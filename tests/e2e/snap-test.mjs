@@ -602,6 +602,27 @@ check(
   after.every((x) => x.handles) && across(after[0].handles[1], after[1].handles[0]) < 0.01,
   JSON.stringify([after[0].handles, after[1].handles]),
 );
+// The second stretch's line itself, pressed in its middle and dragged: it
+// bends through the pointer, its two points staying where they are.
+const unpulled = (await drafted())[1];
+const middleOf = unpulled.coordinates[unpulled.coordinates.length >> 1];
+const pointsBefore = JSON.stringify(await cps());
+await dragFrom(middleOf, 0, 40);
+const pulled = (await drafted())[1];
+const [mx, my] = await proj(middleOf);
+const nearest = Math.min(
+  ...(await Promise.all(pulled.coordinates.map((c) => proj(c)))).map(([x, y]) =>
+    Math.hypot(x - mx, y - (my + 40)),
+  ),
+);
+check(
+  'curves: a Draw stretch dragged by its line bends through the pointer, its points staying put',
+  JSON.stringify(await cps()) === pointsBefore &&
+    JSON.stringify(pulled.coordinates[0]) === JSON.stringify(unpulled.coordinates[0]) &&
+    JSON.stringify(pulled.coordinates.at(-1)) === JSON.stringify(unpulled.coordinates.at(-1)) &&
+    nearest < 6,
+  `the line passes ${nearest.toFixed(1)} px from the pointer`,
+);
 await discard();
 
 check('no page errors', errors.length === 0, errors.slice(0, 2).join(' | '));

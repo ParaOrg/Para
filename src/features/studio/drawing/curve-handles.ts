@@ -90,3 +90,46 @@ export function toggleSmooth(
   if (outOf) next[i] = outOf;
   return next;
 }
+
+/** A grab nearer an end than this share of the stretch bends it as if from here: the handles stay in reach. */
+const GRAB_EDGE = 0.15;
+
+/** Where on a Draw stretch a press took hold: the share of the way along its line, 0–1, by projection. */
+export function grabAt(segment: Segment, at: LngLat): number {
+  const line = segment.coordinates;
+  let walked = 0;
+  let best = { d: Infinity, along: 0 };
+  for (let i = 1; i < line.length; i++) {
+    const [a, b] = [line[i - 1], line[i]];
+    const dx = b[0] - a[0];
+    const dy = b[1] - a[1];
+    const span = Math.hypot(dx, dy);
+    const u =
+      span > 0
+        ? Math.min(1, Math.max(0, ((at[0] - a[0]) * dx + (at[1] - a[1]) * dy) / span ** 2))
+        : 0;
+    const d = Math.hypot(a[0] + dx * u - at[0], a[1] + dy * u - at[1]);
+    if (d < best.d) best = { d, along: walked + u * span };
+    walked += span;
+  }
+  return walked > 0 ? best.along / walked : 0;
+}
+
+/**
+ * A Draw stretch dragged by its line: `grabbed` is the stretch as it was when
+ * the press took hold at `t` of the way along, `by` how far the press has moved.
+ * Both handles move, each by its share, so the curve passes through the
+ * pointer, its ends staying put; the points either side keep their other
+ * handles. A routed stretch never bends.
+ */
+export function bendThrough(grabbed: Segment, t: number, by: LngLat): Segment {
+  if (grabbed.snap !== 'freehand' || grabbed.coordinates.length < 2) return grabbed;
+  const from = grabbed.coordinates[0];
+  const to = grabbed.coordinates[grabbed.coordinates.length - 1];
+  const [c1, c2] = grabbed.handles ?? [from, to];
+  const s = Math.min(1 - GRAB_EDGE, Math.max(GRAB_EDGE, t));
+  // B(s) moves by w1·Δc1 + w2·Δc2; with Δc1 = k(1−s)·by and Δc2 = k·s·by, k makes that exactly `by`.
+  const k = 1 / (3 * s * (1 - s) * ((1 - s) ** 2 + s ** 2));
+  const shift = (c: LngLat, share: number): LngLat => [c[0] + by[0] * share, c[1] + by[1] * share];
+  return curveSegment(from, to, shift(c1, k * (1 - s)), shift(c2, k * s));
+}

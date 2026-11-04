@@ -5,6 +5,7 @@ import { clickHandlers } from './draw-clicks';
 import type { DrawActions, DrawContext, DrawRefs } from './draw-context';
 import { handleDragHandlers } from './draw-handle-drag';
 import { HANDLE_DOT_LAYER, HIT_LAYER, POINT_LAYER } from './draw-layers';
+import { lineBendHandlers } from './draw-line-bend';
 import { mouseHandlers } from './draw-mouse';
 import { penHandlers } from './draw-pen';
 import { touchHandlers } from './draw-touch';
@@ -17,7 +18,7 @@ import { touchHandlers } from './draw-touch';
  * beside a point selects it for the point bar (draw-touch.ts). In Draw, a
  * mouse's press and drag places a smooth point (draw-pen.ts), and a curve's
  * handle is dragged, or a point double-clicked between corner and smooth
- * (draw-handle-drag.ts). The arithmetic they share is draw-gestures.ts.
+ * (draw-handle-drag.ts), and a Draw stretch bent by its line (draw-line-bend.ts). The arithmetic they share is draw-gestures.ts.
  *
  * The handlers are bound once per drawing and read the drawing through its
  * refs, which every mutator keeps current. They share one context, `ctx`:
@@ -94,6 +95,7 @@ export function useDrawEvents(
     );
     const detachPen = penHandlers(ctx).attach();
     const detachHandles = handleDragHandlers(ctx).attach(HANDLE_DOT_LAYER);
+    const detachBend = lineBendHandlers(ctx).attach();
 
     // The line's handler first: MapLibre calls click listeners in the order
     // they were added, and a tap on the line that closes the point bar must
@@ -115,6 +117,7 @@ export function useDrawEvents(
     return () => {
       detachPen();
       detachHandles();
+      detachBend();
       map.off('click', onMapClick);
       map.off('click', HIT_LAYER, onLineClick);
       map.off('mousedown', POINT_LAYER, onPointDown);

@@ -18,7 +18,12 @@ import {
   outHandle,
   splitCurve,
 } from '../../src/features/studio/drawing/curves.ts';
-import { moveHandle, toggleSmooth } from '../../src/features/studio/drawing/curve-handles.ts';
+import {
+  bendThrough,
+  grabAt,
+  moveHandle,
+  toggleSmooth,
+} from '../../src/features/studio/drawing/curve-handles.ts';
 import { insertInGap, removeAt } from '../../src/features/studio/drawing/drawing-edits.ts';
 import { rubberBand } from '../../src/features/studio/drawing/draw-gestures.ts';
 
@@ -205,4 +210,28 @@ test('a double-click with no Draw stretch beside it changes nothing: the same ar
     { snap: 'snapped', coordinates: [B, C] },
   ];
   assert.equal(toggleSmooth(routed, [A, B, C], 1), routed);
+});
+
+test('a Draw stretch dragged by its line bends through the pointer, its ends staying put', () => {
+  const straight = { snap: 'freehand', coordinates: [A, C] };
+  const t = 0.5;
+  const by = [0, 0.004];
+  const bent = bendThrough(straight, t, by);
+  assert.deepEqual(bent.coordinates[0], A);
+  assert.deepEqual(bent.coordinates.at(-1), C);
+  // Its middle is where the middle of the straight line was, moved by `by`.
+  const middle = bent.coordinates.reduce((best, p) =>
+    Math.abs(p[0] - 121.01) < Math.abs(best[0] - 121.01) ? p : best,
+  );
+  assert.ok(Math.abs(middle[1] - 14.704) < 2e-5, `${middle[1]}`);
+  assert.ok(
+    Math.abs(grabAt(straight, [121.01, 14.7001]) - 0.5) < 1e-9,
+    'by projection, not the nearer vertex',
+  );
+  assert.ok(Math.abs(grabAt(bent, middle) - 0.5) < 0.05);
+});
+
+test('a routed stretch is never bent by a drag', () => {
+  const routed = { snap: 'snapped', coordinates: [A, C] };
+  assert.equal(bendThrough(routed, 0.5, [0, 0.004]), routed);
 });
