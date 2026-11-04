@@ -6,9 +6,10 @@ import type {
 } from 'maplibre-gl';
 
 import { MAP_COLOURS } from '@/design-system/foundation/map-colours';
+import { zoomForScale } from '@/shared/utils/geo';
 
 import { LAYERS } from './layers';
-import { METRES_PER_PX_AT_ZOOM_0 } from './saved-hotspots-labels';
+import { SCALE_RULE_LAT } from './saved-hotspots-labels';
 import { boxCentre } from '../geo/box-centre';
 import { hotspotRing, type Hotspot, type HotspotKind } from '../model/hotspots';
 
@@ -26,18 +27,18 @@ export const PINS_SRC = 'saved-stops-pins';
 export const PIN = LAYERS.hotspotsPin;
 export const DOT = LAYERS.hotspotsDot;
 
-/** The phone the owner measures the map on: 393 px across. */
-const PHONE_WIDTH_PX = 393;
-/** The most ground a phone's width may span with the pins drawn whole (the owner's call). */
-const PINS_WITHIN_M = 500;
+/** The most ground the scale bar's width may cover with the pins drawn. */
+const PINS_WITHIN_M = 1000;
 
 /**
  * The zoom from which a hotspot shows its pin, and below which its dot: the
- * zoom at which a 393 px phone spans 500 m at Manila's latitude, 15.86 with
- * MapLibre's 512 px tiles. One zoom on every page, so the pins come in at the
- * same scale everywhere.
+ * moment the scale bar first reads 500 m (the owner's choice), once its width
+ * covers less than 1000 m, zoom 12.89. The bar steps 1, 2, 3, 5: it reads 1 km
+ * while its width covers 2000 m down to 1000 m, and 500 m below that. One zoom
+ * on every page, so the pins come in at the same scale everywhere; the names
+ * follow a zoom later (NAMES_FROM).
  */
-export const PINS_FROM_ZOOM = Math.log2((METRES_PER_PX_AT_ZOOM_0 * PHONE_WIDTH_PX) / PINS_WITHIN_M);
+export const PINS_FROM_ZOOM = zoomForScale(PINS_WITHIN_M, SCALE_RULE_LAT);
 
 /** The pin's colour and its dot's, the same (MapPins). */
 export const PIN_COLOUR: Record<HotspotKind, string> = {
@@ -56,8 +57,15 @@ export const PIN_SHAPE = { width: 28, height: 48, head: 28, stemWidth: 4, paddin
 /** Where the pin's point is, from the image's bottom-left corner: the stem's middle, at its foot. */
 const PIN_POINT_X = PIN_SHAPE.stemWidth / 2;
 
-/** The dot's diameter, zoomed out: 16 px (the owner's call). */
-const DOT_SIZE_PX = 16;
+/**
+ * The dot's diameter: 6 px up to DOT_SMALL_UNTIL_ZOOM, growing evenly to 16 px
+ * at PINS_FROM_ZOOM, where the pin takes over (the owner's call). Full-size
+ * dots at a whole city's view, as the public map opens, join into a chain
+ * over the route lines; small ones leave the lines readable.
+ */
+const DOT_SMALL_SIZE_PX = 6;
+const DOT_FULL_SIZE_PX = 16;
+const DOT_SMALL_UNTIL_ZOOM = 11;
 
 export const pinImageOf = (kind: HotspotKind) => `hotspot-pin-${kind}`;
 
@@ -130,7 +138,15 @@ export function addHotspotPins(
       maxzoom: PINS_FROM_ZOOM,
       layout: { 'circle-sort-key': TERMINAL_ON_TOP },
       paint: {
-        'circle-radius': DOT_SIZE_PX / 2,
+        'circle-radius': [
+          'interpolate',
+          ['linear'],
+          ['zoom'],
+          DOT_SMALL_UNTIL_ZOOM,
+          DOT_SMALL_SIZE_PX / 2,
+          PINS_FROM_ZOOM,
+          DOT_FULL_SIZE_PX / 2,
+        ],
         'circle-color': [
           'match',
           ['get', 'kind'],

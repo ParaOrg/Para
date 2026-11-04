@@ -1,6 +1,8 @@
 // The hotspots' pins (src/features/routes/map/hotspot-pins.ts) on all three pages, from the
 // committed map file (the public map and the contributor page) and the same hotspots in the
-// studio's stand-in database: a pin at each box's middle zoomed in, a 16 px dot zoomed out.
+// studio's stand-in database: a pin at each box's middle from the zoom where the scale bar first
+// reads 500 m, a dot below it, 6 px across at the public map's opening view, and the names from
+// where the bar first reads 300 m.
 //
 //   npm run dev                          (in another terminal)
 //   node tests/e2e/map-pins-test.mjs
@@ -22,9 +24,13 @@ const { check, tally } = harness();
 const SHOTS = process.env.PARA_SHOTS;
 if (SHOTS) mkdirSync(SHOTS, { recursive: true });
 
-/** Zoomed in, a phone spanning under 500 m (pins from 15.86), and zoomed out (dots). */
+/** Zoomed in, well past the pins' zoom (12.89, the scale bar at 500 m), and zoomed out (dots). */
 const ZOOMED_IN = 17.5;
-const ZOOMED_OUT = 15;
+const ZOOMED_OUT = 12.5;
+/** Just past the pins' zoom; either side of the names' (13.89, the scale bar at 300 m). */
+const PINS_IN = 13;
+const NAMES_OUT = 13.5;
+const NAMES_IN = 14.2;
 /** The middle of a pin's head from its point, in CSS px: 28 across, 48 tall, the stem at 2. */
 const HEAD = { dx: -2 + 14, dy: -48 + 14 };
 const LAYER = {
@@ -32,6 +38,7 @@ const LAYER = {
   dot: 'saved-stops-dot',
   pin: 'saved-stops-pin',
   hintuanLabel: 'saved-stops-label-hintuan',
+  terminalLabel: 'saved-stops-label',
   routesHit: 'saved-routes-hit',
 };
 
@@ -183,6 +190,83 @@ async function checkTaps(page, where, pin, fresh) {
   );
 }
 
+/**
+ * At the public map's opening zoom, `pin`'s dot is drawn with a radius of 3 px: a query 2 px off
+ * its point finds it, one 4.5 px off does not (MapLibre's own hit test, by the circle's radius).
+ */
+async function checkOpeningDot(page, pin) {
+  const { id } = pin.properties;
+  const at = pin.geometry.coordinates;
+  const opening = await page.evaluate(() => window.__map.getZoom());
+  await settle(page, at, opening);
+  const found = ([dx, dy]) =>
+    page.evaluate(
+      ([at, dx, dy, dot, id]) => {
+        const p = window.__map.project(at);
+        return window.__map
+          .queryRenderedFeatures([p.x + dx, p.y + dy], { layers: [dot] })
+          .some((f) => f.properties.id === id);
+      },
+      [at, dx, dy, LAYER.dot, id],
+    );
+  const around = (r) => [
+    [r, 0],
+    [-r, 0],
+    [0, r],
+    [0, -r],
+  ];
+  const onPoint = await until(
+    () => found([0, 0]),
+    (v) => v,
+    3000,
+  );
+  const inside = [];
+  for (const off of around(2)) inside.push(await found(off));
+  const outside = [];
+  for (const off of around(4.5)) outside.push(await found(off));
+  check(
+    `public map: at the opening zoom (${opening.toFixed(2)}), the dot's radius is 3 px`,
+    opening <= 11 && onPoint && inside.every(Boolean) && outside.every((v) => !v),
+    `on its point: ${onPoint}; 2 px off: ${inside.join(', ')}; 4.5 px off: ${outside.join(', ')}`,
+  );
+  if (SHOTS) await page.screenshot({ path: `${SHOTS}/public-opening.png` });
+}
+
+/** How many hotspot names are drawn on the screen now. */
+const namesShown = (page) =>
+  page.evaluate(
+    (layers) =>
+      new Set(window.__map.queryRenderedFeatures({ layers }).map((f) => f.properties.name)).size,
+    [LAYER.terminalLabel, LAYER.hintuanLabel],
+  );
+
+/**
+ * The scale bar's two thresholds on the public map, around `pin`: its pin and no dot just past
+ * the pins' zoom, with no name yet; then names a little past the names' zoom.
+ */
+async function checkThresholds(page, pin) {
+  const { id } = pin.properties;
+  const at = pin.geometry.coordinates;
+  await settle(page, at, PINS_IN);
+  check(
+    `public map: at ${PINS_IN}, just past the pins' zoom, the box's pin, and no dot`,
+    (await comesIn(page, LAYER.pin, id)) && !(await drawn(page, LAYER.dot, id)),
+  );
+  await settle(page, at, NAMES_OUT);
+  const namesOut = await namesShown(page);
+  await settle(page, at, NAMES_IN);
+  const namesIn = await until(
+    () => namesShown(page),
+    (n) => n > 0,
+    3000,
+  );
+  check(
+    `public map: no hotspot names at ${NAMES_OUT}, some at ${NAMES_IN}`,
+    namesOut === 0 && namesIn > 0,
+    `${namesOut} at ${NAMES_OUT}, ${namesIn} at ${NAMES_IN}`,
+  );
+}
+
 /** A lone pin whose head stands off its box, to prove the pin itself takes the tap; else any lone one. */
 async function pinToTap(page, alone) {
   for (const pin of alone.slice(0, 12)) {
@@ -206,8 +290,10 @@ let chosenPin;
     `${count} of ${boxes}`,
   );
   await checkOrder(page, 'public map');
+  await checkOpeningDot(page, alone[0]);
   chosenPin = await pinToTap(page, alone);
   console.log(`      (the pin: ${chosenPin.properties.kind} ${chosenPin.properties.id})`);
+  await checkThresholds(page, chosenPin);
   await checkTaps(page, 'public', chosenPin, async () => {
     await page.reload({ waitUntil: 'load' });
     await page.waitForFunction(() => window.__map && window.__map.loaded(), null, {
@@ -261,25 +347,42 @@ let chosenPin;
   const page = await context.newPage();
   await fakeContributions(page);
   await page.addInitScript(() => localStorage.setItem('para.contribute.consent', 'yes'));
+  // When the map loaded, by the page's own clock: the moment MapView hands the suites the map,
+  // in its 'load' handler. The hotspots' chunk is asked for on the first 'idle' after that.
+  await page.addInitScript(() => {
+    let map;
+    Object.defineProperty(window, '__map', {
+      configurable: true,
+      get: () => map,
+      set: (value) => {
+        window.__mapLoadedAt ??= Date.now();
+        map = value;
+      },
+    });
+  });
   const scripts = [];
   page.on('request', (r) => {
-    if (r.resourceType() === 'script') scripts.push(r.url());
+    if (r.resourceType() === 'script') scripts.push(r);
   });
   const errors = await open(page, '/contribute/');
-  const opening = scripts.length;
   const { count } = await lonePin(page);
   check(
     'contributor page: the hotspots come in after the map, a pin point for every box',
     count === index.stops.filter((s) => s.area).length,
     `${count}`,
   );
+  // Timed by the browser's own clocks rather than by where the suite happens to look: whether
+  // the chunk was asked for before open() saw the map loaded is a race the page may win, and
+  // proves nothing about the page.
+  const mapLoadedAt = await page.evaluate(() => window.__mapLoadedAt);
+  // The chunk's own file, not use-published-hotspots.ts, which the page imports at its opening.
+  const chunks = scripts.filter((r) => /\/published-hotspots[.-]/.test(new URL(r.url()).pathname));
+  for (const r of chunks) await r.response();
+  const askedAt = chunks.map((r) => r.timing().startTime);
   check(
     "  in a chunk of their own, fetched after the page's opening",
-    scripts.slice(opening).some((u) => /published-hotspots/.test(u)),
-    scripts
-      .slice(opening)
-      .map((u) => u.split('/').pop())
-      .join(', '),
+    chunks.length > 0 && askedAt.every((t) => t >= mapLoadedAt),
+    `the map loaded at ${mapLoadedAt}; the chunk asked for at ${askedAt.join(', ') || 'never'}`,
   );
   await checkOrder(page, 'contributor page');
   const { id } = chosenPin.properties;

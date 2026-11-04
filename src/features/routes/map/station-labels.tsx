@@ -2,7 +2,7 @@ import type { MapLibreMap } from 'maplibre-gl';
 import { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { haversine, type LngLat } from '@/shared/utils/geo';
+import { SCALE_PX, haversine, type LngLat } from '@/shared/utils/geo';
 
 import { HintuanLabel } from './hintuan-label';
 import { useMapMarker, useMarkerElement } from './use-map-marker';
@@ -14,9 +14,6 @@ import { isLoop, type Direction } from '../model/routes';
 import type { TimelineRow } from '../model/timeline';
 
 import './hintuan-pin.css';
-
-/** The scale bar's width (MapView's ScaleControl, MapLibre's default maxWidth). */
-const SCALE_PX = 100;
 
 /** How much ground the scale bar's width may span with the names still on: under 3 km. */
 const NAMES_UNTIL_M = 3000;
