@@ -89,6 +89,8 @@ function drawing(state: Partial<Drawing> = {}): Drawing {
     adoptHotspot: fn(),
     cancel: fn(),
     undo: fn(),
+    redo: fn(),
+    canRedo: false,
     addPoint: fn(),
     insertPoint: fn(),
     deletePoint: fn(),
@@ -142,7 +144,7 @@ const meta = {
       <div
         className={
           ctx.parameters.phone
-            ? 'relative h-160 w-[390px] bg-surface-quaternary'
+            ? 'relative h-160 w-97.5 bg-surface-quaternary'
             : 'relative h-96 bg-surface-quaternary'
         }
       >
@@ -162,8 +164,8 @@ export const Empty: Story = {
   args: { draw: drawing() },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(canvas.getByRole('button', { name: '↶ Undo' })).toBeDisabled();
-    await expect(canvas.getByRole('button', { name: '✓ Done' })).toBeDisabled();
+    await expect(canvas.getByRole('button', { name: 'Undo' })).toBeDisabled();
+    await expect(canvas.getByRole('button', { name: 'Done' })).toBeDisabled();
   },
 };
 
@@ -171,7 +173,7 @@ export const Empty: Story = {
 export const OnePoint: Story = {
   args: { draw: drawing({ controlPoints: [points[0]], segments: [], line: [points[0]] }) },
   play: async ({ canvasElement }) => {
-    const done = within(canvasElement).getByRole('button', { name: '✓ Done' });
+    const done = within(canvasElement).getByRole('button', { name: 'Done' });
     await expect(done).toBeDisabled();
     await expect(done).toHaveAttribute('title', 'Add at least 2 points');
   },
@@ -181,13 +183,13 @@ export const OnePoint: Story = {
 export const Drawn: Story = {
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
-    await userEvent.click(canvas.getByRole('button', { name: '✓ Done' }));
+    await userEvent.click(canvas.getByRole('button', { name: 'Done' }));
     await expect(args.onDone).toHaveBeenCalledOnce();
     await expect(canvas.getByText(/3 points · 640 m/)).toBeVisible();
   },
 };
 
-/** Enter is Done, and Ctrl+Z is Undo, while no panel is open. */
+/** Enter is Done, Ctrl+Z is Undo and Ctrl+Shift+Z is Redo, while no panel is open. */
 export const Keys: Story = {
   play: async ({ args }) => {
     // The keys are bound in an effect, which can land after play has started:
@@ -198,6 +200,42 @@ export const Keys: Story = {
     });
     await userEvent.keyboard('{Control>}z{/Control}');
     await expect(args.draw.undo).toHaveBeenCalledOnce();
+    await userEvent.keyboard('{Control>}{Shift>}z{/Shift}{/Control}');
+    await expect(args.draw.redo).toHaveBeenCalledOnce();
+    await expect(args.draw.undo).toHaveBeenCalledOnce();
+  },
+};
+
+/** Nothing undone yet: Redo rests. */
+export const NothingToRedo: Story = {
+  play: async ({ canvasElement }) => {
+    await expect(within(canvasElement).getByRole('button', { name: 'Redo' })).toBeDisabled();
+  },
+};
+
+/** A point just undone: Redo puts it back, by button or by Ctrl+Y. */
+export const Redo: Story = {
+  args: { draw: drawn({ canRedo: true }) },
+  play: async ({ canvasElement, args }) => {
+    await userEvent.click(within(canvasElement).getByRole('button', { name: 'Redo' }));
+    await expect(args.draw.redo).toHaveBeenCalledOnce();
+    await waitFor(async () => {
+      await userEvent.keyboard('{Control>}y{/Control}');
+      await expect(args.draw.redo).toHaveBeenCalledTimes(2);
+    });
+  },
+};
+
+/** Snap picked: pale brand, and a press on Draw switches to straight stretches. */
+export const SnapPicked: Story = {
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole('button', { name: 'Snap' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    await userEvent.click(canvas.getByRole('button', { name: 'Draw' }));
+    await expect(args.draw.setFreehand).toHaveBeenCalledWith(true);
   },
 };
 
@@ -223,7 +261,7 @@ export const KeysOff: Story = {
 export const EnterOnAButton: Story = {
   play: async ({ canvasElement, args }) => {
     await settled();
-    within(canvasElement).getByRole('button', { name: '↶ Undo' }).focus();
+    within(canvasElement).getByRole('button', { name: 'Undo' }).focus();
     await userEvent.keyboard('{Enter}');
     await expect(args.draw.undo).toHaveBeenCalledOnce();
     await expect(args.onDone).not.toHaveBeenCalled();
@@ -252,7 +290,7 @@ export const WithAStraightStretch: Story = {
 export const Snapping: Story = {
   args: { draw: drawn({ snapping: 1 }) },
   play: async ({ canvasElement }) => {
-    const done = within(canvasElement).getByRole('button', { name: '✓ Done' });
+    const done = within(canvasElement).getByRole('button', { name: 'Done' });
     await expect(done).toBeDisabled();
     await expect(done).toHaveAttribute('title', 'Waiting for the router');
   },
@@ -266,7 +304,7 @@ export const WaitingForTheLine: Story = {
   args: { draw: drawn({ unresolved: true }) },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(canvas.getByRole('button', { name: '✓ Done' })).toHaveAttribute(
+    await expect(canvas.getByRole('button', { name: 'Done' })).toHaveAttribute(
       'title',
       'Waiting for the router',
     );
@@ -314,7 +352,7 @@ export const LongContent: Story = {
   },
 };
 
-/** Tracing a terminal: corners, not points, three needed, and no Tap | Draw. */
+/** Tracing a terminal: corners, not points, three needed, and no Snap | Draw. */
 export const TerminalOutline: Story = {
   args: {
     draw: drawing({
@@ -325,8 +363,8 @@ export const TerminalOutline: Story = {
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(canvas.queryByTestId('tap-draw')).toBeNull();
-    await expect(canvas.getByRole('button', { name: '✓ Done' })).toHaveAttribute(
+    await expect(canvas.queryByTestId('snap-draw')).toBeNull();
+    await expect(canvas.getByRole('button', { name: 'Done' })).toHaveAttribute(
       'title',
       'Add at least 3 corners',
     );
@@ -497,7 +535,7 @@ export const FingerConfirmDiscardHotspot: Story = {
   beforeEach: asFinger,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await userEvent.click(canvas.getByRole('button', { name: '✕' }));
+    await userEvent.click(canvas.getByRole('button', { name: /^Discard this/ }));
     await expect(canvas.getByText('Discard this hotspot?')).toBeVisible();
   },
 };
@@ -507,7 +545,7 @@ export const FingerConfirmDiscard: Story = {
   beforeEach: asFinger,
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
-    await userEvent.click(canvas.getByRole('button', { name: '✕' }));
+    await userEvent.click(canvas.getByRole('button', { name: /^Discard this/ }));
     await expect(canvas.getByText('Discard this route?')).toBeVisible();
     await expect(args.draw.cancel).not.toHaveBeenCalled();
     await userEvent.click(canvas.getByRole('button', { name: 'Discard' }));

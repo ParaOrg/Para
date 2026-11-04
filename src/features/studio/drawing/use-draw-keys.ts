@@ -15,7 +15,8 @@ interface UseDrawKeysOptions {
 
 /**
  * The drawing's keys, the toolbar's buttons by keyboard: Ctrl+Z undoes,
- * Enter is Done, F flips Tap | Draw (a route's only). A key typed in a field
+ * Ctrl+Shift+Z or Ctrl+Y redoes,
+ * Enter is Done, F flips Snap | Draw (a route's only). A key typed in a field
  * is the field's.
  */
 export function useDrawKeys({ draw, isOn, points, canDone, isArea, onDone }: UseDrawKeysOptions) {
@@ -24,7 +25,12 @@ export function useDrawKeys({ draw, isOn, points, canDone, isArea, onDone }: Use
     const onKey = (e: KeyboardEvent) => {
       if (isTyping(e.target)) return;
       const mod = e.ctrlKey || e.metaKey;
-      if (mod && !e.shiftKey && !e.altKey && e.key.toLowerCase() === 'z') {
+      const key = e.key.toLowerCase();
+      if (mod && !e.altKey && ((e.shiftKey && key === 'z') || (!e.shiftKey && key === 'y'))) {
+        // Redo, by either computer's habit: Ctrl+Shift+Z, or Windows' Ctrl+Y.
+        e.preventDefault();
+        if (draw.canRedo) draw.redo();
+      } else if (mod && !e.shiftKey && !e.altKey && key === 'z') {
         // Same as the button: nothing to undo is nothing to do, but the
         // browser's own undo must not run on the map either way.
         e.preventDefault();

@@ -43,6 +43,14 @@ import { findUTurns } from './uturns';
 
 export type Drawing = ReturnType<typeof useDrawing>;
 
+/** One Undo's step: the drawing before it, and the arrays it left. */
+interface RedoStep {
+  points: LngLat[];
+  segments: Segment[];
+  pointsAfter: LngLat[];
+  segmentsAfter: Segment[];
+}
+
 export function useDrawing(
   map: MapLibreMap | null,
   opts: {
@@ -108,6 +116,12 @@ export function useDrawing(
    * back in one step rather than one borrowed point at a time.
    */
   const connectedRef = useRef<{ spot: LngLat; end: LngLat } | null>(null);
+  /**
+   * What each Undo took off the end, newest last, with the drawing it left.
+   * Redo puts a step back only while the drawing is still exactly that one:
+   * any other edit writes new arrays, so the steps lapse without being cleared.
+   */
+  const [redoSteps, setRedoSteps] = useState<RedoStep[]>([]);
 
   // The segments and the router's answers for them.
   const gaps = useGapResolver(
@@ -208,9 +222,31 @@ export function useDrawing(
       if (join > 0) void deletePoint(join - 1);
       return;
     }
-    writePoints(cpRef.current.slice(0, -1));
-    writeSegments(segRef.current.slice(0, -1));
-  }, [deletePoint, writePoints, writeSegments]);
+    const before = { points: cpRef.current, segments: segRef.current };
+    if (before.points.length === 0) return;
+    writePoints(before.points.slice(0, -1));
+    writeSegments(before.segments.slice(0, -1));
+    // A stretch still waiting for the router loses its answer here, so it can't come back.
+    const taken = before.segments.at(-1);
+    if (taken && isStandIn(taken)) return;
+    setRedoSteps((steps) => [
+      ...steps,
+      { ...before, pointsAfter: cpRef.current, segmentsAfter: segRef.current },
+    ]);
+  }, [deletePoint, writePoints, writeSegments, isStandIn]);
+
+  const redoStep = redoSteps.at(-1);
+  const canRedo =
+    redoStep !== undefined &&
+    redoStep.pointsAfter === controlPoints &&
+    redoStep.segmentsAfter === segments;
+
+  const redo = useCallback(() => {
+    if (!canRedo) return;
+    setRedoSteps(redoSteps.slice(0, -1));
+    writePoints(redoStep.points);
+    writeSegments(redoStep.segments);
+  }, [canRedo, redoStep, redoSteps, writePoints, writeSegments]);
 
   // The finger's Delete, Put back and the follow offer. Called here so its Put
   // back timer keeps its place among the effects.
@@ -501,6 +537,9 @@ export function useDrawing(
     adoptHotspot,
     cancel,
     undo,
+    /** Puts back what the last Undo took, while nothing else has changed since. */
+    redo,
+    canRedo,
     addPoint,
     insertPoint,
     deletePoint,

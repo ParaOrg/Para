@@ -560,24 +560,24 @@ check(
   `bar ${await bar.count()}`,
 );
 
-// ---------------------------------------------------------------- Tap | Draw
-const tapDraw = page.getByTestId('tap-draw');
+// --------------------------------------------------------------- Snap | Draw
+const snapDraw = page.getByTestId('snap-draw');
 const [nx, ny] = (await roadPixels(6, 70))[4] ?? [W / 2, 200];
-await tapDraw.getByRole('button', { name: 'Draw' }).tap();
+await snapDraw.getByRole('button', { name: 'Draw' }).tap();
 await tap(nx, ny);
 await settle();
 check(
   'Draw makes the next stretch straight',
   (await snaps()).at(-1) === 'freehand' &&
-    (await tapDraw.getByRole('button', { name: 'Draw' }).getAttribute('aria-pressed')) === 'true',
+    (await snapDraw.getByRole('button', { name: 'Draw' }).getAttribute('aria-pressed')) === 'true',
   `${await snaps()}`,
 );
-await tapDraw.getByRole('button', { name: 'Tap' }).tap();
+await snapDraw.getByRole('button', { name: 'Snap' }).tap();
 const [mx, my] = (await roadPixels(7, 70))[5] ?? [W / 2, 260];
 await tap(mx, my);
 await settle();
 check(
-  'Tap makes the next one follow the streets again',
+  'Snap makes the next one follow the streets again',
   (await snaps()).at(-1) === 'snapped',
   `${await snaps()}`,
 );

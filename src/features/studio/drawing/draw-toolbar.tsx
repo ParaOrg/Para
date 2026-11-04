@@ -1,18 +1,16 @@
 import { useState } from 'react';
 
 import { coarsePointer } from '@/features/routes/map/tap';
+import { cn } from '@/shared/utils/cn';
 
-import { whyCannotCloseLoop } from './loop-closing';
+import { CloseLoop } from './close-loop';
+import { DrawCount } from './draw-count';
+import { PILL, TOOL } from './draw-toolbar-look';
 import { PickBar } from './pick-bar';
 import { FollowChip, PointBar, PutBack } from './point-bar';
-import { TapDraw } from './tap-draw';
-import {
-  drawHint,
-  formatDistance,
-  uTurnWarning,
-  whyNotDone,
-  type ExtendEnds,
-} from './toolbar-text';
+import { SnapDraw } from './snap-draw';
+import { drawHint, uTurnWarning, whyNotDone, type ExtendEnds } from './toolbar-text';
+import { UndoRedo } from './undo-redo';
 import { useDrawKeys } from './use-draw-keys';
 import type { Drawing } from './use-drawing';
 import type { LoopPlan } from './use-loop-closing';
@@ -33,14 +31,16 @@ interface DrawToolbarProps {
 }
 
 /**
- * Replaces the single idle button while drawing. Deliberately small: the map
- * is the document, and this is the only chrome allowed to compete with it.
+ * Replaces the single idle button while drawing: Undo | Redo in one pill and
+ * Snap | Draw | Done in another, after the owner's frame (4304:21645), with
+ * the count above them. Deliberately small: the map is the document, and
+ * this is the only chrome allowed to compete with it.
  *
  * Serves both a route trace and a hotspot outline. The outline needs three
- * corners, has no router to wait for, and has no Tap | Draw switch because
+ * corners, has no router to wait for, and has no Snap | Draw switch because
  * every edge is already straight.
  *
- * Three of the buttons answer to a key as well — Ctrl+Z, Enter, F — but only
+ * Four of the buttons answer to a key as well — Ctrl+Z, Ctrl+Shift+Z, Enter, F — but only
  * while `keys` is true: the studio turns them off the moment a panel opens,
  * so Enter in the save form submits the form and Ctrl+Z in a field is the
  * browser's own undo. Esc is deliberately unbound: cancel discards the whole
@@ -69,7 +69,6 @@ function Toolbar({
   loop: LoopPlan | null;
 }) {
   const points = draw.controlPoints.length;
-  const freehandCount = draw.segments.filter((s) => s?.snap === 'freehand').length;
   const area = draw.area;
   const minPoints = area ? 3 : 2;
   const noun = area ? 'corner' : 'point';
@@ -108,8 +107,8 @@ function Toolbar({
         <p
           className={
             finger
-              ? 'rounded-full bg-neutral-900/80 px-3 py-1.5 text-center text-xs text-white'
-              : 'text-center text-[11px] text-neutral-600 [text-shadow:0_1px_2px_white]'
+              ? 'rounded-full bg-surface-transparent px-3 py-1.5 text-center text-xs text-content-inverse'
+              : 'text-center text-[11px] text-content-quaternary [text-shadow:0_1px_2px_white]'
           }
         >
           {hint}
@@ -120,113 +119,65 @@ function Toolbar({
       <PutBack draw={draw} />
       <FollowChip draw={draw} />
 
-      {!area && <TapDraw draw={draw} />}
+      <DrawCount
+        draw={draw}
+        isFinger={finger}
+        doneReason={doneReason}
+        onUTurnHelp={() => setUTurnHelp(!uTurnHelp)}
+      />
 
-      <div className="flex flex-col items-center rounded-3xl bg-white p-1.5 shadow-lg ring-1 ring-black/10">
-        <span className="px-3 pt-0.5 text-center text-xs text-neutral-500 tabular-nums">
-          {area && (
-            <span className="font-medium text-neutral-700">
-              {area.kind === 'terminal' ? 'Terminal' : 'Hintuan'} ·{' '}
-            </span>
-          )}
-          {points} {points === 1 ? noun : `${noun}s`}
-          {!area && draw.line.length > 1 && <> · {formatDistance(draw.metres)}</>}
-          {!area && freehandCount > 0 && (
-            <span className="text-neutral-400"> · {freehandCount} straight</span>
-          )}
-          {!area && uTurns > 0 && (
-            <button
-              type="button"
-              onClick={() => setUTurnHelp(!uTurnHelp)}
-              title={uTurnText}
-              className="text-amber-700 underline decoration-dotted underline-offset-2"
-            >
-              · ⚠ {uTurns} U-turn{uTurns === 1 ? '' : 's'}
-            </button>
-          )}
-          {draw.snapping > 0 && <span className="text-rose-600"> · snapping…</span>}
-          {finger && doneReason && points > 0 && !draw.snapping && (
-            <span className="text-neutral-400"> · {doneReason.toLowerCase()}</span>
-          )}
-        </span>
+      {confirming ? (
+        <div className={PILL}>
+          <span className="px-2 text-sm text-content-tertiary">
+            Discard this {area ? 'hotspot' : 'route'}?
+          </span>
+          <button
+            type="button"
+            onClick={() => setConfirming(false)}
+            className={cn(TOOL, 'text-content-tertiary')}
+          >
+            Keep
+          </button>
+          <button type="button" onClick={draw.cancel} className={cn(TOOL, 'text-content-error')}>
+            Discard
+          </button>
+        </div>
+      ) : (
+        <div className="flex flex-wrap items-center justify-center gap-2">
+          <UndoRedo draw={draw} noun={noun} />
 
-        {confirming ? (
-          <div className="flex items-center gap-1">
-            <span className="px-2 text-sm text-neutral-700">
-              Discard this {area ? 'hotspot' : 'route'}?
-            </span>
-            <button type="button" onClick={() => setConfirming(false)} className={TOOL}>
-              Keep
-            </button>
-            <button type="button" onClick={draw.cancel} className={TOOL + ' text-red-600'}>
-              Discard
-            </button>
-          </div>
-        ) : (
-          <div className="flex items-center gap-1">
-            <button
-              type="button"
-              onClick={draw.undo}
-              disabled={points === 0}
-              title={`Undo last ${noun} (Ctrl+Z)`}
-              className={TOOL}
-            >
-              ↶ Undo
-            </button>
+          {loop && (
+            <div className={PILL}>
+              <CloseLoop draw={draw} loop={loop} />
+            </div>
+          )}
 
-            {loop && <CloseLoop draw={draw} loop={loop} />}
-
+          <div className={PILL}>
+            {!area && <SnapDraw draw={draw} />}
             <button
               type="button"
               onClick={onDone}
               disabled={!canDone}
               title={doneReason ?? (area ? 'Save this hotspot (Enter)' : 'Save this route (Enter)')}
-              className="rounded-full bg-neutral-900 px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-40"
+              className="rounded-full bg-parabrand-800 px-4 py-1.5 text-sm font-medium text-content-inverse disabled:cursor-not-allowed disabled:opacity-40"
             >
-              ✓ Done
+              Done
             </button>
+          </div>
 
+          <div className={PILL}>
             <button
               type="button"
               onClick={finger && points > 0 ? () => setConfirming(true) : draw.cancel}
+              aria-label={area ? 'Discard this hotspot' : 'Discard this route'}
               title={area ? 'Discard this hotspot' : 'Discard this route'}
-              className={TOOL + ' text-neutral-500'}
+              className={cn(TOOL, 'text-content-quaternary')}
             >
               ✕
             </button>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
-  );
-}
-
-/**
- * A tool button, the same size under a finger as under a mouse: touch targets have no
- * 44 px floor (they follow Figma), and the toolbar isn't drawn in Figma yet.
- */
-const TOOL =
-  'rounded-full px-3 py-2 text-sm text-neutral-700 hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-40';
-
-/**
- * Ends a return trip on the first point of the way already drawn, routed like
- * any click (or straight in freehand). Disabled, and saying why in its label,
- * until there is a point to come from and while the loop is already closed.
- */
-function CloseLoop({ draw, loop }: { draw: Drawing; loop: LoopPlan }) {
-  const reason = whyCannotCloseLoop(draw.controlPoints, loop.closeAt, loop.other === null);
-  const label = reason ? `Close the loop: ${reason}` : 'Close the loop';
-  return (
-    <button
-      type="button"
-      data-testid="close-loop"
-      onClick={() => void draw.addPoint(loop.closeAt)}
-      disabled={reason !== null}
-      aria-label={label}
-      title={reason ? label : `End the line where ${loop.other ?? 'it'} began`}
-      className={TOOL}
-    >
-      ⟲ Close the loop
-    </button>
   );
 }
