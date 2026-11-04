@@ -6,7 +6,9 @@ import { TRAIL_SRC } from '@/features/routes/map/recording-trail';
 
 /*
  * The faint published routes' source and layer ids (published-routes.ts), apart so what only
- * needs their names (the History picture, capture-trail-picture.ts) does not fetch the reader.
+ * needs their names (the History picture, capture-trail-picture.ts) does not fetch the reader;
+ * and the layer the routes and the hotspots' boxes go under (layerToGoUnder), here so the two
+ * drawings, each in a chunk of its own, agree on one place.
  */
 
 export const PUBLISHED_SRC = 'published-routes';

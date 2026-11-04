@@ -28,8 +28,8 @@ function trailLayer(map: MapLibreMap): string | undefined {
 /**
  * Reads the published index and draws its hotspots on `map`: the boxes under the published
  * routes (as the public map's are under its routes), whether those are drawn yet or come after,
- * and under the basemap's names; the pins and names under the trail. Resolves with what takes them off again; rejects when the index cannot be
- * read, and the map then shows no hotspots.
+ * and under the basemap's names; the pins and names under the trail. Resolves with what takes
+ * them off again; rejects when the index cannot be read, and the map then shows no hotspots.
  */
 export async function drawPublishedHotspots(map: MapLibreMap): Promise<() => void> {
   const { hotspots } = await fetchIndex();
