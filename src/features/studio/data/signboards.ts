@@ -2,6 +2,8 @@ import { cleanSignboardSvg } from '@/features/routes/model/signboard-svg';
 
 import { draftRefusal, signboardsDraft } from './draft-save';
 import { STUDIO_DRAFTS } from './flags';
+import type { DraftRow } from './review-schema';
+import { routeStateFromDraft } from './route-draft-state';
 import { getSupabase, supabaseConfig } from './supabase';
 
 /**
@@ -22,6 +24,18 @@ const BUCKET = 'signboards';
 /** Where a board is read in the studio: the bucket's public address. */
 export function signboardUrl(name: string): string {
   return `${supabaseConfig?.url ?? ''}/storage/v1/object/public/${BUCKET}/${encodeURIComponent(name)}`;
+}
+
+/**
+ * A direction's boards as a route draft lists them: what its next save builds
+ * on (signboardsDraft). Null when there is no draft or it holds no such
+ * direction, so the approved row's list stands; a draft direction that lists
+ * none is an empty list.
+ */
+export function draftedSignboards(draft: DraftRow | null, directionId: string): string[] | null {
+  if (!draft) return null;
+  const direction = routeStateFromDraft(draft).directions.find((d) => d.id === directionId);
+  return direction?.signboards ?? null;
 }
 
 /** The direction's list, written as given; the new list back. */

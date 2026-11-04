@@ -479,6 +479,19 @@ check(
     approvedWrites(w).length === 0,
   said(w),
 );
+// Reopened later, the card lists the draft's boards, not the approved row's empty list:
+// a change saved on top of the draft would otherwise drop the board the draft added.
+await load();
+await openCard(OUT[1]);
+const openDialog = page.locator('dialog[open]');
+if ((await openDialog.count()) > 0)
+  await openDialog.getByRole('button', { name: 'Close', exact: true }).click();
+await waitFor(async () => (await items().count()) === 1);
+check(
+  "  reopened, the card lists the editor's draft's board",
+  (await items().count()) === 1,
+  `${await items().count()} boards`,
+);
 n = log.length;
 await page.getByRole('button', { name: 'Remove signboard 1' }).click();
 await waitFor(async () => (await items().count()) === 0);
