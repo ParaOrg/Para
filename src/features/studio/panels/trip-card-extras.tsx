@@ -1,19 +1,18 @@
 import { useQueryClient } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
 
-import { Button } from '@/design-system/primitives/button';
 import type { Hotspot, HotspotRow } from '@/features/routes/model/hotspots';
 import type { DirectionRow } from '@/features/routes/model/routes';
 import type { LngLat } from '@/shared/utils/geo';
 
 import { CardActions } from './card-actions';
+import { DraftSignboardsNotice } from './draft-signboards-notice';
 import { RouteExportPanel } from './route-export-panel';
 import { RouteFacts } from './route-facts';
 import { SignboardEditor } from './signboard-editor';
 import { STUDIO_DRAFTS } from '../data/flags';
 import { reviewKeys } from '../data/review-keys';
-import { draftedSignboards } from '../data/signboards';
-import { useRouteDraftQuery } from '../data/use-route-draft-query';
+import { useDraftSignboardsQuery } from '../data/use-draft-signboards-query';
 
 interface TripCardExtrasProps {
   /** The direction on the trip card. */
@@ -89,30 +88,17 @@ interface DraftSignboardsProps {
  */
 function DraftSignboards({ direction, onChanged }: DraftSignboardsProps) {
   const client = useQueryClient();
-  const draft = useRouteDraftQuery(direction.routeId);
-  if (STUDIO_DRAFTS && draft.isPending)
-    return (
-      <p role="status" className="px-3 pb-4 font-sn-pro text-sm text-content-quaternary">
-        Loading signboards…
-      </p>
-    );
-  if (draft.isError)
-    return (
-      <div className="flex flex-col items-start gap-2 px-3 pb-4 font-sn-pro">
-        <p role="alert" className="text-sm text-content-error">
-          Couldn&apos;t read your draft&apos;s signboards. Try again before changing them.
-        </p>
-        <Button variant="secondary" label="Try again" onClick={() => void draft.refetch()} />
-      </div>
-    );
-  const drafted = draftedSignboards(draft.data ?? null, direction.id);
+  const drafted = useDraftSignboardsQuery(direction.routeId, direction.id);
+  if (STUDIO_DRAFTS && drafted.isPending) return <DraftSignboardsNotice state="loading" />;
+  if (drafted.isError)
+    return <DraftSignboardsNotice state="error" onRetry={() => void drafted.refetch()} />;
   const handleChanged = () => {
     void client.invalidateQueries({ queryKey: reviewKeys.draftOf('route', direction.routeId) });
     onChanged();
   };
   return (
     <SignboardEditor
-      direction={drafted ? { ...direction, signboards: drafted } : direction}
+      direction={drafted.data ? { ...direction, signboards: drafted.data } : direction}
       onChanged={handleChanged}
     />
   );

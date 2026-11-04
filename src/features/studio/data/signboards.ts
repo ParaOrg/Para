@@ -28,8 +28,9 @@ export function signboardUrl(name: string): string {
 
 /**
  * A direction's boards as a route draft lists them: what its next save builds
- * on (signboardsDraft). Null when there is no draft or it does not list them,
- * so the approved row's list stands.
+ * on (signboardsDraft). Null when there is no draft or it holds no such
+ * direction, so the approved row's list stands; a draft direction that lists
+ * none is an empty list.
  */
 export function draftedSignboards(draft: DraftRow | null, directionId: string): string[] | null {
   if (!draft) return null;
