@@ -3500,7 +3500,7 @@ const REFUSING_LOCATION = () => {
 // The resting paints of the public map (map-colours.ts): Map/RouteLine/surface-default, and each
 // train line's Map/Rail/<line>/surface-pale.
 const PUBLISHED_PAINT = {
-  'published-routes-line': '#8ec5ff',
+  'published-routes-line': '#c1bfff',
   'published-saved-routes-rail-lrt-1': '#b7f5ca',
   'published-saved-routes-rail-lrt-2': '#d0b9ff',
   'published-saved-routes-rail-mrt-3': '#fff1b8',
