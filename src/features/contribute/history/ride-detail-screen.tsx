@@ -41,7 +41,7 @@ interface RideDetailScreenProps {
 }
 
 /**
- * Figma's Route Information (4558:11792): the ride's map, live under it, with the back button and
+ * Figma's Route Information (4569:4933): the ride's map, live under it, with the back button and
  * the map's own buttons standing on the sheet, and the sheet folded to the ride's name, where it
  * went, at its Low height. Pulled up (4560:12422), it opens to its content's height, the map in
  * sight above it (4569:4974): Commute Information, its upload's Status among it, the Description
@@ -76,9 +76,9 @@ export function RideDetailScreen({ ride, onBack }: RideDetailScreenProps) {
       className="pointer-events-none absolute inset-0 z-20 font-sn-pro text-content-primary"
     >
       {/* Rides on the sheet's top all the way up, as the locator's buttons do (Locator's
-          dockCap `top`), up to DOCK_TOP_CSS, room for it under the status bar: a sheet whose content fills the
-          screen covers it, and pulled down, brings it back. */}
-      {/* Under the question, out of reach: its Escape and focus are the question's alone. */}
+          dockCap `top`), up to DOCK_TOP_CSS, room for it under the status bar: a sheet whose
+          content fills the screen covers it, and pulled down, brings it back. Under the
+          question, out of reach: its Escape and focus are the question's alone. */}
       <div
         inert={isAsking}
         className="absolute inset-0 transition-[translate] duration-sheet ease-enter in-data-dock-dragging:transition-none motion-reduce:transition-none"

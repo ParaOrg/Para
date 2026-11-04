@@ -66,7 +66,7 @@ async function openSheet(canvasElement: HTMLElement) {
   await expect(canvas.getByTestId('dock-handle')).toHaveAccessibleName('Sheet raised. Lower it');
 }
 
-/** Folded, as Figma draws it (4558:11792): the name, where it went, Back above the sheet. */
+/** Folded, as Figma draws it (4569:4933): the name, where it went, Back above the sheet. */
 export const Folded: Story = {
   play: async ({ args, canvasElement }) => {
     const canvas = within(canvasElement);
@@ -214,6 +214,17 @@ export const Walked: Story = {
   play: async ({ canvasElement }) => {
     await openSheet(canvasElement);
     await expect(within(canvasElement).getByText('Lakad (walking)')).toBeInTheDocument();
+  },
+};
+
+/** Never sendable (longer than 6 hours): its reason in red, no icon and no retry. */
+export const TooLong: Story = {
+  args: { ride: { ...ride, status: { tone: 'problem', words: 'Longer than 6 hours' } } },
+  play: async ({ canvasElement }) => {
+    await openSheet(canvasElement);
+    const canvas = within(canvasElement);
+    await expect(canvas.getByText('Longer than 6 hours')).toBeInTheDocument();
+    await expect(canvas.queryByRole('button', { name: /^Longer than 6 hours/ })).toBeNull();
   },
 };
 

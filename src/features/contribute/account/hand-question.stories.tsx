@@ -70,6 +70,16 @@ export const KeepFirst: Story = {
   },
 };
 
+/** The keep-first look under way: both answers wait, as any look's do. */
+export const KeepFirstBusy: Story = {
+  args: { ...KeepFirst.args, busyLabel: 'Deleting…', isBusy: true },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole('button', { name: 'Deleting…' })).toBeDisabled();
+    await expect(canvas.getByRole('button', { name: 'Keep recording' })).toBeDisabled();
+  },
+};
+
 /** The answer on its way: it says so, and neither answer can be pressed. */
 export const Busy: Story = {
   args: { isBusy: true },

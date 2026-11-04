@@ -104,13 +104,12 @@ export const Uploaded: Story = {
   },
 };
 
-/** A tap anywhere on the card opens the ride's screen, where it can be deleted: no ⋮. */
+/** A tap anywhere on the card opens the ride's screen, where it can be deleted. */
 export const OpensItsRide: Story = {
   play: async ({ args, canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.click(canvas.getByRole('button', { name: 'Cubao via Marcos Highway' }));
     await expect(args.onOpen).toHaveBeenCalledTimes(1);
-    await expect(canvas.queryByRole('button', { name: /More actions/ })).toBeNull();
   },
 };
 

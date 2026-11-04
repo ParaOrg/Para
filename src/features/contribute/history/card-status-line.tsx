@@ -29,11 +29,6 @@ const LINE_CLASSES: Record<CardStatusLineSize, string> = {
   sheet: 'gap-1.5 text-sm/5',
 };
 
-const ICON_CLASSES: Record<CardStatusLineSize, string> = {
-  card: 'size-4',
-  sheet: 'size-4',
-};
-
 const TONE_ICONS: Partial<Record<CardStatusTone, ComponentType>> = {
   uploaded: CheckIcon,
   retry: ReloadIcon,
@@ -49,7 +44,7 @@ export function CardStatusLine({ status, size = 'card', fullName, onRetry }: Car
   const content = (
     <>
       {Icon && (
-        <span aria-hidden className={cn(ICON_CLASSES[size], 'shrink-0 *:size-full')}>
+        <span aria-hidden className={'size-4 shrink-0 *:size-full'}>
           <Icon />
         </span>
       )}

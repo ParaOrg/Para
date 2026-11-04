@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { expect, fn, waitFor, within } from 'storybook/test';
+import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
 import { HistoryScreen } from './history-screen';
 import type { HistoryItems, HistoryLoad } from './use-history-items';
@@ -184,19 +184,18 @@ export const Scrolled: Story = {
 
 const OTHER_PHONE = [ride(10, 'Fairview Center Mall'), ride(11, 'Philcoa')];
 
-/** Uploads the account made on another phone sit among the rest; only Delete from Para is behind their ⋮. */
+/** Uploads the account made on another phone sit among the rest, and open their ride the same way. */
 export const FromAnotherPhone: Story = {
   args: {
     items: itemsOf([...rides.slice(0, 2), ...OTHER_PHONE], allOf(UPLOADED), {
       elsewhere: OTHER_PHONE,
     }),
   },
-  play: async ({ canvasElement }) => {
+  play: async ({ args, canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(canvas.getAllByRole('listitem')).toHaveLength(4);
-    await expect(
-      canvas.queryByRole('button', { name: /^Remove from this phone, .*Fairview Center Mall/ }),
-    ).toBeNull();
+    await userEvent.click(canvas.getByRole('button', { name: 'Fairview Center Mall' }));
+    await expect(args.onOpenRide).toHaveBeenCalledTimes(1);
   },
 };
 

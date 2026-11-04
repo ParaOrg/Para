@@ -34,8 +34,8 @@ interface HandQuestionProps {
 /**
  * The question before an act that ends something, over the frosted page (Logout, 4521:3500;
  * Delete account, 4543:5154): a raised hand, the question and a grey line, then the answer above
- * the safe one, or under it (`plain-error`). Focus starts on the safe answer and goes round inside; once the answer is under
- * way nothing cancels it.
+ * the safe one, or under it (`plain-error`). Focus starts on the safe answer and goes round
+ * inside; once the answer is under way nothing cancels it.
  */
 export function HandQuestion({
   title,
