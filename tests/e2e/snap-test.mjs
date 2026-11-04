@@ -318,6 +318,18 @@ check(
   allSnapped(s, 2),
   `gaps ${snapModes(s)}, at zoom ${await zoomNow()}`,
 );
+// Which way the line goes: the public map's chevrons, on its solid stretches only.
+const chevrons = async () =>
+  ((await page.evaluate(() => window.__src('draw-arrows')))?.features ?? []).length;
+let arrows = await chevrons();
+check('far click: chevrons flow along the snapped line', arrows > 0, `${arrows} chevrons`);
+const where = () =>
+  page.evaluate(async () =>
+    JSON.stringify((await window.__src('draw-arrows'))?.features?.[0]?.geometry.coordinates),
+  );
+const before = await where();
+await page.waitForTimeout(400);
+check('far click: the chevrons move along it', before !== (await where()));
 await discard();
 // A 429, a 5xx or a timeout also leaves the gap freehand, so a freehand line
 // alone does not prove the router refused the point. Keep the router's answers
@@ -347,6 +359,8 @@ check(
   s.length === 1 && s[0].snap === 'freehand' && noSegment,
   `gaps ${snapModes(s)}, the line ends ${end ? Math.round(metres(end, W)) : '?'} m from the click, router answered ${saidText}`,
 );
+arrows = await chevrons();
+check('far click: no chevrons on the dashed (freehand) line', arrows === 0, `${arrows} chevrons`);
 await discard();
 
 console.log('== Append (Sinai Street, Novaliches)');

@@ -11,6 +11,7 @@ import {
 } from '@/shared/utils/geo';
 
 import { readDraft, restoredState, useDraftSaving } from './draft';
+import { useDrawArrows } from './draw-arrows';
 import { useDrawLayers } from './draw-layers';
 import { addBeforeJoin, insertInGap, removeAt, ringSegments } from './drawing-edits';
 import type {
@@ -466,6 +467,7 @@ export function useDrawing(
   );
 
   useDrawRendering(map, { segments, controlPoints, area, uTurns, picking, selected });
+  useDrawArrows(map, segments, area, isStandIn);
 
   return {
     drawing,
