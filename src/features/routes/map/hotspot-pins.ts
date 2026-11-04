@@ -33,10 +33,10 @@ const PINS_WITHIN_M = 1000;
 /**
  * The zoom from which a hotspot shows its pin, and below which its dot: the
  * moment the scale bar first reads 500 m (the owner's choice), once its width
- * covers less than 1000 m, zoom 12.89. The bar steps 1, 2, 3, 5, so it reads
- * 1 km down to 1000 m and 500 m below that. One zoom on every page, so the
- * pins come in at the same scale everywhere; the names follow a zoom later
- * (NAMES_FROM).
+ * covers less than 1000 m, zoom 12.89. The bar steps 1, 2, 3, 5: it reads 1 km
+ * while its width covers 2000 m down to 1000 m, and 500 m below that. One zoom
+ * on every page, so the pins come in at the same scale everywhere; the names
+ * follow a zoom later (NAMES_FROM).
  */
 export const PINS_FROM_ZOOM = zoomForScale(PINS_WITHIN_M, SCALE_RULE_LAT);
 

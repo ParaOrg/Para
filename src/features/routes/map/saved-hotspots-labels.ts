@@ -25,13 +25,14 @@ export const SCALE_RULE_LAT = 14.6;
 const NAMES_WITHIN_M = 500;
 
 /**
- * Hotspot names, terminals' and hintuans' alike, from the moment the scale
- * bar first reads 300 m (the owner's choice): once its width covers less than
- * 500 m, zoom 13.89. The bar steps 1, 2, 3, 5, so it reads 500 m down to 500
- * m and 300 m below that. Close in only, but near enough to the overview that
- * a name may sit over the line's stretch through its hotspot; where names
- * meet, MapLibre keeps one. station-labels.tsx measures the bar live, for
- * markers. Two layers, one a kind, so each can be set apart.
+ * Hotspot names, terminals' and hintuans' alike, from the moment the scale bar
+ * first reads 300 m (the owner's choice): once its width covers less than 500
+ * m, zoom 13.89. The bar steps 1, 2, 3, 5: it reads 500 m while its width
+ * covers 1000 m down to 500 m, and 300 m below that. Close in only, but near
+ * enough to the overview that a name may sit over the line's stretch through
+ * its hotspot; where names meet, MapLibre keeps one. station-labels.tsx
+ * measures the bar live, for markers. Two layers, one a kind, so each can be
+ * set apart.
  */
 export const NAMES_FROM = zoomForScale(NAMES_WITHIN_M, SCALE_RULE_LAT);
 
