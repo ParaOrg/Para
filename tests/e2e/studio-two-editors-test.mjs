@@ -254,7 +254,7 @@ check('  and B has sent no write', writesOf(db).length === writesBefore);
 
 // B's Drafts list says it too, and marks the draft a Draft.
 await b.page.getByRole('button', { name: /^Drafts \(\d+\)$/ }).click();
-const item = b.page.getByRole('listitem').filter({ hasText: 'Discard…' });
+const item = b.page.getByRole('listitem').filter({ hasText: 'route · Draft' });
 await item.first().waitFor();
 // The name arrives after the list.
 await item.first().getByText('Being changed by Marisol').waitFor({ timeout: 10000 });
@@ -263,11 +263,19 @@ check(
   (await item.first().innerText()).includes('route · Draft') &&
     (await item.first().innerText()).includes('Being changed by Marisol'),
 );
+check(
+  "  and offers B no Discard on A's draft: only its maker discards it",
+  (await item.first().getByRole('button', { name: 'Discard…' }).count()) === 0,
+);
 
 // B can review that draft, but not edit its details or resolve its conflict.
 await item.first().getByRole('button', { name: 'Review changes' }).click();
 await b.page.getByText('Being changed by Marisol').waitFor();
 await b.page.getByRole('button', { name: 'Approve', exact: true }).waitFor({ timeout: 10000 });
+check(
+  '  and the review screen offers B no Discard either',
+  (await b.page.getByRole('button', { name: 'Discard…' }).count()) === 0,
+);
 check(
   "B, reviewing A's draft, is offered Approve but not its details form",
   (await b.page.getByRole('button', { name: 'Save draft details' }).count()) === 0 &&

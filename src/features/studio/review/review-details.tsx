@@ -113,12 +113,15 @@ export function ReviewDetails({
               }
               onClick={() => onAction('approve', draft)}
             />
-            <Button
-              variant="secondary"
-              label="Discard…"
-              disabled={busy}
-              onClick={() => onAction('discard', draft)}
-            />
+            {/* Only a draft's maker discards it; while that is still being checked, neither. */}
+            {!lock && (
+              <Button
+                variant="secondary"
+                label="Discard…"
+                disabled={busy}
+                onClick={() => onAction('discard', draft)}
+              />
+            )}
             <Button
               variant="secondary"
               label="Refresh comparison"

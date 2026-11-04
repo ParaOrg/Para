@@ -21,6 +21,7 @@ const meta = {
         updatedAt: '2026-10-18T10:00:00Z',
       },
     ],
+    changedBy: (): string | null => null,
     isBusy: false,
     onAction: fn(),
     onReview: fn(),

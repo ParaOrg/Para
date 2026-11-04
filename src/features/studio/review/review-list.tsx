@@ -5,8 +5,11 @@ import type { ReviewDraft } from '../data/review-label';
 
 interface ReviewListProps {
   drafts: ReviewDraft[];
-  /** Who is changing a draft, in words, when it is another editor's. */
-  changedBy?: (draft: ReviewDraft) => string | null;
+  /**
+   * Who is changing a draft, in words, when it is another editor's; null for the
+   * editor's own. Another editor's draft is offered no Discard.
+   */
+  changedBy: (draft: ReviewDraft) => string | null;
   isBusy: boolean;
   onReview: (draftId: string) => void;
   onAction: (action: ReviewAction, draftId: string) => void;
@@ -17,7 +20,7 @@ export function ReviewList({ drafts, changedBy, isBusy, onAction, onReview }: Re
   return (
     <ul className="flex flex-col gap-3">
       {drafts.map((draft) => {
-        const holder = changedBy?.(draft);
+        const holder = changedBy(draft);
         return (
           <li
             key={draft.id}
@@ -39,12 +42,15 @@ export function ReviewList({ drafts, changedBy, isBusy, onAction, onReview }: Re
                 disabled={isBusy}
                 onClick={() => onReview(draft.id)}
               />
-              <Button
-                variant="secondary"
-                label="Discard…"
-                disabled={isBusy}
-                onClick={() => onAction('discard', draft.id)}
-              />
+              {/* Only a draft's maker discards it: another editor's work can be looked at, not removed. */}
+              {!holder && (
+                <Button
+                  variant="secondary"
+                  label="Discard…"
+                  disabled={isBusy}
+                  onClick={() => onAction('discard', draft.id)}
+                />
+              )}
             </div>
           </li>
         );
