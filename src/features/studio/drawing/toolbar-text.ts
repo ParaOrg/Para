@@ -108,5 +108,5 @@ export function drawHint({
   if (points === 0) return null;
   return isArea
     ? 'drag a corner to move · right-click to delete · click an edge to insert a corner'
-    : 'drag a point to move · right-click it to delete · click the line to insert · shift-click a stretch to straighten it · right-click a blue line to follow it to its end';
+    : 'drag a point to move · right-click it to delete · click the line to insert · shift-click a stretch to straighten it · right-click a saved route to follow it to its end';
 }

@@ -240,8 +240,8 @@
   /* The map: its route lines and hintuans. Figma: Map/… Two looks, no
      opacity — every line at rest, the selected one drawn over it: see-through
      lines stack and confuse. */
-  --map-route-line-surface-default: var(--color-blue-300);
-  --map-route-line-surface-selected: var(--color-blue-700);
+  --map-route-line-surface-default: var(--color-parabrand-300);
+  --map-route-line-surface-selected: var(--color-parabrand-800);
   --map-route-line-arrow-rest: var(--color-white);
   --map-route-line-arrow-inverse: var(--color-neutral-900);
   /* A lit line where it passes a hintuan. */

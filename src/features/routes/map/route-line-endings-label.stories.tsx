@@ -93,7 +93,7 @@ export const HeadRoute: Story = {
   },
 };
 
-/** Head Route stays green on the list's blue lines, as on a card's colour. */
+/** Head Route stays green on the list's resting lines, as on a card's colour. */
 export const HeadRouteSelectedBlue: Story = {
   args: { variant: 'head', livery: null },
   play: async ({ canvasElement }) => {
@@ -115,7 +115,7 @@ export const TailRoute: Story = {
   },
 };
 
-/** Tail Route is red on the list's blue lines and on any card's colour: the line's colour is not worn. */
+/** Tail Route is red on the list's resting lines and on any card's colour: the line's colour is not worn. */
 export const TailRouteSelectedBlue: Story = {
   args: { variant: 'tail', livery: null },
   play: async ({ canvasElement }) => {
