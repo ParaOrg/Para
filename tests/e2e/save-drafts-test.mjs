@@ -441,6 +441,8 @@ check(
   (await viaField().inputValue()) === 'Zabarte',
   await viaField().inputValue(),
 );
+// Save waits while the draft is read ("Reading your draft of this route…").
+await waitFor(async () => await saveButton().isEnabled());
 n = log.length;
 await saveButton().click();
 await drafted();
@@ -464,6 +466,8 @@ const upload = (name, text) =>
     .getByTestId('signboard-file')
     .setInputFiles({ name, mimeType: 'image/svg+xml', buffer: Buffer.from(text) });
 await openCard(OUT[1]);
+// The signboards wait for the route's draft to be read: a save just before dropped the cached one.
+await waitFor(async () => (await page.getByTestId('signboard-editor').count()) === 1);
 check(
   'the trip card has a Signboard for the direction on show',
   (await page.getByTestId('signboard-editor').count()) === 1 && (await items().count()) === 0,
