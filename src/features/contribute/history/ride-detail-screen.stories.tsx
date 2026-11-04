@@ -57,11 +57,11 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** Raises the sheet to Max, as a contributor pulling it up would, by its handle. */
+/** Opens the sheet to its content's height, as a contributor tapping its handle would. */
 async function openSheet(canvasElement: HTMLElement) {
   const canvas = within(canvasElement);
   await userEvent.click(canvas.getByTestId('dock-handle'));
-  await userEvent.click(canvas.getByTestId('dock-handle'));
+  await expect(canvas.getByTestId('dock-handle')).toHaveAccessibleName('Sheet raised. Lower it');
 }
 
 /** Folded, as Figma draws it (4558:11792): the name, where it went, Back above the sheet. */
@@ -77,7 +77,7 @@ export const Folded: Story = {
   },
 };
 
-/** Pulled up (4560:12422): Commute Information, five rows, and the Description. */
+/** Opened (4560:12422): as tall as its content, the map above; six rows, Status last, and the Description. */
 export const Open: Story = {
   play: async ({ canvasElement }) => {
     await openSheet(canvasElement);
@@ -87,6 +87,7 @@ export const Open: Story = {
     await expect(canvas.getByText('Jan 25, 2026')).toBeInTheDocument();
     await expect(canvas.getByText('12.7 km')).toBeInTheDocument();
     await expect(canvas.getByRole('heading', { name: 'Description' })).toBeInTheDocument();
+    await expect(canvas.getByText('Status')).toBeInTheDocument();
   },
 };
 

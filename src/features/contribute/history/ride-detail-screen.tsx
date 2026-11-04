@@ -2,7 +2,7 @@ import { useState } from 'react';
 
 import { IconButton } from '@/design-system/primitives/icon-button';
 import { BottomSheet } from '@/shared/ui/bottom-sheet';
-import { slide, type Snap } from '@/shared/ui/sheet-gesture';
+import { DOCK_TOP_CSS, type Snap } from '@/shared/ui/sheet-gesture';
 
 import type { CardStatus } from './card-status';
 import { RideDetailBody } from './ride-detail-body';
@@ -36,8 +36,8 @@ interface RideDetailScreenProps {
 /**
  * Figma's Route Information (4558:11792): the ride's map, live under it, with the back button and
  * the map's own buttons standing on the sheet, and the sheet folded to the ride's name, where it
- * went, at its Low height. Pulled up (4560:12422), it shows the upload's line, Commute
- * Information and the Description. The page's one map draws behind it (contribute-page.tsx).
+ * went, at its Low height. Pulled up (4560:12422), it opens to its content's height, the map in
+ * sight above it: Commute Information, its upload's Status among it, and the Description. The page's one map draws behind it (contribute-page.tsx).
  * While the ride is still being found, the back button stands alone.
  */
 export function RideDetailScreen({ ride, onBack }: RideDetailScreenProps) {
@@ -49,11 +49,13 @@ export function RideDetailScreen({ ride, onBack }: RideDetailScreenProps) {
       {...{ [SCREEN_HASH_ATTR]: SCREENS.ride.hash }}
       className="pointer-events-none absolute inset-0 z-20 font-sn-pro text-content-primary"
     >
-      {/* Slides with the sheet's top, as the locator's buttons do (Locator), and never above
-          where Middle puts it: past Middle the sheet covers it. */}
+      {/* Rides on the sheet's top all the way up, as the locator's buttons do (Locator's
+          dockCap `top`), up to DOCK_TOP_CSS, room for it under the status bar: a sheet whose content fills the
+          screen covers it, and pulled down, brings it back. */}
       <div
         className="absolute inset-0 transition-[translate] duration-sheet ease-enter in-data-dock-dragging:transition-none motion-reduce:transition-none"
-        style={{ translate: `0 max(var(--dock-y, 100%), ${slide('middle')})` }}
+        // With no sheet yet (the ride still being found), at the map's foot.
+        style={{ translate: `0 max(var(--dock-y, 100%), ${DOCK_TOP_CSS})` }}
       >
         <div className="pointer-events-auto absolute bottom-full left-[calc(1rem+env(safe-area-inset-left))] mb-4">
           <IconButton
@@ -71,6 +73,7 @@ export function RideDetailScreen({ ride, onBack }: RideDetailScreenProps) {
             label={`Your ride: ${rideTitleOf(ride.recording)}`}
             testId="card"
             height={{ snap, onSnap: setSnap }}
+            fits
             onClose={onBack}
             header={<RideHeader recording={ride.recording} />}
           >

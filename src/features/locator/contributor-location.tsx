@@ -19,7 +19,7 @@ interface ContributorLocationProps {
   isMapLoaded: boolean;
   /** A recording is on: the camera follows the contributor from its start. */
   isRecording: boolean;
-  /** A sheet is on the map: the buttons stand on it, following it (Locator's `docked`). */
+  /** A ride's fitted sheet is on the map: the buttons stand on it, following it all the way up. */
   isDocked?: boolean;
   /** What stands above the button in its column; the contributor's mark button. */
   above?: ReactNode;
@@ -113,6 +113,7 @@ export function ContributorLocation({
           basemapThumbnails={BASEMAP_THUMBNAILS}
           labelsPlace="map"
           docked={isDocked}
+          dockCap="top"
           above={above}
           onNote={onNote}
         />

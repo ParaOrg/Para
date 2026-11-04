@@ -113,6 +113,36 @@ export const Free: Story = {
   },
 };
 
+/**
+ * Fitted (`fits`, Figma 4560:12422): two heights, Low and its content's. The handle opens it only
+ * as tall as its three rows, the map in sight above, and lowers it again.
+ */
+export const FitsContent: Story = {
+  render: (args) => <Keeping {...args} startsAt="low" />,
+  args: { fits: true, height: { snap: 'low', onSnap: fn() }, children: <Rows count={3} /> },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const handle = canvas.getByTestId('dock-handle');
+    await expect(handle).toHaveAccessibleName('Sheet lowered. Raise it');
+    await userEvent.click(handle);
+    await expect(handle).toHaveAccessibleName('Sheet raised. Lower it');
+    await expect(canvas.getByTestId('card')).toHaveAttribute('data-snap', 'free');
+    await userEvent.click(handle);
+    await expect(canvas.getByTestId('card')).toHaveAttribute('data-snap', 'low');
+  },
+};
+
+/** Fitted, with more than the map holds: it opens to Max, and its body scrolls there. */
+export const FitsTallContent: Story = {
+  render: (args) => <Keeping {...args} startsAt="low" />,
+  args: { fits: true, height: { snap: 'low', onSnap: fn() }, children: <Rows count={30} /> },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByTestId('dock-handle'));
+    await expect(canvas.getByTestId('card')).toHaveAttribute('data-snap', 'max');
+  },
+};
+
 /** The handle from the keyboard goes round: Middle → Max → Low → Middle, and says where it is. */
 export const HandleGoesRound: Story = {
   play: async ({ canvasElement }) => {
