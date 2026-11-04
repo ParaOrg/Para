@@ -20,7 +20,7 @@ import { PUBLISHED_CASING, layerToGoUnder } from './published-routes-layers';
  * dot does nothing when touched.
  */
 
-/** The trail's first layer: the pins and names go under it, so the rider's own line stays on top. */
+/** The trail's first layer: the pins and names go under it, so the rider's line stays on top. */
 function trailLayer(map: MapLibreMap): string | undefined {
   return map.getLayersOrder().find((id) => map.getLayer(id)?.source === TRAIL_SRC);
 }
