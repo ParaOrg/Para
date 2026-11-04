@@ -11,7 +11,7 @@ import {
 import { maskStations } from '@/features/routes/map/station-mask';
 import { fetchIndex } from '@/features/routes/published/fetch-index';
 
-import { PUBLISHED_CASING } from './published-routes-layers';
+import { PUBLISHED_CASING, layerToGoUnder } from './published-routes-layers';
 
 /*
  * The published hotspots behind a recording: every box on the published map, its pin and its
@@ -27,8 +27,8 @@ function trailLayer(map: MapLibreMap): string | undefined {
 
 /**
  * Reads the published index and draws its hotspots on `map`: the boxes under the published
- * routes when they are there (as the public map's are under its routes), the pins and names
- * under the trail. Resolves with what takes them off again; rejects when the index cannot be
+ * routes (as the public map's are under its routes), whether those are drawn yet or come after,
+ * and under the basemap's names; the pins and names under the trail. Resolves with what takes them off again; rejects when the index cannot be
  * read, and the map then shows no hotspots.
  */
 export async function drawPublishedHotspots(map: MapLibreMap): Promise<() => void> {
@@ -37,7 +37,7 @@ export async function drawPublishedHotspots(map: MapLibreMap): Promise<() => voi
 
   const marksUnder = trailLayer(map);
   addSavedHotspots(map, hotspots, {
-    boxesUnder: map.getLayer(PUBLISHED_CASING) ? PUBLISHED_CASING : marksUnder,
+    boxesUnder: map.getLayer(PUBLISHED_CASING) ? PUBLISHED_CASING : layerToGoUnder(map),
     marksUnder,
   });
   addPinLayer(map);

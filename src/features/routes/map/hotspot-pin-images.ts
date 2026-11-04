@@ -1,5 +1,7 @@
 import type { FilterSpecification, MapLibreMap } from 'maplibre-gl';
 
+import { MAP_PAINT } from '@/design-system/foundation/map-colours';
+
 import hintuanIcon from './hintuan-pin-icon.svg?raw';
 import { PIN_COLOUR, PIN_LAYER, PIN_SHAPE, pinImageOf } from './hotspot-pins';
 import { HINTUAN_LABEL } from './saved-hotspots-labels';
@@ -11,17 +13,16 @@ import type { HotspotKind } from '../model/hotspots';
  * own, fetched once the boxes are drawn (vite.config.ts keeps it out of
  * `shared`). Drawn on a canvas as the flagstop is (trail-flag.ts): the head
  * and the stem in the kind's colour, the kind's icon (Figma's own SVG, as
- * downloaded) over the head.
+ * downloaded) over the head in the map's white.
  */
 
 const ICONS: Record<HotspotKind, string> = { terminal: terminalIcon, hintuan: hintuanIcon };
 
-/** An icon's one path, with its fill and fill rule, as its SVG writes them. */
-function iconPath(svg: string): { path: Path2D; fill: string; rule: CanvasFillRule } {
+/** An icon's one path and its fill rule, as its SVG writes them; its white is the map's own. */
+function iconPath(svg: string): { path: Path2D; rule: CanvasFillRule } {
   const d = /\sd="([^"]+)"/.exec(svg)?.[1] ?? '';
-  const fill = /\sfill="(#[0-9a-f]+|white)"/i.exec(svg)?.[1] ?? 'white';
   const rule = /fill-rule="evenodd"/.test(svg) ? 'evenodd' : 'nonzero';
-  return { path: new Path2D(d), fill, rule };
+  return { path: new Path2D(d), rule };
 }
 
 /** A kind's pin as an image, at twice its size for a sharp screen. Drawn on a canvas, so in the browser only. */
@@ -45,7 +46,7 @@ function pinImage(kind: HotspotKind): ImageData | null {
   context.fill();
   const icon = iconPath(ICONS[kind]);
   context.translate(padding, padding);
-  context.fillStyle = icon.fill;
+  context.fillStyle = MAP_PAINT['Paint/casing'];
   context.fill(icon.path, icon.rule);
   return context.getImageData(0, 0, canvas.width, canvas.height);
 }

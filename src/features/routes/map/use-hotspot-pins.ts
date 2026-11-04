@@ -29,7 +29,7 @@ export function useHotspotPins(map: MapLibreMap | null, hidden: RefObject<string
         addPinLayer(map, hidden.current === null ? undefined : pinsOf(hidden.current));
       })
       .catch((error: unknown) => {
-        // Offline before the chunk came: the dots stand in for the pins at every zoom.
+        // Offline before the chunk came: zoomed out the dots show; zoomed in, the boxes alone.
         console.warn("The hotspots' pins could not be loaded; their dots stay.", error);
       });
     return () => {
