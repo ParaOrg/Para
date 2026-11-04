@@ -1638,8 +1638,9 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
     "  an upload from another phone can be deleted here: off the list, Para's row stays",
     database.rows.has('dddddddd-0000-4000-8000-000000000001') && fake.deleteRequests === 0,
   );
+  // A reload on #history lands on History itself.
   await page.reload({ waitUntil: 'load' });
-  await openHistory(page);
+  await page.getByRole('heading', { level: 1, name: 'History' }).waitFor();
   await row(page, 'Also phone A').waitFor({ timeout: 15000 });
   check(
     '  and after a reload it does not come back',
@@ -1655,8 +1656,9 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
       fake.deleteRequests === 0 &&
       (await page.getByRole('listitem').filter({ hasText: 'Here and there' }).count()) === 0,
   );
+  // A reload on #history lands on History itself.
   await page.reload({ waitUntil: 'load' });
-  await openHistory(page);
+  await page.getByRole('heading', { level: 1, name: 'History' }).waitFor();
   await row(page, 'Also phone A').waitFor({ timeout: 15000 });
   check(
     '  and it stays hidden after a reload',
