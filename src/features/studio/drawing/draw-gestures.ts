@@ -1,5 +1,7 @@
 import type { LngLat, Segment, SnapMode } from '@/shared/utils/geo';
 
+import { carryHandles, curveSegment } from './curves';
+
 /** A pixel on the map. */
 interface Pixel {
   x: number;
@@ -50,7 +52,8 @@ export function modesAround(segments: readonly Segment[], i: number): ModesAroun
 
 /**
  * Point `i` moved to `point`: the points, and its two stretches rubber-banded
- * straight to it in their modes until they re-route. `standIns` are those new
+ * straight to it in their modes until they re-route; a curve keeps its bend,
+ * its handle at the point moving with it. `standIns` are those new
  * stretches, for the caller to mark. The join point is held by identity, so
  * it is replaced when it is the point moved.
  */
@@ -63,16 +66,25 @@ export function rubberBand(
   join: LngLat | null,
 ): { points: LngLat[]; segments: Segment[]; standIns: Segment[]; join: LngLat | null } {
   const pts = [...points];
+  const was = pts[i];
   const nextJoin = pts[i] === join ? point : join;
   pts[i] = point;
   const next = [...segments];
   const standIns: Segment[] = [];
+  // A curve's handle at the moved point goes with it; its far handle stays.
+  const stretch = (k: number, mode: SnapMode | undefined, atStart: boolean): Segment => {
+    const coordinates: LngLat[] = [pts[k], pts[k + 1]];
+    const handles = was ? carryHandles(segments[k], atStart, was, point) : undefined;
+    return handles
+      ? curveSegment(coordinates[0], coordinates[1], handles[0], handles[1])
+      : { snap: mode ?? 'snapped', coordinates };
+  };
   if (i > 0 && pts[i - 1]) {
-    next[i - 1] = { snap: modes[0] ?? 'snapped', coordinates: [pts[i - 1], point] };
+    next[i - 1] = stretch(i - 1, modes[0], false);
     standIns.push(next[i - 1]);
   }
   if (i < pts.length - 1 && pts[i + 1]) {
-    next[i] = { snap: modes[1] ?? 'snapped', coordinates: [point, pts[i + 1]] };
+    next[i] = stretch(i, modes[1], true);
     standIns.push(next[i]);
   }
   return { points: pts, segments: next, standIns, join: nextJoin };

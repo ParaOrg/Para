@@ -5,6 +5,7 @@ import { clickHandlers } from './draw-clicks';
 import type { DrawActions, DrawContext, DrawRefs } from './draw-context';
 import { HIT_LAYER, POINT_LAYER } from './draw-layers';
 import { mouseHandlers } from './draw-mouse';
+import { penHandlers } from './draw-pen';
 import { touchHandlers } from './draw-touch';
 
 /**
@@ -30,6 +31,7 @@ export function useDrawEvents(
   const {
     setPicking,
     addPoint,
+    addSmoothPoint,
     insertPoint,
     deletePoint,
     toggleSegment,
@@ -63,6 +65,7 @@ export function useDrawEvents(
       actions: {
         setPicking,
         addPoint,
+        addSmoothPoint,
         insertPoint,
         deletePoint,
         toggleSegment,
@@ -84,6 +87,7 @@ export function useDrawEvents(
       ctx,
       mouse,
     );
+    const detachPen = penHandlers(ctx).attach();
 
     // The line's handler first: MapLibre calls click listeners in the order
     // they were added, and a tap on the line that closes the point bar must
@@ -103,6 +107,7 @@ export function useDrawEvents(
     map.on('mouseleave', HIT_LAYER, leave);
 
     return () => {
+      detachPen();
       map.off('click', onMapClick);
       map.off('click', HIT_LAYER, onLineClick);
       map.off('mousedown', POINT_LAYER, onPointDown);
@@ -132,6 +137,7 @@ export function useDrawEvents(
     refs,
     setPicking,
     addPoint,
+    addSmoothPoint,
     insertPoint,
     deletePoint,
     toggleSegment,

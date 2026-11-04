@@ -7,6 +7,7 @@ import type { LngLat, Segment } from '@/shared/utils/geo';
 import {
   areaFeatures,
   borrowFeatures,
+  handleFeatures,
   lineFeatures,
   pointFeatures,
   uTurnFeatures,
@@ -15,6 +16,7 @@ import {
   AREA_FILL_LAYER,
   AREA_SRC,
   BORROW_SRC,
+  HANDLE_SRC,
   LINE_SRC,
   POINT_SRC,
   UTURN_SRC,
@@ -53,6 +55,8 @@ export function useDrawRendering(
     if (isGeoJSON(areaSrc)) areaSrc.setData(areaFeatures(controlPoints, area));
     const uturnSrc = map.getSource(UTURN_SRC);
     if (isGeoJSON(uturnSrc)) uturnSrc.setData(uTurnFeatures(uTurns, controlPoints));
+    const handleSrc = map.getSource(HANDLE_SRC);
+    if (isGeoJSON(handleSrc)) handleSrc.setData(handleFeatures(segments, area));
   }, [map, segments, controlPoints, area, uTurns, selected]);
 
   useEffect(() => {

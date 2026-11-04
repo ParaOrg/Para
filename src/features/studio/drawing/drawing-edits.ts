@@ -1,5 +1,6 @@
 import type { LngLat, Segment, SnapMode } from '@/shared/utils/geo';
 
+import { mergeAcross, splitCurve } from './curves';
 import { straightSegment } from './snap';
 
 /**
@@ -48,7 +49,11 @@ export function addBeforeJoin(
   };
 }
 
-/** insertPoint: split gap `gap` by dropping `point` into it, both halves in the gap's own mode. */
+/**
+ * insertPoint: split gap `gap` by dropping `point` into it, both halves in the
+ * gap's own mode. A curve splits at its vertex nearest the click, the new
+ * point there, each half bending as that part of it did; nothing to ask.
+ */
 export function insertInGap(
   points: LngLat[],
   segments: Segment[],
@@ -59,6 +64,13 @@ export function insertInGap(
   const pts = [...points];
   pts.splice(gap + 1, 0, point);
   const segs = [...segments];
+  const halves = segments[gap] ? splitCurve(segments[gap], point) : null;
+  if (halves) {
+    // The new point is where the halves meet, on the curve, not the click beside it.
+    pts[gap + 1] = halves[1].coordinates[0];
+    segs.splice(gap, 1, halves[0], halves[1]);
+    return { points: pts, segments: segs, resolve: null };
+  }
   segs.splice(gap, 1, straightSegment(pts[gap], point), straightSegment(point, pts[gap + 2]));
   return { points: pts, segments: segs, resolve: { from: gap, modes: [mode, mode] } };
 }
@@ -79,7 +91,13 @@ export function removeAt(points: LngLat[], segments: Segment[], idx: number): Ed
   const segs = [...segments];
   if (idx === 0) segs.splice(0, 1);
   else if (idx === origLen - 1) segs.splice(segs.length - 1, 1);
-  else segs.splice(idx - 1, 2, straightSegment(pts[idx - 1], pts[idx]));
+  else
+    segs.splice(
+      idx - 1,
+      2,
+      mergeAcross(segments[idx - 1], segments[idx], pts[idx - 1], pts[idx]) ??
+        straightSegment(pts[idx - 1], pts[idx]),
+    );
 
   const resolve =
     idx > 0 && idx < pts.length
