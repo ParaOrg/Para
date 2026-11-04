@@ -81,6 +81,9 @@ const BROWSER_GLOBALS = [
 ];
 const readonly = (names) => Object.fromEntries(names.map((name) => [name, 'readonly']));
 
+const CORE_MESSAGE =
+  'routes/model, geo and published stay free of React, MapLibre and browser globals (docs/adr/0008-the-commuter-app-is-react-native-expo.md).';
+
 const SOURCE = [
   'src/**/*.{ts,tsx}',
   '.storybook/**/*.{ts,tsx}',
@@ -360,6 +363,71 @@ export default defineConfig([
             },
           ],
         },
+      ],
+    },
+  },
+
+  {
+    // The shared core stays plain (ADR 0008): the native commuter app imports these three folders,
+    // so no React, MapLibre or browser global. A flat-config rule replaces the earlier block's
+    // option for the same files, so the general patterns are repeated here. `fetch` stays allowed
+    // because published/'s readers fetch the map files, and React Native has fetch too.
+    files: ['src/features/routes/{model,geo,published}/**/*.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            { name: 'react', message: CORE_MESSAGE },
+            { name: 'react-dom', message: CORE_MESSAGE },
+            { name: 'maplibre-gl', message: CORE_MESSAGE },
+          ],
+          patterns: [
+            {
+              group: [
+                '@/features/*/*',
+                '!@/features/*/index',
+                '!@/features/routes/*',
+                '!@/features/routes/*/*',
+              ],
+              message:
+                'Import a feature through its index.ts, never its inner files (routes: through its concern folders).',
+            },
+            {
+              group: ['@/app/*', '@/pages/*'],
+              message:
+                'Nothing imports from app/ or pages/; imports flow app → pages → features → shared.',
+            },
+            {
+              group: [
+                'react/*',
+                'react-dom/*',
+                '@maplibre/*',
+                '@tanstack/*',
+                '@supabase/*',
+                '**/*.tsx',
+                '**/map',
+                '**/map/*',
+                '**/cards',
+                '**/cards/*',
+              ],
+              message: CORE_MESSAGE,
+            },
+          ],
+        },
+      ],
+      'no-restricted-globals': [
+        'error',
+        ...[
+          'window',
+          'document',
+          'navigator',
+          'localStorage',
+          'sessionStorage',
+          'indexedDB',
+          'caches',
+          'location',
+        ].map((name) => ({ name, message: CORE_MESSAGE })),
       ],
     },
   },

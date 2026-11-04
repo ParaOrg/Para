@@ -16,3 +16,5 @@ Blocked by: 02
 - The web's `npm run check` passes unchanged; the app builds and reads the published map through the shared reader.
 
 ## Comments
+
+- 2026-11-04: the lint check now exists (`eslint.config.js`, the block for `routes/{model,geo,published}`; PR #689, https://github.com/ParaOrg/Para/pull/689). `published/fetch-index.ts` still uses `caches` on two lines, each with an `eslint-disable-next-line` naming this ticket. Moving it behind an interface is still to do, so the Status stays.
