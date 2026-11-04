@@ -129,6 +129,21 @@ async function route(points: LngLat[], signal?: AbortSignal): Promise<Segment[]>
   });
 }
 
+/**
+ * The road from `from` to `to`, as a click at `to` would add it: Snap's live
+ * preview. One request through the same page-wide queue as every other, so a
+ * preview never takes the router past its one a second. Throws as `route`
+ * does: a refusal, no answer, or an abort; the caller shows nothing then.
+ */
+export async function previewRoute(
+  from: LngLat,
+  to: LngLat,
+  signal: AbortSignal,
+): Promise<LngLat[]> {
+  const [leg] = await route([from, to], signal);
+  return leg.coordinates;
+}
+
 /** The roads a leg follows as runs of one name, in order. Unnamed ways stay in, so the lengths add up. */
 function streetRuns(steps: OsrmStep[]): StreetRun[] {
   const runs: StreetRun[] = [];

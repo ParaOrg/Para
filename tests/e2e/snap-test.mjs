@@ -448,6 +448,53 @@ check(
 await uTurnChecks('insert', s, ['A', 'P', 'B', 'D']);
 await discard();
 
+console.log('== Live preview');
+// While the cursor rests, the road from the last point to it shows, solid, in
+// draw-preview; a move takes it away at once; there is none in Draw.
+const preview = async () =>
+  ((await page.evaluate(() => window.__src('draw-preview')))?.features ?? []).flatMap(
+    (f) => f.geometry?.coordinates ?? [],
+  );
+const restAt = async (c) => {
+  const [x, y] = await proj(c);
+  await page.mouse.move(box0.x + x, box0.y + y, { steps: 4 });
+};
+await drawRoute([A, B]);
+await restAt(D);
+let offered = [];
+for (let i = 0; i < 30 && offered.length === 0; i++) {
+  await page.waitForTimeout(200);
+  offered = await preview();
+}
+check(
+  'preview: resting past B, the road from B to the cursor shows',
+  offered.length > 2 && metres(offered[0], B) < 25 && metres(offered.at(-1), D) < 25,
+  `${offered.length} coords, from B ${offered[0] ? Math.round(metres(offered[0], B)) : '?'} m, to the cursor ${offered.length ? Math.round(metres(offered.at(-1), D)) : '?'} m`,
+);
+const segsBefore = (await segs()).length;
+await restAt(E);
+check('preview: a move takes it away at once', (await preview()).length === 0);
+check('preview: it is never part of the line', (await segs()).length === segsBefore);
+await restAt(D);
+offered = [];
+for (let i = 0; i < 30 && offered.length === 0; i++) {
+  await page.waitForTimeout(200);
+  offered = await preview();
+}
+await page.keyboard.press('f');
+await page.waitForTimeout(200);
+check(
+  'preview: F for Draw takes it away, the cursor never moving',
+  offered.length > 2 && (await preview()).length === 0,
+  `${offered.length} coords before`,
+);
+await page.keyboard.press('f');
+await page.getByTestId('snap-draw').getByRole('button', { name: 'Draw' }).click();
+await restAt(D);
+await page.waitForTimeout(2500);
+check('preview: none in Draw', (await preview()).length === 0);
+await discard();
+
 check('no page errors', errors.length === 0, errors.slice(0, 2).join(' | '));
 await b.close();
 console.log(
