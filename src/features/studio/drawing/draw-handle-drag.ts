@@ -1,7 +1,8 @@
 import type { MapLayerMouseEvent, MapMouseEvent } from 'maplibre-gl';
 
 import { moveHandle, toggleSmooth, type HandleRef } from './curve-handles';
-import type { DrawContext } from './draw-context';
+import { CLICK_AFTER_MS, type DrawContext } from './draw-context';
+import { POINT_LAYER } from './draw-layers';
 
 /**
  * A curve shaped after it is drawn, the way a pen tool's editor does: a
@@ -11,18 +12,15 @@ import type { DrawContext } from './draw-context';
  * mouse's: a finger has the point bar.
  */
 
-/** The click that ends a handle's drag comes straight after it, and adds no point. */
-const CLICK_AFTER_MS = 50;
-
 export function handleDragHandlers(ctx: DrawContext) {
   const { map, canvas, refs } = ctx;
-  const { writeSegments } = ctx.actions;
+  const { reshape } = ctx.actions;
   let held: HandleRef | null = null;
 
   const onMove = (e: MapMouseEvent) => {
     if (!held) return;
     const to: [number, number] = [e.lngLat.lng, e.lngLat.lat];
-    writeSegments(moveHandle(refs.segments.current, held, to, e.originalEvent.altKey));
+    reshape(moveHandle(refs.segments.current, held, to, e.originalEvent.altKey));
   };
 
   const onUp = () => {
@@ -40,6 +38,8 @@ export function handleDragHandlers(ctx: DrawContext) {
     const end = props?.end;
     if (e.originalEvent.button !== 0 || typeof seg !== 'number' || seg < 0) return;
     if (end !== 0 && end !== 1) return;
+    // A handle under its point gives way: the point is drawn over it, and dragged.
+    if (map.queryRenderedFeatures(e.point, { layers: [POINT_LAYER] }).length > 0) return;
     e.preventDefault();
     held = { seg, end };
     map.dragPan.disable();
@@ -50,10 +50,10 @@ export function handleDragHandlers(ctx: DrawContext) {
   };
 
   const onPointDoubleClick = (e: MapLayerMouseEvent) => {
-    const idx = e.features?.[0]?.properties?.index;
-    if (typeof idx !== 'number' || refs.area.current) return;
+    const index = e.features?.[0]?.properties?.index;
+    if (typeof index !== 'number' || refs.area.current) return;
     e.preventDefault();
-    writeSegments(toggleSmooth(refs.segments.current, refs.points.current, idx));
+    reshape(toggleSmooth(refs.segments.current, refs.points.current, index));
   };
 
   const enterHandle = () => {
@@ -64,16 +64,16 @@ export function handleDragHandlers(ctx: DrawContext) {
   };
 
   /** Everything a handle's drag listens to, on; and the function that turns it all off. */
-  const attach = (handleLayer: string, pointLayer: string) => {
+  const attach = (handleLayer: string) => {
     map.on('mousedown', handleLayer, onHandleDown);
     map.on('mouseenter', handleLayer, enterHandle);
     map.on('mouseleave', handleLayer, leaveHandle);
-    map.on('dblclick', pointLayer, onPointDoubleClick);
+    map.on('dblclick', POINT_LAYER, onPointDoubleClick);
     return () => {
       map.off('mousedown', handleLayer, onHandleDown);
       map.off('mouseenter', handleLayer, enterHandle);
       map.off('mouseleave', handleLayer, leaveHandle);
-      map.off('dblclick', pointLayer, onPointDoubleClick);
+      map.off('dblclick', POINT_LAYER, onPointDoubleClick);
       map.off('mousemove', onMove);
       document.removeEventListener('mouseup', onUp);
       held = null;

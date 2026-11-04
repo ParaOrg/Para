@@ -589,8 +589,9 @@ after = await drafted();
 check(
   'curves: a double-click makes the smooth point a corner',
   (await cps()).length === 3 &&
-    !after[0].handles?.[1]?.every((v, k) => Math.abs(v - smoothAt[k]) > 1e-6) &&
-    !after[1].handles?.[0]?.every((v, k) => Math.abs(v - smoothAt[k]) > 1e-6),
+    [after[0].handles?.[1], after[1].handles?.[0]].every(
+      (h) => !h || h.every((v, k) => Math.abs(v - smoothAt[k]) <= 1e-6),
+    ),
   JSON.stringify([after[0].handles, after[1].handles]),
 );
 await page.mouse.dblclick(box0.x + sx, box0.y + sy);

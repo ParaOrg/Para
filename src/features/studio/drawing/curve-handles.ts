@@ -10,6 +10,7 @@ import { curveSegment, isOnPoint, mirror } from './curves';
 
 /** A handle of a stretch: which stretch, and at its start (0) or its end (1). */
 export interface HandleRef {
+  /** The stretch's index. */
   seg: number;
   end: 0 | 1;
 }
@@ -36,7 +37,8 @@ export function moveHandle(
 ): Segment[] {
   const next = [...segments];
   const moved = withHandle(next[seg], end, to);
-  if (!moved) return next;
+  // A routed stretch has no handles to move, and turns no partner.
+  if (!moved || moved === next[seg]) return next;
   next[seg] = moved;
   if (isAlone) return next;
   const point = end === 0 ? moved.coordinates[0] : moved.coordinates[moved.coordinates.length - 1];
@@ -66,9 +68,9 @@ export function toggleSmooth(
   segments: readonly Segment[],
   points: readonly LngLat[],
   i: number,
-): Segment[] {
+): readonly Segment[] {
   const point = points[i];
-  if (!point) return [...segments];
+  if (!point) return segments;
   const isSmooth = handlesAt(segments, i).some((h) => h && !isOnPoint(h, point));
   const prev = points[i - 1] ?? point;
   const nextPoint = points[i + 1] ?? point;
@@ -79,9 +81,11 @@ export function toggleSmooth(
     point[0] + (sign * way[0] * reach(to)) / length,
     point[1] + (sign * way[1] * reach(to)) / length,
   ];
+  const into = withHandle(segments[i - 1], 1, isSmooth ? point : along(-1, prev));
+  const outOf = withHandle(segments[i], 0, isSmooth ? point : along(1, nextPoint));
+  // Nothing of Draw's beside it: the same array, so nothing is written and Redo stays.
+  if (into === segments[i - 1] && outOf === segments[i]) return segments;
   const next = [...segments];
-  const into = withHandle(next[i - 1], 1, isSmooth ? point : along(-1, prev));
-  const outOf = withHandle(next[i], 0, isSmooth ? point : along(1, nextPoint));
   if (into) next[i - 1] = into;
   if (outOf) next[i] = outOf;
   return next;

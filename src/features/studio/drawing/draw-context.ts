@@ -14,6 +14,12 @@ import type { AreaTarget, Borrow, FollowOffer, Picking } from './drawing-types';
  */
 export const ECHO_MS = 700;
 
+/**
+ * A mouse drag let go back near its press still ends in a click, straight
+ * after: one this soon is the drag's (the pen's, a handle's), adding nothing.
+ */
+export const CLICK_AFTER_MS = 50;
+
 /** A feature of the drawing's layers, carrying its point's or its gap's index. */
 export interface IndexedFeature {
   properties?: { index?: number };
@@ -37,6 +43,8 @@ export interface DrawRefs {
 export interface DrawActions {
   setPicking: (p: Picking) => void;
   addPoint: (point: LngLat) => Promise<void>;
+  /** A curve's handles reshaped (draw-handle-drag.ts): the stretches as they now bend. */
+  reshape: (next: readonly Segment[]) => void;
   /** A smooth point, its handles mirrored, `out` toward the next stretch (draw-pen.ts). */
   addSmoothPoint: (point: LngLat, out: LngLat) => Promise<void>;
   insertPoint: (gap: number, point: LngLat) => Promise<void>;

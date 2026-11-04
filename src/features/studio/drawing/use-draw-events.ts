@@ -14,8 +14,10 @@ import { touchHandlers } from './draw-touch';
  * the line inserts one, a right-click deletes a point or asks to follow a
  * saved line (draw-clicks.ts); a mouse drags a point (draw-mouse.ts); a
  * finger does the same through touch events, and a tap or a long-press on or
- * beside a point selects it for the point bar (draw-touch.ts). The
- * arithmetic they share is draw-gestures.ts.
+ * beside a point selects it for the point bar (draw-touch.ts). In Draw, a
+ * mouse's press and drag places a smooth point (draw-pen.ts), and a curve's
+ * handle is dragged, or a point double-clicked between corner and smooth
+ * (draw-handle-drag.ts). The arithmetic they share is draw-gestures.ts.
  *
  * The handlers are bound once per drawing and read the drawing through its
  * refs, which every mutator keeps current. They share one context, `ctx`:
@@ -33,6 +35,7 @@ export function useDrawEvents(
     setPicking,
     addPoint,
     addSmoothPoint,
+    reshape,
     insertPoint,
     deletePoint,
     toggleSegment,
@@ -67,6 +70,7 @@ export function useDrawEvents(
         setPicking,
         addPoint,
         addSmoothPoint,
+        reshape,
         insertPoint,
         deletePoint,
         toggleSegment,
@@ -89,7 +93,7 @@ export function useDrawEvents(
       mouse,
     );
     const detachPen = penHandlers(ctx).attach();
-    const detachHandles = handleDragHandlers(ctx).attach(HANDLE_DOT_LAYER, POINT_LAYER);
+    const detachHandles = handleDragHandlers(ctx).attach(HANDLE_DOT_LAYER);
 
     // The line's handler first: MapLibre calls click listeners in the order
     // they were added, and a tap on the line that closes the point bar must
@@ -141,6 +145,7 @@ export function useDrawEvents(
     setPicking,
     addPoint,
     addSmoothPoint,
+    reshape,
     insertPoint,
     deletePoint,
     toggleSegment,

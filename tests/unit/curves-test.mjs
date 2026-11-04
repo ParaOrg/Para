@@ -168,3 +168,41 @@ test('double-click: a corner turns smooth along the line, a smooth point back to
     'straight again',
   );
 });
+
+test("the line's end handles move alone: there is nothing across them to mirror", () => {
+  const only = curveSegment(A, B, [121.001, 14.701], [121.009, 14.701]);
+  const start = moveHandle([only], { seg: 0, end: 0 }, [121.002, 14.703], false);
+  assert.deepEqual(start[0].handles[0], [121.002, 14.703]);
+  const end = moveHandle([only], { seg: 0, end: 1 }, [121.008, 14.703], false);
+  assert.deepEqual(end[0].handles[1], [121.008, 14.703]);
+  assert.equal(end.length, 1);
+});
+
+test('a routed stretch has no handle to move, and turns no Draw partner', () => {
+  const routed = { snap: 'snapped', coordinates: [A, B] };
+  const curve = curveSegment(B, C, [121.011, 14.701], C);
+  const next = moveHandle([routed, curve], { seg: 0, end: 1 }, [121.009, 14.703], false);
+  assert.equal(next[0], routed);
+  assert.equal(next[1], curve);
+});
+
+test('double-click at either end, and beside a routed stretch, bends only Draw', () => {
+  const draw = { snap: 'freehand', coordinates: [A, B] };
+  const routed = { snap: 'snapped', coordinates: [B, C] };
+  const first = toggleSmooth([draw, routed], [A, B, C], 0);
+  assert.ok(first[0].handles, 'the first point turns smooth along its stretch');
+  assert.equal(first[1], routed);
+  const middle = toggleSmooth([draw, routed], [A, B, C], 1);
+  assert.ok(middle[0].handles);
+  assert.equal(middle[1], routed, 'the routed side is left as it is');
+  const last = [draw, { snap: 'freehand', coordinates: [B, C] }];
+  assert.ok(toggleSmooth(last, [A, B, C], 2)[1].handles, 'the last point too');
+});
+
+test('a double-click with no Draw stretch beside it changes nothing: the same array', () => {
+  const routed = [
+    { snap: 'snapped', coordinates: [A, B] },
+    { snap: 'snapped', coordinates: [B, C] },
+  ];
+  assert.equal(toggleSmooth(routed, [A, B, C], 1), routed);
+});
