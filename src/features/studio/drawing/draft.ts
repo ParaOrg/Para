@@ -45,6 +45,7 @@ const storedDraftSchema = z.object({
         coordinates: z.array(lngLatSchema),
         streets: z.optional(z.array(z.object({ name: z.string(), metres: z.number() }))),
         pending: z.optional(z.boolean()),
+        handles: z.optional(z.tuple([lngLatSchema, lngLatSchema])),
       }),
     ),
   ),

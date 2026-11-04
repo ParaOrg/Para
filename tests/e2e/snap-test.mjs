@@ -495,6 +495,52 @@ await page.waitForTimeout(2500);
 check('preview: none in Draw', (await preview()).length === 0);
 await discard();
 
+console.log('== Curves in Draw');
+// A click places a corner; a press and a drag places a smooth point, its
+// handles mirrored; the stretches either side bend to it, and keep their bend
+// as the point is dragged. Only Draw's stretches bend.
+const drafted = () =>
+  page.evaluate(() => JSON.parse(localStorage.getItem('para.draft.v1') ?? 'null')?.segments ?? []);
+await view([A, B, C, D, E]);
+await newRoute();
+await page.getByTestId('snap-draw').getByRole('button', { name: 'Draw' }).click();
+await clickAt(A);
+await page.waitForTimeout(250);
+const [bx, by] = await proj(C0);
+await page.mouse.move(box0.x + bx, box0.y + by);
+await page.mouse.down();
+for (let i = 1; i <= 6; i++) await page.mouse.move(box0.x + bx + i * 8, box0.y + by - i * 6);
+await page.mouse.up();
+await page.waitForTimeout(250);
+await clickAt(E);
+await page.waitForTimeout(400);
+let bent = await drafted();
+const handles = ((await page.evaluate(() => window.__src('draw-handles')))?.features ?? []).length;
+check(
+  'curves: a corner, a dragged smooth point, a corner: two Draw stretches, both bent',
+  bent.length === 2 &&
+    bent.every((x) => x.snap === 'freehand' && x.handles && x.coordinates.length > 2),
+  JSON.stringify(bent.map((x) => [x.snap, x.coordinates.length, !!x.handles])),
+);
+check(
+  'curves: the smooth point shows its two handles, an arm and a dot each',
+  handles === 4,
+  `${handles}`,
+);
+const [px1, py1] = await proj((await cps())[1]);
+await page.mouse.move(box0.x + px1, box0.y + py1);
+await page.mouse.down();
+for (let i = 1; i <= 5; i++) await page.mouse.move(box0.x + px1, box0.y + py1 + i * 6);
+await page.mouse.up();
+await page.waitForTimeout(400);
+bent = await drafted();
+check(
+  'curves: dragging the smooth point keeps both stretches bent',
+  bent.length === 2 && bent.every((x) => x.handles && x.coordinates.length > 2),
+  JSON.stringify(bent.map((x) => [x.snap, x.coordinates.length, !!x.handles])),
+);
+await discard();
+
 check('no page errors', errors.length === 0, errors.slice(0, 2).join(' | '));
 await b.close();
 console.log(

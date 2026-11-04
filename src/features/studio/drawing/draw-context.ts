@@ -29,12 +29,16 @@ export interface DrawRefs {
   borrow: RefObject<Borrow | null>;
   follow: RefObject<((directionIds: string[], at: LngLat, offered?: LngLat) => void) | undefined>;
   selected: RefObject<number | null>;
+  /** Draw (freehand) or Snap: whether a drag on empty map shapes a curve (draw-pen.ts). */
+  freehand: RefObject<boolean>;
 }
 
 /** What the pointer does to the drawing. */
 export interface DrawActions {
   setPicking: (p: Picking) => void;
   addPoint: (point: LngLat) => Promise<void>;
+  /** A smooth point, its handles mirrored, `out` toward the next stretch (draw-pen.ts). */
+  addSmoothPoint: (point: LngLat, out: LngLat) => Promise<void>;
   insertPoint: (gap: number, point: LngLat) => Promise<void>;
   deletePoint: (idx: number) => Promise<void>;
   toggleSegment: (gap: number) => Promise<void>;

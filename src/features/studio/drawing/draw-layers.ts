@@ -18,6 +18,8 @@ export const POINT_SRC = 'draw-points';
 export const AREA_SRC = 'draw-area';
 export const UTURN_SRC = 'draw-uturns';
 export const BORROW_SRC = 'draw-borrow';
+/** A curve's handles: each an arm from its point and a dot at its end. */
+export const HANDLE_SRC = 'draw-handles';
 /** The drawing's points, and the wide invisible line a click finds: the events' layers. */
 export const POINT_LAYER = 'draw-point-dots';
 export const HIT_LAYER = 'draw-line-hit';
@@ -49,6 +51,7 @@ export function useDrawLayers(map: MapLibreMap | null): void {
     map.addSource(AREA_SRC, { type: 'geojson', data: EMPTY });
     map.addSource(UTURN_SRC, { type: 'geojson', data: EMPTY });
     map.addSource(BORROW_SRC, { type: 'geojson', data: EMPTY });
+    map.addSource(HANDLE_SRC, { type: 'geojson', data: EMPTY });
 
     // The hotspot fill sits under its own outline and under the route layers.
     map.addLayer({
@@ -139,6 +142,21 @@ export function useDrawLayers(map: MapLibreMap | null): void {
         'circle-stroke-color': UTURN_COLOUR,
         'circle-stroke-width': 3,
       },
+    });
+    // A curve's handles, under its points: thin arms, small dots, in the line's colour.
+    map.addLayer({
+      id: 'draw-handle-arms',
+      type: 'line',
+      source: HANDLE_SRC,
+      filter: ['==', ['geometry-type'], 'LineString'],
+      paint: { 'line-color': ROUTE_COLOUR, 'line-width': 1.5 },
+    });
+    map.addLayer({
+      id: 'draw-handle-dots',
+      type: 'circle',
+      source: HANDLE_SRC,
+      filter: ['==', ['geometry-type'], 'Point'],
+      paint: { 'circle-radius': 3.5, 'circle-color': ROUTE_COLOUR },
     });
     map.addLayer({
       id: POINT_LAYER,

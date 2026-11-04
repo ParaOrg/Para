@@ -10,6 +10,7 @@ import {
   type SnapMode,
 } from '@/shared/utils/geo';
 
+import { curveSegment, mirror, outHandle } from './curves';
 import { readDraft, restoredState, useDraftSaving } from './draft';
 import { useDrawArrows } from './draw-arrows';
 import { useDrawLayers } from './draw-layers';
@@ -98,6 +99,8 @@ export function useDrawing(
    * returns the drawing to plain appending.
    */
   const joinRef = useRef<LngLat | null>(null);
+  /** The handle the last point, placed smooth, sends the stretch still to come. */
+  const pendingOutRef = useRef<{ point: LngLat; out: LngLat } | null>(null);
   const borrowRef = useRef<Borrow | null>(null);
   const followRef = useRef(opts.onFollow);
   // The refs that mirror state or a prop also follow it on every commit, for
@@ -162,11 +165,44 @@ export function useDrawing(
         return;
       }
       const prevLen = cpRef.current.length;
+      const prev = cpRef.current[prevLen - 1];
+      // After a smooth point, a Draw stretch leaves it along its handle.
+      const out =
+        mode === 'freehand' && !areaRef.current && prev
+          ? outHandle(prev, segRef.current[prevLen - 2], pendingOutRef.current)
+          : null;
+      pendingOutRef.current = null;
       writePoints([...cpRef.current, point]);
       if (prevLen === 0) return;
+      if (prev && out) {
+        writeSegments([...segRef.current, curveSegment(prev, point, out, point)]);
+        return;
+      }
       await resolveGaps(prevLen - 1, [mode]);
     },
     [resolveGaps, writePoints, writeSegments],
+  );
+
+  /**
+   * Draw's click and drag: a smooth point at `point`, its handles mirrored,
+   * `out` the one toward the next stretch. The stretch in bends to it. Before
+   * a borrowed end, or for a hotspot, it is a plain point.
+   */
+  const addSmoothPoint = useCallback(
+    async (point: LngLat, out: LngLat) => {
+      const hasJoin = !!joinRef.current && cpRef.current.includes(joinRef.current);
+      if (!freehandRef.current || areaRef.current || hasJoin) return addPoint(point);
+      const prevLen = cpRef.current.length;
+      const prev = cpRef.current[prevLen - 1];
+      const c1 = prev
+        ? (outHandle(prev, segRef.current[prevLen - 2], pendingOutRef.current) ?? prev)
+        : null;
+      writePoints([...cpRef.current, point]);
+      if (prev && c1)
+        writeSegments([...segRef.current, curveSegment(prev, point, c1, mirror(out, point))]);
+      pendingOutRef.current = { point, out };
+    },
+    [addPoint, writePoints, writeSegments],
   );
 
   /** Split a segment by dropping a new control point into it. */
@@ -468,12 +504,14 @@ export function useDrawing(
         borrow: borrowRef,
         follow: followRef,
         selected: selectedRef,
+        freehand: freehandRef,
       }),
       [],
     ),
     {
       setPicking,
       addPoint,
+      addSmoothPoint,
       insertPoint,
       deletePoint,
       toggleSegment,
