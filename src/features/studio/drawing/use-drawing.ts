@@ -209,6 +209,20 @@ export function useDrawing(
     [addPoint, writePoints, writeSegments],
   );
 
+  /**
+   * A curve's handles reshaped: the stretches as they now bend. A smooth last
+   * point then sends its next stretch the mirror of its handle in, or none
+   * once it is a corner, never the handle the pen first gave it.
+   */
+  const reshape = useCallback(
+    (next: readonly Segment[]) => {
+      if (next === segRef.current) return;
+      pendingOutRef.current = null;
+      writeSegments([...next]);
+    },
+    [writeSegments],
+  );
+
   /** Split a segment by dropping a new control point into it. */
   const insertPoint = useCallback(
     async (gap: number, point: LngLat) => {
@@ -516,6 +530,7 @@ export function useDrawing(
       setPicking,
       addPoint,
       addSmoothPoint,
+      reshape,
       insertPoint,
       deletePoint,
       toggleSegment,

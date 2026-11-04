@@ -6,7 +6,7 @@ import type { LngLat } from '@/shared/utils/geo';
 import { nearestSpot } from './borrow';
 import { fromFinger, isEcho, type DrawContext, type IndexedFeature } from './draw-context';
 import { featureIds } from './draw-gestures';
-import { CLOSING, HIT_LAYER, POINT_LAYER } from './draw-layers';
+import { CLOSING, HANDLE_DOT_LAYER, HIT_LAYER, POINT_LAYER } from './draw-layers';
 import { closeTargetOf, isNearClose } from './use-connect-hint';
 
 /** A tap this many pixels off the line being extended does not pick a spot on it. */
@@ -83,8 +83,9 @@ export function clickHandlers(ctx: DrawContext) {
       return;
     }
     if (closesLine(e)) return;
+    // A curve's handle is held, not clicked through (draw-handle-drag.ts).
     const hits = map.queryRenderedFeatures(e.point, {
-      layers: [POINT_LAYER, HIT_LAYER],
+      layers: [POINT_LAYER, HIT_LAYER, HANDLE_DOT_LAYER],
     });
     if (hits.length > 0) return;
     const point: LngLat = [e.lngLat.lng, e.lngLat.lat];
@@ -96,7 +97,8 @@ export function clickHandlers(ctx: DrawContext) {
     if (isEcho(ctx) || closesBar()) return;
     // A click on a point's dot is a press on that point, not a click on the
     // line beneath it: inserting here would stack a second point on the first.
-    if (map.queryRenderedFeatures(e.point, { layers: [POINT_LAYER] }).length > 0) return;
+    if (map.queryRenderedFeatures(e.point, { layers: [POINT_LAYER, HANDLE_DOT_LAYER] }).length > 0)
+      return;
     // The line's first stretch starts at its closing point: there, a mouse's
     // click closes the line (onMapClick); a shift-click still straightens it.
     const closeAt = closeTargetOf(map);

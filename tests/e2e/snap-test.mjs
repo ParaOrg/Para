@@ -539,6 +539,69 @@ check(
   bent.length === 2 && bent.every((x) => x.handles && x.coordinates.length > 2),
   JSON.stringify(bent.map((x) => [x.snap, x.coordinates.length, !!x.handles])),
 );
+// The handle at the smooth point's end of the first stretch, dragged: the
+// stretch bends to it and the handle across the point turns to mirror it;
+// with Alt it moves alone; a double-click makes the point a corner, and back.
+const dotOf = async (seg, end) =>
+  (await page.evaluate(() => window.__src('draw-handles')))?.features?.find(
+    (f) => f.geometry.type === 'Point' && f.properties.seg === seg && f.properties.end === end,
+  )?.geometry.coordinates;
+const dragFrom = async (ll, dx, dy, { alt = false } = {}) => {
+  const [x, y] = await proj(ll);
+  await page.mouse.move(box0.x + x, box0.y + y);
+  if (alt) await page.keyboard.down('Alt');
+  await page.mouse.down();
+  for (let i = 1; i <= 5; i++)
+    await page.mouse.move(box0.x + x + (dx * i) / 5, box0.y + y + (dy * i) / 5);
+  await page.mouse.up();
+  if (alt) await page.keyboard.up('Alt');
+  await page.waitForTimeout(300);
+};
+const smoothAt = (await cps())[1];
+/** The sine of the angle between two handles about the point: 0 when they lie on one line through it. */
+const across = (h1, h2) => {
+  const a = [h1[0] - smoothAt[0], h1[1] - smoothAt[1]];
+  const b = [h2[0] - smoothAt[0], h2[1] - smoothAt[1]];
+  return Math.abs(a[0] * b[1] - a[1] * b[0]) / (Math.hypot(...a) * Math.hypot(...b));
+};
+const unbent = await drafted();
+await dragFrom(await dotOf(0, 1), -30, -20);
+let after = await drafted();
+check(
+  'curves: a handle dragged bends its stretch, the one across the point mirroring it',
+  JSON.stringify(after[0].handles[1]) !== JSON.stringify(unbent[0].handles[1]) &&
+    across(after[0].handles[1], after[1].handles[0]) < 0.01 &&
+    (await cps()).length === 3,
+  JSON.stringify([after[0].handles, after[1].handles]),
+);
+const partner = after[1].handles[0];
+await dragFrom(await dotOf(0, 1), 0, 30, { alt: true });
+after = await drafted();
+check(
+  '  with Alt it moves alone',
+  JSON.stringify(after[1].handles[0]) === JSON.stringify(partner) &&
+    across(after[0].handles[1], after[1].handles[0]) > 0.05,
+);
+const [sx, sy] = await proj(smoothAt);
+await page.mouse.dblclick(box0.x + sx, box0.y + sy);
+await page.waitForTimeout(300);
+after = await drafted();
+check(
+  'curves: a double-click makes the smooth point a corner',
+  (await cps()).length === 3 &&
+    [after[0].handles?.[1], after[1].handles?.[0]].every(
+      (h) => !h || h.every((v, k) => Math.abs(v - smoothAt[k]) <= 1e-6),
+    ),
+  JSON.stringify([after[0].handles, after[1].handles]),
+);
+await page.mouse.dblclick(box0.x + sx, box0.y + sy);
+await page.waitForTimeout(300);
+after = await drafted();
+check(
+  '  and again smooth, its handles on one line through it',
+  after.every((x) => x.handles) && across(after[0].handles[1], after[1].handles[0]) < 0.01,
+  JSON.stringify([after[0].handles, after[1].handles]),
+);
 await discard();
 
 check('no page errors', errors.length === 0, errors.slice(0, 2).join(' | '));

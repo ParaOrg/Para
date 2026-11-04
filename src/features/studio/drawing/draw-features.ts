@@ -126,18 +126,16 @@ export function uTurnFeatures(
   return { type: 'FeatureCollection', features: [...stubs, ...rings] };
 }
 
-type HandleFeature = Feature<LineString | Point, Record<string, never>>;
+/** Which handle a feature draws, so a drag on its dot knows what it moves; -1 for one being placed. */
+type HandleFeature = Feature<LineString | Point, { seg: number; end: 0 | 1 }>;
 
 /** A handle: the arm from its point, and the dot at its end. */
-function handleOf(point: LngLat, handle: LngLat): HandleFeature[] {
+function handleOf(point: LngLat, handle: LngLat, seg = -1, end: 0 | 1 = 0): HandleFeature[] {
   if (isOnPoint(handle, point)) return [];
+  const properties = { seg, end };
   return [
-    {
-      type: 'Feature',
-      properties: {},
-      geometry: { type: 'LineString', coordinates: [point, handle] },
-    },
-    { type: 'Feature', properties: {}, geometry: { type: 'Point', coordinates: handle } },
+    { type: 'Feature', properties, geometry: { type: 'LineString', coordinates: [point, handle] } },
+    { type: 'Feature', properties, geometry: { type: 'Point', coordinates: handle } },
   ];
 }
 
@@ -147,10 +145,13 @@ export function handleFeatures(
   area: AreaTarget | null,
 ): FeatureCollection<HandleFeature> {
   if (area) return { type: 'FeatureCollection', features: [] };
-  const features = segments.flatMap((s) => {
+  const features = segments.flatMap((s, i) => {
     const line = s?.coordinates;
     if (s?.snap !== 'freehand' || !s.handles || !line || line.length < 2) return [];
-    return [...handleOf(line[0], s.handles[0]), ...handleOf(line[line.length - 1], s.handles[1])];
+    return [
+      ...handleOf(line[0], s.handles[0], i, 0),
+      ...handleOf(line[line.length - 1], s.handles[1], i, 1),
+    ];
   });
   return { type: 'FeatureCollection', features };
 }
@@ -166,7 +167,7 @@ export function handleLines(
       ...handleOf(point, handles[1]),
       {
         type: 'Feature' as const,
-        properties: {},
+        properties: { seg: -1, end: 0 as const },
         geometry: { type: 'Point' as const, coordinates: point },
       },
     ]),

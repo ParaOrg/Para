@@ -3,9 +3,9 @@ import type { MapMouseEvent } from 'maplibre-gl';
 import type { LngLat } from '@/shared/utils/geo';
 
 import { mirror } from './curves';
-import type { DrawContext } from './draw-context';
+import { CLICK_AFTER_MS, type DrawContext } from './draw-context';
 import { handleFeatures, handleLines } from './draw-features';
-import { HANDLE_SRC, HIT_LAYER, POINT_LAYER, isGeoJSON } from './draw-layers';
+import { HANDLE_DOT_LAYER, HANDLE_SRC, HIT_LAYER, POINT_LAYER, isGeoJSON } from './draw-layers';
 import { isTyping } from './toolbar-text';
 import { isNearClose, closeTargetOf } from './use-connect-hint';
 
@@ -20,12 +20,6 @@ import { isNearClose, closeTargetOf } from './use-connect-hint';
 
 /** A press that moves this far is a drag: MapLibre's own click tolerance. */
 const DRAG_PX = 3;
-
-/**
- * A drag let go back within DRAG_PX of its press still ends in a click, which
- * comes straight after the release: one this soon is the drag's, not a corner.
- */
-const CLICK_AFTER_MS = 50;
 
 export function penHandlers(ctx: DrawContext) {
   const { map, canvas, refs } = ctx;
@@ -74,7 +68,8 @@ export function penHandlers(ctx: DrawContext) {
     if (e.originalEvent.button !== 0 || isSpaceDown) return;
     if (!refs.freehand.current || refs.area.current || refs.picking.current) return;
     // A point is dragged, the line inserted into, the first point clicked to close.
-    if (map.queryRenderedFeatures(e.point, { layers: [POINT_LAYER, HIT_LAYER] }).length > 0) return;
+    const under = [POINT_LAYER, HIT_LAYER, HANDLE_DOT_LAYER];
+    if (map.queryRenderedFeatures(e.point, { layers: under }).length > 0) return;
     const closeAt = closeTargetOf(map);
     if (closeAt && isNearClose(map, e.point, closeAt)) return;
     press = {

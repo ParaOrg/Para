@@ -18,6 +18,7 @@ import {
   outHandle,
   splitCurve,
 } from '../../src/features/studio/drawing/curves.ts';
+import { moveHandle, toggleSmooth } from '../../src/features/studio/drawing/curve-handles.ts';
 import { insertInGap, removeAt } from '../../src/features/studio/drawing/drawing-edits.ts';
 import { rubberBand } from '../../src/features/studio/drawing/draw-gestures.ts';
 
@@ -127,4 +128,81 @@ test('a lone first point keeps the handle it drew with when its stretch goes', (
   assert.deepEqual(keptFirstHandle(curveSegment(A, B, out, B), A), out);
   assert.equal(keptFirstHandle(curveSegment(A, B, A, [121.009, 14.702]), A), null, 'a corner');
   assert.equal(keptFirstHandle({ snap: 'snapped', coordinates: [A, B] }, A), null);
+});
+
+test('a handle dragged bends its stretch, and its partner across the point mirrors it', () => {
+  const first = curveSegment(A, B, A, [121.009, 14.701]);
+  const second = curveSegment(B, C, [121.011, 14.699], C);
+  const to = [121.008, 14.703];
+  const next = moveHandle([first, second], { seg: 0, end: 1 }, to, false);
+  assert.deepEqual(next[0].handles[1], to);
+  assert.ok(near(next[1].handles[0], [121.012, 14.697], 1e-9));
+  const alone = moveHandle([first, second], { seg: 0, end: 1 }, to, true);
+  assert.deepEqual(alone[1], second, 'Alt moves it alone');
+});
+
+test('a routed stretch never bends, even beside a dragged handle', () => {
+  const first = curveSegment(A, B, A, [121.009, 14.701]);
+  const routed = { snap: 'snapped', coordinates: [B, C] };
+  const next = moveHandle([first, routed], { seg: 0, end: 1 }, [121.008, 14.703], false);
+  assert.equal(next[1], routed);
+});
+
+test('double-click: a corner turns smooth along the line, a smooth point back to a corner', () => {
+  const straight = [
+    { snap: 'freehand', coordinates: [A, UP] },
+    { snap: 'freehand', coordinates: [UP, C] },
+  ];
+  const smooth = toggleSmooth(straight, [A, UP, C], 1);
+  assert.ok(
+    smooth.every((s) => s.handles),
+    'both stretches bend at it',
+  );
+  // The two handles lie on one line through the point: mirrored in direction.
+  const [h1, h2] = [smooth[0].handles[1], smooth[1].handles[0]];
+  const cross = (h1[0] - UP[0]) * (h2[1] - UP[1]) - (h1[1] - UP[1]) * (h2[0] - UP[0]);
+  assert.ok(Math.abs(cross) < 1e-12);
+  const corner = toggleSmooth(smooth, [A, UP, C], 1);
+  assert.ok(
+    corner.every((s) => s.coordinates.length === 2 && !s.handles),
+    'straight again',
+  );
+});
+
+test("the line's end handles move alone: there is nothing across them to mirror", () => {
+  const only = curveSegment(A, B, [121.001, 14.701], [121.009, 14.701]);
+  const start = moveHandle([only], { seg: 0, end: 0 }, [121.002, 14.703], false);
+  assert.deepEqual(start[0].handles[0], [121.002, 14.703]);
+  const end = moveHandle([only], { seg: 0, end: 1 }, [121.008, 14.703], false);
+  assert.deepEqual(end[0].handles[1], [121.008, 14.703]);
+  assert.equal(end.length, 1);
+});
+
+test('a routed stretch has no handle to move, and turns no Draw partner', () => {
+  const routed = { snap: 'snapped', coordinates: [A, B] };
+  const curve = curveSegment(B, C, [121.011, 14.701], C);
+  const next = moveHandle([routed, curve], { seg: 0, end: 1 }, [121.009, 14.703], false);
+  assert.equal(next[0], routed);
+  assert.equal(next[1], curve);
+});
+
+test('double-click at either end, and beside a routed stretch, bends only Draw', () => {
+  const draw = { snap: 'freehand', coordinates: [A, B] };
+  const routed = { snap: 'snapped', coordinates: [B, C] };
+  const first = toggleSmooth([draw, routed], [A, B, C], 0);
+  assert.ok(first[0].handles, 'the first point turns smooth along its stretch');
+  assert.equal(first[1], routed);
+  const middle = toggleSmooth([draw, routed], [A, B, C], 1);
+  assert.ok(middle[0].handles);
+  assert.equal(middle[1], routed, 'the routed side is left as it is');
+  const last = [draw, { snap: 'freehand', coordinates: [B, C] }];
+  assert.ok(toggleSmooth(last, [A, B, C], 2)[1].handles, 'the last point too');
+});
+
+test('a double-click with no Draw stretch beside it changes nothing: the same array', () => {
+  const routed = [
+    { snap: 'snapped', coordinates: [A, B] },
+    { snap: 'snapped', coordinates: [B, C] },
+  ];
+  assert.equal(toggleSmooth(routed, [A, B, C], 1), routed);
 });
