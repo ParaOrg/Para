@@ -2,8 +2,9 @@ import { useCallback, useRef, useState, type RefObject } from 'react';
 
 import type { LngLat, Segment, SnapMode } from '@/shared/utils/geo';
 
+import { bend } from './curves';
 import type { AreaTarget } from './drawing-types';
-import { snapSegments, straightSegment } from './snap';
+import { snapSegments } from './snap';
 
 /** A router request still wanted: the stand-ins its answer will replace. */
 interface Request {
@@ -81,7 +82,8 @@ export function useGapResolver(
       const next = [...segmentsRef.current];
       const standIns = modes.map((_, k) => {
         if (!routed[k]) {
-          next[first + k] = straightSegment(pts[k], pts[k + 1]);
+          // A Draw stretch keeps its bend: its handles, its ends where they are now.
+          next[first + k] = bend(segmentsRef.current[first + k], pts[k], pts[k + 1]);
           return null;
         }
         const seg: Segment = { snap: 'snapped', coordinates: [pts[k], pts[k + 1]] };

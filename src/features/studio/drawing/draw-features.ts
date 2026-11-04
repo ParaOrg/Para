@@ -1,6 +1,7 @@
 import { directionLine } from '@/features/routes/model/routes';
 import type { LngLat, Segment, SnapMode } from '@/shared/utils/geo';
 
+import { isOnPoint } from './curves';
 import { CLOSING } from './draw-layers';
 import type { AreaTarget, Picking } from './drawing-types';
 import type { UTurn } from './uturns';
@@ -123,6 +124,53 @@ export function uTurnFeatures(
       geometry: { type: 'Point' as const, coordinates: controlPoints[u.point] },
     }));
   return { type: 'FeatureCollection', features: [...stubs, ...rings] };
+}
+
+type HandleFeature = Feature<LineString | Point, Record<string, never>>;
+
+/** A handle: the arm from its point, and the dot at its end. */
+function handleOf(point: LngLat, handle: LngLat): HandleFeature[] {
+  if (isOnPoint(handle, point)) return [];
+  return [
+    {
+      type: 'Feature',
+      properties: {},
+      geometry: { type: 'LineString', coordinates: [point, handle] },
+    },
+    { type: 'Feature', properties: {}, geometry: { type: 'Point', coordinates: handle } },
+  ];
+}
+
+/** The handle source: every curve's two handles, each an arm and a dot; none for a hotspot. */
+export function handleFeatures(
+  segments: readonly Segment[],
+  area: AreaTarget | null,
+): FeatureCollection<HandleFeature> {
+  if (area) return { type: 'FeatureCollection', features: [] };
+  const features = segments.flatMap((s) => {
+    const line = s?.coordinates;
+    if (s?.snap !== 'freehand' || !s.handles || !line || line.length < 2) return [];
+    return [...handleOf(line[0], s.handles[0]), ...handleOf(line[line.length - 1], s.handles[1])];
+  });
+  return { type: 'FeatureCollection', features };
+}
+
+/** A point being placed smooth, its two handles shown as the pen's drag pulls them. */
+export function handleLines(
+  smooth: readonly { point: LngLat; handles: [LngLat, LngLat] }[],
+): FeatureCollection<HandleFeature> {
+  return {
+    type: 'FeatureCollection',
+    features: smooth.flatMap(({ point, handles }) => [
+      ...handleOf(point, handles[0]),
+      ...handleOf(point, handles[1]),
+      {
+        type: 'Feature' as const,
+        properties: {},
+        geometry: { type: 'Point' as const, coordinates: point },
+      },
+    ]),
+  };
 }
 
 /** The borrow source: the line being picked for Extend, and the spot picked on it; else nothing. */

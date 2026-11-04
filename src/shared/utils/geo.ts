@@ -21,6 +21,12 @@ export interface Segment {
    * recorded.
    */
   streets?: StreetRun[];
+  /**
+   * A Draw (freehand) stretch that bends: the two handles of its cubic curve,
+   * the first at its start, the second at its end; its `coordinates` are the
+   * curve flattened. Absent on a straight or routed stretch.
+   */
+  handles?: [LngLat, LngLat];
 }
 
 /** Two points this close are one join, not two vertices: 1 cm, far below a click or a 6-decimal save. */
