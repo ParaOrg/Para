@@ -159,14 +159,17 @@ function queryTargets(
   event?: Event,
 ): TapTargets {
   const box = tapBox(point, event);
-  const features = (layer: string, where: typeof box | [number, number] = box) =>
-    map.getLayer(layer) ? map.queryRenderedFeatures(where, { layers: [layer] }) : [];
-  // A pin, a dot or a box under the tap, in that order: each one the box's.
+  const features = (layers: string[], where: typeof box | [number, number] = box) => {
+    const drawn = layers.filter((layer) => map.getLayer(layer));
+    return drawn.length > 0 ? map.queryRenderedFeatures(where, { layers: drawn }) : [];
+  };
+  // A pin, a dot or a box under the tap, topmost first, each one the box's: one query for all
+  // three, as a tap asks the map once (phone-test counts them).
   const hotspots = (where: typeof box | [number, number] = box) =>
-    idsInOrder(HOTSPOT_TAP_LAYERS.flatMap((layer) => features(layer, where)));
+    idsInOrder(features(HOTSPOT_TAP_LAYERS, where));
   const inside = hotspots([point.x, point.y]);
   if (inside.length > 0) return { routeIds: [], routeKeys: [], hotspotIds: inside };
-  const routes = features(ROUTES_HIT_LAYER);
+  const routes = features([ROUTES_HIT_LAYER]);
   if (routes.length > 0)
     return {
       routeIds: idsInOrder(routes),

@@ -136,17 +136,23 @@ test('the dot below that zoom and the pin from it: one or the other, never both'
 
 // ------------------------------------------------------------ the tap
 
-/** A map with a pin, a dot, a box and a route's hit area; `under` as tap-test's stand-in. */
+/**
+ * A map with a pin, a dot, a box and a route's hit area; `under` gives, for each layer and a
+ * point or a box, what a query there finds. One query may ask several layers: what each finds,
+ * in the order asked, which is the map's topmost first. Every query is counted in `asked`.
+ */
 function standIn(under) {
   const asked = [];
   const layers = new Set([PIN, DOT, HOTSPOTS_FILL_LAYER, ROUTES_HIT_LAYER]);
   return {
     asked,
     getLayer: (id) => (layers.has(id) ? { id } : undefined),
-    queryRenderedFeatures(where, { layers: [layer] }) {
+    queryRenderedFeatures(where, { layers: wanted }) {
       const kind = Array.isArray(where[0]) ? 'box' : 'point';
-      asked.push([layer, kind]);
-      return (under[`${layer} ${kind}`] ?? []).map((properties) => ({ properties }));
+      asked.push([wanted, kind]);
+      return wanted.flatMap((layer) =>
+        (under[`${layer} ${kind}`] ?? []).map((properties) => ({ properties })),
+      );
     },
   };
 }
@@ -162,7 +168,11 @@ test("a tap on a pin is its box's, even with a route under it", () => {
     routeKeys: [],
     hotspotIds: ['s1'],
   });
-  assert.ok(!map.asked.some(([layer]) => layer === ROUTES_HIT_LAYER), 'the routes not asked');
+  assert.deepEqual(
+    map.asked,
+    [[[PIN, DOT, HOTSPOTS_FILL_LAYER], 'point']],
+    'one query for the pin, the dot and the box; the routes not asked',
+  );
 });
 
 test('a pin over its own box counts the box once; a dot near a finger is its box', () => {
