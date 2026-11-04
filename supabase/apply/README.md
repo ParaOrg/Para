@@ -436,3 +436,47 @@ screen's "Also delete my uploaded routes" ships after this is applied.
   `verify/delete-account-keep-uploads.sh` checks the schema afterwards matches the schema before, and
   that it re-applies. If anyone has already kept their uploads, the revert refuses: decide with the
   owner first whether to retire those rides or delete them.
+
+# Applying delete_account_refuse_uploads to the live project
+
+Deleting an account never deletes the uploads (the owner, 2026-11-04). This keeps
+`public.delete_my_account(delete_uploads boolean default true)` with the same signature and default,
+so the types do not change, and makes its first check, before it locks or changes anything:
+
+- **`false`:** exactly as `delete_account_keep_uploads`: the person goes, the uploads stay unlinked.
+- **`true`, null or no argument:** refused with SQLSTATE `P0001`, message
+  `delete_uploads_refused: only delete_uploads => false deletes an account; nothing was changed`. The
+  account stays whole. The contributor app 0.2.0 sends `true` when its "Also delete my uploaded routes"
+  switch is on, and older versions send no argument; both show their usual "couldn't delete", so
+  nobody is told their uploads were deleted when they were not.
+
+Same refusals as before for `false`. No table, no row changes. Three files, each pasted whole into the
+SQL editor as `postgres`:
+
+| File | What it does |
+| --- | --- |
+| `20261105090000_delete_account_refuse_uploads_apply.sql` | One transaction. Checks `delete_account_keep_uploads` is in the ledger with `delete_my_account(boolean)`, and this is not. Applies `migrations/20261105090000_delete_account_refuse_uploads.sql` (carried unchanged; `verify/delete-account-refuse-uploads.sh` checks the copy). Checks there is one `delete_my_account`, a definer with a pinned path for `authenticated` only, defaulting to `true`, whose refusal comes before its first lock. Writes the ledger row `delete_account_refuse_uploads`. Any failed check raises and nothing is changed. A second run stops at the first check and changes nothing. |
+| `20261105090000_delete_account_refuse_uploads_check.sql` | Part one adds seven test users with a row in every table, proves the behaviour, then rolls all of it back; it raises `FAILED: ...` on the first wrong result. No argument, `true` and null are each refused with `P0001 delete_uploads_refused`, and the account keeps everything; the refusal comes before the others (no caller, an anonymous phone, an editor, a map owner). With `false` the usual refusals hold, and an account goes while its upload stays unlinked and marked, its typed words cleared; a retry answers as deleted. anon cannot call it. Part two is read-only: 5 rows, all `ok` should be `t`. |
+| `20261105090000_delete_account_refuse_uploads_revert.sql` | One transaction: puts back `delete_my_account(boolean)` as `delete_account_keep_uploads` left it (so `true` or no argument deletes the uploads again) and removes the ledger row. Run it before that migration's revert, never after. Safe to run twice. |
+
+## Steps
+
+1. `delete_account_keep_uploads` first: the apply refuses without it. Apply both together, or this one
+   right after it.
+2. Run `20261105090000_delete_account_refuse_uploads_apply.sql`. It ends with `COMMIT`; an error means
+   nothing changed.
+3. Run `20261105090000_delete_account_refuse_uploads_check.sql`: part one ends with `ROLLBACK` and no
+   `FAILED`; part two gives 5 rows, all `ok = t`.
+4. Record the ledger version
+   (`select version from supabase_migrations.schema_migrations where name = 'delete_account_refuse_uploads';`)
+   in `migrations/README.md`. The types do not change.
+
+Apply both before the new contributor app is released: it always sends `delete_uploads: false`, which
+fails until `delete_account_keep_uploads` is applied.
+
+## Recovery
+
+- Apply failed: nothing changed. The message names what it found.
+- Applied, and it must be withdrawn: run `20261105090000_delete_account_refuse_uploads_revert.sql`.
+  `verify/delete-account-refuse-uploads.sh` checks the schema afterwards matches the schema before, and
+  that it re-applies.

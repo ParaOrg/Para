@@ -39,8 +39,8 @@ export async function deleteAccount(): Promise<void> {
       deletion = step.deletion;
     } else {
       deletion = step.kept ?? { accountId: step.accountId };
-      // Said every time: left out, delete_my_account deletes the uploads too (its default, kept
-      // for the app versions that called it before uploads could stay).
+      // Said every time: left out (or true), delete_my_account refuses and deletes nothing. Its
+      // default stays true for the app versions that call it so; only false deletes an account.
       const result = await callRpc(client, 'delete_my_account', { delete_uploads: false });
       if (result.kind === 'failure') {
         if (result.isOffline) throw new AccountError('offline', result.message);
