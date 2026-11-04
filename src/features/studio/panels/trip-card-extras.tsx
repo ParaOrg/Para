@@ -1,5 +1,7 @@
+import { useQueryClient } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
 
+import { Button } from '@/design-system/primitives/button';
 import type { Hotspot, HotspotRow } from '@/features/routes/model/hotspots';
 import type { DirectionRow } from '@/features/routes/model/routes';
 import type { LngLat } from '@/shared/utils/geo';
@@ -8,6 +10,10 @@ import { CardActions } from './card-actions';
 import { RouteExportPanel } from './route-export-panel';
 import { RouteFacts } from './route-facts';
 import { SignboardEditor } from './signboard-editor';
+import { STUDIO_DRAFTS } from '../data/flags';
+import { reviewKeys } from '../data/review-keys';
+import { draftedSignboards } from '../data/signboards';
+import { useRouteDraftQuery } from '../data/use-route-draft-query';
 
 interface TripCardExtrasProps {
   /** The direction on the trip card. */
@@ -65,7 +71,49 @@ export function TripCardExtras({
         hotspots={hotspots}
         hotspotsAlong={hotspotsAlong}
       />
-      {canEdit && <SignboardEditor direction={direction} onChanged={onSignboardsChanged} />}
+      {canEdit && <DraftSignboards direction={direction} onChanged={onSignboardsChanged} />}
     </>
+  );
+}
+
+interface DraftSignboardsProps {
+  direction: DirectionRow;
+  onChanged: () => void;
+}
+
+/**
+ * The signboards as the editor's own draft of the route lists them, when it
+ * does: a change is saved on top of the draft, so starting from the approved
+ * list would drop the boards the draft added. Shown only once the draft is
+ * read, so nothing is changed on a list about to be replaced.
+ */
+function DraftSignboards({ direction, onChanged }: DraftSignboardsProps) {
+  const client = useQueryClient();
+  const draft = useRouteDraftQuery(direction.routeId);
+  if (STUDIO_DRAFTS && draft.isPending)
+    return (
+      <p role="status" className="px-3 pb-4 font-sn-pro text-sm text-content-quaternary">
+        Loading signboards…
+      </p>
+    );
+  if (draft.isError)
+    return (
+      <div className="flex flex-col items-start gap-2 px-3 pb-4 font-sn-pro">
+        <p role="alert" className="text-sm text-content-error">
+          Couldn&apos;t read your draft&apos;s signboards. Try again before changing them.
+        </p>
+        <Button variant="secondary" label="Try again" onClick={() => void draft.refetch()} />
+      </div>
+    );
+  const drafted = draftedSignboards(draft.data ?? null, direction.id);
+  const handleChanged = () => {
+    void client.invalidateQueries({ queryKey: reviewKeys.draftOf('route', direction.routeId) });
+    onChanged();
+  };
+  return (
+    <SignboardEditor
+      direction={drafted ? { ...direction, signboards: drafted } : direction}
+      onChanged={handleChanged}
+    />
   );
 }
