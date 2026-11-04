@@ -35,6 +35,7 @@ import {
   openCard,
   OUT,
   P1,
+  px,
   P2,
   page,
   pointsShown,
@@ -91,13 +92,26 @@ let drawn;
     await closeLoop().isEnabled(),
     await closeLoop().getAttribute('aria-label'),
   );
-  await closeLoop().click();
+  // Closed by the first point itself: the connect badge shows as the cursor nears it.
+  const hint = page.getByTestId('connect-hint');
+  const [fx, fy] = await px(IKOT[0]);
+  await page.mouse.move(fx + 60, fy + 60, { steps: 3 });
+  const hintAway = await hint.count();
+  await page.mouse.move(fx + 6, fy + 6, { steps: 3 });
+  await page.waitForTimeout(150);
+  check(
+    '  nearing the first point shows the connect badge, away from it none',
+    hintAway === 0 && (await hint.isVisible()),
+    `away ${hintAway}, near ${await hint.count()}`,
+  );
+  await page.mouse.click(fx + 6, fy + 6);
   await idle();
   await page.waitForTimeout(400);
   drawn = await drawnPoints();
   check(
-    '  it ends the line on the first point (<1 m), and then rests',
-    drawn.length === IKOT.length + 1 &&
+    '  a click there ends the line on the first point (<1 m), the badge gone, and then rests',
+    (await hint.count()) === 0 &&
+      drawn.length === IKOT.length + 1 &&
       metresBetween(drawn.at(-1), drawn[0]) < 1 &&
       (await closeLoop().isDisabled()),
     `${drawn.length} point(s)`,

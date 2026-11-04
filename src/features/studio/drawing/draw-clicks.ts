@@ -7,6 +7,7 @@ import { nearestSpot } from './borrow';
 import { fromFinger, isEcho, type DrawContext, type IndexedFeature } from './draw-context';
 import { featureIds } from './draw-gestures';
 import { CLOSING, HIT_LAYER, POINT_LAYER } from './draw-layers';
+import { closeTargetOf, isNearClose } from './use-connect-hint';
 
 /** A tap this many pixels off the line being extended does not pick a spot on it. */
 const PICK_PX = 40;
@@ -18,12 +19,28 @@ const PICK_PX = 40;
  * an Extend leaves a line, a tap near it picks the spot. A tap that adds a
  * point on a saved line offers to follow that line instead, which is the
  * right-click's job on a desktop; the next tap on the map with the point bar
- * open only closes it.
+ * open only closes it. A click near where the line may close (use-connect-hint.ts)
+ * ends it on that point exactly, whatever lies under it.
  */
 export function clickHandlers(ctx: DrawContext) {
   const { map, refs } = ctx;
   const { setPicking, addPoint, insertPoint, deletePoint, toggleSegment, select, setFollowOffer } =
     ctx.actions;
+
+  /**
+   * A click that closes the line: on its closing point, the point itself is
+   * added. A mouse's only: a finger sees no badge, so its tap there adds or
+   * selects as anywhere else, and closes with the toolbar's button; a
+   * shift-click keeps straightening the stretch under it.
+   */
+  const closesLine = (e: MapMouseEvent) => {
+    if (fromFinger(ctx) || e.originalEvent.shiftKey) return false;
+    const closeAt = closeTargetOf(map);
+    if (!closeAt || !isNearClose(map, e.point, closeAt)) return false;
+    // A copy: the drawing finds its points by identity.
+    void addPoint([closeAt[0], closeAt[1]]);
+    return true;
+  };
 
   /**
    * A tap while the point bar is open closes it and does nothing else, so
@@ -65,6 +82,7 @@ export function clickHandlers(ctx: DrawContext) {
       setPicking(next);
       return;
     }
+    if (closesLine(e)) return;
     const hits = map.queryRenderedFeatures(e.point, {
       layers: [POINT_LAYER, HIT_LAYER],
     });
@@ -79,6 +97,16 @@ export function clickHandlers(ctx: DrawContext) {
     // A click on a point's dot is a press on that point, not a click on the
     // line beneath it: inserting here would stack a second point on the first.
     if (map.queryRenderedFeatures(e.point, { layers: [POINT_LAYER] }).length > 0) return;
+    // The line's first stretch starts at its closing point: there, a mouse's
+    // click closes the line (onMapClick); a shift-click still straightens it.
+    const closeAt = closeTargetOf(map);
+    if (
+      closeAt &&
+      !fromFinger(ctx) &&
+      !e.originalEvent.shiftKey &&
+      isNearClose(map, e.point, closeAt)
+    )
+      return;
     const gap = e.features?.[0]?.properties?.index;
     if (typeof gap !== 'number') return;
     // Clicking the closing edge of a hotspot appends a corner: the ring
