@@ -410,6 +410,40 @@ check(
   '  the approved line is as it was until approval',
   outV?.control_points.length === OUT.length,
 );
+
+// ---- 3a. Edit again before approval: the editor's own draft opens, not the approved line
+// Saving builds on the draft, so opening the approved line would save it over the first edit.
+await load();
+await openCard(OUT[1]);
+// The draft's line is drawn over the approved one, and a tap on it opens Drafts as well.
+const reviewDialog = page.locator('dialog[open]');
+if ((await reviewDialog.count()) > 0)
+  await reviewDialog.getByRole('button', { name: 'Close', exact: true }).click();
+await page.getByRole('button', { name: 'Edit route' }).click();
+await waitFor(async () => (await pointsShown()) > 0);
+await page.waitForTimeout(300);
+check(
+  "Edit route on a route with the editor's draft opens the draft's line",
+  (await pointsShown()) === OUT.length + 1,
+  `${await pointsShown()} points`,
+);
+await go(at(0, 0), 15);
+await clickAt(at(0.006, 0.001), 300);
+await waitFor(async () => (await pointsShown()) === OUT.length + 2);
+await done();
+n = log.length;
+await saveButton().click();
+await drafted();
+w = writesSince(n);
+check(
+  '  and its save keeps the first edit: the same draft, two points more than approved',
+  draftOf('route', route?.id)?.id === editDraft?.id &&
+    draftOf('route', route?.id)?.payload.directions.find((v) => v.id === outV?.id)?.control_points
+      .length ===
+      OUT.length + 2 &&
+    approvedWrites(w).length === 0,
+  said(w),
+);
 await approveAll();
 
 // ---- 4. Signboards, per direction
