@@ -7,6 +7,7 @@ import {
   areaFeatures,
   borrowFeatures,
   handleFeatures,
+  handlePoints,
   lineFeatures,
   pointFeatures,
   uTurnFeatures,
@@ -30,7 +31,7 @@ interface DrawRenderingState {
   uTurns: UTurn[];
   picking: Picking | null;
   selected: number | null;
-  /** The point whose handles show, the mouse's selection; none in Snap. */
+  /** The point the mouse selected, whose handles show beside the last two's; none in Snap. */
   handlesAt: number | null;
   isFreehand: boolean;
   /** The handle the last point, placed smooth, sends the stretch still to come. */
@@ -41,7 +42,7 @@ interface DrawRenderingState {
  * The drawing on the map: its segments (routed and freehand), points, a
  * hotspot's fill and closing edge, the U-turns ringed, the line being picked
  * for Extend, the point a finger selected ringed, and the handles of the
- * point the mouse selected, in Draw. What each source holds is draw-features.ts'.
+ * last two points and the one the mouse selected, in Draw. What each source holds is draw-features.ts'.
  */
 export function useDrawRendering(
   map: MapLibreMap | null,
@@ -71,8 +72,8 @@ export function useDrawRendering(
     const handleSrc = map.getSource(HANDLE_SRC);
     if (isGeoJSON(handleSrc)) {
       // In Snap nothing shows handles: only Draw's stretches bend.
-      const at = isFreehand ? handlesAt : null;
-      handleSrc.setData(handleFeatures(segments, controlPoints, area, at, pendingOut.current));
+      const shown = isFreehand ? handlePoints(handlesAt, controlPoints.length) : [];
+      handleSrc.setData(handleFeatures(segments, controlPoints, area, shown, pendingOut.current));
     }
   }, [map, segments, controlPoints, area, uTurns, selected, handlesAt, isFreehand, pendingOut]);
 

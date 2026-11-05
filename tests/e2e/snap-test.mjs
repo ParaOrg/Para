@@ -567,8 +567,25 @@ await page.mouse.up();
 await page.waitForTimeout(250);
 const handleCount = async () =>
   ((await page.evaluate(() => window.__src('draw-handles')))?.features ?? []).length;
+/** Whether point `i`'s handles show: its stretch in's end handle, or its stretch out's start one. */
+const showsHandlesOf = async (i) =>
+  ((await page.evaluate(() => window.__src('draw-handles')))?.features ?? []).some(
+    (f) =>
+      f.geometry.type === 'Point' &&
+      ((f.properties.seg === i - 1 && f.properties.end === 1) ||
+        (f.properties.seg === i && f.properties.end === 0)),
+  );
+const handleColours = await page.evaluate(() => [
+  window.__map.getPaintProperty('draw-handle-arms', 'line-color'),
+  window.__map.getPaintProperty('draw-handle-dots', 'circle-color'),
+]);
 check(
-  'handles: the smooth point just placed is selected, its two handles shown',
+  'handles: the arm red/400, the dot red/600',
+  handleColours[0] === '#ff6467' && handleColours[1] === '#e7000b',
+  JSON.stringify(handleColours),
+);
+check(
+  'handles: the smooth point just placed shows its two handles',
   (await handleCount()) === 4,
   `${await handleCount()}`,
 );
@@ -583,14 +600,6 @@ check(
 await clickAt(E);
 await page.waitForTimeout(400);
 let bent = await drafted();
-check(
-  'handles: a click elsewhere on the map deselects; no other point shows any',
-  (await handleCount()) === 0,
-  `${await handleCount()}`,
-);
-const [sx0, sy0] = await proj((await cps())[1]);
-await page.mouse.click(box0.x + sx0, box0.y + sy0);
-await page.waitForTimeout(250);
 const handles = await handleCount();
 check(
   'curves: a corner, a dragged smooth point, a corner: two Draw stretches, both bent',
@@ -599,13 +608,10 @@ check(
   JSON.stringify(bent.map((x) => [x.snap, x.coordinates.length, !!x.handles])),
 );
 check(
-  'handles: a click on the smooth point selects it, showing its two handles, an arm and a dot each',
-  handles === 4,
+  'handles: the last two points always show theirs: the smooth one, an arm and a dot each',
+  handles === 4 && (await showsHandlesOf(1)),
   `${handles}`,
 );
-await page.keyboard.press('Escape');
-await page.waitForTimeout(150);
-check('handles: Escape deselects', (await handleCount()) === 0, `${await handleCount()}`);
 const [px1, py1] = await proj((await cps())[1]);
 await page.mouse.move(box0.x + px1, box0.y + py1);
 await page.mouse.down();
@@ -710,10 +716,30 @@ check(
   'curves: a press on a Draw stretch with no drag still inserts a point',
   (await cps()).length === 4,
 );
-// A routed stretch is not held: a drag on it leaves the line as it was.
+// Four points now: the smooth one, second, is no longer among the last two.
+check(
+  'handles: an older point shows none until it is selected',
+  !(await showsHandlesOf(1)) && (await handleCount()) > 0,
+  `${await handleCount()} handle features`,
+);
 const [sx1, sy1] = await proj((await cps())[1]);
 await page.mouse.click(box0.x + sx1, box0.y + sy1);
 await page.waitForTimeout(250);
+check('handles: a click on its circle selects it, showing its handles', await showsHandlesOf(1));
+await page.keyboard.press('Escape');
+await page.waitForTimeout(150);
+check('handles: Escape deselects it', !(await showsHandlesOf(1)));
+await page.mouse.click(box0.x + sx1, box0.y + sy1);
+await page.waitForTimeout(250);
+const [fx, fy] = await proj(E);
+await page.mouse.click(box0.x + fx + 60, box0.y + fy + 60);
+await page.waitForTimeout(250);
+check('handles: a click elsewhere on the map deselects it', !(await showsHandlesOf(1)));
+await page.keyboard.press('Control+z');
+await page.waitForTimeout(250);
+await page.mouse.click(box0.x + sx1, box0.y + sy1);
+await page.waitForTimeout(250);
+// A routed stretch is not held: a drag on it leaves the line as it was.
 const handlesInDraw = await handleCount();
 await page.getByTestId('snap-draw').getByRole('button', { name: 'Snap' }).click();
 await page.waitForTimeout(150);
