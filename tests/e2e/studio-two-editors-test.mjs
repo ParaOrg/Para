@@ -178,9 +178,8 @@ async function openRoute(page) {
 }
 
 /**
- * Opens the route's trip card from the place at its end. A tap on the line
- * would not do once there is a draft: its dashed line lies on the route's and
- * takes the tap, which opens the review.
+ * Opens the route's trip card from the place at its end, clear of the draft's
+ * dashed line, so the card is reached the same way whoever's draft is on it.
  */
 async function openRouteFromPlace(page) {
   // Inside the place's box, clear of the line's end and the draft's marker.

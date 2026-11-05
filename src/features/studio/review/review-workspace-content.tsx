@@ -36,8 +36,8 @@ export function ReviewWorkspaceContent({
   const dialogRef = useRef<HTMLDialogElement>(null);
   // A draft tapped on the map opens straight into editing where it can (onOpenDraft); else in
   // Drafts, to be reviewed.
-  // The map's draft layers listen with openDraft, so it stays the same function between renders
-  // and reads the newest onOpenDraft from a ref.
+  // onOpenDraft is a new function every render (useOpenDraft); the ref keeps openDraft, which the
+  // map's draft layers listen with, changing only when the drafts do.
   const drafts = query.data;
   const onOpenDraftRef = useRef(onOpenDraft);
   useEffect(() => {

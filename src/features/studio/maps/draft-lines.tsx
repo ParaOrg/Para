@@ -24,7 +24,7 @@ interface DraftLinesProps {
 
 /**
  * The drafts' drawn ways on the map, in the saved routes' colour and width but
- * dashed. A tap on one opens that draft's review, as its marker does.
+ * dashed. A tap on one hands its draft, and the direction tapped, to `onReview`.
  */
 export function DraftLines({ map, drafts, onReview }: DraftLinesProps) {
   useEffect(() => {

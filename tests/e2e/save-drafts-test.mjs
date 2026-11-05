@@ -437,19 +437,13 @@ check(
 // No reload between the two: the studio's cache of the draft must not seed the second edit.
 await openCard(OUT[1]);
 // The draft's line is drawn over the approved one: a tap on it opens the editor's own draft
-// straight into Edit route, with no review sheet; a tap on the approved line opens its card.
-await waitFor(
-  async () =>
-    (await pointsShown()) > 0 ||
-    (await page.locator('dialog[open]').count()) > 0 ||
-    (await page.getByRole('button', { name: 'Edit route' }).count()) > 0,
-);
-check(
-  "a tap on the editor's own draft opens no review sheet",
-  (await page.locator('dialog[open]').count()) === 0,
-);
-if ((await pointsShown()) === 0) await page.getByRole('button', { name: 'Edit route' }).click();
+// straight into Edit route on the way tapped, with no review sheet.
 await waitFor(async () => (await pointsShown()) > 0);
+check(
+  "a tap on the editor's own draft opens it into editing, with no review sheet",
+  (await pointsShown()) > 0 && (await page.locator('dialog[open]').count()) === 0,
+  `${await pointsShown()} points`,
+);
 await page.waitForTimeout(300);
 check(
   "Edit route on a route with the editor's draft opens the draft's line",
@@ -532,9 +526,8 @@ check(
 await load();
 await openCard(OUT[1]);
 // A tap on the editor's own draft opens it into editing; Exit leaves the drawing for its card.
-await waitFor(async () => (await pointsShown()) > 0 || (await items().count()) > 0);
-if ((await pointsShown()) > 0)
-  await page.getByRole('button', { name: 'Exit', exact: true }).click();
+await waitFor(async () => (await pointsShown()) > 0);
+await page.getByRole('button', { name: 'Exit', exact: true }).click();
 await waitFor(async () => (await items().count()) === 1);
 check(
   "  reopened, the card lists the editor's draft's board",
