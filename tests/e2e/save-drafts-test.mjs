@@ -377,6 +377,7 @@ check(
 
 // ---- 3. Edit a direction
 await openCard(OUT[1]);
+await waitFor(async () => (await page.getByRole('button', { name: 'Edit route' }).count()) === 1);
 check(
   'a tap on the line opens its card, with Edit route',
   (await page.getByRole('button', { name: 'Edit route' }).count()) === 1,
