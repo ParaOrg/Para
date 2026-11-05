@@ -579,11 +579,22 @@ for (const p of OUT) {
   await guest.mouse.click(gbox.x + q[0], gbox.y + q[1]);
   await guest.waitForTimeout(300);
 }
-await guest.getByRole('button', { name: /Done/ }).click();
+// Signed out, the toolbar has Done (no form beside the map yet), and its key
+// is Ctrl+Enter: plain Enter must not press it, Ctrl+Enter must. Focus off any
+// button first, where Enter would press that button itself.
+const signInShown = () => guest.getByRole('textbox', { name: 'Email', exact: true }).count();
+// Done waits for the router's answers; its key as much as its button.
+await waitFor(async () => await guest.getByRole('button', { name: /Done/ }).isEnabled());
+await guest.evaluate(() => document.activeElement?.blur?.());
+await guest.keyboard.press('Enter');
+await guest.waitForTimeout(400);
+const afterPlainEnter = await signInShown();
+await guest.keyboard.press('Control+Enter');
 await guest.waitForTimeout(400);
 check(
-  'signed out, Done asks for sign-in',
-  (await guest.getByRole('textbox', { name: 'Email', exact: true }).count()) === 1,
+  'signed out, plain Enter is no shortcut, and Ctrl+Enter is Done, which asks for sign-in',
+  afterPlainEnter === 0 && (await signInShown()) === 1,
+  `after Enter ${afterPlainEnter}, after Ctrl+Enter ${await signInShown()}`,
 );
 await guest.getByRole('textbox', { name: 'Email', exact: true }).fill('owner@example.com');
 await guest.getByLabel('Password', { exact: true }).fill('stand-in');
@@ -613,12 +624,6 @@ check(
   '  and Ctrl+Z still undoes (9)',
   before === OUT.length && after === OUT.length - 1,
   `${before} → ${after} points`,
-);
-await guest.keyboard.press('Control+Enter');
-await guest.waitForTimeout(500);
-check(
-  '  and the save panel is open, Ctrl+Enter or not (9)',
-  (await guest.getByTestId('save-head').count()) === 1,
 );
 
 // A line that comes back to where it began: the panel's first guess puts one
@@ -744,15 +749,23 @@ check(
   '  no field is focused, so no keyboard springs up',
   await phone.evaluate(() => !/INPUT|SELECT|TEXTAREA/.test(document.activeElement?.tagName ?? '')),
 );
-const small = await phone.evaluate(() =>
+/** The phone sheet's fields for a new route: the two ends, and the two facts below them. */
+const PHONE_SHEET_FIELDS = 4;
+// Every field the sheet shows, measured: a list that found nothing would pass
+// with nothing checked, so the fields are counted too.
+const fieldSizes = await phone.evaluate(() =>
   [...document.querySelectorAll('form input:not([type=checkbox]), form select')]
-    .map((e) => parseFloat(getComputedStyle(e).fontSize))
-    .filter((px) => px < 16),
+    .filter((e) => e.getClientRects().length > 0)
+    .map((e) => ({
+      name: e.getAttribute('aria-label') ?? e.getAttribute('data-testid') ?? e.tagName,
+      px: parseFloat(getComputedStyle(e).fontSize),
+    })),
 );
+const small = fieldSizes.filter((f) => f.px < 16);
 check(
   '  every field is 16 px, so iOS does not zoom in on it',
-  small.length === 0,
-  `${small.length} under 16 px`,
+  fieldSizes.length >= PHONE_SHEET_FIELDS && small.length === 0,
+  `${fieldSizes.length} fields measured, ${small.length} under 16 px: ${JSON.stringify(small)}`,
 );
 const phoneSave = phone.getByRole('button', { name: /^(Publish|Save as draft)$/ }).last();
 const saveAt = await rect(phoneSave);
