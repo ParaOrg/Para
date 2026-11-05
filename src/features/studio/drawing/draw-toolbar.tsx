@@ -29,14 +29,6 @@ interface DrawToolbarProps {
    * keep buttons can say which part they keep in the jeep's own order.
    */
   ends?: ExtendEnds | null;
-  /**
-   * Accepted and unused: the toolbar has no Close the loop any more (a line
-   * closes by its first point's connect badge, use-connect-hint.ts). Still
-   * taken because the studio passes it; removed with the callers.
-   */
-  loop?: unknown;
-  /** Accepted and unused, as `loop`: nothing on the toolbar hides beside the sidebar now. */
-  isBesideSidebar?: boolean;
 }
 
 /**

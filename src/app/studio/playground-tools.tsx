@@ -17,7 +17,6 @@ import {
   type useAuthFlow,
   type useContributionStart,
   type useDrawing,
-  type useLoopClosing,
   type useSaveFlow,
   type useSaveTarget,
 } from '@/features/studio';
@@ -35,7 +34,6 @@ interface PlaygroundToolsProps {
   saveFlow: ReturnType<typeof useSaveFlow>;
   contribution: ReturnType<typeof useContributionStart>;
   extendEnds: ReturnType<typeof useSaveTarget>['extendEnds'];
-  loop: ReturnType<typeof useLoopClosing>['loop'];
   isPlayground: boolean;
   isChoosing: boolean;
   isNewMenuOpen: boolean;
@@ -61,7 +59,6 @@ export function PlaygroundTools({
   saveFlow,
   contribution,
   extendEnds,
-  loop,
   isPlayground,
   isChoosing,
   isNewMenuOpen,
@@ -120,7 +117,6 @@ export function PlaygroundTools({
           onDone={onDone}
           keys={isPlayground && !isSaving && !isAccountDialogOpen}
           ends={extendEnds}
-          loop={loop}
         />
       ) : isChoosing ? null : (
         /*
