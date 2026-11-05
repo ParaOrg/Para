@@ -2,7 +2,7 @@
 //    the editor has —
 //      router.project-osrm.org   the route snapper
 //      para.draft              the drawing-draft key
-//      Sign in to save, Forgot password?, New route, terminal or hintuan,
+//      Sign in to save, Login your admin account, New route, terminal or hintuan,
 //      Draw the return trip
 //      .supabase.co              the database's address: commuters read the
 //                                published map and never call it
@@ -11,7 +11,7 @@ const EDITOR_ONLY = [
   'router.project-osrm.org',
   'para.draft',
   'Sign in to save',
-  'Forgot password?',
+  'Login your admin account',
   'New route, terminal or hintuan',
   'Draw the return trip',
   '.supabase.co',
@@ -26,11 +26,11 @@ export function proveStrings(build, check) {
   // Its own chunks, not the ones it shares with the public page, whose map reader
   // names route_variant in the published file's fields.
   const contributeOwn = text(contributeFiles.filter((f) => !commuterFiles.includes(f)));
-  // The database's address and "Forgot password?" (its own Sign in button) are the editor strings the
-  // contributor page needs. What it may not name are the studio's tables and operations.
+  // The database's address is the one editor string the contributor page needs. What it may not
+  // name are the studio's tables and operations.
   const STUDIO_DATA = ['route_variant', 'route_stop', 'claim_draft', 'publish_draft', 'take_down'];
   const leakedToContribute = [
-    ...EDITOR_ONLY.filter((s) => s !== '.supabase.co' && s !== 'Forgot password?'),
+    ...EDITOR_ONLY.filter((s) => s !== '.supabase.co'),
     ...STUDIO_DATA,
   ].filter((s) => contributeOwn.includes(s));
   check(

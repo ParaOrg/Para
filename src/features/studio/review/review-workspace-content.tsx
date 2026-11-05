@@ -20,7 +20,12 @@ const TABS: { id: ReviewTab; label: string }[] = [
   { id: 'subjects', label: 'Routes and places' },
   { id: 'publication', label: 'Waiting for publication' },
 ];
-export function ReviewWorkspaceContent({ map, onChanged, buttonSlot = null }: StudioReviewProps) {
+export function ReviewWorkspaceContent({
+  map,
+  onChanged,
+  buttonSlot = null,
+  onOpenDraft,
+}: StudioReviewProps) {
   const client = useQueryClient();
   const query = useReviewQuery();
   const names = useReviewNames(query.data ?? []);
@@ -29,11 +34,25 @@ export function ReviewWorkspaceContent({ map, onChanged, buttonSlot = null }: St
   const [tab, setTab] = useState<ReviewTab>('drafts');
   const [draftId, setDraftId] = useState<string | null>(null);
   const dialogRef = useRef<HTMLDialogElement>(null);
-  const openDraft = useCallback((id: string) => {
-    setDraftId(id);
-    setTab('drafts');
-    setIsOpen(true);
-  }, []);
+  // A draft tapped on the map opens straight into editing where it can (onOpenDraft); else in
+  // Drafts, to be reviewed.
+  // onOpenDraft is a new function every render (useOpenDraft); the ref keeps openDraft, which the
+  // map's draft layers listen with, changing only when the drafts do.
+  const drafts = query.data;
+  const onOpenDraftRef = useRef(onOpenDraft);
+  useEffect(() => {
+    onOpenDraftRef.current = onOpenDraft;
+  }, [onOpenDraft]);
+  const openDraft = useCallback(
+    (id: string, directionId?: string) => {
+      const draft = drafts?.find((d) => d.id === id);
+      if (draft && onOpenDraftRef.current?.(draft, directionId)) return;
+      setDraftId(id);
+      setTab('drafts');
+      setIsOpen(true);
+    },
+    [drafts],
+  );
   useEffect(
     () =>
       subscribeReviewChanges(() => {

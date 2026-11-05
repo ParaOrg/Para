@@ -194,9 +194,14 @@ const idle = () =>
   page
     .waitForFunction(() => !document.body.innerText.includes('snapping…'), null, { timeout: 15000 })
     .catch(() => {});
-// The drawing's count, not the sidebar's "Add at least 2 points" while a save waits.
-const pointsShown = async () =>
-  Number((await body()).match(/(?<!at least )(\d+) points?\b/)?.[1] ?? 0);
+// The drawing's count: the toolbar's "3 points", or beside the map Line detail's Points (or a
+// hotspot's Corners); never the sidebar's "Add at least 2 points" while a save waits.
+const countIn = (text) => {
+  const toolbar = text.match(/(?<!at least )(\d+) (?:points?|corners?)\b/);
+  const detail = text.match(/\b(?:Points|Corners)\s+(\d+)/);
+  return Number(detail?.[1] ?? toolbar?.[1] ?? 0);
+};
+const pointsShown = async () => countIn(await body());
 // On a computer the sidebar already stands beside the map, a route's or a hotspot's; narrower, Done.
 const done = async () => {
   await idle();
@@ -329,7 +334,18 @@ async function openCard(ll) {
   await go(at(0, 0), 15);
   await clickAt(ll, 700);
 }
-const closeLoop = () => page.getByTestId('close-loop');
+/** Closes the line by a click at its connect badge, as the editor does (use-connect-hint.ts). */
+const closeByBadge = async () => {
+  const outbound = (await page.evaluate(() => window.__src('draw-outbound')))?.features?.find(
+    (f) => f.properties.role === 'start',
+  )?.geometry.coordinates;
+  const points = (await page.evaluate(() => window.__src('draw-points')))?.features ?? [];
+  const target = outbound ?? points[0]?.geometry.coordinates;
+  const [x, y] = await px(target);
+  await page.mouse.move(x + 4, y + 4, { steps: 3 });
+  await page.waitForTimeout(150);
+  await page.mouse.click(x + 4, y + 4);
+};
 
 // ---- 2b. The return trip, into the slot
 const slotId = draftDirections.find((v) => v.shape === null)?.id;
@@ -343,7 +359,7 @@ check(
   `${await pointsShown()} points`,
 );
 await clickAt(BACK_MID, 300);
-await closeLoop().click();
+await closeByBadge();
 await idle();
 await done();
 check('  the panel says it draws the return trip', (await body()).includes('Draw the return trip'));
@@ -372,6 +388,7 @@ check(
 
 // ---- 3. Edit a direction
 await openCard(OUT[1]);
+await waitFor(async () => (await page.getByRole('button', { name: 'Edit route' }).count()) === 1);
 check(
   'a tap on the line opens its card, with Edit route',
   (await page.getByRole('button', { name: 'Edit route' }).count()) === 1,
@@ -430,15 +447,17 @@ check(
 // Saving builds on the draft, so opening the approved line would save it over the first edit.
 // No reload between the two: the studio's cache of the draft must not seed the second edit.
 await openCard(OUT[1]);
-// The draft's line is drawn over the approved one, and a tap on it opens Drafts as well.
-const reviewDialog = page.locator('dialog[open]');
-if ((await reviewDialog.count()) > 0)
-  await reviewDialog.getByRole('button', { name: 'Close', exact: true }).click();
-await page.getByRole('button', { name: 'Edit route' }).click();
+// The draft's line is drawn over the approved one: a tap on it opens the editor's own draft
+// straight into Edit route on the way tapped, with no review sheet.
 await waitFor(async () => (await pointsShown()) > 0);
+check(
+  "a tap on the editor's own draft opens it into editing, with no review sheet",
+  (await pointsShown()) > 0 && (await page.locator('dialog[open]').count()) === 0,
+  `${await pointsShown()} points`,
+);
 await page.waitForTimeout(300);
 check(
-  "Edit route on a route with the editor's draft opens the draft's line",
+  "  the tap opens the draft's own line",
   (await pointsShown()) === OUT.length + 1,
   `${await pointsShown()} points`,
 );
@@ -517,9 +536,9 @@ check(
 // a change saved on top of the draft would otherwise drop the board the draft added.
 await load();
 await openCard(OUT[1]);
-const openDialog = page.locator('dialog[open]');
-if ((await openDialog.count()) > 0)
-  await openDialog.getByRole('button', { name: 'Close', exact: true }).click();
+// A tap on the editor's own draft opens it into editing; Exit leaves the drawing for its card.
+await waitFor(async () => (await pointsShown()) > 0);
+await page.getByRole('button', { name: 'Exit', exact: true }).click();
 await waitFor(async () => (await items().count()) === 1);
 check(
   "  reopened, the card lists the editor's draft's board",
@@ -659,7 +678,7 @@ await page.getByRole('button', { name: 'New route, terminal or hintuan' }).click
 await page.getByRole('menuitem', { name: /Routes/ }).click();
 await page.waitForTimeout(200);
 for (const p of IKOT) await clickAt(p, 300);
-await closeLoop().click();
+await closeByBadge();
 await idle();
 await done();
 await page.getByLabel('Ikot name').fill('UP – Ikot');

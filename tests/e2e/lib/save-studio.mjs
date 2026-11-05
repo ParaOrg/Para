@@ -660,9 +660,14 @@ export const idle = () =>
   page
     .waitForFunction(() => !document.body.innerText.includes('snapping…'), null, { timeout: 15000 })
     .catch(() => {});
-// The drawing's count, not the sidebar's "Add at least 2 points" while a save waits.
-export const pointsShown = async () =>
-  Number((await body()).match(/(?<!at least )(\d+) points?\b/)?.[1] ?? 0);
+// The drawing's count: the toolbar's "3 points", or beside the map Line detail's Points (or a
+// hotspot's Corners); never the sidebar's "Add at least 2 points" while a save waits.
+const countIn = (text) => {
+  const toolbar = text.match(/(?<!at least )(\d+) (?:points?|corners?)\b/);
+  const detail = text.match(/\b(?:Points|Corners)\s+(\d+)/);
+  return Number(detail?.[1] ?? toolbar?.[1] ?? 0);
+};
+export const pointsShown = async () => countIn(await body());
 /**
  * Done: on a computer the sidebar already stands beside the map, a route's or a
  * hotspot's, whose saves are Done, so the toolbar has none; a phone or a
@@ -772,7 +777,24 @@ export const drawnPoints = async () =>
   (await page.evaluate(() => window.__src('draw-points')))?.features.map(
     (f) => f.geometry.coordinates,
   ) ?? [];
+/** The toolbar's Close the loop, which is gone: a check that it stays gone. */
 export const closeLoop = () => page.getByTestId('close-loop');
+/**
+ * Closes the line as the editor does: a click by the connect badge at the
+ * point it closes on, a return trip's outbound start or the line's own first
+ * point (use-connect-hint.ts).
+ */
+export const closeByBadge = async () => {
+  const outbound = (await page.evaluate(() => window.__src('draw-outbound')))?.features?.find(
+    (f) => f.properties.role === 'start',
+  )?.geometry.coordinates;
+  const points = (await page.evaluate(() => window.__src('draw-points')))?.features ?? [];
+  const target = outbound ?? points[0]?.geometry.coordinates;
+  const [x, y] = await px(target);
+  await page.mouse.move(x + 4, y + 4, { steps: 3 });
+  await page.waitForTimeout(150);
+  await page.mouse.click(x + 4, y + 4);
+};
 
 /** Taps `ll` from the suite's ground at zoom 15; the camera as it was before the tap. */
 export async function openCard(ll) {
@@ -807,7 +829,7 @@ export async function drawTheRoute() {
   await page.waitForTimeout(400);
   await clickAt(BACK[1], 300);
   await clickAt(at(-0.002, -0.0015), 300);
-  await closeLoop().click();
+  await closeByBadge();
   await idle();
   await page.waitForTimeout(400);
   await done();

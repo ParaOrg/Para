@@ -25,6 +25,7 @@ import {
   body,
   check,
   clickAt,
+  closeByBadge,
   closeLoop,
   directionsOf,
   dismissToasts,
@@ -86,16 +87,10 @@ let drawn;
   await page.getByRole('menuitem', { name: /Routes/ }).click();
   await page.waitForTimeout(200);
   await clickAt(IKOT[0], 300);
-  check(
-    'a new route can close on its own first point, but not before it has three points',
-    (await closeLoop().count()) === 1 && (await closeLoop().isDisabled()),
-    await closeLoop().getAttribute('aria-label'),
-  );
   for (const p of IKOT.slice(1)) await clickAt(p, 300);
   check(
-    '  with the line going round, "Close the loop" is on',
-    await closeLoop().isEnabled(),
-    await closeLoop().getAttribute('aria-label'),
+    'a new route closes by its first point alone: the toolbar has no "Close the loop"',
+    (await closeLoop().count()) === 0,
   );
   // Closed by the first point itself: the connect badge shows as the cursor nears it.
   const hint = page.getByTestId('connect-hint');
@@ -114,11 +109,10 @@ let drawn;
   await page.waitForTimeout(400);
   drawn = await drawnPoints();
   check(
-    '  a click there ends the line on the first point (<1 m), the badge gone, and then rests',
+    '  a click there ends the line on the first point (<1 m), the badge gone',
     (await hint.count()) === 0 &&
       drawn.length === IKOT.length + 1 &&
-      metresBetween(drawn.at(-1), drawn[0]) < 1 &&
-      (await closeLoop().isDisabled()),
+      metresBetween(drawn.at(-1), drawn[0]) < 1,
     `${drawn.length} point(s)`,
   );
   await done();
@@ -199,7 +193,7 @@ let drawn;
   await page.getByRole('menuitem', { name: /Routes/ }).click();
   await page.waitForTimeout(200);
   for (const p of WIDER) await clickAt(p, 300);
-  await closeLoop().click();
+  await closeByBadge();
   await done();
   await page.getByLabel('Ikot name').fill('  up – IKOT ');
   n = log.length;
