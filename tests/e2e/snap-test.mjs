@@ -458,8 +458,9 @@ await uTurnChecks('insert', s, ['A', 'P', 'B', 'D']);
 await discard();
 
 console.log('== Live preview');
-// While the cursor rests, the road from the last point to it shows, dashed, in
-// draw-preview; a move takes it away at once; there is none in Draw.
+// As the cursor moves, a straight dashed guide from the last point to it shows
+// at once in draw-preview; once it rests, the road replaces it; a move puts
+// the guide back at once; there is none in Draw.
 const preview = async () =>
   ((await page.evaluate(() => window.__src('draw-preview')))?.features ?? []).flatMap(
     (f) => f.geometry?.coordinates ?? [],
@@ -468,13 +469,26 @@ const restAt = async (c) => {
   const [x, y] = await proj(c);
   await page.mouse.move(box0.x + x, box0.y + y, { steps: 4 });
 };
+/** The road offered once the cursor rests, and how long after the rest it came. */
+const roadOffered = async () => {
+  const restedAt = Date.now();
+  let line = await preview();
+  for (let i = 0; i < 120 && line.length <= 2; i++) {
+    await page.waitForTimeout(50);
+    line = await preview();
+  }
+  return { line, ms: Date.now() - restedAt };
+};
 await drawRoute([A, B]);
 await restAt(D);
-let offered = [];
-for (let i = 0; i < 30 && offered.length === 0; i++) {
-  await page.waitForTimeout(200);
-  offered = await preview();
-}
+const guide = await preview();
+check(
+  'preview: the moment the cursor stops, a straight guide from B to it, before any road',
+  guide.length === 2 && metres(guide[0], B) < 25 && metres(guide[1], D) < 5,
+  `${guide.length} coords`,
+);
+let { line: offered, ms: roadMs } = await roadOffered();
+console.log(`      the road showed ${roadMs} ms after the rest`);
 check(
   'preview: resting past B, the road from B to the cursor shows',
   offered.length > 2 && metres(offered[0], B) < 25 && metres(offered.at(-1), D) < 25,
@@ -490,14 +504,17 @@ check(
 );
 const segsBefore = (await segs()).length;
 await restAt(E);
-check('preview: a move takes it away at once', (await preview()).length === 0);
+const guideAgain = await preview();
+check(
+  'preview: a move puts the straight guide back at once, to the cursor',
+  guideAgain.length === 2 && metres(guideAgain[1], E) < 5,
+  `${guideAgain.length} coords`,
+);
 check('preview: it is never part of the line', (await segs()).length === segsBefore);
+({ ms: roadMs } = await roadOffered());
+console.log(`      and ${roadMs} ms after a second rest, the queue a second apart`);
 await restAt(D);
-offered = [];
-for (let i = 0; i < 30 && offered.length === 0; i++) {
-  await page.waitForTimeout(200);
-  offered = await preview();
-}
+({ line: offered } = await roadOffered());
 await page.keyboard.press('f');
 await page.waitForTimeout(200);
 check(
