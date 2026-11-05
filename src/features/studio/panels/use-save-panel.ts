@@ -9,7 +9,8 @@ import {
 } from '@/features/routes/model/routes';
 
 import { loopSaveRefusal, saveRefusal } from './save-checks';
-import { useRouteSave, type SaveIntent } from './use-route-save';
+import type { SaveIntent } from './save-intent';
+import { useRouteSave } from './use-route-save';
 import { useSaveEnds } from './use-save-ends';
 import { useSaveFacts } from './use-save-facts';
 import { returnTripNotices } from '../drawing/loop-closing';

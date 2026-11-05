@@ -4,6 +4,7 @@ import { hotspotLabel } from '@/features/routes/model/hotspots';
 import { LOOP_WORD } from '@/features/routes/model/routes';
 
 import { IkotNameField } from './ikot-name-field';
+import { LineDetail } from './line-detail';
 import { LoopToggle } from './loop-toggle';
 import { ModeField } from './mode-field';
 import { SaveDirectionName } from './save-direction-name';
@@ -13,6 +14,7 @@ import { SaveNotices } from './save-notices';
 import { SaveTimeline } from './save-timeline';
 import { BESIDE_BODY } from './sheet';
 import { useSavePanel, type UseSavePanelOptions } from './use-save-panel';
+import { useUnpublish } from './use-unpublish';
 import { ViaField } from './via-field';
 
 interface SavePanelProps extends UseSavePanelOptions {
@@ -20,6 +22,13 @@ interface SavePanelProps extends UseSavePanelOptions {
   saveBlocked?: string | null;
   /** Back to the map, when the form covers it. Absent beside the map, where Exit ends the drawing. */
   onCancel?: () => void;
+  /**
+   * The route as it stands is published, has no draft and its line is as it opened (the caller
+   * knows the line from before this form): Published until a field changes too.
+   */
+  isPublished?: boolean;
+  /** The published route came off the map (Unpublish). */
+  onUnpublished?: () => void;
 }
 
 /**
@@ -36,7 +45,13 @@ interface SavePanelProps extends UseSavePanelOptions {
  * (`SaveNotices`), what the line passes (`SaveTimeline`) and is called (`SaveDirectionName`) and
  * the footer (`SaveFooter`).
  */
-export function SavePanel({ saveBlocked = null, onCancel, ...options }: SavePanelProps) {
+export function SavePanel({
+  saveBlocked = null,
+  onCancel,
+  isPublished = false,
+  onUnpublished,
+  ...options
+}: SavePanelProps) {
   const headingId = useId();
   const { draw, existing, directions = [] } = options;
   const panel = useSavePanel(options);
@@ -46,8 +61,7 @@ export function SavePanel({ saveBlocked = null, onCancel, ...options }: SavePane
   const isBeside = !onCancel;
 
   // What Exit would lose: the line or a field changed since the sidebar opened.
-  const changes = JSON.stringify([
-    draw.controlPoints,
+  const fields = JSON.stringify([
     panel.signboard,
     panel.mode,
     panel.via,
@@ -55,14 +69,22 @@ export function SavePanel({ saveBlocked = null, onCancel, ...options }: SavePane
     ends.tailId,
     isLoop,
   ]);
-  const [openedWith] = useState(changes);
+  const line = JSON.stringify(draw.controlPoints);
+  const [opened] = useState({ fields, line });
+  const isChanged = fields !== opened.fields || line !== opened.line;
+  const status = isPublished && fields === opened.fields ? 'published' : 'draft';
+  const unpublishing = useUnpublish({
+    kind: 'route',
+    subjectId: isPublished ? (existing?.route.id ?? null) : null,
+    onUnpublished,
+  });
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     void panel.submit('draft');
   };
   const handleExit = () => {
-    if (changes !== openedWith && !window.confirm('Discard your changes?')) return;
+    if (isChanged && !window.confirm('Discard your changes?')) return;
     draw.cancel();
   };
 
@@ -70,6 +92,7 @@ export function SavePanel({ saveBlocked = null, onCancel, ...options }: SavePane
     <form
       onSubmit={handleSubmit}
       aria-labelledby={headingId}
+      data-testid="route-panel"
       className={isBeside ? 'flex min-h-0 flex-1 flex-col' : undefined}
     >
       <div className={isBeside ? BESIDE_BODY : 'flex flex-col gap-5'}>
@@ -78,8 +101,7 @@ export function SavePanel({ saveBlocked = null, onCancel, ...options }: SavePane
             Route Information
           </h2>
           <p className="-mt-2 text-xs text-content-quaternary">
-            {panelTitle({ isEdit: !!existing, isReturnTrip: !!options.route, isLoop })} ·{' '}
-            {draw.controlPoints.length} points · {(draw.metres / 1000).toFixed(2)} km
+            {panelTitle({ isEdit: !!existing, isReturnTrip: !!options.route, isLoop })}
             {routeLocked && ' · the ends belong to the route, so both directions share them'}
             {existing &&
               " · the ends, via, mode and fare note are the route's: a change here is a change to both directions"}
@@ -119,6 +141,16 @@ export function SavePanel({ saveBlocked = null, onCancel, ...options }: SavePane
           <ModeField mode={panel.mode} isLocked={routeLocked} onChange={panel.setMode} />
         </section>
 
+        {(isLoop || (head && tail)) && (
+          <SaveTimeline
+            isLoop={isLoop}
+            loopPlacesCount={facts.loopPlacesCount}
+            preview={facts.preview}
+          />
+        )}
+
+        <LineDetail points={draw.controlPoints.length} metres={draw.metres} status={status} />
+
         <SaveNotices
           segments={draw.segments}
           uTurns={draw.uTurns}
@@ -144,14 +176,6 @@ export function SavePanel({ saveBlocked = null, onCancel, ...options }: SavePane
           direction={direction}
         />
 
-        {(isLoop || (head && tail)) && (
-          <SaveTimeline
-            isLoop={isLoop}
-            loopPlacesCount={facts.loopPlacesCount}
-            preview={facts.preview}
-          />
-        )}
-
         <SaveDirectionName
           isLoop={isLoop}
           name={facts.name}
@@ -160,13 +184,25 @@ export function SavePanel({ saveBlocked = null, onCancel, ...options }: SavePane
           isEdit={!!existing}
         />
 
-        {panel.error && <p className="text-sm text-content-error">{panel.error}</p>}
+        {panel.error && (
+          <p role="alert" className="text-sm text-content-error">
+            {panel.error}
+          </p>
+        )}
+        {unpublishing.error && (
+          <p role="alert" className="text-sm text-content-error">
+            {unpublishing.error}
+          </p>
+        )}
 
         {saveBlocked && <p className="text-sm text-content-quaternary">{saveBlocked}</p>}
       </div>
 
       <SaveFooter
         busyIntent={panel.busy}
+        status={status}
+        isUnpublishing={unpublishing.isBusy}
+        onUnpublish={() => unpublishing.unpublish(existing?.route.name ?? 'this route')}
         saveBlocked={saveBlocked}
         onExit={handleExit}
         onCancel={onCancel}

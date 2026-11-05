@@ -194,11 +194,13 @@ const idle = () =>
   page
     .waitForFunction(() => !document.body.innerText.includes('snapping…'), null, { timeout: 15000 })
     .catch(() => {});
-const pointsShown = async () => Number((await body()).match(/(\d+) points?\b/)?.[1] ?? 0);
-// On a computer the route's form already stands beside the map; a hotspot still presses Done.
+// The drawing's count, not the sidebar's "Add at least 2 points" while a save waits.
+const pointsShown = async () =>
+  Number((await body()).match(/(?<!at least )(\d+) points?\b/)?.[1] ?? 0);
+// On a computer the sidebar already stands beside the map, a route's or a hotspot's; narrower, Done.
 const done = async () => {
   await idle();
-  if (!(await page.getByTestId('route-panel').isVisible()))
+  if (!(await page.getByTestId('sidebar').isVisible()))
     await page.getByRole('button', { name: /Done/ }).click();
   await page.waitForTimeout(600);
 };
@@ -230,9 +232,10 @@ async function hintuan(c, name) {
   await done();
   await page.getByPlaceholder('SM Fairview Ilalim').fill(name);
   const n = log.length;
-  await page.getByRole('button', { name: 'Save hintuan' }).click();
+  await page.getByRole('button', { name: 'Save as draft', exact: true }).click();
   await waitFor(
-    async () => (await page.getByRole('button', { name: 'Save hintuan' }).count()) === 0,
+    async () =>
+      (await page.getByRole('button', { name: 'Save as draft', exact: true }).count()) === 0,
   );
   await page.waitForTimeout(500);
   return writesSince(n);
@@ -380,6 +383,10 @@ check(
   (await pointsShown()) === OUT.length,
   `${await pointsShown()} points`,
 );
+check(
+  '  a published route with no draft opens as Published',
+  /Status\s+Published/.test(await page.getByTestId('line-detail').innerText()),
+);
 // Edit route opens in Move, where a click adds nothing: Snap, to add.
 await page.getByTestId('snap-draw').getByRole('button', { name: 'Snap' }).click();
 await go(at(0, 0), 15);
@@ -434,6 +441,10 @@ check(
   "Edit route on a route with the editor's draft opens the draft's line",
   (await pointsShown()) === OUT.length + 1,
   `${await pointsShown()} points`,
+);
+check(
+  "  and opens as a Draft: the editor's own draft is waiting",
+  /Status\s+Draft/.test(await page.getByTestId('line-detail').innerText()),
 );
 await page.getByTestId('snap-draw').getByRole('button', { name: 'Snap' }).click();
 await go(at(0, 0), 15);
@@ -700,7 +711,7 @@ async function editHintuan(spot, name) {
   shownName = await nameField().inputValue();
   await nameField().fill(name);
   const from = log.length;
-  await page.getByRole('button', { name: 'Save changes' }).click();
+  await page.getByRole('button', { name: 'Save as draft', exact: true }).click();
   await drafted();
   await page.waitForTimeout(300);
   return writesSince(from);
@@ -862,7 +873,7 @@ check(
       rpcs(w, 'publish_draft').length === 1 &&
       rpcs(w, 'submit_draft').length === 0 &&
       published?.status === 'approved' &&
-      !(await page.getByTestId('route-panel').isVisible()),
+      !(await page.getByTestId('sidebar').isVisible()),
     said(w),
   );
 }

@@ -33,7 +33,7 @@ await page.getByRole('button', { name: 'New route, terminal or hintuan' }).click
 await page.getByRole('menuitem', { name: /Routes/ }).click();
 // From the map's own corner: on a computer the route's form opens left of it and moves it.
 await page
-  .getByTestId('route-panel')
+  .getByTestId('sidebar')
   .or(page.getByRole('button', { name: /Done/ }))
   .first()
   .waitFor();
@@ -42,7 +42,7 @@ await page.mouse.click(mapBox.x + 180, mapBox.y + 352);
 await page.mouse.click(mapBox.x + 250, mapBox.y + 402);
 await page.mouse.click(mapBox.x + 300, mapBox.y + 372);
 // On a computer the route's form already stands beside the map; narrower, Done opens it.
-if (!(await page.getByTestId('route-panel').isVisible()))
+if (!(await page.getByTestId('sidebar').isVisible()))
   await page.getByRole('button', { name: /Done/ }).click();
 await page.getByTestId('save-head').selectOption({ label: '+ New place here…' });
 const group = page.getByRole('group', { name: 'New place for the head', exact: true });

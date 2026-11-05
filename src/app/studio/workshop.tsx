@@ -185,12 +185,11 @@ export function Workshop({ session, recovery }: WorkshopProps) {
 
   const { choosing } = cards;
 
-  // On a computer, a signed-in editor's route form stands beside the map the
-  // whole time the line is drawn, and its Save is Done. Not while Extend is
-  // still choosing where to leave a line: there is no line yet.
+  // On a computer, a signed-in editor's sidebar stands beside the map the whole
+  // time a route or a hotspot is drawn, and its saves are Done. Not while Extend
+  // is still choosing where to leave a line: there is no line yet.
   const isWideScreen = useIsWideScreen();
-  const isBeside =
-    isWideScreen && isPlayground && isSignedIn && draw.drawing && !draw.area && !draw.picking;
+  const isBeside = isWideScreen && isPlayground && isSignedIn && draw.drawing && !draw.picking;
 
   // While a save sheet or an account dialog is open over the map, nothing
   // behind it can be reached: the drawing's toolbar would change the line
@@ -213,13 +212,16 @@ export function Workshop({ session, recovery }: WorkshopProps) {
 
   // The map's credits, opened by its ⓘ as on the public map: the page is out of reach under them.
   const credits = useMapCredits(root);
+  const [draftsSlot, setDraftsSlot] = useState<HTMLDivElement | null>(null);
 
   return (
     <div className="relative flex h-full w-full flex-col">
       <div inert={credits.state === 'open'} className="contents">
         {/* The studio's top bar: everything on the map starts below it. Provisional until the owner's Figma frame. */}
-        <div className="flex h-[calc(3rem+env(safe-area-inset-top))] shrink-0 items-center justify-center border-b border-border-primary bg-surface px-4 pt-[env(safe-area-inset-top)]">
+        <div className="relative flex h-[calc(3rem+env(safe-area-inset-top))] shrink-0 items-center justify-center border-b border-border-primary bg-surface px-4 pt-[env(safe-area-inset-top)]">
           <MapSwitch ref={switchRef} value={studioMap} onChange={chooseStudioMap} />
+          {/* Drafts, on a computer: in the bar, clear of the map's controls (StudioReview). */}
+          <div ref={setDraftsSlot} className="absolute right-4 bottom-0 flex h-12 items-center" />
         </div>
         {/* The route's form left of the map while a line is drawn on a computer, and the map. */}
         <div className="flex min-h-0 flex-1">
@@ -315,6 +317,7 @@ export function Workshop({ session, recovery }: WorkshopProps) {
               />
               <PlaygroundTools
                 map={map}
+                draftsSlot={isWideScreen ? draftsSlot : null}
                 session={session}
                 auth={auth}
                 draw={draw}
