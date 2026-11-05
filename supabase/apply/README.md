@@ -523,3 +523,37 @@ No table, no row changes. Three files, each pasted whole into the SQL editor as 
 - Apply failed: nothing changed. The message names what it found.
 - Applied, and it must be withdrawn: run `20261105120000_review_rules_revert.sql`.
   `verify/review-rules.sh` checks the schema afterwards matches the schema before, and that it re-applies.
+
+# Applying draft_update_makerless to the live project
+
+**Applied live 2026-11-05** (ledger `20261105055623`) from its paste file; its check passed. Do not reapply. The owner's choice after review_rules: any editor may edit a draft whose maker's
+account is gone (`editor_id` null), as `draft_update_own` allowed. review_rules had made `draft_update`'s
+with check the maker's alone, which refused every direct edit of such a draft. This puts back the maker
+or a maker-less draft. A draft still cannot be handed to nobody: since review_rules an editor updates
+only `payload`, `status`, `submitted_at` and `note`, never `editor_id`. Deleting and discarding are
+unchanged. One policy; no table, grant or row changes.
+
+After this, `20261105120000_review_rules_check.sql` no longer passes as written: its step 9 and its row 3
+expect the maker-only with check this replaces.
+
+| File | What it does |
+| --- | --- |
+| `20261105130000_draft_update_makerless_apply.sql` | One transaction. Checks `review_rules` is in the ledger, and this is not. Applies `migrations/20261105130000_draft_update_makerless.sql` (carried unchanged; `verify/draft-update-makerless.sh` checks the copy). Checks `draft_update` accepts the maker or a maker-less draft and `editor_id` is still not updatable. Writes the ledger row `draft_update_makerless`. Any failed check raises and nothing is changed. A second run stops at the first check and changes nothing. |
+| `20261105130000_draft_update_makerless_check.sql` | Part one adds two test editors, two hotspots and their drafts, proves the behaviour, then rolls all of it back; it raises `FAILED: ...` (or a row-security error) on the first wrong result. Part two is read-only: 4 rows, all `ok` should be `t`. |
+| `20261105130000_draft_update_makerless_revert.sql` | One transaction: puts back `draft_update` as review_rules left it (the maker only in its with check) and removes the ledger row. Touches no data. Safe to run twice. |
+
+## Steps
+
+1. Run `20261105130000_draft_update_makerless_apply.sql`. It ends with `COMMIT`; an error means nothing
+   changed.
+2. Run `20261105130000_draft_update_makerless_check.sql`: part one ends with `ROLLBACK` and no error;
+   part two gives 4 rows, all `ok = t`.
+3. Record the ledger version
+   (`select version from supabase_migrations.schema_migrations where name = 'draft_update_makerless';`)
+   in `migrations/README.md`. The types do not change.
+
+## Recovery
+
+- Apply failed: nothing changed. The message names what it found.
+- Applied, and it must be withdrawn: run `20261105130000_draft_update_makerless_revert.sql`.
+

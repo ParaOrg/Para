@@ -253,3 +253,20 @@ discarded by any editor. Then `after-0022.sql` (its one direct `base_revision` f
 postgres), `concurrency-0022.sh`, `deadlock-0022.sh`, `studio-drafts.sh` and `reviewed-draft.sql` run
 again over it. On a second database, without draft_update_own, the apply refuses and writes no ledger
 row. On a third, apply then revert twice leaves the schema as before, and re-applying passes the check.
+
+## draft-update-makerless.sh
+
+`migrations/20261105130000_draft_update_makerless.sql` on databases of its own, run last by `run.sh` or alone:
+
+    PSQL="docker exec -i pg-verify psql -U postgres" bash supabase/verify/draft-update-makerless.sh
+
+It applies every earlier migration and the review paste files as live has them (through review_rules),
+then `../apply/20261105130000_draft_update_makerless_apply.sql` twice (the second run must stop and change
+nothing), and runs `…_check.sql`: its rolled-back behaviour part must raise nothing and leave no row
+behind, and its 4 read-only rows must be `t`. The behaviour part proves that any editor edits a draft
+whose maker is gone and it stays maker-less, that nobody can set `editor_id`, that another editor still
+cannot edit, delete or discard a draft whose maker is there, that a maker-less draft is discarded by any
+editor and not deleted directly, and that the maker edits their own. On a second database, without
+review_rules, the apply refuses and writes no ledger row. On a third, apply then revert twice leaves the
+schema as before, and re-applying passes the check.
+
