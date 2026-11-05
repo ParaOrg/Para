@@ -211,8 +211,19 @@ export function Workshop({ session, recovery }: WorkshopProps) {
       <div className="flex h-[calc(3rem+env(safe-area-inset-top))] shrink-0 items-center justify-center border-b border-border-primary bg-surface px-4 pt-[env(safe-area-inset-top)]">
         <MapSwitch ref={switchRef} value={studioMap} onChange={chooseStudioMap} />
       </div>
-      {/* The map, and the route's form beside it while a line is drawn on a computer. */}
+      {/* The route's form left of the map while a line is drawn on a computer, and the map. */}
       <div className="flex min-h-0 flex-1">
+        {/* Outside the map's box, so a full-screen panel covers the band too; on a computer, before the map in this row: the form is read first, left of the map. */}
+        <PlaygroundSaveSheets
+          isPlayground={isPlayground}
+          isBeside={isBeside}
+          draw={draw}
+          saved={saved}
+          hotspots={hotspots}
+          target={target}
+          saveFlow={saveFlow}
+          contribution={contribution}
+        />
         {/* `data-dock-host`: the open card's sheet says where its top is here, for the pill to follow (BottomSheet); the New + says what it stands in the corner. */}
         <div
           ref={root}
@@ -305,17 +316,6 @@ export function Workshop({ session, recovery }: WorkshopProps) {
             />
           </div>
         </div>
-        {/* Outside the map's box, so a full-screen panel covers the band too; beside it, in this row, on a computer. */}
-        <PlaygroundSaveSheets
-          isPlayground={isPlayground}
-          isBeside={isBeside}
-          draw={draw}
-          saved={saved}
-          hotspots={hotspots}
-          target={target}
-          saveFlow={saveFlow}
-          contribution={contribution}
-        />
       </div>
       <AccountDialogs session={session} auth={auth} recovery={recovery} />
     </div>

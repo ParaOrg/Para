@@ -31,9 +31,16 @@ await page.route(/router\.project-osrm\.org|routing\.openstreetmap\.de/, (r) =>
 await page.goto('http://127.0.0.1:4180/studio/');
 await page.getByRole('button', { name: 'New route, terminal or hintuan' }).click();
 await page.getByRole('menuitem', { name: /Routes/ }).click();
-await page.mouse.click(180, 400);
-await page.mouse.click(250, 450);
-await page.mouse.click(300, 420);
+// From the map's own corner: on a computer the route's form opens left of it and moves it.
+await page
+  .getByTestId('route-panel')
+  .or(page.getByRole('button', { name: /Done/ }))
+  .first()
+  .waitFor();
+const mapBox = await page.locator('canvas.maplibregl-canvas').boundingBox();
+await page.mouse.click(mapBox.x + 180, mapBox.y + 352);
+await page.mouse.click(mapBox.x + 250, mapBox.y + 402);
+await page.mouse.click(mapBox.x + 300, mapBox.y + 372);
 // On a computer the route's form already stands beside the map; narrower, Done opens it.
 if (!(await page.getByTestId('route-panel').isVisible()))
   await page.getByRole('button', { name: /Done/ }).click();
