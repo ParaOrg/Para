@@ -3,10 +3,13 @@ import type { MapLibreMap } from 'maplibre-gl';
 import { useRef, useState } from 'react';
 
 import { useGazeHush } from '@/features/locator';
+import { MapCreditsDock } from '@/features/routes/map/map-credits-dock';
+import { MapCreditsSheet } from '@/features/routes/map/map-credits-sheet';
 import { MapView } from '@/features/routes/map/map-view';
 import { useCardCamera } from '@/features/routes/map/use-card-camera';
 import { useCardStack } from '@/features/routes/map/use-card-stack';
 import { useLoopTip } from '@/features/routes/map/use-loop-tip';
+import { useMapCredits } from '@/features/routes/map/use-map-credits';
 import { useSavedHotspots } from '@/features/routes/map/use-saved-hotspots';
 import { useSavedRoutes } from '@/features/routes/map/use-saved-routes';
 import {
@@ -205,118 +208,133 @@ export function Workshop({ session, recovery }: WorkshopProps) {
     setNotice,
   });
 
+  // The map's credits, opened by its ⓘ as on the public map: the page is out of reach under them.
+  const credits = useMapCredits(root);
+
   return (
     <div className="relative flex h-full w-full flex-col">
-      {/* The studio's top bar: everything on the map starts below it. Provisional until the owner's Figma frame. */}
-      <div className="flex h-[calc(3rem+env(safe-area-inset-top))] shrink-0 items-center justify-center border-b border-border-primary bg-surface px-4 pt-[env(safe-area-inset-top)]">
-        <MapSwitch ref={switchRef} value={studioMap} onChange={chooseStudioMap} />
-      </div>
-      {/* The route's form left of the map while a line is drawn on a computer, and the map. */}
-      <div className="flex min-h-0 flex-1">
-        {/* Outside the map's box, so a full-screen panel covers the band too; on a computer, before the map in this row: the form is read first, left of the map. */}
-        <PlaygroundSaveSheets
-          isPlayground={isPlayground}
-          isBeside={isBeside}
-          draw={draw}
-          saved={saved}
-          hotspots={hotspots}
-          target={target}
-          saveFlow={saveFlow}
-          contribution={contribution}
-        />
-        {/* `data-dock-host`: the open card's sheet says where its top is here, for the pill to follow (BottomSheet); the New + says what it stands in the corner. */}
-        <div
-          ref={root}
-          data-map-box
-          data-dock-host
-          inert={isSheetOpen}
-          className={
-            '@container relative min-w-0 flex-1 overflow-clip' +
-            (!draw.drawing && !choosing ? ' ' + NEW_MENU_DOCK_FOOT : '')
-          }
-        >
-          {/* Inert on the other maps, so a keyboard cannot pan the camera that waits there. */}
-          <div inert={!isPlayground && !isContributors} className="contents">
-            <MapView
-              onReady={setMap}
-              onLoadedChange={setIsMapLoaded}
-              foldCredits
-              basemaps={STUDIO_BASEMAPS}
-              basemapThumbnails={STUDIO_BASEMAP_THUMBNAILS}
-              hasMapStyleButton={false}
-              labelsPlace="studio"
-            />
-            <WorkshopLocation
-              map={map}
-              isMapLoaded={isMapLoaded}
-              saved={saved}
-              hotspots={hotspots}
-              cards={cards}
-              camera={camera}
-              cameraTurn={locatorTurn}
-              hushedAt={hushedAt}
-            />
-          </div>
-
-          {/* A config or load problem is a banner, never a blank page. */}
-          {(supabaseConfigError || saved.error || hotspots.error) && (
-            <div className="absolute top-[calc(1rem+var(--map-safe-top))] left-1/2 z-20 w-max max-w-[calc(100%-2rem)] -translate-x-1/2 rounded-lg bg-amber-50 px-4 py-2 text-xs text-amber-900 shadow ring-1 ring-amber-200">
-              {supabaseConfigError ??
-                `Couldn't load saved routes: ${saved.error ?? hotspots.error}`}
-            </div>
-          )}
-
-          <OtherMaps
-            studioMap={studioMap}
-            isContributors={isContributors}
-            map={map}
-            userId={session?.user.id}
-            isSignedIn={isSignedIn}
-            hasLine={draw.drawing}
-            onSignIn={openSignIn}
-            onOpenPlayground={handleOpenPlayground}
-            onContributionStart={handleContributionStart}
+      <div inert={credits.state === 'open'} className="contents">
+        {/* The studio's top bar: everything on the map starts below it. Provisional until the owner's Figma frame. */}
+        <div className="flex h-[calc(3rem+env(safe-area-inset-top))] shrink-0 items-center justify-center border-b border-border-primary bg-surface px-4 pt-[env(safe-area-inset-top)]">
+          <MapSwitch ref={switchRef} value={studioMap} onChange={chooseStudioMap} />
+        </div>
+        {/* The route's form left of the map while a line is drawn on a computer, and the map. */}
+        <div className="flex min-h-0 flex-1">
+          {/* Outside the map's box, so a full-screen panel covers the band too; on a computer, before the map in this row: the form is read first, left of the map. */}
+          <PlaygroundSaveSheets
+            isPlayground={isPlayground}
+            isBeside={isBeside}
+            draw={draw}
+            saved={saved}
+            hotspots={hotspots}
+            target={target}
+            saveFlow={saveFlow}
+            contribution={contribution}
           />
+          {/* `data-dock-host`: the open card's sheet says where its top is here, for the pill to follow (BottomSheet); the New + says what it stands in the corner. */}
+          <div
+            ref={root}
+            data-map-box
+            data-dock-host
+            inert={isSheetOpen}
+            className={
+              '@container relative min-w-0 flex-1 overflow-clip' +
+              (!draw.drawing && !choosing ? ' ' + NEW_MENU_DOCK_FOOT : '')
+            }
+          >
+            {/* Inert on the other maps, so a keyboard cannot pan the camera that waits there. */}
+            <div inert={!isPlayground && !isContributors} className="contents">
+              <MapView
+                onReady={setMap}
+                onLoadedChange={setIsMapLoaded}
+                foldCredits
+                basemaps={STUDIO_BASEMAPS}
+                basemapThumbnails={STUDIO_BASEMAP_THUMBNAILS}
+                hasMapStyleButton={false}
+                labelsPlace="studio"
+                areCreditsShown={credits.isSheetMissing}
+              />
+              {/* The public map's ⓘ, in its place at the map's bottom left; MapLibre's corner credits step aside. */}
+              {!credits.isSheetMissing && (
+                <MapCreditsDock
+                  isDocked={cards.open}
+                  onOpen={credits.open}
+                  buttonRef={credits.buttonRef}
+                />
+              )}
+              <WorkshopLocation
+                map={map}
+                isMapLoaded={isMapLoaded}
+                saved={saved}
+                hotspots={hotspots}
+                cards={cards}
+                camera={camera}
+                cameraTurn={locatorTurn}
+                hushedAt={hushedAt}
+              />
+            </div>
 
-          {/* Out of the page's reach, not unmounted, on the other maps. */}
-          <div inert={!isPlayground} className={isPlayground ? 'contents' : 'hidden'}>
-            <PlaygroundCards
+            {/* A config or load problem is a banner, never a blank page. */}
+            {(supabaseConfigError || saved.error || hotspots.error) && (
+              <div className="absolute top-[calc(1rem+var(--map-safe-top))] left-1/2 z-20 w-max max-w-[calc(100%-2rem)] -translate-x-1/2 rounded-lg bg-amber-50 px-4 py-2 text-xs text-amber-900 shadow ring-1 ring-amber-200">
+                {supabaseConfigError ??
+                  `Couldn't load saved routes: ${saved.error ?? hotspots.error}`}
+              </div>
+            )}
+
+            <OtherMaps
+              studioMap={studioMap}
+              isContributors={isContributors}
               map={map}
-              draw={draw}
-              saved={saved}
-              hotspots={hotspots}
-              cards={cards}
-              camera={camera}
-              trip={trip}
-              canEdit={canEdit}
-              opening={opening}
-              deletes={deletes}
-              hush={hush}
-              onDrawReturnTrip={startReturnTrip}
+              userId={session?.user.id}
+              isSignedIn={isSignedIn}
+              hasLine={draw.drawing}
+              onSignIn={openSignIn}
+              onOpenPlayground={handleOpenPlayground}
+              onContributionStart={handleContributionStart}
             />
-            <PlaygroundTools
-              map={map}
-              session={session}
-              auth={auth}
-              draw={draw}
-              saved={saved}
-              hotspots={hotspots}
-              routeCount={trip.routeCount}
-              saveFlow={saveFlow}
-              contribution={contribution}
-              extendEnds={extendEnds}
-              loop={loop}
-              isPlayground={isPlayground}
-              isChoosing={choosing}
-              isNewMenuOpen={isNewMenuOpen}
-              onNewMenuOpenChange={setIsNewMenuOpen}
-              canDrawReturnTrip={slotLeft}
-              onDrawReturnTrip={startReturnTrip}
-              onDone={isBeside ? undefined : onDone}
-            />
+
+            {/* Out of the page's reach, not unmounted, on the other maps. */}
+            <div inert={!isPlayground} className={isPlayground ? 'contents' : 'hidden'}>
+              <PlaygroundCards
+                map={map}
+                draw={draw}
+                saved={saved}
+                hotspots={hotspots}
+                cards={cards}
+                camera={camera}
+                trip={trip}
+                canEdit={canEdit}
+                opening={opening}
+                deletes={deletes}
+                hush={hush}
+                onDrawReturnTrip={startReturnTrip}
+              />
+              <PlaygroundTools
+                map={map}
+                session={session}
+                auth={auth}
+                draw={draw}
+                saved={saved}
+                hotspots={hotspots}
+                routeCount={trip.routeCount}
+                saveFlow={saveFlow}
+                contribution={contribution}
+                extendEnds={extendEnds}
+                loop={loop}
+                isPlayground={isPlayground}
+                isChoosing={choosing}
+                isNewMenuOpen={isNewMenuOpen}
+                onNewMenuOpenChange={setIsNewMenuOpen}
+                canDrawReturnTrip={slotLeft}
+                onDrawReturnTrip={startReturnTrip}
+                onDone={isBeside ? undefined : onDone}
+              />
+            </div>
           </div>
         </div>
       </div>
+      <MapCreditsSheet credits={credits} />
       <AccountDialogs session={session} auth={auth} recovery={recovery} />
     </div>
   );

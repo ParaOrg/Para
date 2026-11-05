@@ -266,6 +266,48 @@ check(
   );
 }
 
+// ---- 2c. The map's ⓘ, as on the public map: at the map's bottom left, opening Map Data Source
+{
+  const info = page.getByRole('button', { name: 'Map data sources' });
+  const sheet = page.getByRole('dialog', { name: 'Map Data Source' });
+  const infoBox = await info.boundingBox();
+  const mapBox = await page.locator('[data-map-box]').boundingBox();
+  const scaleBox = await page.locator('.maplibregl-ctrl-scale').boundingBox();
+  check(
+    "the studio's ⓘ sits at the map's bottom left, 12 in, 32 across, MapLibre's corner credits gone",
+    !!infoBox &&
+      !!mapBox &&
+      Math.abs(infoBox.x - mapBox.x - 12) < 1 &&
+      Math.abs(infoBox.width - 32) < 1 &&
+      Math.abs(mapBox.y + mapBox.height - (infoBox.y + infoBox.height) - 12) < 1 &&
+      !(await page.locator('.maplibregl-ctrl-attrib').isVisible()),
+    JSON.stringify({ infoBox, mapBox }),
+  );
+  check(
+    '  the scale steps to its right: both are read',
+    !!infoBox && !!scaleBox && scaleBox.x >= infoBox.x + infoBox.width,
+    JSON.stringify(scaleBox),
+  );
+  await info.click();
+  await sheet.waitFor();
+  check(
+    '  it opens Map Data Source over the studio, the map and the switch out of reach under it',
+    (await page.evaluate(() => !!document.querySelector('[data-map-box]')?.closest('[inert]'))) &&
+      (await page.evaluate(
+        () => !!document.querySelector('[role=radiogroup]')?.closest('[inert]'),
+      )),
+  );
+  await page.keyboard.press('Escape');
+  await sheet.waitFor({ state: 'detached' });
+  check(
+    '  Escape closes it, focus back on the ⓘ, the map live again',
+    (await page.evaluate(
+      () => document.activeElement?.getAttribute('aria-label') === 'Map data sources',
+    )) &&
+      !(await page.evaluate(() => !!document.querySelector('[data-map-box]')?.closest('[inert]'))),
+  );
+}
+
 // ---- 3a. On a computer, the route's form stands beside the map while the line is drawn
 {
   await go(at(0, 0), 15);
@@ -314,6 +356,12 @@ check(
       Math.round(panelBox.width) === 384 &&
       Math.round(mapBox.x) === 384,
     JSON.stringify({ panel: panelBox, map: mapBox }),
+  );
+  const infoBesideBox = await page.getByRole('button', { name: 'Map data sources' }).boundingBox();
+  check(
+    "  the map's ⓘ stays clear of the form, 12 in from the map's own left edge",
+    !!infoBesideBox && !!mapBox && Math.abs(infoBesideBox.x - mapBox.x - 12) < 1,
+    JSON.stringify(infoBesideBox),
   );
   // Shift+Tab from the toolbar's first button walks back into the form: it comes before the map in the page.
   await page.getByTitle('Discard this route').focus();

@@ -599,10 +599,14 @@ const overlap = (a, z) =>
   z.x < a.x + a.width &&
   a.y < z.y + z.height &&
   z.y < a.y + a.height;
+const phoneInfo = await rect(phone.getByRole('button', { name: 'Map data sources' }));
 check(
-  'phone: the credits start folded to their ⓘ',
-  (await phone.locator('.maplibregl-compact-show').count()) === 0 &&
-    (await phone.locator('.maplibregl-ctrl-attrib').count()) === 1,
+  "phone: the map's ⓘ sits at the bottom left, as on the public map, just clear of the home bar",
+  !!phoneInfo &&
+    Math.abs(phoneInfo.x - 12) < 1 &&
+    Math.abs(844 - (phoneInfo.y + phoneInfo.height) - 34) < 1 &&
+    !(await phone.locator('.maplibregl-ctrl-attrib').isVisible()),
+  JSON.stringify(phoneInfo),
 );
 const pill = await rect(phone.getByRole('button', { name: 'Sign out' }));
 check('phone: the account pill is below the notch', !!pill && pill.y >= 47, JSON.stringify(pill));
