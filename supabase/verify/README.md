@@ -314,3 +314,21 @@ linked, and deleting the phone's user afterwards changes none of it. Then
 delete_account_keep_uploads, the apply refuses and writes no ledger row. On a third, apply then revert twice
 leaves the schema as before, and re-applying passes the check. Without the trigger the check fails at its
 first step.
+
+## drop-dead-weight.sh
+
+`migrations/20261105200000_drop_dead_weight.sql` on databases of its own, run last by `run.sh` or alone:
+
+    PSQL="docker exec -i pg-verify psql -U postgres" bash supabase/verify/drop-dead-weight.sh
+
+It applies every earlier migration with the paste files as live has them (the review flow through
+draft_published, the contributor flow through keep_uploads_on_user_delete), then proves the apply refuses,
+changing nothing, while `gps_session` has a row or a route has a `short_name`. Then
+`../apply/20261105200000_drop_dead_weight_apply.sql` twice (the second run must stop and change nothing), and
+`…_check.sql`: its rolled-back behaviour part (`delete_my_account(false)` deletes the person and keeps the ride
+unlinked, anything but false is still refused, a route is published and read whole without the two columns)
+must raise nothing and leave no row behind, and its 5 read-only rows must be `t`. Then
+`20261105180000_keep_uploads_on_user_delete_check.sql` runs again over it. On a second database, without
+keep_uploads_on_user_delete, the apply refuses and writes no ledger row. On a third, apply then revert twice
+leaves the schema as before, line for line once the dumps are sorted (the two columns come back at the end of
+`route`), and re-applying passes the check.

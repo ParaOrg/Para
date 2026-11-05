@@ -629,3 +629,44 @@ behave as before. One function and one trigger; no table, grant or row changes.
 - Applied, and it must be withdrawn: run `20261105160000_draft_published_revert.sql`.
 
 - Applied, and it must be withdrawn: run `20261105180000_keep_uploads_on_user_delete_revert.sql`.
+
+# Applying drop_dead_weight to the live project
+
+**Not applied live.** Safe to apply now: no studio build and no publish reads what goes. Clean-up step 5 of
+`.scratch/codebase-review/database.md`, the parts nothing reads or writes (M4, L4):
+
+- `gps_session`, the editors' recorded trips from before the contributor app. Nothing writes it.
+  `delete_my_account` deleted the caller's rows from it, so it is redefined without that one statement and is
+  otherwise unchanged.
+- `route.short_name` and `route.fare_as_of`: never written. The studio reads them as optional.
+- `route_variant_route_id_idx`: `route_variant_one_per_direction` (route_id, reversed) covers it.
+
+**Nothing is lost:** the apply refuses while `gps_session` has a row or either column holds a value. Then
+nothing changes, and the owner decides what to keep first. The weekly backup names `gps_session` but skips a
+name that matches nothing, so it keeps working.
+
+Not in this step, because the studio or the publish reads them today: `route.route_code` and `long_name`,
+`route_variant.direction_name`, `origin_terminal` and `destination_terminal`. Also not here: the merged read
+rules and the grant and definer tidy-ups (L1, L2, L5).
+
+| File | What it does |
+| --- | --- |
+| `20261105200000_drop_dead_weight_apply.sql` | One transaction. Checks `keep_uploads_on_user_delete` is in the ledger, this is not, and nothing would be lost. Applies `migrations/20261105200000_drop_dead_weight.sql` (carried unchanged; `verify/drop-dead-weight.sh` checks the copy). Checks all three are gone, the unique index stays and `delete_my_account` no longer names `gps_session`. Writes the ledger row `drop_dead_weight`. Any failed check raises and nothing is changed. A second run stops at the first check and changes nothing. |
+| `20261105200000_drop_dead_weight_check.sql` | Part one adds a test account with a ride and a test route, proves `delete_my_account` and the publish still work, then rolls all of it back. Part two is read-only: 5 rows, all `ok` should be `t`. |
+| `20261105200000_drop_dead_weight_revert.sql` | One transaction: re-creates `gps_session` (empty, with its policies, indexes and grant), the two columns (empty, at the end of `route`) and the index; restores `delete_my_account`; removes the ledger row. Safe to run twice. |
+
+## Steps
+
+1. Run `20261105200000_drop_dead_weight_apply.sql`. It ends with `COMMIT`; an error means nothing changed. If it
+   says something holds rows or values, stop and decide what to keep.
+2. Run `20261105200000_drop_dead_weight_check.sql`: part one ends with `ROLLBACK` and no error; part two gives 5
+   rows, all `ok = t`.
+3. Record the ledger version
+   (`select version from supabase_migrations.schema_migrations where name = 'drop_dead_weight';`)
+   in `migrations/README.md`. The types change; this PR carries them, regenerated against a local Postgres
+   with the migration applied.
+
+## Recovery
+
+- Apply failed: nothing changed. The message names what it found.
+- Applied, and it must be withdrawn: run `20261105200000_drop_dead_weight_revert.sql`.

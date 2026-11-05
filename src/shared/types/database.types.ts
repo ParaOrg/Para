@@ -270,41 +270,6 @@ export type Database = {
         }
         Relationships: []
       }
-      gps_session: {
-        Row: {
-          id: string
-          note: string | null
-          owner_id: string
-          points: Json
-          recorded_at: string
-          route_variant_id: string | null
-        }
-        Insert: {
-          id?: string
-          note?: string | null
-          owner_id?: string
-          points?: Json
-          recorded_at?: string
-          route_variant_id?: string | null
-        }
-        Update: {
-          id?: string
-          note?: string | null
-          owner_id?: string
-          points?: Json
-          recorded_at?: string
-          route_variant_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "gps_session_route_variant_id_fkey"
-            columns: ["route_variant_id"]
-            isOneToOne: false
-            referencedRelation: "route_variant"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       hinto: {
         Row: {
           cell: number | null
@@ -1662,7 +1627,6 @@ export type Database = {
       route: {
         Row: {
           created_at: string
-          fare_as_of: string | null
           fare_note: string | null
           head_stop_id: string | null
           id: string
@@ -1676,7 +1640,6 @@ export type Database = {
           published_by: string | null
           revision: number
           route_code: string | null
-          short_name: string | null
           signboard: string | null
           status: string
           status_at: string
@@ -1686,7 +1649,6 @@ export type Database = {
         }
         Insert: {
           created_at?: string
-          fare_as_of?: string | null
           fare_note?: string | null
           head_stop_id?: string | null
           id?: string
@@ -1700,7 +1662,6 @@ export type Database = {
           published_by?: string | null
           revision?: number
           route_code?: string | null
-          short_name?: string | null
           signboard?: string | null
           status?: string
           status_at?: string
@@ -1710,7 +1671,6 @@ export type Database = {
         }
         Update: {
           created_at?: string
-          fare_as_of?: string | null
           fare_note?: string | null
           head_stop_id?: string | null
           id?: string
@@ -1724,7 +1684,6 @@ export type Database = {
           published_by?: string | null
           revision?: number
           route_code?: string | null
-          short_name?: string | null
           signboard?: string | null
           status?: string
           status_at?: string
