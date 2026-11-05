@@ -47,6 +47,7 @@ export function useDrawEvents(
     markStandIn,
     isStandIn,
     select,
+    showHandlesAt,
     setFollowOffer,
   } = actions;
   useEffect(() => {
@@ -82,6 +83,7 @@ export function useDrawEvents(
         markStandIn,
         isStandIn,
         select,
+        showHandlesAt,
         setFollowOffer,
       },
       drag: { idx: null, moved: false, modes: [undefined, undefined] },
@@ -160,6 +162,7 @@ export function useDrawEvents(
     markStandIn,
     isStandIn,
     select,
+    showHandlesAt,
     setFollowOffer,
   ]);
 }

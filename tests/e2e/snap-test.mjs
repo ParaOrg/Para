@@ -565,6 +565,13 @@ check(
 );
 await page.mouse.up();
 await page.waitForTimeout(250);
+const handleCount = async () =>
+  ((await page.evaluate(() => window.__src('draw-handles')))?.features ?? []).length;
+check(
+  'handles: the smooth point just placed is selected, its two handles shown',
+  (await handleCount()) === 4,
+  `${await handleCount()}`,
+);
 const [ex, ey] = await proj(E);
 await page.mouse.move(box0.x + ex, box0.y + ey, { steps: 3 });
 toCursor = await cursorLine();
@@ -576,7 +583,15 @@ check(
 await clickAt(E);
 await page.waitForTimeout(400);
 let bent = await drafted();
-const handles = ((await page.evaluate(() => window.__src('draw-handles')))?.features ?? []).length;
+check(
+  'handles: a click elsewhere on the map deselects; no other point shows any',
+  (await handleCount()) === 0,
+  `${await handleCount()}`,
+);
+const [sx0, sy0] = await proj((await cps())[1]);
+await page.mouse.click(box0.x + sx0, box0.y + sy0);
+await page.waitForTimeout(250);
+const handles = await handleCount();
 check(
   'curves: a corner, a dragged smooth point, a corner: two Draw stretches, both bent',
   bent.length === 2 &&
@@ -584,10 +599,13 @@ check(
   JSON.stringify(bent.map((x) => [x.snap, x.coordinates.length, !!x.handles])),
 );
 check(
-  'curves: the smooth point shows its two handles, an arm and a dot each',
+  'handles: a click on the smooth point selects it, showing its two handles, an arm and a dot each',
   handles === 4,
   `${handles}`,
 );
+await page.keyboard.press('Escape');
+await page.waitForTimeout(150);
+check('handles: Escape deselects', (await handleCount()) === 0, `${await handleCount()}`);
 const [px1, py1] = await proj((await cps())[1]);
 await page.mouse.move(box0.x + px1, box0.y + py1);
 await page.mouse.down();
@@ -693,7 +711,17 @@ check(
   (await cps()).length === 4,
 );
 // A routed stretch is not held: a drag on it leaves the line as it was.
+const [sx1, sy1] = await proj((await cps())[1]);
+await page.mouse.click(box0.x + sx1, box0.y + sy1);
+await page.waitForTimeout(250);
+const handlesInDraw = await handleCount();
 await page.getByTestId('snap-draw').getByRole('button', { name: 'Snap' }).click();
+await page.waitForTimeout(150);
+check(
+  'handles: in Snap nothing shows handles, the point still selected',
+  handlesInDraw > 0 && (await handleCount()) === 0,
+  `${handlesInDraw} in Draw, ${await handleCount()} in Snap`,
+);
 const [dx0, dy0] = await proj(D);
 await page.mouse.move(box0.x + dx0, box0.y + dy0, { steps: 3 });
 check('cursor line: none in Snap', (await cursorLine()).length === 0);

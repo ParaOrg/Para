@@ -97,6 +97,7 @@ function drawing(state: Partial<Drawing> = {}): Drawing {
     toggleSegment: fn(() => Promise.resolve()),
     selected: null,
     select: fn(),
+    hideHandles: fn(),
     deleteSelected: fn(),
     canPutBack: false,
     putBack: fn(),

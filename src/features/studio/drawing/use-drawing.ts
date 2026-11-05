@@ -83,6 +83,8 @@ export function useDrawing(
   const [picking, setPicking] = useState<Picking | null>(null);
   /** The point a finger tapped, whose bar of actions is open (point-bar.tsx). */
   const [selected, setSelected] = useState<number | null>(null);
+  /** The point whose handles show: the one the mouse pressed, as a pen tool selects it. */
+  const [handlesAt, setHandlesAt] = useState<number | null>(null);
 
   // Map event handlers are registered once and must always see current state,
   // so every mutator updates these refs synchronously.
@@ -136,6 +138,8 @@ export function useDrawing(
   );
   const { writeSegments, resolveGaps, isStandIn, markStandIn } = gaps;
 
+  const showHandlesAt = useCallback((i: number | null) => setHandlesAt(i), []);
+
   const select = useCallback((i: number | null) => {
     selectedRef.current = i;
     setSelected(i);
@@ -145,7 +149,10 @@ export function useDrawing(
   // lasts only while the drawing keeps its number of points.
   const writePoints = useCallback(
     (pts: LngLat[]) => {
-      if (pts.length !== cpRef.current.length) select(null);
+      if (pts.length !== cpRef.current.length) {
+        select(null);
+        showHandlesAt(null);
+      }
       // Back to its first point alone: a smooth one keeps the handle it drew with.
       const first = pts.length === 1 && pts[0] === cpRef.current[0] ? pts[0] : null;
       const kept = first && keptFirstHandle(segRef.current[0], first);
@@ -153,7 +160,7 @@ export function useDrawing(
       cpRef.current = pts;
       setControlPoints(pts);
     },
-    [select],
+    [select, showHandlesAt],
   );
 
   const addPoint = useCallback(
@@ -206,8 +213,10 @@ export function useDrawing(
       if (prev && c1)
         writeSegments([...segRef.current, curveSegment(prev, point, c1, mirror(out, point))]);
       pendingOutRef.current = { point, out };
+      // Placed, it is the point selected: its handles stay shown, as a pen tool's do.
+      showHandlesAt(cpRef.current.indexOf(point));
     },
-    [addPoint, writePoints, writeSegments],
+    [addPoint, writePoints, writeSegments, showHandlesAt],
   );
 
   /**
@@ -542,6 +551,7 @@ export function useDrawing(
       markStandIn,
       isStandIn,
       select,
+      showHandlesAt,
       setFollowOffer,
     },
   );
@@ -562,7 +572,17 @@ export function useDrawing(
     [segments, isStandIn],
   );
 
-  useDrawRendering(map, { segments, controlPoints, area, uTurns, picking, selected });
+  useDrawRendering(map, {
+    segments,
+    controlPoints,
+    area,
+    uTurns,
+    picking,
+    selected,
+    handlesAt,
+    isFreehand: freehand,
+    pendingOut: pendingOutRef,
+  });
   useDrawArrows(map, segments, area, isStandIn);
   useCursorLine(
     map,
@@ -643,6 +663,8 @@ export function useDrawing(
     /** The point a finger tapped, or null; its bar is point-bar.tsx. */
     selected,
     select,
+    /** Hides the selected point's handles: Escape (use-draw-keys.ts). */
+    hideHandles: useCallback(() => showHandlesAt(null), [showHandlesAt]),
     deleteSelected: pointBar.deleteSelected,
     /** Whether the last Delete can still be put back. */
     canPutBack: pointBar.canPutBack,
