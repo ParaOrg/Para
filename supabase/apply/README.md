@@ -526,7 +526,7 @@ No table, no row changes. Three files, each pasted whole into the SQL editor as 
 
 # Applying draft_update_makerless to the live project
 
-**Not applied live.** The owner's choice after review_rules: any editor may edit a draft whose maker's
+**Applied live 2026-11-05** (ledger `20261105055623`) from its paste file; its check passed. Do not reapply. The owner's choice after review_rules: any editor may edit a draft whose maker's
 account is gone (`editor_id` null), as `draft_update_own` allowed. review_rules had made `draft_update`'s
 with check the maker's alone, which refused every direct edit of such a draft. This puts back the maker
 or a maker-less draft. A draft still cannot be handed to nobody: since review_rules an editor updates
