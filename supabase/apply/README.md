@@ -557,3 +557,51 @@ expect the maker-only with check this replaces.
 - Apply failed: nothing changed. The message names what it found.
 - Applied, and it must be withdrawn: run `20261105130000_draft_update_makerless_revert.sql`.
 
+# Applying draft_published to the live project
+
+**Not applied live.** The owner's decision of 2026-11-05: Draft and Published only, for routes and
+hotspots alike (ADR 0003's amendment). Clean-up step 3 of `.scratch/codebase-review/database.md`,
+closing H3 and M2.
+
+- `route` and `stop` gain `published_at`, `published_by`, `last_saved_at` and `last_saved_by`, and
+  `draft` gains `last_saved_by`. Existing rows are backfilled from `status_at` and `owner_id`, which is
+  **approximate**: see the migration's header. A taken-down row gets no publish date. The backfill moves
+  no revision and no `updated_at`.
+- `save_draft(draft, revision, payload)` replaces the direct update of a draft: the maker's own draft or
+  a maker-less one, at the revision read. Direct update is revoked and `draft_update` dropped.
+- `publish_draft(draft, revision)` publishes straight from a draft, with the revision check, the base
+  check, the lock order and the end guards, and stamps the four columns (`published_by` is the draft's
+  maker).
+- `unpublish(kind, id)` takes a route or hotspot down, refusing a hotspot that ends a published route,
+  and leaves a draft of it as it stands (or keeps the draft already there, rebased).
+- `approve_draft`, `approve_reviewed_draft`, `submit_draft` and `send_back_draft` are dropped: nothing
+  calls them once the studio publishes with `publish_draft`.
+
+**Apply it together with the studio change that moves to `save_draft`, `publish_draft` and
+`unpublish`.** The studio on the live site before that change saves an existing draft by direct update
+and approves with `approve_reviewed_draft`; both stop working the moment this is applied.
+
+| File | What it does |
+| --- | --- |
+| `20261105160000_draft_published_apply.sql` | One transaction. Checks `draft_update_makerless` is in the ledger, and this is not. Applies `migrations/20261105160000_draft_published.sql` (carried unchanged; `verify/draft-published.sh` checks the copy). Checks every row was stamped, the three functions are editors' and not anon's, the four old ones are gone and no direct update of a draft is left. Writes the ledger row `draft_published`. Any failed check raises and nothing is changed. A second run stops at the first check and changes nothing. |
+| `20261105160000_draft_published_check.sql` | Part one adds two test editors, a non-editor, three places and a route, proves save, publish, conflict and unpublish (route and hotspot), then rolls all of it back; it raises `FAILED: ...` on the first wrong result. Part two is read-only: 8 rows, all `ok` should be `t`. |
+| `20261105160000_draft_published_revert.sql` | One transaction: drops the three functions and their two helpers, re-creates the four old ones with their grants, gives back the direct update of a draft under `draft_update`, drops the five columns and removes the ledger row. What the columns recorded since the apply is lost; drafts unpublish left stay as ordinary drafts. Safe to run twice. |
+
+## Steps
+
+1. Have the studio change ready to deploy.
+2. Run `20261105160000_draft_published_apply.sql`. It ends with `COMMIT`; an error means nothing
+   changed.
+3. Run `20261105160000_draft_published_check.sql`: part one ends with `ROLLBACK` and no error; part two
+   gives 8 rows, all `ok = t`.
+4. Deploy the studio change.
+5. Record the ledger version
+   (`select version from supabase_migrations.schema_migrations where name = 'draft_published';`)
+   in `migrations/README.md`. The types change: the studio change regenerates them against a local
+   Postgres built by `verify/run.sh`.
+
+## Recovery
+
+- Apply failed: nothing changed. The message names what it found.
+- Applied, and it must be withdrawn: run `20261105160000_draft_published_revert.sql`, and deploy the
+  studio as it was before the change.

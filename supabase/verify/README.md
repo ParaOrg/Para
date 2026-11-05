@@ -270,3 +270,26 @@ editor and not deleted directly, and that the maker edits their own. On a second
 review_rules, the apply refuses and writes no ledger row. On a third, apply then revert twice leaves the
 schema as before, and re-applying passes the check.
 
+## draft-published.sh
+
+`migrations/20261105160000_draft_published.sql` on databases of its own, run last by `run.sh` or alone:
+
+    PSQL="docker exec -i pg-verify psql -U postgres" bash supabase/verify/draft-published.sh
+
+It applies every earlier migration and the review paste files as live has them (through
+draft_update_makerless), with a taken-down route and a draft as live has them, then
+`../apply/20261105160000_draft_published_apply.sql` twice (the second run must stop and change
+nothing). It checks the backfill: every row's last save from `status_at` and `owner_id`, a publish date
+only on approved rows, no revision or `updated_at` moved, the draft's base and last saver kept. Then
+`…_check.sql`: its rolled-back behaviour part must raise nothing and leave no row behind, and its 8
+read-only rows must be `t`. `draft-published-race.sh` races `publish_draft` against a live edit of its
+route (edit first: `conflict`, nothing applied; publish first: it lands whole, the edit on top), against
+a second publish of the same draft (`approved` / `no_draft`), and against `unpublish` in both orders
+(publish first: published, then down with a draft of what was published; unpublish first: down, the
+draft rebased, the publish `revision_mismatch`); none may deadlock. Then every fixture route and hotspot
+is unpublished, routes first; the drafts left are read by the studio's own code
+(`unpublished-drafts.mjs`: a route's payload parses into the studio's draft state and builds back into
+the same payload; a hotspot's opens in Edit with its links), and publishing them all, hotspots first,
+puts back exactly the map that was there. On a second database, without draft_update_makerless, the
+apply refuses and writes no ledger row. On a third, apply then revert twice leaves the schema as
+before, and re-applying passes the check.
