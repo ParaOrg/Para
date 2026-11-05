@@ -10,10 +10,11 @@ import type { AreaTarget, Picking } from './drawing-types';
 import { previewRoute } from './snap';
 
 /**
- * Snap's live preview: while the mouse rests, the road from the line's last
- * point to the cursor, as a click there would add it. The router is asked
- * only once the cursor has rested for PAUSE_MS, through snap.ts's
- * one-a-second queue; a move or a press calls off whatever is still on its
+ * Snap's live preview: the road from the line's last point to the cursor, as
+ * a click there would add it. As the cursor moves, a straight guide to it
+ * shows at once, asking nothing; once the cursor has rested for PAUSE_MS the
+ * router is asked, through snap.ts's one-a-second queue, and its road
+ * replaces the guide. A move or a press calls off whatever is still on its
  * way, and an answer that comes after the drawing or its mode has changed
  * is dropped, so a stale road never paints. A click routes and adds its own
  * stretch; the preview only shows. Over the line or a point, where a click
@@ -27,8 +28,12 @@ import { previewRoute } from './snap';
 const SRC = 'draw-preview';
 const PREVIEW_LAYER = 'draw-preview-line';
 
-/** How long the cursor rests before the router is asked: shorter would ask at every slowing of a sweep. */
-const PAUSE_MS = 250;
+/**
+ * How long the cursor rests before the router is asked: shorter would ask at
+ * every slowing of a sweep. The queue in snap.ts still spaces the asks a
+ * second apart.
+ */
+const PAUSE_MS = 120;
 
 const EMPTY = { type: 'FeatureCollection', features: [] } as const;
 
@@ -110,6 +115,13 @@ export function useSnapPreview(
         refs.join.current,
         !refs.freehand.current && !refs.area.current && !refs.picking.current,
       );
+    const show = (line: LngLat[]) =>
+      src.setData({
+        type: 'FeatureCollection',
+        features: [
+          { type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: line } },
+        ],
+      });
     const ask = async (from: LngLat, to: LngLat) => {
       const controller = new AbortController();
       asking = controller;
@@ -117,18 +129,14 @@ export function useSnapPreview(
       try {
         line = await previewRoute(from, to, controller.signal);
       } catch {
-        // Refused, unreachable or called off: there is no road to offer, so
-        // nothing shows. A click there asks the router for itself.
+        // Refused, unreachable or called off: no road to offer, so the
+        // straight guide stays, which is what a click there draws if the
+        // router refuses it too. A click asks the router for itself.
         return;
       }
       // Called off, or the drawing moved on while the router answered.
       if (controller.signal.aborted || fromNow() !== from) return;
-      src.setData({
-        type: 'FeatureCollection',
-        features: [
-          { type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: line } },
-        ],
-      });
+      show(line);
     };
     const handleMove = (e: MapMouseEvent) => {
       stop();
@@ -140,6 +148,8 @@ export function useSnapPreview(
       const from = fromNow();
       if (!from) return;
       const to: LngLat = [e.lngLat.lng, e.lngLat.lat];
+      // The straight guide at once, until the road comes.
+      show([from, to]);
       timer = setTimeout(() => {
         timer = null;
         void ask(from, to);
