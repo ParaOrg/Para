@@ -483,7 +483,7 @@ which fails without `delete_account_keep_uploads`.
 
 # Applying review_rules to the live project
 
-**Not applied live.** The review step's rules, findings studio-03, studio-08 and studio-09
+**Applied live 2026-11-05** from its paste file; its check passed. Do not reapply. The review step's rules, findings studio-03, studio-08 and studio-09
 (`.scratch/codebase-review/studio.md`), approved by the owner on 2026-11-05:
 
 - **Approvals write only the links that changed.** A link the draft keeps as it is (same direction,
