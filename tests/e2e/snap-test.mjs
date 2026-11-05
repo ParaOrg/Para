@@ -703,6 +703,28 @@ const across = (h1, h2) => {
   return Math.abs(a[0] * b[1] - a[1] * b[0]) / (Math.hypot(...a) * Math.hypot(...b));
 };
 const unbent = await drafted();
+// Held, a handle's dot is a diamond; let go, a circle again.
+const heldCount = () =>
+  page.evaluate(() => window.__map.queryRenderedFeatures({ layers: ['draw-handle-held'] }).length);
+const [hx, hy] = await proj(await dotOf(0, 1));
+await page.mouse.move(box0.x + hx, box0.y + hy);
+await page.mouse.down();
+await page.mouse.move(box0.x + hx + 2, box0.y + hy + 2);
+await page.waitForTimeout(150);
+const heldWhilePressed = await heldCount();
+await page.mouse.move(box0.x + hx, box0.y + hy);
+await page.mouse.up();
+// Let go, the map redraws the dot on its next frame.
+let heldAfter = await heldCount();
+for (let i = 0; i < 20 && heldAfter > 0; i++) {
+  await page.waitForTimeout(50);
+  heldAfter = await heldCount();
+}
+check(
+  'handles: a handle held is a diamond, and a circle again once let go',
+  heldWhilePressed === 1 && heldAfter === 0,
+  `${heldWhilePressed} held, then ${heldAfter}`,
+);
 await dragFrom(await dotOf(0, 1), -30, -20);
 let after = await drafted();
 check(
