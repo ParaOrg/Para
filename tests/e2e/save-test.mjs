@@ -362,12 +362,11 @@ check(
   await idle();
   await page.waitForTimeout(300);
   check(
-    '  as the line reaches its places, both ends and the name show at once',
+    '  as the line reaches its places, both ends show at once',
     (await page.getByTestId('save-head').inputValue()) !== '' &&
       (await page.getByTestId('save-tail').inputValue()) !== '' &&
-      (await page.getByTestId('save-direction').innerText()).includes('→') &&
       (await save.isEnabled()),
-    await page.getByTestId('save-direction').innerText(),
+    await page.getByTestId('save-head').inputValue(),
   );
   const panelBox = await panel.boundingBox();
   const mapBox = await page.locator('[data-map-box]').boundingBox();

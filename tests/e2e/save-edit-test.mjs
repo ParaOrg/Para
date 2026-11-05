@@ -595,10 +595,20 @@ check(
   '  signing in closes the dialog',
   (await guest.getByRole('textbox', { name: 'Email', exact: true }).count()) === 0,
 );
-const before = Number((await guestBody()).match(/(\d+) points?\b/)?.[1] ?? 0);
+const before = Number(
+  (await guestBody())
+    .match(/\bPoints\s+(\d+)|(\d+) points?\b/)
+    ?.slice(1)
+    .find(Boolean) ?? 0,
+);
 await guest.keyboard.press('Control+z');
 await guest.waitForTimeout(300);
-const after = Number((await guestBody()).match(/(\d+) points?\b/)?.[1] ?? 0);
+const after = Number(
+  (await guestBody())
+    .match(/\bPoints\s+(\d+)|(\d+) points?\b/)
+    ?.slice(1)
+    .find(Boolean) ?? 0,
+);
 check(
   '  and Ctrl+Z still undoes (9)',
   before === OUT.length && after === OUT.length - 1,
