@@ -334,7 +334,18 @@ async function openCard(ll) {
   await go(at(0, 0), 15);
   await clickAt(ll, 700);
 }
-const closeLoop = () => page.getByTestId('close-loop');
+/** Closes the line by a click at its connect badge, as the editor does (use-connect-hint.ts). */
+const closeByBadge = async () => {
+  const outbound = (await page.evaluate(() => window.__src('draw-outbound')))?.features?.find(
+    (f) => f.properties.role === 'start',
+  )?.geometry.coordinates;
+  const points = (await page.evaluate(() => window.__src('draw-points')))?.features ?? [];
+  const target = outbound ?? points[0]?.geometry.coordinates;
+  const [x, y] = await px(target);
+  await page.mouse.move(x + 4, y + 4, { steps: 3 });
+  await page.waitForTimeout(150);
+  await page.mouse.click(x + 4, y + 4);
+};
 
 // ---- 2b. The return trip, into the slot
 const slotId = draftDirections.find((v) => v.shape === null)?.id;
@@ -348,7 +359,7 @@ check(
   `${await pointsShown()} points`,
 );
 await clickAt(BACK_MID, 300);
-await closeLoop().click();
+await closeByBadge();
 await idle();
 await done();
 check('  the panel says it draws the return trip', (await body()).includes('Draw the return trip'));
@@ -665,7 +676,7 @@ await page.getByRole('button', { name: 'New route, terminal or hintuan' }).click
 await page.getByRole('menuitem', { name: /Routes/ }).click();
 await page.waitForTimeout(200);
 for (const p of IKOT) await clickAt(p, 300);
-await closeLoop().click();
+await closeByBadge();
 await idle();
 await done();
 await page.getByLabel('Ikot name').fill('UP – Ikot');

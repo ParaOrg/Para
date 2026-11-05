@@ -533,42 +533,16 @@ export const ExtendLongNames: Story = {
 /** Where a return trip closes: the first point of the way already drawn. */
 const loop = { closeAt: points[0], other: 'papunta' } as const;
 
-/** A return trip with no point yet: Close the loop rests, and its label says why. */
-export const ReturnTripEmpty: Story = {
-  args: { draw: drawing(), loop },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    const close = canvas.getByRole('button', { name: 'Close the loop: add a point first' });
-    await expect(close).toBeDisabled();
-  },
-};
-
-/** A return trip begun on the other way's last point: the loop can be closed. */
-export const ReturnTripStarted: Story = {
-  args: { draw: drawing({ controlPoints: [points[2]], segments: [], line: [points[2]] }), loop },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await expect(canvas.getByRole('button', { name: 'Close the loop' })).toBeEnabled();
-  },
-};
-
-/** Close the loop adds one last point on the way already drawn's first. */
-export const ReturnTripClosing: Story = {
+/**
+ * A return trip: no Close the loop on the toolbar. The line closes by a
+ * click at its first point's connect badge, on the map (use-connect-hint.ts).
+ */
+export const ReturnTrip: Story = {
   args: { loop },
-  play: async ({ canvasElement, args }) => {
-    await userEvent.click(within(canvasElement).getByRole('button', { name: 'Close the loop' }));
-    await expect(args.draw.addPoint).toHaveBeenCalledOnce();
-    await expect(args.draw.addPoint).toHaveBeenCalledWith(points[0]);
-  },
-};
-
-/** The line already ends on that point: a second would only double it. */
-export const ReturnTripClosed: Story = {
-  args: { draw: drawn({ controlPoints: [points[2], points[1], points[0]] }), loop },
   play: async ({ canvasElement }) => {
     await expect(
-      within(canvasElement).getByRole('button', { name: 'Close the loop: the loop is closed' }),
-    ).toBeDisabled();
+      within(canvasElement).queryByRole('button', { name: /^Close the loop/ }),
+    ).toBeNull();
   },
 };
 
@@ -641,8 +615,8 @@ export const Phone: Story = {
 };
 
 /**
- * Beside the route's sidebar, which shows Close the loop itself, and the form
- * whose Save is Done: the toolbar keeps only Undo/Redo | Move · Snap · Draw and ✕.
+ * Beside the route's sidebar and its form, whose Save is Done: Undo/Redo |
+ * Move · Snap · Draw and ✕.
  */
 export const BesideTheSidebar: Story = {
   args: { onDone: undefined, isBesideSidebar: true, loop },
