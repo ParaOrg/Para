@@ -1,7 +1,7 @@
 import type { MapLayerMouseEvent, MapMouseEvent } from 'maplibre-gl';
 
 import { moveHandle, toggleSmooth, type HandleRef } from './curve-handles';
-import { CLICK_AFTER_MS, type DrawContext } from './draw-context';
+import { CLICK_AFTER_MS, restCursor, type DrawContext } from './draw-context';
 import { POINT_LAYER } from './draw-layers';
 
 /**
@@ -27,7 +27,7 @@ export function handleDragHandlers(ctx: DrawContext) {
     map.off('mousemove', onMove);
     document.removeEventListener('mouseup', onUp);
     map.dragPan.enable();
-    canvas.style.cursor = 'crosshair';
+    canvas.style.cursor = restCursor(ctx);
     if (held) ctx.echo.until = performance.now() + CLICK_AFTER_MS;
     held = null;
   };
@@ -60,7 +60,7 @@ export function handleDragHandlers(ctx: DrawContext) {
     if (!held && ctx.drag.idx === null) canvas.style.cursor = 'move';
   };
   const leaveHandle = () => {
-    if (!held && ctx.drag.idx === null) canvas.style.cursor = 'crosshair';
+    if (!held && ctx.drag.idx === null) canvas.style.cursor = restCursor(ctx);
   };
 
   /** Everything a handle's drag listens to, on; and the function that turns it all off. */

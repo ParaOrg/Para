@@ -69,6 +69,8 @@ function drawing(state: Partial<Drawing> = {}): Drawing {
     unresolved: false,
     freehand: false,
     setFreehand: fn(),
+    moving: false,
+    setMoving: fn(),
     target: { routeId: null, directionId: null },
     area: null,
     borrow: null,
@@ -217,6 +219,8 @@ export const Keys: Story = {
     await expect(args.draw.setFreehand).toHaveBeenLastCalledWith(false);
     await userEvent.keyboard('f');
     await expect(args.draw.setFreehand).toHaveBeenLastCalledWith(true);
+    await userEvent.keyboard('v');
+    await expect(args.draw.setMoving).toHaveBeenCalledWith(true);
     await userEvent.keyboard('{Escape}');
     await expect(args.draw.hideHandles).toHaveBeenCalledOnce();
   },
@@ -254,6 +258,24 @@ export const Redo: Story = {
       await userEvent.keyboard('{Control>}y{/Control}');
       await expect(args.draw.redo).toHaveBeenCalledTimes(2);
     });
+  },
+};
+
+/** Move picked, as a saved line opens to edit: pale brand on Move, and Snap leaves it. */
+export const MovePicked: Story = {
+  args: { draw: drawn({ moving: true }) },
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole('button', { name: 'Move' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    await expect(canvas.getByRole('button', { name: 'Snap' })).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    );
+    await userEvent.click(canvas.getByRole('button', { name: 'Snap' }));
+    await expect(args.draw.setFreehand).toHaveBeenCalledWith(false);
   },
 };
 

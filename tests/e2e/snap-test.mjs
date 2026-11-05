@@ -580,6 +580,53 @@ await page.waitForTimeout(2500);
 check('preview: none in Draw', (await preview()).length === 0);
 await discard();
 
+console.log('== Move');
+// V picks Move: a click there adds nothing and inserts nothing, a point still
+// drags; S or D leaves it, and a click adds again.
+const toolPressed = (name) =>
+  page.getByTestId('snap-draw').getByRole('button', { name }).getAttribute('aria-pressed');
+await view([A, B, C, D, E]);
+await page.getByRole('button', { name: 'New route, terminal or hintuan' }).click();
+await page.getByRole('menuitem', { name: /Routes/ }).click();
+await page.getByTestId('draw-toolbar').waitFor({ timeout: 5000 });
+await page.getByTestId('snap-draw').getByRole('button', { name: 'Draw' }).click();
+await clickAt(A);
+await page.waitForTimeout(250);
+await clickAt(C);
+await page.waitForTimeout(250);
+await page.keyboard.press('v');
+await page.waitForTimeout(150);
+const pointsInMove = (await cps()).length;
+await clickAt(E);
+await page.waitForTimeout(300);
+const lineInMove = (await segs())[0]?.coords ?? [];
+const midLine = lineInMove[lineInMove.length >> 1];
+if (midLine) await clickAt(midLine);
+await page.waitForTimeout(300);
+check(
+  'move: V picks Move, and a click on the map or the line adds no point',
+  (await toolPressed('Move')) === 'true' && pointsInMove === 2 && (await cps()).length === 2,
+  `${pointsInMove} → ${(await cps()).length} points`,
+);
+const [mx0, my0] = await proj((await cps())[1]);
+await page.mouse.move(box0.x + mx0, box0.y + my0);
+await page.mouse.down();
+for (let i = 1; i <= 5; i++) await page.mouse.move(box0.x + mx0 + i * 6, box0.y + my0);
+await page.mouse.up();
+await page.waitForTimeout(300);
+const [mx1] = await proj((await cps())[1]);
+check('move: a point still drags in Move', Math.abs(mx1 - (mx0 + 30)) < 4, `${mx1 - mx0} px`);
+await page.keyboard.press('d');
+await page.waitForTimeout(150);
+await clickAt(E);
+await page.waitForTimeout(300);
+check(
+  'move: D leaves Move for Draw, and a click adds a point again',
+  (await toolPressed('Draw')) === 'true' && (await cps()).length === 3,
+  `${(await cps()).length} points`,
+);
+await discard();
+
 console.log('== Curves in Draw');
 // A click places a corner; a press and a drag places a smooth point, its
 // handles mirrored; the stretches either side bend to it, and keep their bend

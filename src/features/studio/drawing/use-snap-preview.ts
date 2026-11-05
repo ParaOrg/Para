@@ -20,7 +20,7 @@ import { previewRoute } from './snap';
  * stretch; the preview only shows. Over the line or a point, where a click
  * inserts or drags instead of adding, nothing is offered.
  *
- * None in Draw (freehand), for a hotspot, while a line is picked for Extend,
+ * None in Draw (freehand) or Move, for a hotspot, while a line is picked for Extend,
  * or before anything is drawn; and none on a touch screen, which has no
  * resting cursor.
  */
@@ -41,6 +41,7 @@ const EMPTY = { type: 'FeatureCollection', features: [] } as const;
 export interface SnapPreviewRefs {
   points: RefObject<LngLat[]>;
   freehand: RefObject<boolean>;
+  moving: RefObject<boolean>;
   area: RefObject<AreaTarget | null>;
   picking: RefObject<Picking | null>;
   join: RefObject<LngLat | null>;
@@ -113,7 +114,10 @@ export function useSnapPreview(
       previewFrom(
         refs.points.current,
         refs.join.current,
-        !refs.freehand.current && !refs.area.current && !refs.picking.current,
+        !refs.freehand.current &&
+          !refs.moving.current &&
+          !refs.area.current &&
+          !refs.picking.current,
       );
     const show = (line: LngLat[]) =>
       src.setData({

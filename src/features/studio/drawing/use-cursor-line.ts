@@ -25,7 +25,7 @@ import { previewFrom } from './use-snap-preview';
  * closes the line. Before a borrowed end it runs from the point a click goes
  * in after.
  *
- * None in Snap (its preview is use-snap-preview.ts), for a hotspot, while a
+ * None in Snap (its preview is use-snap-preview.ts), in Move, for a hotspot, while a
  * line is picked for Extend, or before anything is drawn; none with a button
  * held (the pen shows its own stretch, draw-pen.ts) or over the line, a
  * point or a handle, where a click adds no stretch; and none on a touch
@@ -42,6 +42,7 @@ export interface CursorLineRefs {
   points: RefObject<LngLat[]>;
   segments: RefObject<Segment[]>;
   freehand: RefObject<boolean>;
+  moving: RefObject<boolean>;
   area: RefObject<AreaTarget | null>;
   picking: RefObject<Picking | null>;
   join: RefObject<LngLat | null>;
@@ -54,7 +55,8 @@ export interface CursorLineRefs {
  * add nothing.
  */
 export function cursorLine(refs: CursorLineRefs, to: LngLat): LngLat[] | null {
-  if (!refs.freehand.current || refs.area.current || refs.picking.current) return null;
+  if (!refs.freehand.current || refs.moving.current || refs.area.current || refs.picking.current)
+    return null;
   const points = refs.points.current;
   const join = refs.join.current;
   const hasJoin = !!join && points.includes(join);
