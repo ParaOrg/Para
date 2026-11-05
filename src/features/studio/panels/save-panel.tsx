@@ -14,6 +14,7 @@ import { SaveNotices } from './save-notices';
 import { SaveTimeline } from './save-timeline';
 import { BESIDE_BODY } from './sheet';
 import { useSavePanel, type UseSavePanelOptions } from './use-save-panel';
+import { useUnpublish } from './use-unpublish';
 import { ViaField } from './via-field';
 
 interface SavePanelProps extends UseSavePanelOptions {
@@ -26,6 +27,8 @@ interface SavePanelProps extends UseSavePanelOptions {
    * line or a field changes.
    */
   isPublished?: boolean;
+  /** The published route came off the map (Unpublish). */
+  onUnpublished?: () => void;
 }
 
 /**
@@ -46,6 +49,7 @@ export function SavePanel({
   saveBlocked = null,
   onCancel,
   isPublished = false,
+  onUnpublished,
   ...options
 }: SavePanelProps) {
   const headingId = useId();
@@ -68,6 +72,11 @@ export function SavePanel({
   ]);
   const [openedWith] = useState(changes);
   const isChanged = changes !== openedWith;
+  const status = isPublished && !isChanged ? 'published' : 'draft';
+  const unpublishing = useUnpublish({
+    routeId: isPublished ? (existing?.route.id ?? null) : null,
+    onUnpublished,
+  });
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -138,11 +147,7 @@ export function SavePanel({
           />
         )}
 
-        <LineDetail
-          points={draw.controlPoints.length}
-          metres={draw.metres}
-          status={isPublished && !isChanged ? 'published' : 'draft'}
-        />
+        <LineDetail points={draw.controlPoints.length} metres={draw.metres} status={status} />
 
         <SaveNotices
           segments={draw.segments}
@@ -178,12 +183,16 @@ export function SavePanel({
         />
 
         {panel.error && <p className="text-sm text-content-error">{panel.error}</p>}
+        {unpublishing.error && <p className="text-sm text-content-error">{unpublishing.error}</p>}
 
         {saveBlocked && <p className="text-sm text-content-quaternary">{saveBlocked}</p>}
       </div>
 
       <SaveFooter
         busyIntent={panel.busy}
+        status={status}
+        isUnpublishing={unpublishing.isBusy}
+        onUnpublish={() => void unpublishing.unpublish(existing?.route.name ?? 'this route')}
         saveBlocked={saveBlocked}
         onExit={handleExit}
         onCancel={onCancel}

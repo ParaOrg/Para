@@ -34,6 +34,8 @@ interface StudioSaveSheetsProps {
   onDrafted?: (subjectId: string) => void;
   /** A route's draft published: the map has changed. */
   onPublished?: (subjectId: string) => void;
+  /** A published route unpublished: the map has changed. */
+  onUnpublished?: () => void;
   onCancel: () => void;
 }
 
@@ -50,6 +52,7 @@ export function StudioSaveSheets({
   target,
   onDrafted,
   onPublished,
+  onUnpublished,
   onCancel,
 }: StudioSaveSheetsProps) {
   // The hotspot being edited, when the area trace came from a saved one.
@@ -97,6 +100,7 @@ export function StudioSaveSheets({
     directions: saved.directions,
     onDrafted: handleDrafted,
     onPublished: handlePublished,
+    onUnpublished,
     onPlaceSaved: () => void hotspots.reload(),
   };
 
