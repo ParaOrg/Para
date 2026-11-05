@@ -311,8 +311,8 @@ box0.y = box.y;
 const zoomNow = async () => (await page.evaluate(() => window.__map.getZoom())).toFixed(1);
 
 console.log('== The wheel, as Figma');
-// On a computer the studio's wheel pans, Shift+wheel pans sideways and
-// Ctrl+wheel zooms about the pointer (features/studio/maps/use-wheel-navigation.ts).
+// On a computer the studio's wheel pans, gliding, Shift+wheel pans sideways,
+// and Ctrl+wheel is MapLibre's own eased zoom (features/studio/maps/use-wheel-navigation.ts).
 const camera = () =>
   page.evaluate(() => {
     const c = window.__map.getCenter();
@@ -321,8 +321,15 @@ const camera = () =>
 await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
 let cameraBefore = await camera();
 await page.mouse.wheel(0, 200);
-await page.waitForTimeout(200);
+await page.waitForTimeout(40);
+const midGlide = await camera();
+await page.waitForTimeout(700);
 let cameraAfter = await camera();
+check(
+  'wheel: the pan glides, part of the way a frame later',
+  midGlide.lat < cameraBefore.lat && midGlide.lat > cameraAfter.lat,
+  JSON.stringify([cameraBefore.lat, midGlide.lat, cameraAfter.lat]),
+);
 check(
   'wheel: the wheel pans down, the zoom kept',
   cameraAfter.lat < cameraBefore.lat &&
@@ -334,7 +341,7 @@ cameraBefore = cameraAfter;
 await page.keyboard.down('Shift');
 await page.mouse.wheel(0, 200);
 await page.keyboard.up('Shift');
-await page.waitForTimeout(200);
+await page.waitForTimeout(700);
 cameraAfter = await camera();
 check(
   'wheel: Shift+wheel pans sideways, the zoom kept',
@@ -346,11 +353,11 @@ cameraBefore = cameraAfter;
 await page.keyboard.down('Control');
 await page.mouse.wheel(0, -200);
 await page.keyboard.up('Control');
-await page.waitForTimeout(200);
+await page.waitForTimeout(700);
 cameraAfter = await camera();
 check(
-  'wheel: Ctrl+wheel zooms in about the pointer',
-  cameraAfter.zoom > cameraBefore.zoom + 0.5,
+  "wheel: Ctrl+wheel zooms in, MapLibre's eased zoom",
+  cameraAfter.zoom > cameraBefore.zoom + 0.1,
   JSON.stringify([cameraBefore, cameraAfter]),
 );
 
