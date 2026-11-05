@@ -1,3 +1,6 @@
+import type { Database } from '@/shared/types/database.types';
+
+import { toJson } from './json';
 import { parsed, readAll } from './read-all';
 import { notifyReviewChange } from './review-events';
 import {
@@ -25,11 +28,26 @@ import { requireSupabase } from './supabase';
 
 export type { DraftKind, DraftRow, DraftStatus, ReviewCode, ReviewResult } from './review-schema';
 
-export async function callReview(fn: string, args: Record<string, unknown>): Promise<ReviewResult> {
+/** The review functions, with their arguments as the generated types have them. */
+type ReviewFunctions = Pick<
+  Database['public']['Functions'],
+  | 'claim_draft'
+  | 'save_draft'
+  | 'discard_draft'
+  | 'publish_draft'
+  | 'unpublish'
+  | 'take_down'
+  | 'put_back'
+  | 'refresh_draft_base'
+>;
+
+export async function callReview<TName extends keyof ReviewFunctions>(
+  fn: TName,
+  args: ReviewFunctions[TName]['Args'],
+): Promise<ReviewResult> {
   const client = requireSupabase();
-  // SQL-null arguments are valid here, although the generated RPC Args
-  // describe those scalar inputs as non-null. Validate every response below.
-  const { data, error } = await client.rpc(fn as never, args as never);
+  // Every answer is validated below: the generated Returns is only Json.
+  const { data, error } = await client.rpc(fn, args);
   if (error) throw new Error(`${fn}: ${error.message}`);
   const [row] = parsed(reviewResultSchema, [data], 'review result');
   if (['ok', 'approved', 'discarded', 'taken_down', 'put_back', 'unpublished'].includes(row.code))
@@ -107,9 +125,12 @@ export async function claimDraft(
     p_kind: kind,
     p_subject_id: subjectId,
     p_is_new: isNew,
-    p_base_revision: baseRevision,
-    p_payload: payload,
-    p_note: note ?? null,
+    // A new subject has no base: SQL null, which the generator cannot express (every argument
+    // it types is non-null), so this one argument is widened. The function requires the null.
+    p_base_revision: baseRevision as number,
+    p_payload: toJson(payload),
+    // Left out rather than null: the argument's default is null.
+    ...(note === undefined ? {} : { p_note: note }),
   });
 }
 
@@ -123,11 +144,19 @@ export async function saveDraft(
   revision: number,
   payload: Record<string, unknown>,
 ): Promise<ReviewResult> {
-  return callReview('save_draft', { p_draft: draftId, p_revision: revision, p_payload: payload });
+  return callReview('save_draft', {
+    p_draft: draftId,
+    p_revision: revision,
+    p_payload: toJson(payload),
+  });
 }
 
 export async function discardDraft(draftId: string, revision?: number): Promise<ReviewResult> {
-  return callReview('discard_draft', { p_draft: draftId, p_revision: revision ?? null });
+  // No revision is left out rather than null: the argument's default is null.
+  return callReview(
+    'discard_draft',
+    revision === undefined ? { p_draft: draftId } : { p_draft: draftId, p_revision: revision },
+  );
 }
 
 /** The draft published, at the revision the editor saw: the map changes now, the public map at the next publish. */

@@ -118,7 +118,7 @@ const claimed = (q) => ({
       revision: 1,
       status: 'draft',
       payload: q.payload.p_payload,
-      note: q.payload.p_note,
+      note: q.payload.p_note ?? null,
       editor_id: null,
       created_at: '',
       updated_at: '',
