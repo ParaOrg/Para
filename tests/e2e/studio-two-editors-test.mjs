@@ -1,9 +1,9 @@
 // Two editors, one route: "being changed by", looked at and not changed, then
-// discarded and taken over. /studio/?e2e=1 with VITE_STUDIO_DRAFTS=1, against
+// discarded and taken over. /studio/?e2e=1, against
 // a stand-in for the database that two pages share; no router, no tiles, no
 // account, nothing reaches the live project.
 //
-//   VITE_STUDIO_DRAFTS=1 npm run dev       (in another terminal)
+//   npm run dev                            (in another terminal)
 //   node tests/e2e/studio-two-editors-test.mjs
 //
 // What it checks: editor A edits a route and saves, which stores a draft

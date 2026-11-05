@@ -10,7 +10,6 @@ import { DraftSignboardsNotice } from './draft-signboards-notice';
 import { RouteExportPanel } from './route-export-panel';
 import { RouteFacts } from './route-facts';
 import { SignboardEditor } from './signboard-editor';
-import { STUDIO_DRAFTS } from '../data/flags';
 import { reviewKeys } from '../data/review-keys';
 import { useDraftSignboardsQuery } from '../data/use-draft-signboards-query';
 
@@ -89,7 +88,7 @@ interface DraftSignboardsProps {
 function DraftSignboards({ direction, onChanged }: DraftSignboardsProps) {
   const client = useQueryClient();
   const drafted = useDraftSignboardsQuery(direction.routeId, direction.id);
-  if (STUDIO_DRAFTS && drafted.isPending) return <DraftSignboardsNotice state="loading" />;
+  if (drafted.isPending) return <DraftSignboardsNotice state="loading" />;
   if (drafted.isError)
     return <DraftSignboardsNotice state="error" onRetry={() => void drafted.refetch()} />;
   const handleChanged = () => {

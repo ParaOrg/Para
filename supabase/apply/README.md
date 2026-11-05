@@ -94,8 +94,7 @@ Turnstile sign-in must ship before CAPTCHA is turned on project-wide.
 
 # Applying reviewed_draft_approval to the live project
 
-**Applied live 2026-10-20** (ledger `20261020034722`; check 6/6 true). Do not reapply. It was needed before the studio's drafts are turned on
-(`STUDIO_DRAFTS`): the review screens approve with `approve_reviewed_draft`,
+**Applied live 2026-10-20** (ledger `20261020034722`; check 6/6 true). Do not reapply. It was needed before the studio saved as drafts: the review screens approve with `approve_reviewed_draft`,
 which checks the reviewer approves exactly the draft version they compared, and
 settle a conflict with `refresh_draft_base`. Adds two functions; changes no
 table, row or existing function.

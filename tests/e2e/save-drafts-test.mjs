@@ -1,10 +1,10 @@
-// save-test's core flows a second time, with drafts on (VITE_STUDIO_DRAFTS=1),
-// the save path the live studio takes: signed in, against the stand-in that
-// keeps drafts (lib/fake-studio-db.mjs), on today's published map. The
+// save-test's core flows a second time, against the other stand-in that keeps
+// drafts (lib/fake-studio-db.mjs), with the review flow's own steps: signed
+// in, on today's published map. The
 // basemap is a flat grey and the router has no roads, so every line is
 // freehand and nothing reaches the live project.
 //
-//   VITE_STUDIO_DRAFTS=1 npm run dev     (in another terminal)
+//   npm run dev                          (in another terminal)
 //   node tests/e2e/save-drafts-test.mjs
 //
 // What it checks, flow by flow as save-test drives them, each save a draft

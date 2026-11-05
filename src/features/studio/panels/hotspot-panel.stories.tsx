@@ -74,7 +74,6 @@ const meta = {
     existingLinks: [],
     directions: [],
     hotspots,
-    onSaved: fn(),
     onCancel: fn(),
   },
 } satisfies Meta<typeof HotspotPanel>;

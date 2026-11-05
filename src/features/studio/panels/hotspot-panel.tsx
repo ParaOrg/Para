@@ -24,11 +24,8 @@ interface HotspotPanelProps {
   directions: DirectionRow[];
   /** Every saved hotspot, so the informal-name box can offer the names already in use. */
   hotspots?: HotspotRow[];
-  onSaved: (s: HotspotRow) => void;
   onCancel: () => void;
-  /** Hears the row a save wrote, the moment it is in, to keep it beyond this panel. */
-  onWritten?: (hotspotId: string) => void;
-  /** A save stored as a draft (STUDIO_DRAFTS). */
+  /** Hears the hotspot a save stored as a draft. */
   onDrafted?: (hotspotId: string) => void;
 }
 
@@ -47,9 +44,7 @@ export function HotspotPanel({
   existingLinks,
   directions,
   hotspots = [],
-  onSaved,
   onCancel,
-  onWritten,
   onDrafted,
 }: HotspotPanelProps) {
   const area = draw.area;
@@ -68,12 +63,8 @@ export function HotspotPanel({
     () => knownInformalNames(hotspots, existing?.id),
     [hotspots, existing?.id],
   );
-  const { busy, error, setError, writtenId, submit } = useHotspotSave({
-    onSaved,
-    onWritten,
-    onDrafted,
-  });
-  const hotspotId = writtenId ?? existing?.id ?? area?.hotspotId ?? null;
+  const { busy, error, setError, submit } = useHotspotSave({ onDrafted });
+  const hotspotId = existing?.id ?? area?.hotspotId ?? null;
 
   // The directions the outline can reach, read in full; Save waits for them.
   const lined = useNearLines(ring, directions, setError);
