@@ -96,6 +96,17 @@ export const WithError: Story = {
   },
 };
 
+/** Opened with a notice that is not about what was typed: under Password, the fields as they are. */
+export const WithANotice: Story = {
+  args: { notice: 'Reset link problem: the link has expired. Ask for a new one below.' },
+  play: async ({ canvasElement }) => {
+    const canvas = await openDialog(canvasElement);
+    await expect(canvas.getByLabelText('Password', { exact: true })).not.toHaveAttribute(
+      'aria-invalid',
+    );
+  },
+};
+
 /** Turnstile still checking: Sign in waits, dimmed, until the check passes. */
 export const Disabled: Story = {
   args: { email: 'owner@example.com', password: 'hunter22', captcha: CHECKING },

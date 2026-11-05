@@ -1,10 +1,14 @@
+import { useId } from 'react';
+
 import { Button } from '@/design-system/primitives/button';
 import { ButtonLink } from '@/design-system/primitives/button-link';
+import { FieldError } from '@/design-system/primitives/field-error';
 import { PasswordField } from '@/design-system/primitives/password-field';
 import { TextField } from '@/design-system/primitives/text-field';
 import { coarse } from '@/features/routes/map/map-view';
 
 import { AuthCard } from './auth-card';
+import { CheckEmailCard } from './check-email-card';
 import type { Captcha } from './use-captcha';
 import type { SignInMode } from './use-sign-in';
 
@@ -21,6 +25,11 @@ interface SignInCardProps {
   isSent: boolean;
   /** One line about the last try, or null. */
   error: string | null;
+  /**
+   * A message the card opens with, such as why a reset link was refused: in the error's place
+   * under Password, with neither field marked wrong.
+   */
+  notice?: string | null;
   captcha: Captcha;
   onEmailChange: (email: string) => void;
   onPasswordChange: (password: string) => void;
@@ -50,6 +59,7 @@ export function SignInCard({
   isBusy,
   isSent,
   error,
+  notice = null,
   captcha,
   onEmailChange,
   onPasswordChange,
@@ -58,23 +68,14 @@ export function SignInCard({
   onSentDone,
   onDismiss,
 }: SignInCardProps) {
+  const noticeId = useId();
   const leave = onDismiss ? (
     <Button variant="secondary" label="Cancel" onClick={onDismiss} />
   ) : (
     <ButtonLink variant="secondary" label="Public map" href="/" />
   );
 
-  if (isSent) {
-    return (
-      <AuthCard
-        title="Check your email"
-        subtitle={`If an account exists for ${email}, a reset link is on its way. Open it on this device to choose a new password.`}
-        onDismiss={onDismiss}
-        onSubmit={onSentDone}
-        actions={<Button type="submit" variant="primary" label="Done" />}
-      />
-    );
-  }
+  if (isSent) return <CheckEmailCard email={email} onDone={onSentDone} onDismiss={onDismiss} />;
 
   const emailField = (
     <TextField
@@ -126,14 +127,19 @@ export function SignInCard({
       fields={
         <>
           {emailField}
-          <PasswordField
-            label="Password"
-            required
-            autoComplete="current-password"
-            value={password}
-            onChange={(event) => onPasswordChange(event.target.value)}
-            error={error ?? undefined}
-          />
+          {/* The field's own gap to its message, so a notice sits where an error would. */}
+          <div className="flex flex-col gap-1.5">
+            <PasswordField
+              label="Password"
+              required
+              autoComplete="current-password"
+              value={password}
+              onChange={(event) => onPasswordChange(event.target.value)}
+              error={error ?? undefined}
+              aria-describedby={notice && !error ? noticeId : undefined}
+            />
+            {notice && !error && <FieldError id={noticeId} message={notice} />}
+          </div>
         </>
       }
       captcha={captcha}

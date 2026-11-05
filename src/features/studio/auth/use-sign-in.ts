@@ -22,12 +22,16 @@ export function useSignIn(notice: string | null) {
   const [password, setPassword] = useState('');
   const [isBusy, setIsBusy] = useState(false);
   const [isSent, setIsSent] = useState(false);
-  const [error, setError] = useState<string | null>(notice);
+  const [error, setError] = useState<string | null>(null);
+  // Said on opening, such as why a reset link was refused: not about what was typed, so the
+  // fields stay as they are. Gone once the person tries again or switches.
+  const [openingNotice, setOpeningNotice] = useState<string | null>(notice);
   const captcha = useCaptcha();
 
   async function submit() {
     setIsBusy(true);
     setError(null);
+    setOpeningNotice(null);
 
     const supabase = getSupabase();
     if (!supabase) {
@@ -69,6 +73,7 @@ export function useSignIn(notice: string | null) {
   function switchMode(next: SignInMode) {
     setMode(next);
     setError(null);
+    setOpeningNotice(null);
     setPassword('');
   }
 
@@ -87,6 +92,7 @@ export function useSignIn(notice: string | null) {
     isBusy,
     isSent,
     error,
+    notice: openingNotice,
     captcha,
     submit,
     switchMode,

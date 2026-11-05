@@ -29,6 +29,7 @@ export function SignIn({ title = 'Sign in to save', notice = null, onDismiss }: 
       isBusy={form.isBusy}
       isSent={form.isSent}
       error={form.error}
+      notice={form.notice}
       captcha={form.captcha}
       onEmailChange={form.setEmail}
       onPasswordChange={form.setPassword}

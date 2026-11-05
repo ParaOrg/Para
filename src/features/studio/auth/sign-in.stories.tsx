@@ -74,18 +74,22 @@ export const EscapeCloses: Story = {
   },
 };
 
-/** Opened with a notice, such as why a reset link was refused: it shows as the error, under Password. */
+/**
+ * Opened with a notice, such as why a reset link was refused: it shows where an error would,
+ * under Password, with neither field marked wrong; it goes once the person tries again.
+ */
 export const WithANotice: Story = {
   args: {
     notice: 'That reset link has expired or was already used. Ask for a new one below.',
   },
   play: async ({ canvasElement }) => {
     const canvas = await openDialog(canvasElement);
-    await expect(canvas.getByRole('textbox', { name: 'Email' })).toHaveAttribute(
+    await expect(canvas.getByRole('textbox', { name: 'Email' })).not.toHaveAttribute(
       'aria-invalid',
-      'true',
     );
-    await expect(canvas.getByLabelText('Password', { exact: true })).toHaveAccessibleDescription(
+    const password = canvas.getByLabelText('Password', { exact: true });
+    await expect(password).not.toHaveAttribute('aria-invalid');
+    await expect(password).toHaveAccessibleDescription(
       'That reset link has expired or was already used. Ask for a new one below.',
     );
   },
@@ -98,7 +102,8 @@ export const ForgotPassword: Story = {
     await userEvent.click(canvas.getByRole('button', { name: 'Forgot password' }));
     await expect(canvas.getByRole('heading', { name: 'Forgot password' })).toBeVisible();
     await expect(canvas.queryByLabelText('Password', { exact: true })).toBeNull();
-    await expect(canvas.getByRole('button', { name: 'Send reset link' })).toBeEnabled();
+    // Visible, not enabled: a built Storybook carries the site key, so it waits for the check.
+    await expect(canvas.getByRole('button', { name: 'Send reset link' })).toBeVisible();
   },
 };
 
