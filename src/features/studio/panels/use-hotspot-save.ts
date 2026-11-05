@@ -47,11 +47,10 @@ export function useHotspotSave({ onDrafted, onPublished }: UseHotspotSaveOptions
       );
       const refusal = draftRefusal(result);
       if (refusal) throw new Error(refusal);
-      // Publish is the draft save and then its approval, in one press, until the database
-      // publishes a draft in one call (.scratch/codebase-review/database.md).
+      // Publish is the draft save and then publish_draft at the revision it saved, in one press.
       if (intent === 'publish') {
         if (!result.draft) throw new Error(NOT_PUBLISHED);
-        const published = await review.mutateAsync({ action: 'approve', draft: result.draft });
+        const published = await review.mutateAsync({ action: 'publish', draft: result.draft });
         if (published.code !== 'approved')
           throw new Error(`${NOT_PUBLISHED} ${reviewMessage(published)}`);
         if (onPublished) onPublished(hotspotId);
