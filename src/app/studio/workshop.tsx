@@ -28,6 +28,7 @@ import {
   useAuthFlow,
   useDrawing,
   useFollow,
+  useOpenDraft,
   useLoopClosing,
   useSaveFlow,
   useSaveTarget,
@@ -167,9 +168,18 @@ export function Workshop({ session, recovery }: WorkshopProps) {
     target,
     setNotice,
   });
+  // A draft tapped on the map opens into editing: Edit route on the editor's own, the card on
+  // another editor's; the rest wait in Drafts.
+  const handleOpenDraft = useOpenDraft({
+    directions: saved.directions,
+    userId: session?.user.id ?? null,
+    draw,
+    opening,
+    openTrip: cards.openTrip,
+  });
 
   // A return trip starts where the other way ended, shows it faintly, and can close the loop.
-  const { loop, startReturnTrip } = useLoopClosing(
+  const { startReturnTrip } = useLoopClosing(
     map,
     draw,
     target.editing ? null : (target.parentRoute?.id ?? null),
@@ -318,6 +328,7 @@ export function Workshop({ session, recovery }: WorkshopProps) {
               <PlaygroundTools
                 map={map}
                 draftsSlot={isWideScreen ? draftsSlot : null}
+                onOpenDraft={handleOpenDraft}
                 session={session}
                 auth={auth}
                 draw={draw}
@@ -327,7 +338,6 @@ export function Workshop({ session, recovery }: WorkshopProps) {
                 saveFlow={saveFlow}
                 contribution={contribution}
                 extendEnds={extendEnds}
-                loop={loop}
                 isPlayground={isPlayground}
                 isChoosing={choosing}
                 isNewMenuOpen={isNewMenuOpen}

@@ -1,5 +1,7 @@
 import type { MapLibreMap } from 'maplibre-gl';
 
+import type { DraftRow } from '../data/review-schema';
+
 export interface StudioReviewProps {
   map: MapLibreMap | null;
   onChanged: () => void;
@@ -8,4 +10,10 @@ export interface StudioReviewProps {
    * Without one it stands on the map, as on a phone, where the top bar is the map switch's.
    */
   buttonSlot?: HTMLElement | null;
+  /**
+   * A draft tapped on the map, with the direction whose line was tapped when known: opened
+   * straight into editing where it can be, and true; false leaves it to Drafts, where it is
+   * reviewed.
+   */
+  onOpenDraft?: (draft: DraftRow, directionId?: string) => boolean;
 }

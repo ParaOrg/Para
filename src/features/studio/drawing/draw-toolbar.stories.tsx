@@ -530,48 +530,6 @@ export const ExtendLongNames: Story = {
   },
 };
 
-/** Where a return trip closes: the first point of the way already drawn. */
-const loop = { closeAt: points[0], other: 'papunta' } as const;
-
-/** A return trip with no point yet: Close the loop rests, and its label says why. */
-export const ReturnTripEmpty: Story = {
-  args: { draw: drawing(), loop },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    const close = canvas.getByRole('button', { name: 'Close the loop: add a point first' });
-    await expect(close).toBeDisabled();
-  },
-};
-
-/** A return trip begun on the other way's last point: the loop can be closed. */
-export const ReturnTripStarted: Story = {
-  args: { draw: drawing({ controlPoints: [points[2]], segments: [], line: [points[2]] }), loop },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await expect(canvas.getByRole('button', { name: 'Close the loop' })).toBeEnabled();
-  },
-};
-
-/** Close the loop adds one last point on the way already drawn's first. */
-export const ReturnTripClosing: Story = {
-  args: { loop },
-  play: async ({ canvasElement, args }) => {
-    await userEvent.click(within(canvasElement).getByRole('button', { name: 'Close the loop' }));
-    await expect(args.draw.addPoint).toHaveBeenCalledOnce();
-    await expect(args.draw.addPoint).toHaveBeenCalledWith(points[0]);
-  },
-};
-
-/** The line already ends on that point: a second would only double it. */
-export const ReturnTripClosed: Story = {
-  args: { draw: drawn({ controlPoints: [points[2], points[1], points[0]] }), loop },
-  play: async ({ canvasElement }) => {
-    await expect(
-      within(canvasElement).getByRole('button', { name: 'Close the loop: the loop is closed' }),
-    ).toBeDisabled();
-  },
-};
-
 /** Under a finger, nothing placed: the toolbar alone, no hint over it. */
 export const FingerEmpty: Story = {
   args: { draw: drawing() },
@@ -638,18 +596,4 @@ export const FingerPointSelected: Story = {
 export const Phone: Story = {
   parameters: { phone: true },
   beforeEach: asFinger,
-};
-
-/**
- * Beside the route's sidebar, which shows Close the loop itself, and the form
- * whose Save is Done: the toolbar keeps only Undo/Redo | Move · Snap · Draw and ✕.
- */
-export const BesideTheSidebar: Story = {
-  args: { onDone: undefined, isBesideSidebar: true, loop },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await expect(canvas.queryByRole('button', { name: /^Close the loop/ })).toBeNull();
-    for (const name of ['Undo', 'Redo', 'Move', 'Snap', 'Draw'])
-      await expect(canvas.getByRole('button', { name })).toBeVisible();
-  },
 };
