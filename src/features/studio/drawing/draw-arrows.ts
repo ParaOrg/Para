@@ -11,9 +11,10 @@ import type { AreaTarget } from './drawing-types';
 
 /**
  * Which way the line being drawn goes: the public map's moving chevrons
- * (flowChevrons), on its routed stretches only. A Draw (freehand) stretch has
- * none, so a stretch the router refused is not read as road; a stand-in waiting for the
- * router has none, not being road yet; a hotspot has none, having no way.
+ * (flowChevrons), on its drawn stretches, routed and Draw's (straight or
+ * curved) alike. A stand-in waiting for the router has none, not being road
+ * yet; a hotspot has none, having no way. Snap's preview and Draw's line to
+ * the cursor are other sources, with none: they are offered, not drawn.
  */
 
 const SRC = 'draw-arrows';
@@ -23,11 +24,11 @@ export const ARROW_LAYER = 'draw-arrow-chevrons';
 const drawAcross = () => DRAW_LINE_WIDTH;
 
 /**
- * The runs of routed segments, each one line in drawing order: a chevron's
+ * The runs of drawn segments, each one line in drawing order: a chevron's
  * spacing carries on across a join instead of starting afresh at every point.
  * Empty for a hotspot.
  */
-export function routedRuns(
+export function drawnRuns(
   segments: readonly (Segment | undefined)[],
   area: AreaTarget | null,
   isStandIn: (segment: Segment) => boolean = () => false,
@@ -36,7 +37,7 @@ export function routedRuns(
   const runs: LngLat[][] = [];
   let run: LngLat[] | null = null;
   for (const s of segments) {
-    if (!s || s.snap !== 'snapped' || s.coordinates.length < 2 || isStandIn(s)) {
+    if (!s || s.coordinates.length < 2 || isStandIn(s)) {
       run = null;
       continue;
     }
@@ -51,7 +52,7 @@ export function routedRuns(
 }
 
 /**
- * Chevrons flowing along the drawing's routed stretches, from its first point
+ * Chevrons flowing along the drawing's drawn stretches, from its first point
  * to its last. An edit carries the flow on from where it was rather than
  * starting the chevrons again from the line's start.
  */
@@ -61,7 +62,7 @@ export function useDrawArrows(
   area: AreaTarget | null,
   isStandIn: (segment: Segment) => boolean,
 ): void {
-  const runs = useMemo(() => routedRuns(segments, area, isStandIn), [segments, area, isStandIn]);
+  const runs = useMemo(() => drawnRuns(segments, area, isStandIn), [segments, area, isStandIn]);
   const clock = useRef<FlowClock>({ flowed: 0 });
   // Over the line, under its hit area and points: the drawing's layers come first.
   const isHitReady = useLayerReady(map, HIT_LAYER);

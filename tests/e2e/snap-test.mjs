@@ -319,7 +319,7 @@ check(
   allSnapped(s, 2),
   `gaps ${snapModes(s)}, at zoom ${await zoomNow()}`,
 );
-// Which way the line goes: the public map's chevrons, on its solid stretches only.
+// Which way the line goes: the public map's chevrons, on its drawn stretches, routed and Draw's.
 const chevrons = async () =>
   ((await page.evaluate(() => window.__src('draw-arrows')))?.features ?? []).length;
 let arrows = await chevrons();
@@ -361,7 +361,7 @@ check(
   `gaps ${snapModes(s)}, the line ends ${end ? Math.round(metres(end, W)) : '?'} m from the click, router answered ${saidText}`,
 );
 arrows = await chevrons();
-check('far click: no chevrons on the freehand line', arrows === 0, `${arrows} chevrons`);
+check('far click: chevrons on the freehand line too', arrows > 0, `${arrows} chevrons`);
 const freehandDash = await page.evaluate(() =>
   window.__map.getPaintProperty('draw-line-freehand', 'line-dasharray'),
 );
@@ -598,6 +598,8 @@ check(
     bent.every((x) => x.snap === 'freehand' && x.handles && x.coordinates.length > 2),
   JSON.stringify(bent.map((x) => [x.snap, x.coordinates.length, !!x.handles])),
 );
+arrows = await chevrons();
+check('curves: chevrons flow along the curved stretches', arrows > 0, `${arrows} chevrons`);
 check(
   'handles: a click on the smooth point selects it, showing its two handles, an arm and a dot each',
   handles === 4,
