@@ -445,14 +445,21 @@ export function monochromeStyle(style: StyleSpecification): StyleSpecification {
  * Violet gray. Positron's grays lean warm, toward beige; here every gray
  * Monochrome draws, Positron's and ours, turns to the brand's hue at the same
  * small saturation (MONOCHROME_LEAN) and keeps its lightness, so nothing gets
- * lighter or darker and white stays white. A name with a colour of its own
- * (the rail stations' blue, the water's) is not a gray, and is left as it is.
+ * lighter or darker and white stays white. A colour with a hue of its own
+ * (today the rail stations' and the water's blue names) is not a gray, and is
+ * left as it is.
  */
 const LEAN_HUE = hueOf(MONOCHROME_LEAN.brand);
-/** Above this, a colour is a colour, not a gray: Positron's grays reach 17, the blue names 31. */
-const GRAY_SATURATION = 25;
+/**
+ * Above this chroma, a colour is a colour, not a gray. Chroma, not HSL's
+ * saturation, which runs high near white: Positron's warm halo #f8f4f0 is 36
+ * saturated but 3 in chroma. Positron's grays reach 8, the blue names 21.
+ */
+const GRAY_CHROMA = 10;
+
+/** HSL's chroma, 0 to 100: how far a colour is from a gray of its lightness. */
+const chroma = (c: { saturation: number; lightness: number }): number =>
+  c.saturation * (1 - Math.abs((2 * c.lightness) / 100 - 1));
 
 const toBrandGray: Recolour = (c) =>
-  c.saturation > GRAY_SATURATION
-    ? c
-    : { ...c, hue: LEAN_HUE, saturation: MONOCHROME_LEAN.saturation };
+  chroma(c) > GRAY_CHROMA ? c : { ...c, hue: LEAN_HUE, saturation: MONOCHROME_LEAN.saturation };

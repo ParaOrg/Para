@@ -69,21 +69,33 @@ test('Positron gets the detail where its layers are, the input untouched', () =>
 
 test("every gray leans to parabrand/600's hue, keeping its lightness; a blue name keeps its own", () => {
   const input = positron();
+  // Positron's warm halo on path names: 36 saturated in HSL, yet a gray.
   input.layers.push({
-    id: 'water_name',
+    id: 'highway-name-path',
     type: 'symbol',
     source: 'openmaptiles',
-    'source-layer': 'water_name',
-    paint: { 'text-color': '#495e91' },
+    'source-layer': 'transportation_name',
+    paint: { 'text-halo-color': '#f8f4f0' },
   });
   const styled = monochromeStyle(input);
-  const ground = styled.layers.find((l) => l.id === 'background').paint['background-color'];
-  const [hue, saturation, lightness] = ground.match(/[\d.]+/g).map(Number);
+  const paintOf = (id, property) =>
+    styled.layers
+      .find((l) => l.id === id)
+      .paint[property].match(/[\d.]+/g)
+      .map(Number);
+
+  const [hue, saturation, lightness] = paintOf('background', 'background-color');
   assert.ok(Math.abs(hue - 252.5) < 0.1, `${hue}`);
   assert.equal(saturation, MONOCHROME_LEAN.saturation);
   assert.ok(saturation > 0 && saturation <= 30, 'a gray, not a violet');
   assert.ok(Math.abs(lightness - 94.7) < 0.2, `${lightness}`);
-  const water = styled.layers.find((l) => l.id === 'water_name').paint['text-color'];
-  const [waterHue, waterSaturation] = water.match(/[\d.]+/g).map(Number);
-  assert.ok(Math.abs(waterHue - 222.5) < 0.1 && waterSaturation > 30, water);
+
+  const [haloHue, haloSaturation] = paintOf('highway-name-path', 'text-halo-color');
+  assert.ok(Math.abs(haloHue - 252.5) < 0.1, `${haloHue}`);
+  assert.equal(haloSaturation, MONOCHROME_LEAN.saturation);
+
+  // The rail stations' names, MAP_PAINT's basemap-transit #3d5a73: blue, kept.
+  const [railHue, railSaturation] = paintOf('detail-rail-stops', 'text-color');
+  assert.ok(Math.abs(railHue - 207.8) < 0.2, `${railHue}`);
+  assert.ok(railSaturation > 30, `${railSaturation}`);
 });
