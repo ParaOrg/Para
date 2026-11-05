@@ -24,6 +24,8 @@ import {
 
 interface PlaygroundToolsProps {
   map: MapLibreMap | null;
+  /** Where Drafts stands in the top bar, on a computer (StudioReview's buttonSlot). */
+  draftsSlot?: HTMLElement | null;
   session: Session | null;
   auth: ReturnType<typeof useAuthFlow>;
   draw: ReturnType<typeof useDrawing>;
@@ -67,6 +69,7 @@ export function PlaygroundTools({
   canDrawReturnTrip,
   onDrawReturnTrip,
   onDone,
+  draftsSlot = null,
 }: PlaygroundToolsProps) {
   const { isSignedIn, isAccountDialogOpen, openSignIn, openPasswordChange } = auth;
   const { isSaving, toast, setToast } = saveFlow;
@@ -88,6 +91,7 @@ export function PlaygroundTools({
         <StudioReview
           key={session?.user.id}
           map={map}
+          buttonSlot={draftsSlot}
           onChanged={() => {
             void saved.reload();
             void hotspots.reload();
