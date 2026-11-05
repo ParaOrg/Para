@@ -310,6 +310,50 @@ box0.x = box.x;
 box0.y = box.y;
 const zoomNow = async () => (await page.evaluate(() => window.__map.getZoom())).toFixed(1);
 
+console.log('== The wheel, as Figma');
+// On a computer the studio's wheel pans, Shift+wheel pans sideways and
+// Ctrl+wheel zooms about the pointer (features/studio/maps/use-wheel-navigation.ts).
+const camera = () =>
+  page.evaluate(() => {
+    const c = window.__map.getCenter();
+    return { lng: c.lng, lat: c.lat, zoom: window.__map.getZoom() };
+  });
+await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+let cameraBefore = await camera();
+await page.mouse.wheel(0, 200);
+await page.waitForTimeout(200);
+let cameraAfter = await camera();
+check(
+  'wheel: the wheel pans down, the zoom kept',
+  cameraAfter.lat < cameraBefore.lat &&
+    Math.abs(cameraAfter.lng - cameraBefore.lng) < 1e-6 &&
+    Math.abs(cameraAfter.zoom - cameraBefore.zoom) < 1e-6,
+  JSON.stringify([cameraBefore, cameraAfter]),
+);
+cameraBefore = cameraAfter;
+await page.keyboard.down('Shift');
+await page.mouse.wheel(0, 200);
+await page.keyboard.up('Shift');
+await page.waitForTimeout(200);
+cameraAfter = await camera();
+check(
+  'wheel: Shift+wheel pans sideways, the zoom kept',
+  Math.abs(cameraAfter.lng - cameraBefore.lng) > 1e-6 &&
+    Math.abs(cameraAfter.zoom - cameraBefore.zoom) < 1e-6,
+  JSON.stringify([cameraBefore, cameraAfter]),
+);
+cameraBefore = cameraAfter;
+await page.keyboard.down('Control');
+await page.mouse.wheel(0, -200);
+await page.keyboard.up('Control');
+await page.waitForTimeout(200);
+cameraAfter = await camera();
+check(
+  'wheel: Ctrl+wheel zooms in about the pointer',
+  cameraAfter.zoom > cameraBefore.zoom + 0.5,
+  JSON.stringify([cameraBefore, cameraAfter]),
+);
+
 console.log('== Far click (Quirino Highway, La Mesa watershed)');
 await view([Q1, Q2, W]);
 await drawRoute([Q2, Q1]);

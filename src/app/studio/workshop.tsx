@@ -33,6 +33,7 @@ import {
   useSaveTarget,
   useIsWideScreen,
   useStudioMap,
+  useWheelNavigation,
   useContributionStart,
   useDeleteActions,
   useStudioTrip,
@@ -67,6 +68,8 @@ export function Workshop({ session, recovery }: WorkshopProps) {
   // stay behind the one map and its state, so a switch keeps the camera, the
   // basemap and a half-drawn line.
   const { studioMap, chooseStudioMap } = useStudioMap();
+  // On a computer the wheel pans and Ctrl/⌘+wheel zooms, as in Figma.
+  useWheelNavigation(map);
   const isPlayground = studioMap === 'playground';
   // The Contributors map draws on the studio's own map, so it stays live there.
   const isContributors = CONTRIBUTIONS && studioMap === 'contributors';
