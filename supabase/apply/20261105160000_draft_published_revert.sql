@@ -1,78 +1,21 @@
--- ParaPo — undo draft_published: the review steps come back as 20261105130000_draft_update_makerless
--- left them, and the published and last-saved columns go.
+-- ParaPo — undo draft_published: approve_draft as 20261105120000_review_rules has it, and the
+-- published and last-saved columns gone.
 --
 -- Paste this whole file into the SQL editor (role: postgres) and run it. One transaction; safe to
--- run twice. It drops save_draft, publish_draft, unpublish, private.apply_draft and
--- private.payload_of; re-creates approve_draft (as 20261105120000_review_rules has it),
--- approve_reviewed_draft, submit_draft and send_back_draft with their grants; gives editors back
--- the direct update of a draft's payload, status, submitted_at and note under draft_update (the
--- maker's, or a maker-less draft's); and drops draft.last_saved_by and the four columns on route
+-- run twice. It drops save_draft, publish_draft, unpublish, private.apply_draft,
+-- private.payload_of and the draft_saver trigger; re-creates approve_draft's own body (as
+-- 20261105120000_review_rules has it); and drops draft.last_saved_by and the four columns on route
 -- and stop. What those columns recorded since the apply is lost. The drafts unpublish left stay:
--- they are ordinary drafts, and take_down's row stays taken down. Then the ledger row goes.
+-- they are ordinary drafts, and the row it took down stays taken down. Then the ledger row goes.
+-- Apply 20261105170000_retire_review_steps's revert first if that was applied.
 begin;
 
 drop function if exists public.unpublish(text, uuid);
 drop function if exists public.publish_draft(uuid, integer);
 drop function if exists public.save_draft(uuid, integer, jsonb);
-drop function if exists private.apply_draft(uuid);
 drop function if exists private.payload_of(text, uuid);
-
--- As 0022_draft_ops.
-create or replace function public.submit_draft(p_draft uuid, p_revision integer)
-returns jsonb
-language plpgsql
-security definer
-set search_path = ''
-as $$
-declare
-  d public.draft;
-begin
-  perform private.require_editor();
-  update public.draft
-  set status = 'pending', submitted_at = now()
-  where id = p_draft and revision = p_revision and status = 'draft'
-  returning * into d;
-  if found then
-    return jsonb_build_object('code', 'submitted', 'draft', row_to_json(d));
-  end if;
-  select * into d from public.draft where id = p_draft;
-  if not found then
-    return jsonb_build_object('code', 'no_draft');
-  end if;
-  if d.revision <> p_revision then
-    return jsonb_build_object('code', 'revision_mismatch', 'current_revision', d.revision);
-  end if;
-  return jsonb_build_object('code', 'already_pending');
-end;
-$$;
-
-create or replace function public.send_back_draft(p_draft uuid, p_revision integer, p_note text)
-returns jsonb
-language plpgsql
-security definer
-set search_path = ''
-as $$
-declare
-  d public.draft;
-begin
-  perform private.require_editor();
-  update public.draft
-  set status = 'draft', submitted_at = null, note = p_note
-  where id = p_draft and revision = p_revision and status = 'pending'
-  returning * into d;
-  if found then
-    return jsonb_build_object('code', 'sent_back', 'draft', row_to_json(d));
-  end if;
-  select * into d from public.draft where id = p_draft;
-  if not found then
-    return jsonb_build_object('code', 'no_draft');
-  end if;
-  if d.revision <> p_revision then
-    return jsonb_build_object('code', 'revision_mismatch', 'current_revision', d.revision);
-  end if;
-  return jsonb_build_object('code', 'not_pending');
-end;
-$$;
+drop trigger if exists draft_saver on public.draft;
+drop function if exists private.draft_saver();
 
 -- As 20261105120000_review_rules.
 create or replace function public.approve_draft(p_draft uuid)
@@ -382,44 +325,7 @@ exception
 end;
 $$;
 
--- As 20261018112757_reviewed_draft_approval.
-create or replace function public.approve_reviewed_draft(p_draft uuid, p_revision integer)
-returns jsonb language plpgsql security definer set search_path = '' as $$
-declare d public.draft;
-begin
-  perform private.require_editor();
-  select * into d from public.draft where id = p_draft for update;
-  if not found then return jsonb_build_object('code', 'no_draft'); end if;
-  if p_revision is null or d.revision <> p_revision then
-    return jsonb_build_object('code', 'revision_mismatch', 'current_revision', d.revision);
-  end if;
-  -- The row lock survives through the inner RPC and its atomic apply.
-  return public.approve_draft(p_draft);
-exception when deadlock_detected or lock_not_available or query_canceled then
-  return jsonb_build_object('code', 'busy');
-end $$;
-
-revoke all on function public.submit_draft(uuid, integer) from public, anon;
-revoke all on function public.send_back_draft(uuid, integer, text) from public, anon;
-revoke all on function public.approve_draft(uuid) from public, anon;
-revoke all on function public.approve_reviewed_draft(uuid, integer) from public, anon;
-grant execute on function public.submit_draft(uuid, integer) to authenticated;
-grant execute on function public.send_back_draft(uuid, integer, text) to authenticated;
-grant execute on function public.approve_draft(uuid) to authenticated;
-grant execute on function public.approve_reviewed_draft(uuid, integer) to authenticated;
-
--- As 20261105120000_review_rules and 20261105130000_draft_update_makerless.
-grant update (payload, status, submitted_at, note) on public.draft to authenticated;
-drop policy if exists draft_update on public.draft;
-create policy draft_update on public.draft for update to authenticated
-  using (
-    (select private.is_editor())
-    and (editor_id = (select auth.uid()) or editor_id is null)
-  )
-  with check (
-    (select private.is_editor())
-    and (editor_id = (select auth.uid()) or editor_id is null)
-  );
+drop function if exists private.apply_draft(uuid);
 
 drop index if exists public.draft_last_saved_by_idx;
 alter table public.draft drop column if exists last_saved_by;

@@ -6,7 +6,8 @@
 # raises nothing and leaves nothing behind, and its read-only rows are all true. Then the backfill is
 # checked against status_at and owner_id, the races run (draft-published-race.sh), and every
 # fixture route and hotspot is unpublished: the drafts left are read by the studio's own code
-# (unpublished-drafts.mjs), and publishing them puts back exactly what was there. On the second:
+# (unpublished-drafts.mjs), and publishing them puts back exactly what was there. Then every earlier
+# review check runs again over it, as the studio on main still uses that path. On the second:
 # the apply refuses without draft_update_makerless, changing nothing. On the third: apply, revert
 # twice, and the schema equals one the migration never touched; re-apply passes the check.
 #   PSQL="docker exec -i pg-verify psql -U postgres" bash supabase/verify/draft-published.sh
@@ -143,6 +144,19 @@ published=$(q "${ed[@]}" -c "select count(*) filter (where public.publish_draft(
 [ "$(q -c "select count(*) from public.route where status <> 'approved'") $(q -c "select count(*) from public.stop where status <> 'approved'") $(q -c "select count(*) from public.draft")" = '0 0 0' ] \
   || { echo 'FAILED: something stayed down, or a draft stayed'; exit 1; }
 echo "draft_published: $routes routes and $stops hotspots unpublished, read by the studio, published back unchanged"
+
+# The studio on main's path, over the migration: every earlier review check again. after-0022.sql's one
+# direct base_revision step runs as postgres, as review-rules.sh runs it (review_rules refuses it).
+grep -q '^update draft set base_revision = ' after-0022.sql \
+  || { echo 'FAILED: after-0022.sql no longer has the base_revision fixture step this script expects'; exit 1; }
+sed 's/^update draft set base_revision = .*/reset role;\n&\nset role authenticated;/' after-0022.sql | apply -o /dev/null
+PSQL="$PSQL" DB=$DB bash concurrency-0022.sh
+PSQL="$PSQL" DB=$DB bash deadlock-0022.sh
+PSQL="$PSQL" DB=$DB bash studio-drafts.sh
+apply -o /dev/null < reviewed-draft.sql
+[ "$(q -c "select count(*) from public.route where last_saved_at is null or (status = 'approved' and published_at is null)")" = 0 ] \
+  || { echo 'FAILED: a route the old path approved was not stamped'; exit 1; }
+echo 'draft_published: the studio on main still works over it (after-0022.sql, the race scripts, studio-drafts.sh, reviewed-draft.sql), and stamps what it approves'
 
 # Without draft_update_makerless the apply refuses and changes nothing.
 DB=verify_draft_published_order
