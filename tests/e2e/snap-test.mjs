@@ -764,20 +764,31 @@ const [hx, hy] = await proj(await dotOf(0, 1));
 await page.mouse.move(box0.x + hx, box0.y + hy);
 await page.mouse.down();
 await page.mouse.move(box0.x + hx + 2, box0.y + hy + 2);
-await page.waitForTimeout(150);
-const heldWhilePressed = await heldCount();
+// The diamond is drawn on a later frame, and a software-rendered browser (CI's)
+// draws slowly: wait for it, up to two seconds, rather than look once.
+let heldWhilePressed = await heldCount();
+for (let i = 0; i < 40 && heldWhilePressed === 0; i++) {
+  await page.waitForTimeout(50);
+  heldWhilePressed = await heldCount();
+}
+// What the press took hold of, for a failure to say: the cursor a held handle sets,
+// and the held layer's filter.
+const pressedWith = await page.evaluate(() => ({
+  cursor: window.__map.getCanvas().style.cursor,
+  filter: JSON.stringify(window.__map.getFilter('draw-handle-held')),
+}));
 await page.mouse.move(box0.x + hx, box0.y + hy);
 await page.mouse.up();
 // Let go, the map redraws the dot on its next frame.
 let heldAfter = await heldCount();
-for (let i = 0; i < 20 && heldAfter > 0; i++) {
+for (let i = 0; i < 40 && heldAfter > 0; i++) {
   await page.waitForTimeout(50);
   heldAfter = await heldCount();
 }
 check(
   'handles: a handle held is a diamond, and a circle again once let go',
   heldWhilePressed === 1 && heldAfter === 0,
-  `${heldWhilePressed} held, then ${heldAfter}`,
+  `${heldWhilePressed} held, then ${heldAfter}; pressed: cursor ${pressedWith.cursor}, filter ${pressedWith.filter}`,
 );
 await dragFrom(await dotOf(0, 1), -30, -20);
 let after = await drafted();
