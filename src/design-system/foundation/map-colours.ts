@@ -144,3 +144,17 @@ export const MAP_PAINT = {
   'Paint/draw-borrow': '#c1bfff', // parabrand/300: the stretch an Extend borrows
   'Paint/draw-preview': '#c1bfff', // parabrand/300: Snap's road from the last point to the resting cursor, dashed
 } as const satisfies Record<`Paint/${string}`, string>;
+
+/**
+ * Monochrome's lean (monochrome.ts, `toBrandGray`): every gray it draws,
+ * Positron's and MAP_PAINT's, takes the hue of `brand` at `saturation` and
+ * keeps its lightness, so the relief, which road reads as above which, and
+ * the calm stay as they were; only the cast turns toward Para's violet.
+ * parabrand/600 is the middle of the brand ramp, between the route lines'
+ * parabrand/300 and parabrand/800. The saturation is HSL's, 0 to 100: low, so
+ * the map stays a gray with a hint of lilac, never a violet.
+ */
+export const MONOCHROME_LEAN = {
+  brand: '#724dff', // parabrand/600
+  saturation: 16,
+} as const;
