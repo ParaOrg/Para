@@ -232,3 +232,24 @@ change nothing), and runs `…_check.sql`: its rolled-back behaviour part must r
 no row behind, and its 5 read-only rows must be `t`. On a second database, without
 delete_account_keep_uploads, the apply refuses and writes no ledger row. On a third, apply then revert
 twice leaves the schema as before, and re-applying passes the check.
+
+## review-rules.sh
+
+`migrations/20261105120000_review_rules.sql` on databases of its own, run last by `run.sh` or alone:
+
+    PSQL="docker exec -i pg-verify psql -U postgres" bash supabase/verify/review-rules.sh
+
+It applies every earlier migration and the review paste files as live has them (0018, 0022,
+reviewed_draft_approval, draft_update_own), then `../apply/20261105120000_review_rules_apply.sql` twice
+(the second run must stop and change nothing), and runs `…_check.sql`: its rolled-back behaviour part
+must raise nothing and leave no row behind, and its 9 read-only rows must be `t`. The behaviour part
+proves that an approval with unchanged links moves no neighbour's revision (route and hotspot), that a
+changed link is written and moves only the hotspots it touches, that a hotspot listed twice is still
+`refused`, that Keep rebuilds a hintuan's links from the approved directions (and keeps its own list when
+the draft moves the outline) and keeps a terminal's ticked links only, that an editor cannot update
+`base_revision`, `editor_id`, `subject_id`, `kind` or `is_new`, that another editor cannot update, delete
+or discard someone's draft (`not_your_draft`) while the maker can, and that a maker-less draft is
+discarded by any editor. Then `after-0022.sql` (its one direct `base_revision` fixture step run as
+postgres), `concurrency-0022.sh`, `deadlock-0022.sh`, `studio-drafts.sh` and `reviewed-draft.sql` run
+again over it. On a second database, without draft_update_own, the apply refuses and writes no ledger
+row. On a third, apply then revert twice leaves the schema as before, and re-applying passes the check.

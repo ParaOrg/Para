@@ -36,6 +36,8 @@ export function reviewMessage(result: ReviewResult): string {
       return 'Someone changed this draft. Refresh it before acting again.';
     case 'no_draft':
       return 'This draft is no longer available. Refresh to check its current state.';
+    case 'not_your_draft':
+      return 'Only the editor who made this draft can discard it. Nothing was changed.';
     case 'already_pending':
     case 'not_pending':
       return 'Someone else acted on this draft meanwhile. Refresh it before trying again.';
