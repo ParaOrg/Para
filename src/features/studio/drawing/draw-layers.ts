@@ -145,13 +145,13 @@ export function useDrawLayers(map: MapLibreMap | null): void {
         'circle-stroke-width': 3,
       },
     });
-    // A curve's handles, under its points: thin arms, small dots, in the line's colour.
+    // A curve's handles, under its points: thin arms and small dots, in red as a pen tool's are, apart from the line.
     map.addLayer({
       id: 'draw-handle-arms',
       type: 'line',
       source: HANDLE_SRC,
       filter: ['==', ['geometry-type'], 'LineString'],
-      paint: { 'line-color': ROUTE_COLOUR, 'line-width': HANDLE_ARM_WIDTH },
+      paint: { 'line-color': MAP_PAINT['Paint/draw-handle-arm'], 'line-width': HANDLE_ARM_WIDTH },
     });
     map.addLayer({
       id: HANDLE_DOT_LAYER,
@@ -160,7 +160,7 @@ export function useDrawLayers(map: MapLibreMap | null): void {
       filter: ['==', ['geometry-type'], 'Point'],
       paint: {
         'circle-radius': 4,
-        'circle-color': ROUTE_COLOUR,
+        'circle-color': MAP_PAINT['Paint/draw-handle-dot'],
         'circle-stroke-color': MAP_PAINT['Paint/casing'],
         'circle-stroke-width': 1,
       },

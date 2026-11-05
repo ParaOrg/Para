@@ -147,29 +147,48 @@ function handleAt(segment: Segment | undefined, end: 0 | 1): [LngLat, LngLat] | 
 }
 
 /**
- * The handle source: the two handles of the point `at` the editor selected,
- * each an arm and a dot, as a pen tool shows only the selected point's: the
- * one its stretch in arrives with, and the one its stretch out leaves with,
- * or, on the last point placed smooth, the handle `pending` it will send the
- * next stretch (shown, not dragged: no stretch holds it yet). None with no
- * point selected, or for a hotspot.
+ * The points whose handles show while drawing, as a pen tool shows them: the
+ * last two placed, always, and the one the editor selected, `selected`.
+ */
+export function handlePoints(selected: number | null, count: number): number[] {
+  const last = [count - 2, count - 1].filter((i) => i >= 0);
+  return selected === null || last.includes(selected) ? last : [selected, ...last];
+}
+
+/** One point's two handles: the one its stretch in arrives with, and the one it leaves with. */
+function handlesOfPoint(
+  segments: readonly Segment[],
+  points: readonly LngLat[],
+  at: number,
+  pending: { point: LngLat; out: LngLat } | null,
+): HandleFeature[] {
+  const point = points[at];
+  if (!point) return [];
+  const into = handleAt(segments[at - 1], 1);
+  const outOf = handleAt(segments[at], 0);
+  return [
+    ...(into ? handleOf(into[0], into[1], at - 1, 1) : []),
+    ...(outOf ? handleOf(outOf[0], outOf[1], at, 0) : []),
+    ...(!segments[at] && pending?.point === point ? handleOf(point, pending.out) : []),
+  ];
+}
+
+/**
+ * The handle source: the handles of the points `shown` (handlePoints), each
+ * an arm and a dot: the one a point's stretch in arrives with, and the one
+ * its stretch out leaves with, or, on the last point placed smooth, the
+ * handle `pending` it will send the next stretch (shown, not dragged: no
+ * stretch holds it yet). None for a hotspot.
  */
 export function handleFeatures(
   segments: readonly Segment[],
   points: readonly LngLat[],
   area: AreaTarget | null,
-  at: number | null,
+  shown: readonly number[],
   pending: { point: LngLat; out: LngLat } | null,
 ): FeatureCollection<HandleFeature> {
-  const point = at === null ? undefined : points[at];
-  if (area || at === null || !point) return { type: 'FeatureCollection', features: [] };
-  const into = handleAt(segments[at - 1], 1);
-  const outOf = handleAt(segments[at], 0);
-  const features = [
-    ...(into ? handleOf(into[0], into[1], at - 1, 1) : []),
-    ...(outOf ? handleOf(outOf[0], outOf[1], at, 0) : []),
-    ...(!segments[at] && pending?.point === point ? handleOf(point, pending.out) : []),
-  ];
+  if (area) return { type: 'FeatureCollection', features: [] };
+  const features = shown.flatMap((at) => handlesOfPoint(segments, points, at, pending));
   return { type: 'FeatureCollection', features };
 }
 

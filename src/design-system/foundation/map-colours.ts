@@ -138,6 +138,8 @@ export const MAP_PAINT = {
   'Paint/daylight-street': '#ffffff', // streets and service roads, white
   'Paint/daylight-street-edge': '#ebe5da', // a whisper on the ground, no strong casing
   'Paint/draw-line': '#4900be', // parabrand/800: the line being drawn, its points' rims, a new hotspot's fill
+  'Paint/draw-handle-arm': '#ff6467', // red/400: a curve's handle line
+  'Paint/draw-handle-dot': '#e7000b', // red/600: the dot at a handle's end, what a drag holds
   'Paint/draw-uturn': '#f59e0b', // amber/500: a join that turns back
   'Paint/draw-borrow': '#c1bfff', // parabrand/300: the stretch an Extend borrows
   'Paint/draw-preview': '#c1bfff', // parabrand/300: Snap's road from the last point to the resting cursor, dashed
