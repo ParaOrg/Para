@@ -34,18 +34,18 @@ const shot = (name) => page.screenshot({ path: `${out}/${name}.png` });
 const beforeStops = (await api('stop?select=id')).length;
 await page.getByRole('button', { name: 'New route, terminal or hintuan' }).click();
 await page.getByRole('menuitem', { name: /Hintuan/ }).click();
+// On the map, right of the sidebar, whose hintuan form is open from the first corner.
 for (const [x, y] of [
-  [180, 300],
-  [210, 300],
-  [210, 330],
-  [180, 330],
+  [700, 300],
+  [730, 300],
+  [730, 330],
+  [700, 330],
 ])
   await page.mouse.click(x, y);
-await page.getByRole('button', { name: /Done/ }).click();
 await page.getByPlaceholder('SM Fairview Ilalim').fill('Browser-drawn draft place');
-await page.getByRole('button', { name: 'Save hintuan', exact: true }).click();
+await page.getByRole('button', { name: 'Save as draft', exact: true }).click();
 await page
-  .getByRole('button', { name: 'Save hintuan', exact: true })
+  .getByRole('button', { name: 'Save as draft', exact: true })
   .waitFor({ state: 'detached' });
 assert.equal(
   (await api('stop?select=id')).length,

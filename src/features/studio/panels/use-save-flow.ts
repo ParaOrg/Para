@@ -4,6 +4,9 @@ import type { SaveToast } from './save-toasts';
 import { DRAFTED } from '../data/draft-save';
 import { reviewMessage } from '../data/review-commands';
 
+/** What the toast says once a route is unpublished. */
+const UNPUBLISHED = 'Unpublished. It leaves the public map at the next publish.';
+
 interface UseSaveFlowOptions {
   /** Whether a line or an area is being drawn: a save panel belongs to one. */
   isDrawing: boolean;
@@ -59,6 +62,15 @@ export function useSaveFlow({
     setNotice(reviewMessage({ code: 'approved' }));
   };
 
+  // A route unpublished: it leaves the map, so both are read again.
+  const onUnpublished = () => {
+    setIsSaving(false);
+    cancelDrawing();
+    void reloadRoutes();
+    void reloadHotspots();
+    setNotice(UNPUBLISHED);
+  };
+
   return {
     isSaving,
     setIsSaving,
@@ -69,5 +81,6 @@ export function useSaveFlow({
     justSaved: toast?.kind === 'route' ? toast.v : null,
     onDrafted,
     onPublished,
+    onUnpublished,
   };
 }

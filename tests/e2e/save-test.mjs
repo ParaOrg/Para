@@ -280,6 +280,13 @@ check(
 
 // ---- 2c. The map's ⓘ, as on the public map: at the map's bottom left, opening Map Data Source
 {
+  const drafts = await page.getByRole('button', { name: /^Drafts/ }).boundingBox();
+  check(
+    'on a computer Drafts stands in the top bar, clear of the map and its controls',
+    !!drafts && drafts.y + drafts.height <= 48 && drafts.x + drafts.width <= 1280 - 16 + 1,
+    JSON.stringify(drafts),
+  );
+
   const info = page.getByRole('button', { name: 'Map data sources' });
   const sheet = page.getByRole('dialog', { name: 'Map Data Source' });
   const infoBox = await info.boundingBox();
@@ -326,7 +333,7 @@ check(
   await page.getByRole('button', { name: 'New route, terminal or hintuan' }).click();
   await page.getByRole('menuitem', { name: /Routes/ }).click();
   await page.waitForTimeout(300);
-  const panel = page.getByTestId('route-panel');
+  const panel = page.getByTestId('sidebar');
   const save = panel.getByRole('button', { name: /^(Publish|Save as draft)$/ }).last();
   check(
     "the route's form is beside the map from the first click, named by its heading",
@@ -337,6 +344,10 @@ check(
     '  the map beside it is live, and the toolbar has no Done: Save is Done',
     !(await page.locator('[data-map-box]').evaluate((e) => e.inert)) &&
       (await page.getByRole('button', { name: 'Done' }).count()) === 0,
+  );
+  check(
+    '  Line detail says a new route is a Draft',
+    /Status\s+Draft/.test(await page.getByTestId('line-detail').innerText()),
   );
   check(
     '  Save waits for a line, and says so',
@@ -351,12 +362,11 @@ check(
   await idle();
   await page.waitForTimeout(300);
   check(
-    '  as the line reaches its places, both ends and the name show at once',
+    '  as the line reaches its places, both ends show at once',
     (await page.getByTestId('save-head').inputValue()) !== '' &&
       (await page.getByTestId('save-tail').inputValue()) !== '' &&
-      (await page.getByTestId('save-direction').innerText()).includes('→') &&
       (await save.isEnabled()),
-    await page.getByTestId('save-direction').innerText(),
+    await page.getByTestId('save-head').inputValue(),
   );
   const panelBox = await panel.boundingBox();
   const mapBox = await page.locator('[data-map-box]').boundingBox();

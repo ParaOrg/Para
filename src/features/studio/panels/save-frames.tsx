@@ -16,14 +16,14 @@ export function SaveSheetFrame({ children }: SaveFrameProps) {
 }
 
 /**
- * A route's save form left of the map on a computer, open the whole time the
- * line is drawn. Not a dialog: the map beside it stays live, so it traps no
+ * The sidebar left of the map on a computer, a route's or a hotspot's, open the
+ * whole time the line or outline is drawn. Not a dialog: the map beside it stays live, so it traps no
  * focus; the form's heading names it, and it comes before the map in the page,
  * as it is read: left to right.
  */
 export function SaveBesideFrame({ children }: SaveFrameProps) {
   return (
-    <div data-testid="route-panel" className={BESIDE}>
+    <div data-testid="sidebar" className={BESIDE}>
       {children}
     </div>
   );
