@@ -20,6 +20,7 @@ export { useLoopClosing } from './drawing/use-loop-closing';
 export { MapPlaceholder } from './maps/map-placeholder';
 export { MapSwitch } from './maps/map-switch';
 export { useStudioMap } from './maps/use-studio-map';
+export { useWheelNavigation } from './maps/use-wheel-navigation';
 export { AccountPill } from './panels/account-pill';
 export { NEW_MENU_DOCK_FOOT, NewMenu } from './panels/new-menu';
 export { returnTripLeft } from './panels/return-trip';
