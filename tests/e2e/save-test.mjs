@@ -339,6 +339,10 @@ check(
       (await page.getByRole('button', { name: 'Done' }).count()) === 0,
   );
   check(
+    '  Line detail says a new route is a Draft',
+    /Status\s+Draft/.test(await page.getByTestId('line-detail').innerText()),
+  );
+  check(
     '  Save waits for a line, and says so',
     (await save.isDisabled()) && (await panel.innerText()).includes('Add at least 2 points'),
   );

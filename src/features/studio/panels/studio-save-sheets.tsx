@@ -66,6 +66,10 @@ export function StudioSaveSheets({
   const approvedRoute = target.editing?.route ?? target.parentRoute;
   const routeToEdit = useRouteToEditQuery(approvedRoute);
   const draftedRoute = routeToEdit.data ?? approvedRoute;
+  // A direction of a published route, with no draft of the editor's own: what the sidebar opened
+  // on is published. routeToEdit hands back the approved route itself when there is no draft.
+  const isPublished =
+    !!target.editing && routeToEdit.isSuccess && routeToEdit.data === approvedRoute;
   // Until the draft is read, Save would build on facts the form does not show: it waits.
   const draftNotRead =
     approvedRoute && routeToEdit.isPending
@@ -123,6 +127,7 @@ export function StudioSaveSheets({
             // route reads it fresh into the cache, and a draft save drops the cached ones).
             key={`${draw.target.routeId}:${draw.target.directionId}:${routeToEdit.isSuccess ? 'read' : 'reading'}`}
             {...routeForm}
+            isPublished={isPublished}
             saveBlocked={draftNotRead ?? whyCannotSave(draw)}
           />
         </SaveBesideFrame>
@@ -133,6 +138,7 @@ export function StudioSaveSheets({
           <SavePanel
             key={routeToEdit.isSuccess ? 'read' : 'reading'}
             {...routeForm}
+            isPublished={isPublished}
             saveBlocked={draftNotRead}
             onCancel={onCancel}
           />
