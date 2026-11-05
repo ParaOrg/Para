@@ -3,7 +3,10 @@ import './draw-toolbar-icons.css';
 /**
  * The drawing toolbar's icons, from the owner's toolbar frame (4614:15351):
  * Figma's own files, painted in currentColor through a mask
- * (draw-toolbar-icons.css), 20 across as the frame draws them.
+ * (draw-toolbar-icons.css), 20 across as the frame draws them. Draw's file
+ * is drawn on a 24 grid where the others are on 20; the frame scales its
+ * instance into the same 20 slot, so it is rendered at 20 too, a touch
+ * smaller, exactly as Figma shows it.
  */
 
 /** Undo's arrow, turning back to the left. */
