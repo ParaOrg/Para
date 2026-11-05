@@ -3,7 +3,7 @@ import type { MapMouseEvent } from 'maplibre-gl';
 import type { LngLat } from '@/shared/utils/geo';
 
 import { mirror, penStretch } from './curves';
-import { CLICK_AFTER_MS, DRAG_PX, type DrawContext } from './draw-context';
+import { CLICK_AFTER_MS, DRAG_PX, restCursor, type DrawContext } from './draw-context';
 import { handleLines, lineFeatures } from './draw-features';
 import {
   HANDLE_DOT_LAYER,
@@ -92,7 +92,8 @@ export function penHandlers(ctx: DrawContext) {
 
   const onDown = (e: MapMouseEvent) => {
     if (e.originalEvent.button !== 0 || ctx.pan.isSpaceHeld) return;
-    if (!refs.freehand.current || refs.area.current || refs.picking.current) return;
+    if (!refs.freehand.current || refs.moving.current) return;
+    if (refs.area.current || refs.picking.current) return;
     // A point is dragged, the line inserted into, the first point clicked to close.
     const under = [POINT_LAYER, HIT_LAYER, HANDLE_DOT_LAYER];
     if (map.queryRenderedFeatures(e.point, { layers: under }).length > 0) return;
@@ -117,7 +118,8 @@ export function penHandlers(ctx: DrawContext) {
   const release = () => {
     if (!ctx.pan.isSpaceHeld) return;
     ctx.pan.isSpaceHeld = false;
-    if (canvas.style.cursor === 'grab' && ctx.drag.idx === null) canvas.style.cursor = 'crosshair';
+    if (canvas.style.cursor === 'grab' && ctx.drag.idx === null)
+      canvas.style.cursor = restCursor(ctx);
   };
   const onKeyDown = (e: KeyboardEvent) => {
     if (e.code !== 'Space' || isTyping(e.target)) return;

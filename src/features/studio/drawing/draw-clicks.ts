@@ -102,6 +102,8 @@ export function clickHandlers(ctx: DrawContext) {
       setPicking(next);
       return;
     }
+    // Move adds nothing: a click there only selects, or deselects (above).
+    if (refs.moving.current) return;
     if (closesLine(e)) return;
     // A curve's handle is held, not clicked through (draw-handle-drag.ts).
     const hits = map.queryRenderedFeatures(e.point, {
@@ -119,6 +121,8 @@ export function clickHandlers(ctx: DrawContext) {
     // line beneath it: inserting here would stack a second point on the first.
     if (map.queryRenderedFeatures(e.point, { layers: [POINT_LAYER, HANDLE_DOT_LAYER] }).length > 0)
       return;
+    // Move inserts no point; a shift-click still straightens the stretch.
+    if (refs.moving.current && !e.originalEvent.shiftKey) return;
     // The line's first stretch starts at its closing point: there, a mouse's
     // click closes the line (onMapClick); a shift-click still straightens it.
     const closeAt = closeTargetOf(map);

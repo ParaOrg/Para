@@ -30,7 +30,10 @@ interface SaveEndsFieldsProps {
   onPlaceCancel: () => void;
 }
 
-/** A route's two ends on the save panel: Head and Tail, and the form that makes a new place for one. */
+/**
+ * A route's two ends on the sidebar, labelled as the studio says them: Origin (the head) and
+ * Destination (the tail). And the form that makes a new place for one.
+ */
 export function SaveEndsFields({
   places,
   headPlace,
@@ -50,28 +53,24 @@ export function SaveEndsFields({
 }: SaveEndsFieldsProps) {
   return (
     <>
-      <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <PlacePicker
-          label="Head"
-          hint="(where the jeeps wait)"
-          places={places}
-          value={headPlace?.key ?? ''}
-          isDisabled={isLocked}
-          onChange={onHeadChange}
-          ref={headRef}
-          testId="save-head"
-        />
-        <PlacePicker
-          label="Tail"
-          hint="(the far end)"
-          places={places}
-          value={tailPlace?.key ?? ''}
-          isDisabled={isLocked}
-          onChange={onTailChange}
-          ref={tailRef}
-          testId="save-tail"
-        />
-      </div>
+      <PlacePicker
+        label="Origin"
+        places={places}
+        value={headPlace?.key ?? ''}
+        isDisabled={isLocked}
+        onChange={onHeadChange}
+        ref={headRef}
+        testId="save-head"
+      />
+      <PlacePicker
+        label="Destination"
+        places={places}
+        value={tailPlace?.key ?? ''}
+        isDisabled={isLocked}
+        onChange={onTailChange}
+        ref={tailRef}
+        testId="save-tail"
+      />
 
       {making && nearHead && nearTail && (
         <NewPlaceForm

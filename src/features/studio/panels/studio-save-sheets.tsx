@@ -1,5 +1,4 @@
 import { useQueryClient } from '@tanstack/react-query';
-import type { ComponentProps } from 'react';
 
 import type { useSavedHotspots } from '@/features/routes/map/use-saved-hotspots';
 import type { useSavedRoutes } from '@/features/routes/map/use-saved-routes';
@@ -10,7 +9,6 @@ import { HotspotPanel } from './hotspot-panel';
 import { SaveBesideFrame, SaveSheetFrame } from './save-frames';
 import { SavePanel } from './save-panel';
 import type { SaveTarget } from './use-save-target';
-import { STUDIO_DRAFTS } from '../data/flags';
 import { reviewKeys } from '../data/review-keys';
 import { useHotspotToEditQuery } from '../data/use-hotspot-to-edit-query';
 import { useRouteToEditQuery } from '../data/use-route-to-edit-query';
@@ -32,10 +30,10 @@ interface StudioSaveSheetsProps {
   saved: Pick<Saved, 'directions'>;
   hotspots: Pick<Hotspots, 'hotspots' | 'linkedDirectionIds' | 'reload'>;
   target: Pick<SaveTarget, 'editing' | 'parentRoute' | 'slotReversed'>;
-  onSaved: ComponentProps<typeof SavePanel>['onSaved'];
-  onSavedHotspot: ComponentProps<typeof HotspotPanel>['onSaved'];
-  /** A save stored as a draft (STUDIO_DRAFTS). */
+  /** Hears what a save stored as a draft. */
   onDrafted?: (subjectId: string) => void;
+  /** A route's draft published: the map has changed. */
+  onPublished?: (subjectId: string) => void;
   onCancel: () => void;
 }
 
@@ -50,9 +48,8 @@ export function StudioSaveSheets({
   saved,
   hotspots,
   target,
-  onSaved,
-  onSavedHotspot,
   onDrafted,
+  onPublished,
   onCancel,
 }: StudioSaveSheetsProps) {
   // The hotspot being edited, when the area trace came from a saved one.
@@ -71,7 +68,7 @@ export function StudioSaveSheets({
   const draftedRoute = routeToEdit.data ?? approvedRoute;
   // Until the draft is read, Save would build on facts the form does not show: it waits.
   const draftNotRead =
-    STUDIO_DRAFTS && approvedRoute && routeToEdit.isPending
+    approvedRoute && routeToEdit.isPending
       ? 'Reading your draft of this route…'
       : routeToEdit.isError
         ? 'Couldn’t read your draft of this route. Close this and open it again.'
@@ -82,6 +79,11 @@ export function StudioSaveSheets({
     client.removeQueries({ queryKey: reviewKeys.draftsOf() });
     onDrafted?.(subjectId);
   };
+  // A publish makes every cached draft stale too: the draft it published is gone.
+  const handlePublished = (subjectId: string) => {
+    client.removeQueries({ queryKey: reviewKeys.draftsOf() });
+    onPublished?.(subjectId);
+  };
   const routeForm = {
     draw,
     existing: target.editing && draftedRoute ? { ...target.editing, route: draftedRoute } : null,
@@ -89,8 +91,8 @@ export function StudioSaveSheets({
     slotReversed: target.slotReversed,
     hotspots: hotspots.hotspots,
     directions: saved.directions,
-    onSaved,
     onDrafted: handleDrafted,
+    onPublished: handlePublished,
     onPlaceSaved: () => void hotspots.reload(),
   };
 
@@ -108,12 +110,8 @@ export function StudioSaveSheets({
           }
           directions={saved.directions}
           hotspots={hotspots.hotspots}
-          onSaved={onSavedHotspot}
           onDrafted={handleDrafted}
           onCancel={onCancel}
-          // A row written before its links failed becomes the outline's own
-          // (adoptHotspot): ✕, Done and Save again, or a reload, update it.
-          onWritten={draw.adoptHotspot}
         />
       )}
 

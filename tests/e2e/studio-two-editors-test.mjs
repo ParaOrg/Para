@@ -1,9 +1,9 @@
 // Two editors, one route: "being changed by", looked at and not changed, then
-// discarded and taken over. /studio/?e2e=1 with VITE_STUDIO_DRAFTS=1, against
+// discarded and taken over. /studio/?e2e=1, against
 // a stand-in for the database that two pages share; no router, no tiles, no
 // account, nothing reaches the live project.
 //
-//   VITE_STUDIO_DRAFTS=1 npm run dev       (in another terminal)
+//   npm run dev                            (in another terminal)
 //   node tests/e2e/studio-two-editors-test.mjs
 //
 // What it checks: editor A edits a route and saves, which stores a draft
@@ -206,7 +206,10 @@ async function editAndSave(page) {
     .catch(() => {});
   if (!(await page.getByTestId('route-panel').isVisible()))
     await page.getByRole('button', { name: /Done/ }).click();
-  await page.getByRole('button', { name: /^(Save|Update)$/ }).click();
+  await page
+    .getByRole('button', { name: /^(Publish|Save as draft)$/ })
+    .last()
+    .click();
   await page.getByText('Saved as a draft').waitFor({ timeout: 10000 });
 }
 
@@ -350,7 +353,10 @@ db.tables.draft.push({
 const staleWrites = writesOf(db).length;
 if (!(await b.page.getByTestId('route-panel').isVisible()))
   await b.page.getByRole('button', { name: /Done/ }).click();
-await b.page.getByRole('button', { name: /^(Save|Update)$/ }).click();
+await b.page
+  .getByRole('button', { name: /^(Publish|Save as draft)$/ })
+  .last()
+  .click();
 await b.page.getByText('This is being changed by Marisol').waitFor({ timeout: 10000 });
 check(
   "B's save from a card opened before A's draft is refused, and nothing is written",

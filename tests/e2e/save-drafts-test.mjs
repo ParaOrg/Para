@@ -1,10 +1,10 @@
-// save-test's core flows a second time, with drafts on (VITE_STUDIO_DRAFTS=1),
-// the save path the live studio takes: signed in, against the stand-in that
-// keeps drafts (lib/fake-studio-db.mjs), on today's published map. The
+// save-test's core flows a second time, against the other stand-in that keeps
+// drafts (lib/fake-studio-db.mjs), with the review flow's own steps: signed
+// in, on today's published map. The
 // basemap is a flat grey and the router has no roads, so every line is
 // freehand and nothing reaches the live project.
 //
-//   VITE_STUDIO_DRAFTS=1 npm run dev     (in another terminal)
+//   npm run dev                          (in another terminal)
 //   node tests/e2e/save-drafts-test.mjs
 //
 // What it checks, flow by flow as save-test drives them, each save a draft
@@ -202,7 +202,8 @@ const done = async () => {
     await page.getByRole('button', { name: /Done/ }).click();
   await page.waitForTimeout(600);
 };
-const saveButton = () => page.getByRole('button', { name: /^(Save|Update)$/ });
+const saveButton = () => page.getByRole('button', { name: 'Save as draft', exact: true });
+const publishButton = () => page.getByRole('button', { name: 'Publish', exact: true });
 const DRAFTED = 'Saved as a draft. The map changes once it is approved.';
 const drafted = () => waitFor(async () => (await body()).includes(DRAFTED));
 const draftOf = (kind, subjectId) =>
@@ -379,6 +380,8 @@ check(
   (await pointsShown()) === OUT.length,
   `${await pointsShown()} points`,
 );
+// Edit route opens in Move, where a click adds nothing: Snap, to add.
+await page.getByTestId('snap-draw').getByRole('button', { name: 'Snap' }).click();
 await go(at(0, 0), 15);
 await clickAt(at(0.0055, 0.0005), 300);
 await waitFor(async () => (await pointsShown()) === OUT.length + 1);
@@ -388,7 +391,7 @@ check(
   (await body()).includes('Update this direction'),
 );
 // A via in this edit: a route fact, kept in the draft, for 3a to find again.
-const viaField = () => page.getByPlaceholder('Zabarte');
+const viaField = () => page.getByLabel('Via (if applicable)');
 await viaField().fill('Zabarte');
 n = log.length;
 const revisionBefore = route?.revision;
@@ -432,6 +435,7 @@ check(
   (await pointsShown()) === OUT.length + 1,
   `${await pointsShown()} points`,
 );
+await page.getByTestId('snap-draw').getByRole('button', { name: 'Snap' }).click();
 await go(at(0, 0), 15);
 await clickAt(at(0.006, 0.001), 300);
 await waitFor(async () => (await pointsShown()) === OUT.length + 2);
@@ -648,7 +652,7 @@ for (const p of IKOT) await clickAt(p, 300);
 await closeLoop().click();
 await idle();
 await done();
-await page.getByLabel(/Signboard/).fill('UP – Ikot');
+await page.getByLabel('Ikot name').fill('UP – Ikot');
 n = log.length;
 await saveButton().click();
 await drafted();
@@ -830,6 +834,35 @@ check(
       newRoute.is_new === true &&
       newRoute.payload.route.tail_stop_id === newTail?.subject_id &&
       approvedWrites(w).length === 0,
+    said(w),
+  );
+}
+
+// ---- Publish: the sidebar's other save makes the draft published in the same press
+{
+  await go(at(0, 0), 15);
+  await page.getByRole('button', { name: 'New route, terminal or hintuan' }).click();
+  await page.getByRole('menuitem', { name: /Routes/ }).click();
+  await page.waitForTimeout(200);
+  for (const p of [P1, at(0, 0.0035), P2]) await clickAt(p, 300);
+  await idle();
+  await done();
+  // Late in the suite the stand-in's places are drafts and edits: two of today's map's are picked.
+  await page.getByTestId('save-head').selectOption({ label: 'Cogeo' });
+  await page.getByTestId('save-tail').selectOption({ label: 'Tala' });
+  await viaField().fill('Published Road');
+  n = log.length;
+  await publishButton().click();
+  await waitFor(async () => (await body()).includes('Published. The Studio map shows it now'));
+  w = writesSince(n);
+  const published = tables.route.find((r) => r.via === 'Published Road');
+  check(
+    'Publish saves the draft, then submits and approves it: the route is on the map',
+    rpcs(w, 'claim_draft').length === 1 &&
+      rpcs(w, 'submit_draft').length === 1 &&
+      rpcs(w, 'approve_reviewed_draft').length + rpcs(w, 'approve_draft').length === 1 &&
+      published?.status === 'approved' &&
+      !(await page.getByTestId('route-panel').isVisible()),
     said(w),
   );
 }

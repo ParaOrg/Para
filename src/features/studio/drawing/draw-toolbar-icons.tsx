@@ -1,7 +1,7 @@
 /**
- * The drawing toolbar's icons, read from the owner's frame (4304:21645): a
- * flattened capture with no layers, so these are drawn to match the picture,
- * 20 across, in currentColor.
+ * The drawing toolbar's icons, read from the owner's frames (4304:21645,
+ * and 4300:20893 for Move): flattened captures with no layers, so these are
+ * drawn to match the pictures, 20 across, in currentColor.
  */
 
 /** Undo's arrow, turning back to the left. */
@@ -20,6 +20,19 @@ export function RedoIcon() {
     <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden>
       <path d="M12.5 4.5 16 8l-3.5 3.5" strokeLinecap="round" strokeLinejoin="round" />
       <path d="M15.5 8H8.25a4 4 0 0 0 0 8H11" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+/** Move's arrow, the cursor that selects and drags, as the owner's frame (4300:20893) draws it. */
+export function MoveIcon() {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden>
+      <path
+        d="M4 3.5 16.5 8.25l-5.5 1.75-2 5.5L4 3.5Z"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   );
 }

@@ -1,3 +1,5 @@
+import { useId } from 'react';
+
 import { TextField } from '@/design-system/primitives/text-field';
 
 interface ViaFieldProps {
@@ -8,27 +10,25 @@ interface ViaFieldProps {
   onChange: (via: string) => void;
 }
 
-/** A route's via: what tells it from another with the same ends, or a loop from another with its signboard. */
+/**
+ * A route's via: what tells it from another with the same ends, or an ikot from another with its
+ * name. Its hint says which, under the field.
+ */
 export function ViaField({ value, isLoop, isLocked, onChange }: ViaFieldProps) {
+  const hintId = useId();
   return (
-    <div className="mt-3">
+    <div>
       <TextField
-        label={
-          <>
-            Via{' '}
-            <span className="text-content-disabled">
-              {isLoop
-                ? '(only if another ikot has this signboard)'
-                : '(only if another route shares both ends)'}
-            </span>
-          </>
-        }
+        label="Via (if applicable)"
+        aria-describedby={hintId}
         disabled={isLocked}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         onClear={() => onChange('')}
-        placeholder="Zabarte"
       />
+      <p id={hintId} className="mt-1.5 text-xs text-content-disabled">
+        {isLoop ? 'Only if another ikot has this name.' : 'Only if another route shares both ends.'}
+      </p>
     </div>
   );
 }

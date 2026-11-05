@@ -54,8 +54,7 @@ re-apply passes 0022_check.sql`, or stops at the first failure.
 
 ## studio-drafts.sh
 
-The studio's draft saves (`src/features/studio/data/draft-save.ts`, behind
-`VITE_STUDIO_DRAFTS`) end to end. Each payload is built by the studio's own
+The studio's draft saves (`src/features/studio/data/draft-save.ts`) end to end. Each payload is built by the studio's own
 code (`studio-drafts.mjs`) from the rows as they stand, claimed as an editor,
 submitted and approved. It checks that a stored draft changes no approved row
 (a hash of every fixture row before and after each claim), and that approval

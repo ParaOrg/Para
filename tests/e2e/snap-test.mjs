@@ -311,8 +311,8 @@ box0.y = box.y;
 const zoomNow = async () => (await page.evaluate(() => window.__map.getZoom())).toFixed(1);
 
 console.log('== The wheel, as Figma');
-// On a computer the studio's wheel pans, Shift+wheel pans sideways and
-// Ctrl+wheel zooms about the pointer (features/studio/maps/use-wheel-navigation.ts).
+// On a computer the studio's wheel pans, gliding, Shift+wheel pans sideways,
+// and Ctrl+wheel is MapLibre's own eased zoom (features/studio/maps/use-wheel-navigation.ts).
 const camera = () =>
   page.evaluate(() => {
     const c = window.__map.getCenter();
@@ -321,8 +321,15 @@ const camera = () =>
 await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
 let cameraBefore = await camera();
 await page.mouse.wheel(0, 200);
-await page.waitForTimeout(200);
+await page.waitForTimeout(40);
+const midGlide = await camera();
+await page.waitForTimeout(700);
 let cameraAfter = await camera();
+check(
+  'wheel: the pan glides, part of the way a frame later',
+  midGlide.lat < cameraBefore.lat && midGlide.lat > cameraAfter.lat,
+  JSON.stringify([cameraBefore.lat, midGlide.lat, cameraAfter.lat]),
+);
 check(
   'wheel: the wheel pans down, the zoom kept',
   cameraAfter.lat < cameraBefore.lat &&
@@ -334,7 +341,7 @@ cameraBefore = cameraAfter;
 await page.keyboard.down('Shift');
 await page.mouse.wheel(0, 200);
 await page.keyboard.up('Shift');
-await page.waitForTimeout(200);
+await page.waitForTimeout(700);
 cameraAfter = await camera();
 check(
   'wheel: Shift+wheel pans sideways, the zoom kept',
@@ -346,11 +353,11 @@ cameraBefore = cameraAfter;
 await page.keyboard.down('Control');
 await page.mouse.wheel(0, -200);
 await page.keyboard.up('Control');
-await page.waitForTimeout(200);
+await page.waitForTimeout(700);
 cameraAfter = await camera();
 check(
-  'wheel: Ctrl+wheel zooms in about the pointer',
-  cameraAfter.zoom > cameraBefore.zoom + 0.5,
+  "wheel: Ctrl+wheel zooms in, MapLibre's eased zoom",
+  cameraAfter.zoom > cameraBefore.zoom + 0.1,
   JSON.stringify([cameraBefore, cameraAfter]),
 );
 
@@ -580,6 +587,53 @@ await page.waitForTimeout(2500);
 check('preview: none in Draw', (await preview()).length === 0);
 await discard();
 
+console.log('== Move');
+// V picks Move: a click there adds nothing and inserts nothing, a point still
+// drags; S or D leaves it, and a click adds again.
+const toolPressed = (name) =>
+  page.getByTestId('snap-draw').getByRole('button', { name }).getAttribute('aria-pressed');
+await view([A, B, C, D, E]);
+await page.getByRole('button', { name: 'New route, terminal or hintuan' }).click();
+await page.getByRole('menuitem', { name: /Routes/ }).click();
+await page.getByTestId('draw-toolbar').waitFor({ timeout: 5000 });
+await page.getByTestId('snap-draw').getByRole('button', { name: 'Draw' }).click();
+await clickAt(A);
+await page.waitForTimeout(250);
+await clickAt(C);
+await page.waitForTimeout(250);
+await page.keyboard.press('v');
+await page.waitForTimeout(150);
+const pointsInMove = (await cps()).length;
+await clickAt(E);
+await page.waitForTimeout(300);
+const lineInMove = (await segs())[0]?.coords ?? [];
+const midLine = lineInMove[lineInMove.length >> 1];
+if (midLine) await clickAt(midLine);
+await page.waitForTimeout(300);
+check(
+  'move: V picks Move, and a click on the map or the line adds no point',
+  (await toolPressed('Move')) === 'true' && pointsInMove === 2 && (await cps()).length === 2,
+  `${pointsInMove} → ${(await cps()).length} points`,
+);
+const [mx0, my0] = await proj((await cps())[1]);
+await page.mouse.move(box0.x + mx0, box0.y + my0);
+await page.mouse.down();
+for (let i = 1; i <= 5; i++) await page.mouse.move(box0.x + mx0 + i * 6, box0.y + my0);
+await page.mouse.up();
+await page.waitForTimeout(300);
+const [mx1] = await proj((await cps())[1]);
+check('move: a point still drags in Move', Math.abs(mx1 - (mx0 + 30)) < 4, `${mx1 - mx0} px`);
+await page.keyboard.press('d');
+await page.waitForTimeout(150);
+await clickAt(E);
+await page.waitForTimeout(300);
+check(
+  'move: D leaves Move for Draw, and a click adds a point again',
+  (await toolPressed('Draw')) === 'true' && (await cps()).length === 3,
+  `${(await cps()).length} points`,
+);
+await discard();
+
 console.log('== Curves in Draw');
 // A click places a corner; a press and a drag places a smooth point, its
 // handles mirrored; the stretches either side bend to it, and keep their bend
@@ -703,6 +757,28 @@ const across = (h1, h2) => {
   return Math.abs(a[0] * b[1] - a[1] * b[0]) / (Math.hypot(...a) * Math.hypot(...b));
 };
 const unbent = await drafted();
+// Held, a handle's dot is a diamond; let go, a circle again.
+const heldCount = () =>
+  page.evaluate(() => window.__map.queryRenderedFeatures({ layers: ['draw-handle-held'] }).length);
+const [hx, hy] = await proj(await dotOf(0, 1));
+await page.mouse.move(box0.x + hx, box0.y + hy);
+await page.mouse.down();
+await page.mouse.move(box0.x + hx + 2, box0.y + hy + 2);
+await page.waitForTimeout(150);
+const heldWhilePressed = await heldCount();
+await page.mouse.move(box0.x + hx, box0.y + hy);
+await page.mouse.up();
+// Let go, the map redraws the dot on its next frame.
+let heldAfter = await heldCount();
+for (let i = 0; i < 20 && heldAfter > 0; i++) {
+  await page.waitForTimeout(50);
+  heldAfter = await heldCount();
+}
+check(
+  'handles: a handle held is a diamond, and a circle again once let go',
+  heldWhilePressed === 1 && heldAfter === 0,
+  `${heldWhilePressed} held, then ${heldAfter}`,
+);
 await dragFrom(await dotOf(0, 1), -30, -20);
 let after = await drafted();
 check(
