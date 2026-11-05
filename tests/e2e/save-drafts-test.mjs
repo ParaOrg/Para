@@ -388,6 +388,7 @@ check(
 
 // ---- 3. Edit a direction
 await openCard(OUT[1]);
+await waitFor(async () => (await page.getByRole('button', { name: 'Edit route' }).count()) === 1);
 check(
   'a tap on the line opens its card, with Edit route',
   (await page.getByRole('button', { name: 'Edit route' }).count()) === 1,
@@ -446,15 +447,17 @@ check(
 // Saving builds on the draft, so opening the approved line would save it over the first edit.
 // No reload between the two: the studio's cache of the draft must not seed the second edit.
 await openCard(OUT[1]);
-// The draft's line is drawn over the approved one, and a tap on it opens Drafts as well.
-const reviewDialog = page.locator('dialog[open]');
-if ((await reviewDialog.count()) > 0)
-  await reviewDialog.getByRole('button', { name: 'Close', exact: true }).click();
-await page.getByRole('button', { name: 'Edit route' }).click();
+// The draft's line is drawn over the approved one: a tap on it opens the editor's own draft
+// straight into Edit route on the way tapped, with no review sheet.
 await waitFor(async () => (await pointsShown()) > 0);
+check(
+  "a tap on the editor's own draft opens it into editing, with no review sheet",
+  (await pointsShown()) > 0 && (await page.locator('dialog[open]').count()) === 0,
+  `${await pointsShown()} points`,
+);
 await page.waitForTimeout(300);
 check(
-  "Edit route on a route with the editor's draft opens the draft's line",
+  "  the tap opens the draft's own line",
   (await pointsShown()) === OUT.length + 1,
   `${await pointsShown()} points`,
 );
@@ -533,9 +536,9 @@ check(
 // a change saved on top of the draft would otherwise drop the board the draft added.
 await load();
 await openCard(OUT[1]);
-const openDialog = page.locator('dialog[open]');
-if ((await openDialog.count()) > 0)
-  await openDialog.getByRole('button', { name: 'Close', exact: true }).click();
+// A tap on the editor's own draft opens it into editing; Exit leaves the drawing for its card.
+await waitFor(async () => (await pointsShown()) > 0);
+await page.getByRole('button', { name: 'Exit', exact: true }).click();
 await waitFor(async () => (await items().count()) === 1);
 check(
   "  reopened, the card lists the editor's draft's board",

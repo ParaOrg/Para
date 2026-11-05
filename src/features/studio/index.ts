@@ -29,6 +29,7 @@ export { StudioHotspotCard } from './panels/studio-hotspot-card';
 export { StudioSaveSheets } from './panels/studio-save-sheets';
 export { StudioTripCard } from './panels/studio-trip-card';
 export { useDeleteActions } from './panels/use-delete-actions';
+export { useOpenDraft } from './panels/use-open-draft';
 export { useSaveFlow } from './panels/use-save-flow';
 export { useSaveTarget } from './panels/use-save-target';
 export { useIsWideScreen } from './panels/use-is-wide-screen';
