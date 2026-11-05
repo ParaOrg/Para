@@ -471,8 +471,8 @@ SQL editor as `postgres`:
    (`select version from supabase_migrations.schema_migrations where name = 'delete_account_refuse_uploads';`)
    in `migrations/README.md`. The types do not change.
 
-Apply both before the new contributor app is released: it always sends `delete_uploads: false`, which
-fails until `delete_account_keep_uploads` is applied.
+Both are applied live (2026-11-05). The new contributor app always sends `delete_uploads: false`,
+which fails without `delete_account_keep_uploads`.
 
 ## Recovery
 
