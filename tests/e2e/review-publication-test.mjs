@@ -35,17 +35,9 @@ const claim = await api('rpc/claim_draft', {
   p_base_revision: null,
   p_payload: payload,
 });
-const submit = await api('rpc/submit_draft', {
-  p_draft: claim.draft.id,
-  p_revision: claim.draft.revision,
-});
 assert.equal(
-  (
-    await api('rpc/approve_reviewed_draft', {
-      p_draft: claim.draft.id,
-      p_revision: submit.draft.revision,
-    })
-  ).code,
+  (await api('rpc/publish_draft', { p_draft: claim.draft.id, p_revision: claim.draft.revision }))
+    .code,
   'approved',
 );
 const publish = async () =>
@@ -79,14 +71,7 @@ const next = await api('rpc/claim_draft', {
   p_base_revision: current.revision,
   p_payload: payload,
 });
-const again = await api('rpc/submit_draft', {
-  p_draft: next.draft.id,
-  p_revision: next.draft.revision,
-});
-await api('rpc/approve_reviewed_draft', {
-  p_draft: next.draft.id,
-  p_revision: again.draft.revision,
-});
+await api('rpc/publish_draft', { p_draft: next.draft.id, p_revision: next.draft.revision });
 assert.equal(
   waitingForPublication([await subject()], await snapshot()).length,
   1,

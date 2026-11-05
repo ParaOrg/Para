@@ -111,7 +111,7 @@ export function ReviewDetails({
                 query.data.dependencies.length > 0 ||
                 query.isFetching
               }
-              onClick={() => onAction('approve', draft)}
+              onClick={() => onAction('publish', draft)}
             />
             {/* Only a draft's maker discards it; while that is still being checked, neither. */}
             {!lock && (

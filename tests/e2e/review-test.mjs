@@ -84,7 +84,7 @@ await shot('04-approve');
 await page.getByRole('button', { name: 'Approve', exact: true }).click();
 await page
   .getByRole('status')
-  .filter({ hasText: 'Approved. The Studio map shows it now' })
+  .filter({ hasText: 'Published. The Studio map shows it now' })
   .waitFor();
 const subjectId = '10000000-0000-4000-8000-000000000001';
 assert.equal((await api(`stop?id=eq.${subjectId}`))[0].name, 'Preview approved place');
@@ -128,7 +128,13 @@ await page.getByRole('button', { name: 'Take down…' }).waitFor();
 assert.equal((await api(`stop?id=eq.${subjectId}`))[0].status, 'approved');
 await page.getByRole('button', { name: 'Drafts', exact: true }).click();
 const drafts = await api('draft?select=*');
-const conflict = drafts.find((draft) => draft.kind === 'route' && draft.status === 'pending');
+// The seeded route draft whose route another editor changed after it was drafted.
+const routes = await api('route?select=id,revision');
+const conflict = drafts.find(
+  (draft) =>
+    draft.kind === 'route' &&
+    routes.some((route) => route.id === draft.subject_id && route.revision !== draft.base_revision),
+);
 assert.ok(conflict);
 // Open each remaining route until its conflict panel is found.
 for (let at = 0; at < (await page.getByRole('button', { name: 'Review changes' }).count()); at++) {

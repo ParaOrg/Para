@@ -102,7 +102,7 @@ export function useDeleteActions({
         // The delete is the draft's only change: approved in the same press, so it is gone
         // and not parked in Drafts, where Discard would undo it.
         const approved =
-          stored.draft && (await runReviewCommand({ action: 'approve', draft: stored.draft }));
+          stored.draft && (await runReviewCommand({ action: 'publish', draft: stored.draft }));
         if (approved?.code === 'approved') {
           await saved.reload();
           return;

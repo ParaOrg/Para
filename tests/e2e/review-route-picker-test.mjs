@@ -79,17 +79,8 @@ await routeItem.getByRole('button', { name: 'Review changes', exact: true }).cli
 await page.getByRole('button', { name: 'Approve', exact: true }).waitFor();
 assert.equal(await page.getByRole('button', { name: 'Approve', exact: true }).isDisabled(), true);
 for (const place of [head, tailDraft]) {
-  const submitted = await api('rpc/submit_draft', {
-    p_draft: place.id,
-    p_revision: place.revision,
-  });
   assert.equal(
-    (
-      await api('rpc/approve_reviewed_draft', {
-        p_draft: place.id,
-        p_revision: submitted.draft.revision,
-      })
-    ).code,
+    (await api('rpc/publish_draft', { p_draft: place.id, p_revision: place.revision })).code,
     'approved',
   );
 }
@@ -101,7 +92,7 @@ await page.waitForFunction(() =>
 );
 await page.getByRole('button', { name: 'Approve', exact: true }).click();
 await page.getByRole('button', { name: 'Approve', exact: true }).click();
-await page.getByRole('status').filter({ hasText: 'Approved. The Studio map' }).waitFor();
+await page.getByRole('status').filter({ hasText: 'Published. The Studio map' }).waitFor();
 assert.equal((await api(`route?id=eq.${route.subject_id}`)).length, 1);
 assert.equal((await api('route?select=id')).length, beforeRoutes + 1);
 assert.equal((await api('stop?select=id')).length, beforePlaces + 2);
