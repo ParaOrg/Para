@@ -9,9 +9,9 @@
 -- 20261105160000_draft_published_check.sql (it adds test editors, places and a
 -- route, and rolls them back). Undo: 20261105160000_draft_published_revert.sql.
 --
--- Apply it together with the studio change that saves with save_draft and
--- publishes with publish_draft: the studio on the live site before that change
--- can no longer save an existing draft or approve one.
+-- Safe to apply now: production keeps working. The studio on main (direct
+-- draft updates, submit_draft and approve_reviewed_draft) keeps every grant it
+-- uses, and its saves and approvals stamp the new columns too.
 
 begin;
 
@@ -51,22 +51,23 @@ end $$;
 --    Publish; a maker-less draft names the publisher.
 --
 -- 2. draft gains last_saved_by: claim_draft's insert sets it through its
---    default, and save_draft sets it on every save. A draft's updated_at is
---    when it was last saved. Publishing copies both onto the row.
+--    default, and the draft_saver trigger sets it whenever a draft's payload
+--    changes, by save_draft or by the direct update the studio on main still
+--    makes. A draft's updated_at is when it was last saved. Publishing copies
+--    both onto the row.
 --
--- 3. save_draft(draft, revision, payload) is the only way to change a
---    draft's payload: the maker's own draft or a maker-less one, at the
---    revision the editor read, with a payload of the v1 shape. It takes the
---    draft out of review, as the direct update did. Direct update on draft
---    is revoked and the draft_update policy dropped, so status can no longer
---    be set by hand (M2).
+-- 3. save_draft(draft, revision, payload) changes a draft's payload: the
+--    maker's own draft or a maker-less one, at the revision the editor read,
+--    with a payload of the v1 shape. It takes the draft out of review, as the
+--    direct update does.
 --
 -- 4. publish_draft(draft, revision) publishes straight from a draft: the
---    revision the editor saw, then the draft applied as approve_draft did
---    (private.apply_draft, the same body without its pending check): the
---    base_revision conflict check, the lock order (draft, then routes, then
---    hotspots), the end guards and the unique places. One approval path,
---    always with the revision check (H3).
+--    revision the editor saw, then the draft applied by private.apply_draft,
+--    approve_draft's body without its pending check: the base_revision
+--    conflict check, the lock order (draft, then routes, then hotspots), the
+--    end guards and the unique places. approve_draft becomes its pending
+--    check and a call to private.apply_draft, so the old path stamps the
+--    published columns too: one body that applies a draft.
 --
 -- 5. unpublish(kind, id) is take_down, keeping the hotspot-ends-a-route
 --    guard, and it leaves a draft. Without a draft, a draft of the row as it
@@ -76,17 +77,14 @@ end $$;
 --    is left, and rebased onto the new revision when it was based on the one
 --    the take-down replaced (the take-down changes no content).
 --
--- 6. approve_draft, approve_reviewed_draft, submit_draft and send_back_draft
---    are dropped: nothing calls them once the studio publishes with
---    publish_draft (its data layer moves in the next change). take_down,
---    put_back, claim_draft, discard_draft and refresh_draft_base stay as they
---    are. draft.status and submitted_at stay for now: always 'draft' and
---    null from here on, retired with the review machinery later (M3).
---
--- The studio now on the live site saves an existing draft by direct update
--- and approves with approve_reviewed_draft, so both stop working once this is
--- applied: apply it together with the studio change that moves to save_draft,
--- publish_draft and unpublish.
+-- 6. SAFE TO APPLY NOW: production keeps working. Staging and production
+--    share this database, and the studio on main still saves a draft by
+--    direct update and approves with submit_draft and approve_reviewed_draft.
+--    All of that stays, granted as before, and stamps the new columns too.
+--    Retiring it (dropping approve_draft, approve_reviewed_draft, submit_draft
+--    and send_back_draft, revoking the direct update: H3 and M2) is the
+--    follow-up 20261105170000_retire_review_steps, applied only once main
+--    has the studio that uses save_draft, publish_draft and unpublish.
 --
 -- Order: after 20261105130000_draft_update_makerless (its apply refuses
 -- without it). Not applied by the session that wrote it: the owner applies
@@ -174,9 +172,10 @@ begin
   if not private.payload_ok(d.kind, p_payload) then
     return jsonb_build_object('code', 'bad_payload');
   end if;
-  -- Out of review, as the direct update did; draft_revision moves revision and updated_at.
+  -- Out of review, as the direct update does; draft_revision moves revision and
+  -- updated_at, draft_saver last_saved_by.
   update public.draft
-  set payload = p_payload, status = 'draft', submitted_at = null, last_saved_by = (select auth.uid())
+  set payload = p_payload, status = 'draft', submitted_at = null
   where id = p_draft
   returning * into d;
   return jsonb_build_object('code', 'ok', 'created', false, 'draft', row_to_json(d));
@@ -187,9 +186,22 @@ exception
 end;
 $$;
 
-revoke update on public.draft from authenticated;
-revoke update (payload, status, submitted_at, note) on public.draft from authenticated;
-drop policy if exists draft_update on public.draft;
+-- Who saved a draft last, however its payload was changed.
+create or replace function private.draft_saver()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+begin
+  if new.payload is distinct from old.payload then
+    new.last_saved_by := coalesce((select auth.uid()), new.last_saved_by);
+  end if;
+  return new;
+end;
+$$;
+create or replace trigger draft_saver before update on public.draft
+  for each row execute function private.draft_saver();
+revoke all on function private.draft_saver() from public, anon, authenticated;
 
 -- 4. publish_draft: the revision the editor saw, then the draft applied.
 -- approve_draft's body as 20261105120000_review_rules left it, without the
@@ -662,11 +674,32 @@ exception
 end;
 $$;
 
--- 6. The review steps the studio no longer has.
-drop function if exists public.approve_reviewed_draft(uuid, integer);
-drop function if exists public.approve_draft(uuid);
-drop function if exists public.submit_draft(uuid, integer);
-drop function if exists public.send_back_draft(uuid, integer, text);
+-- 6. approve_draft: its pending check, then the one body that applies a draft.
+-- approve_reviewed_draft, submit_draft and send_back_draft are unchanged.
+create or replace function public.approve_draft(p_draft uuid)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  d public.draft;
+begin
+  perform private.require_editor();
+  select * into d from public.draft where id = p_draft for update;
+  if not found then
+    -- Approved or discarded already: a retry after a lost answer lands here.
+    return jsonb_build_object('code', 'no_draft');
+  end if;
+  if d.status <> 'pending' then
+    return jsonb_build_object('code', 'not_pending');
+  end if;
+  return private.apply_draft(p_draft);
+exception
+  when deadlock_detected or lock_not_available then
+    return jsonb_build_object('code', 'busy');
+end;
+$$;
 
 revoke all on function private.apply_draft(uuid) from public, anon, authenticated;
 revoke all on function private.payload_of(text, uuid) from public, anon, authenticated;
@@ -679,7 +712,7 @@ grant execute on function public.unpublish(text, uuid) to authenticated;
 -- <<< supabase/migrations/20261105160000_draft_published.sql
 
 -- 2. After: the columns, filled; the three functions, an editor's only; the
---    four old ones gone; no direct update of a draft.
+--    studio on main's path still granted.
 do $$
 begin
   if exists (select 1 from public.route where last_saved_at is null)
@@ -701,16 +734,13 @@ begin
      or has_function_privilege('authenticated', 'private.payload_of(text, uuid)', 'execute') then
     raise exception 'draft_published: save_draft, publish_draft or unpublish is missing or granted wrongly. Nothing was changed.';
   end if;
-  if to_regprocedure('public.approve_draft(uuid)') is not null
-     or to_regprocedure('public.approve_reviewed_draft(uuid, integer)') is not null
-     or to_regprocedure('public.submit_draft(uuid, integer)') is not null
-     or to_regprocedure('public.send_back_draft(uuid, integer, text)') is not null then
-    raise exception 'draft_published: an old review function is still there. Nothing was changed.';
-  end if;
-  if has_table_privilege('authenticated', 'public.draft', 'update')
-     or has_any_column_privilege('authenticated', 'public.draft', 'update')
-     or exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'draft' and policyname = 'draft_update') then
-    raise exception 'draft_published: editors can still update a draft directly. Nothing was changed.';
+  if not has_function_privilege('authenticated', 'public.approve_draft(uuid)', 'execute')
+     or not has_function_privilege('authenticated', 'public.approve_reviewed_draft(uuid, integer)', 'execute')
+     or not has_function_privilege('authenticated', 'public.submit_draft(uuid, integer)', 'execute')
+     or not has_function_privilege('authenticated', 'public.send_back_draft(uuid, integer, text)', 'execute')
+     or not has_column_privilege('authenticated', 'public.draft', 'payload', 'update')
+     or not exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'draft' and policyname = 'draft_update') then
+    raise exception 'draft_published: the studio on main lost a grant it uses. Nothing was changed.';
   end if;
 end $$;
 

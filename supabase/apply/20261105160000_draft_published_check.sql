@@ -6,7 +6,8 @@
 -- proves:
 --   - save_draft saves the maker's draft at the revision read, out of review,
 --     naming who saved it; refuses another editor's draft, a stale revision
---     and a malformed payload; and a draft can no longer be updated directly;
+--     and a malformed payload; the direct update the studio on main makes
+--     still works and names its saver too;
 --   - publish_draft refuses a stale revision, then publishes: the route as
 --     the draft has it, approved, its published and last-saved columns
 --     written (published_by the draft's maker), the draft gone; a draft whose
@@ -17,6 +18,8 @@
 --     publishing puts back unchanged; an existing draft is kept and rebased;
 --     a hotspot that ends a published route is refused (blocked) and left
 --     as it was; a second unpublish is not_published;
+--   - the studio on main's submit_draft and approve_reviewed_draft still
+--     publish, and stamp the same columns;
 --   - a non-editor can call none of them.
 -- The second part is read-only: one row per check, every ok should be t.
 
@@ -89,10 +92,14 @@ select pg_temp.check(d.payload -> 'route' ->> 'fare_note' = 'Check fare' and d.s
     and d.revision = 2 and d.last_saved_by = '7e7e7e80-0000-0000-0000-0000000000e1',
   'the save is stored, out of review, at the next revision, naming its saver')
   from pg_temp.draft_of('7e7e7e80-0000-0000-0000-0000000000b1') d;
-do $$ begin
-  update public.draft set note = 'By hand' where subject_id = '7e7e7e80-0000-0000-0000-0000000000b1';
-  raise exception 'FAILED: a draft was updated directly';
-exception when insufficient_privilege then null; end $$;
+-- The studio on main updates a draft directly: still allowed, and it names its saver.
+reset role;
+update public.draft set last_saved_by = null where subject_id = '7e7e7e80-0000-0000-0000-0000000000b1';
+set role authenticated;
+with u as (update public.draft set payload = jsonb_set(payload, '{route,note_check}', '"direct"')
+    where subject_id = '7e7e7e80-0000-0000-0000-0000000000b1' returning last_saved_by)
+select pg_temp.check((select count(*) = 1 and bool_and(last_saved_by = '7e7e7e80-0000-0000-0000-0000000000e1') from u),
+  'a direct update of the payload still works, and names its saver');
 
 -- publish_draft: stale, then published by e2; the maker is named.
 select set_config('request.jwt.claim.sub', '7e7e7e80-0000-0000-0000-0000000000e2', true);
@@ -199,6 +206,21 @@ select pg_temp.check(s.status = 'approved' and s.published_by = '7e7e7e80-0000-0
   from public.stop s where s.id = '7e7e7e80-0000-0000-0000-0000000000a4';
 set role authenticated;
 
+-- The studio on main's path: submit, then approve the submitted revision; the same stamps.
+select public.claim_draft('hotspot', '7e7e7e80-0000-0000-0000-0000000000a5', true, null,
+  jsonb_build_object('version', 1, 'stop', jsonb_build_object('name', 'Published check old path', 'informal', null,
+    'aliases', '[]'::jsonb, 'kind', 'hintuan', 'note', null, 'line', null,
+    'point', '{"type":"Point","coordinates":[121.21,14.6]}'::jsonb, 'area', null), 'links', '[]'::jsonb));
+select pg_temp.check(public.approve_reviewed_draft(d.id, (public.submit_draft(d.id, d.revision) -> 'draft' ->> 'revision')::integer)
+    ->> 'code' = 'approved', 'submit and approve still publish')
+  from pg_temp.draft_of('7e7e7e80-0000-0000-0000-0000000000a5') d;
+reset role;
+select pg_temp.check(s.status = 'approved' and s.published_at = now()
+    and s.published_by = '7e7e7e80-0000-0000-0000-0000000000e1'
+    and s.last_saved_by = '7e7e7e80-0000-0000-0000-0000000000e1', 'and stamp the same columns')
+  from public.stop s where s.id = '7e7e7e80-0000-0000-0000-0000000000a5';
+set role authenticated;
+
 -- A non-editor can call none of them.
 select set_config('request.jwt.claim.sub', '7e7e7e80-0000-0000-0000-0000000000f1', true);
 do $$ begin
@@ -236,16 +258,16 @@ select * from (values
   (4, 'private.apply_draft and private.payload_of are granted to nobody',
    (select not has_function_privilege('authenticated', 'private.apply_draft(uuid)', 'execute')
        and not has_function_privilege('authenticated', 'private.payload_of(text, uuid)', 'execute'))),
-  (5, 'approve_draft, approve_reviewed_draft, submit_draft and send_back_draft are gone',
-   (select to_regprocedure('public.approve_draft(uuid)') is null
-       and to_regprocedure('public.approve_reviewed_draft(uuid, integer)') is null
-       and to_regprocedure('public.submit_draft(uuid, integer)') is null
-       and to_regprocedure('public.send_back_draft(uuid, integer, text)') is null)),
-  (6, 'no direct update of a draft: no grant, no draft_update policy',
-   (select not has_table_privilege('authenticated', 'public.draft', 'update')
-       and not has_any_column_privilege('authenticated', 'public.draft', 'update')
-       and not exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'draft'
-                         and policyname = 'draft_update'))),
+  (5, 'the studio on main keeps approve_draft, approve_reviewed_draft, submit_draft and send_back_draft',
+   (select bool_and(has_function_privilege('authenticated', f, 'execute'))
+      from unnest(array['public.approve_draft(uuid)', 'public.approve_reviewed_draft(uuid, integer)',
+                        'public.submit_draft(uuid, integer)', 'public.send_back_draft(uuid, integer, text)']) f)),
+  (6, 'and its direct update of a draft, which draft_saver stamps',
+   (select has_column_privilege('authenticated', 'public.draft', 'payload', 'update')
+       and exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'draft'
+                     and policyname = 'draft_update')
+       and exists (select 1 from pg_trigger where tgname = 'draft_saver'
+                     and tgrelid = 'public.draft'::regclass and not tgisinternal))),
   (7, 'draft.last_saved_by defaults to the caller',
    (select column_default like '%uid()%' from information_schema.columns
       where table_schema = 'public' and table_name = 'draft' and column_name = 'last_saved_by')),

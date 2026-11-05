@@ -290,6 +290,8 @@ draft rebased, the publish `revision_mismatch`); none may deadlock. Then every f
 is unpublished, routes first; the drafts left are read by the studio's own code
 (`unpublished-drafts.mjs`: a route's payload parses into the studio's draft state and builds back into
 the same payload; a hotspot's opens in Edit with its links), and publishing them all, hotspots first,
-puts back exactly the map that was there. On a second database, without draft_update_makerless, the
+puts back exactly the map that was there. Then `after-0022.sql`, the two race scripts, `studio-drafts.sh`
+and `reviewed-draft.sql` run again over it, as the studio on `main` still uses the old path, and every
+route it approved is stamped. On a second database, without draft_update_makerless, the
 apply refuses and writes no ledger row. On a third, apply then revert twice leaves the schema as
 before, and re-applying passes the check.
