@@ -4,6 +4,8 @@ import { useEffect } from 'react';
 import { MAP_PAINT } from '@/design-system/foundation/map-colours';
 import { LAYERS } from '@/features/routes/map/layers';
 
+import { DIAMOND_IMAGE, HANDLE_HELD_LAYER, diamondImage } from './handle-diamond';
+
 /**
  * What the drawing paints on the map: its sources and layers, laid once
  * (useDrawLayers), with their colours; the data they show as the drawing
@@ -163,6 +165,25 @@ export function useDrawLayers(map: MapLibreMap | null): void {
         'circle-color': MAP_PAINT['Paint/draw-handle-dot'],
         'circle-stroke-color': MAP_PAINT['Paint/casing'],
         'circle-stroke-width': 1,
+      },
+    });
+    // The handle held, while a press drags it: its dot a diamond (handle-diamond.ts).
+    const pixelRatio = Math.max(1, Math.round(window.devicePixelRatio || 1));
+    if (!map.hasImage(DIAMOND_IMAGE))
+      map.addImage(
+        DIAMOND_IMAGE,
+        diamondImage(MAP_PAINT['Paint/draw-handle-dot'], MAP_PAINT['Paint/casing'], pixelRatio),
+        { pixelRatio },
+      );
+    map.addLayer({
+      id: HANDLE_HELD_LAYER,
+      type: 'symbol',
+      source: HANDLE_SRC,
+      filter: ['all', ['==', ['geometry-type'], 'Point'], false],
+      layout: {
+        'icon-image': DIAMOND_IMAGE,
+        'icon-allow-overlap': true,
+        'icon-ignore-placement': true,
       },
     });
     map.addLayer({
