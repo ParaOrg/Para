@@ -85,6 +85,17 @@ end — `Tala – SM Fairview` becomes `Tala – Novaliches`. Its own route, gro
 by the end it shares. Drawn with the studio's Extend (built 2026-09-25).
 _Avoid_: variant, branch
 
+**Attached start** / **Attached end**:
+A short extra line from another terminal that joins a route's main line
+partway along (an attached start), or leaves it partway along to another
+terminal (an attached end). For routes that leave from more than one
+terminal yet are one route, with one main line and one name. A route may
+have several of each. The route keeps its name, the main start's; an attached
+stretch never renames it. On the way back, an attached terminal can be where
+the jeep ends. Drawn in the studio's Attach mode. Planned, decided
+2026-11-05, not built (ADR 0009).
+_Avoid_: branch, variant, second start, sub-route
+
 **Signboard**:
 The short informal wording a jeep is called out by — `TALA – SM FAIRVIEW` —
 written by the editor in the jeepneys' own style. Since 2026-11-05 the
