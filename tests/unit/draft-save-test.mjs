@@ -118,7 +118,7 @@ const claimed = (q) => ({
       revision: 1,
       status: 'draft',
       payload: q.payload.p_payload,
-      note: q.payload.p_note,
+      note: q.payload.p_note ?? null,
       editor_id: null,
       created_at: '',
       updated_at: '',
@@ -333,11 +333,11 @@ const keptDraft = (payload, over = {}) => ({
   ...over,
 });
 
-test('an edit of a kept draft builds on it, at its revision, and takes it out of review', async () => {
+test('an edit of a kept draft builds on it, saved at its revision through save_draft', async () => {
   const kept = keptDraft(routePayloadOf(live()));
   const f = fake({
-    draft: (q) =>
-      q.op === 'update' ? { data: { ...kept, revision: 4, status: 'draft' } } : { data: kept },
+    draft: () => ({ data: kept }),
+    rpc: () => ({ data: { code: 'ok', created: false, draft: { ...kept, revision: 4 } } }),
   });
   const r = await signboardsDraft({ id: 'out', routeId: 'r' }, ['new.svg']);
   assert.equal(r.code, 'ok');
@@ -346,14 +346,14 @@ test('an edit of a kept draft builds on it, at its revision, and takes it out of
     !f.log.some((q) => q.table === 'route'),
     'approved rows not read: the draft is the base',
   );
-  const up = f.log.find((q) => q.table === 'draft' && q.op === 'update');
-  assert.deepEqual(up.filters, [
-    ['eq', 'id', 'd'],
-    ['eq', 'revision', 3],
-  ]);
-  assert.equal(up.payload.status, 'draft');
-  assert.equal(up.payload.submitted_at, null);
-  const dirs = up.payload.payload.directions;
+  assert.ok(
+    !f.log.some((q) => q.table === 'draft' && q.op === 'update'),
+    'no direct update of the draft',
+  );
+  const up = f.log.find((q) => q.op === 'save_draft');
+  assert.equal(up.payload.p_draft, 'd');
+  assert.equal(up.payload.p_revision, 3);
+  const dirs = up.payload.p_payload.directions;
   assert.deepEqual(
     dirs.map((d) => d.signboards),
     [['new.svg'], ['b.svg']],
@@ -362,7 +362,10 @@ test('an edit of a kept draft builds on it, at its revision, and takes it out of
 
 test('a kept draft changed since it was read is not overwritten', async () => {
   const kept = keptDraft(routePayloadOf(live()));
-  fake({ draft: (q) => (q.op === 'update' ? { data: null } : { data: kept }) });
+  fake({
+    draft: () => ({ data: kept }),
+    rpc: () => ({ data: { code: 'revision_mismatch', current_revision: 4 } }),
+  });
   const r = await deleteDirectionDraft({ id: 'out', routeId: 'r' });
   assert.equal(r.code, 'revision_mismatch');
 });
@@ -458,8 +461,10 @@ test('a retry of a new subject whose claim answer was lost updates that draft', 
     },
   );
   const f = fake({
-    rpc: () => ({ data: { code: 'ok', created: false, draft: kept } }),
-    draft: () => ({ data: { ...kept, revision: 2 } }),
+    rpc: (q) =>
+      q.op === 'claim_draft'
+        ? { data: { code: 'ok', created: false, draft: kept } }
+        : { data: { code: 'ok', created: false, draft: { ...kept, revision: 2 } } },
   });
   const { result, hotspotId } = await saveHotspotDraft(
     { ...hotspotInput, hotspotId: null },
@@ -467,11 +472,9 @@ test('a retry of a new subject whose claim answer was lost updates that draft', 
   );
   assert.equal(hotspotId, 'kept-h');
   assert.equal(result.code, 'ok');
-  const up = f.log.find((q) => q.table === 'draft' && q.op === 'update');
-  assert.deepEqual(up.filters, [
-    ['eq', 'id', 'd'],
-    ['eq', 'revision', 1],
-  ]);
+  const up = f.log.find((q) => q.op === 'save_draft');
+  assert.equal(up.payload.p_draft, 'd');
+  assert.equal(up.payload.p_revision, 1);
 });
 
 // Where a new line lands (draft-reads.ts, stateForNewLine), and the facts a draft holds.

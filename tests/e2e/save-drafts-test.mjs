@@ -571,8 +571,7 @@ check(
   draftOf('route', route?.id)?.id === boardDraft?.id &&
     draftOf('route', route?.id)?.payload.directions.find((v) => v.id === outV?.id)?.shape ===
       null &&
-    rpcs(w, 'submit_draft').length === 0 &&
-    rpcs(w, 'approve_reviewed_draft').length === 0 &&
+    rpcs(w, 'publish_draft').length === 0 &&
     approvedWrites(w).length === 0,
   said(w),
 );
@@ -586,12 +585,12 @@ await load();
 
 // ---- 4b. An approval on a stale base is refused, and the studio says so
 // Another editor's change lands between Delete's draft and its approval: the
-// route's revision moves on, so 0022 answers conflict and applies nothing.
+// route's revision moves on, so publish_draft answers conflict and applies nothing.
 const CONFLICT_SAID =
-  'Approved data changed since this draft began. Refresh and compare before making a new draft.';
+  'Published data changed since this draft began. Refresh and compare before making a new draft.';
 await openCard(OUT[1]);
 db.meanwhile = {
-  when: (method, table) => method === 'POST' && table === 'approve_reviewed_draft',
+  when: (method, table) => method === 'POST' && table === 'publish_draft',
   run: () => {
     const row = tables.route.find((r) => r.id === route?.id);
     if (row) row.revision += 1;
@@ -603,13 +602,13 @@ await waitFor(async () => (await body()).includes(CONFLICT_SAID), 25000);
 w = writesSince(n);
 check(
   'an approval on a stale base is refused as conflict, and the studio says so in words',
-  (await body()).includes(CONFLICT_SAID) && rpcs(w, 'approve_reviewed_draft').length === 1,
+  (await body()).includes(CONFLICT_SAID) && rpcs(w, 'publish_draft').length === 1,
   `${said(w)} · ${(await body()).slice(-200)}`,
 );
 check(
   '  and nothing is applied: the direction keeps its line, the draft waits',
   !!tables.route_variant.find((v) => v.id === outV?.id)?.shape &&
-    draftOf('route', route?.id)?.status === 'pending',
+    draftOf('route', route?.id)?.status === 'draft',
 );
 // The refused draft is the editor's to discard; the stand-in drops it so the next flow starts clean.
 tables.draft = tables.draft.filter((d) => d.subject_id !== route?.id);
@@ -623,10 +622,10 @@ await waitFor(async () => (await page.getByRole('button', { name: 'Edit route' }
 await page.waitForTimeout(800);
 w = writesSince(n);
 check(
-  'Delete stores a draft and approves it: claim, submit, approve',
+  'Delete stores a draft and publishes it: claim, then publish, no submit',
   rpcs(w, 'claim_draft').length === 1 &&
-    rpcs(w, 'submit_draft').length === 1 &&
-    rpcs(w, 'approve_reviewed_draft').length === 1 &&
+    rpcs(w, 'submit_draft').length === 0 &&
+    rpcs(w, 'publish_draft').length === 1 &&
     !draftOf('route', route?.id),
   said(w),
 );
@@ -658,7 +657,7 @@ await page.waitForTimeout(800);
 w = writesSince(n);
 check(
   'Delete on the last line: approved in the same press, and the route comes down',
-  rpcs(w, 'approve_reviewed_draft').length === 1 &&
+  rpcs(w, 'publish_draft').length === 1 &&
     tables.route_variant.find((v) => v.id === slotId)?.shape === null &&
     tables.route.find((r) => r.id === route?.id)?.status === 'taken_down',
   said(w),
@@ -762,7 +761,8 @@ check(
   tailDraftAgain?.id === tailDraft?.id &&
     tailDraftAgain.payload.stop.name === 'Stand-in Tail Twice' &&
     rpcs(w, 'claim_draft').length === 0 &&
-    w.some((x) => x.method === 'PATCH' && x.table === 'draft') &&
+    rpcs(w, 'save_draft').length === 1 &&
+    !w.some((x) => x.method === 'PATCH' && x.table === 'draft') &&
     approvedWrites(w).length === 0,
   said(w),
 );
@@ -887,10 +887,10 @@ check(
   w = writesSince(n);
   const published = tables.route.find((r) => r.via === 'Published Road');
   check(
-    'Publish saves the draft, then submits and approves it: the route is on the map',
+    'Publish saves the draft, then publishes it in one call: the route is on the map',
     rpcs(w, 'claim_draft').length === 1 &&
-      rpcs(w, 'submit_draft').length === 1 &&
-      rpcs(w, 'approve_reviewed_draft').length + rpcs(w, 'approve_draft').length === 1 &&
+      rpcs(w, 'publish_draft').length === 1 &&
+      rpcs(w, 'submit_draft').length === 0 &&
       published?.status === 'approved' &&
       !(await page.getByTestId('sidebar').isVisible()),
     said(w),

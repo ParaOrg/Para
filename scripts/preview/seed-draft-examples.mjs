@@ -48,9 +48,6 @@ for (const [at, route] of routes.slice(0, 2).entries()) {
   console.log(
     `select public.claim_draft('route', ${quote(route.id)}, false, (select revision from public.route where id=${quote(route.id)}), ${json(payload(route))});`,
   );
-  console.log(
-    `select public.submit_draft(id, revision) from public.draft where subject_id=${quote(route.id)};`,
-  );
   if (at === 1)
     console.log(
       `update public.route set fare_note='Another editor changed approved data' where id=${quote(route.id)};`,

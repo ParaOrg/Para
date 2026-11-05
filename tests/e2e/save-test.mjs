@@ -133,13 +133,8 @@ check(
     a.c[0] === b.c[0] && a.c[1] === b.c[1] && a.z === b.z && a.b === b.b && a.p === b.p;
   const mapOf = () => new URL(page.url()).searchParams.get('map');
 
-  // The Map Style sheet's Close, reached by keyboard: signed in, the provisional
-  // "Drafts" button overlaps it and takes the click. The sidebar's replacement
-  // of that button fixes the overlap; Enter still proves Close works.
-  const closeMapStyle = async (sheet) => {
-    await sheet.getByRole('button', { name: 'Close' }).focus();
-    await page.keyboard.press('Enter');
-  };
+  // The Map Style sheet's Close, clicked: nothing may stand over it.
+  const closeMapStyle = (sheet) => sheet.getByRole('button', { name: 'Close' }).click();
   const basemapPicked = async () => {
     await page.getByRole('button', { name: 'Map design' }).click();
     const dialog = page.getByRole('dialog');

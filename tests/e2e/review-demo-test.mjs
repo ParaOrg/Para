@@ -38,7 +38,7 @@ await page.waitForFunction(() =>
 );
 await page.getByRole('button', { name: 'Approve', exact: true }).click();
 await page.getByRole('button', { name: 'Approve', exact: true }).click();
-await page.getByRole('status').filter({ hasText: 'Approved. The Studio map' }).waitFor();
+await page.getByRole('status').filter({ hasText: 'Published. The Studio map' }).waitFor();
 await page.getByRole('button', { name: 'Waiting for publication', exact: true }).click();
 await page.getByRole('listitem').filter({ hasText: 'Hosted reviewed place' }).waitFor();
 const snapshot = () =>

@@ -12,12 +12,12 @@ interface ReviewConfirmationProps {
 }
 
 const LABELS: Record<ReviewAction, string> = {
-  approve: 'Approve',
+  publish: 'Approve',
   discard: 'Discard draft',
 };
 
 const EXPLANATIONS: Record<ReviewAction, string> = {
-  approve:
+  publish:
     'The Studio map changes as soon as you approve. The public map changes at the next publish.',
   discard: 'This removes the draft. Approved data stays as it is. You cannot undo this.',
 };

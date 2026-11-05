@@ -18,7 +18,6 @@ import {
   listDirections,
   loadHotspotsFromSupabase,
   supabaseConfigError,
-  returnTripLeft,
   MapSwitch,
   NEW_MENU_DOCK_FOOT,
   STUDIO_BASEMAPS,
@@ -109,7 +108,7 @@ export function Workshop({ session, recovery }: WorkshopProps) {
     reloadRoutes: saved.reload,
     reloadHotspots: hotspots.reload,
   });
-  const { isSaving, setIsSaving, setNotice, justSaved } = saveFlow;
+  const { isSaving, setIsSaving, setNotice } = saveFlow;
   // A drawing begun from an upload (Use this line, Draw a hintuan here), and the
   // record of which uploads its save came from (contributors/actions).
   const contribution = useContributionStart({ map, draw, setNotice });
@@ -207,9 +206,6 @@ export function Workshop({ session, recovery }: WorkshopProps) {
   // AuthDialogs. The form beside the map is no sheet: the map stays live.
   const isSheetOpen =
     (isPlayground && isSaving && draw.drawing && !isBeside) || isAccountDialogOpen;
-
-  // "Draw the return trip" only while the route still has a way undrawn.
-  const slotLeft = returnTripLeft(justSaved, saved.directions);
 
   // Delete on the trip's card and the hotspot's: signed out, it asks for sign-in.
   const deletes = useDeleteActions({
@@ -342,8 +338,6 @@ export function Workshop({ session, recovery }: WorkshopProps) {
                 isChoosing={choosing}
                 isNewMenuOpen={isNewMenuOpen}
                 onNewMenuOpenChange={setIsNewMenuOpen}
-                canDrawReturnTrip={slotLeft}
-                onDrawReturnTrip={startReturnTrip}
                 onDone={isBeside ? undefined : onDone}
               />
             </div>

@@ -41,15 +41,13 @@ interface PlaygroundToolsProps {
   isChoosing: boolean;
   isNewMenuOpen: boolean;
   onNewMenuOpenChange: (isOpen: boolean) => void;
-  canDrawReturnTrip: boolean;
-  onDrawReturnTrip: (routeId: string) => void;
   /** Done on the toolbar; absent while the route's form stands beside the map, whose Save is Done. */
   onDone?: () => void;
 }
 
 /**
  * The Playground's tools over the map: the account pill, the review, an
- * upload's hint, the saved toasts, and the drawing's toolbar or the New +.
+ * upload's hint, the toast, and the drawing's toolbar or the New +.
  */
 export function PlaygroundTools({
   map,
@@ -66,8 +64,6 @@ export function PlaygroundTools({
   isChoosing,
   isNewMenuOpen,
   onNewMenuOpenChange,
-  canDrawReturnTrip,
-  onDrawReturnTrip,
   onDone,
   draftsSlot = null,
   onOpenDraft,
@@ -105,16 +101,7 @@ export function PlaygroundTools({
         <ContributionHint start={contribution.start} onForget={contribution.forget} />
       )}
 
-      <SaveToasts
-        toast={toast}
-        isDrawing={draw.drawing}
-        canDrawReturnTrip={canDrawReturnTrip}
-        onDismiss={() => setToast(null)}
-        onDrawReturnTrip={(routeId) => {
-          setToast(null);
-          onDrawReturnTrip(routeId);
-        }}
-      />
+      <SaveToasts toast={toast} onDismiss={() => setToast(null)} />
 
       {draw.drawing ? (
         <DrawToolbar
