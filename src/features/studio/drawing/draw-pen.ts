@@ -2,10 +2,17 @@ import type { MapMouseEvent } from 'maplibre-gl';
 
 import type { LngLat } from '@/shared/utils/geo';
 
-import { mirror } from './curves';
+import { mirror, penStretch } from './curves';
 import { CLICK_AFTER_MS, DRAG_PX, type DrawContext } from './draw-context';
-import { handleFeatures, handleLines } from './draw-features';
-import { HANDLE_DOT_LAYER, HANDLE_SRC, HIT_LAYER, POINT_LAYER, isGeoJSON } from './draw-layers';
+import { handleFeatures, handleLines, lineFeatures } from './draw-features';
+import {
+  HANDLE_DOT_LAYER,
+  HANDLE_SRC,
+  HIT_LAYER,
+  LINE_SRC,
+  POINT_LAYER,
+  isGeoJSON,
+} from './draw-layers';
 import { isTyping } from './toolbar-text';
 import { isNearClose, closeTargetOf } from './use-connect-hint';
 
@@ -13,7 +20,8 @@ import { isNearClose, closeTargetOf } from './use-connect-hint';
  * Draw's pen: a press on empty map and a drag places a smooth point where the
  * press was, its handles mirrored, the drag pulling the one toward the next
  * stretch, as a pen tool does. A press let go without a drag is a click, and
- * places a corner (draw-clicks.ts). In Draw a drag on empty map
+ * places a corner (draw-clicks.ts). While the drag pulls, the stretch in
+ * bends live under the pointer, as the release will write it. In Draw a drag on empty map
  * therefore shapes a curve rather than panning: hold Space to pan, as in a
  * pen tool, or pan in Snap. A mouse's: a finger places corners.
  */
@@ -40,11 +48,36 @@ export function penHandlers(ctx: DrawContext) {
     src.setData({ type: 'FeatureCollection', features: [...drawn.features, ...placing.features] });
   };
 
+  /**
+   * The stretch into the point being placed, bent as the release will write
+   * it (addSmoothPoint), shown on the line with the stretches already drawn.
+   * Only the map's source: the drawing itself changes on release, and its
+   * next render writes the line afresh.
+   */
+  const showStretch = (at: LngLat, out: LngLat) => {
+    const src = map.getSource(LINE_SRC);
+    if (!isGeoJSON(src)) return;
+    const points = refs.points.current;
+    const join = refs.join.current;
+    const hasJoin = !!join && points.includes(join);
+    const stretch = penStretch(
+      points,
+      refs.segments.current,
+      hasJoin,
+      refs.pendingOut.current,
+      at,
+      mirror(out, at),
+    );
+    if (!stretch) return;
+    src.setData(lineFeatures([...refs.segments.current, stretch], points, refs.area.current));
+  };
+
   const onMove = (e: MapMouseEvent) => {
     if (!press) return;
     if (!press.out && Math.hypot(e.point.x - press.x, e.point.y - press.y) < DRAG_PX) return;
     press.out = [e.lngLat.lng, e.lngLat.lat];
     showHandles(press.at, press.out);
+    showStretch(press.at, press.out);
   };
 
   const onUp = (e: MouseEvent) => {

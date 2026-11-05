@@ -16,6 +16,7 @@ import {
   mergeAcross,
   mirror,
   outHandle,
+  penStretch,
   splitCurve,
 } from '../../src/features/studio/drawing/curves.ts';
 import {
@@ -126,6 +127,28 @@ test("the handle a point sends its next stretch: the drag's, else its smooth mir
   const smoothIn = curveSegment(A, B, A, [121.009, 14.699]);
   assert.ok(near(outHandle(B, smoothIn, null), [121.011, 14.701]));
   assert.equal(outHandle(B, curveSegment(A, B, UP, B), null), null, 'a corner sends none');
+});
+
+test('the stretch the pen would place: what a click or a drag there writes', () => {
+  assert.equal(penStretch([], [], false, null, B, null), null, 'nothing drawn yet');
+  assert.equal(penStretch([A], [], true, null, B, null), null, 'before a borrowed end');
+  assert.deepEqual(
+    penStretch([A], [], false, null, B, null),
+    curveSegment(A, B, A, B),
+    'a corner: straight',
+  );
+  const out = [121.001, 14.702];
+  assert.deepEqual(
+    penStretch([A], [], false, { point: A, out }, B, null),
+    curveSegment(A, B, out, B),
+    "after a smooth point: bent by its handle out, as addPoint's",
+  );
+  const back = [121.009, 14.699];
+  assert.deepEqual(
+    penStretch([A], [], false, { point: A, out }, B, back),
+    curveSegment(A, B, out, back),
+    "the pen's drag: bent at both ends, as addSmoothPoint's",
+  );
 });
 
 test('a lone first point keeps the handle it drew with when its stretch goes', () => {
