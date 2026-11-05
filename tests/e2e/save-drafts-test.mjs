@@ -387,6 +387,9 @@ check(
   '  the panel says it updates this direction',
   (await body()).includes('Update this direction'),
 );
+// A via in this edit: a route fact, kept in the draft, for 3a to find again.
+const viaField = () => page.getByPlaceholder('Zabarte');
+await viaField().fill('Zabarte');
 n = log.length;
 const revisionBefore = route?.revision;
 await saveButton().click();
@@ -415,7 +418,7 @@ check(
 
 // ---- 3a. Edit again before approval: the editor's own draft opens, not the approved line
 // Saving builds on the draft, so opening the approved line would save it over the first edit.
-await load();
+// No reload between the two: the studio's cache of the draft must not seed the second edit.
 await openCard(OUT[1]);
 // The draft's line is drawn over the approved one, and a tap on it opens Drafts as well.
 const reviewDialog = page.locator('dialog[open]');
@@ -433,8 +436,17 @@ await go(at(0, 0), 15);
 await clickAt(at(0.006, 0.001), 300);
 await waitFor(async () => (await pointsShown()) === OUT.length + 2);
 await done();
+check(
+  "  and its form opens on the draft's route facts: the via saved before",
+  (await viaField().inputValue()) === 'Zabarte',
+  await viaField().inputValue(),
+);
+// Save waits while the draft is read ("Reading your draft of this route…").
+await waitFor(async () => await saveButton().isEnabled());
 n = log.length;
 await saveButton().click();
+// The first save's "Saved as a draft" may still be up: wait for this save's own write.
+await waitFor(async () => writesSince(n).some((x) => x.table === 'draft'));
 await drafted();
 w = writesSince(n);
 check(
@@ -443,6 +455,7 @@ check(
     draftOf('route', route?.id)?.payload.directions.find((v) => v.id === outV?.id)?.control_points
       .length ===
       OUT.length + 2 &&
+    draftOf('route', route?.id)?.payload.route.via === 'Zabarte' &&
     approvedWrites(w).length === 0,
   said(w),
 );
@@ -455,6 +468,8 @@ const upload = (name, text) =>
     .getByTestId('signboard-file')
     .setInputFiles({ name, mimeType: 'image/svg+xml', buffer: Buffer.from(text) });
 await openCard(OUT[1]);
+// The signboards wait for the route's draft to be read: a save just before dropped the cached one.
+await waitFor(async () => (await page.getByTestId('signboard-editor').count()) === 1);
 check(
   'the trip card has a Signboard for the direction on show',
   (await page.getByTestId('signboard-editor').count()) === 1 && (await items().count()) === 0,
