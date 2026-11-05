@@ -81,15 +81,15 @@ const meta = {
   title: 'Features/Studio/SavePanel',
   component: SavePanel,
   // The panel covers the map it sits over, so give it a map-sized box. The
-  // `beside` parameter stands it beside the map instead, as on a computer.
+  // `beside` parameter stands it left of the map instead, as on a computer.
   decorators: [
     (Story, ctx) =>
       ctx.parameters.beside ? (
         <div className="flex h-176 bg-neutral-200">
-          <div className="flex-1" />
           <SaveBesideFrame>
             <Story />
           </SaveBesideFrame>
+          <div className="flex-1" />
         </div>
       ) : (
         <div className="relative h-176 bg-neutral-200">

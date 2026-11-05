@@ -613,11 +613,13 @@ export const px = async (ll) => {
   await page
     .waitForFunction(() => !window.__map.isMoving(), null, { timeout: 3000 })
     .catch(() => {});
+  // Measured each time: on a computer the route's form opens left of the map and moves it.
+  const live = await page.locator('canvas.maplibregl-canvas').boundingBox();
   const p = await page.evaluate((ll) => {
     const q = window.__map.project(ll);
     return [q.x, q.y];
   }, ll);
-  return [box.x + p[0], box.y + p[1]];
+  return [live.x + p[0], live.y + p[1]];
 };
 export const clickAt = async (ll, wait = 250) => {
   const [x, y] = await px(ll);

@@ -304,15 +304,26 @@ check(
       (await save.isEnabled()),
     await page.getByTestId('save-direction').innerText(),
   );
-  // Tab from the toolbar's last button walks on into the form: it follows the map in the page.
+  const panelBox = await panel.boundingBox();
+  const mapBox = await page.locator('[data-map-box]').boundingBox();
+  check(
+    '  the form stands left of the map, 384 px wide, and the map starts where it ends',
+    panelBox !== null &&
+      mapBox !== null &&
+      panelBox.x === 0 &&
+      Math.round(panelBox.width) === 384 &&
+      Math.round(mapBox.x) === 384,
+    JSON.stringify({ panel: panelBox, map: mapBox }),
+  );
+  // Shift+Tab from the toolbar's first button walks back into the form: it comes before the map in the page.
   await page.getByTitle('Discard this route').focus();
   let tabs = 0;
   while (tabs < 40 && !(await panel.evaluate((e) => e.contains(document.activeElement)))) {
-    await page.keyboard.press('Tab');
+    await page.keyboard.press('Shift+Tab');
     tabs += 1;
   }
   check(
-    '  Tab from the toolbar reaches the form',
+    '  Shift+Tab from the toolbar reaches the form',
     await panel.evaluate((e) => e.contains(document.activeElement)),
     `${tabs} tabs`,
   );

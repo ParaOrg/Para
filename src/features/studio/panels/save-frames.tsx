@@ -16,9 +16,10 @@ export function SaveSheetFrame({ children }: SaveFrameProps) {
 }
 
 /**
- * A route's save form beside the map on a computer, open the whole time the
+ * A route's save form left of the map on a computer, open the whole time the
  * line is drawn. Not a dialog: the map beside it stays live, so it traps no
- * focus; the form's heading names it, and Tab reaches it after the map.
+ * focus; the form's heading names it, and it comes before the map in the page,
+ * as it is read: left to right.
  */
 export function SaveBesideFrame({ children }: SaveFrameProps) {
   return (
