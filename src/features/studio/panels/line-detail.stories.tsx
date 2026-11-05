@@ -78,17 +78,6 @@ export const Hotspot: Story = {
   },
 };
 
-/** While the line is drawn: the router still working, two stretches straight and two U-turns. */
-export const WhileDrawing: Story = {
-  args: { isSnapping: true, straight: 2, uTurns: 2 },
-  play: async ({ canvasElement }) => {
-    const detail = within(canvasElement).getByTestId('line-detail');
-    await expect(detail).toHaveTextContent('Distance13.7 km · snapping…');
-    await expect(detail).toHaveTextContent('Straight2');
-    await expect(detail).toHaveTextContent('U-turns⚠ 2');
-  },
-};
-
 /** At a phone's width, in the sheet over the map. */
 export const Phone: Story = {
   parameters: { phone: true },

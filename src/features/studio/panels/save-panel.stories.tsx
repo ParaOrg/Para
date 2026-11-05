@@ -67,9 +67,6 @@ function drawing(segments: Segment[], uTurns = 0): Drawing {
     segments,
     metres: 640,
     uTurns: Array.from({ length: uTurns }, (_, i) => ({ point: i + 1, stub: [], metres: 60 })),
-    area: null,
-    moving: false,
-    snapping: 0,
   } as unknown as Drawing;
 }
 
@@ -431,9 +428,6 @@ function ikotDrawing(line: LngLat[] = ROUND): Drawing {
     segments,
     metres: 1200,
     uTurns: [],
-    area: null,
-    moving: false,
-    snapping: 0,
   } as unknown as Drawing;
 }
 

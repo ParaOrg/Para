@@ -280,6 +280,13 @@ check(
 
 // ---- 2c. The map's ⓘ, as on the public map: at the map's bottom left, opening Map Data Source
 {
+  const drafts = await page.getByRole('button', { name: /^Drafts/ }).boundingBox();
+  check(
+    'on a computer Drafts stands in the top bar, clear of the map and its controls',
+    !!drafts && drafts.y + drafts.height <= 48 && drafts.x + drafts.width <= 1280 - 16 + 1,
+    JSON.stringify(drafts),
+  );
+
   const info = page.getByRole('button', { name: 'Map data sources' });
   const sheet = page.getByRole('dialog', { name: 'Map Data Source' });
   const infoBox = await info.boundingBox();

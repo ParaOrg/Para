@@ -212,13 +212,16 @@ export function Workshop({ session, recovery }: WorkshopProps) {
 
   // The map's credits, opened by its ⓘ as on the public map: the page is out of reach under them.
   const credits = useMapCredits(root);
+  const [draftsSlot, setDraftsSlot] = useState<HTMLDivElement | null>(null);
 
   return (
     <div className="relative flex h-full w-full flex-col">
       <div inert={credits.state === 'open'} className="contents">
         {/* The studio's top bar: everything on the map starts below it. Provisional until the owner's Figma frame. */}
-        <div className="flex h-[calc(3rem+env(safe-area-inset-top))] shrink-0 items-center justify-center border-b border-border-primary bg-surface px-4 pt-[env(safe-area-inset-top)]">
+        <div className="relative flex h-[calc(3rem+env(safe-area-inset-top))] shrink-0 items-center justify-center border-b border-border-primary bg-surface px-4 pt-[env(safe-area-inset-top)]">
           <MapSwitch ref={switchRef} value={studioMap} onChange={chooseStudioMap} />
+          {/* Drafts, on a computer: in the bar, clear of the map's controls (StudioReview). */}
+          <div ref={setDraftsSlot} className="absolute right-4 bottom-0 flex h-12 items-center" />
         </div>
         {/* The route's form left of the map while a line is drawn on a computer, and the map. */}
         <div className="flex min-h-0 flex-1">
@@ -226,7 +229,6 @@ export function Workshop({ session, recovery }: WorkshopProps) {
           <PlaygroundSaveSheets
             isPlayground={isPlayground}
             isBeside={isBeside}
-            loop={loop}
             draw={draw}
             saved={saved}
             hotspots={hotspots}
@@ -315,6 +317,7 @@ export function Workshop({ session, recovery }: WorkshopProps) {
               />
               <PlaygroundTools
                 map={map}
+                draftsSlot={isWideScreen ? draftsSlot : null}
                 session={session}
                 auth={auth}
                 draw={draw}
@@ -332,7 +335,6 @@ export function Workshop({ session, recovery }: WorkshopProps) {
                 canDrawReturnTrip={slotLeft}
                 onDrawReturnTrip={startReturnTrip}
                 onDone={isBeside ? undefined : onDone}
-                isBesideSidebar={isBeside}
               />
             </div>
           </div>

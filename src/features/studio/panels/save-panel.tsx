@@ -3,7 +3,6 @@ import { useId, useState, type FormEvent } from 'react';
 import { hotspotLabel } from '@/features/routes/model/hotspots';
 import { LOOP_WORD } from '@/features/routes/model/routes';
 
-import { DrawingHint } from './drawing-hint';
 import { IkotNameField } from './ikot-name-field';
 import { LineDetail } from './line-detail';
 import { LoopToggle } from './loop-toggle';
@@ -16,8 +15,6 @@ import { BESIDE_BODY } from './sheet';
 import { useSavePanel, type UseSavePanelOptions } from './use-save-panel';
 import { useUnpublish } from './use-unpublish';
 import { ViaField } from './via-field';
-import { straightCount } from '../drawing/toolbar-text';
-import type { LoopPlan } from '../drawing/use-loop-closing';
 
 interface SavePanelProps extends UseSavePanelOptions {
   /** Why a save can't go yet, said under the form; null when it can. Beside the map only. */
@@ -31,8 +28,6 @@ interface SavePanelProps extends UseSavePanelOptions {
   isPublished?: boolean;
   /** The published route came off the map (Unpublish). */
   onUnpublished?: () => void;
-  /** While a return trip is drawn beside the map: where the loop closes (Close the loop). */
-  loop?: LoopPlan | null;
 }
 
 /**
@@ -53,7 +48,6 @@ export function SavePanel({
   onCancel,
   isPublished = false,
   onUnpublished,
-  loop = null,
   ...options
 }: SavePanelProps) {
   const headingId = useId();
@@ -145,8 +139,6 @@ export function SavePanel({
           <ModeField mode={panel.mode} isLocked={routeLocked} onChange={panel.setMode} />
         </section>
 
-        {isBeside && <DrawingHint draw={draw} loop={loop} />}
-
         {(isLoop || (head && tail)) && (
           <SaveTimeline
             isLoop={isLoop}
@@ -155,14 +147,7 @@ export function SavePanel({
           />
         )}
 
-        <LineDetail
-          points={draw.controlPoints.length}
-          metres={draw.metres}
-          isSnapping={draw.snapping > 0}
-          straight={straightCount(draw.segments)}
-          uTurns={draw.uTurns.length}
-          status={status}
-        />
+        <LineDetail points={draw.controlPoints.length} metres={draw.metres} status={status} />
 
         <SaveNotices
           segments={draw.segments}
