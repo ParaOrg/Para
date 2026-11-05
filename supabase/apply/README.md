@@ -558,7 +558,7 @@ expect the maker-only with check this replaces.
 
 # Applying draft_published to the live project
 
-**Not applied live.** **Safe to apply now: production keeps working.** The owner's decision of
+**Applied live 2026-11-05** (ledger `20261105132206`) from its paste file; its check passed. Do not reapply. Production keeps working on it. The owner's decision of
 2026-11-05: Draft and Published only, for routes and hotspots alike (ADR 0003's amendment).
 Clean-up step 3 of `.scratch/codebase-review/database.md`, first half.
 
