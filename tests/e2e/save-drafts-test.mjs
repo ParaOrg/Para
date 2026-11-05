@@ -446,7 +446,7 @@ check(
 );
 await page.waitForTimeout(300);
 check(
-  "Edit route on a route with the editor's draft opens the draft's line",
+  "  the tap opens the draft's own line",
   (await pointsShown()) === OUT.length + 1,
   `${await pointsShown()} points`,
 );
