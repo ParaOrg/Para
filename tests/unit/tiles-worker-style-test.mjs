@@ -127,10 +127,6 @@ test('GET /styles/liberty serves the stored style rewritten to the request origi
 });
 
 const ALLOWED = [
-  'https://parapo.villaralvorovic2.workers.dev',
-  'https://staging-parapo.villaralvorovic2.workers.dev',
-  'https://3f2a9c1b-parapo.villaralvorovic2.workers.dev',
-  'https://claude-own-tiles-parapo.villaralvorovic2.workers.dev',
   'https://para.para-ph-info.workers.dev',
   'https://staging-para.para-ph-info.workers.dev',
   'https://3f2a9c1b-para.para-ph-info.workers.dev',
@@ -165,6 +161,11 @@ const REFUSED = [
   'https://3f2a9c1b-para.villaralvorovic2.workers.dev',
   'http://localhost:3000',
   'null',
+  // The old site's addresses, which now redirect to www.para-commute.org.
+  'https://parapo.villaralvorovic2.workers.dev',
+  'https://staging-parapo.villaralvorovic2.workers.dev',
+  'https://3f2a9c1b-parapo.villaralvorovic2.workers.dev',
+  'https://claude-own-tiles-parapo.villaralvorovic2.workers.dev',
 ];
 
 test('Para origins are allowed and every other origin is not', () => {

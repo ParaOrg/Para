@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { chromium } from 'playwright';
 import { bareStyle, nodeFetch } from './lib/harness.mjs';
 const BASE = process.env.PARA_REVIEW_DEMO_BASE ?? 'http://127.0.0.1:4182';
-const allowed = ['127.0.0.1', 'parapo-studio-review-preview.villaralvorovic2.workers.dev'];
+const allowed = ['127.0.0.1'];
 if (!allowed.includes(new URL(BASE).hostname))
   throw new Error('This suite runs only on the isolated sample preview.');
 const browser = await chromium.launch();
