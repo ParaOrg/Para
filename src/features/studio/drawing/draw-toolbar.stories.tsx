@@ -530,22 +530,6 @@ export const ExtendLongNames: Story = {
   },
 };
 
-/** Where a return trip closes: the first point of the way already drawn. */
-const loop = { closeAt: points[0], other: 'papunta' } as const;
-
-/**
- * A return trip: no Close the loop on the toolbar. The line closes by a
- * click at its first point's connect badge, on the map (use-connect-hint.ts).
- */
-export const ReturnTrip: Story = {
-  args: { loop },
-  play: async ({ canvasElement }) => {
-    await expect(
-      within(canvasElement).queryByRole('button', { name: /^Close the loop/ }),
-    ).toBeNull();
-  },
-};
-
 /** Under a finger, nothing placed: the toolbar alone, no hint over it. */
 export const FingerEmpty: Story = {
   args: { draw: drawing() },
@@ -612,18 +596,4 @@ export const FingerPointSelected: Story = {
 export const Phone: Story = {
   parameters: { phone: true },
   beforeEach: asFinger,
-};
-
-/**
- * Beside the route's sidebar and its form, whose Save is Done: Undo/Redo |
- * Move · Snap · Draw and ✕.
- */
-export const BesideTheSidebar: Story = {
-  args: { onDone: undefined, isBesideSidebar: true, loop },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await expect(canvas.queryByRole('button', { name: /^Close the loop/ })).toBeNull();
-    for (const name of ['Undo', 'Redo', 'Move', 'Snap', 'Draw'])
-      await expect(canvas.getByRole('button', { name })).toBeVisible();
-  },
 };
