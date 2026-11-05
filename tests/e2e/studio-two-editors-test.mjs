@@ -200,7 +200,7 @@ const APPROVED_TABLES = ['route', 'route_variant', 'route_stop', 'stop'];
 /** Edit route → Update: the editor's own save, which becomes a draft. On a computer the form is beside the map, with no Done. */
 async function editAndSave(page) {
   await page.getByRole('button', { name: 'Edit route' }).click();
-  await page.waitForFunction(() => /\d+ points?\b/.test(document.body.innerText));
+  await page.waitForFunction(() => /\d+ points?\b|\bPoints\s+\d+/.test(document.body.innerText));
   await page
     .waitForFunction(() => !document.body.innerText.includes('snapping…'), null, { timeout: 15000 })
     .catch(() => {});
@@ -335,7 +335,7 @@ await load(b.page);
 await openRouteFromPlace(b.page);
 await b.page.getByRole('button', { name: 'Edit route' }).waitFor();
 await b.page.getByRole('button', { name: 'Edit route' }).click();
-await b.page.waitForFunction(() => /\d+ points?/.test(document.body.innerText));
+await b.page.waitForFunction(() => /\d+ points?|\bPoints\s+\d+/.test(document.body.innerText));
 db.tables.editor_name = [{ user_id: A_ID, name: 'Marisol' }];
 db.tables.draft.push({
   id: 'eeeeeeee-0000-4000-8000-0000000000aa',
