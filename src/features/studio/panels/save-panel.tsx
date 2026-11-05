@@ -12,6 +12,7 @@ import { SaveFooter } from './save-footer';
 import { SaveNotices } from './save-notices';
 import { SaveTimeline } from './save-timeline';
 import { BESIDE_BODY } from './sheet';
+import { useLineStamps } from './use-line-stamps';
 import { useSavePanel, type UseSavePanelOptions } from './use-save-panel';
 import { useUnpublish } from './use-unpublish';
 import { ViaField } from './via-field';
@@ -71,6 +72,7 @@ export function SavePanel({
   const [opened] = useState({ fields, line });
   const isChanged = fields !== opened.fields || line !== opened.line;
   const status = isPublished && fields === opened.fields ? 'published' : 'draft';
+  const stamps = useLineStamps('route', panel.parent?.id ?? null);
   const unpublishing = useUnpublish({
     kind: 'route',
     subjectId: isPublished ? (existing?.route.id ?? null) : null,
@@ -147,7 +149,12 @@ export function SavePanel({
           />
         )}
 
-        <LineDetail points={draw.controlPoints.length} metres={draw.metres} status={status} />
+        <LineDetail
+          points={draw.controlPoints.length}
+          metres={draw.metres}
+          status={status}
+          {...stamps}
+        />
 
         <SaveNotices
           segments={draw.segments}
