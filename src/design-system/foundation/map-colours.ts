@@ -156,5 +156,5 @@ export const MAP_PAINT = {
  */
 export const MONOCHROME_LEAN = {
   brand: '#724dff', // parabrand/600
-  saturation: 8,
+  saturation: 28,
 } as const;
