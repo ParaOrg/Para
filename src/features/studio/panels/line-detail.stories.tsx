@@ -7,45 +7,53 @@ const meta = {
   title: 'Features/Studio/LineDetail',
   component: LineDetail,
   // At the sidebar's width, 348 inside its 16 each side.
+  // The `phone` parameter puts it at a handset's width, in the sheet over the map.
   decorators: [
-    (Story) => (
-      <div className="w-95 bg-surface p-4 font-sn-pro">
+    (Story, ctx) => (
+      <div
+        className={'bg-surface font-sn-pro ' + (ctx.parameters.phone ? 'w-97.5 p-6' : 'w-95 p-4')}
+      >
         <Story />
       </div>
     ),
   ],
   parameters: { layout: 'padded' },
-  args: { points: 3, metres: 13_700, status: 'draft', author: 'Roveec' },
+  args: { points: 3, metres: 13_700, status: 'draft' },
 } satisfies Meta<typeof LineDetail>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** A draft, as Figma 4300:20893 draws it: Draft in orange, never published. */
+/**
+ * A draft, as Figma 4300:20893 draws it: Draft in orange, and no Last edited. Who saved it and
+ * when read "--", as the sidebar has them until the database records them.
+ */
 export const Draft: Story = {
   play: async ({ canvasElement }) => {
     const detail = within(canvasElement).getByTestId('line-detail');
     await expect(detail).toHaveTextContent('Points3');
     await expect(detail).toHaveTextContent('Distance13.7 km');
     await expect(detail).toHaveTextContent('StatusDraft');
+    await expect(detail).toHaveTextContent('Author--');
     await expect(detail).toHaveTextContent('Date published--');
+    await expect(detail).not.toHaveTextContent('Last edited');
   },
 };
 
-/** Published, as Figma 4614:15082 draws it: Published in green. */
+/** Published, as Figma 4614:15082 draws it: Published in green, and Last edited. */
 export const Published: Story = {
   args: { status: 'published' },
-};
-
-/** Nothing known yet of who saved it and when: each reads "--". */
-export const NotKnownYet: Story = {
-  args: { author: null },
   play: async ({ canvasElement }) => {
-    await expect(within(canvasElement).getByTestId('line-detail')).toHaveTextContent('Author--');
+    const detail = within(canvasElement).getByTestId('line-detail');
+    await expect(detail).toHaveTextContent('StatusPublished');
+    await expect(detail).toHaveTextContent('Last edited--');
   },
 };
 
-/** Every fact known, the author's name long: it wraps beside its label. */
+/**
+ * Every fact known, the author's name long: it wraps beside its label. The sidebar does not feed
+ * these yet; this is where it is headed once the database records them.
+ */
 export const AllKnown: Story = {
   args: {
     status: 'published',
@@ -53,4 +61,15 @@ export const AllKnown: Story = {
     datePublished: '5 Nov 2026',
     lastEdited: '5 Nov 2026, 9:42 am',
   },
+  play: async ({ canvasElement }) => {
+    const detail = within(canvasElement).getByTestId('line-detail');
+    await expect(detail).toHaveTextContent('Date published5 Nov 2026');
+    await expect(detail).toHaveTextContent('Last edited5 Nov 2026, 9:42 am');
+  },
+};
+
+/** At a phone's width, in the sheet over the map. */
+export const Phone: Story = {
+  parameters: { phone: true },
+  globals: { viewport: { value: 'mobile1', isRotated: false } },
 };

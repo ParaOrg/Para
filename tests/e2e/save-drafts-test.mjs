@@ -194,7 +194,9 @@ const idle = () =>
   page
     .waitForFunction(() => !document.body.innerText.includes('snapping…'), null, { timeout: 15000 })
     .catch(() => {});
-const pointsShown = async () => Number((await body()).match(/(\d+) points?\b/)?.[1] ?? 0);
+// The drawing's count, not the sidebar's "Add at least 2 points" while a save waits.
+const pointsShown = async () =>
+  Number((await body()).match(/(?<!at least )(\d+) points?\b/)?.[1] ?? 0);
 // On a computer the route's form already stands beside the map; a hotspot still presses Done.
 const done = async () => {
   await idle();
@@ -380,6 +382,10 @@ check(
   (await pointsShown()) === OUT.length,
   `${await pointsShown()} points`,
 );
+check(
+  '  a published route with no draft opens as Published',
+  /Status\s+Published/.test(await page.getByTestId('line-detail').innerText()),
+);
 // Edit route opens in Move, where a click adds nothing: Snap, to add.
 await page.getByTestId('snap-draw').getByRole('button', { name: 'Snap' }).click();
 await go(at(0, 0), 15);
@@ -434,6 +440,10 @@ check(
   "Edit route on a route with the editor's draft opens the draft's line",
   (await pointsShown()) === OUT.length + 1,
   `${await pointsShown()} points`,
+);
+check(
+  "  and opens as a Draft: the editor's own draft is waiting",
+  /Status\s+Draft/.test(await page.getByTestId('line-detail').innerText()),
 );
 await page.getByTestId('snap-draw').getByRole('button', { name: 'Snap' }).click();
 await go(at(0, 0), 15);
