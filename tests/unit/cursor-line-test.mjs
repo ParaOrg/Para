@@ -16,6 +16,7 @@ const refsOf = (over = {}) => ({
   points: ref([A]),
   segments: ref([]),
   freehand: ref(true),
+  moving: ref(false),
   area: ref(null),
   picking: ref(null),
   join: ref(null),
@@ -37,8 +38,9 @@ test('before a borrowed end: straight from the point a click goes in after', () 
   assert.deepEqual(cursorLine(refsOf({ points: ref([A, C]), join: ref(C) }), B), [A, B]);
 });
 
-test('none in Snap, for a hotspot, while picking, or before anything is drawn', () => {
+test('none in Snap, in Move, for a hotspot, while picking, or before anything is drawn', () => {
   assert.equal(cursorLine(refsOf({ freehand: ref(false) }), B), null);
+  assert.equal(cursorLine(refsOf({ moving: ref(true) }), B), null);
   assert.equal(cursorLine(refsOf({ area: ref({ kind: 'terminal', hotspotId: null }) }), B), null);
   assert.equal(cursorLine(refsOf({ picking: ref({ direction: {}, spot: null }) }), B), null);
   assert.equal(cursorLine(refsOf({ points: ref([]) }), B), null);

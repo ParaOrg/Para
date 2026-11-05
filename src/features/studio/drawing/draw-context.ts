@@ -40,6 +40,8 @@ export interface DrawRefs {
   selected: RefObject<number | null>;
   /** Draw (freehand) or Snap: whether a drag on empty map shapes a curve (draw-pen.ts). */
   freehand: RefObject<boolean>;
+  /** Move: clicks select and drag points, handles and the line, and never add a point. */
+  moving: RefObject<boolean>;
   /** The handle the last point, placed smooth, sends the stretch still to come (curves.ts, outHandle). */
   pendingOut: RefObject<{ point: LngLat; out: LngLat } | null>;
 }
@@ -86,6 +88,10 @@ export interface DrawContext {
    */
   echo: { until: number; lastTouchEnd: number };
 }
+
+/** The cursor at rest over empty map: an arrow in Move, where a click adds nothing; else a crosshair. */
+export const restCursor = (ctx: DrawContext): string =>
+  ctx.refs.moving.current ? 'default' : 'crosshair';
 
 /** Whether a click now is the echo of a touch already answered. */
 export const isEcho = (ctx: DrawContext): boolean => performance.now() < ctx.echo.until;

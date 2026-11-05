@@ -379,6 +379,8 @@ check(
   (await pointsShown()) === OUT.length,
   `${await pointsShown()} points`,
 );
+// Edit route opens in Move, where a click adds nothing: Snap, to add.
+await page.getByTestId('snap-draw').getByRole('button', { name: 'Snap' }).click();
 await go(at(0, 0), 15);
 await clickAt(at(0.0055, 0.0005), 300);
 await waitFor(async () => (await pointsShown()) === OUT.length + 1);
@@ -432,6 +434,7 @@ check(
   (await pointsShown()) === OUT.length + 1,
   `${await pointsShown()} points`,
 );
+await page.getByTestId('snap-draw').getByRole('button', { name: 'Snap' }).click();
 await go(at(0, 0), 15);
 await clickAt(at(0.006, 0.001), 300);
 await waitFor(async () => (await pointsShown()) === OUT.length + 2);

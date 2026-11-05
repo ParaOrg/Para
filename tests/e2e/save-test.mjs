@@ -603,6 +603,13 @@ check(
   (await pointsShown()) === OUT.length,
   `${await pointsShown()} points`,
 );
+// Edit route opens in Move, where a click adds nothing: Snap, to add.
+const moveOnEdit = await page
+  .getByTestId('snap-draw')
+  .getByRole('button', { name: 'Move' })
+  .getAttribute('aria-pressed');
+check('  Edit route opens in Move', moveOnEdit === 'true', `${moveOnEdit}`);
+await page.getByTestId('snap-draw').getByRole('button', { name: 'Snap' }).click();
 // Back where the suite measured its ground.
 await go(at(0, 0), 15);
 await clickAt(at(0.0055, 0.0005), 300);
