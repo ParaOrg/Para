@@ -84,7 +84,15 @@ check(
     (await page.getByLabel('Via (if applicable)').isEnabled()) &&
     (await page.getByLabel('Transportation mode').isEnabled()),
 );
+const lineStatus = async () =>
+  (await page.getByTestId('line-detail').innerText()).match(/Status\s+(\w+)/)?.[1];
+check(
+  '  Line detail says the published route is Published while it is as it was',
+  (await lineStatus()) === 'Published',
+  await lineStatus(),
+);
 await page.getByTestId('save-head').selectOption({ label: 'Stand-in Phase' });
+check('  and Draft once it changes', (await lineStatus()) === 'Draft', await lineStatus());
 // The form asks a jeepney for no signboard: the one the route has is kept.
 const signboardBefore = tables.route.find((r) => r.id === outRoute?.id)?.signboard ?? null;
 check(

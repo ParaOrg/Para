@@ -4,6 +4,7 @@ import { hotspotLabel } from '@/features/routes/model/hotspots';
 import { LOOP_WORD } from '@/features/routes/model/routes';
 
 import { IkotNameField } from './ikot-name-field';
+import { LineDetail } from './line-detail';
 import { LoopToggle } from './loop-toggle';
 import { ModeField } from './mode-field';
 import { SaveDirectionName } from './save-direction-name';
@@ -20,6 +21,11 @@ interface SavePanelProps extends UseSavePanelOptions {
   saveBlocked?: string | null;
   /** Back to the map, when the form covers it. Absent beside the map, where Exit ends the drawing. */
   onCancel?: () => void;
+  /**
+   * The route as it stands is published and has no draft: Line detail says Published until the
+   * line or a field changes.
+   */
+  isPublished?: boolean;
 }
 
 /**
@@ -36,7 +42,12 @@ interface SavePanelProps extends UseSavePanelOptions {
  * (`SaveNotices`), what the line passes (`SaveTimeline`) and is called (`SaveDirectionName`) and
  * the footer (`SaveFooter`).
  */
-export function SavePanel({ saveBlocked = null, onCancel, ...options }: SavePanelProps) {
+export function SavePanel({
+  saveBlocked = null,
+  onCancel,
+  isPublished = false,
+  ...options
+}: SavePanelProps) {
   const headingId = useId();
   const { draw, existing, directions = [] } = options;
   const panel = useSavePanel(options);
@@ -56,13 +67,14 @@ export function SavePanel({ saveBlocked = null, onCancel, ...options }: SavePane
     isLoop,
   ]);
   const [openedWith] = useState(changes);
+  const isChanged = changes !== openedWith;
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     void panel.submit('draft');
   };
   const handleExit = () => {
-    if (changes !== openedWith && !window.confirm('Discard your changes?')) return;
+    if (isChanged && !window.confirm('Discard your changes?')) return;
     draw.cancel();
   };
 
@@ -78,8 +90,7 @@ export function SavePanel({ saveBlocked = null, onCancel, ...options }: SavePane
             Route Information
           </h2>
           <p className="-mt-2 text-xs text-content-quaternary">
-            {panelTitle({ isEdit: !!existing, isReturnTrip: !!options.route, isLoop })} ·{' '}
-            {draw.controlPoints.length} points · {(draw.metres / 1000).toFixed(2)} km
+            {panelTitle({ isEdit: !!existing, isReturnTrip: !!options.route, isLoop })}
             {routeLocked && ' · the ends belong to the route, so both directions share them'}
             {existing &&
               " · the ends, via, mode and fare note are the route's: a change here is a change to both directions"}
@@ -126,6 +137,12 @@ export function SavePanel({ saveBlocked = null, onCancel, ...options }: SavePane
             preview={facts.preview}
           />
         )}
+
+        <LineDetail
+          points={draw.controlPoints.length}
+          metres={draw.metres}
+          status={isPublished && !isChanged ? 'published' : 'draft'}
+        />
 
         <SaveNotices
           segments={draw.segments}

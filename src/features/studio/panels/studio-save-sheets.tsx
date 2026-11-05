@@ -9,7 +9,10 @@ import { HotspotPanel } from './hotspot-panel';
 import { SaveBesideFrame, SaveSheetFrame } from './save-frames';
 import { SavePanel } from './save-panel';
 import type { SaveTarget } from './use-save-target';
+import { useStudioSession } from '../auth/use-studio-session';
+import { isAnothersDraft } from '../data/draft-lock';
 import { reviewKeys } from '../data/review-keys';
+import type { DraftRow } from '../data/review-schema';
 import { useHotspotToEditQuery } from '../data/use-hotspot-to-edit-query';
 import { useRouteToEditQuery } from '../data/use-route-to-edit-query';
 import { whyCannotSave } from '../drawing/toolbar-text';
@@ -66,6 +69,16 @@ export function StudioSaveSheets({
   const approvedRoute = target.editing?.route ?? target.parentRoute;
   const routeToEdit = useRouteToEditQuery(approvedRoute);
   const draftedRoute = routeToEdit.data ?? approvedRoute;
+  // A direction of a published route with no draft of the editor's own, read in the same cached
+  // read routeToEdit made: what the sidebar opened on is published. Another editor's draft
+  // leaves it published: the sidebar is theirs to change, not this editor's.
+  const client = useQueryClient();
+  const userId = useStudioSession()?.user.id ?? null;
+  const routeDraft = approvedRoute
+    ? client.getQueryData<DraftRow | null>(reviewKeys.draftOf('route', approvedRoute.id))
+    : undefined;
+  const hasOwnDraft = !!routeDraft && (userId === null || !isAnothersDraft(routeDraft, userId));
+  const isPublished = !!target.editing && routeToEdit.isSuccess && !hasOwnDraft;
   // Until the draft is read, Save would build on facts the form does not show: it waits.
   const draftNotRead =
     approvedRoute && routeToEdit.isPending
@@ -74,7 +87,6 @@ export function StudioSaveSheets({
         ? 'Couldn’t read your draft of this route. Close this and open it again.'
         : null;
   // A draft saved here makes every cached draft stale: the next Edit or card reads afresh.
-  const client = useQueryClient();
   const handleDrafted = (subjectId: string) => {
     client.removeQueries({ queryKey: reviewKeys.draftsOf() });
     onDrafted?.(subjectId);
@@ -123,6 +135,7 @@ export function StudioSaveSheets({
             // route reads it fresh into the cache, and a draft save drops the cached ones).
             key={`${draw.target.routeId}:${draw.target.directionId}:${routeToEdit.isSuccess ? 'read' : 'reading'}`}
             {...routeForm}
+            isPublished={isPublished}
             saveBlocked={draftNotRead ?? whyCannotSave(draw)}
           />
         </SaveBesideFrame>
@@ -133,6 +146,7 @@ export function StudioSaveSheets({
           <SavePanel
             key={routeToEdit.isSuccess ? 'read' : 'reading'}
             {...routeForm}
+            isPublished={isPublished}
             saveBlocked={draftNotRead}
             onCancel={onCancel}
           />
