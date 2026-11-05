@@ -119,6 +119,14 @@ export function SavePanel({ saveBlocked = null, onCancel, ...options }: SavePane
           <ModeField mode={panel.mode} isLocked={routeLocked} onChange={panel.setMode} />
         </section>
 
+        {(isLoop || (head && tail)) && (
+          <SaveTimeline
+            isLoop={isLoop}
+            loopPlacesCount={facts.loopPlacesCount}
+            preview={facts.preview}
+          />
+        )}
+
         <SaveNotices
           segments={draw.segments}
           uTurns={draw.uTurns}
@@ -143,14 +151,6 @@ export function SavePanel({ saveBlocked = null, onCancel, ...options }: SavePane
           sameEnds={facts.sameEnds}
           direction={direction}
         />
-
-        {(isLoop || (head && tail)) && (
-          <SaveTimeline
-            isLoop={isLoop}
-            loopPlacesCount={facts.loopPlacesCount}
-            preview={facts.preview}
-          />
-        )}
 
         <SaveDirectionName
           isLoop={isLoop}
