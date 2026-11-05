@@ -602,3 +602,37 @@ studio.
 
 - Apply failed: nothing changed. The message names what it found.
 - Applied, and it must be withdrawn: run `20261105160000_draft_published_revert.sql`.
+
+# Applying retire_review_steps to the live project
+
+**Not applied live. Apply only after `main` has the new studio**, the one that saves with `save_draft`,
+publishes with `publish_draft` and unpublishes with `unpublish`. Staging and production share this
+database: the studio on an older `main` saves a draft by direct update and approves with `submit_draft`
+and `approve_reviewed_draft`, and both stop working the moment this is applied.
+
+The second half of clean-up step 3: `approve_draft`, `approve_reviewed_draft`, `submit_draft` and
+`send_back_draft` are dropped, so approval has one way in, `publish_draft`, always with the revision check
+(H3); editors lose the direct update of a draft and `draft_update` goes, so a draft's status can no longer
+be set by hand (M2). After this, `20261105160000_draft_published_check.sql` no longer passes as written: it
+proves the old path still works.
+
+| File | What it does |
+| --- | --- |
+| `20261105170000_retire_review_steps_apply.sql` | One transaction. Checks `draft_published` is in the ledger, and this is not. Applies `migrations/20261105170000_retire_review_steps.sql` (carried unchanged; `verify/retire-review-steps.sh` checks the copy). Checks the four functions are gone, no direct update of a draft is left, and the new path is whole. Writes the ledger row `retire_review_steps`. Any failed check raises and nothing is changed. A second run stops at the first check and changes nothing. |
+| `20261105170000_retire_review_steps_check.sql` | Part one adds a test editor and a hotspot's draft, proves the direct update refused and the new path working, then rolls all of it back. Part two is read-only: 4 rows, all `ok` should be `t`. |
+| `20261105170000_retire_review_steps_revert.sql` | One transaction: re-creates the four functions with their grants, gives back the direct update under `draft_update`, and removes the ledger row. Touches no data. Safe to run twice. |
+
+## Steps
+
+1. Confirm `main` has the new studio deployed.
+2. Run `20261105170000_retire_review_steps_apply.sql`. It ends with `COMMIT`; an error means nothing changed.
+3. Run `20261105170000_retire_review_steps_check.sql`: part one ends with `ROLLBACK` and no error; part two
+   gives 4 rows, all `ok = t`.
+4. Record the ledger version
+   (`select version from supabase_migrations.schema_migrations where name = 'retire_review_steps';`)
+   in `migrations/README.md`. The types change (four functions go): regenerate them.
+
+## Recovery
+
+- Apply failed: nothing changed. The message names what it found.
+- Applied too early, or it must be withdrawn: run `20261105170000_retire_review_steps_revert.sql`.

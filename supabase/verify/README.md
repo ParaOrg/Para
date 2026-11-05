@@ -295,3 +295,17 @@ and `reviewed-draft.sql` run again over it, as the studio on `main` still uses t
 route it approved is stamped. On a second database, without draft_update_makerless, the
 apply refuses and writes no ledger row. On a third, apply then revert twice leaves the schema as
 before, and re-applying passes the check.
+
+## retire-review-steps.sh
+
+`migrations/20261105170000_retire_review_steps.sql` on databases of its own, run last by `run.sh` or alone:
+
+    PSQL="docker exec -i pg-verify psql -U postgres" bash supabase/verify/retire-review-steps.sh
+
+It applies every earlier migration and the review paste files as live has them (through
+draft_published), then `../apply/20261105170000_retire_review_steps_apply.sql` twice (the second run
+must stop and change nothing), and runs `…_check.sql`: its rolled-back behaviour part (no direct update
+of a draft; save_draft still saves and names its saver; publish_draft still publishes) must raise
+nothing and leave no row behind, and its 4 read-only rows must be `t`. `draft-published-race.sh` runs
+again over it. On a second database, without draft_published, the apply refuses and writes no ledger
+row. On a third, apply then revert twice leaves the schema as before, and re-applying passes the check.
