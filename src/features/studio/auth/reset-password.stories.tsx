@@ -64,8 +64,11 @@ export const Skipped: Story = {
 export const PasswordsDiffer: Story = {
   play: async ({ canvasElement, args }) => {
     const canvas = await openDialog(canvasElement);
-    await userEvent.type(canvas.getByPlaceholderText('New password'), 'New-password-22');
-    await userEvent.type(canvas.getByPlaceholderText('Confirm new password'), 'New-password-23');
+    await userEvent.type(canvas.getByLabelText('New password', { exact: true }), 'New-password-22');
+    await userEvent.type(
+      canvas.getByLabelText('Confirm new password', { exact: true }),
+      'New-password-23',
+    );
     await userEvent.click(canvas.getByRole('button', { name: 'Save password' }));
     await expect(canvas.getByText('The two passwords do not match.')).toBeVisible();
     await expect(args.onDone).not.toHaveBeenCalled();
@@ -76,11 +79,14 @@ export const PasswordsDiffer: Story = {
 export const RuleBroken: Story = {
   play: async ({ canvasElement, args }) => {
     const canvas = await openDialog(canvasElement);
-    await expect(canvas.getByPlaceholderText('New password')).toHaveAccessibleDescription(
-      'At least 8 characters, with letters and numbers',
+    await expect(
+      canvas.getByLabelText('New password', { exact: true }),
+    ).toHaveAccessibleDescription('At least 8 characters, with letters and numbers');
+    await userEvent.type(canvas.getByLabelText('New password', { exact: true }), 'only-letters');
+    await userEvent.type(
+      canvas.getByLabelText('Confirm new password', { exact: true }),
+      'only-letters',
     );
-    await userEvent.type(canvas.getByPlaceholderText('New password'), 'only-letters');
-    await userEvent.type(canvas.getByPlaceholderText('Confirm new password'), 'only-letters');
     await userEvent.click(canvas.getByRole('button', { name: 'Save password' }));
     await expect(
       canvas.getByText('Use at least 8 characters, with letters and numbers'),

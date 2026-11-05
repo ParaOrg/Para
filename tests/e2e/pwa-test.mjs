@@ -208,7 +208,7 @@ try {
     await page.goto(`${base}/studio/`, { waitUntil: 'load' });
     // The positive control: the two negatives below mean nothing on a blank page.
     const door = await page
-      .getByText('Sign in to Para Studio')
+      .getByText('Studio sign in')
       .waitFor({ timeout: 15000 })
       .then(
         () => true,
