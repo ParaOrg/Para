@@ -670,7 +670,7 @@ export const pointsShown = async () =>
  */
 export const done = async () => {
   await idle();
-  if (await page.getByTestId('route-panel').isVisible()) {
+  if (await page.getByTestId('sidebar').isVisible()) {
     await page.waitForTimeout(600);
     return;
   }

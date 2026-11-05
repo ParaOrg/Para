@@ -380,7 +380,7 @@ check(
 check('  nothing is written yet', writes().length === before);
 await shot('2-use-this-line');
 // On a computer the route's form already stands beside the map; narrower, Done opens it.
-if (!(await page.getByTestId('route-panel').isVisible()))
+if (!(await page.getByTestId('sidebar').isVisible()))
   await page.getByRole('button', { name: /Done/ }).click();
 await page.getByTestId('save-head').waitFor({ timeout: 10000 });
 await page.getByTestId('save-head').selectOption({ label: 'Fairview Terminal' });
@@ -426,7 +426,7 @@ check(
 );
 await shot('4-draw-a-hintuan');
 // On a computer the hotspot's sidebar already stands beside the map; narrower, Done opens it.
-if (!(await page.getByTestId('route-panel').isVisible()))
+if (!(await page.getByTestId('sidebar').isVisible()))
   await page.getByRole('button', { name: /Done/ }).click();
 await page.getByPlaceholder('SM Fairview Ilalim').fill('Mid-route Hintuan');
 await page.getByRole('button', { name: 'Save as draft', exact: true }).click();

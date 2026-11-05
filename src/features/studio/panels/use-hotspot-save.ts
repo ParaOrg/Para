@@ -1,15 +1,11 @@
 import { useRef, useState } from 'react';
 
 import { hotspotRefusal, type HotspotCheck } from './hotspot-checks';
-import type { SaveIntent } from './use-route-save';
+import { NOT_PUBLISHED, type SaveIntent } from './save-intent';
 import { draftRefusal, saveHotspotDraft } from '../data/draft-save';
 import type { SaveHotspotInput } from '../data/hotspot-save-input';
 import { reviewMessage } from '../data/review-commands';
 import { useReviewMutation } from '../data/use-review-query';
-
-/** A publish that stopped after the draft save (useRouteSave's NOT_PUBLISHED). */
-const NOT_PUBLISHED =
-  'Saved as a draft, not published. To publish it, open Drafts and approve it there.';
 
 interface UseHotspotSaveOptions {
   /** Hears the hotspot the draft holds, for what was made from it. The map is unchanged until approval. */
@@ -30,11 +26,11 @@ export function useHotspotSave({ onDrafted, onPublished }: UseHotspotSaveOptions
   const newHotspotId = useRef<string | null>(null);
   const review = useReviewMutation();
 
-  /** Saves the form, `check` the refusal's view of it, `input` what is written. */
-  async function submit(
-    intent: SaveIntent,
+  /** Saves the form, `check` the refusal's view of it, `input` what is written, as `intent` asks. */
+  async function save(
     check: HotspotCheck,
     input: Omit<SaveHotspotInput, 'hotspotId'>,
+    intent: SaveIntent,
   ) {
     setError(null);
     const refusal = hotspotRefusal(check);
@@ -70,5 +66,5 @@ export function useHotspotSave({ onDrafted, onPublished }: UseHotspotSaveOptions
     }
   }
 
-  return { busy, error, setError, submit };
+  return { busy, error, setError, save };
 }

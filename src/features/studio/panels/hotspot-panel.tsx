@@ -9,11 +9,11 @@ import { groupBySignboard, knownInformalNames, tickedDirections } from './hotspo
 import { LineDetail } from './line-detail';
 import { PassesThrough } from './passes-through';
 import { SaveFooter } from './save-footer';
+import type { SaveIntent } from './save-intent';
 import { BESIDE_BODY } from './sheet';
 import { TerminalChecklist } from './terminal-checklist';
 import { useHotspotSave } from './use-hotspot-save';
 import { useNearLines } from './use-near-lines';
-import type { SaveIntent } from './use-route-save';
 import { useUnpublish } from './use-unpublish';
 import { linksThrough, directionsStartingIn } from '../data/hotspots-geometry';
 import type { Drawing } from '../drawing/use-drawing';
@@ -71,6 +71,8 @@ export function HotspotPanel({
   onUnpublished,
 }: HotspotPanelProps) {
   const headingId = useId();
+  const informalListId = useId();
+  const stopNameHintId = useId();
   const isBeside = !onCancel;
   const area = draw.area;
   const kind = area?.kind ?? 'hintuan';
@@ -88,7 +90,7 @@ export function HotspotPanel({
     () => knownInformalNames(hotspots, existing?.id),
     [hotspots, existing?.id],
   );
-  const { busy, error, setError, submit } = useHotspotSave({ onDrafted, onPublished });
+  const { busy, error, setError, save: saveHotspot } = useHotspotSave({ onDrafted, onPublished });
   const hotspotId = existing?.id ?? area?.hotspotId ?? null;
 
   // The directions the outline can reach, read in full; Save waits for them.
@@ -144,8 +146,7 @@ export function HotspotPanel({
   });
 
   const save = (intent: SaveIntent) =>
-    void submit(
-      intent,
+    void saveHotspot(
       { ring, kind, hotspots, hotspotId, name, informal },
       {
         kind,
@@ -157,6 +158,7 @@ export function HotspotPanel({
         directionIds: kind === 'terminal' ? [...ticked] : undefined,
         directions: lines,
       },
+      intent,
     );
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -173,6 +175,7 @@ export function HotspotPanel({
     <form
       onSubmit={handleSubmit}
       aria-labelledby={headingId}
+      data-testid="hotspot-panel"
       className={isBeside ? 'flex min-h-0 flex-1 flex-col' : undefined}
     >
       <div className={isBeside ? BESIDE_BODY : 'flex flex-col gap-5'}>
@@ -212,16 +215,16 @@ export function HotspotPanel({
               value={informal}
               onChange={(e) => setInformal(e.target.value)}
               onClear={() => setInformal('')}
-              list="para-informal-names"
-              aria-describedby="para-stop-name-hint"
+              list={informalListId}
+              aria-describedby={stopNameHintId}
               placeholder="SM Fairview"
             />
-            <datalist id="para-informal-names">
+            <datalist id={informalListId}>
               {knownInformal.map((n) => (
                 <option key={n} value={n} />
               ))}
             </datalist>
-            <p id="para-stop-name-hint" className="mt-1 text-[11px] text-content-disabled">
+            <p id={stopNameHintId} className="mt-1 text-[11px] text-content-disabled">
               Boxes that share a hotspot name are one hotspot, whatever is written on each. Route
               names read it
               {kind === 'terminal' ? '; a hotspot has one terminal.' : '.'}
@@ -237,13 +240,17 @@ export function HotspotPanel({
 
         <LineDetail points={ring.length} pointsTerm="Corners" status={status} />
 
-        {error && <p className="text-sm text-content-error">{error}</p>}
+        {error && (
+          <p role="alert" className="text-sm text-content-error">
+            {error}
+          </p>
+        )}
         {unpublishing.error && (
           <p role="alert" className="text-sm text-content-error">
             {unpublishing.error}
           </p>
         )}
-        {saveBlocked && <p className="text-sm text-content-quaternary">{saveBlocked}</p>}
+        {blocked && <p className="text-sm text-content-quaternary">{blocked}</p>}
       </div>
 
       <SaveFooter

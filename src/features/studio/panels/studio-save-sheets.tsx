@@ -36,9 +36,9 @@ interface StudioSaveSheetsProps {
   target: Pick<SaveTarget, 'editing' | 'parentRoute' | 'slotReversed'>;
   /** Hears what a save stored as a draft. */
   onDrafted?: (subjectId: string) => void;
-  /** A route's draft published: the map has changed. */
+  /** A draft published, a route's or a hotspot's: the map has changed. */
   onPublished?: (subjectId: string) => void;
-  /** A published route unpublished: the map has changed. */
+  /** A published route or hotspot unpublished: the map has changed. */
   onUnpublished?: () => void;
   onCancel: () => void;
 }

@@ -92,6 +92,7 @@ export function SavePanel({
     <form
       onSubmit={handleSubmit}
       aria-labelledby={headingId}
+      data-testid="route-panel"
       className={isBeside ? 'flex min-h-0 flex-1 flex-col' : undefined}
     >
       <div className={isBeside ? BESIDE_BODY : 'flex flex-col gap-5'}>
@@ -183,7 +184,11 @@ export function SavePanel({
           isEdit={!!existing}
         />
 
-        {panel.error && <p className="text-sm text-content-error">{panel.error}</p>}
+        {panel.error && (
+          <p role="alert" className="text-sm text-content-error">
+            {panel.error}
+          </p>
+        )}
         {unpublishing.error && (
           <p role="alert" className="text-sm text-content-error">
             {unpublishing.error}

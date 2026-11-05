@@ -200,7 +200,7 @@ const pointsShown = async () =>
 // On a computer the sidebar already stands beside the map, a route's or a hotspot's; narrower, Done.
 const done = async () => {
   await idle();
-  if (!(await page.getByTestId('route-panel').isVisible()))
+  if (!(await page.getByTestId('sidebar').isVisible()))
     await page.getByRole('button', { name: /Done/ }).click();
   await page.waitForTimeout(600);
 };
@@ -873,7 +873,7 @@ check(
       rpcs(w, 'submit_draft').length === 1 &&
       rpcs(w, 'approve_reviewed_draft').length + rpcs(w, 'approve_draft').length === 1 &&
       published?.status === 'approved' &&
-      !(await page.getByTestId('route-panel').isVisible()),
+      !(await page.getByTestId('sidebar').isVisible()),
     said(w),
   );
 }

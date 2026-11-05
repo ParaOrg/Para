@@ -3,8 +3,8 @@ import type { ReactNode } from 'react';
 import { Button } from '@/design-system/primitives/button';
 
 import type { LineStatus } from './line-detail';
+import type { SaveIntent } from './save-intent';
 import { FOOTER, FOOTER_BESIDE } from './sheet';
-import type { SaveIntent } from './use-route-save';
 
 interface SaveFooterProps {
   /** The save under way, if any: its button says so. */
