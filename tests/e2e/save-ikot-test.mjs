@@ -131,21 +131,21 @@ let drawn;
     (await body()).slice(0, 160),
   );
   check(
-    '  its places are listed from the first drawn, the signboard asked for',
+    '  its places are listed from the first drawn, the Ikot name asked for',
     (await page.getByTestId('save-timeline').innerText()).includes('Stand-in Head') &&
       (await page.getByTestId('save-timeline').innerText()).includes('Stand-in Tail') &&
-      (await page.getByLabel(/Signboard.*required/).count()) === 1,
+      (await page.getByLabel('Ikot name').getAttribute('aria-required')) === 'true',
     (await page.getByTestId('save-timeline').innerText()).replace(/\s+/g, ' '),
   );
   n = log.length;
   await saveButton().click();
   await page.waitForTimeout(400);
   check(
-    'saving without a signboard is refused in words, and writes nothing',
-    /An ikot is called by its signboard/.test(await body()) && writesSince(n).length === 0,
+    'saving without an Ikot name is refused in words, and writes nothing',
+    /An ikot is called by its Ikot name/.test(await body()) && writesSince(n).length === 0,
     said(writesSince(n)),
   );
-  await page.getByLabel(/Signboard/).fill('UP – Ikot');
+  await page.getByLabel('Ikot name').fill('UP – Ikot');
   await saveButton().click();
   await drafted();
   w = writesSince(n);
@@ -201,7 +201,7 @@ let drawn;
   for (const p of WIDER) await clickAt(p, 300);
   await closeLoop().click();
   await done();
-  await page.getByLabel(/Signboard/).fill('  up – IKOT ');
+  await page.getByLabel('Ikot name').fill('  up – IKOT ');
   n = log.length;
   await saveButton().click();
   await page.waitForTimeout(400);
@@ -395,7 +395,7 @@ await page.waitForTimeout(300);
 
 // ---- 9. A save whose draft is refused, and the retry
 await drawLine(VIA);
-await page.getByPlaceholder('Zabarte').fill('Stand-in Road');
+await page.getByLabel('Via (if applicable)').fill('Stand-in Road');
 stub.fault = (method, table) => method === 'POST' && table === 'rpc/claim_draft';
 n = log.length;
 await saveButton().click();

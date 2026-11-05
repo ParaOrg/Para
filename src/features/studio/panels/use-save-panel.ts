@@ -9,7 +9,7 @@ import {
 } from '@/features/routes/model/routes';
 
 import { loopSaveRefusal, saveRefusal } from './save-checks';
-import { useRouteSave } from './use-route-save';
+import { useRouteSave, type SaveIntent } from './use-route-save';
 import { useSaveEnds } from './use-save-ends';
 import { useSaveFacts } from './use-save-facts';
 import { returnTripNotices } from '../drawing/loop-closing';
@@ -38,6 +38,8 @@ export interface UseSavePanelOptions {
   directions?: DirectionRow[];
   /** Hears the direction a save stored as a draft. */
   onDrafted?: (directionId: string) => void;
+  /** Hears the direction a publish made published: the map has changed. */
+  onPublished?: (directionId: string) => void;
   /** Hears of a place made from the pickers, so the map's own list is read again. */
   onPlaceSaved?: () => void;
 }
@@ -55,6 +57,7 @@ export function useSavePanel({
   hotspots: savedHotspots,
   directions = [],
   onDrafted,
+  onPublished,
   onPlaceSaved,
 }: UseSavePanelOptions) {
   const parent = existing?.route ?? route;
@@ -100,7 +103,13 @@ export function useSavePanel({
   const loop = existing
     ? []
     : returnTripNotices(directions, route?.id ?? null, hotspots, draw.line, slotReversed);
-  const { busy, error, setError, save } = useRouteSave({ facts, draw, hotspots, onDrafted });
+  const { busy, error, setError, save } = useRouteSave({
+    facts,
+    draw,
+    hotspots,
+    onDrafted,
+    onPublished,
+  });
 
   // A return trip fills its route's slot and leaves the route as it is; Edit
   // route may change the route's facts, for both its directions.
@@ -108,8 +117,7 @@ export function useSavePanel({
   // The toggle is locked by more than the route's facts: Edit route keeps it too.
   const loopLocked = !!existing || routeLocked;
 
-  async function submit(e: React.FormEvent) {
-    e.preventDefault();
+  async function submit(intent: SaveIntent) {
     const refusal = isLoop
       ? loopSaveRefusal({
           signboard,
@@ -129,18 +137,21 @@ export function useSavePanel({
       setError(refusal);
       return;
     }
-    await save({
-      routeId: parent?.id ?? null,
-      directionId: existing?.id ?? null,
-      writeRoute: !!existing,
-      signboard,
-      mode,
-      fareNote,
-      headHotspotId: isLoop ? null : headId,
-      tailHotspotId: isLoop ? null : tailId,
-      isLoop,
-      via,
-    });
+    await save(
+      {
+        routeId: parent?.id ?? null,
+        directionId: existing?.id ?? null,
+        writeRoute: !!existing,
+        signboard,
+        mode,
+        fareNote,
+        headHotspotId: isLoop ? null : headId,
+        tailHotspotId: isLoop ? null : tailId,
+        isLoop,
+        via,
+      },
+      intent,
+    );
   }
 
   return {

@@ -386,7 +386,7 @@ await page.getByTestId('save-head').waitFor({ timeout: 10000 });
 await page.getByTestId('save-head').selectOption({ label: 'Fairview Terminal' });
 await page.getByTestId('save-tail').selectOption({ label: 'Cubao Terminal' });
 await shot('3-save-panel');
-await page.getByRole('button', { name: /^Save$/ }).click();
+await page.getByRole('button', { name: 'Save as draft', exact: true }).click();
 // The save is a draft: the direction it holds is the one the use is recorded against.
 const routeDraft = () => db.tables.draft.find((d) => d.kind === 'route');
 const wrote = await waitFor(() => !!routeDraft() && db.tables.contribution_use.length > 0);
