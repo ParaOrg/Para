@@ -2698,24 +2698,72 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
       });
     });
 
+  /**
+   * Lets the page run until `isThere` holds, its clock held still while anything it loads (data
+   * from the fake server, code from the dev server) is on its way, and moved on a millisecond at a
+   * time only while nothing is: a chained `setTimeout(0)`, such as TanStack Query's notices, is due
+   * a millisecond on under Playwright's clock. So the page's own time counts its work, never the
+   * runner's speed.
+   */
+  const runHeldUntil = async (page, inFlight, isThere) => {
+    const deadline = Date.now() + 15_000;
+    while (!(await isThere())) {
+      if (Date.now() > deadline) throw new Error('The page did not get there with its clock held');
+      // What is due now runs at once; then the page is given a moment to do the work it leads to.
+      await page.clock.runFor(0);
+      await new Promise((resolve) => setTimeout(resolve, 10));
+      if (inFlight.size === 0 && !(await isThere())) await page.clock.runFor(1);
+    }
+  };
+  /** The page's requests to the fake server and the dev server not yet answered, from now on. */
+  const watchLoads = (page) => {
+    const inFlight = new Set();
+    const isLoad = (request) =>
+      /^https:\/\/[^/]+\.supabase\.co\//.test(request.url()) || request.url().startsWith(BASE);
+    page.on('request', (request) => isLoad(request) && inFlight.add(request));
+    page.on('requestfinished', (request) => inFlight.delete(request));
+    page.on('requestfailed', (request) => inFlight.delete(request));
+    return inFlight;
+  };
+
   // A quick load shows none: History and Account open on what loads at once, with no flash.
+  // "Quick" is by the page's own clock, held still while the loads are on their way: a slow
+  // runner takes longer in real time, but the 300 ms timer cannot fire before the data is in.
   {
     const { page, fake, errors } = await phone();
     fake.stats = SOME_STATS;
     await start(page).waitFor({ timeout: 30000 });
     await watchForSkeletons(page);
+    const inFlight = watchLoads(page);
+    await page.clock.install();
+    await page.clock.pauseAt((await page.evaluate(() => Date.now())) + 1000);
+    const heldAt = await page.evaluate(() => performance.now());
     await openHistory(page);
-    await page.getByRole('heading', { level: 1, name: 'History' }).waitFor();
-    await page.locator('[aria-busy="true"]').waitFor({ state: 'detached', timeout: 10000 });
+    await runHeldUntil(
+      page,
+      inFlight,
+      async () =>
+        (await page.getByRole('heading', { level: 1, name: 'History' }).count()) === 1 &&
+        (await page.locator('[aria-busy="true"]').count()) === 0,
+    );
     await toolbarRecord(page).click();
     await accountTab(page).click();
-    await page
+    const statsIn = page
       .getByRole('region', { name: 'Commute Statistics' })
-      .getByText('Total time')
-      .waitFor();
+      .getByText('Total time');
+    await runHeldUntil(
+      page,
+      inFlight,
+      async () =>
+        (await statsIn.count()) === 1 && (await page.locator('[aria-busy="true"]').count()) === 0,
+    );
+    const heldFor = (await page.evaluate(() => performance.now())) - heldAt;
+    // Then time moves on past the delay: a timer the loads left behind would show a skeleton now.
+    await page.clock.runFor(1000);
     check(
       'a load quicker than 300 ms shows no skeleton, on History or on Account',
-      (await page.evaluate(() => window.__sawSkeleton)) === false,
+      heldFor < 300 && (await page.evaluate(() => window.__sawSkeleton)) === false,
+      JSON.stringify({ heldFor }),
     );
     check('  no page errors', errors.length === 0, errors.join(' | '));
   }
