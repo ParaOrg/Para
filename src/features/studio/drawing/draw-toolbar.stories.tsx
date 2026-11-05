@@ -274,8 +274,20 @@ export const MovePicked: Story = {
       'aria-pressed',
       'false',
     );
+    await expect(canvas.getByText(/^Move: drag a point, a handle or the line/)).toBeVisible();
     await userEvent.click(canvas.getByRole('button', { name: 'Snap' }));
     await expect(args.draw.setFreehand).toHaveBeenCalledWith(false);
+  },
+};
+
+/** Move under a finger: the hint says what a finger does there, and how to add. */
+export const FingerMovePicked: Story = {
+  args: { draw: drawn({ moving: true }) },
+  beforeEach: asFinger,
+  play: async ({ canvasElement }) => {
+    await expect(
+      within(canvasElement).getByText(/^Move: drag a point · tap a point for options/),
+    ).toBeVisible();
   },
 };
 
@@ -432,6 +444,8 @@ export const TerminalOutline: Story = {
     await settled();
     await userEvent.keyboard('s');
     await expect(args.draw.setFreehand).not.toHaveBeenCalled();
+    await userEvent.keyboard('v');
+    await expect(args.draw.setMoving).not.toHaveBeenCalled();
     await expect(canvas.getByRole('button', { name: 'Done' })).toHaveAttribute(
       'title',
       'Add at least 3 corners',

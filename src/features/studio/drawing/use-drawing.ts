@@ -589,9 +589,14 @@ export function useDrawing(
     [segments, isStandIn],
   );
 
-  // Move's arrow, or the crosshair a click adds a point under, as the tool changes.
+  // Move's arrow, or the crosshair a click adds a point under, as the tool
+  // changes: only the cursor at rest, never one a hover or a drag set
+  // (use-draw-events.ts owns the cursor, and clears it when drawing ends).
   useEffect(() => {
-    if (map && drawing) map.getCanvas().style.cursor = moving ? 'default' : 'crosshair';
+    const canvas = map?.getCanvas();
+    if (!canvas || !drawing) return;
+    if (canvas.style.cursor === 'crosshair' || canvas.style.cursor === 'default')
+      canvas.style.cursor = moving ? 'default' : 'crosshair';
   }, [map, drawing, moving]);
 
   useDrawRendering(map, {
@@ -611,6 +616,7 @@ export function useDrawing(
     map,
     drawing,
     controlPoints,
+    // Draw, not Move: the cursor line is offered.
     freehand && !moving,
     useMemo(
       () => ({
@@ -630,6 +636,7 @@ export function useDrawing(
     map,
     drawing,
     controlPoints,
+    // Draw or Move: no Snap preview.
     freehand || moving,
     useMemo(
       () => ({

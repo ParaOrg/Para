@@ -63,15 +63,15 @@ export function previewFrom(
 }
 
 /**
- * The preview. `controlPoints` and `isFreehand` are the drawing's state: any
- * change to either (a key's undo, F for Draw) calls off what is offered, as a
- * move does.
+ * The preview. `controlPoints` and `isPreviewOff` (Draw or Move, where Snap
+ * offers nothing) are the drawing's state: any change to either (a key's
+ * undo, D for Draw, V for Move) calls off what is offered, as a move does.
  */
 export function useSnapPreview(
   map: MapLibreMap | null,
   isDrawing: boolean,
   controlPoints: readonly LngLat[],
-  isFreehand: boolean,
+  isPreviewOff: boolean,
   refs: SnapPreviewRefs,
 ): void {
   const isCasingReady = useLayerReady(map, LAYERS.drawCasing);
@@ -169,5 +169,5 @@ export function useSnapPreview(
       map.off('mouseout', stop);
       stop();
     };
-  }, [map, isDrawing, isCasingReady, controlPoints, isFreehand, refs]);
+  }, [map, isDrawing, isCasingReady, controlPoints, isPreviewOff, refs]);
 }

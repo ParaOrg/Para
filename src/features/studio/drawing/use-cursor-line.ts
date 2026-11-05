@@ -76,15 +76,15 @@ export function cursorLine(refs: CursorLineRefs, to: LngLat): LngLat[] | null {
 }
 
 /**
- * The line. `controlPoints` and `isFreehand` are the drawing's state: a
- * change to either (an undo, F for Snap) takes the line away until the
- * cursor next moves.
+ * The line. `controlPoints` and `isLineOffered` (Draw, not Move) are the
+ * drawing's state: a change to either (an undo, S for Snap, V for Move)
+ * takes the line away until the cursor next moves.
  */
 export function useCursorLine(
   map: MapLibreMap | null,
   isDrawing: boolean,
   controlPoints: readonly LngLat[],
-  isFreehand: boolean,
+  isLineOffered: boolean,
   refs: CursorLineRefs,
 ): void {
   const isPointReady = useLayerReady(map, POINT_LAYER);
@@ -138,5 +138,5 @@ export function useCursorLine(
       map.off('mouseout', clear);
       clear();
     };
-  }, [map, isDrawing, isPointReady, controlPoints, isFreehand, refs]);
+  }, [map, isDrawing, isPointReady, controlPoints, isLineOffered, refs]);
 }

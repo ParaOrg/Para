@@ -17,9 +17,9 @@ interface UseDrawKeysOptions {
  * The drawing's keys, the toolbar's buttons by keyboard, as Figma's:
  * Ctrl/⌘+Z undoes; Ctrl/⌘+Shift+Z or Ctrl+Y redoes; Ctrl/⌘+Enter is Done;
  * V is Move, S is Snap, D is Draw, F flips between Snap and Draw (a route's
- * only); Escape hides
- * the selected point's handles. Plain Enter is no shortcut: it stays a
- * focused button's. A key typed in a field is the field's.
+ * only); Escape hides the selected point's handles. Plain Enter is no
+ * shortcut: it stays a focused button's. A key typed in a field is the
+ * field's.
  */
 export function useDrawKeys({ draw, isOn, points, canDone, isArea, onDone }: UseDrawKeysOptions) {
   useEffect(() => {

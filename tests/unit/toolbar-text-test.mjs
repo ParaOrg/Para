@@ -118,3 +118,19 @@ test('a shortcut names the command key as the computer does: Ctrl, or ⌘ on a M
   assert.equal(withCommand('Shift+Z', true), '⇧⌘Z');
   assert.equal(withCommand('Enter', true), '⌘Enter');
 });
+
+test('in Move the hint says what Move does and how to add, never "add" or "insert" by a click', () => {
+  const route = { uTurnHelp: null, isArea: false, points: 3, isMoving: true };
+  assert.match(
+    drawHint({ ...route, isFinger: false }),
+    /^Move: drag a point, a handle or the line/,
+  );
+  assert.match(
+    drawHint({ ...route, isFinger: true }),
+    /^Move: drag a point · tap a point for options/,
+  );
+  assert.equal(
+    drawHint({ ...route, isMoving: false, isFinger: true }),
+    'Tap to add · tap a point for options · drag a point to move',
+  );
+});
