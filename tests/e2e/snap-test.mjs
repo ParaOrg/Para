@@ -510,6 +510,14 @@ const [bx, by] = await proj(C0);
 await page.mouse.move(box0.x + bx, box0.y + by);
 await page.mouse.down();
 for (let i = 1; i <= 6; i++) await page.mouse.move(box0.x + bx + i * 8, box0.y + by - i * 6);
+// Before the release, the stretch into the point bends live on the line.
+const liveLine = (await page.evaluate(() => window.__src('draw-line')))?.features ?? [];
+const liveSegs = (await drafted()).length;
+check(
+  'curves: while the pen drags, the stretch in bends live, before the release writes it',
+  liveLine.length === 1 && liveLine[0].geometry.coordinates.length > 2 && liveSegs === 0,
+  `${liveLine.length} line features, ${liveLine[0]?.geometry.coordinates.length} coords, ${liveSegs} drafted`,
+);
 await page.mouse.up();
 await page.waitForTimeout(250);
 await clickAt(E);

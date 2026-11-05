@@ -40,6 +40,8 @@ export interface DrawRefs {
   selected: RefObject<number | null>;
   /** Draw (freehand) or Snap: whether a drag on empty map shapes a curve (draw-pen.ts). */
   freehand: RefObject<boolean>;
+  /** The handle the last point, placed smooth, sends the stretch still to come (curves.ts, outHandle). */
+  pendingOut: RefObject<{ point: LngLat; out: LngLat } | null>;
 }
 
 /** What the pointer does to the drawing. */

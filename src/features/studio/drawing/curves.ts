@@ -155,3 +155,24 @@ export function outHandle(
   const c2 = incoming?.snap === 'freehand' ? incoming.handles?.[1] : undefined;
   return c2 && !same(c2, point) ? mirror(c2, point) : null;
 }
+
+/**
+ * The Draw stretch a click at `to` would add after the last point, or the
+ * pen's press there with `toHandle` (the handle back toward it): the same
+ * stretch addPoint and addSmoothPoint write, shown before it is placed. Null
+ * with nothing drawn yet, or before a borrowed end, where a point goes in
+ * ahead of the join instead.
+ */
+export function penStretch(
+  points: readonly LngLat[],
+  segments: readonly Segment[],
+  hasJoin: boolean,
+  pending: { point: LngLat; out: LngLat } | null,
+  to: LngLat,
+  toHandle: LngLat | null,
+): Segment | null {
+  const prev = points[points.length - 1];
+  if (!prev || hasJoin) return null;
+  const out = outHandle(prev, segments[points.length - 2], pending);
+  return curveSegment(prev, to, out ?? prev, toHandle ?? to);
+}

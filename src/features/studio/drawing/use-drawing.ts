@@ -523,6 +523,7 @@ export function useDrawing(
         follow: followRef,
         selected: selectedRef,
         freehand: freehandRef,
+        pendingOut: pendingOutRef,
       }),
       [],
     ),
