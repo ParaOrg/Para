@@ -115,3 +115,4 @@ PSQL="$PSQL" PG_DUMP="$PG_DUMP" bash contribution-fare.sh
 PSQL="$PSQL" PG_DUMP="$PG_DUMP" bash delete-account-keep-uploads.sh
 PSQL="$PSQL" PG_DUMP="$PG_DUMP" bash delete-account-refuse-uploads.sh
 PSQL="$PSQL" PG_DUMP="$PG_DUMP" bash review-rules.sh
+PSQL="$PSQL" PG_DUMP="$PG_DUMP" bash draft-update-makerless.sh
