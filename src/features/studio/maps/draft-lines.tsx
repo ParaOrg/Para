@@ -18,7 +18,8 @@ const DRAFT_DASH = [2, 2];
 interface DraftLinesProps {
   map: MapLibreMap | null;
   drafts: DraftRow[];
-  onReview: (id: string) => void;
+  /** The draft tapped, and the direction whose line was tapped when the draft names it. */
+  onReview: (id: string, directionId?: string) => void;
 }
 
 /**
@@ -71,8 +72,11 @@ export function DraftLines({ map, drafts, onReview }: DraftLinesProps) {
   useEffect(() => {
     if (!map) return;
     const handleClick = (event: MapLayerMouseEvent) => {
-      const draftId: unknown = event.features?.[0]?.properties.draftId;
-      if (typeof draftId === 'string') onReview(draftId);
+      const properties = event.features?.[0]?.properties;
+      const draftId: unknown = properties?.draftId;
+      const directionId: unknown = properties?.directionId;
+      if (typeof draftId === 'string')
+        onReview(draftId, typeof directionId === 'string' ? directionId : undefined);
     };
     const handleEnter = () => {
       map.getCanvas().style.cursor = 'pointer';

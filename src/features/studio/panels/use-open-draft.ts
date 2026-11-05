@@ -23,13 +23,20 @@ interface UseOpenDraftOptions {
 /**
  * A draft tapped on the map, opened straight into editing: the editor's own draft of a route on
  * the map opens Edit route on it, with the sidebar; another editor's opens the route's card,
- * which says who is changing it, to read. True when it opened. A hotspot's draft, or a route that
- * is a draft only, is left to Drafts until the drawing opens from a draft alone.
+ * which says who is changing it, to read. A tapped line opens its own direction; a marker, which
+ * names none, the route's first drawn one. True when it opened. A hotspot's draft, a route that is
+ * a draft only, or a direction drawn only in the draft is left to Drafts until the drawing opens
+ * from a draft alone.
  */
 export function useOpenDraft({ directions, userId, draw, opening, openTrip }: UseOpenDraftOptions) {
-  return (draft: DraftRow): boolean => {
+  return (draft: DraftRow, directionId?: string): boolean => {
     if (draft.kind !== 'route') return false;
-    const direction = directions.find((v) => v.routeId === draft.subject_id && v.shape !== null);
+    const direction = directions.find(
+      (v) =>
+        v.routeId === draft.subject_id &&
+        v.shape !== null &&
+        (directionId === undefined || v.id === directionId),
+    );
     if (!direction) return false;
     if (userId !== null && isAnothersDraft(draft, userId)) {
       openTrip(direction);

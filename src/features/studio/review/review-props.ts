@@ -11,8 +11,9 @@ export interface StudioReviewProps {
    */
   buttonSlot?: HTMLElement | null;
   /**
-   * A draft tapped on the map: opened straight into editing where it can be, and true; false
-   * leaves it to Drafts, where it is reviewed.
+   * A draft tapped on the map, with the direction whose line was tapped when known: opened
+   * straight into editing where it can be, and true; false leaves it to Drafts, where it is
+   * reviewed.
    */
-  onOpenDraft?: (draft: DraftRow) => boolean;
+  onOpenDraft?: (draft: DraftRow, directionId?: string) => boolean;
 }

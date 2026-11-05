@@ -44,9 +44,9 @@ export function ReviewWorkspaceContent({
     onOpenDraftRef.current = onOpenDraft;
   }, [onOpenDraft]);
   const openDraft = useCallback(
-    (id: string) => {
+    (id: string, directionId?: string) => {
       const draft = drafts?.find((d) => d.id === id);
-      if (draft && onOpenDraftRef.current?.(draft)) return;
+      if (draft && onOpenDraftRef.current?.(draft, directionId)) return;
       setDraftId(id);
       setTab('drafts');
       setIsOpen(true);

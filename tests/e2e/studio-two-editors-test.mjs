@@ -241,6 +241,15 @@ check(
 // ---- B opens the same route: looks, cannot change.
 const b = await editor(B_ID, 'b@example.com', db);
 const writesBefore = writesOf(db).length;
+// A tap on A's dashed line opens the route's card, to read: no review sheet and no editing.
+await openRoute(b.page);
+await b.page.getByText('Being changed by Marisol').waitFor({ timeout: 10000 });
+check(
+  "B's tap on A's draft line opens the route's card to read, with no review sheet",
+  (await b.page.locator('dialog[open]').count()) === 0 &&
+    (await b.page.getByTestId('sidebar').count()) === 0 &&
+    (await b.page.getByRole('button', { name: 'Edit route' }).count()) === 0,
+);
 await openRouteFromPlace(b.page);
 await b.page.getByText('Being changed by Marisol').waitFor({ timeout: 10000 });
 check(
