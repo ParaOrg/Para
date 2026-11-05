@@ -11,6 +11,7 @@ import {
   drawHint,
   formatDistance,
   isTyping,
+  straightCount,
   withCommand,
   keepOptions,
   uTurnWarning,
@@ -133,4 +134,11 @@ test('in Move the hint says what Move does and how to add, never "add" or "inser
     drawHint({ ...route, isMoving: false, isFinger: true }),
     'Tap to add · tap a point for options · drag a point to move',
   );
+});
+
+test("straight stretches are counted: Draw's and refused ones, never routed or missing ones", () => {
+  const at = [121, 14.7];
+  const seg = (snap) => ({ snap, coordinates: [at, at] });
+  assert.equal(straightCount([]), 0);
+  assert.equal(straightCount([seg('snapped'), seg('freehand'), undefined, seg('freehand')]), 2);
 });

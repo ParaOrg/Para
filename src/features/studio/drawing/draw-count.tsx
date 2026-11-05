@@ -1,4 +1,4 @@
-import { formatDistance, uTurnWarning } from './toolbar-text';
+import { formatDistance, straightCount, uTurnWarning } from './toolbar-text';
 import type { Drawing } from './use-drawing';
 
 interface DrawCountProps {
@@ -20,7 +20,7 @@ export function DrawCount({ draw, isFinger, doneReason, onUTurnHelp }: DrawCount
   const area = draw.area;
   const points = draw.controlPoints.length;
   const noun = area ? 'corner' : 'point';
-  const freehandCount = draw.segments.filter((s) => s?.snap === 'freehand').length;
+  const freehandCount = straightCount(draw.segments);
   const uTurns = draw.uTurns.length;
   return (
     <span className="rounded-full bg-surface px-3 py-1 text-center text-xs text-content-quaternary tabular-nums shadow-large">
