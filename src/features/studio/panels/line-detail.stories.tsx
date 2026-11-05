@@ -51,20 +51,20 @@ export const Published: Story = {
 };
 
 /**
- * Every fact known, the author's name long: it wraps beside its label. The sidebar does not feed
- * these yet; this is where it is headed once the database records them.
+ * Every fact known, as the edit stamps give them (use-line-stamps.ts), the author's name long: it
+ * wraps beside its label.
  */
 export const AllKnown: Story = {
   args: {
     status: 'published',
     author: 'Maria Clara de los Santos Villanueva',
-    datePublished: '5 Nov 2026',
-    lastEdited: '5 Nov 2026, 9:42 am',
+    datePublished: '2 Nov 2026, 10:15 AM',
+    lastEdited: '5 Nov 2026, 3:42 PM',
   },
   play: async ({ canvasElement }) => {
     const detail = within(canvasElement).getByTestId('line-detail');
-    await expect(detail).toHaveTextContent('Date published5 Nov 2026');
-    await expect(detail).toHaveTextContent('Last edited5 Nov 2026, 9:42 am');
+    await expect(detail).toHaveTextContent('Date published2 Nov 2026, 10:15 AM');
+    await expect(detail).toHaveTextContent('Last edited5 Nov 2026, 3:42 PM');
   },
 };
 
