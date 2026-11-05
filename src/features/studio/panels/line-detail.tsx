@@ -73,7 +73,12 @@ export function LineDetail({
           </Fact>
         )}
         {straight > 0 && <Fact term="Straight">{straight}</Fact>}
-        {uTurns > 0 && <Fact term="U-turns">⚠ {uTurns}</Fact>}
+        {uTurns > 0 && (
+          <Fact term="U-turns">
+            <span aria-hidden="true">⚠ </span>
+            {uTurns}
+          </Fact>
+        )}
         <Fact term="Status" tone={status}>
           {STATUS_LABEL[status]}
         </Fact>

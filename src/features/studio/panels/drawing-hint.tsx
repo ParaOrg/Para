@@ -12,16 +12,16 @@ interface DrawingHintProps {
 }
 
 /**
- * What the drawing toolbar says beside the map moves into the sidebar: how to draw (drawHint),
- * what a U-turn means when the line has one, and Close the loop while a return trip is drawn.
- * The toolbar keeps them where there is no sidebar (DrawToolbar's isBesideSidebar).
+ * Beside the map, the sidebar says what the toolbar would: how to draw (drawHint), what a U-turn
+ * means when the line has one, and Close the loop while a return trip is drawn. Where there is no
+ * sidebar, the toolbar keeps them (DrawToolbar's isBesideSidebar).
  */
 export function DrawingHint({ draw, loop = null }: DrawingHintProps) {
   const uTurns = draw.uTurns.length;
   const hint = drawHint({
     uTurnHelp: null,
     isFinger: coarsePointer(),
-    isArea: draw.area !== null,
+    isArea: !!draw.area,
     points: draw.controlPoints.length,
     isMoving: draw.moving,
     loopOther: loop?.other ?? null,
@@ -30,7 +30,12 @@ export function DrawingHint({ draw, loop = null }: DrawingHintProps) {
   return (
     <div data-testid="drawing-hint" className="flex flex-col items-start gap-2">
       {hint && <p className="text-xs text-content-quaternary">{hint}</p>}
-      {uTurns > 0 && <p className="text-xs text-content-quaternary">⚠ {uTurnWarning(uTurns)}</p>}
+      {uTurns > 0 && (
+        <p role="status" className="text-xs text-content-quaternary">
+          <span aria-hidden="true">⚠ </span>
+          {uTurnWarning(uTurns)}
+        </p>
+      )}
       {loop && <CloseLoop draw={draw} loop={loop} />}
     </div>
   );
