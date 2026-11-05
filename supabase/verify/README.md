@@ -269,3 +269,22 @@ editor and not deleted directly, and that the maker edits their own. On a second
 review_rules, the apply refuses and writes no ledger row. On a third, apply then revert twice leaves the
 schema as before, and re-applying passes the check.
 
+## keep-uploads-on-user-delete.sh
+
+`migrations/20261105180000_keep_uploads_on_user_delete.sql` on databases of its own, run last by `run.sh` or
+alone:
+
+    PSQL="docker exec -i pg-verify psql -U postgres" bash supabase/verify/keep-uploads-on-user-delete.sh
+
+It applies every earlier migration and the contributor paste files as live has them (through
+delete_account_refuse_uploads), then `../apply/20261105180000_keep_uploads_on_user_delete_apply.sql` twice
+(the second run must stop and change nothing), and runs `…_check.sql`: its rolled-back behaviour part must
+raise nothing and leave no row behind, and its 3 read-only rows must be `t`. The behaviour part deletes an
+account's user, an anonymous phone's user and a contributor row directly, and each ride stays with its
+point batch, hinto and use, unlinked and marked with its typed words cleared, while the person's own rows go;
+`delete_my_account(false)` leaves what it left before; a claim still moves a phone's ride to the account,
+linked, and deleting the phone's user afterwards changes none of it. Then
+`20261105090000_delete_account_refuse_uploads_check.sql` runs again over it. On a second database, without
+delete_account_keep_uploads, the apply refuses and writes no ledger row. On a third, apply then revert twice
+leaves the schema as before, and re-applying passes the check. Without the trigger the check fails at its
+first step.

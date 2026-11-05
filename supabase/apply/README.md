@@ -556,3 +556,33 @@ expect the maker-only with check this replaces.
 - Apply failed: nothing changed. The message names what it found.
 - Applied, and it must be withdrawn: run `20261105130000_draft_update_makerless_revert.sql`.
 
+# Applying keep_uploads_on_user_delete to the live project
+
+**Applied live 2026-11-05** (ledger `20261105131416`) from its paste file; its check passed. Do not reapply.
+It changes only what happens when a user or a contributor row is deleted. Clean-up step 1 of `.scratch/codebase-review/database.md` (H2), approved by the owner on
+2026-11-05. Deleting a user from the dashboard, a script or an anonymous clean-up used to cascade their
+contributions, points, hintos and uses away; only `delete_my_account` unlinked them first. Now a
+before-delete trigger on `contributor` unlinks their rides first, as `delete_my_account(false)` does
+(`contributor_id` null, `unlinked` true, the typed words cleared). `delete_my_account` and `finish_claim`
+behave as before. One function and one trigger; no table, grant or row changes.
+
+| File | What it does |
+| --- | --- |
+| `20261105180000_keep_uploads_on_user_delete_apply.sql` | One transaction. Checks `delete_account_keep_uploads` is in the ledger, and this is not. Applies `migrations/20261105180000_keep_uploads_on_user_delete.sql` (carried unchanged; `verify/keep-uploads-on-user-delete.sh` checks the copy). Checks the trigger is before delete and enabled, and its function callable by no app role. Writes the ledger row `keep_uploads_on_user_delete`. Any failed check raises and nothing is changed. A second run stops at the first check and changes nothing. |
+| `20261105180000_keep_uploads_on_user_delete_check.sql` | Part one adds six test users with a ride each, deletes them every way a user can go, then rolls all of it back; it raises `FAILED: ...` on the first wrong result. Part two is read-only: 3 rows, all `ok` should be `t`. |
+| `20261105180000_keep_uploads_on_user_delete_revert.sql` | One transaction: drops the trigger and its function and removes the ledger row. Touches no data. Safe to run twice. |
+
+## Steps
+
+1. Run `20261105180000_keep_uploads_on_user_delete_apply.sql`. It ends with `COMMIT`; an error means nothing
+   changed.
+2. Run `20261105180000_keep_uploads_on_user_delete_check.sql`: part one ends with `ROLLBACK` and no error;
+   part two gives 3 rows, all `ok = t`.
+3. Record the ledger version
+   (`select version from supabase_migrations.schema_migrations where name = 'keep_uploads_on_user_delete';`)
+   in `migrations/README.md`. The types do not change.
+
+## Recovery
+
+- Apply failed: nothing changed. The message names what it found.
+- Applied, and it must be withdrawn: run `20261105180000_keep_uploads_on_user_delete_revert.sql`.
