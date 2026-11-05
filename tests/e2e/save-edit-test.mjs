@@ -8,19 +8,24 @@
 //   npm run dev                          (in another terminal)
 //   node tests/e2e/save-edit-test.mjs    # against http://localhost:5173
 //
+// Every save is a draft, approved by the stand-in (approveAll) where a step
+// needs the map to move on, as an editor's Approve would.
+//
 // What it checks, each against the finding it guards (the review's numbers):
 // Edit route changing a route's ends and facts, and refusing ends another
 // route has and a head–tail swap; the switch in a band of its own and Escape
 // leaving a card open under the other maps alone; a new head or tail made from
-// the save panel's pickers (a 30 m box at the line's end, the hotspot panel's
-// own write, the drawn line left alone; Enter on any field saving the place
-// and not the route, one write however many Enters, none before the lines are
-// read, a retry updating the box it wrote, a name already a place refused);
+// the save panel's pickers (a 30 m box at the line's end, a draft of its own,
+// the drawn line left alone; Enter on any field saving the place and not the
+// route, one draft however many Enters, none before the lines are read, a
+// retry storing the same place's draft, a name already a place refused);
 // the drawing keys alive after signing in from Done (9); a line back to its
 // start; the save panel and the toast on a phone with a notch and a home bar;
 // no React warnings (the duplicate key).
 import { waitFor } from './lib/harness.mjs';
 import {
+  approveAll,
+  approvedWrites,
   backToMap,
   at,
   BACK,
@@ -28,8 +33,9 @@ import {
   check,
   clickAt,
   directionsOf,
-  dismissToasts,
   done,
+  draftOf as subjectDraft,
+  drafted,
   drawLine,
   drawTheRoute,
   finish,
@@ -44,30 +50,29 @@ import {
   P2,
   page,
   pointsShown,
-  remove,
   said,
   saveButton,
   stub,
   tables,
-  toast,
   VIA,
   writesSince,
 } from './lib/save-studio.mjs';
 
 // The ground: the two hintuans, the route between them drawn both ways, and a
-// second route between them by Stand-in Road, as save-ikot-test's link sync
-// leaves it once its retry is in.
+// second route between them by Stand-in Road, as save-ikot-test's retry
+// leaves it once approved.
 const { outRoute, outV } = await drawTheRoute();
 await drawLine(VIA);
 await page.getByPlaceholder('Zabarte').fill('Stand-in Road');
 await saveButton().click();
-await waitFor(async () => (await toast().count()) > 0);
-await dismissToasts();
+await drafted();
+await approveAll();
 let n;
 let w;
 
 // ---- 10. Edit route changes the route's facts (stage 11, the owner's ask)
 await hintuan(at(-0.004, 0.006), 'Stand-in Phase');
+await approveAll();
 const phase = tables.stop.find((s) => s.name === 'Stand-in Phase');
 await openCard(OUT[1]);
 await page.getByRole('button', { name: 'Edit route' }).click();
@@ -94,37 +99,30 @@ const aTerminal = tables.stop.find((s) => s.kind === 'terminal');
 if (aTerminal && outV)
   tables.route_stop.push({ route_variant_id: outV.id, stop_id: aTerminal.id, stop_sequence: 0 });
 await saveButton().click();
-await waitFor(async () => (await toast().count()) > 0);
+await drafted();
 w = writesSince(n);
-const edited = tables.route.find((r) => r.id === outRoute?.id);
+const editDraft = subjectDraft('route', outRoute?.id);
 check(
-  '  Update writes the route row — its new head, its signboard kept — then the direction',
-  edited?.head_stop_id === phase?.id &&
-    (edited?.signboard ?? null) === signboardBefore &&
-    w.findIndex((x) => x.method === 'PATCH' && x.table === 'route') <
-      w.findIndex((x) => x.method === 'PATCH' && x.table === 'route_variant'),
+  '  Update is a draft of the route — its new head, its signboard kept — and the direction',
+  editDraft?.payload.route.head_stop_id === phase?.id &&
+    (editDraft.payload.route.signboard ?? null) === signboardBefore &&
+    editDraft.payload.directions.length === 2 &&
+    approvedWrites(w).length === 0,
   said(w),
 );
+const editedLinks = editDraft?.payload.directions.find((v) => v.id === outV?.id)?.links ?? [];
 check(
-  '  the name follows the new end',
-  (await toast().innerText()).includes('Stand-in Phase – Stand-in Tail'),
-  (await toast().innerText()).replace(/\s+/g, ' '),
+  '  the terminal links are left as they are: the one set stays in the draft',
+  !!aTerminal && editedLinks.some((l) => l.stop_id === aTerminal.id),
+  JSON.stringify(editedLinks),
 );
-const terminals = new Set(tables.stop.filter((s) => s.kind === 'terminal').map((s) => s.id));
-const linkWrites = w.filter((x) => x.table === 'route_stop');
+await approveAll();
+const edited = tables.route.find((r) => r.id === outRoute?.id);
 check(
-  '  the terminal links are left as they are: the one set stays, and the link writes name hintuans only',
-  !!aTerminal &&
-    tables.route_stop.some((l) => l.route_variant_id === outV?.id && l.stop_id === aTerminal.id) &&
-    linkWrites.every(
-      (x) =>
-        !/stop_id=eq\./.test(x.query) &&
-        ![x.body ?? []].flat().some((l) => terminals.has(l?.stop_id)) &&
-        ![...terminals].some((t) => x.query.includes(t)),
-    ),
-  said(linkWrites),
+  '  approved, the route row has its new head, and the terminal link stays',
+  edited?.head_stop_id === phase?.id &&
+    tables.route_stop.some((l) => l.route_variant_id === outV?.id && l.stop_id === aTerminal?.id),
 );
-await dismissToasts();
 // The other direction, not saved here, shares the route: its card reads the
 // new end once the list is read again.
 // The card is the public map's trip card since 2026-09-30: its ends sit on
@@ -141,6 +139,20 @@ await waitFor(async () => {
   // One try (a jump, a tap and its 700 ms) takes up to 5 s on a slow page,
   // and the list may be read again more than once before the name changes.
 }, 120000);
+await page.keyboard.press('Escape');
+await page.waitForTimeout(300);
+await waitFor(async () => {
+  await openCard(OUT[1]);
+  return (await cardName()) === 'Stand-in Phase → Stand-in Tail';
+}, 120000);
+check(
+  '  the name follows the new end',
+  (await cardName()) === 'Stand-in Phase → Stand-in Tail',
+  await cardName(),
+);
+await page.keyboard.press('Escape');
+await page.waitForTimeout(300);
+await openCard(BACK[1]);
 check(
   '  and the other direction, which shares the route, is renamed with it',
   directionsOf(outRoute?.id).some((v) => v.id === backId) &&
@@ -251,8 +263,11 @@ await page.waitForTimeout(300);
   const line = JSON.parse(draftBefore).controlPoints;
   const form = (end) => page.getByRole('group', { name: `New place for the ${end}` });
   const isFocused = (locator) => locator.evaluate((e) => e === document.activeElement);
-  const stopsBefore = tables.stop.length;
-  const routesBefore = tables.route.length;
+  /** The hotspot drafts made here, by the name written on the ground. */
+  const placeDrafts = () => tables.draft.filter((d) => d.kind === 'hotspot');
+  const placeDraft = (name) => placeDrafts().find((d) => d.payload.stop.name === name);
+  const placesBefore = placeDrafts().length;
+  const routeDraftsBefore = tables.draft.filter((d) => d.kind === 'route').length;
 
   check(
     'each end picker ends with "+ New place here…"',
@@ -289,7 +304,8 @@ await page.waitForTimeout(300);
   await page.waitForTimeout(500);
   check(
     '  a name that is already a place is refused in words, with nothing written',
-    /is already a place/.test(await form('head').innerText()) && tables.stop.length === stopsBefore,
+    /is already a place/.test(await form('head').innerText()) &&
+      placeDrafts().length === placesBefore,
     (await form('head').innerText()).slice(-160),
   );
 
@@ -301,10 +317,11 @@ await page.waitForTimeout(300);
     .getByLabel(/Stop name/)
     .fill('Newhead');
   await page.keyboard.press('Enter');
-  await waitFor(() => tables.stop.some((r) => r.name === 'Stand-in Newhead'));
-  // The save ends when its links are written and the form closes, not when the box is in the table.
+  await waitFor(() => !!placeDraft('Stand-in Newhead'));
+  // The save ends when the form closes, not when the draft is stored.
   await form('head').waitFor({ state: 'hidden' });
-  const head = tables.stop.find((r) => r.name === 'Stand-in Newhead');
+  const headDraft = placeDraft('Stand-in Newhead');
+  const head = headDraft && { id: headDraft.subject_id, ...headDraft.payload.stop };
   const boxOf = (r) => r.area.coordinates[0];
   const metres = ([lng1, lat1], [lng2, lat2]) => {
     const rad = Math.PI / 180;
@@ -324,9 +341,10 @@ await page.waitForTimeout(300);
     '',
   );
   check(
-    "  through the hotspot panel's own write: one stop row and its links, nothing else",
-    writesSince(n).every((w) => w.table === 'stop' || w.table === 'route_stop') &&
-      writesSince(n).filter((w) => w.method === 'POST' && w.table === 'stop').length === 1,
+    '  as a draft of its own: one draft of a new place, nothing written to the approved tables',
+    headDraft?.is_new === true &&
+      writesSince(n).filter((w) => w.table === 'rpc/claim_draft').length === 1 &&
+      approvedWrites(writesSince(n)).length === 0,
     said(writesSince(n)),
   );
   check(
@@ -347,9 +365,10 @@ await page.waitForTimeout(300);
     .getByLabel(/Ground name/)
     .fill('Stand-in Newtail');
   await form('tail').getByRole('button', { name: 'Save place' }).click();
-  await waitFor(() => tables.stop.some((r) => r.name === 'Stand-in Newtail'));
+  await waitFor(() => !!placeDraft('Stand-in Newtail'));
   await form('tail').waitFor({ state: 'hidden' });
-  const tail = tables.stop.find((r) => r.name === 'Stand-in Newtail');
+  const tailDraft = placeDraft('Stand-in Newtail');
+  const tail = tailDraft && { id: tailDraft.subject_id, ...tailDraft.payload.stop };
   check(
     "the tail is created as a hintuan with a 30 m box centred on the line's last point",
     !!tail &&
@@ -360,24 +379,26 @@ await page.waitForTimeout(300);
   );
   check(
     '  the drawn line is untouched by both',
-    (await draftOf()) === draftBefore && tables.stop.length === stopsBefore + 2,
+    (await draftOf()) === draftBefore && placeDrafts().length === placesBefore + 2,
   );
 
   n = log.length;
   await saveButton().click();
-  await waitFor(async () => (await toast().count()) > 0);
-  const made = tables.route.find((r) => r.head_stop_id === head?.id && r.tail_stop_id === tail?.id);
+  await drafted();
+  const made = tables.draft.find(
+    (d) =>
+      d.kind === 'route' &&
+      d.payload.route.head_stop_id === head?.id &&
+      d.payload.route.tail_stop_id === tail?.id,
+  );
   check(
-    'the route saves with the new places as its head and tail',
-    !!made && tables.route.length === routesBefore + 1,
+    "the route's draft has the new places as its head and tail",
+    !!made && tables.draft.filter((d) => d.kind === 'route').length === routeDraftsBefore + 1,
     said(writesSince(n)),
   );
-  await dismissToasts();
 
   // Leave the stand-in as it was for what follows.
-  if (made) remove('route', [made]);
-  if (head) remove('stop', [head]);
-  if (tail) remove('stop', [tail]);
+  tables.draft = tables.draft.filter((d) => ![made, headDraft, tailDraft].includes(d));
   await page.evaluate(() => localStorage.removeItem('para.draft.v1'));
 }
 
@@ -394,10 +415,15 @@ await page.waitForTimeout(300);
   for (const p of L) await clickAt(p, 300);
   await done();
   const draftBefore = await draftOf();
-  const routesBefore = tables.route.length;
+  const routeDrafts = () => tables.draft.filter((d) => d.kind === 'route').length;
+  const routesBefore = routeDrafts();
   const form = (end) => page.getByRole('group', { name: `New place for the ${end}` });
-  const stopsNamed = (name) => tables.stop.filter((r) => r.name === name);
-  const stopWrites = (n) => writesSince(n).filter((w) => w.method === 'POST' && w.table === 'stop');
+  /** The drafts of new places with this ground name. */
+  const stopsNamed = (name) =>
+    tables.draft.filter((d) => d.kind === 'hotspot' && d.payload.stop.name === name);
+  /** The place drafts claimed since `n`. */
+  const stopWrites = (n) =>
+    writesSince(n).filter((w) => w.table === 'rpc/claim_draft' && w.body?.p_kind === 'hotspot');
   const open = async (end) => {
     await page.getByTestId(`save-${end.toLowerCase()}`).selectOption(NEW);
     await form(end)
@@ -449,7 +475,7 @@ await page.waitForTimeout(300);
   // Only once the form has closed is the next one a new form, not this one still saving.
   await form('Head').waitFor({ state: 'hidden' });
   check(
-    'two Enters write one box, once the lines are in',
+    'two Enters store one draft of the box, once the lines are in',
     stopsNamed('Stand-in Guard').length === 1 && stopWrites(n).length === 1,
     said(writesSince(n)),
   );
@@ -467,7 +493,7 @@ await page.waitForTimeout(300);
   check(
     'Enter on the Hintuan radio saves the place and not the route',
     stopsNamed('Stand-in Radio Head').length === 1 &&
-      tables.route.length === routesBefore &&
+      routeDrafts() === routesBefore &&
       (await saveButton().isVisible()),
   );
   await open('Tail');
@@ -482,23 +508,25 @@ await page.waitForTimeout(300);
   check(
     '  and on the Terminal radio',
     stopsNamed('Stand-in Radio Tail').length === 1 &&
-      tables.route.length === routesBefore &&
+      routeDrafts() === routesBefore &&
       (await saveButton().isVisible()),
   );
 
-  // 3. A retry after the links failed updates the box it wrote.
+  // 3. A retry after the draft was refused stores the same place, under the same id.
   await open('Tail');
   await form('Tail')
     .getByLabel(/Ground name/)
     .fill('Stand-in Retry');
   await waitFor(async () => form('Tail').getByRole('button', { name: 'Save place' }).isEnabled());
-  stub.fault = (method, table) => method === 'DELETE' && table === 'route_stop';
+  stub.fault = (method, table) => method === 'POST' && table === 'rpc/claim_draft';
+  n = log.length;
   await page.keyboard.press('Enter');
-  await waitFor(async () => /Press Save again to retry/.test(await form('Tail').innerText()));
+  await waitFor(async () => /refused this one, on purpose/.test(await form('Tail').innerText()));
+  const firstTry = stopWrites(n)[0];
   check(
-    'a failed link write is said, with the box already written once',
-    /Press Save again to retry/.test(await form('Tail').innerText()) &&
-      stopsNamed('Stand-in Retry').length === 1,
+    'a refused draft is said in the form, and nothing is stored',
+    /refused this one, on purpose/.test(await form('Tail').innerText()) &&
+      stopsNamed('Stand-in Retry').length === 0,
   );
   n = log.length;
   await form('Tail')
@@ -506,10 +534,10 @@ await page.waitForTimeout(300);
     .press('Enter');
   await form('Tail').waitFor({ state: 'hidden' });
   check(
-    '  the retry updates that box: one row, no second POST',
+    '  the retry stores one draft of that place, under the id the first try had',
     stopsNamed('Stand-in Retry').length === 1 &&
-      stopWrites(n).length === 0 &&
-      writesSince(n).some((w) => w.method === 'PATCH' && w.table === 'stop'),
+      stopsNamed('Stand-in Retry')[0].subject_id === firstTry?.body.p_subject_id &&
+      approvedWrites(writesSince(n)).length === 0,
     said(writesSince(n)),
   );
   check('  the drawn line is untouched through all of it', (await draftOf()) === draftBefore);
@@ -521,7 +549,7 @@ await page.waitForTimeout(300);
     'Stand-in Radio Tail',
     'Stand-in Retry',
   ])
-    for (const r of stopsNamed(name)) remove('stop', [r]);
+    tables.draft = tables.draft.filter((d) => !stopsNamed(name).includes(d));
   await backToMap();
   await page.getByTitle('Discard this route').click();
   await page.waitForTimeout(300);

@@ -5,7 +5,7 @@ import { directionRows } from './direction-rows';
 import { hotspotDraftBase, routeDraftState, stateForNewLine } from './draft-reads';
 import { claimDraft, updateDraft, type DraftKind, type ReviewResult } from './drafts';
 import { hotspotPayloadOf } from './hotspot-draft-state';
-import type { SaveHotspotInput } from './hotspots-write';
+import type { SaveHotspotInput } from './hotspot-save-input';
 import {
   hintuanLinksFor,
   withDirectionEmptied,
@@ -13,7 +13,7 @@ import {
   withSignboards,
 } from './route-draft-edits';
 import { routePayloadOf, servedRouteOf, type DraftBase } from './route-draft-state';
-import type { SaveInput } from './routes-write';
+import type { SaveInput } from './route-save-input';
 
 // The studio's saves as drafts (0022): each builds the subject's whole state —
 // a route with every direction and each direction's complete link set, or a

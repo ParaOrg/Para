@@ -184,163 +184,19 @@ export async function fakeStudioDb(page, seed = {}, shared = null) {
     return { ...base, ...r };
   };
 
-  /**
-   * A draft approved as approve_draft applies it (0022): the subject's row,
-   * each direction of a route with its whole link set, or a hotspot with its
-   * links; a route left with no drawn line comes down. The draft goes.
-   */
-  const apply = (d) => {
-    const bump = (row) =>
-      Object.assign(row, { status: 'approved', revision: (row.revision ?? 0) + 1 });
-    // A link written or removed bumps both its route and its hotspot (0022's link_bumps_subjects).
-    const routeOfDirection = (id) =>
-      tables.route.find((r) => r.id === tables.route_variant.find((v) => v.id === id)?.route_id);
-    const bumpLinked = (links) => {
-      const routes = new Set(links.map((l) => routeOfDirection(l.route_variant_id)));
-      const stops = new Set(links.map((l) => tables.stop.find((x) => x.id === l.stop_id)));
-      for (const row of [...routes, ...stops])
-        if (row && row.id !== d.subject_id) row.revision = (row.revision ?? 0) + 1;
-    };
-    if (d.kind === 'route') {
-      const { route: r, directions } = d.payload;
-      const row = tables.route.find((x) => x.id === d.subject_id);
-      const columns = {
-        ...r,
-        head_stop_id: r.is_loop ? null : r.head_stop_id,
-        tail_stop_id: r.is_loop ? null : r.tail_stop_id,
-      };
-      if (row) bump(Object.assign(row, columns));
-      else
-        tables.route.push(
-          fill('route', { id: d.subject_id, ...columns, status: 'approved', revision: 1 }),
-        );
-      for (const { links, ...dir } of directions) {
-        const v = tables.route_variant.find((x) => x.id === dir.id);
-        if (v) Object.assign(v, dir);
-        else tables.route_variant.push(fill('route_variant', { ...dir, route_id: d.subject_id }));
-        const fresh = links.map((l) => ({ route_variant_id: dir.id, ...l }));
-        bumpLinked([...tables.route_stop.filter((l) => l.route_variant_id === dir.id), ...fresh]);
-        tables.route_stop = tables.route_stop
-          .filter((l) => l.route_variant_id !== dir.id)
-          .concat(fresh);
-        if (dir.shape === null)
-          for (const o of tables.route_variant)
-            if (o.borrowed_from === dir.id)
-              Object.assign(o, { borrowed_from: null, borrowed_part: null, borrowed_m: null });
-      }
-      const drawn = tables.route_variant.some((v) => v.route_id === d.subject_id && v.shape);
-      if (!drawn) tables.route.find((x) => x.id === d.subject_id).status = 'taken_down';
-    } else {
-      const { stop, links } = d.payload;
-      const row = tables.stop.find((x) => x.id === d.subject_id);
-      if (row) bump(Object.assign(row, stop));
-      else
-        tables.stop.push(
-          fill('stop', { id: d.subject_id, ...stop, status: 'approved', revision: 1 }),
-        );
-      const fresh = links.map((l) => ({ ...l, stop_id: d.subject_id }));
-      bumpLinked([...tables.route_stop.filter((l) => l.stop_id === d.subject_id), ...fresh]);
-      tables.route_stop = tables.route_stop.filter((l) => l.stop_id !== d.subject_id).concat(fresh);
-    }
-    tables.draft = tables.draft.filter((x) => x !== d);
-  };
+  const drafts = draftWorkflow(tables, { newId, fill, now });
   db.approve = (draftId) => {
     const kept = tables.draft.find((d) => d.id === draftId);
     if (!kept) throw new Error(`no draft ${draftId}`);
-    apply(kept);
+    drafts.approve(kept);
   };
 
   const rpc = (name, body, caller) => {
     // 20261030090000: about the caller alone; no account, no.
     if (name === 'am_i_editor')
       return { status: 200, body: caller !== null && !db.notEditors.has(caller) };
-    if (name === 'claim_draft') {
-      const same = (d) => d.kind === body.p_kind && d.subject_id === body.p_subject_id;
-      const kept = tables.draft.find(same);
-      if (kept) return { status: 200, body: { code: 'ok', created: false, draft: kept } };
-      const draft = {
-        id: newId(),
-        kind: body.p_kind,
-        subject_id: body.p_subject_id,
-        is_new: body.p_is_new,
-        base_revision: body.p_base_revision,
-        revision: 1,
-        status: 'draft',
-        payload: body.p_payload,
-        note: body.p_note ?? null,
-        editor_id: caller,
-        created_at: now,
-        updated_at: now,
-        submitted_at: null,
-      };
-      tables.draft.push(draft);
-      return { status: 200, body: { code: 'ok', created: true, draft } };
-    }
-    if (name === 'discard_draft') {
-      const kept = tables.draft.find((d) => d.id === body.p_draft);
-      if (!kept) return { status: 200, body: { code: 'no_draft' } };
-      if (body.p_revision !== null && body.p_revision !== kept.revision)
-        return {
-          status: 200,
-          body: { code: 'revision_mismatch', current_revision: kept.revision },
-        };
-      tables.draft = tables.draft.filter((d) => d !== kept);
-      return { status: 200, body: { code: 'discarded' } };
-    }
-    if (name === 'submit_draft') {
-      const kept = tables.draft.find((d) => d.id === body.p_draft);
-      if (!kept) return { status: 200, body: { code: 'no_draft' } };
-      if (kept.revision !== body.p_revision)
-        return {
-          status: 200,
-          body: { code: 'revision_mismatch', current_revision: kept.revision },
-        };
-      if (kept.status !== 'draft') return { status: 200, body: { code: 'already_pending' } };
-      Object.assign(kept, { status: 'pending', submitted_at: now, revision: kept.revision + 1 });
-      return { status: 200, body: { code: 'submitted', draft: kept } };
-    }
-    if (name === 'approve_reviewed_draft' || name === 'approve_draft') {
-      const kept = tables.draft.find((d) => d.id === body.p_draft);
-      if (!kept) return { status: 200, body: { code: 'no_draft' } };
-      if (name === 'approve_reviewed_draft' && kept.revision !== body.p_revision)
-        return {
-          status: 200,
-          body: { code: 'revision_mismatch', current_revision: kept.revision },
-        };
-      if (kept.status !== 'pending') return { status: 200, body: { code: 'not_pending' } };
-      // 0022's checks before it applies: the subject is there or not as the
-      // draft says, and nobody changed it since the draft's base was read.
-      const live = (kept.kind === 'route' ? tables.route : tables.stop).find(
-        (x) => x.id === kept.subject_id,
-      );
-      if (kept.is_new && live) return { status: 200, body: { code: 'subject_exists' } };
-      if (!kept.is_new && !live) return { status: 200, body: { code: 'subject_gone' } };
-      if (!kept.is_new && live.revision !== kept.base_revision)
-        return { status: 200, body: { code: 'conflict', current_revision: live.revision } };
-      apply(kept);
-      return { status: 200, body: { code: 'approved' } };
-    }
-    if (name === 'take_down' || name === 'put_back') {
-      const [from, to] =
-        name === 'take_down' ? ['approved', 'taken_down'] : ['taken_down', 'approved'];
-      const row = (body.p_kind === 'route' ? tables.route : tables.stop).find(
-        (x) => x.id === body.p_subject_id,
-      );
-      // A hotspot an approved route still ends at cannot come down.
-      const isEnd = (r) =>
-        r.status !== 'taken_down' &&
-        (r.head_stop_id === body.p_subject_id || r.tail_stop_id === body.p_subject_id);
-      if (name === 'take_down' && body.p_kind === 'hotspot' && tables.route.some(isEnd))
-        return { status: 200, body: { code: 'blocked' } };
-      if (row?.status !== from)
-        return {
-          status: 200,
-          body: { code: name === 'take_down' ? 'not_approved' : 'not_taken_down' },
-        };
-      // 0018's bump_revision: every update of a route or stop moves its revision on.
-      Object.assign(row, { status: to, revision: (row.revision ?? 0) + 1 });
-      return { status: 200, body: { code: name === 'take_down' ? 'taken_down' : 'put_back' } };
-    }
+    const answered = drafts.rpc(name, body, caller);
+    if (answered) return answered;
     if (name !== 'block_contributor' && name !== 'unblock_contributor')
       throw new Error(`unknown rpc ${name}`);
     const phone = tables.contributor.find((c) => c.id === body.target);
@@ -446,4 +302,169 @@ export async function fakeStudioDb(page, seed = {}, shared = null) {
     });
   });
   return db;
+}
+
+/**
+ * The review workflow's calls, answered as 0022 answers them, over `tables`
+ * (route, route_variant, stop, route_stop, draft): claim_draft, discard_draft,
+ * submit_draft, approve_reviewed_draft (or approve_draft), take_down and
+ * put_back. `approve(draft)` applies a draft without the calls or the checks.
+ * Shared by fakeStudioDb and the save suites' own stand-in (save-studio.mjs).
+ *
+ *   const drafts = draftWorkflow(tables, { newId, fill, now });
+ *   drafts.rpc(name, body, caller)   { status, body }, or null for a call it does not know
+ */
+export function draftWorkflow(tables, { newId, fill, now }) {
+  /**
+   * A draft approved as approve_draft applies it (0022): the subject's row,
+   * each direction of a route with its whole link set, or a hotspot with its
+   * links; a route left with no drawn line comes down. The draft goes.
+   */
+  const apply = (d) => {
+    const bump = (row) =>
+      Object.assign(row, { status: 'approved', revision: (row.revision ?? 0) + 1 });
+    // A link written or removed bumps both its route and its hotspot (0022's link_bumps_subjects).
+    const routeOfDirection = (id) =>
+      tables.route.find((r) => r.id === tables.route_variant.find((v) => v.id === id)?.route_id);
+    const bumpLinked = (links) => {
+      const routes = new Set(links.map((l) => routeOfDirection(l.route_variant_id)));
+      const stops = new Set(links.map((l) => tables.stop.find((x) => x.id === l.stop_id)));
+      for (const row of [...routes, ...stops])
+        if (row && row.id !== d.subject_id) row.revision = (row.revision ?? 0) + 1;
+    };
+    if (d.kind === 'route') {
+      const { route: r, directions } = d.payload;
+      const row = tables.route.find((x) => x.id === d.subject_id);
+      const columns = {
+        ...r,
+        head_stop_id: r.is_loop ? null : r.head_stop_id,
+        tail_stop_id: r.is_loop ? null : r.tail_stop_id,
+      };
+      if (row) bump(Object.assign(row, columns));
+      else
+        tables.route.push(
+          fill('route', { id: d.subject_id, ...columns, status: 'approved', revision: 1 }),
+        );
+      for (const { links, ...dir } of directions) {
+        const v = tables.route_variant.find((x) => x.id === dir.id);
+        if (v) Object.assign(v, dir);
+        else tables.route_variant.push(fill('route_variant', { ...dir, route_id: d.subject_id }));
+        const fresh = links.map((l) => ({ route_variant_id: dir.id, ...l }));
+        bumpLinked([...tables.route_stop.filter((l) => l.route_variant_id === dir.id), ...fresh]);
+        tables.route_stop = tables.route_stop
+          .filter((l) => l.route_variant_id !== dir.id)
+          .concat(fresh);
+        if (dir.shape === null)
+          for (const o of tables.route_variant)
+            if (o.borrowed_from === dir.id)
+              Object.assign(o, { borrowed_from: null, borrowed_part: null, borrowed_m: null });
+      }
+      const drawn = tables.route_variant.some((v) => v.route_id === d.subject_id && v.shape);
+      if (!drawn) tables.route.find((x) => x.id === d.subject_id).status = 'taken_down';
+    } else {
+      const { stop, links } = d.payload;
+      const row = tables.stop.find((x) => x.id === d.subject_id);
+      if (row) bump(Object.assign(row, stop));
+      else
+        tables.stop.push(
+          fill('stop', { id: d.subject_id, ...stop, status: 'approved', revision: 1 }),
+        );
+      const fresh = links.map((l) => ({ ...l, stop_id: d.subject_id }));
+      bumpLinked([...tables.route_stop.filter((l) => l.stop_id === d.subject_id), ...fresh]);
+      tables.route_stop = tables.route_stop.filter((l) => l.stop_id !== d.subject_id).concat(fresh);
+    }
+    tables.draft = tables.draft.filter((x) => x !== d);
+  };
+
+  const rpc = (name, body, caller) => {
+    if (name === 'claim_draft') {
+      const same = (d) => d.kind === body.p_kind && d.subject_id === body.p_subject_id;
+      const kept = tables.draft.find(same);
+      if (kept) return { status: 200, body: { code: 'ok', created: false, draft: kept } };
+      const draft = {
+        id: newId(),
+        kind: body.p_kind,
+        subject_id: body.p_subject_id,
+        is_new: body.p_is_new,
+        base_revision: body.p_base_revision,
+        revision: 1,
+        status: 'draft',
+        payload: body.p_payload,
+        note: body.p_note ?? null,
+        editor_id: caller,
+        created_at: now,
+        updated_at: now,
+        submitted_at: null,
+      };
+      tables.draft.push(draft);
+      return { status: 200, body: { code: 'ok', created: true, draft } };
+    }
+    if (name === 'discard_draft') {
+      const kept = tables.draft.find((d) => d.id === body.p_draft);
+      if (!kept) return { status: 200, body: { code: 'no_draft' } };
+      if (body.p_revision !== null && body.p_revision !== kept.revision)
+        return {
+          status: 200,
+          body: { code: 'revision_mismatch', current_revision: kept.revision },
+        };
+      tables.draft = tables.draft.filter((d) => d !== kept);
+      return { status: 200, body: { code: 'discarded' } };
+    }
+    if (name === 'submit_draft') {
+      const kept = tables.draft.find((d) => d.id === body.p_draft);
+      if (!kept) return { status: 200, body: { code: 'no_draft' } };
+      if (kept.revision !== body.p_revision)
+        return {
+          status: 200,
+          body: { code: 'revision_mismatch', current_revision: kept.revision },
+        };
+      if (kept.status !== 'draft') return { status: 200, body: { code: 'already_pending' } };
+      Object.assign(kept, { status: 'pending', submitted_at: now, revision: kept.revision + 1 });
+      return { status: 200, body: { code: 'submitted', draft: kept } };
+    }
+    if (name === 'approve_reviewed_draft' || name === 'approve_draft') {
+      const kept = tables.draft.find((d) => d.id === body.p_draft);
+      if (!kept) return { status: 200, body: { code: 'no_draft' } };
+      if (name === 'approve_reviewed_draft' && kept.revision !== body.p_revision)
+        return {
+          status: 200,
+          body: { code: 'revision_mismatch', current_revision: kept.revision },
+        };
+      if (kept.status !== 'pending') return { status: 200, body: { code: 'not_pending' } };
+      // 0022's checks before it applies: the subject is there or not as the
+      // draft says, and nobody changed it since the draft's base was read.
+      const live = (kept.kind === 'route' ? tables.route : tables.stop).find(
+        (x) => x.id === kept.subject_id,
+      );
+      if (kept.is_new && live) return { status: 200, body: { code: 'subject_exists' } };
+      if (!kept.is_new && !live) return { status: 200, body: { code: 'subject_gone' } };
+      if (!kept.is_new && live.revision !== kept.base_revision)
+        return { status: 200, body: { code: 'conflict', current_revision: live.revision } };
+      apply(kept);
+      return { status: 200, body: { code: 'approved' } };
+    }
+    if (name === 'take_down' || name === 'put_back') {
+      const [from, to] =
+        name === 'take_down' ? ['approved', 'taken_down'] : ['taken_down', 'approved'];
+      const row = (body.p_kind === 'route' ? tables.route : tables.stop).find(
+        (x) => x.id === body.p_subject_id,
+      );
+      // A hotspot an approved route still ends at cannot come down.
+      const isEnd = (r) =>
+        r.status !== 'taken_down' &&
+        (r.head_stop_id === body.p_subject_id || r.tail_stop_id === body.p_subject_id);
+      if (name === 'take_down' && body.p_kind === 'hotspot' && tables.route.some(isEnd))
+        return { status: 200, body: { code: 'blocked' } };
+      if (row?.status !== from)
+        return {
+          status: 200,
+          body: { code: name === 'take_down' ? 'not_approved' : 'not_taken_down' },
+        };
+      // 0018's bump_revision: every update of a route or stop moves its revision on.
+      Object.assign(row, { status: to, revision: (row.revision ?? 0) + 1 });
+      return { status: 200, body: { code: name === 'take_down' ? 'taken_down' : 'put_back' } };
+    }
+    return null;
+  };
+  return { approve: apply, rpc };
 }

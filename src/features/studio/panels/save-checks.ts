@@ -1,7 +1,7 @@
 import { LOOP_CLOSED_M } from '@/features/routes/model/routes';
 
 import type { Place } from './places';
-import { ENDS_TAKEN, LOOP_TAKEN } from '../data/routes-write';
+import { ENDS_TAKEN, LOOP_TAKEN } from '../data/route-save-input';
 
 /**
  * Why the save panel refuses a save, before it writes anything: pure, so

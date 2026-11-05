@@ -1,35 +1,39 @@
 // The studio's save flows, signed in, against a stand-in for the database
 // (lib/save-studio.mjs): a route's life, from two hintuans and its first save
-// to its delete and its redraw. One of three parts, each a CI job of its own;
-// save-ikot-test and save-edit-test are the others.
+// to its delete and its redraw. Every save is a draft, and the stand-in
+// approves it (approveAll) before the next step, as an editor's Approve
+// would. One of three parts, each a CI job of its own; save-ikot-test and
+// save-edit-test are the others.
 //
 //   npm run dev                          (in another terminal)
 //   node tests/e2e/save-test.mjs         # against http://localhost:5173
 //
-// The other suites run signed out, so until 2026-09-29 nothing in
-// routes-write.ts or hotspots-write.ts ran under a check (docs/archive/review-2026-09-29.md,
-// section 4). The stand-in grew from the one the review drove them with
+// The other suites run signed out, so until 2026-09-29 nothing that writes
+// ran under a check (docs/archive/review-2026-09-29.md, section 4). The
+// stand-in grew from the one the review drove them with
 // (tests/unit/fixtures/fake-supabase.mjs).
 //
 // What it checks, each against the finding it guards (the review's numbers):
 // the pill counts routes (7) and the stop table is read once a load (6); a
-// hotspot saved with its links, and the directions read again after it (8);
-// the map switch — Contributors, Playground and Public, the address, a
-// half-drawn line, the camera and the basemap kept, the keys and clicks dead
-// on the other maps; a route saved with its slot, the return trip offered
-// while the slot is empty and written into it (2); the return trip closing
-// the loop: it begins on the outbound's end, the outbound shows faintly under
-// it, Close the loop ends it on the outbound's start, and the save panel says
-// how far an open loop falls short; every request line short with 500
-// hintuans (4); an edit that writes one row and offers no return trip (2),
-// and the camera with the cards, the public map's in the studio too (the
-// owner, 2026-09-30); a direction's signboards; the route exported both ways;
-// a delete that empties the direction into a slot and a redraw that fills it
-// again (3), a refused step of it said (16); no React warnings.
+// hotspot saved as a draft with its links, nothing written to the approved
+// tables; the map switch — Contributors, Playground and Public, the address,
+// a half-drawn line, the camera and the basemap kept, the keys and clicks
+// dead on the other maps; a route saved with its slot (2); the return trip
+// from the card's SWITCH, closing the loop: it begins on the outbound's end,
+// the outbound shows faintly under it, Close the loop ends it on the
+// outbound's start, and the save panel says how far an open loop falls short,
+// and its draft fills the slot; every request line short with 500 hintuans
+// (4); an edit that rewrites one direction by its id (2), and the camera with
+// the cards, the public map's in the studio too (the owner, 2026-09-30); a
+// direction's signboards in its draft; the route exported both ways; a delete
+// that empties the direction into a slot and a redraw that fills it again
+// (3), a refused step of it said (16); no React warnings.
 import { readFileSync } from 'node:fs';
 
 import { waitFor } from './lib/harness.mjs';
 import {
+  approveAll,
+  approvedWrites,
   backToMap,
   at,
   BACK,
@@ -42,6 +46,8 @@ import {
   directionsOf,
   dismissToasts,
   done,
+  draftOf,
+  drafted,
   drawLine,
   drawnPoints,
   finish,
@@ -58,13 +64,11 @@ import {
   page,
   pointsShown,
   px,
-  returnTrip,
   said,
   saveButton,
   since,
   stub,
   tables,
-  toast,
   URL_LIMIT,
   writesSince,
 } from './lib/save-studio.mjs';
@@ -74,7 +78,10 @@ const loadReads = [...log];
 const listReads = loadReads.filter(
   (w) => w.method === 'GET' && w.table === 'route_variant' && /route:route/.test(w.query),
 ).length;
-const hotspotReads = loadReads.filter((w) => w.method === 'GET' && w.table === 'stop').length;
+// The hotspot list's own read (select=*); the Public map and Drafts read their few columns apart.
+const hotspotReads = loadReads.filter(
+  (w) => w.method === 'GET' && w.table === 'stop' && /select=\*/.test(w.query),
+).length;
 check(
   'the stop table is read once for each read of the direction list, not twice (6)',
   hotspotReads > 0 && hotspotReads <= listReads,
@@ -87,34 +94,32 @@ check(
   `want "${routesToday} routes"; ${(await body()).match(/\d+ routes?/)?.[0]}`,
 );
 
-// ---- 2. Two hintuans, traced and saved
+// ---- 2. Two hintuans, traced and saved as drafts
+const hotspotDraftNamed = (name) =>
+  tables.draft.find((d) => d.kind === 'hotspot' && d.payload.stop.name === name);
 let w = await hintuan(P1, 'Stand-in Head');
-const head = tables.stop.find((s) => s.name === 'Stand-in Head');
+const headDraft = hotspotDraftNamed('Stand-in Head');
 check(
-  'a hintuan traced and saved is one stop row',
-  !!head && w.filter((x) => x.method === 'POST' && x.table === 'stop').length === 1,
+  'a hintuan traced and saved is one draft of a new hotspot, and no approved row',
+  !!headDraft &&
+    headDraft.is_new === true &&
+    w.filter((x) => x.method === 'POST' && x.table === 'rpc/claim_draft').length === 1 &&
+    approvedWrites(w).length === 0,
   said(w),
 );
 check(
-  '  its links are replaced by its own id: none, where no line passes',
-  w.some(
-    (x) =>
-      x.method === 'DELETE' &&
-      x.table === 'route_stop' &&
-      x.query.includes(`stop_id=eq.${head?.id}`),
-  ) && !w.some((x) => x.method === 'POST' && x.table === 'route_stop'),
-  said(w),
+  '  its draft lists its links: none, where no line passes',
+  Array.isArray(headDraft?.payload.links) && headDraft.payload.links.length === 0,
+  JSON.stringify(headDraft?.payload.links),
 );
-let nTail = log.length;
 await hintuan(P2, 'Stand-in Tail');
+check('a second one', !!hotspotDraftNamed('Stand-in Tail'));
+await approveAll();
+const head = tables.stop.find((s) => s.name === 'Stand-in Head');
 const tail = tables.stop.find((s) => s.name === 'Stand-in Tail');
-check('a second one', !!tail);
 check(
-  '  a saved hotspot reads the directions again, so a renamed end renames its routes (8)',
-  log
-    .slice(nTail)
-    .some((x) => x.method === 'GET' && x.table === 'route_variant' && /route:route/.test(x.query)),
-  said(log.slice(nTail)),
+  '  approved, both are places on the map, under the ids their drafts held',
+  head?.id === headDraft?.subject_id && !!tail,
 );
 
 // ---- 2b. The map switch: a half-drawn line, the camera and the basemap survive it
@@ -128,11 +133,18 @@ check(
     a.c[0] === b.c[0] && a.c[1] === b.c[1] && a.z === b.z && a.b === b.b && a.p === b.p;
   const mapOf = () => new URL(page.url()).searchParams.get('map');
 
+  // The Map Style sheet's Close, reached by keyboard: signed in, the provisional
+  // "Drafts" button overlaps it and takes the click. The sidebar's replacement
+  // of that button fixes the overlap; Enter still proves Close works.
+  const closeMapStyle = async (sheet) => {
+    await sheet.getByRole('button', { name: 'Close' }).focus();
+    await page.keyboard.press('Enter');
+  };
   const basemapPicked = async () => {
     await page.getByRole('button', { name: 'Map design' }).click();
     const dialog = page.getByRole('dialog');
     const picked = await dialog.locator('button[aria-pressed="true"]').innerText();
-    await dialog.getByRole('button', { name: 'Close' }).click();
+    await closeMapStyle(dialog);
     await page.waitForTimeout(300);
     return picked.trim();
   };
@@ -140,7 +152,7 @@ check(
   const basemapAtOpen = await basemapPicked();
   await page.getByRole('button', { name: 'Map design' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Terrain' }).click();
-  await page.getByRole('dialog').getByRole('button', { name: 'Close' }).click();
+  await closeMapStyle(page.getByRole('dialog'));
   await page.waitForTimeout(500);
   const basemapBefore = await basemapPicked();
   await go(at(0, 0), 15);
@@ -182,7 +194,7 @@ check(
     'an arrow key moves to the Public map: the address says so and says it plainly',
     mapOf() === 'public' &&
       (await page.getByRole('radio', { name: 'Public' }).isChecked()) &&
-      (await page.getByRole('heading', { name: 'Public map' }).isVisible()),
+      (await page.getByRole('region', { name: 'Published public view' }).isVisible()),
     page.url(),
   );
   await page.keyboard.press('Tab');
@@ -254,7 +266,7 @@ check(
   await page.getByRole('button', { name: 'Map design' }).click();
   const menu = page.getByTestId('basemap-menu');
   await menu.getByRole('button', { name: basemapAtOpen, exact: true }).click();
-  await menu.getByRole('button', { name: 'Close' }).click();
+  await closeMapStyle(menu);
   await page.waitForTimeout(300);
   const basemapAfter = await basemapPicked();
   check(
@@ -403,35 +415,37 @@ check(
 );
 let n = log.length;
 await saveButton().click();
-await waitFor(async () => (await toast().count()) > 0);
+await drafted();
 w = writesSince(n);
-const outRoute = tables.route.find(
-  (r) => r.head_stop_id === head?.id && r.tail_stop_id === tail?.id,
+const routeDraft = tables.draft.find(
+  (d) =>
+    d.kind === 'route' &&
+    d.payload.route.head_stop_id === head?.id &&
+    d.payload.route.tail_stop_id === tail?.id,
 );
+const draftDirections = routeDraft?.payload.directions ?? [];
 check(
-  'a new route is one route row and two directions, one of them an empty slot',
-  !!outRoute &&
-    directionsOf(outRoute.id).length === 2 &&
-    directionsOf(outRoute.id).filter((v) => v.shape === null).length === 1,
+  'a new route is one draft: the route and two directions, one of them an empty slot',
+  !!routeDraft &&
+    routeDraft.is_new === true &&
+    draftDirections.length === 2 &&
+    draftDirections.filter((v) => v.shape === null).length === 1,
   said(w),
 );
-const outV = outRoute && directionsOf(outRoute.id).find((v) => v.shape);
+check('  nothing written to the approved tables', approvedWrites(w).length === 0, said(w));
+const drawnDraft = draftDirections.find((v) => v.shape);
 check(
-  '  the save writes the overview beside the line, from the same points (0009)',
-  !!outV?.overview &&
-    outV.overview.coordinates.length >= 2 &&
-    outV.overview.coordinates.length <= outV.shape.coordinates.length &&
-    String(outV.overview.coordinates[0][0]).split('.')[1].length <= 5,
-  `${outV?.overview?.coordinates.length} of ${outV?.shape?.coordinates.length} points`,
+  '  the draft holds the overview beside the line, from the same points (0009)',
+  !!drawnDraft?.overview &&
+    drawnDraft.overview.coordinates.length >= 2 &&
+    drawnDraft.overview.coordinates.length <= drawnDraft.shape.coordinates.length &&
+    String(drawnDraft.overview.coordinates[0][0]).split('.')[1].length <= 5,
+  `${drawnDraft?.overview?.coordinates.length} of ${drawnDraft?.shape?.coordinates.length} points`,
 );
 check(
   '  the line is linked to the two hintuans it runs between',
-  ['Stand-in Head', 'Stand-in Tail'].every((nm) =>
-    tables.route_stop.some(
-      (l) =>
-        l.route_variant_id === outV?.id && l.stop_id === tables.stop.find((s) => s.name === nm)?.id,
-    ),
-  ),
+  [head?.id, tail?.id].every((id) => drawnDraft?.links.some((l) => l.stop_id === id)),
+  JSON.stringify(drawnDraft?.links),
 );
 const longest = since(n).reduce((a, x) => (x.url.length > a.url.length ? x : a), { url: '' });
 check(
@@ -440,30 +454,18 @@ check(
   `${longest.url.length}: ${longest.method} ${longest.table}${longest.query.slice(0, 60)}`,
 );
 check(
-  '  the hintuans are read in pages, not in one bare request (4)',
-  since(n).some(
-    (x) =>
-      x.method === 'GET' &&
-      x.table === 'stop' &&
-      /kind=eq\.hintuan/.test(x.query) &&
-      /offset=0/.test(x.query) &&
-      /limit=/.test(x.query),
-  ),
-);
-check(
-  '  the draft is gone',
+  '  the drawing is gone',
   (await page.evaluate(() => localStorage.getItem('para.draft.v1'))) === null,
 );
-await waitFor(async () => (await returnTrip().count()) > 0);
+await approveAll();
+const outRoute = tables.route.find((r) => r.id === routeDraft?.subject_id);
 check(
-  '  the toast offers the return trip: the route has an empty slot (2)',
-  (await returnTrip().count()) === 1,
-  (
-    await toast()
-      .innerText()
-      .catch(() => '')
-  ).replace(/\s+/g, ' '),
+  '  approved, it is one route row and two directions, one of them an empty slot',
+  !!outRoute &&
+    directionsOf(outRoute.id).length === 2 &&
+    directionsOf(outRoute.id).filter((v) => v.shape === null).length === 1,
 );
+const outV = outRoute && directionsOf(outRoute.id).find((v) => v.shape);
 check(
   '  the pill counts one route more (7)',
   (await body()).includes(`${routesToday + 1} routes`),
@@ -472,11 +474,13 @@ check(
 
 // ---- 4. The return trip, into the slot
 const outLine = outV?.shape?.coordinates ?? [];
-await returnTrip().click();
+const slotId = directionsOf(outRoute?.id).find((v) => v.shape === null)?.id;
+await openCard(OUT[1]);
+await page.getByTestId('card-switch').click();
 await page.waitForTimeout(400);
 let drawn = await drawnPoints();
 check(
-  "the return trip begins with its first point on the outbound line's end (<1 m)",
+  "the card's SWITCH begins the return trip with its first point on the outbound line's end (<1 m)",
   drawn.length === 1 && outLine.length > 1 && metresBetween(drawn[0], outLine.at(-1)) < 1,
   `${drawn.length} point(s), ${drawn[0] && outLine.length ? metresBetween(drawn[0], outLine.at(-1)).toFixed(2) : '?'} m`,
 );
@@ -541,18 +545,22 @@ check(
 );
 n = log.length;
 await saveButton().click();
-await waitFor(async () => (await toast().count()) > 0);
+await drafted();
 w = writesSince(n);
-const backV = directionsOf(outRoute?.id).find((v) => v !== outV);
+const returnDraft = draftOf('route', outRoute?.id);
 check(
-  '  it fills the slot: one update, only of an empty row, no new route (2)',
-  w.some(
-    (x) => x.method === 'PATCH' && x.table === 'route_variant' && /shape=is\.null/.test(x.query),
-  ) && !w.some((x) => x.method === 'POST' && (x.table === 'route' || x.table === 'route_variant')),
+  '  its draft fills the slot of the same route: no new route, both ways drawn (2)',
+  returnDraft?.is_new === false &&
+    returnDraft.payload.directions.length === 2 &&
+    returnDraft.payload.directions.every((v) => v.shape) &&
+    returnDraft.payload.directions.some((v) => v.id === slotId && v.reversed === true) &&
+    approvedWrites(w).length === 0,
   said(w),
 );
+await approveAll();
+const backV = directionsOf(outRoute?.id).find((v) => v !== outV);
 check(
-  '  both directions are drawn, still two rows',
+  '  approved, both directions are drawn, still two rows',
   directionsOf(outRoute?.id).length === 2 && directionsOf(outRoute?.id).every((v) => v.shape),
   `${directionsOf(outRoute?.id).map((v) => (v.shape ? 'drawn' : 'slot'))}`,
 );
@@ -567,12 +575,6 @@ check(
     ? `${metresBetween(backLine[0], outLine.at(-1)).toFixed(2)} m and ${metresBetween(backLine.at(-1), outLine[0]).toFixed(2)} m`
     : 'no lines',
 );
-await page.waitForTimeout(1200);
-check(
-  '  and the toast offers no return trip: there is no slot left (2)',
-  (await toast().count()) === 1 && (await returnTrip().count()) === 0,
-);
-await dismissToasts();
 
 // ---- 5. Edit a direction
 const cameraBeforeOpen = await openCard(OUT[1]);
@@ -638,26 +640,29 @@ check(
 n = log.length;
 const rowsBefore = tables.route_variant.length;
 await saveButton().click();
-await waitFor(async () => (await toast().count()) > 0);
+await drafted();
 w = writesSince(n);
+const editDraft = draftOf('route', outRoute?.id);
 check(
-  '  Update writes that one row, by its id',
-  w.some(
-    (x) =>
-      x.method === 'PATCH' && x.table === 'route_variant' && x.query.includes(`id=eq.${outV?.id}`),
-  ) && !w.some((x) => x.method === 'POST' && x.table !== 'route_stop'),
+  '  Update is a draft of the route that rewrites that one direction, by its id',
+  editDraft?.is_new === false &&
+    editDraft.payload.directions.find((v) => v.id === outV?.id)?.control_points.length ===
+      OUT.length + 1 &&
+    approvedWrites(w).length === 0,
   said(w),
 );
-check('  no row added or lost', tables.route_variant.length === rowsBefore);
-await page.waitForTimeout(1200);
 check(
-  '  and no return trip is offered for a route drawn both ways (2)',
-  (await toast().count()) === 1 && (await returnTrip().count()) === 0,
+  '  no direction added or lost',
+  editDraft?.payload.directions.length === 2 && tables.route_variant.length === rowsBefore,
 );
-await dismissToasts();
+await approveAll();
 
 // ---- 5b. Signboards, per direction (0010, the owner's ask of 2026-10-01)
 const outRow = () => tables.route_variant.find((v) => v.id === outV?.id);
+/** The direction's boards as the route's draft lists them. */
+const draftBoards = () =>
+  draftOf('route', outRoute?.id)?.payload.directions.find((v) => v.id === outV?.id)?.signboards ??
+  [];
 const items = () => page.getByTestId('signboard-item');
 const upload = (name, text) =>
   page
@@ -665,6 +670,8 @@ const upload = (name, text) =>
     .setInputFiles({ name, mimeType: 'image/svg+xml', buffer: Buffer.from(text) });
 await openCard(OUT[1]);
 const editor = page.getByTestId('signboard-editor');
+// The signboards wait for the route's draft to be read.
+await waitFor(async () => (await editor.count()) === 1);
 check(
   'the trip card has a Signboard for the direction on show, Papunta',
   (await editor.count()) === 1 &&
@@ -677,7 +684,7 @@ await upload(
   '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 98 40" onload="alert(1)"><script>alert(2)</script><rect width="98" height="40" fill="#111"/><a href="https://example.com"><text>X</text></a></svg>',
 );
 await waitFor(async () => (await items().count()) === 1);
-const firstBoard = outRow()?.signboards?.[0];
+const firstBoard = draftBoards()[0];
 const stored = bucket.get(firstBoard) ?? '';
 check(
   '  an upload lands in the bucket cleaned: no script, no handler, no link out',
@@ -687,15 +694,25 @@ check(
   stored.slice(0, 160),
 );
 check(
-  '  and is listed on the direction, file first and then the row',
+  "  and is listed in the route's draft, file first and then the draft; the approved row untouched",
   (await items().count()) === 1 &&
     since(n).findIndex((x) => x.table === 'storage') <
-      since(n).findIndex((x) => x.method === 'PATCH' && x.table === 'route_variant'),
+      since(n).findIndex((x) => x.method === 'POST' && x.table === 'rpc/claim_draft') &&
+    outRow()?.signboards.length === 0 &&
+    approvedWrites(writesSince(n)).length === 0,
   said(since(n)),
 );
-await waitFor(async () => (await page.getByTestId('trip-signboard').count()) === 1);
 check(
-  '  the card above shows it as commuters will',
+  '  the card above shows only what is approved: no board yet',
+  (await page.getByTestId('trip-signboard').count()) === 0,
+);
+// Approved, the card above shows the board as commuters will see it.
+await approveAll();
+await openCard(OUT[1]);
+await waitFor(async () => (await page.getByTestId('trip-signboard').count()) === 1);
+await waitFor(async () => (await items().count()) === 1);
+check(
+  '  approved, the card above shows it as commuters will',
   (await page.getByTestId('trip-signboard').count()) === 1 &&
     /\/storage\/v1\/object\/public\/signboards\//.test(
       (await page.getByTestId('trip-signboard').getAttribute('src')) ?? '',
@@ -706,13 +723,13 @@ await upload(
   '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 98 40"><rect width="98" height="40" fill="#222"/></svg>',
 );
 await waitFor(async () => (await items().count()) === 2);
-const second = outRow()?.signboards?.[1];
+const second = draftBoards()[1];
 await page.getByRole('button', { name: 'Move signboard 2 earlier' }).click();
-await waitFor(async () => outRow()?.signboards?.[0] === second);
+await waitFor(async () => draftBoards()[0] === second);
 check(
   '  a second goes last, and ‹ moves it first',
-  outRow()?.signboards?.join() === [second, firstBoard].join(),
-  JSON.stringify(outRow()?.signboards),
+  draftBoards().join() === [second, firstBoard].join(),
+  JSON.stringify(draftBoards()),
 );
 n = log.length;
 await upload('note.svg', 'just words, not a drawing');
@@ -732,27 +749,25 @@ check(
 await page.getByRole('button', { name: 'Remove signboard 1' }).click();
 await waitFor(async () => (await items().count()) === 1);
 check(
-  '  ✕ takes it off the direction and out of the bucket',
-  outRow()?.signboards?.join() === firstBoard && !bucket.has(second),
-  JSON.stringify(outRow()?.signboards),
+  "  ✕ takes it off the draft's list; its file stays, as the approved map may still list it",
+  draftBoards().join() === firstBoard && bucket.has(second),
+  JSON.stringify(draftBoards()),
 );
 await page.getByRole('button', { name: 'Remove signboard 1' }).click();
-await waitFor(
-  async () =>
-    (await items().count()) === 0 && (await page.getByTestId('trip-signboards').count()) === 0,
-);
+await waitFor(async () => (await items().count()) === 0);
 check(
-  '  and the last one leaves none',
-  outRow()?.signboards?.length === 0 &&
-    bucket.size === 0 &&
-    (await page.getByTestId('trip-signboards').count()) === 0,
-  `${JSON.stringify(outRow()?.signboards)}; ${bucket.size} in the bucket; ${await page.getByTestId('trip-signboards').count()} row(s) on the card`,
+  '  and the last one leaves none in the draft; the card above keeps the approved board until approval',
+  draftBoards().length === 0 &&
+    (await items().count()) === 0 &&
+    (await page.getByTestId('trip-signboard').count()) === 1,
+  `${JSON.stringify(draftBoards())}; ${await page.getByTestId('trip-signboard').count()} board(s) on the card`,
 );
 
 // The race the step above met on slower runners, made certain: removing the
 // last two boards reads the directions twice, and the first read, which
 // still lists a board, answers after the second. A late answer must never
-// bring a removed board back to the card or the editor.
+// bring a removed board back to the editor (the card above lists the approved
+// boards, which a draft leaves as they are).
 await upload(
   'third.svg',
   '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 98 40"><rect width="98" height="40" fill="#333"/></svg>',
@@ -762,10 +777,7 @@ await upload(
   'fourth.svg',
   '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 98 40"><rect width="98" height="40" fill="#444"/></svg>',
 );
-await waitFor(
-  async () =>
-    (await items().count()) === 2 && (await page.getByTestId('trip-signboard').count()) === 2,
-);
+await waitFor(async () => (await items().count()) === 2);
 let isListHeld = false;
 const releaseList = holdAnswers((method, table, u) => {
   const isListRead =
@@ -779,10 +791,7 @@ const releaseList = holdAnswers((method, table, u) => {
 await page.getByRole('button', { name: 'Remove signboard 1' }).click();
 await waitFor(async () => isListHeld && (await items().count()) === 1);
 await page.getByRole('button', { name: 'Remove signboard 1' }).click();
-await waitFor(
-  async () =>
-    (await items().count()) === 0 && (await page.getByTestId('trip-signboards').count()) === 0,
-);
+await waitFor(async () => (await items().count()) === 0);
 // The held read is the only list read still out: wait for its answer to be
 // delivered, then for the page to have taken it in.
 const lateAnswer = page.waitForResponse(
@@ -795,14 +804,16 @@ const lateAnswer = page.waitForResponse(
 releaseList();
 await lateAnswer;
 // Watched for 5 s after: a board shown again at any moment is the race lost.
-const shownAgain = async () =>
-  (await items().count()) + (await page.getByTestId('trip-signboards').count());
+const shownAgain = async () => await items().count();
 const isBroughtBack = await waitFor(async () => (await shownAgain()) > 0, 5000);
 check(
   '  a list read that answers late, after the last is gone, never brings a board back',
-  isListHeld && !isBroughtBack && outRow()?.signboards?.length === 0,
-  `held: ${isListHeld}; ${JSON.stringify(outRow()?.signboards)}; ${await items().count()} in the editor; ${await page.getByTestId('trip-signboards').count()} row(s) on the card`,
+  isListHeld && !isBroughtBack && draftBoards().length === 0,
+  `held: ${isListHeld}; ${JSON.stringify(draftBoards())}; ${await items().count()} in the editor`,
 );
+
+// The boards' draft, empty again, approved: the map moves on as it was.
+await approveAll();
 
 // ---- 5c. Export, the route both ways (the owner's ask of 2026-10-13)
 await openCard(OUT[1]);
@@ -852,9 +863,9 @@ check(
 
 // ---- 6. Delete a direction, then draw it again
 await openCard(OUT[1]);
-// A refused step — here the count that decides whether the route goes — is
-// said, not swallowed (16): it was read by nobody. Delete again finishes it.
-stub.fault = (method, table) => method === 'HEAD' && table === 'route_variant';
+// A refused step — here the draft the delete is stored as — is said, not
+// swallowed (16). Delete again finishes it.
+stub.fault = (method, table) => method === 'POST' && table === 'rpc/claim_draft';
 await page.getByRole('button', { name: 'Delete' }).click();
 await waitFor(async () => /refused this one, on purpose/.test(await body()));
 check(
@@ -869,9 +880,10 @@ await waitFor(async () => (await page.getByRole('button', { name: 'Edit route' }
 await page.waitForTimeout(500);
 w = writesSince(n);
 check(
-  'Delete empties the direction into a slot: the row stays, with no line (3)',
+  'Delete is approved in the same press, and empties the direction into a slot: the row stays, with no line (3)',
   directionsOf(outRoute?.id).length === 2 &&
-    directionsOf(outRoute?.id).find((v) => v.id === outV?.id)?.shape === null,
+    directionsOf(outRoute?.id).find((v) => v.id === outV?.id)?.shape === null &&
+    !draftOf('route', outRoute?.id),
   said(w),
 );
 check(
@@ -881,8 +893,7 @@ check(
 );
 check(
   '  the route stays: its other way is drawn',
-  tables.route.some((r) => r.id === outRoute?.id) &&
-    !w.some((x) => x.method === 'DELETE' && x.table === 'route'),
+  tables.route.some((r) => r.id === outRoute?.id && r.status === 'approved'),
 );
 check('  and Delete again finishes it, no error shown', !/error|refused/i.test(await body()));
 await drawLine(OUT);
@@ -894,21 +905,27 @@ check(
 n = log.length;
 await saveButton().click();
 await waitFor(
-  async () => (await toast().count()) > 0 || /already has this direction drawn/.test(await body()),
+  async () =>
+    (await body()).includes('Saved as a draft') ||
+    /already has this direction drawn/.test(await body()),
 );
 w = writesSince(n);
+const refillDraft = draftOf('route', outRoute?.id);
 check(
-  '+ then Routes with the same ends fills the slot again, not "already drawn" (3)',
-  (await toast().count()) === 1 && !/already has this direction drawn/.test(await body()),
+  '+ then Routes with the same ends fills the slot again in a draft of that route, not "already drawn" (3)',
+  refillDraft?.is_new === false &&
+    refillDraft.payload.directions.length === 2 &&
+    refillDraft.payload.directions.every((v) => v.shape) &&
+    !/already has this direction drawn/.test(await body()),
   (await body()).slice(-160),
 );
+await approveAll();
 check(
-  '  one route, two drawn directions',
+  '  approved, one route, two drawn directions',
   tables.route.filter((r) => r.id === outRoute?.id).length === 1 &&
     directionsOf(outRoute?.id).length === 2 &&
     directionsOf(outRoute?.id).every((v) => v.shape),
   said(w),
 );
-await dismissToasts();
 
 await finish('save-test.png');

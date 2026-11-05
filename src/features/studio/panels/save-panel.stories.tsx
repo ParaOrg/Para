@@ -111,7 +111,6 @@ const meta = {
     existing: null,
     route: null,
     hotspots,
-    onSaved: fn(),
     onCancel: fn(),
   },
 } satisfies Meta<typeof SavePanel>;
