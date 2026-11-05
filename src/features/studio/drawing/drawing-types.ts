@@ -63,6 +63,8 @@ export interface DrawingStart {
   points?: LngLat[];
   segments?: Segment[];
   picking?: Picking | null;
+  /** Begin in Move, where clicks select and drag but add nothing: a saved line opened to edit. */
+  moving?: boolean;
 }
 
 /** See `followOffer` in useDrawing. */

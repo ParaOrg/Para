@@ -3,7 +3,6 @@ import * as z from 'zod/mini';
 import {
   rawDirectionRowSchema,
   toUnnamedDirectionRow,
-  type UnnamedDirectionRow,
 } from '@/features/routes/model/direction-schema';
 import { lineStringSchema } from '@/features/routes/model/geojson-schema';
 import {
@@ -13,7 +12,6 @@ import {
   type LineStringGeoJSON,
 } from '@/features/routes/model/routes';
 
-import { STUDIO_DRAFTS } from './flags';
 import { listHotspots } from './hotspots-read';
 import { parsed, readAll } from './read-all';
 import { getSupabase } from './supabase';
@@ -64,7 +62,7 @@ import { getSupabase } from './supabase';
 //
 // `signboards` (0010): a few file names, for the trip card's Signboard and the
 // editor's own (SignboardEditor).
-export const DIRECTION_SELECT =
+const DIRECTION_SELECT =
   'id, route_id, direction_name, origin_terminal, destination_terminal, overview, reversed, confidence, updated_at, borrowed_from, borrowed_part, borrowed_m, signboards, route:route(*)';
 /** The rest of a direction: its drawing, and its full line. */
 const DRAWING_SELECT = 'control_points, segments, shape';
@@ -81,20 +79,6 @@ const lineShapeSchema = z.object({ shape: z.nullable(lineStringSchema) });
 
 /** A direction's id and full line, as lines are read on their own. */
 const lineRowSchema = z.object({ id: z.string(), shape: z.nullable(lineStringSchema) });
-
-/**
- * A listed row as the editor holds it, before nameDirections: the glossary's
- * names, and `shape` holding what the list carried for it (`line` when the
- * caller knows better: the save hands back the line it just wrote).
- */
-export function unnamedFromListed(
-  raw: unknown,
-  line?: LineStringGeoJSON | null,
-): UnnamedDirectionRow {
-  const [row] = parsed(listedRowSchema, [raw], 'direction');
-  const { overview, shape, ...rest } = row;
-  return toUnnamedDirectionRow({ ...rest, shape: line ?? overview ?? shape ?? null });
-}
 
 /**
  * Every saved direction of every route, with the generated names filled in
@@ -116,13 +100,11 @@ export async function listDirections(): Promise<DirectionRow[]> {
         .range(from, to),
     );
   const [listedRaw, hotspots] = await Promise.all([list(), listHotspots()]);
-  const visible = STUDIO_DRAFTS
-    ? listedRaw.filter(
-        (row) =>
-          z.object({ route: z.object({ status: z.optional(z.string()) }) }).parse(row).route
-            .status !== 'taken_down',
-      )
-    : listedRaw;
+  const visible = listedRaw.filter(
+    (row) =>
+      z.object({ route: z.object({ status: z.optional(z.string()) }) }).parse(row).route.status !==
+      'taken_down',
+  );
   // Most recently changed first: the order the map stacks them in.
   const listed: ListedRow[] = parsed(listedRowSchema, visible, 'direction').sort(byRecentChange);
   // A drawn row saved before 0009 and not backfilled has no overview yet: its

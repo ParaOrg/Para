@@ -109,6 +109,7 @@ function Toolbar({
     isFinger: finger,
     isArea: !!area,
     points,
+    isMoving: draw.moving,
     loopOther: loop?.other ?? null,
   });
   const contextual = draw.selected !== null || draw.canPutBack || draw.followOffer !== null;

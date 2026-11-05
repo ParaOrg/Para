@@ -3,7 +3,7 @@ import type { MapLayerMouseEvent, MapMouseEvent } from 'maplibre-gl';
 import type { LngLat, Segment } from '@/shared/utils/geo';
 
 import { bendThrough, grabAt } from './curve-handles';
-import { CLICK_AFTER_MS, DRAG_PX, type DrawContext } from './draw-context';
+import { CLICK_AFTER_MS, DRAG_PX, restCursor, type DrawContext } from './draw-context';
 import { CLOSING, HANDLE_DOT_LAYER, HIT_LAYER, POINT_LAYER } from './draw-layers';
 import { closeTargetOf, isNearClose } from './use-connect-hint';
 
@@ -53,7 +53,7 @@ export function lineBendHandlers(ctx: DrawContext) {
     document.removeEventListener('mouseup', onUp);
     map.dragPan.enable();
     if (held?.isDragging) {
-      canvas.style.cursor = 'crosshair';
+      canvas.style.cursor = restCursor(ctx);
       ctx.echo.until = performance.now() + CLICK_AFTER_MS;
     }
     held = null;

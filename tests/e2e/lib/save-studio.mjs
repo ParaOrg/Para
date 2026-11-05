@@ -1,8 +1,11 @@
 // What the save suites share: today's published map and 500 far-off hintuans
 // in a stand-in for the database, answered the way PostgREST answers (the
 // filters the studio sends, its unique indexes, foreign keys and cascades),
-// the signboards bucket, a faked stored session, and the studio opened on it,
-// signed in, at /studio/. The basemap is a flat grey and the router has no
+// the review workflow's calls as 0022 answers them (draftWorkflow, from
+// fake-studio-db.mjs), the signboards bucket, a faked stored session, and the
+// studio opened on it, signed in, at /studio/. Every save is a draft; a suite
+// approves with approveAll, as an editor's Approve would, and the studio reads
+// the map again. The basemap is a flat grey and the router has no
 // roads, so every line is freehand and nothing needs the network, an account
 // or the router. Nothing reaches the live tables.
 //
@@ -12,6 +15,7 @@ import { chromium } from 'playwright';
 import { readPublished } from './big-map.mjs';
 import { BASE, bareStyle, harness, waitFor } from './harness.mjs';
 import { fakeTurnstile } from './fake-turnstile.mjs';
+import { draftWorkflow } from './fake-studio-db.mjs';
 
 /** The project ref in VITE_SUPABASE_URL, which names the storage key. */
 const PROJECT_REF = 'smzwbqxttdyvohuizynl';
@@ -42,6 +46,8 @@ for (const v of m.variants) {
     tail_stop_id: v.route.tail_stop_id ?? null,
     via: v.route.via ?? null,
     is_loop: v.route.is_loop === true,
+    status: 'approved',
+    revision: 1,
     created_at: now,
     updated_at: now,
   });
@@ -69,12 +75,20 @@ export const tables = {
     created_at: now,
     updated_at: now,
   })),
-  stop: m.stops.map((s) => ({ ...s, owner_id: OWNER, created_at: now })),
+  stop: m.stops.map((s) => ({
+    ...s,
+    owner_id: OWNER,
+    status: 'approved',
+    revision: 1,
+    created_at: now,
+  })),
   route_stop: m.links.map((l) => ({
     route_variant_id: l.route_variant_id,
     stop_id: l.stop_id,
     stop_sequence: l.stop_sequence,
   })),
+  draft: [],
+  editor_name: [],
 };
 
 // Everything is placed from the data's own box: the empty ground east of it,
@@ -109,6 +123,8 @@ for (let i = 0; i < 500; i++) {
     area: square(c, 0.0003),
     note: null,
     owner_id: OWNER,
+    status: 'approved',
+    revision: 1,
     created_at: now,
   });
 }
@@ -317,6 +333,8 @@ const fill = (table, r) =>
           }
         : { ...r };
 
+const drafts = draftWorkflow(tables, { newId, fill, now });
+
 /** Every request the page sent to the tables, in order. */
 export const log = [];
 /** `stub.fault`: the next request it matches is refused with a 500, once. */
@@ -371,6 +389,11 @@ const serve = async (req) => {
   }
   // 20261030090000: the studio asks at sign-in; this stand-in's session is an editor's.
   if (table === 'rpc/am_i_editor') return { status: 200, body: true };
+  if (table.startsWith('rpc/')) {
+    const answered = drafts.rpc(table.slice(4), body, OWNER);
+    if (!answered) throw new Error(`unknown rpc ${table}`);
+    return answered;
+  }
   const params = [...u.searchParams];
   const select = u.searchParams.get('select');
   const one = /vnd\.pgrst\.object/.test(req.headers().accept ?? '');
@@ -415,7 +438,9 @@ const serve = async (req) => {
       const next = { ...r, ...body };
       const no = conflictOf(table, next, r);
       if (no) return no;
-      Object.assign(r, body, table === 'stop' ? {} : { updated_at: now });
+      // A draft's revision moves with every change (0022), as its update reads it back.
+      if (table === 'draft') Object.assign(r, body, { revision: r.revision + 1 });
+      else Object.assign(r, body, table === 'stop' ? {} : { updated_at: now });
     }
     return answer(rows);
   }
@@ -578,6 +603,12 @@ export async function open(signedIn, path, phone = false) {
     { key: `sb-${PROJECT_REF}-auth-token`, s: signedIn ? session : null },
   );
   await page.goto(`${BASE}${path}`, { waitUntil: 'load' });
+  await mapLoaded(page);
+  return page;
+}
+
+/** The map loaded and the saved routes drawn on it. */
+async function mapLoaded(page) {
   await page.waitForFunction(() => window.__map && window.__map.loaded(), null, { timeout: 30000 });
   for (
     let i = 0;
@@ -589,7 +620,6 @@ export async function open(signedIn, path, phone = false) {
   )
     await page.waitForTimeout(100);
   await page.waitForTimeout(500);
-  return page;
 }
 
 export const page = await open(true, '/studio/');
@@ -652,14 +682,32 @@ export const backToMap = async () => {
   if (await back.isVisible()) await back.click();
 };
 export const saveButton = () => page.getByRole('button', { name: /^(Save|Update)$/ });
-export const toast = () => page.getByTestId('toast').filter({ hasText: /^Saved/ });
-export const returnTrip = () => page.getByRole('button', { name: 'Draw the return trip' });
 export const dismissToasts = async () => {
   for (const d of await page.getByRole('button', { name: 'Dismiss' }).all())
     await d.click().catch(() => {});
   await page.waitForTimeout(200);
 };
 export const directionsOf = (routeId) => tables.route_variant.filter((v) => v.route_id === routeId);
+
+/** What a save says once its draft is stored. */
+export const DRAFTED = 'Saved as a draft. The map changes once it is approved.';
+/** Waits for a save's draft to be stored, as the page says. */
+export const drafted = () => waitFor(async () => (await body()).includes(DRAFTED));
+/** The draft of a route or hotspot, if one is kept. */
+export const draftOf = (kind, subjectId) =>
+  tables.draft.find((d) => d.kind === kind && d.subject_id === subjectId);
+/** The tables a draft never writes: only approval does. */
+const APPROVED_TABLES = ['route', 'route_variant', 'stop', 'route_stop'];
+export const approvedWrites = (ws) => ws.filter((w) => APPROVED_TABLES.includes(w.table));
+/**
+ * The stand-in approves every draft, as an editor's Approve would, and the
+ * studio is opened again on the map as approval left it.
+ */
+export async function approveAll() {
+  for (const d of [...tables.draft]) drafts.approve(d);
+  await page.goto(`${BASE}/studio/`, { waitUntil: 'load' });
+  await mapLoaded(page);
+}
 
 // The ground the suite draws on, at street level: two hintuans 900 m apart,
 // a route between them, its return trip by another street.
@@ -737,18 +785,21 @@ export async function openCard(ll) {
 /**
  * The ground the parts after save-test start from, made as save-test makes it
  * and with no checks: the two hintuans, and the route between them drawn both
- * ways, its return trip closed on papunta's start. Its outbound is `outV`.
+ * ways, its return trip begun from the card's SWITCH and closed on papunta's
+ * start, each save a draft approved before the next. Its outbound is `outV`.
  */
 export async function drawTheRoute() {
   await hintuan(P1, 'Stand-in Head');
   await hintuan(P2, 'Stand-in Tail');
+  await approveAll();
   const head = tables.stop.find((s) => s.name === 'Stand-in Head');
   const tail = tables.stop.find((s) => s.name === 'Stand-in Tail');
   await drawLine(OUT);
   await saveButton().click();
-  await waitFor(async () => (await toast().count()) > 0);
-  await waitFor(async () => (await returnTrip().count()) > 0);
-  await returnTrip().click();
+  await drafted();
+  await approveAll();
+  await openCard(OUT[1]);
+  await page.getByTestId('card-switch').click();
   await page.waitForTimeout(400);
   await clickAt(BACK[1], 300);
   await clickAt(at(-0.002, -0.0015), 300);
@@ -757,9 +808,8 @@ export async function drawTheRoute() {
   await page.waitForTimeout(400);
   await done();
   await saveButton().click();
-  await waitFor(async () => (await toast().count()) > 0);
-  await page.waitForTimeout(1200);
-  await dismissToasts();
+  await drafted();
+  await approveAll();
   const outRoute = tables.route.find(
     (r) => r.head_stop_id === head?.id && r.tail_stop_id === tail?.id,
   );

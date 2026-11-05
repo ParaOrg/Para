@@ -68,7 +68,9 @@ export function useDrawing(
   const [drawing, setDrawing] = useState(false);
   const [controlPoints, setControlPoints] = useState<LngLat[]>([]);
   const [segments, setSegments] = useState<Segment[]>([]);
-  const [freehand, setFreehand] = useState(false);
+  const [freehand, setFreehandState] = useState(false);
+  /** Move: clicks select and drag points, handles and the line, and never add a point. */
+  const [moving, setMovingState] = useState(false);
   /** What a save will write to: an existing direction, a new direction on an
    *  existing route, or (both null) a brand-new route. */
   const [target, setTarget] = useState<Target>({
@@ -91,6 +93,7 @@ export function useDrawing(
   const cpRef = useRef<LngLat[]>([]);
   const segRef = useRef<Segment[]>([]);
   const freehandRef = useRef(false);
+  const movingRef = useRef(false);
   const areaRef = useRef<AreaTarget | null>(null);
   const pickingRef = useRef<Picking | null>(null);
   /**
@@ -112,6 +115,7 @@ export function useDrawing(
   // React throws away would leave its values behind.
   useLayoutEffect(() => {
     freehandRef.current = freehand;
+    movingRef.current = moving;
     areaRef.current = area;
     pickingRef.current = picking;
     borrowRef.current = borrow;
@@ -139,6 +143,15 @@ export function useDrawing(
   const { writeSegments, resolveGaps, isStandIn, markStandIn } = gaps;
 
   const showHandlesAt = useCallback((i: number | null) => setHandlesAt(i), []);
+
+  /** Snap (false) or Draw (true) for the stretches to come; either leaves Move. */
+  const setFreehand = useCallback((isStraight: boolean) => {
+    setFreehandState(isStraight);
+    setMovingState(false);
+  }, []);
+
+  /** Move, where clicks select and drag but never add a point; or back to Snap | Draw. */
+  const setMoving = useCallback((isMoving: boolean) => setMovingState(isMoving), []);
 
   const select = useCallback((i: number | null) => {
     selectedRef.current = i;
@@ -371,11 +384,13 @@ export function useDrawing(
       points,
       segments: nextSegments,
       picking: nextPicking = null,
+      moving: isMoving = false,
     }: DrawingStart) => {
       reset();
       if (points) writePoints(points);
       if (nextSegments) writeSegments(nextSegments);
-      setFreehand(false);
+      setFreehandState(false);
+      setMovingState(isMoving);
       setArea(nextArea);
       areaRef.current = nextArea;
       setTarget(nextTarget);
@@ -419,6 +434,7 @@ export function useDrawing(
         target: { routeId: v.routeId, directionId: v.id },
         points: v.controlPoints ?? [],
         segments: v.segments ?? [],
+        moving: true,
       }),
     [begin],
   );
@@ -533,6 +549,7 @@ export function useDrawing(
         follow: followRef,
         selected: selectedRef,
         freehand: freehandRef,
+        moving: movingRef,
         pendingOut: pendingOutRef,
       }),
       [],
@@ -572,6 +589,16 @@ export function useDrawing(
     [segments, isStandIn],
   );
 
+  // Move's arrow, or the crosshair a click adds a point under, as the tool
+  // changes: only the cursor at rest, never one a hover or a drag set
+  // (use-draw-events.ts owns the cursor, and clears it when drawing ends).
+  useEffect(() => {
+    const canvas = map?.getCanvas();
+    if (!canvas || !drawing) return;
+    if (canvas.style.cursor === 'crosshair' || canvas.style.cursor === 'default')
+      canvas.style.cursor = moving ? 'default' : 'crosshair';
+  }, [map, drawing, moving]);
+
   useDrawRendering(map, {
     segments,
     controlPoints,
@@ -580,7 +607,8 @@ export function useDrawing(
     picking,
     selected,
     handlesAt,
-    isFreehand: freehand,
+    // In Move as in Draw a curve is shaped by its handles; Snap shows none.
+    isFreehand: freehand || moving,
     pendingOut: pendingOutRef,
   });
   useDrawArrows(map, segments, area, isStandIn);
@@ -588,12 +616,14 @@ export function useDrawing(
     map,
     drawing,
     controlPoints,
-    freehand,
+    // Draw, not Move: the cursor line is offered.
+    freehand && !moving,
     useMemo(
       () => ({
         points: cpRef,
         segments: segRef,
         freehand: freehandRef,
+        moving: movingRef,
         area: areaRef,
         picking: pickingRef,
         join: joinRef,
@@ -606,11 +636,13 @@ export function useDrawing(
     map,
     drawing,
     controlPoints,
-    freehand,
+    // Draw or Move: no Snap preview.
+    freehand || moving,
     useMemo(
       () => ({
         points: cpRef,
         freehand: freehandRef,
+        moving: movingRef,
         area: areaRef,
         picking: pickingRef,
         join: joinRef,
@@ -629,6 +661,9 @@ export function useDrawing(
     unresolved,
     freehand,
     setFreehand,
+    /** Move: clicks select and drag, never add a point (V). Snap | Draw leave it. */
+    moving,
+    setMoving,
     target,
     /** Non-null while tracing a hotspot; null while drawing a route. */
     area,

@@ -135,11 +135,10 @@ jobs:
           cp -a src scripts public .env.production /tmp/para-review-publish/
           ln -s "$PWD/node_modules" /tmp/para-review-publish/node_modules
           bash scripts/preview/reset-review.sh
-      # Step 5: the app built against the loopback server, drafts on, and
+      # Step 5: the app built against the loopback server, and
       # the server that stands in for Supabase's auth and proxies to PostgREST.
       - name: Build the preview and start its server
         env:
-          VITE_STUDIO_DRAFTS: '1'
           VITE_SUPABASE_URL: http://127.0.0.1:4180/api
           VITE_SUPABASE_PUBLISHABLE_KEY: isolated-preview-publishable
           VITE_BASEMAP_HOST: https://tiles.openfreemap.org

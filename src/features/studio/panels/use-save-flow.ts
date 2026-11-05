@@ -1,8 +1,5 @@
 import { useState } from 'react';
 
-import type { HotspotRow } from '@/features/routes/model/hotspots';
-import type { DirectionRow } from '@/features/routes/model/routes';
-
 import type { SaveToast } from './save-toasts';
 import { DRAFTED } from '../data/draft-save';
 
@@ -13,10 +10,6 @@ interface UseSaveFlowOptions {
   recoveryError: string | null;
   /** Ends the drawing that was saved. */
   cancelDrawing: () => void;
-  /** Reads the saved routes again. */
-  reloadRoutes: () => unknown;
-  /** Reads the saved hotspots again. */
-  reloadHotspots: () => unknown;
 }
 
 /**
@@ -24,13 +17,7 @@ interface UseSaveFlowOptions {
  * time, the newest: a save's, or a problem. A save closes its panel, ends the
  * drawing, reads what it changed again and says so.
  */
-export function useSaveFlow({
-  isDrawing,
-  recoveryError,
-  cancelDrawing,
-  reloadRoutes,
-  reloadHotspots,
-}: UseSaveFlowOptions) {
+export function useSaveFlow({ isDrawing, recoveryError, cancelDrawing }: UseSaveFlowOptions) {
   const [isSaving, setIsSaving] = useState(false);
   // A drawing that ends with its panel open takes the panel with it, or the
   // next drawing would open on a save form with no points.
@@ -45,27 +32,7 @@ export function useSaveFlow({
   const setNotice = (text: string | null) =>
     setToast(text === null ? null : { kind: 'notice', text });
 
-  const onSaved = (v: DirectionRow) => {
-    setIsSaving(false);
-    cancelDrawing();
-    void reloadRoutes();
-    // A moved line may have entered or left a hintuan; its links were re-synced.
-    void reloadHotspots();
-    setToast({ kind: 'route', v });
-  };
-
-  const onSavedHotspot = (s: HotspotRow) => {
-    setIsSaving(false);
-    cancelDrawing();
-    void reloadHotspots();
-    // The directions too: their names are generated from the hotspots at
-    // their ends when they load, so a renamed end would leave every card, the
-    // list and the pill on the old name until the next route save.
-    void reloadRoutes();
-    setToast({ kind: 'hotspot', s });
-  };
-
-  // With STUDIO_DRAFTS on: the save is a draft, so nothing on the map is read again.
+  // A save is a draft, so nothing on the map is read again.
   const onDrafted = () => {
     setIsSaving(false);
     cancelDrawing();
@@ -80,8 +47,6 @@ export function useSaveFlow({
     setNotice,
     /** The direction a save just wrote, while its toast is up. */
     justSaved: toast?.kind === 'route' ? toast.v : null,
-    onSaved,
-    onSavedHotspot,
     onDrafted,
   };
 }

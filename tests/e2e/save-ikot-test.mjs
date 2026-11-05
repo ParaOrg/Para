@@ -7,15 +7,20 @@
 //   npm run dev                          (in another terminal)
 //   node tests/e2e/save-ikot-test.mjs    # against http://localhost:5173
 //
+// Every save is a draft, approved by the stand-in (approveAll) before the
+// next step, as an editor's Approve would.
+//
 // What it checks, each against the finding it guards (the review's numbers):
 // an ikot (0021) closed on its own first point, saved with no ends and one
 // direction, its signboard asked for and kept unique, its card, its edit and
 // its delete, and a terminal on it linked by itself; a route's end refused a
-// delete in words (15); undo to no points leaving no draft (12); a link sync
-// that fails and a retry that updates rather than inserts (13); no React
-// warnings.
+// delete in words (15); undo to no points leaving no drawing (12); a save
+// whose draft is refused, said in words, and Save again storing one draft
+// under the same new route (13); no React warnings.
 import { waitFor } from './lib/harness.mjs';
 import {
+  approveAll,
+  approvedWrites,
   at,
   body,
   check,
@@ -24,6 +29,8 @@ import {
   directionsOf,
   dismissToasts,
   done,
+  draftOf,
+  drafted,
   drawLine,
   drawnPoints,
   drawTheRoute,
@@ -42,12 +49,10 @@ import {
   publishedRoutes,
   R,
   remove,
-  returnTrip,
   said,
   saveButton,
   stub,
   tables,
-  toast,
   VIA,
   writesSince,
 } from './lib/save-studio.mjs';
@@ -142,37 +147,42 @@ let drawn;
   );
   await page.getByLabel(/Signboard/).fill('UP – Ikot');
   await saveButton().click();
-  await waitFor(async () => (await toast().count()) > 0);
+  await drafted();
   w = writesSince(n);
-  const [ikot] = drawnIkots();
-  const ikotV = ikot && directionsOf(ikot.id);
+  const ikotDraft = tables.draft.find((d) => d.kind === 'route' && d.payload.route.is_loop);
+  const draftV = ikotDraft?.payload.directions ?? [];
   check(
-    'an ikot is one route row with is_loop and no ends, and one direction row: no slot',
-    !!ikot &&
-      ikot.head_stop_id === null &&
-      ikot.tail_stop_id === null &&
-      ikot.signboard === 'UP – Ikot' &&
-      ikotV.length === 1 &&
-      ikotV[0].reversed === false &&
-      !!ikotV[0].shape,
+    'an ikot is one draft of a route with is_loop and no ends, and one direction: no slot',
+    !!ikotDraft &&
+      ikotDraft.payload.route.head_stop_id === null &&
+      ikotDraft.payload.route.tail_stop_id === null &&
+      ikotDraft.payload.route.signboard === 'UP – Ikot' &&
+      draftV.length === 1 &&
+      draftV[0].reversed === false &&
+      !!draftV[0].shape &&
+      approvedWrites(w).length === 0,
     said(w),
   );
   check(
     '  its line is linked to the two hintuans it goes round',
     ['Stand-in Head', 'Stand-in Tail'].every((nm) =>
-      tables.route_stop.some(
-        (l) =>
-          l.route_variant_id === ikotV?.[0]?.id &&
-          l.stop_id === tables.stop.find((x) => x.name === nm)?.id,
-      ),
+      draftV[0]?.links.some((l) => l.stop_id === tables.stop.find((x) => x.name === nm)?.id),
     ),
+    JSON.stringify(draftV[0]?.links),
   );
-  await page.waitForTimeout(1200);
+  await approveAll();
+  const [ikot] = drawnIkots();
+  const ikotV = ikot && directionsOf(ikot.id);
   check(
-    '  and the toast offers no return trip: an ikot has no way back',
-    (await toast().count()) === 1 && (await returnTrip().count()) === 0,
+    '  approved, it is one route row with is_loop and no ends, and one direction row',
+    !!ikot &&
+      ikot.id === ikotDraft?.subject_id &&
+      ikot.is_loop === true &&
+      ikot.head_stop_id === null &&
+      ikot.tail_stop_id === null &&
+      ikotV.length === 1 &&
+      !!ikotV[0].shape,
   );
-  await dismissToasts();
 
   // The same signboard again, round the same two hintuans by a longer way so its
   // line is not under the first's: refused in words by the panel, before any write.
@@ -201,11 +211,12 @@ let drawn;
     said(writesSince(n)),
   );
   check(
-    '  a via tells them apart: the refusal goes',
+    '  a via tells them apart: the refusal goes, and approved it is a second ikot',
     await (async () => {
       await page.getByLabel(/^Via/).fill('Katipunan');
       await saveButton().click();
-      await waitFor(async () => (await toast().count()) > 0);
+      await drafted();
+      await approveAll();
       return drawnIkots().length === 2;
     })(),
     `${drawnIkots().length} ikots`,
@@ -242,19 +253,21 @@ let drawn;
   );
   n = log.length;
   await saveButton().click();
-  await waitFor(async () => (await toast().count()) > 0);
+  await drafted();
   w = writesSince(n);
-  const routePatch = w.find((x) => x.method === 'PATCH' && x.table === 'route');
+  const editDraft = draftOf('route', ikot?.id);
   check(
-    '  the update writes the route facts and the line, never the ends or is_loop',
-    !!routePatch &&
-      !('head_stop_id' in routePatch.body) &&
-      !('tail_stop_id' in routePatch.body) &&
-      !('is_loop' in routePatch.body) &&
-      w.some((x) => x.method === 'PATCH' && x.table === 'route_variant'),
+    '  the update keeps it an ikot with no ends, and rewrites its one line',
+    editDraft?.is_new === false &&
+      editDraft.payload.route.is_loop === true &&
+      editDraft.payload.route.head_stop_id === null &&
+      editDraft.payload.route.tail_stop_id === null &&
+      editDraft.payload.directions.length === 1 &&
+      editDraft.payload.directions[0].id === ikotV?.[0]?.id &&
+      approvedWrites(w).length === 0,
     said(w),
   );
-  await dismissToasts();
+  await approveAll();
 
   // A terminal drawn on the ikot afterwards is linked to it by itself, and its
   // checklist does not offer the ikot.
@@ -282,18 +295,25 @@ let drawn;
   await waitFor(
     async () => (await page.getByRole('button', { name: 'Save terminal' }).count()) === 0,
   );
-  // The panel goes before the save is done: its toast says when it is, and a
-  // tap on the map before then opens nothing.
-  await waitFor(async () => (await toast().count()) > 0);
-  await dismissToasts();
+  await drafted();
+  const terminalDraft = tables.draft.find(
+    (d) => d.kind === 'hotspot' && d.payload.stop.name === 'Stand-in Ikot Terminal',
+  );
+  check(
+    "  saved, the terminal's draft links it to the ikot's line, though nobody ticked it",
+    !!terminalDraft &&
+      terminalDraft.payload.links.some((l) => l.route_variant_id === ikotV?.[0]?.id) &&
+      approvedWrites(writesSince(n)).length === 0,
+    said(writesSince(n)),
+  );
+  await approveAll();
   const ikotTerminal = tables.stop.find((x) => x.name === 'Stand-in Ikot Terminal');
   check(
-    "  saved, the terminal is linked to the ikot's line, though nobody ticked it",
+    '  approved, the link is on the map',
     !!ikotTerminal &&
       tables.route_stop.some(
         (l) => l.route_variant_id === ikotV?.[0]?.id && l.stop_id === ikotTerminal.id,
       ),
-    said(writesSince(n)),
   );
 
   // Delete: the confirm names the ikot, and emptying its only direction removes the route.
@@ -302,21 +322,22 @@ let drawn;
   await waitFor(async () => (await page.getByRole('button', { name: 'Delete' }).count()) > 0);
   n = log.length;
   await page.getByRole('button', { name: 'Delete' }).click();
-  // Done when the studio says so: deleteDirection's five requests run one after
-  // another (empty the line, unlink, unborrow, count, delete the route), and
-  // only then does the card close. On a slow runner they take more than a few
-  // seconds, so the wait is for that state, not for a fixed time.
+  // Done when the studio says so: the delete's draft is stored and approved in
+  // the same press, and only then does the card close. On a slow runner that
+  // takes more than a few seconds, so the wait is for that state, not for a
+  // fixed time.
+  const isTakenDown = () =>
+    tables.route.some((r) => r.id === ikot?.id && r.status === 'taken_down');
   await waitFor(
     async () =>
-      !tables.route.some((r) => r.id === ikot?.id) &&
-      (await page.getByRole('button', { name: 'Edit route' }).count()) === 0,
+      isTakenDown() && (await page.getByRole('button', { name: 'Edit route' }).count()) === 0,
     30000,
   );
   check(
-    'Delete on an ikot asks about the ikot, and takes the route away with its only direction',
+    'Delete on an ikot asks about the ikot, and takes the route down with its only direction emptied',
     dialogs.some((d) => d === 'Delete the ikot "UP – Ikot"?') &&
-      !tables.route.some((r) => r.id === ikot?.id) &&
-      directionsOf(ikot?.id).length === 0 &&
+      isTakenDown() &&
+      directionsOf(ikot?.id).every((v) => v.shape === null) &&
       !tables.route_stop.some((l) => l.route_variant_id === ikotV?.[0]?.id) &&
       // The card closes on a delete that went through; one that says it went
       // wrong leaves it open, though the rows are gone.
@@ -350,11 +371,7 @@ check(
   /Stand-in Head.*is where .* ends?\. Delete .* first/.test(await body()),
   (await body()).slice(-200),
 );
-check(
-  '  and nothing is sent to the database',
-  !writesSince(n).some((x) => x.method === 'DELETE' && x.table === 'stop'),
-  said(writesSince(n)),
-);
+check('  and nothing is sent to the database', writesSince(n).length === 0, said(writesSince(n)));
 await dismissToasts();
 await page.keyboard.press('Escape');
 
@@ -365,56 +382,50 @@ await page.getByRole('menuitem', { name: /Routes/ }).click();
 await clickAt(OUT[0], 300);
 await clickAt(OUT[1], 300);
 await idle();
-const drafted = (await page.evaluate(() => localStorage.getItem('para.draft.v1'))) !== null;
+const isStored = (await page.evaluate(() => localStorage.getItem('para.draft.v1'))) !== null;
 await page.keyboard.press('Control+z');
 await page.keyboard.press('Control+z');
 await page.waitForTimeout(400);
 check(
   'undo down to no points leaves no draft to come back on reload (12)',
-  drafted && (await page.evaluate(() => localStorage.getItem('para.draft.v1'))) === null,
+  isStored && (await page.evaluate(() => localStorage.getItem('para.draft.v1'))) === null,
 );
 await page.getByTitle('Discard this route').click();
 await page.waitForTimeout(300);
 
-// ---- 9. A link sync that fails, and the retry
+// ---- 9. A save whose draft is refused, and the retry
 await drawLine(VIA);
 await page.getByPlaceholder('Zabarte').fill('Stand-in Road');
-stub.fault = (method, table, u) =>
-  method === 'GET' && table === 'route_stop' && u.searchParams.has('route_variant_id');
+stub.fault = (method, table) => method === 'POST' && table === 'rpc/claim_draft';
 n = log.length;
 await saveButton().click();
-await waitFor(async () => /links are not/.test(await body()));
+await waitFor(async () => /refused this one, on purpose/.test(await body()));
 w = writesSince(n);
+const firstClaim = w.find((x) => x.table === 'rpc/claim_draft');
 check(
-  'a link sync that fails says the line is saved and its links are not (13)',
-  /The line is saved, but its hintuan links are not/.test(await body()),
+  'a save whose draft is refused says so in words, and stores nothing (13)',
+  /refused this one, on purpose/.test(await body()) &&
+    !tables.draft.some((d) => d.payload.route?.via === 'Stand-in Road') &&
+    approvedWrites(w).length === 0,
   (await body()).slice(-200),
 );
-const viaRoute = tables.route.find((r) => r.via === 'Stand-in Road');
-check(
-  '  the route and its directions are in',
-  !!viaRoute && directionsOf(viaRoute.id).length === 2,
-  said(w),
-);
-check(
-  '  and its ends are locked while the save is finished: the retry would not write them',
-  await page.getByTestId('save-head').isDisabled(),
-);
 n = log.length;
 await saveButton().click();
-await waitFor(async () => (await toast().count()) > 0);
+await drafted();
 w = writesSince(n);
+const viaDrafts = tables.draft.filter((d) => d.payload.route?.via === 'Stand-in Road');
 check(
-  '  Save again updates the row it wrote, and inserts nothing (13)',
-  w.some((x) => x.method === 'PATCH' && x.table === 'route_variant' && /id=eq\./.test(x.query)) &&
-    !w.some((x) => x.method === 'POST' && (x.table === 'route' || x.table === 'route_variant')) &&
-    (await toast().count()) === 1,
+  '  Save again stores one draft, under the same new route id as the first try (13)',
+  viaDrafts.length === 1 && viaDrafts[0].subject_id === firstClaim?.body.p_subject_id,
   said(w),
 );
+await approveAll();
+const viaRoute = tables.route.find((r) => r.via === 'Stand-in Road');
 check(
-  '  still one route for these ends and that via',
-  tables.route.filter((r) => r.via === 'Stand-in Road').length === 1,
+  '  approved, one route for these ends and that via, drawn with its slot',
+  tables.route.filter((r) => r.via === 'Stand-in Road').length === 1 &&
+    !!viaRoute &&
+    directionsOf(viaRoute.id).length === 2,
 );
-await dismissToasts();
 
 await finish('save-ikot-test.png');

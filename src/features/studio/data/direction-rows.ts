@@ -5,7 +5,7 @@ import type { Segment } from '@/shared/utils/geo';
 import { joinSegments, overviewOf, roundLngLat } from '@/shared/utils/geo';
 
 import { toJson } from './json';
-import type { SaveInput } from './routes-write';
+import type { SaveInput } from './route-save-input';
 
 /** A route_variant row as a save writes it, in the table's names. */
 interface DirectionRowColumns {

@@ -36,8 +36,7 @@ export interface UseSavePanelOptions {
    * and, in Edit route, for refusing ends another route already has.
    */
   directions?: DirectionRow[];
-  onSaved: (v: DirectionRow) => void;
-  /** A save stored as a draft (STUDIO_DRAFTS). */
+  /** Hears the direction a save stored as a draft. */
   onDrafted?: (directionId: string) => void;
   /** Hears of a place made from the pickers, so the map's own list is read again. */
   onPlaceSaved?: () => void;
@@ -55,7 +54,6 @@ export function useSavePanel({
   slotReversed = null,
   hotspots: savedHotspots,
   directions = [],
-  onSaved,
   onDrafted,
   onPlaceSaved,
 }: UseSavePanelOptions) {
@@ -102,19 +100,11 @@ export function useSavePanel({
   const loop = existing
     ? []
     : returnTripNotices(directions, route?.id ?? null, hotspots, draw.line, slotReversed);
-  const { busy, error, setError, written, save } = useRouteSave({
-    facts,
-    draw,
-    hotspots,
-    onSaved,
-    onDrafted,
-  });
+  const { busy, error, setError, save } = useRouteSave({ facts, draw, hotspots, onDrafted });
 
   // A return trip fills its route's slot and leaves the route as it is; Edit
-  // route may change the route's facts, for both its directions. A new
-  // route's are fixed once a save has written it: the retry finishes that
-  // row and would ignore a changed end.
-  const routeLocked = !existing && (!!parent || !!written);
+  // route may change the route's facts, for both its directions.
+  const routeLocked = !existing && !!parent;
   // The toggle is locked by more than the route's facts: Edit route keeps it too.
   const loopLocked = !!existing || routeLocked;
 
@@ -140,8 +130,8 @@ export function useSavePanel({
       return;
     }
     await save({
-      routeId: written?.routeId ?? parent?.id ?? null,
-      directionId: written?.directionId ?? existing?.id ?? null,
+      routeId: parent?.id ?? null,
+      directionId: existing?.id ?? null,
       writeRoute: !!existing,
       signboard,
       mode,

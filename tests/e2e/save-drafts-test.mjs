@@ -1,10 +1,10 @@
-// save-test's core flows a second time, with drafts on (VITE_STUDIO_DRAFTS=1),
-// the save path the live studio takes: signed in, against the stand-in that
-// keeps drafts (lib/fake-studio-db.mjs), on today's published map. The
+// save-test's core flows a second time, against the other stand-in that keeps
+// drafts (lib/fake-studio-db.mjs), with the review flow's own steps: signed
+// in, on today's published map. The
 // basemap is a flat grey and the router has no roads, so every line is
 // freehand and nothing reaches the live project.
 //
-//   VITE_STUDIO_DRAFTS=1 npm run dev     (in another terminal)
+//   npm run dev                          (in another terminal)
 //   node tests/e2e/save-drafts-test.mjs
 //
 // What it checks, flow by flow as save-test drives them, each save a draft
@@ -379,6 +379,8 @@ check(
   (await pointsShown()) === OUT.length,
   `${await pointsShown()} points`,
 );
+// Edit route opens in Move, where a click adds nothing: Snap, to add.
+await page.getByTestId('snap-draw').getByRole('button', { name: 'Snap' }).click();
 await go(at(0, 0), 15);
 await clickAt(at(0.0055, 0.0005), 300);
 await waitFor(async () => (await pointsShown()) === OUT.length + 1);
@@ -432,6 +434,7 @@ check(
   (await pointsShown()) === OUT.length + 1,
   `${await pointsShown()} points`,
 );
+await page.getByTestId('snap-draw').getByRole('button', { name: 'Snap' }).click();
 await go(at(0, 0), 15);
 await clickAt(at(0.006, 0.001), 300);
 await waitFor(async () => (await pointsShown()) === OUT.length + 2);
