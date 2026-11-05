@@ -5,7 +5,11 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { loopSaveRefusal, saveRefusal } from '../../src/features/studio/panels/save-checks.ts';
-import { ENDS_TAKEN, LOOP_TAKEN } from '../../src/features/studio/data/routes-write.ts';
+import {
+  ENDS_TAKEN,
+  foldLoopKey,
+  LOOP_TAKEN,
+} from '../../src/features/studio/data/route-save-input.ts';
 
 const tala = { key: 'tala', label: 'Tala', boxes: [], terminal: null };
 const fairview = { key: 'sm fairview', label: 'SM Fairview', boxes: [], terminal: null };
@@ -63,7 +67,7 @@ test('an ikot with a signboard, a closed line and places goes ahead', () => {
 test('each ikot refusal in the words the panel shows', () => {
   assert.equal(
     loopSaveRefusal({ ...okIkot, signboard: '  ' }),
-    'An ikot is called by its signboard: write what the jeep says, like UP – Ikot.',
+    'An ikot is called by its Ikot name: write what the jeep says, like UP – Ikot.',
   );
   assert.equal(
     loopSaveRefusal({ ...okIkot, gapM: 120.4 }),
@@ -78,8 +82,15 @@ test('each ikot refusal in the words the panel shows', () => {
 
 test('the ikot refusals come in this order: signboard, closed, places, taken', () => {
   const all = { signboard: '', gapM: 99, placesCount: 0, signboardTaken: true };
-  assert.match(loopSaveRefusal(all), /called by its signboard/);
+  assert.match(loopSaveRefusal(all), /called by its Ikot name/);
   assert.match(loopSaveRefusal({ ...all, signboard: 'x' }), /ends where it began/);
   assert.match(loopSaveRefusal({ ...all, signboard: 'x', gapM: 0 }), /at least two places/);
   assert.equal(loopSaveRefusal({ ...all, signboard: 'x', gapM: 0, placesCount: 2 }), LOOP_TAKEN);
+});
+
+test('the fold the loop index uses: case and the ends of a signboard and via do not tell two apart', () => {
+  assert.equal(foldLoopKey(' UP – Ikot ', null), foldLoopKey('up – ikot', ''));
+  assert.notEqual(foldLoopKey('UP – Ikot', 'Katipunan'), foldLoopKey('UP – Ikot', null));
+  // Inside the text, space and punctuation still count.
+  assert.notEqual(foldLoopKey('UP  Ikot', null), foldLoopKey('UP Ikot', null));
 });

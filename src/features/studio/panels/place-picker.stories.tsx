@@ -28,8 +28,7 @@ const meta = {
   ],
   parameters: { layout: 'padded' },
   args: {
-    label: 'Head',
-    hint: '(where the jeeps wait)',
+    label: 'Origin',
     places,
     value: '',
     isDisabled: false,
@@ -52,9 +51,9 @@ export const Empty: Story = {
   },
 };
 
-/** The far end, with a place picked. */
+/** The Destination, with a place picked. */
 export const Picked: Story = {
-  args: { label: 'Tail', hint: '(the far end)', value: 'tala', testId: 'save-tail' },
+  args: { label: 'Destination', value: 'tala', testId: 'save-tail' },
   play: async ({ canvasElement }) => {
     await expect(within(canvasElement).getByTestId('save-tail')).toHaveDisplayValue('Tala');
   },

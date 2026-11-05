@@ -1,7 +1,6 @@
 import { cleanSignboardSvg } from '@/features/routes/model/signboard-svg';
 
 import { draftRefusal, signboardsDraft } from './draft-save';
-import { STUDIO_DRAFTS } from './flags';
 import type { DraftRow } from './review-schema';
 import { routeStateFromDraft } from './route-draft-state';
 import { getSupabase, supabaseConfig } from './supabase';
@@ -42,28 +41,18 @@ export function draftedSignboards(draft: DraftRow | null, directionId: string): 
 async function writeList(directionId: string, names: readonly string[]): Promise<string[]> {
   const client = getSupabase();
   if (!client) throw new Error('Supabase is not configured.');
-  // With drafts on, the list goes into the route's draft; the approved row stays.
-  if (STUDIO_DRAFTS) {
-    const { data: row, error: readError } = await client
-      .from('route_variant')
-      .select('route_id')
-      .eq('id', directionId)
-      .single();
-    if (readError) throw new Error(`The signboards were not saved: ${readError.message}`);
-    const refusal = draftRefusal(
-      await signboardsDraft({ id: directionId, routeId: row.route_id }, names),
-    );
-    if (refusal) throw new Error(`The signboards were not saved: ${refusal}`);
-    return [...names];
-  }
-  const { data, error } = await client
+  // The list goes into the route's draft; the approved row stays until approval.
+  const { data: row, error: readError } = await client
     .from('route_variant')
-    .update({ signboards: [...names] })
+    .select('route_id')
     .eq('id', directionId)
-    .select('signboards')
     .single();
-  if (error) throw new Error(`The signboards were not saved: ${error.message}`);
-  return data.signboards;
+  if (readError) throw new Error(`The signboards were not saved: ${readError.message}`);
+  const refusal = draftRefusal(
+    await signboardsDraft({ id: directionId, routeId: row.route_id }, names),
+  );
+  if (refusal) throw new Error(`The signboards were not saved: ${refusal}`);
+  return [...names];
 }
 
 /** A file cleaned and sent, then put last in the direction's list. */
@@ -111,22 +100,20 @@ export async function addSignboards(
   return list;
 }
 
-/** A board taken off the direction, and its file deleted after. */
-export async function removeSignboard(
+/**
+ * A board taken off the direction's draft. Its file stays in the bucket: the
+ * approved list still names it until the draft is approved, and once approved
+ * it is an unlisted file, which the publish never reads.
+ */
+export function removeSignboard(
   directionId: string,
   current: readonly string[],
   name: string,
 ): Promise<string[]> {
-  const client = getSupabase();
-  if (!client) throw new Error('Supabase is not configured.');
-  const next = await writeList(
+  return writeList(
     directionId,
     current.filter((n) => n !== name),
   );
-  // With drafts on, the approved list still names the file until the draft is
-  // approved: it stays, an unlisted file once approved, which the publish never reads.
-  if (!STUDIO_DRAFTS) await client.storage.from(BUCKET).remove([name]);
-  return next;
 }
 
 /** A board one place earlier in the list. */

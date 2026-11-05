@@ -1,3 +1,5 @@
+import type { Segment } from '@/shared/utils/geo';
+
 import type { AreaTarget } from './drawing-types';
 
 /**
@@ -14,6 +16,11 @@ export function isTyping(target: EventTarget | null): boolean {
   const el = target as HTMLElement | null;
   if (!el) return false;
   return el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName);
+}
+
+/** How many of a route's stretches go straight (Draw's, or refused by the router): the count's "N straight". */
+export function straightCount(segments: readonly (Segment | undefined)[]): number {
+  return segments.filter((s) => s?.snap === 'freehand').length;
 }
 
 /** Whether the keyboard is a Mac's, whose shortcuts read ⌘ for Ctrl. */
@@ -109,13 +116,15 @@ export interface HintState {
   /** Drawing a hotspot's outline, not a route. */
   isArea: boolean;
   points: number;
+  /** Move: a click selects and drags, and adds nothing (snap-draw.tsx). */
+  isMoving?: boolean;
   /** A return trip being drawn: the way already drawn, which the faint line under it shows. */
   loopOther?: string | null;
 }
 
 /**
- * The line over the toolbar: the U-turn warning when asked for; else, on a
- * phone, what a finger does; with a mouse, what its drags and clicks do once
+ * The line over the toolbar: the U-turn warning when asked for; in Move,
+ * what Move does and how to add; else, on a phone, what a finger does; with a mouse, what its drags and clicks do once
  * there is a point. Dragging and right-clicking are not discoverable on a
  * bare map.
  */
@@ -124,9 +133,15 @@ export function drawHint({
   isFinger,
   isArea,
   points,
+  isMoving = false,
   loopOther = null,
 }: HintState): string | null {
   if (uTurnHelp !== null) return uTurnHelp;
+  if (isMoving && !isArea) {
+    return isFinger
+      ? 'Move: drag a point · tap a point for options · Snap or Draw to add'
+      : 'Move: drag a point, a handle or the line · S or D to add points';
+  }
   if (loopOther !== null && !isArea && points === 0) {
     return `Tap the dot where ${loopOther} ended: this line starts there`;
   }

@@ -1,6 +1,5 @@
 // The studio's saves as drafts (src/features/studio/data/draft-save.ts and the
-// state it builds, route-draft-state.ts and route-draft-edits.ts), behind
-// STUDIO_DRAFTS: the whole route or hotspot built as 0022's payload, stored in
+// state it builds, route-draft-state.ts and route-draft-edits.ts): the whole route or hotspot built as 0022's payload, stored in
 // `draft` only — never a write to route, route_variant, stop or route_stop.
 //
 //   node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs tests/unit/draft-save-test.mjs
@@ -24,7 +23,6 @@ import {
   routePayloadOf,
   routeStateFromLive,
 } from '../../src/features/studio/data/route-draft-state.ts';
-import { STUDIO_DRAFTS } from '../../src/features/studio/data/flags.ts';
 
 const line = [
   [121.04, 14.7],
@@ -127,10 +125,6 @@ const claimed = (q) => ({
       submitted_at: null,
     },
   },
-});
-
-test('the flag is off unless VITE_STUDIO_DRAFTS=1', () => {
-  assert.equal(STUDIO_DRAFTS, false);
 });
 
 test('a new route: drawn direction and an empty slot, each with a links list', () => {
@@ -478,4 +472,74 @@ test('a retry of a new subject whose claim answer was lost updates that draft', 
     ['eq', 'id', 'd'],
     ['eq', 'revision', 1],
   ]);
+});
+
+// Where a new line lands (draft-reads.ts, stateForNewLine), and the facts a draft holds.
+
+test("a route's facts are trimmed, and blank ones are held as null", () => {
+  const typed = withDirectionSaved(
+    newRouteState('new-r'),
+    { ...input, signboard: '  Tala - Fairview ', fareNote: ' 13 pesos ', via: ' Commonwealth ' },
+    { fresh: [], managed: new Set() },
+  ).state.route;
+  assert.deepEqual(
+    [typed.signboard, typed.fare_note, typed.via],
+    ['Tala - Fairview', '13 pesos', 'Commonwealth'],
+  );
+  const blank = withDirectionSaved(
+    newRouteState('new-r'),
+    { ...input, signboard: '   ', fareNote: '', via: '  ' },
+    { fresh: [], managed: new Set() },
+  ).state.route;
+  assert.deepEqual([blank.signboard, blank.fare_note, blank.via], [null, null, null]);
+});
+
+test('a new line looks its route up by its ends, with via null when it has none', async () => {
+  const f = fake({ route: () => ({ data: null }), rpc: claimed });
+  await saveRouteDraft(input, []);
+  const lookup = f.log.find((q) => q.table === 'route');
+  assert.deepEqual(
+    lookup.filters.filter((x) => x[1] !== 'status'),
+    [
+      ['eq', 'head_stop_id', 'tala'],
+      ['eq', 'tail_stop_id', 'fairview'],
+      ['is', 'via', null],
+    ],
+  );
+});
+
+test('a new line looks its route up by its via when it has one, trimmed', async () => {
+  const f = fake({ route: () => ({ data: null }), rpc: claimed });
+  await saveRouteDraft({ ...input, via: ' Mindanao Ave ' }, []);
+  const lookup = f.log.find((q) => q.table === 'route');
+  assert.ok(lookup.filters.some((x) => x[0] === 'eq' && x[1] === 'via' && x[2] === 'Mindanao Ave'));
+});
+
+/** A new ikot's input, and an approved ikot the lookup answers with. */
+const ikotInput = { ...input, isLoop: true, headHotspotId: null, tailHotspotId: null };
+const approvedIkot = { id: 'ikot', signboard: 'UP – Ikot', via: null };
+
+test('a new ikot whose signboard is taken lands on that ikot, found by the index fold, not by ilike', async () => {
+  const f = fake({
+    route: (q) =>
+      q.filters.some((x) => x[1] === 'is_loop') ? { data: [approvedIkot] } : { data: null },
+    rpc: claimed,
+  });
+  await saveRouteDraft({ ...ikotInput, signboard: ' up – IKOT ' }, []).catch(() => {});
+  const lookups = f.log.filter((q) => q.table === 'route');
+  assert.ok(lookups[0].filters.some((x) => x[0] === 'eq' && x[1] === 'is_loop' && x[2] === true));
+  assert.ok(!lookups[0].filters.some((x) => x[0] === 'ilike'));
+  // The second read is the taken ikot's own row: the draft builds on it.
+  assert.ok(lookups[1]?.filters.some((x) => x[0] === 'eq' && x[1] === 'id' && x[2] === 'ikot'));
+});
+
+test('a new ikot whose via differs is not the taken one: it is a route of its own', async () => {
+  const f = fake({ route: () => ({ data: [approvedIkot] }), rpc: claimed });
+  const saved = await saveRouteDraft(
+    { ...ikotInput, signboard: 'UP – Ikot', via: 'Katipunan' },
+    [],
+    'own-ikot',
+  );
+  assert.equal(saved.routeId, 'own-ikot');
+  assert.equal(f.log.find((q) => q.table === 'rpc').payload.p_is_new, true);
 });

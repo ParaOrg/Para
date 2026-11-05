@@ -37,6 +37,8 @@ function drawing(state: Partial<Drawing> = {}): Drawing {
     unresolved: false,
     freehand: false,
     setFreehand: fn(),
+    moving: false,
+    setMoving: fn(),
     target: { routeId: null, directionId: null },
     area: null,
     borrow: null,

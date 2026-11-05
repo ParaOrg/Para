@@ -69,6 +69,8 @@ function drawing(state: Partial<Drawing> = {}): Drawing {
     unresolved: false,
     freehand: false,
     setFreehand: fn(),
+    moving: false,
+    setMoving: fn(),
     target: { routeId: null, directionId: null },
     area: null,
     borrow: null,
@@ -217,6 +219,8 @@ export const Keys: Story = {
     await expect(args.draw.setFreehand).toHaveBeenLastCalledWith(false);
     await userEvent.keyboard('f');
     await expect(args.draw.setFreehand).toHaveBeenLastCalledWith(true);
+    await userEvent.keyboard('v');
+    await expect(args.draw.setMoving).toHaveBeenCalledWith(true);
     await userEvent.keyboard('{Escape}');
     await expect(args.draw.hideHandles).toHaveBeenCalledOnce();
   },
@@ -254,6 +258,36 @@ export const Redo: Story = {
       await userEvent.keyboard('{Control>}y{/Control}');
       await expect(args.draw.redo).toHaveBeenCalledTimes(2);
     });
+  },
+};
+
+/** Move picked, as a saved line opens to edit: pale brand on Move, and Snap leaves it. */
+export const MovePicked: Story = {
+  args: { draw: drawn({ moving: true }) },
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole('button', { name: 'Move' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    await expect(canvas.getByRole('button', { name: 'Snap' })).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    );
+    await expect(canvas.getByText(/^Move: drag a point, a handle or the line/)).toBeVisible();
+    await userEvent.click(canvas.getByRole('button', { name: 'Snap' }));
+    await expect(args.draw.setFreehand).toHaveBeenCalledWith(false);
+  },
+};
+
+/** Move under a finger: the hint says what a finger does there, and how to add. */
+export const FingerMovePicked: Story = {
+  args: { draw: drawn({ moving: true }) },
+  beforeEach: asFinger,
+  play: async ({ canvasElement }) => {
+    await expect(
+      within(canvasElement).getByText(/^Move: drag a point · tap a point for options/),
+    ).toBeVisible();
   },
 };
 
@@ -410,6 +444,8 @@ export const TerminalOutline: Story = {
     await settled();
     await userEvent.keyboard('s');
     await expect(args.draw.setFreehand).not.toHaveBeenCalled();
+    await userEvent.keyboard('v');
+    await expect(args.draw.setMoving).not.toHaveBeenCalled();
     await expect(canvas.getByRole('button', { name: 'Done' })).toHaveAttribute(
       'title',
       'Add at least 3 corners',
@@ -612,4 +648,21 @@ export const FingerPointSelected: Story = {
 export const Phone: Story = {
   parameters: { phone: true },
   beforeEach: asFinger,
+};
+
+/**
+ * Beside the route's sidebar, which shows the count, the hint and Close the
+ * loop itself, and the form whose Save is Done: the toolbar keeps only
+ * Undo/Redo | Move · Snap · Draw and ✕.
+ */
+export const BesideTheSidebar: Story = {
+  args: { onDone: undefined, isBesideSidebar: true, loop },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.queryByText(/3 points/)).toBeNull();
+    await expect(canvas.queryByRole('button', { name: /^Close the loop/ })).toBeNull();
+    await expect(canvas.queryByText(/drag a point to move/)).toBeNull();
+    for (const name of ['Undo', 'Redo', 'Move', 'Snap', 'Draw'])
+      await expect(canvas.getByRole('button', { name })).toBeVisible();
+  },
 };

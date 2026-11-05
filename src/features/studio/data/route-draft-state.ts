@@ -15,7 +15,7 @@ import {
   liveRouteSchema,
   routePayloadSchema,
 } from './route-draft-schema';
-import type { SaveInput } from './routes-write';
+import type { SaveInput } from './route-save-input';
 
 // A route's draft as one state: built from the approved rows, from the draft
 // kept for it, or from nothing for a new route, and stored as 0022's payload.

@@ -16,9 +16,10 @@ interface UseDrawKeysOptions {
 /**
  * The drawing's keys, the toolbar's buttons by keyboard, as Figma's:
  * Ctrl/⌘+Z undoes; Ctrl/⌘+Shift+Z or Ctrl+Y redoes; Ctrl/⌘+Enter is Done;
- * S is Snap, D is Draw, F flips between them (a route's only); Escape hides
- * the selected point's handles. Plain Enter is no shortcut: it stays a
- * focused button's. A key typed in a field is the field's.
+ * V is Move, S is Snap, D is Draw, F flips between Snap and Draw (a route's
+ * only); Escape hides the selected point's handles. Plain Enter is no
+ * shortcut: it stays a focused button's. A key typed in a field is the
+ * field's.
  */
 export function useDrawKeys({ draw, isOn, points, canDone, isArea, onDone }: UseDrawKeysOptions) {
   useEffect(() => {
@@ -45,6 +46,9 @@ export function useDrawKeys({ draw, isOn, points, canDone, isArea, onDone }: Use
       } else if (event.key === 'Escape') {
         // Deselects the point whose handles show, as a pen tool's Escape does.
         draw.hideHandles();
+      } else if (!isArea && key === 'v') {
+        event.preventDefault();
+        draw.setMoving(true);
       } else if (!isArea && (key === 's' || key === 'd' || key === 'f')) {
         event.preventDefault();
         draw.setFreehand(key === 'f' ? !draw.freehand : key === 'd');
