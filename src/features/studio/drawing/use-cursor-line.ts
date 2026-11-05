@@ -5,7 +5,14 @@ import { useLayerReady } from '@/features/routes/map/layers';
 import type { LngLat, Segment } from '@/shared/utils/geo';
 
 import { penStretch } from './curves';
-import { HANDLE_DOT_LAYER, HIT_LAYER, POINT_LAYER, ROUTE_COLOUR, isGeoJSON } from './draw-layers';
+import {
+  HANDLE_ARM_WIDTH,
+  HANDLE_DOT_LAYER,
+  HIT_LAYER,
+  POINT_LAYER,
+  ROUTE_COLOUR,
+  isGeoJSON,
+} from './draw-layers';
 import type { AreaTarget, Picking } from './drawing-types';
 import { closeTargetOf, isNearClose } from './use-connect-hint';
 import { previewFrom } from './use-snap-preview';
@@ -27,9 +34,6 @@ import { previewFrom } from './use-snap-preview';
 
 const SRC = 'draw-cursor';
 const CURSOR_LAYER = 'draw-cursor-line';
-
-/** Thin, as a pen tool's guide is; the handle arms' width. */
-const CURSOR_LINE_WIDTH = 1.5;
 
 const EMPTY = { type: 'FeatureCollection', features: [] } as const;
 
@@ -93,7 +97,7 @@ export function useCursorLine(
         type: 'line',
         source: SRC,
         layout: { 'line-cap': 'round', 'line-join': 'round' },
-        paint: { 'line-color': ROUTE_COLOUR, 'line-width': CURSOR_LINE_WIDTH },
+        paint: { 'line-color': ROUTE_COLOUR, 'line-width': HANDLE_ARM_WIDTH },
       },
       POINT_LAYER,
     );
