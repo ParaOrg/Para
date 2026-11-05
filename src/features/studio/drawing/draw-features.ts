@@ -139,20 +139,37 @@ function handleOf(point: LngLat, handle: LngLat, seg = -1, end: 0 | 1 = 0): Hand
   ];
 }
 
-/** The handle source: every curve's two handles, each an arm and a dot; none for a hotspot. */
+/** The handle a Draw stretch has at one end, and that end's point; null for a routed or straight one. */
+function handleAt(segment: Segment | undefined, end: 0 | 1): [LngLat, LngLat] | null {
+  const line = segment?.coordinates;
+  if (segment?.snap !== 'freehand' || !segment.handles || !line || line.length < 2) return null;
+  return end === 0 ? [line[0], segment.handles[0]] : [line[line.length - 1], segment.handles[1]];
+}
+
+/**
+ * The handle source: the two handles of the point `at` the editor selected,
+ * each an arm and a dot, as a pen tool shows only the selected point's: the
+ * one its stretch in arrives with, and the one its stretch out leaves with,
+ * or, on the last point placed smooth, the handle `pending` it will send the
+ * next stretch (shown, not dragged: no stretch holds it yet). None with no
+ * point selected, or for a hotspot.
+ */
 export function handleFeatures(
   segments: readonly Segment[],
+  points: readonly LngLat[],
   area: AreaTarget | null,
+  at: number | null,
+  pending: { point: LngLat; out: LngLat } | null,
 ): FeatureCollection<HandleFeature> {
-  if (area) return { type: 'FeatureCollection', features: [] };
-  const features = segments.flatMap((s, i) => {
-    const line = s?.coordinates;
-    if (s?.snap !== 'freehand' || !s.handles || !line || line.length < 2) return [];
-    return [
-      ...handleOf(line[0], s.handles[0], i, 0),
-      ...handleOf(line[line.length - 1], s.handles[1], i, 1),
-    ];
-  });
+  const point = at === null ? undefined : points[at];
+  if (area || at === null || !point) return { type: 'FeatureCollection', features: [] };
+  const into = handleAt(segments[at - 1], 1);
+  const outOf = handleAt(segments[at], 0);
+  const features = [
+    ...(into ? handleOf(into[0], into[1], at - 1, 1) : []),
+    ...(outOf ? handleOf(outOf[0], outOf[1], at, 0) : []),
+    ...(!segments[at] && pending?.point === point ? handleOf(point, pending.out) : []),
+  ];
   return { type: 'FeatureCollection', features };
 }
 

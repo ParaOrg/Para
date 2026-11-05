@@ -4,7 +4,7 @@ import type { LngLat } from '@/shared/utils/geo';
 
 import { mirror, penStretch } from './curves';
 import { CLICK_AFTER_MS, DRAG_PX, type DrawContext } from './draw-context';
-import { handleFeatures, handleLines, lineFeatures } from './draw-features';
+import { handleLines, lineFeatures } from './draw-features';
 import {
   HANDLE_DOT_LAYER,
   HANDLE_SRC,
@@ -39,13 +39,10 @@ export function penHandlers(ctx: DrawContext) {
     out: LngLat | null;
   } | null = null;
 
-  /** The point being placed and its two handles, shown with every curve's own while the drag shapes them. */
+  /** The point being placed and its two handles, the only ones shown while the drag shapes them. */
   const showHandles = (at: LngLat, out: LngLat) => {
     const src = map.getSource(HANDLE_SRC);
-    if (!isGeoJSON(src)) return;
-    const placing = handleLines([{ point: at, handles: [mirror(out, at), out] }]);
-    const drawn = handleFeatures(refs.segments.current, refs.area.current);
-    src.setData({ type: 'FeatureCollection', features: [...drawn.features, ...placing.features] });
+    if (isGeoJSON(src)) src.setData(handleLines([{ point: at, handles: [mirror(out, at), out] }]));
   };
 
   /**

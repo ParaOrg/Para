@@ -13,7 +13,7 @@ import { gapsAround, modesAround, rubberBand } from './draw-gestures';
  */
 export function mouseHandlers(ctx: DrawContext) {
   const { map, canvas, refs, drag } = ctx;
-  const { resolveGaps, writePoints, writeSegments, markStandIn } = ctx.actions;
+  const { resolveGaps, writePoints, writeSegments, markStandIn, showHandlesAt } = ctx.actions;
 
   /** The point being dragged follows the pointer; its two stretches rubber-band. */
   const dragTo = (point: LngLat) => {
@@ -66,6 +66,8 @@ export function mouseHandlers(ctx: DrawContext) {
     // starting a drag here would swallow it.
     if (e.originalEvent.button !== 0) return;
     e.preventDefault();
+    // Pressed, it is the point selected: its handles show, as a pen tool's do.
+    showHandlesAt(idx);
     drag.idx = idx;
     drag.moved = false;
     drag.modes = modesAround(refs.segments.current, idx);

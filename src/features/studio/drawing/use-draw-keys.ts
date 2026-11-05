@@ -16,7 +16,8 @@ interface UseDrawKeysOptions {
 /**
  * The drawing's keys, the toolbar's buttons by keyboard: Ctrl+Z undoes,
  * Ctrl+Shift+Z or Ctrl+Y redoes,
- * Enter is Done, F flips Snap | Draw (a route's only). A key typed in a field
+ * Enter is Done, F flips Snap | Draw (a route's only), Escape hides the
+ * selected point's handles. A key typed in a field
  * is the field's.
  */
 export function useDrawKeys({ draw, isOn, points, canDone, isArea, onDone }: UseDrawKeysOptions) {
@@ -44,6 +45,9 @@ export function useDrawKeys({ draw, isOn, points, canDone, isArea, onDone }: Use
         if (!canDone || pressable) return;
         e.preventDefault();
         onDone();
+      } else if (!mod && !e.altKey && e.key === 'Escape') {
+        // Deselects the point whose handles show, as a pen tool's Escape does.
+        draw.hideHandles();
       } else if (!mod && !e.altKey && !isArea && e.key.toLowerCase() === 'f') {
         e.preventDefault();
         draw.setFreehand(!draw.freehand);

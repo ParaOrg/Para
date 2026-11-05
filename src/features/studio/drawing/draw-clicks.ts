@@ -24,8 +24,16 @@ const PICK_PX = 40;
  */
 export function clickHandlers(ctx: DrawContext) {
   const { map, refs } = ctx;
-  const { setPicking, addPoint, insertPoint, deletePoint, toggleSegment, select, setFollowOffer } =
-    ctx.actions;
+  const {
+    setPicking,
+    addPoint,
+    insertPoint,
+    deletePoint,
+    toggleSegment,
+    select,
+    showHandlesAt,
+    setFollowOffer,
+  } = ctx.actions;
 
   /**
    * A click that closes the line: on its closing point, the point itself is
@@ -66,9 +74,21 @@ export function clickHandlers(ctx: DrawContext) {
     if (ids.length > 0) setFollowOffer({ ids, at: point, point });
   };
 
+  /**
+   * A click anywhere but on a point or a handle deselects the point whose
+   * handles show, as a pen tool's does: the point it places, if any, is a
+   * corner, with none to show.
+   */
+  const deselects = (e: MapMouseEvent) => {
+    const on = map.queryRenderedFeatures(e.point, { layers: [POINT_LAYER, HANDLE_DOT_LAYER] });
+    if (on.length === 0) showHandlesAt(null);
+  };
+
   // Clicking empty map appends a point; clicking the route itself does not.
   const onMapClick = (e: MapMouseEvent) => {
-    if (isEcho(ctx) || closesBar()) return;
+    if (isEcho(ctx)) return;
+    deselects(e);
+    if (closesBar()) return;
     // Choosing where a new route leaves a saved one: a tap near its line
     // picks the nearest spot on it; a tap elsewhere is ignored.
     const p = refs.picking.current;

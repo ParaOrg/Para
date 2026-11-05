@@ -1,5 +1,5 @@
 import type { MapLibreMap } from 'maplibre-gl';
-import { useEffect } from 'react';
+import { useEffect, type RefObject } from 'react';
 
 import type { LngLat, Segment } from '@/shared/utils/geo';
 
@@ -30,17 +30,32 @@ interface DrawRenderingState {
   uTurns: UTurn[];
   picking: Picking | null;
   selected: number | null;
+  /** The point whose handles show, the mouse's selection; none in Snap. */
+  handlesAt: number | null;
+  isFreehand: boolean;
+  /** The handle the last point, placed smooth, sends the stretch still to come. */
+  pendingOut: RefObject<{ point: LngLat; out: LngLat } | null>;
 }
 
 /**
  * The drawing on the map: its segments (routed and freehand), points, a
  * hotspot's fill and closing edge, the U-turns ringed, the line being picked
- * for Extend, and the point a finger selected ringed. What each source holds
- * is draw-features.ts'.
+ * for Extend, the point a finger selected ringed, and the handles of the
+ * point the mouse selected, in Draw. What each source holds is draw-features.ts'.
  */
 export function useDrawRendering(
   map: MapLibreMap | null,
-  { segments, controlPoints, area, uTurns, picking, selected }: DrawRenderingState,
+  {
+    segments,
+    controlPoints,
+    area,
+    uTurns,
+    picking,
+    selected,
+    handlesAt,
+    isFreehand,
+    pendingOut,
+  }: DrawRenderingState,
 ): void {
   useEffect(() => {
     if (!map) return;
@@ -54,8 +69,12 @@ export function useDrawRendering(
     const uturnSrc = map.getSource(UTURN_SRC);
     if (isGeoJSON(uturnSrc)) uturnSrc.setData(uTurnFeatures(uTurns, controlPoints));
     const handleSrc = map.getSource(HANDLE_SRC);
-    if (isGeoJSON(handleSrc)) handleSrc.setData(handleFeatures(segments, area));
-  }, [map, segments, controlPoints, area, uTurns, selected]);
+    if (isGeoJSON(handleSrc)) {
+      // In Snap nothing shows handles: only Draw's stretches bend.
+      const at = isFreehand ? handlesAt : null;
+      handleSrc.setData(handleFeatures(segments, controlPoints, area, at, pendingOut.current));
+    }
+  }, [map, segments, controlPoints, area, uTurns, selected, handlesAt, isFreehand, pendingOut]);
 
   useEffect(() => {
     if (!map) return;

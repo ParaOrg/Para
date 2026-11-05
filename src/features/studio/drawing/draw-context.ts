@@ -61,6 +61,8 @@ export interface DrawActions {
   markStandIn: (s: Segment) => void;
   isStandIn: (s: Segment) => boolean;
   select: (i: number | null) => void;
+  /** Shows point `i`'s handles alone, or none (null). */
+  showHandlesAt: (i: number | null) => void;
   setFollowOffer: (o: FollowOffer | null) => void;
 }
 
