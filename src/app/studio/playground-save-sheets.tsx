@@ -36,7 +36,7 @@ export function PlaygroundSaveSheets({
   saveFlow,
   contribution,
 }: PlaygroundSaveSheetsProps) {
-  const { isSaving, setIsSaving, onSaved, onSavedHotspot, onDrafted } = saveFlow;
+  const { isSaving, setIsSaving, onSaved, onSavedHotspot, onDrafted, onPublished } = saveFlow;
 
   return (
     <div inert={!isPlayground} className={isPlayground ? 'contents' : 'hidden'}>
@@ -58,6 +58,10 @@ export function PlaygroundSaveSheets({
         onDrafted={(subjectId) => {
           void contribution.recordSaved(subjectId, draw.controlPoints);
           onDrafted();
+        }}
+        onPublished={(subjectId) => {
+          void contribution.recordSaved(subjectId, draw.controlPoints);
+          onPublished();
         }}
         onCancel={() => setIsSaving(false)}
       />

@@ -22,10 +22,11 @@ export type VariantAndSize =
   // designed.
   | { variant: 'primary'; size: 'small'; fill: CardFill; disabled?: never; tone?: never }
   | { variant: 'error'; size?: 'base'; fill?: never; tone?: never }
-  // Plain (4451:14022): the words alone, as Sign in's "Forgot password". Only Base Default is
-  // drawn; disabled takes the set's opacity/60, as every voice does. Its words in Content/error
-  // (`tone`) are how Account settings' Delete account overrides it (4540:4316).
-  | { variant: 'plain'; size?: 'base'; fill?: never; tone?: PlainTone };
+  // Plain (4451:14022): the words alone, as Sign in's "Forgot password". Base Default is drawn,
+  // and Small in the studio sidebar's Exit (4591:9746); disabled takes the set's opacity/60, as
+  // every voice does. Its words in Content/error (`tone`) are how Account settings' Delete account
+  // overrides it (4540:4316).
+  | { variant: 'plain'; size?: Size; fill?: never; tone?: PlainTone };
 
 /** Plain's words: Content/primary, or Content/error for a destructive one. */
 export type PlainTone = 'default' | 'error';

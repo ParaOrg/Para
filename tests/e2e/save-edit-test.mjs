@@ -59,7 +59,7 @@ import {
 // leaves it once its retry is in.
 const { outRoute, outV } = await drawTheRoute();
 await drawLine(VIA);
-await page.getByPlaceholder('Zabarte').fill('Stand-in Road');
+await page.getByLabel('Via (if applicable)').fill('Stand-in Road');
 await saveButton().click();
 await waitFor(async () => (await toast().count()) > 0);
 await dismissToasts();
@@ -76,8 +76,8 @@ await done();
 check(
   'Edit route unlocks the ends and the facts',
   (await page.getByTestId('save-head').isEnabled()) &&
-    (await page.getByPlaceholder('Zabarte').isEnabled()) &&
-    (await page.getByLabel(/Mode/).isEnabled()),
+    (await page.getByLabel('Via (if applicable)').isEnabled()) &&
+    (await page.getByLabel('Transportation mode').isEnabled()),
 );
 await page.getByTestId('save-head').selectOption({ label: 'Stand-in Phase' });
 // The form asks a jeepney for no signboard: the one the route has is kept.
@@ -154,7 +154,7 @@ await page.getByRole('button', { name: 'Edit route' }).click();
 await waitFor(async () => (await pointsShown()) > 0);
 await done();
 await page.getByTestId('save-head').selectOption({ label: 'Stand-in Head' });
-await page.getByPlaceholder('Zabarte').fill('Stand-in Road');
+await page.getByLabel('Via (if applicable)').fill('Stand-in Road');
 n = log.length;
 await saveButton().click();
 await page.waitForTimeout(600);
@@ -678,7 +678,7 @@ check(
   small.length === 0,
   `${small.length} under 16 px`,
 );
-const phoneSave = phone.getByRole('button', { name: /^(Save|Update)$/ });
+const phoneSave = phone.getByRole('button', { name: /^(Publish|Save as draft)$/ }).last();
 const saveAt = await rect(phoneSave);
 check(
   '  Save shows at the foot, above the home bar',
@@ -686,7 +686,7 @@ check(
   JSON.stringify(saveAt),
 );
 // The keyboard up: the page 365 px shorter, as interactive-widget=resizes-content makes it.
-await phone.getByPlaceholder('Zabarte').fill('Phone Road');
+await phone.getByLabel('Via (if applicable)').fill('Phone Road');
 await phone.setViewportSize({ width: 390, height: 479 });
 await phone.waitForTimeout(300);
 const saveUp = await rect(phoneSave);

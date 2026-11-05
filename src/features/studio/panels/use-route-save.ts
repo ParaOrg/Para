@@ -6,8 +6,10 @@ import type { DirectionRow } from '@/features/routes/model/routes';
 import type { useSaveFacts } from './use-save-facts';
 import { draftRefusal, saveRouteDraft } from '../data/draft-save';
 import { STUDIO_DRAFTS } from '../data/flags';
+import { reviewMessage } from '../data/review-commands';
 import type { SaveInput } from '../data/routes-write';
 import { saveRouteAndLinks } from '../data/save-route';
+import { useReviewMutation } from '../data/use-review-query';
 import type { Drawing } from '../drawing/use-drawing';
 
 /** What the save panel's form contributes to a save; the line and its borrow come from the drawing. */
@@ -24,6 +26,12 @@ type RouteSaveForm = Pick<
   | 'isLoop'
   | 'via'
 >;
+
+/**
+ * What the sidebar's footer asked for: Save as draft keeps the change to editors; Publish makes
+ * it what commuters get at the next publish. With STUDIO_DRAFTS off every save is a publish.
+ */
+export type SaveIntent = 'draft' | 'publish';
 
 /** The direction a save wrote, by its route's id and its own. */
 interface WrittenDirection {
@@ -42,13 +50,22 @@ interface UseRouteSaveOptions {
   /** With STUDIO_DRAFTS on: the save is a draft, and the map is unchanged. */
   /** Hears the direction the draft holds, for what was made from it. */
   onDrafted?: (directionId: string) => void;
+  /** With STUDIO_DRAFTS on: the draft was published, so the map has changed. */
+  onPublished?: (directionId: string) => void;
 }
 
 /**
  * The save panel's save: busy while it runs, its error as text, and the row
  * it wrote when the link sync after it failed.
  */
-export function useRouteSave({ facts, draw, hotspots, onSaved, onDrafted }: UseRouteSaveOptions) {
+export function useRouteSave({
+  facts,
+  draw,
+  hotspots,
+  onSaved,
+  onDrafted,
+  onPublished,
+}: UseRouteSaveOptions) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // The direction as a save wrote it, when the link sync after it failed.
@@ -60,8 +77,9 @@ export function useRouteSave({ facts, draw, hotspots, onSaved, onDrafted }: UseR
   // A new route's id for its draft, the same on every retry: a claim whose
   // answer was lost then updates that draft instead of making a second one.
   const newRouteId = useRef<string | null>(null);
+  const review = useReviewMutation();
 
-  async function save(form: RouteSaveForm) {
+  async function save(form: RouteSaveForm, intent: SaveIntent) {
     setBusy(true);
     setError(null);
     try {
@@ -82,6 +100,16 @@ export function useRouteSave({ facts, draw, hotspots, onSaved, onDrafted }: UseR
         const { result, directionId } = await saveRouteDraft(input, hotspots, newRouteId.current);
         const refusal = draftRefusal(result);
         if (refusal) throw new Error(refusal);
+        // Publish is the draft save and then its approval, in one press, until the database
+        // publishes a draft in one call (.scratch/codebase-review/database.md).
+        if (intent === 'publish' && result.draft) {
+          const published = await review.mutateAsync({ action: 'approve', draft: result.draft });
+          if (published.code !== 'approved')
+            throw new Error(`Saved as a draft, not published. ${reviewMessage(published)}`);
+          if (onPublished) onPublished(directionId);
+          else setBusy(false);
+          return;
+        }
         if (onDrafted) onDrafted(directionId);
         else setBusy(false);
         return;

@@ -33,7 +33,7 @@ export const Jeepney: Story = {
   play: async ({ args, canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(canvas.queryByRole('textbox')).toBeNull();
-    const mode = canvas.getByRole('combobox', { name: /Mode/ });
+    const mode = canvas.getByRole('combobox', { name: 'Transportation mode' });
     await expect(mode).toBeEnabled();
     await expect(within(mode).queryByRole('option', { name: 'Ferry' })).toBeNull();
     await userEvent.selectOptions(mode, 'UV Express');
@@ -41,39 +41,41 @@ export const Jeepney: Story = {
   },
 };
 
-/** An ikot is called by its signboard: the field shows, and says it is required. */
-export const IkotSignboardRequired: Story = {
-  args: { isSignboardRequired: true },
+/** An ikot is called by its Ikot name: the field shows, and says it is required. */
+export const IkotName: Story = {
+  args: { isIkot: true },
   play: async ({ canvasElement }) => {
-    const signboard = within(canvasElement).getByRole('textbox', { name: /Signboard/ });
+    const signboard = within(canvasElement).getByRole('textbox', { name: 'Ikot name' });
     await expect(signboard).toHaveAttribute('aria-required', 'true');
     await expect(signboard).toHaveAttribute('placeholder', 'UP – Ikot');
   },
 };
 
-/** A train line, imported with its line named: its Mode stays. */
+/** A train line, imported with its line named: its Transportation mode stays. */
 export const Train: Story = {
   args: { mode: 'lrt', signboard: 'LRT-1' },
   play: async ({ canvasElement }) => {
-    await expect(within(canvasElement).getByRole('combobox', { name: /Mode/ })).toBeDisabled();
+    await expect(
+      within(canvasElement).getByRole('combobox', { name: 'Transportation mode' }),
+    ).toBeDisabled();
   },
 };
 
 /** A return trip's ikot: the route's facts, shown and locked. */
 export const Locked: Story = {
-  args: { signboard: 'UP – Ikot', isSignboardRequired: true, isLocked: true },
+  args: { signboard: 'UP – Ikot', isIkot: true, isLocked: true },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(canvas.getByRole('textbox', { name: /Signboard/ })).toBeDisabled();
-    await expect(canvas.getByRole('combobox', { name: /Mode/ })).toBeDisabled();
+    await expect(canvas.getByRole('textbox', { name: 'Ikot name' })).toBeDisabled();
+    await expect(canvas.getByRole('combobox', { name: 'Transportation mode' })).toBeDisabled();
   },
 };
 
-/** A long ikot signboard at a phone's width: the fields read 16 px, following the viewport. */
+/** A long Ikot name at a phone's width: the fields read 16 px, following the viewport. */
 export const Phone: Story = {
   args: {
     signboard: 'UP Diliman – Ikot via Katipunan, C.P. Garcia and the Academic Oval',
-    isSignboardRequired: true,
+    isIkot: true,
   },
   parameters: { phone: true },
   globals: { viewport: { value: 'mobile1', isRotated: false } },

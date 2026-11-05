@@ -386,7 +386,10 @@ await page.getByTestId('save-head').waitFor({ timeout: 10000 });
 await page.getByTestId('save-head').selectOption({ label: 'Fairview Terminal' });
 await page.getByTestId('save-tail').selectOption({ label: 'Cubao Terminal' });
 await shot('3-save-panel');
-await page.getByRole('button', { name: /^Save$/ }).click();
+await page
+  .getByRole('button', { name: /^(Publish|Save as draft)$/ })
+  .last()
+  .click();
 const wrote = await waitFor(
   () => db.tables.route_variant.length > 0 && db.tables.contribution_use.length > 0,
 );

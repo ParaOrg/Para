@@ -206,7 +206,10 @@ async function editAndSave(page) {
     .catch(() => {});
   if (!(await page.getByTestId('route-panel').isVisible()))
     await page.getByRole('button', { name: /Done/ }).click();
-  await page.getByRole('button', { name: /^(Save|Update)$/ }).click();
+  await page
+    .getByRole('button', { name: /^(Publish|Save as draft)$/ })
+    .last()
+    .click();
   await page.getByText('Saved as a draft').waitFor({ timeout: 10000 });
 }
 
@@ -350,7 +353,10 @@ db.tables.draft.push({
 const staleWrites = writesOf(db).length;
 if (!(await b.page.getByTestId('route-panel').isVisible()))
   await b.page.getByRole('button', { name: /Done/ }).click();
-await b.page.getByRole('button', { name: /^(Save|Update)$/ }).click();
+await b.page
+  .getByRole('button', { name: /^(Publish|Save as draft)$/ })
+  .last()
+  .click();
 await b.page.getByText('This is being changed by Marisol').waitFor({ timeout: 10000 });
 check(
   "B's save from a card opened before A's draft is refused, and nothing is written",

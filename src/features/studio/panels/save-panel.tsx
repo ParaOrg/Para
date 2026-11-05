@@ -1,4 +1,4 @@
-import { useId } from 'react';
+import { useId, useState, type FormEvent } from 'react';
 
 import { hotspotLabel } from '@/features/routes/model/hotspots';
 import { LOOP_WORD } from '@/features/routes/model/routes';
@@ -10,149 +10,191 @@ import { SaveEndsFields } from './save-ends-fields';
 import { SaveFooter } from './save-footer';
 import { SaveNotices } from './save-notices';
 import { SaveTimeline } from './save-timeline';
+import { BESIDE_BODY } from './sheet';
+import type { SaveIntent } from './use-route-save';
 import { useSavePanel, type UseSavePanelOptions } from './use-save-panel';
 import { ViaField } from './via-field';
+import { STUDIO_DRAFTS } from '../data/flags';
 
 interface SavePanelProps extends UseSavePanelOptions {
-  /** Why Save can't go yet, said under it; null when it can. Beside the map only. */
+  /** Why a save can't go yet, said under the form; null when it can. Beside the map only. */
   saveBlocked?: string | null;
-  /** Back to the map, when the form covers it. Absent beside the map. */
+  /** Back to the map, when the form covers it. Absent beside the map, where Exit ends the drawing. */
   onCancel?: () => void;
 }
 
 /**
- * The one form in the app. On a computer it stands beside the map the whole
- * time a route is drawn, filling itself in as the line reaches places, and its
- * Save is the drawing's Done; narrower, it covers the map at Done. Which is
- * the caller's: it wraps the form in SaveBesideFrame or SaveSheetFrame.
+ * The route's sidebar (Figma 4300:20893). On a computer it stands left of the map the whole time
+ * a route is drawn, filling itself in as the line reaches places; narrower, it covers the map at
+ * Done. Which is the caller's: it wraps the form in SaveBesideFrame or SaveSheetFrame.
  *
- * It asks for a route's two ends, not its name: the name is generated from
- * them and cannot be typed over, so a hotspot renamed once fixes every route
- * through it. Nothing here is required except the two ends — the signboard is
- * an observed fact and can wait until it is known.
+ * Route Information asks for a route's two ends, its Origin and Destination, not its name: the
+ * name is generated from them and cannot be typed over, so a hotspot renamed once fixes every
+ * route through it. An ikot has no ends: it is named by its Ikot name (ADR 0005).
  *
- * Its state and its submit are `useSavePanel`; its pieces live beside it: the
- * ends (`SaveEndsFields`), the route's facts (`RouteFields`, `ViaField`), the
- * notices (`SaveNotices`), what the line passes (`SaveTimeline`) and is
- * called (`SaveDirectionName`) and the buttons (`SaveFooter`).
+ * Its state and its submit are `useSavePanel`; its pieces live beside it: the ends
+ * (`SaveEndsFields`), the route's facts (`RouteFields`, `ViaField`), the notices
+ * (`SaveNotices`), what the line passes (`SaveTimeline`) and is called (`SaveDirectionName`) and
+ * the footer (`SaveFooter`).
  */
 export function SavePanel({ saveBlocked = null, onCancel, ...options }: SavePanelProps) {
   const headingId = useId();
-  const { draw, existing, route, directions = [] } = options;
+  const { draw, existing, directions = [] } = options;
   const panel = useSavePanel(options);
   const { ends, facts, isLoop, routeLocked } = panel;
   const { hotspots, head, tail } = ends;
   const { reversed, direction } = facts;
+  const isBeside = !onCancel;
+  const [busyIntent, setBusyIntent] = useState<SaveIntent | null>(null);
 
-  const routeFields = (
-    <RouteFields
-      signboard={panel.signboard}
-      mode={panel.mode}
-      isLocked={routeLocked}
-      isSignboardRequired={isLoop}
-      onSignboardChange={panel.setSignboard}
-      onModeChange={panel.setMode}
-    />
-  );
+  // What Exit would lose: the line or a field changed since the sidebar opened.
+  const changes = JSON.stringify([
+    draw.controlPoints,
+    panel.signboard,
+    panel.mode,
+    panel.via,
+    ends.headId,
+    ends.tailId,
+    isLoop,
+  ]);
+  const [openedWith] = useState(changes);
+
+  const handleSave = async (intent: SaveIntent) => {
+    setBusyIntent(intent);
+    await panel.submit(intent);
+    setBusyIntent(null);
+  };
+  const handleSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    void handleSave(STUDIO_DRAFTS ? 'draft' : 'publish');
+  };
+  const handleExit = () => {
+    if (changes !== openedWith && !window.confirm('Discard your changes?')) return;
+    draw.cancel();
+  };
 
   return (
-    <form onSubmit={panel.submit} aria-labelledby={headingId}>
-      <h2 id={headingId} className="text-base font-medium text-neutral-900">
-        {panelTitle({ isEdit: !!existing, isReturnTrip: !!route, isLoop })}
-      </h2>
-      <p className="mt-1 text-xs text-neutral-500">
-        {draw.controlPoints.length} points · {(draw.metres / 1000).toFixed(2)} km
-        {routeLocked && ' · the ends belong to the route, so both directions share them'}
-        {existing &&
-          " · the ends, via, signboard, mode and fare note are the route's: a change here is a change to both directions"}
-      </p>
-      <LoopToggle isLoop={isLoop} isLocked={panel.loopLocked} onChange={panel.setIsLoop} />
-      {isLoop && <div className="mt-3">{routeFields}</div>}
-      <SaveNotices
-        segments={draw.segments}
-        uTurns={draw.uTurns}
-        loop={panel.loop}
-        hotspotsCount={hotspots.length}
-        isLoop={isLoop}
-        passedTwice={isLoop ? facts.placesPassedTwice : []}
-        wrongWay={
-          !isLoop && facts.wrongWayRound && head && tail
-            ? {
-                direction,
-                startsAt: hotspotLabel(reversed ? head : tail),
-                from: hotspotLabel(reversed ? tail : head),
-              }
-            : null
-        }
-        borrowed={
-          facts.borrowParent && facts.borrowedM > 0
-            ? { metres: facts.borrowedM, parent: facts.borrowParent }
-            : null
-        }
-        sameEnds={facts.sameEnds}
-        direction={direction}
-      />
+    <form
+      onSubmit={handleSubmit}
+      aria-labelledby={headingId}
+      className={isBeside ? 'flex min-h-0 flex-1 flex-col' : undefined}
+    >
+      <div className={isBeside ? BESIDE_BODY : 'flex flex-col gap-5'}>
+        <section aria-labelledby={headingId} className="flex flex-col gap-3">
+          <h2 id={headingId} className="text-xl/7 font-semibold text-content-primary">
+            Route Information
+          </h2>
+          <p className="-mt-2 text-xs text-content-quaternary">
+            {panelTitle({ isEdit: !!existing, isReturnTrip: !!options.route, isLoop })} ·{' '}
+            {draw.controlPoints.length} points · {(draw.metres / 1000).toFixed(2)} km
+            {routeLocked && ' · the ends belong to the route, so both directions share them'}
+            {existing &&
+              " · the ends, via, mode and fare note are the route's: a change here is a change to both directions"}
+          </p>
+          <LoopToggle isLoop={isLoop} isLocked={panel.loopLocked} onChange={panel.setIsLoop} />
+          {isLoop ? (
+            <RouteFields
+              signboard={panel.signboard}
+              mode={panel.mode}
+              isLocked={routeLocked}
+              isIkot
+              onSignboardChange={panel.setSignboard}
+              onModeChange={panel.setMode}
+            />
+          ) : (
+            <SaveEndsFields
+              places={ends.places}
+              headPlace={ends.headPlace}
+              tailPlace={ends.tailPlace}
+              making={ends.making}
+              nearHead={ends.nearHead}
+              nearTail={ends.nearTail}
+              hotspots={hotspots}
+              directions={directions}
+              isLocked={routeLocked}
+              headRef={ends.headSelect}
+              tailRef={ends.tailSelect}
+              onHeadChange={ends.pickHead}
+              onTailChange={ends.pickTail}
+              onPlaceSaved={ends.handlePlaceSaved}
+              onPlaceCancel={ends.closeMaking}
+            />
+          )}
+          <ViaField
+            value={panel.via}
+            isLoop={isLoop}
+            isLocked={routeLocked}
+            onChange={panel.setVia}
+          />
+          {!isLoop && (
+            <RouteFields
+              signboard={panel.signboard}
+              mode={panel.mode}
+              isLocked={routeLocked}
+              onSignboardChange={panel.setSignboard}
+              onModeChange={panel.setMode}
+            />
+          )}
+        </section>
 
-      {!isLoop && (
-        <SaveEndsFields
-          places={ends.places}
-          headPlace={ends.headPlace}
-          tailPlace={ends.tailPlace}
-          making={ends.making}
-          nearHead={ends.nearHead}
-          nearTail={ends.nearTail}
-          hotspots={hotspots}
-          directions={directions}
-          isLocked={routeLocked}
-          headRef={ends.headSelect}
-          tailRef={ends.tailSelect}
-          onHeadChange={ends.pickHead}
-          onTailChange={ends.pickTail}
-          onPlaceSaved={ends.handlePlaceSaved}
-          onPlaceCancel={ends.closeMaking}
-        />
-      )}
-
-      {(isLoop || (head && tail)) && (
-        <SaveTimeline
+        <SaveNotices
+          segments={draw.segments}
+          uTurns={draw.uTurns}
+          loop={panel.loop}
+          hotspotsCount={hotspots.length}
           isLoop={isLoop}
-          loopPlacesCount={facts.loopPlacesCount}
-          preview={facts.preview}
+          passedTwice={isLoop ? facts.placesPassedTwice : []}
+          wrongWay={
+            !isLoop && facts.wrongWayRound && head && tail
+              ? {
+                  direction,
+                  startsAt: hotspotLabel(reversed ? head : tail),
+                  from: hotspotLabel(reversed ? tail : head),
+                }
+              : null
+          }
+          borrowed={
+            facts.borrowParent && facts.borrowedM > 0
+              ? { metres: facts.borrowedM, parent: facts.borrowParent }
+              : null
+          }
+          sameEnds={facts.sameEnds}
+          direction={direction}
         />
-      )}
 
-      <ViaField value={panel.via} isLoop={isLoop} isLocked={routeLocked} onChange={panel.setVia} />
+        {(isLoop || (head && tail)) && (
+          <SaveTimeline
+            isLoop={isLoop}
+            loopPlacesCount={facts.loopPlacesCount}
+            preview={facts.preview}
+          />
+        )}
 
-      <SaveDirectionName
-        isLoop={isLoop}
-        name={facts.name}
-        direction={direction}
-        hasParent={!!panel.parent}
-        isEdit={!!existing}
-      />
+        <SaveDirectionName
+          isLoop={isLoop}
+          name={facts.name}
+          direction={direction}
+          hasParent={!!panel.parent}
+          isEdit={!!existing}
+        />
 
-      {!isLoop && (
-        <>
-          <hr className="my-4 border-neutral-200" />
-          {routeFields}
-        </>
-      )}
+        {panel.error && <p className="text-sm text-content-error">{panel.error}</p>}
 
-      {panel.error && <p className="mt-3 text-sm text-red-600">{panel.error}</p>}
-
-      {saveBlocked && <p className="mt-3 text-sm text-content-quaternary">{saveBlocked}</p>}
+        {saveBlocked && <p className="text-sm text-content-quaternary">{saveBlocked}</p>}
+      </div>
 
       <SaveFooter
-        isBusy={panel.busy}
-        isEdit={!!existing}
+        busyIntent={busyIntent}
         saveBlocked={saveBlocked}
+        onExit={handleExit}
         onCancel={onCancel}
+        onPublish={() => void handleSave('publish')}
       />
     </form>
   );
 }
 
-/** The panel's heading: an edit, a return trip, or a new route or loop. */
+/** What this save is, under the heading: an edit, a return trip, or a new route or ikot. */
 function panelTitle({
   isEdit,
   isReturnTrip,

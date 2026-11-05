@@ -9,7 +9,7 @@ import {
 } from '@/features/routes/model/routes';
 
 import { loopSaveRefusal, saveRefusal } from './save-checks';
-import { useRouteSave } from './use-route-save';
+import { useRouteSave, type SaveIntent } from './use-route-save';
 import { useSaveEnds } from './use-save-ends';
 import { useSaveFacts } from './use-save-facts';
 import { returnTripNotices } from '../drawing/loop-closing';
@@ -39,6 +39,8 @@ export interface UseSavePanelOptions {
   onSaved: (v: DirectionRow) => void;
   /** A save stored as a draft (STUDIO_DRAFTS). */
   onDrafted?: (directionId: string) => void;
+  /** A draft published (STUDIO_DRAFTS): the map has changed. */
+  onPublished?: (directionId: string) => void;
   /** Hears of a place made from the pickers, so the map's own list is read again. */
   onPlaceSaved?: () => void;
 }
@@ -57,6 +59,7 @@ export function useSavePanel({
   directions = [],
   onSaved,
   onDrafted,
+  onPublished,
   onPlaceSaved,
 }: UseSavePanelOptions) {
   const parent = existing?.route ?? route;
@@ -108,6 +111,7 @@ export function useSavePanel({
     hotspots,
     onSaved,
     onDrafted,
+    onPublished,
   });
 
   // A return trip fills its route's slot and leaves the route as it is; Edit
@@ -118,8 +122,7 @@ export function useSavePanel({
   // The toggle is locked by more than the route's facts: Edit route keeps it too.
   const loopLocked = !!existing || routeLocked;
 
-  async function submit(e: React.FormEvent) {
-    e.preventDefault();
+  async function submit(intent: SaveIntent) {
     const refusal = isLoop
       ? loopSaveRefusal({
           signboard,
@@ -139,18 +142,21 @@ export function useSavePanel({
       setError(refusal);
       return;
     }
-    await save({
-      routeId: written?.routeId ?? parent?.id ?? null,
-      directionId: written?.directionId ?? existing?.id ?? null,
-      writeRoute: !!existing,
-      signboard,
-      mode,
-      fareNote,
-      headHotspotId: isLoop ? null : headId,
-      tailHotspotId: isLoop ? null : tailId,
-      isLoop,
-      via,
-    });
+    await save(
+      {
+        routeId: written?.routeId ?? parent?.id ?? null,
+        directionId: written?.directionId ?? existing?.id ?? null,
+        writeRoute: !!existing,
+        signboard,
+        mode,
+        fareNote,
+        headHotspotId: isLoop ? null : headId,
+        tailHotspotId: isLoop ? null : tailId,
+        isLoop,
+        via,
+      },
+      intent,
+    );
   }
 
   return {

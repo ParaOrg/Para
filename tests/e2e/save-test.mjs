@@ -315,11 +315,11 @@ check(
   await page.getByRole('menuitem', { name: /Routes/ }).click();
   await page.waitForTimeout(300);
   const panel = page.getByTestId('route-panel');
-  const save = panel.getByRole('button', { name: 'Save' });
+  const save = panel.getByRole('button', { name: /^(Publish|Save as draft)$/ }).last();
   check(
     "the route's form is beside the map from the first click, named by its heading",
     (await panel.isVisible()) &&
-      (await page.getByRole('form', { name: 'Save this route' }).isVisible()),
+      (await page.getByRole('form', { name: 'Route Information' }).isVisible()),
   );
   check(
     '  the map beside it is live, and the toolbar has no Done: Save is Done',
@@ -349,12 +349,12 @@ check(
   const panelBox = await panel.boundingBox();
   const mapBox = await page.locator('[data-map-box]').boundingBox();
   check(
-    '  the form stands left of the map, 384 px wide, and the map starts where it ends',
+    '  the form stands left of the map, 380 px wide, and the map starts where it ends',
     panelBox !== null &&
       mapBox !== null &&
       panelBox.x === 0 &&
-      Math.round(panelBox.width) === 384 &&
-      Math.round(mapBox.x) === 384,
+      Math.round(panelBox.width) === 380 &&
+      Math.round(mapBox.x) === 380,
     JSON.stringify({ panel: panelBox, map: mapBox }),
   );
   const infoBesideBox = await page.getByRole('button', { name: 'Map data sources' }).boundingBox();
@@ -386,6 +386,35 @@ check(
   await page.getByTitle('Discard this route').click();
   await page.waitForTimeout(300);
   check('  ✕ takes the form away with the line', !(await panel.isVisible()));
+
+  // Exit, at the sidebar's foot: it asks before it loses a line, and ends the drawing.
+  await page.getByRole('button', { name: 'New route, terminal or hintuan' }).click();
+  await page.getByRole('menuitem', { name: /Routes/ }).click();
+  await page.waitForTimeout(300);
+  const exit = panel.getByRole('button', { name: 'Exit' });
+  await clickAt(OUT[0], 300);
+  await clickAt(OUT[1], 300);
+  // The suite's own dialog handler says yes to every question, so the page's is answered here.
+  const answerConfirm = (answer) =>
+    page.evaluate((a) => {
+      window.confirm = (message) => {
+        window.__asked = message;
+        return a;
+      };
+    }, answer);
+  await answerConfirm(false);
+  await exit.click();
+  await page.waitForTimeout(300);
+  const asked = await page.evaluate(() => window.__asked);
+  check(
+    '  Exit with a line asks "Discard your changes?"; No keeps the line and the form',
+    asked === 'Discard your changes?' && (await panel.isVisible()) && (await pointsShown()) === 2,
+    asked,
+  );
+  await answerConfirm(true);
+  await exit.click();
+  await page.waitForTimeout(300);
+  check('  and Yes ends the drawing', !(await panel.isVisible()));
 }
 
 // ---- 3. A route between them, saved with its slot
