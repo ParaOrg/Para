@@ -88,6 +88,20 @@ From the owner's look at staging, with Figma's pen tool as the reference:
 21. **The route panel on the left of the map:** the form is read first, left to right.
 22. **The studio's map controls match the public map's:** the information button at the lower left, sharing the public map's placement.
 
+23. **Handles, Figma-style.** The handle line is red/400 and the dot at its end red/600. While drawing, the last two points always show their handles; an older point shows its handles only when its anchor is clicked.
+24. **Arrows on Draw's stretches too,** straight and curved, not only Snap's routed ones. There are none on the Snap preview or the line to the cursor.
+25. **Keyboard:**
+    - Ctrl/⌘+Z undo; Ctrl/⌘+Shift+Z redo.
+    - D Draw; S Snap; F still toggles.
+    - Ctrl/⌘+Enter saves. **Plain Enter is no shortcut.**
+    - Letter keys are ignored while typing in a field.
+26. **Scrolling on the studio map, on a computer, as in Figma:**
+    - Ctrl/⌘+wheel zooms, and a trackpad pinch too.
+    - The wheel pans up and down; Shift+wheel pans left and right.
+    - The public map keeps scroll-to-zoom.
+
+Built in #724 and #730: the Snap hover preview is **dashed** parabrand-300, with a straight dashed guide at once and the road after a 120 ms rest. This replaces item 9's "solid" trail.
+
 Also decided that day:
 - **Card/red/surface-light** is red/400, as Figma has it (#722).
 - **A double-click on a loop's closing point** may close it on the first click: "we can start always again".
