@@ -16,9 +16,5 @@ interface SaveToastsProps {
  */
 export function SaveToasts({ toast, onDismiss }: SaveToastsProps) {
   if (!toast) return null;
-  return (
-    <Toast tone="alert" onDismiss={onDismiss}>
-      {toast.text}
-    </Toast>
-  );
+  return <Toast onDismiss={onDismiss}>{toast.text}</Toast>;
 }

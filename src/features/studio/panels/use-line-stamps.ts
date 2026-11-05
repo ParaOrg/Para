@@ -1,7 +1,9 @@
+import { OTHER_EDITOR } from '../data/draft-lock';
+import type { EditStamp } from '../data/edit-stamps';
 import type { DraftKind } from '../data/review-schema';
 import { useEditStampsQuery } from '../data/use-edit-stamps-query';
 
-/** Line detail's dates, in Manila time: "5 Nov 2026, 3:42 PM", as the owner chose. */
+/** Line detail's dates, in Manila time: "5 Nov 2026, 3:42 PM". */
 const STAMP_PARTS = new Intl.DateTimeFormat('en-US', {
   timeZone: 'Asia/Manila',
   day: 'numeric',
@@ -11,9 +13,6 @@ const STAMP_PARTS = new Intl.DateTimeFormat('en-US', {
   minute: '2-digit',
   hour12: true,
 });
-
-/** What an author with no name on file is called, as the draft lock says it. */
-const UNNAMED_AUTHOR = 'another editor';
 
 /** An ISO time as Line detail says it; null when there is none or it cannot be read. */
 export function stampDate(iso: string | null): string | null {
@@ -25,24 +24,31 @@ export function stampDate(iso: string | null): string | null {
   return `${part('day')} ${part('month')} ${part('year')}, ${part('hour')}:${part('minute')} ${part('dayPeriod').toUpperCase()}`;
 }
 
-interface LineStamps {
+export interface LineStamps {
   author: string | null;
   datePublished: string | null;
   lastEdited: string | null;
 }
 
 /**
+ * A route's or hotspot's stamp as Line detail says it: the author by name, or "another editor"
+ * when they have none on file. All null with no stamp: Line detail says "--" for each.
+ */
+export function lineStamps(stamp: EditStamp | undefined): LineStamps {
+  return {
+    author: stamp?.authorName ?? (stamp?.authorId ? OTHER_EDITOR : null),
+    datePublished: stampDate(stamp?.publishedAt ?? null),
+    lastEdited: stampDate(stamp?.lastEditedAt ?? null),
+  };
+}
+
+/**
  * Line detail's Author, Date published and Last edited for a route or a hotspot
- * (useEditStampsQuery). All null for one not saved yet, and while the stamps are read: Line
- * detail says "--" for each.
+ * (useEditStampsQuery). All null for one not saved yet, while the stamps are read, or when they
+ * could not be read.
  */
 export function useLineStamps(kind: DraftKind, id: string | null): LineStamps {
   const query = useEditStampsQuery();
   const stamps = kind === 'route' ? query.data?.routes : query.data?.hotspots;
-  const stamp = id === null ? undefined : stamps?.get(id);
-  return {
-    author: stamp?.authorName ?? (stamp?.authorId ? UNNAMED_AUTHOR : null),
-    datePublished: stampDate(stamp?.publishedAt ?? null),
-    lastEdited: stampDate(stamp?.lastEditedAt ?? null),
-  };
+  return lineStamps(id === null ? undefined : stamps?.get(id));
 }

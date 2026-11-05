@@ -26,7 +26,7 @@ type Story = StoryObj<typeof meta>;
 
 /**
  * A draft, as Figma 4300:20893 draws it: Draft in orange, and no Last edited. Who saved it and
- * when read "--", as the sidebar has them until the database records them.
+ * when read "--": not known yet, as for a line not saved or while they are read.
  */
 export const Draft: Story = {
   play: async ({ canvasElement }) => {
