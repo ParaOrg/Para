@@ -39,6 +39,13 @@ interface DrawToolbarProps {
   ends?: ExtendEnds | null;
   /** While drawing a route's return trip: where the loop closes (use-loop-closing.ts). */
   loop?: LoopPlan | null;
+  /**
+   * The route's sidebar stands beside the map and shows the count, the hint
+   * and Close the loop itself: the toolbar is then Undo/Redo | Move · Snap ·
+   * Draw (with Done and ✕). Without it (a phone, a narrow screen, signed
+   * out) the toolbar keeps them.
+   */
+  isBesideSidebar?: boolean;
 }
 
 /**
@@ -64,9 +71,18 @@ export function DrawToolbar({
   keys = true,
   ends = null,
   loop = null,
+  isBesideSidebar = false,
 }: DrawToolbarProps) {
   if (draw.picking) return <PickBar draw={draw} ends={ends} />;
-  return <Toolbar draw={draw} onDone={onDone} keys={keys} loop={loop} />;
+  return (
+    <Toolbar
+      draw={draw}
+      onDone={onDone}
+      keys={keys}
+      loop={loop}
+      isBesideSidebar={isBesideSidebar}
+    />
+  );
 }
 
 function Toolbar({
@@ -74,11 +90,13 @@ function Toolbar({
   onDone,
   keys,
   loop,
+  isBesideSidebar,
 }: {
   draw: Drawing;
   onDone: (() => void) | undefined;
   keys: boolean;
   loop: LoopPlan | null;
+  isBesideSidebar: boolean;
 }) {
   const points = draw.controlPoints.length;
   const area = draw.area;
@@ -120,7 +138,7 @@ function Toolbar({
       className="absolute bottom-[calc(1.5rem+env(safe-area-inset-bottom))] left-1/2 z-10 flex w-max max-w-[calc(100%-2rem)] -translate-x-1/2 flex-col items-center gap-2"
     >
       {/* Dragging and right-clicking are not discoverable on a bare map (drawHint). */}
-      {hint && !contextual && (
+      {hint && !contextual && !isBesideSidebar && (
         <p
           className={
             finger
@@ -136,12 +154,14 @@ function Toolbar({
       <PutBack draw={draw} />
       <FollowChip draw={draw} />
 
-      <DrawCount
-        draw={draw}
-        isFinger={finger}
-        doneReason={doneReason}
-        onUTurnHelp={() => setUTurnHelp(!uTurnHelp)}
-      />
+      {!isBesideSidebar && (
+        <DrawCount
+          draw={draw}
+          isFinger={finger}
+          doneReason={doneReason}
+          onUTurnHelp={() => setUTurnHelp(!uTurnHelp)}
+        />
+      )}
 
       {confirming ? (
         <div className={PILL}>
@@ -163,7 +183,7 @@ function Toolbar({
         <div className="flex flex-wrap items-center justify-center gap-2">
           <UndoRedo draw={draw} noun={noun} />
 
-          {loop && (
+          {loop && !isBesideSidebar && (
             <div className={PILL}>
               <CloseLoop draw={draw} loop={loop} />
             </div>
