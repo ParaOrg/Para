@@ -89,12 +89,11 @@ export function useRouteSave({
       const { result, directionId } = await saveRouteDraft(input, hotspots, newRouteId.current);
       const refusal = draftRefusal(result);
       if (refusal) throw new Error(refusal);
-      // Publish is the draft save and then its approval, in one press, until the database
-      // publishes a draft in one call (.scratch/codebase-review/database.md).
+      // Publish is the draft save and then publish_draft at the revision it saved, in one press.
       if (intent === 'publish') {
-        // Without the draft's row there is nothing to approve: never call that published.
+        // Without the draft's row there is nothing to publish: never call that published.
         if (!result.draft) throw new Error(NOT_PUBLISHED);
-        const published = await review.mutateAsync({ action: 'approve', draft: result.draft });
+        const published = await review.mutateAsync({ action: 'publish', draft: result.draft });
         if (published.code !== 'approved')
           throw new Error(`${NOT_PUBLISHED} ${reviewMessage(published)}`);
         if (onPublished) onPublished(directionId);
