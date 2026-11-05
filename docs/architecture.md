@@ -305,6 +305,7 @@ flowchart TD
   features_studio_panels --> features_routes_geo
   features_studio_panels --> features_routes_map
   features_studio_panels --> features_routes_model
+  features_studio_panels --> features_studio_auth
   features_studio_panels --> features_studio_data
   features_studio_panels --> features_studio_drawing
   features_studio_panels --> features_studio_review
@@ -362,7 +363,7 @@ flowchart TD
 | `features/studio/data` | `features/routes/geo`, `features/routes/model`, `features/routes/published`, `features/studio/auth`, `shared/types`, `shared/utils` |
 | `features/studio/drawing` | `design-system/foundation`, `features/routes/map`, `features/routes/model`, `features/studio/data`, `shared/utils` |
 | `features/studio/maps` | `design-system/foundation`, `design-system/primitives`, `features/routes/map`, `features/studio/data` |
-| `features/studio/panels` | `design-system/primitives`, `features/routes/cards`, `features/routes/geo`, `features/routes/map`, `features/routes/model`, `features/studio/data`, `features/studio/drawing`, `features/studio/review`, `shared/ui`, `shared/utils` |
+| `features/studio/panels` | `design-system/primitives`, `features/routes/cards`, `features/routes/geo`, `features/routes/map`, `features/routes/model`, `features/studio/auth`, `features/studio/data`, `features/studio/drawing`, `features/studio/review`, `shared/ui`, `shared/utils` |
 | `features/studio/public-view` | `design-system/primitives`, `features/studio/data` |
 | `features/studio/review` | `design-system/primitives`, `features/studio/auth`, `features/studio/data`, `features/studio/maps` |
 | `shared/config` | — |
