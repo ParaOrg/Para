@@ -857,10 +857,10 @@ check(
   w = writesSince(n);
   const published = tables.route.find((r) => r.via === 'Published Road');
   check(
-    'Publish saves the draft, then submits and approves it: the route is on the map',
+    'Publish saves the draft, then publishes it in one call: the route is on the map',
     rpcs(w, 'claim_draft').length === 1 &&
-      rpcs(w, 'submit_draft').length === 1 &&
-      rpcs(w, 'approve_reviewed_draft').length + rpcs(w, 'approve_draft').length === 1 &&
+      rpcs(w, 'publish_draft').length === 1 &&
+      rpcs(w, 'submit_draft').length === 0 &&
       published?.status === 'approved' &&
       !(await page.getByTestId('route-panel').isVisible()),
     said(w),
