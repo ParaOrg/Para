@@ -13,7 +13,7 @@
 //   U-turns    Where the route turns back on itself at a join, the line is kept
 //              as the router drew it and the editor says so: the point is
 //              ringed in amber with its doubled-back stretch (the draw-uturns
-//              source) and the toolbar counts it. A join that goes on is not
+//              source) and the screen reader is told. A join that goes on is not
 //              flagged. Checked after appending, after dragging a middle point
 //              and after inserting a point. The owner chose this on 2026-09-15:
 //              a U-turn can be a click past a corner or a jeepney that really
@@ -287,7 +287,7 @@ const uTurnChecks = async (scenario, s, labels) => {
     `turn back: ${names(back)}; ringed: ${names(f.rings)}; stretches: ${f.stubs}`,
   );
   check(
-    `${scenario}: the toolbar counts them`,
+    `${scenario}: the screen reader's count names them`,
     n === back.length,
     `toolbar ⚠ ${n}, turn back ${back.length}`,
   );

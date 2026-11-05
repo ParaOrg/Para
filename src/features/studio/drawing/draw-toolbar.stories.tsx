@@ -182,13 +182,14 @@ export const OnePoint: Story = {
   },
 };
 
-/** A route of three points: its length, the mouse's hint, and Done open. */
+/** A route of three points: Done open, and its length read to a screen reader, never shown. */
 export const Drawn: Story = {
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
     await userEvent.click(canvas.getByRole('button', { name: 'Done' }));
     await expect(args.onDone).toHaveBeenCalledOnce();
-    await expect(canvas.getByText(/3 points · 640 m/)).toBeVisible();
+    await expect(canvas.getByRole('status')).toHaveTextContent(/3 points · 640 m/);
+    await expect(canvas.getByRole('status')).toHaveClass('sr-only');
   },
 };
 
@@ -274,20 +275,8 @@ export const MovePicked: Story = {
       'aria-pressed',
       'false',
     );
-    await expect(canvas.getByText(/^Move: drag a point, a handle or the line/)).toBeVisible();
     await userEvent.click(canvas.getByRole('button', { name: 'Snap' }));
     await expect(args.draw.setFreehand).toHaveBeenCalledWith(false);
-  },
-};
-
-/** Move under a finger: the hint says what a finger does there, and how to add. */
-export const FingerMovePicked: Story = {
-  args: { draw: drawn({ moving: true }) },
-  beforeEach: asFinger,
-  play: async ({ canvasElement }) => {
-    await expect(
-      within(canvasElement).getByText(/^Move: drag a point · tap a point for options/),
-    ).toBeVisible();
   },
 };
 
@@ -347,7 +336,7 @@ export const WithAStraightStretch: Story = {
       'aria-pressed',
       'true',
     );
-    await expect(canvas.getByText(/1 straight/)).toBeVisible();
+    await expect(canvas.getByRole('status')).toHaveTextContent(/1 straight/);
   },
 };
 
@@ -363,13 +352,15 @@ export const BesideTheForm: Story = {
   },
 };
 
-/** Waiting for the router: snapping… in rose, and Done rests until the line is road. */
+/** Waiting for the router: Done rests until the line is road, and a screen reader hears snapping…. */
 export const Snapping: Story = {
   args: { draw: drawn({ snapping: 1 }) },
   play: async ({ canvasElement }) => {
-    const done = within(canvasElement).getByRole('button', { name: 'Done' });
+    const canvas = within(canvasElement);
+    const done = canvas.getByRole('button', { name: 'Done' });
     await expect(done).toBeDisabled();
     await expect(done).toHaveAttribute('title', 'Waiting for the router');
+    await expect(canvas.getByRole('status')).toHaveTextContent(/snapping…/);
   },
 };
 
@@ -385,21 +376,19 @@ export const WaitingForTheLine: Story = {
       'title',
       'Waiting for the router',
     );
-    await expect(canvas.queryByText(/snapping/)).toBeNull();
+    await expect(canvas.getByRole('status')).not.toHaveTextContent(/snapping/);
   },
 };
 
-/** A U-turn ringed on the map: the count's warning opens what it means. */
+/** A U-turn ringed in amber on the map: a screen reader hears it too. */
 export const WithAUTurn: Story = {
   args: { draw: drawn({ uTurns: [{ point: 1, stub: [], metres: 60 }] }) },
   play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await userEvent.click(canvas.getByRole('button', { name: /1 U-turn/ }));
-    await expect(canvas.getByText(/turns back on itself at the ringed point,/)).toBeVisible();
+    await expect(within(canvasElement).getByRole('status')).toHaveTextContent(/⚠ 1 U-turn$/);
   },
 };
 
-/** Two U-turns: the plural, and the plural help. */
+/** Two U-turns: the plural. */
 export const WithTwoUTurns: Story = {
   args: {
     draw: drawn({
@@ -409,11 +398,14 @@ export const WithTwoUTurns: Story = {
       ],
     }),
   },
+  play: async ({ canvasElement }) => {
+    await expect(within(canvasElement).getByRole('status')).toHaveTextContent(/⚠ 2 U-turns/);
+  },
 };
 
 /**
- * A long route at its longest labels: kilometres, many points, straight
- * stretches and U-turns at once — the count must still fit.
+ * A long route at its longest: kilometres, many points, straight stretches
+ * and U-turns at once, all read out, and the toolbar no wider for it.
  */
 export const LongContent: Story = {
   args: {
@@ -548,17 +540,15 @@ export const ReturnTripEmpty: Story = {
     const canvas = within(canvasElement);
     const close = canvas.getByRole('button', { name: 'Close the loop: add a point first' });
     await expect(close).toBeDisabled();
-    await expect(canvas.getByText(/Tap the dot where papunta ended/)).toBeVisible();
   },
 };
 
-/** A return trip begun on the other way's last point: the loop can be closed, and the hint says where it starts. */
+/** A return trip begun on the other way's last point: the loop can be closed. */
 export const ReturnTripStarted: Story = {
   args: { draw: drawing({ controlPoints: [points[2]], segments: [], line: [points[2]] }), loop },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(canvas.getByRole('button', { name: 'Close the loop' })).toBeEnabled();
-    await expect(canvas.getByText(/starts where papunta ended \(the dot\)/)).toBeVisible();
   },
 };
 
@@ -582,27 +572,27 @@ export const ReturnTripClosed: Story = {
   },
 };
 
-/** Under a finger, nothing placed: the hint is a pill, and says what a tap does. */
+/** Under a finger, nothing placed: the toolbar alone, no hint over it. */
 export const FingerEmpty: Story = {
   args: { draw: drawing() },
   beforeEach: asFinger,
 };
 
-/** Under a finger, one point placed: the count says what Done still needs. */
+/** Under a finger, one point placed: Done rests until a second. */
 export const FingerOnePoint: Story = {
   args: { draw: drawing({ controlPoints: [points[0]], line: [points[0]] }) },
   beforeEach: asFinger,
   play: async ({ canvasElement }) => {
-    await expect(within(canvasElement).getByText(/add at least 2 points/)).toBeVisible();
+    await expect(within(canvasElement).getByRole('button', { name: 'Done' })).toBeDisabled();
   },
 };
 
-/** Under a finger, a hotspot not yet begun: tap its corners. */
+/** Under a finger, a hotspot not yet begun: the toolbar alone, no Snap | Draw. */
 export const FingerHotspot: Story = {
   args: { draw: drawing({ area: { kind: 'terminal', hotspotId: null } }) },
   beforeEach: asFinger,
   play: async ({ canvasElement }) => {
-    await expect(within(canvasElement).getByText('Tap the corners of the hotspot')).toBeVisible();
+    await expect(within(canvasElement).queryByTestId('snap-draw')).toBeNull();
   },
 };
 
@@ -651,17 +641,14 @@ export const Phone: Story = {
 };
 
 /**
- * Beside the route's sidebar, which shows the count, the hint and Close the
- * loop itself, and the form whose Save is Done: the toolbar keeps only
- * Undo/Redo | Move · Snap · Draw and ✕.
+ * Beside the route's sidebar, which shows Close the loop itself, and the form
+ * whose Save is Done: the toolbar keeps only Undo/Redo | Move · Snap · Draw and ✕.
  */
 export const BesideTheSidebar: Story = {
   args: { onDone: undefined, isBesideSidebar: true, loop },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(canvas.queryByText(/3 points/)).toBeNull();
     await expect(canvas.queryByRole('button', { name: /^Close the loop/ })).toBeNull();
-    await expect(canvas.queryByText(/drag a point to move/)).toBeNull();
     for (const name of ['Undo', 'Redo', 'Move', 'Snap', 'Draw'])
       await expect(canvas.getByRole('button', { name })).toBeVisible();
   },
