@@ -42,8 +42,9 @@ interface DrawToolbarProps {
   /**
    * The route's sidebar stands beside the map and shows the count, the hint
    * and Close the loop itself: the toolbar is then Undo/Redo | Move · Snap ·
-   * Draw (with Done and ✕). Without it (a phone, a narrow screen, signed
-   * out) the toolbar keeps them.
+   * Draw and ✕, with Done only when `onDone` is given (beside the route's
+   * form its Save is Done, as without the sidebar). Without it (a phone, a
+   * narrow screen, signed out) the toolbar keeps them.
    */
   isBesideSidebar?: boolean;
 }

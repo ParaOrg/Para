@@ -652,7 +652,8 @@ export const Phone: Story = {
 
 /**
  * Beside the route's sidebar, which shows the count, the hint and Close the
- * loop itself: the toolbar keeps only Undo/Redo | Move · Snap · Draw and ✕.
+ * loop itself, and the form whose Save is Done: the toolbar keeps only
+ * Undo/Redo | Move · Snap · Draw and ✕.
  */
 export const BesideTheSidebar: Story = {
   args: { onDone: undefined, isBesideSidebar: true, loop },
