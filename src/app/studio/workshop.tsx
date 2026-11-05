@@ -226,6 +226,7 @@ export function Workshop({ session, recovery }: WorkshopProps) {
           <PlaygroundSaveSheets
             isPlayground={isPlayground}
             isBeside={isBeside}
+            loop={loop}
             draw={draw}
             saved={saved}
             hotspots={hotspots}
@@ -331,6 +332,7 @@ export function Workshop({ session, recovery }: WorkshopProps) {
                 canDrawReturnTrip={slotLeft}
                 onDrawReturnTrip={startReturnTrip}
                 onDone={isBeside ? undefined : onDone}
+                isBesideSidebar={isBeside}
               />
             </div>
           </div>

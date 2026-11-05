@@ -42,6 +42,8 @@ interface PlaygroundToolsProps {
   onDrawReturnTrip: (routeId: string) => void;
   /** Done on the toolbar; absent while the route's form stands beside the map, whose Save is Done. */
   onDone?: () => void;
+  /** The sidebar stands beside the map: the toolbar leaves it the hint, the count and Close the loop. */
+  isBesideSidebar?: boolean;
 }
 
 /**
@@ -67,6 +69,7 @@ export function PlaygroundTools({
   canDrawReturnTrip,
   onDrawReturnTrip,
   onDone,
+  isBesideSidebar = false,
 }: PlaygroundToolsProps) {
   const { isSignedIn, isAccountDialogOpen, openSignIn, openPasswordChange } = auth;
   const { isSaving, toast, setToast } = saveFlow;
@@ -117,6 +120,7 @@ export function PlaygroundTools({
           keys={isPlayground && !isSaving && !isAccountDialogOpen}
           ends={extendEnds}
           loop={loop}
+          isBesideSidebar={isBesideSidebar}
         />
       ) : isChoosing ? null : (
         /*

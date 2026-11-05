@@ -18,6 +18,7 @@ import { useHotspotToEditQuery } from '../data/use-hotspot-to-edit-query';
 import { useRouteToEditQuery } from '../data/use-route-to-edit-query';
 import { whyCannotSave } from '../drawing/toolbar-text';
 import type { Drawing } from '../drawing/use-drawing';
+import type { LoopPlan } from '../drawing/use-loop-closing';
 
 type Saved = ReturnType<typeof useSavedRoutes<DirectionRow>>;
 type Hotspots = ReturnType<typeof useSavedHotspots<HotspotRow>>;
@@ -31,6 +32,8 @@ interface StudioSaveSheetsProps {
    */
   isBeside?: boolean;
   draw: Drawing;
+  /** While a return trip is drawn: where the loop closes, for the sidebar's Close the loop. */
+  loop?: LoopPlan | null;
   saved: Pick<Saved, 'directions'>;
   hotspots: Pick<Hotspots, 'hotspots' | 'linkedDirectionIds' | 'reload'>;
   target: Pick<SaveTarget, 'editing' | 'parentRoute' | 'slotReversed'>;
@@ -51,6 +54,7 @@ interface StudioSaveSheetsProps {
 export function StudioSaveSheets({
   isSaving,
   isBeside = false,
+  loop = null,
   draw,
   saved,
   hotspots,
@@ -181,6 +185,7 @@ export function StudioSaveSheets({
             key={`${draw.target.routeId}:${draw.target.directionId}:${routeToEdit.isSuccess ? 'read' : 'reading'}`}
             {...routeForm}
             isPublished={isPublished}
+            loop={loop}
             saveBlocked={draftNotRead ?? whyCannotSave(draw)}
           />
         </SaveBesideFrame>

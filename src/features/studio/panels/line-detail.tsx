@@ -27,6 +27,12 @@ interface LineDetailProps {
   pointsTerm?: 'Points' | 'Corners';
   /** The line's length; a hotspot's outline has none to give. */
   metres?: number | null;
+  /** The router is still owed road: the distance is not final. */
+  isSnapping?: boolean;
+  /** Stretches drawn straight, off the streets. */
+  straight?: number;
+  /** Places the line turns back on itself. */
+  uTurns?: number;
   status: LineStatus;
   /** Who last saved it, by name; null until it is known. */
   author?: string | null;
@@ -45,6 +51,9 @@ export function LineDetail({
   points,
   pointsTerm = 'Points',
   metres = null,
+  isSnapping = false,
+  straight = 0,
+  uTurns = 0,
   status,
   author = null,
   datePublished = null,
@@ -58,7 +67,13 @@ export function LineDetail({
       </h3>
       <dl data-testid="line-detail" className="flex flex-col gap-3 text-sm/5">
         <Fact term={pointsTerm}>{points}</Fact>
-        {metres !== null && <Fact term="Distance">{(metres / 1000).toFixed(1)} km</Fact>}
+        {metres !== null && (
+          <Fact term="Distance">
+            {(metres / 1000).toFixed(1)} km{isSnapping && ' · snapping…'}
+          </Fact>
+        )}
+        {straight > 0 && <Fact term="Straight">{straight}</Fact>}
+        {uTurns > 0 && <Fact term="U-turns">⚠ {uTurns}</Fact>}
         <Fact term="Status" tone={status}>
           {STATUS_LABEL[status]}
         </Fact>

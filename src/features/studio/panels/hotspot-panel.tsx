@@ -5,6 +5,7 @@ import { coarse } from '@/features/routes/map/map-view';
 import { parseAliases, type HotspotRow } from '@/features/routes/model/hotspots';
 import { isLoop, type DirectionRow } from '@/features/routes/model/routes';
 
+import { DrawingHint } from './drawing-hint';
 import { groupBySignboard, knownInformalNames, tickedDirections } from './hotspot-checks';
 import { LineDetail } from './line-detail';
 import { PassesThrough } from './passes-through';
@@ -231,6 +232,8 @@ export function HotspotPanel({
             </p>
           </div>
         </section>
+
+        {isBeside && <DrawingHint draw={draw} />}
 
         {kind === 'terminal' ? (
           <TerminalChecklist groups={groups} ticked={ticked} onToggle={toggle} />

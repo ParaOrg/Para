@@ -4,6 +4,7 @@ import type { HotspotRow } from '@/features/routes/model/hotspots';
 import type { DirectionRow } from '@/features/routes/model/routes';
 import {
   StudioSaveSheets,
+  type useLoopClosing,
   type useContributionStart,
   type useDrawing,
   type useSaveFlow,
@@ -14,6 +15,8 @@ interface PlaygroundSaveSheetsProps {
   isPlayground: boolean;
   /** A route's form beside the map while it is drawn (StudioSaveSheets). */
   isBeside: boolean;
+  /** While a return trip is drawn: where the loop closes, for the sidebar's Close the loop. */
+  loop: ReturnType<typeof useLoopClosing>['loop'];
   draw: ReturnType<typeof useDrawing>;
   saved: ReturnType<typeof useSavedRoutes<DirectionRow>>;
   hotspots: ReturnType<typeof useSavedHotspots<HotspotRow>>;
@@ -29,6 +32,7 @@ interface PlaygroundSaveSheetsProps {
 export function PlaygroundSaveSheets({
   isPlayground,
   isBeside,
+  loop,
   draw,
   saved,
   hotspots,
@@ -43,6 +47,7 @@ export function PlaygroundSaveSheets({
       <StudioSaveSheets
         isSaving={isSaving}
         isBeside={isBeside}
+        loop={loop}
         draw={draw}
         saved={saved}
         hotspots={hotspots}
