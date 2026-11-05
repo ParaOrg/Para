@@ -558,8 +558,8 @@ expect the maker-only with check this replaces.
 
 # Applying keep_uploads_on_user_delete to the live project
 
-**Not applied live.** Safe to apply now: it changes only what happens when a user or a contributor row is
-deleted. Clean-up step 1 of `.scratch/codebase-review/database.md` (H2), approved by the owner on
+**Applied live 2026-11-05** (ledger `20261105131416`) from its paste file; its check passed. Do not reapply.
+It changes only what happens when a user or a contributor row is deleted. Clean-up step 1 of `.scratch/codebase-review/database.md` (H2), approved by the owner on
 2026-11-05. Deleting a user from the dashboard, a script or an anonymous clean-up used to cascade their
 contributions, points, hintos and uses away; only `delete_my_account` unlinked them first. Now a
 before-delete trigger on `contributor` unlinks their rides first, as `delete_my_account(false)` does
