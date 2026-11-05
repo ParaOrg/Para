@@ -11,8 +11,8 @@ import type { AreaTarget } from './drawing-types';
 
 /**
  * Which way the line being drawn goes: the public map's moving chevrons
- * (flowChevrons), on its solid stretches only. A dashed (freehand) stretch has
- * none, so a dash is never read as a chevron; a stand-in waiting for the
+ * (flowChevrons), on its routed stretches only. A Draw (freehand) stretch has
+ * none, so a stretch the router refused is not read as road; a stand-in waiting for the
  * router has none, not being road yet; a hotspot has none, having no way.
  */
 
@@ -27,7 +27,7 @@ const drawAcross = () => DRAW_LINE_WIDTH;
  * spacing carries on across a join instead of starting afresh at every point.
  * Empty for a hotspot.
  */
-export function solidRuns(
+export function routedRuns(
   segments: readonly (Segment | undefined)[],
   area: AreaTarget | null,
   isStandIn: (segment: Segment) => boolean = () => false,
@@ -51,7 +51,7 @@ export function solidRuns(
 }
 
 /**
- * Chevrons flowing along the drawing's solid stretches, from its first point
+ * Chevrons flowing along the drawing's routed stretches, from its first point
  * to its last. An edit carries the flow on from where it was rather than
  * starting the chevrons again from the line's start.
  */
@@ -61,7 +61,7 @@ export function useDrawArrows(
   area: AreaTarget | null,
   isStandIn: (segment: Segment) => boolean,
 ): void {
-  const runs = useMemo(() => solidRuns(segments, area, isStandIn), [segments, area, isStandIn]);
+  const runs = useMemo(() => routedRuns(segments, area, isStandIn), [segments, area, isStandIn]);
   const clock = useRef<FlowClock>({ flowed: 0 });
   // Over the line, under its hit area and points: the drawing's layers come first.
   const isHitReady = useLayerReady(map, HIT_LAYER);

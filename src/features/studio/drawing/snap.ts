@@ -21,14 +21,15 @@ const OSRM = 'https://router.project-osrm.org/route/v1/driving';
  * Without a limit the router silently takes the nearest road however far away
  * it is: a click in the La Mesa watershed snapped to Quirino Highway 1.2 km
  * off and looked like success. With the limit the router refuses, and a
- * refused gap is drawn dashed, where it can be seen and fixed.
+ * refused gap is drawn straight, and the toolbar counts it, where it can be
+ * seen and fixed.
  */
 const SNAP_RADIUS_M = 25;
 
 /**
  * The public router allows about one request a second. Requests are spaced
  * this far apart across the page, so a quick run of clicks queues instead of
- * being refused — and a refusal draws a good stretch as a dashed straight line.
+ * being refused — and a refusal draws a good stretch as a straight line.
  */
 const REQUEST_GAP_MS = 1000;
 

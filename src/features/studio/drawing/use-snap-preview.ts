@@ -80,7 +80,12 @@ export function useSnapPreview(
         type: 'line',
         source: SRC,
         layout: { 'line-cap': 'round', 'line-join': 'round' },
-        paint: { 'line-color': MAP_PAINT['Paint/draw-preview'], 'line-width': DRAW_LINE_WIDTH },
+        paint: {
+          'line-color': MAP_PAINT['Paint/draw-preview'],
+          'line-width': DRAW_LINE_WIDTH,
+          // The one dashed line in the drawing: offered, not yet drawn.
+          'line-dasharray': [2, 1.5],
+        },
       },
       LAYERS.drawCasing,
     );

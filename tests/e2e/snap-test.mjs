@@ -7,8 +7,9 @@
 // back out of the map (the draw-line source: one feature per segment, with
 // `index` and `snap`) and checks three things:
 //
-//   far click  A click no road is within 25 m of becomes a straight, dashed
-//              'freehand' segment, not a routed line to a road far away.
+//   far click  A click no road is within 25 m of becomes a straight, solid
+//              'freehand' segment, not a routed line to a road far away. The
+//              only dashed line is the Snap preview's.
 //   U-turns    Where the route turns back on itself at a join, the line is kept
 //              as the router drew it and the editor says so: the point is
 //              ringed in amber with its doubled-back stretch (the draw-uturns
@@ -360,7 +361,15 @@ check(
   `gaps ${snapModes(s)}, the line ends ${end ? Math.round(metres(end, W)) : '?'} m from the click, router answered ${saidText}`,
 );
 arrows = await chevrons();
-check('far click: no chevrons on the dashed (freehand) line', arrows === 0, `${arrows} chevrons`);
+check('far click: no chevrons on the freehand line', arrows === 0, `${arrows} chevrons`);
+const freehandDash = await page.evaluate(() =>
+  window.__map.getPaintProperty('draw-line-freehand', 'line-dasharray'),
+);
+check(
+  'far click: the freehand line is solid, not dashed',
+  freehandDash === undefined,
+  JSON.stringify(freehandDash),
+);
 await discard();
 
 console.log('== Append (Sinai Street, Novaliches)');
@@ -449,7 +458,7 @@ await uTurnChecks('insert', s, ['A', 'P', 'B', 'D']);
 await discard();
 
 console.log('== Live preview');
-// While the cursor rests, the road from the last point to it shows, solid, in
+// While the cursor rests, the road from the last point to it shows, dashed, in
 // draw-preview; a move takes it away at once; there is none in Draw.
 const preview = async () =>
   ((await page.evaluate(() => window.__src('draw-preview')))?.features ?? []).flatMap(
@@ -470,6 +479,14 @@ check(
   'preview: resting past B, the road from B to the cursor shows',
   offered.length > 2 && metres(offered[0], B) < 25 && metres(offered.at(-1), D) < 25,
   `${offered.length} coords, from B ${offered[0] ? Math.round(metres(offered[0], B)) : '?'} m, to the cursor ${offered.length ? Math.round(metres(offered.at(-1), D)) : '?'} m`,
+);
+const previewDash = await page.evaluate(() =>
+  window.__map.getPaintProperty('draw-preview-line', 'line-dasharray'),
+);
+check(
+  'preview: dashed, the one dashed line in the drawing',
+  Array.isArray(previewDash),
+  JSON.stringify(previewDash),
 );
 const segsBefore = (await segs()).length;
 await restAt(E);
