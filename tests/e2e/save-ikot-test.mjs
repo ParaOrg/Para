@@ -395,7 +395,7 @@ await page.waitForTimeout(300);
 
 // ---- 9. A save whose draft is refused, and the retry
 await drawLine(VIA);
-await page.getByPlaceholder('Zabarte').fill('Stand-in Road');
+await page.getByLabel('Via (if applicable)').fill('Stand-in Road');
 stub.fault = (method, table) => method === 'POST' && table === 'rpc/claim_draft';
 n = log.length;
 await saveButton().click();
