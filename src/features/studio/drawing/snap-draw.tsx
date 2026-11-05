@@ -37,7 +37,7 @@ export function SnapDraw({ draw }: SnapDrawProps) {
         onClick={pick[tool]}
         title={title}
         className={cn(
-          'flex items-center gap-1.5 rounded-full py-1.5 pr-3.5 pl-2.5 text-sm font-medium transition-colors [&>svg]:size-5',
+          'flex items-center gap-1.5 rounded-full py-1.5 pr-3.5 pl-2.5 text-sm font-medium transition-colors',
           isPicked
             ? 'bg-parabrand-100 text-parabrand-800'
             : 'text-content-primary hover:bg-surface-secondary',
