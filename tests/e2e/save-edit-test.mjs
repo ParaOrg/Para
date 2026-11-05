@@ -656,9 +656,10 @@ await page.waitForTimeout(300);
   await panel.getByRole('button', { name: 'Unpublish' }).click();
   await waitFor(async () => (await body()).includes('Unpublished. It leaves the public map'));
   check(
-    '  Unpublish takes the route down and closes the sidebar',
-    writesSince(m).some((x) => x.table === 'rpc/take_down') &&
+    '  Unpublish takes the route down, leaves it a draft, and closes the sidebar',
+    writesSince(m).some((x) => x.table === 'rpc/unpublish') &&
       tables.route.find((r) => r.id === viaRoute?.id)?.status === 'taken_down' &&
+      tables.draft.some((d) => d.subject_id === viaRoute?.id) &&
       !(await panel.isVisible()),
     said(writesSince(m)),
   );
