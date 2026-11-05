@@ -2,6 +2,7 @@ import { useState } from 'react';
 
 import type { SaveToast } from './save-toasts';
 import { DRAFTED } from '../data/draft-save';
+import { reviewMessage } from '../data/review-commands';
 
 interface UseSaveFlowOptions {
   /** Whether a line or an area is being drawn: a save panel belongs to one. */
@@ -10,6 +11,10 @@ interface UseSaveFlowOptions {
   recoveryError: string | null;
   /** Ends the drawing that was saved. */
   cancelDrawing: () => void;
+  /** Reads the saved routes again, once a publish has changed them. */
+  reloadRoutes: () => unknown;
+  /** Reads the saved hotspots again, once a publish has changed them. */
+  reloadHotspots: () => unknown;
 }
 
 /**
@@ -17,7 +22,13 @@ interface UseSaveFlowOptions {
  * time, the newest: a save's, or a problem. A save closes its panel, ends the
  * drawing, reads what it changed again and says so.
  */
-export function useSaveFlow({ isDrawing, recoveryError, cancelDrawing }: UseSaveFlowOptions) {
+export function useSaveFlow({
+  isDrawing,
+  recoveryError,
+  cancelDrawing,
+  reloadRoutes,
+  reloadHotspots,
+}: UseSaveFlowOptions) {
   const [isSaving, setIsSaving] = useState(false);
   // A drawing that ends with its panel open takes the panel with it, or the
   // next drawing would open on a save form with no points.
@@ -39,6 +50,15 @@ export function useSaveFlow({ isDrawing, recoveryError, cancelDrawing }: UseSave
     setNotice(DRAFTED);
   };
 
+  // A draft published: the map's own rows changed, so both are read again.
+  const onPublished = () => {
+    setIsSaving(false);
+    cancelDrawing();
+    void reloadRoutes();
+    void reloadHotspots();
+    setNotice(reviewMessage({ code: 'approved' }));
+  };
+
   return {
     isSaving,
     setIsSaving,
@@ -48,5 +68,6 @@ export function useSaveFlow({ isDrawing, recoveryError, cancelDrawing }: UseSave
     /** The direction a save just wrote, while its toast is up. */
     justSaved: toast?.kind === 'route' ? toast.v : null,
     onDrafted,
+    onPublished,
   };
 }

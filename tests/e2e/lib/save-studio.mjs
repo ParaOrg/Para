@@ -681,7 +681,8 @@ export const backToMap = async () => {
   const back = page.getByRole('button', { name: 'Back to map' });
   if (await back.isVisible()) await back.click();
 };
-export const saveButton = () => page.getByRole('button', { name: /^(Save|Update)$/ });
+// The sidebar's save: Save as draft, the footer's last button.
+export const saveButton = () => page.getByRole('button', { name: 'Save as draft', exact: true });
 export const dismissToasts = async () => {
   for (const d of await page.getByRole('button', { name: 'Dismiss' }).all())
     await d.click().catch(() => {});

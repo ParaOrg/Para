@@ -1,3 +1,5 @@
+import type { Segment } from '@/shared/utils/geo';
+
 import type { AreaTarget } from './drawing-types';
 
 /**
@@ -14,6 +16,11 @@ export function isTyping(target: EventTarget | null): boolean {
   const el = target as HTMLElement | null;
   if (!el) return false;
   return el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName);
+}
+
+/** How many of a route's stretches go straight (Draw's, or refused by the router): the count's "N straight". */
+export function straightCount(segments: readonly (Segment | undefined)[]): number {
+  return segments.filter((s) => s?.snap === 'freehand').length;
 }
 
 /** Whether the keyboard is a Mac's, whose shortcuts read ⌘ for Ctrl. */

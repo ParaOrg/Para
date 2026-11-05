@@ -649,3 +649,20 @@ export const Phone: Story = {
   parameters: { phone: true },
   beforeEach: asFinger,
 };
+
+/**
+ * Beside the route's sidebar, which shows the count, the hint and Close the
+ * loop itself, and the form whose Save is Done: the toolbar keeps only
+ * Undo/Redo | Move · Snap · Draw and ✕.
+ */
+export const BesideTheSidebar: Story = {
+  args: { onDone: undefined, isBesideSidebar: true, loop },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.queryByText(/3 points/)).toBeNull();
+    await expect(canvas.queryByRole('button', { name: /^Close the loop/ })).toBeNull();
+    await expect(canvas.queryByText(/drag a point to move/)).toBeNull();
+    for (const name of ['Undo', 'Redo', 'Move', 'Snap', 'Draw'])
+      await expect(canvas.getByRole('button', { name })).toBeVisible();
+  },
+};

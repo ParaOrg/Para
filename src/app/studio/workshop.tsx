@@ -105,6 +105,8 @@ export function Workshop({ session, recovery }: WorkshopProps) {
     isDrawing: draw.drawing,
     recoveryError: recovery.error,
     cancelDrawing: draw.cancel,
+    reloadRoutes: saved.reload,
+    reloadHotspots: hotspots.reload,
   });
   const { isSaving, setIsSaving, setNotice, justSaved } = saveFlow;
   // A drawing begun from an upload (Use this line, Draw a hintuan here), and the

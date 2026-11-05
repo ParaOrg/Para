@@ -1,8 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
 import type { HotspotRow } from '@/features/routes/model/hotspots';
 import type { RouteRow, DirectionRow } from '@/features/routes/model/routes';
+import { createQueryClient } from '@/shared/lib/query-client';
 import { M_PER_DEG, type LngLat, type Segment } from '@/shared/utils/geo';
 
 import { SaveBesideFrame, SaveSheetFrame } from './save-frames';
@@ -50,7 +52,7 @@ const hotspots: HotspotRow[] = [
 
 /**
  * Just the parts of a drawing the panel reads. Sample data only: a story has no
- * Supabase client, so pressing Save here shows an error and writes nothing.
+ * Supabase client, so pressing a save here shows an error and writes nothing.
  */
 function drawing(segments: Segment[], uTurns = 0): Drawing {
   const controlPoints: LngLat[] = [
@@ -77,12 +79,22 @@ const routed = (streets?: Segment['streets']): Segment => ({
   streets,
 });
 
+/** The footer's save, the form's submit. */
+const saveButton = (canvas: ReturnType<typeof within>) =>
+  canvas.getByRole('button', { name: 'Save as draft' });
+
 const meta = {
   title: 'Features/Studio/SavePanel',
   component: SavePanel,
   // The panel covers the map it sits over, so give it a map-sized box. The
   // `beside` parameter stands it left of the map instead, as on a computer.
+  // Publish asks the review queries, so the panel sits under a query client of its own.
   decorators: [
+    (Story) => (
+      <QueryClientProvider client={createQueryClient()}>
+        <Story />
+      </QueryClientProvider>
+    ),
     (Story, ctx) =>
       ctx.parameters.beside ? (
         <div className="flex h-176 bg-neutral-200">
@@ -342,7 +354,7 @@ export const EditRouteEndsTaken: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.selectOptions(canvas.getByTestId('save-head'), 'Lagro');
-    await userEvent.click(canvas.getByRole('button', { name: 'Update' }));
+    await userEvent.click(saveButton(canvas));
     await expect(
       await canvas.findByText(/Another route already runs between these two places/),
     ).toBeVisible();
@@ -356,7 +368,7 @@ export const EditRouteTurnedRound: Story = {
     const canvas = within(canvasElement);
     await userEvent.selectOptions(canvas.getByTestId('save-head'), 'SM Fairview');
     await userEvent.selectOptions(canvas.getByTestId('save-tail'), 'Tala');
-    await userEvent.click(canvas.getByRole('button', { name: 'Update' }));
+    await userEvent.click(saveButton(canvas));
     await expect(
       await canvas.findByText(/Head and tail swapped would turn the route round/),
     ).toBeVisible();
@@ -418,7 +430,7 @@ export const NewIkot: Story = {
     const canvas = within(canvasElement);
     await expect(canvas.getByRole('checkbox', { name: /Ikot: goes round, no ends/ })).toBeChecked();
     await expect(canvas.queryByTestId('save-head')).toBeNull();
-    await expect(canvas.getByRole('heading', { name: 'Save this ikot' })).toBeVisible();
+    await expect(canvas.getByRole('heading', { name: 'Route Information' })).toBeVisible();
     await expect(canvas.getByTestId('save-timeline')).toHaveTextContent('Tala');
   },
 };
@@ -428,8 +440,8 @@ export const IkotWithoutASignboard: Story = {
   args: NewIkot.args,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await userEvent.click(canvas.getByRole('button', { name: 'Save' }));
-    await expect(await canvas.findByText(/An ikot is called by its signboard/)).toBeVisible();
+    await userEvent.click(saveButton(canvas));
+    await expect(await canvas.findByText(/An ikot is called by its Ikot name/)).toBeVisible();
   },
 };
 
@@ -438,8 +450,8 @@ export const IkotSignboardTaken: Story = {
   args: { ...NewIkot.args, directions: [upIkot] },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await userEvent.type(canvas.getByLabelText(/Signboard/), ' up – IKOT');
-    await userEvent.click(canvas.getByRole('button', { name: 'Save' }));
+    await userEvent.type(canvas.getByLabelText('Ikot name'), ' up – IKOT');
+    await userEvent.click(saveButton(canvas));
     await expect(await canvas.findByText(/Another ikot already has this signboard/)).toBeVisible();
   },
 };
@@ -451,8 +463,8 @@ export const OpenLineTickedAsAnIkot: Story = {
     const canvas = within(canvasElement);
     await expect(canvas.getByRole('checkbox', { name: /Ikot/ })).not.toBeChecked();
     await userEvent.click(canvas.getByRole('checkbox', { name: /Ikot/ }));
-    await userEvent.type(canvas.getByLabelText(/Signboard/), 'UP – Ikot');
-    await userEvent.click(canvas.getByRole('button', { name: 'Save' }));
+    await userEvent.type(canvas.getByLabelText('Ikot name'), 'UP – Ikot');
+    await userEvent.click(saveButton(canvas));
     await expect(await canvas.findByText(/An ikot ends where it began/)).toBeVisible();
   },
 };
@@ -465,25 +477,52 @@ export const EditIkot: Story = {
     const toggle = canvas.getByRole('checkbox', { name: /Ikot: goes round, no ends/ });
     await expect(toggle).toBeChecked();
     await expect(toggle).toBeDisabled();
-    await expect(canvas.getByRole('heading', { name: 'Update this ikot' })).toBeVisible();
+    await expect(canvas.getByRole('heading', { name: 'Route Information' })).toBeVisible();
   },
 };
 
 /**
- * At a phone's width: the sheet fills the screen, Save held at its foot. The
- * sheet's `max-sm` reads the viewport, not the box, hence the phone viewport.
+ * At a phone's width: the sheet fills the screen, its footer held at its foot, Back to map in
+ * Exit's place. The sheet's `max-sm` reads the viewport, not the box, hence the phone viewport.
  */
 export const Phone: Story = {
   globals: { viewport: { value: 'mobile1', isRotated: false } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole('button', { name: 'Back to map' })).toBeVisible();
+    await expect(canvas.queryByRole('button', { name: 'Exit' })).toBeNull();
+    await expect(canvas.getByRole('button', { name: 'Publish' })).toBeVisible();
+  },
 };
 
-/** Beside the map on a computer: no Back to map, and Save is the drawing's Done. */
+/** Beside the map on a computer: Exit in Back to map's place, and the footer's saves are Done. */
 export const BesideTheMap: Story = {
   parameters: { beside: true },
   args: { onCancel: undefined, saveBlocked: null },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole('button', { name: 'Exit' })).toBeVisible();
+    await expect(canvas.queryByRole('button', { name: 'Back to map' })).toBeNull();
+    await expect(canvas.getByRole('button', { name: 'Publish' })).toBeVisible();
+  },
 };
 
-/** Beside the map before the line is long enough: Save waits, and says why. */
+/** An ikot beside the map: Ikot name in Origin and Destination's place, then Via and the mode. */
+export const BesideTheMapIkot: Story = {
+  parameters: { beside: true },
+  args: { onCancel: undefined, saveBlocked: null, existing: null },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole('checkbox', { name: /Ikot: goes round, no ends/ }));
+    const labels = [...canvasElement.querySelectorAll('label')].map((l) => l.textContent.trim());
+    const fields = labels.filter((l) =>
+      ['Ikot name', 'Via (if applicable)', 'Transportation mode', 'Origin'].includes(l),
+    );
+    await expect(fields).toEqual(['Ikot name', 'Via (if applicable)', 'Transportation mode']);
+  },
+};
+
+/** Beside the map before the line is long enough: the footer's saves wait, and say why. */
 export const BesideTheMapTooShort: Story = {
   parameters: { beside: true },
   args: {
@@ -498,7 +537,7 @@ export const BesideTheMapTooShort: Story = {
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(canvas.getByRole('button', { name: 'Save' })).toBeDisabled();
+    await expect(saveButton(canvas)).toBeDisabled();
     await expect(canvas.getByText('Add at least 2 points')).toBeVisible();
     await expect(canvas.queryByRole('button', { name: 'Back to map' })).toBeNull();
   },

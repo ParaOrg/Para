@@ -54,8 +54,10 @@ const tail = page.getByRole('group', { name: 'New place for the tail', exact: tr
 await tail.getByLabel(/Ground name/).fill('Preview route tail');
 await tail.getByRole('button', { name: 'Save place', exact: true }).click();
 await tail.waitFor({ state: 'detached' });
-await page.getByRole('button', { name: 'Save', exact: true }).click();
-await page.getByRole('button', { name: 'Save', exact: true }).waitFor({ state: 'detached' });
+await page.getByRole('button', { name: 'Save as draft', exact: true }).click();
+await page
+  .getByRole('button', { name: 'Save as draft', exact: true })
+  .waitFor({ state: 'detached' });
 await page.getByRole('button', { name: /^Drafts \(\d+\)$/ }).click();
 const text = await page.getByRole('dialog').innerText();
 assert.ok(text.includes('Preview route head'));

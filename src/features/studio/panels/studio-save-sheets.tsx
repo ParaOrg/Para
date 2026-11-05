@@ -32,6 +32,8 @@ interface StudioSaveSheetsProps {
   target: Pick<SaveTarget, 'editing' | 'parentRoute' | 'slotReversed'>;
   /** Hears what a save stored as a draft. */
   onDrafted?: (subjectId: string) => void;
+  /** A route's draft published: the map has changed. */
+  onPublished?: (subjectId: string) => void;
   onCancel: () => void;
 }
 
@@ -47,6 +49,7 @@ export function StudioSaveSheets({
   hotspots,
   target,
   onDrafted,
+  onPublished,
   onCancel,
 }: StudioSaveSheetsProps) {
   // The hotspot being edited, when the area trace came from a saved one.
@@ -76,6 +79,11 @@ export function StudioSaveSheets({
     client.removeQueries({ queryKey: reviewKeys.draftsOf() });
     onDrafted?.(subjectId);
   };
+  // A publish makes every cached draft stale too: the draft it published is gone.
+  const handlePublished = (subjectId: string) => {
+    client.removeQueries({ queryKey: reviewKeys.draftsOf() });
+    onPublished?.(subjectId);
+  };
   const routeForm = {
     draw,
     existing: target.editing && draftedRoute ? { ...target.editing, route: draftedRoute } : null,
@@ -84,6 +92,7 @@ export function StudioSaveSheets({
     hotspots: hotspots.hotspots,
     directions: saved.directions,
     onDrafted: handleDrafted,
+    onPublished: handlePublished,
     onPlaceSaved: () => void hotspots.reload(),
   };
 
