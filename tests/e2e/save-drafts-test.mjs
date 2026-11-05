@@ -194,9 +194,14 @@ const idle = () =>
   page
     .waitForFunction(() => !document.body.innerText.includes('snapping…'), null, { timeout: 15000 })
     .catch(() => {});
-// The drawing's count, not the sidebar's "Add at least 2 points" while a save waits.
-const pointsShown = async () =>
-  Number((await body()).match(/(?<!at least )(\d+) points?\b/)?.[1] ?? 0);
+// The drawing's count: the toolbar's "3 points", or beside the map Line detail's Points (or a
+// hotspot's Corners); never the sidebar's "Add at least 2 points" while a save waits.
+const countIn = (text) => {
+  const toolbar = text.match(/(?<!at least )(\d+) (?:points?|corners?)\b/);
+  const detail = text.match(/\b(?:Points|Corners)\s+(\d+)/);
+  return Number(detail?.[1] ?? toolbar?.[1] ?? 0);
+};
+const pointsShown = async () => countIn(await body());
 // On a computer the sidebar already stands beside the map, a route's or a hotspot's; narrower, Done.
 const done = async () => {
   await idle();

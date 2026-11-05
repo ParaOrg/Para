@@ -14,4 +14,4 @@ export const TOOL =
 
 /** Undo's and Redo's round buttons, an icon each. */
 export const ICON_TOOL =
-  'flex size-9 items-center justify-center rounded-full text-content-primary hover:bg-surface-secondary disabled:cursor-not-allowed disabled:opacity-40 [&>svg]:size-5';
+  'flex size-9 items-center justify-center rounded-full text-content-primary hover:bg-surface-secondary disabled:cursor-not-allowed disabled:opacity-40';
