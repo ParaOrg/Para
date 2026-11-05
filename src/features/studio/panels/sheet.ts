@@ -15,13 +15,13 @@ export const OVERLAY =
 
 /** A long form (SavePanel, HotspotPanel): a card, or the whole screen on a phone. */
 export const PANEL =
-  'max-h-full w-full max-w-md overflow-y-auto rounded-xl bg-white p-6 shadow-xl ' +
+  'max-h-full w-full max-w-md overflow-y-auto rounded-xl bg-surface p-6 shadow-xl ' +
   'max-sm:h-full max-sm:max-w-none max-sm:rounded-none max-sm:pt-[calc(1.5rem+env(safe-area-inset-top))]';
 
 /** A long form's Cancel and Save, kept at the bottom of the screen on a phone. */
 export const FOOTER =
-  'mt-5 flex gap-2 max-sm:sticky max-sm:-bottom-6 max-sm:-mx-6 max-sm:border-t max-sm:border-neutral-200 ' +
-  'max-sm:bg-white max-sm:px-6 max-sm:pt-3 max-sm:pb-[calc(1.5rem+env(safe-area-inset-bottom))]';
+  'mt-5 flex gap-2 max-sm:sticky max-sm:-bottom-6 max-sm:-mx-6 max-sm:border-t max-sm:border-border-primary ' +
+  'max-sm:bg-surface max-sm:px-6 max-sm:pt-3 max-sm:pb-[calc(1.5rem+env(safe-area-inset-bottom))]';
 
 /**
  * A route's sidebar left of the map on a computer (Figma 4300:20893): 380 across, the full

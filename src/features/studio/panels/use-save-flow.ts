@@ -5,10 +5,7 @@ import type { DirectionRow } from '@/features/routes/model/routes';
 
 import type { SaveToast } from './save-toasts';
 import { DRAFTED } from '../data/draft-save';
-
-/** What the toast says once a draft is published. */
-export const PUBLISHED =
-  'Published. The Studio map shows it now; the public map changes at the next publish.';
+import { reviewMessage } from '../data/review-commands';
 
 interface UseSaveFlowOptions {
   /** Whether a line or an area is being drawn: a save panel belongs to one. */
@@ -82,7 +79,7 @@ export function useSaveFlow({
     cancelDrawing();
     void reloadRoutes();
     void reloadHotspots();
-    setNotice(PUBLISHED);
+    setNotice(reviewMessage({ code: 'approved' }));
   };
 
   return {

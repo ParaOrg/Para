@@ -4,11 +4,12 @@ import { Button } from '@/design-system/primitives/button';
 
 import { FOOTER, FOOTER_BESIDE } from './sheet';
 import type { SaveIntent } from './use-route-save';
-import { STUDIO_DRAFTS } from '../data/flags';
 
 interface SaveFooterProps {
   /** The save under way, if any: its button says so. */
   busyIntent: SaveIntent | null;
+  /** Whether a change can wait as a draft (STUDIO_DRAFTS). Without drafts, Publish is the save. */
+  canDraft: boolean;
   /**
    * Why a save can't go yet (whyNotDone): the line is too short, or the router still owes it
    * road. Only beside the map, where the line is still drawn.
@@ -23,11 +24,12 @@ interface SaveFooterProps {
 
 /**
  * The sidebar's footer (Figma 4300:20893): Exit, Publish, and Save as draft, the form's submit.
- * Over the map on a phone, Back to map stands in Exit's place, since the line is kept. With
- * STUDIO_DRAFTS off there are no drafts: Publish is the submit, and Save as draft is not offered.
+ * Over the map on a phone, Back to map stands in Exit's place, since the line is kept. Without
+ * drafts, Publish is the submit, and Save as draft is not offered.
  */
 export function SaveFooter({
   busyIntent,
+  canDraft,
   saveBlocked = null,
   onExit,
   onCancel,
@@ -60,14 +62,14 @@ export function SaveFooter({
         <Button
           variant="secondary"
           size="small"
-          type={STUDIO_DRAFTS ? 'button' : 'submit'}
+          type={canDraft ? 'button' : 'submit'}
           label={busyIntent === 'publish' ? 'Publishing…' : 'Publish'}
-          onClick={STUDIO_DRAFTS ? onPublish : undefined}
+          onClick={canDraft ? onPublish : undefined}
           disabled={isSaveDisabled}
           title={blockedTitle}
         />
       </Grow>
-      {STUDIO_DRAFTS && (
+      {canDraft && (
         <Grow>
           <Button
             variant="primary"

@@ -3,15 +3,15 @@ import { useId, useState, type FormEvent } from 'react';
 import { hotspotLabel } from '@/features/routes/model/hotspots';
 import { LOOP_WORD } from '@/features/routes/model/routes';
 
+import { IkotNameField } from './ikot-name-field';
 import { LoopToggle } from './loop-toggle';
-import { RouteFields } from './route-fields';
+import { ModeField } from './mode-field';
 import { SaveDirectionName } from './save-direction-name';
 import { SaveEndsFields } from './save-ends-fields';
 import { SaveFooter } from './save-footer';
 import { SaveNotices } from './save-notices';
 import { SaveTimeline } from './save-timeline';
 import { BESIDE_BODY } from './sheet';
-import type { SaveIntent } from './use-route-save';
 import { useSavePanel, type UseSavePanelOptions } from './use-save-panel';
 import { ViaField } from './via-field';
 import { STUDIO_DRAFTS } from '../data/flags';
@@ -33,7 +33,7 @@ interface SavePanelProps extends UseSavePanelOptions {
  * route through it. An ikot has no ends: it is named by its Ikot name (ADR 0005).
  *
  * Its state and its submit are `useSavePanel`; its pieces live beside it: the ends
- * (`SaveEndsFields`), the route's facts (`RouteFields`, `ViaField`), the notices
+ * (`SaveEndsFields`), the route's facts (`IkotNameField`, `ViaField`, `ModeField`), the notices
  * (`SaveNotices`), what the line passes (`SaveTimeline`) and is called (`SaveDirectionName`) and
  * the footer (`SaveFooter`).
  */
@@ -45,7 +45,6 @@ export function SavePanel({ saveBlocked = null, onCancel, ...options }: SavePane
   const { hotspots, head, tail } = ends;
   const { reversed, direction } = facts;
   const isBeside = !onCancel;
-  const [busyIntent, setBusyIntent] = useState<SaveIntent | null>(null);
 
   // What Exit would lose: the line or a field changed since the sidebar opened.
   const changes = JSON.stringify([
@@ -59,14 +58,9 @@ export function SavePanel({ saveBlocked = null, onCancel, ...options }: SavePane
   ]);
   const [openedWith] = useState(changes);
 
-  const handleSave = async (intent: SaveIntent) => {
-    setBusyIntent(intent);
-    await panel.submit(intent);
-    setBusyIntent(null);
-  };
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    void handleSave(STUDIO_DRAFTS ? 'draft' : 'publish');
+    void panel.submit(STUDIO_DRAFTS ? 'draft' : 'publish');
   };
   const handleExit = () => {
     if (changes !== openedWith && !window.confirm('Discard your changes?')) return;
@@ -80,7 +74,7 @@ export function SavePanel({ saveBlocked = null, onCancel, ...options }: SavePane
       className={isBeside ? 'flex min-h-0 flex-1 flex-col' : undefined}
     >
       <div className={isBeside ? BESIDE_BODY : 'flex flex-col gap-5'}>
-        <section aria-labelledby={headingId} className="flex flex-col gap-3">
+        <section className="flex flex-col gap-3">
           <h2 id={headingId} className="text-xl/7 font-semibold text-content-primary">
             Route Information
           </h2>
@@ -93,13 +87,10 @@ export function SavePanel({ saveBlocked = null, onCancel, ...options }: SavePane
           </p>
           <LoopToggle isLoop={isLoop} isLocked={panel.loopLocked} onChange={panel.setIsLoop} />
           {isLoop ? (
-            <RouteFields
-              signboard={panel.signboard}
-              mode={panel.mode}
+            <IkotNameField
+              value={panel.signboard}
               isLocked={routeLocked}
-              isIkot
-              onSignboardChange={panel.setSignboard}
-              onModeChange={panel.setMode}
+              onChange={panel.setSignboard}
             />
           ) : (
             <SaveEndsFields
@@ -126,15 +117,7 @@ export function SavePanel({ saveBlocked = null, onCancel, ...options }: SavePane
             isLocked={routeLocked}
             onChange={panel.setVia}
           />
-          {!isLoop && (
-            <RouteFields
-              signboard={panel.signboard}
-              mode={panel.mode}
-              isLocked={routeLocked}
-              onSignboardChange={panel.setSignboard}
-              onModeChange={panel.setMode}
-            />
-          )}
+          <ModeField mode={panel.mode} isLocked={routeLocked} onChange={panel.setMode} />
         </section>
 
         <SaveNotices
@@ -184,11 +167,12 @@ export function SavePanel({ saveBlocked = null, onCancel, ...options }: SavePane
       </div>
 
       <SaveFooter
-        busyIntent={busyIntent}
+        busyIntent={panel.busy}
+        canDraft={STUDIO_DRAFTS}
         saveBlocked={saveBlocked}
         onExit={handleExit}
         onCancel={onCancel}
-        onPublish={() => void handleSave('publish')}
+        onPublish={() => void panel.submit('publish')}
       />
     </form>
   );

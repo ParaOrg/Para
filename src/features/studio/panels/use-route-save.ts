@@ -33,6 +33,13 @@ type RouteSaveForm = Pick<
  */
 export type SaveIntent = 'draft' | 'publish';
 
+/**
+ * A publish that stopped after the draft save. The approval submits first, so a refusal after
+ * it leaves the draft waiting in Drafts, where its Approve finishes the publish.
+ */
+const NOT_PUBLISHED =
+  'Saved as a draft, not published. To publish it, open Drafts and approve it there.';
+
 /** The direction a save wrote, by its route's id and its own. */
 interface WrittenDirection {
   routeId: string;
@@ -66,7 +73,8 @@ export function useRouteSave({
   onDrafted,
   onPublished,
 }: UseRouteSaveOptions) {
-  const [busy, setBusy] = useState(false);
+  // The save under way, by what was asked of it: the footer names it on its button.
+  const [busy, setBusy] = useState<SaveIntent | null>(null);
   const [error, setError] = useState<string | null>(null);
   // The direction as a save wrote it, when the link sync after it failed.
   // Saves are two steps, so a second press must update the row already written:
@@ -80,7 +88,7 @@ export function useRouteSave({
   const review = useReviewMutation();
 
   async function save(form: RouteSaveForm, intent: SaveIntent) {
-    setBusy(true);
+    setBusy(intent);
     setError(null);
     try {
       // The borrow on the parent's full line, read now if it has not come.
@@ -102,16 +110,18 @@ export function useRouteSave({
         if (refusal) throw new Error(refusal);
         // Publish is the draft save and then its approval, in one press, until the database
         // publishes a draft in one call (.scratch/codebase-review/database.md).
-        if (intent === 'publish' && result.draft) {
+        if (intent === 'publish') {
+          // Without the draft's row there is nothing to approve: never call that published.
+          if (!result.draft) throw new Error(NOT_PUBLISHED);
           const published = await review.mutateAsync({ action: 'approve', draft: result.draft });
           if (published.code !== 'approved')
-            throw new Error(`Saved as a draft, not published. ${reviewMessage(published)}`);
+            throw new Error(`${NOT_PUBLISHED} ${reviewMessage(published)}`);
           if (onPublished) onPublished(directionId);
-          else setBusy(false);
+          else setBusy(null);
           return;
         }
         if (onDrafted) onDrafted(directionId);
-        else setBusy(false);
+        else setBusy(null);
         return;
       }
       const named = await saveRouteAndLinks(input, hotspots, setWritten);
@@ -119,7 +129,7 @@ export function useRouteSave({
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
       // Only on failure: a save that succeeds closes the panel.
-      setBusy(false);
+      setBusy(null);
     }
   }
 

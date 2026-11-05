@@ -52,7 +52,7 @@ const hotspots: HotspotRow[] = [
 
 /**
  * Just the parts of a drawing the panel reads. Sample data only: a story has no
- * Supabase client, so pressing Save here shows an error and writes nothing.
+ * Supabase client, so pressing a save here shows an error and writes nothing.
  */
 function drawing(segments: Segment[], uTurns = 0): Drawing {
   const controlPoints: LngLat[] = [
@@ -484,20 +484,47 @@ export const EditIkot: Story = {
 };
 
 /**
- * At a phone's width: the sheet fills the screen, Save held at its foot. The
- * sheet's `max-sm` reads the viewport, not the box, hence the phone viewport.
+ * At a phone's width: the sheet fills the screen, its footer held at its foot, Back to map in
+ * Exit's place. The sheet's `max-sm` reads the viewport, not the box, hence the phone viewport.
  */
 export const Phone: Story = {
   globals: { viewport: { value: 'mobile1', isRotated: false } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole('button', { name: 'Back to map' })).toBeVisible();
+    await expect(canvas.queryByRole('button', { name: 'Exit' })).toBeNull();
+    await expect(canvas.getByRole('button', { name: 'Publish' })).toBeVisible();
+  },
 };
 
-/** Beside the map on a computer: no Back to map, and Save is the drawing's Done. */
+/** Beside the map on a computer: Exit in Back to map's place, and the footer's saves are Done. */
 export const BesideTheMap: Story = {
   parameters: { beside: true },
   args: { onCancel: undefined, saveBlocked: null },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole('button', { name: 'Exit' })).toBeVisible();
+    await expect(canvas.queryByRole('button', { name: 'Back to map' })).toBeNull();
+    await expect(canvas.getByRole('button', { name: 'Publish' })).toBeVisible();
+  },
 };
 
-/** Beside the map before the line is long enough: Save waits, and says why. */
+/** An ikot beside the map: Ikot name in Origin and Destination's place, then Via and the mode. */
+export const BesideTheMapIkot: Story = {
+  parameters: { beside: true },
+  args: { onCancel: undefined, saveBlocked: null, existing: null },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole('checkbox', { name: /Ikot: goes round, no ends/ }));
+    const labels = [...canvasElement.querySelectorAll('label')].map((l) => l.textContent.trim());
+    const fields = labels.filter((l) =>
+      ['Ikot name', 'Via (if applicable)', 'Transportation mode', 'Origin'].includes(l),
+    );
+    await expect(fields).toEqual(['Ikot name', 'Via (if applicable)', 'Transportation mode']);
+  },
+};
+
+/** Beside the map before the line is long enough: the footer's saves wait, and say why. */
 export const BesideTheMapTooShort: Story = {
   parameters: { beside: true },
   args: {
