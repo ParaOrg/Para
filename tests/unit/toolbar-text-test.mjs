@@ -1,6 +1,7 @@
 // What the studio's drawing toolbar says (src/features/studio/drawing/toolbar-text.ts):
 // the length, Extend's keep buttons in the jeep's order, why Done waits, the
-// U-turn warning, the hint over the bar, and keys typed into a field.
+// U-turn warning, the hint over the bar, keys typed into a field, and how a
+// shortcut is named.
 //
 //   node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs tests/unit/toolbar-text-test.mjs
 import { test } from 'node:test';
@@ -10,6 +11,7 @@ import {
   drawHint,
   formatDistance,
   isTyping,
+  withCommand,
   keepOptions,
   uTurnWarning,
   whyCannotSave,
@@ -106,4 +108,13 @@ test("whyCannotSave: Done's and the beside form's Save's one rule, a route's or 
   const hotspot = { kind: 'hintuan', hotspotId: null };
   assert.equal(whyCannotSave(route(2, { area: hotspot })), 'Add at least 3 corners');
   assert.equal(whyCannotSave(route(3, { area: hotspot })), null);
+});
+
+test('a shortcut names the command key as the computer does: Ctrl, or ⌘ on a Mac', () => {
+  assert.equal(withCommand('Z', false), 'Ctrl+Z');
+  assert.equal(withCommand('Shift+Z', false), 'Ctrl+Shift+Z');
+  assert.equal(withCommand('Enter', false), 'Ctrl+Enter');
+  assert.equal(withCommand('Z', true), '⌘Z');
+  assert.equal(withCommand('Shift+Z', true), '⇧⌘Z');
+  assert.equal(withCommand('Enter', true), '⌘Enter');
 });
