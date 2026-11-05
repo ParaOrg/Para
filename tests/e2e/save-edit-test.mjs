@@ -583,17 +583,17 @@ await guest.getByRole('button', { name: /Done/ }).click();
 await guest.waitForTimeout(400);
 check(
   'signed out, Done asks for sign-in',
-  (await guest.getByPlaceholder('you@example.com').count()) === 1,
+  (await guest.getByRole('textbox', { name: 'Email', exact: true }).count()) === 1,
 );
-await guest.getByPlaceholder('you@example.com').fill('owner@example.com');
-await guest.getByPlaceholder('Password').fill('stand-in');
+await guest.getByRole('textbox', { name: 'Email', exact: true }).fill('owner@example.com');
+await guest.getByLabel('Password', { exact: true }).fill('stand-in');
 // With a Turnstile site key in the build, Sign in waits for the check.
 await guest.waitForFunction(() => !document.querySelector('button[type="submit"]')?.disabled);
-await guest.getByPlaceholder('Password').press('Enter');
+await guest.getByLabel('Password', { exact: true }).press('Enter');
 await guest.waitForTimeout(1200);
 check(
   '  signing in closes the dialog',
-  (await guest.getByPlaceholder('you@example.com').count()) === 0,
+  (await guest.getByRole('textbox', { name: 'Email', exact: true }).count()) === 0,
 );
 const before = Number((await guestBody()).match(/(\d+) points?\b/)?.[1] ?? 0);
 await guest.keyboard.press('Control+z');
