@@ -508,6 +508,17 @@ await clickAt(A);
 await page.waitForTimeout(250);
 const [bx, by] = await proj(C0);
 await page.mouse.move(box0.x + bx, box0.y + by);
+// Draw's line to the cursor: from the last point, the stretch a click would add.
+const cursorLine = async () =>
+  ((await page.evaluate(() => window.__src('draw-cursor')))?.features ?? []).flatMap(
+    (f) => f.geometry?.coordinates ?? [],
+  );
+let toCursor = await cursorLine();
+check(
+  'cursor line: from a corner, straight from the last point to the cursor',
+  toCursor.length === 2 && metres(toCursor[0], A) < 5 && metres(toCursor[1], C0) < 5,
+  `${toCursor.length} coords, from A ${toCursor[0] ? metres(toCursor[0], A).toFixed(1) : '?'} m, to the cursor ${toCursor[1] ? metres(toCursor[1], C0).toFixed(1) : '?'} m`,
+);
 await page.mouse.down();
 for (let i = 1; i <= 6; i++) await page.mouse.move(box0.x + bx + i * 8, box0.y + by - i * 6);
 // Before the release, the stretch into the point bends live on the line.
@@ -520,6 +531,14 @@ check(
 );
 await page.mouse.up();
 await page.waitForTimeout(250);
+const [ex, ey] = await proj(E);
+await page.mouse.move(box0.x + ex, box0.y + ey, { steps: 3 });
+toCursor = await cursorLine();
+check(
+  'cursor line: after a smooth point, bent along its handle to the cursor',
+  toCursor.length > 2 && metres(toCursor.at(-1), E) < 25,
+  `${toCursor.length} coords`,
+);
 await clickAt(E);
 await page.waitForTimeout(400);
 let bent = await drafted();
@@ -641,6 +660,9 @@ check(
 );
 // A routed stretch is not held: a drag on it leaves the line as it was.
 await page.getByTestId('snap-draw').getByRole('button', { name: 'Snap' }).click();
+const [dx0, dy0] = await proj(D);
+await page.mouse.move(box0.x + dx0, box0.y + dy0, { steps: 3 });
+check('cursor line: none in Snap', (await cursorLine()).length === 0);
 await clickAt(D);
 await settle();
 // The router's answer in, so nothing but the drag could change the line.

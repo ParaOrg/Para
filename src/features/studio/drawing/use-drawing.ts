@@ -24,6 +24,7 @@ import type {
   Target,
 } from './drawing-types';
 import { useGapResolver } from './gap-resolver';
+import { useCursorLine } from './use-cursor-line';
 import { useDrawEvents } from './use-draw-events';
 import { useDrawRendering } from './use-draw-rendering';
 import { useLineBorrowing } from './use-line-borrowing';
@@ -563,6 +564,24 @@ export function useDrawing(
 
   useDrawRendering(map, { segments, controlPoints, area, uTurns, picking, selected });
   useDrawArrows(map, segments, area, isStandIn);
+  useCursorLine(
+    map,
+    drawing,
+    controlPoints,
+    freehand,
+    useMemo(
+      () => ({
+        points: cpRef,
+        segments: segRef,
+        freehand: freehandRef,
+        area: areaRef,
+        picking: pickingRef,
+        join: joinRef,
+        pendingOut: pendingOutRef,
+      }),
+      [],
+    ),
+  );
   useSnapPreview(
     map,
     drawing,
