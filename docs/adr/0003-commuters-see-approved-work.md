@@ -29,3 +29,16 @@ approved rows only, so the publish needs no rule of its own to leave drafts out.
   marks work as finished, not as checked by someone else.
 - On the day it ships everything already saved is approved, so commuters see
   no change.
+
+## Amendment 2026-11-05: Draft and Published
+
+The owner simplified the steps to two: a route or hotspot is a **Draft**
+while it is being changed, and **Published** once an editor presses Publish.
+Publish approves the draft at once; there is no Pending step and no Send back
+(Pending already did nothing: the studio submitted and approved in one press).
+**Unpublish** takes published work off the public map at the next publish and
+leaves it a draft. The decision above stands: commuters see published
+(approved) work only, at the next publish, and drafts never reach a public
+timeline. The studio shows who last saved a route or hotspot and when it was
+published, so the database records both at publish
+(`.scratch/codebase-review/database.md`, "What Draft ↔ Published needs").
