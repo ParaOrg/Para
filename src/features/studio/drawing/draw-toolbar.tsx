@@ -9,7 +9,13 @@ import { PILL, TOOL } from './draw-toolbar-look';
 import { PickBar } from './pick-bar';
 import { FollowChip, PointBar, PutBack } from './point-bar';
 import { SnapDraw } from './snap-draw';
-import { drawHint, uTurnWarning, whyCannotSave, type ExtendEnds } from './toolbar-text';
+import {
+  drawHint,
+  uTurnWarning,
+  whyCannotSave,
+  withCommand,
+  type ExtendEnds,
+} from './toolbar-text';
 import { UndoRedo } from './undo-redo';
 import { useDrawKeys } from './use-draw-keys';
 import type { Drawing } from './use-drawing';
@@ -19,8 +25,8 @@ interface DrawToolbarProps {
   draw: Drawing;
   /**
    * Done, opening the save form. Absent while the route's form stands beside
-   * the map, where its Save is Done: then the toolbar has no Done, and Enter
-   * does nothing.
+   * the map, where its Save is Done: then the toolbar has no Done, and
+   * Ctrl/⌘+Enter does nothing.
    */
   onDone?: () => void;
   /** Whether the keyboard shortcuts may act. False while a panel is open. */
@@ -45,11 +51,12 @@ interface DrawToolbarProps {
  * corners, has no router to wait for, and has no Snap | Draw switch because
  * every edge is already straight.
  *
- * Four of the buttons answer to a key as well — Ctrl+Z, Ctrl+Shift+Z, Enter, F — but only
- * while `keys` is true: the studio turns them off the moment a panel opens,
- * so Enter in the save form submits the form and Ctrl+Z in a field is the
- * browser's own undo. Esc is deliberately unbound: cancel discards the whole
- * trace, and that should not be one stray key away.
+ * The buttons answer to keys as well (use-draw-keys.ts) — Ctrl/⌘+Z,
+ * Ctrl/⌘+Shift+Z, Ctrl/⌘+Enter, S, D, F — but only while `keys` is true: the
+ * studio turns them off the moment a panel opens, so Enter in the save form
+ * submits the form and Ctrl+Z in a field is the browser's own undo. Escape
+ * only hides the selected point's handles; it never cancels, because cancel
+ * discards the whole trace, and that should not be one stray key away.
  */
 export function DrawToolbar({
   draw,
@@ -87,7 +94,7 @@ function Toolbar({
   const doneReason = whyCannotSave(draw);
   const canDone = doneReason === null;
 
-  // While ✕ asks, Enter must not save what is about to be thrown away.
+  // While ✕ asks, Ctrl/⌘+Enter must not save what is about to be thrown away.
   useDrawKeys({
     draw,
     isOn: keys && !confirming,
@@ -169,7 +176,8 @@ function Toolbar({
                 onClick={onDone}
                 disabled={!canDone}
                 title={
-                  doneReason ?? (area ? 'Save this hotspot (Enter)' : 'Save this route (Enter)')
+                  doneReason ??
+                  `${area ? 'Save this hotspot' : 'Save this route'} (${withCommand('Enter')})`
                 }
                 className="rounded-full bg-parabrand-800 px-4 py-1.5 text-sm font-medium text-content-inverse disabled:cursor-not-allowed disabled:opacity-40"
               >

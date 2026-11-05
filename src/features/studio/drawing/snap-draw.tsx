@@ -39,11 +39,11 @@ export function SnapDraw({ draw }: SnapDrawProps) {
   };
   return (
     <div data-testid="snap-draw" role="group" aria-label="New stretches" className="flex gap-0.5">
-      {option(false, 'Snap', 'New stretches follow the streets (F)', <SnapIcon />)}
+      {option(false, 'Snap', 'New stretches follow the streets (S)', <SnapIcon />)}
       {option(
         true,
         'Draw',
-        'New stretches go straight from point to point, for paths the router refuses (F)',
+        'New stretches go straight from point to point, for paths the router refuses (D)',
         <DrawIcon />,
       )}
     </div>

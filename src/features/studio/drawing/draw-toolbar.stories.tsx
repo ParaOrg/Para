@@ -190,20 +190,50 @@ export const Drawn: Story = {
   },
 };
 
-/** Enter is Done, Ctrl+Z is Undo and Ctrl+Shift+Z is Redo, while no panel is open. */
+/**
+ * Ctrl/⌘+Enter is Done, Ctrl/⌘+Z is Undo and Ctrl/⌘+Shift+Z is Redo, D is
+ * Draw and S is Snap, while no panel is open. Plain Enter is nothing.
+ */
 export const Keys: Story = {
   play: async ({ args }) => {
     // The keys are bound in an effect, which can land after play has started:
     // press until they are.
     await waitFor(async () => {
-      await userEvent.keyboard('{Enter}');
+      await userEvent.keyboard('{Control>}{Enter}{/Control}');
       await expect(args.onDone).toHaveBeenCalled();
     });
+    await userEvent.keyboard('{Enter}');
+    await expect(args.onDone).toHaveBeenCalledOnce();
+    await userEvent.keyboard('{Meta>}{Enter}{/Meta}');
+    await expect(args.onDone).toHaveBeenCalledTimes(2);
     await userEvent.keyboard('{Control>}z{/Control}');
     await expect(args.draw.undo).toHaveBeenCalledOnce();
-    await userEvent.keyboard('{Control>}{Shift>}z{/Shift}{/Control}');
+    await userEvent.keyboard('{Meta>}{Shift>}z{/Shift}{/Meta}');
     await expect(args.draw.redo).toHaveBeenCalledOnce();
     await expect(args.draw.undo).toHaveBeenCalledOnce();
+    await userEvent.keyboard('d');
+    await expect(args.draw.setFreehand).toHaveBeenLastCalledWith(true);
+    await userEvent.keyboard('s');
+    await expect(args.draw.setFreehand).toHaveBeenLastCalledWith(false);
+    await userEvent.keyboard('f');
+    await expect(args.draw.setFreehand).toHaveBeenLastCalledWith(true);
+    await userEvent.keyboard('{Escape}');
+    await expect(args.draw.hideHandles).toHaveBeenCalledOnce();
+  },
+};
+
+/** A letter typed in a field is the field's: D there switches nothing. */
+export const KeysInAField: Story = {
+  render: (args) => (
+    <>
+      <input aria-label="A field" />
+      <DrawToolbar {...args} />
+    </>
+  ),
+  play: async ({ canvasElement, args }) => {
+    await settled();
+    await userEvent.type(within(canvasElement).getByLabelText('A field'), 'd');
+    await expect(args.draw.setFreehand).not.toHaveBeenCalled();
   },
 };
 
@@ -246,12 +276,12 @@ export const SnapPicked: Story = {
  */
 const settled = () => new Promise((resolve) => setTimeout(resolve, 50));
 
-/** With a panel open the keys belong to it: Enter and Ctrl+Z do nothing here. */
+/** With a panel open the keys belong to it: Ctrl+Enter and Ctrl+Z do nothing here. */
 export const KeysOff: Story = {
   args: { keys: false },
   play: async ({ args }) => {
     await settled();
-    await userEvent.keyboard('{Enter}');
+    await userEvent.keyboard('{Control>}{Enter}{/Control}');
     await userEvent.keyboard('{Control>}z{/Control}');
     await expect(args.onDone).not.toHaveBeenCalled();
     await expect(args.draw.undo).not.toHaveBeenCalled();
@@ -287,13 +317,15 @@ export const WithAStraightStretch: Story = {
   },
 };
 
-/** Beside the route's form on a computer, whose Save is Done: no Done here, and Enter does nothing. */
+/** Beside the route's form on a computer, whose Save is Done: no Done here, and Ctrl/⌘+Enter does nothing. */
 export const BesideTheForm: Story = {
   args: { onDone: undefined },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(canvas.queryByRole('button', { name: 'Done' })).toBeNull();
     await expect(canvas.getByRole('button', { name: 'Snap' })).toBeVisible();
+    await settled();
+    await userEvent.keyboard('{Control>}{Enter}{/Control}');
   },
 };
 
@@ -372,9 +404,12 @@ export const TerminalOutline: Story = {
       line: points.slice(0, 2),
     }),
   },
-  play: async ({ canvasElement }) => {
+  play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
     await expect(canvas.queryByTestId('snap-draw')).toBeNull();
+    await settled();
+    await userEvent.keyboard('s');
+    await expect(args.draw.setFreehand).not.toHaveBeenCalled();
     await expect(canvas.getByRole('button', { name: 'Done' })).toHaveAttribute(
       'title',
       'Add at least 3 corners',
@@ -558,6 +593,9 @@ export const FingerConfirmDiscard: Story = {
     const canvas = within(canvasElement);
     await userEvent.click(canvas.getByRole('button', { name: /^Discard this/ }));
     await expect(canvas.getByText('Discard this route?')).toBeVisible();
+    // While ✕ asks, Ctrl/⌘+Enter must not save what is about to be thrown away.
+    await userEvent.keyboard('{Control>}{Enter}{/Control}');
+    await expect(args.onDone).not.toHaveBeenCalled();
     await expect(args.draw.cancel).not.toHaveBeenCalled();
     await userEvent.click(canvas.getByRole('button', { name: 'Discard' }));
     await expect(args.draw.cancel).toHaveBeenCalledOnce();
