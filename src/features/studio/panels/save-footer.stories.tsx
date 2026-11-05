@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { expect, fn, within } from 'storybook/test';
+import { expect, fn, userEvent, within } from 'storybook/test';
 
 import { SaveFooter } from './save-footer';
 
@@ -63,4 +63,26 @@ export const Blocked: Story = {
 export const OverTheMap: Story = {
   args: { onExit: undefined, onCancel: fn() },
   globals: { viewport: { value: 'mobile1', isRotated: false } },
+};
+
+/** Published and unchanged (Figma 4614:15082): Exit and Unpublish, no saves. */
+export const Published: Story = {
+  args: { status: 'published', onUnpublish: fn() },
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement);
+    const names = canvas.getAllByRole('button').map((b) => b.textContent);
+    await expect(names).toEqual(['Exit', 'Unpublish']);
+    await userEvent.click(canvas.getByRole('button', { name: 'Unpublish' }));
+    await expect(args.onUnpublish).toHaveBeenCalled();
+  },
+};
+
+/** Unpublishing: its button says so, and nothing can be pressed twice. */
+export const Unpublishing: Story = {
+  args: { status: 'published', isUnpublishing: true, onUnpublish: fn() },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole('button', { name: 'Unpublishing…' })).toBeDisabled();
+    await expect(canvas.getByRole('button', { name: 'Exit' })).toBeDisabled();
+  },
 };

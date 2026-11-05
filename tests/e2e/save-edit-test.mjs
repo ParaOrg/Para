@@ -625,6 +625,35 @@ check(
 await backToMap();
 await page.getByTitle('Discard this route').click();
 await page.waitForTimeout(300);
+// ---- 11b. Unpublish: a published route opened with Edit route, unchanged, offers it in the saves' place
+{
+  await approveAll();
+  const viaRoute = tables.route.find((r) => r.via === 'Stand-in Road');
+  await openCard(VIA[1]);
+  await page.getByRole('button', { name: 'Edit route' }).click();
+  await waitFor(async () => (await pointsShown()) > 0);
+  await done();
+  const panel = page.getByTestId('route-panel');
+  // The sidebar reads the route's draft first: until it knows there is none, it is a draft's.
+  await waitFor(async () => await panel.getByRole('button', { name: 'Unpublish' }).isVisible());
+  check(
+    "a published route, unchanged, has Exit and Unpublish at the sidebar's foot, no saves",
+    (await panel.getByRole('button', { name: 'Unpublish' }).isVisible()) &&
+      (await panel.getByRole('button', { name: 'Publish', exact: true }).count()) === 0 &&
+      (await panel.getByRole('button', { name: 'Save as draft' }).count()) === 0,
+  );
+  const m = log.length;
+  await panel.getByRole('button', { name: 'Unpublish' }).click();
+  await waitFor(async () => (await body()).includes('Unpublished. It leaves the public map'));
+  check(
+    '  Unpublish takes the route down and closes the sidebar',
+    writesSince(m).some((x) => x.table === 'rpc/take_down') &&
+      tables.route.find((r) => r.id === viaRoute?.id)?.status === 'taken_down' &&
+      !(await panel.isVisible()),
+    said(writesSince(m)),
+  );
+}
+
 // ---- 12. On a phone: 390×844, a notch of 47 px and a home bar of 34
 const phone = await open(true, '/studio/', true);
 const rect = (loc) => loc.first().boundingBox();

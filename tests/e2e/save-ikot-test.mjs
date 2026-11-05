@@ -251,6 +251,8 @@ let drawn;
       (await page.getByTestId('save-head').count()) === 0 &&
       (await body()).includes('Update this ikot'),
   );
+  // Published and unchanged, the sidebar offers Unpublish, not a save: a mode makes it a change.
+  await page.getByLabel('Transportation mode').selectOption({ label: 'Modern e-jeepney' });
   n = log.length;
   await saveButton().click();
   await drafted();
