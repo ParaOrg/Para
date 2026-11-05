@@ -21,12 +21,12 @@ Checked against `staging` on the night of 2026-11-04, after wave 1's pull reques
 | --- | --- |
 | studio-01: delete approves the editor's other unreviewed changes | Fixed (#695): a delete joins the editor's open draft |
 | studio-02: Edit and the signboard editor open the approved version, then overwrite the editor's own draft | Fixed for the line (#699), the signboards (#703) and the hotspot (#710). Left: the save panel's facts after "Edit draft details", after the live route sheet (wave 3, item 13) lands in `save-panel.tsx` |
-| studio-03: every approval rewrites links, causing false conflicts | Open, database: needs the owner's OK |
+| studio-03: every approval rewrites links, causing false conflicts | Approved 2026-11-05; migration in progress |
 | studio-04: sheets aren't modal | Partly fixed: the map is `inert` while a sheet is open. Dialog semantics are wave 2; the route sheet stops being a modal with item 13 |
 | studio-05: Close the loop offered after Extend | Fixed |
 | studio-06: a Follow reply joins onto a drawing that has moved on | Fixed: `connect` refuses a line that arrives after the drawing changed |
 | studio-07: false "This draft changed" after Edit draft details | Fixed |
-| studio-08: editors can rewrite any column of their draft | Open, database: needs the owner's OK |
+| studio-08: editors can rewrite any column of their draft | Approved 2026-11-05; migration in progress |
 | studio-09: any editor can discard any draft | Fixed in the UI (#696). The database check waits on the owner's OK |
 | studio-10: four query caches | Fixed: one client in `studio-session-provider.tsx` |
 | studio-11: aborted router requests keep their turn | Fixed: `router-queue.ts` |
@@ -76,6 +76,22 @@ The owner's decisions on 2026-11-04. Felt was dropped; `felt-research.md` stays 
     - Stored as a third kind of segment, with its handles, in the existing `segments` jsonb. It needs no migration: the column checks nothing. The publish flattens a curve into points, so the public map doesn't change.
     - The biggest item here, likely a few PRs.
 13. **The route's sheet open while drawing** (the owner's 1a and 3, 2026-11-04). On a computer, a panel stays on the side of the screen the whole time a route is drawn. The map stays usable beside it, and Done becomes Save inside the panel. Its fields fill themselves as the line is drawn: when the line reaches a place, the panel shows that place as an end at once, so the route's name is seen before finishing. The phone isn't designed for: editors use laptops, and there's no phone design. On a phone it must keep working, with no layout of its own. Worked around until the owner designs it.
+
+### Wave 3c: the owner's review of the drawing, 2026-11-05
+
+From the owner's look at staging, with Figma's pen tool as the reference:
+
+17. **Draw: a live curve while dragging.** It reshapes under the pointer, not only on release.
+18. **Draw: a straight line from the last point to the cursor,** like Figma's pen. It is solid, in the line's colour.
+19. **Line styles.** The line being drawn is all solid. The only dashed line is Snap's hover preview, which stays parabrand-300.
+20. **Handles only on the selected point:** shown after its circle is clicked; clicking elsewhere or Escape deselects.
+21. **The route panel on the left of the map:** the form is read first, left to right.
+22. **The studio's map controls match the public map's:** the information button at the lower left, sharing the public map's placement.
+
+Also decided that day:
+- **Card/red/surface-light** is red/400, as Figma has it (#722).
+- **A double-click on a loop's closing point** may close it on the first click: "we can start always again".
+- **The three database fixes** (studio-03, studio-08, and studio-09's database half) are approved. They go in one migration PR, which the owner reviews and applies.
 
 ### Wave 3b: polish, from the owner's designs
 
