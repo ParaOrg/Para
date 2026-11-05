@@ -32,9 +32,7 @@ export async function callReview(fn: string, args: Record<string, unknown>): Pro
   const { data, error } = await client.rpc(fn as never, args as never);
   if (error) throw new Error(`${fn}: ${error.message}`);
   const [row] = parsed(reviewResultSchema, [data], 'review result');
-  if (
-    ['ok', 'approved', 'discarded', 'taken_down', 'put_back', 'unpublished'].includes(row.code)
-  )
+  if (['ok', 'approved', 'discarded', 'taken_down', 'put_back', 'unpublished'].includes(row.code))
     notifyReviewChange();
   return row;
 }
