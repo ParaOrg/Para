@@ -68,6 +68,16 @@ export const AllKnown: Story = {
   },
 };
 
+/** A hotspot's outline: its corners, and no distance. */
+export const Hotspot: Story = {
+  args: { points: 4, pointsTerm: 'Corners', metres: null },
+  play: async ({ canvasElement }) => {
+    const detail = within(canvasElement).getByTestId('line-detail');
+    await expect(detail).toHaveTextContent('Corners4');
+    await expect(detail).not.toHaveTextContent('Distance');
+  },
+};
+
 /** At a phone's width, in the sheet over the map. */
 export const Phone: Story = {
   parameters: { phone: true },

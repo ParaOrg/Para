@@ -197,7 +197,7 @@ const idle = () =>
 // The drawing's count, not the sidebar's "Add at least 2 points" while a save waits.
 const pointsShown = async () =>
   Number((await body()).match(/(?<!at least )(\d+) points?\b/)?.[1] ?? 0);
-// On a computer the route's form already stands beside the map; a hotspot still presses Done.
+// On a computer the sidebar already stands beside the map, a route's or a hotspot's; narrower, Done.
 const done = async () => {
   await idle();
   if (!(await page.getByTestId('route-panel').isVisible()))
@@ -232,9 +232,10 @@ async function hintuan(c, name) {
   await done();
   await page.getByPlaceholder('SM Fairview Ilalim').fill(name);
   const n = log.length;
-  await page.getByRole('button', { name: 'Save hintuan' }).click();
+  await page.getByRole('button', { name: 'Save as draft', exact: true }).click();
   await waitFor(
-    async () => (await page.getByRole('button', { name: 'Save hintuan' }).count()) === 0,
+    async () =>
+      (await page.getByRole('button', { name: 'Save as draft', exact: true }).count()) === 0,
   );
   await page.waitForTimeout(500);
   return writesSince(n);
@@ -711,7 +712,7 @@ async function editHintuan(spot, name) {
   shownName = await nameField().inputValue();
   await nameField().fill(name);
   const from = log.length;
-  await page.getByRole('button', { name: 'Save changes' }).click();
+  await page.getByRole('button', { name: 'Save as draft', exact: true }).click();
   await drafted();
   await page.waitForTimeout(300);
   return writesSince(from);

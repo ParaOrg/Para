@@ -664,9 +664,9 @@ export const idle = () =>
 export const pointsShown = async () =>
   Number((await body()).match(/(?<!at least )(\d+) points?\b/)?.[1] ?? 0);
 /**
- * Done: on a computer the route's form already stands beside the map, whose
- * Save is Done, so the toolbar has none; a hotspot, a phone or a signed-out
- * editor still press it.
+ * Done: on a computer the sidebar already stands beside the map, a route's or a
+ * hotspot's, whose saves are Done, so the toolbar has none; a phone or a
+ * signed-out editor still press it.
  */
 export const done = async () => {
   await idle();
@@ -737,9 +737,10 @@ export async function hintuan(c, name) {
   await done();
   await page.getByPlaceholder('SM Fairview Ilalim').fill(name);
   const n = log.length;
-  await page.getByRole('button', { name: 'Save hintuan' }).click();
+  await page.getByRole('button', { name: 'Save as draft', exact: true }).click();
   await waitFor(
-    async () => (await page.getByRole('button', { name: 'Save hintuan' }).count()) === 0,
+    async () =>
+      (await page.getByRole('button', { name: 'Save as draft', exact: true }).count()) === 0,
   );
   await page.waitForTimeout(500);
   await dismissToasts();

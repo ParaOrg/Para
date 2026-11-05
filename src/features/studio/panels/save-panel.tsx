@@ -74,7 +74,8 @@ export function SavePanel({
   const isChanged = fields !== opened.fields || line !== opened.line;
   const status = isPublished && fields === opened.fields ? 'published' : 'draft';
   const unpublishing = useUnpublish({
-    routeId: isPublished ? (existing?.route.id ?? null) : null,
+    kind: 'route',
+    subjectId: isPublished ? (existing?.route.id ?? null) : null,
     onUnpublished,
   });
 

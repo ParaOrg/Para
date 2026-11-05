@@ -26,8 +26,8 @@ interface StudioSaveSheetsProps {
   /** Whether Done has opened the save form. */
   isSaving: boolean;
   /**
-   * A route's form stands beside the map the whole time its line is drawn,
-   * rather than covering the map at Done (a computer's screen, signed in).
+   * The sidebar stands beside the map the whole time its line or outline is
+   * drawn, rather than covering the map at Done (a computer's screen, signed in).
    */
   isBeside?: boolean;
   draw: Drawing;
@@ -44,8 +44,9 @@ interface StudioSaveSheetsProps {
 }
 
 /**
- * The save form while saving: a hotspot's panel for an area trace, a route's
- * for a line, over the map; or a route's beside it the whole time it is drawn.
+ * The sidebar: a hotspot's for an area trace, a route's for a line; beside the
+ * map the whole time it is drawn on a computer, over the map once Done is
+ * pressed on a phone.
  */
 export function StudioSaveSheets({
   isSaving,
@@ -82,10 +83,12 @@ export function StudioSaveSheets({
     ? client.getQueryData<DraftRow | null>(reviewKeys.draftOf('route', approvedRoute.id))
     : undefined;
   const hasOwnDraft = !!routeDraft && (userId === null || !isAnothersDraft(routeDraft, userId));
-  // The line as it first came in for this route and direction, kept here rather than in the
-  // form, which starts again when the draft's read lands: a line moved before that, or before
-  // Done on a phone, is a change all the same.
-  const lineKey = `${draw.target.routeId}:${draw.target.directionId}`;
+  // The line as it first came in for this route and direction (or the outline, for this
+  // hotspot), kept here rather than in the form, which starts again when the draft's read lands:
+  // a line moved before that is a change all the same.
+  const lineKey = draw.area
+    ? `hotspot:${draw.area.hotspotId ?? 'new'}`
+    : `${draw.target.routeId}:${draw.target.directionId}`;
   const lineNow = JSON.stringify(draw.controlPoints);
   const [openedLine, setOpenedLine] = useState<{ key: string; line: string } | null>(null);
   if (draw.drawing && draw.controlPoints.length > 0 && openedLine?.key !== lineKey)
@@ -122,23 +125,51 @@ export function StudioSaveSheets({
     onPlaceSaved: () => void hotspots.reload(),
   };
 
+  // A published hotspot with no draft of the editor's own, as for a route (above).
+  const hotspotDraft = approvedHotspot
+    ? client.getQueryData<DraftRow | null>(reviewKeys.draftOf('hotspot', approvedHotspot.id))
+    : undefined;
+  const hasOwnHotspotDraft =
+    !!hotspotDraft && (userId === null || !isAnothersDraft(hotspotDraft, userId));
+  const hotspotForm = {
+    draw,
+    existing: editingHotspot,
+    existingLinks:
+      toEdit.data?.linkedDirectionIds ??
+      (editingHotspot ? hotspots.linkedDirectionIds(editingHotspot.id) : []),
+    directions: saved.directions,
+    hotspots: hotspots.hotspots,
+    onDrafted: handleDrafted,
+    onPublished: handlePublished,
+    onUnpublished,
+  };
+
   return (
     <>
-      {isSaving && draw.drawing && draw.area && (
-        <HotspotPanel
-          // The form takes its fields once: started again if the read lands after it opened.
-          key={toEdit.isSuccess ? 'read' : 'reading'}
-          draw={draw}
-          existing={editingHotspot}
-          existingLinks={
-            toEdit.data?.linkedDirectionIds ??
-            (editingHotspot ? hotspots.linkedDirectionIds(editingHotspot.id) : [])
-          }
-          directions={saved.directions}
-          hotspots={hotspots.hotspots}
-          onDrafted={handleDrafted}
-          onCancel={onCancel}
-        />
+      {isBeside && draw.drawing && draw.area && (
+        <SaveBesideFrame>
+          <HotspotPanel
+            // A new outline is a new form; the form takes its fields once, so it starts again
+            // when the read lands after it opened.
+            key={`${draw.area.hotspotId ?? 'new'}:${toEdit.isSuccess ? 'read' : 'reading'}`}
+            {...hotspotForm}
+            isPublished={
+              !!approvedHotspot && toEdit.isSuccess && !hasOwnHotspotDraft && isLineAsOpened
+            }
+            saveBlocked={whyCannotSave(draw)}
+          />
+        </SaveBesideFrame>
+      )}
+
+      {!isBeside && isSaving && draw.drawing && draw.area && (
+        <SaveSheetFrame>
+          <HotspotPanel
+            // The form takes its fields once: started again if the read lands after it opened.
+            key={toEdit.isSuccess ? 'read' : 'reading'}
+            {...hotspotForm}
+            onCancel={onCancel}
+          />
+        </SaveSheetFrame>
       )}
 
       {isBeside && draw.drawing && !draw.area && (

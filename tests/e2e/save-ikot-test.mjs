@@ -291,9 +291,10 @@ let drawn;
       /An ikot links the terminals on it by itself/.test(await body()),
   );
   n = log.length;
-  await page.getByRole('button', { name: 'Save terminal' }).click();
+  await page.getByRole('button', { name: 'Save as draft', exact: true }).click();
   await waitFor(
-    async () => (await page.getByRole('button', { name: 'Save terminal' }).count()) === 0,
+    async () =>
+      (await page.getByRole('button', { name: 'Save as draft', exact: true }).count()) === 0,
   );
   await drafted();
   const terminalDraft = tables.draft.find(

@@ -425,9 +425,11 @@ check(
   /Shape the box/.test(await page.getByRole('region', { name: 'From an upload' }).innerText()),
 );
 await shot('4-draw-a-hintuan');
-await page.getByRole('button', { name: /Done/ }).click();
+// On a computer the hotspot's sidebar already stands beside the map; narrower, Done opens it.
+if (!(await page.getByTestId('route-panel').isVisible()))
+  await page.getByRole('button', { name: /Done/ }).click();
 await page.getByPlaceholder('SM Fairview Ilalim').fill('Mid-route Hintuan');
-await page.getByRole('button', { name: 'Save hintuan' }).click();
+await page.getByRole('button', { name: 'Save as draft', exact: true }).click();
 await waitFor(() => db.tables.contribution_use.length > 1);
 const newStopDraft = db.tables.draft.find(
   (d) => d.kind === 'hotspot' && d.payload.stop.name === 'Mid-route Hintuan',
