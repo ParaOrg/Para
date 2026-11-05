@@ -17,18 +17,20 @@
 //   db.notEditors    a Set of account ids am_i_editor answers no for; every other
 //                    signed-in caller is an editor
 //
-// The review workflow's three calls are answered as 0022 answers them,
+// The review workflow's calls are answered as the database answers them,
 // enough for two editors to meet over one draft: claim_draft (one draft per
 // route or hotspot, stamped with the caller's id from the request's token),
-// discard_draft, and a draft's revision rising with every change. submit_draft
-// and approve_reviewed_draft (or approve_draft) apply a draft as 0022 does,
-// refusing as it does (subject_exists, subject_gone, conflict); a link
-// written bumps its route's and hotspot's revisions; take_down and put_back
-// flip a row's status. db.approve(id) applies a draft without the calls or
-// the checks, for a suite that needs the map to move on before its next
-// step. A direct
-// update of a draft changes it only for its maker, as draft_update does once
-// 20261026090000 is applied (RLS hides the row, so the update matches none).
+// save_draft (the maker's own, at the revision read), discard_draft, and a
+// draft's revision rising with every change. publish_draft, and the old
+// submit_draft with approve_reviewed_draft (or approve_draft), apply a draft
+// as private.apply_draft does, refusing as it does (subject_exists,
+// subject_gone, conflict); a link written bumps its route's and hotspot's
+// revisions. unpublish takes a row down and leaves a draft of it (or keeps,
+// rebased, the one there); take_down and put_back flip a row's status.
+// db.approve(id) applies a draft without the calls or the checks, for a
+// suite that needs the map to move on before its next step. A direct update
+// of a draft changes it only for its maker, as draft_update does (RLS hides
+// the row, so the update matches none).
 
 const TABLES = [
   'contribution',
@@ -376,6 +378,44 @@ export function draftWorkflow(tables, { newId, fill, now }) {
     tables.draft = tables.draft.filter((x) => x !== d);
   };
 
+  /** A row's whole state as a draft's payload v1, as draft_published's private.payload_of builds it. */
+  const payloadOf = (kind, row) => {
+    if (kind === 'route') {
+      const directions = tables.route_variant
+        .filter((v) => v.route_id === row.id)
+        .map(({ route_id: _route, owner_id: _owner, created_at: _c, updated_at: _u, ...v }) => ({
+          ...v,
+          links: tables.route_stop
+            .filter((l) => l.route_variant_id === v.id)
+            .map(({ stop_id, stop_sequence }) => ({ stop_id, stop_sequence })),
+        }));
+      const { signboard, mode, fare_note, via, head_stop_id, tail_stop_id, is_loop } = row;
+      return {
+        version: 1,
+        route: { signboard, mode, fare_note, via, head_stop_id, tail_stop_id, is_loop },
+        route_code: row.route_code ?? null,
+        directions,
+      };
+    }
+    const { name: stopName, informal, aliases, kind: stopKind, note, area, point, line } = row;
+    return {
+      version: 1,
+      stop: {
+        name: stopName,
+        informal,
+        aliases,
+        kind: stopKind,
+        note,
+        area,
+        point,
+        line: line ?? null,
+      },
+      links: tables.route_stop
+        .filter((l) => l.stop_id === row.id)
+        .map(({ route_variant_id, stop_sequence }) => ({ route_variant_id, stop_sequence })),
+    };
+  };
+
   const rpc = (name, body, caller) => {
     if (name === 'claim_draft') {
       const same = (d) => d.kind === body.p_kind && d.subject_id === body.p_subject_id;
@@ -422,15 +462,37 @@ export function draftWorkflow(tables, { newId, fill, now }) {
       Object.assign(kept, { status: 'pending', submitted_at: now, revision: kept.revision + 1 });
       return { status: 200, body: { code: 'submitted', draft: kept } };
     }
-    if (name === 'approve_reviewed_draft' || name === 'approve_draft') {
+    if (name === 'save_draft') {
+      // draft_published's save_draft: the maker's draft (or a maker-less one), at the revision read.
       const kept = tables.draft.find((d) => d.id === body.p_draft);
       if (!kept) return { status: 200, body: { code: 'no_draft' } };
-      if (name === 'approve_reviewed_draft' && kept.revision !== body.p_revision)
+      if (kept.editor_id != null && kept.editor_id !== caller)
+        return { status: 200, body: { code: 'not_your_draft' } };
+      if (kept.revision !== body.p_revision)
         return {
           status: 200,
           body: { code: 'revision_mismatch', current_revision: kept.revision },
         };
-      if (kept.status !== 'pending') return { status: 200, body: { code: 'not_pending' } };
+      Object.assign(kept, {
+        payload: body.p_payload,
+        status: 'draft',
+        submitted_at: null,
+        last_saved_by: caller,
+        revision: kept.revision + 1,
+      });
+      return { status: 200, body: { code: 'ok', created: false, draft: kept } };
+    }
+    if (name === 'publish_draft' || name === 'approve_reviewed_draft' || name === 'approve_draft') {
+      const kept = tables.draft.find((d) => d.id === body.p_draft);
+      if (!kept) return { status: 200, body: { code: 'no_draft' } };
+      if (name !== 'approve_draft' && kept.revision !== body.p_revision)
+        return {
+          status: 200,
+          body: { code: 'revision_mismatch', current_revision: kept.revision },
+        };
+      // publish_draft needs no submit; the old approvals still do.
+      if (name !== 'publish_draft' && kept.status !== 'pending')
+        return { status: 200, body: { code: 'not_pending' } };
       // 0022's checks before it applies: the subject is there or not as the
       // draft says, and nobody changed it since the draft's base was read.
       const live = (kept.kind === 'route' ? tables.route : tables.stop).find(
@@ -442,6 +504,40 @@ export function draftWorkflow(tables, { newId, fill, now }) {
         return { status: 200, body: { code: 'conflict', current_revision: live.revision } };
       apply(kept);
       return { status: 200, body: { code: 'approved' } };
+    }
+    if (name === 'unpublish') {
+      // draft_published's unpublish: take_down, then a draft of the row as it stands (or the one kept, rebased).
+      const isRoute = body.p_kind === 'route';
+      const row = (isRoute ? tables.route : tables.stop).find((x) => x.id === body.p_subject_id);
+      const isEnd = (r) =>
+        r.status !== 'taken_down' &&
+        (r.head_stop_id === body.p_subject_id || r.tail_stop_id === body.p_subject_id);
+      if (!isRoute && tables.route.some(isEnd)) return { status: 200, body: { code: 'blocked' } };
+      if (row?.status !== 'approved') return { status: 200, body: { code: 'not_published' } };
+      const before = row.revision ?? 0;
+      Object.assign(row, { status: 'taken_down', revision: before + 1 });
+      let kept = tables.draft.find((d) => d.kind === body.p_kind && d.subject_id === row.id);
+      if (kept && kept.base_revision === before)
+        Object.assign(kept, { base_revision: row.revision, revision: kept.revision + 1 });
+      if (!kept) {
+        kept = {
+          id: newId(),
+          kind: body.p_kind,
+          subject_id: row.id,
+          is_new: false,
+          base_revision: row.revision,
+          revision: 1,
+          status: 'draft',
+          payload: payloadOf(body.p_kind, row),
+          note: null,
+          editor_id: caller,
+          created_at: now,
+          updated_at: now,
+          submitted_at: null,
+        };
+        tables.draft.push(kept);
+      }
+      return { status: 200, body: { code: 'unpublished', draft: kept } };
     }
     if (name === 'take_down' || name === 'put_back') {
       const [from, to] =
