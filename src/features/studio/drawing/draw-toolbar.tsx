@@ -3,7 +3,6 @@ import { useState } from 'react';
 import { coarsePointer } from '@/features/routes/map/tap';
 import { cn } from '@/shared/utils/cn';
 
-import { CloseLoop } from './close-loop';
 import { DrawCount } from './draw-count';
 import { PILL, TOOL } from './draw-toolbar-look';
 import { PickBar } from './pick-bar';
@@ -13,7 +12,6 @@ import { whyCannotSave, withCommand, type ExtendEnds } from './toolbar-text';
 import { UndoRedo } from './undo-redo';
 import { useDrawKeys } from './use-draw-keys';
 import type { Drawing } from './use-drawing';
-import type { LoopPlan } from './use-loop-closing';
 
 interface DrawToolbarProps {
   draw: Drawing;
@@ -31,20 +29,20 @@ interface DrawToolbarProps {
    * keep buttons can say which part they keep in the jeep's own order.
    */
   ends?: ExtendEnds | null;
-  /** While drawing a route's return trip: where the loop closes (use-loop-closing.ts). */
-  loop?: LoopPlan | null;
   /**
-   * The route's sidebar stands beside the map and shows Close the loop
-   * itself: the toolbar then leaves it out. Done shows only when `onDone` is
-   * given (beside the route's form its Save is Done).
+   * Accepted and unused: the toolbar has no Close the loop any more (a line
+   * closes by its first point's connect badge, use-connect-hint.ts). Still
+   * taken because the studio passes it; removed with the callers.
    */
+  loop?: unknown;
+  /** Accepted and unused, as `loop`: nothing on the toolbar hides beside the sidebar now. */
   isBesideSidebar?: boolean;
 }
 
 /**
  * Replaces the single idle button while drawing: Undo | Redo in one pill and
- * Move · Snap · Draw | Done in another, after the owner's frame. No hint and
- * no count over them: the owner's toolbar has neither, and what is drawn so
+ * Move · Snap · Draw | Done in another, after the owner's frame. No Close the
+ * loop (a line closes by its first point's badge), and no hint and no count: the owner's toolbar has neither, and what is drawn so
  * far is read out to a screen reader instead (draw-count.tsx). Deliberately
  * small: the map is the document, and this is the only chrome allowed to
  * compete with it.
@@ -60,38 +58,19 @@ interface DrawToolbarProps {
  * only hides the selected point's handles; it never cancels, because cancel
  * discards the whole trace, and that should not be one stray key away.
  */
-export function DrawToolbar({
-  draw,
-  onDone,
-  keys = true,
-  ends = null,
-  loop = null,
-  isBesideSidebar = false,
-}: DrawToolbarProps) {
+export function DrawToolbar({ draw, onDone, keys = true, ends = null }: DrawToolbarProps) {
   if (draw.picking) return <PickBar draw={draw} ends={ends} />;
-  return (
-    <Toolbar
-      draw={draw}
-      onDone={onDone}
-      keys={keys}
-      loop={loop}
-      isBesideSidebar={isBesideSidebar}
-    />
-  );
+  return <Toolbar draw={draw} onDone={onDone} keys={keys} />;
 }
 
 function Toolbar({
   draw,
   onDone,
   keys,
-  loop,
-  isBesideSidebar,
 }: {
   draw: Drawing;
   onDone: (() => void) | undefined;
   keys: boolean;
-  loop: LoopPlan | null;
-  isBesideSidebar: boolean;
 }) {
   const points = draw.controlPoints.length;
   const area = draw.area;
@@ -145,12 +124,6 @@ function Toolbar({
       ) : (
         <div className="flex flex-wrap items-center justify-center gap-2">
           <UndoRedo draw={draw} noun={noun} />
-
-          {loop && !isBesideSidebar && (
-            <div className={PILL}>
-              <CloseLoop draw={draw} loop={loop} />
-            </div>
-          )}
 
           <div className={PILL}>
             {!area && <SnapDraw draw={draw} />}

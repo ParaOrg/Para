@@ -20,7 +20,7 @@
 // a half-drawn line, the camera and the basemap kept, the keys and clicks
 // dead on the other maps; a route saved with its slot (2); the return trip
 // from the card's SWITCH, closing the loop: it begins on the outbound's end,
-// the outbound shows faintly under it, Close the loop ends it on the
+// the outbound shows faintly under it, a click by its start's badge ends it on the
 // outbound's start, and the save panel says how far an open loop falls short,
 // and its draft fills the slot; every request line short with 500 hintuans
 // (4); an edit that rewrites one direction by its id (2), and the camera with
@@ -531,8 +531,8 @@ check(
     .join() === 'line,start,end',
 );
 check(
-  '  "Close the loop" is on the toolbar, enabled: there is a point to come from',
-  (await closeLoop().count()) === 1 && (await closeLoop().isEnabled()),
+  '  the toolbar has no "Close the loop": a line closes by its first point\'s badge',
+  (await closeLoop().count()) === 0,
 );
 {
   // Nearing where papunta began, the connect badge shows there: a click would close the loop.
@@ -562,16 +562,18 @@ check(
 );
 await backToMap();
 await page.waitForTimeout(300);
-await closeLoop().click();
+// A click by the connect badge closes the loop, on the outbound line's start exactly.
+{
+  const [sx, sy] = await px(outLine[0]);
+  await page.mouse.move(sx + 4, sy + 4, { steps: 3 });
+  await page.mouse.click(sx + 4, sy + 4);
+}
 await idle();
 await page.waitForTimeout(400);
 drawn = await drawnPoints();
 check(
-  "  Close the loop adds a last point on the outbound line's start (<1 m), and then rests",
-  drawn.length === 4 &&
-    outLine.length > 1 &&
-    metresBetween(drawn.at(-1), outLine[0]) < 1 &&
-    (await closeLoop().isDisabled()),
+  "  a click by the badge adds a last point on the outbound line's start (<1 m)",
+  drawn.length === 4 && outLine.length > 1 && metresBetween(drawn.at(-1), outLine[0]) < 1,
   `${drawn.length} point(s), ${drawn.length && outLine.length ? metresBetween(drawn.at(-1), outLine[0]).toFixed(2) : '?'} m`,
 );
 await done();
