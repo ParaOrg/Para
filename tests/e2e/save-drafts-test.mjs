@@ -445,8 +445,10 @@ check(
 await waitFor(async () => await saveButton().isEnabled());
 n = log.length;
 await saveButton().click();
-// The first save's "Saved as a draft" may still be up: wait for this save's own write.
+// The first save's "Saved as a draft" may still be up: wait for this save's own write, then
+// for the drawing to end, which is when the save has finished and the kept drawing is cleared.
 await waitFor(async () => writesSince(n).some((x) => x.table === 'draft'));
+await waitFor(async () => (await pointsShown()) === 0);
 await drafted();
 w = writesSince(n);
 check(
