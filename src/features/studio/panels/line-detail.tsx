@@ -1,5 +1,7 @@
 import { useId, type ReactNode } from 'react';
 
+import { cn } from '@/shared/utils/cn';
+
 /** Whether what the sidebar shows is a draft, or what commuters get at the next publish. */
 export type LineStatus = 'draft' | 'published';
 
@@ -34,7 +36,8 @@ interface LineDetailProps {
 
 /**
  * The sidebar's Line detail (Figma 4300:20893, 4614:15082): the line's points and length, whether
- * it is a draft or published, who last saved it and when, and when it was published.
+ * it is a draft or published, who last saved it, when it was published and, published, when it
+ * was last edited: the Draft frame stops at Date published.
  */
 export function LineDetail({
   points,
@@ -53,12 +56,12 @@ export function LineDetail({
       <dl data-testid="line-detail" className="flex flex-col gap-3 text-sm/5">
         <Fact term="Points">{points}</Fact>
         <Fact term="Distance">{(metres / 1000).toFixed(1)} km</Fact>
-        <Fact term="Status" valueClassName={STATUS_COLOUR[status]}>
+        <Fact term="Status" tone={status}>
           {STATUS_LABEL[status]}
         </Fact>
         <Fact term="Author">{author ?? UNKNOWN}</Fact>
         <Fact term="Date published">{datePublished ?? UNKNOWN}</Fact>
-        <Fact term="Last edited">{lastEdited ?? UNKNOWN}</Fact>
+        {status === 'published' && <Fact term="Last edited">{lastEdited ?? UNKNOWN}</Fact>}
       </dl>
     </section>
   );
@@ -67,16 +70,18 @@ export function LineDetail({
 interface FactProps {
   term: string;
   children: ReactNode;
-  /** The value's colour, where it is not the row's. */
-  valueClassName?: string;
+  /** A status, whose value wears its own colour; any other value reads as its label does. */
+  tone?: LineStatus;
 }
 
 /** One row of Line detail: its name, 140 across, and its value. */
-function Fact({ term, children, valueClassName = 'text-content-quaternary' }: FactProps) {
+function Fact({ term, children, tone }: FactProps) {
   return (
     <div className="flex items-center">
       <dt className="w-35 shrink-0 font-medium text-content-quaternary">{term}</dt>
-      <dd className={'min-w-0 flex-1 ' + valueClassName}>{children}</dd>
+      <dd className={cn('min-w-0 flex-1', tone ? STATUS_COLOUR[tone] : 'text-content-quaternary')}>
+        {children}
+      </dd>
     </div>
   );
 }

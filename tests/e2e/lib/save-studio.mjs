@@ -660,7 +660,9 @@ export const idle = () =>
   page
     .waitForFunction(() => !document.body.innerText.includes('snapping…'), null, { timeout: 15000 })
     .catch(() => {});
-export const pointsShown = async () => Number((await body()).match(/(\d+) points?\b/)?.[1] ?? 0);
+// The drawing's count, not the sidebar's "Add at least 2 points" while a save waits.
+export const pointsShown = async () =>
+  Number((await body()).match(/(?<!at least )(\d+) points?\b/)?.[1] ?? 0);
 /**
  * Done: on a computer the route's form already stands beside the map, whose
  * Save is Done, so the toolbar has none; a hotspot, a phone or a signed-out
