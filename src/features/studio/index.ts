@@ -16,6 +16,7 @@ export { DrawToolbar } from './drawing/draw-toolbar';
 export { STUDIO_BASEMAPS, STUDIO_BASEMAP_THUMBNAILS } from './drawing/studio-basemaps';
 export { useDrawing } from './drawing/use-drawing';
 export { useFollow } from './drawing/use-follow';
+export { useOpenDraft } from './panels/use-open-draft';
 export { useLoopClosing } from './drawing/use-loop-closing';
 export { MapPlaceholder } from './maps/map-placeholder';
 export { MapSwitch } from './maps/map-switch';

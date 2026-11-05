@@ -430,11 +430,19 @@ check(
 // Saving builds on the draft, so opening the approved line would save it over the first edit.
 // No reload between the two: the studio's cache of the draft must not seed the second edit.
 await openCard(OUT[1]);
-// The draft's line is drawn over the approved one, and a tap on it opens Drafts as well.
-const reviewDialog = page.locator('dialog[open]');
-if ((await reviewDialog.count()) > 0)
-  await reviewDialog.getByRole('button', { name: 'Close', exact: true }).click();
-await page.getByRole('button', { name: 'Edit route' }).click();
+// The draft's line is drawn over the approved one: a tap on it opens the editor's own draft
+// straight into Edit route, with no review sheet; a tap on the approved line opens its card.
+await waitFor(
+  async () =>
+    (await pointsShown()) > 0 ||
+    (await page.locator('dialog[open]').count()) > 0 ||
+    (await page.getByRole('button', { name: 'Edit route' }).count()) > 0,
+);
+check(
+  "a tap on the editor's own draft opens no review sheet",
+  (await page.locator('dialog[open]').count()) === 0,
+);
+if ((await pointsShown()) === 0) await page.getByRole('button', { name: 'Edit route' }).click();
 await waitFor(async () => (await pointsShown()) > 0);
 await page.waitForTimeout(300);
 check(

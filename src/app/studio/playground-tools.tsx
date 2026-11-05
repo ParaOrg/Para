@@ -1,5 +1,6 @@
 import type { Session } from '@supabase/supabase-js';
 import type { MapLibreMap } from 'maplibre-gl';
+import type { ComponentProps } from 'react';
 
 import type { useSavedHotspots } from '@/features/routes/map/use-saved-hotspots';
 import type { useSavedRoutes } from '@/features/routes/map/use-saved-routes';
@@ -26,6 +27,8 @@ interface PlaygroundToolsProps {
   map: MapLibreMap | null;
   /** Where Drafts stands in the top bar, on a computer (StudioReview's buttonSlot). */
   draftsSlot?: HTMLElement | null;
+  /** A draft tapped on the map, opened into editing where it can be (useOpenDraft). */
+  onOpenDraft?: ComponentProps<typeof StudioReview>['onOpenDraft'];
   session: Session | null;
   auth: ReturnType<typeof useAuthFlow>;
   draw: ReturnType<typeof useDrawing>;
@@ -70,6 +73,7 @@ export function PlaygroundTools({
   onDrawReturnTrip,
   onDone,
   draftsSlot = null,
+  onOpenDraft,
 }: PlaygroundToolsProps) {
   const { isSignedIn, isAccountDialogOpen, openSignIn, openPasswordChange } = auth;
   const { isSaving, toast, setToast } = saveFlow;
@@ -92,6 +96,7 @@ export function PlaygroundTools({
           key={session?.user.id}
           map={map}
           buttonSlot={draftsSlot}
+          onOpenDraft={onOpenDraft}
           onChanged={() => {
             void saved.reload();
             void hotspots.reload();
