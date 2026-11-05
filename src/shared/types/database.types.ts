@@ -212,6 +212,7 @@ export type Database = {
           id: string
           is_new: boolean
           kind: string
+          last_saved_by: string | null
           note: string | null
           payload: Json
           revision: number
@@ -227,6 +228,7 @@ export type Database = {
           id?: string
           is_new: boolean
           kind: string
+          last_saved_by?: string | null
           note?: string | null
           payload: Json
           revision?: number
@@ -242,6 +244,7 @@ export type Database = {
           id?: string
           is_new?: boolean
           kind?: string
+          last_saved_by?: string | null
           note?: string | null
           payload?: Json
           revision?: number
@@ -1664,9 +1667,13 @@ export type Database = {
           head_stop_id: string | null
           id: string
           is_loop: boolean
+          last_saved_at: string | null
+          last_saved_by: string | null
           long_name: string | null
           mode: Database["public"]["Enums"]["transport_mode"]
           owner_id: string
+          published_at: string | null
+          published_by: string | null
           revision: number
           route_code: string | null
           short_name: string | null
@@ -1684,9 +1691,13 @@ export type Database = {
           head_stop_id?: string | null
           id?: string
           is_loop?: boolean
+          last_saved_at?: string | null
+          last_saved_by?: string | null
           long_name?: string | null
           mode?: Database["public"]["Enums"]["transport_mode"]
           owner_id?: string
+          published_at?: string | null
+          published_by?: string | null
           revision?: number
           route_code?: string | null
           short_name?: string | null
@@ -1704,9 +1715,13 @@ export type Database = {
           head_stop_id?: string | null
           id?: string
           is_loop?: boolean
+          last_saved_at?: string | null
+          last_saved_by?: string | null
           long_name?: string | null
           mode?: Database["public"]["Enums"]["transport_mode"]
           owner_id?: string
+          published_at?: string | null
+          published_by?: string | null
           revision?: number
           route_code?: string | null
           short_name?: string | null
@@ -1853,11 +1868,15 @@ export type Database = {
           id: string
           informal: string | null
           kind: Database["public"]["Enums"]["stop_kind"]
+          last_saved_at: string | null
+          last_saved_by: string | null
           line: string | null
           name: string
           note: string | null
           owner_id: string
           point: Json
+          published_at: string | null
+          published_by: string | null
           revision: number
           status: string
           status_at: string
@@ -1870,11 +1889,15 @@ export type Database = {
           id?: string
           informal?: string | null
           kind?: Database["public"]["Enums"]["stop_kind"]
+          last_saved_at?: string | null
+          last_saved_by?: string | null
           line?: string | null
           name: string
           note?: string | null
           owner_id?: string
           point: Json
+          published_at?: string | null
+          published_by?: string | null
           revision?: number
           status?: string
           status_at?: string
@@ -1887,11 +1910,15 @@ export type Database = {
           id?: string
           informal?: string | null
           kind?: Database["public"]["Enums"]["stop_kind"]
+          last_saved_at?: string | null
+          last_saved_by?: string | null
           line?: string | null
           name?: string
           note?: string | null
           owner_id?: string
           point?: Json
+          published_at?: string | null
+          published_by?: string | null
           revision?: number
           status?: string
           status_at?: string
@@ -2004,6 +2031,10 @@ export type Database = {
           profile_updated_at: string
         }[]
       }
+      publish_draft: {
+        Args: { p_draft: string; p_revision: number }
+        Returns: Json
+      }
       put_back: {
         Args: { p_kind: string; p_subject_id: string }
         Returns: Json
@@ -2013,6 +2044,10 @@ export type Database = {
         Returns: Json
       }
       save_contribution: { Args: { recording: Json }; Returns: string }
+      save_draft: {
+        Args: { p_draft: string; p_payload: Json; p_revision: number }
+        Returns: Json
+      }
       send_back_draft: {
         Args: { p_draft: string; p_note: string; p_revision: number }
         Returns: Json
@@ -2027,6 +2062,10 @@ export type Database = {
         Returns: Json
       }
       unblock_contributor: { Args: { target: string }; Returns: undefined }
+      unpublish: {
+        Args: { p_kind: string; p_subject_id: string }
+        Returns: Json
+      }
     }
     Enums: {
       route_confidence: "drawn" | "verified"

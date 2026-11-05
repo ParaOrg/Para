@@ -28,7 +28,7 @@ export function proveStrings(build, check) {
   const contributeOwn = text(contributeFiles.filter((f) => !commuterFiles.includes(f)));
   // The database's address is the one editor string the contributor page needs. What it may not
   // name are the studio's tables and operations.
-  const STUDIO_DATA = ['route_variant', 'route_stop', 'claim_draft', 'approve_draft', 'take_down'];
+  const STUDIO_DATA = ['route_variant', 'route_stop', 'claim_draft', 'publish_draft', 'take_down'];
   const leakedToContribute = [
     ...EDITOR_ONLY.filter((s) => s !== '.supabase.co'),
     ...STUDIO_DATA,

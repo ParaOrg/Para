@@ -86,15 +86,9 @@ export function installReviewDemo(seed, session) {
       state.draft = state.draft.filter((row) => row.id !== draft.id);
       return { code: 'discarded' };
     }
-    if (name === 'submit_draft') {
-      if (draft.status !== 'draft') return { code: 'already_pending' };
-      changeDraft(draft, { status: 'pending', submitted_at: now() });
-      return { code: 'submitted', draft };
-    }
-    if (name === 'send_back_draft') {
-      if (draft.status !== 'pending') return { code: 'not_pending' };
-      changeDraft(draft, { status: 'draft', note: args.p_note, submitted_at: null });
-      return { code: 'sent_back', draft };
+    if (name === 'save_draft') {
+      changeDraft(draft, { payload: args.p_payload, status: 'draft', submitted_at: null });
+      return { code: 'ok', created: false, draft };
     }
     const table = draft.kind === 'route' ? state.route : state.stop;
     const subject = table.find((row) => row.id === draft.subject_id);
@@ -105,8 +99,7 @@ export function installReviewDemo(seed, session) {
       changeDraft(draft, { base_revision: subject.revision, status: 'draft', submitted_at: null });
       return { code: 'ok', draft };
     }
-    if (name !== 'approve_reviewed_draft') return { code: 'refused' };
-    if (draft.status !== 'pending') return { code: 'not_pending' };
+    if (name !== 'publish_draft') return { code: 'refused' };
     if (subject && draft.is_new) return { code: 'subject_exists' };
     if (!draft.is_new && (!subject || subject.revision !== draft.base_revision))
       return { code: subject ? 'conflict' : 'subject_gone' };
@@ -222,16 +215,9 @@ export function installReviewDemo(seed, session) {
           : row,
       );
       let rows = enriched.filter((row) => matches(row, url.searchParams));
-      if (method === 'PATCH' && table === 'draft') {
-        for (const row of rows) {
-          const draft = state.draft.find((draft) => draft.id === row.id);
-          changeDraft(draft, args);
-        }
-        rows = state.draft.filter((row) => rows.some((old) => old.id === row.id));
-        save(state);
-      } else if (!['GET', 'HEAD'].includes(method))
+      if (!['GET', 'HEAD'].includes(method))
         return response(
-          { message: 'Only reviewed draft writes are supported in this sample.' },
+          { message: 'This sample changes drafts through their functions only.' },
           400,
         );
       const total = rows.length;

@@ -1,4 +1,3 @@
-import { toJson } from './json';
 import { parsed, readAll } from './read-all';
 import { notifyReviewChange } from './review-events';
 import {
@@ -11,10 +10,11 @@ import {
 import { requireSupabase } from './supabase';
 
 /**
- * The studio's side of the review workflow (0022): every save becomes a
- * draft, a draft waits pending, approving applies it, and taking down /
- * putting back flips a row's status. All of it through RPCs that answer a
- * small jsonb result, never an exception a screen would read.
+ * The studio's side of Draft and Published (0022, 20261105160000_draft_published):
+ * every save is a draft, publishing applies it, unpublishing takes the row
+ * down and leaves it a draft, and taking down / putting back flips a row's
+ * status. All of it through RPCs that answer a small jsonb result, never an
+ * exception a screen would read.
  *
  * Payload v1, as approve_draft reads it (the migration's header documents it
  * for both sides): a route draft is the route's editable columns plus the
@@ -32,11 +32,7 @@ export async function callReview(fn: string, args: Record<string, unknown>): Pro
   const { data, error } = await client.rpc(fn as never, args as never);
   if (error) throw new Error(`${fn}: ${error.message}`);
   const [row] = parsed(reviewResultSchema, [data], 'review result');
-  if (
-    ['ok', 'approved', 'submitted', 'sent_back', 'discarded', 'taken_down', 'put_back'].includes(
-      row.code,
-    )
-  )
+  if (['ok', 'approved', 'discarded', 'taken_down', 'put_back', 'unpublished'].includes(row.code))
     notifyReviewChange();
   return row;
 }
@@ -118,42 +114,34 @@ export async function claimDraft(
 }
 
 /**
- * A draft's payload replaced, if nobody changed it since it was read
- * (`revision`). Editing a draft takes it back out of review: a pending draft
- * goes back to 'draft', so an approval cannot pass a payload the reviewer has
- * not seen. approve_draft validates the payload again before it applies it.
+ * A draft's payload replaced (save_draft), if nobody changed it since it was
+ * read (`revision`), by its maker or by anyone once its maker's account is
+ * gone. publish_draft validates the payload again before it applies it.
  */
-export async function updateDraft(
+export async function saveDraft(
   draftId: string,
   revision: number,
   payload: Record<string, unknown>,
 ): Promise<ReviewResult> {
-  const client = requireSupabase();
-  const { data, error } = await client
-    .from('draft')
-    .update({ payload: toJson(payload), status: 'draft', submitted_at: null })
-    .eq('id', draftId)
-    .eq('revision', revision)
-    .select(DRAFT_LIST_SELECT)
-    .maybeSingle();
-  if (error) throw new Error(`draft ${draftId}: ${error.message}`);
-  if (!data) return { code: 'revision_mismatch' };
-  const [row] = parsed(draftRowSchema, [data], 'draft');
-  notifyReviewChange();
-  return { code: 'ok', created: false, draft: row };
-}
-
-export async function submitDraft(draftId: string, revision: number): Promise<ReviewResult> {
-  return callReview('submit_draft', { p_draft: draftId, p_revision: revision });
+  return callReview('save_draft', { p_draft: draftId, p_revision: revision, p_payload: payload });
 }
 
 export async function discardDraft(draftId: string, revision?: number): Promise<ReviewResult> {
   return callReview('discard_draft', { p_draft: draftId, p_revision: revision ?? null });
 }
 
-export async function approveDraft(draftId: string, revision?: number): Promise<ReviewResult> {
-  if (revision === undefined) return callReview('approve_draft', { p_draft: draftId });
-  return callReview('approve_reviewed_draft', { p_draft: draftId, p_revision: revision });
+/** The draft published, at the revision the editor saw: the map changes now, the public map at the next publish. */
+export async function publishDraft(draftId: string, revision: number): Promise<ReviewResult> {
+  return callReview('publish_draft', { p_draft: draftId, p_revision: revision });
+}
+
+/**
+ * Taken off the public map at the next publish, and left a draft: the one it
+ * already had, or a new one of it as it stands. A hotspot that ends a
+ * published route answers `blocked`.
+ */
+export async function unpublish(kind: DraftKind, subjectId: string): Promise<ReviewResult> {
+  return callReview('unpublish', { p_kind: kind, p_subject_id: subjectId });
 }
 
 export async function takeDown(kind: DraftKind, subjectId: string): Promise<ReviewResult> {
@@ -167,7 +155,7 @@ export async function putBack(kind: DraftKind, subjectId: string): Promise<Revie
 // --- Reading drafts for the review list and the playground markers.
 
 const DRAFT_LIST_SELECT =
-  'id, kind, subject_id, is_new, base_revision, revision, status, payload, note, editor_id, created_at, updated_at, submitted_at';
+  'id, kind, subject_id, is_new, base_revision, revision, status, payload, note, editor_id, last_saved_by, created_at, updated_at, submitted_at';
 
 /** Every draft, pending first then by recent activity: the review list. */
 export async function listDrafts(): Promise<DraftRow[]> {
