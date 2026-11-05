@@ -480,3 +480,46 @@ which fails without `delete_account_keep_uploads`.
 - Applied, and it must be withdrawn: run `20261105090000_delete_account_refuse_uploads_revert.sql`.
   `verify/delete-account-refuse-uploads.sh` checks the schema afterwards matches the schema before, and
   that it re-applies.
+
+# Applying review_rules to the live project
+
+**Not applied live.** The review step's rules, findings studio-03, studio-08 and studio-09
+(`.scratch/codebase-review/studio.md`), approved by the owner on 2026-11-05:
+
+- **Approvals write only the links that changed.** A link the draft keeps as it is (same direction,
+  hotspot and sequence) is not touched, so it moves no neighbour's revision. That ends the false
+  "Approved data changed" on drafts of every hotspot a route passes (and every route through a hotspot).
+  Same rows and same codes as before.
+- **Keep rebuilds a hotspot draft's links.** "Keep draft for a new review" (`refresh_draft_base`) takes a
+  hintuan's links from the links the approved directions have to it now, and keeps a terminal's ticked
+  links, adding the ikot that pass it now. Only when the draft keeps the approved outline and station
+  line: a draft that moves them keeps its own list, as before. Route drafts are kept as before.
+- **Editors change only a draft's content.** `authenticated` updates `payload`, `status`, `submitted_at`
+  and `note` only; `draft_update` no longer lets a direct update leave a draft without its maker.
+- **Only the maker discards a draft.** `discard_draft` answers `not_your_draft` for another editor's
+  draft (the studio shows "Only the editor who made this draft can discard it. Nothing was changed.");
+  `draft_delete` is the maker's only. A draft whose maker's account is gone can be discarded by any
+  editor.
+
+No table, no row changes. Three files, each pasted whole into the SQL editor as `postgres`:
+
+| File | What it does |
+| --- | --- |
+| `20261105120000_review_rules_apply.sql` | One transaction. Checks `0022_draft_ops`, `reviewed_draft_approval` and `draft_update_own` are in the ledger, and this is not. Applies `migrations/20261105120000_review_rules.sql` (carried unchanged; `verify/review-rules.sh` checks the copy). Checks `authenticated` updates only the four content columns, both policies are the maker's, and the three functions are definers with a pinned path for `authenticated` only. Writes the ledger row `review_rules`. Any failed check raises and nothing is changed. A second run stops at the first check and changes nothing. |
+| `20261105120000_review_rules_check.sql` | Part one adds two test editors, test routes and hotspots and their drafts, proves the behaviour, then rolls all of it back; it raises `FAILED: ...` on the first wrong result. Part two is read-only: 9 rows, all `ok` should be `t`. |
+| `20261105120000_review_rules_revert.sql` | One transaction: puts back `approve_draft` and `discard_draft` as 0022 wrote them, `refresh_draft_base` as reviewed_draft_approval wrote it, the table-wide update grant, `draft_update` as draft_update_own left it and `draft_delete` as 0018 did, and removes the ledger row. Touches no data. Safe to run twice. |
+
+## Steps
+
+1. Run `20261105120000_review_rules_apply.sql`. It ends with `COMMIT`; an error means nothing changed.
+2. Run `20261105120000_review_rules_check.sql`: part one ends with `ROLLBACK` and no `FAILED`; part two
+   gives 9 rows, all `ok = t`.
+3. Record the ledger version
+   (`select version from supabase_migrations.schema_migrations where name = 'review_rules';`)
+   in `migrations/README.md`. The types do not change: no function's arguments or result type changed.
+
+## Recovery
+
+- Apply failed: nothing changed. The message names what it found.
+- Applied, and it must be withdrawn: run `20261105120000_review_rules_revert.sql`.
+  `verify/review-rules.sh` checks the schema afterwards matches the schema before, and that it re-applies.

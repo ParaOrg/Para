@@ -16,6 +16,7 @@ const reviewCodeSchema = z.enum([
   'conflict',
   'revision_mismatch',
   'no_draft',
+  'not_your_draft',
   'not_pending',
   'not_approved',
   'not_taken_down',
