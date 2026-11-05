@@ -4,10 +4,10 @@ import { routeStreets } from '../drawing/streets';
 import type { Drawing } from '../drawing/use-drawing';
 
 /**
- * What the save panel says about the line before it is saved: the streets it
- * runs along, a return trip drawn from the wrong end, what an Extend shares with its parent, ends that already make
- * a route, and no hotspots at all to end at. Each says and never blocks;
- * the `save-*` test ids are the suites'.
+ * What the save panel says about the line before it is saved: the streets it runs along, a
+ * return trip drawn from the wrong end, what an Extend shares with its parent, ends that
+ * already make a route, and no hotspots at all to end at. Each says and never blocks; the
+ * `save-*` test ids are the suites'.
  */
 export function SaveNotices({
   segments,

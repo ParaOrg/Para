@@ -54,7 +54,7 @@ const hotspots: HotspotRow[] = [
  * Just the parts of a drawing the panel reads. Sample data only: a story has no
  * Supabase client, so pressing a save here shows an error and writes nothing.
  */
-function drawing(segments: Segment[], uTurns = 0): Drawing {
+function drawing(segments: Segment[]): Drawing {
   const controlPoints: LngLat[] = [
     [121.043326, 14.742006],
     [121.04184, 14.742003],
@@ -66,7 +66,7 @@ function drawing(segments: Segment[], uTurns = 0): Drawing {
     line: controlPoints,
     segments,
     metres: 640,
-    uTurns: Array.from({ length: uTurns }, (_, i) => ({ point: i + 1, stub: [], metres: 60 })),
+    uTurns: [],
   } as unknown as Drawing;
 }
 
@@ -154,22 +154,6 @@ export const RoutedBeforeNames: Story = {
   args: { draw: drawing([routed(), routed()]) },
 };
 
-/** The route turns back on itself at a point: ringed on the map, and saved as it is. */
-export const WithAUTurn: Story = {
-  args: {
-    draw: drawing(
-      [
-        routed([{ name: 'Sinai Street', metres: 160 }]),
-        routed([
-          { name: 'Sinai Street', metres: 60 },
-          { name: 'Assyria Street', metres: 55 },
-        ]),
-      ],
-      1,
-    ),
-  },
-};
-
 const hintuan = (
   id: string,
   name: string,
@@ -231,9 +215,8 @@ function drawingBack(): Drawing {
 
 /**
  * Tala – SM Fairview exists with its outbound drawn; this is its return trip,
- * drawn from SM Fairview. The panel leads with the direction — "SM Fairview →
- * Tala" — because "to Tala" under a locked "Tala – SM Fairview" reads as not
- * reversed at all.
+ * drawn from SM Fairview. The panel says "Draw the return trip" over the
+ * route's locked ends.
  */
 export const TheReturnTrip: Story = {
   args: { route: talaFairview, slotReversed: true, draw: drawingBack() },
