@@ -194,11 +194,18 @@ const idle = () =>
   page
     .waitForFunction(() => !document.body.innerText.includes('snapping…'), null, { timeout: 15000 })
     .catch(() => {});
-const pointsShown = async () => Number((await body()).match(/(\d+) points?\b/)?.[1] ?? 0);
-// On a computer the route's form already stands beside the map; a hotspot still presses Done.
+// The drawing's count: the toolbar's "3 points", or beside the map Line detail's Points (or a
+// hotspot's Corners); never the sidebar's "Add at least 2 points" while a save waits.
+const countIn = (text) => {
+  const toolbar = text.match(/(?<!at least )(\d+) (?:points?|corners?)\b/);
+  const detail = text.match(/\b(?:Points|Corners)\s+(\d+)/);
+  return Number(detail?.[1] ?? toolbar?.[1] ?? 0);
+};
+const pointsShown = async () => countIn(await body());
+// On a computer the sidebar already stands beside the map, a route's or a hotspot's; narrower, Done.
 const done = async () => {
   await idle();
-  if (!(await page.getByTestId('route-panel').isVisible()))
+  if (!(await page.getByTestId('sidebar').isVisible()))
     await page.getByRole('button', { name: /Done/ }).click();
   await page.waitForTimeout(600);
 };
@@ -230,9 +237,10 @@ async function hintuan(c, name) {
   await done();
   await page.getByPlaceholder('SM Fairview Ilalim').fill(name);
   const n = log.length;
-  await page.getByRole('button', { name: 'Save hintuan' }).click();
+  await page.getByRole('button', { name: 'Save as draft', exact: true }).click();
   await waitFor(
-    async () => (await page.getByRole('button', { name: 'Save hintuan' }).count()) === 0,
+    async () =>
+      (await page.getByRole('button', { name: 'Save as draft', exact: true }).count()) === 0,
   );
   await page.waitForTimeout(500);
   return writesSince(n);
@@ -326,7 +334,18 @@ async function openCard(ll) {
   await go(at(0, 0), 15);
   await clickAt(ll, 700);
 }
-const closeLoop = () => page.getByTestId('close-loop');
+/** Closes the line by a click at its connect badge, as the editor does (use-connect-hint.ts). */
+const closeByBadge = async () => {
+  const outbound = (await page.evaluate(() => window.__src('draw-outbound')))?.features?.find(
+    (f) => f.properties.role === 'start',
+  )?.geometry.coordinates;
+  const points = (await page.evaluate(() => window.__src('draw-points')))?.features ?? [];
+  const target = outbound ?? points[0]?.geometry.coordinates;
+  const [x, y] = await px(target);
+  await page.mouse.move(x + 4, y + 4, { steps: 3 });
+  await page.waitForTimeout(150);
+  await page.mouse.click(x + 4, y + 4);
+};
 
 // ---- 2b. The return trip, into the slot
 const slotId = draftDirections.find((v) => v.shape === null)?.id;
@@ -340,7 +359,7 @@ check(
   `${await pointsShown()} points`,
 );
 await clickAt(BACK_MID, 300);
-await closeLoop().click();
+await closeByBadge();
 await idle();
 await done();
 check('  the panel says it draws the return trip', (await body()).includes('Draw the return trip'));
@@ -379,6 +398,10 @@ check(
   '  Edit route loads its points',
   (await pointsShown()) === OUT.length,
   `${await pointsShown()} points`,
+);
+check(
+  '  a published route with no draft opens as Published',
+  /Status\s+Published/.test(await page.getByTestId('line-detail').innerText()),
 );
 // Edit route opens in Move, where a click adds nothing: Snap, to add.
 await page.getByTestId('snap-draw').getByRole('button', { name: 'Snap' }).click();
@@ -434,6 +457,10 @@ check(
   "Edit route on a route with the editor's draft opens the draft's line",
   (await pointsShown()) === OUT.length + 1,
   `${await pointsShown()} points`,
+);
+check(
+  "  and opens as a Draft: the editor's own draft is waiting",
+  /Status\s+Draft/.test(await page.getByTestId('line-detail').innerText()),
 );
 await page.getByTestId('snap-draw').getByRole('button', { name: 'Snap' }).click();
 await go(at(0, 0), 15);
@@ -649,7 +676,7 @@ await page.getByRole('button', { name: 'New route, terminal or hintuan' }).click
 await page.getByRole('menuitem', { name: /Routes/ }).click();
 await page.waitForTimeout(200);
 for (const p of IKOT) await clickAt(p, 300);
-await closeLoop().click();
+await closeByBadge();
 await idle();
 await done();
 await page.getByLabel('Ikot name').fill('UP – Ikot');
@@ -701,7 +728,7 @@ async function editHintuan(spot, name) {
   shownName = await nameField().inputValue();
   await nameField().fill(name);
   const from = log.length;
-  await page.getByRole('button', { name: 'Save changes' }).click();
+  await page.getByRole('button', { name: 'Save as draft', exact: true }).click();
   await drafted();
   await page.waitForTimeout(300);
   return writesSince(from);
@@ -862,7 +889,7 @@ check(
       rpcs(w, 'submit_draft').length === 1 &&
       rpcs(w, 'approve_reviewed_draft').length + rpcs(w, 'approve_draft').length === 1 &&
       published?.status === 'approved' &&
-      !(await page.getByTestId('route-panel').isVisible()),
+      !(await page.getByTestId('sidebar').isVisible()),
     said(w),
   );
 }

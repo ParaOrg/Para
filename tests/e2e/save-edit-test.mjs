@@ -84,7 +84,15 @@ check(
     (await page.getByLabel('Via (if applicable)').isEnabled()) &&
     (await page.getByLabel('Transportation mode').isEnabled()),
 );
+const lineStatus = async () =>
+  (await page.getByTestId('line-detail').innerText()).match(/Status\s+(\w+)/)?.[1];
+check(
+  '  Line detail says the published route is Published while it is as it was',
+  (await lineStatus()) === 'Published',
+  await lineStatus(),
+);
 await page.getByTestId('save-head').selectOption({ label: 'Stand-in Phase' });
+check('  and Draft once it changes', (await lineStatus()) === 'Draft', await lineStatus());
 // The form asks a jeepney for no signboard: the one the route has is kept.
 const signboardBefore = tables.route.find((r) => r.id === outRoute?.id)?.signboard ?? null;
 check(
@@ -575,22 +583,32 @@ await guest.getByRole('button', { name: /Done/ }).click();
 await guest.waitForTimeout(400);
 check(
   'signed out, Done asks for sign-in',
-  (await guest.getByPlaceholder('you@example.com').count()) === 1,
+  (await guest.getByRole('textbox', { name: 'Email', exact: true }).count()) === 1,
 );
-await guest.getByPlaceholder('you@example.com').fill('owner@example.com');
-await guest.getByPlaceholder('Password').fill('stand-in');
+await guest.getByRole('textbox', { name: 'Email', exact: true }).fill('owner@example.com');
+await guest.getByLabel('Password', { exact: true }).fill('stand-in');
 // With a Turnstile site key in the build, Sign in waits for the check.
 await guest.waitForFunction(() => !document.querySelector('button[type="submit"]')?.disabled);
-await guest.getByPlaceholder('Password').press('Enter');
+await guest.getByLabel('Password', { exact: true }).press('Enter');
 await guest.waitForTimeout(1200);
 check(
   '  signing in closes the dialog',
-  (await guest.getByPlaceholder('you@example.com').count()) === 0,
+  (await guest.getByRole('textbox', { name: 'Email', exact: true }).count()) === 0,
 );
-const before = Number((await guestBody()).match(/(\d+) points?\b/)?.[1] ?? 0);
+const before = Number(
+  (await guestBody())
+    .match(/\bPoints\s+(\d+)|(\d+) points?\b/)
+    ?.slice(1)
+    .find(Boolean) ?? 0,
+);
 await guest.keyboard.press('Control+z');
 await guest.waitForTimeout(300);
-const after = Number((await guestBody()).match(/(\d+) points?\b/)?.[1] ?? 0);
+const after = Number(
+  (await guestBody())
+    .match(/\bPoints\s+(\d+)|(\d+) points?\b/)
+    ?.slice(1)
+    .find(Boolean) ?? 0,
+);
 check(
   '  and Ctrl+Z still undoes (9)',
   before === OUT.length && after === OUT.length - 1,
@@ -617,6 +635,35 @@ check(
 await backToMap();
 await page.getByTitle('Discard this route').click();
 await page.waitForTimeout(300);
+// ---- 11b. Unpublish: a published route opened with Edit route, unchanged, offers it in the saves' place
+{
+  await approveAll();
+  const viaRoute = tables.route.find((r) => r.via === 'Stand-in Road');
+  await openCard(VIA[1]);
+  await page.getByRole('button', { name: 'Edit route' }).click();
+  await waitFor(async () => (await pointsShown()) > 0);
+  await done();
+  const panel = page.getByTestId('sidebar');
+  // The sidebar reads the route's draft first: until it knows there is none, it is a draft's.
+  await waitFor(async () => await panel.getByRole('button', { name: 'Unpublish' }).isVisible());
+  check(
+    "a published route, unchanged, has Exit and Unpublish at the sidebar's foot, no saves",
+    (await panel.getByRole('button', { name: 'Unpublish' }).isVisible()) &&
+      (await panel.getByRole('button', { name: 'Publish', exact: true }).count()) === 0 &&
+      (await panel.getByRole('button', { name: 'Save as draft' }).count()) === 0,
+  );
+  const m = log.length;
+  await panel.getByRole('button', { name: 'Unpublish' }).click();
+  await waitFor(async () => (await body()).includes('Unpublished. It leaves the public map'));
+  check(
+    '  Unpublish takes the route down and closes the sidebar',
+    writesSince(m).some((x) => x.table === 'rpc/take_down') &&
+      tables.route.find((r) => r.id === viaRoute?.id)?.status === 'taken_down' &&
+      !(await panel.isVisible()),
+    said(writesSince(m)),
+  );
+}
+
 // ---- 12. On a phone: 390×844, a notch of 47 px and a home bar of 34
 const phone = await open(true, '/studio/', true);
 const rect = (loc) => loc.first().boundingBox();

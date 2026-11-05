@@ -2,8 +2,8 @@
  * The studio's dialogs on a phone (narrower than 40rem): a sheet that fills
  * the screen, clear of the notch and the home bar, with its buttons held at
  * its foot while the form scrolls, so the keyboard never hides Save. Wider,
- * they stay a card in the middle of the map. On a computer a route's form is
- * not a dialog at all but a panel beside the map (BESIDE).
+ * they stay a card in the middle of the map. On a computer a route's or a
+ * hotspot's form is not a dialog at all but a sidebar beside the map (BESIDE).
  */
 
 /**
@@ -24,7 +24,7 @@ export const FOOTER =
   'max-sm:bg-surface max-sm:px-6 max-sm:pt-3 max-sm:pb-[calc(1.5rem+env(safe-area-inset-bottom))]';
 
 /**
- * A route's sidebar left of the map on a computer (Figma 4300:20893): 380 across, the full
+ * The sidebar left of the map on a computer, a route's or a hotspot's (Figma 4300:20893): 380 across, the full
  * height, its sections scrolling on their own above the footer.
  */
 export const BESIDE =

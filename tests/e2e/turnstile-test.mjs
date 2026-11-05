@@ -128,10 +128,10 @@ await page.route(/^https:\/\/[^/]+\.supabase\.co\//, async (route) => {
 });
 
 await page.goto(`${BASE}/studio/`, { waitUntil: 'load' });
-await page.getByText('Sign in to Para Studio').waitFor({ timeout: 30000 });
+await page.getByText('Studio sign in').waitFor({ timeout: 30000 });
 const signIn = page.locator('button[type="submit"]');
-await page.getByPlaceholder('you@example.com').fill(EMAIL);
-await page.getByPlaceholder('Password').fill('wrong');
+await page.getByRole('textbox', { name: 'Email', exact: true }).fill(EMAIL);
+await page.getByLabel('Password', { exact: true }).fill('wrong');
 check('Sign in waits for the check before it can be pressed', await signIn.isDisabled());
 await page.getByText(/Turnstile stand-in w1/).waitFor();
 await page.waitForFunction(() => !document.querySelector('button[type="submit"]')?.disabled);
@@ -150,7 +150,7 @@ check(
 await page.getByText(/Turnstile stand-in w2/).waitFor();
 await page.waitForFunction(() => !document.querySelector('button[type="submit"]')?.disabled);
 isPasswordRight = true;
-await page.getByPlaceholder('Password').fill('right');
+await page.getByLabel('Password', { exact: true }).fill('right');
 await signIn.click();
 await page.getByRole('button', { name: 'Password', exact: true }).waitFor({ timeout: 20000 });
 const passwordGrants = auth.filter((a) => a.path.includes('grant_type=password'));
@@ -219,9 +219,9 @@ await page.evaluate(
   [CONTRIBUTOR_PAGE_KEY],
 );
 await page.reload({ waitUntil: 'load' });
-await page.getByText('Sign in to Para Studio').waitFor({ timeout: 30000 });
-await page.getByPlaceholder('you@example.com').fill(CONTRIBUTOR_EMAIL);
-await page.getByPlaceholder('Password').fill('right');
+await page.getByText('Studio sign in').waitFor({ timeout: 30000 });
+await page.getByRole('textbox', { name: 'Email', exact: true }).fill(CONTRIBUTOR_EMAIL);
+await page.getByLabel('Password', { exact: true }).fill('right');
 await page.waitForFunction(() => !document.querySelector('button[type="submit"]')?.disabled);
 const logoutsBefore = auth.filter((a) => a.path.startsWith('/auth/v1/logout')).length;
 await signIn.click();
@@ -281,7 +281,7 @@ check(
 await page.getByRole('button', { name: 'Sign in with another account' }).click();
 check(
   '  Sign in with another account comes back to the door',
-  (await page.getByText('Sign in to Para Studio').count()) === 1 && (await notEditor.count()) === 0,
+  (await page.getByText('Studio sign in').count()) === 1 && (await notEditor.count()) === 0,
 );
 
 // The same account's session, restored on load: turned away the same way.
@@ -309,8 +309,8 @@ await page.reload({ waitUntil: 'load' });
 await page.getByRole('button', { name: 'Sign out' }).click({ timeout: 20000 });
 await page.getByRole('button', { name: 'Sign in', exact: true }).click({ timeout: 20000 });
 const dialogSubmit = page.locator('form button[type="submit"]');
-await page.getByPlaceholder('you@example.com').fill(CONTRIBUTOR_EMAIL);
-await page.getByPlaceholder('Password').fill('right');
+await page.getByRole('textbox', { name: 'Email', exact: true }).fill(CONTRIBUTOR_EMAIL);
+await page.getByLabel('Password', { exact: true }).fill('right');
 await page.waitForFunction(() => !document.querySelector('form button[type="submit"]')?.disabled);
 await dialogSubmit.click();
 await notEditor.waitFor({ timeout: 20000 });
@@ -331,20 +331,20 @@ check(
   (await dialogSubmit.innerText()) === 'Sign in' && (await notEditor.count()) === 0,
   await dialogSubmit.innerText(),
 );
-await page.getByPlaceholder('you@example.com').fill(EMAIL);
+await page.getByRole('textbox', { name: 'Email', exact: true }).fill(EMAIL);
 await dialogSubmit.click();
 await page.getByRole('button', { name: 'Sign out' }).waitFor({ timeout: 20000 });
 check(
   '  where an editor then signs in, and the dialog closes',
-  (await page.getByPlaceholder('you@example.com').count()) === 0,
+  (await page.getByRole('textbox', { name: 'Email', exact: true }).count()) === 0,
 );
 
 // Forgot password, from a signed-out start.
 await page.evaluate(() => localStorage.clear());
 await page.reload({ waitUntil: 'load' });
-await page.getByText('Sign in to Para Studio').waitFor({ timeout: 30000 });
-await page.getByRole('button', { name: 'Forgot password?' }).click();
-await page.getByPlaceholder('you@example.com').fill(EMAIL);
+await page.getByText('Studio sign in').waitFor({ timeout: 30000 });
+await page.getByRole('button', { name: 'Forgot password' }).click();
+await page.getByRole('textbox', { name: 'Email', exact: true }).fill(EMAIL);
 await page.waitForFunction(() => !document.querySelector('button[type="submit"]')?.disabled);
 await page.locator('button[type="submit"]').click();
 await page.waitForTimeout(500);

@@ -1,4 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
 
 import type { useSavedHotspots } from '@/features/routes/map/use-saved-hotspots';
 import type { useSavedRoutes } from '@/features/routes/map/use-saved-routes';
@@ -9,7 +10,10 @@ import { HotspotPanel } from './hotspot-panel';
 import { SaveBesideFrame, SaveSheetFrame } from './save-frames';
 import { SavePanel } from './save-panel';
 import type { SaveTarget } from './use-save-target';
+import { useStudioSession } from '../auth/use-studio-session';
+import { isAnothersDraft } from '../data/draft-lock';
 import { reviewKeys } from '../data/review-keys';
+import type { DraftRow } from '../data/review-schema';
 import { useHotspotToEditQuery } from '../data/use-hotspot-to-edit-query';
 import { useRouteToEditQuery } from '../data/use-route-to-edit-query';
 import { whyCannotSave } from '../drawing/toolbar-text';
@@ -22,8 +26,8 @@ interface StudioSaveSheetsProps {
   /** Whether Done has opened the save form. */
   isSaving: boolean;
   /**
-   * A route's form stands beside the map the whole time its line is drawn,
-   * rather than covering the map at Done (a computer's screen, signed in).
+   * The sidebar stands beside the map the whole time its line or outline is
+   * drawn, rather than covering the map at Done (a computer's screen, signed in).
    */
   isBeside?: boolean;
   draw: Drawing;
@@ -32,14 +36,17 @@ interface StudioSaveSheetsProps {
   target: Pick<SaveTarget, 'editing' | 'parentRoute' | 'slotReversed'>;
   /** Hears what a save stored as a draft. */
   onDrafted?: (subjectId: string) => void;
-  /** A route's draft published: the map has changed. */
+  /** A draft published, a route's or a hotspot's: the map has changed. */
   onPublished?: (subjectId: string) => void;
+  /** A published route or hotspot unpublished: the map has changed. */
+  onUnpublished?: () => void;
   onCancel: () => void;
 }
 
 /**
- * The save form while saving: a hotspot's panel for an area trace, a route's
- * for a line, over the map; or a route's beside it the whole time it is drawn.
+ * The sidebar: a hotspot's for an area trace, a route's for a line; beside the
+ * map the whole time it is drawn on a computer, over the map once Done is
+ * pressed on a phone.
  */
 export function StudioSaveSheets({
   isSaving,
@@ -50,6 +57,7 @@ export function StudioSaveSheets({
   target,
   onDrafted,
   onPublished,
+  onUnpublished,
   onCancel,
 }: StudioSaveSheetsProps) {
   // The hotspot being edited, when the area trace came from a saved one.
@@ -66,6 +74,27 @@ export function StudioSaveSheets({
   const approvedRoute = target.editing?.route ?? target.parentRoute;
   const routeToEdit = useRouteToEditQuery(approvedRoute);
   const draftedRoute = routeToEdit.data ?? approvedRoute;
+  // A direction of a published route with no draft of the editor's own, read in the same cached
+  // read routeToEdit made: what the sidebar opened on is published. Another editor's draft
+  // leaves it published: the sidebar is theirs to change, not this editor's.
+  const client = useQueryClient();
+  const userId = useStudioSession()?.user.id ?? null;
+  const routeDraft = approvedRoute
+    ? client.getQueryData<DraftRow | null>(reviewKeys.draftOf('route', approvedRoute.id))
+    : undefined;
+  const hasOwnDraft = !!routeDraft && (userId === null || !isAnothersDraft(routeDraft, userId));
+  // The line as it first came in for this route and direction (or the outline, for this
+  // hotspot), kept here rather than in the form, which starts again when the draft's read lands:
+  // a line moved before that is a change all the same.
+  const lineKey = draw.area
+    ? `hotspot:${draw.area.hotspotId ?? 'new'}`
+    : `${draw.target.routeId}:${draw.target.directionId}`;
+  const lineNow = JSON.stringify(draw.controlPoints);
+  const [openedLine, setOpenedLine] = useState<{ key: string; line: string } | null>(null);
+  if (draw.drawing && draw.controlPoints.length > 0 && openedLine?.key !== lineKey)
+    setOpenedLine({ key: lineKey, line: lineNow });
+  const isLineAsOpened = openedLine?.key === lineKey && openedLine.line === lineNow;
+  const isPublished = !!target.editing && routeToEdit.isSuccess && !hasOwnDraft && isLineAsOpened;
   // Until the draft is read, Save would build on facts the form does not show: it waits.
   const draftNotRead =
     approvedRoute && routeToEdit.isPending
@@ -74,7 +103,6 @@ export function StudioSaveSheets({
         ? 'Couldn’t read your draft of this route. Close this and open it again.'
         : null;
   // A draft saved here makes every cached draft stale: the next Edit or card reads afresh.
-  const client = useQueryClient();
   const handleDrafted = (subjectId: string) => {
     client.removeQueries({ queryKey: reviewKeys.draftsOf() });
     onDrafted?.(subjectId);
@@ -93,26 +121,55 @@ export function StudioSaveSheets({
     directions: saved.directions,
     onDrafted: handleDrafted,
     onPublished: handlePublished,
+    onUnpublished,
     onPlaceSaved: () => void hotspots.reload(),
+  };
+
+  // A published hotspot with no draft of the editor's own, as for a route (above).
+  const hotspotDraft = approvedHotspot
+    ? client.getQueryData<DraftRow | null>(reviewKeys.draftOf('hotspot', approvedHotspot.id))
+    : undefined;
+  const hasOwnHotspotDraft =
+    !!hotspotDraft && (userId === null || !isAnothersDraft(hotspotDraft, userId));
+  const hotspotForm = {
+    draw,
+    existing: editingHotspot,
+    existingLinks:
+      toEdit.data?.linkedDirectionIds ??
+      (editingHotspot ? hotspots.linkedDirectionIds(editingHotspot.id) : []),
+    directions: saved.directions,
+    hotspots: hotspots.hotspots,
+    onDrafted: handleDrafted,
+    onPublished: handlePublished,
+    onUnpublished,
   };
 
   return (
     <>
-      {isSaving && draw.drawing && draw.area && (
-        <HotspotPanel
-          // The form takes its fields once: started again if the read lands after it opened.
-          key={toEdit.isSuccess ? 'read' : 'reading'}
-          draw={draw}
-          existing={editingHotspot}
-          existingLinks={
-            toEdit.data?.linkedDirectionIds ??
-            (editingHotspot ? hotspots.linkedDirectionIds(editingHotspot.id) : [])
-          }
-          directions={saved.directions}
-          hotspots={hotspots.hotspots}
-          onDrafted={handleDrafted}
-          onCancel={onCancel}
-        />
+      {isBeside && draw.drawing && draw.area && (
+        <SaveBesideFrame>
+          <HotspotPanel
+            // A new outline is a new form; the form takes its fields once, so it starts again
+            // when the read lands after it opened.
+            key={`${draw.area.hotspotId ?? 'new'}:${toEdit.isSuccess ? 'read' : 'reading'}`}
+            {...hotspotForm}
+            isPublished={
+              !!approvedHotspot && toEdit.isSuccess && !hasOwnHotspotDraft && isLineAsOpened
+            }
+            saveBlocked={whyCannotSave(draw)}
+          />
+        </SaveBesideFrame>
+      )}
+
+      {!isBeside && isSaving && draw.drawing && draw.area && (
+        <SaveSheetFrame>
+          <HotspotPanel
+            // The form takes its fields once: started again if the read lands after it opened.
+            key={toEdit.isSuccess ? 'read' : 'reading'}
+            {...hotspotForm}
+            onCancel={onCancel}
+          />
+        </SaveSheetFrame>
       )}
 
       {isBeside && draw.drawing && !draw.area && (
@@ -123,6 +180,7 @@ export function StudioSaveSheets({
             // route reads it fresh into the cache, and a draft save drops the cached ones).
             key={`${draw.target.routeId}:${draw.target.directionId}:${routeToEdit.isSuccess ? 'read' : 'reading'}`}
             {...routeForm}
+            isPublished={isPublished}
             saveBlocked={draftNotRead ?? whyCannotSave(draw)}
           />
         </SaveBesideFrame>
