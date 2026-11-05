@@ -2,7 +2,8 @@ import type { MapLayerMouseEvent, MapMouseEvent } from 'maplibre-gl';
 
 import { moveHandle, toggleSmooth, type HandleRef } from './curve-handles';
 import { CLICK_AFTER_MS, type DrawContext } from './draw-context';
-import { POINT_LAYER } from './draw-layers';
+import { HANDLE_DOT_LAYER, POINT_LAYER } from './draw-layers';
+import { holdHandle } from './handle-diamond';
 
 /**
  * A curve shaped after it is drawn, the way a pen tool's editor does: a
@@ -30,6 +31,7 @@ export function handleDragHandlers(ctx: DrawContext) {
     canvas.style.cursor = 'crosshair';
     if (held) ctx.echo.until = performance.now() + CLICK_AFTER_MS;
     held = null;
+    holdHandle(map, HANDLE_DOT_LAYER, null);
   };
 
   const onHandleDown = (e: MapLayerMouseEvent) => {
@@ -42,6 +44,8 @@ export function handleDragHandlers(ctx: DrawContext) {
     if (map.queryRenderedFeatures(e.point, { layers: [POINT_LAYER] }).length > 0) return;
     e.preventDefault();
     held = { seg, end };
+    // Held, the dot is a diamond until it is let go, as a pen tool draws it.
+    holdHandle(map, HANDLE_DOT_LAYER, held);
     map.dragPan.disable();
     canvas.style.cursor = 'grabbing';
     map.on('mousemove', onMove);
@@ -76,6 +80,7 @@ export function handleDragHandlers(ctx: DrawContext) {
       map.off('dblclick', POINT_LAYER, onPointDoubleClick);
       map.off('mousemove', onMove);
       document.removeEventListener('mouseup', onUp);
+      if (held) holdHandle(map, HANDLE_DOT_LAYER, null);
       held = null;
     };
   };
