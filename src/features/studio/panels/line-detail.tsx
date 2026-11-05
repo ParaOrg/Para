@@ -21,10 +21,12 @@ const STATUS_COLOUR = {
 const UNKNOWN = '--';
 
 interface LineDetailProps {
-  /** The points drawn. */
+  /** The points drawn: a route's points, or a hotspot's corners. */
   points: number;
-  /** The line's length. */
-  metres: number;
+  /** What the points are called: a hotspot's outline has corners. */
+  pointsTerm?: 'Points' | 'Corners';
+  /** The line's length; a hotspot's outline has none to give. */
+  metres?: number | null;
   status: LineStatus;
   /** Who last saved it, by name; null until it is known. */
   author?: string | null;
@@ -41,7 +43,8 @@ interface LineDetailProps {
  */
 export function LineDetail({
   points,
-  metres,
+  pointsTerm = 'Points',
+  metres = null,
   status,
   author = null,
   datePublished = null,
@@ -54,8 +57,8 @@ export function LineDetail({
         Line detail
       </h3>
       <dl data-testid="line-detail" className="flex flex-col gap-3 text-sm/5">
-        <Fact term="Points">{points}</Fact>
-        <Fact term="Distance">{(metres / 1000).toFixed(1)} km</Fact>
+        <Fact term={pointsTerm}>{points}</Fact>
+        {metres !== null && <Fact term="Distance">{(metres / 1000).toFixed(1)} km</Fact>}
         <Fact term="Status" tone={status}>
           {STATUS_LABEL[status]}
         </Fact>

@@ -185,12 +185,11 @@ export function Workshop({ session, recovery }: WorkshopProps) {
 
   const { choosing } = cards;
 
-  // On a computer, a signed-in editor's route form stands beside the map the
-  // whole time the line is drawn, and its Save is Done. Not while Extend is
-  // still choosing where to leave a line: there is no line yet.
+  // On a computer, a signed-in editor's sidebar stands beside the map the whole
+  // time a route or a hotspot is drawn, and its saves are Done. Not while Extend
+  // is still choosing where to leave a line: there is no line yet.
   const isWideScreen = useIsWideScreen();
-  const isBeside =
-    isWideScreen && isPlayground && isSignedIn && draw.drawing && !draw.area && !draw.picking;
+  const isBeside = isWideScreen && isPlayground && isSignedIn && draw.drawing && !draw.picking;
 
   // While a save sheet or an account dialog is open over the map, nothing
   // behind it can be reached: the drawing's toolbar would change the line

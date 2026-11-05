@@ -326,7 +326,7 @@ check(
   await page.getByRole('button', { name: 'New route, terminal or hintuan' }).click();
   await page.getByRole('menuitem', { name: /Routes/ }).click();
   await page.waitForTimeout(300);
-  const panel = page.getByTestId('route-panel');
+  const panel = page.getByTestId('sidebar');
   const save = panel.getByRole('button', { name: /^(Publish|Save as draft)$/ }).last();
   check(
     "the route's form is beside the map from the first click, named by its heading",

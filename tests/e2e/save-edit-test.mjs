@@ -633,7 +633,7 @@ await page.waitForTimeout(300);
   await page.getByRole('button', { name: 'Edit route' }).click();
   await waitFor(async () => (await pointsShown()) > 0);
   await done();
-  const panel = page.getByTestId('route-panel');
+  const panel = page.getByTestId('sidebar');
   // The sidebar reads the route's draft first: until it knows there is none, it is a draft's.
   await waitFor(async () => await panel.getByRole('button', { name: 'Unpublish' }).isVisible());
   check(

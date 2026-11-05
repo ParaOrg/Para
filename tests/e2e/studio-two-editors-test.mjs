@@ -204,7 +204,7 @@ async function editAndSave(page) {
   await page
     .waitForFunction(() => !document.body.innerText.includes('snapping…'), null, { timeout: 15000 })
     .catch(() => {});
-  if (!(await page.getByTestId('route-panel').isVisible()))
+  if (!(await page.getByTestId('sidebar').isVisible()))
     await page.getByRole('button', { name: /Done/ }).click();
   // Published and unchanged, the sidebar offers Unpublish, not a save: a via makes it a change.
   await page.getByLabel('Via (if applicable)').fill('Two Editors Road');
@@ -353,7 +353,7 @@ db.tables.draft.push({
   submitted_at: null,
 });
 const staleWrites = writesOf(db).length;
-if (!(await b.page.getByTestId('route-panel').isVisible()))
+if (!(await b.page.getByTestId('sidebar').isVisible()))
   await b.page.getByRole('button', { name: /Done/ }).click();
 // Published and unchanged, the sidebar offers Unpublish, not a save: a via makes it a change.
 await b.page.getByLabel('Via (if applicable)').fill('Two Editors Road');

@@ -43,9 +43,9 @@ for (const [x, y] of [
   await page.mouse.click(x, y);
 await page.getByRole('button', { name: /Done/ }).click();
 await page.getByPlaceholder('SM Fairview Ilalim').fill('Browser-drawn draft place');
-await page.getByRole('button', { name: 'Save hintuan', exact: true }).click();
+await page.getByRole('button', { name: 'Save as draft', exact: true }).click();
 await page
-  .getByRole('button', { name: 'Save hintuan', exact: true })
+  .getByRole('button', { name: 'Save as draft', exact: true })
   .waitFor({ state: 'detached' });
 assert.equal(
   (await api('stop?select=id')).length,
