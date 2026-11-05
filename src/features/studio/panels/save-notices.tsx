@@ -5,14 +5,12 @@ import type { Drawing } from '../drawing/use-drawing';
 
 /**
  * What the save panel says about the line before it is saved: the streets it
- * runs along, the U-turns ringed on the map, a return trip drawn from the
- * wrong end, what an Extend shares with its parent, ends that already make
+ * runs along, a return trip drawn from the wrong end, what an Extend shares with its parent, ends that already make
  * a route, and no hotspots at all to end at. Each says and never blocks;
  * the `save-*` test ids are the suites'.
  */
 export function SaveNotices({
   segments,
-  uTurns,
   hotspotsCount,
   wrongWay,
   borrowed,
@@ -24,8 +22,6 @@ export function SaveNotices({
 }: {
   /** The drawing's stretches, for the streets they run along. */
   segments: Drawing['segments'];
-  /** The U-turns ringed on the map. */
-  uTurns: Drawing['uTurns'];
   hotspotsCount: number;
   /** The slot's direction, the end the line starts nearer, and the end it should. */
   wrongWay: { direction: string; startsAt: string; from: string } | null;
@@ -59,17 +55,6 @@ export function SaveNotices({
           No street names yet for{' '}
           {streets.missing === 1 ? 'one stretch' : `${streets.missing} stretches`} routed before
           they were recorded. Moving a point re-routes its stretches and fills them in.
-        </p>
-      )}
-      {uTurns.length > 0 && (
-        <p
-          data-testid="save-uturns"
-          className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800"
-        >
-          This route turns back on itself at{' '}
-          {uTurns.length === 1 ? 'one point' : `${uTurns.length} points`}, ringed in amber on the
-          map. Save anyway if the jeep really turns there; otherwise go back and drag the point to
-          the corner.
         </p>
       )}
       {loop.map((text) => (

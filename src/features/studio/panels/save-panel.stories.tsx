@@ -157,7 +157,7 @@ export const RoutedBeforeNames: Story = {
   args: { draw: drawing([routed(), routed()]) },
 };
 
-/** The route turns back on itself at a point: warned before saving. */
+/** The route turns back on itself at a point: ringed on the map, and saved as it is. */
 export const WithAUTurn: Story = {
   args: {
     draw: drawing(

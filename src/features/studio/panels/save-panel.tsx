@@ -8,7 +8,6 @@ import { IkotNameField } from './ikot-name-field';
 import { LineDetail } from './line-detail';
 import { LoopToggle } from './loop-toggle';
 import { ModeField } from './mode-field';
-import { SaveDirectionName } from './save-direction-name';
 import { SaveEndsFields } from './save-ends-fields';
 import { SaveFooter } from './save-footer';
 import { SaveNotices } from './save-notices';
@@ -47,8 +46,7 @@ interface SavePanelProps extends UseSavePanelOptions {
  *
  * Its state and its submit are `useSavePanel`; its pieces live beside it: the ends
  * (`SaveEndsFields`), the route's facts (`IkotNameField`, `ViaField`, `ModeField`), the notices
- * (`SaveNotices`), what the line passes (`SaveTimeline`) and is called (`SaveDirectionName`) and
- * the footer (`SaveFooter`).
+ * (`SaveNotices`), what the line passes (`SaveTimeline`) and the footer (`SaveFooter`).
  */
 export function SavePanel({
   saveBlocked = null,
@@ -168,7 +166,6 @@ export function SavePanel({
 
         <SaveNotices
           segments={draw.segments}
-          uTurns={draw.uTurns}
           loop={panel.loop}
           hotspotsCount={hotspots.length}
           isLoop={isLoop}
@@ -189,14 +186,6 @@ export function SavePanel({
           }
           sameEnds={facts.sameEnds}
           direction={direction}
-        />
-
-        <SaveDirectionName
-          isLoop={isLoop}
-          name={facts.name}
-          direction={direction}
-          hasParent={!!panel.parent}
-          isEdit={!!existing}
         />
 
         {panel.error && (
