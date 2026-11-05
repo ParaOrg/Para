@@ -365,6 +365,22 @@ export const EditRoutePublished: Story = {
   },
 };
 
+/**
+ * Unpublish refused (here, with no database to reach): the sidebar stays, and says why in an
+ * alert the screen reader announces.
+ */
+export const EditRoutePublishedUnpublishRefused: Story = {
+  parameters: { beside: true },
+  args: { ...EditRoute.args, isPublished: true, onCancel: undefined, saveBlocked: null },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    window.confirm = () => true;
+    await userEvent.click(canvas.getByRole('button', { name: 'Unpublish' }));
+    await expect(await canvas.findByRole('alert')).toBeVisible();
+    await expect(canvas.getByRole('button', { name: 'Unpublish' })).toBeEnabled();
+  },
+};
+
 /** Edit route onto ends another route already has: refused in one sentence, before anything is written. */
 export const EditRouteEndsTaken: Story = {
   args: EditRoute.args,

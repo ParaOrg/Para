@@ -1,4 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
 
 import type { useSavedHotspots } from '@/features/routes/map/use-saved-hotspots';
 import type { useSavedRoutes } from '@/features/routes/map/use-saved-routes';
@@ -81,7 +82,16 @@ export function StudioSaveSheets({
     ? client.getQueryData<DraftRow | null>(reviewKeys.draftOf('route', approvedRoute.id))
     : undefined;
   const hasOwnDraft = !!routeDraft && (userId === null || !isAnothersDraft(routeDraft, userId));
-  const isPublished = !!target.editing && routeToEdit.isSuccess && !hasOwnDraft;
+  // The line as it first came in for this route and direction, kept here rather than in the
+  // form, which starts again when the draft's read lands: a line moved before that, or before
+  // Done on a phone, is a change all the same.
+  const lineKey = `${draw.target.routeId}:${draw.target.directionId}`;
+  const lineNow = JSON.stringify(draw.controlPoints);
+  const [openedLine, setOpenedLine] = useState<{ key: string; line: string } | null>(null);
+  if (draw.drawing && draw.controlPoints.length > 0 && openedLine?.key !== lineKey)
+    setOpenedLine({ key: lineKey, line: lineNow });
+  const isLineAsOpened = openedLine?.key === lineKey && openedLine.line === lineNow;
+  const isPublished = !!target.editing && routeToEdit.isSuccess && !hasOwnDraft && isLineAsOpened;
   // Until the draft is read, Save would build on facts the form does not show: it waits.
   const draftNotRead =
     approvedRoute && routeToEdit.isPending
@@ -150,7 +160,6 @@ export function StudioSaveSheets({
           <SavePanel
             key={routeToEdit.isSuccess ? 'read' : 'reading'}
             {...routeForm}
-            isPublished={isPublished}
             saveBlocked={draftNotRead}
             onCancel={onCancel}
           />

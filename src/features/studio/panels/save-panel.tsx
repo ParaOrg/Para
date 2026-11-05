@@ -23,8 +23,8 @@ interface SavePanelProps extends UseSavePanelOptions {
   /** Back to the map, when the form covers it. Absent beside the map, where Exit ends the drawing. */
   onCancel?: () => void;
   /**
-   * The route as it stands is published and has no draft: Line detail says Published until the
-   * line or a field changes.
+   * The route as it stands is published, has no draft and its line is as it opened (the caller
+   * knows the line from before this form): Published until a field changes too.
    */
   isPublished?: boolean;
   /** The published route came off the map (Unpublish). */
@@ -61,8 +61,7 @@ export function SavePanel({
   const isBeside = !onCancel;
 
   // What Exit would lose: the line or a field changed since the sidebar opened.
-  const changes = JSON.stringify([
-    draw.controlPoints,
+  const fields = JSON.stringify([
     panel.signboard,
     panel.mode,
     panel.via,
@@ -70,9 +69,10 @@ export function SavePanel({
     ends.tailId,
     isLoop,
   ]);
-  const [openedWith] = useState(changes);
-  const isChanged = changes !== openedWith;
-  const status = isPublished && !isChanged ? 'published' : 'draft';
+  const line = JSON.stringify(draw.controlPoints);
+  const [opened] = useState({ fields, line });
+  const isChanged = fields !== opened.fields || line !== opened.line;
+  const status = isPublished && fields === opened.fields ? 'published' : 'draft';
   const unpublishing = useUnpublish({
     routeId: isPublished ? (existing?.route.id ?? null) : null,
     onUnpublished,
@@ -183,7 +183,11 @@ export function SavePanel({
         />
 
         {panel.error && <p className="text-sm text-content-error">{panel.error}</p>}
-        {unpublishing.error && <p className="text-sm text-content-error">{unpublishing.error}</p>}
+        {unpublishing.error && (
+          <p role="alert" className="text-sm text-content-error">
+            {unpublishing.error}
+          </p>
+        )}
 
         {saveBlocked && <p className="text-sm text-content-quaternary">{saveBlocked}</p>}
       </div>
@@ -192,7 +196,7 @@ export function SavePanel({
         busyIntent={panel.busy}
         status={status}
         isUnpublishing={unpublishing.isBusy}
-        onUnpublish={() => void unpublishing.unpublish(existing?.route.name ?? 'this route')}
+        onUnpublish={() => unpublishing.unpublish(existing?.route.name ?? 'this route')}
         saveBlocked={saveBlocked}
         onExit={handleExit}
         onCancel={onCancel}

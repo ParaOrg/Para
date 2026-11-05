@@ -635,10 +635,7 @@ await page.waitForTimeout(300);
   await done();
   const panel = page.getByTestId('route-panel');
   // The sidebar reads the route's draft first: until it knows there is none, it is a draft's.
-  await panel
-    .getByRole('button', { name: 'Unpublish' })
-    .waitFor({ timeout: 10000 })
-    .catch(() => {});
+  await waitFor(async () => await panel.getByRole('button', { name: 'Unpublish' }).isVisible());
   check(
     "a published route, unchanged, has Exit and Unpublish at the sidebar's foot, no saves",
     (await panel.getByRole('button', { name: 'Unpublish' }).isVisible()) &&

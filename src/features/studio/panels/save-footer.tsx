@@ -9,7 +9,7 @@ import type { SaveIntent } from './use-route-save';
 interface SaveFooterProps {
   /** The save under way, if any: its button says so. */
   busyIntent: SaveIntent | null;
-  /** Published and unchanged: Unpublish in the saves' place (Figma 4614:15082). */
+  /** Published and unchanged: Unpublish in the saves' place (Figma 4614:15082), when given. */
   status?: LineStatus;
   /** Unpublish under way: its button says so. */
   isUnpublishing?: boolean;
@@ -62,7 +62,7 @@ export function SaveFooter({
           disabled={isBusy}
         />
       )}
-      {status === 'published' ? (
+      {status === 'published' && onUnpublish ? (
         <Grow>
           <Button
             variant="secondary"
