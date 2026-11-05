@@ -32,6 +32,8 @@ export const AREA_FILL_LAYER = 'draw-area-fill';
 export const ROUTE_COLOUR = MAP_PAINT['Paint/draw-line'];
 /** The line's width in pixels: its chevrons (draw-arrows.ts) are cut to it. */
 export const DRAW_LINE_WIDTH = 4;
+/** A curve's handle arm's width, and the line to the cursor's (use-cursor-line.ts): thin, as a pen tool's guides are. */
+export const HANDLE_ARM_WIDTH = 1.5;
 
 /** Whether a source the drawing looked up is a GeoJSON one it can set data on. */
 export const isGeoJSON = (source: Source | undefined): source is GeoJSONSource =>
@@ -151,7 +153,7 @@ export function useDrawLayers(map: MapLibreMap | null): void {
       type: 'line',
       source: HANDLE_SRC,
       filter: ['==', ['geometry-type'], 'LineString'],
-      paint: { 'line-color': ROUTE_COLOUR, 'line-width': 1.5 },
+      paint: { 'line-color': ROUTE_COLOUR, 'line-width': HANDLE_ARM_WIDTH },
     });
     map.addLayer({
       id: HANDLE_DOT_LAYER,
