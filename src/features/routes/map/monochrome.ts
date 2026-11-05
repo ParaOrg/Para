@@ -6,9 +6,9 @@ import type {
   SymbolLayerSpecification,
 } from 'maplibre-gl';
 
-import { MAP_PAINT } from '@/design-system/foundation/map-colours';
+import { MAP_PAINT, MONOCHROME_LEAN } from '@/design-system/foundation/map-colours';
 
-import { recolouredStyle, type Recolour } from './recolour';
+import { hueOf, recolouredStyle, type Recolour } from './recolour';
 
 /*
  * Monochrome: Positron, as detailed as its tiles allow, and still only grays,
@@ -39,7 +39,7 @@ import { recolouredStyle, type Recolour } from './recolour';
  * Buildings — firmer than Positron's whisper, and in 3D from z15 as Colour
  * has them: they stand up when the map is tilted (two fingers up or down).
  *
- * And all of it in cool gray, last (see `toCoolGray`).
+ * And all of it in a gray leaning toward the brand's violet, last (see `toBrandGray`).
  */
 
 const SOURCE = 'openmaptiles';
@@ -436,23 +436,23 @@ export function monochromeStyle(style: StyleSpecification): StyleSpecification {
       ...PLACE_LAYERS,
     ],
   };
-  return recolouredStyle(detailed, toCoolGray);
+  return recolouredStyle(detailed, toBrandGray);
 }
 
-// -------------------------------------------------------------- cool gray
+// ------------------------------------------------------------- violet gray
 
 /*
- * Cool gray. Positron's grays lean warm, toward beige; here every colour
- * Monochrome draws, Positron's and ours, turns to the same slate hue with
- * the same small saturation, the cool gray of Tailwind's `gray`, and keeps
- * its lightness, so nothing gets lighter or darker and white stays white. A
- * colour already more saturated (the rail stations' blue names) keeps its own.
+ * Violet gray. Positron's grays lean warm, toward beige; here every gray
+ * Monochrome draws, Positron's and ours, turns to the brand's hue at the same
+ * small saturation (MONOCHROME_LEAN) and keeps its lightness, so nothing gets
+ * lighter or darker and white stays white. A name with a colour of its own
+ * (the rail stations' blue, the water's) is not a gray, and is left as it is.
  */
-const COOL_HUE = 218;
-const COOL_SATURATION = 14;
+const LEAN_HUE = hueOf(MONOCHROME_LEAN.brand);
+/** Above this, a colour is a colour, not a gray: Positron's grays reach 17, the blue names 31. */
+const GRAY_SATURATION = 25;
 
-const toCoolGray: Recolour = (c) => ({
-  ...c,
-  hue: COOL_HUE,
-  saturation: Math.max(c.saturation, COOL_SATURATION),
-});
+const toBrandGray: Recolour = (c) =>
+  c.saturation > GRAY_SATURATION
+    ? c
+    : { ...c, hue: LEAN_HUE, saturation: MONOCHROME_LEAN.saturation };
