@@ -28,10 +28,13 @@ const STATIONS = [
 const meta = {
   title: 'Features/Studio/RouteLine',
   component: RouteLine,
-  // At the sidebar's width, 348 inside its 16 each side.
+  // At the sidebar's width, 348 inside its 16 each side; the `phone` parameter at a handset's,
+  // where the sheet over the map holds it.
   decorators: [
-    (Story) => (
-      <div className="w-95 bg-surface p-4 font-sn-pro">
+    (Story, ctx) => (
+      <div
+        className={'bg-surface font-sn-pro ' + (ctx.parameters.phone ? 'w-97.5 p-6' : 'w-95 p-4')}
+      >
         <Story />
       </div>
     ),
@@ -102,4 +105,18 @@ export const LongNames: Story = {
       to: row('SM City Fairview Jeepney Terminal, Regalado Avenue side', 'terminal'),
     },
   },
+};
+
+/** One place only, while the line reaches its first: a lone ringed dot, no rail. */
+export const OnePlace: Story = {
+  args: { timeline: { from: row('Tala', 'terminal'), between: [], to: null } },
+  play: async ({ canvasElement }) => {
+    await expect(within(canvasElement).getAllByRole('listitem')).toHaveLength(1);
+  },
+};
+
+/** At a phone's width, in the sheet over the map, folded. */
+export const Phone: Story = {
+  parameters: { phone: true },
+  globals: { viewport: { value: 'mobile1', isRotated: false } },
 };
