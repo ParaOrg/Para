@@ -1,7 +1,6 @@
 import type { MapLibreMap } from 'maplibre-gl';
 import { useEffect } from 'react';
 
-import { LAYERS } from '@/features/routes/map/layers';
 import type { LngLat, Segment } from '@/shared/utils/geo';
 
 import {
@@ -13,7 +12,6 @@ import {
   uTurnFeatures,
 } from './draw-features';
 import {
-  AREA_FILL_LAYER,
   AREA_SRC,
   BORROW_SRC,
   HANDLE_SRC,
@@ -65,12 +63,4 @@ export function useDrawRendering(
     if (!isGeoJSON(src)) return;
     src.setData(borrowFeatures(picking));
   }, [map, picking]);
-
-  // A hotspot trace's straight edges are drawn solid rather than in the
-  // freehand dash. Both kinds are drawn in the route's colour: the kind shows
-  // once the box is saved.
-  useEffect(() => {
-    if (!map || !map.getLayer(AREA_FILL_LAYER)) return;
-    map.setPaintProperty(LAYERS.drawFreehand, 'line-dasharray', area ? [1, 0] : [2, 1.5]);
-  }, [map, area]);
 }

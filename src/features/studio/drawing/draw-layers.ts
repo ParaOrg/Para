@@ -92,8 +92,10 @@ export function useDrawLayers(map: MapLibreMap | null): void {
       layout: { 'line-cap': 'round', 'line-join': 'round' },
       paint: { 'line-color': MAP_PAINT['Paint/casing'], 'line-width': 8, 'line-opacity': 0.9 },
     });
-    // Routed and freehand are separate layers because line-dasharray cannot be
-    // driven by a feature property.
+    // Routed and Draw stretches look the same, solid in the line's colour: the
+    // only dashed line is Snap's preview (use-snap-preview.ts). A stretch the
+    // router refused is told apart by the toolbar's count ("… straight",
+    // draw-count.tsx), never by its look. Two layers, by their ids the suites read.
     map.addLayer({
       id: LAYERS.drawSnapped,
       type: 'line',
@@ -108,11 +110,7 @@ export function useDrawLayers(map: MapLibreMap | null): void {
       source: LINE_SRC,
       filter: ['==', ['get', 'snap'], 'freehand'],
       layout: { 'line-cap': 'round', 'line-join': 'round' },
-      paint: {
-        'line-color': ROUTE_COLOUR,
-        'line-width': DRAW_LINE_WIDTH,
-        'line-dasharray': [2, 1.5],
-      },
+      paint: { 'line-color': ROUTE_COLOUR, 'line-width': DRAW_LINE_WIDTH },
     });
     // Where the route turns back on itself, the doubled-back stretch overlaps
     // or runs beside the line and would be invisible. Paint it amber over it.
