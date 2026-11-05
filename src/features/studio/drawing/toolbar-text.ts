@@ -16,6 +16,19 @@ export function isTyping(target: EventTarget | null): boolean {
   return el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName);
 }
 
+/** Whether the keyboard is a Mac's, whose shortcuts read ⌘ for Ctrl. */
+const isMacKeyboard = () =>
+  typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.userAgent);
+
+/**
+ * A shortcut with the command key, as the computer names it: `Z` reads
+ * "Ctrl+Z", or "⌘Z" on a Mac; `Shift+Z` reads "Ctrl+Shift+Z", or "⇧⌘Z".
+ */
+export function withCommand(keys: string, isMac: boolean = isMacKeyboard()): string {
+  if (!isMac) return `Ctrl+${keys}`;
+  return keys.startsWith('Shift+') ? `⇧⌘${keys.slice('Shift+'.length)}` : `⌘${keys}`;
+}
+
 /** The direction being extended: where it runs from and to, and whether its stored line runs the other way. */
 export interface ExtendEnds {
   from: string;

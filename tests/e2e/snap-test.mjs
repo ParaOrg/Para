@@ -523,6 +523,13 @@ check(
   `${offered.length} coords before`,
 );
 await page.keyboard.press('f');
+const pressed = (name) =>
+  page.getByTestId('snap-draw').getByRole('button', { name }).getAttribute('aria-pressed');
+await page.keyboard.press('d');
+const drawOnD = await pressed('Draw');
+await page.keyboard.press('s');
+const snapOnS = await pressed('Snap');
+check('keys: D picks Draw, S picks Snap', drawOnD === 'true' && snapOnS === 'true');
 await page.getByTestId('snap-draw').getByRole('button', { name: 'Draw' }).click();
 await restAt(D);
 await page.waitForTimeout(2500);

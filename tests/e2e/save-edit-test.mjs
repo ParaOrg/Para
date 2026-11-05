@@ -568,10 +568,10 @@ check(
   before === OUT.length && after === OUT.length - 1,
   `${before} → ${after} points`,
 );
-await guest.keyboard.press('Enter');
+await guest.keyboard.press('Control+Enter');
 await guest.waitForTimeout(500);
 check(
-  '  and Enter still opens the save panel (9)',
+  '  and the save panel is open, Ctrl+Enter or not (9)',
   (await guest.getByTestId('save-head').count()) === 1,
 );
 

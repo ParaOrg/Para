@@ -1,5 +1,6 @@
 import { RedoIcon, UndoIcon } from './draw-toolbar-icons';
 import { ICON_TOOL, PILL } from './draw-toolbar-look';
+import { withCommand } from './toolbar-text';
 import type { Drawing } from './use-drawing';
 
 interface UndoRedoProps {
@@ -20,7 +21,7 @@ export function UndoRedo({ draw, noun }: UndoRedoProps) {
         onClick={draw.undo}
         disabled={draw.controlPoints.length === 0}
         aria-label="Undo"
-        title={`Undo last ${noun} (Ctrl+Z)`}
+        title={`Undo last ${noun} (${withCommand('Z')})`}
         className={ICON_TOOL}
       >
         <UndoIcon />
@@ -30,7 +31,7 @@ export function UndoRedo({ draw, noun }: UndoRedoProps) {
         onClick={draw.redo}
         disabled={!draw.canRedo}
         aria-label="Redo"
-        title={`Redo the ${noun} undone (Ctrl+Shift+Z)`}
+        title={`Redo the ${noun} undone (${withCommand('Shift+Z')})`}
         className={ICON_TOOL}
       >
         <RedoIcon />
