@@ -115,7 +115,9 @@ public class RidePlugin extends Plugin {
     public void events(PluginCall call) {
         JSObject result = new JSObject();
         try {
-            result.put("events", JSArray.from(RideState.events(getContext()).toString()));
+            // Parsed from the events' JSON. Not JSArray.from, which takes an array, not a string:
+            // given one it answers null, and the page then had no taps to apply.
+            result.put("events", new JSArray(RideState.events(getContext()).toString()));
         } catch (Exception unreadable) {
             result.put("events", new JSArray());
         }

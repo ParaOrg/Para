@@ -123,12 +123,34 @@ export function measureSafeTop(sheet: Element | null) {
   probe.remove();
 }
 
+/**
+ * A sheet's own Low and Max, where they differ from every other card's: the route list's Low
+ * shows its first card above the Controller, and its Max fills the screen (BottomSheet's `shape`).
+ */
+export interface SheetShape {
+  /** What Low shows, in px. */
+  lowPx: number;
+  /** Whether Max fills the screen, leaving no strip of map. */
+  isMaxFull: boolean;
+}
+
+/** Every card's shape but the route list's: LOW_PX at Low, a strip of map above Max. */
+export const CARD_SHAPE: SheetShape = { lowPx: LOW_PX, isMaxFull: false };
+
+/** What Max leaves of the map above the sheet, as a CSS length. */
+const maxGapCss = (shape: SheetShape) => (shape.isMaxFull ? '0px' : MAX_GAP_CSS);
+
 /** What each magnet shows of a sheet `h` tall, the map's height. */
-export function heightsFor(h: number): Record<SnapName & ('low' | 'middle' | 'max'), number> {
+export function heightsFor(
+  h: number,
+  shape: SheetShape = CARD_SHAPE,
+): Record<SnapName & ('low' | 'middle' | 'max'), number> {
+  const middle = Math.round(h * MIDDLE);
+  // A tall Low (the route list's) on a short map, a phone on its side: never above Middle.
   return {
-    low: LOW_PX,
-    middle: Math.round(h * MIDDLE),
-    max: Math.max(0, h - safeTop - MAX_STRIP_PX),
+    low: Math.min(shape.lowPx, middle),
+    middle,
+    max: shape.isMaxFull ? h : Math.max(0, h - safeTop - MAX_STRIP_PX),
   };
 }
 
@@ -164,24 +186,27 @@ export function fitSnap(h: number, contentPx: number): Snap {
 }
 
 /** What a sheet `h` tall shows at `snap`, a free height's included: a share of Max's. */
-export function shownAt(snap: Snap, h: number): number {
-  return typeof snap === 'number' ? Math.round(heightsFor(h).max * snap) : heightsFor(h)[snap];
+export function shownAt(snap: Snap, h: number, shape: SheetShape = CARD_SHAPE): number {
+  const heights = heightsFor(h, shape);
+  return typeof snap === 'number' ? Math.round(heights.max * snap) : heights[snap];
 }
 
 /** How far down a sheet at `snap` slides, as a CSS length: `100%` is its own height, the map's. */
-export function slide(snap: Snap): string {
-  if (snap === 'max') return MAX_GAP_CSS;
+export function slide(snap: Snap, shape: SheetShape = CARD_SHAPE): string {
+  const gap = maxGapCss(shape);
+  if (snap === 'max') return gap;
   // Below Max its bottom padding is off the screen: what shows stands clear
   // of a phone's home indicator by lifting it that much.
   if (snap === 'middle') return `calc(${(1 - MIDDLE) * 100}% - env(safe-area-inset-bottom))`;
   if (typeof snap === 'number')
-    return `calc(100% - ${snap} * (100% - ${MAX_GAP_CSS}) - env(safe-area-inset-bottom))`;
-  return `calc(100% - ${LOW_PX}px - env(safe-area-inset-bottom))`;
+    return `calc(100% - ${snap} * (100% - ${gap}) - env(safe-area-inset-bottom))`;
+  // Never above Middle, as heightsFor has it.
+  return `calc(100% - min(${shape.lowPx}px, ${Math.round(MIDDLE * 100)}%) - env(safe-area-inset-bottom))`;
 }
 
 /** How far down a sheet slides while `shown` px of it follow a finger. Never above Max's top. */
-export function slideShowing(shown: number): string {
-  return `max(${MAX_GAP_CSS}, calc(100% - ${shown}px - env(safe-area-inset-bottom)))`;
+export function slideShowing(shown: number, shape: SheetShape = CARD_SHAPE): string {
+  return `max(${maxGapCss(shape)}, calc(100% - ${shown}px - env(safe-area-inset-bottom)))`;
 }
 
 /**
