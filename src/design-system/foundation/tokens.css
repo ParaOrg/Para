@@ -224,6 +224,27 @@
   --card-pink-border-primary: var(--color-pink-800);
   --card-pink-timeline-surface: var(--color-pink-900);
 
+  /* The mode cards: a RouteCard's colours by the kind of ride (RouteCard, 4629:22776).
+     Figma: Card/Jeep/Jeep-surface… The leaf repeats its group, so the token drops the
+     repeat: Card/Jeep/Jeep-surface is --card-jeep-surface. surface-border is the hairline
+     above and below a card, surface-secondary its darker step, on-surface what is written. */
+  --card-jeep-surface: var(--color-blue-700);
+  --card-jeep-surface-secondary: var(--color-blue-800);
+  --card-jeep-surface-border: var(--color-blue-800);
+  --card-jeep-on-surface: var(--color-white);
+  --card-uv-express-surface: var(--color-neutral-300);
+  --card-uv-express-surface-secondary: var(--color-neutral-400);
+  --card-uv-express-surface-border: var(--color-neutral-400);
+  --card-uv-express-on-surface: var(--color-neutral-950);
+  --card-ejeep-surface: var(--color-neutral-50);
+  --card-ejeep-surface-secondary: var(--color-neutral-300);
+  --card-ejeep-surface-border: var(--color-neutral-300);
+  --card-ejeep-on-surface: var(--color-neutral-800);
+  --card-bus-surface: var(--color-orange-700);
+  --card-bus-surface-secondary: var(--color-orange-800);
+  --card-bus-surface-border: var(--color-orange-800);
+  --card-bus-on-surface: var(--color-neutral-50);
+
   /* Error actions — the destructive button, whose fill is a semantic rather
      than a bare primitive. Figma: Error/… */
   --error-surface: var(--color-red-700);
@@ -342,6 +363,22 @@
   --color-card-red-timeline-surface: var(--card-red-timeline-surface);
   --color-card-red-surface-light: var(--card-red-surface-light);
   --color-card-green-surface-light: var(--card-green-surface-light);
+  --color-card-jeep-surface: var(--card-jeep-surface);
+  --color-card-jeep-surface-secondary: var(--card-jeep-surface-secondary);
+  --color-card-jeep-surface-border: var(--card-jeep-surface-border);
+  --color-card-jeep-on-surface: var(--card-jeep-on-surface);
+  --color-card-uv-express-surface: var(--card-uv-express-surface);
+  --color-card-uv-express-surface-secondary: var(--card-uv-express-surface-secondary);
+  --color-card-uv-express-surface-border: var(--card-uv-express-surface-border);
+  --color-card-uv-express-on-surface: var(--card-uv-express-on-surface);
+  --color-card-ejeep-surface: var(--card-ejeep-surface);
+  --color-card-ejeep-surface-secondary: var(--card-ejeep-surface-secondary);
+  --color-card-ejeep-surface-border: var(--card-ejeep-surface-border);
+  --color-card-ejeep-on-surface: var(--card-ejeep-on-surface);
+  --color-card-bus-surface: var(--card-bus-surface);
+  --color-card-bus-surface-secondary: var(--card-bus-surface-secondary);
+  --color-card-bus-surface-border: var(--card-bus-surface-border);
+  --color-card-bus-on-surface: var(--card-bus-on-surface);
   --color-card-orange-surface: var(--card-orange-surface);
   --color-card-orange-surface-pale: var(--card-orange-surface-pale);
   --color-card-orange-border-primary: var(--card-orange-border-primary);
