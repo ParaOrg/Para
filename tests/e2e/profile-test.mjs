@@ -1321,9 +1321,11 @@ async function seed(page, id, name, upload) {
   /**
    * A touch tap on `name` that drifts `drift` px along the bar before it lifts; once the move
    * shows, it is held a quarter into the pill's glide and the pill read, from the page and from
-   * its pixels. A press the harness was too slow to keep under the hold is tried again.
+   * its pixels. A press the harness was too slow to keep under the hold is tried again, from
+   * `from`: a hold opens the tab all the same (the slide's settle), and a tap on the tab already
+   * open has no glide to read, so every try after it would find none.
    */
-  const driftedTap = async (name, drift) => {
+  const driftedTap = async (name, drift, from, fromShows) => {
     for (let attempt = 0; attempt < 3; attempt += 1) {
       await noMove();
       await page.waitForTimeout(300);
@@ -1360,6 +1362,13 @@ async function seed(page, id, name, upload) {
       const [pressMs] = await page.evaluate(() => window.presses);
       if (!isMoving || pressMs >= 250) {
         await noMove();
+        const isOpened =
+          (await page.locator(`.tab-toolbar [data-tab="${name}"][aria-current="page"]`).count()) >
+          0;
+        if (isOpened) {
+          await page.locator(`.tab-toolbar button[data-tab="${from}"]`).click();
+          await fromShows().waitFor();
+        }
         continue;
       }
       const placed = await page.evaluate(() => {
@@ -1390,12 +1399,13 @@ async function seed(page, id, name, upload) {
   };
   const isBetween = (value, a, b) => value > Math.min(a, b) + 4 && value < Math.max(a, b) - 4;
 
-  for (const [drift, to, from, shows] of [
-    [9, 'history', 'record', () => heading('History')],
-    [12, 'record', 'history', () => start(page)],
+  const shows = { history: () => heading('History'), record: () => start(page) };
+  for (const [drift, to, from] of [
+    [9, 'history', 'record'],
+    [12, 'record', 'history'],
   ]) {
-    const seen = await driftedTap(to, drift);
-    await shows().waitFor();
+    const seen = await driftedTap(to, drift, from, shows[from]);
+    await shows[to]().waitFor();
     const paintedCentre = seen?.painted ? (seen.painted.from + seen.painted.to) / 2 : null;
     check(
       `${drift === 9 ? '' : '  '}a touch tap that drifts ${drift} px opens ${to === 'history' ? 'History' : 'Record'}, the pill a quarter into its glide between the tabs, not at the end`,
