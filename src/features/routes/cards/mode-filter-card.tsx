@@ -34,6 +34,11 @@ export function ModeFilterCard({ id, ref, filter, onFilter }: ModeFilterCardProp
     }
     close();
   };
+  // The arrow's click comes during its keydown: clear the mark by keyup, so a key that moved
+  // nothing (an arrow held with Ctrl) cannot swallow the next tap.
+  const handleKeyUp = () => {
+    isArrowMoveRef.current = false;
+  };
   const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     isArrowMoveRef.current = event.key.startsWith('Arrow');
     // Radios do nothing on Enter, nor on Space once checked (no click comes), so those close the
@@ -68,6 +73,7 @@ export function ModeFilterCard({ id, ref, filter, onFilter }: ModeFilterCardProp
               onChange={() => onFilter(option)}
               onClick={handleClick}
               onKeyDown={handleKeyDown}
+              onKeyUp={handleKeyUp}
               className="size-4 accent-brand-surface outline-none"
             />
             {MODE_FILTER_LABEL[option]}

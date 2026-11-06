@@ -90,3 +90,15 @@ export const TapTheWords: Story = {
     await expect(card).not.toBeVisible();
   },
 };
+
+/** Space on the choice already picked keeps it and closes the card. */
+export const SpaceOnThePicked: Story = {
+  args: { filter: 'jeep' },
+  play: async ({ canvasElement }) => {
+    const card = await open(canvasElement);
+    within(card).getByRole('radio', { name: 'Jeep' }).focus();
+    await userEvent.keyboard(' ');
+    await expect(card).not.toBeVisible();
+    await expect(within(card).getByRole('radio', { name: 'Jeep', hidden: true })).toBeChecked();
+  },
+};
