@@ -923,12 +923,14 @@ if (PART !== 1) {
   );
   if (has) {
     const items = chooser.locator('button[data-testid="chooser-item"]');
-    // The owner's pick of 2026-09-29: the count stays the routes', a card each.
+    // The count stays the routes', a card each: the list's name for a screen reader, since the
+    // list draws no header.
     const title = `${cardCount} ${cardCount === 1 ? 'Route' : 'Routes'}`;
+    const named = await chooser.getAttribute('aria-label');
     check(
-      `  headed "${title}": the routes' count, not the hotspot's`,
-      text.split('\n').includes(title),
-      text.split('\n')[0],
+      `  named "${title}": the routes' count, not the hotspot's`,
+      named === title,
+      String(named),
     );
     // A list lights every route it shows; a tap on a card off its rows
     // narrows the lights to its routes, in its colour over the rest, and a

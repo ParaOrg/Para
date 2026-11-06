@@ -1321,9 +1321,11 @@ async function seed(page, id, name, upload) {
   /**
    * A touch tap on `name` that drifts `drift` px along the bar before it lifts; once the move
    * shows, it is held a quarter into the pill's glide and the pill read, from the page and from
-   * its pixels. A press the harness was too slow to keep under the hold is tried again.
+   * its pixels. A press the harness was too slow to keep under the hold is tried again, from
+   * `from`: a hold opens the tab all the same (the slide's settle), and a tap on the tab already
+   * open has no glide to read, so every try after it would find none.
    */
-  const driftedTap = async (name, drift) => {
+  const driftedTap = async (name, drift, from, fromShows) => {
     for (let attempt = 0; attempt < 3; attempt += 1) {
       await noMove();
       await page.waitForTimeout(300);
@@ -1360,6 +1362,13 @@ async function seed(page, id, name, upload) {
       const [pressMs] = await page.evaluate(() => window.presses);
       if (!isMoving || pressMs >= 250) {
         await noMove();
+        const isOpened =
+          (await page.locator(`.tab-toolbar [data-tab="${name}"][aria-current="page"]`).count()) >
+          0;
+        if (isOpened) {
+          await page.locator(`.tab-toolbar button[data-tab="${from}"]`).click();
+          await fromShows().waitFor();
+        }
         continue;
       }
       const placed = await page.evaluate(() => {
@@ -1390,12 +1399,13 @@ async function seed(page, id, name, upload) {
   };
   const isBetween = (value, a, b) => value > Math.min(a, b) + 4 && value < Math.max(a, b) - 4;
 
-  for (const [drift, to, from, shows] of [
-    [9, 'history', 'record', () => heading('History')],
-    [12, 'record', 'history', () => start(page)],
+  const shows = { history: () => heading('History'), record: () => start(page) };
+  for (const [drift, to, from] of [
+    [9, 'history', 'record'],
+    [12, 'record', 'history'],
   ]) {
-    const seen = await driftedTap(to, drift);
-    await shows().waitFor();
+    const seen = await driftedTap(to, drift, from, shows[from]);
+    await shows[to]().waitFor();
     const paintedCentre = seen?.painted ? (seen.painted.from + seen.painted.to) / 2 : null;
     check(
       `${drift === 9 ? '' : '  '}a touch tap that drifts ${drift} px opens ${to === 'history' ? 'History' : 'Record'}, the pill a quarter into its glide between the tabs, not at the end`,
@@ -1846,6 +1856,16 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
 // ------------ signing out leaves a claim waiting for its own account
 {
   const { page, fake } = await phone();
+  // A claim waits only while it cannot finish: here, no answer comes for it while signed in, as
+  // with no signal. Without this the page finishes it as its own account, rightly, whenever it
+  // looks (the account read, the page shown or online), and whether that came before the logout
+  // was a race the check lost now and then. Each call is told apart by whether the sign-out was in.
+  let isSignedOut = false;
+  const finishesAfterSignOut = [];
+  await page.route(/\/rest\/v1\/rpc\/finish_claim/, (route) => {
+    if (isSignedOut) finishesAfterSignOut.push(route.request().url());
+    return route.abort('internetdisconnected');
+  });
   await start(page).waitFor({ timeout: 30000 });
   await page.evaluate(
     ([id]) =>
@@ -1864,6 +1884,7 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
   await page
     .getByRole('heading', { name: 'Welcome Contributor', level: 1 })
     .waitFor({ timeout: 15000 });
+  isSignedOut = true;
   await page.evaluate(() => window.dispatchEvent(new Event('online')));
   await page.waitForTimeout(500);
   const kept = JSON.parse(
@@ -1871,8 +1892,10 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
   );
   check(
     'Logout keeps a waiting claim, still bound to its account, and finishes nothing',
-    kept?.accountId === ACCOUNT_ID && !fake.claims.includes('finish_claim'),
-    JSON.stringify({ kept, claims: fake.claims }),
+    kept?.accountId === ACCOUNT_ID &&
+      finishesAfterSignOut.length === 0 &&
+      !fake.claims.includes('finish_claim'),
+    JSON.stringify({ kept, finishesAfterSignOut, claims: fake.claims }),
   );
 }
 

@@ -40,7 +40,7 @@ export function useRecording(): RecordingState {
   const [phase, setPhase] = useState<Phase>('loading');
   const [announcement, setAnnouncement] = useState('');
   const [focusTarget, setFocusTarget] = useState<'heading' | 'pause'>('heading');
-  const problems = useRecorderProblems();
+  const problems = useRecorderProblems(phase === 'recording');
   const { reportStore, clearStorageProblem, setLocationProblem } = problems;
 
   // A native log that cannot be read leaves the ride with the fixes the page already holds.

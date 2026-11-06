@@ -108,3 +108,21 @@ service with a visible "Para is recording" notification.
   notification for its own through `ParaServiceWatchers.java`, which sits in the plugin's own
   package (`com.equimaps.capacitor_background_geolocation`) to reach the service's watchers, so a
   new plugin version must be checked against it before the pin moves.
+
+## Amendment, 2026-11-06
+
+- **The ride records in Para's own foreground service, `RideService`**, not the plugin's. The
+  plugin's service was bound to the page, so it died when the app was swiped away, and the ride
+  stopped there. `RideService` is started (not bound) by the contributor's Start, of type
+  `location`, with `stopWithTask="false"` and sticky, so it records on with the app swiped away
+  and comes back if Android kills the process; only Pause, Finish or a refused permission stops it.
+- It takes the fixes from Play Services' `FusedLocationProviderClient`, one a second, writes each
+  straight to `FixLog` and hands it to the page while the page is there (`RidePlugin`'s `rideFix`
+  event). The page keeps its catch-up from the log (`native-fix-catch-up.ts`, `importNativeFixes`).
+- The notification's Pause and Finish stop the service; Resume starts it again while the page is
+  alive and its watch was on, as before. A page gone no longer ends a recording ride.
+- `ParaServiceWatchers.java` and `ParaApplication`'s broadcast listener are gone with the
+  plugin's service. The npm plugin is still installed, pinned at `1.3.1`, but the page no longer
+  calls it; removing it is a change of its own.
+- Google Play asks an app with a location foreground service for a declaration and a short video
+  (`.scratch/contribute-apk/play-declaration.md`); the app is not on the Play Store today.

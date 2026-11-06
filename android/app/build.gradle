@@ -59,11 +59,8 @@ dependencies {
     implementation "androidx.coordinatorlayout:coordinatorlayout:$androidxCoordinatorLayoutVersion"
     implementation "androidx.core:core-splashscreen:$coreSplashScreenVersion"
     implementation project(':capacitor-android')
-    // Already in the build through the background-geolocation plugin; ParaApplication listens to
-    // the same broadcast.
-    implementation "androidx.localbroadcastmanager:localbroadcastmanager:1.1.0"
-    // Already in the build through the background-geolocation plugin, at the version it asks for;
-    // NativePermissionsPlugin asks it whether location is on, and shows its dialog to turn it on.
+    // Already in the build through the background-geolocation plugin, at the version it asks for:
+    // RideService's fixes, and NativePermissionsPlugin's check that location is on.
     implementation "com.google.android.gms:play-services-location:21.0.1"
     testImplementation "junit:junit:$junitVersion"
     androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"

@@ -178,12 +178,14 @@ flowchart TD
   features_contribute_map --> features_routes_map
   features_contribute_map --> features_routes_model
   features_contribute_map --> features_routes_published
+  features_contribute_map --> shared_config
   features_contribute_map --> shared_ui
   features_contribute_map --> shared_utils
   features_contribute_motion --> features_contribute_common
   features_contribute_motion --> features_contribute_navigation
   features_contribute_motion --> shared_utils
   features_contribute_native --> design_system_primitives
+  features_contribute_native --> features_contribute_map
   features_contribute_native --> features_contribute_native_bridge
   features_contribute_native --> features_contribute_recorder
   features_contribute_native --> features_contribute_screens
@@ -319,6 +321,7 @@ flowchart TD
   features_studio_review --> features_studio_maps
   shared_ui --> design_system_primitives
   shared_ui --> shared_hooks
+  shared_ui --> shared_utils
   styles --> design_system_foundation
 ```
 
@@ -338,9 +341,9 @@ flowchart TD
 | `features/contribute/common` | `design-system/primitives`, `features/contribute/native-bridge`, `shared/hooks`, `shared/ui`, `shared/utils` |
 | `features/contribute/consent` | `design-system/primitives`, `features/contribute/api`, `features/contribute/common`, `features/contribute/storage`, `shared/hooks` |
 | `features/contribute/history` | `design-system/foundation`, `design-system/primitives`, `features/contribute/account`, `features/contribute/api`, `features/contribute/common`, `features/contribute/motion`, `features/contribute/navigation`, `features/contribute/recorder`, `features/contribute/screens`, `features/contribute/storage`, `features/contribute/toolbar`, `features/contribute/uploads`, `features/routes/map`, `features/routes/model`, `shared/ui`, `shared/utils` |
-| `features/contribute/map` | `design-system/foundation`, `features/contribute/api`, `features/contribute/history`, `features/contribute/notices`, `features/contribute/recorder`, `features/contribute/storage`, `features/routes/map`, `features/routes/model`, `features/routes/published`, `shared/ui`, `shared/utils` |
+| `features/contribute/map` | `design-system/foundation`, `features/contribute/api`, `features/contribute/history`, `features/contribute/notices`, `features/contribute/recorder`, `features/contribute/storage`, `features/routes/map`, `features/routes/model`, `features/routes/published`, `shared/config`, `shared/ui`, `shared/utils` |
 | `features/contribute/motion` | `features/contribute/common`, `features/contribute/navigation`, `shared/utils` |
-| `features/contribute/native` | `design-system/primitives`, `features/contribute/native-bridge`, `features/contribute/recorder`, `features/contribute/screens`, `features/contribute/storage`, `shared/hooks`, `shared/utils` |
+| `features/contribute/native` | `design-system/primitives`, `features/contribute/map`, `features/contribute/native-bridge`, `features/contribute/recorder`, `features/contribute/screens`, `features/contribute/storage`, `shared/hooks`, `shared/utils` |
 | `features/contribute/native-bridge` | `features/contribute/native`, `features/contribute/storage`, `features/routes/model`, `shared/config` |
 | `features/contribute/navigation` | `features/contribute/motion`, `features/contribute/toolbar` |
 | `features/contribute/notices` | `design-system/primitives`, `features/contribute/common`, `features/contribute/uploads`, `shared/ui` |
@@ -370,7 +373,7 @@ flowchart TD
 | `shared/hooks` | — |
 | `shared/lib` | — |
 | `shared/types` | — |
-| `shared/ui` | `design-system/primitives`, `shared/hooks` |
+| `shared/ui` | `design-system/primitives`, `shared/hooks`, `shared/utils` |
 | `shared/utils` | — |
 | `styles` | `design-system/foundation` |
 

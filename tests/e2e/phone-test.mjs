@@ -3449,15 +3449,13 @@ if (!shared) {
     const [head, tail] = endsOf(r.signboard);
     return shownBack(r) ? { from: tail, to: head } : { from: head, to: tail };
   };
-  // The owner's route list (2026-09-28) counts its cards, one per place the
-  // routes leave from: two routes out of Tala are "1 Route".
+  // The route list counts its cards, one per place the routes leave from: two
+  // routes out of Tala are "1 Route". It draws no header, so the count is its
+  // name for a screen reader.
   const places = new Set([shared.a, shared.b].map((r) => shownWay(r).from.toLowerCase())).size;
   const title = `${places} ${places === 1 ? 'Route' : 'Routes'}`;
-  check(
-    `  the list is headed "${title}", a card per place`,
-    chooserText.split('\n').includes(title),
-    chooserText.split('\n')[0] ?? '',
-  );
+  const named = has ? await chooser.first().getAttribute('aria-label') : null;
+  check(`  the list is named "${title}", a card per place`, named === title, String(named));
   check(
     `  it lists both routes ${wayBack ? 'the way back' : 'outbound'} where drawn so, else the way hit, one row each, under the place each leaves from`,
     itemTexts.length === 2 &&
@@ -4617,12 +4615,8 @@ if (!fannedOne) {
     const ends = fan.map((d) => (d.name ?? '').split(' → '));
     const places = new Set(ends.map(([from = '']) => from.toLowerCase())).size;
     const title = `${places} ${places === 1 ? 'Route' : 'Routes'}`;
-    const text = await chooser.first().innerText();
-    check(
-      `  headed "${title}", a card per place`,
-      text.split('\n').includes(title),
-      text.split('\n')[0] ?? '',
-    );
+    const named = await chooser.first().getAttribute('aria-label');
+    check(`  named "${title}", a card per place`, named === title, String(named));
     const items = chooser.locator('button[data-testid="chooser-item"]');
     const rows = [];
     for (let i = 0; i < (await items.count()); i++)

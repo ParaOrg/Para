@@ -5,7 +5,7 @@
  * the arithmetic under them takes rects.
  */
 
-import { aboveMiddle, shownAt, type Snap } from './sheet-gesture';
+import { CARD_SHAPE, aboveMiddle, shownAt, type SheetShape, type Snap } from './sheet-gesture';
 
 /** MapLibre's fit padding, a side at a time. */
 export interface Room {
@@ -36,9 +36,27 @@ export function clearOfDock(
   if (!dock || dock.hidden) return [0, 0];
   return clearOfRects(
     map.getBoundingClientRect(),
-    dock.getBoundingClientRect(),
+    dockRect(dock),
     snap ? showsAt(dock, snap) : undefined,
   );
+}
+
+/**
+ * The dock's box on the page, with what stands beside it: a docked list's footer, its Controller,
+ * sits over the map at its right (BottomSheet's `floats="dock"`), and the camera keeps clear of it
+ * too. Along the bottom the footer is inside the sheet, and the box is the sheet's own.
+ */
+function dockRect(dock: HTMLElement): Rect {
+  const sheet = dock.getBoundingClientRect();
+  const footer = dock.querySelector('[data-sheet-footer]')?.getBoundingClientRect();
+  if (!footer || footer.left < sheet.right - 1) return sheet;
+  return {
+    top: sheet.top,
+    bottom: sheet.bottom,
+    left: sheet.left,
+    right: Math.max(sheet.right, footer.right),
+    height: sheet.height,
+  };
 }
 
 /**
@@ -85,7 +103,7 @@ export function roomBeside(map: HTMLElement, dock: HTMLElement | null, snap: Sna
   if (!dock || dock.hidden) return roomFromRects(map.getBoundingClientRect(), null, 0, 0, snap);
   return roomFromRects(
     map.getBoundingClientRect(),
-    dock.getBoundingClientRect(),
+    dockRect(dock),
     showsAt(dock, snap),
     showsAt(dock, framedAt(snap)),
     snap,
@@ -131,8 +149,18 @@ export function roomFromRects(
  */
 function showsAt(sheet: HTMLElement, snap: Snap): number {
   const h = sheet.offsetHeight;
-  if (snap === 'max') return shownAt('max', h);
-  return shownAt(snap, h) + (parseFloat(getComputedStyle(sheet).paddingBottom) || 0);
+  const shape = shapeOf(sheet);
+  if (snap === 'max') return shownAt('max', h, shape);
+  return shownAt(snap, h, shape) + (parseFloat(getComputedStyle(sheet).paddingBottom) || 0);
+}
+
+/** The sheet's own Low and Max, as BottomSheet writes them on it (its `shape`). */
+function shapeOf(sheet: HTMLElement): SheetShape {
+  const lowPx = Number(sheet.dataset.lowPx);
+  return {
+    lowPx: Number.isFinite(lowPx) && lowPx > 0 ? lowPx : CARD_SHAPE.lowPx,
+    isMaxFull: sheet.hasAttribute('data-max-full'),
+  };
 }
 
 /**
@@ -148,4 +176,22 @@ export function clearOfSheet(
   snap: Snap,
 ): [number, number] {
   return clearOfDock(map, dock, framedAt(snap));
+}
+
+/**
+ * Whether the map under `map` is out of sight or on the move under a finger: a docked sheet at
+ * Max over it, or a finger (or a mouse) holding a sheet (`data-dock-dragging`, BottomSheet). What
+ * only moves for the eye, as the flowing chevrons do, waits meanwhile: each of its steps costs a
+ * redraw the sheet's own frames then lack. A sheet floating beside the map at Max covers none.
+ */
+export function isMapOutOfSight(map: HTMLElement): boolean {
+  const host = map.closest('[data-dock-host]');
+  if (!host) return false;
+  if (host.hasAttribute('data-dock-dragging')) return true;
+  const sheet = host.querySelector<HTMLElement>('[role="dialog"][data-snap="max"]:not([hidden])');
+  if (!sheet) return false;
+  const over = sheet.getBoundingClientRect();
+  const under = map.getBoundingClientRect();
+  // Docked along the bottom at Max: as wide as the map, its top at the map's or a strip under it.
+  return over.width >= under.width - 1 && over.top - under.top < under.height / 4;
 }

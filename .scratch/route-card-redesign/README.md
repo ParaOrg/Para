@@ -41,9 +41,10 @@ This session stopped here; the owner's own sessions carry on. Each PR is stacked
 | 1 | Tokens: the mode card variables, added only | Merged: [#779](https://github.com/ParaOrg/Para/pull/779) |
 | 2 | Deletions, and mode → look (decisions 10 and 7) | Merged: [#780](https://github.com/ParaOrg/Para/pull/780), 412.5 kB. Its phone-test failure was the suites, not the app: they looked up the deleted `card-<livery>-surface-pale`; the dots along a road ride's rest ring in Map/RouteLine/surface-default |
 | 3 | RouteCard restyle | Merged: [#781](https://github.com/ParaOrg/Para/pull/781), 412.6 kB. Its profile-test failure did not come back on a fresh run |
-| 4 | RouteCardStackedList, with the railway card | Open PR (branch `claude/route-card-list`): the reviewers' findings below are fixed |
-| 5 | The Controller, with the filter | Built on `claude/route-card-controller`, stacked on step 4; its PR follows step 4's merge |
-| 6 | Sheet layout: docked on desktop, the mobile Controller at the bottom, Max full screen | Not started |
+| 4 | RouteCardStackedList, with the railway card | Merged: [#786](https://github.com/ParaOrg/Para/pull/786), 412.6 kB. Its profile-test failure (a race in the contributor's claim check) passed on re-run |
+| 5 | The Controller, with the filter | Merged: [#788](https://github.com/ParaOrg/Para/pull/788), 412.6 kB. The filter and its empty state designed for now. Its icons were moved into a sprite, to stay within the budget. |
+| 5b | The route icons into a sprite (size) | [#791](https://github.com/ParaOrg/Para/pull/791): the remaining inline drawings into `route-icons.svg`, 412.7 → 404.5 kB, room for steps 6–9 |
+| 6 | Sheet layout: docked on desktop, the mobile Controller at the bottom, Max full screen | Open PR (branch `claude/route-card-sheet`) |
 | 7 | Commuter map wiring | Not started |
 | 8 | Studio wiring | Not started |
 | 9 | Map lines in the mode colours | Not started |
@@ -58,13 +59,13 @@ This session stopped here; the owner's own sessions carry on. Each PR is stacked
 
 A second review found three more `+` joins in `route-card-railway.tsx` and a comment left unwrapped; fixed too, with `AStation`'s play, which looked for the wrong test id.
 
-### Step 5: what the Figma says, and the draft
+### Step 5: what the Figma says, and what was built
 
 - **Controller** is a component set (4633:22010). Default (phones): a row, ✕ bottom left, ⇆ over the filter bottom right, padding 0 24 32 24, the items at the bottom. Variant2 (desktop): a column 88 wide beside the 368 list, ✕, then 8, then ⇆ and the filter 16 apart, padding 20 20 32 20. Each is IconButton Special Large; Figma fills the drawings with Brand/surface. The icons are `closeLarge`, `arrow-left-right-large` and `filter-large`, 28 square (export them from 4633:22012, 4633:22014 and 4633:22015).
 - ⇆ takes over SWITCH: its label stays the way it leads to (Pabalik, a train's bound), and it keeps `data-testid="chooser-flip"` and `data-back` for the suites.
-- **The filter, designed for now:** the sliders open a card in the middle of the screen (the page's own `popover`, so Escape, a tap outside and the focus come free), with "Show routes" and one choice of All, Jeep, E-Jeep, Bus, LRT, MRT or Ferry as native radio buttons. A choice applies and closes it. While a filter is on, a dot sits on the sliders and the button's name says which ("Filter: Jeep"). An empty result says "No Jeep routes here" with a way back to All. LRT keeps both light-rail lines, MRT the metro; UV Express shows under All only, since the owner's options leave it out.
-- The draft (`model/mode-filter.ts`, `cards/mode-filter-card.tsx`, `cards/route-list-controller.tsx`) is in [drafts.md](drafts.md). Untested.
-- **Mobbin** could not be searched: its tools were not connected in this session. The filter above has not been checked against other apps.
+- **The filter, designed for now:** the sliders open a card in the middle of the screen (the page's own `popover`, so Escape, a tap outside and the focus come free), with "Show routes" and one choice of All, Jeep, E-Jeep, Bus, LRT, MRT or Ferry as native radio buttons. A choice applies at once; a tap, Enter or Space closes the card, while the arrow keys only move through the choices. While a filter is on, a dot sits on the sliders and the button's name says which ("Filter: Jeep"). An empty result says "No Jeep routes here" with a way back to All. LRT keeps both light-rail lines, MRT the metro. The filter keeps rides by vehicle, not by card colour, so UV Express (left out of the owner's options), P2P and tricycle show under All only.
+- Built: `model/mode-filter.ts` (with `tests/unit/mode-filter-test.mjs`), `cards/mode-filter-card.tsx`, `cards/mode-filter-empty.tsx` and `cards/route-list-controller.tsx`, each with stories; the icons are in `shared/ui/route-icons.tsx`. Not wired into the list yet: steps 6 and 7 do that.
+- The filter has not been checked against other apps (Mobbin): it waits for the owner's own design.
 
 ### Learned on the way
 
@@ -95,11 +96,25 @@ Figma's leaf names repeat their group (`Card/Jeep/Jeep-surface`). The tokens dro
 - **Border/tertiary becomes neutral/300**, as Figma has it, in its own small PR that lists everywhere it shows. Not done yet.
 - **Brand/surface-pale** (`color/parabrand/100`) is in Figma and not in the code. Nothing uses it yet; it is added when something does.
 
+## The owner's answers on the sheet (2026-11-06, every recommendation)
+
+1. **Low** shows the first card's mode and name above the Controller. Built at 240 px, not the ~210 asked about: at 210 the ⇆ button stood over the end of the first card's name on a 393-wide phone, and a long name at Low (one line) ran under it.
+2. **No handle drawn**, but the button stays, visually hidden: Tab reaches it, it says the height and moves it. The sheet drags by its cards.
+3. **Wide screens:** the list docks at 368 with the Controller column beside it. The trip and the place card stay 384 until their own frames come, so opening a trip widens the panel by 16.
+4. **Max fills the screen** for the list only; a trip opened from it keeps today's strip of map. The list pads its top by the status bar at Max.
+5. The desktop Controller sits over the map with no backing, as drawn.
+
+These sit in the shared sheet as opt-in props (`shape`, `handle`, `footer`, `floats="dock"`): every other card renders as before. The filter is the caller's (`modeFilter`), so the map lights what the cards show: until steps 7 and 8 pass it, the Controller shows ✕ and ⇆ alone, no sliders.
+
 ## Owner to design later
 
 The builder designed these for now, or left them out. Each waits for the owner's frames:
 
-- the filter button and its sheet;
+- the filter's card (ModeFilterCard: a centred popover of radio buttons), the dot on the sliders while a filter is on, and the empty state of a filter with no matches (ModeFilterEmpty);
+- the list's sheet at Low (240 px: the first card's mode and name above the Controller), which Figma does not draw;
+- a way to change the list sheet's height without a handle, for the keyboard (today a visually hidden button, shown as the usual notch while it has the keyboard's focus);
+- the trip and place cards' width beside the 368 list (they stay 384);
+- the trip card at Max beside the list's full-screen Max (it keeps its strip of map);
 - the loading, empty, error and long-content states;
 - the studio's version (the owner is revamping it all);
 - the route detail's new frame;

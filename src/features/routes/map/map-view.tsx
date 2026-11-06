@@ -5,6 +5,7 @@ import {
   ScaleControl,
   prewarm,
   setWorkerUrl,
+  type RequestTransformFunction,
 } from 'maplibre-gl';
 import maplibreWorkerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
 import { useEffect, useRef, useState } from 'react';
@@ -185,6 +186,18 @@ interface Props {
    * the map says of itself, its failure included, stays under it.
    */
   isCovered?: boolean;
+  /**
+   * What the map is made with in place of `initialStyle`: the contributor app's, which falls back
+   * to its copies of the basemaps' styles, so it loads with no signal
+   * (features/contribute/map/basemap-copies.ts). Read once, as the map is made.
+   */
+  makeStyle?: typeof initialStyle;
+  /**
+   * The contributor app's: what each request the map makes is sent as, its basemap through the
+   * app's cache (features/contribute/map/basemap-cache.ts). The public map's notes its tiles
+   * instead (`openOn`). Read once, as the map is made.
+   */
+  transformRequest?: RequestTransformFunction;
 }
 
 /**
@@ -217,6 +230,8 @@ export function MapView({
   creditsAtBottom = false,
   areCreditsShown = true,
   isCovered = false,
+  makeStyle = initialStyle,
+  transformRequest,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   // Kept from an effect declared before the map's own: the map hands itself
@@ -275,7 +290,7 @@ export function MapView({
       // Beside it, the public map's framing (`openOn`): none if it fails or
       // has not come within OPENING_WAIT_MS.
       const [style, framing] = await Promise.all([
-        initialStyle(basemap, areLabelsShown),
+        makeStyle(basemap, areLabelsShown),
         openOn ? within(openOn(), OPENING_WAIT_MS, null) : null,
       ]);
       if (cancelled || !containerRef.current) return;
@@ -306,7 +321,7 @@ export function MapView({
           // The public map notes the tiles it asks for, changing none, so the
           // service worker can keep a first visit's (tiles-asked.ts). The
           // studio has no worker and notes nothing.
-          ...(openOn ? { transformRequest: noteTile } : {}),
+          transformRequest: openOn ? noteTile : transformRequest,
         });
       } catch (err) {
         setError(`MapLibre could not start: ${err instanceof Error ? err.message : String(err)}.`);
@@ -454,7 +469,7 @@ export function MapView({
       setReady(null);
       map?.remove();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- the map is made once: `basemap`, `zoomButtons`, `maxBounds`, `foldCredits` and `openOn` are read once, as it is made (each prop says so)
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- the map is made once: `basemap`, `zoomButtons`, `maxBounds`, `foldCredits`, `openOn`, `makeStyle` and `transformRequest` are read once, as it is made (each prop says so)
   }, []);
 
   return (
