@@ -41,7 +41,7 @@ This session stopped here; the owner's own sessions carry on. Each PR is stacked
 | 1 | Tokens: the mode card variables, added only | Merged: [#779](https://github.com/ParaOrg/Para/pull/779) |
 | 2 | Deletions, and mode → look (decisions 10 and 7) | Merged: [#780](https://github.com/ParaOrg/Para/pull/780), 412.5 kB. Its phone-test failure was the suites, not the app: they looked up the deleted `card-<livery>-surface-pale`; the dots along a road ride's rest ring in Map/RouteLine/surface-default |
 | 3 | RouteCard restyle | Merged: [#781](https://github.com/ParaOrg/Para/pull/781), 412.6 kB. Its profile-test failure did not come back on a fresh run |
-| 4 | RouteCardStackedList, with the railway card | Open PR: [#786](https://github.com/ParaOrg/Para/pull/786). The reviewers' findings below are fixed |
+| 4 | RouteCardStackedList, with the railway card | Merged: [#786](https://github.com/ParaOrg/Para/pull/786), 412.6 kB. Its profile-test failure (a race in the contributor's claim check) passed on re-run |
 | 5 | The Controller, with the filter | Open PR (branch `claude/route-card-controller`): the filter and its empty state designed for now |
 | 6 | Sheet layout: docked on desktop, the mobile Controller at the bottom, Max full screen | Not started |
 | 7 | Commuter map wiring | Not started |
