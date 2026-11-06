@@ -32,19 +32,44 @@ New variables: `Card/{Jeep,UVExpress,Ejeep,Bus}/{…-surface, …-surface-second
 12. **The studio** uses the same list, layout and filter. Its trip card keeps its editor extras.
 13. **Station codes** ("PL01") from `rail-codes.ts` where one exists, otherwise nothing. The S and E icons beside them go.
 
-## Build order
+## Status (handed over 2026-11-06)
 
-| # | Pull request | Status |
+This session stopped here; the owner's own sessions carry on. Each PR is stacked on the one before: #780 holds #779's tokens (merged), #781 holds #780, and the step 4 branch holds #781. Their own edits to this README will conflict with this version when they merge: keep this one.
+
+| # | Step | Status |
 | --- | --- | --- |
-| 1 | Tokens: the mode card variables, added only | [#779](https://github.com/ParaOrg/Para/pull/779), merged |
-| 2 | Deletions, and mode → look (decisions 10 and 7) | [#780](https://github.com/ParaOrg/Para/pull/780) |
-| 3 | RouteCard restyle | [#781](https://github.com/ParaOrg/Para/pull/781) |
-| 4 | RouteCardStackedList, with the railway card | In review |
-| 5 | The Controller, with the filter | |
-| 6 | Sheet layout: docked on desktop, the mobile Controller at the bottom, Max full screen | |
-| 7 | Commuter map wiring | |
-| 8 | Studio wiring | |
-| 9 | Map lines in the mode colours | |
+| 1 | Tokens: the mode card variables, added only | Merged: [#779](https://github.com/ParaOrg/Para/pull/779) |
+| 2 | Deletions, and mode → look (decisions 10 and 7) | Open PR: [#780](https://github.com/ParaOrg/Para/pull/780). ds-reviewer PASS, `npm run check` green. The phone-test failure was the suites, not the app: they still looked up the deleted `card-<livery>-surface-pale` for the dots along a road ride's rest, which the app rings in Map/RouteLine/surface-default. Fixed in the phone, commuter and group suites. |
+| 3 | RouteCard restyle | Open PR: [#781](https://github.com/ParaOrg/Para/pull/781). ds-reviewer PASS, `npm run check` green. Left: CI's **profile-test** failed (not diagnosed yet; [job](https://github.com/ParaOrg/Para/actions/runs/42166094812/job/127722910522)), and #780 first. |
+| 4 | RouteCardStackedList, with the railway card | Branch `claude/route-card-list` pushed, **no PR yet**. `npm run check` green; locally the commuter suite passed every check it reached. Left: the ds-reviewer's findings, below. |
+| 5 | The Controller, with the filter | Not started in the repo; drafted (below). |
+| 6 | Sheet layout: docked on desktop, the mobile Controller at the bottom, Max full screen | Not started |
+| 7 | Commuter map wiring | Not started |
+| 8 | Studio wiring | Not started |
+| 9 | Map lines in the mode colours | Not started |
+
+### Step 4: the reviewer's findings, still to fix
+
+1. **A run can lose its mode's name.** `showsMode` turns off when the card before has the same livery, but a card draws its mode only when its first row has a vehicle. P2P (UV Express's colours) and tricycle (Jeep's) have none, so a run led by one draws no name at all (the unit test's `Tala|uv-express` before `Bigte|uv-express` shows it). Fix: compare what the previous card drew, the `MODE_LABEL` of its first row's `vehicleOf`, not the livery; add a story with a P2P card leading a run.
+2. `route-card.stories.tsx`, `MixedModes`: the play looks for "Jeepney"; the card says "Jeep".
+3. `route-card-stack.tsx`: `PickedPlace.card` and the component's comment still say a card per place; it is now a card per place and mode, run by mode.
+4. `route-card-railway.tsx`: a comment cites "RouteCardStackedList, 4633:25360"; that node is RouteCardRailway.
+5. `route-card-railway.tsx` and `railway-badge.stories.tsx` join classes with `+`; use `cn()`.
+
+### Step 5: what the Figma says, and the draft
+
+- **Controller** is a component set (4633:22010). Default (phones): a row, ✕ bottom left, ⇆ over the filter bottom right, padding 0 24 32 24, the items at the bottom. Variant2 (desktop): a column 88 wide beside the 368 list, ✕, then 8, then ⇆ and the filter 16 apart, padding 20 20 32 20. Each is IconButton Special Large; Figma fills the drawings with Brand/surface. The icons are `closeLarge`, `arrow-left-right-large` and `filter-large`, 28 square (export them from 4633:22012, 4633:22014 and 4633:22015).
+- ⇆ takes over SWITCH: its label stays the way it leads to (Pabalik, a train's bound), and it keeps `data-testid="chooser-flip"` and `data-back` for the suites.
+- **The filter, designed for now:** the sliders open a card in the middle of the screen (the page's own `popover`, so Escape, a tap outside and the focus come free), with "Show routes" and one choice of All, Jeep, E-Jeep, Bus, LRT, MRT or Ferry as native radio buttons. A choice applies and closes it. While a filter is on, a dot sits on the sliders and the button's name says which ("Filter: Jeep"). An empty result says "No Jeep routes here" with a way back to All. LRT keeps both light-rail lines, MRT the metro; UV Express shows under All only, since the owner's options leave it out.
+- The draft (`model/mode-filter.ts`, `cards/mode-filter-card.tsx`, `cards/route-list-controller.tsx`) is in [drafts.md](drafts.md). Untested.
+- **Mobbin** could not be searched: its tools were not connected in this session. The filter above has not been checked against other apps.
+
+### Learned on the way
+
+- **Size:** MapLibre, React and the shared code together were 412.9 of 413 kB at the start; step 2 brought it to 412.5, step 3 to 412.6 (`node --experimental-strip-types scripts/checks/health.mjs` after `npm run build`). There is very little room: measure every PR.
+- **Card keys** are now `${place}|${livery}` for a road card (`Tala|jeep`); stories and tests that held a card Selected by its place name were changed to match.
+- **A local browser suite** needs a dev server on its own port (`npx vite --port 5197 --strictPort`, then `PARA_BASE=http://localhost:5197`). Rebuilding Storybook, or editing a file under the repo, while it runs makes Vite reload the page and the suite crash on `window.__map`. In this container the project's Playwright wants browser build 1248 while 1243 is installed: point `PLAYWRIGHT_BROWSERS_PATH` at a folder that links `chromium_headless_shell-1248` to `/opt/pw-browsers/chromium_headless_shell-1243`.
+- The map-colours test's name converter now splits an acronym (`UVExpress` → `uv-express`).
 
 ## Token naming
 
@@ -61,10 +86,10 @@ Figma's leaf names repeat their group (`Card/Jeep/Jeep-surface`). The tokens dro
 
 - **The list's order** is by mode: Jeep, UV Express, E-Jeep, Bus, then the trains and the ferry, each mode's places in the order met. A place with two modes is two cards.
 
-## Waiting on the owner
+## The owner's answers (2026-11-06)
 
-- **The route card shadows changed in Figma.** Route/RouteCardPrimary, …PrimarySelected, …Inverse and …InverseSelected now hold new values. The tokens of the same names (`shadow-route-card-*`) also dress the HintuanCard's boxes and the contributor page's tracking button. Should those take the new shadows too, or keep today's?
-- **Border/tertiary** is `color/neutral/300` in Figma and `neutral-400` in the code. Which is right?
+- **One shadow look everywhere.** The new Route/RouteCard… shadow values (4633:25526) go into the `shadow-route-card-*` tokens, and the HintuanCard's boxes and the contributor page's tracking button take them too. Not applied yet.
+- **Border/tertiary becomes neutral/300**, as Figma has it, in its own small PR that lists everywhere it shows. Not done yet.
 - **Brand/surface-pale** (`color/parabrand/100`) is in Figma and not in the code. Nothing uses it yet; it is added when something does.
 
 ## Owner to design later
