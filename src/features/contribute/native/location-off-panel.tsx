@@ -20,7 +20,7 @@ export function LocationOffPanel({ onOpenSettings, onClose }: LocationOffPanelPr
       aria-labelledby="location-off-heading"
       className="flex flex-col gap-3 bg-surface p-4 font-sn-pro text-content-primary"
     >
-      <span className="size-8 text-content-primary">
+      <span className="flex size-8 *:size-full">
         <LocationIcon />
       </span>
       <h1
