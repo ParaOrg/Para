@@ -41,7 +41,7 @@ export function useSavedHotspotsLayers(
   const laidOut = useRef<readonly Hotspot[] | null>(null);
   useEffect(() => {
     if (!map || map.getSource(SRC)) return;
-    addSavedHotspots(map, hotspots, {}, shouldShowPins);
+    addSavedHotspots(map, hotspots);
     maskStations(map, hotspots);
     laidOut.current = hotspots;
     // eslint-disable-next-line react-hooks/exhaustive-deps -- lays out the hotspots the source is made with; later ones are the next effect's

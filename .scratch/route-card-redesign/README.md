@@ -32,7 +32,7 @@ New variables: `Card/{Jeep,UVExpress,Ejeep,Bus}/{…-surface, …-surface-second
 12. **The studio** uses the same list, layout and filter. Its trip card keeps its editor extras.
 13. **Station codes** ("PL01") from `rail-codes.ts` where one exists, otherwise nothing. The S and E icons beside them go.
 14. **The filter on the map** (step 7): the filter starts at All with each new list. Changing it frames the routes still lit, as ⇆ does, and lets a Selected card go. A hintuan's or terminal's own card does not follow it.
-15. **No hotspot pins on the commuter map, for now**: no terminal or hintuan flag zoomed in and no dot zoomed out. One switch, `SHOW_HOTSPOT_PINS` in `public-map-app.tsx`, turns them back on. The boxes, their names and their taps stay. The studio and the contributor page keep their pins.
+15. **No hotspot pins on the commuter map, for now**: no terminal or hintuan flag zoomed in. Zoomed out each hotspot keeps its small dot, so it stays in sight (Q28). One switch, `SHOW_HOTSPOT_PINS` in `public-map-app.tsx`, turns the flags back on. The boxes, their names, their dots and their taps stay. The studio and the contributor page keep their pins.
 16. **Map lines in their mode's colours** (step 9): a road route rests in its card's line colour: Jeep blue-700, UV Express neutral-400, E-Jeep neutral-300 (their cards' border shades, so they show on the light basemap), Bus orange-700, the ferry its own Map/Ferry/surface. Trains keep their pales. Every line, resting and lit, is cased in neutral-800 (Map/RouteLine/casing), trains included. Lit lines keep their rule: a card's or trip's colour, the selected purple while a whole list is lit. The contributor page's lines are unchanged for now.
 
 ## Status (handed over 2026-11-06)
