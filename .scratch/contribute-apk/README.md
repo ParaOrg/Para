@@ -21,3 +21,4 @@ The builder chose these for now, from the owner's decisions. Each waits for the 
   the phone's location switch is off. Instead a card shows, in the Start gate's other panels' style:
   the location icon, "Turn on location", "Para needs your location to record your ride.", and
   **Go to Settings** (the phone's Location settings) beside **Close**. The next Start checks again.
+- **The History card's "On the map" line** (no Figma frame yet): `history-card.tsx` shows `On the map: <route names>` in `text-xs/4` `text-content-success`, at most two lines, under the ride's day, time and distance. It appears once an editor has used the ride on the published map (#674).
