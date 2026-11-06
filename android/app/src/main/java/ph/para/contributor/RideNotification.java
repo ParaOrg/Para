@@ -73,15 +73,19 @@ final class RideNotification {
         else stopTicking();
     }
 
-    /** The notification for the ride now: also what the service shows when a tap starts it again. */
-    /** The ride's notification for RideService to go into the foreground with, its channel made. */
+    /**
+     * The ride's notification for RideService to go into the foreground with, its channel made. It
+     * starts no ticking: the service does that once it is in the foreground (post), so a service
+     * Android refuses leaves no card counting.
+     */
     static Notification forService(Context context, RideState state) {
         Context app = context.getApplicationContext();
         NotificationManager manager = (NotificationManager) app.getSystemService(Context.NOTIFICATION_SERVICE);
         if (manager != null) ensureChannel(app, manager);
-        if (RideState.RECORDING.equals(state.phase)) tickAfter(app, state);
         return build(app, state);
     }
+
+    /** The notification for the ride now: also what the service shows when a tap starts it again. */
 
     static Notification build(Context context, RideState state) {
         long now = System.currentTimeMillis();

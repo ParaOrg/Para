@@ -50,6 +50,8 @@ export const rideFixProblemSchema = z.object({
   message: z.string(),
 });
 
+export type RideFixProblem = z.infer<typeof rideFixProblemSchema>;
+
 /** What the page tells the notification (RidePlugin.java setState). */
 export const rideStateSchema = z.object({
   recordingId: z.string(),

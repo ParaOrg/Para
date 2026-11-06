@@ -93,14 +93,24 @@ public class RideService extends Service {
             // Recording from this tap on, before the page says so: an app swiped away at once
             // still has a ride to record. The page tells the rest (RidePlugin.setState).
             String recordingId = intent.getStringExtra(RECORDING_ID);
-            if (recordingId != null && !recordingId.isEmpty()) state.recordingId = recordingId;
+            long now = System.currentTimeMillis();
+            if (recordingId != null && !recordingId.isEmpty() && !recordingId.equals(state.recordingId)) {
+                // A new ride: nothing of the last one's clock or mode carries over.
+                state.recordingId = recordingId;
+                state.startedAt = now;
+                state.pausedMs = 0;
+                state.finishedAt = 0;
+                state.mode = "walk";
+            } else if (state.pausedSince > 0) {
+                // The same ride resumed in the page: its pause is counted, as the receiver counts one.
+                state.pausedMs += now - state.pausedSince;
+            }
             state.phase = RideState.RECORDING;
             state.pausedSince = 0;
-            if (state.startedAt == 0) state.startedAt = System.currentTimeMillis();
             state.write(this);
         }
         if (!inForeground(RideNotification.forService(this, state))) {
-            stopSelf();
+            failed(state);
             return START_NOT_STICKY;
         }
         if (!LocationManagerCompat.isLocationEnabled(locationManager())) {
@@ -117,13 +127,40 @@ public class RideService extends Service {
         } catch (SecurityException refused) {
             Log.w(TAG, "The location permission is missing; the ride records no more.", refused);
             RidePlugin.tellFixProblem("DENIED", "Location permission is missing.");
-            stopSelf();
+            failed(state);
             return START_NOT_STICKY;
         }
         synchronized (RideService.class) {
             isRunning = true;
         }
+        // In the foreground now: the card counts on (RideNotification's quiet updates).
+        RideNotification.post(this);
         return START_STICKY;
+    }
+
+    /**
+     * The ride cannot record (Android refused the foreground, or the permission is gone): it is
+     * paused where it stands, as the notification's Pause pauses it, so no card says "Recording"
+     * while nothing records. The page applies the pause when it wakes, and Resume (in the app, once
+     * the permission is back) records again.
+     */
+    private void failed(RideState state) {
+        long now = System.currentTimeMillis();
+        if (RideState.RECORDING.equals(state.phase)) {
+            try {
+                FixLog.end(this, now);
+            } catch (Exception error) {
+                Log.e(TAG, "The fix log could not be sealed.", error);
+            }
+            state.phase = RideState.PAUSED;
+            state.pausedSince = now;
+            state.isPageWatching = false;
+            state.write(this);
+            RideState.addEvent(this, "pause", now, null);
+            RidePlugin.tellPage();
+        }
+        RideNotification.post(this);
+        stopSelf();
     }
 
     /** In the foreground with the ride's notification; false when Android refuses it. */

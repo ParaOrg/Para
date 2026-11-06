@@ -58,9 +58,11 @@ public class RideActionReceiver extends BroadcastReceiver {
                     if (!RideNotification.canResumeHere(state)) break;
                     try {
                         FixLog.begin(app, state.recordingId);
-                    } catch (java.io.IOException | org.json.JSONException error) {
-                        // No log to keep the fixes in: the ride stays paused.
-                        Log.e(TAG, "Resume: the fix log could not be opened; the ride stays paused.", error);
+                        // The ride records again in its own service, from this tap. Started before
+                        // anything says it resumed: if Android refuses it, the ride stays paused.
+                        RideService.start(app, state.recordingId);
+                    } catch (java.io.IOException | org.json.JSONException | RuntimeException error) {
+                        Log.e(TAG, "Resume: the ride could not record again; it stays paused.", error);
                         break;
                     }
                     state.phase = RideState.RECORDING;
@@ -68,8 +70,6 @@ public class RideActionReceiver extends BroadcastReceiver {
                     state.pausedSince = 0;
                     state.write(app);
                     RideState.addEvent(app, "resume", now, null);
-                    // The ride records again in its own service, from this tap.
-                    RideService.start(app, state.recordingId);
                     done(app, pending, "resume");
                     return;
                 case FINISH:

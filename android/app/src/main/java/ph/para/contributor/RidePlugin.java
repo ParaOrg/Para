@@ -105,6 +105,9 @@ public class RidePlugin extends Plugin {
     @PluginMethod
     public void stopRecording(PluginCall call) {
         RideService.stop(getContext());
+        // The service's leaving the foreground takes its notification, after the page's own
+        // setState may have posted it: posted again, as the receiver's Pause does.
+        RideNotification.postAgainSoon(getContext());
         call.resolve();
     }
 

@@ -58,7 +58,14 @@ final class RideState {
         return state;
     }
 
-    synchronized void write(Context context) {
+    /** Written under the same lock as read, so a read and its write are not split by another's. */
+    void write(Context context) {
+        synchronized (RideState.class) {
+            writeLocked(context);
+        }
+    }
+
+    private void writeLocked(Context context) {
         // commit(), not apply(): the process may be killed right after a tap.
         preferences(context).edit()
             .putString("recordingId", recordingId)

@@ -59,8 +59,9 @@ export async function startNativeWatch({
   const plugin = getPlugin();
   const listening: Listening[] = [];
   try {
-    const heard = await Promise.all([
-      plugin.addListener(RIDE_FIX_EVENT_NAME, (data) => {
+    // One at a time, each kept as it comes: a second that fails leaves none of the first behind.
+    listening.push(
+      await plugin.addListener(RIDE_FIX_EVENT_NAME, (data) => {
         const read = fixLineSchema.safeParse(data);
         if (!read.success) {
           console.warn('A fix from the ride could not be read; the log keeps it.', read.error);
@@ -76,7 +77,9 @@ export async function startNativeWatch({
           },
         });
       }),
-      plugin.addListener(RIDE_FIX_PROBLEM_EVENT_NAME, (data) => {
+    );
+    listening.push(
+      await plugin.addListener(RIDE_FIX_PROBLEM_EVENT_NAME, (data) => {
         const read = rideFixProblemSchema.safeParse(data);
         onError(
           read.success
@@ -84,8 +87,7 @@ export async function startNativeWatch({
             : watchErrorOfThrown(new Error('The ride could not record.')),
         );
       }),
-    ]);
-    listening.push(...heard);
+    );
     await plugin.startRecording({ recordingId });
   } catch (error) {
     for (const handle of listening) void handle.remove();

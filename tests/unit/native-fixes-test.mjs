@@ -7,7 +7,10 @@ import assert from 'node:assert/strict';
 
 import { fixesAfter } from '../../src/features/contribute/recorder/recording-fixes.ts';
 import { parseFixLog } from '../../src/features/contribute/native/native-fix-log.ts';
-import { watchErrorOf } from '../../src/features/contribute/native/watch-error.ts';
+import {
+  watchErrorOf,
+  watchErrorOfRideProblem,
+} from '../../src/features/contribute/native/watch-error.ts';
 import { batteryHelpFor } from '../../src/features/contribute/native/battery-steps.ts';
 import {
   canRecordWithout,
@@ -109,4 +112,15 @@ test('the plugin refusing because location is switched off is not a denied permi
     2,
   );
   assert.equal(watchErrorOf({ message: 'Service not running.' }).code, 2);
+});
+
+test("the ride's service saying it cannot record reads as the browser's denied, else unavailable", () => {
+  assert.deepEqual(
+    watchErrorOfRideProblem({ code: 'DENIED', message: 'Location permission is missing.' }),
+    { code: 1, message: 'Location permission is missing.' },
+  );
+  assert.equal(
+    watchErrorOfRideProblem({ code: 'UNAVAILABLE', message: 'Location services disabled.' }).code,
+    2,
+  );
 });
