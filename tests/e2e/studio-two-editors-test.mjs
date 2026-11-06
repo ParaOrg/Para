@@ -187,7 +187,10 @@ async function openRouteFromPlace(page) {
   await page.addStyleTag({ content: '.maplibregl-marker { pointer-events: none !important; }' });
   // The place's card lists its routes; a computer's tap goes past it into editing the place,
   // so the card is opened in a narrow window and the trip seen in a wide one.
+  // Any card open is closed first: in a narrow window its sheet would cover the place.
   const viewport = page.viewportSize();
+  const close = page.getByRole('button', { name: 'Close' });
+  if (await close.count()) await close.first().click();
   await page.setViewportSize({ width: 900, height: 800 });
   await tapAt(page, [LINE.at(-1)[0] + 0.0003, LINE.at(-1)[1] - 0.0002], 17);
   await page.getByTestId('card-item').first().click();

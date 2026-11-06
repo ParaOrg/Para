@@ -719,12 +719,18 @@ async function editHintuan(spot, name) {
   await clickAt([spot[0] + R * 0.7, spot[1] - R * 0.7], 700);
   // On a computer the tap opens the hintuan straight into its sidebar, with no card or Edit.
   const sidebar = page.getByTestId('sidebar');
+  // No card between the tap and the sidebar: the old way showed it with its Edit and waited.
+  const hadCard = (await page.getByRole('button', { name: 'Edit hintuan' }).count()) > 0;
+  let tookRow = false;
   if (!(await sidebar.isVisible())) {
     const row = page.getByRole('button', { name: /Stand-in Tail/ });
-    if (await row.count()) await row.first().click();
+    if (await row.count()) {
+      tookRow = true;
+      await row.first().click();
+    }
   }
   await sidebar.waitFor({ timeout: 10000 });
-  openedBeside.push((await page.getByRole('button', { name: 'Edit hintuan' }).count()) === 0);
+  openedBeside.push(!hadCard && !tookRow);
   await done();
   // The name the form opened with: the editor's own draft's, when there is one.
   shownName = await nameField().inputValue();

@@ -75,6 +75,14 @@ export function StudioHotspotCard({
   const held = lock ?? (hasEditFailed ? { state: 'unknown' as const } : null);
   // One Edit at a time: StrictMode runs the sidebar's opening effect twice.
   const isEditing = useRef(false);
+  // A card closed, or another hotspot tapped, while the draft was read: that Edit is dropped.
+  const isMounted = useRef(true);
+  useEffect(() => {
+    isMounted.current = true;
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
   const handleEdit = async () => {
     const s = hotspots.selected;
     if (!s || isEditing.current) return;
@@ -83,11 +91,12 @@ export function StudioHotspotCard({
     try {
       opened = (await fetchToEdit(s)).hotspot;
     } catch {
-      setHasEditFailed(true);
+      if (isMounted.current) setHasEditFailed(true);
       return;
     } finally {
       isEditing.current = false;
     }
+    if (!isMounted.current) return;
     onCloseAll();
     // A RouteCard picked on the way here, on this card or in the list, took in
     // its routes whole and left the box a few pixels across: the outline opens
@@ -96,15 +105,14 @@ export function StudioHotspotCard({
     if (map && map.getZoom() < 16) map.flyTo({ center: s.point.coordinates, zoom: 16 }, APP_MOVE);
     draw.loadArea(opened.kind, opened.id, hotspotRing(opened));
   };
-  // Not behind a trip: a card hidden there is waiting for the trip's ‹, not opened.
-  const [opensInSidebarAtOpen] = useState(opensInSidebar);
-  const isToSidebar = opensInSidebarAtOpen && canEdit && !saved.selected;
+  // Read as the card opens. One opened behind a trip waits for the trip's ‹ as a card, not opened.
+  const [isToSidebarAtOpen] = useState(opensInSidebar && !saved.selected);
+  const isToSidebar = isToSidebarAtOpen && canEdit;
   const canOpenInSidebar = isToSidebar && held === null;
   const openInSidebar = useEffectEvent(() => void handleEdit());
-  // The drawing and the map's camera are outside React: started once the draft is known to be free.
+  // Edit starts once the lock's query says the draft is free: a query result, not an event, so
+  // it is started from an effect.
   useEffect(() => {
-    // handleEdit sets state only after its read resolves, never in the effect's own turn.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (canOpenInSidebar) openInSidebar();
   }, [canOpenInSidebar]);
   // While the draft is checked and read, nothing: the sidebar is on its way.
