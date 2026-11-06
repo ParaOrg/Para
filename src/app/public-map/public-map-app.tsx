@@ -65,6 +65,13 @@ const PageToasts = retryingLazy(() =>
 const openOnRoutes = () =>
   openingDirections().then((directions) => (directions ? routesBounds(directions) : null));
 
+/**
+ * Whether the commuter map draws the hotspots' pins (a terminal's or hintuan's flag zoomed in, its
+ * dot zoomed out). Off for now: the boxes and their names say where each one
+ * is, and a tap there opens it as before. The studio keeps its pins.
+ */
+const SHOW_HOTSPOT_PINS = false;
+
 /** The too-new map's Reload: the newer app, through the worker (pwa.ts). */
 const handleReloadNewer = () => void reloadForNewerApp();
 
@@ -86,7 +93,10 @@ export function PublicMapApp() {
   // read as it is lit (fetch-line.ts).
   const saved = useSavedRoutes(map, loadDirectionsFromFile, { loadLine: fetchLine });
   // While a trip is open, the map lights only the trip.
-  const hotspots = useSavedHotspots(map, loadHotspotsFromFile, { muted: !!saved.selected });
+  const hotspots = useSavedHotspots(map, loadHotspotsFromFile, {
+    muted: !!saved.selected,
+    shouldShowPins: SHOW_HOTSPOT_PINS,
+  });
   // A load problem, and a published map too new for this app (loadProblems).
   const problems = loadProblems([saved, hotspots]);
   // Each Try again answered: one that fails again says so again, after its toast closed.
