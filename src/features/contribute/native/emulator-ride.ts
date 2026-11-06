@@ -17,17 +17,21 @@ function say(line: string): void {
 
 /**
  * Waits for the page's own load (recorder-opening.ts) to import the native log: until the ride holds
- * the log's last fix, as read in the same look. True once it does; false when it gives up after a
- * minute, and the report then shows what the ride holds. The service goes on writing meanwhile, so
- * a count read later may be a fix ahead of the ride: this answer is the one the test reads.
+ * every fix the service had kept before this page opened (`performance.timeOrigin`, after the last
+ * page was gone). True once it does; false when it gives up after a minute, and the report then
+ * shows what the ride holds. The ride's service records on through a rebuilt activity and a reopened
+ * app (RideService), so the log keeps growing while the page loads: the fixes after the page opened
+ * are the live watch's to take (startNativeWatch), not the opening import's, and are not waited for.
  */
 async function waitForImport(recordingId: string): Promise<boolean> {
+  const openedAt = performance.timeOrigin;
   const giveUpAt = Date.now() + IMPORT_GIVE_UP_MS;
   while (Date.now() < giveUpAt) {
     const log = await readFixLog();
     const rows = await loadFixes(recordingId);
-    const logEnd = log.fixes[log.fixes.length - 1]?.timestamp ?? 0;
-    if (log.recordingId === recordingId && (rows[rows.length - 1]?.time ?? 0) >= logEnd) {
+    const keptBefore = log.fixes.filter((fix) => fix.timestamp <= openedAt);
+    const keptEnd = keptBefore[keptBefore.length - 1]?.timestamp ?? 0;
+    if (log.recordingId === recordingId && (rows[rows.length - 1]?.time ?? 0) >= keptEnd) {
       return true;
     }
     await new Promise((resolve) => setTimeout(resolve, IMPORT_POLL_MS));
