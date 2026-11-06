@@ -36,8 +36,9 @@ import java.util.Locale;
  */
 final class RideNotification {
     /**
-     * The notification's id and channel: those of the location plugin's service, which carried the
-     * ride before RideService did, so a phone updated mid-ride still has one notification.
+     * The notification's id and channel: those the location plugin's service used, which carried the
+     * ride before RideService did. Kept, so a phone updated keeps its one channel and the choices
+     * made for it in Android's settings.
      */
     static final int ID = 28351;
     private static final String CHANNEL = "com.equimaps.capacitor_background_geolocation";
@@ -285,7 +286,7 @@ final class RideNotification {
 
     private static void ensureChannel(Context context, NotificationManager manager) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O || manager.getNotificationChannel(CHANNEL) != null) return;
-        // As the plugin makes it (BackgroundGeolocation.load): silent, no lights, no vibration.
+        // As the location plugin made it: silent, no lights, no vibration.
         NotificationChannel channel = new NotificationChannel(CHANNEL,
             context.getString(R.string.capacitor_background_geolocation_notification_channel_name),
             NotificationManager.IMPORTANCE_DEFAULT);
