@@ -136,8 +136,9 @@ const FRAME = {
 const frameOf = (p: { frame?: Frame }) => FRAME[p.frame ?? 'phone'];
 
 /**
- * Keeps the Selected card, the way round and the filter as the apps do, so a story can be tapped
- * through; ⇆ lets the card go.
+ * Keeps the Selected card and the way round as the apps do, and the filter where a story gives
+ * one, so a story can be tapped through; ⇆ lets the card go. Without a filter, as the public map
+ * and the studio pass none yet, the Controller has no sliders.
  */
 function Picking(props: ComponentProps<typeof RouteCardList>) {
   const [selected, setSelected] = useState(props.selected);
@@ -146,7 +147,15 @@ function Picking(props: ComponentProps<typeof RouteCardList>) {
   return (
     <RouteCardList
       {...props}
-      modeFilter={{ filter, onFilter: setFilter }}
+      modeFilter={
+        props.modeFilter && {
+          filter,
+          onFilter: (next) => {
+            props.modeFilter?.onFilter(next);
+            setFilter(next);
+          },
+        }
+      }
       back={back}
       onFlip={() => {
         props.onFlip();
@@ -198,8 +207,17 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** On a phone, the way there: a card per place, docked along the bottom. Each card wears its mode's colour. */
+/**
+ * On a phone, the way there: a card per place, docked along the bottom. Each card wears its mode's
+ * colour. No filter kept, as on the live maps until they pass one: ✕ and ⇆ alone.
+ */
 export const Phone: Story = {};
+
+/** With a filter kept by the caller: the sliders beside ⇆. */
+export const WithAFilter: Story = { args: { modeFilter: { filter: 'all', onFilter: fn() } } };
+
+/** A filter on, Jeep: the dot on the sliders, and only the jeeps' cards. */
+export const FilteredToJeep: Story = { args: { modeFilter: { filter: 'jeep', onFilter: fn() } } };
 
 /** Turned round with ⇆: out of Tala both ways, one card — "1 Route". */
 export const Switched: Story = { args: { back: true } };
@@ -316,6 +334,7 @@ export const SheetLow: Story = {
 
 /** A filter with nothing to show under this tap: it says so, with a way back to All. */
 export const FilterWithNoMatch: Story = {
+  args: { modeFilter: { filter: 'all', onFilter: fn() } },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.click(canvas.getByRole('button', { name: 'Filter' }));

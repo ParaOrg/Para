@@ -87,10 +87,9 @@ interface Props {
   handle?: 'shown' | 'hidden';
   /**
    * Drawn at the sheet's foot on the screen, whatever its height, following a drag: the route
-   * list's Controller, the cards scrolling under it (4633:25516). What it holds keeps its taps;
-   * the rest of its row lets them through to the cards. Its buttons and what they pop up keep
-   * their taps. Floating as a `dock`, it stands beside
-   * the sheet instead, at its top.
+   * list's Controller, the cards scrolling under it (4633:25516). Its buttons, and what they pop
+   * up, keep their taps; the rest of its row lets them through to the cards. Floating as a
+   * `dock`, it stands beside the sheet instead, at its top.
    */
   footer?: ReactNode;
   children: ReactNode;
@@ -343,6 +342,7 @@ export function BottomSheet({
       {footer && (
         <div
           data-testid="sheet-footer"
+          data-sheet-footer
           className={
             'pointer-events-none absolute inset-x-0 bottom-(--sheet-y) pb-[env(safe-area-inset-bottom)] ' +
             '[&_[popover]]:pointer-events-auto [&_button]:pointer-events-auto ' +

@@ -48,7 +48,7 @@ export function clearOfDock(
  */
 function dockRect(dock: HTMLElement): Rect {
   const sheet = dock.getBoundingClientRect();
-  const footer = dock.querySelector('[data-testid="sheet-footer"]')?.getBoundingClientRect();
+  const footer = dock.querySelector('[data-sheet-footer]')?.getBoundingClientRect();
   if (!footer || footer.left < sheet.right - 1) return sheet;
   return {
     top: sheet.top,
