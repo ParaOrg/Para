@@ -47,6 +47,7 @@ import { retryingImport } from '@/shared/utils/retrying-import';
 
 import { ContributionCard } from './contribution-card';
 import type { SaidNote } from './page-toasts';
+import { PlaceSearchBar } from './place-search-bar';
 import { useStatusBarColour } from './status-bar';
 
 // The toasts, fetched the first time the page has something to say: the opening page does not
@@ -304,6 +305,19 @@ export function PublicMapApp() {
           />
         )}
 
+        {/*
+        Place search (.scratch/place-search, step 1): a place chosen opens as its name tapped on
+        the map does (openPlace). Up while no card is, until the owner designs it beside one.
+      */}
+        {!cards.open && (
+          <PlaceSearchBar
+            hotspots={hotspots.hotspots}
+            whereNow={() => where.current?.at ?? null}
+            onPick={(hotspot) => openPlace(hotspot.id)}
+            isUnderUpdate={needRefresh}
+            isUnderOfflinePill={offline || age.stale}
+          />
+        )}
         {/* How old the map is, and a new version waiting. */}
         <Notices offline={offline} age={age} needRefresh={needRefresh} onUpdate={reloadToUpdate} />
         {/* What went wrong, at the top: the locator's note and a failed load. */}

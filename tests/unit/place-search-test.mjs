@@ -126,6 +126,22 @@ test('equal matches rank nearest first when the commuter is located, by name oth
   assert.ok(nearPitx[0].distanceM < nearPitx[1].distanceM);
 });
 
+test("at one quality, a place matched by its own label beats one matched by another's name", () => {
+  const places = searchablePlaces([
+    hotspot('Robinsons Fairview', {
+      informal: 'Robinson',
+      aliases: ['SM Fairview'],
+      at: [121.0, 14.7],
+    }),
+    hotspot('SM Fairview Terminal', { informal: 'SM Fairview', at: [121.06, 14.73] }),
+  ]);
+  assert.deepEqual(labels(searchPlaces('sm fairveiw', places)), ['SM Fairview', 'Robinson']);
+  assert.deepEqual(labels(searchPlaces('sm fairveiw', places, [121.0, 14.7])), [
+    'SM Fairview',
+    'Robinson',
+  ]);
+});
+
 test('a place is as near as its nearest box', () => {
   const [match] = searchPlaces('sm fairview', PLACES, [121.061, 14.734]);
   assert.ok(match.distanceM < 1);

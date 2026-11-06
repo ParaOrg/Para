@@ -9,7 +9,7 @@ This page is generated from the code, so it cannot go stale. It shows the struct
 A unit is a folder: an app, a feature (or a concern folder of a feature that has them), a kind of shared code, a design-system layer, or the styles.
 
 - **app**: `contribute`, `public-map`, `studio`
-- **features**: `contribute`, `contribute/account`, `contribute/api`, `contribute/app-update`, `contribute/common`, `contribute/consent`, `contribute/history`, `contribute/map`, `contribute/motion`, `contribute/native`, `contribute/native-bridge`, `contribute/navigation`, `contribute/notices`, `contribute/recorder`, `contribute/screens`, `contribute/storage`, `contribute/toolbar`, `contribute/tutorial`, `contribute/uploads`, `locator`, `published-map`, `routes/cards`, `routes/geo`, `routes/map`, `routes/model`, `routes/published`, `studio`, `studio/auth`, `studio/contributors`, `studio/data`, `studio/drawing`, `studio/maps`, `studio/panels`, `studio/public-view`, `studio/review`
+- **features**: `contribute`, `contribute/account`, `contribute/api`, `contribute/app-update`, `contribute/common`, `contribute/consent`, `contribute/history`, `contribute/map`, `contribute/motion`, `contribute/native`, `contribute/native-bridge`, `contribute/navigation`, `contribute/notices`, `contribute/recorder`, `contribute/screens`, `contribute/storage`, `contribute/toolbar`, `contribute/tutorial`, `contribute/uploads`, `locator`, `published-map`, `routes/cards`, `routes/geo`, `routes/map`, `routes/model`, `routes/published`, `routes/search`, `studio`, `studio/auth`, `studio/contributors`, `studio/data`, `studio/drawing`, `studio/maps`, `studio/panels`, `studio/public-view`, `studio/review`
 - **shared**: `config`, `hooks`, `lib`, `types`, `ui`, `utils`
 - **design-system**: `foundation`, `primitives`
 - **styles**: `styles`
@@ -50,6 +50,7 @@ flowchart TD
     features_routes_map["routes/map"]
     features_routes_model["routes/model"]
     features_routes_published["routes/published"]
+    features_routes_search["routes/search"]
     features_studio["studio"]
     features_studio_auth["studio/auth"]
     features_studio_contributors["studio/contributors"]
@@ -88,6 +89,7 @@ flowchart TD
   app_public_map --> features_routes_map
   app_public_map --> features_routes_model
   app_public_map --> features_routes_published
+  app_public_map --> features_routes_search
   app_public_map --> shared_hooks
   app_public_map --> shared_lib
   app_public_map --> shared_ui
@@ -270,6 +272,9 @@ flowchart TD
   features_routes_model --> features_routes_geo
   features_routes_model --> shared_utils
   features_routes_published --> features_routes_model
+  features_routes_search --> design_system_primitives
+  features_routes_search --> features_routes_model
+  features_routes_search --> shared_utils
   features_studio --> features_studio_auth
   features_studio --> features_studio_contributors
   features_studio --> features_studio_data
@@ -331,7 +336,7 @@ flowchart TD
 | Unit | Imports |
 | --- | --- |
 | `app/contribute` | `design-system/foundation`, `features/contribute`, `features/locator`, `shared/lib`, `shared/ui`, `styles` |
-| `app/public-map` | `design-system/primitives`, `features/locator`, `features/published-map`, `features/routes/cards`, `features/routes/map`, `features/routes/model`, `features/routes/published`, `shared/hooks`, `shared/lib`, `shared/ui`, `shared/utils`, `styles` |
+| `app/public-map` | `design-system/primitives`, `features/locator`, `features/published-map`, `features/routes/cards`, `features/routes/map`, `features/routes/model`, `features/routes/published`, `features/routes/search`, `shared/hooks`, `shared/lib`, `shared/ui`, `shared/utils`, `styles` |
 | `app/studio` | `design-system/primitives`, `features/locator`, `features/routes/cards`, `features/routes/map`, `features/routes/model`, `features/studio`, `shared/hooks`, `shared/lib`, `shared/types`, `shared/ui`, `shared/utils`, `styles` |
 | `design-system/foundation` | — |
 | `design-system/primitives` | — |
@@ -361,6 +366,7 @@ flowchart TD
 | `features/routes/map` | `design-system/foundation`, `design-system/primitives`, `features/routes/cards`, `features/routes/geo`, `features/routes/model`, `shared/config`, `shared/hooks`, `shared/ui`, `shared/utils` |
 | `features/routes/model` | `features/routes/geo`, `shared/utils` |
 | `features/routes/published` | `features/routes/model` |
+| `features/routes/search` | `design-system/primitives`, `features/routes/model`, `shared/utils` |
 | `features/studio` | `features/studio/auth`, `features/studio/contributors`, `features/studio/data`, `features/studio/drawing`, `features/studio/maps`, `features/studio/panels`, `features/studio/public-view`, `features/studio/review` |
 | `features/studio/auth` | `design-system/primitives`, `features/routes/map`, `features/studio/data`, `shared/lib`, `shared/ui` |
 | `features/studio/contributors` | `design-system/foundation`, `design-system/primitives`, `features/studio/data`, `features/studio/drawing`, `shared/utils` |

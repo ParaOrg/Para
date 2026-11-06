@@ -133,7 +133,10 @@ export function distanceToPlace(from: LngLat, place: SearchPlace): number {
   return Math.min(...place.hotspots.map((h) => haversine(from, h.point.coordinates)));
 }
 
-/** The places the query matches, best match first, then nearest (when `from` is known), then by name. */
+/**
+ * The places the query matches: best match first, then those matched by their own label, then
+ * nearest (when `from` is known), then by name.
+ */
 export function searchPlaces(
   query: string,
   places: readonly SearchPlace[],
@@ -152,9 +155,12 @@ export function searchPlaces(
       distanceM: from ? distanceToPlace(from, place) : null,
     });
   }
+  // At one quality, a place matched by its own label comes before one matched by another name.
+  const byOther = (match: PlaceMatch) => (match.matchedTerm === match.place.label ? 0 : 1);
   return matches.sort(
     (a, b) =>
       rank(a.quality) - rank(b.quality) ||
+      byOther(a) - byOther(b) ||
       (a.distanceM ?? 0) - (b.distanceM ?? 0) ||
       a.place.label.localeCompare(b.place.label),
   );
