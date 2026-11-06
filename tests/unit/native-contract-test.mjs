@@ -15,6 +15,9 @@ import {
   PLUGIN_NAMES,
   RIDE_EVENT_KINDS,
   RIDE_EVENT_NAME,
+  RIDE_FIX_EVENT_NAME,
+  RIDE_FIX_PROBLEM_CODES,
+  RIDE_FIX_PROBLEM_EVENT_NAME,
   RIDE_MODES,
   RIDE_PHASES,
   rideEventSchema,
@@ -23,9 +26,6 @@ import {
 
 const JAVA = 'android/app/src/main/java/ph/para/contributor';
 const java = (name) => readFileSync(`${JAVA}/${name}.java`, 'utf8');
-// The location plugin is the npm package's; its Java comes with node_modules.
-const GEOLOCATION_JAVA =
-  'node_modules/@capacitor-community/background-geolocation/android/src/main/java/com/equimaps/capacitor_background_geolocation/BackgroundGeolocation.java';
 
 const escape = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
@@ -39,7 +39,6 @@ test('each plugin is registered under the name the page asks for', () => {
     [PLUGIN_NAMES.ride]: java('RidePlugin'),
     [PLUGIN_NAMES.fixLog]: java('FixLogPlugin'),
     [PLUGIN_NAMES.nativePermissions]: java('NativePermissionsPlugin'),
-    [PLUGIN_NAMES.backgroundGeolocation]: readFileSync(GEOLOCATION_JAVA, 'utf8'),
   };
   assert.deepEqual(Object.keys(declared).sort(), Object.values(PLUGIN_NAMES).sort());
   for (const [name, source] of Object.entries(declared)) {
@@ -134,4 +133,40 @@ test('a fix with no accuracy gets the same accuracy on both sides', () => {
     /fix\.optDouble\("accuracyM", NO_ACCURACY_M\)/,
     'its use for a fix with no accuracy',
   );
+});
+
+test("the ride's service hands the page its fixes and its problems by the names the page hears", () => {
+  const plugin = java('RidePlugin');
+  assertHas(plugin, 'RidePlugin.java', new RegExp(`"${RIDE_FIX_EVENT_NAME}"`), RIDE_FIX_EVENT_NAME);
+  assertHas(
+    plugin,
+    'RidePlugin.java',
+    new RegExp(`"${RIDE_FIX_PROBLEM_EVENT_NAME}"`),
+    RIDE_FIX_PROBLEM_EVENT_NAME,
+  );
+  // A live fix has the keys of a fix line, as FixLog writes them.
+  for (const key of Object.keys(fixLineSchema.shape)) {
+    assertHas(plugin, 'RidePlugin.java', new RegExp(`fix\\.put\\("${key}"`), `fix.put("${key}")`);
+  }
+  const service = java('RideService');
+  for (const code of RIDE_FIX_PROBLEM_CODES) {
+    assertHas(
+      service,
+      'RideService.java',
+      new RegExp(`tellFixProblem\\("${code}"`),
+      `the problem "${code}"`,
+    );
+  }
+  for (const method of ['startRecording', 'stopRecording']) {
+    assertHas(plugin, 'RidePlugin.java', new RegExp(`public void ${method}\\(PluginCall`), method);
+  }
+});
+
+test('the ride records in a service that outlives the app, of type location', () => {
+  const manifest = readFileSync('android/app/src/main/AndroidManifest.xml', 'utf8');
+  const service = manifest.match(/<service[^>]*android:name="\.RideService"[^>]*\/>/)?.[0] ?? '';
+  assert.match(service, /android:foregroundServiceType="location"/);
+  assert.match(service, /android:stopWithTask="false"/);
+  assert.match(service, /android:exported="false"/);
+  assert.match(manifest, /android\.permission\.FOREGROUND_SERVICE_LOCATION/);
 });

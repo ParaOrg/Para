@@ -12,7 +12,7 @@
 # the bar on the screen, tapped; the other taps are the notification's own (RideActionReceiver),
 # sent as root, as its bars send them.
 #
-#   0:00  the ride starts; the notification is the location service's, in the foreground
+#   0:00  the ride starts; the notification is the ride's service's (RideService), in the foreground
 #   1:00  the shade: the card's bars, Pause and Sakay; Sakay tapped there
 #   ~1:10 the phone's dark theme on: the card is still white (light always), then off again
 #   1:30  Pause: no fix is kept from then on, and the service leaves the foreground; the shade:
@@ -20,8 +20,8 @@
 #   1:40  Resume: the service is in the foreground again and fixes are kept
 #   2:10  Finish: no fix after it, and the notification says the ride waits to be saved
 #
-# The service's state after Pause and after Resume is what the plugin's internals do
-# (ParaServiceWatchers.java): if that changes, this fails.
+# The service's state after Pause and after Resume is what RideActionReceiver does with
+# RideService: it stops at Pause and Finish and starts again at Resume.
 set -u
 APK=$1
 OUT=$2
