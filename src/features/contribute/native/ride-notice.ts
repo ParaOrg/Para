@@ -20,16 +20,18 @@ interface RidePlugin {
 
 const getPlugin = lazyPlugin<RidePlugin>(PLUGIN_NAMES.ride);
 
-// The page's watcher (native-location.ts) and the last state said: the notification needs both,
-// and they change apart.
-let watcherId = '';
+// Whether the page's watch is on (native-location.ts) and the last state said: the notification
+// needs both, and they change apart.
+let isWatching = false;
 let lastState: RideNoticeState | null = null;
 
 function send(): Promise<void> {
   if (!lastState) return Promise.resolve();
-  // Paused, the page holds no watcher: the notification's Resume then opens the app.
-  const held = lastState.phase === 'recording' ? watcherId : '';
-  return getPlugin().setState({ ...lastState, watcherId: held });
+  // Paused, the page has no watch on: the notification's Resume then opens the app.
+  return getPlugin().setState({
+    ...lastState,
+    isWatching: isWatching && lastState.phase === 'recording',
+  });
 }
 
 /** Tells the notification where the ride is now. */
@@ -38,9 +40,9 @@ export function setRideNoticeState(state: RideNoticeState): Promise<void> {
   return send();
 }
 
-/** The page's watcher started (its id) or let go (''). */
-export function noteRideWatcher(id: string): void {
-  watcherId = id;
+/** The page's watch started, or stopped. */
+export function noteRideWatch(isOn: boolean): void {
+  isWatching = isOn;
   void send().catch((error: unknown) => {
     console.warn('The ride notification could not be told of the watch.', error);
   });
