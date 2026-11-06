@@ -32,6 +32,7 @@ New variables: `Card/{Jeep,UVExpress,Ejeep,Bus}/{…-surface, …-surface-second
 12. **The studio** uses the same list, layout and filter. Its trip card keeps its editor extras.
 13. **Station codes** ("PL01") from `rail-codes.ts` where one exists, otherwise nothing. The S and E icons beside them go.
 14. **The filter on the map** (step 7): the filter starts at All with each new list. Changing it frames the routes still lit, as ⇆ does, and lets a Selected card go. A hintuan's or terminal's own card does not follow it.
+15. **No hotspot pins on the commuter map, for now**: no terminal or hintuan flag zoomed in and no dot zoomed out. One switch, `SHOW_HOTSPOT_PINS` in `public-map-app.tsx`, turns them back on. The boxes, their names and their taps stay. The studio and the contributor page keep their pins.
 
 ## Status (handed over 2026-11-06)
 
@@ -47,9 +48,10 @@ This session stopped here; the owner's own sessions carry on. Each PR is stacked
 | 5b | The route icons into a sprite (size) | Merged: [#791](https://github.com/ParaOrg/Para/pull/791): the remaining inline drawings into `route-icons.svg`, 412.7 → 404.5 kB, room for steps 6–9 |
 | 6 | Sheet layout: docked on desktop, the mobile Controller at the bottom, Max full screen | Merged: [#794](https://github.com/ParaOrg/Para/pull/794), 406.1 kB. Its profile-test failures came from staging's #793 and were fixed by #796; phone-test once ran into its 30-minute timeout on a slow runner and passed on re-run |
 | 6a | The sheet's scroll lag (no look change) | Merged: [#797](https://github.com/ParaOrg/Para/pull/797), 406.3 kB. The chevrons pause while the map is out of sight; the dock host is written only at rest |
-| 6b | The trip card's two plays (test-only) | Open PR (branch `claude/trip-card-plays`) |
-| 7 | Commuter map wiring | Open PR (branch `claude/route-card-commuter-wiring`) |
-| 8 | Studio wiring | Not started |
+| 6b | The trip card's two plays (test-only) | Merged: [#808](https://github.com/ParaOrg/Para/pull/808), 406.3 kB |
+| 7 | Commuter map wiring | Merged: [#812](https://github.com/ParaOrg/Para/pull/812), 406.8 kB. The filter lights the map; its framing is checked where an LRT line runs over a jeep road |
+| 7b | The hotspot pins off on the commuter map (decision 15) | Merged: [#813](https://github.com/ParaOrg/Para/pull/813), 406.9 kB |
+| 8 | Studio wiring | Open PR (branch `claude/route-card-studio-wiring`) |
 | 9 | Map lines in the mode colours | Not started |
 
 ### Step 4: the reviewer's findings, fixed

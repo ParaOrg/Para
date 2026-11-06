@@ -1,14 +1,15 @@
-// The hotspots' pins (src/features/routes/map/hotspot-pins.ts) on all three pages, from the
-// committed map file (the public map and the contributor page) and the same hotspots in the
-// studio's stand-in database: a pin at each box's middle from the zoom where the scale bar first
-// reads 500 m, a dot below it, 6 px across at the public map's opening view, and the names from
-// where the bar first reads 300 m.
+// The hotspots' pins (src/features/routes/map/hotspot-pins.ts) in the studio and on the
+// contributor page, from the same hotspots in the studio's stand-in database and the committed map
+// file: a pin at each box's middle from the zoom where the scale bar first reads 500 m, a dot below
+// it, and the names from where the bar first reads 300 m. The public map draws no pins for now
+// (SHOW_HOTSPOT_PINS in public-map-app.tsx): its boxes and names stay, and a tap on a box opens it.
 //
 //   npm run dev                          (in another terminal)
 //   node tests/e2e/map-pins-test.mjs
 //   PARA_SHOTS=dir node tests/e2e/map-pins-test.mjs   keeps each page at both zooms
 //
-// What it proves: on the public map and in the studio, the pins and dots stand over the boxes
+// What it proves: on the public map, no pin or dot is drawn, its chunk is not fetched, and the
+// boxes, their names and their taps work without them. In the studio, the pins and dots stand over the boxes
 // and the route lines and under the hotspots' names, and tapping a pin's head (off its box) or a
 // dot opens that box's card, as tapping the box does; on the contributor page the hotspots come
 // in after the map settles, in a chunk of their own, and a pin there is display-only: a tap on it
@@ -190,48 +191,6 @@ async function checkTaps(page, where, pin, fresh) {
   );
 }
 
-/**
- * At the public map's opening zoom, `pin`'s dot is drawn with a radius of 3 px: a query 2 px off
- * its point finds it, one 4.5 px off does not (MapLibre's own hit test, by the circle's radius).
- */
-async function checkOpeningDot(page, pin) {
-  const { id } = pin.properties;
-  const at = pin.geometry.coordinates;
-  const opening = await page.evaluate(() => window.__map.getZoom());
-  await settle(page, at, opening);
-  const found = ([dx, dy]) =>
-    page.evaluate(
-      ([at, dx, dy, dot, id]) => {
-        const p = window.__map.project(at);
-        return window.__map
-          .queryRenderedFeatures([p.x + dx, p.y + dy], { layers: [dot] })
-          .some((f) => f.properties.id === id);
-      },
-      [at, dx, dy, LAYER.dot, id],
-    );
-  const around = (r) => [
-    [r, 0],
-    [-r, 0],
-    [0, r],
-    [0, -r],
-  ];
-  const onPoint = await until(
-    () => found([0, 0]),
-    (v) => v,
-    3000,
-  );
-  const inside = [];
-  for (const off of around(2)) inside.push(await found(off));
-  const outside = [];
-  for (const off of around(4.5)) outside.push(await found(off));
-  check(
-    `public map: at the opening zoom (${opening.toFixed(2)}), the dot's radius is 3 px`,
-    opening <= 11 && onPoint && inside.every(Boolean) && outside.every((v) => !v),
-    `on its point: ${onPoint}; 2 px off: ${inside.join(', ')}; 4.5 px off: ${outside.join(', ')}`,
-  );
-  if (SHOTS) await page.screenshot({ path: `${SHOTS}/public-opening.png` });
-}
-
 /** How many hotspot names are drawn on the screen now. */
 const namesShown = (page) =>
   page.evaluate(
@@ -241,15 +200,15 @@ const namesShown = (page) =>
   );
 
 /**
- * The scale bar's two thresholds on the public map, around `pin`: its pin and no dot just past
- * the pins' zoom, with no name yet; then names a little past the names' zoom.
+ * The scale bar's two thresholds around `pin`: its pin and no dot just past the pins' zoom, with
+ * no name yet; then names a little past the names' zoom.
  */
-async function checkThresholds(page, pin) {
+async function checkThresholds(page, where, pin) {
   const { id } = pin.properties;
   const at = pin.geometry.coordinates;
   await settle(page, at, PINS_IN);
   check(
-    `public map: at ${PINS_IN}, just past the pins' zoom, the box's pin, and no dot`,
+    `${where}: at ${PINS_IN}, just past the pins' zoom, the box's pin, and no dot`,
     (await comesIn(page, LAYER.pin, id)) && !(await drawn(page, LAYER.dot, id)),
   );
   await settle(page, at, NAMES_OUT);
@@ -261,7 +220,7 @@ async function checkThresholds(page, pin) {
     3000,
   );
   check(
-    `public map: no hotspot names at ${NAMES_OUT}, some at ${NAMES_IN}`,
+    `${where}: no hotspot names at ${NAMES_OUT}, some at ${NAMES_IN}`,
     namesOut === 0 && namesIn > 0,
     `${namesOut} at ${NAMES_OUT}, ${namesIn} at ${NAMES_IN}`,
   );
@@ -278,34 +237,62 @@ async function pinToTap(page, alone) {
 }
 
 // ------------------------------------------------------------ the public map
-let chosenPin;
 {
   const page = await browser.newPage({ viewport: { width: 393, height: 852 } });
-  const errors = await open(page, '/');
-  const { count, alone } = await lonePin(page);
-  const boxes = index.stops.filter((s) => s.area).length;
-  check(
-    'public map: a pin point for every box in the map file',
-    count === boxes,
-    `${count} of ${boxes}`,
-  );
-  await checkOrder(page, 'public map');
-  await checkOpeningDot(page, alone[0]);
-  chosenPin = await pinToTap(page, alone);
-  console.log(`      (the pin: ${chosenPin.properties.kind} ${chosenPin.properties.id})`);
-  await checkThresholds(page, chosenPin);
-  await checkTaps(page, 'public', chosenPin, async () => {
-    await page.reload({ waitUntil: 'load' });
-    await page.waitForFunction(() => window.__map && window.__map.loaded(), null, {
-      timeout: 30000,
-    });
-    await waitForSource(page, 'saved-stops-pins', 30000);
+  const pinChunks = [];
+  page.on('request', (r) => {
+    if (/hotspot-pin-images/.test(r.url())) pinChunks.push(r.url());
   });
-  check('public map: no page errors, no missing pin image', errors.length === 0, errors.join('; '));
+  const errors = await open(page, '/');
+  const { alone } = await lonePin(page);
+  const box = alone[0];
+  const { id } = box.properties;
+  const at = box.geometry.coordinates;
+  await settle(page, at, ZOOMED_IN);
+  check(
+    `public map: zoomed in (${ZOOMED_IN}), no pin; the box drawn`,
+    !(await page.evaluate((pin) => !!window.__map.getLayer(pin), LAYER.pin)) &&
+      (await until(
+        () => drawn(page, LAYER.fill, id),
+        (v) => v,
+        3000,
+      )),
+  );
+  if (SHOTS) await page.screenshot({ path: `${SHOTS}/public-zoomed-in.png` });
+  await settle(page, at, ZOOMED_OUT);
+  check(`public map: zoomed out (${ZOOMED_OUT}), no dot`, !(await drawn(page, LAYER.dot, id)));
+  if (SHOTS) await page.screenshot({ path: `${SHOTS}/public-zoomed-out.png` });
+  await settle(page, at, NAMES_IN);
+  const names = await until(
+    () => namesShown(page),
+    (n) => n > 0,
+    3000,
+  );
+  check(`public map: the hotspots' names still drawn at ${NAMES_IN}`, names > 0, `${names}`);
+  await settle(page, at, ZOOMED_IN);
+  const middle = await screenPoint(page, at);
+  await page.mouse.click(middle.x, middle.y);
+  check(
+    "public map: a tap on a box's middle opens its card, with no pin there",
+    await until(
+      () => isChosen(page, id),
+      (v) => v,
+      3000,
+    ),
+    `on the box: ${middle.onBox}`,
+  );
+  check(
+    "public map: the pins' chunk is never fetched",
+    pinChunks.length === 0,
+    pinChunks.join(', '),
+  );
+  check('public map: no page errors', errors.length === 0, errors.join('; '));
   await page.close();
 }
 
 // ------------------------------------------------------------ the studio
+// The pin the studio taps, tapped again on the contributor page.
+let chosenPin;
 {
   const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
   await signInAsEditor(page);
@@ -318,14 +305,17 @@ let chosenPin;
   }));
   await fakeStudioDb(page, { stop });
   const errors = await open(page, '/studio/?e2e=1');
-  const pin = chosenPin;
-  const { count } = await lonePin(page);
+  const { count, alone } = await lonePin(page);
+  const pin = await pinToTap(page, alone);
+  chosenPin = pin;
+  console.log(`      (the pin: ${pin.properties.kind} ${pin.properties.id})`);
   check(
     'studio: a pin point for every box',
     count === stop.filter((s) => s.area).length,
     `${count}`,
   );
   await checkOrder(page, 'studio');
+  await checkThresholds(page, 'studio', pin);
   await checkTaps(page, 'studio', pin, async () => {
     await page.reload({ waitUntil: 'load' });
     await page.waitForFunction(() => window.__map && window.__map.loaded(), null, {

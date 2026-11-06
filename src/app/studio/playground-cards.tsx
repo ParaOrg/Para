@@ -63,6 +63,7 @@ export function PlaygroundCards({
     clearOfOpen,
     switchTrip,
     flipList,
+    filterList,
     pickOnPlaceCard,
     openTrip,
     backFromTrip,
@@ -160,6 +161,7 @@ export function PlaygroundCards({
           back={saved.back}
           listing={saved.listing}
           onFlip={flipList}
+          modeFilter={{ filter: saved.modeFilter, onFilter: filterList }}
           selected={saved.highlight?.where === 'list' ? saved.highlight.card : null}
           onSelect={(p) => saved.highlightCard(p && { where: 'list', ...p })}
           onRoute={openTrip}
