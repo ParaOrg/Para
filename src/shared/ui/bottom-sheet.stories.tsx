@@ -259,22 +259,22 @@ const footer = (
   </div>
 );
 
-/** The route list's shape (BottomSheet's `shape`): its own Low, and a Max that fills the screen. */
-const LIST_SHAPE = { lowPx: 210, isMaxFull: true };
+/** A sheet with a shape of its own (`shape`), as the route list's: Low 240, a Max that fills the screen. */
+const LIST_SHAPE = { lowPx: 240, isMaxFull: true };
 
-/** `shape` at Low: 210 tall, its own Low rather than every card's 133. */
+/** `shape` at Low: 240 tall, its own Low rather than every card's 133. */
 export const ShapeLow: Story = {
   render: (args) => <Keeping {...args} startsAt="low" />,
   args: { shape: LIST_SHAPE, height: { snap: 'low', onSnap: fn() } },
   play: async ({ canvasElement }) => {
     const sheet = within(canvasElement).getByTestId('card');
-    await waitFor(() => expect(sheet).toHaveAttribute('data-low-px', '210'));
+    await waitFor(() => expect(sheet).toHaveAttribute('data-low-px', '240'));
     await waitFor(() =>
       expect(
         Math.round(
           canvasElement.getBoundingClientRect().bottom - sheet.getBoundingClientRect().top,
         ),
-      ).toBe(210),
+      ).toBe(240),
     );
   },
 };

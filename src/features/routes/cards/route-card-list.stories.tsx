@@ -9,6 +9,7 @@ import { CARD_SURFACE, CARD_TEXT } from './livery-card';
 import { RouteCardList } from './route-card-list';
 import type { Hotspot } from '../model/hotspots';
 import type { Livery } from '../model/liveries';
+import type { ModeFilter } from '../model/mode-filter';
 import type { Direction } from '../model/routes';
 
 /** Sample data only, shaped like the published map. Not the real map. */
@@ -134,13 +135,18 @@ const FRAME = {
 } satisfies Record<Frame, string>;
 const frameOf = (p: { frame?: Frame }) => FRAME[p.frame ?? 'phone'];
 
-/** Keeps the Selected card as the apps do, so a story can be tapped through; ⇆ lets it go. */
+/**
+ * Keeps the Selected card, the way round and the filter as the apps do, so a story can be tapped
+ * through; ⇆ lets the card go.
+ */
 function Picking(props: ComponentProps<typeof RouteCardList>) {
   const [selected, setSelected] = useState(props.selected);
   const [back, setBack] = useState(props.back);
+  const [filter, setFilter] = useState<ModeFilter>(props.modeFilter?.filter ?? 'all');
   return (
     <RouteCardList
       {...props}
+      modeFilter={{ filter, onFilter: setFilter }}
       back={back}
       onFlip={() => {
         props.onFlip();
@@ -161,9 +167,9 @@ const meta = {
   component: RouteCardList,
   render: (args) => <Picking {...args} />,
   // A map-sized box, marked @container as the apps' roots are: the list docks
-  // along its bottom, and sits in the top-left corner from 1024 wide
-  // (`@float:`) — Figma's frames at 393, 640 and 1024. Never taller than the
-  // canvas, so the story itself does not scroll.
+  // along its bottom, and from 1024 wide (`@float:`) the map's whole height on
+  // the left, the Controller beside it — Figma's frames at 393, 768 and 1024.
+  // Never taller than the canvas, so the story itself does not scroll.
   decorators: [
     (Story, ctx) => (
       <div
@@ -202,7 +208,8 @@ export const Switched: Story = { args: { back: true } };
 export const ACardSelected: Story = { args: { back: true, selected: 'Tala|jeep' } };
 
 /**
- * From 1024 wide, flush in the top-left corner, 384 wide (Figma 3750:1911).
+ * From 1024 wide (Figma 4633:22034): docked the map's whole height on the left, 368 wide, the
+ * Controller a column beside it over the map.
  */
 export const Floating: Story = { parameters: { frame: 'wide' } };
 
@@ -212,7 +219,7 @@ export const Floating: Story = { parameters: { frame: 'wide' } };
  */
 export const Tablet: Story = { parameters: { frame: 'tablet' } };
 
-/** Taller than the room: the cards scroll under the header. */
+/** Taller than the room: the cards scroll under the Controller. */
 export const ManyPlaces: Story = { args: { routes: many } };
 
 /** The other way round is not drawn yet: ⇆ rests disabled. */

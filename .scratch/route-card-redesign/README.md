@@ -104,7 +104,7 @@ Figma's leaf names repeat their group (`Card/Jeep/Jeep-surface`). The tokens dro
 4. **Max fills the screen** for the list only; a trip opened from it keeps today's strip of map. The list pads its top by the status bar at Max.
 5. The desktop Controller sits over the map with no backing, as drawn.
 
-These sit in the shared sheet as opt-in props (`shape`, `handle`, `footer`, `floats="dock"`): every other card renders as before.
+These sit in the shared sheet as opt-in props (`shape`, `handle`, `footer`, `floats="dock"`): every other card renders as before. The filter is the caller's (`modeFilter`), so the map lights what the cards show: until steps 7 and 8 pass it, the Controller shows ✕ and ⇆ alone, no sliders.
 
 ## Owner to design later
 
@@ -112,7 +112,7 @@ The builder designed these for now, or left them out. Each waits for the owner's
 
 - the filter's card (ModeFilterCard: a centred popover of radio buttons), the dot on the sliders while a filter is on, and the empty state of a filter with no matches (ModeFilterEmpty);
 - the list's sheet at Low (240 px: the first card's mode and name above the Controller), which Figma does not draw;
-- a way to change the list sheet's height without a handle, for the keyboard (today a visually hidden button);
+- a way to change the list sheet's height without a handle, for the keyboard (today a visually hidden button, shown as the usual notch while it has the keyboard's focus);
 - the trip and place cards' width beside the 368 list (they stay 384);
 - the trip card at Max beside the list's full-screen Max (it keeps its strip of map);
 - the loading, empty, error and long-content states;

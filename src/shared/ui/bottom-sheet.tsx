@@ -81,7 +81,8 @@ interface Props {
   shape?: SheetShape;
   /**
    * `hidden`: no HandleNotch drawn, where Figma draws none (the route list), but the button stays
-   * for the keyboard and a screen reader: Tab reaches it, it says the height and moves it.
+   * for the keyboard and a screen reader: Tab reaches it, it says the height and moves it, and it
+   * shows as the notch while it has the keyboard's focus.
    */
   handle?: 'shown' | 'hidden';
   /**
@@ -358,7 +359,9 @@ export function BottomSheet({
 /** The handle drawn, or kept for the keyboard alone (BottomSheet's `handle`). */
 const HANDLE = {
   shown: 'flex w-full pt-2 pb-1',
-  hidden: 'sr-only',
+  // Focused from the keyboard, it shows as the notch every other card draws: focus is always seen.
+  hidden:
+    'sr-only focus-visible:not-sr-only focus-visible:flex focus-visible:w-full focus-visible:pt-2 focus-visible:pb-1',
 } satisfies Record<NonNullable<Props['handle']>, string>;
 
 /**

@@ -8,6 +8,12 @@ import { vehicleOf, type Vehicle } from './vehicles';
 export const MODE_FILTERS = ['all', 'jeep', 'ejeep', 'bus', 'lrt', 'mrt', 'ferry'] as const;
 export type ModeFilter = (typeof MODE_FILTERS)[number];
 
+/** A filter and its setter, kept by whoever lights the map, so the map and the cards agree. */
+export interface ModeFilterControl {
+  filter: ModeFilter;
+  onFilter: (filter: ModeFilter) => void;
+}
+
 /** Each option as the filter writes it. */
 export const MODE_FILTER_LABEL = {
   all: 'All',

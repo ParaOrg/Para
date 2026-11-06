@@ -145,9 +145,11 @@ export function heightsFor(
   h: number,
   shape: SheetShape = CARD_SHAPE,
 ): Record<SnapName & ('low' | 'middle' | 'max'), number> {
+  const middle = Math.round(h * MIDDLE);
+  // A tall Low (the route list's) on a short map, a phone on its side: never above Middle.
   return {
-    low: shape.lowPx,
-    middle: Math.round(h * MIDDLE),
+    low: Math.min(shape.lowPx, middle),
+    middle,
     max: shape.isMaxFull ? h : Math.max(0, h - safeTop - MAX_STRIP_PX),
   };
 }
@@ -198,7 +200,8 @@ export function slide(snap: Snap, shape: SheetShape = CARD_SHAPE): string {
   if (snap === 'middle') return `calc(${(1 - MIDDLE) * 100}% - env(safe-area-inset-bottom))`;
   if (typeof snap === 'number')
     return `calc(100% - ${snap} * (100% - ${gap}) - env(safe-area-inset-bottom))`;
-  return `calc(100% - ${shape.lowPx}px - env(safe-area-inset-bottom))`;
+  // Never above Middle, as heightsFor has it.
+  return `calc(100% - min(${shape.lowPx}px, ${Math.round(MIDDLE * 100)}%) - env(safe-area-inset-bottom))`;
 }
 
 /** How far down a sheet slides while `shown` px of it follow a finger. Never above Max's top. */

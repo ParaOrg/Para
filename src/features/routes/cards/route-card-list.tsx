@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react';
+import type { ReactNode } from 'react';
 
 import { BottomSheet, type SheetHeight } from '@/shared/ui/bottom-sheet';
 import type { SheetShape } from '@/shared/ui/sheet-gesture';
@@ -9,7 +9,7 @@ import { RouteListController } from './route-list-controller';
 import { listedDepartures, otherWayHasRoutes, switchWord, type Listing } from '../model/departures';
 import { hotspotLabel, type Hotspot } from '../model/hotspots';
 import type { Livery } from '../model/liveries';
-import { passesModeFilter, type ModeFilter } from '../model/mode-filter';
+import { passesModeFilter, type ModeFilterControl } from '../model/mode-filter';
 import { hotspotCount } from '../model/places';
 import { isLoop, type Direction } from '../model/routes';
 
@@ -41,6 +41,11 @@ interface Props {
   hidden?: boolean;
   /** Its height, shared with the trip opened from it (BottomSheet). */
   height?: SheetHeight;
+  /**
+   * The filter, kept by the caller so the map lights what the cards show (passesModeFilter); the
+   * cards follow it. Without one, every route is listed and the Controller has no sliders.
+   */
+  modeFilter?: ModeFilterControl;
   /** Drawn after the last route card, handed its livery: the public map's contribute card. */
   end?: (livery: Livery) => ReactNode;
 }
@@ -72,8 +77,9 @@ const LIST_SHAPE: SheetShape = { lowPx: 240, isMaxFull: true };
  * direction, under the place that leaves from (chooserDepartures). ⇆ rests disabled when the
  * other way round has nothing drawn, and is not there when only loops show.
  *
- * The filter (ModeFilterCard) narrows the cards to one kind of ride; one with nothing to show
- * says so, with a way back to All (ModeFilterEmpty).
+ * The filter (ModeFilterCard), where the caller keeps one, narrows the cards to one kind of ride,
+ * the caller the map's lights to match; one with nothing to show says so, with a way back to All
+ * (ModeFilterEmpty).
  *
  * The hotspots under the tap come first: a box is small and deliberate. They are plain rows, a
  * row a box (TODO: the rows await the owner's hintuan design). The list's name for a screen
@@ -94,9 +100,10 @@ export function RouteCardList({
   onClose,
   hidden,
   height,
+  modeFilter,
   end,
 }: Props) {
-  const [filter, setFilter] = useState<ModeFilter>('all');
+  const filter = modeFilter?.filter ?? 'all';
   const filtered = routes.filter((v) => passesModeFilter(v, filter));
   const places = listedDepartures(filtered, back, listing);
   const switchable = otherWayHasRoutes(filtered, back);
@@ -130,8 +137,7 @@ export function RouteCardList({
           isSwitchable={switchable}
           isBack={back}
           onSwitch={onFlip}
-          filter={filter}
-          onFilter={setFilter}
+          modeFilter={modeFilter}
           onClose={onClose}
         />
       }
@@ -163,8 +169,8 @@ export function RouteCardList({
             ))}
           </ul>
         )}
-        {filter !== 'all' && places.length === 0 && (
-          <ModeFilterEmpty filter={filter} onShowAll={() => setFilter('all')} />
+        {modeFilter && filter !== 'all' && places.length === 0 && (
+          <ModeFilterEmpty filter={filter} onShowAll={() => modeFilter.onFilter('all')} />
         )}
         <RouteCardStack
           routes={filtered}
