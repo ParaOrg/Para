@@ -186,7 +186,7 @@ const styleOutlineSchema = z.looseObject({
   layers: z.array(z.unknown()),
 });
 
-function isStyle(raw: unknown): raw is StyleSpecification {
+export function isStyle(raw: unknown): raw is StyleSpecification {
   return styleOutlineSchema.safeParse(raw).success;
 }
 
@@ -196,8 +196,8 @@ function isStyle(raw: unknown): raw is StyleSpecification {
  * labels hidden: location-labels.ts) fetches its style here and is dressed
  * before the map exists — one request, the same one MapLibre would have made,
  * and no plain-gray flash first. If the fetch fails, or brings no style
- * (isStyle), the page's copy goes in (`copies`), else a flat style; with no
- * copies at all, the plain URL, and MapLibre's own error path reports what it can.
+ * (isStyle), the page's copy goes in (`copies`); with no copies at all, the
+ * plain URL, and MapLibre's own error path reports what it can.
  */
 export async function initialStyle(
   b: Basemap,
@@ -205,10 +205,16 @@ export async function initialStyle(
   copies?: StyleCopies,
 ): Promise<StyleSpecification | string> {
   if (!copies && isPlain(b) && areLabelsShown) return b.url;
-  const fetched = await fetchStyle(b.url);
-  if (fetched) copies?.keep(b, fetched);
-  const style = fetched ?? (copies ? await copyOf(b, copies) : null);
-  return style ? withLocationLabels(dressed(b, style), areLabelsShown) : b.url;
+  let style: unknown = null;
+  try {
+    const r = await fetch(b.url);
+    if (r.ok) style = await r.json();
+  } catch {
+    // No signal, or no answer: the copy below, or the URL for MapLibre to report.
+  }
+  if (isStyle(style)) copies?.keep(b, style);
+  else if (copies) style = await copies.offline(b);
+  return isStyle(style) ? withLocationLabels(dressed(b, style), areLabelsShown) : b.url;
 }
 
 /**
@@ -217,43 +223,11 @@ export async function initialStyle(
  * style's URL, and no style offline.
  */
 export interface StyleCopies {
-  /** A copy of the design's style, undressed, as read: checked here (isStyle). Null with none. */
-  read: (b: Basemap) => Promise<unknown>;
   /** The design's style as just fetched, undressed, to keep as its copy. */
   keep: (b: Basemap, style: StyleSpecification) => void;
+  /** What to draw the design with when it cannot be fetched: its copy, else a flat style. Never rejects. */
+  offline: (b: Basemap) => Promise<StyleSpecification>;
 }
-
-/** The style at `url`, or null when it cannot be fetched or is not a style. */
-async function fetchStyle(url: string): Promise<StyleSpecification | null> {
-  try {
-    const r = await fetch(url);
-    if (!r.ok) return null;
-    const style: unknown = await r.json();
-    return isStyle(style) ? style : null;
-  } catch {
-    return null;
-  }
-}
-
-/**
- * The page's copy of the design's style; with none, a flat one, so the map still loads and
- * what is drawn on it shows.
- */
-async function copyOf(b: Basemap, copies: StyleCopies): Promise<StyleSpecification> {
-  try {
-    const copy = await copies.read(b);
-    if (copy && isStyle(copy)) return copy;
-  } catch (error) {
-    console.warn('No copy of the basemap could be read; the map is flat.', error);
-  }
-  return FLAT_STYLE;
-}
-
-/**
- * The map with no basemap at all: no roads, no labels, no 3D. It has no layer of its own, so the
- * map's own ground (MapView's surface-secondary) shows through. Pure data, as `dressed` leaves it.
- */
-const FLAT_STYLE: StyleSpecification = { version: 8, sources: {}, layers: [] };
 
 // -------------------------------------------------------------- the switch
 

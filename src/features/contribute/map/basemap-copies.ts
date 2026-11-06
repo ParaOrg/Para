@@ -1,14 +1,15 @@
-import type { Basemap, StyleCopies } from '@/features/routes/map/basemap';
+import type { StyleSpecification } from 'maplibre-gl';
+
+import { isStyle, type Basemap, type StyleCopies } from '@/features/routes/map/basemap';
 
 /**
  * The app's copies of the basemaps' styles, for a map made with no signal (basemap.ts,
- * initialStyle, which checks a copy is a style before it draws with it): the style last fetched
- * on this phone, kept in its storage, else the one the app was built with (vite.apk.config.ts,
- * basemapStylesInTheApp), served from the app's own files. Each is the style as fetched, before
- * it is dressed. The tiles they point at come once there is a signal again (use-map-reconnect.ts).
+ * initialStyle): the style last fetched on this phone, kept in its storage, else the one the app
+ * was built with (vite.apk.config.ts, basemapStylesInTheApp), served from the app's own files,
+ * else a flat map. Each copy is the style as fetched, before it is dressed. The tiles they point at
+ * come once there is a signal again (use-map-reconnect.ts).
  */
 export const BASEMAP_COPIES: StyleCopies = {
-  read: async (b) => keptCopy(b) ?? (await builtInCopy(b)),
   keep: (b, style) => {
     try {
       localStorage.setItem(keyOf(b), JSON.stringify(style));
@@ -17,7 +18,25 @@ export const BASEMAP_COPIES: StyleCopies = {
       console.warn('The basemap could not be kept for offline use.', error);
     }
   },
+  offline: async (b) => {
+    const kept = keptCopy(b);
+    if (isStyle(kept)) return kept;
+    try {
+      const builtIn = await builtInCopy(b);
+      if (isStyle(builtIn)) return builtIn;
+    } catch (error) {
+      console.warn('The basemap the app was built with could not be read.', error);
+    }
+    return FLAT_STYLE;
+  },
 };
+
+/**
+ * The map with no basemap at all: no roads, no labels, no 3D. It has no layer of its own, so the
+ * map's own ground (MapView's surface-secondary) shows through. Owner to design later
+ * (.scratch/contribute-apk/README.md).
+ */
+export const FLAT_STYLE: StyleSpecification = { version: 8, sources: {}, layers: [] };
 
 /** Where the app's build puts each design's style, as `<id>.json`. */
 const BUILT_IN_STYLES_FOLDER = 'basemap-styles';

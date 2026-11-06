@@ -345,8 +345,8 @@ test('a fetched style is dressed only once it is one: version 8, its sources and
   }
 });
 
-/** initialStyle with no signal (`fetch` throws), and the page's copies; what they were asked. */
-async function offlineStyleOf(basemap, copy) {
+/** initialStyle with no signal (`fetch` throws), and copies giving `offline`; what was kept. */
+async function offlineStyleOf(basemap, offline) {
   const realFetch = globalThis.fetch;
   globalThis.fetch = async () => {
     throw new TypeError('Failed to fetch');
@@ -354,7 +354,7 @@ async function offlineStyleOf(basemap, copy) {
   const kept = [];
   try {
     const style = await initialStyle(basemap, false, {
-      read: async () => copy,
+      offline: async () => offline,
       keep: (b, s) => kept.push([b.id, s]),
     });
     return { style, kept };
@@ -371,7 +371,7 @@ test('with copies, a fetched style is kept as fetched, undressed, and the map ha
   const kept = [];
   try {
     const style = await initialStyle(monochrome, false, {
-      read: async () => assert.fail('a copy is read only when the style cannot be fetched'),
+      offline: async () => assert.fail('a copy is read only when the style cannot be fetched'),
       keep: (b, s) => kept.push([b.id, s]),
     });
     assert.equal(typeof style, 'object');
@@ -381,7 +381,7 @@ test('with copies, a fetched style is kept as fetched, undressed, and the map ha
   }
 });
 
-test('with no signal the map is made with the copy, dressed; with no copy, flat, never the URL', async () => {
+test('with no signal the map is made from the copies, dressed, even a plain design', async () => {
   const monochrome = BASEMAPS.find((b) => b.dressing === 'monochrome');
   const plain = BASEMAPS.find((b) => !b.dressing);
   const copy = { version: 8, sources: {}, layers: [{ id: 'bg', type: 'background' }] };
@@ -391,14 +391,6 @@ test('with no signal the map is made with the copy, dressed; with no copy, flat,
   assert.deepEqual(withCopy.kept, [], 'nothing fetched, nothing kept');
   // A plain design, which goes by its URL online, is made from its copy too.
   assert.equal(typeof (await offlineStyleOf(plain, copy)).style, 'object');
-  for (const noCopy of [null, { version: 7 }, 'junk']) {
-    const { style } = await offlineStyleOf(monochrome, noCopy);
-    assert.deepEqual(
-      style,
-      { version: 8, sources: {}, layers: [] },
-      `${JSON.stringify(noCopy)}: flat, no roads, labels or 3D`,
-    );
-  }
 });
 
 test('without copies (the public map, the studio), a failed fetch is still the URL', async () => {
