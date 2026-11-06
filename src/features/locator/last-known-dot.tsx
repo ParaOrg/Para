@@ -20,6 +20,6 @@ interface LastKnownDotProps {
 export function LastKnownDot({ map, place, now }: LastKnownDotProps) {
   const el = useMarkerElement('last-known-location');
   // The mark's top at the place, lifted by half its dot (24 px) so the dot's middle is there.
-  useMapMarker(map, el, place.at, { anchor: 'top', offset: [0, -12], dragsPass: true });
+  useMapMarker(map, el, place.at, { anchor: 'top', offset: [0, -12] });
   return createPortal(<LastKnownMark time={place.time} now={now} />, el);
 }

@@ -9,8 +9,7 @@ interface LastKnownMarkProps {
 
 /**
  * The last known place's look: the locator's dot without its face, in grey, and a pill under it
- * saying how long ago, as Life360's "1 minute ago". The builder's for now (owner to design later,
- * .scratch/contribute-apk/README.md).
+ * saying how long ago, as Life360's "1 minute ago".
  */
 export function LastKnownMark({ time, now }: LastKnownMarkProps) {
   return (

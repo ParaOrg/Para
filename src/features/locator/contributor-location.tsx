@@ -112,11 +112,14 @@ export function ContributorLocation({
     latestOnNote.current?.(null);
   }, [fix]);
 
-  // Where the phone last was: this run's last fix, else the place an earlier run kept.
-  const [storedPlace] = useState<LastKnown | null>(() =>
+  // Where the phone last was: this run's last fix, kept even once the locator lets its fix go (a
+  // permission taken back), else the place an earlier run kept.
+  const [lastPlace, setLastPlace] = useState<LastKnown | null>(() =>
     remembersLastPlace ? readLastKnown() : null,
   );
-  const lastPlace: LastKnown | null = fix ? { at: fix.at, time: fix.time } : storedPlace;
+  if (remembersLastPlace && fix && fix.time !== lastPlace?.time) {
+    setLastPlace({ at: fix.at, time: fix.time });
+  }
   // Each live fix kept on the phone, for the next start.
   const keptAt = useRef(0);
   useEffect(() => {
