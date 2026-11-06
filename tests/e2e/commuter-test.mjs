@@ -21,6 +21,8 @@
 // none (since 2026-10-05 asked of it as the first tap of a page of its
 // own), and that the map is made framed on the routes, where their fit
 // framed it, and stays there (the owner's Q1).
+import { readFileSync } from 'node:fs';
+
 import { chromium } from 'playwright';
 import {
   BASE,
@@ -1101,8 +1103,8 @@ if (PART !== 1) {
         }
       }
       // The filter: the map lights what the cards list under each kind of ride, a Selected card
-      // let go as ⇆ lets it go, the camera taking in what a narrower filter leaves lit, and All
-      // lighting the whole list again (README decision 14).
+      // let go as ⇆ lets it go, and All lighting the whole list again (README decision 14). The
+      // camera's framing is 4a′'s, where a tap lists more than one kind of ride.
       const filterButton = chooser.locator('[data-testid="chooser-filter"]');
       const filterTo = async (label) => {
         await filterButton.click();
@@ -1121,30 +1123,11 @@ if (PART !== 1) {
       const firstCard = cards.nth(Math.max(restAt, 0));
       await firstCard.locator('[data-testid="chooser-select"]').click();
       const pickedFirst = (await inState(firstCard, 'selected')) === 'selected';
-      const camera = () =>
-        page.evaluate(() => {
-          const { lng, lat } = window.__map.getCenter();
-          return { lng, lat, zoom: window.__map.getZoom() };
-        });
       const agree = [];
-      // Each filter that leaves some routes lit but not all: whether the camera moved to them.
-      const framings = [];
       for (const label of ['Jeep', 'E-Jeep', 'Bus', 'LRT', 'MRT', 'Ferry']) {
-        const cameraWas = await camera();
         await filterTo(label);
         const listedUnder = await listedNow();
         const litUnder = await until(litNow, (lit) => sameIds(lit, listedUnder));
-        if (listedUnder.length > 0 && listedUnder.length < before.length) {
-          await mapIdle(page);
-          const cameraNow = await camera();
-          framings.push({
-            label,
-            moved:
-              Math.abs(cameraNow.zoom - cameraWas.zoom) > 1e-6 ||
-              Math.abs(cameraNow.lng - cameraWas.lng) > 1e-9 ||
-              Math.abs(cameraNow.lat - cameraWas.lat) > 1e-9,
-          });
-        }
         agree.push({
           label,
           listed: listedUnder.length,
@@ -1163,18 +1146,6 @@ if (PART !== 1) {
           agree.map((a) => `${a.label} ${a.lit}/${a.listed}`).join(', ') +
           ` of ${before.length}`,
       );
-      if (framings.length === 0) {
-        skip(
-          '  a narrower filter frames the routes it leaves lit',
-          'no filter leaves some but not all of these routes',
-        );
-      } else {
-        check(
-          '  a narrower filter frames the routes it leaves lit',
-          framings.every((f) => f.moved),
-          JSON.stringify(framings),
-        );
-      }
       await filterTo('All');
       const allAgain = await until(litNow, (lit) => sameIds(lit, before));
       check(
@@ -1194,6 +1165,75 @@ if (PART !== 1) {
         .getAttribute('aria-label');
       check('  a new list starts at All', nextLabel === 'Filter', String(nextLabel));
     }
+    await closeCard();
+  }
+}
+
+// 4a′. The filter frames what it leaves lit (README decision 14): where a rail line runs over a
+// jeep's road, outside every box, one tap lists both kinds of ride, and narrowing the list to the
+// rail moves the camera to take it in, as ⇆ does. Part 1's, with 4a.
+if (PART === 1) {
+  const modeOf = new Map(
+    JSON.parse(readFileSync('public/data/index.v5.json', 'utf8')).variants.map((v) => [
+      v.route_id,
+      v.route.mode,
+    ]),
+  );
+  const rails = snapshot.routes.filter((r) => modeOf.get(r.routeId) === 'lrt');
+  const jeeps = snapshot.routes.filter((r) => modeOf.get(r.routeId) === 'jeepney');
+  const mixed = rails
+    .flatMap((r) => r.coords)
+    .find(
+      (c) =>
+        !snapshot.polys.some((p) => pointInPolygon(c, p.ring)) &&
+        jeeps.some((j) => metresToLine(c, j.coords) < 3),
+    );
+  if (!mixed) {
+    check(
+      'a tap where a rail line runs over a jeep road: the LRT filter frames the rail',
+      false,
+      'the map file has no such road any more: pick another two kinds of ride',
+    );
+  } else {
+    await page.evaluate((c) => window.__map.jumpTo({ center: c, zoom: 18 }), mixed);
+    await mapIdle(page);
+    const box = await page.locator('canvas.maplibregl-canvas').boundingBox();
+    await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+    await shows();
+    const chooser = page.locator('[data-testid="chooser"]');
+    const liveries = await chooser
+      .locator('[data-testid="chooser-origin"]')
+      .evaluateAll((els) => els.map((e) => e.dataset.livery));
+    const filterButton = chooser.locator('[data-testid="chooser-filter"]');
+    const camera = () =>
+      page.evaluate(() => {
+        const { lng, lat } = window.__map.getCenter();
+        return { lng, lat, zoom: window.__map.getZoom() };
+      });
+    const cameraWas = await camera();
+    await filterButton.click();
+    await page.getByRole('radio', { name: 'LRT', exact: true }).click();
+    await until(
+      () => filterButton.getAttribute('aria-label'),
+      (l) => l === 'Filter: LRT',
+    );
+    const listed = (await cardDirections(chooser.first())).filter(Boolean);
+    const lit = await until(litNow, (ids) => sameIds(ids, listed));
+    await mapIdle(page);
+    const cameraNow = await camera();
+    const moved =
+      Math.abs(cameraNow.zoom - cameraWas.zoom) > 1e-6 ||
+      Math.abs(cameraNow.lng - cameraWas.lng) > 1e-9 ||
+      Math.abs(cameraNow.lat - cameraWas.lat) > 1e-9;
+    check(
+      'a tap where a rail line runs over a jeep road: the LRT filter frames the rail',
+      liveries.some((l) => l?.startsWith('lrt')) &&
+        liveries.includes('jeep') &&
+        listed.length > 0 &&
+        sameIds(lit, listed) &&
+        moved,
+      `cards ${liveries.join(', ')}; ${lit.length} lit, ${listed.length} listed; camera ${JSON.stringify(cameraWas)} → ${JSON.stringify(cameraNow)}`,
+    );
     await closeCard();
   }
 }
