@@ -3,26 +3,38 @@ import { useState, type ComponentProps } from 'react';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
 import { RouteListController } from './route-list-controller';
+import type { ModeFilter } from '../model/mode-filter';
 
-/** Keeps the filter as the apps will, so a story can be tapped through. */
-function Filtering(props: ComponentProps<typeof RouteListController>) {
-  const [filter, setFilter] = useState(props.filter);
+interface FilteringProps extends Omit<ComponentProps<typeof RouteListController>, 'modeFilter'> {
+  /** The filter it starts on; null: the caller keeps none, so no sliders. */
+  filter: ModeFilter | null;
+  onFilter: (filter: ModeFilter) => void;
+}
+
+/** Keeps the filter as the apps do, so a story can be tapped through. */
+function Filtering({ filter: startsOn, onFilter, ...props }: FilteringProps) {
+  const [filter, setFilter] = useState(startsOn ?? 'all');
   return (
     <RouteListController
       {...props}
-      filter={filter}
-      onFilter={(next) => {
-        props.onFilter(next);
-        setFilter(next);
-      }}
+      modeFilter={
+        startsOn === null
+          ? undefined
+          : {
+              filter,
+              onFilter: (next) => {
+                onFilter(next);
+                setFilter(next);
+              },
+            }
+      }
     />
   );
 }
 
 const meta = {
   title: 'Features/Routes/RouteListController',
-  component: RouteListController,
-  render: (args) => <Filtering {...args} />,
+  component: Filtering,
   args: {
     layout: 'row',
     way: 'Pabalik',
@@ -40,7 +52,7 @@ const meta = {
       </div>
     ),
   ],
-} satisfies Meta<typeof RouteListController>;
+} satisfies Meta<typeof Filtering>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
@@ -88,3 +100,26 @@ export const PickAFilter: Story = {
 
 /** The column with a filter on, on a wide screen. */
 export const ColumnFiltered: Story = { args: { layout: 'column', filter: 'lrt' } };
+
+/** No filter kept by the caller: no sliders, ✕ and ⇆ alone. */
+export const NoFilter: Story = { args: { filter: null } };
+
+/**
+ * `auto`, as the route list wears it: the row on a phone's sheet, and the column where the sheet
+ * docks (`sheet-floating:`, a map 64rem wide). Each tooltip points inward, to fit in both.
+ */
+export const Auto: Story = {
+  args: { layout: 'auto' },
+  decorators: [
+    (Story) => (
+      <div className="flex flex-col gap-8">
+        <div data-floats="dock" className="@container w-98 bg-surface pt-8">
+          <Story />
+        </div>
+        <div data-floats="dock" className="@container h-96 w-5xl bg-surface-quaternary">
+          <Story />
+        </div>
+      </div>
+    ),
+  ],
+};
