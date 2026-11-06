@@ -7,8 +7,9 @@ const config: CapacitorConfig = {
   appName: 'Para Contributor',
   webDir: 'dist-apk',
   android: {
-    // Without it Android halts the page's location updates five minutes after the screen
-    // goes off (the background-geolocation plugin's README).
+    // Set for the location plugin, whose README said Android otherwise halts the page's location
+    // updates five minutes after the screen goes off. Kept with RideService: the page still hears
+    // its fixes through the bridge, and whether it is still needed is a phone test of its own.
     useLegacyBridge: true,
   },
   plugins: {
