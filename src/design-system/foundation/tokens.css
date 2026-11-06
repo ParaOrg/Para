@@ -241,11 +241,14 @@
 
   /* The map: its route lines and hintuans. Figma: Map/… Two looks, no
      opacity — every line at rest, the selected one drawn over it: see-through
-     lines stack and confuse. */
+     lines stack and confuse. A road route rests in its card's line colour
+     (rail-rest-layers.ts); surface-default is the rest of a road trip past a
+     picked hintuan. Every line is cased in route-line-casing. */
   --map-route-line-surface-default: var(--color-parabrand-300);
   --map-route-line-surface-selected: var(--color-parabrand-800);
   --map-route-line-arrow-rest: var(--color-white);
   --map-route-line-arrow-inverse: var(--color-neutral-900);
+  --map-route-line-casing: var(--color-neutral-800);
   /* A lit line where it passes a hintuan. */
   --map-route-line-hintuan-surface-default: var(--color-green-400);
   /* The hotspot boxes on the map: HotspotOverlayCard (3837:11308). Figma gives
@@ -375,6 +378,7 @@
   --color-map-route-line-surface-selected: var(--map-route-line-surface-selected);
   --color-map-route-line-arrow-rest: var(--map-route-line-arrow-rest);
   --color-map-route-line-arrow-inverse: var(--map-route-line-arrow-inverse);
+  --color-map-route-line-casing: var(--map-route-line-casing);
   --color-map-route-line-hintuan-surface-default: var(--map-route-line-hintuan-surface-default);
   --color-map-overlay-card-hintuan-surface: var(--map-overlay-card-hintuan-surface);
   --color-map-overlay-card-hintuan-surface-selected: var(

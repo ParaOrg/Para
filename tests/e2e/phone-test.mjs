@@ -2700,14 +2700,18 @@ const framedAboveCard = async (bbox, sheet = 'card') =>
       }),
     [bbox, sheet],
   );
-// The owner's two looks for the lines (2026-09-29): every one opaque in
-// Map/RouteLine/surface-default, the lit ones drawn over them in
-// …/surface-selected, and no layer shading a line. The hexes are
+// The owner's two looks for the lines (2026-09-29): every one opaque, a jeep's
+// at rest in Jeep's colour (each road mode in its own, README decision 16), the
+// lit ones drawn over them in …/surface-selected, and no layer shading a line. The hexes are
 // map-colours.ts's, read from the dev server; a server that cannot serve it
 // is held to two different colours.
 const MAP = await page.evaluate(async () => {
   try {
-    return (await import('/src/design-system/foundation/map-colours.ts')).MAP_COLOURS;
+    const { MAP_COLOURS } = await import('/src/design-system/foundation/map-colours.ts');
+    const { LIVERY_LINE } = await import('/src/features/routes/map/livery-line.ts');
+    // A card's line colour by its look: what a road mode rests in.
+    const line = Object.fromEntries(Object.entries(LIVERY_LINE).map(([k, v]) => [k, v.line]));
+    return { ...MAP_COLOURS, line };
   } catch {
     return null;
   }
@@ -2715,9 +2719,7 @@ const MAP = await page.evaluate(async () => {
 const twoLooks = (p, lit = MAP?.['Map/RouteLine/surface-selected']) =>
   !!p &&
   p.shaded.length === 0 &&
-  (MAP
-    ? p.rest === MAP['Map/RouteLine/surface-default'] && p.lit === lit
-    : !!p.rest && p.rest !== p.lit);
+  (MAP ? p.rest === MAP.line.jeep && p.lit === lit : !!p.rest && p.rest !== p.lit);
 
 // What is lit wears the colour of the card it answers — a picked RouteCard's,
 // an open trip's — its chevrons in the card's words' colour and its end
@@ -3449,13 +3451,27 @@ if (!shared) {
     const [head, tail] = endsOf(r.signboard);
     return shownBack(r) ? { from: tail, to: head } : { from: head, to: tail };
   };
-  // The route list counts its cards, one per place the routes leave from: two
-  // routes out of Tala are "1 Route". It draws no header, so the count is its
-  // name for a screen reader.
-  const places = new Set([shared.a, shared.b].map((r) => shownWay(r).from.toLowerCase())).size;
-  const title = `${places} ${places === 1 ? 'Route' : 'Routes'}`;
+  // The route list counts its cards, one per place and mode the routes leave from: two jeeps
+  // out of Tala are "1 Route", a jeep and a bus out of Tala "2 Routes". It draws no header, so
+  // the count is its name for a screen reader. A mode as the cards fold it: P2P wears UV
+  // Express's card and the tricycle Jeep's; a train is its own line.
+  const cardMode = (r) => {
+    const route = fileDirections.find((d) => d.id === r.id)?.route;
+    const mode = route?.mode ?? 'jeepney';
+    if (mode === 'p2p') return 'uv_express';
+    if (mode === 'tricycle') return 'jeepney';
+    return mode === 'lrt' || mode === 'mrt' ? (route?.routeCode ?? mode) : mode;
+  };
+  const cards = new Set(
+    [shared.a, shared.b].map((r) => `${shownWay(r).from.toLowerCase()}|${cardMode(r)}`),
+  ).size;
+  const title = `${cards} ${cards === 1 ? 'Route' : 'Routes'}`;
   const named = has ? await chooser.first().getAttribute('aria-label') : null;
-  check(`  the list is named "${title}", a card per place`, named === title, String(named));
+  check(
+    `  the list is named "${title}", a card per place and mode`,
+    named === title,
+    String(named),
+  );
   check(
     `  it lists both routes ${wayBack ? 'the way back' : 'outbound'} where drawn so, else the way hit, one row each, under the place each leaves from`,
     itemTexts.length === 2 &&

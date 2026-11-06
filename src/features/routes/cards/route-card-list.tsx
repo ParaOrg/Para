@@ -6,7 +6,13 @@ import type { SheetShape } from '@/shared/ui/sheet-gesture';
 import { ModeFilterEmpty } from './mode-filter-empty';
 import { RouteCardStack, type PickedPlace } from './route-card-stack';
 import { RouteListController } from './route-list-controller';
-import { listedDepartures, otherWayHasRoutes, switchWord, type Listing } from '../model/departures';
+import {
+  listedDepartures,
+  otherWayHasRoutes,
+  routeCards,
+  switchWord,
+  type Listing,
+} from '../model/departures';
 import { hotspotLabel, type Hotspot } from '../model/hotspots';
 import type { Livery } from '../model/liveries';
 import { passesModeFilter, type ModeFilterControl } from '../model/mode-filter';
@@ -109,10 +115,13 @@ export function RouteCardList({
   const switchable = otherWayHasRoutes(filtered, back);
   const shownDirections = places.flatMap((p) => p.directions.map((d) => d.v));
   const hotspotTotal = hotspotCount(hotspots);
+  // A RouteCard each, as RouteCardStack lays them out: a place and mode, so a place that jeeps
+  // and a train both leave from counts twice.
+  const cardTotal = routeCards(filtered, back, listing).length;
   const count =
-    places.length === 0 && hotspotTotal > 0
+    cardTotal === 0 && hotspotTotal > 0
       ? `${hotspotTotal} ${hotspotTotal === 1 ? 'Hotspot' : 'Hotspots'}`
-      : `${places.length} ${places.length === 1 ? 'Route' : 'Routes'}`;
+      : `${cardTotal} ${cardTotal === 1 ? 'Route' : 'Routes'}`;
 
   return (
     <BottomSheet
