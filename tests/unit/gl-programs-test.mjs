@@ -26,6 +26,12 @@ import {
 } from '../../src/features/routes/map/warm-programs.ts';
 import { twinsOf } from '../../src/features/routes/map/layer-switch.ts';
 import { addSavedRoutes } from '../../src/features/routes/map/saved-routes-layers.ts';
+import { routesData } from '../../src/features/routes/map/saved-routes-data.ts';
+import {
+  RESTING_LAYERS,
+  SAVED_REST_FILTER,
+} from '../../src/features/routes/map/rail-rest-layers.ts';
+import { MAP_COLOURS } from '../../src/design-system/foundation/map-colours.ts';
 import { addSavedHotspots } from '../../src/features/routes/map/saved-hotspots-layers.ts';
 import { hiddenHotspotFilters } from '../../src/features/routes/map/saved-hotspots-layers.ts';
 import { namePaint } from '../../src/features/routes/map/saved-hotspots-labels.ts';
@@ -176,9 +182,9 @@ test("a train line at rest is drawn by the resting line's program, one layer a l
   );
 });
 
-// The owner's ruling of 2026-11-06: a road route rests in its mode's colour. Jeep's is the resting
-// line's own; UV Express, E-Jeep, Bus and the ferry each rest in a layer of their own, one colour
-// each, on the resting line's program, and between them every road route is drawn at rest once.
+// A road route rests in its mode's colour (README decision 16). Jeep's is the resting line's own;
+// UV Express, E-Jeep, Bus and the ferry each rest in a layer of their own, one colour each, on the
+// resting line's program.
 test("a road mode at rest is drawn by the resting line's program, one layer a mode", () => {
   const layers = [
     { id: 'background', type: 'background' },
@@ -206,7 +212,63 @@ test("a road mode at rest is drawn by the resting line's program, one layer a mo
   );
   // The casing under them all, resting and lit, in Map/RouteLine/casing.
   for (const id of ['saved-routes-casing', 'saved-routes-selected-casing'])
-    assert.equal(map.getLayer(id)?.paint['line-color'], '#262626');
+    assert.equal(map.getLayer(id)?.paint['line-color'], MAP_COLOURS['Map/RouteLine/casing']);
+});
+
+// Every route is drawn at rest exactly once, by the layer its mode or train line names: a tricycle,
+// which wears Jeep's look, by the jeeps' line, P2P by UV Express's, the ferry by its own; and the
+// studio's filter for the direction it is editing hides it from every one of them.
+test('every route rests in exactly one resting layer, and the edited one in none', () => {
+  const line = {
+    type: 'LineString',
+    coordinates: [
+      [121, 14.6],
+      [121.01, 14.61],
+    ],
+  };
+  const route = (mode, routeCode = null) => ({ id: `${mode}${routeCode ?? ''}`, mode, routeCode });
+  const rows = [
+    route('jeepney'),
+    route('tricycle'),
+    route('p2p'),
+    route('uv_express'),
+    route('e_jeepney'),
+    route('bus'),
+    route('ferry'),
+    route('lrt', 'LRT-1'),
+    route('lrt', 'LRT-2'),
+    route('mrt', 'MRT-3'),
+  ].map((r) => ({ id: r.id, routeId: r.id, route: r, shape: line }));
+  const features = routesData(rows).features.map((f) => ({ type: 2, properties: f.properties }));
+  assert.equal(features.length, rows.length);
+  const drawnBy = (extra) => (feature) =>
+    RESTING_LAYERS.filter((id) =>
+      featureFilter(
+        extra ? ['all', SAVED_REST_FILTER[id], extra] : SAVED_REST_FILTER[id],
+        `layers.${id}.filter`,
+      ).filter({ zoom: 15 }, feature),
+    );
+  const expected = {
+    jeepney: ['saved-routes-line'],
+    tricycle: ['saved-routes-line'],
+    p2p: ['saved-routes-road-uv-express'],
+    uv_express: ['saved-routes-road-uv-express'],
+    e_jeepney: ['saved-routes-road-ejeep'],
+    bus: ['saved-routes-road-bus'],
+    ferry: ['saved-routes-road-ferry'],
+    'lrtLRT-1': ['saved-routes-rail-lrt-1'],
+    'lrtLRT-2': ['saved-routes-rail-lrt-2'],
+    'mrtMRT-3': ['saved-routes-rail-mrt-3'],
+  };
+  for (const f of features)
+    assert.deepEqual(drawnBy(null)(f), expected[f.properties.id], f.properties.id);
+  // As use-saved-routes-layers hides the direction the studio is editing.
+  for (const f of features)
+    assert.deepEqual(
+      drawnBy(['!=', ['get', 'id'], f.properties.id])(f),
+      [],
+      `${f.properties.id} hidden`,
+    );
 });
 
 test("the rest of a ride past a picked hintuan is drawn by the resting line's program, compiled at load", () => {

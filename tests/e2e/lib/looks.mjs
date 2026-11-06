@@ -62,7 +62,7 @@ export function lookReaders() {
             : null,
         ]),
       ),
-      // Each road mode with a colour of its own at rest (2026-11-06): null where the layer is missing.
+      // Each road mode with a colour of its own at rest: null where the layer is missing.
       roads: Object.fromEntries(
         ['uv-express', 'ejeep', 'bus', 'ferry'].map((l) => [
           l,

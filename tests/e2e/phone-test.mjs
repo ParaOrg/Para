@@ -2701,7 +2701,7 @@ const framedAboveCard = async (bbox, sheet = 'card') =>
     [bbox, sheet],
   );
 // The owner's two looks for the lines (2026-09-29): every one opaque, a jeep's
-// at rest in Jeep's colour (each road mode in its own since 2026-11-06), the
+// at rest in Jeep's colour (each road mode in its own, README decision 16), the
 // lit ones drawn over them in …/surface-selected, and no layer shading a line. The hexes are
 // map-colours.ts's, read from the dev server; a server that cannot serve it
 // is held to two different colours.
@@ -2709,7 +2709,7 @@ const MAP = await page.evaluate(async () => {
   try {
     const { MAP_COLOURS } = await import('/src/design-system/foundation/map-colours.ts');
     const { LIVERY_LINE } = await import('/src/features/routes/map/livery-line.ts');
-    // A card's line colour by its look: what a road mode rests in (2026-11-06).
+    // A card's line colour by its look: what a road mode rests in.
     const line = Object.fromEntries(Object.entries(LIVERY_LINE).map(([k, v]) => [k, v.line]));
     return { ...MAP_COLOURS, line };
   } catch {

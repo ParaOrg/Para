@@ -18,7 +18,8 @@ import type { Direction } from '../model/routes';
 
 /*
  * The saved directions on the map: their source and their layers (five, and
- * a resting one for each train line). What lights them is lighting.ts's, and
+ * a resting one for each road mode with a colour of its own and each train
+ * line, rail-rest-layers.ts). What lights them is lighting.ts's, and
  * the hook that keeps them in step is use-saved-routes-layers.ts.
  */
 

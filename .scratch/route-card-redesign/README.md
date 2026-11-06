@@ -53,7 +53,7 @@ This session stopped here; the owner's own sessions carry on. Each PR is stacked
 | 7 | Commuter map wiring | Merged: [#812](https://github.com/ParaOrg/Para/pull/812), 406.8 kB. The filter lights the map; its framing is checked where an LRT line runs over a jeep road |
 | 7b | The hotspot pins off on the commuter map (decision 15) | Merged: [#813](https://github.com/ParaOrg/Para/pull/813), 406.9 kB |
 | 8 | Studio wiring | Open PR (branch `claude/route-card-studio-wiring`) |
-| 9 | Map lines in the mode colours | Open PR (branch `claude/route-lines-mode-colours`). Screenshots for the owner's morning check are linked in the PR |
+| 9 | Map lines in the mode colours | Open PR (branch `claude/route-lines-mode-colours`). For the owner's morning check: `shots-step-9/` (light basemap, 393 and 1440 wide: Cubao, with jeeps beside LRT-2 and MRT-3, and the Pasig ferry) |
 
 ### Step 4: the reviewer's findings, fixed
 
@@ -129,4 +129,5 @@ The builder designed these for now, or left them out. Each waits for the owner's
 - tricycle and P2P looks;
 - the map line colours for E-Jeep and UV Express (their cards' border shades for now);
 - the casing's width under the route lines (1 px a side, CASING_EXTRA, as it was), and whether the trains and the ferry wear the neutral-800 casing too;
-- a jeep's lit line when its card is picked: Jeep's blue, the same as its rest, set apart only by its width and its chevrons.
+- a jeep's lit line when its card is picked: Jeep's blue, the same as its rest, set apart only by its width and its chevrons;
+- the rest of a road trip's line past a picked hintuan, and the studio's dashed drafts: both still the light purple (Map/RouteLine/surface-default), which no resting line wears any more.
