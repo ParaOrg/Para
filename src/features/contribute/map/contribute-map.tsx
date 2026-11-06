@@ -10,6 +10,7 @@ import { retryingImport } from '@/shared/utils/retrying-import';
 import type { MapWhere } from './map-where';
 import type { PausedFrostProps } from './paused-frost';
 import { RIDE_FRAME_PADDING, trailBounds } from './trail-picture-frame';
+import { useMapReconnect } from './use-map-reconnect';
 import { usePublishedHotspots } from './use-published-hotspots';
 import { usePublishedRoutes } from './use-published-routes';
 import type { RecordingTrack } from './use-recording-track';
@@ -109,6 +110,9 @@ export function ContributeMap({
     };
   }, [isRecording, PausedFrost]);
 
+  // A map made with no signal is made again once there is one (use-map-reconnect.ts).
+  const mapAttempt = useMapReconnect(map, isMapLoaded);
+
   usePublishedRoutes(map, isMapLoaded);
   usePublishedHotspots(map, isMapLoaded);
   useRecordingTrail(map, ride?.trail ?? track.trail);
@@ -173,6 +177,7 @@ export function ContributeMap({
   return (
     <>
       <MapView
+        key={mapAttempt}
         onReady={setMap}
         onLoadedChange={setIsMapLoaded}
         zoomButtons={false}

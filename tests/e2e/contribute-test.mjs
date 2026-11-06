@@ -13,7 +13,7 @@
 import { mkdirSync } from 'node:fs';
 import { chromium } from 'playwright';
 import { fakeContributions } from './lib/fake-contributions.mjs';
-import { BASE, bareStyle, harness, nodeFetch, until } from './lib/harness.mjs';
+import { BASE, bareStyle, harness, nodeFetch, until, waitFor } from './lib/harness.mjs';
 import { checkLocationLabels } from './lib/location-labels.mjs';
 import { mapControlsInTabOrder } from './lib/tab-order.mjs';
 
@@ -3730,6 +3730,67 @@ const FIRST_IDLE = () => {
     '  the page notes it once, in the console only',
     warnings.filter((w) => w.includes('published routes could not be shown')).length === 1,
     JSON.stringify(warnings),
+  );
+  check('  no page errors', errors.length === 0, errors.join('; '));
+  await page.context().close();
+}
+
+// --------------------------- no signal as the page opens: the map comes once the phone is back online
+{
+  const { page, errors } = await phone();
+  let tilesAsked = 0;
+  let isStyleReachable = false;
+  // A design with one vector source whose tiles are empty, so the tiles asked can be counted; the
+  // style itself unreachable until the signal comes back.
+  await page.route(/tiles\.openfreemap\.org/, (route) => {
+    const url = route.request().url();
+    if (/\/stand-in\//.test(url)) {
+      tilesAsked += 1;
+      return route.fulfill({ status: 204, body: '' });
+    }
+    if (!/\/styles\//.test(url)) return route.fulfill({ status: 404, body: '' });
+    if (!isStyleReachable) return route.abort('internetdisconnected');
+    return route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        version: 8,
+        sources: {
+          openmaptiles: {
+            type: 'vector',
+            tiles: ['https://tiles.openfreemap.org/stand-in/{z}/{x}/{y}.pbf'],
+          },
+        },
+        layers: [
+          { id: 'bg', type: 'background', paint: { 'background-color': '#eeeeee' } },
+          { id: 'road', type: 'line', source: 'openmaptiles', 'source-layer': 'road' },
+        ],
+      }),
+    });
+  });
+  const isLoaded = () => page.locator('[data-testid="map-view"][data-loaded]').count();
+  await page.reload({ waitUntil: 'load' });
+  await page.getByRole('button', { name: 'Start Tracking' }).waitFor({ timeout: 20000 });
+  await page.waitForTimeout(3000);
+  check('with no signal as the page opens, the map does not load', (await isLoaded()) === 0);
+  isStyleReachable = true;
+  await page.evaluate(() => window.dispatchEvent(new Event('online')));
+  const cameBack = await page
+    .locator('[data-testid="map-view"][data-loaded]')
+    .waitFor({ timeout: 20000 })
+    .then(
+      () => true,
+      () => false,
+    );
+  check('  once the phone is back online, the map loads by itself, with no reload', cameBack);
+  await waitFor(() => tilesAsked > 0, 10000);
+  const before = tilesAsked;
+  await page.evaluate(() => window.dispatchEvent(new Event('online')));
+  await waitFor(() => tilesAsked > before, 10000);
+  check(
+    "  and the signal coming back again asks the basemap's tiles afresh, for any that failed",
+    tilesAsked > before,
+    `${before} then ${tilesAsked}`,
   );
   check('  no page errors', errors.length === 0, errors.join('; '));
   await page.context().close();
