@@ -153,3 +153,48 @@ test('an empty or blank query finds nothing; no location means no distance', () 
   assert.equal(searchPlaces('quiapo', PLACES)[0].distanceM, null);
   assert.deepEqual(searchPlaces('nowhere at all', PLACES), []);
 });
+
+// The first typo rule, kept here as the reference: the query against each word start's stretch,
+// as long as the query give or take the typos, one editDistance each.
+const typoByStretches = (query, name) => {
+  const limit = typosAllowed(query.length);
+  if (limit === 0) return false;
+  const starts = [0, ...[...name].flatMap((char, i) => (char === ' ' ? [i + 1] : []))];
+  return starts.some((start) => {
+    for (let length = query.length - limit; length <= query.length + limit; length++) {
+      if (length < 1 || start + length > name.length) continue;
+      if (editDistance(query, name.slice(start, start + length), limit) <= limit) return true;
+    }
+    return false;
+  });
+};
+
+test('the one-table typo match and the letter filter answer as the stretch-by-stretch rule does', () => {
+  // A fixed sequence, so a failure repeats.
+  let seed = 7;
+  const random = (n) => ((seed = (seed * 1103515245 + 12345) % 2 ** 31), seed % n);
+  const letters = 'aeinorstum';
+  const word = (length) => Array.from({ length }, () => letters[random(letters.length)]).join('');
+  const mutate = (text) => {
+    const at = random(text.length);
+    const edits = [
+      () => text.slice(0, at) + text.slice(at + 1),
+      () => text.slice(0, at) + letters[random(letters.length)] + text.slice(at + 1),
+      () => text.slice(0, at) + letters[random(letters.length)] + text.slice(at),
+      () => text.slice(0, at) + (text[at + 1] ?? '') + text[at] + text.slice(at + 2),
+    ];
+    return edits[random(edits.length)]();
+  };
+  let typos = 0;
+  for (let n = 0; n < 4000; n++) {
+    const name = [word(3 + random(6)), word(3 + random(6)), word(2 + random(5))].join(' ');
+    const words = name.split(' ');
+    const picked = words[random(words.length)];
+    const query = random(3) === 0 ? word(4 + random(6)) : mutate(mutate(picked + word(random(3))));
+    if (query.length < 4 || name.includes(query)) continue;
+    const expected = typoByStretches(query, name);
+    if (expected) typos++;
+    assert.equal(matchQuality(query, name) === 'typo', expected, `${query} in ${name}`);
+  }
+  assert.ok(typos > 200, `only ${typos} typo matches were tried`);
+});

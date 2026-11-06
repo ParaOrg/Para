@@ -96,34 +96,98 @@ export function editDistance(a: string, b: string, limit: number): number {
 
 /** How well a folded query matches one name, or null when it does not. */
 export function matchQuality(foldedQuery: string, term: string): MatchQuality | null {
-  const folded = foldForSearch(term);
+  return matchFolded(foldedQuery, foldForSearch(term));
+}
+
+/**
+ * A bit for each letter a–z and digit group in a folded text: what lets a typo match be turned
+ * down without its table, since every letter of the query missing from the name costs an edit.
+ */
+export function lettersOf(folded: string): number {
+  let mask = 0;
+  for (const char of folded) {
+    const code = char.charCodeAt(0);
+    if (code >= 97 && code <= 122) mask |= 1 << (code - 97);
+    else if (code >= 48 && code <= 57) mask |= 1 << (26 + ((code - 48) % 5));
+    else if (char !== ' ') mask |= 1 << 31;
+  }
+  return mask;
+}
+
+/** How many of the query's characters have no letter like them anywhere in the name: each one an edit at least. */
+function missingLetters(foldedQuery: string, nameLetters: number): number {
+  let missing = 0;
+  for (const char of foldedQuery) {
+    if (char !== ' ' && (lettersOf(char) & nameLetters) === 0) missing++;
+  }
+  return missing;
+}
+
+/**
+ * matchQuality on a name folded already, with its letters (lettersOf) when kept: for a long list
+ * folded once, not on every keystroke.
+ */
+export function matchFolded(
+  foldedQuery: string,
+  folded: string,
+  nameLetters: number = lettersOf(folded),
+): MatchQuality | null {
   if (foldedQuery === '' || folded === '') return null;
   if (folded === foldedQuery) return 'whole';
   if (folded.startsWith(foldedQuery)) return 'start';
   if (` ${folded}`.includes(` ${foldedQuery}`)) return 'word';
   if (folded.includes(foldedQuery)) return 'inside';
   const limit = typosAllowed(foldedQuery.length);
-  if (limit === 0) return null;
-  // The query against the stretch of the name from each word's start, as long as the query give or take the typos.
-  const starts = [0, ...[...folded].flatMap((char, i) => (char === ' ' ? [i + 1] : []))];
-  for (const start of starts) {
-    for (let length = foldedQuery.length - limit; length <= foldedQuery.length + limit; length++) {
-      if (length < 1 || start + length > folded.length) continue;
-      const stretch = folded.slice(start, start + length);
-      if (editDistance(foldedQuery, stretch, limit) <= limit) return 'typo';
-    }
-  }
-  return null;
+  if (limit === 0 || missingLetters(foldedQuery, nameLetters) > limit) return null;
+  return typosToWordStart(foldedQuery, folded, limit) <= limit ? 'typo' : null;
 }
 
-const rank = (quality: MatchQuality) => QUALITY_ORDER.indexOf(quality);
+/**
+ * The fewest edits (insert, delete, change, swap two neighbours) between the query and a stretch
+ * of the name that starts at a word's start, any length; limit + 1 once past it. One table over
+ * the whole name: row 0 costs the letters skipped since the last word's start, and the last row's
+ * smallest cell is the best stretch's end.
+ */
+export function typosToWordStart(query: string, name: string, limit: number): number {
+  const width = name.length + 1;
+  let twoBack = new Int32Array(width);
+  let previous = new Int32Array(width);
+  let current = new Int32Array(width);
+  let sinceWordStart = 0;
+  for (let j = 0; j < width; j++) {
+    previous[j] = sinceWordStart;
+    sinceWordStart = name[j] === ' ' ? 0 : sinceWordStart + 1;
+  }
+  for (let i = 1; i <= query.length; i++) {
+    current[0] = i;
+    let rowBest = i;
+    for (let j = 1; j < width; j++) {
+      const cost = query[i - 1] === name[j - 1] ? 0 : 1;
+      let value = Math.min(previous[j] + 1, current[j - 1] + 1, previous[j - 1] + cost);
+      if (i > 1 && j > 1 && query[i - 1] === name[j - 2] && query[i - 2] === name[j - 1]) {
+        value = Math.min(value, twoBack[j - 2] + 1);
+      }
+      current[j] = value;
+      if (value < rowBest) rowBest = value;
+    }
+    if (rowBest > limit) return limit + 1;
+    [twoBack, previous, current] = [previous, current, twoBack];
+  }
+  return Math.min(...previous);
+}
+
+/** A match quality's place in the order, 0 the best: what both place and landmark ranking sort by. */
+export function qualityRank(quality: MatchQuality): number {
+  return QUALITY_ORDER.indexOf(quality);
+}
 
 /** The place's best match among its terms, the first term winning a tie. */
 function bestMatch(foldedQuery: string, place: SearchPlace) {
   let best: { quality: MatchQuality; term: string } | null = null;
   for (const term of place.terms) {
     const quality = matchQuality(foldedQuery, term);
-    if (quality && (!best || rank(quality) < rank(best.quality))) best = { quality, term };
+    if (quality && (!best || qualityRank(quality) < qualityRank(best.quality)))
+      best = { quality, term };
   }
   return best;
 }
@@ -159,7 +223,7 @@ export function searchPlaces(
   const byOther = (match: PlaceMatch) => (match.matchedTerm === match.place.label ? 0 : 1);
   return matches.sort(
     (a, b) =>
-      rank(a.quality) - rank(b.quality) ||
+      qualityRank(a.quality) - qualityRank(b.quality) ||
       byOther(a) - byOther(b) ||
       (a.distanceM ?? 0) - (b.distanceM ?? 0) ||
       a.place.label.localeCompare(b.place.label),

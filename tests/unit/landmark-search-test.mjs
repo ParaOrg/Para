@@ -11,13 +11,17 @@ import {
   combineResults,
   isParaPlace,
   routesNearHere,
-  searchLandmarks,
+  searchLandmarks as searchFolded,
+  searchableLandmarks,
 } from '../../src/features/routes/model/landmark-search.ts';
 import { searchPlaces, searchablePlaces } from '../../src/features/routes/model/place-search.ts';
 import { landmarkFileSchema } from '../../src/features/routes/published/landmark-file-schema.ts';
 
 let next = 0;
-const hotspot = (name, { informal = null, aliases = [], kind = 'hintuan', at = [121, 14.6] } = {}) => ({
+const hotspot = (
+  name,
+  { informal = null, aliases = [], kind = 'hintuan', at = [121, 14.6] } = {},
+) => ({
   id: `s${++next}`,
   name,
   informal,
@@ -30,6 +34,9 @@ const hotspot = (name, { informal = null, aliases = [], kind = 'hintuan', at = [
   line: null,
 });
 const landmark = (id, name, kind, point, aliases = []) => ({ id, name, kind, point, aliases });
+// The tests hand in plain landmarks; the app folds them once, as the file is read.
+const searchLandmarks = (query, landmarks, from) =>
+  searchFolded(query, searchableLandmarks(landmarks), from);
 
 const committed = JSON.parse(
   readFileSync(new URL('../../public/data/landmarks.v1.json', import.meta.url), 'utf8'),
@@ -47,7 +54,10 @@ test('the committed landmark file parses, with the glossary names and every alia
 test('a file that is not the landmark file is refused, not half read', () => {
   assert.throws(() => landmarkFileSchema.parse({ ...committed, schema: 2 }));
   assert.throws(() =>
-    landmarkFileSchema.parse({ ...committed, landmarks: [{ id: 'x', name: 'A', kind: 'shop', point: [1, 2] }] }),
+    landmarkFileSchema.parse({
+      ...committed,
+      landmarks: [{ id: 'x', name: 'A', kind: 'shop', point: [1, 2] }],
+    }),
   );
 });
 
@@ -57,10 +67,19 @@ test('landmarks match by name and alias, ignoring accents and small typos', () =
     landmark('w2', 'Parañaque City Hall', 'school', [121.0, 14.48]),
     landmark('w3', 'Trinoma', 'mall', [121.033, 14.653]),
   ];
-  assert.deepEqual(searchLandmarks('sm north', landmarks).map(({ landmark }) => landmark.id), ['w1']);
+  assert.deepEqual(
+    searchLandmarks('sm north', landmarks).map(({ landmark }) => landmark.id),
+    ['w1'],
+  );
   assert.equal(searchLandmarks('sm north', landmarks)[0].matchedTerm, 'SM North');
-  assert.deepEqual(searchLandmarks('paranaque', landmarks).map(({ landmark }) => landmark.id), ['w2']);
-  assert.deepEqual(searchLandmarks('trinomaa', landmarks).map(({ landmark }) => landmark.id), ['w3']);
+  assert.deepEqual(
+    searchLandmarks('paranaque', landmarks).map(({ landmark }) => landmark.id),
+    ['w2'],
+  );
+  assert.deepEqual(
+    searchLandmarks('trinomaa', landmarks).map(({ landmark }) => landmark.id),
+    ['w3'],
+  );
   assert.deepEqual(searchLandmarks('', landmarks), []);
 });
 
@@ -70,18 +89,32 @@ test('equal landmark matches rank by own name, then nearest, then name', () => {
     landmark('n2', 'Near Market', 'market', [121.0, 14.6]),
     landmark('n3', 'Bagsakan', 'market', [121.0, 14.6], ['Bagsakan Market']),
   ];
-  const ids = (from) => searchLandmarks('market', landmarks, from).map(({ landmark }) => landmark.id);
+  const ids = (from) =>
+    searchLandmarks('market', landmarks, from).map(({ landmark }) => landmark.id);
   assert.deepEqual(ids(null), ['n1', 'n2', 'n3']);
   assert.deepEqual(ids([121.0, 14.6]), ['n2', 'n1', 'n3']);
 });
 
-test('a landmark of a Para place\'s name within 250 m is that place; farther, or another name, is not', () => {
+test("a landmark of a Para place's name within 250 m is that place; farther, or another name, is not", () => {
   const places = searchablePlaces([
-    hotspot('SM Fairview Terminal', { informal: 'SM Fairview', aliases: ['SM City Fairview'], at: [121.06, 14.733] }),
+    hotspot('SM Fairview Terminal', {
+      informal: 'SM Fairview',
+      aliases: ['SM City Fairview'],
+      at: [121.06, 14.733],
+    }),
   ]);
-  assert.equal(isParaPlace(landmark('w1', 'SM City Fairview', 'mall', [121.061, 14.733]), places), true);
-  assert.equal(isParaPlace(landmark('w2', 'SM City Fairview', 'mall', [121.09, 14.733]), places), false);
-  assert.equal(isParaPlace(landmark('w3', 'Fairview Terraces', 'mall', [121.06, 14.733]), places), false);
+  assert.equal(
+    isParaPlace(landmark('w1', 'SM City Fairview', 'mall', [121.061, 14.733]), places),
+    true,
+  );
+  assert.equal(
+    isParaPlace(landmark('w2', 'SM City Fairview', 'mall', [121.09, 14.733]), places),
+    false,
+  );
+  assert.equal(
+    isParaPlace(landmark('w3', 'Fairview Terraces', 'mall', [121.06, 14.733]), places),
+    false,
+  );
 });
 
 test('results list Para places first, then landmarks that are not places, up to the limit', () => {
@@ -94,9 +127,21 @@ test('results list Para places first, then landmarks that are not places, up to 
     landmark('w3', 'Fairview Elementary School', 'school', [121.066, 14.709]),
   ];
   const query = 'fairview';
-  const results = combineResults(searchPlaces(query, places), searchLandmarks(query, landmarks), places, 2);
-  assert.deepEqual(results.places.map(({ place }) => place.label), ['SM Fairview']);
-  assert.deepEqual(results.landmarks.map(({ landmark }) => landmark.id), ['w2']);
+  const results = combineResults(
+    searchPlaces(query, places),
+    searchLandmarks(query, landmarks),
+    places,
+    2,
+  );
+  assert.deepEqual(
+    results.places.map(({ place }) => place.label),
+    ['SM Fairview'],
+  );
+  // The two left tie on quality and own name, so by name; SM City Fairview is the place itself.
+  assert.deepEqual(
+    results.landmarks.map(({ landmark }) => landmark.id),
+    ['w3'],
+  );
 });
 
 test('routes near here: hintuans with routes within 500 m, nearest first', () => {
@@ -126,13 +171,17 @@ test('routes near here: hintuans with routes within 500 m, nearest first', () =>
 });
 
 test('routes near here is empty where Para has no routes', () => {
-  assert.deepEqual(routesNearHere([121.5, 14.9], [hotspot('Somewhere', { at: [121.0, 14.6] })], []), []);
+  assert.deepEqual(
+    routesNearHere([121.5, 14.9], [hotspot('Somewhere', { at: [121.0, 14.6] })], []),
+    [],
+  );
 });
 
 test('a search over the whole committed file answers within a keystroke', () => {
-  const { landmarks } = landmarkFileSchema.parse(committed);
+  const landmarks = searchableLandmarks(landmarkFileSchema.parse(committed).landmarks);
   const started = performance.now();
-  for (const query of ['sm north', 'fairveiw', 'quiapo church', 'espana']) searchLandmarks(query, landmarks);
+  for (const query of ['sm north', 'fairveiw', 'quiapo church', 'espana'])
+    searchFolded(query, landmarks);
   const perQueryMs = (performance.now() - started) / 4;
   // A laptop's figure; a phone may be several times slower. Recorded, and held loosely.
   console.error(`searchLandmarks over ${landmarks.length}: ${perQueryMs.toFixed(1)} ms a query`);

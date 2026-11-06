@@ -4,7 +4,8 @@ import type { Hotspot, HotspotLink } from './hotspots';
 import {
   distanceToPlace,
   foldForSearch,
-  matchQuality,
+  lettersOf,
+  matchFolded,
   qualityRank,
   type MatchQuality,
   type PlaceMatch,
@@ -32,19 +33,37 @@ export interface LandmarkMatch {
   distanceM: number | null;
 }
 
+/** A landmark with its names folded once, so a keystroke over thousands folds only the query. */
+export interface SearchLandmark {
+  landmark: Landmark;
+  /** Its name, then its aliases, each beside its fold and that fold's letters. */
+  terms: { term: string; folded: string; letters: number }[];
+}
+
+/** The landmarks ready to search: each name folded once, when the file is read. */
+export function searchableLandmarks(landmarks: readonly Landmark[]): SearchLandmark[] {
+  return landmarks.map((landmark) => ({
+    landmark,
+    terms: [landmark.name, ...landmark.aliases].map((term) => {
+      const folded = foldForSearch(term);
+      return { term, folded, letters: lettersOf(folded) };
+    }),
+  }));
+}
+
 /** The landmarks the query matches, ranked as places are: match, own name, distance, name. */
 export function searchLandmarks(
   query: string,
-  landmarks: readonly Landmark[],
+  landmarks: readonly SearchLandmark[],
   from: LngLat | null = null,
 ): LandmarkMatch[] {
   const foldedQuery = foldForSearch(query);
   if (foldedQuery === '') return [];
   const matches: LandmarkMatch[] = [];
-  for (const landmark of landmarks) {
+  for (const { landmark, terms } of landmarks) {
     let best: { quality: MatchQuality; term: string } | null = null;
-    for (const term of [landmark.name, ...landmark.aliases]) {
-      const quality = matchQuality(foldedQuery, term);
+    for (const { term, folded, letters } of terms) {
+      const quality = matchFolded(foldedQuery, folded, letters);
       if (quality && (!best || qualityRank(quality) < qualityRank(best.quality))) {
         best = { quality, term };
       }
