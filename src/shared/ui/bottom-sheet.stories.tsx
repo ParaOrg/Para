@@ -240,3 +240,103 @@ export const LongHeader: Story = {
     ),
   },
 };
+
+/** A footer for the stories: a row of two buttons at the sheet's foot, the rest of it see-through. */
+const footer = (
+  <div className="flex w-full justify-between px-6 pb-8 sheet-floating:w-22 sheet-floating:flex-col sheet-floating:items-center sheet-floating:gap-2 sheet-floating:px-5 sheet-floating:pt-5">
+    <button
+      type="button"
+      className="rounded-full bg-surface-tertiary px-4 py-2 text-content-primary"
+    >
+      Close
+    </button>
+    <button
+      type="button"
+      className="rounded-full bg-surface-tertiary px-4 py-2 text-content-primary"
+    >
+      Filter
+    </button>
+  </div>
+);
+
+/** The route list's shape (BottomSheet's `shape`): its own Low, and a Max that fills the screen. */
+const LIST_SHAPE = { lowPx: 210, isMaxFull: true };
+
+/** `shape` at Low: 210 tall, its own Low rather than every card's 133. */
+export const ShapeLow: Story = {
+  render: (args) => <Keeping {...args} startsAt="low" />,
+  args: { shape: LIST_SHAPE, height: { snap: 'low', onSnap: fn() } },
+  play: async ({ canvasElement }) => {
+    const sheet = within(canvasElement).getByTestId('card');
+    await waitFor(() => expect(sheet).toHaveAttribute('data-low-px', '210'));
+    await waitFor(() =>
+      expect(
+        Math.round(
+          canvasElement.getBoundingClientRect().bottom - sheet.getBoundingClientRect().top,
+        ),
+      ).toBe(210),
+    );
+  },
+};
+
+/** `shape` at Max: the whole screen, no strip of map above it. */
+export const ShapeMaxFills: Story = {
+  render: (args) => <Keeping {...args} startsAt="max" />,
+  args: { shape: LIST_SHAPE, height: { snap: 'max', onSnap: fn() }, children: <Rows count={30} /> },
+  play: async ({ canvasElement }) => {
+    const host = canvasElement.querySelector('[data-dock-host]') ?? canvasElement;
+    const sheet = within(canvasElement).getByTestId('card');
+    await waitFor(() =>
+      expect(Math.round(sheet.getBoundingClientRect().top - host.getBoundingClientRect().top)).toBe(
+        0,
+      ),
+    );
+  },
+};
+
+/** `handle="hidden"`: no notch drawn, but the button is still there for Tab and a screen reader. */
+export const HandleHidden: Story = {
+  args: { handle: 'hidden', header: null },
+  play: async ({ canvasElement }) => {
+    const handle = within(canvasElement).getByTestId('dock-handle');
+    await expect(handle).toHaveAccessibleName('Sheet at half the screen. Raise to full screen');
+    await expect(handle.getBoundingClientRect().height).toBeLessThanOrEqual(1);
+    handle.focus();
+    await userEvent.keyboard('{Enter}');
+    await expect(within(canvasElement).getByTestId('card')).toHaveAttribute('data-snap', 'max');
+  },
+};
+
+/** `footer`: drawn at the sheet's foot on the screen, the rows scrolling under it. */
+export const Footer: Story = {
+  args: { footer, header: null },
+  play: async ({ canvasElement }) => {
+    const host = canvasElement.querySelector('[data-dock-host]') ?? canvasElement;
+    const foot = within(canvasElement).getByTestId('sheet-footer');
+    await waitFor(() =>
+      expect(
+        Math.round(host.getBoundingClientRect().bottom - foot.getBoundingClientRect().bottom),
+      ).toBe(0),
+    );
+  },
+};
+
+/** `footer` at Low: still at the screen's foot, over what Low shows. */
+export const FooterAtLow: Story = {
+  render: (args) => <Keeping {...args} startsAt="low" />,
+  args: { footer, header: null, shape: LIST_SHAPE, height: { snap: 'low', onSnap: fn() } },
+};
+
+/** `floats="dock"` on a wide screen: the map's whole height on the left, 368 wide, the footer beside it. */
+export const Dock: Story = {
+  args: { floats: 'dock', footer, header: null, handle: 'hidden', children: <Rows count={30} /> },
+  parameters: { phone: false },
+  play: async ({ canvasElement }) => {
+    const host = canvasElement.querySelector('[data-dock-host]') ?? canvasElement;
+    const sheet = within(canvasElement).getByTestId('card').getBoundingClientRect();
+    const foot = within(canvasElement).getByTestId('sheet-footer').getBoundingClientRect();
+    await expect(Math.round(sheet.width)).toBe(368);
+    await expect(Math.round(sheet.height)).toBe(Math.round(host.getBoundingClientRect().height));
+    await expect(Math.round(foot.left)).toBe(Math.round(sheet.right));
+  },
+};

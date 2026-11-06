@@ -6,13 +6,14 @@ import { ArrowLeftRightIcon, CloseLargeIcon, FilterIcon } from '@/shared/ui/rout
 import { ModeFilterCard } from './mode-filter-card';
 import { MODE_FILTER_LABEL, type ModeFilter } from '../model/mode-filter';
 
-type RouteListControllerLayout = 'row' | 'column';
+type RouteListControllerLayout = 'row' | 'column' | 'auto';
 
 interface RouteListControllerProps {
   /**
    * Figma's Property 1: Default, a row along a phone sheet's foot, ✕ at the left and ⇆ over the
    * filter at the right; Variant2, a column beside the list docked on a wide screen, ✕ then ⇆ and
-   * the filter.
+   * the filter. `auto`: the row on a phone's sheet and the column where the sheet docks
+   * (`sheet-floating:`), as the route list wears it.
    */
   layout: RouteListControllerLayout;
   /**
@@ -33,14 +34,20 @@ interface RouteListControllerProps {
 const LAYOUT = {
   row: 'flex w-full items-end justify-between px-6 pb-8',
   column: 'flex w-22 flex-col items-center gap-2 px-5 pt-5 pb-8',
+  auto:
+    'flex w-full items-end justify-between px-6 pb-8 ' +
+    'sheet-floating:w-22 sheet-floating:flex-col sheet-floating:items-center sheet-floating:justify-start sheet-floating:gap-2 sheet-floating:px-5 sheet-floating:pt-5',
 } satisfies Record<RouteListControllerLayout, string>;
 
-/** Where the tooltips point from: above the row at a phone's foot, beside the column. */
-const CLOSE_TOOLTIP = { row: 'bottom', column: 'left' } satisfies Record<
+/**
+ * Where the tooltips point from: above the row at a phone's foot, beside the column. `auto` takes
+ * the column's: a tooltip shows on hover alone, and a phone has none.
+ */
+const CLOSE_TOOLTIP = { row: 'bottom', column: 'left', auto: 'left' } satisfies Record<
   RouteListControllerLayout,
   TooltipPosition
 >;
-const SIDE_TOOLTIP = { row: 'right', column: 'left' } satisfies Record<
+const SIDE_TOOLTIP = { row: 'right', column: 'left', auto: 'left' } satisfies Record<
   RouteListControllerLayout,
   TooltipPosition
 >;

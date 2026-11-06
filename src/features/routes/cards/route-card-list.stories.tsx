@@ -87,7 +87,7 @@ const longName: Direction[] = [
   direction('l', `${LONG} – Tala`, `Tala → ${LONG}`, 8.6, true),
 ];
 
-/** Their ways back still slots: nothing to SWITCH to. */
+/** Their ways back still slots: nothing for ⇆ to turn to. */
 const oneWay: Direction[] = [
   direction('c', 'Lagro – Fatima', 'Lagro → Fatima', 2.5),
   direction('c', 'Lagro – Fatima', 'Fatima → Lagro', 2.5, true, false),
@@ -134,7 +134,7 @@ const FRAME = {
 } satisfies Record<Frame, string>;
 const frameOf = (p: { frame?: Frame }) => FRAME[p.frame ?? 'phone'];
 
-/** Keeps the Selected card as the apps do, so a story can be tapped through; SWITCH lets it go. */
+/** Keeps the Selected card as the apps do, so a story can be tapped through; ⇆ lets it go. */
 function Picking(props: ComponentProps<typeof RouteCardList>) {
   const [selected, setSelected] = useState(props.selected);
   const [back, setBack] = useState(props.back);
@@ -195,7 +195,7 @@ type Story = StoryObj<typeof meta>;
 /** On a phone, the way there: a card per place, docked along the bottom. Each card wears its mode's colour. */
 export const Phone: Story = {};
 
-/** SWITCHed: out of Tala both ways, one card — "1 Route". */
+/** Turned round with ⇆: out of Tala both ways, one card — "1 Route". */
 export const Switched: Story = { args: { back: true } };
 
 /** Tala's card picked: pressed in, its routes alone lit on the map. */
@@ -215,7 +215,7 @@ export const Tablet: Story = { parameters: { frame: 'tablet' } };
 /** Taller than the room: the cards scroll under the header. */
 export const ManyPlaces: Story = { args: { routes: many } };
 
-/** The other way round is not drawn yet: SWITCH rests disabled. */
+/** The other way round is not drawn yet: ⇆ rests disabled. */
 export const NothingTheOtherWay: Story = { args: { routes: oneWay } };
 
 /**
@@ -234,7 +234,7 @@ export const EveryLineUnderTheTap: Story = {
   args: { routes: underOneFinger },
   play: async ({ canvasElement }) => {
     const list = within(canvasElement);
-    await expect(list.getByText('2 Routes')).toBeInTheDocument();
+    await expect(list.getByRole('dialog', { name: '2 Routes' })).toBeInTheDocument();
     await expect(list.getByText('Novaliches')).toBeInTheDocument();
     await expect(list.getByText('Tala')).toBeInTheDocument();
   },
@@ -248,7 +248,7 @@ export const WayRoundOnly: Story = {
   args: { routes: underOneFinger, listing: 'way-round' },
   play: async ({ canvasElement }) => {
     const list = within(canvasElement);
-    await expect(list.getByText('1 Route')).toBeInTheDocument();
+    await expect(list.getByRole('dialog', { name: '1 Route' })).toBeInTheDocument();
     await expect(list.queryByText('Novaliches')).toBeNull();
   },
 };
@@ -266,8 +266,8 @@ export const WithAHotspotFloating: Story = {
 };
 
 /**
- * Two boxes and no line: "2 Hotspots", with no route to count, and nothing to
- * SWITCH.
+ * Two boxes and no line: "2 Hotspots", with no route to count, and nothing for
+ * ⇆ to turn.
  */
 export const TwoHotspots: Story = { args: { routes: [], hotspots: twoBoxes } };
 
@@ -278,16 +278,17 @@ export const TwoHotspots: Story = { args: { routes: [], hotspots: twoBoxes } };
 export const OneHintuanTwoBoxes: Story = { args: { routes: [], hotspots: oneHintuan } };
 
 /**
- * Figma's BottomSheetConfiguration (3815:5637) holds the list too: it opens at
- * Middle (Phone, above); a tap on the HandleNotch goes round.
+ * The list's sheet (4633:25516) opens at Middle (Phone, above). It draws no HandleNotch, but the
+ * handle stays for the keyboard: a press on it goes round, Low → Middle → Max.
  */
 const tapHandle = async (canvasElement: HTMLElement, times: number) => {
   const handle = within(canvasElement).getByTestId('dock-handle');
-  for (let i = 0; i < times; i++) await userEvent.click(handle);
+  handle.focus();
+  for (let i = 0; i < times; i++) await userEvent.keyboard('{Enter}');
   handle.blur();
 };
 
-/** Max: the whole map, the count at the top, the places scrolling under it. */
+/** Max (4633:25575): the whole screen, the places scrolling under the Controller. */
 export const SheetMax: Story = {
   args: { routes: many },
   play: async ({ canvasElement }) => {
@@ -296,11 +297,27 @@ export const SheetMax: Story = {
   },
 };
 
-/** Low: the count, SWITCH and the top of the first card, as a trip's card does (3817:6007). */
+/** Low: the first card's mode and name above the Controller, 240 tall. */
 export const SheetLow: Story = {
   play: async ({ canvasElement }) => {
     await tapHandle(canvasElement, 2);
-    await expect(within(canvasElement).getByTestId('chooser')).toHaveAttribute('data-snap', 'low');
+    const sheet = within(canvasElement).getByTestId('chooser');
+    await expect(sheet).toHaveAttribute('data-snap', 'low');
+    await expect(sheet).toHaveAttribute('data-low-px', '240');
+  },
+};
+
+/** A filter with nothing to show under this tap: it says so, with a way back to All. */
+export const FilterWithNoMatch: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole('button', { name: 'Filter' }));
+    const card = within(canvasElement.ownerDocument.body).getByTestId('mode-filter');
+    await userEvent.click(within(card).getByText('Ferry'));
+    await expect(canvas.getByText('No Ferry routes here')).toBeVisible();
+    await expect(canvas.getByRole('dialog', { name: '0 Routes' })).toBeInTheDocument();
+    await userEvent.click(canvas.getByRole('button', { name: 'Show all routes' }));
+    await expect(canvas.queryByText('No Ferry routes here')).toBeNull();
   },
 };
 
@@ -340,7 +357,7 @@ const ikotLoop: Direction = {
 /** A loop in the list, beside Tala's routes: its row says Ikot, and it is there whichever way round the list is. */
 export const WithALoop: Story = { args: { routes: [...talaRoutes, ikotLoop] } };
 
-/** Only a loop: no way back to turn to, so no SWITCH. */
+/** Only a loop: no way back to turn to, so no ⇆. */
 export const OnlyALoop: Story = { args: { routes: [ikotLoop] } };
 
 /**

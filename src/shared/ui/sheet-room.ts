@@ -5,7 +5,7 @@
  * the arithmetic under them takes rects.
  */
 
-import { aboveMiddle, shownAt, type Snap } from './sheet-gesture';
+import { CARD_SHAPE, aboveMiddle, shownAt, type SheetShape, type Snap } from './sheet-gesture';
 
 /** MapLibre's fit padding, a side at a time. */
 export interface Room {
@@ -131,8 +131,18 @@ export function roomFromRects(
  */
 function showsAt(sheet: HTMLElement, snap: Snap): number {
   const h = sheet.offsetHeight;
-  if (snap === 'max') return shownAt('max', h);
-  return shownAt(snap, h) + (parseFloat(getComputedStyle(sheet).paddingBottom) || 0);
+  const shape = shapeOf(sheet);
+  if (snap === 'max') return shownAt('max', h, shape);
+  return shownAt(snap, h, shape) + (parseFloat(getComputedStyle(sheet).paddingBottom) || 0);
+}
+
+/** The sheet's own Low and Max, as BottomSheet writes them on it (its `shape`). */
+function shapeOf(sheet: HTMLElement): SheetShape {
+  const lowPx = Number(sheet.dataset.lowPx);
+  return {
+    lowPx: Number.isFinite(lowPx) && lowPx > 0 ? lowPx : CARD_SHAPE.lowPx,
+    isMaxFull: sheet.hasAttribute('data-max-full'),
+  };
 }
 
 /**
