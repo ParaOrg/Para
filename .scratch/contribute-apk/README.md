@@ -33,3 +33,11 @@ The builder chose these for now, from the owner's decisions. Each waits for the 
   card skeletons now), and after 8 s with no answer give way to their no-signal line with **Try
   again**. Commute Statistics' line had no Try again before; it now has the small secondary one
   History and Account settings use.
+- **Keep Para recording** (`native/keep-recording-panel.tsx`): it replaces the battery card.
+  - **When it shows:** once, at the first Start, on Xiaomi, Redmi, POCO, Oppo, realme, Vivo, iQOO, Huawei, Honor, OnePlus and Samsung. It shows even when battery restrictions are already off, because Android cannot report the maker's Autostart switch.
+  - **What it says:** "Keep Para recording" and "Your phone may stop Para when you leave the app. Turn on Autostart so your rides keep recording."
+  - **Its buttons:**
+    - **Open settings** opens the maker's Autostart or battery screen, or Para's page in Settings when the phone has none.
+    - **Done** starts the ride.
+  - **Its look:** card A's layout, without an icon, because no icon was drawn for it. It keeps the old card's Done.
+  - **In Account settings:** a "Keep Para recording" row, in the app only, opens the same screen. It uses GeneralBar's Settings icon and sits above Delete account.

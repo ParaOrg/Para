@@ -1,6 +1,6 @@
 import { cn } from '@/shared/utils/cn';
 
-import { BatteryPanel } from './battery-panel';
+import { KeepRecordingPanel } from './keep-recording-panel';
 import { LocationOffPanel } from './location-off-panel';
 import { PermissionPanel } from './permission-panel';
 import { RefusedPanel } from './refused-panel';
@@ -13,7 +13,7 @@ interface StartGateProps {
 }
 
 /**
- * The Start bar in the Android app: a tap checks the permissions and, once, the battery help,
+ * The Start bar in the Android app: a tap checks the permissions and, once, Keep Para recording,
  * before the recording begins. Loaded in the app's build only (ready-screen.tsx).
  */
 export function StartGate({ onStart }: StartGateProps) {
@@ -54,11 +54,10 @@ export function StartGate({ onStart }: StartGateProps) {
               onClose={gate.handleClose}
             />
           )}
-          {step.kind === 'battery' && (
-            <BatteryPanel
-              help={step.help}
-              onOpenSettings={gate.handleOpenSettings}
-              onDone={gate.handleBatteryDone}
+          {step.kind === 'keep-recording' && (
+            <KeepRecordingPanel
+              onOpenSettings={gate.handleOpenAutostartSettings}
+              onDone={gate.handleKeepRecordingDone}
             />
           )}
         </div>
