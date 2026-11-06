@@ -62,18 +62,11 @@ export function lookReaders() {
             : null,
         ]),
       ),
-      // Each road mode with a colour of its own at rest: null where the layer is missing.
-      roads: Object.fromEntries(
-        ['uv-express', 'ejeep', 'bus', 'ferry'].map((l) => [
-          l,
-          m.getLayer(`saved-routes-road-${l}`)
-            ? m.getPaintProperty(`saved-routes-road-${l}`, 'line-color')
-            : null,
-        ]),
-      ),
-      casing: m.getPaintProperty('saved-routes-casing', 'line-color'),
-      litCasing: m.getPaintProperty('saved-routes-selected-casing', 'line-color'),
       lit: m.getPaintProperty('saved-routes-selected', 'line-color'),
+      // No rim at rest: the resting casing's layer is there, hidden; the lit lines' is drawn.
+      casingShown: m.getLayoutProperty('saved-routes-casing', 'visibility') !== 'none',
+      litCasing: m.getPaintProperty('saved-routes-selected-casing', 'line-color'),
+      roadLayers: m.getLayersOrder().filter((id) => id.startsWith('saved-routes-road-')),
       shaded,
     };
   };

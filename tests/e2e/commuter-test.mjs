@@ -328,18 +328,14 @@ check(
 );
 
 // 2. Read the map's own data before asserting anything about it.
-// The owner's two looks for the lines (2026-09-29): every one opaque, a jeep's
-// at rest in Jeep's colour (each road mode in its own, README decision 16), the
-// lit ones drawn over them in …/surface-selected, and no layer shading a line. The hexes are
+// The owner's two looks for the lines (2026-09-29): every one opaque in
+// Map/RouteLine/surface-default, the lit ones drawn over them in
+// …/surface-selected, and no layer shading a line. The hexes are
 // map-colours.ts's, read from the dev server; a server that cannot serve it
 // is held to two different colours.
 const MAP = await page.evaluate(async () => {
   try {
-    const { MAP_COLOURS } = await import('/src/design-system/foundation/map-colours.ts');
-    const { LIVERY_LINE } = await import('/src/features/routes/map/livery-line.ts');
-    // A card's line colour by its look: what a road mode rests in.
-    const line = Object.fromEntries(Object.entries(LIVERY_LINE).map(([k, v]) => [k, v.line]));
-    return { ...MAP_COLOURS, line };
+    return (await import('/src/design-system/foundation/map-colours.ts')).MAP_COLOURS;
   } catch {
     return null;
   }
@@ -355,7 +351,9 @@ const sameIds = (a, b) => a.length === b.length && a.every((id) => b.includes(id
 const twoLooks = (p, lit = MAP?.['Map/RouteLine/surface-selected']) =>
   !!p &&
   p.shaded.length === 0 &&
-  (MAP ? p.rest === MAP.line.jeep && p.lit === lit : !!p.rest && p.rest !== p.lit);
+  (MAP
+    ? p.rest === MAP['Map/RouteLine/surface-default'] && p.lit === lit
+    : !!p.rest && p.rest !== p.lit);
 
 // What is lit wears the colour of the card it answers — a picked RouteCard's,
 // an open trip's — its chevrons in the card's words' colour and its end
@@ -1299,7 +1297,7 @@ const firstTapPrograms = async (at) => {
 if (PART === 1) {
   const looks = await paintNow(page);
   check(
-    "the lines rest opaque, a jeep's in Jeep's colour, lit in …/surface-selected, none shaded",
+    'the lines rest opaque in Map/RouteLine/surface-default, lit in …/surface-selected, none shaded',
     twoLooks(looks),
     JSON.stringify(looks),
   );
@@ -1317,15 +1315,19 @@ if (PART === 1) {
         looks?.rails['mrt-3'] === MAP['Map/Rail/MetroRailWayThree/surface-pale'],
       JSON.stringify(looks?.rails),
     );
-  // Each road mode rests in its card's line colour, every line over a neutral/800 casing
-  // (README decision 16).
+  // The owner's route-line rule: at rest one pale for every road route and no rim; lit, the line
+  // on the neutral-800 casing.
   if (MAP)
     check(
-      'a road mode rests in its own colour, each line cased in Map/RouteLine/casing',
-      ['uv-express', 'ejeep', 'bus', 'ferry'].every((l) => looks?.roads[l] === MAP.line[l]) &&
-        looks?.casing === MAP['Map/RouteLine/casing'] &&
+      'at rest every road route in one pale, with no rim; lit, on Map/RouteLine/casing',
+      looks?.roadLayers.length === 0 &&
+        looks?.casingShown === false &&
         looks?.litCasing === MAP['Map/RouteLine/casing'],
-      JSON.stringify({ roads: looks?.roads, casing: looks?.casing, lit: looks?.litCasing }),
+      JSON.stringify({
+        roads: looks?.roadLayers,
+        casing: looks?.casingShown,
+        lit: looks?.litCasing,
+      }),
     );
   const clean = findVertexOutsideHotspots(snapshot.routes, snapshot.polys);
   if (!clean) {

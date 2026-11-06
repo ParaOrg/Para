@@ -5,22 +5,18 @@ import { MAP_COLOURS, MAP_PAINT } from '@/design-system/foundation/map-colours';
 import { LAYERS, firstLayerOfType } from './layers';
 import { litOpacity } from './lighting';
 import { CASING_EXTRA, litWidth, roadWidth } from './line-style';
-import {
-  RAIL_AT_REST,
-  ROAD_AT_REST,
-  ROUTES_LINE,
-  ROUTES_LINE_COLOUR,
-  SAVED_REST_FILTER,
-} from './rail-rest-layers';
+import { RAIL_AT_REST, RESTING_FILTER, ROUTES_LINE, ROUTES_LINE_COLOUR } from './rail-rest-layers';
 import { routesData } from './saved-routes-data';
 import { ROUTES_HIT_LAYER } from './tap';
 import type { Direction } from '../model/routes';
 
 /*
  * The saved directions on the map: their source and their layers (five, and
- * a resting one for each road mode with a colour of its own and each train
- * line, rail-rest-layers.ts). What lights them is lighting.ts's, and
- * the hook that keeps them in step is use-saved-routes-layers.ts.
+ * a resting one for each train line, rail-rest-layers.ts). At rest every road
+ * route is the brand pale and every train its line's pale, with no rim; lit,
+ * a line wears its card's colour (or the selected blue) on the neutral-800
+ * casing. What lights them is lighting.ts's, and the hook that keeps them in
+ * step is use-saved-routes-layers.ts.
  */
 
 export const SRC = 'saved-routes';
@@ -54,12 +50,14 @@ export function addSavedRoutes(
     promoteId: 'id',
     data: routesData(rows),
   });
+  // No rim at rest: the casing stays as a layer, hidden, for the hotspots' boxes and the babaan
+  // sides that are laid under it (saved-hotspots-layers.ts, babaan-sides.ts).
   map.addLayer(
     {
       id: CASING,
       type: 'line',
       source: SRC,
-      layout: { 'line-cap': 'round', 'line-join': 'round' },
+      layout: { 'line-cap': 'round', 'line-join': 'round', visibility: 'none' },
       paint: {
         'line-color': MAP_COLOURS['Map/RouteLine/casing'],
         'line-width': roadWidth(CASING_EXTRA),
@@ -73,19 +71,19 @@ export function addSavedRoutes(
       type: 'line',
       source: SRC,
       layout: { 'line-cap': 'round', 'line-join': 'round' },
-      filter: SAVED_REST_FILTER[LINE],
+      filter: RESTING_FILTER[LINE],
       paint: { 'line-color': ROUTES_LINE_COLOUR, 'line-width': roadWidth(0) },
     },
     before,
   );
-  for (const { id, colour } of [...Object.values(ROAD_AT_REST), ...Object.values(RAIL_AT_REST)])
+  for (const { id, colour } of Object.values(RAIL_AT_REST))
     map.addLayer(
       {
         id,
         type: 'line',
         source: SRC,
         layout: { 'line-cap': 'round', 'line-join': 'round' },
-        filter: SAVED_REST_FILTER[id],
+        filter: RESTING_FILTER[id],
         paint: { 'line-color': colour, 'line-width': roadWidth(0) },
       },
       before,

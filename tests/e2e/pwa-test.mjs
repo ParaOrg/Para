@@ -96,7 +96,7 @@ console.log(`preview at ${base}`);
  * Opens a trip as a commuter does, by a tap on its line. A production build
  * keeps its map to itself (no window.__map) and trip links went on
  * 2026-10-03, so the line is found on a screenshot: a pixel in the colour
- * a jeep's route rests in (Jeep's line colour, #1447e6), away from the
+ * routes rest in (Map/RouteLine/surface-default, #c1bfff), away from the
  * screen's edges. A tap there opens a trip, or the route list where routes
  * share the road, whose first row then opens one. The directions it may be,
  * with its name: the row's own when the list was used, else every direction
@@ -122,7 +122,7 @@ async function openSomeTrip(page) {
         for (let x = Math.round(width * 0.1); x < width * 0.9; x += 2) {
           const k = (y * width + x) * 4;
           if (
-            Math.abs(data[k] - 0x14) + Math.abs(data[k + 1] - 0x47) + Math.abs(data[k + 2] - 0xe6) <
+            Math.abs(data[k] - 0xc1) + Math.abs(data[k + 1] - 0xbf) + Math.abs(data[k + 2] - 0xff) <
             12
           )
             hits.push([x / scale, y / scale]);
