@@ -1112,7 +1112,10 @@ if (PART !== 1) {
         );
       };
       const before = await listedNow();
-      const firstCard = cards.first();
+      // A card at rest: the checks above may leave one picked.
+      const firstCard = chooser
+        .locator('[data-testid="chooser-origin"][data-state="rest"]')
+        .first();
       await firstCard.locator('[data-testid="chooser-select"]').click();
       const pickedFirst = (await inState(firstCard, 'selected')) === 'selected';
       const agree = [];
