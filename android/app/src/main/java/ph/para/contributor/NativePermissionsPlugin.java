@@ -156,7 +156,22 @@ public class NativePermissionsPlugin extends Plugin {
         state.put("sdk", Build.VERSION.SDK_INT);
         state.put("manufacturer", Build.MANUFACTURER.toLowerCase(Locale.ROOT));
         state.put("isUnrestricted", power.isIgnoringBatteryOptimizations(getContext().getPackageName()));
+        LocationManager location = (LocationManager) getContext().getSystemService(Context.LOCATION_SERVICE);
+        state.put("isLocationOn", location != null && LocationManagerCompat.isLocationEnabled(location));
         call.resolve(state);
+    }
+
+    /** The phone's Location settings, where its switch is; Para's own page if a phone has none. */
+    @PluginMethod
+    public void openLocationSettings(PluginCall call) {
+        Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        try {
+            getContext().startActivity(intent);
+        } catch (android.content.ActivityNotFoundException none) {
+            openAppSettings(call);
+            return;
+        }
+        call.resolve();
     }
 
     /** Para's page in the phone's Settings, where Permissions and Battery are one tap away. */

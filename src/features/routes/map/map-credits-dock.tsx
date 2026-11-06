@@ -28,6 +28,7 @@ export function MapCreditsDock({ isDocked, onOpen, buttonRef }: MapCreditsDockPr
   const y = isDocked ? `max(var(--dock-y, 100%), ${HIGHEST})` : '100%';
   return (
     <div
+      data-dock-follower
       className={
         'pointer-events-none absolute inset-0 z-[5] ' +
         'transition-[translate] duration-sheet ease-enter in-data-dock-dragging:transition-none motion-reduce:transition-none ' +

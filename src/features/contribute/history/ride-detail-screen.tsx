@@ -81,6 +81,7 @@ export function RideDetailScreen({ ride, onBack }: RideDetailScreenProps) {
           question, out of reach: its Escape and focus are the question's alone. */}
       <div
         inert={isAsking}
+        data-dock-follower
         className="absolute inset-0 transition-[translate] duration-sheet ease-enter in-data-dock-dragging:transition-none motion-reduce:transition-none"
         // With no sheet yet (the ride still being found), at the map's foot.
         style={{ translate: `0 max(var(--dock-y, 100%), ${DOCK_TOP_CSS})` }}
