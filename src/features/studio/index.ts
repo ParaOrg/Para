@@ -23,7 +23,6 @@ export { useStudioMap } from './maps/use-studio-map';
 export { useWheelNavigation } from './maps/use-wheel-navigation';
 export { AccountPill } from './panels/account-pill';
 export { NEW_MENU_DOCK_FOOT, NewMenu } from './panels/new-menu';
-export { returnTripLeft } from './panels/return-trip';
 export { SaveToasts } from './panels/save-toasts';
 export { StudioHotspotCard } from './panels/studio-hotspot-card';
 export { StudioSaveSheets } from './panels/studio-save-sheets';

@@ -1,0 +1,32 @@
+-- ParaPo — the map tables are written only through the draft functions:
+-- editors lose the direct insert, update and delete on route, route_variant,
+-- stop and route_stop.
+--
+-- Clean-up step 4 of .scratch/codebase-review/database.md (H1). 0005 and 0015
+-- let any editor insert, update or delete those four tables directly. The
+-- studio stopped writing them directly: since production turned drafts on, and
+-- in code since #748 removed the direct-write path. Every change to the map
+-- goes through claim_draft, save_draft and publish_draft (or take_down,
+-- put_back, unpublish), which run with their owner's rights and keep working.
+-- The grants were left over, so an old cached studio build, a script or an
+-- editor's browser console could still change or hard-delete published rows
+-- with no draft, no publish and no takedown record; a direct DELETE of a
+-- route cascades to its directions and links.
+--
+-- Now authenticated keeps select only. The write policies of 0005 and 0015
+-- stay: without the grants they let nothing through, and a later tidy-up can
+-- drop them. anon has had no writes since 0017. service_role, which the
+-- overview backfill (scripts/publish/backfill-overview.mjs) writes with, is
+-- unchanged.
+--
+-- Safe to apply now: the studio on main and on staging writes these tables
+-- only through the draft functions.
+--
+-- Order: after 20261105160000_draft_published (its apply refuses without it).
+-- Not applied by the session that wrote it: the owner applies it, as
+-- postgres, from supabase/apply/20261105190000_lock_map_tables_apply.sql,
+-- then records the ledger version. Safe to run twice. Undo:
+-- supabase/apply/20261105190000_lock_map_tables_revert.sql.
+
+revoke insert, update, delete on public.route, public.route_variant, public.stop, public.route_stop
+  from authenticated;

@@ -17,6 +17,7 @@ import {
   CARD_PALE_COLOURS,
   MAP_COLOURS,
   MAP_PAINT,
+  MONOCHROME_LEAN,
 } from '../../src/design-system/foundation/map-colours.ts';
 
 const read = (path) => readFileSync(new URL(path, import.meta.url), 'utf8');
@@ -184,6 +185,10 @@ test('no colour is written in the map code outside map-colours.ts', () => {
     }
   }
   assert.deepEqual(found, []);
+});
+
+test("Monochrome's lean is parabrand/600, as tokens.css has it", () => {
+  assert.equal(MONOCHROME_LEAN.brand, primitiveHex('parabrand-600'));
 });
 
 test('every MAP_PAINT colour is one MapLibre reads: a hex, or rgb()', () => {

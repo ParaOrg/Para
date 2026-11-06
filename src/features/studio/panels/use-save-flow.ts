@@ -41,10 +41,9 @@ export function useSaveFlow({
   // link is read once, on arrival, so its error is known before this mounts
   // and never comes later.
   const [toast, setToast] = useState<SaveToast | null>(() =>
-    recoveryError ? { kind: 'notice', text: `Reset link problem: ${recoveryError}` } : null,
+    recoveryError ? { text: `Reset link problem: ${recoveryError}` } : null,
   );
-  const setNotice = (text: string | null) =>
-    setToast(text === null ? null : { kind: 'notice', text });
+  const setNotice = (text: string | null) => setToast(text === null ? null : { text });
 
   // A save is a draft, so nothing on the map is read again.
   const onDrafted = () => {
@@ -77,8 +76,6 @@ export function useSaveFlow({
     toast,
     setToast,
     setNotice,
-    /** The direction a save just wrote, while its toast is up. */
-    justSaved: toast?.kind === 'route' ? toast.v : null,
     onDrafted,
     onPublished,
     onUnpublished,

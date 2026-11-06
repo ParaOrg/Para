@@ -315,6 +315,22 @@ delete_account_keep_uploads, the apply refuses and writes no ledger row. On a th
 leaves the schema as before, and re-applying passes the check. Without the trigger the check fails at its
 first step.
 
+## lock-map-tables.sh
+
+`migrations/20261105190000_lock_map_tables.sql` on databases of its own, run last by `run.sh` or alone:
+
+    PSQL="docker exec -i pg-verify psql -U postgres" bash supabase/verify/lock-map-tables.sh
+
+It applies every earlier migration and the review paste files as live has them (through draft_published),
+then `../apply/20261105190000_lock_map_tables_apply.sql` twice (the second run must stop and change nothing),
+and runs `…_check.sql`: its rolled-back behaviour part (every direct insert, update and delete on route,
+route_variant, stop and route_stop refused for an editor; reads kept; a hotspot claimed and published, a route
+unpublished and published back, a take-down and put-back) must raise nothing and leave no row behind, and its
+4 read-only rows must be `t`. Then `draft-published-race.sh`, `concurrency-0022.sh`, `deadlock-0022.sh` and
+`studio-drafts.sh`, which change the map only through the draft functions, run again over it. On a second
+database, without draft_published, the apply refuses and writes no ledger row. On a third, apply then revert
+twice leaves the schema as before, and re-applying passes the check.
+
 ## drop-dead-weight.sh
 
 `migrations/20261105200000_drop_dead_weight.sql` on databases of its own, run last by `run.sh` or alone:
@@ -332,3 +348,22 @@ must raise nothing and leave no row behind, and its 5 read-only rows must be `t`
 keep_uploads_on_user_delete, the apply refuses and writes no ledger row. On a third, apply then revert twice
 leaves the schema as before, line for line once the dumps are sorted (the two columns come back at the end of
 `route`), and re-applying passes the check.
+
+## schema-snapshot.sh
+
+`../schema/snapshot.sql` is the `public` and `private` schemas as the live project has them, in one file:
+tables, columns, indexes, functions as they stand after every copy, triggers, row-security policies and
+grants, and no rows. It ends having to read three migrations to know what one function does now (review M5,
+M6). It is never applied.
+
+    PSQL="docker exec -i pg-verify psql -U postgres" bash supabase/verify/schema-snapshot.sh           # check, run last by run.sh
+    PSQL="docker exec -i pg-verify psql -U postgres" bash supabase/verify/schema-snapshot.sh --write   # rewrite
+
+The script builds a database from every migration the ledger lists, in the ledger's order (not the file
+names' order), each through its paste file where it has one, as the owner applied it. It then dumps the two
+schemas (`pg_dump --schema-only --no-owner`). The check fails when the snapshot differs. When a migration is
+recorded as applied, add it to `APPLIED` in the script and rewrite the snapshot in the same change. A
+migration not yet applied stays out until it is.
+
+It is rebuilt here, not read from the live project, so it has what the migrations made. It does not have
+what Supabase adds around them, such as `service_role`'s grants and Supabase's own schemas.
