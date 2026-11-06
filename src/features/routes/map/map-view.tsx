@@ -13,14 +13,7 @@ import { useEffect, useRef, useState } from 'react';
 import { basemapHost } from '@/shared/config/env';
 import { noop } from '@/shared/utils/noop';
 
-import {
-  BASEMAPS,
-  DEFAULT_BASEMAP,
-  initialStyle,
-  readBasemap,
-  type Basemap,
-  type StyleCopies,
-} from './basemap';
+import { BASEMAPS, DEFAULT_BASEMAP, initialStyle, readBasemap, type Basemap } from './basemap';
 import { BasemapControl, type MapButtonStyle } from './basemap-control';
 import { BASEMAP_THUMBNAILS } from './basemap-thumbnails';
 import { diagnose, type Diagnosis } from './diagnose';
@@ -194,11 +187,11 @@ interface Props {
    */
   isCovered?: boolean;
   /**
-   * The contributor app's copies of the basemaps' styles: the map is made with one when its
-   * style cannot be fetched, so it loads with no signal (basemap.ts, initialStyle). Read once,
-   * as the map is made.
+   * What the map is made with in place of `initialStyle`: the contributor app's, which falls back
+   * to its copies of the basemaps' styles, so it loads with no signal
+   * (features/contribute/map/basemap-copies.ts). Read once, as the map is made.
    */
-  styleCopies?: StyleCopies;
+  makeStyle?: typeof initialStyle;
   /**
    * The contributor app's: what each request the map makes is sent as, its basemap through the
    * app's cache (features/contribute/map/basemap-cache.ts). The public map's notes its tiles
@@ -237,7 +230,7 @@ export function MapView({
   creditsAtBottom = false,
   areCreditsShown = true,
   isCovered = false,
-  styleCopies,
+  makeStyle = initialStyle,
   transformRequest,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -297,7 +290,7 @@ export function MapView({
       // Beside it, the public map's framing (`openOn`): none if it fails or
       // has not come within OPENING_WAIT_MS.
       const [style, framing] = await Promise.all([
-        initialStyle(basemap, areLabelsShown, styleCopies),
+        makeStyle(basemap, areLabelsShown),
         openOn ? within(openOn(), OPENING_WAIT_MS, null) : null,
       ]);
       if (cancelled || !containerRef.current) return;
@@ -476,7 +469,7 @@ export function MapView({
       setReady(null);
       map?.remove();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- the map is made once: `basemap`, `zoomButtons`, `maxBounds`, `foldCredits`, `openOn`, `styleCopies` and `transformRequest` are read once, as it is made (each prop says so)
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- the map is made once: `basemap`, `zoomButtons`, `maxBounds`, `foldCredits`, `openOn`, `makeStyle` and `transformRequest` are read once, as it is made (each prop says so)
   }, []);
 
   return (
