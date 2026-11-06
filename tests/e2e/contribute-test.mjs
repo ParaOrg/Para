@@ -194,10 +194,20 @@ const openHistory = async (page) => {
   await history.click();
   await heading.waitFor();
 };
-/** The first card's ⋮ menu opened, so its Remove from this phone is there to press. */
-const openCardMenu = async (page) => {
-  const more = page.getByRole('button', { name: /^More actions/ }).first();
-  if ((await more.getAttribute('aria-expanded')) !== 'true') await more.click();
+/** The first card opened: its ride's screen, the sheet folded. */
+const openFirstRide = async (page) => {
+  await page.locator('[data-ride-card]').first().click();
+  await page.getByTestId('dock-handle').waitFor();
+};
+/** The open ride's sheet raised, Delete this record asked and confirmed: back on History. */
+const deleteRecord = async (page) => {
+  await page.getByTestId('dock-handle').click();
+  await page.getByRole('button', { name: 'Delete this record' }).click();
+  await page
+    .getByRole('alertdialog', { name: 'You want to remove this recording?' })
+    .getByRole('button', { name: 'Delete this record' })
+    .click();
+  await page.getByRole('heading', { level: 1, name: 'History' }).waitFor();
 };
 /**
  * The newest saved recording on this phone, read back from IndexedDB as History reads it, with
@@ -361,6 +371,13 @@ const buttons = (page) =>
   await page.waitForFunction(() => !!window.__map?.loaded(), null, { timeout: 30000 });
   const locatorWatchersBefore = await page.evaluate(() => window.__locatorWatchers());
   const dialog = page.getByRole('dialog');
+  const help = page.getByRole('button', { name: 'How to record' });
+  const offer = page.getByRole('region', { name: 'Track your routes' });
+  /** The ?, then the card's Start Tutorial: the way into the tutorial. */
+  const openTutorial = async () => {
+    await help.click();
+    await offer.getByRole('button', { name: 'Start Tutorial' }).click();
+  };
   /** The coachmark's spotlight round the control it names, and its card on the near side. */
   const placement = (name) =>
     page.evaluate((label) => {
@@ -393,7 +410,7 @@ const buttons = (page) =>
     ['Stop without saving', 'Discard recording'],
     ['Finish and save', 'Finish'],
   ];
-  await page.getByRole('button', { name: 'How to record' }).click();
+  await openTutorial();
   for (const [index, [title, target]] of STEPS.entries()) {
     await dialog.getByRole('heading', { name: title }).waitFor({ timeout: 10000 });
     const isLast = index === STEPS.length - 1;
@@ -479,9 +496,42 @@ const buttons = (page) =>
       (await page.evaluate(() => window.__watchers())) === 0,
   );
 
+  // The ? offers the tutorial first: Later, Escape and a tap outside close the offer and nothing else.
+  {
+    await help.click();
+    await offer.waitFor({ timeout: 5000 });
+    const open = {
+      isFocusInCard: await page.evaluate(
+        () => !!document.activeElement?.closest('section[aria-labelledby]'),
+      ),
+      texts: await offer.locator('button').allTextContents(),
+      dialogs: await dialog.count(),
+    };
+    check(
+      '  the ? opens the "Track your routes" card with Later then Start Tutorial, focus in it, no tutorial yet',
+      open.isFocusInCard && open.texts.join('|') === 'Later|Start Tutorial' && open.dialogs === 0,
+      JSON.stringify(open),
+    );
+    for (const close of ['Later', 'Escape', 'outside']) {
+      if (close === 'Later') await offer.getByRole('button', { name: 'Later' }).click();
+      else if (close === 'Escape') await page.keyboard.press('Escape');
+      else await page.mouse.click(196, 600);
+      await offer.waitFor({ state: 'detached', timeout: 5000 });
+      check(
+        `  ${close} closes the card: no tutorial, focus on the ?`,
+        (await dialog.count()) === 0 &&
+          (await page.evaluate(() => document.activeElement?.getAttribute('aria-label'))) ===
+            'How to record',
+      );
+      await help.click();
+      await offer.waitFor({ timeout: 5000 });
+    }
+    await page.keyboard.press('Escape');
+    await offer.waitFor({ state: 'detached', timeout: 5000 });
+  }
   // Leaving part-way, by Skip and by Escape, is back on Record too.
   for (const leave of ['Skip', 'Escape']) {
-    await page.getByRole('button', { name: 'How to record' }).click();
+    await openTutorial();
     await dialog.getByRole('heading', { name: 'Start tracking' }).waitFor({ timeout: 10000 });
     await dialog.getByRole('button', { name: 'Next' }).click();
     await dialog.getByRole('heading', { name: 'Lakad or Sakay' }).waitFor();
@@ -503,7 +553,7 @@ const buttons = (page) =>
       url: location.href,
       length: window.history.length,
     }));
-    await page.getByRole('button', { name: 'How to record' }).click();
+    await openTutorial();
     await dialog.getByRole('heading', { name: 'Start tracking' }).waitFor({ timeout: 10000 });
     await dialog.getByRole('button', { name: 'Next' }).click();
     await dialog.getByRole('heading', { name: 'Lakad or Sakay' }).waitFor();
@@ -524,7 +574,7 @@ const buttons = (page) =>
   }
   // A move to another screen by its hash (the browser's Forward, say) ends it as well.
   {
-    await page.getByRole('button', { name: 'How to record' }).click();
+    await openTutorial();
     await dialog.getByRole('button', { name: 'Next' }).click();
     await dialog.getByRole('heading', { name: 'Lakad or Sakay' }).waitFor();
     await page.evaluate(() => {
@@ -1924,9 +1974,8 @@ const buttons = (page) =>
     );
   }
   check('  (its picture kept again)', (await thumbnails()).length === 1);
-  await openCardMenu(page);
-  await page.getByRole('button', { name: /^Remove from this phone, / }).click();
-  await page.getByRole('button', { name: 'Remove', exact: true }).click();
+  await openFirstRide(page);
+  await deleteRecord(page);
   await page.getByText('No recordings yet.').waitFor();
   check('  deleting the recording deletes its picture', (await thumbnails()).length === 0);
   check('  no page error', errors.length === 0, errors.join('; '));
@@ -2368,20 +2417,13 @@ const buttons = (page) =>
   await page.getByRole('button', { name: 'Save recording' }).click();
   await page.getByTestId('toast').filter({ hasText: 'Route recorded' }).waitFor();
   await openHistory(page);
-  await openCardMenu(page);
-  const rowRemoves = page.getByRole('button', {
-    name: /^Remove from this phone, the recording of .*, Reload me$/,
-  });
-  await rowRemoves.first().waitFor();
-  check('the recording just saved is listed in History', (await rowRemoves.count()) === 1);
-  check(
-    '  and its ⋮ offers no Download',
-    (await page.getByRole('button', { name: /^Download recording/ }).count()) === 0,
-  );
+  const rowTitles = page.locator('[data-ride-card]').filter({ hasText: 'Reload me' });
+  await rowTitles.first().waitFor();
+  check('the recording just saved is listed in History', (await rowTitles.count()) === 1);
   await page.reload({ waitUntil: 'load' });
   await openHistory(page);
-  await openCardMenu(page);
-  check('after a reload it is still listed', (await rowRemoves.count()) === 1);
+  await rowTitles.first().waitFor();
+  check('after a reload it is still listed', (await rowTitles.count()) === 1);
   const file = await lastSavedRide(page);
   check(
     '  and the phone still holds that recording',
@@ -2732,14 +2774,10 @@ const ANIMATIONS = () => {
     .getByRole('heading', { level: 1, name: 'History' })
     .waitFor({ timeout: 5000 })
     .catch(() => {});
-  await openCardMenu(second);
   check(
     '  once the first tab saves, the second lists it without a reload',
-    (await second
-      .getByRole('button', {
-        name: /^Remove from this phone, the recording of .*, From the first tab$/,
-      })
-      .count()) === 1,
+    (await second.locator('[data-ride-card]').filter({ hasText: 'From the first tab' }).count()) ===
+      1,
   );
   // The first tab closes: the second is handed the recorder, as a page opened afresh would be.
   await page.close();

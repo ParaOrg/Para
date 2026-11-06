@@ -65,3 +65,22 @@ export function cardDistanceText(metres: number): string {
   if (whole < 10_000) return `${kilometresText(whole)} km`;
   return `${Math.round(whole / 1000)} km`;
 }
+
+/**
+ * A trip's whole time, in words, as the ride's screen says it: `4 hr 30 mins and 40 secs`,
+ * `12 mins`, `40 secs`. Parts that are zero are left out; under a second reads `0 secs`.
+ */
+export function tripTimeText(seconds: number): string {
+  const whole = Math.max(0, Math.floor(seconds));
+  const hours = Math.floor(whole / 3600);
+  const minutes = Math.floor((whole % 3600) / 60);
+  const secs = whole % 60;
+  const parts = [
+    hours > 0 && `${hours} hr`,
+    minutes > 0 && `${minutes} ${minutes === 1 ? 'min' : 'mins'}`,
+    secs > 0 && `${secs} ${secs === 1 ? 'sec' : 'secs'}`,
+  ].filter((part) => part !== false);
+  if (parts.length === 0) return '0 secs';
+  const last = parts.pop();
+  return parts.length === 0 ? `${last}` : `${parts.join(' ')} and ${last}`;
+}

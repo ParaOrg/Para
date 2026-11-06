@@ -71,14 +71,14 @@ jobs:
     env:
       SHOULD_UPLOAD: ${{ github.event_name == 'schedule' || github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.upload) }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
       - run: echo "WORK=$RUNNER_TEMP/tiles" >> "$GITHUB_ENV"
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
-      - uses: actions/setup-java@v5
+      - uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: 21
@@ -120,7 +120,7 @@ jobs:
       # Planetiler's own downloads come from three third-party hosts. An upload run keeps a copy in
       # R2 (sources.sh); a pull request, which does not read R2, uses GitHub's cache (dropped after
       # 7 days unused) and then upstream.
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         with:
           path: ${{ env.WORK }}/data/sources
           key: planetiler-sources-${{ env.PLANETILER_VERSION }}
@@ -205,11 +205,11 @@ jobs:
       contents: read
       issues: write
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
           sparse-checkout: scripts/watch
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
       - name: Open or update the alert issue

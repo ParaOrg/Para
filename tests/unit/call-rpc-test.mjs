@@ -446,7 +446,7 @@ describe('every error a caller sees, word for word', () => {
 
   // delete_my_account.
 
-  const deleteAll = () => deleteAccount({ deleteUploads: true });
+  const deleteAll = () => deleteAccount();
 
   test('delete_my_account: with no account signed in it is not asked', async () => {
     client.session = null;
@@ -459,7 +459,8 @@ describe('every error a caller sees, word for word', () => {
     const { error, warns } = await whenAnswered(noAnswer('TypeError: Failed to fetch'), deleteAll);
     assertError(error, AccountError, 'offline', 'TypeError: Failed to fetch');
     assert.deepEqual(warns, []);
-    assert.deepEqual(client.calls[0].args, { delete_uploads: true });
+    // Always asked to keep the uploads: left out, the function's default deletes them.
+    assert.deepEqual(client.calls[0].args, { delete_uploads: false });
   });
 
   test('delete_my_account: 42501 and owns_map_rows are not-deletable, with no warning', async () => {

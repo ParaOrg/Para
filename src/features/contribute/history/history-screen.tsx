@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Button } from '@/design-system/primitives/button';
 import { cn } from '@/shared/utils/cn';
 
-import { HISTORY_HEADING_ID, canUploadFromMenu } from './card-status';
+import { HISTORY_HEADING_ID } from './card-status';
 import { HistoryCard } from './history-card';
 import { HistoryLoadLine } from './history-load-line';
 import { HistorySkeleton } from './history-skeleton';
@@ -16,14 +16,6 @@ import { useScreenEntry } from '../motion/use-screen-entry';
 import { SCREENS } from '../navigation/screen-routes';
 import type { Recording } from '../storage/recording-schema';
 import { TOOLBAR_FOOT, TOOLBAR_ROOM } from '../toolbar/toolbar-place';
-import type { UploadStatus } from '../uploads/upload-state';
-
-/** In flight: taking the recording off the phone now would cut that short. */
-const BUSY_STATES: ReadonlySet<UploadStatus['state']> = new Set([
-  'checking',
-  'uploading',
-  'removing',
-]);
 
 interface HistoryScreenProps {
   items: HistoryItems;
@@ -31,7 +23,8 @@ interface HistoryScreenProps {
   pictures: ReadonlyMap<string, string>;
   /** Record a route, with nothing recorded yet: back to Start. */
   onOpenRecord: () => void;
-  onRemoveFromPhone: (recording: Recording) => void;
+  /** A card tapped: its ride's screen. */
+  onOpenRide: (recording: Recording) => void;
 }
 
 /**
@@ -39,17 +32,12 @@ interface HistoryScreenProps {
  * scrolls under it, and every recording newest first, this phone's and the account's uploads from
  * its other phones alike, over the page's toolbar (contribute-page.tsx) with History marked.
  */
-export function HistoryScreen({
-  items,
-  pictures,
-  onOpenRecord,
-  onRemoveFromPhone,
-}: HistoryScreenProps) {
+export function HistoryScreen({ items, pictures, onOpenRecord, onOpenRide }: HistoryScreenProps) {
   const headingRef = useFocusHeading();
   const entryRef = useScreenEntry<HTMLElement>();
   const [isScrolled, setIsScrolled] = useState(false);
   const isOnline = useIsOnline();
-  const { recordings, uploads, isOnPhone, factsOf, load } = items;
+  const { recordings, uploads, factsOf, load } = items;
   // Nothing to list until the account's uploads come: their cards' shapes stand in for them.
   const isFirstLoad = load.state === 'loading' && recordings.length === 0;
   const isSkeletonShown = useIsSlowLoad(isFirstLoad);
@@ -91,29 +79,18 @@ export function HistoryScreen({
         )}
         {recordings.length > 0 && (
           <ul aria-label="Recordings" className="flex flex-col gap-3">
-            {recordings.map((recording) => {
-              const status = uploads.statusOf(recording);
-              const isKept = isOnPhone(recording);
-              return (
-                <HistoryCard
-                  key={recording.id}
-                  recording={recording}
-                  status={status}
-                  actions={{
-                    canUpload: isKept && canUploadFromMenu(status),
-                    isOnPhone: isKept,
-                    canDeleteFromPara: uploads.canRemove(recording),
-                    isBusy: BUSY_STATES.has(status.state),
-                  }}
-                  facts={factsOf(recording)}
-                  picture={pictures.get(recording.id) ?? null}
-                  isOnline={isOnline}
-                  onUpload={() => uploads.upload(recording)}
-                  onDeleteFromPara={() => void uploads.removeUploaded(recording)}
-                  onRemoveFromPhone={() => onRemoveFromPhone(recording)}
-                />
-              );
-            })}
+            {recordings.map((recording) => (
+              <HistoryCard
+                key={recording.id}
+                recording={recording}
+                status={uploads.statusOf(recording)}
+                facts={factsOf(recording)}
+                picture={pictures.get(recording.id) ?? null}
+                isOnline={isOnline}
+                onOpen={() => onOpenRide(recording)}
+                onRetry={() => uploads.upload(recording)}
+              />
+            ))}
           </ul>
         )}
         {/* Over a list already drawn, Loading waits under it: going, it moves no card. */}

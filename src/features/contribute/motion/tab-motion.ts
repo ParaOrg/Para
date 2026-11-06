@@ -6,7 +6,7 @@ import {
   SCREEN_HASH_ATTR,
   TOOLBAR_TAB_ATTR,
 } from '../common/data-attributes';
-import { orderOf, SCREENS } from '../navigation/screen-routes';
+import { orderOf, SCREENS, screenHashOf } from '../navigation/screen-routes';
 
 import './tab-motion.css';
 
@@ -67,7 +67,9 @@ export function screenEntryDirection(): MotionDirection | null {
  * Account settings) in sight, or for Record none of them over the map. A screen the page cannot open now
  * (its `[data-screens]`) never draws: nothing to wait for.
  */
-function isDrawn(hash: string): boolean {
+function isDrawn(fullHash: string): boolean {
+  // A ride's hash names its ride (`#ride/<id>`); its screen is marked with the screen's own.
+  const hash = screenHashOf(fullHash);
   // A screen kept but hidden (contribute-page.tsx) is not drawn.
   const screens = [...document.querySelectorAll(`[${SCREEN_HASH_ATTR}]`)].filter((screen) =>
     screen.checkVisibility(),

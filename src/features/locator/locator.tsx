@@ -3,7 +3,7 @@ import { useEffect, useRef, type ReactNode } from 'react';
 
 import type { Basemap } from '@/features/routes/map/basemap';
 import type { LabelsPlace } from '@/features/routes/map/location-labels';
-import { slide } from '@/shared/ui/sheet-gesture';
+import { DOCK_TOP_CSS, slide } from '@/shared/ui/sheet-gesture';
 
 import { LocationAndMapControl } from './location-and-map-control';
 import { LocatorButton } from './locator-button';
@@ -23,6 +23,13 @@ interface Props {
   labelsPlace: LabelsPlace;
   /** A card is open: the button sits on its sheet rather than at the map's foot. */
   docked: boolean;
+  /**
+   * Docked, it follows the sheet up to Middle and stays there, the sheet covering it above
+   * (`middle`, the public map's). A fitted sheet's open height is its content's, the map in sight
+   * above it, so the button rides on it up to just under the status bar (`top`, the contributor's
+   * ride: DOCK_TOP_CSS), the sheet covering it only when its content fills the screen.
+   */
+  dockCap?: 'middle' | 'top';
   /** Stands directly above the pill, hidden while the Map Style card is open; the contributor's mark button. */
   above?: ReactNode;
   /**
@@ -45,7 +52,8 @@ const LABEL = {
  * placed as ScreenLocationBehavior draws the LocatorButton (Figma
  * 3870:5941): at the map's right edge, 12 above the card's sheet, following
  * it down from Middle to Low; up past Middle it stays where Middle left it,
- * and the sheet covers it. With no card open it sits at the map's foot. Where
+ * and the sheet covers it (unless `dockCap` is `top`, over a fitted sheet,
+ * where it rides higher, up to DOCK_TOP_CSS). With no card open it sits at the map's foot. Where
  * the card floats in the corner (`@float:`), which the frame does not show, it
  * sits at the bottom right, clear of the credit line.
  * BottomSheet says where its top is as `--dock-y` on the page; this layer
@@ -62,6 +70,7 @@ export function Locator({
   basemapThumbnails,
   labelsPlace,
   docked,
+  dockCap = 'middle',
   above,
   onNote,
 }: Props) {
@@ -93,7 +102,7 @@ export function Locator({
   // gap over that foot and from the right edge; the contributor page sets them,
   // the public map keeps 0.75rem each.
   const y = docked
-    ? `max(var(--dock-y, 100%), ${slide('middle')})`
+    ? `max(var(--dock-y, 100%), ${dockCap === 'top' ? DOCK_TOP_CSS : slide('middle')})`
     : 'calc(100% - max(env(safe-area-inset-bottom), var(--dock-foot, 0px)))';
   return (
     <div

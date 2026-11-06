@@ -16,20 +16,14 @@ export function DeleteAccountView({ onBack }: DeleteAccountViewProps) {
   const deletion = useDeleteAccountMutation();
   // Two taps in one moment start one delete: isPending is only seen on the next render.
   const isSending = useRef(false);
-  const handleDelete = (deleteUploads: boolean) => {
+  const handleDelete = () => {
     if (isSending.current) return;
     isSending.current = true;
-    // A try again after an answer that never came may carry the switch changed meanwhile; Para
-    // acted on the first, and answers an account already gone as deleted, so this one changes
-    // nothing there.
-    deletion.mutate(
-      { deleteUploads },
-      {
-        onSettled: () => {
-          isSending.current = false;
-        },
+    deletion.mutate(undefined, {
+      onSettled: () => {
+        isSending.current = false;
       },
-    );
+    });
   };
   return (
     <DeleteAccountScreen

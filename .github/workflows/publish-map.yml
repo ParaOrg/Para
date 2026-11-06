@@ -100,12 +100,12 @@ jobs:
       # deploy key and without keeping the token: the install and the publish
       # below run third-party code, and nothing that can push may be on disk
       # while they do. Only the commit step gets the key.
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           ref: main
           persist-credentials: false
 
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
@@ -246,11 +246,11 @@ jobs:
       contents: read
       issues: write
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
           sparse-checkout: scripts/watch
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
       - name: Open or update the alert issue
