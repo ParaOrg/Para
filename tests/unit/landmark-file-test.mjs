@@ -6,6 +6,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { haversine } from '../../src/shared/utils/geo.ts';
 import {
   LANDMARK_FILE_MAX_BYTES,
   LANDMARK_FILE_PATH,
@@ -21,6 +22,7 @@ import {
   osmIdOf,
   pointOf,
   ringCentroid,
+  samplesAlong,
   streetLandmarks,
   withoutRepeats,
 } from '../../scripts/landmarks/landmarks.mjs';
@@ -85,7 +87,7 @@ test('the kinds are what the owner listed: no shops, no houses, no nameless plac
   assert.equal(landmarkKind({ name: 'FEU Institute', amenity: 'college' }), 'university');
   assert.equal(
     landmarkKind({ name: 'Quiapo Church', amenity: 'place_of_worship', religion: 'christian' }),
-    'church',
+    'worship',
   );
   assert.equal(landmarkKind({ name: 'Cubao', railway: 'station' }), 'station');
   assert.equal(landmarkKind({ name: 'PITX', amenity: 'bus_station' }), 'station');
@@ -173,6 +175,66 @@ test('ways of one street that meet are one landmark; a far stretch of the same n
   assert.equal(streets.length, 2);
   assert.deepEqual(streets.map(({ id }) => id).sort(), ['w1', 'w3']);
   assert.deepEqual(streets.find(({ id }) => id === 'w1').point, [121.01, 14.6]);
+});
+
+test('places of worship of every faith are one kind', () => {
+  for (const religion of ['christian', 'muslim', 'buddhist', 'taoist', 'hindu', undefined]) {
+    assert.equal(
+      landmarkKind({ name: 'A place of worship', amenity: 'place_of_worship', religion }),
+      'worship',
+    );
+  }
+});
+
+test('a line is sampled at its start, every so many metres along it, and its end', () => {
+  // About 1,076 m along the equator-ish line at 14.6° N, sampled every 500 m.
+  const samples = samplesAlong(
+    [
+      [121.0, 14.6],
+      [121.01, 14.6],
+    ],
+    500,
+  );
+  assert.equal(samples.length, 4);
+  assert.deepEqual(samples[0], [121.0, 14.6]);
+  assert.deepEqual(samples.at(-1), [121.01, 14.6]);
+  assert.ok(Math.abs(haversine(samples[0], samples[1]) - 500) < 1);
+  assert.ok(Math.abs(haversine(samples[1], samples[2]) - 500) < 1);
+});
+
+test('a long street keeps a point about every kilometre, both carriageways as one', () => {
+  // Two carriageways 30 m apart, 10 km long.
+  const way = (id, lat) => ({
+    id,
+    name: 'Long Avenue',
+    aliases: [],
+    line: [
+      [121.0, lat],
+      [121.0927, lat],
+    ],
+  });
+  const [street] = streetLandmarks([way('w1', 14.6), way('w2', 14.60027)]);
+  assert.ok(
+    street.points.length >= 9 && street.points.length <= 12,
+    `${street.points.length} points`,
+  );
+  const sorted = [...street.points].sort((a, b) => a[0] - b[0]);
+  for (let i = 1; i < sorted.length; i++) {
+    const gap = haversine(sorted[i - 1], sorted[i]);
+    assert.ok(gap >= 1000 && gap < 1600, `a gap of ${gap.toFixed(0)} m`);
+  }
+});
+
+test('the committed file gives its streets points, about a kilometre apart, and nothing else any', () => {
+  const { landmarks } = JSON.parse(committed);
+  const withPoints = landmarks.filter(({ points }) => points);
+  assert.ok(withPoints.length > 50);
+  assert.ok(withPoints.every(({ kind }) => kind === 'street'));
+  const edsa = landmarks.filter(({ name, points }) => name === 'EDSA' && points);
+  assert.ok(
+    edsa.some(({ points }) => points.length >= 15),
+    'EDSA has its points along it',
+  );
 });
 
 test('a node inside its own outline is kept once, the outline over the node', () => {

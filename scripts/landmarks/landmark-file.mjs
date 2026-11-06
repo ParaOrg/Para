@@ -15,7 +15,7 @@ export const LANDMARK_KINDS = [
   'school',
   'university',
   'hospital',
-  'church',
+  'worship',
   'market',
   'station',
   'barangay',
@@ -46,8 +46,15 @@ export function landmarkFileText({ extractAt, landmarks }) {
   const headerLines = Object.entries(header).map(
     ([key, value]) => `  ${JSON.stringify(key)}: ${JSON.stringify(value)},`,
   );
-  const rows = landmarks.map(({ id, name, kind, point, aliases }) =>
-    JSON.stringify({ id, name, kind, point, ...(aliases.length > 0 ? { aliases } : {}) }),
+  const rows = landmarks.map(({ id, name, kind, point, points, aliases }) =>
+    JSON.stringify({
+      id,
+      name,
+      kind,
+      point,
+      ...(points ? { points } : {}),
+      ...(aliases.length > 0 ? { aliases } : {}),
+    }),
   );
   return `{\n${headerLines.join('\n')}\n  "landmarks": [\n    ${rows.join(',\n    ')}\n  ]\n}\n`;
 }
@@ -55,6 +62,11 @@ export function landmarkFileText({ extractAt, landmarks }) {
 const isText = (value) => typeof value === 'string' && value.trim() !== '';
 const isCoordinate = (value, low, high) =>
   typeof value === 'number' && Number.isFinite(value) && value >= low && value <= high;
+const isLngLat = (point) =>
+  Array.isArray(point) &&
+  point.length === 2 &&
+  isCoordinate(point[0], -180, 180) &&
+  isCoordinate(point[1], -90, 90);
 
 /** What is wrong with a landmark file's text, as sentences; empty when it is sound. */
 export function landmarkFileProblems(text) {
@@ -90,14 +102,16 @@ export function landmarkFileProblems(text) {
     if (!isText(landmark?.name)) problems.push(`${where}: no name.`);
     if (!counts.has(landmark?.kind)) problems.push(`${where}: unknown kind ${landmark?.kind}.`);
     else counts.set(landmark.kind, counts.get(landmark.kind) + 1);
-    const point = landmark?.point;
-    if (
-      !Array.isArray(point) ||
-      point.length !== 2 ||
-      !isCoordinate(point[0], -180, 180) ||
-      !isCoordinate(point[1], -90, 90)
-    ) {
-      problems.push(`${where}: the point is not [lng, lat].`);
+    if (!isLngLat(landmark?.point)) problems.push(`${where}: the point is not [lng, lat].`);
+    if (landmark?.points !== undefined) {
+      if (landmark.kind !== 'street') problems.push(`${where}: only a street has points.`);
+      else if (
+        !Array.isArray(landmark.points) ||
+        landmark.points.length < 2 ||
+        !landmark.points.every(isLngLat)
+      ) {
+        problems.push(`${where}: points, when present, are two or more [lng, lat].`);
+      }
     }
     if (landmark?.aliases !== undefined) {
       if (
