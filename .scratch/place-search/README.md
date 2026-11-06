@@ -71,3 +71,12 @@ Designed for now from existing primitives and tokens, never final. Each needs th
 3. The source is openstreetmap.fr's Metro Manila extract rather than Geofabrik's or Overpass. Recommended: keep it (smallest download; reachable from both the sessions and GitHub).
 4. A long street is one point. Recommended: store a point every 1 km along a major street (still well under 3 MB) so "routes near here" works along all of EDSA, and search lists the street once, opening at the point nearest the commuter.
 5. (Sent after route card step 7 merged.) On a computer, may the corner sheet start below the search bar? Recommended: one opt-in line in `bottom-sheet.tsx`, the corner kind reading its top from a CSS variable only the public map sets. Answered yes by the hub, for `corner` and `dock`.
+
+## Answers (the owner, 2026-11-06, via the hub: all recommended)
+
+1. Places of worship of all faiths, as one landmark kind.
+2. The owner ticks GitHub's "Allow Actions to create and approve pull requests" themselves; ticket 04 waits for the hub's confirmation.
+3. Keep openstreetmap.fr's Metro Manila extract.
+4. A point every 1 km along major streets.
+5. Yes, for `corner` and `dock`: built in #817.
+6. Yes: `search/` added to `.claude/CLAUDE.md`'s routes block in #817.

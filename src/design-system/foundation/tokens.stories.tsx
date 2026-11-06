@@ -530,6 +530,16 @@ function TokensPage() {
           cls="shadow-route-card-primary-selected"
         />
         <Swatch
+          box="bg-card-uv-express-surface shadow-route-card-inverse"
+          token="Route/RouteCardInverse"
+          cls="shadow-route-card-inverse"
+        />
+        <Swatch
+          box="bg-card-uv-express-surface shadow-route-card-inverse-selected"
+          token="Route/RouteCardInverseSelected (not in Figma)"
+          cls="shadow-route-card-inverse-selected"
+        />
+        <Swatch
           box="rounded-full bg-card-red-surface shadow-selected-hintuan-route-title"
           token="Map/SelectedHintuanRouteTitle"
           cls="shadow-selected-hintuan-route-title"
