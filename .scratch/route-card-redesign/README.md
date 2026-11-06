@@ -1,0 +1,70 @@
+# Route card redesign
+
+The owner's new RouteCard and its list, built in small pull requests into `staging`. The owner said yes to this plan on 2026-11-06.
+
+## Figma (file `MGPQFPjemLbzjNqAI5Ny4D`)
+
+| Node | What |
+| --- | --- |
+| 4629:22776 | The RouteCard set: Jeep blue, UV Express grey, E-Jeep near-white, Bus orange |
+| 4633:19780 | RouteCardStackedList: edge to edge; a same-mode run shows its header only on its first card; RouteCardRailway with station codes |
+| 4633:22034 | Desktop: the list docked full height on the left, 368 wide; a Controller column with ✕, then ⇆ (switch) and sliders (filter) |
+| 4633:25516 | Mobile, at 768 and 393: the Controller stuck to the sheet's bottom, the cards scrolling under it |
+| 4633:25526 | The rest and selected shadows |
+| 4633:25575 | The mobile sheet at Max, filling the whole screen |
+| 4261:15199 | Ferry and MRT/LRT-2, which keep their own looks |
+
+New variables: `Card/{Jeep,UVExpress,Ejeep,Bus}/{…-surface, …-surface-secondary, …-surface-border, …-on-surface}`. "Card (Depreciated)" is the old group.
+
+## The owner's decisions (2026-11-06)
+
+1. **RouteCard only.** The cards and the list change; the route detail (the trip view after a tap) stays as it is until new frames come.
+2. **The list header goes** ("N Routes", Switch). The Controller replaces it.
+3. **Taps work as before.** No selected look of its own: the highlight shows only on a tappable route-end row, and tapping it opens that route's detail. The cards wear the rest and selected shadows of 4633:25526.
+4. **Filter (sliders):** designed by the builder for now, from existing primitives and tokens. Options: All, Jeep, E-Jeep, Bus, LRT, MRT, Ferry.
+5. **States Figma doesn't draw** (loading, empty, error, very long names, 20+ routes): designed by the builder for now. Today's states restyled; long names wrap; an empty state for a filter with no matches.
+6. **Map route lines take the mode colours.** Jeep blue (the terminal pin is cyan, so it stays distinct). E-Jeep's near-white and UV's grey must stay visible on the light basemap: each mode's `-surface-border`, or a darker shade.
+7. **Blue for Jeep is fine.** The old rule that blue means selected is dropped, in comments and docs too.
+8. **Modes:** Ferry and MRT/LRT-2 keep their own looks, and trains their Map/Rail colours. Tricycle is not drawn for now. P2P borrows UV Express until it is drawn.
+9. **Operator logos** (PISTON, CITYBUS) stay out until the database has an operator field.
+10. **The old mode colours go:** the `--card-{orange,violet,rose,fuchsia,pink}-*` tokens, `CARD_COLOURS` and `CARD_PALE_COLOURS`, `JEEPNEY_LIVERIES` and `liveriesFor`, and `button-look.ts`'s card fills. `studio/panels/line-detail.tsx` and `contribute/history/card-status-line.tsx` are re-pointed. `card-red-*` and `card-green-surface-light` stay: they mean Start and End.
+11. **Mobile sheet:** the drag and the Low / Middle / Max snaps stay; Max fills the whole screen. No handle unless Figma draws one; no scrollbar.
+12. **The studio** uses the same list, layout and filter. Its trip card keeps its editor extras.
+13. **Station codes** ("PL01") from `rail-codes.ts` where one exists, otherwise nothing. The S and E icons beside them go.
+
+## Build order
+
+| # | Pull request | Status |
+| --- | --- | --- |
+| 1 | Tokens: the mode card variables, added only | In review |
+| 2 | Deletions, and mode → look (decisions 10 and 7) | |
+| 3 | RouteCard restyle | |
+| 4 | RouteCardStackedList, with the railway card | |
+| 5 | The Controller, with the filter | |
+| 6 | Sheet layout: docked on desktop, the mobile Controller at the bottom, Max full screen | |
+| 7 | Commuter map wiring | |
+| 8 | Studio wiring | |
+| 9 | Map lines in the mode colours | |
+
+## Token naming
+
+Figma's leaf names repeat their group (`Card/Jeep/Jeep-surface`). The tokens drop the repeat: `--card-jeep-surface`, `bg-card-jeep-surface`. Camel case splits as the train lines' do (`UVExpress` → `uv-express`).
+
+## Waiting on the owner
+
+- **The route card shadows changed in Figma.** Route/RouteCardPrimary, …PrimarySelected, …Inverse and …InverseSelected now hold new values. The tokens of the same names (`shadow-route-card-*`) also dress the HintuanCard's boxes and the contributor page's tracking button. Should those take the new shadows too, or keep today's?
+- **Border/tertiary** is `color/neutral/300` in Figma and `neutral-400` in the code. Which is right?
+- **Brand/surface-pale** (`color/parabrand/100`) is in Figma and not in the code. Nothing uses it yet; it is added when something does.
+
+## Owner to design later
+
+The builder designed these for now, or left them out. Each waits for the owner's frames:
+
+- the filter button and its sheet;
+- the loading, empty, error and long-content states;
+- the studio's version (the owner is revamping it all);
+- the route detail's new frame;
+- the S and E icons beside station codes;
+- operator logos;
+- tricycle and P2P looks;
+- the map line colours for E-Jeep and UV Express.
