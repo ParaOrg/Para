@@ -1,6 +1,7 @@
 import { lazyPlugin } from '../native-bridge/native-app';
 import {
   PLUGIN_NAMES,
+  recordingNowSchema,
   rideEventsSchema,
   RIDE_EVENT_NAME,
   type RideEvent,
@@ -11,6 +12,7 @@ import {
 interface RidePlugin {
   setState: (state: RideState) => Promise<void>;
   events: () => Promise<unknown>;
+  recordingNow: () => Promise<unknown>;
   dropEvents: (options: { time: number }) => Promise<void>;
   addListener: (
     event: typeof RIDE_EVENT_NAME,
@@ -46,6 +48,11 @@ export function noteRideWatch(isOn: boolean): void {
   void send().catch((error: unknown) => {
     console.warn('The ride notification could not be told of the watch.', error);
   });
+}
+
+/** The ride the app's service is recording now, or null when it records none. */
+export async function readRecordingNow(): Promise<string | null> {
+  return recordingNowSchema.parse(await getPlugin().recordingNow()).recordingId;
 }
 
 /** The taps made on the notification that the page has not applied yet, oldest first. */

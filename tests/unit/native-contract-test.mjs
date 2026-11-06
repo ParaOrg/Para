@@ -20,6 +20,7 @@ import {
   RIDE_FIX_PROBLEM_EVENT_NAME,
   RIDE_MODES,
   RIDE_PHASES,
+  recordingNowSchema,
   rideEventSchema,
   rideStateSchema,
 } from '../../src/features/contribute/native-bridge/native-contract.ts';
@@ -100,6 +101,21 @@ test('RideState writes each field of a tap the page reads, and the page hears it
     `notifyListeners("${RIDE_EVENT_NAME}")`,
   );
   assertHas(java('RidePlugin'), 'RidePlugin.java', /result\.put\("events"/, 'result.put("events")');
+  // The ride its service records now, which the page asks as it opens (recorder-opening.ts).
+  assertHas(
+    java('RidePlugin'),
+    'RidePlugin.java',
+    /public void recordingNow\(PluginCall call\)/,
+    'recordingNow(PluginCall)',
+  );
+  for (const key of Object.keys(recordingNowSchema.shape)) {
+    assertHas(
+      java('RidePlugin'),
+      'RidePlugin.java',
+      new RegExp(`result\\.put\\("${key}"`),
+      `result.put("${key}")`,
+    );
+  }
 });
 
 test('FixLog writes each key of a fix line and of the log the page reads', () => {

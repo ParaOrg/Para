@@ -111,6 +111,23 @@ public class RidePlugin extends Plugin {
         call.resolve();
     }
 
+    /**
+     * The ride the service is recording now, or null: the page asks as it opens, so a ride that
+     * went on recording while the app was gone (swiped from Recents, or its page rebuilt) opens
+     * recording, not cut off. Recording is the service running with the ride's state at RECORDING.
+     */
+    @PluginMethod
+    public void recordingNow(PluginCall call) {
+        RideState state = RideState.read(getContext());
+        boolean isRecording = RideService.isRunning()
+            && RideState.RECORDING.equals(state.phase)
+            && state.recordingId != null
+            && !state.recordingId.isEmpty();
+        JSObject result = new JSObject();
+        result.put("recordingId", isRecording ? state.recordingId : JSObject.NULL);
+        call.resolve(result);
+    }
+
     @PluginMethod
     public void events(PluginCall call) {
         JSObject result = new JSObject();
