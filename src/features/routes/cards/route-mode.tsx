@@ -1,4 +1,6 @@
-import { CARD_SURFACE_TEXT } from './livery-card';
+import { cn } from '@/shared/utils/cn';
+
+import { MODE_CHIP } from './livery-card';
 import { MODE_LABEL } from './route-modes';
 import { VehicleIcon } from './vehicle-icon';
 import type { Livery } from '../model/liveries';
@@ -6,27 +8,29 @@ import type { Vehicle } from '../model/vehicles';
 
 interface RouteModeProps {
   vehicle: Vehicle;
-  /** The card it sits on: the vehicle is drawn in the card's own colour. */
+  /** The card it sits on: its chip is the card's colours turned inside out (MODE_CHIP). */
   livery: Livery;
 }
 
 /**
- * Figma's Modes (4236:17040): what a card's routes ride. The vehicle, 16, in the card's own
- * colour on a round white chip (Background/surface, 2 round it), then its word in Medium 14/20 in
- * the card's words' colour, 6 between them; all of it at 80% (Figma's opacity/80).
+ * What a card's routes ride, at the card's top (RouteCard, 4629:22776): the vehicle, 36, in the
+ * card's words' colour, then its word in Bold 16/24 on a chip (MODE_CHIP), 10 between them. The
+ * word is the card's; the drawing beside it is decoration.
  */
 export function RouteMode({ vehicle, livery }: RouteModeProps) {
   return (
-    <span className="inline-flex items-center gap-1.5 text-sm/5 font-medium whitespace-nowrap opacity-80">
-      <span
-        aria-hidden
-        className={'shrink-0 rounded-full bg-surface p-0.5 ' + CARD_SURFACE_TEXT[livery]}
-      >
-        <span className="block size-4 *:size-full">
-          <VehicleIcon vehicle={vehicle} />
-        </span>
+    <span className="inline-flex items-center gap-2.5">
+      <span aria-hidden className="block size-9 shrink-0 *:size-full">
+        <VehicleIcon vehicle={vehicle} />
       </span>
-      {MODE_LABEL[vehicle]}
+      <span
+        className={cn(
+          'rounded-lg px-2 text-base-lower/6 font-bold whitespace-nowrap',
+          MODE_CHIP[livery],
+        )}
+      >
+        {MODE_LABEL[vehicle]}
+      </span>
     </span>
   );
 }

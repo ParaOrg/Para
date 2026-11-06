@@ -15,7 +15,7 @@ export const MODE_LABEL = {
   'UV Express': 'UV Express',
 } satisfies Record<Vehicle, string>;
 
-interface ModeGroup<T> {
+export interface ModeGroup<T> {
   /** The mode the group's label names; null for rows that ride nothing the design draws. */
   vehicle: Vehicle | null;
   items: T[];

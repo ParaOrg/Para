@@ -73,20 +73,19 @@ export const CARD_TEXT = {
 } satisfies Record<Livery, string>;
 
 /**
- * Words or a drawing in the card's own colour, Card/<Mode>/…-surface, a train's
- * or the ferry's Map/…/surface: what sits on a white chip on the card (on the
- * light UV Express and E-Jeep cards, their on-surface instead), a mode's
- * vehicle (Modes, 4236:17040) as the line's on a RouteCardRailway.
+ * The mode's chip at a RouteCard's top (RouteCard, 4629:22776): the card's words' colour as its
+ * fill and the card's own colour for its word, so it reads as the card turned inside out. A train
+ * or ferry card wears its line's colours the same way, as its own chip does (RAILWAY_PILL).
  */
-export const CARD_SURFACE_TEXT = {
-  jeep: 'text-card-jeep-surface',
-  'uv-express': 'text-card-uv-express-on-surface',
-  ejeep: 'text-card-ejeep-on-surface',
-  bus: 'text-card-bus-surface',
-  'light-rail-way-one': 'text-map-rail-light-rail-way-one-surface',
-  'light-rail-way-two': 'text-map-rail-light-rail-way-two-surface',
-  'metro-rail-way-three': 'text-map-rail-metro-rail-way-three-surface',
-  ferry: 'text-map-ferry-surface',
+export const MODE_CHIP = {
+  jeep: 'bg-card-jeep-on-surface text-card-jeep-surface',
+  'uv-express': 'bg-card-uv-express-on-surface text-card-uv-express-surface',
+  ejeep: 'bg-card-ejeep-on-surface text-card-ejeep-surface',
+  bus: 'bg-card-bus-on-surface text-card-bus-surface',
+  'light-rail-way-one': 'bg-content-inverse text-map-rail-light-rail-way-one-surface',
+  'light-rail-way-two': 'bg-content-inverse text-map-rail-light-rail-way-two-surface',
+  'metro-rail-way-three': 'bg-content-primary text-map-rail-metro-rail-way-three-surface',
+  ferry: 'bg-content-inverse text-map-ferry-surface',
 } satisfies Record<Livery, string>;
 
 // Drawn over the card, as Figma lays it: above the Blob and the words.

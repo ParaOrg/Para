@@ -1,3 +1,5 @@
+import { cn } from '@/shared/utils/cn';
+
 import './route-end-point-lines.css';
 
 export type RouteEndPointPosition = 'top' | 'bottom';
@@ -8,17 +10,22 @@ interface RouteEndPointLinesProps {
    * past its arrow; Bottom, the last row, the line ending at its arrow.
    */
   position: RouteEndPointPosition;
+  /** At Figma's opacity/80, as a RouteCardRailway's and a trip's rows draw it; else at full. */
+  isFaint?: boolean;
 }
 
 /**
  * The tree line before a RouteCard's row, joining the rows to the place above them. Figma's own
- * VectorLine drawings in the card's words' colour at Figma's opacity/80, as the mode's label
- * above them, stretched to the row's height around a fixed 16px middle.
+ * VectorLine drawings in the card's words' colour, stretched to the row's height around a fixed
+ * 16px middle.
  */
-export function RouteEndPointLines({ position }: RouteEndPointLinesProps) {
+export function RouteEndPointLines({ position, isFaint = true }: RouteEndPointLinesProps) {
   const isBottom = position === 'bottom';
   return (
-    <span aria-hidden className="flex w-6 shrink-0 flex-col items-start self-stretch opacity-80">
+    <span
+      aria-hidden
+      className={cn('flex w-6 shrink-0 flex-col items-start self-stretch', isFaint && 'opacity-80')}
+    >
       <span className="route-end-point-line route-end-point-line-top-bottom min-h-px w-4 flex-1" />
       <span className="flex h-4 w-full items-center">
         <span

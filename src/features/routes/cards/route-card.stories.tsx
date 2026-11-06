@@ -30,15 +30,15 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /**
- * Bus: Card/Bus, Content on-surface under Route/RouteCardPrimary, the Primary Blob. The place in
- * SN Pro Bold 24/32.
+ * Bus: Card/Bus, its words in on-surface under Route/RouteCardPrimary, the Primary Blob. The place
+ * in SN Pro Bold 28/32.
  */
 export const Bus: Story = {
   args: { livery: 'bus', endPoints: [{ id: 'a', routeDirection: 'Tala', vehicle: 'Bus' }] },
   play: async ({ canvasElement }) => {
     const place = within(canvasElement).getByTestId('chooser-select');
     const type = getComputedStyle(place);
-    await expect(type.fontSize).toBe('24px');
+    await expect(type.fontSize).toBe('28px');
     await expect(type.lineHeight).toBe('32px');
     await expect(type.fontWeight).toBe('700');
   },
@@ -273,7 +273,13 @@ export const TrainFirstInData: Story = {
   },
 };
 
-/** A route with no drawn vehicle (P2P, tricycle) has no label; the rows stand alone. */
+/**
+ * A card that follows one of its mode in a list (RouteCardStackedList, 4633:19780): the mode is
+ * drawn on the run's first card only. The rows still name it to a screen reader.
+ */
+export const ModeShownAbove: Story = { args: { showsMode: false, routeOrigin: 'Bigte' } };
+
+/** A route with no drawn vehicle (tricycle) has no mode at the top; the rows stand alone. */
 export const NoMode: Story = {
   args: { endPoints: [{ id: 'a', routeDirection: 'Tala', vehicle: null }] },
 };
@@ -307,6 +313,18 @@ export const MixedModesOnPhone: Story = {
   decorators: [
     (Story) => (
       <div className="w-97.5">
+        <Story />
+      </div>
+    ),
+  ],
+};
+
+/** At a phone's sheet at Low (sheetGesture's LOW_PX): a long place name cut to one line. */
+export const OnPhoneAtLow: Story = {
+  args: { routeOrigin: 'Fairview Teraccess Transport Terminal' },
+  decorators: [
+    (Story) => (
+      <div className="@container w-97.5" data-floats="card" data-snap="low">
         <Story />
       </div>
     ),
