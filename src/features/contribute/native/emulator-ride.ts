@@ -1,6 +1,7 @@
 import { readFixLog } from './native-fix-log';
 import { startNativeWatch } from './native-location';
 import { readRideEvents, setRideNoticeState } from './ride-notice';
+import { LIMITS } from '../map/basemap-cache';
 import { fixOfRow, rowOfFix, takeWatchedFixes } from '../recorder/recording-fixes';
 import { newRecording } from '../recorder/recording-transitions';
 import type { Recording } from '../storage/recording-schema';
@@ -39,6 +40,17 @@ async function waitForImport(recordingId: string): Promise<boolean> {
   return false;
 }
 
+/**
+ * What the app's basemap cache holds (basemap-cache.ts), for emulator-ride.sh: the map loads under
+ * the driver's screens as on a phone, so its tiles and files are kept in the WebView's own Cache
+ * Storage, or not. `none` where the WebView has no Cache Storage.
+ */
+async function keptBasemap(): Promise<string> {
+  if (typeof caches === 'undefined') return 'tiles=none meta=none';
+  const count = async (name: string) => String((await (await caches.open(name)).keys()).length);
+  return `tiles=${await count(LIMITS.tiles.name)} meta=${await count(LIMITS.meta.name)}`;
+}
+
 async function snapshot(recordingId: string): Promise<string> {
   const rows = await loadFixes(recordingId);
   const times = rows.map((row) => row.time);
@@ -50,7 +62,7 @@ async function snapshot(recordingId: string): Promise<string> {
     (events) => String(events.length),
     () => 'unreadable',
   );
-  return `rows=${rows.length} first=${times[0] ?? 0} last=${times[times.length - 1] ?? 0} sorted=${sorted} native=${log.fixes.length} taps=${taps}`;
+  return `rows=${rows.length} first=${times[0] ?? 0} last=${times[times.length - 1] ?? 0} sorted=${sorted} native=${log.fixes.length} taps=${taps} ${await keptBasemap()}`;
 }
 
 /**

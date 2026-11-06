@@ -30,7 +30,7 @@ const PROTOCOL = 'para-basemap';
 const PREFIX = `${PROTOCOL}://`;
 
 /** The public map's limits (offline-worker-caches.ts): the tiles' cache the first to go. */
-const LIMITS = {
+export const LIMITS = {
   tiles: { name: 'para-basemap-tiles-v1', maxEntries: 1000 },
   meta: { name: 'para-basemap-meta-v1', maxEntries: 500 },
 } as const;
