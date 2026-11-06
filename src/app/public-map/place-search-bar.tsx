@@ -28,7 +28,7 @@ const SHEET_TOP_UNDER = {
   map: '[--sheet-float-top:calc(env(safe-area-inset-top)+7.375rem)]',
   offlinePill: '[--sheet-float-top:calc(env(safe-area-inset-top)+9.875rem)]',
   update: '[--sheet-float-top:calc(env(safe-area-inset-top)+11.125rem)]',
-} satisfies Record<string, string>;
+} satisfies Record<'map' | 'offlinePill' | 'update', string>;
 
 /** The root's class that starts the floating cards under the bar, as the notices place it. */
 export function sheetTopUnderSearch(isUnderUpdate: boolean, isUnderOfflinePill: boolean): string {
@@ -56,6 +56,7 @@ export function PlaceSearchBar({
         // From @float the bar ends where the docked route list does: 16 in, 352 wide, 368.
         'absolute inset-x-4 z-10 rounded-xl bg-surface p-3 shadow-large @wide:right-auto @wide:w-80 @float:w-88',
         isCardOpen && 'hidden @float:block',
+        // These tops and the padding above are summed in SHEET_TOP_UNDER: change them together.
         isUnderUpdate
           ? 'top-[calc(env(safe-area-inset-top)+4.75rem)]'
           : 'top-[calc(env(safe-area-inset-top)+1rem)]',
