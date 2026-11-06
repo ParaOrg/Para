@@ -15,10 +15,11 @@
 #   0:00  the ride starts; the notification is the ride's service's (RideService), in the foreground
 #   1:00  the shade: the card's bars, Pause and Sakay; Sakay tapped there
 #   ~1:10 the phone's dark theme on: the card is still white (light always), then off again
-#   1:30  Pause: no fix is kept from then on, and the service leaves the foreground; the shade:
+#   ~1:30 swiped from Recents: the service records on, its notification stays; the app opened again
+#   ~2:40 Pause: no fix is kept from then on, and the service leaves the foreground; the shade:
 #         Resume and Finish
-#   1:40  Resume: the service is in the foreground again and fixes are kept
-#   2:10  Finish: no fix after it, and the notification says the ride waits to be saved
+#   ~3:10 Resume: the service is in the foreground again and fixes are kept
+#   ~3:40 Finish: no fix after it, and the notification says the ride waits to be saved
 #
 # The service's state after Pause and after Resume is what RideActionReceiver does with
 # RideService: it stops at Pause and Finish and starts again at Resume.
@@ -181,6 +182,39 @@ echo "$CARD" | grep -Eq '^2(4[5-9]|5[0-5]),2(4[5-9]|5[0-5]),2(4[5-9]|5[0-5]) ' \
   && pass "dark theme on, the card is still white ($CARD)" || fail "dark theme on, the card is not white: $CARD"
 adb shell cmd statusbar collapse
 adb shell cmd uimode night no > /dev/null
+
+# Swiped away from Recents, as a person ends an app: on stock Android the ride's service records
+# on and its notification stays (RideService, stopWithTask false), with the activity gone. Makers
+# such as Xiaomi kill the whole app on this swipe unless it may run in the background (Autostart,
+# No restrictions); an emulator is stock Android, so this checks only what the app itself does.
+adb shell input keyevent KEYCODE_APP_SWITCH
+sleep 3
+SIZE=$(adb shell wm size | tr -d '\r' | grep -o '[0-9]*x[0-9]*' | tail -1)
+WIDTH=${SIZE%x*}
+HEIGHT=${SIZE#*x}
+adb shell input swipe $((WIDTH / 2)) $((HEIGHT / 2)) $((WIDTH / 2)) $((HEIGHT / 20)) 250
+sleep 3
+adb shell input keyevent KEYCODE_HOME
+sleep 2
+adb shell dumpsys activity activities > "$OUT/activities-after-swipe.txt"
+if grep -q "$PKG/$ACTIVITY" "$OUT/activities-after-swipe.txt"; then
+  fail "swiped from Recents, yet the app's activity is still there (the swipe did not land)"
+else
+  pass "swiped from Recents: the app's activity is gone"
+fi
+SWIPED_AT=$(native_fixes)
+sleep 30
+SINCE_SWIPE=$(native_fixes)
+[ "$SINCE_SWIPE" -gt "$SWIPED_AT" ] && pass "swiped away: fixes still kept ($SWIPED_AT then $SINCE_SWIPE)" \
+  || fail "swiped away, the ride stopped recording: $SWIPED_AT then $SINCE_SWIPE"
+is_foreground && pass "swiped away: the service is still in the foreground" \
+  || fail "swiped away, the service left the foreground"
+adb shell dumpsys notification --noredact > "$OUT/notification-swiped.txt"
+grep -q 'Recording' "$OUT/notification-swiped.txt" && pass "swiped away: the notification still says Recording" \
+  || fail "swiped away, the Recording notification is gone"
+# Opened again: the page takes the ride up where the service has it, and the taps below go on.
+adb shell am start -n "$PKG/$ACTIVITY"
+sleep 30
 
 tap PAUSE
 PAUSED_AT=$(native_fixes)
