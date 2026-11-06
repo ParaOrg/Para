@@ -1,10 +1,12 @@
 import type { MapLibreMap } from 'maplibre-gl';
-import { useEffect, useRef, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 
 import { BASEMAPS } from '@/features/routes/map/basemap';
 import { BASEMAP_THUMBNAILS } from '@/features/routes/map/basemap-thumbnails';
 import { coarse } from '@/features/routes/map/map-view';
 
+import { keepLastKnown, readLastKnown, type LastKnown } from './last-known';
+import { LastKnownDot } from './last-known-dot';
 import { isLocationGranted } from './location-permission';
 import { Locator } from './locator';
 import { LOCATION_OFF_NOTE, type LocatorNote } from './locator-note';
@@ -34,7 +36,20 @@ interface ContributorLocationProps {
    * web), the button asks the browser.
    */
   checkLocationOn?: () => Promise<'on' | 'off' | 'unknown'>;
+  /**
+   * The contributor app's: where the phone last was stays on the map, greyed out with how long
+   * ago, while location is off or no fix comes, and is kept on the phone for the next start.
+   * Display only: it never becomes ride data. Without it (the web), the map shows only a live dot.
+   */
+  remembersLastPlace?: boolean;
 }
+
+/** A fix older than this is not where the phone is now: the last known place shows instead. */
+const LIVE_FIX_MS = 30_000;
+/** How often a live fix is kept on the phone: often enough, without a write a second. */
+const KEEP_EVERY_MS = 15_000;
+/** How often the last known place's clock is read again: its pill says minutes. */
+const LAST_KNOWN_TICK_MS = 15_000;
 
 /** Where the contributor's dot is drawn: the page's paused frost clears round it. */
 export interface LocatorWhere {
@@ -72,6 +87,7 @@ export function ContributorLocation({
   onNote,
   onWhere,
   checkLocationOn,
+  remembersLastPlace = false,
 }: ContributorLocationProps) {
   const locator = useLocator(map, { compass: coarse, snap: 'low', offset: clearOfBars });
   const { mood, face, beat, poke } = useLocatorMood(locator);
@@ -95,6 +111,29 @@ export function ContributorLocation({
     isOffSaid.current = false;
     latestOnNote.current?.(null);
   }, [fix]);
+
+  // Where the phone last was: this run's last fix, kept even once the locator lets its fix go (a
+  // permission taken back), else the place an earlier run kept.
+  const [lastPlace, setLastPlace] = useState<LastKnown | null>(() =>
+    remembersLastPlace ? readLastKnown() : null,
+  );
+  if (remembersLastPlace && fix && fix.time !== lastPlace?.time) {
+    setLastPlace({ at: fix.at, time: fix.time });
+  }
+  // Each live fix kept on the phone, for the next start.
+  const keptAt = useRef(0);
+  useEffect(() => {
+    if (!remembersLastPlace || !fix || fix.time - keptAt.current < KEEP_EVERY_MS) return;
+    keptAt.current = fix.time;
+    keepLastKnown({ at: fix.at, time: fix.time });
+  }, [fix, remembersLastPlace]);
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (!remembersLastPlace) return;
+    const timer = window.setInterval(() => setNow(Date.now()), LAST_KNOWN_TICK_MS);
+    return () => window.clearInterval(timer);
+  }, [remembersLastPlace]);
+  const isFixLive = !!fix && (!remembersLastPlace || now - fix.time < LIVE_FIX_MS);
 
   // The latest tap, for effects that must not re-run when the hook hands out a new one.
   const latestTap = useRef(tap);
@@ -157,7 +196,8 @@ export function ContributorLocation({
           onNote={onNote}
         />
       )}
-      {map && locator.fix && (
+      {map && !isFixLive && lastPlace && <LastKnownDot map={map} place={lastPlace} now={now} />}
+      {map && locator.fix && isFixLive && (
         <LocatorOnMap
           map={map}
           fix={locator.fix}

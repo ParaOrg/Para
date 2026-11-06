@@ -1,12 +1,14 @@
-import { keepPreviousData, useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo } from 'react';
 
 import { historyKeys } from './history-keys';
 import { mergeHistory } from './history-merge';
 import { rideFactsOf, storedFactsOf, uploadFactsOf, type RideFacts } from './ride-facts';
+import { accountKeys } from '../api/account-keys';
 import { UploadError } from '../api/upload-problem';
 import { useAccountUploadsQuery } from '../api/use-account-uploads-query';
 import { useMyUsesQuery } from '../api/use-my-uses-query';
+import { askAgain, useLoadGiveUp } from '../common/use-load-give-up';
 import { fixOfRow } from '../recorder/recording-fixes';
 import type { Recording } from '../storage/recording-schema';
 import { loadFixes, updateRecording } from '../storage/recording-store';
@@ -43,9 +45,17 @@ function loadStateOf(query: {
   return 'ready';
 }
 
+const NO_SIGNAL_MESSAGE = "No signal — can't load your uploads";
+
+/** What History says of its load: none while it goes well, and why not once it fails or is given up. */
+function loadMessage(hasGivenUp: boolean, error: unknown): string | null {
+  if (hasGivenUp) return NO_SIGNAL_MESSAGE;
+  return error ? loadMessageOf(error) : null;
+}
+
 const loadMessageOf = (error: unknown): string =>
   error instanceof UploadError && error.problem === 'offline'
-    ? "No signal — can't load your uploads"
+    ? NO_SIGNAL_MESSAGE
     : "Can't load your uploads right now";
 
 /**
@@ -82,6 +92,10 @@ export function useHistoryItems(
 ): HistoryItems {
   const query = useAccountUploadsQuery();
   const uses = useMyUsesQuery().data;
+  const queryClient = useQueryClient();
+  // A load with no answer after a while is said as one with no signal, with Try again.
+  const queryState = loadStateOf(query);
+  const giveUp = useLoadGiveUp(queryState === 'loading');
   const needsFixes = saved.filter(
     (recording) =>
       recording.distanceM === undefined || (pictures !== undefined && !pictures.has(recording.id)),
@@ -134,9 +148,12 @@ export function useHistoryItems(
     },
     usedOf: (recording) => uses?.get(recording.id) ?? NONE,
     load: {
-      state: loadStateOf(query),
-      message: query.isError ? loadMessageOf(query.error) : null,
-      onRetry: () => void query.refetch(),
+      state: giveUp.hasGivenUp ? 'error' : queryState,
+      message: loadMessage(giveUp.hasGivenUp, query.isError ? query.error : null),
+      onRetry: () => {
+        giveUp.restart();
+        void askAgain(queryClient, accountKeys.uploads(), query.refetch);
+      },
     },
   };
 }

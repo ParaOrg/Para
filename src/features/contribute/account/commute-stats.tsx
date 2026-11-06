@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 
+import { Button } from '@/design-system/primitives/button';
 import { cn } from '@/shared/utils/cn';
 
 import {
@@ -31,7 +32,7 @@ export interface CommuteNumbers {
 /** What there is to show: numbers, still loading, or a line saying why there are none. */
 export type CommuteStatsState =
   | { kind: 'loading' }
-  | { kind: 'failed'; message: string }
+  | { kind: 'failed'; message: string; onRetry: () => void }
   | { kind: 'shown'; numbers: CommuteNumbers };
 
 interface CommuteStatsProps {
@@ -56,7 +57,14 @@ export function CommuteStats({ state }: CommuteStatsProps) {
 
 function StatsBody({ state }: CommuteStatsProps) {
   if (state.kind === 'failed') {
-    return <p className="text-sm/5 text-content-quaternary">{state.message}</p>;
+    return (
+      <div className="flex flex-col items-start gap-2">
+        <p role="alert" className="text-sm/5 text-content-quaternary">
+          {state.message}
+        </p>
+        <Button variant="secondary" size="small" label="Try again" onClick={state.onRetry} />
+      </div>
+    );
   }
   if (state.kind === 'loading') return <StatsSkeleton />;
   const { numbers } = state;
@@ -135,7 +143,9 @@ function StatsSkeleton() {
   const isShown = useIsSlowLoad(true);
   return (
     <div aria-busy="true" className="flex flex-col gap-4">
-      <p className="sr-only">Loading your statistics</p>
+      <p role="status" className="sr-only">
+        Loading your statistics
+      </p>
       <div aria-hidden className={cn('flex flex-col gap-4', !isShown && 'invisible')}>
         <div className="flex gap-4">
           <div className="flex flex-1 flex-col gap-4">
