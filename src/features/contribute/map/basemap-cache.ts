@@ -6,7 +6,10 @@ import {
   type RequestTransformFunction,
 } from 'maplibre-gl';
 
+import { BASEMAPS } from '@/features/routes/map/basemap';
 import { basemapCacheRules, type BasemapCacheRules } from '@/shared/config/basemap-cache-rules';
+
+import { BASEMAP_COPIES } from './basemap-copies';
 
 /**
  * The contributor app's keeping of the basemap: it has no service worker, so the map's own
@@ -37,8 +40,16 @@ const KEPT_AT = 'x-para-kept-at';
 /** How many copies are put between two trims of a cache to its limit: a trim lists the cache. */
 const TRIM_EVERY = 50;
 
-/** The cache for the basemap at `host`; null where the WebView has no Cache Storage. */
-export function basemapCache(host: string, now: () => number = Date.now): BasemapCache | null {
+/**
+ * The cache for the basemap at `host`; null where the WebView has no Cache Storage. `styleCopy`
+ * answers a design's style that is neither kept nor fetchable (a switch with no signal) with the
+ * app's copy of it, null for a URL that is no design's.
+ */
+export function basemapCache(
+  host: string,
+  now: () => number = Date.now,
+  styleCopy: (url: string) => Promise<unknown> = async () => null,
+): BasemapCache | null {
   if (typeof caches === 'undefined') return null;
   const rules = basemapCacheRules(host);
   const putsSinceTrim = { tiles: 0, meta: 0 };
@@ -93,7 +104,17 @@ export function basemapCache(host: string, now: () => number = Date.now): Basema
           throw error;
         }
       }
-      if (!kept) return { data: await bodyOf(await fromNetwork(kind, url, signal), params) };
+      if (!kept) {
+        try {
+          return { data: await bodyOf(await fromNetwork(kind, url, signal), params) };
+        } catch (error) {
+          // A design switched to with no signal: drawn from the app's copy of its style, over
+          // whatever tiles the phone kept, as the map is made offline (basemap-copies.ts).
+          const copy = signal.aborted ? null : await styleCopy(url);
+          if (copy !== null) return { data: copy };
+          throw error;
+        }
+      }
       // Refreshed behind the copy, for the next time; with no signal, the copy stays.
       fromNetwork(kind, url, new AbortController().signal).catch(() => undefined);
       return { data: await bodyOf(kept, params) };
@@ -123,7 +144,10 @@ let isAdded = false;
  * The map takes its `transformRequest` as it is made.
  */
 export function keepBasemapOnThePhone(host: string): RequestTransformFunction | undefined {
-  const cache = basemapCache(host);
+  const cache = basemapCache(host, Date.now, async (url) => {
+    const design = BASEMAPS.find((b) => b.url === url);
+    return design ? BASEMAP_COPIES.offline(design) : null;
+  });
   if (!cache) return undefined;
   if (!isAdded) {
     addProtocol(PROTOCOL, cache.load);
