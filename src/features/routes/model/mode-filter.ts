@@ -2,8 +2,8 @@ import type { Direction } from './routes';
 import { vehicleOf, type Vehicle } from './vehicles';
 
 /**
- * What the route list's filter can narrow it to (the owner's options, 2026-11-06): every route, or
- * one kind of ride. LRT is both light-rail lines, MRT the metro.
+ * What the route list's filter can narrow it to: every route, or one kind of ride. LRT is both
+ * light-rail lines, MRT the metro.
  */
 export const MODE_FILTERS = ['all', 'jeep', 'ejeep', 'bus', 'lrt', 'mrt', 'ferry'] as const;
 export type ModeFilter = (typeof MODE_FILTERS)[number];

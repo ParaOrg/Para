@@ -16,8 +16,8 @@ interface RouteListControllerProps {
    */
   layout: RouteListControllerLayout;
   /**
-   * The way ⇆ leads to, switchWord's (Pabalik, Papunta, a train's other bound): its name, as the
-   * word was on SWITCH. Null: no ⇆, for loops have no way back.
+   * The way ⇆ leads to, switchWord's (Pabalik, Papunta, a train's other bound): its accessible
+   * name and tooltip. Null: no ⇆, for loops have no way back.
    */
   way: string | null;
   /** False when the other way round has nothing drawn; ⇆ then rests disabled. */

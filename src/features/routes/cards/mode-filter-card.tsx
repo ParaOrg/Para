@@ -1,4 +1,4 @@
-import { useId, type RefObject } from 'react';
+import { useId, type KeyboardEvent, type MouseEvent, type RefObject } from 'react';
 
 import { MODE_FILTER_LABEL, MODE_FILTERS, type ModeFilter } from '../model/mode-filter';
 
@@ -16,28 +16,36 @@ interface ModeFilterCardProps {
  * from the house's own parts, until the owner draws it: a card in the middle of the screen with the
  * Map Style card's surface and shadow, and one choice of All, Jeep, E-Jeep, Bus, LRT, MRT or Ferry.
  * Radio buttons, so the arrow keys move through them and a screen reader says how many there are.
- * A choice applies at once and closes the card; Escape or a tap outside closes it as it was (the
- * page's own popover, which also hands the focus back).
+ * A choice applies at once. A tap, Enter or Space on one closes the card; the arrow keys only move,
+ * so a keyboard can reach Ferry without the card closing on the way. Escape or a tap outside
+ * closes it too (the page's own popover, which also hands the focus back).
  */
 export function ModeFilterCard({ id, ref, filter, onFilter }: ModeFilterCardProps) {
-  const titleId = useId();
-  const handleChange = (next: ModeFilter) => {
-    onFilter(next);
-    ref.current?.hidePopover();
+  // One radio group per card, so two lists' filters never share their choice.
+  const groupName = useId();
+  const close = () => ref.current?.hidePopover();
+  // An arrow key checks the next radio and fires a click with no pointer behind it (detail 0).
+  const handleClick = (event: MouseEvent<HTMLInputElement>) => {
+    if (event.detail > 0) close();
+  };
+  const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === ' ') close();
+    if (event.key !== 'Enter') return;
+    // Closing hands the focus back to the sliders; unprevented, the same Enter would press them
+    // and open the card again.
+    event.preventDefault();
+    close();
   };
   return (
     <div
       ref={ref}
       id={id}
       popover="auto"
-      aria-labelledby={titleId}
       data-testid="mode-filter"
       className="m-auto w-72 rounded-2xl bg-surface p-4 font-sn-pro text-content-primary shadow-sm backdrop:bg-surface-transparent"
     >
       <fieldset className="flex flex-col gap-1">
-        <legend id={titleId} className="mb-2 text-lg/7 font-extrabold">
-          Show routes
-        </legend>
+        <legend className="mb-2 text-lg/7 font-extrabold">Show routes</legend>
         {MODE_FILTERS.map((option) => (
           <label
             key={option}
@@ -45,10 +53,12 @@ export function ModeFilterCard({ id, ref, filter, onFilter }: ModeFilterCardProp
           >
             <input
               type="radio"
-              name={titleId}
+              name={groupName}
               value={option}
               checked={filter === option}
-              onChange={() => handleChange(option)}
+              onChange={() => onFilter(option)}
+              onClick={handleClick}
+              onKeyDown={handleKeyDown}
               className="size-4 accent-brand-surface outline-none"
             />
             {MODE_FILTER_LABEL[option]}
