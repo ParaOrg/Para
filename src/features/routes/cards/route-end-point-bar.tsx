@@ -1,12 +1,17 @@
 import type { ComponentPropsWithoutRef, ReactNode } from 'react';
 
+import { cn } from '@/shared/utils/cn';
+
 import { ROW_PRESSED } from './livery-card';
 import { RouteEndPointLines, type RouteEndPointPosition } from './route-end-point-lines';
 import type { Livery } from '../model/liveries';
 
 type RouteEndPointBarSize = 'base' | 'medium' | 'xl';
 
-type Props = Omit<ComponentPropsWithoutRef<'button'>, 'type' | 'children' | 'slot'> & {
+type RouteEndPointBarProps = Omit<
+  ComponentPropsWithoutRef<'button'>,
+  'type' | 'children' | 'slot'
+> & {
   /** Figma's routeDirection: the place the row's route goes to. */
   routeDirection: string;
   /**
@@ -57,23 +62,21 @@ export function RouteEndPointBar({
   size = 'base',
   className,
   ...rest
-}: Props) {
+}: RouteEndPointBarProps) {
   const isOnSurface = on === 'surface';
   return (
     <button
       type="button"
       {...rest}
-      className={
-        BAR +
-        ' ' +
-        SIZE_CLASSES[size] +
-        ' ' +
-        (isOnSurface ? ON_SURFACE : ON_CARD + ' ' + ROW_PRESSED[on]) +
-        (className ? ' ' + className : '')
-      }
+      className={cn(
+        BAR,
+        SIZE_CLASSES[size],
+        isOnSurface ? ON_SURFACE : cn(ON_CARD, ROW_PRESSED[on]),
+        className,
+      )}
     >
       <RouteEndPointLines position={position} isFaint={size !== 'medium'} />
-      <span className={'flex min-w-0 flex-1 items-center gap-1 ' + WORDS_PADDING[size]}>
+      <span className={cn('flex min-w-0 flex-1 items-center gap-1', WORDS_PADDING[size])}>
         <span className="min-w-0 flex-1">{routeDirection}</span>
         {slot}
       </span>

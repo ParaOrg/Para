@@ -1,3 +1,5 @@
+import { cn } from '@/shared/utils/cn';
+
 import './route-end-point-lines.css';
 
 export type RouteEndPointPosition = 'top' | 'bottom';
@@ -22,9 +24,7 @@ export function RouteEndPointLines({ position, isFaint = true }: RouteEndPointLi
   return (
     <span
       aria-hidden
-      className={
-        'flex w-6 shrink-0 flex-col items-start self-stretch' + (isFaint ? ' opacity-80' : '')
-      }
+      className={cn('flex w-6 shrink-0 flex-col items-start self-stretch', isFaint && 'opacity-80')}
     >
       <span className="route-end-point-line route-end-point-line-top-bottom min-h-px w-4 flex-1" />
       <span className="flex h-4 w-full items-center">

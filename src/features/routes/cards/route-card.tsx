@@ -1,3 +1,5 @@
+import { cn } from '@/shared/utils/cn';
+
 import {
   BLOB_PLACE,
   CARD_BLOB,
@@ -41,7 +43,7 @@ interface EndPoint {
   vehicle: Vehicle | null;
 }
 
-interface Props {
+interface RouteCardProps {
   livery: Livery;
   /** Figma's State. */
   state: 'rest' | 'selected';
@@ -72,7 +74,7 @@ export function RouteCard({
   onSelect,
   onPick,
   testId,
-}: Props) {
+}: RouteCardProps) {
   const selected = state === 'selected';
   // Each mode's rows stand under its own mode, so rows of one mode can move up past another's.
   const [first, ...others] = groupByMode(endPoints);
@@ -103,18 +105,17 @@ export function RouteCard({
       data-testid={`${testId}-origin`}
       data-livery={livery}
       data-state={state}
-      className={
-        'relative isolate flex w-full flex-col items-start gap-2 overflow-clip border-y-[0.6px] pt-4 pb-2.5 font-sn-pro ' +
-        CARD_SURFACE[livery] +
-        ' ' +
-        CARD_TEXT[livery]
-      }
+      className={cn(
+        'relative isolate flex w-full flex-col items-start gap-2 overflow-clip border-y-0-6 pt-4 pb-2.5 font-sn-pro',
+        CARD_SURFACE[livery],
+        CARD_TEXT[livery],
+      )}
     >
       <img
         src={CARD_BLOB[livery].src}
         alt=""
         aria-hidden
-        className={BLOB_PLACE + ' ' + CARD_BLOB[livery].className}
+        className={cn(BLOB_PLACE, CARD_BLOB[livery].className)}
       />
       {showsMode && first?.vehicle && (
         <div className="flex px-4">
@@ -153,10 +154,10 @@ export function RouteCard({
       ))}
       <span
         aria-hidden
-        className={
-          'pointer-events-none absolute inset-0 ' +
-          (selected ? CARD_SHADOW_SELECTED[livery] : CARD_SHADOW[livery])
-        }
+        className={cn(
+          'pointer-events-none absolute inset-0',
+          selected ? CARD_SHADOW_SELECTED[livery] : CARD_SHADOW[livery],
+        )}
       />
     </div>
   );

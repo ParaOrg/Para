@@ -75,7 +75,7 @@ export const CARD_TEXT = {
 /**
  * The mode's chip at a RouteCard's top (RouteCard, 4629:22776): the card's words' colour as its
  * fill and the card's own colour for its word, so it reads as the card turned inside out. A train
- * or the ferry, where a road card lists one, as its RouteCardRailway's chip (RAILWAY_PILL).
+ * or ferry card wears its line's colours the same way, as its own chip does (RAILWAY_PILL).
  */
 export const MODE_CHIP = {
   jeep: 'bg-card-jeep-on-surface text-card-jeep-surface',

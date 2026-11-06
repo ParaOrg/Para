@@ -22,7 +22,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /** Property 1=Jeepney, which the card calls Jeep. */
-export const Jeepney: Story = {};
+export const Jeepney: Story = { args: { vehicle: 'Jeepney' } };
 
 /** Property 1=Train: every rail line says "Train" on a card. */
 export const Train: Story = { args: { vehicle: 'MRT-3' } };

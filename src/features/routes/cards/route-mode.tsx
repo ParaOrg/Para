@@ -1,3 +1,5 @@
+import { cn } from '@/shared/utils/cn';
+
 import { MODE_CHIP } from './livery-card';
 import { MODE_LABEL } from './route-modes';
 import { VehicleIcon } from './vehicle-icon';
@@ -22,9 +24,10 @@ export function RouteMode({ vehicle, livery }: RouteModeProps) {
         <VehicleIcon vehicle={vehicle} />
       </span>
       <span
-        className={
-          'rounded-lg px-2 text-base-lower/6 font-bold whitespace-nowrap ' + MODE_CHIP[livery]
-        }
+        className={cn(
+          'rounded-lg px-2 text-base-lower/6 font-bold whitespace-nowrap',
+          MODE_CHIP[livery],
+        )}
       >
         {MODE_LABEL[vehicle]}
       </span>
