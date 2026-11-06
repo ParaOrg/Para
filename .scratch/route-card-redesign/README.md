@@ -41,8 +41,8 @@ This session stopped here; the owner's own sessions carry on. Each PR is stacked
 | 1 | Tokens: the mode card variables, added only | Merged: [#779](https://github.com/ParaOrg/Para/pull/779) |
 | 2 | Deletions, and mode → look (decisions 10 and 7) | Merged: [#780](https://github.com/ParaOrg/Para/pull/780), 412.5 kB. Its phone-test failure was the suites, not the app: they looked up the deleted `card-<livery>-surface-pale`; the dots along a road ride's rest ring in Map/RouteLine/surface-default |
 | 3 | RouteCard restyle | Merged: [#781](https://github.com/ParaOrg/Para/pull/781), 412.6 kB. Its profile-test failure did not come back on a fresh run |
-| 4 | RouteCardStackedList, with the railway card | Open PR (branch `claude/route-card-list`): the reviewers' findings below are fixed |
-| 5 | The Controller, with the filter | Built on `claude/route-card-controller`, stacked on step 4; its PR follows step 4's merge |
+| 4 | RouteCardStackedList, with the railway card | Open PR: [#786](https://github.com/ParaOrg/Para/pull/786). The reviewers' findings below are fixed |
+| 5 | The Controller, with the filter | Open PR (branch `claude/route-card-controller`): the filter and its empty state designed for now |
 | 6 | Sheet layout: docked on desktop, the mobile Controller at the bottom, Max full screen | Not started |
 | 7 | Commuter map wiring | Not started |
 | 8 | Studio wiring | Not started |
@@ -58,13 +58,13 @@ This session stopped here; the owner's own sessions carry on. Each PR is stacked
 
 A second review found three more `+` joins in `route-card-railway.tsx` and a comment left unwrapped; fixed too, with `AStation`'s play, which looked for the wrong test id.
 
-### Step 5: what the Figma says, and the draft
+### Step 5: what the Figma says, and what was built
 
 - **Controller** is a component set (4633:22010). Default (phones): a row, ✕ bottom left, ⇆ over the filter bottom right, padding 0 24 32 24, the items at the bottom. Variant2 (desktop): a column 88 wide beside the 368 list, ✕, then 8, then ⇆ and the filter 16 apart, padding 20 20 32 20. Each is IconButton Special Large; Figma fills the drawings with Brand/surface. The icons are `closeLarge`, `arrow-left-right-large` and `filter-large`, 28 square (export them from 4633:22012, 4633:22014 and 4633:22015).
 - ⇆ takes over SWITCH: its label stays the way it leads to (Pabalik, a train's bound), and it keeps `data-testid="chooser-flip"` and `data-back` for the suites.
-- **The filter, designed for now:** the sliders open a card in the middle of the screen (the page's own `popover`, so Escape, a tap outside and the focus come free), with "Show routes" and one choice of All, Jeep, E-Jeep, Bus, LRT, MRT or Ferry as native radio buttons. A choice applies and closes it. While a filter is on, a dot sits on the sliders and the button's name says which ("Filter: Jeep"). An empty result says "No Jeep routes here" with a way back to All. LRT keeps both light-rail lines, MRT the metro; UV Express shows under All only, since the owner's options leave it out.
-- The draft (`model/mode-filter.ts`, `cards/mode-filter-card.tsx`, `cards/route-list-controller.tsx`) is in [drafts.md](drafts.md). Untested.
-- **Mobbin** could not be searched: its tools were not connected in this session. The filter above has not been checked against other apps.
+- **The filter, designed for now:** the sliders open a card in the middle of the screen (the page's own `popover`, so Escape, a tap outside and the focus come free), with "Show routes" and one choice of All, Jeep, E-Jeep, Bus, LRT, MRT or Ferry as native radio buttons. A choice applies at once; a tap, Enter or Space closes the card, while the arrow keys only move through the choices. While a filter is on, a dot sits on the sliders and the button's name says which ("Filter: Jeep"). An empty result says "No Jeep routes here" with a way back to All. LRT keeps both light-rail lines, MRT the metro. The filter keeps rides by vehicle, not by card colour, so UV Express (left out of the owner's options), P2P and tricycle show under All only.
+- Built: `model/mode-filter.ts` (with `tests/unit/mode-filter-test.mjs`), `cards/mode-filter-card.tsx`, `cards/mode-filter-empty.tsx` and `cards/route-list-controller.tsx`, each with stories; the icons are in `shared/ui/route-icons.tsx`. Not wired into the list yet: steps 6 and 7 do that.
+- The filter has not been checked against other apps (Mobbin): it waits for the owner's own design.
 
 ### Learned on the way
 
@@ -99,7 +99,7 @@ Figma's leaf names repeat their group (`Card/Jeep/Jeep-surface`). The tokens dro
 
 The builder designed these for now, or left them out. Each waits for the owner's frames:
 
-- the filter button and its sheet;
+- the filter's card (ModeFilterCard: a centred popover of radio buttons), the dot on the sliders while a filter is on, and the empty state of a filter with no matches (ModeFilterEmpty);
 - the loading, empty, error and long-content states;
 - the studio's version (the owner is revamping it all);
 - the route detail's new frame;
