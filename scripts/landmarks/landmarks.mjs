@@ -2,9 +2,10 @@
 // feature per line, from `osmium export`) into the landmark file place search reads:
 // public/data/landmarks.v1.json (.scratch/place-search/README.md, step 2).
 //
-// A landmark is one named point: a mall, school, university, hospital, church, market, transport
-// station, barangay or major street. Areas become their centroid; a street becomes one point per
-// stretch of road that carries its name, at the vertex nearest that stretch's middle. Nothing
+// A landmark is one named point: a mall, school, university, hospital, place of worship, market,
+// transport station, barangay or major street. Areas become their centroid; a street becomes one
+// landmark per stretch of road that carries its name, at the vertex nearest that stretch's middle,
+// with a point about every kilometre along it (`points`), so "routes near here" covers it all. Nothing
 // here reaches the network: the same features always give the same file, byte for byte.
 //
 // Usage: node --experimental-strip-types scripts/landmarks/landmarks.mjs <features.geojsonseq> <extract timestamp> <out.json>
@@ -32,6 +33,47 @@ const RECORD_SEPARATOR = '\u001e';
 const SAME_LANDMARK_M = 250;
 /** Two ways of one street name whose ends are this close are one stretch of road. */
 const SAME_STREET_M = 300;
+/** How far apart a street's points are: about a kilometre (the owner's answer to question 4). */
+const STREET_POINT_EVERY_M = 1000;
+/** How finely the ways are walked to find those points. */
+const STREET_SAMPLE_M = 100;
+
+/** Points along a line, one at its start and one each `everyM` walked, and its end. */
+export function samplesAlong(line, everyM) {
+  const samples = [line[0]];
+  let sinceLast = 0;
+  for (let i = 1; i < line.length; i++) {
+    const [a, b] = [line[i - 1], line[i]];
+    const length = haversine(a, b);
+    let at = everyM - sinceLast;
+    while (at <= length) {
+      const t = at / length;
+      samples.push([a[0] + t * (b[0] - a[0]), a[1] + t * (b[1] - a[1])]);
+      at += everyM;
+    }
+    sinceLast = (sinceLast + length) % everyM;
+  }
+  samples.push(line[line.length - 1]);
+  return samples;
+}
+
+/**
+ * A stretch's points about STREET_POINT_EVERY_M apart: its ways walked every STREET_SAMPLE_M, then
+ * kept from the end farthest from its middle onward, each at least that far from the last ones
+ * kept. Both carriageways of a divided road fall to one set of points.
+ */
+export function streetPoints(stretch, middle) {
+  const samples = stretch.flatMap(({ line }) => samplesAlong(line, STREET_SAMPLE_M));
+  const farEnd = samples.reduce((far, sample) =>
+    haversine(sample, middle) > haversine(far, middle) ? sample : far,
+  );
+  const ordered = [...samples].sort((a, b) => haversine(a, farEnd) - haversine(b, farEnd));
+  const kept = [];
+  for (const sample of ordered) {
+    if (kept.every((point) => haversine(point, sample) >= STREET_POINT_EVERY_M)) kept.push(sample);
+  }
+  return kept;
+}
 
 /**
  * The OSM id of an exported feature: osmium names an area `a` + twice its way's id, or twice its
@@ -52,7 +94,7 @@ export function landmarkKind(tags) {
   if (tags.amenity === 'university' || tags.amenity === 'college') return 'university';
   if (tags.amenity === 'school') return 'school';
   if (tags.amenity === 'hospital') return 'hospital';
-  if (tags.amenity === 'place_of_worship' && tags.religion === 'christian') return 'church';
+  if (tags.amenity === 'place_of_worship') return 'worship';
   if (tags.amenity === 'marketplace') return 'market';
   if (RAIL_OR_STATION.has(tags.railway)) return 'station';
   if (tags.amenity === 'bus_station' || tags.amenity === 'ferry_terminal') return 'station';
@@ -127,7 +169,8 @@ const byOsmId = (a, b) => a.id[0].localeCompare(b.id[0]) || osmNumber(a.id) - os
 
 /**
  * The streets' ways joined into stretches: ways of one name whose ends lie within SAME_STREET_M
- * of each other's are one stretch, and each stretch is one landmark at the vertex nearest its middle.
+ * of each other's are one stretch, and each stretch is one landmark at the vertex nearest its middle,
+ * with its points along it (streetPoints).
  */
 export function streetLandmarks(ways) {
   const byName = new Map();
@@ -163,6 +206,7 @@ export function streetLandmarks(ways) {
         name: stretch[0].name,
         kind: 'street',
         point,
+        points: streetPoints(stretch, middle),
         aliases: [...new Set(stretch.flatMap(({ aliases }) => aliases))],
       });
     }
@@ -217,7 +261,15 @@ export function landmarksFrom(features, box) {
   const places = [...placesById.values()];
   const order = (kind) => LANDMARK_KINDS.indexOf(kind);
   return withoutRepeats([...places, ...streetLandmarks(streets)])
-    .map((landmark) => ({ ...landmark, point: roundPoint(landmark.point) }))
+    .map((landmark) => ({
+      ...landmark,
+      point: roundPoint(landmark.point),
+      // A street of one stretch shorter than a kilometre needs no list: its point is enough.
+      points: landmark.points?.map(roundPoint).filter((point) => isInside(box, point)),
+    }))
+    .map(({ points, ...landmark }) =>
+      points && points.length > 1 ? { ...landmark, points } : landmark,
+    )
     .filter((landmark) => isInside(box, landmark.point))
     .sort(
       (a, b) =>
