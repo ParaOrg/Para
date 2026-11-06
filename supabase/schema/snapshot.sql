@@ -1591,7 +1591,6 @@ begin
       set contributor_id = null, unlinked = true, start_name = null, end_name = null, description = null
       where contributor_id = who;
   end if;
-  delete from public.gps_session where owner_id = who;
   -- GoTrue's log of their sign-ins and changes, which names them by email.
   if to_regclass('auth.audit_log_entries') is not null then
     delete from auth.audit_log_entries
@@ -2443,20 +2442,6 @@ CREATE TABLE public.editor_name (
 
 
 --
--- Name: gps_session; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.gps_session (
-    id uuid DEFAULT gen_random_uuid() NOT NULL,
-    owner_id uuid DEFAULT auth.uid() NOT NULL,
-    route_variant_id uuid,
-    recorded_at timestamp with time zone DEFAULT now() NOT NULL,
-    points jsonb DEFAULT '[]'::jsonb NOT NULL,
-    note text
-);
-
-
---
 -- Name: hinto; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -3211,11 +3196,9 @@ CREATE TABLE public.route (
     owner_id uuid DEFAULT auth.uid() NOT NULL,
     signboard text,
     route_code text,
-    short_name text,
     long_name text,
     mode public.transport_mode DEFAULT 'jeepney'::public.transport_mode NOT NULL,
     fare_note text,
-    fare_as_of date,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
     head_stop_id uuid,
@@ -3718,14 +3701,6 @@ ALTER TABLE ONLY public.editor_name
 
 
 --
--- Name: gps_session gps_session_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.gps_session
-    ADD CONSTRAINT gps_session_pkey PRIMARY KEY (id);
-
-
---
 -- Name: hinto hinto_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -4076,20 +4051,6 @@ CREATE INDEX draft_last_saved_by_idx ON public.draft USING btree (last_saved_by)
 
 
 --
--- Name: gps_session_owner_id_idx; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX gps_session_owner_id_idx ON public.gps_session USING btree (owner_id);
-
-
---
--- Name: gps_session_route_variant_id_idx; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX gps_session_route_variant_id_idx ON public.gps_session USING btree (route_variant_id);
-
-
---
 -- Name: hinto_cell; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4164,13 +4125,6 @@ CREATE UNIQUE INDEX route_variant_one_per_direction ON public.route_variant USIN
 --
 
 CREATE INDEX route_variant_owner_id_idx ON public.route_variant USING btree (owner_id);
-
-
---
--- Name: route_variant_route_id_idx; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX route_variant_route_id_idx ON public.route_variant USING btree (route_id);
 
 
 --
@@ -4677,22 +4631,6 @@ ALTER TABLE ONLY public.editor_name
 
 
 --
--- Name: gps_session gps_session_owner_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.gps_session
-    ADD CONSTRAINT gps_session_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES auth.users(id);
-
-
---
--- Name: gps_session gps_session_route_variant_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.gps_session
-    ADD CONSTRAINT gps_session_route_variant_id_fkey FOREIGN KEY (route_variant_id) REFERENCES public.route_variant(id) ON DELETE SET NULL;
-
-
---
 -- Name: hinto hinto_contribution_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -4951,40 +4889,6 @@ CREATE POLICY "editors read points" ON public.point_batch FOR SELECT TO authenti
 --
 
 CREATE POLICY "editors read uses" ON public.contribution_use FOR SELECT TO authenticated USING (( SELECT private.is_editor() AS is_editor));
-
-
---
--- Name: gps_session; Type: ROW SECURITY; Schema: public; Owner: -
---
-
-ALTER TABLE public.gps_session ENABLE ROW LEVEL SECURITY;
-
---
--- Name: gps_session gps_session_delete; Type: POLICY; Schema: public; Owner: -
---
-
-CREATE POLICY gps_session_delete ON public.gps_session FOR DELETE TO authenticated USING (((( SELECT auth.uid() AS uid) = owner_id) AND ( SELECT private.is_editor() AS is_editor)));
-
-
---
--- Name: gps_session gps_session_insert; Type: POLICY; Schema: public; Owner: -
---
-
-CREATE POLICY gps_session_insert ON public.gps_session FOR INSERT TO authenticated WITH CHECK (((( SELECT auth.uid() AS uid) = owner_id) AND ( SELECT private.is_editor() AS is_editor)));
-
-
---
--- Name: gps_session gps_session_select; Type: POLICY; Schema: public; Owner: -
---
-
-CREATE POLICY gps_session_select ON public.gps_session FOR SELECT TO authenticated USING ((( SELECT auth.uid() AS uid) = owner_id));
-
-
---
--- Name: gps_session gps_session_update; Type: POLICY; Schema: public; Owner: -
---
-
-CREATE POLICY gps_session_update ON public.gps_session FOR UPDATE TO authenticated USING (((( SELECT auth.uid() AS uid) = owner_id) AND ( SELECT private.is_editor() AS is_editor))) WITH CHECK (((( SELECT auth.uid() AS uid) = owner_id) AND ( SELECT private.is_editor() AS is_editor)));
 
 
 --
@@ -5992,13 +5896,6 @@ GRANT UPDATE(submitted_at) ON TABLE public.draft TO authenticated;
 --
 
 GRANT SELECT ON TABLE public.editor_name TO authenticated;
-
-
---
--- Name: TABLE gps_session; Type: ACL; Schema: public; Owner: -
---
-
-GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.gps_session TO authenticated;
 
 
 --

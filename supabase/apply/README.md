@@ -663,7 +663,8 @@ overview backfill) is unchanged. No table, function or row changes.
 
 # Applying drop_dead_weight to the live project
 
-**Not applied live.** Safe to apply now: no studio build and no publish reads what goes. Clean-up step 5 of
+**Applied live 2026-11-06** (ledger `20261106022531`) from its paste file; its check passed. Do not reapply.
+No studio build and no publish reads what goes. Clean-up step 5 of
 `.scratch/codebase-review/database.md`, the parts nothing reads or writes (M4, L4):
 
 - `gps_session`, the editors' recorded trips from before the contributor app. Nothing writes it.
