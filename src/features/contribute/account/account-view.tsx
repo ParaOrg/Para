@@ -1,4 +1,4 @@
-import { useIsMutating } from '@tanstack/react-query';
+import { useIsMutating, useQueryClient } from '@tanstack/react-query';
 import { Activity, useEffect, useState } from 'react';
 
 import { messageOf } from './account-message';
@@ -14,6 +14,7 @@ import { useAccountQuery } from '../api/use-account-query';
 import { useMyStatsQuery } from '../api/use-my-stats-query';
 import { useProfileQuery } from '../api/use-profile-query';
 import { useSignOutMutation } from '../api/use-sign-out-mutation';
+import { askAgain, useLoadGiveUp } from '../common/use-load-give-up';
 import { SCREENS } from '../navigation/screen-routes';
 import { useScreenView } from '../navigation/use-screen-view';
 import type { Recording } from '../storage/recording-schema';
@@ -39,6 +40,9 @@ export function AccountView({ recordings, statusOf }: AccountViewProps) {
   const account = useAccountQuery();
   const profile = useProfileQuery();
   const stats = useMyStatsQuery();
+  const queryClient = useQueryClient();
+  // Statistics with no answer after a while are said as with no signal, with Try again.
+  const statsGiveUp = useLoadGiveUp(!stats.data && !stats.error && stats.fetchStatus !== 'idle');
   const signOut = useSignOutMutation();
   // A delete on its way keeps its screen up whatever the hash does (the phone's Back, the
   // browser's): its answer, a failure above all, is always seen where it was asked for.
@@ -90,7 +94,10 @@ export function AccountView({ recordings, statusOf }: AccountViewProps) {
     <AccountScreen
       name={profile.data?.name ?? null}
       email={account.data?.email ?? ''}
-      stats={statsState(stats.data, stats.error)}
+      stats={statsState(stats.data, stats.error, statsGiveUp.hasGivenUp, () => {
+        statsGiveUp.restart();
+        void askAgain(queryClient, accountKeys.stats(), stats.refetch);
+      })}
       unsentCount={recordings.filter((recording) => isNotSent(statusOf(recording))).length}
       isLoggingOut={signOut.isPending}
       error={messageOf(signOut.error)}
@@ -106,7 +113,14 @@ export function AccountView({ recordings, statusOf }: AccountViewProps) {
  * fails, placeholders until the first come, a line when none could be had, and nothing at all
  * while the project has no stats to give (get_my_stats not there yet).
  */
-function statsState(data: MyStats | undefined, error: Error | null): CommuteStatsState | null {
+const STATS_OFFLINE = 'Your statistics show when you’re online.';
+
+function statsState(
+  data: MyStats | undefined,
+  error: Error | null,
+  hasGivenUp: boolean,
+  onRetry: () => void,
+): CommuteStatsState | null {
   if (data) {
     return {
       kind: 'shown',
@@ -128,13 +142,15 @@ function statsState(data: MyStats | undefined, error: Error | null): CommuteStat
       },
     };
   }
+  if (hasGivenUp) return { kind: 'failed', message: STATS_OFFLINE, onRetry };
   if (!error) return { kind: 'loading' };
   if (error instanceof AccountError && error.problem === 'unavailable') return null;
   return {
     kind: 'failed',
     message:
       error instanceof AccountError && error.problem === 'offline'
-        ? 'Your statistics show when you’re online.'
+        ? STATS_OFFLINE
         : 'Your statistics can’t be shown right now.',
+    onRetry,
   };
 }
