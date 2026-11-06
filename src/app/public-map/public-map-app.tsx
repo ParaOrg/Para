@@ -67,7 +67,7 @@ const openOnRoutes = () =>
 
 /**
  * Whether the commuter map draws the hotspots' pins (a terminal's or hintuan's flag zoomed in, its
- * dot zoomed out). Off for now, by the owner's call: the boxes and their names say where each one
+ * dot zoomed out). Off for now: the boxes and their names say where each one
  * is, and a tap there opens it as before. The studio keeps its pins.
  */
 const SHOW_HOTSPOT_PINS = false;
