@@ -1,4 +1,4 @@
-import { useId, type KeyboardEvent, type MouseEvent, type RefObject } from 'react';
+import { useId, useRef, type KeyboardEvent, type RefObject } from 'react';
 
 import { MODE_FILTER_LABEL, MODE_FILTERS, type ModeFilter } from '../model/mode-filter';
 
@@ -24,13 +24,22 @@ export function ModeFilterCard({ id, ref, filter, onFilter }: ModeFilterCardProp
   // One radio group per card, so two lists' filters never share their choice.
   const groupName = useId();
   const close = () => ref.current?.hidePopover();
-  // An arrow key checks the next radio and fires a click with no pointer behind it (detail 0).
-  const handleClick = (event: MouseEvent<HTMLInputElement>) => {
-    if (event.detail > 0) close();
+  // An arrow key checks the next radio and fires a click on it, as a tap on a choice or its words
+  // does, and as Space and a screen reader's click do. Only the arrow keys' clicks leave it open.
+  const isArrowMoveRef = useRef(false);
+  const handleClick = () => {
+    if (isArrowMoveRef.current) {
+      isArrowMoveRef.current = false;
+      return;
+    }
+    close();
   };
   const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === ' ') close();
-    if (event.key !== 'Enter') return;
+    isArrowMoveRef.current = event.key.startsWith('Arrow');
+    // Radios do nothing on Enter, nor on Space once checked (no click comes), so those close the
+    // card here. Space on another choice checks it, and its click closes the card.
+    const isChosenAgain = event.key === ' ' && event.currentTarget.checked;
+    if (event.key !== 'Enter' && !isChosenAgain) return;
     // Closing hands the focus back to the sliders; unprevented, the same Enter would press them
     // and open the card again.
     event.preventDefault();

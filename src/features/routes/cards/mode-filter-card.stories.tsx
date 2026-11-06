@@ -80,3 +80,13 @@ export const ArrowsMove: Story = {
     await expect(card).not.toBeVisible();
   },
 };
+
+/** A tap on a choice's words, where most taps land, applies it and closes the card. */
+export const TapTheWords: Story = {
+  play: async ({ args, canvasElement }) => {
+    const card = await open(canvasElement);
+    await userEvent.click(within(card).getByText('Bus'));
+    await expect(args.onFilter).toHaveBeenCalledWith('bus');
+    await expect(card).not.toBeVisible();
+  },
+};
