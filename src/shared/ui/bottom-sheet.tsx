@@ -214,17 +214,24 @@ export function BottomSheet({
   }, !hidden);
 
   /**
-   * Where the sheet slides to. The page's `[data-dock-host]` hears it too, as
-   * `--dock-y`, while this is the sheet on show: what sits on the map above
-   * the sheet follows it (ScreenLocationBehavior, Figma 3870:5941). The same
-   * length, so both glide alike.
+   * Where the sheet slides to. What sits on the map above the sheet follows it
+   * (ScreenLocationBehavior, Figma 3870:5941) as `--dock-y`, while this is the
+   * sheet on show: the same length, so both glide alike. At rest it is written
+   * on the page's `[data-dock-host]`, for a follower that comes later to find;
+   * a finger's move writes it on the followers alone (`[data-dock-follower]`),
+   * since a property changed on the page's root restyles the whole page, and a
+   * drag writes one each frame.
    */
-  function at(y: string) {
+  function at(y: string, isMove = false) {
     const sheet = own.current;
     if (!sheet) return;
     sheet.style.setProperty('--sheet-y', y);
-    if (!sheet.hidden)
-      sheet.closest<HTMLElement>('[data-dock-host]')?.style.setProperty('--dock-y', y);
+    if (sheet.hidden) return;
+    const host = sheet.closest<HTMLElement>('[data-dock-host]');
+    if (!host) return;
+    if (!isMove) host.style.setProperty('--dock-y', y);
+    for (const follower of host.querySelectorAll<HTMLElement>('[data-dock-follower]'))
+      follower.style.setProperty('--dock-y', y);
   }
 
   // Whether this sheet put the mark on the page: only it takes it off, so a
@@ -252,7 +259,7 @@ export function BottomSheet({
 
   /** Docked, not floating: the notch is drawn only then. */
   const docked = () => handleRef.current?.offsetParent != null;
-  const show = (shown: number) => at(slideShowing(shown, shape));
+  const show = (shown: number) => at(slideShowing(shown, shape), true);
   const { onPointerDown, onBodyFocus, afterTap } = useSheetGestures({
     sheet: own,
     handle: handleRef,
