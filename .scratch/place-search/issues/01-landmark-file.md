@@ -1,6 +1,6 @@
 # 01: The landmark file
 
-Status: ready-for-agent (claimed by the place-search builder; in review)
+Status: resolved
 Type: task
 Blocked by: none
 
@@ -26,3 +26,7 @@ Step 2's data, no UI. A script that builds `public/data/landmarks.v1.json` from 
 - Running the build twice on one extract gives the same bytes.
 - `tests/unit/landmark-file-test.mjs` passes; `npm run check` passes.
 - No file under `src/` changes, so the public page's size cannot move.
+
+## Comments
+
+- 2026-11-06: merged as #811. 6,880 landmarks, 757 kB; CI green first time.

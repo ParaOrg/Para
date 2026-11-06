@@ -47,6 +47,7 @@ import { retryingImport } from '@/shared/utils/retrying-import';
 
 import { ContributionCard } from './contribution-card';
 import type { SaidNote } from './page-toasts';
+import { PlaceSearchBar, sheetTopUnderSearch } from './place-search-bar';
 import { useStatusBarColour } from './status-bar';
 
 // The toasts, fetched the first time the page has something to say: the opening page does not
@@ -197,6 +198,7 @@ export function PublicMapApp() {
       className={cn(
         '@container relative h-full w-full overflow-clip',
         needRefresh && '[--toast-top:calc(env(safe-area-inset-top)+--spacing(19))]',
+        sheetTopUnderSearch(needRefresh, offline || age.stale),
       )}
     >
       {/* Out of reach under the credits, the map and every card alike. */}
@@ -314,6 +316,18 @@ export function PublicMapApp() {
           />
         )}
 
+        {/*
+        Place search (.scratch/place-search, step 1): a place chosen opens as its name tapped on
+        the map does (openPlace). On a wide map the cards float under it (sheetTopUnderSearch).
+      */}
+        <PlaceSearchBar
+          hotspots={hotspots.hotspots}
+          whereNow={() => where.current?.at ?? null}
+          onPick={(hotspot) => openPlace(hotspot.id)}
+          isUnderUpdate={needRefresh}
+          isUnderOfflinePill={offline || age.stale}
+          isCardOpen={cards.open}
+        />
         {/* How old the map is, and a new version waiting. */}
         <Notices offline={offline} age={age} needRefresh={needRefresh} onUpdate={reloadToUpdate} />
         {/* What went wrong, at the top: the locator's note and a failed load. */}

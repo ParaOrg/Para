@@ -13,6 +13,8 @@ A commuter types a place and the map takes them there. Two steps: first Para's o
 - **Choosing a result** (decision 3). The camera moves to the place and its route list opens, exactly as tapping the place on the map does today. Same code path, not a copy.
 - **Not found.** "No place called '…' yet".
 - **Commuter map only** (decision 5). The studio has no search.
+- **Built** (ticket 02). `src/features/routes/model/place-search.ts` (the fold, the match, the ranking; `tests/unit/place-search-test.mjs`), `src/features/routes/search/` (the field and its results, a combobox: arrows, Enter, Escape) and `src/app/public-map/place-search-bar.tsx` (where it sits). At one match quality, a place matched by its own label comes before one matched by another name: "fairveiw" finds SM Fairview before Robinson, whose alias is "SM Fairview". The commuter's position is read as they type, never during render, since the page keeps it in a ref.
+- **For now, until the owner designs it:** on a phone the bar hides while a card is open. On a computer it stays, and the floating cards (`corner` and `dock`) start under it: BottomSheet reads `--sheet-float-top`, 0 unless set, and the public map sets it as one static class (the hub's yes to question 5). It steps down under "Update Para!" and, on a wide map, under the offline pill.
 
 ## Step 2: OpenStreetMap landmarks
 
@@ -49,13 +51,16 @@ Designed for now from existing primitives and tokens, never final. Each needs th
 8. The "routes near here" view: header, the straight-line note, each hintuan with its routes, and "No Para routes near here yet".
 9. Long names in rows and in the field: truncate or wrap.
 10. The camera move to a landmark that is not a place: zoom level, and whether a marker shows.
+11. The bar's card behind the field (white, rounded, the large shadow) and its visible "Search places" label: built so the label reads over the map.
+12. Search while a card is open: on a phone, hidden for now; on a computer, the bar stays and the cards float under it (question 5, built). How the two look together has no story yet: the owner's call whether one is wanted.
+13. A search icon in the field: none exists in the design system, so none is drawn.
 
 ## Tickets
 
 | # | Ticket | Status |
 | --- | --- | --- |
-| 01 | [The landmark file](issues/01-landmark-file.md) | in review |
-| 02 | [Search Para's own places](issues/02-search-own-places.md) | blocked by the route card redesign's step 7 |
+| 01 | [The landmark file](issues/01-landmark-file.md) | resolved (#811) |
+| 02 | [Search Para's own places](issues/02-search-own-places.md) | in review |
 | 03 | [Landmarks and routes near here](issues/03-landmarks-in-search.md) | blocked by 01, 02 |
 | 04 | [The monthly rebuild](issues/04-monthly-rebuild.md) | needs the owner (question 2) |
 
@@ -65,3 +70,13 @@ Designed for now from existing primitives and tokens, never final. Each needs th
 2. The monthly rebuild opens its pull request with the workflow's own token. GitHub then starts no CI on it by itself, and the repository must allow Actions to create pull requests (Settings → Actions → General). Recommended: the owner ticks that setting; the workflow opens the pull request and then starts CI on its branch with "Run workflow" (allowed for the token). `osmium-tool` comes from apt on the runner, like Planetiler's jar in the tiles build.
 3. The source is openstreetmap.fr's Metro Manila extract rather than Geofabrik's or Overpass. Recommended: keep it (smallest download; reachable from both the sessions and GitHub).
 4. A long street is one point. Recommended: store a point every 1 km along a major street (still well under 3 MB) so "routes near here" works along all of EDSA, and search lists the street once, opening at the point nearest the commuter.
+5. (Sent after route card step 7 merged.) On a computer, may the corner sheet start below the search bar? Recommended: one opt-in line in `bottom-sheet.tsx`, the corner kind reading its top from a CSS variable only the public map sets. Answered yes by the hub, for `corner` and `dock`.
+
+## Answers (the owner, 2026-11-06, via the hub: all recommended)
+
+1. Places of worship of all faiths, as one landmark kind.
+2. The owner ticks GitHub's "Allow Actions to create and approve pull requests" themselves; ticket 04 waits for the hub's confirmation.
+3. Keep openstreetmap.fr's Metro Manila extract.
+4. A point every 1 km along major streets.
+5. Yes, for `corner` and `dock`: built in #817.
+6. Yes: `search/` added to `.claude/CLAUDE.md`'s routes block in #817.

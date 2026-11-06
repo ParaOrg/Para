@@ -104,11 +104,13 @@ export interface SheetHeight {
 /**
  * Where each kind floats, and how wide; in each kind's own variant, so its
  * `inset-auto` comes before its `top` and `left`. The rest is `sheet-floating:`.
+ * `corner` and `dock` start `--sheet-float-top` down, 0 unless the page sets it:
+ * the public map sets it under its place search, once per layout, never per move.
  */
 const FLOATS_AT = {
   corner:
-    '@float:inset-auto @float:top-0 @float:left-0 @float:max-h-full @float:w-96 @float:pt-0 @float:pb-0',
-  dock: '@float:inset-auto @float:inset-y-0 @float:left-0 @float:w-92 @float:overflow-visible @float:pt-0 @float:pb-0',
+    '@float:inset-auto @float:top-[var(--sheet-float-top,0px)] @float:left-0 @float:max-h-[calc(100%-var(--sheet-float-top,0px))] @float:w-96 @float:pt-0 @float:pb-0',
+  dock: '@float:inset-auto @float:top-[var(--sheet-float-top,0px)] @float:bottom-0 @float:left-0 @float:w-92 @float:overflow-visible @float:pt-0 @float:pb-0',
   card:
     '@wide:inset-auto @wide:top-4 @wide:left-4 @wide:w-80 @wide:max-w-[calc(100%-2rem)] @wide:max-h-[calc(100%-2rem)] ' +
     '@wide:rounded-xl @wide:shadow-xl @wide:ring-1 @wide:ring-black/10 @wide:pt-4 @wide:pb-4',
