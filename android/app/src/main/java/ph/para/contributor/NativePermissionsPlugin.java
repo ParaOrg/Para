@@ -3,8 +3,11 @@ package ph.para.contributor;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
 import android.os.PowerManager;
 import android.provider.Settings;
 import android.util.Log;
@@ -12,6 +15,7 @@ import android.util.Log;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.IntentSenderRequest;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.core.location.LocationManagerCompat;
 
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
@@ -56,6 +60,8 @@ import java.util.Locale;
 )
 public class NativePermissionsPlugin extends Plugin {
     private static final String TAG = "ParaLocation";
+    /** How long the dialog's own result is waited for once the app is back in front. */
+    private static final long DIALOG_RESULT_GRACE_MS = 1_000;
 
     /** Google's "Turn on location?" dialog, and the call waiting for its answer. */
     private ActivityResultLauncher<IntentSenderRequest> locationDialog;
@@ -110,6 +116,22 @@ public class NativePermissionsPlugin extends Plugin {
             Log.w(TAG, "Location settings could not be read.", noPlayServices);
             answer(call, "unknown");
         }
+    }
+
+    /**
+     * Back in front with the dialog's answer not come: some phones never deliver it, and the
+     * page's tap would wait for good with nothing said. Once the result has had its moment, the
+     * phone's own location switch is the answer.
+     */
+    @Override
+    protected void handleOnResume() {
+        super.handleOnResume();
+        if (waitingForDialog == null) return;
+        new Handler(Looper.getMainLooper()).postDelayed(() -> {
+            if (waitingForDialog == null) return;
+            LocationManager manager = (LocationManager) getContext().getSystemService(Context.LOCATION_SERVICE);
+            answerDialog(manager != null && LocationManagerCompat.isLocationEnabled(manager));
+        }, DIALOG_RESULT_GRACE_MS);
     }
 
     private void answerDialog(boolean isTurnedOn) {
