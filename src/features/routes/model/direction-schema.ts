@@ -14,7 +14,7 @@ import { lineStringSchema } from './geojson-schema';
  */
 
 /** Mirrors the `transport_mode` enum in supabase/migrations/0001_init.sql. */
-const transportModeSchema = z.enum([
+export const transportModeSchema = z.enum([
   'jeepney',
   'e_jeepney',
   'uv_express',

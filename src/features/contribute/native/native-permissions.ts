@@ -26,6 +26,7 @@ interface NativePermissionsPlugin {
   requestPermissions: (options: { permissions: NativePermission[] }) => Promise<unknown>;
   deviceInfo: () => Promise<unknown>;
   openAppSettings: () => Promise<void>;
+  checkLocationOn: () => Promise<unknown>;
 }
 
 const getPlugin = lazyPlugin<NativePermissionsPlugin>(PLUGIN_NAMES.nativePermissions);
@@ -49,4 +50,15 @@ export async function readDeviceInfo(): Promise<DeviceInfo> {
 /** Opens Para's page in the phone's Settings. */
 export function openAppSettings(): Promise<void> {
   return getPlugin().openAppSettings();
+}
+
+const locationSettingSchema = z.object({ location: z.enum(['on', 'off', 'unknown']) });
+export type LocationSetting = z.infer<typeof locationSettingSchema>['location'];
+
+/**
+ * Whether the phone's location is on. Off, Google's "Turn on location?" dialog shows, and its
+ * answer is the answer; "off" too when it cannot show. "unknown" without Google Play services.
+ */
+export async function checkLocationOn(): Promise<LocationSetting> {
+  return locationSettingSchema.parse(await getPlugin().checkLocationOn()).location;
 }

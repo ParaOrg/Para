@@ -1,10 +1,10 @@
-// save-test's core flows a second time, with drafts on (VITE_STUDIO_DRAFTS=1),
-// the save path the live studio takes: signed in, against the stand-in that
-// keeps drafts (lib/fake-studio-db.mjs), on today's published map. The
+// save-test's core flows a second time, against the other stand-in that keeps
+// drafts (lib/fake-studio-db.mjs), with the review flow's own steps: signed
+// in, on today's published map. The
 // basemap is a flat grey and the router has no roads, so every line is
 // freehand and nothing reaches the live project.
 //
-//   VITE_STUDIO_DRAFTS=1 npm run dev     (in another terminal)
+//   npm run dev                          (in another terminal)
 //   node tests/e2e/save-drafts-test.mjs
 //
 // What it checks, flow by flow as save-test drives them, each save a draft
@@ -194,13 +194,23 @@ const idle = () =>
   page
     .waitForFunction(() => !document.body.innerText.includes('snapping…'), null, { timeout: 15000 })
     .catch(() => {});
-const pointsShown = async () => Number((await body()).match(/(\d+) points?\b/)?.[1] ?? 0);
+// The drawing's count: the toolbar's "3 points", or beside the map Line detail's Points (or a
+// hotspot's Corners); never the sidebar's "Add at least 2 points" while a save waits.
+const countIn = (text) => {
+  const toolbar = text.match(/(?<!at least )(\d+) (?:points?|corners?)\b/);
+  const detail = text.match(/\b(?:Points|Corners)\s+(\d+)/);
+  return Number(detail?.[1] ?? toolbar?.[1] ?? 0);
+};
+const pointsShown = async () => countIn(await body());
+// On a computer the sidebar already stands beside the map, a route's or a hotspot's; narrower, Done.
 const done = async () => {
   await idle();
-  await page.getByRole('button', { name: /Done/ }).click();
+  if (!(await page.getByTestId('sidebar').isVisible()))
+    await page.getByRole('button', { name: /Done/ }).click();
   await page.waitForTimeout(600);
 };
-const saveButton = () => page.getByRole('button', { name: /^(Save|Update)$/ });
+const saveButton = () => page.getByRole('button', { name: 'Save as draft', exact: true });
+const publishButton = () => page.getByRole('button', { name: 'Publish', exact: true });
 const DRAFTED = 'Saved as a draft. The map changes once it is approved.';
 const drafted = () => waitFor(async () => (await body()).includes(DRAFTED));
 const draftOf = (kind, subjectId) =>
@@ -227,9 +237,10 @@ async function hintuan(c, name) {
   await done();
   await page.getByPlaceholder('SM Fairview Ilalim').fill(name);
   const n = log.length;
-  await page.getByRole('button', { name: 'Save hintuan' }).click();
+  await page.getByRole('button', { name: 'Save as draft', exact: true }).click();
   await waitFor(
-    async () => (await page.getByRole('button', { name: 'Save hintuan' }).count()) === 0,
+    async () =>
+      (await page.getByRole('button', { name: 'Save as draft', exact: true }).count()) === 0,
   );
   await page.waitForTimeout(500);
   return writesSince(n);
@@ -323,7 +334,18 @@ async function openCard(ll) {
   await go(at(0, 0), 15);
   await clickAt(ll, 700);
 }
-const closeLoop = () => page.getByTestId('close-loop');
+/** Closes the line by a click at its connect badge, as the editor does (use-connect-hint.ts). */
+const closeByBadge = async () => {
+  const outbound = (await page.evaluate(() => window.__src('draw-outbound')))?.features?.find(
+    (f) => f.properties.role === 'start',
+  )?.geometry.coordinates;
+  const points = (await page.evaluate(() => window.__src('draw-points')))?.features ?? [];
+  const target = outbound ?? points[0]?.geometry.coordinates;
+  const [x, y] = await px(target);
+  await page.mouse.move(x + 4, y + 4, { steps: 3 });
+  await page.waitForTimeout(150);
+  await page.mouse.click(x + 4, y + 4);
+};
 
 // ---- 2b. The return trip, into the slot
 const slotId = draftDirections.find((v) => v.shape === null)?.id;
@@ -337,7 +359,7 @@ check(
   `${await pointsShown()} points`,
 );
 await clickAt(BACK_MID, 300);
-await closeLoop().click();
+await closeByBadge();
 await idle();
 await done();
 check('  the panel says it draws the return trip', (await body()).includes('Draw the return trip'));
@@ -366,6 +388,7 @@ check(
 
 // ---- 3. Edit a direction
 await openCard(OUT[1]);
+await waitFor(async () => (await page.getByRole('button', { name: 'Edit route' }).count()) === 1);
 check(
   'a tap on the line opens its card, with Edit route',
   (await page.getByRole('button', { name: 'Edit route' }).count()) === 1,
@@ -377,6 +400,12 @@ check(
   (await pointsShown()) === OUT.length,
   `${await pointsShown()} points`,
 );
+check(
+  '  a published route with no draft opens as Published',
+  /Status\s+Published/.test(await page.getByTestId('line-detail').innerText()),
+);
+// Edit route opens in Move, where a click adds nothing: Snap, to add.
+await page.getByTestId('snap-draw').getByRole('button', { name: 'Snap' }).click();
 await go(at(0, 0), 15);
 await clickAt(at(0.0055, 0.0005), 300);
 await waitFor(async () => (await pointsShown()) === OUT.length + 1);
@@ -385,6 +414,9 @@ check(
   '  the panel says it updates this direction',
   (await body()).includes('Update this direction'),
 );
+// A via in this edit: a route fact, kept in the draft, for 3a to find again.
+const viaField = () => page.getByLabel('Via (if applicable)');
+await viaField().fill('Zabarte');
 n = log.length;
 const revisionBefore = route?.revision;
 await saveButton().click();
@@ -410,6 +442,59 @@ check(
   '  the approved line is as it was until approval',
   outV?.control_points.length === OUT.length,
 );
+
+// ---- 3a. Edit again before approval: the editor's own draft opens, not the approved line
+// Saving builds on the draft, so opening the approved line would save it over the first edit.
+// No reload between the two: the studio's cache of the draft must not seed the second edit.
+await openCard(OUT[1]);
+// The draft's line is drawn over the approved one: a tap on it opens the editor's own draft
+// straight into Edit route on the way tapped, with no review sheet.
+await waitFor(async () => (await pointsShown()) > 0);
+check(
+  "a tap on the editor's own draft opens it into editing, with no review sheet",
+  (await pointsShown()) > 0 && (await page.locator('dialog[open]').count()) === 0,
+  `${await pointsShown()} points`,
+);
+await page.waitForTimeout(300);
+check(
+  "  the tap opens the draft's own line",
+  (await pointsShown()) === OUT.length + 1,
+  `${await pointsShown()} points`,
+);
+check(
+  "  and opens as a Draft: the editor's own draft is waiting",
+  /Status\s+Draft/.test(await page.getByTestId('line-detail').innerText()),
+);
+await page.getByTestId('snap-draw').getByRole('button', { name: 'Snap' }).click();
+await go(at(0, 0), 15);
+await clickAt(at(0.006, 0.001), 300);
+await waitFor(async () => (await pointsShown()) === OUT.length + 2);
+await done();
+check(
+  "  and its form opens on the draft's route facts: the via saved before",
+  (await viaField().inputValue()) === 'Zabarte',
+  await viaField().inputValue(),
+);
+// Save waits while the draft is read ("Reading your draft of this route…").
+await waitFor(async () => await saveButton().isEnabled());
+n = log.length;
+await saveButton().click();
+// The first save's "Saved as a draft" may still be up: wait for this save's own write, then
+// for the drawing to end, which is when the save has finished and the kept drawing is cleared.
+await waitFor(async () => writesSince(n).some((x) => x.table === 'draft'));
+await waitFor(async () => (await pointsShown()) === 0);
+await drafted();
+w = writesSince(n);
+check(
+  '  and its save keeps the first edit: the same draft, two points more than approved',
+  draftOf('route', route?.id)?.id === editDraft?.id &&
+    draftOf('route', route?.id)?.payload.directions.find((v) => v.id === outV?.id)?.control_points
+      .length ===
+      OUT.length + 2 &&
+    draftOf('route', route?.id)?.payload.route.via === 'Zabarte' &&
+    approvedWrites(w).length === 0,
+  said(w),
+);
 await approveAll();
 
 // ---- 4. Signboards, per direction
@@ -419,6 +504,8 @@ const upload = (name, text) =>
     .getByTestId('signboard-file')
     .setInputFiles({ name, mimeType: 'image/svg+xml', buffer: Buffer.from(text) });
 await openCard(OUT[1]);
+// The signboards wait for the route's draft to be read: a save just before dropped the cached one.
+await waitFor(async () => (await page.getByTestId('signboard-editor').count()) === 1);
 check(
   'the trip card has a Signboard for the direction on show',
   (await page.getByTestId('signboard-editor').count()) === 1 && (await items().count()) === 0,
@@ -445,6 +532,19 @@ check(
     approvedWrites(w).length === 0,
   said(w),
 );
+// Reopened later, the card lists the draft's boards, not the approved row's empty list:
+// a change saved on top of the draft would otherwise drop the board the draft added.
+await load();
+await openCard(OUT[1]);
+// A tap on the editor's own draft opens it into editing; Exit leaves the drawing for its card.
+await waitFor(async () => (await pointsShown()) > 0);
+await page.getByRole('button', { name: 'Exit', exact: true }).click();
+await waitFor(async () => (await items().count()) === 1);
+check(
+  "  reopened, the card lists the editor's draft's board",
+  (await items().count()) === 1,
+  `${await items().count()} boards`,
+);
 n = log.length;
 await page.getByRole('button', { name: 'Remove signboard 1' }).click();
 await waitFor(async () => (await items().count()) === 0);
@@ -458,16 +558,39 @@ check(
   said(w),
 );
 check('  and leaves the file in the bucket: the approved map may still list it', bucket.has(board));
-await approveAll();
+
+// ---- 4a. Delete while the editor already has a draft of the route: it joins the draft
+// The signboard's draft is still the editor's, unreviewed. Approving the delete in the same
+// press would publish that draft with it, so the delete is stored in it and waits in Drafts.
+n = log.length;
+await page.getByRole('button', { name: 'Delete' }).click();
+await waitFor(async () => (await body()).includes('Added to your draft of'));
+w = writesSince(n);
+check(
+  'Delete with a draft already open joins that draft, unapproved',
+  draftOf('route', route?.id)?.id === boardDraft?.id &&
+    draftOf('route', route?.id)?.payload.directions.find((v) => v.id === outV?.id)?.shape ===
+      null &&
+    rpcs(w, 'publish_draft').length === 0 &&
+    approvedWrites(w).length === 0,
+  said(w),
+);
+check(
+  '  and the approved direction keeps its line until the draft is approved',
+  !!tables.route_variant.find((v) => v.id === outV?.id)?.shape,
+);
+// The stand-in drops the draft so the next flow starts from the approved map with OUT drawn.
+tables.draft = tables.draft.filter((d) => d.subject_id !== route?.id);
+await load();
 
 // ---- 4b. An approval on a stale base is refused, and the studio says so
 // Another editor's change lands between Delete's draft and its approval: the
-// route's revision moves on, so 0022 answers conflict and applies nothing.
+// route's revision moves on, so publish_draft answers conflict and applies nothing.
 const CONFLICT_SAID =
-  'Approved data changed since this draft began. Refresh and compare before making a new draft.';
+  'Published data changed since this draft began. Refresh and compare before making a new draft.';
 await openCard(OUT[1]);
 db.meanwhile = {
-  when: (method, table) => method === 'POST' && table === 'approve_reviewed_draft',
+  when: (method, table) => method === 'POST' && table === 'publish_draft',
   run: () => {
     const row = tables.route.find((r) => r.id === route?.id);
     if (row) row.revision += 1;
@@ -479,13 +602,13 @@ await waitFor(async () => (await body()).includes(CONFLICT_SAID), 25000);
 w = writesSince(n);
 check(
   'an approval on a stale base is refused as conflict, and the studio says so in words',
-  (await body()).includes(CONFLICT_SAID) && rpcs(w, 'approve_reviewed_draft').length === 1,
+  (await body()).includes(CONFLICT_SAID) && rpcs(w, 'publish_draft').length === 1,
   `${said(w)} · ${(await body()).slice(-200)}`,
 );
 check(
   '  and nothing is applied: the direction keeps its line, the draft waits',
   !!tables.route_variant.find((v) => v.id === outV?.id)?.shape &&
-    draftOf('route', route?.id)?.status === 'pending',
+    draftOf('route', route?.id)?.status === 'draft',
 );
 // The refused draft is the editor's to discard; the stand-in drops it so the next flow starts clean.
 tables.draft = tables.draft.filter((d) => d.subject_id !== route?.id);
@@ -499,10 +622,10 @@ await waitFor(async () => (await page.getByRole('button', { name: 'Edit route' }
 await page.waitForTimeout(800);
 w = writesSince(n);
 check(
-  'Delete stores a draft and approves it: claim, submit, approve',
+  'Delete stores a draft and publishes it: claim, then publish, no submit',
   rpcs(w, 'claim_draft').length === 1 &&
-    rpcs(w, 'submit_draft').length === 1 &&
-    rpcs(w, 'approve_reviewed_draft').length === 1 &&
+    rpcs(w, 'submit_draft').length === 0 &&
+    rpcs(w, 'publish_draft').length === 1 &&
     !draftOf('route', route?.id),
   said(w),
 );
@@ -534,7 +657,7 @@ await page.waitForTimeout(800);
 w = writesSince(n);
 check(
   'Delete on the last line: approved in the same press, and the route comes down',
-  rpcs(w, 'approve_reviewed_draft').length === 1 &&
+  rpcs(w, 'publish_draft').length === 1 &&
     tables.route_variant.find((v) => v.id === slotId)?.shape === null &&
     tables.route.find((r) => r.id === route?.id)?.status === 'taken_down',
   said(w),
@@ -555,10 +678,10 @@ await page.getByRole('button', { name: 'New route, terminal or hintuan' }).click
 await page.getByRole('menuitem', { name: /Routes/ }).click();
 await page.waitForTimeout(200);
 for (const p of IKOT) await clickAt(p, 300);
-await closeLoop().click();
+await closeByBadge();
 await idle();
 await done();
-await page.getByLabel(/Signboard/).fill('UP – Ikot');
+await page.getByLabel('Ikot name').fill('UP – Ikot');
 n = log.length;
 await saveButton().click();
 await drafted();
@@ -594,25 +717,39 @@ const nameField = () => page.getByPlaceholder('SM Fairview Ilalim');
 async function editHintuan(spot, name) {
   await go(spot, 17);
   await clickAt([spot[0] + R * 0.7, spot[1] - R * 0.7], 700);
-  const edit = page.getByRole('button', { name: 'Edit hintuan' });
-  if ((await edit.count()) === 0) {
+  // On a computer the tap opens the hintuan straight into its sidebar, with no card or Edit.
+  const sidebar = page.getByTestId('sidebar');
+  // No card between the tap and the sidebar: the old way showed it with its Edit and waited.
+  const hadCard = (await page.getByRole('button', { name: 'Edit hintuan' }).count()) > 0;
+  let tookRow = false;
+  if (!(await sidebar.isVisible())) {
     const row = page.getByRole('button', { name: /Stand-in Tail/ });
-    if (await row.count()) await row.first().click();
-    await page.waitForTimeout(500);
+    if (await row.count()) {
+      tookRow = true;
+      await row.first().click();
+    }
   }
-  await edit.click();
-  await page.waitForTimeout(400);
+  await sidebar.waitFor({ timeout: 10000 });
+  openedBeside.push(!hadCard && !tookRow);
   await done();
+  // The name the form opened with: the editor's own draft's, when there is one.
+  shownName = await nameField().inputValue();
   await nameField().fill(name);
   const from = log.length;
-  await page.getByRole('button', { name: 'Save changes' }).click();
+  await page.getByRole('button', { name: 'Save as draft', exact: true }).click();
   await drafted();
   await page.waitForTimeout(300);
   return writesSince(from);
 }
+let shownName = '';
+const openedBeside = [];
 const tailRevision = tables.stop.find((x) => x.id === tail?.id)?.revision;
 w = await editHintuan(P2, 'Stand-in Tail Renamed');
 const tailDraft = draftOf('hotspot', tail?.id);
+check(
+  'on a computer a tap on a saved hintuan opens it straight in the sidebar, with no card',
+  openedBeside[0] === true,
+);
 check(
   "editing a saved hintuan is a draft of it, built on the stop's revision",
   !!tailDraft &&
@@ -624,13 +761,19 @@ check(
 );
 check('  nothing written to the approved tables', approvedWrites(w).length === 0, said(w));
 w = await editHintuan(P2, 'Stand-in Tail Twice');
+check(
+  "  edited again, the form opens on the editor's draft: the name saved before",
+  shownName === 'Stand-in Tail Renamed',
+  shownName,
+);
 const tailDraftAgain = draftOf('hotspot', tail?.id);
 check(
   '  edited again, the draft kept for it is updated in place: same draft, its revision on',
   tailDraftAgain?.id === tailDraft?.id &&
     tailDraftAgain.payload.stop.name === 'Stand-in Tail Twice' &&
     rpcs(w, 'claim_draft').length === 0 &&
-    w.some((x) => x.method === 'PATCH' && x.table === 'draft') &&
+    rpcs(w, 'save_draft').length === 1 &&
+    !w.some((x) => x.method === 'PATCH' && x.table === 'draft') &&
     approvedWrites(w).length === 0,
   said(w),
 );
@@ -641,6 +784,8 @@ check(
 );
 
 // ---- 8. Take a hintuan down
+// Delete is on the hintuan's card, which a computer's tap goes past: a narrow window keeps it.
+await page.setViewportSize({ width: 900, height: 800 });
 await go(P1, 17);
 await clickAt([P1[0] + R * 0.7, P1[1] - R * 0.7], 700);
 {
@@ -654,6 +799,7 @@ await clickAt([P1[0] + R * 0.7, P1[1] - R * 0.7], 700);
 n = log.length;
 await page.getByRole('button', { name: 'Delete' }).click();
 await waitFor(() => tables.stop.find((x) => x.id === head?.id)?.status === 'taken_down');
+await page.setViewportSize({ width: 1280, height: 800 });
 w = writesSince(n);
 check(
   'Delete on a hintuan no route ends at takes it down: one take_down, no row deleted',
@@ -732,6 +878,35 @@ check(
       newRoute.is_new === true &&
       newRoute.payload.route.tail_stop_id === newTail?.subject_id &&
       approvedWrites(w).length === 0,
+    said(w),
+  );
+}
+
+// ---- Publish: the sidebar's other save makes the draft published in the same press
+{
+  await go(at(0, 0), 15);
+  await page.getByRole('button', { name: 'New route, terminal or hintuan' }).click();
+  await page.getByRole('menuitem', { name: /Routes/ }).click();
+  await page.waitForTimeout(200);
+  for (const p of [P1, at(0, 0.0035), P2]) await clickAt(p, 300);
+  await idle();
+  await done();
+  // Late in the suite the stand-in's places are drafts and edits: two of today's map's are picked.
+  await page.getByTestId('save-head').selectOption({ label: 'Cogeo' });
+  await page.getByTestId('save-tail').selectOption({ label: 'Tala' });
+  await viaField().fill('Published Road');
+  n = log.length;
+  await publishButton().click();
+  await waitFor(async () => (await body()).includes('Published. The Studio map shows it now'));
+  w = writesSince(n);
+  const published = tables.route.find((r) => r.via === 'Published Road');
+  check(
+    'Publish saves the draft, then publishes it in one call: the route is on the map',
+    rpcs(w, 'claim_draft').length === 1 &&
+      rpcs(w, 'publish_draft').length === 1 &&
+      rpcs(w, 'submit_draft').length === 0 &&
+      published?.status === 'approved' &&
+      !(await page.getByTestId('sidebar').isVisible()),
     said(w),
   );
 }

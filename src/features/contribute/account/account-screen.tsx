@@ -1,13 +1,14 @@
 import { useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
 
+import { useFocusHeading } from '@/shared/hooks/use-focus-heading';
+
 import { CommuteStats, type CommuteStatsState } from './commute-stats';
 import { GeneralBar } from './general-bar';
 import { LogoutConfirm } from './logout-confirm';
 import { ProfileCard } from './profile-card';
 import { SCREEN_HASH_ATTR } from '../common/data-attributes';
 import { useClosedWhenHidden } from '../common/use-closed-when-hidden';
-import { useFocusHeading } from '../common/use-focus-heading';
 import { useScreenEntry } from '../motion/use-screen-entry';
 import { SCREENS } from '../navigation/screen-routes';
 import { TOOLBAR_FOOT, TOOLBAR_ROOM } from '../toolbar/toolbar-place';

@@ -7,7 +7,7 @@ import { coarse } from '@/features/routes/map/map-view';
 
 import { isLocationGranted } from './location-permission';
 import { Locator } from './locator';
-import type { LocatorNote } from './locator-note';
+import { LOCATION_OFF_NOTE, type LocatorNote } from './locator-note';
 import { LocatorOnMap } from './locator-on-map';
 import { circleRadius, type Fix } from './locator-rules';
 import { useLocator } from './use-locator';
@@ -19,12 +19,21 @@ interface ContributorLocationProps {
   isMapLoaded: boolean;
   /** A recording is on: the camera follows the contributor from its start. */
   isRecording: boolean;
+  /** A ride's fitted sheet is on the map: the buttons stand on it, following it all the way up. */
+  isDocked?: boolean;
   /** What stands above the button in its column; the contributor's mark button. */
   above?: ReactNode;
   /** What the locator has to say, for the page's problem toast; null once a fix comes (Locator). */
   onNote?: (note: LocatorNote | null) => void;
   /** Where the dot is, at each fix: its place and its accuracy ring's radius in metres. */
   onWhere?: (where: LocatorWhere | null) => void;
+  /**
+   * The contributor app's: whether the phone's location is on, asked as the button is tapped, with
+   * Google's "Turn on location?" dialog when it is off. "off" says so in the page's toast, at each
+   * tap, and nothing is asked of the browser; "unknown" taps as the web does. Without it (the
+   * web), the button asks the browser.
+   */
+  checkLocationOn?: () => Promise<'on' | 'off' | 'unknown'>;
 }
 
 /** Where the contributor's dot is drawn: the page's paused frost clears round it. */
@@ -58,9 +67,11 @@ export function ContributorLocation({
   map,
   isMapLoaded,
   isRecording,
+  isDocked = false,
   above,
   onNote,
   onWhere,
+  checkLocationOn,
 }: ContributorLocationProps) {
   const locator = useLocator(map, { compass: coarse, snap: 'low', offset: clearOfBars });
   const { mood, face, beat, poke } = useLocatorMood(locator);
@@ -70,6 +81,20 @@ export function ContributorLocation({
   useEffect(() => {
     onWhere?.(fix ? { at: fix.at, ringM: circleRadius(fix.accuracy) } : null);
   }, [fix, onWhere]);
+
+  // The app's "Location is off" is out: the first fix takes it back, however the locator was
+  // started (the button, a recording, the permission already granted), as a fix takes back the
+  // browser's own notes (Locator).
+  const isOffSaid = useRef(false);
+  const latestOnNote = useRef(onNote);
+  useEffect(() => {
+    latestOnNote.current = onNote;
+  });
+  useEffect(() => {
+    if (!fix || !isOffSaid.current) return;
+    isOffSaid.current = false;
+    latestOnNote.current?.(null);
+  }, [fix]);
 
   // The latest tap, for effects that must not re-run when the hook hands out a new one.
   const latestTap = useRef(tap);
@@ -99,17 +124,35 @@ export function ContributorLocation({
     if (!isRefused && camera !== 'tracked' && camera !== 'compass') latestTap.current();
   }, [isRecording, status, camera]);
 
+  // The button's tap, in the app: location turned on first, or a word that it is off. A browser
+  // gives no refusal while the phone's location is off, only a wait of 20 s with nothing said.
+  const handleTap = () => {
+    if (!checkLocationOn) {
+      tap();
+      return;
+    }
+    void checkLocationOn().then((setting) => {
+      if (setting === 'off') {
+        isOffSaid.current = true;
+        latestOnNote.current?.(LOCATION_OFF_NOTE);
+        return;
+      }
+      latestTap.current();
+    });
+  };
+
   return (
     <>
       {map && (
         <Locator
-          locator={locator}
+          locator={checkLocationOn ? { ...locator, tap: handleTap } : locator}
           map={map}
           isMapLoaded={isMapLoaded}
           basemaps={BASEMAPS}
           basemapThumbnails={BASEMAP_THUMBNAILS}
           labelsPlace="map"
-          docked={false}
+          docked={isDocked}
+          dockCap="top"
           above={above}
           onNote={onNote}
         />

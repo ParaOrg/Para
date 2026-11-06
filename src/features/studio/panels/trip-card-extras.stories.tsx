@@ -1,8 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
 import type { HotspotRow } from '@/features/routes/model/hotspots';
 import type { DirectionRow, LineStringGeoJSON } from '@/features/routes/model/routes';
+import { createQueryClient } from '@/shared/lib/query-client';
 
 import { TripCardExtras } from './trip-card-extras';
 import { DraftLockNotice } from '../review/draft-lock-notice';
@@ -70,9 +72,12 @@ const meta = {
   // has it. The `phone` parameter puts it at a handset's width.
   decorators: [
     (Story, ctx) => (
-      <div className={ctx.parameters.phone ? 'w-[390px] bg-surface' : 'w-[369px] bg-surface'}>
-        <Story />
-      </div>
+      // The signboards read the editor's draft through TanStack Query; a client of its own.
+      <QueryClientProvider client={createQueryClient()}>
+        <div className={ctx.parameters.phone ? 'w-[390px] bg-surface' : 'w-[369px] bg-surface'}>
+          <Story />
+        </div>
+      </QueryClientProvider>
     ),
   ],
   parameters: { layout: 'padded' },

@@ -21,17 +21,12 @@ export const UPLOAD_WORDS = {
   },
   checking: { card: SENDING, toast: ON_ITS_WAY },
   uploading: { card: SENDING, toast: ON_ITS_WAY },
-  // An uploaded one whose removal failed says that problem on its card instead.
-  uploaded: {
-    card: { deletable: 'Uploaded', fromEarlierSignIn: 'Uploaded from an earlier sign-in' },
-    toast: ON_ITS_WAY,
-  },
+  uploaded: { card: 'Uploaded', toast: ON_ITS_WAY },
   // Any other failure's card says its own brief reason (upload-failures.ts).
   failed: {
     card: { offline: WAITING_FOR_SIGNAL, retry: 'Tap retry upload' },
     toast: { online: ON_ITS_WAY, offline: SENDS_WHEN_ONLINE },
   },
-  removing: { card: 'Removing…', toast: KEPT_ON_PHONE },
   removed: {
     card: { byEditor: 'Removed by an editor', byYou: ONLY_ON_PHONE },
     toast: KEPT_ON_PHONE,
@@ -39,3 +34,6 @@ export const UPLOAD_WORDS = {
   held: { card: ONLY_ON_PHONE, toast: KEPT_ON_PHONE },
   unavailable: { card: ONLY_ON_PHONE, toast: KEPT_ON_PHONE },
 } as const satisfies Record<UploadStatus['state'], { card: unknown; toast: unknown }>;
+
+/** The ride sheet's Status for one on this phone, not on Para, that can be sent (card-status.ts). */
+export const TAP_TO_UPLOAD = 'Tap to upload';

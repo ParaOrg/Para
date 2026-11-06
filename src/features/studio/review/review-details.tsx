@@ -111,14 +111,17 @@ export function ReviewDetails({
                 query.data.dependencies.length > 0 ||
                 query.isFetching
               }
-              onClick={() => onAction('approve', draft)}
+              onClick={() => onAction('publish', draft)}
             />
-            <Button
-              variant="secondary"
-              label="Discard…"
-              disabled={busy}
-              onClick={() => onAction('discard', draft)}
-            />
+            {/* Only a draft's maker discards it; while that is still being checked, neither. */}
+            {!lock && (
+              <Button
+                variant="secondary"
+                label="Discard…"
+                disabled={busy}
+                onClick={() => onAction('discard', draft)}
+              />
+            )}
             <Button
               variant="secondary"
               label="Refresh comparison"

@@ -5,7 +5,7 @@ import { CARD_SURFACE, CARD_TEXT, ROW_PRESSED, TIMELINE_SURFACE } from './livery
 import { TimelineDisclosure } from './timeline-disclosure';
 
 /**
- * The row that folds a timeline's hintuans and opens them again, alone on the orange card in a
+ * The row that folds a timeline's hintuans and opens them again, alone on the bus card in a
  * list of its own, as a trip's timeline holds it. A tap calls onToggle. The trip opens and closes
  * the fold, so here the row keeps the state it was given.
  */
@@ -14,15 +14,15 @@ const meta = {
   component: TimelineDisclosure,
   decorators: [
     (Story) => (
-      <ol className={'w-[369px] font-sn-pro ' + CARD_SURFACE.orange + ' ' + CARD_TEXT.orange}>
+      <ol className={'w-[369px] font-sn-pro ' + CARD_SURFACE.bus + ' ' + CARD_TEXT.bus}>
         <Story />
       </ol>
     ),
   ],
   args: {
     part: 'all',
-    rail: TIMELINE_SURFACE.orange,
-    pressed: ROW_PRESSED.orange,
+    rail: TIMELINE_SURFACE.bus,
+    pressed: ROW_PRESSED.bus,
     isOpen: false,
     connection: 'connected',
     count: 3,

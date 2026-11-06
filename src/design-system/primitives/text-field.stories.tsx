@@ -71,6 +71,16 @@ export const WithError: Story = {
   },
 };
 
+/** Variant3's box with no message: the form says what went wrong under another field. */
+export const Invalid: Story = {
+  args: { isInvalid: true },
+  play: async ({ canvasElement }) => {
+    const field = within(canvasElement).getByRole('textbox', { name: 'Email' });
+    await expect(field).toHaveAttribute('aria-invalid', 'true');
+    await expect(field).not.toHaveAttribute('aria-describedby');
+  },
+};
+
 /** An error with focus: the box takes Active's border, the message stays. */
 export const WithErrorFocused: Story = {
   args: { error: 'Enter an email address.', onClear: fn() },

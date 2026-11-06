@@ -20,6 +20,8 @@ export interface PageScreensState {
   isPermissionsPending: boolean;
   /** Each screen a hash opens, as the URL has it (useScreenView). */
   isHistoryOpen: boolean;
+  /** A ride's screen, inside History (useRideView). */
+  isRideDetailOpen: boolean;
   isProfileOpen: boolean;
   isAccountSettingsOpen: boolean;
   isChangePasswordOpen: boolean;
@@ -33,6 +35,8 @@ export interface PageScreens {
   isAccountGateShown: boolean;
   isPermissionsShown: boolean;
   isHistoryShown: boolean;
+  /** A ride's screen: over the map, which stays live under it, with no toolbar. */
+  isRideDetailShown: boolean;
   /** Account, or a screen inside it. */
   isProfileShown: boolean;
   /** Ready with no screen of its own over it: Start, or the tutorial over Start. */
@@ -55,6 +59,8 @@ export function pageScreens(state: PageScreensState): PageScreens {
   // Once per phone, after sign-in: the screen itself closes at once if every permission is granted.
   const isPermissionsShown = state.isPermissionsPending && canSend && phase === 'ready';
   const isHistoryShown = phase === 'ready' && canSend && state.isHistoryOpen && !isPermissionsShown;
+  const isRideDetailShown =
+    phase === 'ready' && canSend && state.isRideDetailOpen && !isPermissionsShown;
   const isProfileShown =
     phase === 'ready' &&
     canSend &&
@@ -67,15 +73,22 @@ export function pageScreens(state: PageScreensState): PageScreens {
     isAccountGateShown: accountGate === 'needs-account' || accountGate === 'needs-profile',
     isPermissionsShown,
     isHistoryShown,
+    isRideDetailShown,
     isProfileShown,
     isReadyClear:
-      canSend && phase === 'ready' && !isHistoryShown && !isProfileShown && !isPermissionsShown,
+      canSend &&
+      phase === 'ready' &&
+      !isHistoryShown &&
+      !isRideDetailShown &&
+      !isProfileShown &&
+      !isPermissionsShown,
     isRecordingShown,
     isRideScreenShown: canSend && (isRecordingShown || phase === 'unfinished'),
     isFormShown: phase === 'form',
     // A move to any other screen draws nothing to wait for (tab-motion.ts).
     openableScreens: [
       canSend && SCREENS.history.hash,
+      canSend && SCREENS.ride.hash,
       hasAccount && SCREENS.profile.hash,
       hasAccount && SCREENS.accountSettings.hash,
       hasAccount && SCREENS.changePassword.hash,

@@ -1,6 +1,7 @@
 import { directionLine } from '@/features/routes/model/routes';
 import type { LngLat, Segment, SnapMode } from '@/shared/utils/geo';
 
+import { isOnPoint } from './curves';
 import { CLOSING } from './draw-layers';
 import type { AreaTarget, Picking } from './drawing-types';
 import type { UTurn } from './uturns';
@@ -123,6 +124,90 @@ export function uTurnFeatures(
       geometry: { type: 'Point' as const, coordinates: controlPoints[u.point] },
     }));
   return { type: 'FeatureCollection', features: [...stubs, ...rings] };
+}
+
+/** Which handle a feature draws, so a drag on its dot knows what it moves; -1 for one being placed. */
+type HandleFeature = Feature<LineString | Point, { seg: number; end: 0 | 1 }>;
+
+/** A handle: the arm from its point, and the dot at its end. */
+function handleOf(point: LngLat, handle: LngLat, seg = -1, end: 0 | 1 = 0): HandleFeature[] {
+  if (isOnPoint(handle, point)) return [];
+  const properties = { seg, end };
+  return [
+    { type: 'Feature', properties, geometry: { type: 'LineString', coordinates: [point, handle] } },
+    { type: 'Feature', properties, geometry: { type: 'Point', coordinates: handle } },
+  ];
+}
+
+/** The handle a Draw stretch has at one end, and that end's point; null for a routed or straight one. */
+function handleAt(segment: Segment | undefined, end: 0 | 1): [LngLat, LngLat] | null {
+  const line = segment?.coordinates;
+  if (segment?.snap !== 'freehand' || !segment.handles || !line || line.length < 2) return null;
+  return end === 0 ? [line[0], segment.handles[0]] : [line[line.length - 1], segment.handles[1]];
+}
+
+/**
+ * The points whose handles show while drawing, as a pen tool shows them: the
+ * last two placed, always, and the one the editor selected, `selected`.
+ */
+export function handlePoints(selected: number | null, count: number): number[] {
+  const last = [count - 2, count - 1].filter((i) => i >= 0);
+  return selected === null || last.includes(selected) ? last : [selected, ...last];
+}
+
+/** One point's two handles: the one its stretch in arrives with, and the one it leaves with. */
+function handlesOfPoint(
+  segments: readonly Segment[],
+  points: readonly LngLat[],
+  at: number,
+  pending: { point: LngLat; out: LngLat } | null,
+): HandleFeature[] {
+  const point = points[at];
+  if (!point) return [];
+  const into = handleAt(segments[at - 1], 1);
+  const outOf = handleAt(segments[at], 0);
+  return [
+    ...(into ? handleOf(into[0], into[1], at - 1, 1) : []),
+    ...(outOf ? handleOf(outOf[0], outOf[1], at, 0) : []),
+    ...(!segments[at] && pending?.point === point ? handleOf(point, pending.out) : []),
+  ];
+}
+
+/**
+ * The handle source: the handles of the points `shown` (handlePoints), each
+ * an arm and a dot: the one a point's stretch in arrives with, and the one
+ * its stretch out leaves with, or, on the last point placed smooth, the
+ * handle `pending` it will send the next stretch (shown, not dragged: no
+ * stretch holds it yet). None for a hotspot.
+ */
+export function handleFeatures(
+  segments: readonly Segment[],
+  points: readonly LngLat[],
+  area: AreaTarget | null,
+  shown: readonly number[],
+  pending: { point: LngLat; out: LngLat } | null,
+): FeatureCollection<HandleFeature> {
+  if (area) return { type: 'FeatureCollection', features: [] };
+  const features = shown.flatMap((at) => handlesOfPoint(segments, points, at, pending));
+  return { type: 'FeatureCollection', features };
+}
+
+/** A point being placed smooth, its two handles shown as the pen's drag pulls them. */
+export function handleLines(
+  smooth: readonly { point: LngLat; handles: [LngLat, LngLat] }[],
+): FeatureCollection<HandleFeature> {
+  return {
+    type: 'FeatureCollection',
+    features: smooth.flatMap(({ point, handles }) => [
+      ...handleOf(point, handles[0]),
+      ...handleOf(point, handles[1]),
+      {
+        type: 'Feature' as const,
+        properties: { seg: -1, end: 0 as const },
+        geometry: { type: 'Point' as const, coordinates: point },
+      },
+    ]),
+  };
 }
 
 /** The borrow source: the line being picked for Extend, and the spot picked on it; else nothing. */

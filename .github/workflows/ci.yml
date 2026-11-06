@@ -82,7 +82,7 @@ jobs:
       drawing: ${{ steps.scope.outputs.drawing }}
       preview: ${{ steps.scope.outputs.preview }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
@@ -118,7 +118,7 @@ jobs:
               docs/*|*.md) ;;
               src/app/studio/*|src/features/studio/*|tests/e2e/turnstile-test.mjs|tests/e2e/studio-scale-test.mjs|tests/e2e/studio-contributors-test.mjs|tests/e2e/studio-public-view-test.mjs|tests/e2e/studio-two-editors-test.mjs|tests/e2e/save-test.mjs|tests/e2e/save-ikot-test.mjs|tests/e2e/save-edit-test.mjs|tests/e2e/save-drafts-test.mjs|tests/e2e/group-test.mjs|tests/e2e/regression-gestures.mjs|tests/e2e/hotspot-test.mjs|tests/e2e/snap-test.mjs|tests/e2e/extend-test.mjs|tests/e2e/studio-phone-test.mjs)
                 studio=true ;;
-              src/app/public-map/*|src/features/published-map/*|public/*|tests/e2e/commuter-test.mjs|tests/e2e/phone-test.mjs|tests/e2e/where-test.mjs|tests/e2e/scale-test.mjs|tests/e2e/pwa-test.mjs|tests/e2e/own-tiles-stand-in.mjs|tests/e2e/handover-test.mjs|tests/e2e/fixtures/*|tests/e2e/gate-test.mjs|tests/e2e/loop-test.mjs)
+              src/app/public-map/*|src/features/published-map/*|public/*|tests/e2e/commuter-test.mjs|tests/e2e/phone-test.mjs|tests/e2e/where-test.mjs|tests/e2e/scale-test.mjs|tests/e2e/pwa-test.mjs|tests/e2e/own-tiles-stand-in.mjs|tests/e2e/handover-test.mjs|tests/e2e/fixtures/*|tests/e2e/gate-test.mjs|tests/e2e/loop-test.mjs|tests/e2e/map-pins-test.mjs)
                 public=true ;;
               src/app/contribute/*|src/features/contribute/*|tests/e2e/contribute-test.mjs|tests/e2e/contribute-offline-test.mjs|tests/e2e/upload-test.mjs|tests/e2e/account-test.mjs|tests/e2e/profile-test.mjs|tests/e2e/claim-test.mjs)
                 contribute=true ;;
@@ -146,8 +146,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-node@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
@@ -183,7 +183,6 @@ jobs:
           echo VITE_BASEMAP_HOST=https://tiles.openfreemap.org >> .env.local
           echo VITE_TURNSTILE_SITE_KEY=1x00000000000000000000AA >> .env.local
           echo VITE_CONTRIBUTIONS=0 >> .env.local
-          echo VITE_STUDIO_DRAFTS=0 >> .env.local
           VITE_BASEMAP_HOST=https://tiles.openfreemap.org npm run build
           mv dist preview-openfreemap
           if [ "$OWN_TILES" = true ]; then
@@ -193,7 +192,7 @@ jobs:
           rm .env.local
       - name: Keep the OpenFreeMap preview build
         if: needs.changes.outputs.preview != '[]'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: preview-openfreemap
           path: preview-openfreemap
@@ -202,7 +201,7 @@ jobs:
       # Made only for a public change (The preview builds, above).
       - name: Keep the own-tiles preview build
         if: needs.changes.outputs.public == 'true'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: preview-own-tiles
           path: preview-own-tiles
@@ -222,14 +221,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        suite: [gate-test, phone-test, where-test, scale-test, loop-test]
+        suite: [gate-test, phone-test, where-test, scale-test, loop-test, map-pins-test]
         include:
           - { suite: commuter-test, part: 1 }
           - { suite: commuter-test, part: 2 }
           - { suite: commuter-test, part: 3 }
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-node@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
@@ -243,7 +242,7 @@ jobs:
           echo "version=$(node -p "require('playwright/package.json').version")" >> "$GITHUB_OUTPUT"
           echo "image=$ImageOS" >> "$GITHUB_OUTPUT"
       - id: chromium
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.image }}-${{ steps.playwright.outputs.version }}
@@ -261,9 +260,6 @@ jobs:
           # The suites written for the recorder and the editor run with uploads
           # off; upload-test turns them on below, against its stand-in.
           echo VITE_CONTRIBUTIONS=0 >> .env.local
-          # and with the studio saving straight to the approved rows, as they
-          # were written for; the review suites run on the isolated preview.
-          echo VITE_STUDIO_DRAFTS=0 >> .env.local
       - name: Start the dev server
         run: |
           npx vite --port 5173 --strictPort > vite.log 2>&1 &
@@ -278,7 +274,7 @@ jobs:
           COMMUTER_PART: ${{ matrix.part && format('{0}/3', matrix.part) || '' }}
       - name: Keep the screenshots and the dev server log
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.suite }}${{ matrix.part && format('-{0}', matrix.part) || '' }}-screenshots
           path: |
@@ -306,8 +302,8 @@ jobs:
             profile-test,
           ]
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-node@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
@@ -321,7 +317,7 @@ jobs:
           echo "version=$(node -p "require('playwright/package.json').version")" >> "$GITHUB_OUTPUT"
           echo "image=$ImageOS" >> "$GITHUB_OUTPUT"
       - id: chromium
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.image }}-${{ steps.playwright.outputs.version }}
@@ -339,9 +335,6 @@ jobs:
           # The suites written for the recorder and the editor run with uploads
           # off; upload-test turns them on below, against its stand-in.
           echo VITE_CONTRIBUTIONS=0 >> .env.local
-          # and with the studio saving straight to the approved rows, as they
-          # were written for; the review suites run on the isolated preview.
-          echo VITE_STUDIO_DRAFTS=0 >> .env.local
       # upload-test, account-test, forgot-password-test, claim-test and profile-test turn uploads back on for their own dev server, against a
       # stand-in for Supabase.
       - name: Turn uploads on, for upload-test, account-test, forgot-password-test, claim-test and profile-test
@@ -363,7 +356,7 @@ jobs:
           PARA_TURNSTILE: ${{ matrix.suite != 'contribute-test' && '1' || '' }}
       - name: Keep the screenshots and the dev server log
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.suite }}-screenshots
           path: |
@@ -386,8 +379,8 @@ jobs:
       matrix:
         include: ${{ fromJSON(needs.changes.outputs.preview) }}
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-node@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
@@ -401,7 +394,7 @@ jobs:
           echo "version=$(node -p "require('playwright/package.json').version")" >> "$GITHUB_OUTPUT"
           echo "image=$ImageOS" >> "$GITHUB_OUTPUT"
       - id: chromium
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.image }}-${{ steps.playwright.outputs.version }}
@@ -411,7 +404,7 @@ jobs:
         run: npx playwright install-deps chromium
       # The build was made in the build job; `vite preview` serves it as it is.
       - name: The preview build
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: preview-${{ matrix.basemap }}
           path: dist
@@ -419,7 +412,7 @@ jobs:
         run: node tests/e2e/${{ matrix.suite }}.mjs
       - name: Keep the screenshots
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.suite }}${{ matrix.basemap == 'own-tiles' && '-own-tiles' || '' }}-screenshots
           path: '*.png'
@@ -428,8 +421,10 @@ jobs:
   # The editor against stand-ins for the database, no router: studio-scale
   # (5,000 directions, what the editor asks for and how soon it opens; and the
   # Contributors map with 1,000 uploads), the save flows signed in in three parts
-  # (save-test, save-ikot-test and save-edit-test, on lib/save-studio.mjs) and
-  # studio-contributors (the Contributors map's actions). No retry needed.
+  # (save-test, save-ikot-test and save-edit-test, on lib/save-studio.mjs, every
+  # save a draft the stand-in approves), the review flow's own suites
+  # (save-drafts, studio-two-editors, studio-public-view, on lib/fake-studio-db.mjs)
+  # and studio-contributors (the Contributors map's actions). No retry needed.
   studio-suite:
     name: ${{ matrix.suite }}
     needs: changes
@@ -455,8 +450,8 @@ jobs:
             save-drafts-test,
           ]
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-node@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
@@ -470,7 +465,7 @@ jobs:
           echo "version=$(node -p "require('playwright/package.json').version")" >> "$GITHUB_OUTPUT"
           echo "image=$ImageOS" >> "$GITHUB_OUTPUT"
       - id: chromium
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.image }}-${{ steps.playwright.outputs.version }}
@@ -488,19 +483,11 @@ jobs:
           # The suites written for the recorder and the editor run with uploads
           # off; upload-test turns them on below, against its stand-in.
           echo VITE_CONTRIBUTIONS=0 >> .env.local
-          # and with the studio saving straight to the approved rows, as they
-          # were written for; the review suites run on the isolated preview.
-          echo VITE_STUDIO_DRAFTS=0 >> .env.local
       # The two suites that open the Contributors map read uploads from their
       # own stand-in, so they run with uploads on.
       - name: Turn uploads on, for the Contributors map's suites
         if: matrix.suite == 'studio-scale-test' || matrix.suite == 'studio-contributors-test'
         run: echo VITE_CONTRIBUTIONS=1 >> .env.local
-      # The Public map view exists only with drafts on, and save-drafts-test runs
-      # save-test's flows on the drafts path; the later line wins.
-      - name: Turn the studio's drafts on for studio-public-view-test, studio-two-editors-test and save-drafts-test
-        if: matrix.suite == 'studio-public-view-test' || matrix.suite == 'studio-two-editors-test' || matrix.suite == 'save-drafts-test'
-        run: echo VITE_STUDIO_DRAFTS=1 >> .env.local
       # Cloudflare's always-pass test key: turnstile-test stands in for its script.
       - name: Give turnstile-test a Turnstile site key
         if: matrix.suite == 'turnstile-test'
@@ -517,7 +504,7 @@ jobs:
         run: node tests/e2e/${{ matrix.suite }}.mjs
       - name: Keep the screenshots and the dev server log
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.suite }}-screenshots
           path: |
@@ -535,8 +522,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 40
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-node@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
@@ -550,7 +537,7 @@ jobs:
           echo "version=$(node -p "require('playwright/package.json').version")" >> "$GITHUB_OUTPUT"
           echo "image=$ImageOS" >> "$GITHUB_OUTPUT"
       - id: chromium
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.image }}-${{ steps.playwright.outputs.version }}
@@ -568,9 +555,6 @@ jobs:
           # The suites written for the recorder and the editor run with uploads
           # off; upload-test turns them on below, against its stand-in.
           echo VITE_CONTRIBUTIONS=0 >> .env.local
-          # and with the studio saving straight to the approved rows, as they
-          # were written for; the review suites run on the isolated preview.
-          echo VITE_STUDIO_DRAFTS=0 >> .env.local
       - name: Start the dev server
         run: |
           npx vite --port 5173 --strictPort > vite.log 2>&1 &
@@ -602,7 +586,7 @@ jobs:
           exit $status
       - name: Keep the screenshots and the dev server log
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: drawing-screenshots
           path: |

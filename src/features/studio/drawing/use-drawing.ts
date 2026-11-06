@@ -10,7 +10,9 @@ import {
   type SnapMode,
 } from '@/shared/utils/geo';
 
+import { curveSegment, keptFirstHandle, mirror, outHandle } from './curves';
 import { readDraft, restoredState, useDraftSaving } from './draft';
+import { useDrawArrows } from './draw-arrows';
 import { useDrawLayers } from './draw-layers';
 import { addBeforeJoin, insertInGap, removeAt, ringSegments } from './drawing-edits';
 import type {
@@ -22,10 +24,12 @@ import type {
   Target,
 } from './drawing-types';
 import { useGapResolver } from './gap-resolver';
+import { useCursorLine } from './use-cursor-line';
 import { useDrawEvents } from './use-draw-events';
 import { useDrawRendering } from './use-draw-rendering';
 import { useLineBorrowing } from './use-line-borrowing';
 import { usePointBar } from './use-point-bar';
+import { useSnapPreview } from './use-snap-preview';
 import { findUTurns } from './uturns';
 
 /**
@@ -43,6 +47,14 @@ import { findUTurns } from './uturns';
 
 export type Drawing = ReturnType<typeof useDrawing>;
 
+/** One Undo's step: the drawing before it, and the arrays it left. */
+interface RedoStep {
+  points: LngLat[];
+  segments: Segment[];
+  pointsAfter: LngLat[];
+  segmentsAfter: Segment[];
+}
+
 export function useDrawing(
   map: MapLibreMap | null,
   opts: {
@@ -56,7 +68,9 @@ export function useDrawing(
   const [drawing, setDrawing] = useState(false);
   const [controlPoints, setControlPoints] = useState<LngLat[]>([]);
   const [segments, setSegments] = useState<Segment[]>([]);
-  const [freehand, setFreehand] = useState(false);
+  const [freehand, setFreehandState] = useState(false);
+  /** Move: clicks select and drag points, handles and the line, and never add a point. */
+  const [moving, setMovingState] = useState(false);
   /** What a save will write to: an existing direction, a new direction on an
    *  existing route, or (both null) a brand-new route. */
   const [target, setTarget] = useState<Target>({
@@ -71,12 +85,15 @@ export function useDrawing(
   const [picking, setPicking] = useState<Picking | null>(null);
   /** The point a finger tapped, whose bar of actions is open (point-bar.tsx). */
   const [selected, setSelected] = useState<number | null>(null);
+  /** The point whose handles show: the one the mouse pressed, as a pen tool selects it. */
+  const [handlesAt, setHandlesAt] = useState<number | null>(null);
 
   // Map event handlers are registered once and must always see current state,
   // so every mutator updates these refs synchronously.
   const cpRef = useRef<LngLat[]>([]);
   const segRef = useRef<Segment[]>([]);
   const freehandRef = useRef(false);
+  const movingRef = useRef(false);
   const areaRef = useRef<AreaTarget | null>(null);
   const pickingRef = useRef<Picking | null>(null);
   /**
@@ -88,6 +105,8 @@ export function useDrawing(
    * returns the drawing to plain appending.
    */
   const joinRef = useRef<LngLat | null>(null);
+  /** The handle the last point, placed smooth, sends the stretch still to come. */
+  const pendingOutRef = useRef<{ point: LngLat; out: LngLat } | null>(null);
   const borrowRef = useRef<Borrow | null>(null);
   const followRef = useRef(opts.onFollow);
   // The refs that mirror state or a prop also follow it on every commit, for
@@ -96,6 +115,7 @@ export function useDrawing(
   // React throws away would leave its values behind.
   useLayoutEffect(() => {
     freehandRef.current = freehand;
+    movingRef.current = moving;
     areaRef.current = area;
     pickingRef.current = picking;
     borrowRef.current = borrow;
@@ -108,6 +128,12 @@ export function useDrawing(
    * back in one step rather than one borrowed point at a time.
    */
   const connectedRef = useRef<{ spot: LngLat; end: LngLat } | null>(null);
+  /**
+   * What each Undo took off the end, newest last, with the drawing it left.
+   * Redo puts a step back only while the drawing is still exactly that one:
+   * any other edit writes new arrays, so the steps lapse without being cleared.
+   */
+  const [redoSteps, setRedoSteps] = useState<RedoStep[]>([]);
 
   // The segments and the router's answers for them.
   const gaps = useGapResolver(
@@ -115,6 +141,17 @@ export function useDrawing(
     setSegments,
   );
   const { writeSegments, resolveGaps, isStandIn, markStandIn } = gaps;
+
+  const showHandlesAt = useCallback((i: number | null) => setHandlesAt(i), []);
+
+  /** Snap (false) or Draw (true) for the stretches to come; either leaves Move. */
+  const setFreehand = useCallback((isStraight: boolean) => {
+    setFreehandState(isStraight);
+    setMovingState(false);
+  }, []);
+
+  /** Move, where clicks select and drag but never add a point; or back to Snap | Draw. */
+  const setMoving = useCallback((isMoving: boolean) => setMovingState(isMoving), []);
 
   const select = useCallback((i: number | null) => {
     selectedRef.current = i;
@@ -125,11 +162,18 @@ export function useDrawing(
   // lasts only while the drawing keeps its number of points.
   const writePoints = useCallback(
     (pts: LngLat[]) => {
-      if (pts.length !== cpRef.current.length) select(null);
+      if (pts.length !== cpRef.current.length) {
+        select(null);
+        showHandlesAt(null);
+      }
+      // Back to its first point alone: a smooth one keeps the handle it drew with.
+      const first = pts.length === 1 && pts[0] === cpRef.current[0] ? pts[0] : null;
+      const kept = first && keptFirstHandle(segRef.current[0], first);
+      if (first && kept) pendingOutRef.current = { point: first, out: kept };
       cpRef.current = pts;
       setControlPoints(pts);
     },
-    [select],
+    [select, showHandlesAt],
   );
 
   const addPoint = useCallback(
@@ -146,11 +190,60 @@ export function useDrawing(
         return;
       }
       const prevLen = cpRef.current.length;
+      const prev = cpRef.current[prevLen - 1];
+      // After a smooth point, a Draw stretch leaves it along its handle.
+      const out =
+        mode === 'freehand' && !areaRef.current && prev
+          ? outHandle(prev, segRef.current[prevLen - 2], pendingOutRef.current)
+          : null;
+      pendingOutRef.current = null;
       writePoints([...cpRef.current, point]);
       if (prevLen === 0) return;
+      if (prev && out) {
+        writeSegments([...segRef.current, curveSegment(prev, point, out, point)]);
+        return;
+      }
       await resolveGaps(prevLen - 1, [mode]);
     },
     [resolveGaps, writePoints, writeSegments],
+  );
+
+  /**
+   * Draw's click and drag: a smooth point at `point`, its handles mirrored,
+   * `out` the one toward the next stretch. The stretch in bends to it. Before
+   * a borrowed end, or for a hotspot, it is a plain point.
+   */
+  const addSmoothPoint = useCallback(
+    async (point: LngLat, out: LngLat) => {
+      const hasJoin = !!joinRef.current && cpRef.current.includes(joinRef.current);
+      if (!freehandRef.current || areaRef.current || hasJoin) return addPoint(point);
+      const prevLen = cpRef.current.length;
+      const prev = cpRef.current[prevLen - 1];
+      const c1 = prev
+        ? (outHandle(prev, segRef.current[prevLen - 2], pendingOutRef.current) ?? prev)
+        : null;
+      writePoints([...cpRef.current, point]);
+      if (prev && c1)
+        writeSegments([...segRef.current, curveSegment(prev, point, c1, mirror(out, point))]);
+      pendingOutRef.current = { point, out };
+      // Placed, it is the point selected: its handles stay shown, as a pen tool's do.
+      showHandlesAt(cpRef.current.indexOf(point));
+    },
+    [addPoint, writePoints, writeSegments, showHandlesAt],
+  );
+
+  /**
+   * A curve's handles reshaped: the stretches as they now bend. A smooth last
+   * point then sends its next stretch the mirror of its handle in, or none
+   * once it is a corner, never the handle the pen first gave it.
+   */
+  const reshape = useCallback(
+    (next: readonly Segment[]) => {
+      if (next === segRef.current) return;
+      pendingOutRef.current = null;
+      writeSegments([...next]);
+    },
+    [writeSegments],
   );
 
   /** Split a segment by dropping a new control point into it. */
@@ -208,9 +301,31 @@ export function useDrawing(
       if (join > 0) void deletePoint(join - 1);
       return;
     }
-    writePoints(cpRef.current.slice(0, -1));
-    writeSegments(segRef.current.slice(0, -1));
-  }, [deletePoint, writePoints, writeSegments]);
+    const before = { points: cpRef.current, segments: segRef.current };
+    if (before.points.length === 0) return;
+    writePoints(before.points.slice(0, -1));
+    writeSegments(before.segments.slice(0, -1));
+    // A stretch still waiting for the router loses its answer here, so it can't come back.
+    const taken = before.segments.at(-1);
+    if (taken && isStandIn(taken)) return;
+    setRedoSteps((steps) => [
+      ...steps,
+      { ...before, pointsAfter: cpRef.current, segmentsAfter: segRef.current },
+    ]);
+  }, [deletePoint, writePoints, writeSegments, isStandIn]);
+
+  const redoStep = redoSteps.at(-1);
+  const canRedo =
+    redoStep !== undefined &&
+    redoStep.pointsAfter === controlPoints &&
+    redoStep.segmentsAfter === segments;
+
+  const redo = useCallback(() => {
+    if (!canRedo) return;
+    setRedoSteps(redoSteps.slice(0, -1));
+    writePoints(redoStep.points);
+    writeSegments(redoStep.segments);
+  }, [canRedo, redoStep, redoSteps, writePoints, writeSegments]);
 
   // The finger's Delete, Put back and the follow offer. Called here so its Put
   // back timer keeps its place among the effects.
@@ -269,11 +384,13 @@ export function useDrawing(
       points,
       segments: nextSegments,
       picking: nextPicking = null,
+      moving: isMoving = false,
     }: DrawingStart) => {
       reset();
       if (points) writePoints(points);
       if (nextSegments) writeSegments(nextSegments);
-      setFreehand(false);
+      setFreehandState(false);
+      setMovingState(isMoving);
       setArea(nextArea);
       areaRef.current = nextArea;
       setTarget(nextTarget);
@@ -317,6 +434,7 @@ export function useDrawing(
         target: { routeId: v.routeId, directionId: v.id },
         points: v.controlPoints ?? [],
         segments: v.segments ?? [],
+        moving: true,
       }),
     [begin],
   );
@@ -430,12 +548,17 @@ export function useDrawing(
         borrow: borrowRef,
         follow: followRef,
         selected: selectedRef,
+        freehand: freehandRef,
+        moving: movingRef,
+        pendingOut: pendingOutRef,
       }),
       [],
     ),
     {
       setPicking,
       addPoint,
+      addSmoothPoint,
+      reshape,
       insertPoint,
       deletePoint,
       toggleSegment,
@@ -445,6 +568,7 @@ export function useDrawing(
       markStandIn,
       isStandIn,
       select,
+      showHandlesAt,
       setFollowOffer,
     },
   );
@@ -465,7 +589,67 @@ export function useDrawing(
     [segments, isStandIn],
   );
 
-  useDrawRendering(map, { segments, controlPoints, area, uTurns, picking, selected });
+  // Move's arrow, or the crosshair a click adds a point under, as the tool
+  // changes: only the cursor at rest, never one a hover or a drag set
+  // (use-draw-events.ts owns the cursor, and clears it when drawing ends).
+  useEffect(() => {
+    const canvas = map?.getCanvas();
+    if (!canvas || !drawing) return;
+    if (canvas.style.cursor === 'crosshair' || canvas.style.cursor === 'default')
+      canvas.style.cursor = moving ? 'default' : 'crosshair';
+  }, [map, drawing, moving]);
+
+  useDrawRendering(map, {
+    segments,
+    controlPoints,
+    area,
+    uTurns,
+    picking,
+    selected,
+    handlesAt,
+    // In Move as in Draw a curve is shaped by its handles; Snap shows none.
+    isFreehand: freehand || moving,
+    pendingOut: pendingOutRef,
+  });
+  useDrawArrows(map, segments, area, isStandIn);
+  useCursorLine(
+    map,
+    drawing,
+    controlPoints,
+    // Draw, not Move: the cursor line is offered.
+    freehand && !moving,
+    useMemo(
+      () => ({
+        points: cpRef,
+        segments: segRef,
+        freehand: freehandRef,
+        moving: movingRef,
+        area: areaRef,
+        picking: pickingRef,
+        join: joinRef,
+        pendingOut: pendingOutRef,
+      }),
+      [],
+    ),
+  );
+  useSnapPreview(
+    map,
+    drawing,
+    controlPoints,
+    // Draw or Move: no Snap preview.
+    freehand || moving,
+    useMemo(
+      () => ({
+        points: cpRef,
+        freehand: freehandRef,
+        moving: movingRef,
+        area: areaRef,
+        picking: pickingRef,
+        join: joinRef,
+      }),
+      [],
+    ),
+  );
 
   return {
     drawing,
@@ -477,6 +661,9 @@ export function useDrawing(
     unresolved,
     freehand,
     setFreehand,
+    /** Move: clicks select and drag, never add a point (V). Snap | Draw leave it. */
+    moving,
+    setMoving,
     target,
     /** Non-null while tracing a hotspot; null while drawing a route. */
     area,
@@ -501,6 +688,9 @@ export function useDrawing(
     adoptHotspot,
     cancel,
     undo,
+    /** Puts back what the last Undo took, while nothing else has changed since. */
+    redo,
+    canRedo,
     addPoint,
     insertPoint,
     deletePoint,
@@ -508,6 +698,8 @@ export function useDrawing(
     /** The point a finger tapped, or null; its bar is point-bar.tsx. */
     selected,
     select,
+    /** Hides the selected point's handles: Escape (use-draw-keys.ts). */
+    hideHandles: useCallback(() => showHandlesAt(null), [showHandlesAt]),
     deleteSelected: pointBar.deleteSelected,
     /** Whether the last Delete can still be put back. */
     canPutBack: pointBar.canPutBack,

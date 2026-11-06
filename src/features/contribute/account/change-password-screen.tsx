@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 
 import { Button } from '@/design-system/primitives/button';
 import { PasswordField } from '@/design-system/primitives/password-field';
+import { useFocusHeading } from '@/shared/hooks/use-focus-heading';
 import { Turnstile } from '@/shared/ui/turnstile';
 
 import { checkChangePassword, type ChangePasswordFields } from './account-fields';
@@ -10,7 +11,6 @@ import { SaveChangesSheet } from './save-changes-sheet';
 import { SettingsHeader } from './settings-header';
 import type { Captcha } from './use-captcha';
 import { SCREEN_HASH_ATTR } from '../common/data-attributes';
-import { useFocusHeading } from '../common/use-focus-heading';
 import { useScreenEntry } from '../motion/use-screen-entry';
 import { SCREENS } from '../navigation/screen-routes';
 

@@ -4,6 +4,8 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   LOW_PX,
+  fitHeightsFor,
+  fitSnap,
   follow,
   heightsFor,
   snapAfterTap,
@@ -136,4 +138,27 @@ test('a swipe down from Max that slows before lifting steps down to Middle', () 
   for (let i = 0; i < 3; i++) f.move((y += 50), (t += 16));
   for (let i = 0; i < 10; i++) f.move((y += 2), (t += 16));
   assert.equal(f.release(t + 16), 'middle');
+});
+
+// A fitted sheet (BottomSheet's `fits`, Figma 4560:12422): Low, and open at its content's height.
+test('a fitted sheet opens at its content, never below Low nor above Max', () => {
+  const max = heightsFor(800).max;
+  assert.deepEqual(fitHeightsFor(800, 520), { low: LOW_PX, middle: 520, max: 520 });
+  assert.equal(fitHeightsFor(800, 40).middle, LOW_PX);
+  assert.equal(fitHeightsFor(800, 5000).max, max);
+  assert.equal(fitSnap(800, 520), 520 / max);
+  assert.equal(fitSnap(800, 5000), 'max');
+});
+
+test('a fitted sheet lets go on Low or open, never between', () => {
+  const fitted = fitHeightsFor(800, 520);
+  // Up from Low: a swipe and a flick both open it (what lands on Middle or Max is open).
+  assert.ok(['middle', 'max'].includes(snapFor(200, 0, fitted, LOW_PX)));
+  assert.equal(snapFor(300, 2, fitted, LOW_PX), 'max');
+  // Down from open: back to Low; a flick from Low closes.
+  assert.equal(snapFor(300, 0, fitted, 520), 'low');
+  assert.equal(snapFor(LOW_PX, -2, fitted, LOW_PX), 'close');
+  // A drag never shows more than its content.
+  const track = follow(700, 0, LOW_PX, 800, fitted);
+  assert.equal(track.move(0, 16), 520);
 });

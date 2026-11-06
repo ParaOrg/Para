@@ -1,10 +1,8 @@
 import type { GeoJSONSource, LineLayerSpecification, MapLibreMap } from 'maplibre-gl';
 
 import { MAP_COLOURS, MAP_PAINT } from '@/design-system/foundation/map-colours';
-import { firstLayerOfType } from '@/features/routes/map/layers';
 import { CASING_EXTRA, roadWidth } from '@/features/routes/map/line-style';
 import { RESTING_FILTER, ROUTES_LINE } from '@/features/routes/map/rail-rest-layers';
-import { TRAIL_SRC } from '@/features/routes/map/recording-trail';
 import { routesData, unpatched } from '@/features/routes/map/saved-routes-data';
 import { directionLine, type LineStringGeoJSON } from '@/features/routes/model/routes';
 import { fetchIndex } from '@/features/routes/published/fetch-index';
@@ -16,6 +14,7 @@ import {
   PUBLISHED_LINE,
   PUBLISHED_RAIL,
   PUBLISHED_SRC,
+  layerToGoUnder,
 } from './published-routes-layers';
 
 /*
@@ -41,20 +40,6 @@ const RESTING = [
 
 /** From this zoom an overview's corners show on a street: the public map's FULL_LINES_FROM. */
 const FULL_LINES_FROM = 15;
-
-/**
- * Where the routes go: under the trail, whose layers are on top of the map's labels as it is
- * added and under them after a basemap switch (basemap.ts), and under the labels, so a road
- * painted blue still shows its name.
- */
-function layerToGoUnder(map: MapLibreMap): string | undefined {
-  const trail = map.getLayersOrder().find((id) => map.getLayer(id)?.source === TRAIL_SRC);
-  const label = firstLayerOfType(map, 'symbol');
-  if (!trail) return label;
-  if (!label) return trail;
-  const order = map.getLayersOrder();
-  return order.indexOf(trail) < order.indexOf(label) ? trail : label;
-}
 
 function lineLayer(
   id: string,

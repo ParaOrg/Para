@@ -4,10 +4,12 @@ import { useEffect } from 'react';
 import { MAP_PAINT } from '@/design-system/foundation/map-colours';
 import { LAYERS } from '@/features/routes/map/layers';
 
+import { DIAMOND_IMAGE, HANDLE_HELD_LAYER, diamondImage } from './handle-diamond';
+
 /**
  * What the drawing paints on the map: its sources and layers, laid once
- * (useDrawLayers); the data and colours they show as the drawing changes are
- * useDrawRendering's (use-draw-rendering.ts), from draw-features.ts. The
+ * (useDrawLayers), with their colours; the data they show as the drawing
+ * changes is useDrawRendering's (use-draw-rendering.ts), from draw-features.ts. The
  * `draw-*` ids are a contract — the suites read them — and never change.
  */
 
@@ -18,6 +20,10 @@ export const POINT_SRC = 'draw-points';
 export const AREA_SRC = 'draw-area';
 export const UTURN_SRC = 'draw-uturns';
 export const BORROW_SRC = 'draw-borrow';
+/** A curve's handles: each an arm from its point and a dot at its end. */
+export const HANDLE_SRC = 'draw-handles';
+/** A handle's dot: what a drag takes hold of (draw-handle-drag.ts). */
+export const HANDLE_DOT_LAYER = 'draw-handle-dots';
 /** The drawing's points, and the wide invisible line a click finds: the events' layers. */
 export const POINT_LAYER = 'draw-point-dots';
 export const HIT_LAYER = 'draw-line-hit';
@@ -26,6 +32,10 @@ export const SELECTED_LAYER = 'draw-point-selected';
 export const AREA_FILL_LAYER = 'draw-area-fill';
 
 export const ROUTE_COLOUR = MAP_PAINT['Paint/draw-line'];
+/** The line's width in pixels: its chevrons (draw-arrows.ts) are cut to it. */
+export const DRAW_LINE_WIDTH = 4;
+/** A curve's handle arm's width, and the line to the cursor's (use-cursor-line.ts): thin, as a pen tool's guides are. */
+export const HANDLE_ARM_WIDTH = 1.5;
 
 /** Whether a source the drawing looked up is a GeoJSON one it can set data on. */
 export const isGeoJSON = (source: Source | undefined): source is GeoJSONSource =>
@@ -47,6 +57,7 @@ export function useDrawLayers(map: MapLibreMap | null): void {
     map.addSource(AREA_SRC, { type: 'geojson', data: EMPTY });
     map.addSource(UTURN_SRC, { type: 'geojson', data: EMPTY });
     map.addSource(BORROW_SRC, { type: 'geojson', data: EMPTY });
+    map.addSource(HANDLE_SRC, { type: 'geojson', data: EMPTY });
 
     // The hotspot fill sits under its own outline and under the route layers.
     map.addLayer({
@@ -55,15 +66,16 @@ export function useDrawLayers(map: MapLibreMap | null): void {
       source: AREA_SRC,
       paint: { 'fill-color': ROUTE_COLOUR, 'fill-opacity': 0.18 },
     });
-    // The direction being extended, while its spot is picked: wide and pale,
-    // so the tap has something to land on, with the spot as a ringed dot.
+    // The direction being extended, while its spot is picked: wide, in the
+    // brand's pale shade, so the tap has something to land on, with the spot
+    // as a ringed dot.
     map.addLayer({
       id: 'draw-borrow-line',
       type: 'line',
       source: BORROW_SRC,
       filter: ['==', ['geometry-type'], 'LineString'],
       layout: { 'line-cap': 'round', 'line-join': 'round' },
-      paint: { 'line-color': BORROW_COLOUR, 'line-width': 10, 'line-opacity': 0.35 },
+      paint: { 'line-color': BORROW_COLOUR, 'line-width': 10, 'line-opacity': 0.9 },
     });
     map.addLayer({
       id: 'draw-borrow-spot',
@@ -84,15 +96,17 @@ export function useDrawLayers(map: MapLibreMap | null): void {
       layout: { 'line-cap': 'round', 'line-join': 'round' },
       paint: { 'line-color': MAP_PAINT['Paint/casing'], 'line-width': 8, 'line-opacity': 0.9 },
     });
-    // Routed and freehand are separate layers because line-dasharray cannot be
-    // driven by a feature property.
+    // Routed and Draw stretches look the same, solid in the line's colour: the
+    // only dashed line is Snap's preview (use-snap-preview.ts). A stretch the
+    // router refused is told apart by the toolbar's count ("… straight",
+    // draw-count.tsx), never by its look. Two layers, by their ids the suites read.
     map.addLayer({
       id: LAYERS.drawSnapped,
       type: 'line',
       source: LINE_SRC,
       filter: ['==', ['get', 'snap'], 'snapped'],
       layout: { 'line-cap': 'round', 'line-join': 'round' },
-      paint: { 'line-color': ROUTE_COLOUR, 'line-width': 4 },
+      paint: { 'line-color': ROUTE_COLOUR, 'line-width': DRAW_LINE_WIDTH },
     });
     map.addLayer({
       id: LAYERS.drawFreehand,
@@ -100,11 +114,7 @@ export function useDrawLayers(map: MapLibreMap | null): void {
       source: LINE_SRC,
       filter: ['==', ['get', 'snap'], 'freehand'],
       layout: { 'line-cap': 'round', 'line-join': 'round' },
-      paint: {
-        'line-color': ROUTE_COLOUR,
-        'line-width': 4,
-        'line-dasharray': [2, 1.5],
-      },
+      paint: { 'line-color': ROUTE_COLOUR, 'line-width': DRAW_LINE_WIDTH },
     });
     // Where the route turns back on itself, the doubled-back stretch overlaps
     // or runs beside the line and would be invisible. Paint it amber over it.
@@ -135,6 +145,45 @@ export function useDrawLayers(map: MapLibreMap | null): void {
         'circle-opacity': 0,
         'circle-stroke-color': UTURN_COLOUR,
         'circle-stroke-width': 3,
+      },
+    });
+    // A curve's handles, under its points: thin arms and small dots, in red as a pen tool's are, apart from the line.
+    map.addLayer({
+      id: 'draw-handle-arms',
+      type: 'line',
+      source: HANDLE_SRC,
+      filter: ['==', ['geometry-type'], 'LineString'],
+      paint: { 'line-color': MAP_PAINT['Paint/draw-handle-arm'], 'line-width': HANDLE_ARM_WIDTH },
+    });
+    map.addLayer({
+      id: HANDLE_DOT_LAYER,
+      type: 'circle',
+      source: HANDLE_SRC,
+      filter: ['==', ['geometry-type'], 'Point'],
+      paint: {
+        'circle-radius': 4,
+        'circle-color': MAP_PAINT['Paint/draw-handle-dot'],
+        'circle-stroke-color': MAP_PAINT['Paint/casing'],
+        'circle-stroke-width': 1,
+      },
+    });
+    // The handle held, while a press drags it: its dot a diamond (handle-diamond.ts).
+    const pixelRatio = Math.max(1, Math.round(window.devicePixelRatio || 1));
+    if (!map.hasImage(DIAMOND_IMAGE))
+      map.addImage(
+        DIAMOND_IMAGE,
+        diamondImage(MAP_PAINT['Paint/draw-handle-dot'], MAP_PAINT['Paint/casing'], pixelRatio),
+        { pixelRatio },
+      );
+    map.addLayer({
+      id: HANDLE_HELD_LAYER,
+      type: 'symbol',
+      source: HANDLE_SRC,
+      filter: ['all', ['==', ['geometry-type'], 'Point'], false],
+      layout: {
+        'icon-image': DIAMOND_IMAGE,
+        'icon-allow-overlap': true,
+        'icon-ignore-placement': true,
       },
     });
     map.addLayer({

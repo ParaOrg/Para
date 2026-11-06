@@ -113,6 +113,36 @@ export const Free: Story = {
   },
 };
 
+/**
+ * Fitted (`fits`, Figma 4560:12422): two heights, Low and its content's. The handle opens it only
+ * as tall as its three rows, the map in sight above, and lowers it again.
+ */
+export const FitsContent: Story = {
+  render: (args) => <Keeping {...args} startsAt="low" />,
+  args: { fits: true, height: { snap: 'low', onSnap: fn() }, children: <Rows count={3} /> },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const handle = canvas.getByTestId('dock-handle');
+    await expect(handle).toHaveAccessibleName('Sheet lowered. Raise it');
+    await userEvent.click(handle);
+    await expect(handle).toHaveAccessibleName('Sheet raised. Lower it');
+    await expect(canvas.getByTestId('card')).toHaveAttribute('data-snap', 'free');
+    await userEvent.click(handle);
+    await expect(canvas.getByTestId('card')).toHaveAttribute('data-snap', 'low');
+  },
+};
+
+/** Fitted, with more than the map holds: it opens to Max, and its body scrolls there. */
+export const FitsTallContent: Story = {
+  render: (args) => <Keeping {...args} startsAt="low" />,
+  args: { fits: true, height: { snap: 'low', onSnap: fn() }, children: <Rows count={30} /> },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByTestId('dock-handle'));
+    await expect(canvas.getByTestId('card')).toHaveAttribute('data-snap', 'max');
+  },
+};
+
 /** The handle from the keyboard goes round: Middle → Max → Low → Middle, and says where it is. */
 export const HandleGoesRound: Story = {
   play: async ({ canvasElement }) => {
@@ -138,6 +168,40 @@ export const EscapeCloses: Story = {
     await waitFor(() => expect(within(canvasElement).getByTestId('card')).toHaveFocus());
     await userEvent.keyboard('{Escape}');
     await expect(args.onClose).toHaveBeenCalledOnce();
+  },
+};
+
+/** A finger's pull down on the handle, `px` long, as the sheet's own listeners hear it. */
+function pullDown(handle: HTMLElement, px: number) {
+  const { left, top, width } = handle.getBoundingClientRect();
+  const x = left + width / 2;
+  const at = (y: number) => ({ pointerId: 7, button: 0, clientX: x, clientY: y, bubbles: true });
+  handle.dispatchEvent(new PointerEvent('pointerdown', at(top + 4)));
+  for (let moved = 20; moved <= px; moved += 20) {
+    window.dispatchEvent(new PointerEvent('pointermove', at(top + 4 + moved)));
+  }
+  window.dispatchEvent(new PointerEvent('pointerup', at(top + 4 + px)));
+}
+
+/** Pulled down from Low, a card closes: the public map's and the studio's way. */
+export const PullCloses: Story = {
+  render: (args) => <Keeping {...args} startsAt="low" />,
+  args: { height: { snap: 'low', onSnap: fn() } },
+  play: async ({ args, canvasElement }) => {
+    pullDown(within(canvasElement).getByTestId('dock-handle'), 200);
+    await waitFor(() => expect(args.onClose).toHaveBeenCalledOnce());
+  },
+};
+
+/** With `closesOnPull` off (a contributor's ride), the same pull leaves it at Low, open. */
+export const PullRestsAtLow: Story = {
+  render: (args) => <Keeping {...args} startsAt="low" />,
+  args: { closesOnPull: false, height: { snap: 'low', onSnap: fn() } },
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement);
+    pullDown(canvas.getByTestId('dock-handle'), 200);
+    await waitFor(() => expect(canvas.getByTestId('card')).toHaveAttribute('data-snap', 'low'));
+    await expect(args.onClose).not.toHaveBeenCalled();
   },
 };
 

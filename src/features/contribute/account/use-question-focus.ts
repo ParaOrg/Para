@@ -5,8 +5,8 @@ import { useEscape } from '@/shared/hooks/use-escape';
 import { useHoldToolbar } from '../toolbar/toolbar-hold';
 
 /**
- * Focus for a question before an act that ends something (HandQuestion): the safe answer, drawn
- * last, has it as the question opens, and Tab goes round the buttons that can be
+ * Focus for a question before an act that ends something (HandQuestion): the safe answer (marked
+ * `data-safe-answer`) has it as the question opens, and Tab goes round the buttons that can be
  * pressed. Escape cancels. Once the answer is under way nothing cancels it: Escape waits, and the
  * question's heading holds focus while both buttons are off, so it never drops out of the dialog.
  * The page's toolbar steps aside while it is open (toolbar-hold.tsx).
@@ -24,8 +24,8 @@ export function useQuestionFocus(
   useEffect(() => {
     const dialog = dialogRef.current;
     if (!dialog) return;
-    // The safe answer is drawn last (HandQuestion): Cancel, or "No, I change my mind".
-    [...dialog.querySelectorAll('button')].at(-1)?.focus();
+    // Cancel, "No, I change my mind" or Keep recording, wherever HandQuestion draws it.
+    dialog.querySelector<HTMLButtonElement>('[data-safe-answer]')?.focus();
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key !== 'Tab') return;
       const buttons = [...dialog.querySelectorAll('button')].filter((button) => !button.disabled);

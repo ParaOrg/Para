@@ -6,8 +6,12 @@ import { cn } from '@/shared/utils/cn';
 import type { CardStatus, CardStatusTone } from './card-status';
 import { CheckIcon } from '../common/history-icons';
 
+/** The card's own line, or the ride sheet's larger one (Figma 4569:4974). */
+type CardStatusLineSize = 'card' | 'sheet';
+
 interface CardStatusLineProps {
   status: CardStatus;
+  size?: CardStatusLineSize;
   /** The card's recording in words, so the retry button says which one it sends. */
   fullName: string;
   onRetry: () => void;
@@ -15,9 +19,14 @@ interface CardStatusLineProps {
 
 const TONE_CLASSES: Record<CardStatusTone, string> = {
   uploaded: 'text-content-success',
-  retry: 'text-card-orange-surface',
+  retry: 'text-content-warning',
   quiet: 'text-content-quaternary',
   problem: 'text-content-error',
+};
+
+const LINE_CLASSES: Record<CardStatusLineSize, string> = {
+  card: 'gap-2 text-xs/4',
+  sheet: 'gap-1.5 text-sm/5',
 };
 
 const TONE_ICONS: Partial<Record<CardStatusTone, ComponentType>> = {
@@ -30,19 +39,19 @@ const TONE_ICONS: Partial<Record<CardStatusTone, ComponentType>> = {
  * state never rests on colour alone. A failure's whole line is the retry button. The words are
  * announced as they change.
  */
-export function CardStatusLine({ status, fullName, onRetry }: CardStatusLineProps) {
+export function CardStatusLine({ status, size = 'card', fullName, onRetry }: CardStatusLineProps) {
   const Icon = TONE_ICONS[status.tone];
   const content = (
     <>
       {Icon && (
-        <span aria-hidden className="size-4 shrink-0 *:size-full">
+        <span aria-hidden className={'size-4 shrink-0 *:size-full'}>
           <Icon />
         </span>
       )}
       <span className="min-w-0 flex-1 text-left">{status.words}</span>
     </>
   );
-  const line = 'flex min-w-0 flex-1 items-center gap-2 text-xs/4';
+  const line = cn('flex min-w-0 flex-1 items-center', LINE_CLASSES[size]);
   return (
     <div aria-live="polite" className="flex min-w-0 flex-1">
       {status.tone === 'retry' ? (

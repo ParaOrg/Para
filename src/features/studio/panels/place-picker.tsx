@@ -9,10 +9,8 @@ export const NEW_PLACE_KEY = '+new-place';
 
 interface PlacePickerProps {
   ref?: Ref<HTMLSelectElement>;
-  /** 'Head' or 'Tail'. */
+  /** The studio's word for the end: Origin for the head, Destination for the tail. */
   label: string;
-  /** What that end is, beside the label: '(where the jeeps wait)', '(the far end)'. */
-  hint: string;
   places: Place[];
   /** The picked place's key, '' for none. */
   value: string;
@@ -30,7 +28,6 @@ interface PlacePickerProps {
 export function PlacePicker({
   ref,
   label,
-  hint,
   places,
   value,
   isDisabled,
@@ -40,11 +37,7 @@ export function PlacePicker({
   return (
     <SelectField
       ref={ref}
-      label={
-        <>
-          {label} <span className="text-content-disabled">{hint}</span>
-        </>
-      }
+      label={label}
       required
       disabled={isDisabled}
       value={value}

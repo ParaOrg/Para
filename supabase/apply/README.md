@@ -94,8 +94,7 @@ Turnstile sign-in must ship before CAPTCHA is turned on project-wide.
 
 # Applying reviewed_draft_approval to the live project
 
-**Applied live 2026-10-20** (ledger `20261020034722`; check 6/6 true). Do not reapply. It was needed before the studio's drafts are turned on
-(`STUDIO_DRAFTS`): the review screens approve with `approve_reviewed_draft`,
+**Applied live 2026-10-20** (ledger `20261020034722`; check 6/6 true). Do not reapply. It was needed before the studio saved as drafts: the review screens approve with `approve_reviewed_draft`,
 which checks the reviewer approves exactly the draft version they compared, and
 settle a conflict with `refresh_draft_base`. Adds two functions; changes no
 table, row or existing function.
@@ -436,3 +435,270 @@ screen's "Also delete my uploaded routes" ships after this is applied.
   `verify/delete-account-keep-uploads.sh` checks the schema afterwards matches the schema before, and
   that it re-applies. If anyone has already kept their uploads, the revert refuses: decide with the
   owner first whether to retire those rides or delete them.
+
+# Applying delete_account_refuse_uploads to the live project
+
+Deleting an account never deletes the uploads (the owner, 2026-11-04). This keeps
+`public.delete_my_account(delete_uploads boolean default true)` with the same signature and default,
+so the types do not change, and makes its first check, before it locks or changes anything:
+
+- **`false`:** exactly as `delete_account_keep_uploads`: the person goes, the uploads stay unlinked.
+- **`true`, null or no argument:** refused with SQLSTATE `P0001`, message
+  `delete_uploads_refused: only delete_uploads => false deletes an account; nothing was changed`. The
+  account stays whole. The contributor app 0.2.0 sends `true` when its "Also delete my uploaded routes"
+  switch is on, and older versions send no argument; both show their usual "couldn't delete", so
+  nobody is told their uploads were deleted when they were not.
+
+Same refusals as before for `false`. No table, no row changes. Three files, each pasted whole into the
+SQL editor as `postgres`:
+
+| File | What it does |
+| --- | --- |
+| `20261105090000_delete_account_refuse_uploads_apply.sql` | One transaction. Checks `delete_account_keep_uploads` is in the ledger with `delete_my_account(boolean)`, and this is not. Applies `migrations/20261105090000_delete_account_refuse_uploads.sql` (carried unchanged; `verify/delete-account-refuse-uploads.sh` checks the copy). Checks there is one `delete_my_account`, a definer with a pinned path for `authenticated` only, defaulting to `true`, whose refusal comes before its first lock. Writes the ledger row `delete_account_refuse_uploads`. Any failed check raises and nothing is changed. A second run stops at the first check and changes nothing. |
+| `20261105090000_delete_account_refuse_uploads_check.sql` | Part one adds seven test users with a row in every table, proves the behaviour, then rolls all of it back; it raises `FAILED: ...` on the first wrong result. No argument, `true` and null are each refused with `P0001 delete_uploads_refused`, and the account keeps everything; the refusal comes before the others (no caller, an anonymous phone, an editor, a map owner). With `false` the usual refusals hold, and an account goes while its upload stays unlinked and marked, its typed words cleared; a retry answers as deleted. anon cannot call it. Part two is read-only: 5 rows, all `ok` should be `t`. |
+| `20261105090000_delete_account_refuse_uploads_revert.sql` | One transaction: puts back `delete_my_account(boolean)` as `delete_account_keep_uploads` left it (so `true` or no argument deletes the uploads again) and removes the ledger row. Run it before that migration's revert, never after. Safe to run twice. |
+
+## Steps
+
+1. `delete_account_keep_uploads` first: the apply refuses without it. Apply both together, or this one
+   right after it.
+2. Run `20261105090000_delete_account_refuse_uploads_apply.sql`. It ends with `COMMIT`; an error means
+   nothing changed.
+3. Run `20261105090000_delete_account_refuse_uploads_check.sql`: part one ends with `ROLLBACK` and no
+   `FAILED`; part two gives 5 rows, all `ok = t`.
+4. Record the ledger version
+   (`select version from supabase_migrations.schema_migrations where name = 'delete_account_refuse_uploads';`)
+   in `migrations/README.md`. The types do not change.
+
+Both are applied live (2026-11-05). The new contributor app always sends `delete_uploads: false`,
+which fails without `delete_account_keep_uploads`.
+
+## Recovery
+
+- Apply failed: nothing changed. The message names what it found.
+- Applied, and it must be withdrawn: run `20261105090000_delete_account_refuse_uploads_revert.sql`.
+  `verify/delete-account-refuse-uploads.sh` checks the schema afterwards matches the schema before, and
+  that it re-applies.
+
+# Applying review_rules to the live project
+
+**Applied live 2026-11-05** (ledger `20261105042846`) from its paste file; its check passed. Do not reapply. The review step's rules, findings studio-03, studio-08 and studio-09
+(`.scratch/codebase-review/studio.md`), approved by the owner on 2026-11-05:
+
+- **Approvals write only the links that changed.** A link the draft keeps as it is (same direction,
+  hotspot and sequence) is not touched, so it moves no neighbour's revision. That ends the false
+  "Approved data changed" on drafts of every hotspot a route passes (and every route through a hotspot).
+  Same rows and same codes as before.
+- **Keep rebuilds a hotspot draft's links.** "Keep draft for a new review" (`refresh_draft_base`) takes a
+  hintuan's links from the links the approved directions have to it now, and keeps a terminal's ticked
+  links, adding the ikot that pass it now. Only when the draft keeps the approved outline and station
+  line: a draft that moves them keeps its own list, as before. Route drafts are kept as before.
+- **Editors change only a draft's content.** `authenticated` updates `payload`, `status`, `submitted_at`
+  and `note` only; `draft_update` no longer lets a direct update leave a draft without its maker.
+- **Only the maker discards a draft.** `discard_draft` answers `not_your_draft` for another editor's
+  draft (the studio shows "Only the editor who made this draft can discard it. Nothing was changed.");
+  `draft_delete` is the maker's only. A draft whose maker's account is gone can be discarded by any
+  editor.
+
+No table, no row changes. Three files, each pasted whole into the SQL editor as `postgres`:
+
+| File | What it does |
+| --- | --- |
+| `20261105120000_review_rules_apply.sql` | One transaction. Checks `0022_draft_ops`, `reviewed_draft_approval` and `draft_update_own` are in the ledger, and this is not. Applies `migrations/20261105120000_review_rules.sql` (carried unchanged; `verify/review-rules.sh` checks the copy). Checks `authenticated` updates only the four content columns, both policies are the maker's, and the three functions are definers with a pinned path for `authenticated` only. Writes the ledger row `review_rules`. Any failed check raises and nothing is changed. A second run stops at the first check and changes nothing. |
+| `20261105120000_review_rules_check.sql` | Part one adds two test editors, test routes and hotspots and their drafts, proves the behaviour, then rolls all of it back; it raises `FAILED: ...` on the first wrong result. Part two is read-only: 9 rows, all `ok` should be `t`. |
+| `20261105120000_review_rules_revert.sql` | One transaction: puts back `approve_draft` and `discard_draft` as 0022 wrote them, `refresh_draft_base` as reviewed_draft_approval wrote it, the table-wide update grant, `draft_update` as draft_update_own left it and `draft_delete` as 0018 did, and removes the ledger row. Touches no data. Safe to run twice. |
+
+## Steps
+
+1. Run `20261105120000_review_rules_apply.sql`. It ends with `COMMIT`; an error means nothing changed.
+2. Run `20261105120000_review_rules_check.sql`: part one ends with `ROLLBACK` and no `FAILED`; part two
+   gives 9 rows, all `ok = t`.
+3. Record the ledger version
+   (`select version from supabase_migrations.schema_migrations where name = 'review_rules';`)
+   in `migrations/README.md`. The types do not change: no function's arguments or result type changed.
+
+## Recovery
+
+- Apply failed: nothing changed. The message names what it found.
+- Applied, and it must be withdrawn: run `20261105120000_review_rules_revert.sql`.
+  `verify/review-rules.sh` checks the schema afterwards matches the schema before, and that it re-applies.
+
+# Applying draft_update_makerless to the live project
+
+**Applied live 2026-11-05** (ledger `20261105055623`) from its paste file; its check passed. Do not reapply. The owner's choice after review_rules: any editor may edit a draft whose maker's
+account is gone (`editor_id` null), as `draft_update_own` allowed. review_rules had made `draft_update`'s
+with check the maker's alone, which refused every direct edit of such a draft. This puts back the maker
+or a maker-less draft. A draft still cannot be handed to nobody: since review_rules an editor updates
+only `payload`, `status`, `submitted_at` and `note`, never `editor_id`. Deleting and discarding are
+unchanged. One policy; no table, grant or row changes.
+
+After this, `20261105120000_review_rules_check.sql` no longer passes as written: its step 9 and its row 3
+expect the maker-only with check this replaces.
+
+| File | What it does |
+| --- | --- |
+| `20261105130000_draft_update_makerless_apply.sql` | One transaction. Checks `review_rules` is in the ledger, and this is not. Applies `migrations/20261105130000_draft_update_makerless.sql` (carried unchanged; `verify/draft-update-makerless.sh` checks the copy). Checks `draft_update` accepts the maker or a maker-less draft and `editor_id` is still not updatable. Writes the ledger row `draft_update_makerless`. Any failed check raises and nothing is changed. A second run stops at the first check and changes nothing. |
+| `20261105130000_draft_update_makerless_check.sql` | Part one adds two test editors, two hotspots and their drafts, proves the behaviour, then rolls all of it back; it raises `FAILED: ...` (or a row-security error) on the first wrong result. Part two is read-only: 4 rows, all `ok` should be `t`. |
+| `20261105130000_draft_update_makerless_revert.sql` | One transaction: puts back `draft_update` as review_rules left it (the maker only in its with check) and removes the ledger row. Touches no data. Safe to run twice. |
+
+## Steps
+
+1. Run `20261105130000_draft_update_makerless_apply.sql`. It ends with `COMMIT`; an error means nothing
+   changed.
+2. Run `20261105130000_draft_update_makerless_check.sql`: part one ends with `ROLLBACK` and no error;
+   part two gives 4 rows, all `ok = t`.
+3. Record the ledger version
+   (`select version from supabase_migrations.schema_migrations where name = 'draft_update_makerless';`)
+   in `migrations/README.md`. The types do not change.
+
+## Recovery
+
+- Apply failed: nothing changed. The message names what it found.
+- Applied, and it must be withdrawn: run `20261105130000_draft_update_makerless_revert.sql`.
+
+# Applying draft_published to the live project
+
+**Applied live 2026-11-05** (ledger `20261105132206`) from its paste file; its check passed. Do not reapply. Production keeps working on it. The owner's decision of
+2026-11-05: Draft and Published only, for routes and hotspots alike (ADR 0003's amendment).
+Clean-up step 3 of `.scratch/codebase-review/database.md`, first half.
+
+- `route` and `stop` gain `published_at`, `published_by`, `last_saved_at` and `last_saved_by`, and
+  `draft` gains `last_saved_by`. Existing rows are backfilled from `status_at` and `owner_id`, which is
+  **approximate**: see the migration's header. A taken-down row gets no publish date. The backfill moves
+  no revision and no `updated_at`.
+- `save_draft(draft, revision, payload)`: the maker's own draft or a maker-less one, at the revision read.
+- `publish_draft(draft, revision)` publishes straight from a draft, with the revision check, the base
+  check, the lock order and the end guards, and stamps the four columns (`published_by` is the draft's
+  maker).
+- `unpublish(kind, id)` takes a route or hotspot down, refusing a hotspot that ends a published route,
+  and leaves a draft of it as it stands (or keeps the draft already there, rebased).
+- The studio on `main` keeps working: its direct draft updates, `submit_draft` and
+  `approve_reviewed_draft` keep their grants. `approve_draft` now applies a draft through the same body
+  as `publish_draft` (`private.apply_draft`), and the `draft_saver` trigger names whoever changes a draft's
+  payload, so the old path stamps the new columns too.
+
+Retiring the old path is `20261105170000_retire_review_steps`, applied only after `main` has the new
+studio.
+
+| File | What it does |
+| --- | --- |
+| `20261105160000_draft_published_apply.sql` | One transaction. Checks `draft_update_makerless` is in the ledger, and this is not. Applies `migrations/20261105160000_draft_published.sql` (carried unchanged; `verify/draft-published.sh` checks the copy). Checks every row was stamped, the three functions are editors' and not anon's, and the studio on main keeps every grant it uses. Writes the ledger row `draft_published`. Any failed check raises and nothing is changed. A second run stops at the first check and changes nothing. |
+| `20261105160000_draft_published_check.sql` | Part one adds two test editors, a non-editor, three places and a route, proves save, a direct update, publish, conflict, unpublish (route and hotspot), the old submit and approve, then rolls all of it back; it raises `FAILED: ...` on the first wrong result. Part two is read-only: 8 rows, all `ok` should be `t`. |
+| `20261105160000_draft_published_revert.sql` | One transaction: drops the three functions, their two helpers and the `draft_saver` trigger, puts back `approve_draft`'s own body, drops the five columns and removes the ledger row. What the columns recorded since the apply is lost; drafts unpublish left stay as ordinary drafts. Safe to run twice. |
+
+## Steps
+
+1. Run `20261105160000_draft_published_apply.sql`. It ends with `COMMIT`; an error means nothing
+   changed.
+2. Run `20261105160000_draft_published_check.sql`: part one ends with `ROLLBACK` and no error; part two
+   gives 8 rows, all `ok = t`.
+3. Record the ledger version
+   (`select version from supabase_migrations.schema_migrations where name = 'draft_published';`)
+   in `migrations/README.md`. The types change: the studio change regenerates them against a local
+   Postgres built by `verify/run.sh`.
+
+# Applying keep_uploads_on_user_delete to the live project
+
+**Applied live 2026-11-05** (ledger `20261105131416`) from its paste file; its check passed. Do not reapply.
+It changes only what happens when a user or a contributor row is deleted. Clean-up step 1 of `.scratch/codebase-review/database.md` (H2), approved by the owner on
+2026-11-05. Deleting a user from the dashboard, a script or an anonymous clean-up used to cascade their
+contributions, points, hintos and uses away; only `delete_my_account` unlinked them first. Now a
+before-delete trigger on `contributor` unlinks their rides first, as `delete_my_account(false)` does
+(`contributor_id` null, `unlinked` true, the typed words cleared). `delete_my_account` and `finish_claim`
+behave as before. One function and one trigger; no table, grant or row changes.
+
+| File | What it does |
+| --- | --- |
+| `20261105180000_keep_uploads_on_user_delete_apply.sql` | One transaction. Checks `delete_account_keep_uploads` is in the ledger, and this is not. Applies `migrations/20261105180000_keep_uploads_on_user_delete.sql` (carried unchanged; `verify/keep-uploads-on-user-delete.sh` checks the copy). Checks the trigger is before delete and enabled, and its function callable by no app role. Writes the ledger row `keep_uploads_on_user_delete`. Any failed check raises and nothing is changed. A second run stops at the first check and changes nothing. |
+| `20261105180000_keep_uploads_on_user_delete_check.sql` | Part one adds six test users with a ride each, deletes them every way a user can go, then rolls all of it back; it raises `FAILED: ...` on the first wrong result. Part two is read-only: 3 rows, all `ok` should be `t`. |
+| `20261105180000_keep_uploads_on_user_delete_revert.sql` | One transaction: drops the trigger and its function and removes the ledger row. Touches no data. Safe to run twice. |
+
+## Steps
+
+1. Run `20261105180000_keep_uploads_on_user_delete_apply.sql`. It ends with `COMMIT`; an error means nothing
+   changed.
+2. Run `20261105180000_keep_uploads_on_user_delete_check.sql`: part one ends with `ROLLBACK` and no error;
+   part two gives 3 rows, all `ok = t`.
+3. Record the ledger version
+   (`select version from supabase_migrations.schema_migrations where name = 'keep_uploads_on_user_delete';`)
+   in `migrations/README.md`. The types do not change.
+
+## Recovery
+
+- Apply failed: nothing changed. The message names what it found.
+- Applied, and it must be withdrawn: run `20261105160000_draft_published_revert.sql`.
+
+- Applied, and it must be withdrawn: run `20261105180000_keep_uploads_on_user_delete_revert.sql`.
+
+# Applying lock_map_tables to the live project
+
+**Applied live 2026-11-06** (ledger `20261106022456`) from its paste file; its check passed. Do not reapply.
+The studio on `main` and on `staging` writes the map only through
+the draft functions. Clean-up step 4 of `.scratch/codebase-review/database.md` (H1). Editors could still
+insert, update and delete `route`, `route_variant`, `stop` and `route_stop` directly (0005, 0015), so an old
+cached studio, a script or a browser console could change or hard-delete published rows with no draft, no
+publish and no takedown record. Now `authenticated` keeps select only; the draft functions, which run with
+their owner's rights, are unchanged. The write policies stay, inert without the grants. `service_role` (the
+overview backfill) is unchanged. No table, function or row changes.
+
+| File | What it does |
+| --- | --- |
+| `20261105190000_lock_map_tables_apply.sql` | One transaction. Checks `draft_published` is in the ledger, and this is not. Applies `migrations/20261105190000_lock_map_tables.sql` (carried unchanged; `verify/lock-map-tables.sh` checks the copy). Checks `authenticated` writes none of the four tables and still reads them. Writes the ledger row `lock_map_tables`. Any failed check raises and nothing is changed. A second run stops at the first check and changes nothing. |
+| `20261105190000_lock_map_tables_check.sql` | Part one adds a test editor, two places and a route, proves every direct write refused and the draft functions working, then rolls all of it back. Part two is read-only: 4 rows, all `ok` should be `t`. |
+| `20261105190000_lock_map_tables_revert.sql` | One transaction: grants the direct writes back and removes the ledger row. Touches no data. Safe to run twice. |
+
+## Steps
+
+1. Run `20261105190000_lock_map_tables_apply.sql`. It ends with `COMMIT`; an error means nothing changed.
+2. Run `20261105190000_lock_map_tables_check.sql`: part one ends with `ROLLBACK` and no error; part two gives
+   4 rows, all `ok = t`.
+3. Record the ledger version
+   (`select version from supabase_migrations.schema_migrations where name = 'lock_map_tables';`)
+   in `migrations/README.md`. The types do not change.
+
+## Recovery
+
+- Apply failed: nothing changed. The message names what it found.
+- Applied, and it must be withdrawn: run `20261105190000_lock_map_tables_revert.sql`.
+
+# Applying drop_dead_weight to the live project
+
+**Applied live 2026-11-06** (ledger `20261106022531`) from its paste file; its check passed. Do not reapply.
+No studio build and no publish reads what goes. Clean-up step 5 of
+`.scratch/codebase-review/database.md`, the parts nothing reads or writes (M4, L4):
+
+- `gps_session`, the editors' recorded trips from before the contributor app. Nothing writes it.
+  `delete_my_account` deleted the caller's rows from it, so it is redefined without that one statement and is
+  otherwise unchanged.
+- `route.short_name` and `route.fare_as_of`: never written. The studio reads them as optional.
+- `route_variant_route_id_idx`: `route_variant_one_per_direction` (route_id, reversed) covers it.
+
+**Nothing is lost:** the apply refuses while `gps_session` has a row or either column holds a value. Then
+nothing changes, and the owner decides what to keep first. The weekly backup names `gps_session` but skips a
+name that matches nothing, so it keeps working.
+
+Not in this step, because the studio or the publish reads them today: `route.route_code` and `long_name`,
+`route_variant.direction_name`, `origin_terminal` and `destination_terminal`. Also not here: the merged read
+rules and the grant and definer tidy-ups (L1, L2, L5).
+
+| File | What it does |
+| --- | --- |
+| `20261105200000_drop_dead_weight_apply.sql` | One transaction. Checks `keep_uploads_on_user_delete` is in the ledger, this is not, and nothing would be lost. Applies `migrations/20261105200000_drop_dead_weight.sql` (carried unchanged; `verify/drop-dead-weight.sh` checks the copy). Checks all three are gone, the unique index stays and `delete_my_account` no longer names `gps_session`. Writes the ledger row `drop_dead_weight`. Any failed check raises and nothing is changed. A second run stops at the first check and changes nothing. |
+| `20261105200000_drop_dead_weight_check.sql` | Part one adds a test account with a ride and a test route, proves `delete_my_account` and the publish still work, then rolls all of it back. Part two is read-only: 5 rows, all `ok` should be `t`. |
+| `20261105200000_drop_dead_weight_revert.sql` | One transaction: re-creates `gps_session` (empty, with its policies, indexes and grant), the two columns (empty, at the end of `route`) and the index; restores `delete_my_account`; removes the ledger row. Safe to run twice. |
+
+## Steps
+
+1. Run `20261105200000_drop_dead_weight_apply.sql`. It ends with `COMMIT`; an error means nothing changed. If it
+   says something holds rows or values, stop and decide what to keep.
+2. Run `20261105200000_drop_dead_weight_check.sql`: part one ends with `ROLLBACK` and no error; part two gives 5
+   rows, all `ok = t`.
+3. Record the ledger version
+   (`select version from supabase_migrations.schema_migrations where name = 'drop_dead_weight';`)
+   in `migrations/README.md`. The types change; this PR carries them, regenerated against a local Postgres
+   with the migration applied.
+
+## Recovery
+
+- Apply failed: nothing changed. The message names what it found.
+- Applied, and it must be withdrawn: run `20261105200000_drop_dead_weight_revert.sql`.

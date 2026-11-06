@@ -4,9 +4,8 @@ import { servedBy, directionLine, isLoop, type DirectionRow } from '@/features/r
 
 import { entryDistance } from './hotspot-ring';
 
-// Pure functions, kept apart from the writes (hotspots-write.ts), which need the
-// Supabase client a test cannot load: so they can be unit-tested, and so the
-// save panel can show exactly what a save will write before it writes it.
+// Pure functions, so they can be unit-tested, and so the save panel can show
+// exactly what a save will write before it writes it.
 
 /**
  * Which directions pass this outline, and where along each one. This is a

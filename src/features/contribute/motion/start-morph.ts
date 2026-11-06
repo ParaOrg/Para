@@ -1,13 +1,12 @@
 import { motionOf, prefersReducedMotion } from '@/shared/utils/motion';
 
+import { cardWaitMs } from './card-wait';
 import { LEAVE, MOVE } from './motion';
 import { RECORDING_CARD_ATTR, START_BUTTON_ATTR } from '../common/data-attributes';
 
 /** The ghost's own attribute, so a suite can find it while it runs. */
 export const START_MORPH_ATTR = 'data-start-morph';
 
-/** How long, after the fold, the morph waits for the card to be drawn before it gives up. */
-const CARD_WAIT_MS = 300;
 /**
  * The card's radius, as rounded-4xl draws it (recording-card.tsx): the theme's --radius-4xl, in
  * pixels. Start tracking's is half its height, as rounded-full draws it.
@@ -67,16 +66,21 @@ const copyOf = (el: HTMLElement): HTMLElement => {
 
 /**
  * The card's place as soon as it is drawn and shown, hidden from that very frame (`showCard` lets
- * it go), or null if it is not there within `waitMs`.
+ * it go), or null if it is not there in time. The wait is judged each frame (cardWaitMs): it is
+ * longer once `button` has left the page, as the recording has then begun.
  */
-function cardDrawn(waitMs: number): Promise<{ card: HTMLElement; showCard: () => void } | null> {
-  const giveUpAt = performance.now() + waitMs;
+function cardDrawn(
+  button: HTMLElement,
+  foldMs: number,
+): Promise<{ card: HTMLElement; showCard: () => void } | null> {
+  const startedAt = performance.now();
   return new Promise((resolve) => {
     const look = () => {
       const card = document.querySelector<HTMLElement>(`[${RECORDING_CARD_ATTR}]`);
       if (card && card.getBoundingClientRect().height > 0) resolve({ card, showCard: hide(card) });
-      else if (performance.now() >= giveUpAt) resolve(null);
-      else requestAnimationFrame(look);
+      else if (performance.now() - startedAt >= cardWaitMs(foldMs, !button.isConnected)) {
+        resolve(null);
+      } else requestAnimationFrame(look);
     };
     look();
   });
@@ -91,13 +95,14 @@ function cardDrawn(waitMs: number): Promise<{ card: HTMLElement; showCard: () =>
  * Called as the tap starts the recording, never before it: the recording is not held for it.
  * One surface does it all, a ghost over the page that takes no taps: what it covers works under
  * it, so Pause can be pressed mid-way. Transform-free: clip-path and opacity only. If the start
- * failed (the button is still there and no card comes), the pill opens back into the button.
+ * failed (the button is still there and no card comes), the pill opens back into the button. If it
+ * began, the pill waits for a late card (cardWaitMs) rather than leave it to pop in.
  * With reduced motion the card only fades in, quickly.
  */
 export function morphStartIntoCard(button: HTMLElement): void {
   if (prefersReducedMotion()) {
     const quick = motionOf(LEAVE);
-    void cardDrawn(CARD_WAIT_MS).then((drawn) => {
+    void cardDrawn(button, 0).then((drawn) => {
       if (!drawn) return;
       drawn.showCard();
       drawn.card.animate([{ opacity: 0 }, { opacity: 1 }], {
@@ -167,7 +172,7 @@ export function morphStartIntoCard(button: HTMLElement): void {
     () => true,
     () => false,
   );
-  void Promise.all([folded, cardDrawn(fold.duration + CARD_WAIT_MS)]).then(([isFolded, drawn]) => {
+  void Promise.all([folded, cardDrawn(button, fold.duration)]).then(([isFolded, drawn]) => {
     if (!isFolded) {
       finish(drawn?.showCard);
       return;

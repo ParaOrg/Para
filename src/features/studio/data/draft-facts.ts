@@ -1,7 +1,7 @@
 import * as z from 'zod/mini';
 
 import { assertNotAnothersDraft } from './draft-guard';
-import { updateDraft } from './drafts';
+import { saveDraft } from './drafts';
 import type { DraftRow } from './review-schema';
 
 const payloadSchema = z.record(z.string(), z.unknown());
@@ -34,7 +34,6 @@ export function draftFacts(draft: DraftRow): DraftFact[] {
 
 export async function saveDraftFacts(draft: DraftRow, values: Record<string, string>) {
   await assertNotAnothersDraft(draft);
-  if (draft.status !== 'draft') throw new Error('Send this draft back before editing it.');
   const payload = payloadSchema.parse(draft.payload);
   const key = draft.kind === 'route' ? 'route' : 'stop';
   const facts = factsSchema.parse(payload[key]);
@@ -46,5 +45,5 @@ export async function saveDraftFacts(draft: DraftRow, values: Record<string, str
     if (field.key === 'name' && !value) throw new Error('Give the place a ground name.');
     facts[field.key] = value || null;
   }
-  return updateDraft(draft.id, draft.revision, { ...payload, [key]: facts });
+  return saveDraft(draft.id, draft.revision, { ...payload, [key]: facts });
 }

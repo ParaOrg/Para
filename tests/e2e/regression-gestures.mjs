@@ -289,7 +289,7 @@ check(
   'reloading the page restores the route draft',
   (await pts()) === 3 && (await page.getByRole('button', { name: /Done/ }).count()) === 1,
 );
-await page.getByRole('button', { name: '✕' }).click();
+await page.getByRole('button', { name: /^Discard this/ }).click();
 await page.waitForTimeout(200);
 check(
   'cancel returns to idle',
@@ -316,9 +316,9 @@ for (const [dx, dy] of [
 }
 check('terminal: 4 corners, fill present', (await pts()) === 4 && (await pts('draw-area')) === 1);
 check(
-  'terminal colour is sky',
+  'a new terminal is drawn in the brand colour',
   (await page.evaluate(() => window.__map.getPaintProperty('draw-area-fill', 'fill-color'))) ===
-    '#00a6f4',
+    '#4900be',
 );
 c = await cp();
 p1 = await proj(c[1]);
@@ -371,7 +371,7 @@ check(
   `${routerCalls - before} during hotspots, ${before} while drawing the route`,
 );
 check('Done enabled for the outline', await page.getByRole('button', { name: /Done/ }).isEnabled());
-await page.getByRole('button', { name: '✕' }).click();
+await page.getByRole('button', { name: /^Discard this/ }).click();
 await page.waitForTimeout(200);
 check(
   'cancel returns to idle with the New +',

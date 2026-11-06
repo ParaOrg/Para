@@ -108,7 +108,7 @@ check(
     () => false,
   ),
 );
-check('Tap | Draw hidden in area mode', (await page.getByTestId('tap-draw').count()) === 0);
+check('Snap | Draw hidden in area mode', (await page.getByTestId('snap-draw').count()) === 0);
 
 // click 4 corners around the centre of the map
 const box = await page.locator('canvas.maplibregl-canvas').boundingBox();
@@ -151,8 +151,8 @@ check(
   `${probe.lineFeatures} features, closing=${probe.hasClosing}`,
 );
 check(
-  'hintuan colour is green',
-  probe.fillColor === '#00c951' && probe.lineColor === '#00c951',
+  'a new hotspot is drawn in the brand colour',
+  probe.fillColor === '#4900be' && probe.lineColor === '#4900be',
   `${probe.fillColor}/${probe.lineColor}`,
 );
 check('no router calls made while tracing an area', routerCalls === 0, `${routerCalls}`);
@@ -173,6 +173,22 @@ check(
   !(await page.getByRole('button', { name: /Done/ }).isEnabled()),
 );
 
+// Redo puts the undone corners back, the button and Ctrl+Shift+Z alike; Undo takes one off again.
+const cornersNow = async () => (await window.__src('draw-points'))?.features?.length ?? 0;
+await page.getByRole('button', { name: 'Redo' }).click();
+await page.keyboard.press('Control+Shift+Z');
+await page.waitForTimeout(200);
+const afterRedo = await page.evaluate(cornersNow);
+check(
+  'redo puts both corners back, and then has nothing left to redo',
+  afterRedo === 4 && !(await page.getByRole('button', { name: 'Redo' }).isEnabled()),
+  `${afterRedo}`,
+);
+await page.getByRole('button', { name: 'Undo' }).click();
+await page.getByRole('button', { name: 'Undo' }).click();
+await page.waitForTimeout(200);
+check('undo after redo takes them off again', (await page.evaluate(cornersNow)) === 2);
+
 // draft survives reload with kind
 await page.mouse.click(cx + 80, cy + 60);
 await page.waitForTimeout(200);
@@ -192,7 +208,7 @@ check(
 );
 
 await page.screenshot({ path: 'hotspot-trace.png' });
-await page.getByRole('button', { name: '✕' }).click();
+await page.getByRole('button', { name: /^Discard this/ }).click();
 
 // ---- Regression: a 2-point route still snaps to roads
 await page.getByRole('button', { name: 'New route, terminal or hintuan' }).click();
@@ -281,7 +297,7 @@ check(
 );
 check('route: geometry is road-following (>2 coords)', route.coords > 2, `${route.coords} coords`);
 check('route: no polygon fill in route mode', route.polygons === 0);
-check('route: rose colour restored', route.lineColor === '#e11d48', route.lineColor);
+check('route: brand colour', route.lineColor === '#4900be', route.lineColor);
 check(
   'route: freehand toggle + distance readout back',
   route.freehandVisible && route.distanceShown,

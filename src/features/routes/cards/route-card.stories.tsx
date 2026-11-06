@@ -16,7 +16,7 @@ const meta = {
     ),
   ],
   args: {
-    livery: 'orange',
+    livery: 'jeep',
     state: 'rest',
     routeOrigin: 'Novaliches (Bayan)',
     endPoints: [{ id: 'a', routeDirection: 'Tala', vehicle: 'Jeepney' }],
@@ -30,55 +30,73 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /**
- * Orange: Content/inverse under Route/RouteCardPrimary, the Primary Blob. The
- * place in SN Pro Bold 24/32, as the RouteCard set draws it (3665:2265).
+ * Bus: Card/Bus, its words in on-surface under Route/RouteCardPrimary, the Primary Blob. The place
+ * in SN Pro Bold 28/32.
  */
-export const Orange: Story = {
+export const Bus: Story = {
+  args: { livery: 'bus', endPoints: [{ id: 'a', routeDirection: 'Tala', vehicle: 'Bus' }] },
   play: async ({ canvasElement }) => {
     const place = within(canvasElement).getByTestId('chooser-select');
     const type = getComputedStyle(place);
-    await expect(type.fontSize).toBe('24px');
+    await expect(type.fontSize).toBe('28px');
     await expect(type.lineHeight).toBe('32px');
     await expect(type.fontWeight).toBe('700');
   },
 };
 
-/** State=Selected, orange: pressed in under Route/RouteCardPrimarySelected; nothing else changes. */
-export const OrangeSelected: Story = { args: { state: 'selected' } };
-
-/**
- * Violet: white words, as Orange, under Route/RouteCardInverse's shadow and
- * Blob.
- */
-export const Violet: Story = { args: { livery: 'violet', routeOrigin: 'Fairview' } };
-
-/** Selected, violet: pressed in under Route/RouteCardInverseSelected. */
-export const VioletSelected: Story = {
-  args: { state: 'selected', livery: 'violet', routeOrigin: 'Fairview' },
+/** State=Selected, Bus: pressed in under Route/RouteCardPrimarySelected; nothing else changes. */
+export const BusSelected: Story = {
+  args: {
+    state: 'selected',
+    livery: 'bus',
+    endPoints: [{ id: 'a', routeDirection: 'Tala', vehicle: 'Bus' }],
+  },
 };
 
-/** Rose: as Violet. */
-export const Rose: Story = { args: { livery: 'rose', routeOrigin: 'Novaliches' } };
+/** Jeep: Card/Jeep, white words under Route/RouteCardPrimary, as Bus. */
+export const Jeep: Story = { args: { livery: 'jeep', routeOrigin: 'Fairview' } };
 
-/** Selected, rose: as Violet. */
-export const RoseSelected: Story = {
-  args: { state: 'selected', livery: 'rose', routeOrigin: 'Novaliches' },
+/** Selected, Jeep: pressed in under Route/RouteCardPrimarySelected. */
+export const JeepSelected: Story = {
+  args: { state: 'selected', livery: 'jeep', routeOrigin: 'Fairview' },
 };
 
-/** Fuchsia (Figma's Fuschia): as Violet. */
-export const Fuchsia: Story = { args: { livery: 'fuchsia', routeOrigin: 'SM Fairview' } };
-
-/** Selected, fuchsia: as Violet. */
-export const FuchsiaSelected: Story = {
-  args: { state: 'selected', livery: 'fuchsia', routeOrigin: 'SM Fairview' },
+/** UV Express: Card/UVExpress, a light card with dark words under Route/RouteCardInverse. */
+export const UvExpress: Story = {
+  args: {
+    livery: 'uv-express',
+    routeOrigin: 'Novaliches',
+    endPoints: [{ id: 'a', routeDirection: 'Tala', vehicle: 'UV Express' }],
+  },
 };
 
-/** Pink (4071:7014): as Violet. */
-export const Pink: Story = { args: { livery: 'pink', routeOrigin: 'Lagro' } };
+/** Selected, UV Express: pressed in under Route/RouteCardInverseSelected. */
+export const UvExpressSelected: Story = {
+  args: {
+    state: 'selected',
+    livery: 'uv-express',
+    routeOrigin: 'Novaliches',
+    endPoints: [{ id: 'a', routeDirection: 'Tala', vehicle: 'UV Express' }],
+  },
+};
 
-/** Selected, pink: as Violet. */
-export const PinkSelected: Story = {
-  args: { state: 'selected', livery: 'pink', routeOrigin: 'Lagro' },
+/** E-Jeep: Card/Ejeep, as UV Express. */
+export const Ejeep: Story = {
+  args: {
+    livery: 'ejeep',
+    routeOrigin: 'SM Fairview',
+    endPoints: [{ id: 'a', routeDirection: 'Tala', vehicle: 'E-Jeep' }],
+  },
+};
+
+/** Selected, E-Jeep: as UV Express. */
+export const EjeepSelected: Story = {
+  args: {
+    state: 'selected',
+    livery: 'ejeep',
+    routeOrigin: 'SM Fairview',
+    endPoints: [{ id: 'a', routeDirection: 'Tala', vehicle: 'E-Jeep' }],
+  },
 };
 
 /**
@@ -195,7 +213,7 @@ export const SeveralWaysOut: Story = {
 /** The set's longest: six ways out — tall enough to show the glow fades out whole. */
 export const SixWaysOut: Story = {
   args: {
-    livery: 'orange',
+    livery: 'jeep',
     routeOrigin: 'SM Fairview',
     endPoints: ['Tala', 'Novaliches (Bayan)', 'Quiapo', 'Cubao', 'Lagro', 'Fatima'].map((p, i) => ({
       id: String(i),
@@ -224,7 +242,7 @@ export const MixedModes: Story = {
   },
   play: async ({ canvasElement }) => {
     const rows = within(canvasElement).getAllByTestId('chooser-item');
-    // Jeepney's two rows, then Bus's one, then Train's two at the bottom.
+    // Jeep's two rows, then Bus's one, then Train's two at the bottom.
     await expect(rows.map((r) => r.textContent)).toEqual([
       'Tala',
       'Lagro',
@@ -233,7 +251,7 @@ export const MixedModes: Story = {
       'Antipolo',
     ]);
     const canvas = within(canvasElement);
-    await expect(canvas.getByText('Jeepney')).toBeVisible();
+    await expect(canvas.getByText('Jeep')).toBeVisible();
     await expect(canvas.getByText('Train')).toBeVisible();
     await expect(canvas.getByText('Bus')).toBeVisible();
   },
@@ -255,7 +273,13 @@ export const TrainFirstInData: Story = {
   },
 };
 
-/** A route with no drawn vehicle (P2P, tricycle) has no label; the rows stand alone. */
+/**
+ * A card that follows one of its mode in a list (RouteCardStackedList, 4633:19780): the mode is
+ * drawn on the run's first card only. The rows still name it to a screen reader.
+ */
+export const ModeShownAbove: Story = { args: { showsMode: false, routeOrigin: 'Bigte' } };
+
+/** A route with no drawn vehicle (tricycle) has no mode at the top; the rows stand alone. */
 export const NoMode: Story = {
   args: { endPoints: [{ id: 'a', routeDirection: 'Tala', vehicle: null }] },
 };
@@ -263,7 +287,7 @@ export const NoMode: Story = {
 /** A place name too long for one line wraps; it is never cut. */
 export const LongName: Story = {
   args: {
-    livery: 'orange',
+    livery: 'jeep',
     routeOrigin: 'Fairview Teraccess Transport Terminal',
     endPoints: [{ id: 'a', routeDirection: 'Novaliches (Bayan) via Zabarte', vehicle: 'Jeepney' }],
   },
@@ -289,6 +313,18 @@ export const MixedModesOnPhone: Story = {
   decorators: [
     (Story) => (
       <div className="w-97.5">
+        <Story />
+      </div>
+    ),
+  ],
+};
+
+/** At a phone's sheet at Low (sheetGesture's LOW_PX): a long place name cut to one line. */
+export const OnPhoneAtLow: Story = {
+  args: { routeOrigin: 'Fairview Teraccess Transport Terminal' },
+  decorators: [
+    (Story) => (
+      <div className="@container w-97.5" data-floats="card" data-snap="low">
         <Story />
       </div>
     ),

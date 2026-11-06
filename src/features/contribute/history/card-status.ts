@@ -1,6 +1,6 @@
 import { FAILED } from '../uploads/upload-failures';
 import type { UploadStatus } from '../uploads/upload-state';
-import { UPLOAD_WORDS } from '../uploads/upload-words';
+import { TAP_TO_UPLOAD, UPLOAD_WORDS } from '../uploads/upload-words';
 
 /** The id of History's heading, which focus returns to after a card is deleted from it. */
 export const HISTORY_HEADING_ID = 'history-heading';
@@ -24,11 +24,7 @@ const NEVER_FITS = new Set([FAILED['too-long'].brief, FAILED['line-too-large'].b
  * The one line every card shows about its upload. A retry only for a true failure: one the page
  * will not try again by itself. A failure it will retry is waiting: for signal, or for the reason it gives.
  */
-export function cardStatusOf(
-  status: UploadStatus,
-  canDeleteFromPara: boolean,
-  isOnline: boolean,
-): CardStatus {
+export function cardStatusOf(status: UploadStatus, isOnline: boolean): CardStatus {
   switch (status.state) {
     case 'waiting':
       // Queued: for the signal when the phone has none, else for its turn.
@@ -39,8 +35,6 @@ export function cardStatusOf(
     case 'checking':
     case 'uploading':
       return { tone: 'quiet', words: UPLOAD_WORDS[status.state].card };
-    case 'removing':
-      return { tone: 'quiet', words: UPLOAD_WORDS.removing.card };
     case 'failed':
       if (status.willRetry) {
         return {
@@ -54,11 +48,7 @@ export function cardStatusOf(
         ? { tone: 'problem', words: status.brief }
         : { tone: 'retry', words: UPLOAD_WORDS.failed.card.retry };
     case 'uploaded':
-      if (status.problem) return { tone: 'problem', words: status.problem };
-      // Sent under an identity this phone no longer has: it says why it cannot be deleted here.
-      return canDeleteFromPara
-        ? { tone: 'uploaded', words: UPLOAD_WORDS.uploaded.card.deletable }
-        : { tone: 'uploaded', words: UPLOAD_WORDS.uploaded.card.fromEarlierSignIn };
+      return { tone: 'uploaded', words: UPLOAD_WORDS.uploaded.card };
     case 'removed':
       return status.byEditor
         ? { tone: 'quiet', words: UPLOAD_WORDS.removed.card.byEditor }
@@ -69,6 +59,20 @@ export function cardStatusOf(
   }
 }
 
-/** Whether the recording can be sent from its card's menu: kept back, or taken off Para. */
-export const canUploadFromMenu = (status: UploadStatus): boolean =>
+/** Mid-upload: deleting the phone's copy now would cut the upload short. */
+export const isMidUpload = (status: UploadStatus): boolean =>
+  status.state === 'checking' || status.state === 'uploading';
+
+/** Whether a recording on this phone that is not on Para can be sent: kept back, or taken off Para. */
+const canUploadAgain = (status: UploadStatus): boolean =>
   status.state === 'held' || status.state === 'removed';
+
+/**
+ * The ride sheet's Status row: the card's line, except that one not on Para which can be sent
+ * reads Tap to upload, the line its button, as a retry's is.
+ */
+export function rideStatusOf(status: UploadStatus, isOnline: boolean): CardStatus {
+  return canUploadAgain(status)
+    ? { tone: 'retry', words: TAP_TO_UPLOAD }
+    : cardStatusOf(status, isOnline);
+}

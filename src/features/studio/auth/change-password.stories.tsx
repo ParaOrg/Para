@@ -4,6 +4,21 @@ import { expect, fn, userEvent, within } from 'storybook/test';
 import { ChangePassword } from './change-password';
 
 /**
+ * The open dialog, to query inside. Found, not got: it opens in an effect, which a built
+ * Storybook runs only after the play has begun (install-prompt.stories.tsx).
+ */
+async function openDialog(canvasElement: HTMLElement) {
+  return within(await within(canvasElement.ownerDocument.body).findByRole('dialog'));
+}
+
+/** Escape as the browser answers it: a scripted keypress is untrusted, so the play sends `cancel`. */
+function pressEscape(canvasElement: HTMLElement) {
+  canvasElement.ownerDocument
+    .querySelector('dialog[open]')
+    ?.dispatchEvent(new Event('cancel', { cancelable: true }));
+}
+
+/**
  * Fills the three fields and presses Save password. Callers pass passwords of
  * 8 characters or more, the form's own minimum, so the browser lets it submit.
  */
@@ -22,18 +37,11 @@ async function submitPasswords(
 const meta = {
   title: 'Features/Studio/ChangePassword',
   component: ChangePassword,
-  // The dialog dims the map it sits over, so give it a map-sized box. The
-  // `phone` parameter gives it a handset's width, as card-actions.stories.tsx
-  // does.
+  // A modal dialog sits in the top layer, against the viewport, over a map-coloured page. A
+  // Phone story sets the viewport (as InstallPrompt's do), not a box.
   decorators: [
-    (Story, ctx) => (
-      <div
-        className={
-          ctx.parameters.phone
-            ? 'relative h-160 w-[390px] bg-surface-quaternary'
-            : 'relative h-160 bg-surface-quaternary'
-        }
-      >
+    (Story) => (
+      <div className="h-160 bg-surface-quaternary">
         <Story />
       </div>
     ),
@@ -48,18 +56,22 @@ type Story = StoryObj<typeof meta>;
 /** From the pill's Password: who is signed in, and the three fields. */
 export const Default: Story = {};
 
-/** Cancel closes it, nothing changed. */
+/** Cancel closes it, nothing changed; Escape the same. */
 export const Cancelled: Story = {
   play: async ({ canvasElement, args }) => {
-    await userEvent.click(within(canvasElement).getByRole('button', { name: 'Cancel' }));
+    await userEvent.click(
+      (await openDialog(canvasElement)).getByRole('button', { name: 'Cancel' }),
+    );
     await expect(args.onDone).toHaveBeenCalledOnce();
+    pressEscape(canvasElement);
+    await expect(args.onDone).toHaveBeenCalledTimes(2);
   },
 };
 
 /** The two new passwords differ: refused before anything is sent. */
 export const NewPasswordsDiffer: Story = {
   play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+    const canvas = await openDialog(canvasElement);
     await submitPasswords(canvas, 'Old-password-1', 'New-password-22', 'New-password-23');
     await expect(canvas.getByText('The two new passwords do not match.')).toBeVisible();
   },
@@ -68,7 +80,7 @@ export const NewPasswordsDiffer: Story = {
 /** The rule is said under the new password, and one without a number is refused before anything is sent. */
 export const RuleBroken: Story = {
   play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+    const canvas = await openDialog(canvasElement);
     await expect(canvas.getByText('At least 8 characters, with letters and numbers')).toBeVisible();
     await submitPasswords(canvas, 'Old-password-1', 'only-letters', 'only-letters');
     await expect(
@@ -80,7 +92,7 @@ export const RuleBroken: Story = {
 /** The new password is the current one: refused before anything is sent. */
 export const SameAsCurrent: Story = {
   play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+    const canvas = await openDialog(canvasElement);
     await submitPasswords(canvas, 'Same-password-1', 'Same-password-1', 'Same-password-1');
     await expect(
       canvas.getByText('The new password is the same as the current one.'),
@@ -94,4 +106,4 @@ export const LongEmail: Story = {
 };
 
 /** At phone width. */
-export const Phone: Story = { parameters: { phone: true } };
+export const Phone: Story = { globals: { viewport: { value: 'mobile1', isRotated: false } } };

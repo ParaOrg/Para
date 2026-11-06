@@ -1,7 +1,7 @@
 import * as z from 'zod/mini';
 
 import { hotspotDraftPayload } from './drafts';
-import { hotspotColumns, hotspotLinks, type SaveHotspotInput } from './hotspots-write';
+import { hotspotColumns, hotspotLinks, type SaveHotspotInput } from './hotspot-save-input';
 
 /** A hotspot draft's payload, as far as the next edit needs it: its station line. */
 export const hotspotPayloadSchema = z.object({

@@ -7,12 +7,13 @@
 // back out of the map (the draw-line source: one feature per segment, with
 // `index` and `snap`) and checks three things:
 //
-//   far click  A click no road is within 25 m of becomes a straight, dashed
-//              'freehand' segment, not a routed line to a road far away.
+//   far click  A click no road is within 25 m of becomes a straight, solid
+//              'freehand' segment, not a routed line to a road far away. The
+//              only dashed line is the Snap preview's.
 //   U-turns    Where the route turns back on itself at a join, the line is kept
 //              as the router drew it and the editor says so: the point is
 //              ringed in amber with its doubled-back stretch (the draw-uturns
-//              source) and the toolbar counts it. A join that goes on is not
+//              source) and the screen reader is told. A join that goes on is not
 //              flagged. Checked after appending, after dragging a middle point
 //              and after inserting a point. The owner chose this on 2026-09-15:
 //              a U-turn can be a click past a corner or a jeepney that really
@@ -229,10 +230,10 @@ const view = async (points) => {
 const newRoute = async () => {
   await page.getByRole('button', { name: 'New route, terminal or hintuan' }).click();
   await page.getByRole('menuitem', { name: /Routes/ }).click();
-  await page.getByRole('button', { name: /Done/ }).waitFor({ timeout: 5000 });
+  await page.getByTestId('draw-toolbar').waitFor({ timeout: 5000 });
 };
 const discard = async () => {
-  await page.getByRole('button', { name: '✕' }).click();
+  await page.getByRole('button', { name: /^Discard this/ }).click();
   await page
     .getByRole('button', { name: 'New route, terminal or hintuan' })
     .waitFor({ timeout: 5000 });
@@ -286,7 +287,7 @@ const uTurnChecks = async (scenario, s, labels) => {
     `turn back: ${names(back)}; ringed: ${names(f.rings)}; stretches: ${f.stubs}`,
   );
   check(
-    `${scenario}: the toolbar counts them`,
+    `${scenario}: the screen reader's count names them`,
     n === back.length,
     `toolbar ⚠ ${n}, turn back ${back.length}`,
   );
@@ -309,6 +310,57 @@ box0.x = box.x;
 box0.y = box.y;
 const zoomNow = async () => (await page.evaluate(() => window.__map.getZoom())).toFixed(1);
 
+console.log('== The wheel, as Figma');
+// On a computer the studio's wheel pans, gliding, Shift+wheel pans sideways,
+// and Ctrl+wheel is MapLibre's own eased zoom (features/studio/maps/use-wheel-navigation.ts).
+const camera = () =>
+  page.evaluate(() => {
+    const c = window.__map.getCenter();
+    return { lng: c.lng, lat: c.lat, zoom: window.__map.getZoom() };
+  });
+await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+let cameraBefore = await camera();
+await page.mouse.wheel(0, 200);
+await page.waitForTimeout(40);
+const midGlide = await camera();
+await page.waitForTimeout(700);
+let cameraAfter = await camera();
+check(
+  'wheel: the pan glides, part of the way a frame later',
+  midGlide.lat < cameraBefore.lat && midGlide.lat > cameraAfter.lat,
+  JSON.stringify([cameraBefore.lat, midGlide.lat, cameraAfter.lat]),
+);
+check(
+  'wheel: the wheel pans down, the zoom kept',
+  cameraAfter.lat < cameraBefore.lat &&
+    Math.abs(cameraAfter.lng - cameraBefore.lng) < 1e-6 &&
+    Math.abs(cameraAfter.zoom - cameraBefore.zoom) < 1e-6,
+  JSON.stringify([cameraBefore, cameraAfter]),
+);
+cameraBefore = cameraAfter;
+await page.keyboard.down('Shift');
+await page.mouse.wheel(0, 200);
+await page.keyboard.up('Shift');
+await page.waitForTimeout(700);
+cameraAfter = await camera();
+check(
+  'wheel: Shift+wheel pans sideways, the zoom kept',
+  Math.abs(cameraAfter.lng - cameraBefore.lng) > 1e-6 &&
+    Math.abs(cameraAfter.zoom - cameraBefore.zoom) < 1e-6,
+  JSON.stringify([cameraBefore, cameraAfter]),
+);
+cameraBefore = cameraAfter;
+await page.keyboard.down('Control');
+await page.mouse.wheel(0, -200);
+await page.keyboard.up('Control');
+await page.waitForTimeout(700);
+cameraAfter = await camera();
+check(
+  "wheel: Ctrl+wheel zooms in, MapLibre's eased zoom",
+  cameraAfter.zoom > cameraBefore.zoom + 0.1,
+  JSON.stringify([cameraBefore, cameraAfter]),
+);
+
 console.log('== Far click (Quirino Highway, La Mesa watershed)');
 await view([Q1, Q2, W]);
 await drawRoute([Q2, Q1]);
@@ -318,6 +370,18 @@ check(
   allSnapped(s, 2),
   `gaps ${snapModes(s)}, at zoom ${await zoomNow()}`,
 );
+// Which way the line goes: the public map's chevrons, on its drawn stretches, routed and Draw's.
+const chevrons = async () =>
+  ((await page.evaluate(() => window.__src('draw-arrows')))?.features ?? []).length;
+let arrows = await chevrons();
+check('far click: chevrons flow along the snapped line', arrows > 0, `${arrows} chevrons`);
+const where = () =>
+  page.evaluate(async () =>
+    JSON.stringify((await window.__src('draw-arrows'))?.features?.[0]?.geometry.coordinates),
+  );
+const before = await where();
+await page.waitForTimeout(400);
+check('far click: the chevrons move along it', before !== (await where()));
 await discard();
 // A 429, a 5xx or a timeout also leaves the gap freehand, so a freehand line
 // alone does not prove the router refused the point. Keep the router's answers
@@ -346,6 +410,16 @@ check(
   'far click: a point 1.2 km from any road draws freehand, not a line to that road',
   s.length === 1 && s[0].snap === 'freehand' && noSegment,
   `gaps ${snapModes(s)}, the line ends ${end ? Math.round(metres(end, W)) : '?'} m from the click, router answered ${saidText}`,
+);
+arrows = await chevrons();
+check('far click: chevrons on the freehand line too', arrows > 0, `${arrows} chevrons`);
+const freehandDash = await page.evaluate(() =>
+  window.__map.getPaintProperty('draw-line-freehand', 'line-dasharray'),
+);
+check(
+  'far click: the freehand line is solid, not dashed',
+  freehandDash === undefined,
+  JSON.stringify(freehandDash),
 );
 await discard();
 
@@ -432,6 +506,406 @@ check(
   `line under the click: ${onLine}, ${pts.length} points, P is ${Math.round(placed)} m from the click, gaps ${snapModes(s)}`,
 );
 await uTurnChecks('insert', s, ['A', 'P', 'B', 'D']);
+await discard();
+
+console.log('== Live preview');
+// As the cursor moves, a straight dashed guide from the last point to it shows
+// at once in draw-preview; once it rests, the road replaces it; a move puts
+// the guide back at once; there is none in Draw.
+const preview = async () =>
+  ((await page.evaluate(() => window.__src('draw-preview')))?.features ?? []).flatMap(
+    (f) => f.geometry?.coordinates ?? [],
+  );
+const restAt = async (c) => {
+  const [x, y] = await proj(c);
+  await page.mouse.move(box0.x + x, box0.y + y, { steps: 4 });
+};
+/** The road offered once the cursor rests, and how long after the rest it came. */
+const roadOffered = async () => {
+  const restedAt = Date.now();
+  let line = await preview();
+  for (let i = 0; i < 120 && line.length <= 2; i++) {
+    await page.waitForTimeout(50);
+    line = await preview();
+  }
+  return { line, ms: Date.now() - restedAt };
+};
+await drawRoute([A, B]);
+await restAt(D);
+const guide = await preview();
+check(
+  'preview: the moment the cursor stops, a straight guide from B to it, before any road',
+  guide.length === 2 && metres(guide[0], B) < 25 && metres(guide[1], D) < 5,
+  `${guide.length} coords`,
+);
+let { line: offered, ms: roadMs } = await roadOffered();
+console.log(`      the road showed ${roadMs} ms after the rest`);
+check(
+  'preview: resting past B, the road from B to the cursor shows',
+  offered.length > 2 && metres(offered[0], B) < 25 && metres(offered.at(-1), D) < 25,
+  `${offered.length} coords, from B ${offered[0] ? Math.round(metres(offered[0], B)) : '?'} m, to the cursor ${offered.length ? Math.round(metres(offered.at(-1), D)) : '?'} m`,
+);
+const previewDash = await page.evaluate(() =>
+  window.__map.getPaintProperty('draw-preview-line', 'line-dasharray'),
+);
+check(
+  'preview: dashed, the one dashed line in the drawing',
+  Array.isArray(previewDash),
+  JSON.stringify(previewDash),
+);
+const segsBefore = (await segs()).length;
+await restAt(E);
+const guideAgain = await preview();
+check(
+  'preview: a move puts the straight guide back at once, to the cursor',
+  guideAgain.length === 2 && metres(guideAgain[1], E) < 5,
+  `${guideAgain.length} coords`,
+);
+check('preview: it is never part of the line', (await segs()).length === segsBefore);
+({ ms: roadMs } = await roadOffered());
+console.log(`      and ${roadMs} ms after a second rest, the queue a second apart`);
+await restAt(D);
+({ line: offered } = await roadOffered());
+await page.keyboard.press('f');
+await page.waitForTimeout(200);
+check(
+  'preview: F for Draw takes it away, the cursor never moving',
+  offered.length > 2 && (await preview()).length === 0,
+  `${offered.length} coords before`,
+);
+await page.keyboard.press('f');
+const pressed = (name) =>
+  page.getByTestId('snap-draw').getByRole('button', { name }).getAttribute('aria-pressed');
+await page.keyboard.press('d');
+const drawOnD = await pressed('Draw');
+await page.keyboard.press('s');
+const snapOnS = await pressed('Snap');
+check('keys: D picks Draw, S picks Snap', drawOnD === 'true' && snapOnS === 'true');
+await page.getByTestId('snap-draw').getByRole('button', { name: 'Draw' }).click();
+await restAt(D);
+await page.waitForTimeout(2500);
+check('preview: none in Draw', (await preview()).length === 0);
+await discard();
+
+console.log('== Move');
+// V picks Move: a click there adds nothing and inserts nothing, a point still
+// drags; S or D leaves it, and a click adds again.
+const toolPressed = (name) =>
+  page.getByTestId('snap-draw').getByRole('button', { name }).getAttribute('aria-pressed');
+await view([A, B, C, D, E]);
+await page.getByRole('button', { name: 'New route, terminal or hintuan' }).click();
+await page.getByRole('menuitem', { name: /Routes/ }).click();
+await page.getByTestId('draw-toolbar').waitFor({ timeout: 5000 });
+await page.getByTestId('snap-draw').getByRole('button', { name: 'Draw' }).click();
+await clickAt(A);
+await page.waitForTimeout(250);
+await clickAt(C);
+await page.waitForTimeout(250);
+await page.keyboard.press('v');
+await page.waitForTimeout(150);
+const pointsInMove = (await cps()).length;
+await clickAt(E);
+await page.waitForTimeout(300);
+const lineInMove = (await segs())[0]?.coords ?? [];
+const midLine = lineInMove[lineInMove.length >> 1];
+if (midLine) await clickAt(midLine);
+await page.waitForTimeout(300);
+check(
+  'move: V picks Move, and a click on the map or the line adds no point',
+  (await toolPressed('Move')) === 'true' && pointsInMove === 2 && (await cps()).length === 2,
+  `${pointsInMove} → ${(await cps()).length} points`,
+);
+const [mx0, my0] = await proj((await cps())[1]);
+await page.mouse.move(box0.x + mx0, box0.y + my0);
+await page.mouse.down();
+for (let i = 1; i <= 5; i++) await page.mouse.move(box0.x + mx0 + i * 6, box0.y + my0);
+await page.mouse.up();
+await page.waitForTimeout(300);
+const [mx1] = await proj((await cps())[1]);
+check('move: a point still drags in Move', Math.abs(mx1 - (mx0 + 30)) < 4, `${mx1 - mx0} px`);
+await page.keyboard.press('d');
+await page.waitForTimeout(150);
+await clickAt(E);
+await page.waitForTimeout(300);
+check(
+  'move: D leaves Move for Draw, and a click adds a point again',
+  (await toolPressed('Draw')) === 'true' && (await cps()).length === 3,
+  `${(await cps()).length} points`,
+);
+await discard();
+
+console.log('== Curves in Draw');
+// A click places a corner; a press and a drag places a smooth point, its
+// handles mirrored; the stretches either side bend to it, and keep their bend
+// as the point is dragged. Only Draw's stretches bend.
+const drafted = () =>
+  page.evaluate(() => JSON.parse(localStorage.getItem('para.draft.v1') ?? 'null')?.segments ?? []);
+await view([A, B, C, D, E]);
+await newRoute();
+await page.getByTestId('snap-draw').getByRole('button', { name: 'Draw' }).click();
+await clickAt(A);
+await page.waitForTimeout(250);
+const [bx, by] = await proj(C0);
+await page.mouse.move(box0.x + bx, box0.y + by);
+// Draw's line to the cursor: from the last point, the stretch a click would add.
+const cursorLine = async () =>
+  ((await page.evaluate(() => window.__src('draw-cursor')))?.features ?? []).flatMap(
+    (f) => f.geometry?.coordinates ?? [],
+  );
+let toCursor = await cursorLine();
+check(
+  'cursor line: from a corner, straight from the last point to the cursor',
+  toCursor.length === 2 && metres(toCursor[0], A) < 5 && metres(toCursor[1], C0) < 5,
+  `${toCursor.length} coords, from A ${toCursor[0] ? metres(toCursor[0], A).toFixed(1) : '?'} m, to the cursor ${toCursor[1] ? metres(toCursor[1], C0).toFixed(1) : '?'} m`,
+);
+await page.mouse.down();
+for (let i = 1; i <= 6; i++) await page.mouse.move(box0.x + bx + i * 8, box0.y + by - i * 6);
+// Before the release, the stretch into the point bends live on the line.
+const liveLine = (await page.evaluate(() => window.__src('draw-line')))?.features ?? [];
+const liveSegs = (await drafted()).length;
+check(
+  'curves: while the pen drags, the stretch in bends live, before the release writes it',
+  liveLine.length === 1 && liveLine[0].geometry.coordinates.length > 2 && liveSegs === 0,
+  `${liveLine.length} line features, ${liveLine[0]?.geometry.coordinates.length} coords, ${liveSegs} drafted`,
+);
+await page.mouse.up();
+await page.waitForTimeout(250);
+const handleCount = async () =>
+  ((await page.evaluate(() => window.__src('draw-handles')))?.features ?? []).length;
+/** Whether point `i`'s handles show: its stretch in's end handle, or its stretch out's start one. */
+const showsHandlesOf = async (i) =>
+  ((await page.evaluate(() => window.__src('draw-handles')))?.features ?? []).some(
+    (f) =>
+      f.geometry.type === 'Point' &&
+      ((f.properties.seg === i - 1 && f.properties.end === 1) ||
+        (f.properties.seg === i && f.properties.end === 0)),
+  );
+const handleColours = await page.evaluate(() => [
+  window.__map.getPaintProperty('draw-handle-arms', 'line-color'),
+  window.__map.getPaintProperty('draw-handle-dots', 'circle-color'),
+]);
+check(
+  'handles: the arm red/400, the dot red/600',
+  handleColours[0] === '#ff6467' && handleColours[1] === '#e7000b',
+  JSON.stringify(handleColours),
+);
+check(
+  'handles: the smooth point just placed shows its two handles',
+  (await handleCount()) === 4,
+  `${await handleCount()}`,
+);
+const [ex, ey] = await proj(E);
+await page.mouse.move(box0.x + ex, box0.y + ey, { steps: 3 });
+toCursor = await cursorLine();
+check(
+  'cursor line: after a smooth point, bent along its handle to the cursor',
+  toCursor.length > 2 && metres(toCursor.at(-1), E) < 25,
+  `${toCursor.length} coords`,
+);
+await clickAt(E);
+await page.waitForTimeout(400);
+let bent = await drafted();
+const handles = await handleCount();
+check(
+  'curves: a corner, a dragged smooth point, a corner: two Draw stretches, both bent',
+  bent.length === 2 &&
+    bent.every((x) => x.snap === 'freehand' && x.handles && x.coordinates.length > 2),
+  JSON.stringify(bent.map((x) => [x.snap, x.coordinates.length, !!x.handles])),
+);
+arrows = await chevrons();
+check('curves: chevrons flow along the curved stretches', arrows > 0, `${arrows} chevrons`);
+check(
+  'handles: the last two points always show theirs: the smooth one, an arm and a dot each',
+  handles === 4 && (await showsHandlesOf(1)),
+  `${handles}`,
+);
+const [px1, py1] = await proj((await cps())[1]);
+await page.mouse.move(box0.x + px1, box0.y + py1);
+await page.mouse.down();
+for (let i = 1; i <= 5; i++) await page.mouse.move(box0.x + px1, box0.y + py1 + i * 6);
+await page.mouse.up();
+await page.waitForTimeout(400);
+bent = await drafted();
+check(
+  'curves: dragging the smooth point keeps both stretches bent',
+  bent.length === 2 && bent.every((x) => x.handles && x.coordinates.length > 2),
+  JSON.stringify(bent.map((x) => [x.snap, x.coordinates.length, !!x.handles])),
+);
+// The handle at the smooth point's end of the first stretch, dragged: the
+// stretch bends to it and the handle across the point turns to mirror it;
+// with Alt it moves alone; a double-click makes the point a corner, and back.
+const dotOf = async (seg, end) =>
+  (await page.evaluate(() => window.__src('draw-handles')))?.features?.find(
+    (f) => f.geometry.type === 'Point' && f.properties.seg === seg && f.properties.end === end,
+  )?.geometry.coordinates;
+const dragFrom = async (ll, dx, dy, { alt = false } = {}) => {
+  const [x, y] = await proj(ll);
+  await page.mouse.move(box0.x + x, box0.y + y);
+  if (alt) await page.keyboard.down('Alt');
+  await page.mouse.down();
+  for (let i = 1; i <= 5; i++)
+    await page.mouse.move(box0.x + x + (dx * i) / 5, box0.y + y + (dy * i) / 5);
+  await page.mouse.up();
+  if (alt) await page.keyboard.up('Alt');
+  await page.waitForTimeout(300);
+};
+const smoothAt = (await cps())[1];
+/** The sine of the angle between two handles about the point: 0 when they lie on one line through it. */
+const across = (h1, h2) => {
+  const a = [h1[0] - smoothAt[0], h1[1] - smoothAt[1]];
+  const b = [h2[0] - smoothAt[0], h2[1] - smoothAt[1]];
+  return Math.abs(a[0] * b[1] - a[1] * b[0]) / (Math.hypot(...a) * Math.hypot(...b));
+};
+const unbent = await drafted();
+// Held, a handle's dot is a diamond; let go, a circle again.
+const heldCount = () =>
+  page.evaluate(() => window.__map.queryRenderedFeatures({ layers: ['draw-handle-held'] }).length);
+const [hx, hy] = await proj(await dotOf(0, 1));
+await page.mouse.move(box0.x + hx, box0.y + hy);
+await page.mouse.down();
+await page.mouse.move(box0.x + hx + 2, box0.y + hy + 2);
+// The diamond is drawn on a later frame, and a software-rendered browser (CI's)
+// draws slowly: wait for it, up to two seconds, rather than look once.
+let heldWhilePressed = await heldCount();
+for (let i = 0; i < 40 && heldWhilePressed === 0; i++) {
+  await page.waitForTimeout(50);
+  heldWhilePressed = await heldCount();
+}
+// What the press took hold of, for a failure to say: the cursor a held handle sets,
+// and the held layer's filter.
+const pressedWith = await page.evaluate(() => ({
+  cursor: window.__map.getCanvas().style.cursor,
+  filter: JSON.stringify(window.__map.getFilter('draw-handle-held')),
+}));
+await page.mouse.move(box0.x + hx, box0.y + hy);
+await page.mouse.up();
+// Let go, the map redraws the dot on its next frame.
+let heldAfter = await heldCount();
+for (let i = 0; i < 40 && heldAfter > 0; i++) {
+  await page.waitForTimeout(50);
+  heldAfter = await heldCount();
+}
+check(
+  'handles: a handle held is a diamond, and a circle again once let go',
+  heldWhilePressed === 1 && heldAfter === 0,
+  `${heldWhilePressed} held, then ${heldAfter}; pressed: cursor ${pressedWith.cursor}, filter ${pressedWith.filter}`,
+);
+await dragFrom(await dotOf(0, 1), -30, -20);
+let after = await drafted();
+check(
+  'curves: a handle dragged bends its stretch, the one across the point mirroring it',
+  JSON.stringify(after[0].handles[1]) !== JSON.stringify(unbent[0].handles[1]) &&
+    across(after[0].handles[1], after[1].handles[0]) < 0.01 &&
+    (await cps()).length === 3,
+  JSON.stringify([after[0].handles, after[1].handles]),
+);
+const partner = after[1].handles[0];
+await dragFrom(await dotOf(0, 1), 0, 30, { alt: true });
+after = await drafted();
+check(
+  '  with Alt it moves alone',
+  JSON.stringify(after[1].handles[0]) === JSON.stringify(partner) &&
+    across(after[0].handles[1], after[1].handles[0]) > 0.05,
+);
+const [sx, sy] = await proj(smoothAt);
+await page.mouse.dblclick(box0.x + sx, box0.y + sy);
+await page.waitForTimeout(300);
+after = await drafted();
+check(
+  'curves: a double-click makes the smooth point a corner',
+  (await cps()).length === 3 &&
+    [after[0].handles?.[1], after[1].handles?.[0]].every(
+      (h) => !h || h.every((v, k) => Math.abs(v - smoothAt[k]) <= 1e-6),
+    ),
+  JSON.stringify([after[0].handles, after[1].handles]),
+);
+await page.mouse.dblclick(box0.x + sx, box0.y + sy);
+await page.waitForTimeout(300);
+after = await drafted();
+check(
+  '  and again smooth, its handles on one line through it',
+  after.every((x) => x.handles) && across(after[0].handles[1], after[1].handles[0]) < 0.01,
+  JSON.stringify([after[0].handles, after[1].handles]),
+);
+// The second stretch's line itself, pressed in its middle and dragged: it
+// bends through the pointer, its two points staying where they are.
+const unpulled = (await drafted())[1];
+const middleOf = unpulled.coordinates[unpulled.coordinates.length >> 1];
+const pointsBefore = JSON.stringify(await cps());
+await dragFrom(middleOf, 0, 40);
+const pulled = (await drafted())[1];
+const [mx, my] = await proj(middleOf);
+const nearest = Math.min(
+  ...(await Promise.all(pulled.coordinates.map((c) => proj(c)))).map(([x, y]) =>
+    Math.hypot(x - mx, y - (my + 40)),
+  ),
+);
+check(
+  'curves: a Draw stretch dragged by its line bends through the pointer, its points staying put',
+  JSON.stringify(await cps()) === pointsBefore &&
+    JSON.stringify(pulled.coordinates[0]) === JSON.stringify(unpulled.coordinates[0]) &&
+    JSON.stringify(pulled.coordinates.at(-1)) === JSON.stringify(unpulled.coordinates.at(-1)) &&
+    nearest < 6,
+  `the line passes ${nearest.toFixed(1)} px from the pointer`,
+);
+// A press with no drag is a click, and inserts a point on the curve.
+const [ix, iy] = await proj(pulled.coordinates[pulled.coordinates.length >> 2]);
+await page.mouse.click(box0.x + ix, box0.y + iy);
+await page.waitForTimeout(300);
+check(
+  'curves: a press on a Draw stretch with no drag still inserts a point',
+  (await cps()).length === 4,
+);
+// Four points now: the smooth one, second, is no longer among the last two.
+check(
+  'handles: an older point shows none until it is selected',
+  !(await showsHandlesOf(1)) && (await handleCount()) > 0,
+  `${await handleCount()} handle features`,
+);
+const [sx1, sy1] = await proj((await cps())[1]);
+await page.mouse.click(box0.x + sx1, box0.y + sy1);
+await page.waitForTimeout(250);
+check('handles: a click on its circle selects it, showing its handles', await showsHandlesOf(1));
+await page.keyboard.press('Escape');
+await page.waitForTimeout(150);
+check('handles: Escape deselects it', !(await showsHandlesOf(1)));
+await page.mouse.click(box0.x + sx1, box0.y + sy1);
+await page.waitForTimeout(250);
+const [fx, fy] = await proj(E);
+await page.mouse.click(box0.x + fx + 60, box0.y + fy + 60);
+await page.waitForTimeout(250);
+check('handles: a click elsewhere on the map deselects it', !(await showsHandlesOf(1)));
+await page.keyboard.press('Control+z');
+await page.waitForTimeout(250);
+await page.mouse.click(box0.x + sx1, box0.y + sy1);
+await page.waitForTimeout(250);
+// A routed stretch is not held: a drag on it leaves the line as it was.
+const handlesInDraw = await handleCount();
+await page.getByTestId('snap-draw').getByRole('button', { name: 'Snap' }).click();
+await page.waitForTimeout(150);
+check(
+  'handles: in Snap nothing shows handles, the point still selected',
+  handlesInDraw > 0 && (await handleCount()) === 0,
+  `${handlesInDraw} in Draw, ${await handleCount()} in Snap`,
+);
+const [dx0, dy0] = await proj(D);
+await page.mouse.move(box0.x + dx0, box0.y + dy0, { steps: 3 });
+check('cursor line: none in Snap', (await cursorLine()).length === 0);
+await clickAt(D);
+await settle();
+// The router's answer in, so nothing but the drag could change the line.
+for (let i = 0; i < 30 && !(await drafted()).at(-1)?.streets; i++) await page.waitForTimeout(300);
+const routedLine = (await drafted()).at(-1);
+const segmentsBefore = JSON.stringify(await drafted());
+// The middle of one of its pieces: never one of its points, which a drag moves.
+const k = Math.max(1, routedLine.coordinates.length >> 1);
+const [p0, p1] = [routedLine.coordinates[k - 1], routedLine.coordinates[k]];
+await dragFrom([(p0[0] + p1[0]) / 2, (p0[1] + p1[1]) / 2], 0, 60);
+check(
+  'curves: a drag on a routed stretch never bends it',
+  routedLine.snap === 'snapped' && JSON.stringify(await drafted()) === segmentsBefore,
+  routedLine.snap,
+);
 await discard();
 
 check('no page errors', errors.length === 0, errors.slice(0, 2).join(' | '));

@@ -85,7 +85,7 @@ const meta = {
     ),
   ],
   parameters: { layout: 'fullscreen' },
-  args: { rides: [rideOf()], livery: 'rose' },
+  args: { rides: [rideOf()], livery: 'uv-express' },
 } satisfies Meta<typeof OnAnEmptyMap>;
 
 export default meta;
@@ -298,7 +298,7 @@ export const EndsOnThePale: Story = {
       await expect(end).toHaveAttribute('data-paled');
       await expect(iconOf(end)).toBe('none');
       await expect(getComputedStyle(partOf(end, 'name')).opacity).toBe('0.6');
-      await expect(circleColour(end)).toBe(wornBy(CARD_SURFACE_PALE.rose));
+      await expect(circleColour(end)).toBe(wornBy(CARD_SURFACE_PALE['uv-express']));
       await expectPillOverCircle(end);
     }
     await expect(partOf(endOf(ends, 'Tala', 'head'), 'name').textContent).toBe('Tala');
@@ -319,7 +319,7 @@ export const StartAlone: Story = {
       await expect(end).toHaveAttribute('data-paled');
       await expect(iconOf(end)).toBe('none');
       await expect(getComputedStyle(partOf(end, 'name')).opacity).toBe('0.6');
-      await expect(circleColour(end)).toBe(wornBy(CARD_SURFACE_PALE.rose));
+      await expect(circleColour(end)).toBe(wornBy(CARD_SURFACE_PALE['uv-express']));
     }
     await expect(canvasElement.querySelector('.sr-only')).toBeNull();
   },

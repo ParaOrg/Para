@@ -2,7 +2,7 @@ import type { MapMouseEvent } from 'maplibre-gl';
 
 import type { LngLat } from '@/shared/utils/geo';
 
-import type { DrawContext, IndexedFeature } from './draw-context';
+import { restCursor, type DrawContext, type IndexedFeature } from './draw-context';
 import { gapsAround, modesAround, rubberBand } from './draw-gestures';
 
 /**
@@ -13,7 +13,7 @@ import { gapsAround, modesAround, rubberBand } from './draw-gestures';
  */
 export function mouseHandlers(ctx: DrawContext) {
   const { map, canvas, refs, drag } = ctx;
-  const { resolveGaps, writePoints, writeSegments, markStandIn } = ctx.actions;
+  const { resolveGaps, writePoints, writeSegments, markStandIn, showHandlesAt } = ctx.actions;
 
   /** The point being dragged follows the pointer; its two stretches rubber-band. */
   const dragTo = (point: LngLat) => {
@@ -54,7 +54,7 @@ export function mouseHandlers(ctx: DrawContext) {
     map.off('mousemove', onDragMove);
     map.off('mouseup', onDragEnd);
     document.removeEventListener('mouseup', onDragEnd);
-    canvas.style.cursor = 'crosshair';
+    canvas.style.cursor = restCursor(ctx);
     map.dragPan.enable();
     settleDrag(i);
   };
@@ -66,6 +66,8 @@ export function mouseHandlers(ctx: DrawContext) {
     // starting a drag here would swallow it.
     if (e.originalEvent.button !== 0) return;
     e.preventDefault();
+    // Pressed, it is the point selected: its handles show, as a pen tool's do.
+    showHandlesAt(idx);
     drag.idx = idx;
     drag.moved = false;
     drag.modes = modesAround(refs.segments.current, idx);
@@ -82,10 +84,11 @@ export function mouseHandlers(ctx: DrawContext) {
     if (drag.idx === null) canvas.style.cursor = 'grab';
   };
   const enterLine = () => {
-    if (drag.idx === null) canvas.style.cursor = 'copy';
+    // Over the line a click inserts a point; in Move it only drags the line.
+    if (drag.idx === null) canvas.style.cursor = refs.moving.current ? 'default' : 'copy';
   };
   const leave = () => {
-    if (drag.idx === null) canvas.style.cursor = 'crosshair';
+    if (drag.idx === null) canvas.style.cursor = restCursor(ctx);
   };
 
   return { dragTo, settleDrag, onDragMove, onDragEnd, onPointDown, enterPoint, enterLine, leave };

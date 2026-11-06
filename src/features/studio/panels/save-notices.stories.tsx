@@ -63,7 +63,6 @@ const meta = {
         { name: 'Assyria Street', metres: 55 },
       ]),
     ],
-    uTurns: [],
     hotspotsCount: 2,
     wrongWay: null,
     borrowed: null,
@@ -112,16 +111,6 @@ export const NamesMissing: Story = {
 export const WithStraightStretches: Story = {
   args: {
     segments: [routed([{ name: 'Sinai Street', metres: 160 }]), straight, straight],
-  },
-};
-
-/** One U-turn ringed on the map: warned, never blocked. */
-export const UTurn: Story = {
-  args: { uTurns: [{ point: 1, stub: [], metres: 60 }] },
-  play: async ({ canvasElement }) => {
-    await expect(within(canvasElement).getByTestId('save-uturns')).toHaveTextContent(
-      'at one point',
-    );
   },
 };
 
@@ -186,10 +175,6 @@ export const LongContent: Story = {
       routed(),
       straight,
       straight,
-    ],
-    uTurns: [
-      { point: 2, stub: [], metres: 60 },
-      { point: 5, stub: [], metres: 45 },
     ],
     wrongWay: {
       direction: 'SM City Fairview Public Transport Terminal → Novaliches Bayan',

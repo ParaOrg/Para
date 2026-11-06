@@ -5,8 +5,8 @@ import { fetchMyStats } from './fetch-my-stats';
 import { slowloaded } from '../common/slowload-switch';
 
 /**
- * The signed-in contributor's lifetime stats. A saved, removed or claimed ride changes them, so
- * they are asked again each time they are shown.
+ * The signed-in contributor's lifetime stats. A saved or claimed ride, or one an editor removed,
+ * changes them, so they are asked again each time they are shown.
  */
 export function useMyStatsQuery() {
   return useQuery({

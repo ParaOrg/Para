@@ -43,7 +43,7 @@ const meta = {
     ),
   ],
   args: {
-    livery: 'violet',
+    livery: 'jeep',
     routeOrigin: 'Tala',
     hintuans: talaToNovaliches,
     routeDirection: 'Novaliches',
@@ -74,14 +74,14 @@ export const NoHintuan: Story = {
   args: { routeOrigin: 'Lagro', hintuans: [], routeDirection: 'SM Fairview' },
 };
 
-/** Orange (Figma draws the Timeline set in red). */
-export const Orange: Story = { args: { livery: 'orange' } };
+/** Bus (Figma draws the Timeline set in red). */
+export const Bus: Story = { args: { livery: 'bus' } };
 
-/** Fuchsia. */
-export const Fuchsia: Story = { args: { livery: 'fuchsia' } };
+/** E-Jeep: a light card, dark words. */
+export const Ejeep: Story = { args: { livery: 'ejeep' } };
 
-/** Pink. */
-export const Pink: Story = { args: { livery: 'pink' } };
+/** UV Express: a light card, dark words. */
+export const UvExpress: Story = { args: { livery: 'uv-express' } };
 
 /**
  * A hintuan picked: its dot a white ring round the rail's colour, End's E
@@ -103,21 +103,27 @@ export const HintuanPickedFolded: Story = { args: { picked: 'h3' } };
 /** The last hintuan picked: the rail runs to it, nothing after it to fold, and only the destination is left without a rail. */
 export const LastHintuanPicked: Story = { args: { picked: 'h9' } };
 
-/** Picked, orange: the pill in the card's own colours, swapped. */
-export const HintuanPickedOrange: Story = {
-  args: { livery: 'orange', picked: 'h3' },
+/** Picked, bus: the pill in the card's own colours, swapped. */
+export const HintuanPickedBus: Story = {
+  args: { livery: 'bus', picked: 'h3' },
   play: openFold,
 };
 
-/** Picked, fuchsia: the pill white, as orange's. */
-export const HintuanPickedFuchsia: Story = {
-  args: { livery: 'fuchsia', picked: 'h3' },
+/** Picked, E-Jeep: the light card's pill, on-surface under the card's colour. */
+export const HintuanPickedEjeep: Story = {
+  args: { livery: 'ejeep', picked: 'h3' },
   play: openFold,
 };
 
-/** Picked, pink: the pill white, as fuchsia's. */
-export const HintuanPickedPink: Story = {
-  args: { livery: 'pink', picked: 'h3' },
+/** Picked, UV Express: as E-Jeep's. */
+export const HintuanPickedUvExpress: Story = {
+  args: { livery: 'uv-express', picked: 'h3' },
+  play: openFold,
+};
+
+/** Picked, Jeep: the pill white, as Bus's. */
+export const HintuanPickedJeep: Story = {
+  args: { livery: 'jeep', picked: 'h3' },
   play: openFold,
 };
 
@@ -365,7 +371,7 @@ export const RideStartAndEndJeep: Story = {
 
 /**
  * Figma's frames for a fold next to the ride carrying no rail, on LRT-2
- * from Antipolo to Recto, in orange, YL60 for every
+ * from Antipolo to Recto, in bus, YL60 for every
  * pick as they write it.
  */
 const lrt2 = hintuans(
@@ -382,7 +388,7 @@ const lrt2 = hintuans(
 );
 const [katipunan, jRuiz, vMapa] = ['h2', 'h6', 'h7'];
 const onLrt2 = {
-  livery: 'orange',
+  livery: 'bus',
   routeOrigin: 'Antipolo',
   hintuans: lrt2,
   routeDirection: 'Recto',
@@ -466,7 +472,7 @@ const loopRows = hintuans(
   'Math Building',
 );
 const onLoop = {
-  livery: 'orange',
+  livery: 'bus',
   routeOrigin: 'Oblation',
   routeDirection: 'Oblation',
   hintuans: loopRows,

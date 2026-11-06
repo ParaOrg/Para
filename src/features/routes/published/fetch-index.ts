@@ -111,8 +111,10 @@ async function storedCopy(): Promise<Index | null> {
 async function storedOldCopy(
   candidates: readonly { url: string; schema: number }[] = STORED_OLD,
 ): Promise<Index | null> {
+  // eslint-disable-next-line no-restricted-globals -- moves behind an interface in .scratch/commuter-app/issues/03
   if (typeof caches === 'undefined') return null;
   for (const { url, schema } of candidates) {
+    // eslint-disable-next-line no-restricted-globals -- moves behind an interface in .scratch/commuter-app/issues/03
     const res = await caches.match(url, { cacheName: MAP_FILE_CACHE }).catch(() => undefined);
     if (!res?.ok) continue;
     try {

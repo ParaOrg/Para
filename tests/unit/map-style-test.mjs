@@ -85,6 +85,8 @@ const HOTSPOT_LAYERS = {
   'saved-stops-hatch': 'fill',
   'saved-stops-label': 'symbol',
   'saved-stops-label-hintuan': 'symbol',
+  'saved-stops-dot': 'circle',
+  'saved-stops-pin': 'symbol',
 };
 const BOX_LAYERS = [
   'saved-stops-fill',
@@ -151,6 +153,24 @@ test('the box being edited, and the name it shares, are left out of every hotspo
   for (const id of BOX_LAYERS) assert.deepEqual(b1[id], ['b2', 't1'], id);
   assert.deepEqual(b1['saved-stops-label-hintuan'], ['b3']);
   assert.deepEqual(b1['saved-stops-label'], ['t1']);
+});
+
+test("the box being edited has no pin or dot, and every other box keeps its own (their own source's points)", () => {
+  const pin = (id, kind) => ({ type: 1, properties: { id, kind } });
+  const pins = [pin('b1', 'hintuan'), pin('b2', 'hintuan'), pin('t1', 'terminal')];
+  const filters = (hidden) => new Map(hiddenHotspotFilters(hidden));
+  for (const [hidden, left] of [
+    ['', ['b1', 'b2', 't1']],
+    ['b1', ['b2', 't1']],
+  ]) {
+    for (const id of ['saved-stops-dot', 'saved-stops-pin']) {
+      const f = featureFilter(filters(hidden).get(id), `layers.${id}.filter`);
+      const shownPins = pins
+        .filter((ft) => f.filter({ zoom: 17 }, ft))
+        .map((ft) => ft.properties.id);
+      assert.deepEqual(shownPins, left, `${id}, hidden '${hidden}'`);
+    }
+  }
 });
 
 // ------------------------------------------------------- reading the style

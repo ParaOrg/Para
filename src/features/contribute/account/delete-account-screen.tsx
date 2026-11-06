@@ -1,21 +1,15 @@
-import { useId, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
 
 import { Button } from '@/design-system/primitives/button';
-import { Switch } from '@/design-system/primitives/switch';
+import { useFocusHeading } from '@/shared/hooks/use-focus-heading';
 
-import {
-  DELETE_ACCOUNT_LEAD,
-  PHONE_AND_STATS,
-  UPLOADS_DELETED,
-  UPLOADS_KEPT,
-} from './delete-account-words';
+import { DELETE_ACCOUNT_LEAD, PHONE_AND_STATS, UPLOADS_KEPT } from './delete-account-words';
 import { HandQuestion } from './hand-question';
 import { SettingsHeader } from './settings-header';
 import { useCountdown } from './use-countdown';
 import { SCREEN_HASH_ATTR } from '../common/data-attributes';
 import { useClosedWhenHidden } from '../common/use-closed-when-hidden';
-import { useFocusHeading } from '../common/use-focus-heading';
 import { useScreenEntry } from '../motion/use-screen-entry';
 import { SCREENS } from '../navigation/screen-routes';
 
@@ -28,14 +22,15 @@ interface DeleteAccountScreenProps {
   error: string | null;
   /** The question opens: a last try's error is not carried into it. */
   onAsked: () => void;
-  onDelete: (deleteUploads: boolean) => void;
+  onDelete: () => void;
   onBack: () => void;
 }
 
 /**
- * Delete account (Figma 4543:5309), from Account settings: what goes and what stays, with "Also
- * delete my uploaded routes" between them; Delete account counts down from 5 before it can be
- * pressed, then asks once more over the frosted page.
+ * Delete account (Figma 4543:5309), from Account settings: what goes and what stays. The uploads
+ * always stay on Para, with the name taken off them, so the frame's "Also delete my uploaded
+ * routes" switch is not drawn. Delete account counts down from 5 before it can be pressed, then
+ * asks once more over the frosted page.
  */
 export function DeleteAccountScreen({
   isDeleting,
@@ -46,8 +41,6 @@ export function DeleteAccountScreen({
 }: DeleteAccountScreenProps) {
   const headingRef = useFocusHeading();
   const entryRef = useScreenEntry<HTMLElement>();
-  const switchLabelId = useId();
-  const [isUploadsDeleted, setIsUploadsDeleted] = useState(false);
   const [isAsked, setIsAsked] = useState(false);
   useClosedWhenHidden(setIsAsked, false);
   const secondsLeft = useCountdown(WAIT_SECONDS);
@@ -76,16 +69,8 @@ export function DeleteAccountScreen({
         <div className="flex flex-1 flex-col gap-6 overflow-y-auto px-5 pt-5 pb-[max(2rem,env(safe-area-inset-bottom))] text-base-lower/6">
           <div className="flex flex-col gap-6">
             <p>
-              {DELETE_ACCOUNT_LEAD} {isUploadsDeleted ? UPLOADS_DELETED : UPLOADS_KEPT}
+              {DELETE_ACCOUNT_LEAD} {UPLOADS_KEPT}
             </p>
-            <div className="flex items-center justify-between gap-4">
-              <span id={switchLabelId}>Also delete my uploaded routes</span>
-              <Switch
-                state={isUploadsDeleted ? 'on' : 'rest'}
-                labelledBy={switchLabelId}
-                onClick={() => setIsUploadsDeleted(!isUploadsDeleted)}
-              />
-            </div>
             <p>{PHONE_AND_STATS}</p>
           </div>
           <div ref={deleteRef} className="*:w-full">
@@ -116,7 +101,7 @@ export function DeleteAccountScreen({
           busyLabel="Deleting…"
           cancelLabel="No, I change my mind"
           isBusy={isDeleting}
-          onConfirm={() => onDelete(isUploadsDeleted)}
+          onConfirm={onDelete}
           onCancel={handleCancel}
         />
       )}

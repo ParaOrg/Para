@@ -6,6 +6,7 @@ import { TextField } from '@/design-system/primitives/text-field';
 
 import { putBack, takeDown } from '../data/drafts';
 import type { PublicationSubject } from '../data/publication';
+import { reviewMessage } from '../data/review-commands';
 import { reviewKeys } from '../data/review-keys';
 import { usePublicationQuery } from '../data/use-review-query';
 
@@ -37,7 +38,7 @@ export function ReviewSubjects({ onChanged, onBusyChange }: ReviewSubjectsProps)
           ? 'Updated approved data. Waiting for publication.'
           : result.code === 'blocked'
             ? 'A route still ends here. Change or take down that route first.'
-            : `No change was made (${result.code}). Refresh and check again.`,
+            : reviewMessage(result),
       );
       setSelected(null);
       if (changed) onChanged();

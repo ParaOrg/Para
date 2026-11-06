@@ -192,14 +192,14 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** On a phone, the way there: a card per place, docked along the bottom. The colours are drawn at random. */
+/** On a phone, the way there: a card per place, docked along the bottom. Each card wears its mode's colour. */
 export const Phone: Story = {};
 
 /** SWITCHed: out of Tala both ways, one card — "1 Route". */
 export const Switched: Story = { args: { back: true } };
 
 /** Tala's card picked: pressed in, its routes alone lit on the map. */
-export const ACardSelected: Story = { args: { back: true, selected: 'Tala' } };
+export const ACardSelected: Story = { args: { back: true, selected: 'Tala|jeep' } };
 
 /**
  * From 1024 wide, flush in the top-left corner, 384 wide (Figma 3750:1911).

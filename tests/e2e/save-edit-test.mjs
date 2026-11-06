@@ -8,34 +8,40 @@
 //   npm run dev                          (in another terminal)
 //   node tests/e2e/save-edit-test.mjs    # against http://localhost:5173
 //
+// Every save is a draft, approved by the stand-in (approveAll) where a step
+// needs the map to move on, as an editor's Approve would.
+//
 // What it checks, each against the finding it guards (the review's numbers):
 // Edit route changing a route's ends and facts, and refusing ends another
 // route has and a head–tail swap; the switch in a band of its own and Escape
 // leaving a card open under the other maps alone; a new head or tail made from
-// the save panel's pickers (a 30 m box at the line's end, the hotspot panel's
-// own write, the drawn line left alone; Enter on any field saving the place
-// and not the route, one write however many Enters, none before the lines are
-// read, a retry updating the box it wrote, a name already a place refused);
+// the save panel's pickers (a 30 m box at the line's end, a draft of its own,
+// the drawn line left alone; Enter on any field saving the place and not the
+// route, one draft however many Enters, none before the lines are read, a
+// retry storing the same place's draft, a name already a place refused);
 // the drawing keys alive after signing in from Done (9); a line back to its
 // start; the save panel and the toast on a phone with a notch and a home bar;
 // no React warnings (the duplicate key).
 import { waitFor } from './lib/harness.mjs';
 import {
+  approveAll,
+  approvedWrites,
+  backToMap,
   at,
   BACK,
   body,
   check,
   clickAt,
   directionsOf,
-  dismissToasts,
   done,
+  draftOf as subjectDraft,
+  drafted,
   drawLine,
   drawTheRoute,
   finish,
   go,
   hintuan,
   holdRequests,
-  idle,
   log,
   open,
   openCard,
@@ -44,30 +50,29 @@ import {
   P2,
   page,
   pointsShown,
-  remove,
   said,
   saveButton,
   stub,
   tables,
-  toast,
   VIA,
   writesSince,
 } from './lib/save-studio.mjs';
 
 // The ground: the two hintuans, the route between them drawn both ways, and a
-// second route between them by Stand-in Road, as save-ikot-test's link sync
-// leaves it once its retry is in.
+// second route between them by Stand-in Road, as save-ikot-test's retry
+// leaves it once approved.
 const { outRoute, outV } = await drawTheRoute();
 await drawLine(VIA);
-await page.getByPlaceholder('Zabarte').fill('Stand-in Road');
+await page.getByLabel('Via (if applicable)').fill('Stand-in Road');
 await saveButton().click();
-await waitFor(async () => (await toast().count()) > 0);
-await dismissToasts();
+await drafted();
+await approveAll();
 let n;
 let w;
 
 // ---- 10. Edit route changes the route's facts (stage 11, the owner's ask)
 await hintuan(at(-0.004, 0.006), 'Stand-in Phase');
+await approveAll();
 const phase = tables.stop.find((s) => s.name === 'Stand-in Phase');
 await openCard(OUT[1]);
 await page.getByRole('button', { name: 'Edit route' }).click();
@@ -76,10 +81,18 @@ await done();
 check(
   'Edit route unlocks the ends and the facts',
   (await page.getByTestId('save-head').isEnabled()) &&
-    (await page.getByPlaceholder('Zabarte').isEnabled()) &&
-    (await page.getByLabel(/Mode/).isEnabled()),
+    (await page.getByLabel('Via (if applicable)').isEnabled()) &&
+    (await page.getByLabel('Transportation mode').isEnabled()),
+);
+const lineStatus = async () =>
+  (await page.getByTestId('line-detail').innerText()).match(/Status\s+(\w+)/)?.[1];
+check(
+  '  Line detail says the published route is Published while it is as it was',
+  (await lineStatus()) === 'Published',
+  await lineStatus(),
 );
 await page.getByTestId('save-head').selectOption({ label: 'Stand-in Phase' });
+check('  and Draft once it changes', (await lineStatus()) === 'Draft', await lineStatus());
 // The form asks a jeepney for no signboard: the one the route has is kept.
 const signboardBefore = tables.route.find((r) => r.id === outRoute?.id)?.signboard ?? null;
 check(
@@ -94,37 +107,30 @@ const aTerminal = tables.stop.find((s) => s.kind === 'terminal');
 if (aTerminal && outV)
   tables.route_stop.push({ route_variant_id: outV.id, stop_id: aTerminal.id, stop_sequence: 0 });
 await saveButton().click();
-await waitFor(async () => (await toast().count()) > 0);
+await drafted();
 w = writesSince(n);
-const edited = tables.route.find((r) => r.id === outRoute?.id);
+const editDraft = subjectDraft('route', outRoute?.id);
 check(
-  '  Update writes the route row — its new head, its signboard kept — then the direction',
-  edited?.head_stop_id === phase?.id &&
-    (edited?.signboard ?? null) === signboardBefore &&
-    w.findIndex((x) => x.method === 'PATCH' && x.table === 'route') <
-      w.findIndex((x) => x.method === 'PATCH' && x.table === 'route_variant'),
+  '  Update is a draft of the route — its new head, its signboard kept — and the direction',
+  editDraft?.payload.route.head_stop_id === phase?.id &&
+    (editDraft.payload.route.signboard ?? null) === signboardBefore &&
+    editDraft.payload.directions.length === 2 &&
+    approvedWrites(w).length === 0,
   said(w),
 );
+const editedLinks = editDraft?.payload.directions.find((v) => v.id === outV?.id)?.links ?? [];
 check(
-  '  the name follows the new end',
-  (await toast().innerText()).includes('Stand-in Phase – Stand-in Tail'),
-  (await toast().innerText()).replace(/\s+/g, ' '),
+  '  the terminal links are left as they are: the one set stays in the draft',
+  !!aTerminal && editedLinks.some((l) => l.stop_id === aTerminal.id),
+  JSON.stringify(editedLinks),
 );
-const terminals = new Set(tables.stop.filter((s) => s.kind === 'terminal').map((s) => s.id));
-const linkWrites = w.filter((x) => x.table === 'route_stop');
+await approveAll();
+const edited = tables.route.find((r) => r.id === outRoute?.id);
 check(
-  '  the terminal links are left as they are: the one set stays, and the link writes name hintuans only',
-  !!aTerminal &&
-    tables.route_stop.some((l) => l.route_variant_id === outV?.id && l.stop_id === aTerminal.id) &&
-    linkWrites.every(
-      (x) =>
-        !/stop_id=eq\./.test(x.query) &&
-        ![x.body ?? []].flat().some((l) => terminals.has(l?.stop_id)) &&
-        ![...terminals].some((t) => x.query.includes(t)),
-    ),
-  said(linkWrites),
+  '  approved, the route row has its new head, and the terminal link stays',
+  edited?.head_stop_id === phase?.id &&
+    tables.route_stop.some((l) => l.route_variant_id === outV?.id && l.stop_id === aTerminal?.id),
 );
-await dismissToasts();
 // The other direction, not saved here, shares the route: its card reads the
 // new end once the list is read again.
 // The card is the public map's trip card since 2026-09-30: its ends sit on
@@ -141,6 +147,20 @@ await waitFor(async () => {
   // One try (a jump, a tap and its 700 ms) takes up to 5 s on a slow page,
   // and the list may be read again more than once before the name changes.
 }, 120000);
+await page.keyboard.press('Escape');
+await page.waitForTimeout(300);
+await waitFor(async () => {
+  await openCard(OUT[1]);
+  return (await cardName()) === 'Stand-in Phase → Stand-in Tail';
+}, 120000);
+check(
+  '  the name follows the new end',
+  (await cardName()) === 'Stand-in Phase → Stand-in Tail',
+  await cardName(),
+);
+await page.keyboard.press('Escape');
+await page.waitForTimeout(300);
+await openCard(BACK[1]);
 check(
   '  and the other direction, which shares the route, is renamed with it',
   directionsOf(outRoute?.id).some((v) => v.id === backId) &&
@@ -154,7 +174,7 @@ await page.getByRole('button', { name: 'Edit route' }).click();
 await waitFor(async () => (await pointsShown()) > 0);
 await done();
 await page.getByTestId('save-head').selectOption({ label: 'Stand-in Head' });
-await page.getByPlaceholder('Zabarte').fill('Stand-in Road');
+await page.getByLabel('Via (if applicable)').fill('Stand-in Road');
 n = log.length;
 await saveButton().click();
 await page.waitForTimeout(600);
@@ -175,7 +195,7 @@ check(
   (await body()).slice(-200),
 );
 check('  and nothing is written', writesSince(n).length === 0, said(writesSince(n)));
-await page.getByRole('button', { name: 'Back to map' }).click();
+await backToMap();
 await page.getByTitle('Discard this route').click();
 await page.waitForTimeout(300);
 
@@ -245,16 +265,17 @@ await page.waitForTimeout(300);
   await page.getByRole('menuitem', { name: /Routes/ }).click();
   await page.waitForTimeout(200);
   for (const p of L) await clickAt(p, 300);
-  await idle();
-  await page.getByRole('button', { name: /Done/ }).click();
-  await page.waitForTimeout(600);
+  await done();
   const draftBefore = await draftOf();
   // Where the clicks landed, a pixel's worth off the points asked for.
   const line = JSON.parse(draftBefore).controlPoints;
   const form = (end) => page.getByRole('group', { name: `New place for the ${end}` });
   const isFocused = (locator) => locator.evaluate((e) => e === document.activeElement);
-  const stopsBefore = tables.stop.length;
-  const routesBefore = tables.route.length;
+  /** The hotspot drafts made here, by the name written on the ground. */
+  const placeDrafts = () => tables.draft.filter((d) => d.kind === 'hotspot');
+  const placeDraft = (name) => placeDrafts().find((d) => d.payload.stop.name === name);
+  const placesBefore = placeDrafts().length;
+  const routeDraftsBefore = tables.draft.filter((d) => d.kind === 'route').length;
 
   check(
     'each end picker ends with "+ New place here…"',
@@ -291,7 +312,8 @@ await page.waitForTimeout(300);
   await page.waitForTimeout(500);
   check(
     '  a name that is already a place is refused in words, with nothing written',
-    /is already a place/.test(await form('head').innerText()) && tables.stop.length === stopsBefore,
+    /is already a place/.test(await form('head').innerText()) &&
+      placeDrafts().length === placesBefore,
     (await form('head').innerText()).slice(-160),
   );
 
@@ -303,10 +325,11 @@ await page.waitForTimeout(300);
     .getByLabel(/Stop name/)
     .fill('Newhead');
   await page.keyboard.press('Enter');
-  await waitFor(() => tables.stop.some((r) => r.name === 'Stand-in Newhead'));
-  // The save ends when its links are written and the form closes, not when the box is in the table.
+  await waitFor(() => !!placeDraft('Stand-in Newhead'));
+  // The save ends when the form closes, not when the draft is stored.
   await form('head').waitFor({ state: 'hidden' });
-  const head = tables.stop.find((r) => r.name === 'Stand-in Newhead');
+  const headDraft = placeDraft('Stand-in Newhead');
+  const head = headDraft && { id: headDraft.subject_id, ...headDraft.payload.stop };
   const boxOf = (r) => r.area.coordinates[0];
   const metres = ([lng1, lat1], [lng2, lat2]) => {
     const rad = Math.PI / 180;
@@ -326,9 +349,10 @@ await page.waitForTimeout(300);
     '',
   );
   check(
-    "  through the hotspot panel's own write: one stop row and its links, nothing else",
-    writesSince(n).every((w) => w.table === 'stop' || w.table === 'route_stop') &&
-      writesSince(n).filter((w) => w.method === 'POST' && w.table === 'stop').length === 1,
+    '  as a draft of its own: one draft of a new place, nothing written to the approved tables',
+    headDraft?.is_new === true &&
+      writesSince(n).filter((w) => w.table === 'rpc/claim_draft').length === 1 &&
+      approvedWrites(writesSince(n)).length === 0,
     said(writesSince(n)),
   );
   check(
@@ -349,9 +373,10 @@ await page.waitForTimeout(300);
     .getByLabel(/Ground name/)
     .fill('Stand-in Newtail');
   await form('tail').getByRole('button', { name: 'Save place' }).click();
-  await waitFor(() => tables.stop.some((r) => r.name === 'Stand-in Newtail'));
+  await waitFor(() => !!placeDraft('Stand-in Newtail'));
   await form('tail').waitFor({ state: 'hidden' });
-  const tail = tables.stop.find((r) => r.name === 'Stand-in Newtail');
+  const tailDraft = placeDraft('Stand-in Newtail');
+  const tail = tailDraft && { id: tailDraft.subject_id, ...tailDraft.payload.stop };
   check(
     "the tail is created as a hintuan with a 30 m box centred on the line's last point",
     !!tail &&
@@ -362,24 +387,26 @@ await page.waitForTimeout(300);
   );
   check(
     '  the drawn line is untouched by both',
-    (await draftOf()) === draftBefore && tables.stop.length === stopsBefore + 2,
+    (await draftOf()) === draftBefore && placeDrafts().length === placesBefore + 2,
   );
 
   n = log.length;
   await saveButton().click();
-  await waitFor(async () => (await toast().count()) > 0);
-  const made = tables.route.find((r) => r.head_stop_id === head?.id && r.tail_stop_id === tail?.id);
+  await drafted();
+  const made = tables.draft.find(
+    (d) =>
+      d.kind === 'route' &&
+      d.payload.route.head_stop_id === head?.id &&
+      d.payload.route.tail_stop_id === tail?.id,
+  );
   check(
-    'the route saves with the new places as its head and tail',
-    !!made && tables.route.length === routesBefore + 1,
+    "the route's draft has the new places as its head and tail",
+    !!made && tables.draft.filter((d) => d.kind === 'route').length === routeDraftsBefore + 1,
     said(writesSince(n)),
   );
-  await dismissToasts();
 
   // Leave the stand-in as it was for what follows.
-  if (made) remove('route', [made]);
-  if (head) remove('stop', [head]);
-  if (tail) remove('stop', [tail]);
+  tables.draft = tables.draft.filter((d) => ![made, headDraft, tailDraft].includes(d));
   await page.evaluate(() => localStorage.removeItem('para.draft.v1'));
 }
 
@@ -394,14 +421,17 @@ await page.waitForTimeout(300);
   await page.getByRole('menuitem', { name: /Routes/ }).click();
   await page.waitForTimeout(200);
   for (const p of L) await clickAt(p, 300);
-  await idle();
-  await page.getByRole('button', { name: /Done/ }).click();
-  await page.waitForTimeout(600);
+  await done();
   const draftBefore = await draftOf();
-  const routesBefore = tables.route.length;
+  const routeDrafts = () => tables.draft.filter((d) => d.kind === 'route').length;
+  const routesBefore = routeDrafts();
   const form = (end) => page.getByRole('group', { name: `New place for the ${end}` });
-  const stopsNamed = (name) => tables.stop.filter((r) => r.name === name);
-  const stopWrites = (n) => writesSince(n).filter((w) => w.method === 'POST' && w.table === 'stop');
+  /** The drafts of new places with this ground name. */
+  const stopsNamed = (name) =>
+    tables.draft.filter((d) => d.kind === 'hotspot' && d.payload.stop.name === name);
+  /** The place drafts claimed since `n`. */
+  const stopWrites = (n) =>
+    writesSince(n).filter((w) => w.table === 'rpc/claim_draft' && w.body?.p_kind === 'hotspot');
   const open = async (end) => {
     await page.getByTestId(`save-${end.toLowerCase()}`).selectOption(NEW);
     await form(end)
@@ -453,7 +483,7 @@ await page.waitForTimeout(300);
   // Only once the form has closed is the next one a new form, not this one still saving.
   await form('Head').waitFor({ state: 'hidden' });
   check(
-    'two Enters write one box, once the lines are in',
+    'two Enters store one draft of the box, once the lines are in',
     stopsNamed('Stand-in Guard').length === 1 && stopWrites(n).length === 1,
     said(writesSince(n)),
   );
@@ -471,7 +501,7 @@ await page.waitForTimeout(300);
   check(
     'Enter on the Hintuan radio saves the place and not the route',
     stopsNamed('Stand-in Radio Head').length === 1 &&
-      tables.route.length === routesBefore &&
+      routeDrafts() === routesBefore &&
       (await saveButton().isVisible()),
   );
   await open('Tail');
@@ -486,23 +516,25 @@ await page.waitForTimeout(300);
   check(
     '  and on the Terminal radio',
     stopsNamed('Stand-in Radio Tail').length === 1 &&
-      tables.route.length === routesBefore &&
+      routeDrafts() === routesBefore &&
       (await saveButton().isVisible()),
   );
 
-  // 3. A retry after the links failed updates the box it wrote.
+  // 3. A retry after the draft was refused stores the same place, under the same id.
   await open('Tail');
   await form('Tail')
     .getByLabel(/Ground name/)
     .fill('Stand-in Retry');
   await waitFor(async () => form('Tail').getByRole('button', { name: 'Save place' }).isEnabled());
-  stub.fault = (method, table) => method === 'DELETE' && table === 'route_stop';
+  stub.fault = (method, table) => method === 'POST' && table === 'rpc/claim_draft';
+  n = log.length;
   await page.keyboard.press('Enter');
-  await waitFor(async () => /Press Save again to retry/.test(await form('Tail').innerText()));
+  await waitFor(async () => /refused this one, on purpose/.test(await form('Tail').innerText()));
+  const firstTry = stopWrites(n)[0];
   check(
-    'a failed link write is said, with the box already written once',
-    /Press Save again to retry/.test(await form('Tail').innerText()) &&
-      stopsNamed('Stand-in Retry').length === 1,
+    'a refused draft is said in the form, and nothing is stored',
+    /refused this one, on purpose/.test(await form('Tail').innerText()) &&
+      stopsNamed('Stand-in Retry').length === 0,
   );
   n = log.length;
   await form('Tail')
@@ -510,10 +542,10 @@ await page.waitForTimeout(300);
     .press('Enter');
   await form('Tail').waitFor({ state: 'hidden' });
   check(
-    '  the retry updates that box: one row, no second POST',
+    '  the retry stores one draft of that place, under the id the first try had',
     stopsNamed('Stand-in Retry').length === 1 &&
-      stopWrites(n).length === 0 &&
-      writesSince(n).some((w) => w.method === 'PATCH' && w.table === 'stop'),
+      stopsNamed('Stand-in Retry')[0].subject_id === firstTry?.body.p_subject_id &&
+      approvedWrites(writesSince(n)).length === 0,
     said(writesSince(n)),
   );
   check('  the drawn line is untouched through all of it', (await draftOf()) === draftBefore);
@@ -525,8 +557,8 @@ await page.waitForTimeout(300);
     'Stand-in Radio Tail',
     'Stand-in Retry',
   ])
-    for (const r of stopsNamed(name)) remove('stop', [r]);
-  await page.getByRole('button', { name: 'Back to map' }).click();
+    tables.draft = tables.draft.filter((d) => !stopsNamed(name).includes(d));
+  await backToMap();
   await page.getByTitle('Discard this route').click();
   await page.waitForTimeout(300);
 }
@@ -547,36 +579,51 @@ for (const p of OUT) {
   await guest.mouse.click(gbox.x + q[0], gbox.y + q[1]);
   await guest.waitForTimeout(300);
 }
-await guest.getByRole('button', { name: /Done/ }).click();
+// Signed out, the toolbar has Done (no form beside the map yet), and its key
+// is Ctrl+Enter: plain Enter must not press it, Ctrl+Enter must. Focus off any
+// button first, where Enter would press that button itself.
+const signInShown = () => guest.getByRole('textbox', { name: 'Email', exact: true }).count();
+// Done waits for the router's answers; its key as much as its button.
+await waitFor(async () => await guest.getByRole('button', { name: /Done/ }).isEnabled());
+await guest.evaluate(() => document.activeElement?.blur?.());
+await guest.keyboard.press('Enter');
+await guest.waitForTimeout(400);
+const afterPlainEnter = await signInShown();
+await guest.keyboard.press('Control+Enter');
 await guest.waitForTimeout(400);
 check(
-  'signed out, Done asks for sign-in',
-  (await guest.getByPlaceholder('you@example.com').count()) === 1,
+  'signed out, plain Enter is no shortcut, and Ctrl+Enter is Done, which asks for sign-in',
+  afterPlainEnter === 0 && (await signInShown()) === 1,
+  `after Enter ${afterPlainEnter}, after Ctrl+Enter ${await signInShown()}`,
 );
-await guest.getByPlaceholder('you@example.com').fill('owner@example.com');
-await guest.getByPlaceholder('Password').fill('stand-in');
+await guest.getByRole('textbox', { name: 'Email', exact: true }).fill('owner@example.com');
+await guest.getByLabel('Password', { exact: true }).fill('stand-in');
 // With a Turnstile site key in the build, Sign in waits for the check.
 await guest.waitForFunction(() => !document.querySelector('button[type="submit"]')?.disabled);
-await guest.getByPlaceholder('Password').press('Enter');
+await guest.getByLabel('Password', { exact: true }).press('Enter');
 await guest.waitForTimeout(1200);
 check(
   '  signing in closes the dialog',
-  (await guest.getByPlaceholder('you@example.com').count()) === 0,
+  (await guest.getByRole('textbox', { name: 'Email', exact: true }).count()) === 0,
 );
-const before = Number((await guestBody()).match(/(\d+) points?\b/)?.[1] ?? 0);
+const before = Number(
+  (await guestBody())
+    .match(/\bPoints\s+(\d+)|(\d+) points?\b/)
+    ?.slice(1)
+    .find(Boolean) ?? 0,
+);
 await guest.keyboard.press('Control+z');
 await guest.waitForTimeout(300);
-const after = Number((await guestBody()).match(/(\d+) points?\b/)?.[1] ?? 0);
+const after = Number(
+  (await guestBody())
+    .match(/\bPoints\s+(\d+)|(\d+) points?\b/)
+    ?.slice(1)
+    .find(Boolean) ?? 0,
+);
 check(
   '  and Ctrl+Z still undoes (9)',
   before === OUT.length && after === OUT.length - 1,
   `${before} → ${after} points`,
-);
-await guest.keyboard.press('Enter');
-await guest.waitForTimeout(500);
-check(
-  '  and Enter still opens the save panel (9)',
-  (await guest.getByTestId('save-head').count()) === 1,
 );
 
 // A line that comes back to where it began: the panel's first guess puts one
@@ -590,9 +637,39 @@ check(
     (await page.getByTestId('save-head').inputValue()) ===
       (await page.getByTestId('save-tail').inputValue()),
 );
-await page.getByRole('button', { name: 'Back to map' }).click();
+await backToMap();
 await page.getByTitle('Discard this route').click();
 await page.waitForTimeout(300);
+// ---- 11b. Unpublish: a published route opened with Edit route, unchanged, offers it in the saves' place
+{
+  await approveAll();
+  const viaRoute = tables.route.find((r) => r.via === 'Stand-in Road');
+  await openCard(VIA[1]);
+  await page.getByRole('button', { name: 'Edit route' }).click();
+  await waitFor(async () => (await pointsShown()) > 0);
+  await done();
+  const panel = page.getByTestId('sidebar');
+  // The sidebar reads the route's draft first: until it knows there is none, it is a draft's.
+  await waitFor(async () => await panel.getByRole('button', { name: 'Unpublish' }).isVisible());
+  check(
+    "a published route, unchanged, has Exit and Unpublish at the sidebar's foot, no saves",
+    (await panel.getByRole('button', { name: 'Unpublish' }).isVisible()) &&
+      (await panel.getByRole('button', { name: 'Publish', exact: true }).count()) === 0 &&
+      (await panel.getByRole('button', { name: 'Save as draft' }).count()) === 0,
+  );
+  const m = log.length;
+  await panel.getByRole('button', { name: 'Unpublish' }).click();
+  await waitFor(async () => (await body()).includes('Unpublished. It leaves the public map'));
+  check(
+    '  Unpublish takes the route down, leaves it a draft, and closes the sidebar',
+    writesSince(m).some((x) => x.table === 'rpc/unpublish') &&
+      tables.route.find((r) => r.id === viaRoute?.id)?.status === 'taken_down' &&
+      tables.draft.some((d) => d.subject_id === viaRoute?.id) &&
+      !(await panel.isVisible()),
+    said(writesSince(m)),
+  );
+}
+
 // ---- 12. On a phone: 390×844, a notch of 47 px and a home bar of 34
 const phone = await open(true, '/studio/', true);
 const rect = (loc) => loc.first().boundingBox();
@@ -603,10 +680,14 @@ const overlap = (a, z) =>
   z.x < a.x + a.width &&
   a.y < z.y + z.height &&
   z.y < a.y + a.height;
+const phoneInfo = await rect(phone.getByRole('button', { name: 'Map data sources' }));
 check(
-  'phone: the credits start folded to their ⓘ',
-  (await phone.locator('.maplibregl-compact-show').count()) === 0 &&
-    (await phone.locator('.maplibregl-ctrl-attrib').count()) === 1,
+  "phone: the map's ⓘ sits at the bottom left, as on the public map, just clear of the home bar",
+  !!phoneInfo &&
+    Math.abs(phoneInfo.x - 12) < 1 &&
+    Math.abs(844 - (phoneInfo.y + phoneInfo.height) - 34) < 1 &&
+    !(await phone.locator('.maplibregl-ctrl-attrib').isVisible()),
+  JSON.stringify(phoneInfo),
 );
 const pill = await rect(phone.getByRole('button', { name: 'Sign out' }));
 check('phone: the account pill is below the notch', !!pill && pill.y >= 47, JSON.stringify(pill));
@@ -650,7 +731,13 @@ await phone
   .catch(() => {});
 await phone.getByRole('button', { name: /Done/ }).tap();
 await phone.waitForTimeout(600);
-const sheet = await rect(phone.locator('form').filter({ has: phone.getByTestId('save-head') }));
+// The sheet is the frame round the form (SaveSheetFrame).
+const sheet = await rect(
+  phone
+    .locator('form')
+    .filter({ has: phone.getByTestId('save-head') })
+    .locator('..'),
+);
 check(
   'phone: the save panel fills the screen',
   !!sheet && sheet.x === 0 && sheet.width === 390 && sheet.height === 844,
@@ -662,17 +749,25 @@ check(
   '  no field is focused, so no keyboard springs up',
   await phone.evaluate(() => !/INPUT|SELECT|TEXTAREA/.test(document.activeElement?.tagName ?? '')),
 );
-const small = await phone.evaluate(() =>
+/** The phone sheet's fields for a new route: the two ends, and the two facts below them. */
+const PHONE_SHEET_FIELDS = 4;
+// Every field the sheet shows, measured: a list that found nothing would pass
+// with nothing checked, so the fields are counted too.
+const fieldSizes = await phone.evaluate(() =>
   [...document.querySelectorAll('form input:not([type=checkbox]), form select')]
-    .map((e) => parseFloat(getComputedStyle(e).fontSize))
-    .filter((px) => px < 16),
+    .filter((e) => e.getClientRects().length > 0)
+    .map((e) => ({
+      name: e.getAttribute('aria-label') ?? e.getAttribute('data-testid') ?? e.tagName,
+      px: parseFloat(getComputedStyle(e).fontSize),
+    })),
 );
+const small = fieldSizes.filter((f) => f.px < 16);
 check(
   '  every field is 16 px, so iOS does not zoom in on it',
-  small.length === 0,
-  `${small.length} under 16 px`,
+  fieldSizes.length >= PHONE_SHEET_FIELDS && small.length === 0,
+  `${fieldSizes.length} fields measured, ${small.length} under 16 px: ${JSON.stringify(small)}`,
 );
-const phoneSave = phone.getByRole('button', { name: /^(Save|Update)$/ });
+const phoneSave = phone.getByRole('button', { name: /^(Publish|Save as draft)$/ }).last();
 const saveAt = await rect(phoneSave);
 check(
   '  Save shows at the foot, above the home bar',
@@ -680,7 +775,7 @@ check(
   JSON.stringify(saveAt),
 );
 // The keyboard up: the page 365 px shorter, as interactive-widget=resizes-content makes it.
-await phone.getByPlaceholder('Zabarte').fill('Phone Road');
+await phone.getByLabel('Via (if applicable)').fill('Phone Road');
 await phone.setViewportSize({ width: 390, height: 479 });
 await phone.waitForTimeout(300);
 const saveUp = await rect(phoneSave);

@@ -6,8 +6,8 @@
  * tests/unit/map-colours-test.mjs fails when this and tokens.css part.
  */
 export const MAP_COLOURS = {
-  'Map/RouteLine/surface-default': '#8ec5ff', // blue/300
-  'Map/RouteLine/surface-selected': '#1447e6', // blue/700
+  'Map/RouteLine/surface-default': '#c1bfff', // parabrand/300
+  'Map/RouteLine/surface-selected': '#4900be', // parabrand/800
   'Map/RouteLine/Arrow/Rest': '#ffffff', // white
   'Map/RouteLine/Arrow/Inverse': '#171717', // neutral/900
   'Map/RouteLine/Hintuan/surface-default': '#05df72', // green/400
@@ -21,12 +21,14 @@ export const MAP_COLOURS = {
   'Map/HotspotsCard/Hintuan/border-primary': '#0d542b', // green/900
   'Map/HotspotsCard/Terminal/surface': '#0069a8', // sky/700
   'Map/HotspotsCard/Terminal/border-primary': '#024a70', // sky/900
+  'Map/Pin/Terminal/surface': '#1447e6', // blue/700
+  'Map/Pin/Hintuan/surface': '#008236', // green/700
   'Map/LocatorIndicatorOverlay/surface': '#8b7aff', // parabrand/500, at 15%
   'Map/LocatorIndicatorOverlay/border': '#4900be', // parabrand/800, at 75%
   // Provisional: not named in Figma yet. papunta and pabalik colour the studio's Contributors map;
   // lakad and sakay are /contribute/'s own trail as it is drawn live.
   'Map/Trail/papunta': '#1447e6', // blue/700
-  'Map/Trail/pabalik': '#ca3500', // orange/700, the orange of Card/orange/surface
+  'Map/Trail/pabalik': '#ca3500', // orange/700
   'Map/Trail/lakad': '#1447e6', // blue/700, the contributor page's walked line: the tint's Lakad
   'Map/Trail/sakay': '#008236', // green/700, its ridden line: the tint's Sakay
   'Map/Trail/mark': '#8200db', // purple/700, apart from both ways
@@ -62,35 +64,17 @@ export const MAP_OPACITY = {
 } as const satisfies Partial<Record<keyof typeof MAP_COLOURS, number>>;
 
 /**
- * The RouteCards' Card/<livery>/surface, in hex, for the map: a picked
- * card's routes, and an open trip's line, wear their card's colour. Each hex
- * is the primitive its token aliases, held to tokens.css by
+ * The mode cards' colours a lit line wears, in hex (RouteCard, 4629:22776): Jeep's and Bus's
+ * surface; UV Express's and E-Jeep's surface-border, as their light surfaces would not show on the
+ * basemap. Each hex is the primitive its token aliases, held to tokens.css by
  * tests/unit/map-colours-test.mjs as the Map/… ones are.
  */
-export const CARD_COLOURS = {
-  'Card/red/surface': '#9f0712', // red/800
-  'Card/orange/surface': '#ca3500', // orange/700
-  'Card/violet/surface': '#7008e7', // violet/700
-  'Card/rose/surface': '#c70036', // rose/700
-  'Card/fuchsia/surface': '#a800b7', // fuchsia/700
-  'Card/pink/surface': '#c6005c', // pink/700
-} as const satisfies Record<`Card/${string}/surface`, `#${string}`>;
-
-/**
- * The RouteCards' Card/<livery>/surface-pale, in hex, for the map: the rest
- * of an open trip's line past a picked hintuan, from there to where the trip
- * goes, in the card's own hue paled. Each hex is the primitive its token
- * aliases, each hue's 300, held to tokens.css by
- * tests/unit/map-colours-test.mjs as CARD_COLOURS is.
- */
-export const CARD_PALE_COLOURS = {
-  'Card/red/surface-pale': '#ffa2a2', // red/300
-  'Card/orange/surface-pale': '#ffb86a', // orange/300
-  'Card/violet/surface-pale': '#c4b4ff', // violet/300
-  'Card/rose/surface-pale': '#ffa1ad', // rose/300
-  'Card/fuchsia/surface-pale': '#f4a8ff', // fuchsia/300
-  'Card/pink/surface-pale': '#fda5d5', // pink/300
-} as const satisfies Record<`Card/${string}/surface-pale`, `#${string}`>;
+export const MODE_COLOURS = {
+  'Card/Jeep/Jeep-surface': '#1447e6', // blue/700
+  'Card/UVExpress/UVExpress-surface-border': '#a1a1a1', // neutral/400
+  'Card/Ejeep/Ejeep-surface-border': '#d4d4d4', // neutral/300
+  'Card/Bus/Bus-surface': '#ca3500', // orange/700
+} as const satisfies Record<`Card/${string}`, `#${string}`>;
 
 /**
  * Everything else the map paints — the public map's and the editor's: colours
@@ -135,7 +119,24 @@ export const MAP_PAINT = {
   'Paint/daylight-avenue-edge': '#ced2d9', // a shade darker
   'Paint/daylight-street': '#ffffff', // streets and service roads, white
   'Paint/daylight-street-edge': '#ebe5da', // a whisper on the ground, no strong casing
-  'Paint/draw-line': '#e11d48', // rose/600: the line being drawn, its points' rims
+  'Paint/draw-line': '#4900be', // parabrand/800: the line being drawn, its points' rims, a new hotspot's fill
+  'Paint/draw-handle-arm': '#ff6467', // red/400: a curve's handle line
+  'Paint/draw-handle-dot': '#e7000b', // red/600: the dot at a handle's end, what a drag holds
   'Paint/draw-uturn': '#f59e0b', // amber/500: a join that turns back
-  'Paint/draw-borrow': '#2563eb', // blue/600: the stretch an Extend borrows
+  'Paint/draw-borrow': '#c1bfff', // parabrand/300: the stretch an Extend borrows
+  'Paint/draw-preview': '#c1bfff', // parabrand/300: Snap's road from the last point to the resting cursor, dashed
 } as const satisfies Record<`Paint/${string}`, string>;
+
+/**
+ * Monochrome's lean (monochrome.ts, `toBrandGray`): every gray it draws,
+ * Positron's and MAP_PAINT's, takes the hue of `brand` at `saturation` and
+ * keeps its lightness, so the relief, which road reads as above which, and
+ * the calm stay as they were; only the cast turns toward Para's violet.
+ * parabrand/600 is the middle of the brand ramp, between the route lines'
+ * parabrand/300 and parabrand/800. The saturation is HSL's, 0 to 100: low, so
+ * the map stays a gray with a hint of lilac, never a violet.
+ */
+export const MONOCHROME_LEAN = {
+  brand: '#724dff', // parabrand/600
+  saturation: 16,
+} as const;
