@@ -28,3 +28,8 @@ The builder chose these for now, from the owner's decisions. Each waits for the 
 - **Map styles with no signal**: every design switches offline, drawn from the app's copy of its
   style over whatever tiles the phone kept. No style is shown disabled, as the app holds a copy of
   each. The owner chose this, with no disabled look and no toast, on 2026-11-06.
+- **Loads that never answer**: History, Account's Commute Statistics and Account settings' profile
+  show their skeletons while they load (History's last "Loading…" under a list already drawn is its
+  card skeletons now), and after 8 s with no answer give way to their no-signal line with **Try
+  again**. Commute Statistics' line had no Try again before; it now has the small secondary one
+  History and Account settings use.

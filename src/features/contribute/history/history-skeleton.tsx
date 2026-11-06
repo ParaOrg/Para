@@ -12,9 +12,9 @@ interface HistorySkeletonProps {
 }
 
 /**
- * History's list while the account's uploads load and nothing is listed yet: cards in the shape
- * of HistoryCard (its picture, a title, a line of detail), in its sizes and gaps, where the list
- * comes. A screen reader hears that the rides are loading.
+ * Cards in the shape of HistoryCard (its picture, a title, a line of detail), in its sizes and
+ * gaps, while rides load: as the whole list before any is listed, or under the rides already
+ * listed while the account's uploads still load. A screen reader hears that the rides are loading.
  */
 export function HistorySkeleton({ isShown }: HistorySkeletonProps) {
   return (

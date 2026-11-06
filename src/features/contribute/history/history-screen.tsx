@@ -41,6 +41,7 @@ export function HistoryScreen({ items, pictures, onOpenRecord, onOpenRide }: His
   // Nothing to list until the account's uploads come: their cards' shapes stand in for them.
   const isFirstLoad = load.state === 'loading' && recordings.length === 0;
   const isSkeletonShown = useIsSlowLoad(isFirstLoad);
+  const isMoreShown = useIsSlowLoad(load.state === 'loading' && recordings.length > 0);
 
   return (
     <section
@@ -93,8 +94,11 @@ export function HistoryScreen({ items, pictures, onOpenRecord, onOpenRide }: His
             ))}
           </ul>
         )}
-        {/* Over a list already drawn, Loading waits under it: going, it moves no card. */}
-        {load.state === 'loading' && recordings.length > 0 && <HistoryLoadLine load={load} />}
+        {/* Over a list already drawn, the cards still coming wait under it as their skeletons:
+            going, they move no card. */}
+        {load.state === 'loading' && recordings.length > 0 && (
+          <HistorySkeleton isShown={isMoreShown} />
+        )}
       </div>
       {/* The list fading out under the page's toolbar (4518:24829), which stands over this foot
           (TOOLBAR_FOOT) on all three tabs, so it never moves between them. */}
