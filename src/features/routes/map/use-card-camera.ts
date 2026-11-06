@@ -18,6 +18,7 @@ import { framedBy, type Framed } from '../cards/card-stack';
 import type { PickedPlace } from '../cards/route-card-stack';
 import type { Hotspot } from '../model/hotspots';
 import type { Livery } from '../model/liveries';
+import type { ModeFilter } from '../model/mode-filter';
 import { routeTimeline } from '../model/ride';
 import { directionLine, type Direction } from '../model/routes';
 
@@ -28,6 +29,7 @@ interface Routes<V extends Direction> {
   litDirections: readonly V[];
   select: (id: string | null, opts?: { keepList?: boolean }) => void;
   flip: () => void;
+  filterModes: (filter: ModeFilter) => void;
   highlightCard: (h: Highlight | null) => void;
 }
 
@@ -218,6 +220,12 @@ export function useCardCamera<V extends Direction, S extends Hotspot>(
     /** SWITCH on the route list. */
     flipList: () => {
       saved.flip();
+      switched();
+    },
+
+    /** The route list's filter: the camera takes in what it leaves lit, as for SWITCH (the owner's call). */
+    filterList: (filter: ModeFilter) => {
+      saved.filterModes(filter);
       switched();
     },
 

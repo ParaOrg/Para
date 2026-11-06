@@ -10,6 +10,7 @@ import { litOf, shownOf, showingOf, steady } from './routes-shown';
 import { useSavedRoutesLayers } from './use-saved-routes-layers';
 import type { Listing } from '../model/departures';
 import type { Livery } from '../model/liveries';
+import { passesModeFilter, type ModeFilter } from '../model/mode-filter';
 import { directionLine, type LineStringGeoJSON, type Direction } from '../model/routes';
 
 /**
@@ -111,6 +112,17 @@ export function useSavedRoutes<T extends Direction>(
    */
   const [listing, setListing] = useState<Listing>('every-line');
   /**
+   * The kind of ride the list narrows to (ModeFilterCard), All again with each new list (the
+   * owner's call). The map lights what passes it, as the cards show; a hotspot's own card does
+   * not follow it.
+   */
+  const [modeFilter, setModeFilter] = useState<ModeFilter>('all');
+  /** A new list under a tap: every kind of ride again. */
+  const listRoutes = useCallback((c: T[]) => {
+    setCandidates(c);
+    setModeFilter('all');
+  }, []);
+  /**
    * The Selected RouteCard, whose directions alone are lit while no trip is
    * open; with none picked, a list lights every direction it shows, so it
    * never lights nothing (the owner's call). SWITCH, a new list, a map tap,
@@ -125,6 +137,11 @@ export function useSavedRoutes<T extends Direction>(
   const [cardShows, setCardShows] = useState<readonly string[] | null>(null);
   const flip = useCallback(() => {
     setBack((b) => !b);
+    setHighlight(null);
+  }, []);
+  /** The filter changed: a Selected card is let go, as ⇆ lets it go (the owner's call). */
+  const filterModes = useCallback((filter: ModeFilter) => {
+    setModeFilter(filter);
     setHighlight(null);
   }, []);
 
@@ -151,6 +168,7 @@ export function useSavedRoutes<T extends Direction>(
   const openList = useCallback((directions: readonly T[], way: boolean) => {
     setSelectedId(null);
     setCandidates([...directions]);
+    setModeFilter('all');
     setBack(way);
     setListing('way-round');
     setHighlight(null);
@@ -230,8 +248,15 @@ export function useSavedRoutes<T extends Direction>(
 
   // What is shown and what is lit (routes-shown.ts).
   const showing = useMemo(
-    () => showingOf(candidates, back, listing, directions, cardShows),
-    [candidates, back, listing, directions, cardShows],
+    () =>
+      showingOf(
+        candidates.filter((v) => passesModeFilter(v, modeFilter)),
+        back,
+        listing,
+        directions,
+        cardShows,
+      ),
+    [candidates, modeFilter, back, listing, directions, cardShows],
   );
   // Each kept one array while it holds the same (steady): an unrelated
   // line's arrival lights nothing new, and the chevrons flow on.
@@ -342,7 +367,7 @@ export function useSavedRoutes<T extends Direction>(
     {
       highlight: setHighlight,
       selectedId: setSelectedId,
-      candidates: setCandidates,
+      candidates: listRoutes,
       back: setBack,
       listing: setListing,
     },
@@ -364,6 +389,8 @@ export function useSavedRoutes<T extends Direction>(
     back,
     listing,
     flip,
+    modeFilter,
+    filterModes,
     highlight,
     highlightCard: setHighlight,
     showCard: setCardShows,

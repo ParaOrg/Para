@@ -133,6 +133,7 @@ export function PublicMapApp() {
     clearOfOpen,
     switchTrip,
     flipList,
+    filterList,
     otherRoute,
     pickOnPlaceCard,
     openPlace,
@@ -409,6 +410,7 @@ export function PublicMapApp() {
             back={saved.back}
             listing={saved.listing}
             onFlip={flipList}
+            modeFilter={{ filter: saved.modeFilter, onFilter: filterList }}
             selected={saved.highlight?.where === 'list' ? saved.highlight.card : null}
             onSelect={(p) => saved.highlightCard(p && { where: 'list', ...p })}
             onRoute={openTrip}

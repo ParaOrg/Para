@@ -1100,6 +1100,62 @@ if (PART !== 1) {
           );
         }
       }
+      // The filter: the map lights what the cards list under each kind of ride, a Selected card
+      // let go as ⇆ lets it go, and All lights the whole list again (the owner, 2026-11-06).
+      const filterButton = chooser.locator('[data-testid="chooser-filter"]');
+      const filterTo = async (label) => {
+        await filterButton.click();
+        await page.getByRole('radio', { name: label, exact: true }).click();
+        await until(
+          () => filterButton.getAttribute('aria-label'),
+          (l) => l?.includes(label),
+        );
+      };
+      const before = await listedNow();
+      const firstCard = cards.first();
+      await firstCard.locator('[data-testid="chooser-select"]').click();
+      const pickedFirst = (await inState(firstCard, 'selected')) === 'selected';
+      const agree = [];
+      for (const label of ['Jeep', 'E-Jeep', 'Bus', 'LRT', 'MRT', 'Ferry']) {
+        await filterTo(label);
+        const listedUnder = await listedNow();
+        const litUnder = await until(litNow, (lit) => sameIds(lit, listedUnder));
+        agree.push({
+          label,
+          listed: listedUnder.length,
+          lit: litUnder.length,
+          ok: sameIds(litUnder, listedUnder),
+        });
+      }
+      const selectedLeft = await chooser.locator('[data-state="selected"]').count();
+      check(
+        '  each filter lights just what the cards list, and lets a Selected card go',
+        pickedFirst &&
+          selectedLeft === 0 &&
+          agree.every((a) => a.ok) &&
+          agree.some((a) => a.listed < before.length),
+        `picked ${pickedFirst}, ${selectedLeft} Selected after; ` +
+          agree.map((a) => `${a.label} ${a.lit}/${a.listed}`).join(', ') +
+          ` of ${before.length}`,
+      );
+      await filterTo('All');
+      const allAgain = await until(litNow, (lit) => sameIds(lit, before));
+      check(
+        '  All lights the whole list again',
+        sameIds(allAgain, before),
+        `${allAgain.length} lit, ${before.length} listed`,
+      );
+      // Left on one kind of ride, the next list starts at All.
+      await filterTo('Ferry');
+      await closeCard();
+      await page.evaluate((c) => window.__map.jumpTo({ center: c, zoom: 18 }), hit);
+      await mapIdle(page);
+      await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+      await shows();
+      const nextLabel = await chooser
+        .locator('[data-testid="chooser-filter"]')
+        .getAttribute('aria-label');
+      check('  a new list starts at All', nextLabel === 'Filter', String(nextLabel));
     }
     await closeCard();
   }
