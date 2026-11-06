@@ -89,6 +89,11 @@ export const tables = {
   })),
   draft: [],
   editor_name: [],
+  // Read by the studio only with uploads on (VITE_CONTRIBUTIONS=1, as profile-test runs the dev
+  // server). These suites are written for uploads off, as CI runs them; served empty, a run with
+  // uploads on reaches the check that says so rather than crashing in the stand-in.
+  contribution: [],
+  contribution_use: [],
 };
 
 // Everything is placed from the data's own box: the empty ground east of it,
@@ -398,6 +403,7 @@ const serve = async (req) => {
   const select = u.searchParams.get('select');
   const one = /vnd\.pgrst\.object/.test(req.headers().accept ?? '');
   const prefer = req.headers().prefer ?? '';
+  if (!Object.hasOwn(tables, table)) throw new Error(`the stand-in has no table ${table}`);
   const rows = tables[table].filter((r) => matches(r, params));
   const answer = (out) => {
     const shaped = out.map((r) => shapeRow(table, r, select));
