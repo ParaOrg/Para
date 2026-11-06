@@ -186,7 +186,7 @@ const styleOutlineSchema = z.looseObject({
   layers: z.array(z.unknown()),
 });
 
-function isStyle(raw: unknown): raw is StyleSpecification {
+export function isStyle(raw: unknown): raw is StyleSpecification {
   return styleOutlineSchema.safeParse(raw).success;
 }
 
@@ -196,22 +196,37 @@ function isStyle(raw: unknown): raw is StyleSpecification {
  * labels hidden: location-labels.ts) fetches its style here and is dressed
  * before the map exists — one request, the same one MapLibre would have made,
  * and no plain-gray flash first. If the fetch fails, or brings no style
- * (isStyle), the plain URL goes in instead, and MapLibre's own error path
- * reports what it can.
+ * (isStyle), the page's copy goes in (`copies`); with no copies at all, the
+ * plain URL, and MapLibre's own error path reports what it can.
  */
 export async function initialStyle(
   b: Basemap,
   areLabelsShown: boolean,
+  copies?: StyleCopies,
 ): Promise<StyleSpecification | string> {
-  if (isPlain(b) && areLabelsShown) return b.url;
+  if (!copies && isPlain(b) && areLabelsShown) return b.url;
+  let style: unknown = null;
   try {
     const r = await fetch(b.url);
-    if (!r.ok) return b.url;
-    const style: unknown = await r.json();
-    return isStyle(style) ? withLocationLabels(dressed(b, style), areLabelsShown) : b.url;
+    if (r.ok) style = await r.json();
   } catch {
-    return b.url;
+    // No signal, or no answer: the copy below, or the URL for MapLibre to report.
   }
+  if (isStyle(style)) copies?.keep(b, style);
+  else if (copies) style = await copies.offline(b);
+  return isStyle(style) ? withLocationLabels(dressed(b, style), areLabelsShown) : b.url;
+}
+
+/**
+ * Where a page keeps copies of the basemaps' styles, for a map made with no signal: the
+ * contributor app's (features/contribute/map/basemap-copies.ts). Without it the map has the
+ * style's URL, and no style offline.
+ */
+export interface StyleCopies {
+  /** The design's style as just fetched, undressed, to keep as its copy. */
+  keep: (b: Basemap, style: StyleSpecification) => void;
+  /** What to draw the design with when it cannot be fetched: its copy, else a flat style. Never rejects. */
+  offline: (b: Basemap) => Promise<StyleSpecification>;
 }
 
 // -------------------------------------------------------------- the switch
