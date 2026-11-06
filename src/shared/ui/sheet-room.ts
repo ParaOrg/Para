@@ -177,3 +177,21 @@ export function clearOfSheet(
 ): [number, number] {
   return clearOfDock(map, dock, framedAt(snap));
 }
+
+/**
+ * Whether the map under `map` is out of sight or on the move under a finger: a docked sheet at
+ * Max over it, or a finger (or a mouse) holding a sheet (`data-dock-dragging`, BottomSheet). What
+ * only moves for the eye, as the flowing chevrons do, waits meanwhile: each of its steps costs a
+ * redraw the sheet's own frames then lack. A sheet floating beside the map at Max covers none.
+ */
+export function isMapOutOfSight(map: HTMLElement): boolean {
+  const host = map.closest('[data-dock-host]');
+  if (!host) return false;
+  if (host.hasAttribute('data-dock-dragging')) return true;
+  const sheet = host.querySelector<HTMLElement>('[role="dialog"][data-snap="max"]:not([hidden])');
+  if (!sheet) return false;
+  const over = sheet.getBoundingClientRect();
+  const under = map.getBoundingClientRect();
+  // Docked along the bottom at Max: as wide as the map, its top at the map's or a strip under it.
+  return over.width >= under.width - 1 && over.top - under.top < under.height / 4;
+}

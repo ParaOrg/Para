@@ -174,8 +174,9 @@ export function PublicMapApp() {
   return (
     // `data-directions`: how many the index brought, for the suites on a
     // production build, where the map itself is out of their reach.
-    // `data-dock-host`: the open card's sheet says where its top is here,
-    // for the LocatorButton to follow (BottomSheet). While "Update Para!"
+    // `data-dock-host`: the open card's sheet says where its top is here
+    // at rest, and on what follows it (`data-dock-follower`, the LocatorButton,
+    // the map's ⓘ) as a finger drags it (BottomSheet). While "Update Para!"
     // waits, a toast sits 12 under it rather than over it: the button's 24
     // from the top and its 40 tall (Notices), `--toast-top` (ToastHost).
     <div

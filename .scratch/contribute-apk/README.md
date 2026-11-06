@@ -17,6 +17,10 @@ The builder chose these for now, from the owner's decisions. Each waits for the 
   basemap's style. It has no roads, labels or 3D, and no layer of its own, so the map's own ground
   shows (MapView's `surface-secondary`). The app always ships a copy of each style, so this is a
   last resort. With a copy and no tiles, the map shows only the style's own background colour.
+- **Start with location off** (`native/location-off-panel.tsx`): Start does not start a ride while
+  the phone's location switch is off. Instead a card shows, in the Start gate's other panels' style:
+  the location icon, "Turn on location", "Para needs your location to record your ride.", and
+  **Go to Settings** (the phone's Location settings) beside **Close**. The next Start checks again.
 - **Loads that never answer**: History, Account's Commute Statistics and Account settings' profile
   show their skeletons while they load (History's last "Loading…" under a list already drawn is its
   card skeletons now), and after 8 s with no answer give way to their no-signal line with **Try

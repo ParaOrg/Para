@@ -5,6 +5,7 @@ import { batteryHelpFor, type BatteryHelp } from './battery-steps';
 import {
   checkNativePermissions,
   openAppSettings,
+  openLocationSettings,
   readDeviceInfo,
   requestNativePermission,
   type DeviceInfo,
@@ -15,7 +16,9 @@ import { firstMissing, neededPermissions } from './permission-steps';
 export type GateStep =
   | { kind: 'permission'; permission: NativePermission }
   | { kind: 'refused'; permission: NativePermission }
-  | { kind: 'battery'; help: BatteryHelp };
+  | { kind: 'battery'; help: BatteryHelp }
+  /** The phone's location switch is off: no ride can record until it is on. */
+  | { kind: 'location-off' };
 
 const PROBLEM = 'Para could not check the phone’s permissions. Try Start again.';
 
@@ -28,6 +31,7 @@ export interface StartGate {
   handleRecordAnyway: () => void;
   handleBatteryDone: () => void;
   handleOpenSettings: () => void;
+  handleOpenLocationSettings: () => void;
   handleClose: () => void;
 }
 
@@ -35,7 +39,8 @@ export interface StartGate {
  * What stands between a tap on Start and the recording in the app: the permissions, asked for in
  * order with a reason each (notifications, location, then "all the time"), and, once, the
  * battery help for a maker known to stop background apps. A refusal says what still works; the
- * contributor may record anyway unless it is location.
+ * contributor may record anyway unless it is location. With the phone's location switch off no
+ * ride starts: the card says so, and the next Start checks again.
  */
 export function useStartGate(onStart: () => void): StartGate {
   const [step, setStep] = useState<GateStep | null>(null);
@@ -66,6 +71,7 @@ export function useStartGate(onStart: () => void): StartGate {
     );
     const missing = firstMissing(await checkNativePermissions(), needed);
     if (missing) setStep({ kind: 'permission', permission: missing });
+    else if (!info.isLocationOn) setStep({ kind: 'location-off' });
     else startOrShowBattery(info);
   };
 
@@ -102,6 +108,10 @@ export function useStartGate(onStart: () => void): StartGate {
     openAppSettings().catch(fail);
   };
 
+  const handleOpenLocationSettings = () => {
+    openLocationSettings().catch(fail);
+  };
+
   return {
     step,
     problem,
@@ -110,6 +120,7 @@ export function useStartGate(onStart: () => void): StartGate {
     handleRecordAnyway,
     handleBatteryDone,
     handleOpenSettings,
+    handleOpenLocationSettings,
     handleClose: () => setStep(null),
   };
 }

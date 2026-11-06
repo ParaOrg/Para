@@ -15,7 +15,7 @@ import {
   spacingPx,
 } from '../../src/features/routes/map/chevrons.ts';
 import { haversine, metresPerPixel } from '../../src/shared/utils/geo.ts';
-import { onAMove, widened } from '../../src/features/routes/map/direction-arrows.ts';
+import { flowChevrons, onAMove, widened } from '../../src/features/routes/map/direction-arrows.ts';
 
 /** A straight line north from [121.04, 14.70], `km` long, in `n` segments: sample data. */
 const north = (km, n = 10, lng = 121.04) =>
@@ -277,6 +277,8 @@ function chevronMap(view) {
     addLayer: () => {},
     setPaintProperty: () => {},
     getZoom: () => map.view.zoom,
+    // No page around it: never out of sight (isMapOutOfSight).
+    getContainer: () => ({ closest: () => null }),
     getBounds: () => ({
       getWest: () => map.view.west,
       getEast: () => map.view.east,
@@ -392,4 +394,55 @@ test('a move that starts as another ends, as a camera call stops another, draws 
   await act(async () => root.unmount());
   frame();
   assert.equal(moves(), before, 'nothing after the hook is gone');
+});
+
+test('out of sight or under a finger, the flow waits where it is, its clock too, and flows on from there', () => {
+  const queued = new Map();
+  let nextFrame = 1;
+  let now = performance.now();
+  const saved = [globalThis.requestAnimationFrame, globalThis.cancelAnimationFrame];
+  globalThis.requestAnimationFrame = (f) => (queued.set(nextFrame, f), nextFrame++);
+  globalThis.cancelAnimationFrame = (n) => queued.delete(n);
+  // Frames 100 ms apart: each one a step's worth past the last.
+  const frame = () => {
+    now += 100;
+    const due = [...queued.values()];
+    queued.clear();
+    for (const f of due) f(now);
+  };
+  try {
+    const line = Array.from({ length: 41 }, (_, i) => [121.03 + i * 0.0006, 14.69]);
+    const map = chevronMap(viewAt(line[10], 16));
+    map.addSource('direction-arrows');
+    const draws = map.sets['direction-arrows'];
+    const clock = { flowed: 0 };
+    let paused = false;
+    const stop = flowChevrons(
+      map,
+      map.getSource('direction-arrows'),
+      [line],
+      () => 6,
+      clock,
+      () => paused,
+    );
+    assert.equal(draws.length, 1, 'drawn once as it starts');
+    for (let i = 0; i < 3; i++) frame();
+    assert.equal(draws.length, 4, 'a draw a step, flowing');
+    const flowed = clock.flowed;
+    assert.ok(flowed > 0);
+    paused = true;
+    for (let i = 0; i < 10; i++) frame();
+    assert.equal(draws.length, 4, 'no draw while it waits');
+    assert.equal(clock.flowed, flowed, 'its clock waits with it');
+    paused = false;
+    frame();
+    assert.equal(draws.length, 5, 'flowing again');
+    assert.ok(
+      clock.flowed > flowed && clock.flowed - flowed <= 2 * (1000 / 15) + 1,
+      'one step on from where it was, not a leap',
+    );
+    stop();
+  } finally {
+    [globalThis.requestAnimationFrame, globalThis.cancelAnimationFrame] = saved;
+  }
 });

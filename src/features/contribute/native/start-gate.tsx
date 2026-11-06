@@ -1,6 +1,7 @@
 import { cn } from '@/shared/utils/cn';
 
 import { BatteryPanel } from './battery-panel';
+import { LocationOffPanel } from './location-off-panel';
 import { PermissionPanel } from './permission-panel';
 import { RefusedPanel } from './refused-panel';
 import { useStartGate } from './use-start-gate';
@@ -44,6 +45,12 @@ export function StartGate({ onStart }: StartGateProps) {
               permission={step.permission}
               onOpenSettings={gate.handleOpenSettings}
               onRecordAnyway={gate.handleRecordAnyway}
+              onClose={gate.handleClose}
+            />
+          )}
+          {step.kind === 'location-off' && (
+            <LocationOffPanel
+              onOpenSettings={gate.handleOpenLocationSettings}
               onClose={gate.handleClose}
             />
           )}

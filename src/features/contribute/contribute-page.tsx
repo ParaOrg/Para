@@ -292,7 +292,8 @@ export function ContributePage({ locator }: ContributePageProps) {
     <main
       // The toolbar's screens that can open now (tab-motion.ts).
       {...{ [OPENABLE_SCREENS_ATTR]: layout.openableScreens }}
-      // A ride's sheet says where its top is here (`--dock-y`), for the buttons on the map to follow.
+      // A ride's sheet says where its top is here (`--dock-y`) at rest, and on the buttons on the map
+      // that follow it (`data-dock-follower`) as a finger drags it.
       data-dock-host
       className="contribute-page relative h-dvh bg-surface-secondary font-sn-pro"
     >

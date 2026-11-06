@@ -56,8 +56,9 @@ const LABEL = {
  * where it rides higher, up to DOCK_TOP_CSS). With no card open it sits at the map's foot. Where
  * the card floats in the corner (`@float:`), which the frame does not show, it
  * sits at the bottom right, clear of the credit line.
- * BottomSheet says where its top is as `--dock-y` on the page; this layer
- * slides the same way, by the same length.
+ * BottomSheet says where its top is as `--dock-y`: on the page at rest, and on this layer
+ * itself (`data-dock-follower`) as a finger drags it; this layer slides the same way, by the same
+ * length.
  *
  * Denied, unavailable or no fix yet: it tells the page (onNote), and the
  * button stays as it was, to try again once the browser's setting is changed.
@@ -107,6 +108,7 @@ export function Locator({
   return (
     <div
       data-testid="locator-dock"
+      data-dock-follower
       className={
         'pointer-events-none absolute inset-0 z-[5] ' +
         'transition-[translate] duration-sheet ease-enter in-data-dock-dragging:transition-none motion-reduce:transition-none ' +
