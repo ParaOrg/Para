@@ -33,6 +33,8 @@ interface AccountSettingsScreenProps {
   onOpenDeleteAccount: () => void;
   /** Keep Para recording, in the Android app only: the maker's Autostart screen. */
   onOpenKeepRecording?: () => void;
+  /** One line when Keep Para recording could not open the phone's settings. */
+  keepRecordingError?: string | null;
   onBack: () => void;
 }
 
@@ -55,6 +57,7 @@ export function AccountSettingsScreen({
   onOpenChangePassword,
   onOpenDeleteAccount,
   onOpenKeepRecording,
+  keepRecordingError = null,
   onBack,
 }: AccountSettingsScreenProps) {
   const headingRef = useFocusHeading();
@@ -117,7 +120,18 @@ export function AccountSettingsScreen({
             )}
           </div>
           {onOpenKeepRecording && (
-            <GeneralBar icon="settings" label="Keep Para recording" onClick={onOpenKeepRecording} />
+            <div className="flex flex-col gap-1.5">
+              <GeneralBar
+                icon="settings"
+                label="Keep Para recording"
+                onClick={onOpenKeepRecording}
+              />
+              {keepRecordingError && (
+                <p role="alert" className="text-sm/5 text-content-quaternary">
+                  {keepRecordingError}
+                </p>
+              )}
+            </div>
           )}
           <div className="*:w-full">
             <Button

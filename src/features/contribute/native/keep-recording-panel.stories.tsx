@@ -20,8 +20,8 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /**
- * Shown once, at the first Start on a Xiaomi, Redmi, POCO, Oppo, realme, Vivo, Huawei, Honor,
- * OnePlus or Samsung phone. Open settings goes to the maker's Autostart screen; Done starts.
+ * Shown once, at the first Start on a phone whose maker stops background apps
+ * (keep-recording-makers.ts). Open settings goes to the maker's Autostart screen; Done starts.
  */
 export const Default: Story = {
   play: async ({ args, canvasElement }) => {

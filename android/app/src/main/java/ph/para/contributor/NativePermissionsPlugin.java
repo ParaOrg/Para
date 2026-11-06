@@ -6,7 +6,6 @@ import android.content.Intent;
 import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Build;
-import android.os.PowerManager;
 import android.provider.Settings;
 import android.util.Log;
 
@@ -127,15 +126,13 @@ public class NativePermissionsPlugin extends Plugin {
     }
     /**
      * The phone's maker (lower case) and Android version, which decide which permissions exist and
-     * whether Keep Para recording applies, and whether Android already lets Para run unrestricted.
+     * whether Keep Para recording applies, and whether the phone's location switch is on.
      */
     @PluginMethod
     public void deviceInfo(PluginCall call) {
-        PowerManager power = (PowerManager) getContext().getSystemService(Context.POWER_SERVICE);
         JSObject state = new JSObject();
         state.put("sdk", Build.VERSION.SDK_INT);
         state.put("manufacturer", Build.MANUFACTURER.toLowerCase(Locale.ROOT));
-        state.put("isUnrestricted", power.isIgnoringBatteryOptimizations(getContext().getPackageName()));
         LocationManager location = (LocationManager) getContext().getSystemService(Context.LOCATION_SERVICE);
         state.put("isLocationOn", location != null && LocationManagerCompat.isLocationEnabled(location));
         call.resolve(state);

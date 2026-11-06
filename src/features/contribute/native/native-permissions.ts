@@ -17,7 +17,6 @@ const statesSchema = z.object({
 const deviceInfoSchema = z.object({
   sdk: z.number(),
   manufacturer: z.string(),
-  isUnrestricted: z.boolean(),
   /** The phone's own location switch. */
   isLocationOn: z.boolean(),
 });
@@ -46,7 +45,7 @@ export async function requestNativePermission(
   return statesSchema.parse(await getPlugin().requestPermissions({ permissions: [permission] }));
 }
 
-/** The phone's Android version and maker, and whether battery restrictions are already off. */
+/** The phone's Android version and maker, and whether its location switch is on. */
 export async function readDeviceInfo(): Promise<DeviceInfo> {
   return deviceInfoSchema.parse(await getPlugin().deviceInfo());
 }
