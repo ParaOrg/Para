@@ -116,14 +116,26 @@ export function ContributorLocation({
   useEffect(() => {
     latestOnNote.current = onNote;
   });
+  // The app's "Location is off" is out, for the next tap that gets through to take back.
+  const isOffSaid = useRef(false);
   const handleTap = () => {
     if (!checkLocationOn) {
       tap();
       return;
     }
     void checkLocationOn().then((setting) => {
-      if (setting === 'off') latestOnNote.current?.(LOCATION_OFF_NOTE);
-      else latestTap.current();
+      if (setting === 'off') {
+        isOffSaid.current = true;
+        latestOnNote.current?.(LOCATION_OFF_NOTE);
+        return;
+      }
+      // Location is on now: the word that it was off is taken back, as a fix takes back the
+      // browser's notes (Locator), which come again by themselves if they still hold.
+      if (isOffSaid.current) {
+        isOffSaid.current = false;
+        latestOnNote.current?.(null);
+      }
+      latestTap.current();
     });
   };
 
