@@ -1846,6 +1846,16 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
 // ------------ signing out leaves a claim waiting for its own account
 {
   const { page, fake } = await phone();
+  // A claim waits only while it cannot finish: here, no answer comes for it while signed in, as
+  // with no signal. Without this the page finishes it as its own account, rightly, whenever it
+  // looks (the account read, the page shown or online), and whether that came before the logout
+  // was a race the check lost now and then. Each call is told apart by whether the sign-out was in.
+  let isSignedOut = false;
+  const finishesAfterSignOut = [];
+  await page.route(/\/rest\/v1\/rpc\/finish_claim/, (route) => {
+    if (isSignedOut) finishesAfterSignOut.push(route.request().url());
+    return route.abort('internetdisconnected');
+  });
   await start(page).waitFor({ timeout: 30000 });
   await page.evaluate(
     ([id]) =>
@@ -1864,6 +1874,7 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
   await page
     .getByRole('heading', { name: 'Welcome Contributor', level: 1 })
     .waitFor({ timeout: 15000 });
+  isSignedOut = true;
   await page.evaluate(() => window.dispatchEvent(new Event('online')));
   await page.waitForTimeout(500);
   const kept = JSON.parse(
@@ -1871,8 +1882,10 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
   );
   check(
     'Logout keeps a waiting claim, still bound to its account, and finishes nothing',
-    kept?.accountId === ACCOUNT_ID && !fake.claims.includes('finish_claim'),
-    JSON.stringify({ kept, claims: fake.claims }),
+    kept?.accountId === ACCOUNT_ID &&
+      finishesAfterSignOut.length === 0 &&
+      !fake.claims.includes('finish_claim'),
+    JSON.stringify({ kept, finishesAfterSignOut, claims: fake.claims }),
   );
 }
 
