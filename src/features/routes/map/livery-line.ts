@@ -21,8 +21,10 @@ export interface LineLook {
  * Map/RouteLine/Arrow/Rest, white, on the dark lines, and …/Arrow/Inverse,
  * near-black, on the light ones (UV Express, E-Jeep, MRT-3's yellow), as their
  * cards' words are. Past a picked hintuan the rest of the trip's line is a
- * train's surface-pale, and for a road mode the line at rest
- * (Map/RouteLine/surface-default): the modes have no pale of their own.
+ * train's surface-pale, and for a road mode Map/RouteLine/surface-default,
+ * the light purple: the modes have no pale of their own. (A road route at
+ * rest wears its line colour, ROAD_AT_REST, so this pale is the light purple
+ * alone.)
  */
 const REST = MAP_COLOURS['Map/RouteLine/surface-default'];
 const WHITE_ARROW = MAP_COLOURS['Map/RouteLine/Arrow/Rest'];

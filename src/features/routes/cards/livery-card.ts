@@ -16,7 +16,7 @@ import type { RailwayVehicle } from '../model/vehicles';
  * E-Jeep, light cards with dark words, under Route/RouteCardInverse, its Blob
  * softened 2px more. Each mode's surface-secondary, its darker step, is the
  * trip's rail and a pressed row. Past a picked hintuan a road mode has no pale
- * of its own: the rest of the ride is drawn as a line at rest
+ * of its own: the rest of the ride is drawn in the light purple
  * (Map/RouteLine/surface-default).
  *
  * A train route wears its line's colours (Figma's RouteCards for them,
@@ -45,8 +45,8 @@ export const CARD_SURFACE = {
 
 /**
  * The rest of a lit line past a picked hintuan, and the dots along it: a
- * train's Map/…/surface-pale, a road mode's the line at rest, the circles
- * included. The line is painted from the same tokens in hex
+ * train's Map/…/surface-pale, a road mode's the light purple
+ * (Map/RouteLine/surface-default), the circles included. The line is painted from the same tokens in hex
  * (map-colours.ts, useRideRest); these ring the dots, DOM markers
  * (StationLabels).
  */
