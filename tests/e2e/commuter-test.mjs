@@ -1101,14 +1101,15 @@ if (PART !== 1) {
         }
       }
       // The filter: the map lights what the cards list under each kind of ride, a Selected card
-      // let go as ⇆ lets it go, and All lights the whole list again (the owner, 2026-11-06).
+      // let go as ⇆ lets it go, the camera taking in what a narrower filter leaves lit, and All
+      // lighting the whole list again (README decision 14).
       const filterButton = chooser.locator('[data-testid="chooser-filter"]');
       const filterTo = async (label) => {
         await filterButton.click();
         await page.getByRole('radio', { name: label, exact: true }).click();
         await until(
           () => filterButton.getAttribute('aria-label'),
-          (l) => l?.includes(label),
+          (l) => l === (label === 'All' ? 'Filter' : `Filter: ${label}`),
         );
       };
       const before = await listedNow();
@@ -1120,11 +1121,30 @@ if (PART !== 1) {
       const firstCard = cards.nth(Math.max(restAt, 0));
       await firstCard.locator('[data-testid="chooser-select"]').click();
       const pickedFirst = (await inState(firstCard, 'selected')) === 'selected';
+      const camera = () =>
+        page.evaluate(() => {
+          const { lng, lat } = window.__map.getCenter();
+          return { lng, lat, zoom: window.__map.getZoom() };
+        });
       const agree = [];
+      // Each filter that leaves some routes lit but not all: whether the camera moved to them.
+      const framings = [];
       for (const label of ['Jeep', 'E-Jeep', 'Bus', 'LRT', 'MRT', 'Ferry']) {
+        const cameraWas = await camera();
         await filterTo(label);
         const listedUnder = await listedNow();
         const litUnder = await until(litNow, (lit) => sameIds(lit, listedUnder));
+        if (listedUnder.length > 0 && listedUnder.length < before.length) {
+          await mapIdle(page);
+          const cameraNow = await camera();
+          framings.push({
+            label,
+            moved:
+              Math.abs(cameraNow.zoom - cameraWas.zoom) > 1e-6 ||
+              Math.abs(cameraNow.lng - cameraWas.lng) > 1e-9 ||
+              Math.abs(cameraNow.lat - cameraWas.lat) > 1e-9,
+          });
+        }
         agree.push({
           label,
           listed: listedUnder.length,
@@ -1143,6 +1163,18 @@ if (PART !== 1) {
           agree.map((a) => `${a.label} ${a.lit}/${a.listed}`).join(', ') +
           ` of ${before.length}`,
       );
+      if (framings.length === 0) {
+        skip(
+          '  a narrower filter frames the routes it leaves lit',
+          'no filter leaves some but not all of these routes',
+        );
+      } else {
+        check(
+          '  a narrower filter frames the routes it leaves lit',
+          framings.every((f) => f.moved),
+          JSON.stringify(framings),
+        );
+      }
       await filterTo('All');
       const allAgain = await until(litNow, (lit) => sameIds(lit, before));
       check(
