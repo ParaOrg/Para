@@ -1227,7 +1227,7 @@ if (PART === 1) {
       Math.abs(cameraNow.lat - cameraWas.lat) > 1e-9;
     check(
       'a tap where a rail line runs over a jeep road: the LRT filter frames the rail',
-      liveries.some((l) => l?.startsWith('lrt')) &&
+      liveries.some((l) => l?.includes('rail')) &&
         liveries.includes('jeep') &&
         listed.length > 0 &&
         sameIds(lit, listed) &&
