@@ -9,7 +9,10 @@ export type ReadFixesAfter = (after: number | null) => Promise<WatchedFix[]>;
 export interface FixCatchUp {
   /** Reads the log for what the recorder has not had yet; a read under way is not doubled. */
   readLog: () => void;
-  /** Hands one live fix on, or holds it until a read of the log has gone out first. */
+  /**
+   * Hands one live fix on, or holds it until a read of the log has gone out first: always before
+   * the first read, so the fixes the service kept before the watch began are not skipped.
+   */
   handleLive: (fix: WatchedFix) => void;
 }
 
@@ -17,7 +20,10 @@ export interface FixCatchUp {
  * How the live fixes and the native log reach the recorder. The log is read for the fixes after
  * the last one handed on (all of them before the first), so a wake or a silence late in a long
  * ride brings only the missing stretch, not the whole ride. While it is being read, live fixes
- * wait and go out after it, so the recorder gets the missing stretch before anything newer.
+ * wait and go out after it, so the recorder gets the missing stretch before anything newer. A
+ * live fix before the first read waits for it too: handed on first, it would set where the read
+ * starts, and the fixes logged before it (between the page's opening import and the watch's start)
+ * would never reach the recorder.
  */
 export function createFixCatchUp(
   readAfter: ReadFixesAfter,
@@ -25,6 +31,7 @@ export function createFixCatchUp(
 ): FixCatchUp {
   let lastTime: number | null = null;
   let isReading = false;
+  let hasRead = false;
   let waiting: WatchedFix[] = [];
 
   const deliver = (fixes: WatchedFix[]) => {
@@ -42,7 +49,13 @@ export function createFixCatchUp(
       })
       .then((fromLog) => {
         isReading = false;
-        const merged = [...fromLog, ...waiting];
+        hasRead = true;
+        // A waiting live fix the log already holds goes out once, from the log.
+        const logEnd = fromLog[fromLog.length - 1]?.timestamp ?? null;
+        const merged = [
+          ...fromLog,
+          ...waiting.filter((fix) => logEnd === null || fix.timestamp > logEnd),
+        ];
         waiting = [];
         if (merged.length > 0) deliver(merged);
       });
@@ -50,7 +63,7 @@ export function createFixCatchUp(
 
   const handleLive = (fix: WatchedFix) => {
     const isAfterSilence = lastTime !== null && fix.timestamp - lastTime > GAP_MS;
-    if (isReading || isAfterSilence) {
+    if (isReading || !hasRead || isAfterSilence) {
       waiting.push(fix);
       readLog();
       return;
