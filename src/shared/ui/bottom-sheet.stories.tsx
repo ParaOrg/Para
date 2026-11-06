@@ -3,6 +3,8 @@ import type { ComponentProps } from 'react';
 import { useState } from 'react';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
+import { cn } from '@/shared/utils/cn';
+
 import { BottomSheet } from './bottom-sheet';
 import type { Snap } from './sheet-gesture';
 import { SheetHeader } from './sheet-header';
@@ -58,15 +60,17 @@ const meta = {
   // `@container`, as the apps' roots are, and `data-dock-host`, as the page
   // is. The `phone` parameter shrinks the box to a handset, where it docks
   // along the bottom; otherwise it is 1024 wide, where it floats (`@float:`).
+  // `underSearch` sets `--sheet-float-top` as the public map does under its place search.
   decorators: [
     (Story, ctx) => (
       <div
         data-dock-host
-        className={
+        className={cn(
           ctx.parameters.phone
             ? '@container relative h-[700px] w-[390px] overflow-clip bg-surface-quaternary'
-            : '@container relative h-[40rem] w-[1024px] overflow-clip bg-surface-quaternary'
-        }
+            : '@container relative h-[40rem] w-[1024px] overflow-clip bg-surface-quaternary',
+          ctx.parameters.underSearch && '[--sheet-float-top:7.375rem]',
+        )}
       >
         <Story />
       </div>
@@ -218,6 +222,32 @@ export const Hidden: Story = {
 /** A wide map: the route list's and a trip's panel, flush in the top-left corner, 384 wide. */
 export const Corner: Story = { parameters: { phone: false } };
 
+/** The sheet's top and bottom against its host, rounded to the pixel. */
+const sheetEdges = (canvasElement: HTMLElement) => {
+  const host = (
+    canvasElement.querySelector('[data-dock-host]') ?? canvasElement
+  ).getBoundingClientRect();
+  const sheet = within(canvasElement).getByTestId('card').getBoundingClientRect();
+  return {
+    top: Math.round(sheet.top - host.top),
+    bottomGap: Math.round(host.bottom - sheet.bottom),
+  };
+};
+
+/**
+ * The corner panel under the public map's place search (`--sheet-float-top`, 118 = 7.375rem):
+ * it starts there, and a long body still ends inside the map.
+ */
+export const CornerUnderSearch: Story = {
+  args: { children: <Rows count={30} /> },
+  parameters: { phone: false, underSearch: true },
+  play: async ({ canvasElement }) => {
+    const { top, bottomGap } = sheetEdges(canvasElement);
+    await expect(top).toBe(118);
+    await expect(bottomGap).toBeGreaterThanOrEqual(0);
+  },
+};
+
 /** A wide map, `floats="card"`: the studio's card, 16 in, rounded, with its own shadow. */
 export const Card: Story = { args: { floats: 'card' }, parameters: { phone: false } };
 
@@ -325,6 +355,17 @@ export const Footer: Story = {
 export const FooterAtLow: Story = {
   render: (args) => <Keeping {...args} startsAt="low" />,
   args: { footer, header: null, shape: LIST_SHAPE, height: { snap: 'low', onSnap: fn() } },
+};
+
+/** The docked list under the public map's place search: from 118 down to the map's bottom. */
+export const DockUnderSearch: Story = {
+  args: { floats: 'dock', footer, header: null, handle: 'hidden', children: <Rows count={30} /> },
+  parameters: { phone: false, underSearch: true },
+  play: async ({ canvasElement }) => {
+    const { top, bottomGap } = sheetEdges(canvasElement);
+    await expect(top).toBe(118);
+    await expect(bottomGap).toBe(0);
+  },
 };
 
 /** `floats="dock"` on a wide screen: the map's whole height on the left, 368 wide, the footer beside it. */
