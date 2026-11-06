@@ -309,6 +309,11 @@ function TokensPage() {
           cls="bg-map-route-line-arrow-inverse"
         />
         <Swatch
+          box="bg-map-route-line-casing"
+          token="Map/RouteLine/casing"
+          cls="bg-map-route-line-casing"
+        />
+        <Swatch
           box="bg-map-route-line-hintuan-surface-default"
           token="Map/RouteLine/Hintuan/surface-default"
           cls="bg-map-route-line-hintuan-surface-default"

@@ -25,6 +25,7 @@ import {
   hiddenHotspotFilters,
 } from '../../src/features/routes/map/saved-hotspots-layers.ts';
 import { hotspotsData } from '../../src/features/routes/map/saved-hotspots-data.ts';
+import { liveryOf } from '../../src/features/routes/model/liveries.ts';
 import { directionLine, isRailLine } from '../../src/features/routes/model/routes.ts';
 import { hotspotRing, nameOnMap } from '../../src/features/routes/model/hotspots.ts';
 import { labelGroups } from '../../src/features/routes/model/places.ts';
@@ -306,9 +307,9 @@ const stops = index.stops;
 
 /**
  * What the routes' effect laid out before 2026-10-04, word for word, with
- * the one property added since: `line`, the train line a route runs on, ''
- * for every other, which picks the resting layer that draws it (a train's
- * pale, the owner's ask of 2026-10-13).
+ * the two properties added since, which pick the resting layer that draws a
+ * route: `line`, the train line it runs on, '' for every other (a train's
+ * pale), and `look`, what it wears (liveryOf), for a road mode's colour.
  */
 const routesBefore = (rows) => ({
   type: 'FeatureCollection',
@@ -323,6 +324,7 @@ const routesBefore = (rows) => ({
         name: v.route?.name ?? '',
         mode: v.route?.mode ?? 'jeepney',
         line: isRailLine(v.route?.routeCode) ? v.route.routeCode : '',
+        look: liveryOf(v),
       },
       geometry: { type: 'LineString', coordinates: line },
     })),
