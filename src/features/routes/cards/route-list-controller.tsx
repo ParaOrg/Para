@@ -4,15 +4,16 @@ import { IconButton, type TooltipPosition } from '@/design-system/primitives/ico
 import { ArrowLeftRightIcon, CloseLargeIcon, FilterIcon } from '@/shared/ui/route-icons';
 
 import { ModeFilterCard } from './mode-filter-card';
-import { MODE_FILTER_LABEL, type ModeFilter } from '../model/mode-filter';
+import { MODE_FILTER_LABEL, type ModeFilterControl } from '../model/mode-filter';
 
-type RouteListControllerLayout = 'row' | 'column';
+type RouteListControllerLayout = 'row' | 'column' | 'auto';
 
 interface RouteListControllerProps {
   /**
    * Figma's Property 1: Default, a row along a phone sheet's foot, ✕ at the left and ⇆ over the
    * filter at the right; Variant2, a column beside the list docked on a wide screen, ✕ then ⇆ and
-   * the filter.
+   * the filter. `auto`: the row on a phone's sheet and the column where the sheet docks
+   * (`sheet-floating:`), as the route list wears it.
    */
   layout: RouteListControllerLayout;
   /**
@@ -25,22 +26,32 @@ interface RouteListControllerProps {
   /** Whether the way back is showing, for the suites (`data-back`). */
   isBack: boolean;
   onSwitch: () => void;
-  filter: ModeFilter;
-  onFilter: (filter: ModeFilter) => void;
+  /**
+   * The filter the sliders open, kept by the caller, who lights the map to match; without one, no
+   * sliders.
+   */
+  modeFilter?: ModeFilterControl;
   onClose: () => void;
 }
 
 const LAYOUT = {
   row: 'flex w-full items-end justify-between px-6 pb-8',
   column: 'flex w-22 flex-col items-center gap-2 px-5 pt-5 pb-8',
+  auto:
+    'flex w-full items-end justify-between px-6 pb-8 ' +
+    'sheet-floating:w-22 sheet-floating:flex-col sheet-floating:items-center sheet-floating:justify-start sheet-floating:gap-2 sheet-floating:px-5 sheet-floating:pt-5',
 } satisfies Record<RouteListControllerLayout, string>;
 
-/** Where the tooltips point from: above the row at a phone's foot, beside the column. */
-const CLOSE_TOOLTIP = { row: 'bottom', column: 'left' } satisfies Record<
+/**
+ * Where the tooltips point from: above the row at a phone's foot, beside the column. `auto`, which
+ * is either, points each bubble inward, to fit in both: ✕'s to its right, the others' to their
+ * left, over the list where it docks.
+ */
+const CLOSE_TOOLTIP = { row: 'bottom', column: 'left', auto: 'left' } satisfies Record<
   RouteListControllerLayout,
   TooltipPosition
 >;
-const SIDE_TOOLTIP = { row: 'right', column: 'left' } satisfies Record<
+const SIDE_TOOLTIP = { row: 'right', column: 'left', auto: 'right' } satisfies Record<
   RouteListControllerLayout,
   TooltipPosition
 >;
@@ -57,12 +68,12 @@ export function RouteListController({
   isSwitchable,
   isBack,
   onSwitch,
-  filter,
-  onFilter,
+  modeFilter,
   onClose,
 }: RouteListControllerProps) {
   const filterCardId = useId();
   const filterCardRef = useRef<HTMLDivElement>(null);
+  const filter = modeFilter?.filter ?? 'all';
   const isFiltered = filter !== 'all';
   return (
     <div data-testid="chooser-controller" className={LAYOUT[layout]}>
@@ -86,24 +97,33 @@ export function RouteListController({
             onClick={onSwitch}
           />
         )}
-        <span className="relative flex">
-          <IconButton
-            size="large"
-            icon={<BrandIcon icon={<FilterIcon />} />}
-            label={isFiltered ? `Filter: ${MODE_FILTER_LABEL[filter]}` : 'Filter'}
-            tooltip={SIDE_TOOLTIP[layout]}
-            data-testid="chooser-filter"
-            popoverTarget={filterCardId}
-          />
-          {isFiltered && (
-            <span
-              aria-hidden
-              className="pointer-events-none absolute top-0 right-0 size-3 rounded-full bg-brand-surface ring-2 ring-surface"
+        {modeFilter && (
+          <span className="relative flex">
+            <IconButton
+              size="large"
+              icon={<BrandIcon icon={<FilterIcon />} />}
+              label={isFiltered ? `Filter: ${MODE_FILTER_LABEL[filter]}` : 'Filter'}
+              tooltip={SIDE_TOOLTIP[layout]}
+              data-testid="chooser-filter"
+              popoverTarget={filterCardId}
             />
-          )}
-        </span>
+            {isFiltered && (
+              <span
+                aria-hidden
+                className="pointer-events-none absolute top-0 right-0 size-3 rounded-full bg-brand-surface ring-2 ring-surface"
+              />
+            )}
+          </span>
+        )}
       </div>
-      <ModeFilterCard id={filterCardId} ref={filterCardRef} filter={filter} onFilter={onFilter} />
+      {modeFilter && (
+        <ModeFilterCard
+          id={filterCardId}
+          ref={filterCardRef}
+          filter={modeFilter.filter}
+          onFilter={modeFilter.onFilter}
+        />
+      )}
     </div>
   );
 }
