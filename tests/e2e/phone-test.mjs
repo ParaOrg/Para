@@ -1556,7 +1556,7 @@ const tripChecks = async () => {
       const r = pin?.getBoundingClientRect();
       const c = m.getCanvas().getBoundingClientRect();
       const q = at && m.project(at);
-      // The card's pale, Card/<livery>/surface-pale (tokens.css's own variable; the
+      // A road ride's rest: a line at rest, Map/RouteLine/surface-default (its own variable; the
       // @theme inline alias is never emitted), as the DOM computes it, oklch as the
       // rings come: what the dots along the rest wear.
       const probe = document.createElement('span');
@@ -1566,7 +1566,7 @@ const tripChecks = async () => {
         ? `var(--map-rail-${livery}-surface-pale)`
         : livery === 'ferry'
           ? 'var(--map-ferry-surface-pale)'
-          : `var(--card-${livery}-surface-pale)`;
+          : 'var(--map-route-line-surface-default)';
       document.body.append(probe);
       const cardPale = getComputedStyle(probe).backgroundColor;
       // The picked end's circle is End's red, whatever the line.
