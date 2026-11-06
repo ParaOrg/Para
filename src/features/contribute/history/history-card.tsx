@@ -15,6 +15,8 @@ interface HistoryCardProps {
   status: UploadStatus;
   /** Its distance and trail; null until read, and for an upload the database told nothing of. */
   facts: RideFacts | null;
+  /** What an editor made of it on the map, by name; empty until one uses it. */
+  usedFor?: readonly string[];
   /** The picture of its whole trail on the map, taken as its form opened; null for none. */
   picture: string | null;
   /** Whether the phone has a connection: queued reads "Waiting for signal" without one. */
@@ -34,6 +36,7 @@ export function HistoryCard({
   recording,
   status,
   facts,
+  usedFor = [],
   picture,
   isOnline,
   onOpen,
@@ -82,6 +85,11 @@ export function HistoryCard({
           </div>
           <div className="flex flex-col gap-2">
             <CardMeta recording={recording} facts={facts} />
+            {usedFor.length > 0 && (
+              <p className="line-clamp-2 text-xs/4 break-words text-content-success">
+                On the map: {usedFor.join(', ')}
+              </p>
+            )}
             {/* Only a retry stands above the card's press area: a tap on the line's words
                 opens the ride, as anywhere else on the card. */}
             <div className="pointer-events-none relative z-10 flex h-4 items-center [&_button]:pointer-events-auto">

@@ -37,7 +37,7 @@ export function HistoryScreen({ items, pictures, onOpenRecord, onOpenRide }: His
   const entryRef = useScreenEntry<HTMLElement>();
   const [isScrolled, setIsScrolled] = useState(false);
   const isOnline = useIsOnline();
-  const { recordings, uploads, factsOf, load } = items;
+  const { recordings, uploads, factsOf, usedOf, load } = items;
   // Nothing to list until the account's uploads come: their cards' shapes stand in for them.
   const isFirstLoad = load.state === 'loading' && recordings.length === 0;
   const isSkeletonShown = useIsSlowLoad(isFirstLoad);
@@ -86,6 +86,7 @@ export function HistoryScreen({ items, pictures, onOpenRecord, onOpenRide }: His
                 recording={recording}
                 status={uploads.statusOf(recording)}
                 facts={factsOf(recording)}
+                usedFor={usedOf(recording)}
                 picture={pictures.get(recording.id) ?? null}
                 isOnline={isOnline}
                 onOpen={() => onOpenRide(recording)}
