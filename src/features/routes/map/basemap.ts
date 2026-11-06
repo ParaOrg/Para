@@ -196,23 +196,64 @@ function isStyle(raw: unknown): raw is StyleSpecification {
  * labels hidden: location-labels.ts) fetches its style here and is dressed
  * before the map exists — one request, the same one MapLibre would have made,
  * and no plain-gray flash first. If the fetch fails, or brings no style
- * (isStyle), the plain URL goes in instead, and MapLibre's own error path
- * reports what it can.
+ * (isStyle), the page's copy goes in (`copies`), else a flat style; with no
+ * copies at all, the plain URL, and MapLibre's own error path reports what it can.
  */
 export async function initialStyle(
   b: Basemap,
   areLabelsShown: boolean,
+  copies?: StyleCopies,
 ): Promise<StyleSpecification | string> {
-  if (isPlain(b) && areLabelsShown) return b.url;
+  if (!copies && isPlain(b) && areLabelsShown) return b.url;
+  const fetched = await fetchStyle(b.url);
+  if (fetched) copies?.keep(b, fetched);
+  const style = fetched ?? (copies ? await copyOf(b, copies) : null);
+  return style ? withLocationLabels(dressed(b, style), areLabelsShown) : b.url;
+}
+
+/**
+ * Where a page keeps copies of the basemaps' styles, for a map made with no signal: the
+ * contributor app's (features/contribute/map/basemap-copies.ts). Without it the map has the
+ * style's URL, and no style offline.
+ */
+export interface StyleCopies {
+  /** A copy of the design's style, undressed, as read: checked here (isStyle). Null with none. */
+  read: (b: Basemap) => Promise<unknown>;
+  /** The design's style as just fetched, undressed, to keep as its copy. */
+  keep: (b: Basemap, style: StyleSpecification) => void;
+}
+
+/** The style at `url`, or null when it cannot be fetched or is not a style. */
+async function fetchStyle(url: string): Promise<StyleSpecification | null> {
   try {
-    const r = await fetch(b.url);
-    if (!r.ok) return b.url;
+    const r = await fetch(url);
+    if (!r.ok) return null;
     const style: unknown = await r.json();
-    return isStyle(style) ? withLocationLabels(dressed(b, style), areLabelsShown) : b.url;
+    return isStyle(style) ? style : null;
   } catch {
-    return b.url;
+    return null;
   }
 }
+
+/**
+ * The page's copy of the design's style; with none, a flat one, so the map still loads and
+ * what is drawn on it shows.
+ */
+async function copyOf(b: Basemap, copies: StyleCopies): Promise<StyleSpecification> {
+  try {
+    const copy = await copies.read(b);
+    if (copy && isStyle(copy)) return copy;
+  } catch (error) {
+    console.warn('No copy of the basemap could be read; the map is flat.', error);
+  }
+  return FLAT_STYLE;
+}
+
+/**
+ * The map with no basemap at all: no roads, no labels, no 3D. It has no layer of its own, so the
+ * map's own ground (MapView's surface-secondary) shows through. Pure data, as `dressed` leaves it.
+ */
+const FLAT_STYLE: StyleSpecification = { version: 8, sources: {}, layers: [] };
 
 // -------------------------------------------------------------- the switch
 
