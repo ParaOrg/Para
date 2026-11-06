@@ -8,6 +8,7 @@
  * Content/inverse, never a colour of their own.
  */
 
+import controllerSprite from './route-list-icons.svg?url&no-inline';
 import vehicleSprite from './vehicle-icons.svg?url&no-inline';
 
 /** The side-on jeep, beside a hintuan card's count. */
@@ -205,4 +206,32 @@ export function FerryIcon() {
 /** The UV Express van, from the vehicle sprite. */
 export function UvExpressIcon() {
   return <SpriteIcon id="uv-express" />;
+}
+
+interface ControllerSpriteIconProps {
+  /** The drawing's id in route-list-icons.svg. */
+  id: 'close-large' | 'arrow-left-right-large' | 'filter-large';
+}
+
+function ControllerSpriteIcon({ id }: ControllerSpriteIconProps) {
+  return (
+    <svg viewBox="0 0 28 28" fill="currentColor" aria-hidden>
+      <use href={`${controllerSprite}#${id}`} />
+    </svg>
+  );
+}
+
+/** Figma's closeLarge (4633:22012), 28 across: the route list Controller's ✕. */
+export function CloseLargeIcon() {
+  return <ControllerSpriteIcon id="close-large" />;
+}
+
+/** Figma's arrow-left-right-large (4633:22014), 28 across: the Controller's ⇆, every route the other way round. */
+export function ArrowLeftRightIcon() {
+  return <ControllerSpriteIcon id="arrow-left-right-large" />;
+}
+
+/** Figma's filter-large (4633:22015), 28 across: the Controller's sliders, opening the route list's filter. */
+export function FilterIcon() {
+  return <ControllerSpriteIcon id="filter-large" />;
 }
