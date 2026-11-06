@@ -79,7 +79,7 @@ function Picking(props: ComponentProps<typeof RouteCardStack>) {
       selected={selected}
       onSelect={(p) => {
         props.onSelect(p);
-        setSelected(p?.from ?? null);
+        setSelected(p?.card ?? null);
       }}
     />
   );
@@ -119,7 +119,7 @@ export const TwoPlaces: Story = { args: { back: true } };
 export const InAHotspotCard: Story = { parameters: { frame: 'hotspot' } };
 
 /** The way back with SM Fairview's card Selected: pressed in, the other at rest. */
-export const OneSelected: Story = { args: { back: true, selected: 'SM Fairview' } };
+export const OneSelected: Story = { args: { back: true, selected: 'SM Fairview|jeep' } };
 
 /**
  * A station: its jeeps on its RouteCard, then a RouteCardRailway per line and
@@ -159,5 +159,39 @@ export const ARowOpens: Story = {
     await expect(args.onSelect).toHaveBeenCalledWith(expect.objectContaining({ from: 'Tala' }));
     await userEvent.click(canvas.getByRole('button', { name: 'Tala', pressed: true }));
     await expect(args.onSelect).toHaveBeenLastCalledWith(null);
+  },
+};
+
+/** A road route out of `from` to `to`, on this mode. */
+function road(id: string, from: string, to: string, mode: Direction['route']['mode']): Direction {
+  const v = direction(id, `${from} – ${to}`, `${from} → ${to}`, 4);
+  return { ...v, route: { ...v.route, mode } };
+}
+
+/**
+ * RouteCardStackedList (4633:19780): a card per place and mode, edge to edge, run by mode (Jeep,
+ * UV Express, E-Jeep, Bus, then the trains); a run draws its mode on its first card only.
+ */
+export const StackedList: Story = {
+  args: {
+    routes: [
+      road('t1', 'Tala', 'SM Fairview', 'jeepney'),
+      road('t2', 'Tala', 'Novaliches', 'jeepney'),
+      road('b1', 'Bigte', 'SM Fairview', 'jeepney'),
+      road('b2', 'Bigte', 'Novaliches', 'jeepney'),
+      road('s1', 'S. Palay', 'GMA', 'bus'),
+      road('s2', 'S. Palay', 'PITX', 'bus'),
+      road('u1', 'SM Fairview', 'SM North', 'uv_express'),
+      road('u2', 'SM Fairview', 'Buendia', 'uv_express'),
+      road('p1', 'Palmer', 'SM Fairview', 'e_jeepney'),
+      road('p2', 'Palmer', 'Cubao', 'e_jeepney'),
+      road('a1', 'Amparo Sanana', 'Novaliches', 'jeepney'),
+      road('r1', 'Robinson Fairview', 'Munoz', 'bus'),
+      ...cubao.slice(1, 2),
+    ],
+  },
+  play: async ({ canvasElement }) => {
+    const modes = within(canvasElement).getAllByText(/^(Jeep|UV Express|E-Jeep|Bus)$/);
+    await expect(modes.map((m) => m.textContent)).toEqual(['Jeep', 'UV Express', 'E-Jeep', 'Bus']);
   },
 };

@@ -212,7 +212,10 @@ export const RouteCards: Story = {
 
 /** Tala's card picked: pressed in, its routes lit on the map. */
 export const RouteCardsSelected: Story = {
-  args: { ...RouteCards.args, routeCards: { selected: 'Tala', onSelect: fn(), onShown: fn() } },
+  args: {
+    ...RouteCards.args,
+    routeCards: { selected: 'Tala|jeep', onSelect: fn(), onShown: fn() },
+  },
 };
 
 /** ⇄ pressed: the way back, a card per place — Novaliches, SM Fairview — never alike side by side; it lets a picked card go. */

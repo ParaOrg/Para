@@ -60,8 +60,10 @@ const PILL_LABEL = {
  * Figma's RouteCardRailway (4261:15199): one card per line and bound, in the
  * line's own colours. Over the station's name, its vehicle in a chip and the
  * line's pill beside it, both in the pill's colours; the name has the origin's
- * badge after it, and under it a row per station it goes to (RouteEndPointBar),
- * each with its station's badge in the row's slot. The ferry has no badges.
+ * station code after it, and under it a row per station it goes to
+ * (RouteEndPointBar), each with its station's code in the row's slot
+ * (RouteCardStackedList, 4633:25360). A station rail-codes.ts does not know, and
+ * the ferry, show no code.
  *
  * It behaves as RouteCard does: a row opens its trip; a tap anywhere else
  * selects the card, or lets it go, State=Selected pressing it in under the
@@ -89,7 +91,7 @@ export function RouteCardRailway({
       data-livery={livery}
       data-state={state}
       className={
-        'relative isolate flex w-full flex-col items-start gap-2.5 overflow-clip border-y-[0.6px] py-2 font-sn-pro ' +
+        'relative isolate flex w-full flex-col items-start gap-2.5 overflow-clip border-y-0-6 py-2 font-sn-pro ' +
         CARD_SURFACE[livery] +
         ' ' +
         CARD_TEXT[livery]
@@ -110,7 +112,7 @@ export function RouteCardRailway({
         <p
           data-testid={`${testId}-pill`}
           className={
-            'rounded-full px-2.5 py-0.5 text-xl/7 font-semibold whitespace-nowrap ' +
+            'rounded-full px-2.5 py-0.5 text-lg/7 font-medium whitespace-nowrap ' +
             RAILWAY_PILL[railway]
           }
         >
@@ -131,9 +133,7 @@ export function RouteCardRailway({
           >
             {routeOrigin}
           </button>
-          {railLine && originCode && (
-            <RailwayBadge kind="start" railway={railLine} code={originCode} />
-          )}
+          {railLine && originCode && <RailwayBadge railway={railLine} code={originCode} />}
         </div>
         <ul className="flex w-full flex-col">
           {endPoints.map((e, index) => (
@@ -148,7 +148,7 @@ export function RouteCardRailway({
                   e.stationCode && (
                     <>
                       <span className="sr-only">, </span>
-                      <RailwayBadge kind="end" railway={railLine} code={e.stationCode} />
+                      <RailwayBadge railway={railLine} code={e.stationCode} />
                     </>
                   )
                 }

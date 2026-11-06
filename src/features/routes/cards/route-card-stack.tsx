@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import { RouteCard } from './route-card';
 import { RouteCardRailway } from './route-card-railway';
 import { routeCards, type Listing } from '../model/departures';
-import { liveryOf, type Livery } from '../model/liveries';
+import type { Livery } from '../model/liveries';
 import { stationCode } from '../model/rail-codes';
 import { directionEnds, railLineOf, type Direction } from '../model/routes';
 import { vehicleOf } from '../model/vehicles';
@@ -69,13 +69,9 @@ export function RouteCardStack({
 }: Props) {
   const places = routeCards(routes, back, listing);
 
-  // A card wears its first row's mode's colour, a train or ferry card its line's (liveryOf);
-  // routeCards leaves no card empty.
-  const liveries = places.map((p) => liveryOf(p.directions[0].v));
-
   const byId = new Map(places.flatMap((p) => p.directions.map((d) => [d.v.id, d.v] as const)));
 
-  const pick = (p: (typeof places)[number], i: number) =>
+  const pick = (p: (typeof places)[number]) =>
     onSelect(
       selected === p.card
         ? null
@@ -83,12 +79,12 @@ export function RouteCardStack({
             card: p.card,
             from: p.from,
             ids: p.directions.map((d) => d.v.id),
-            livery: liveries[i],
+            livery: p.livery,
           },
     );
-  const open = (id: string, i: number) => {
+  const open = (id: string, livery: Livery) => {
     const v = byId.get(id);
-    if (v) onRoute(v, liveries[i]);
+    if (v) onRoute(v, livery);
   };
 
   return (
@@ -111,14 +107,15 @@ export function RouteCardStack({
                 stationCode: line && stationCode(line, directionEnds(d.v).to),
               };
             })}
-            onSelect={() => pick(p, i)}
-            onPick={(id) => open(id, i)}
+            onSelect={() => pick(p)}
+            onPick={(id) => open(id, p.livery)}
           />
         ) : (
           <RouteCard
             key={p.card}
             testId={testId}
-            livery={liveries[i]}
+            livery={p.livery}
+            showsMode={i === 0 || places[i - 1].livery !== p.livery}
             state={selected === p.card ? 'selected' : 'rest'}
             routeOrigin={p.from}
             endPoints={p.directions.map((d) => ({
@@ -126,12 +123,12 @@ export function RouteCardStack({
               routeDirection: d.to,
               vehicle: vehicleOf(d.v),
             }))}
-            onSelect={() => pick(p, i)}
-            onPick={(id) => open(id, i)}
+            onSelect={() => pick(p)}
+            onPick={(id) => open(id, p.livery)}
           />
         ),
       )}
-      {end && places.length > 0 && end(liveries[places.length - 1])}
+      {end && places.length > 0 && end(places[places.length - 1].livery)}
     </>
   );
 }

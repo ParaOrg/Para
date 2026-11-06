@@ -199,7 +199,7 @@ export const Phone: Story = {};
 export const Switched: Story = { args: { back: true } };
 
 /** Tala's card picked: pressed in, its routes alone lit on the map. */
-export const ACardSelected: Story = { args: { back: true, selected: 'Tala' } };
+export const ACardSelected: Story = { args: { back: true, selected: 'Tala|jeep' } };
 
 /**
  * From 1024 wide, flush in the top-left corner, 384 wide (Figma 3750:1911).

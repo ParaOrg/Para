@@ -36,10 +36,10 @@ New variables: `Card/{Jeep,UVExpress,Ejeep,Bus}/{…-surface, …-surface-second
 
 | # | Pull request | Status |
 | --- | --- | --- |
-| 1 | Tokens: the mode card variables, added only | [#779](https://github.com/ParaOrg/Para/pull/779) |
+| 1 | Tokens: the mode card variables, added only | [#779](https://github.com/ParaOrg/Para/pull/779), merged |
 | 2 | Deletions, and mode → look (decisions 10 and 7) | [#780](https://github.com/ParaOrg/Para/pull/780) |
-| 3 | RouteCard restyle | In review |
-| 4 | RouteCardStackedList, with the railway card | |
+| 3 | RouteCard restyle | [#781](https://github.com/ParaOrg/Para/pull/781) |
+| 4 | RouteCardStackedList, with the railway card | In review |
 | 5 | The Controller, with the filter | |
 | 6 | Sheet layout: docked on desktop, the mobile Controller at the bottom, Max full screen | |
 | 7 | Commuter map wiring | |
@@ -58,6 +58,8 @@ Figma's leaf names repeat their group (`Card/Jeep/Jeep-surface`). The tokens dro
 - **On the light cards** (UV Express, E-Jeep) the picked hintuan's pill is dark (on-surface) with the card's colour for words, as MRT-3's yellow does; the mode chip's vehicle is in on-surface.
 - **Lit lines** for UV Express and E-Jeep are their `surface-border` with dark chevrons, until step 9 checks them on the basemap.
 - **Draft** in the studio's line detail and **Retry** on the contributor's history keep their orange (orange/700) through a provisional `Content/warning` token, not named in Figma yet.
+
+- **The list's order** is by mode: Jeep, UV Express, E-Jeep, Bus, then the trains and the ferry, each mode's places in the order met. A place with two modes is two cards.
 
 ## Waiting on the owner
 
