@@ -31,6 +31,7 @@ New variables: `Card/{Jeep,UVExpress,Ejeep,Bus}/{…-surface, …-surface-second
 11. **Mobile sheet:** the drag and the Low / Middle / Max snaps stay; Max fills the whole screen. No handle unless Figma draws one; no scrollbar.
 12. **The studio** uses the same list, layout and filter. Its trip card keeps its editor extras.
 13. **Station codes** ("PL01") from `rail-codes.ts` where one exists, otherwise nothing. The S and E icons beside them go.
+14. **The filter on the map** (step 7): the filter starts at All with each new list. Changing it frames the routes still lit, as ⇆ does, and lets a Selected card go. A hintuan's or terminal's own card does not follow it.
 
 ## Status (handed over 2026-11-06)
 
@@ -47,7 +48,7 @@ This session stopped here; the owner's own sessions carry on. Each PR is stacked
 | 6 | Sheet layout: docked on desktop, the mobile Controller at the bottom, Max full screen | Merged: [#794](https://github.com/ParaOrg/Para/pull/794), 406.1 kB. Its profile-test failures came from staging's #793 and were fixed by #796; phone-test once ran into its 30-minute timeout on a slow runner and passed on re-run |
 | 6a | The sheet's scroll lag (no look change) | Merged: [#797](https://github.com/ParaOrg/Para/pull/797), 406.3 kB. The chevrons pause while the map is out of sight; the dock host is written only at rest |
 | 6b | The trip card's two plays (test-only) | Open PR (branch `claude/trip-card-plays`) |
-| 7 | Commuter map wiring | Not started |
+| 7 | Commuter map wiring | Open PR (branch `claude/route-card-commuter-wiring`) |
 | 8 | Studio wiring | Not started |
 | 9 | Map lines in the mode colours | Not started |
 
