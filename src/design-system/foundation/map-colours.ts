@@ -28,7 +28,7 @@ export const MAP_COLOURS = {
   // Provisional: not named in Figma yet. papunta and pabalik colour the studio's Contributors map;
   // lakad and sakay are /contribute/'s own trail as it is drawn live.
   'Map/Trail/papunta': '#1447e6', // blue/700
-  'Map/Trail/pabalik': '#ca3500', // orange/700, the orange of Card/orange/surface
+  'Map/Trail/pabalik': '#ca3500', // orange/700
   'Map/Trail/lakad': '#1447e6', // blue/700, the contributor page's walked line: the tint's Lakad
   'Map/Trail/sakay': '#008236', // green/700, its ridden line: the tint's Sakay
   'Map/Trail/mark': '#8200db', // purple/700, apart from both ways
@@ -64,35 +64,17 @@ export const MAP_OPACITY = {
 } as const satisfies Partial<Record<keyof typeof MAP_COLOURS, number>>;
 
 /**
- * The RouteCards' Card/<livery>/surface, in hex, for the map: a picked
- * card's routes, and an open trip's line, wear their card's colour. Each hex
- * is the primitive its token aliases, held to tokens.css by
+ * The mode cards' colours a lit line wears, in hex (RouteCard, 4629:22776): Jeep's and Bus's
+ * surface; UV Express's and E-Jeep's surface-border, as their light surfaces would not show on the
+ * basemap. Each hex is the primitive its token aliases, held to tokens.css by
  * tests/unit/map-colours-test.mjs as the Map/… ones are.
  */
-export const CARD_COLOURS = {
-  'Card/red/surface': '#9f0712', // red/800
-  'Card/orange/surface': '#ca3500', // orange/700
-  'Card/violet/surface': '#7008e7', // violet/700
-  'Card/rose/surface': '#c70036', // rose/700
-  'Card/fuchsia/surface': '#a800b7', // fuchsia/700
-  'Card/pink/surface': '#c6005c', // pink/700
-} as const satisfies Record<`Card/${string}/surface`, `#${string}`>;
-
-/**
- * The RouteCards' Card/<livery>/surface-pale, in hex, for the map: the rest
- * of an open trip's line past a picked hintuan, from there to where the trip
- * goes, in the card's own hue paled. Each hex is the primitive its token
- * aliases, each hue's 300, held to tokens.css by
- * tests/unit/map-colours-test.mjs as CARD_COLOURS is.
- */
-export const CARD_PALE_COLOURS = {
-  'Card/red/surface-pale': '#ffa2a2', // red/300
-  'Card/orange/surface-pale': '#ffb86a', // orange/300
-  'Card/violet/surface-pale': '#c4b4ff', // violet/300
-  'Card/rose/surface-pale': '#ffa1ad', // rose/300
-  'Card/fuchsia/surface-pale': '#f4a8ff', // fuchsia/300
-  'Card/pink/surface-pale': '#fda5d5', // pink/300
-} as const satisfies Record<`Card/${string}/surface-pale`, `#${string}`>;
+export const MODE_COLOURS = {
+  'Card/Jeep/Jeep-surface': '#1447e6', // blue/700
+  'Card/UVExpress/UVExpress-surface-border': '#a1a1a1', // neutral/400
+  'Card/Ejeep/Ejeep-surface-border': '#d4d4d4', // neutral/300
+  'Card/Bus/Bus-surface': '#ca3500', // orange/700
+} as const satisfies Record<`Card/${string}`, `#${string}`>;
 
 /**
  * Everything else the map paints — the public map's and the editor's: colours

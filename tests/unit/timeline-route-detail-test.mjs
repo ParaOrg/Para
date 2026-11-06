@@ -35,7 +35,7 @@ const { TimelineRouteDetail } = await vite.ssrLoadModule(
 const render = (n, props = {}) =>
   renderToStaticMarkup(
     createElement(TimelineRouteDetail, {
-      livery: 'violet',
+      livery: 'bus',
       routeOrigin: 'Tala',
       hintuans: Array.from({ length: n }, (_, i) => ({ id: `h${i}`, label: `Hintuan ${i}` })),
       picked: null,
@@ -185,15 +185,15 @@ test('the S on white with a green disc, the E on white with a red disc, the butt
   const button = /<button[^>]*class="([^"]*)"[^>]*>(?:(?!<\/button>).)*Remove as start/s.exec(
     html,
   )?.[1];
-  assert.match(button, /\bbg-card-violet-surface\b/);
-  assert.match(button, /\busable:active:bg-card-violet-timeline-surface\b/);
+  assert.match(button, /\bbg-card-bus-surface\b/);
+  assert.match(button, /\busable:active:bg-card-bus-surface-secondary\b/);
   assert.doesNotMatch(button, /\bbg-brand-surface\b/);
   // Set as start, under an end alone, wears them too.
   const choosing = render(5, { picked: 'h2', onSetStart() {} });
   const set = /<button[^>]*class="([^"]*)"[^>]*>(?:(?!<\/button>).)*Set as start/s.exec(
     choosing,
   )?.[1];
-  assert.match(set, /\bbg-card-violet-surface\b/);
+  assert.match(set, /\bbg-card-bus-surface\b/);
 });
 
 test('an end alone carries Set as start; with no start the origin keeps its S', () => {

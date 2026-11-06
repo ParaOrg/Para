@@ -10,10 +10,10 @@ const STATUS_LABEL = {
   published: 'Published',
 } satisfies Record<LineStatus, string>;
 
-// Figma 4300:20893 draws Draft in Card/orange/surface; 4614:15082 draws Published in
-// Content/success. The word says it too, so the colour is never the only sign.
+// Draft in orange (Figma 4300:20893), Published in Content/success (4614:15082). The word says it
+// too, so the colour is never the only sign.
 const STATUS_COLOUR = {
-  draft: 'text-card-orange-surface',
+  draft: 'text-content-warning',
   published: 'text-content-success',
 } satisfies Record<LineStatus, string>;
 

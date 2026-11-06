@@ -39,7 +39,7 @@ This session stopped here; the owner's own sessions carry on. Each PR is stacked
 | # | Step | Status |
 | --- | --- | --- |
 | 1 | Tokens: the mode card variables, added only | Merged: [#779](https://github.com/ParaOrg/Para/pull/779) |
-| 2 | Deletions, and mode → look (decisions 10 and 7) | Open PR: [#780](https://github.com/ParaOrg/Para/pull/780). ds-reviewer PASS, `npm run check` green. Left: CI's **phone-test** failed, 189 passed and 2 failed (not diagnosed yet; [job](https://github.com/ParaOrg/Para/actions/runs/42165366792/job/127720502027)). |
+| 2 | Deletions, and mode → look (decisions 10 and 7) | Open PR: [#780](https://github.com/ParaOrg/Para/pull/780). ds-reviewer PASS, `npm run check` green. The phone-test failure was the suites, not the app: they still looked up the deleted `card-<livery>-surface-pale` for the dots along a road ride's rest, which the app rings in Map/RouteLine/surface-default. Fixed in the phone, commuter and group suites. |
 | 3 | RouteCard restyle | Open PR: [#781](https://github.com/ParaOrg/Para/pull/781). ds-reviewer PASS, `npm run check` green. Left: CI's **profile-test** failed (not diagnosed yet; [job](https://github.com/ParaOrg/Para/actions/runs/42166094812/job/127722910522)), and #780 first. |
 | 4 | RouteCardStackedList, with the railway card | Branch `claude/route-card-list` pushed, **no PR yet**. `npm run check` green; locally the commuter suite passed every check it reached. Left: the ds-reviewer's findings, below. |
 | 5 | The Controller, with the filter | Not started in the repo; drafted (below). |

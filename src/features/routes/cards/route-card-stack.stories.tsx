@@ -109,7 +109,7 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** The way there: one place, Tala, with its two ways out — one card. The colours are drawn at random. */
+/** The way there: one place, Tala, with its two ways out — one card. Each card wears its mode's colour. */
 export const OnePlace: Story = {};
 
 /** The way back: a card per place, Novaliches and SM Fairview, never alike side by side. */

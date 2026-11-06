@@ -87,6 +87,9 @@ function TokensPage() {
           <p className="text-content-disabled">Content/disabled · text-content-disabled</p>
           <p className="text-content-error">Content/error · text-content-error</p>
           <p className="text-content-success">Content/success · text-content-success</p>
+          <p className="text-content-warning">
+            Content/warning (provisional) · text-content-warning
+          </p>
         </div>
         <div className="w-full rounded-lg bg-neutral-900 p-4">
           <p className="text-content-inverse">Content/inverse · text-content-inverse</p>
@@ -152,7 +155,7 @@ function TokensPage() {
         />
       </Group>
 
-      <Group title="Card — the jeepney liveries">
+      <Group title="Card — End and Start (red and green)">
         <Swatch
           box="bg-card-red-surface border-3 border-card-red-border-primary"
           token="Card/red"
@@ -167,81 +170,6 @@ function TokensPage() {
           box="bg-card-red-timeline-surface"
           token="Card/red/Timeline"
           cls="bg-card-red-timeline-surface"
-        />
-        <Swatch
-          box="bg-card-orange-surface border-3 border-card-orange-border-primary"
-          token="Card/orange"
-          cls="bg-card-orange-surface"
-        />
-        <Swatch
-          box="bg-card-orange-surface-pale"
-          token="Card/orange/surface-pale"
-          cls="bg-card-orange-surface-pale"
-        />
-        <Swatch
-          box="bg-card-orange-timeline-surface"
-          token="Card/orange/Timeline"
-          cls="bg-card-orange-timeline-surface"
-        />
-        <Swatch
-          box="bg-card-violet-surface border-3 border-card-violet-border-primary"
-          token="Card/violet"
-          cls="bg-card-violet-surface"
-        />
-        <Swatch
-          box="bg-card-violet-surface-pale"
-          token="Card/violet/surface-pale"
-          cls="bg-card-violet-surface-pale"
-        />
-        <Swatch
-          box="bg-card-violet-timeline-surface"
-          token="Card/violet/Timeline"
-          cls="bg-card-violet-timeline-surface"
-        />
-        <Swatch
-          box="bg-card-rose-surface border-3 border-card-rose-border-primary"
-          token="Card/rose"
-          cls="bg-card-rose-surface"
-        />
-        <Swatch
-          box="bg-card-rose-surface-pale"
-          token="Card/rose/surface-pale"
-          cls="bg-card-rose-surface-pale"
-        />
-        <Swatch
-          box="bg-card-rose-timeline-surface"
-          token="Card/rose/Timeline"
-          cls="bg-card-rose-timeline-surface"
-        />
-        <Swatch
-          box="bg-card-fuchsia-surface border-3 border-card-fuchsia-border-primary"
-          token="Card/fuchsia"
-          cls="bg-card-fuchsia-surface"
-        />
-        <Swatch
-          box="bg-card-fuchsia-surface-pale"
-          token="Card/fuchsia/surface-pale"
-          cls="bg-card-fuchsia-surface-pale"
-        />
-        <Swatch
-          box="bg-card-fuchsia-timeline-surface"
-          token="Card/fuchsia/Timeline"
-          cls="bg-card-fuchsia-timeline-surface"
-        />
-        <Swatch
-          box="bg-card-pink-surface border-3 border-card-pink-border-primary"
-          token="Card/pink"
-          cls="bg-card-pink-surface"
-        />
-        <Swatch
-          box="bg-card-pink-surface-pale"
-          token="Card/pink/surface-pale"
-          cls="bg-card-pink-surface-pale"
-        />
-        <Swatch
-          box="bg-card-pink-timeline-surface"
-          token="Card/pink/Timeline"
-          cls="bg-card-pink-timeline-surface"
         />
       </Group>
 
@@ -592,19 +520,9 @@ function TokensPage() {
           cls="shadow-route-card-primary"
         />
         <Swatch
-          box="bg-card-violet-surface shadow-route-card-inverse"
-          token="Route/RouteCardInverse"
-          cls="shadow-route-card-inverse"
-        />
-        <Swatch
           box="bg-card-red-surface shadow-route-card-primary-selected"
           token="Route/RouteCardPrimarySelected"
           cls="shadow-route-card-primary-selected"
-        />
-        <Swatch
-          box="bg-card-violet-surface shadow-route-card-inverse-selected"
-          token="Route/RouteCardInverseSelected"
-          cls="shadow-route-card-inverse-selected"
         />
         <Swatch
           box="rounded-full bg-card-red-surface shadow-selected-hintuan-route-title"

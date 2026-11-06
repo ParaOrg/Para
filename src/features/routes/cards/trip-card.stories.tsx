@@ -128,7 +128,7 @@ const meta = {
     direction: talaToNovaliches,
     directions: [talaToNovaliches, novalichesToTala],
     timeline: talaTimeline,
-    livery: 'violet',
+    livery: 'jeep',
     onBackToList: fn(),
     onSwitch: fn(),
     onClose: fn(),
@@ -393,7 +393,7 @@ const ikotTimeline: Timeline = {
  * and again at the bottom, the tiles the whole loop's, and no SWITCH.
  */
 export const Loop: Story = {
-  args: { direction: ikot, directions: [ikot], timeline: ikotTimeline, livery: 'orange' },
+  args: { direction: ikot, directions: [ikot], timeline: ikotTimeline, livery: 'bus' },
   play: async ({ canvasElement }) => {
     const card = within(canvasElement);
     await expect(card.queryByTestId('card-switch')).toBeNull();
@@ -407,7 +407,7 @@ export const LoopPicked: Story = {
     direction: ikot,
     directions: [ikot],
     timeline: ikotTimeline,
-    livery: 'orange',
+    livery: 'bus',
     picked: 'quezon-hall',
     pickedMetres: 2_100,
   },

@@ -3,20 +3,17 @@
 // reads neither var() nor oklch. Two copies drift, so this holds them
 // together: every Map/… token has its hex, every hex its token, and each hex
 // is the primitive its token aliases — Tailwind's own oklch, converted, or
-// one of ours from tokens.css. It holds CARD_COLOURS the same way: the
-// Card/<livery>/surface hexes a picked card's routes and an open trip's line
-// are lit in (2026-09-29); and CARD_PALE_COLOURS, the Card/<livery>/surface-pale
-// hexes the rest of a trip's line past a picked hintuan wears (2026-10-12).
+// one of ours from tokens.css. It holds MODE_COLOURS the same way: the
+// Card/<Mode>/… hexes a picked card's routes and an open trip's line are lit in.
 //
 //   node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs tests/unit/map-colours-test.mjs
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readdirSync, readFileSync } from 'node:fs';
 import {
-  CARD_COLOURS,
-  CARD_PALE_COLOURS,
   MAP_COLOURS,
   MAP_PAINT,
+  MODE_COLOURS,
   MONOCHROME_LEAN,
 } from '../../src/design-system/foundation/map-colours.ts';
 
@@ -24,11 +21,16 @@ const read = (path) => readFileSync(new URL(path, import.meta.url), 'utf8');
 const tokens = read('../../src/design-system/foundation/tokens.css');
 const tailwind = read('../../node_modules/tailwindcss/theme.css');
 
-/** Figma's name as tokens.css spells it: Map/RouteLine/Arrow/Rest → map-route-line-arrow-rest. */
+/** Figma's name as tokens.css spells it: Map/RouteLine/Arrow/Rest → map-route-line-arrow-rest, UVExpress → uv-express. */
 const cssName = (figma) =>
   figma
     .split('/')
-    .map((part) => part.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase())
+    .map((part) =>
+      part
+        .replace(/([a-z])([A-Z])/g, '$1-$2')
+        .replace(/([A-Z])([A-Z][a-z])/g, '$1-$2')
+        .toLowerCase(),
+    )
     .join('-');
 
 /** The Map/… tokens tokens.css defines: css name → the primitive it aliases (blue-200). */
@@ -83,43 +85,26 @@ const near = (x, y) =>
     (i) => Math.abs(parseInt(x.slice(i, i + 2), 16) - parseInt(y.slice(i, i + 2), 16)) <= 1,
   );
 
-/** The primitive a Card/… token aliases in tokens.css (Card/red/surface → red-800), and that primitive's hex. */
-function cardToken(figma) {
-  const css = cssName(figma);
-  const primitive = tokens.match(
-    new RegExp(`^\\s*--${css}:\\s*var\\(--color-([a-z0-9-]+)\\);`, 'm'),
-  )?.[1];
-  assert.ok(primitive, `no --${css} in tokens.css`);
-  return { primitive, want: primitiveHex(primitive) };
-}
+/**
+ * A Card/<Mode>/… name as tokens.css spells it: the leaf's repeat of its group is dropped, so
+ * Card/Jeep/Jeep-surface → card-jeep-surface, Card/UVExpress/UVExpress-surface-border →
+ * card-uv-express-surface-border.
+ */
+const modeCssName = (figma) => {
+  const [, mode, leaf] = figma.split('/');
+  return cssName(`Card/${mode}/${leaf.slice(mode.length + 1)}`);
+};
 
-test('each card colour is the primitive its Card/<livery>/surface aliases', () => {
-  assert.ok(Object.keys(CARD_COLOURS).length === 6, 'the six liveries');
-  for (const [figma, hex] of Object.entries(CARD_COLOURS)) {
-    const { primitive, want } = cardToken(figma);
-    assert.ok(
-      near(hex, want),
-      `${figma} is ${hex}, but --${cssName(figma)} is ${primitive}, ${want}`,
-    );
-  }
-});
-
-test("each pale is the primitive its Card/<livery>/surface-pale aliases: the rest of a trip's line past a picked hintuan", () => {
-  // One a livery, named after its card's surface (the owner's ask, 2026-10-12).
-  assert.deepEqual(
-    Object.keys(CARD_PALE_COLOURS).sort(),
-    Object.keys(CARD_COLOURS)
-      .map((k) => `${k}-pale`)
-      .sort(),
-  );
-  for (const [figma, hex] of Object.entries(CARD_PALE_COLOURS)) {
-    const { primitive, want } = cardToken(figma);
-    assert.ok(
-      near(hex, want),
-      `${figma} is ${hex}, but --${cssName(figma)} is ${primitive}, ${want}`,
-    );
-    // Each hue's 300: the card's own hue paled, as the owner's variables alias them.
-    assert.match(primitive, /-300$/, figma);
+test('each mode colour is the primitive its Card/<Mode>/… token aliases', () => {
+  assert.equal(Object.keys(MODE_COLOURS).length, 4, 'Jeep, UV Express, E-Jeep and Bus');
+  for (const [figma, hex] of Object.entries(MODE_COLOURS)) {
+    const css = modeCssName(figma);
+    const primitive = tokens.match(
+      new RegExp(`^\\s*--${css}:\\s*var\\(--color-([a-z0-9-]+)\\);`, 'm'),
+    )?.[1];
+    assert.ok(primitive, `no --${css} in tokens.css`);
+    const want = primitiveHex(primitive);
+    assert.ok(near(hex, want), `${figma} is ${hex}, but --${css} is ${primitive}, ${want}`);
   }
 });
 

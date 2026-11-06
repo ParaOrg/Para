@@ -49,22 +49,22 @@ export const OnSurfacePressed: Story = { args: { className: 'bg-surface-tertiary
 /** The last row of a trip's "Other routes": the line ends at its stub. */
 export const OnSurfaceLast: Story = { args: { position: 'bottom' } };
 
-/** RouteCard at Rest, on an orange card: its words, 40 tall. */
-export const OnOrange: Story = {
-  args: { on: 'orange' },
+/** RouteCard at Rest, on an bus card: its words, 40 tall. */
+export const OnBus: Story = {
+  args: { on: 'bus' },
   play: async ({ canvasElement }) => {
     const row = within(canvasElement).getByRole('button', { name: 'SM Fairview' });
     await expect(row.getBoundingClientRect().height).toBe(40);
   },
 };
 
-/** RouteCard Pressed: Card/orange/Timeline/surface. */
-export const OnOrangePressed: Story = {
-  args: { on: 'orange', className: 'bg-card-orange-timeline-surface' },
+/** RouteCard Pressed: Card/Bus/Bus-surface-secondary. */
+export const OnBusPressed: Story = {
+  args: { on: 'bus', className: 'bg-card-bus-surface-secondary' },
 };
 
 /** The last row of a card's group: the line ends at its stub. */
-export const OnOrangeLast: Story = { args: { on: 'orange', position: 'bottom' } };
+export const OnBusLast: Story = { args: { on: 'bus', position: 'bottom' } };
 
 /** On MRT-3's yellow the row and its line take the card's dark words. */
 export const OnDarkWords: Story = { args: { on: 'metro-rail-way-three', position: 'bottom' } };
