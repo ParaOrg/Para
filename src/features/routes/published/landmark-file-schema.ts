@@ -15,7 +15,7 @@ export const landmarkKindSchema = z.enum([
   'school',
   'university',
   'hospital',
-  'church',
+  'worship',
   'market',
   'station',
   'barangay',
@@ -30,9 +30,16 @@ const landmarkSchema = z.pipe(
     name: z.string().check(z.minLength(1)),
     kind: landmarkKindSchema,
     point: lngLatSchema,
+    /** A street's points about a kilometre apart along it; absent for anything else. */
+    points: z.optional(z.array(lngLatSchema)),
     aliases: z.optional(z.array(z.string())),
   }),
-  z.transform(({ aliases, ...landmark }) => ({ ...landmark, aliases: aliases ?? [] })),
+  z.transform(({ aliases, points, ...landmark }) => ({
+    ...landmark,
+    /** Where "routes near here" looks from: the point, and a street's points along it. */
+    reach: [landmark.point, ...(points ?? [])],
+    aliases: aliases ?? [],
+  })),
 );
 export type Landmark = z.infer<typeof landmarkSchema>;
 

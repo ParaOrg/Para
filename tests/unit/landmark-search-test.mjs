@@ -158,7 +158,7 @@ test('routes near here: hintuans with routes within 500 m, nearest first', () =>
     { directionId: 'd4', hotspotId: far.id, sequence: 1 },
     { directionId: 'd5', hotspotId: terminal.id, sequence: 1 },
   ];
-  const result = routesNearHere(at, [near, nearer, unserved, far, terminal], links);
+  const result = routesNearHere([at], [near, nearer, unserved, far, terminal], links);
   assert.deepEqual(
     result.map(({ hintuan, directionIds }) => [hintuan.name, directionIds]),
     [
@@ -170,9 +170,36 @@ test('routes near here: hintuans with routes within 500 m, nearest first', () =>
   assert.ok(result[0].distanceM < result[1].distanceM);
 });
 
+test("a street's routes near here look from every point along it", () => {
+  const along = hotspot('Halfway Hintuan', { at: [121.05, 14.6] });
+  const links = [{ directionId: 'd9', hotspotId: along.id, sequence: 1 }];
+  // 5 km from the street's middle point, 100 m from one of its points.
+  assert.deepEqual(routesNearHere([[121.0, 14.6]], [along], links), []);
+  const near = routesNearHere(
+    [
+      [121.0, 14.6],
+      [121.0491, 14.6],
+    ],
+    [along],
+    links,
+  );
+  assert.deepEqual(
+    near.map(({ hintuan }) => hintuan.name),
+    ['Halfway Hintuan'],
+  );
+  assert.ok(near[0].distanceM < 120);
+});
+
+test("the file reader gives every landmark its reach: the point, and a street's points", () => {
+  const { landmarks } = landmarkFileSchema.parse(committed);
+  assert.ok(landmarks.every(({ point, reach }) => reach[0] === point));
+  const edsa = landmarks.filter(({ name, kind }) => name === 'EDSA' && kind === 'street');
+  assert.ok(edsa.some(({ reach }) => reach.length > 15));
+});
+
 test('routes near here is empty where Para has no routes', () => {
   assert.deepEqual(
-    routesNearHere([121.5, 14.9], [hotspot('Somewhere', { at: [121.0, 14.6] })], []),
+    routesNearHere([[121.5, 14.9]], [hotspot('Somewhere', { at: [121.0, 14.6] })], []),
     [],
   );
 });

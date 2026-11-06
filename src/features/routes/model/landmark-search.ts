@@ -130,19 +130,22 @@ export interface HintuanNearHere {
 }
 
 /**
- * The hintuans within NEAR_HERE_M of a point, straight-line, nearest first, each with the
- * directions that stop there; a hintuan no direction stops at is left out. Empty means "No Para
+ * The hintuans within NEAR_HERE_M of any of the points, straight-line, nearest first, each with
+ * the directions that stop there; a hintuan no direction stops at is left out. A landmark's
+ * points are its `reach`: its point, and a street's points along it. Empty means "No Para
  * routes near here yet".
  */
 export function routesNearHere(
-  point: LngLat,
+  points: readonly LngLat[],
   hotspots: readonly Hotspot[],
   links: readonly HotspotLink[],
 ): HintuanNearHere[] {
   const near: HintuanNearHere[] = [];
   for (const hotspot of hotspots) {
     if (hotspot.kind !== 'hintuan') continue;
-    const distanceM = haversine(point, hotspot.point.coordinates);
+    const distanceM = Math.min(
+      ...points.map((point) => haversine(point, hotspot.point.coordinates)),
+    );
     if (distanceM > NEAR_HERE_M) continue;
     const directionIds = links
       .filter((link) => link.hotspotId === hotspot.id)
