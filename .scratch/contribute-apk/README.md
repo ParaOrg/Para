@@ -25,3 +25,6 @@ The builder chose these for now, from the owner's decisions. Each waits for the 
   come for 30 s, the map keeps the phone's last place as the locator's dot without its face, in
   grey (Content/disabled on a white ring), with a white pill under it, "N min ago" (then "N hr ago",
   "N days ago"), read again every 15 s. Kept on the phone across restarts; display only.
+- **Map styles with no signal**: every design switches offline, drawn from the app's copy of its
+  style over whatever tiles the phone kept. No style is shown disabled, as the app holds a copy of
+  each. The owner chose this, with no disabled look and no toast, on 2026-11-06.
