@@ -64,7 +64,7 @@ Designed for now from existing primitives and tokens, never final. Each needs th
 | 01 | [The landmark file](issues/01-landmark-file.md) | resolved (#811) |
 | 02 | [Search Para's own places](issues/02-search-own-places.md) | resolved (#817) |
 | 03 | [Landmarks and routes near here](issues/03-landmarks-in-search.md) | in review |
-| 04 | [The monthly rebuild](issues/04-monthly-rebuild.md) | in review (#826) |
+| 04 | [The monthly rebuild](issues/04-monthly-rebuild.md) | resolved (#826) |
 | 05 | [Studio place search](issues/05-studio-place-search.md) | blocked by 03 |
 
 ## Questions sent to the hub (2026-11-06)
