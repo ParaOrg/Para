@@ -48,8 +48,9 @@ This session stopped here; the owner's own sessions carry on. Each PR is stacked
 | 5b | The route icons into a sprite (size) | Merged: [#791](https://github.com/ParaOrg/Para/pull/791): the remaining inline drawings into `route-icons.svg`, 412.7 → 404.5 kB, room for steps 6–9 |
 | 6 | Sheet layout: docked on desktop, the mobile Controller at the bottom, Max full screen | Merged: [#794](https://github.com/ParaOrg/Para/pull/794), 406.1 kB. Its profile-test failures came from staging's #793 and were fixed by #796; phone-test once ran into its 30-minute timeout on a slow runner and passed on re-run |
 | 6a | The sheet's scroll lag (no look change) | Merged: [#797](https://github.com/ParaOrg/Para/pull/797), 406.3 kB. The chevrons pause while the map is out of sight; the dock host is written only at rest |
-| 6b | The trip card's two plays (test-only) | Open PR (branch `claude/trip-card-plays`) |
-| 7 | Commuter map wiring | Open PR (branch `claude/route-card-commuter-wiring`) |
+| 6b | The trip card's two plays (test-only) | Merged: [#808](https://github.com/ParaOrg/Para/pull/808), 406.3 kB |
+| 7 | Commuter map wiring | Merged: [#812](https://github.com/ParaOrg/Para/pull/812), 406.8 kB. The filter lights the map; its framing is checked where an LRT line runs over a jeep road |
+| 7b | The hotspot pins off on the commuter map (decision 15) | Open PR (branch `claude/commuter-pins-off`) |
 | 8 | Studio wiring | Not started |
 | 9 | Map lines in the mode colours | Not started |
 
