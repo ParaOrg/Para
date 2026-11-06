@@ -4,14 +4,14 @@ import { CARD_SURFACE, CARD_TEXT } from './livery-card';
 import { RouteMode } from './route-mode';
 import { VEHICLES } from '../model/vehicles';
 
-/** Figma's Modes (4236:17040): the vehicle in the card's bus on a white chip, the word in the card's white. */
+/** Figma's Modes (4236:17040): what a card's routes ride, on a Bus card. */
 const meta = {
   title: 'Features/Routes/RouteMode',
   component: RouteMode,
-  args: { vehicle: 'Jeepney', livery: 'bus' },
+  args: { vehicle: 'Bus', livery: 'bus' },
   decorators: [
     (Story) => (
-      <div className="w-96 bg-card-bus-surface p-3 text-content-inverse">
+      <div className={'w-96 p-3 ' + CARD_SURFACE.bus + ' ' + CARD_TEXT.bus}>
         <Story />
       </div>
     ),

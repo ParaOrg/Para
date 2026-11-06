@@ -77,8 +77,11 @@ export const NoHintuan: Story = {
 /** Bus (Figma draws the Timeline set in red). */
 export const Bus: Story = { args: { livery: 'bus' } };
 
-/** Ejeep. */
+/** E-Jeep: a light card, dark words. */
 export const Ejeep: Story = { args: { livery: 'ejeep' } };
+
+/** UV Express: a light card, dark words. */
+export const UvExpress: Story = { args: { livery: 'uv-express' } };
 
 /**
  * A hintuan picked: its dot a white ring round the rail's colour, End's E
@@ -109,6 +112,12 @@ export const HintuanPickedBus: Story = {
 /** Picked, E-Jeep: the light card's pill, on-surface under the card's colour. */
 export const HintuanPickedEjeep: Story = {
   args: { livery: 'ejeep', picked: 'h3' },
+  play: openFold,
+};
+
+/** Picked, UV Express: as E-Jeep's. */
+export const HintuanPickedUvExpress: Story = {
+  args: { livery: 'uv-express', picked: 'h3' },
   play: openFold,
 };
 

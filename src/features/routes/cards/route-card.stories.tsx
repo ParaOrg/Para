@@ -16,7 +16,7 @@ const meta = {
     ),
   ],
   args: {
-    livery: 'bus',
+    livery: 'jeep',
     state: 'rest',
     routeOrigin: 'Novaliches (Bayan)',
     endPoints: [{ id: 'a', routeDirection: 'Tala', vehicle: 'Jeepney' }],
@@ -34,6 +34,7 @@ type Story = StoryObj<typeof meta>;
  * SN Pro Bold 24/32.
  */
 export const Bus: Story = {
+  args: { livery: 'bus', endPoints: [{ id: 'a', routeDirection: 'Tala', vehicle: 'Bus' }] },
   play: async ({ canvasElement }) => {
     const place = within(canvasElement).getByTestId('chooser-select');
     const type = getComputedStyle(place);
@@ -44,7 +45,13 @@ export const Bus: Story = {
 };
 
 /** State=Selected, Bus: pressed in under Route/RouteCardPrimarySelected; nothing else changes. */
-export const BusSelected: Story = { args: { state: 'selected' } };
+export const BusSelected: Story = {
+  args: {
+    state: 'selected',
+    livery: 'bus',
+    endPoints: [{ id: 'a', routeDirection: 'Tala', vehicle: 'Bus' }],
+  },
+};
 
 /** Jeep: Card/Jeep, white words under Route/RouteCardPrimary, as Bus. */
 export const Jeep: Story = { args: { livery: 'jeep', routeOrigin: 'Fairview' } };
@@ -55,19 +62,41 @@ export const JeepSelected: Story = {
 };
 
 /** UV Express: Card/UVExpress, a light card with dark words under Route/RouteCardInverse. */
-export const UvExpress: Story = { args: { livery: 'uv-express', routeOrigin: 'Novaliches' } };
+export const UvExpress: Story = {
+  args: {
+    livery: 'uv-express',
+    routeOrigin: 'Novaliches',
+    endPoints: [{ id: 'a', routeDirection: 'Tala', vehicle: 'UV Express' }],
+  },
+};
 
 /** Selected, UV Express: pressed in under Route/RouteCardInverseSelected. */
 export const UvExpressSelected: Story = {
-  args: { state: 'selected', livery: 'uv-express', routeOrigin: 'Novaliches' },
+  args: {
+    state: 'selected',
+    livery: 'uv-express',
+    routeOrigin: 'Novaliches',
+    endPoints: [{ id: 'a', routeDirection: 'Tala', vehicle: 'UV Express' }],
+  },
 };
 
 /** E-Jeep: Card/Ejeep, as UV Express. */
-export const Ejeep: Story = { args: { livery: 'ejeep', routeOrigin: 'SM Fairview' } };
+export const Ejeep: Story = {
+  args: {
+    livery: 'ejeep',
+    routeOrigin: 'SM Fairview',
+    endPoints: [{ id: 'a', routeDirection: 'Tala', vehicle: 'E-Jeep' }],
+  },
+};
 
 /** Selected, E-Jeep: as UV Express. */
 export const EjeepSelected: Story = {
-  args: { state: 'selected', livery: 'ejeep', routeOrigin: 'SM Fairview' },
+  args: {
+    state: 'selected',
+    livery: 'ejeep',
+    routeOrigin: 'SM Fairview',
+    endPoints: [{ id: 'a', routeDirection: 'Tala', vehicle: 'E-Jeep' }],
+  },
 };
 
 /**
@@ -184,7 +213,7 @@ export const SeveralWaysOut: Story = {
 /** The set's longest: six ways out — tall enough to show the glow fades out whole. */
 export const SixWaysOut: Story = {
   args: {
-    livery: 'bus',
+    livery: 'jeep',
     routeOrigin: 'SM Fairview',
     endPoints: ['Tala', 'Novaliches (Bayan)', 'Quiapo', 'Cubao', 'Lagro', 'Fatima'].map((p, i) => ({
       id: String(i),
@@ -252,7 +281,7 @@ export const NoMode: Story = {
 /** A place name too long for one line wraps; it is never cut. */
 export const LongName: Story = {
   args: {
-    livery: 'bus',
+    livery: 'jeep',
     routeOrigin: 'Fairview Teraccess Transport Terminal',
     endPoints: [{ id: 'a', routeDirection: 'Novaliches (Bayan) via Zabarte', vehicle: 'Jeepney' }],
   },

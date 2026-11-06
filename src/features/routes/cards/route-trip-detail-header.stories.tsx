@@ -55,15 +55,15 @@ export const Mrt3Southbound: Story = {
 };
 
 /**
- * A train on a jeep-coloured card, opened from a hotspot's card: its words keep the line's colour.
+ * A train on a Bus card, opened from a hotspot's card: its words keep the line's colour.
  */
-export const TrainOnAJeepCard: Story = { args: { livery: 'bus' } };
+export const TrainOnABusCard: Story = { args: { livery: 'bus' } };
 
 /** An end the line's table does not know: no bound, the line's code alone, rounded both ends. */
 export const NoBound: Story = { args: { way: null } };
 
 /** A jeep's trip (Variant2, 4181:10845): the Jeepney and the way showing, in its card's colour. */
-export const Jeepney: Story = { args: { vehicle: 'Jeepney', way: 'Papunta', livery: 'bus' } };
+export const Jeepney: Story = { args: { vehicle: 'Jeepney', way: 'Papunta', livery: 'jeep' } };
 
 export const JeepneyPabalik: Story = {
   args: { vehicle: 'Jeepney', way: 'Pabalik', livery: 'jeep' },
@@ -73,13 +73,18 @@ export const JeepneyPabalik: Story = {
 export const Bus: Story = { args: { vehicle: 'Bus', way: 'Papunta', livery: 'bus' } };
 
 /** Variant4 (4188:11159). No e-jeep is on the published map yet. */
-export const EJeep: Story = { args: { vehicle: 'E-Jeep', way: 'Papunta', livery: 'jeep' } };
+export const EJeep: Story = { args: { vehicle: 'E-Jeep', way: 'Papunta', livery: 'ejeep' } };
+
+/** UV Express on its own light card: its words in on-surface. */
+export const UvExpress: Story = {
+  args: { vehicle: 'UV Express', way: 'Papunta', livery: 'uv-express' },
+};
 
 /** Variant5 (4189:11181). */
 export const Ferry: Story = { args: { vehicle: 'Ferry', way: 'Papunta', livery: 'ferry' } };
 
-/** Every jeepney colour, the words in each card's own. */
-export const EveryJeepneyLivery: Story = {
+/** Every road mode's card, the words in each card's own. */
+export const EveryRoadLivery: Story = {
   render: (args) => (
     <div className="flex w-[369px] flex-col gap-1">
       {ROAD_LIVERIES.map((livery) => (

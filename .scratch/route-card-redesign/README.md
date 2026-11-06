@@ -57,7 +57,7 @@ Figma's leaf names repeat their group (`Card/Jeep/Jeep-surface`). The tokens dro
 - **A trip's rail and a pressed row** take each mode's `surface-secondary`, its darker step, where the old liveries had Timeline/surface.
 - **On the light cards** (UV Express, E-Jeep) the picked hintuan's pill is dark (on-surface) with the card's colour for words, as MRT-3's yellow does; the mode chip's vehicle is in on-surface.
 - **Lit lines** for UV Express and E-Jeep are their `surface-border` with dark chevrons, until step 9 checks them on the basemap.
-- **Draft** in the studio's line detail and **Retry** on the contributor's history keep their orange (orange/700), now through `Card/Bus/Bus-surface`.
+- **Draft** in the studio's line detail and **Retry** on the contributor's history keep their orange (orange/700) through a provisional `Content/warning` token, not named in Figma yet.
 
 ## Waiting on the owner
 

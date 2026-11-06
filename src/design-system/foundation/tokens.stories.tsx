@@ -87,6 +87,9 @@ function TokensPage() {
           <p className="text-content-disabled">Content/disabled · text-content-disabled</p>
           <p className="text-content-error">Content/error · text-content-error</p>
           <p className="text-content-success">Content/success · text-content-success</p>
+          <p className="text-content-warning">
+            Content/warning (provisional) · text-content-warning
+          </p>
         </div>
         <div className="w-full rounded-lg bg-neutral-900 p-4">
           <p className="text-content-inverse">Content/inverse · text-content-inverse</p>

@@ -17,10 +17,9 @@ interface CardStatusLineProps {
   onRetry: () => void;
 }
 
-// Retry is orange/700, the deprecated Card/orange/surface's, which Card/Bus/Bus-surface now holds.
 const TONE_CLASSES: Record<CardStatusTone, string> = {
   uploaded: 'text-content-success',
-  retry: 'text-card-bus-surface',
+  retry: 'text-content-warning',
   quiet: 'text-content-quaternary',
   problem: 'text-content-error',
 };

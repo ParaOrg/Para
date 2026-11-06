@@ -272,8 +272,11 @@ export const NoHintuan: Story = {
 /** Bus (Figma draws the Timeline set in red), with Content/inverse words. */
 export const Bus: Story = { args: { livery: 'bus' } };
 
-/** Ejeep, with Content/inverse words, like bus. */
+/** E-Jeep: a light card, its words in Card/Ejeep/Ejeep-on-surface. */
 export const Ejeep: Story = { args: { livery: 'ejeep' } };
+
+/** UV Express: a light card, its words in Card/UVExpress/UVExpress-on-surface. */
+export const UvExpress: Story = { args: { livery: 'uv-express' } };
 
 /** SWITCHed: the way back, so SWITCH reads Papunta, the way a tap leads. */
 export const TheWayBack: Story = {
@@ -359,6 +362,12 @@ export const PickedBus: Story = {
 /** E-Jeep: the light card's pill the other way round, on-surface under the card's colour. */
 export const PickedEjeep: Story = {
   args: { livery: 'ejeep', picked: 'h3' },
+  play: pickedAsDrawn,
+};
+
+/** UV Express, as E-Jeep. */
+export const PickedUvExpress: Story = {
+  args: { livery: 'uv-express', picked: 'h3' },
   play: pickedAsDrawn,
 };
 

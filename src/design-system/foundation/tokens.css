@@ -167,6 +167,9 @@
   --content-inverse-secondary: var(--color-neutral-200);
   --content-error: var(--color-red-700);
   --content-success: var(--color-green-700);
+  /* Something not done yet that needs a hand: the studio's Draft, the contributor's Retry.
+     Provisional: not named in Figma yet. */
+  --content-warning: var(--color-orange-700);
 
   /* Border. Figma: Border/… */
   --border-primary: var(--color-neutral-200);
@@ -318,6 +321,7 @@
   --color-content-inverse-secondary: var(--content-inverse-secondary);
   --color-content-error: var(--content-error);
   --color-content-success: var(--content-success);
+  --color-content-warning: var(--content-warning);
 
   --color-border-primary: var(--border-primary);
   --color-border-secondary: var(--border-secondary);

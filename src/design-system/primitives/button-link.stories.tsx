@@ -59,7 +59,7 @@ export const OnACard: Story = {
   },
   decorators: [
     (Story) => (
-      <div className="bg-card-bus-surface p-4 text-content-inverse">
+      <div className="bg-card-bus-surface p-4 text-card-bus-on-surface">
         <Story />
       </div>
     ),
