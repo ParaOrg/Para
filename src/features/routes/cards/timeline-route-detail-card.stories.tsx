@@ -431,17 +431,17 @@ export const PickAndLetGo: Story = {
 };
 
 /**
- * The ends are buttons too, and picked like a hintuan: Tala picks itself, its dot the Selected one,
- * lets Amparo go and says which end to show; a second tap lets it go. Novaliches the same. One at a
- * time: each lets the others go.
- */
-/**
  * The trip's ends by the place's name, whatever a screen reader hears after it: the ride's mark
  * (", start") and, picked, its pesos.
  */
 const TALA = /^Tala\b/;
 const NOVALICHES = /^Novaliches\b/;
 
+/**
+ * The ends are buttons too, and picked like a hintuan: Tala picks itself, its dot the Selected one,
+ * lets Amparo go and says which end to show; a second tap lets it go. Novaliches the same. One at a
+ * time: each lets the others go.
+ */
 export const EndsShowTheWhole: Story = {
   args: { picked: 'h3' },
   play: async (ctx) => {
