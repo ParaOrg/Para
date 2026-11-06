@@ -52,8 +52,10 @@ This session stopped here; the owner's own sessions carry on. Each PR is stacked
 | 6b | The trip card's two plays (test-only) | Merged: [#808](https://github.com/ParaOrg/Para/pull/808), 406.3 kB |
 | 7 | Commuter map wiring | Merged: [#812](https://github.com/ParaOrg/Para/pull/812), 406.8 kB. The filter lights the map; its framing is checked where an LRT line runs over a jeep road |
 | 7b | The hotspot pins off on the commuter map (decision 15) | Merged: [#813](https://github.com/ParaOrg/Para/pull/813), 406.9 kB |
-| 8 | Studio wiring | Open PR (branch `claude/route-card-studio-wiring`) |
-| 9 | Map lines in the mode colours | Open PR (branch `claude/route-lines-mode-colours`). For the owner's morning check: `shots-step-9/` (light basemap, 393 and 1440 wide: Cubao, with jeeps beside LRT-2 and MRT-3, and the Pasig ferry) |
+| 8 | Studio wiring | Merged: [#815](https://github.com/ParaOrg/Para/pull/815), 406.9 kB. group-test's filter check runs once two live routes share a road |
+| 9 | Map lines in the mode colours | Merged: [#818](https://github.com/ParaOrg/Para/pull/818), 407.2 kB. For the owner's morning check: `shots-step-9/` (light basemap, 393 and 1440 wide: Cubao, with jeeps beside LRT-2 and MRT-3, and the Pasig ferry) |
+| 9b | The counters count the cards, a place and mode each (a fix to step 4) | Merged: [#821](https://github.com/ParaOrg/Para/pull/821), 407.2 kB |
+| 10 | One shadow look: the RouteCard's Figma shadows in shadow-route-card-* | Open PR (branch `claude/route-card-shadows`) |
 
 ### Step 4: the reviewer's findings, fixed
 
