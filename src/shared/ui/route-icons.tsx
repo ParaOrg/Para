@@ -13,17 +13,35 @@
 import routeSprite from './route-icons.svg?url&no-inline';
 import vehicleSprite from './vehicle-icons.svg?url&no-inline';
 
+/** Each drawing in route-icons.svg, by its symbol's id, with the symbol's own box. */
+const ROUTE_SPRITE_VIEW_BOX = {
+  jeep: '0 0 24 24',
+  close: '0 0 24 24',
+  'chevron-left': '0 0 24 24',
+  'chevron-down': '0 0 20 20',
+  reload: '0 0 16 16',
+  terminal: '0 0 20 20',
+  hintuan: '0 0 20 20',
+  information: '0 0 24 24',
+  start: '0 0 24 24',
+  end: '0 0 24 24',
+  routes: '0 0 24 24',
+  'close-large': '0 0 28 28',
+  'arrow-left-right-large': '0 0 28 28',
+  'filter-large': '0 0 28 28',
+} as const;
+
+type RouteSpriteId = keyof typeof ROUTE_SPRITE_VIEW_BOX;
+
 interface RouteSpriteIconProps {
   /** The drawing's id in route-icons.svg. */
-  id: string;
-  /** The drawing's own box, as its symbol has it, so it sizes as it did inline. */
-  viewBox: string;
+  id: RouteSpriteId;
 }
 
-/** A drawing from route-icons.svg, in currentColor. */
-function RouteSpriteIcon({ id, viewBox }: RouteSpriteIconProps) {
+/** A drawing from route-icons.svg, in currentColor, filling the icon's size. */
+function RouteSpriteIcon({ id }: RouteSpriteIconProps) {
   return (
-    <svg viewBox={viewBox} fill="currentColor" aria-hidden>
+    <svg viewBox={ROUTE_SPRITE_VIEW_BOX[id]} fill="currentColor" aria-hidden>
       <use href={`${routeSprite}#${id}`} />
     </svg>
   );
@@ -31,27 +49,27 @@ function RouteSpriteIcon({ id, viewBox }: RouteSpriteIconProps) {
 
 /** The side-on jeep, beside a hintuan card's count. */
 export function JeepIcon() {
-  return <RouteSpriteIcon id="jeep" viewBox="0 0 24 24" />;
+  return <RouteSpriteIcon id="jeep" />;
 }
 
 /** ✕: a card's close, and Remove as start on a trip's row. */
 export function CloseIcon() {
-  return <RouteSpriteIcon id="close" viewBox="0 0 24 24" />;
+  return <RouteSpriteIcon id="close" />;
 }
 
 /** ‹, back to the card behind. */
 export function ChevronLeftIcon() {
-  return <RouteSpriteIcon id="chevron-left" viewBox="0 0 24 24" />;
+  return <RouteSpriteIcon id="chevron-left" />;
 }
 
 /** The chevron on the row that folds a trip's hintuans; turned up when they are open. */
 export function ChevronDownIcon() {
-  return <RouteSpriteIcon id="chevron-down" viewBox="0 0 20 20" />;
+  return <RouteSpriteIcon id="chevron-down" />;
 }
 
 /** Figma's Reload (3807:5509), 16 across: the fare tile's turn between Regular and Discounted fare. */
 export function ReloadIcon() {
-  return <RouteSpriteIcon id="reload" viewBox="0 0 16 16" />;
+  return <RouteSpriteIcon id="reload" />;
 }
 
 /**
@@ -60,17 +78,17 @@ export function ReloadIcon() {
  * for a terminal, H for a hintuan.
  */
 export function TerminalIcon() {
-  return <RouteSpriteIcon id="terminal" viewBox="0 0 20 20" />;
+  return <RouteSpriteIcon id="terminal" />;
 }
 
 /** The H disc before a hintuan's name on a HintuanCard (TerminalIcon's pair). */
 export function HintuanIcon() {
-  return <RouteSpriteIcon id="hintuan" viewBox="0 0 20 20" />;
+  return <RouteSpriteIcon id="hintuan" />;
 }
 
 /** Figma's Information, 24 across: the HintuanCard's ⓘ, its drawing inset 1.6 as the file places it. */
 export function InformationIcon() {
-  return <RouteSpriteIcon id="information" viewBox="0 0 24 24" />;
+  return <RouteSpriteIcon id="information" />;
 }
 
 /**
@@ -80,12 +98,12 @@ export function InformationIcon() {
  * it goes, and before the picked hintuan's, where the ride now ends.
  */
 export function StartIcon() {
-  return <RouteSpriteIcon id="start" viewBox="0 0 24 24" />;
+  return <RouteSpriteIcon id="start" />;
 }
 
 /** The E disc before where a ride ends (StartIcon's pair). */
 export function EndIcon() {
-  return <RouteSpriteIcon id="end" viewBox="0 0 24 24" />;
+  return <RouteSpriteIcon id="end" />;
 }
 
 /**
@@ -93,7 +111,7 @@ export function EndIcon() {
  * the route list ("2 Routes").
  */
 export function RoutesIcon() {
-  return <RouteSpriteIcon id="routes" viewBox="0 0 24 24" />;
+  return <RouteSpriteIcon id="routes" />;
 }
 
 /**
@@ -153,15 +171,15 @@ export function UvExpressIcon() {
 
 /** Figma's closeLarge (4633:22012), 28 across: the route list Controller's ✕. */
 export function CloseLargeIcon() {
-  return <RouteSpriteIcon id="close-large" viewBox="0 0 28 28" />;
+  return <RouteSpriteIcon id="close-large" />;
 }
 
 /** Figma's arrow-left-right-large (4633:22014), 28 across: the Controller's ⇆, every route the other way round. */
 export function ArrowLeftRightIcon() {
-  return <RouteSpriteIcon id="arrow-left-right-large" viewBox="0 0 28 28" />;
+  return <RouteSpriteIcon id="arrow-left-right-large" />;
 }
 
 /** Figma's filter-large (4633:22015), 28 across: the Controller's sliders, opening the route list's filter. */
 export function FilterIcon() {
-  return <RouteSpriteIcon id="filter-large" viewBox="0 0 28 28" />;
+  return <RouteSpriteIcon id="filter-large" />;
 }
