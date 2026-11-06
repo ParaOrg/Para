@@ -28,6 +28,8 @@ interface PlaygroundCardsProps {
   camera: ReturnType<typeof useCardCamera<DirectionRow, HotspotRow>>;
   trip: ReturnType<typeof useStudioTrip>;
   canEdit: boolean;
+  /** A computer's screen: a tapped hotspot opens in the sidebar (StudioHotspotCard). */
+  isWideScreen: boolean;
   opening: ReturnType<typeof useFollow>['opening'];
   deletes: ReturnType<typeof useDeleteActions>;
   hush: ReturnType<typeof useGazeHush>['hush'];
@@ -48,6 +50,7 @@ export function PlaygroundCards({
   camera,
   trip,
   canEdit,
+  isWideScreen,
   opening,
   deletes,
   hush,
@@ -132,6 +135,7 @@ export function PlaygroundCards({
           draw={draw}
           height={height}
           canEdit={canEdit}
+          opensInSidebar={isWideScreen}
           clearOfOpen={clearOfOpen}
           onPickOnPlaceCard={pickOnPlaceCard}
           onOpenTrip={openTrip}

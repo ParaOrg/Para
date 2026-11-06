@@ -347,6 +347,8 @@ let drawn;
 }
 
 // ---- 7. A route's end is refused a delete, in words
+// Delete is on the hintuan's card, which a computer's tap goes past: a narrow window keeps it.
+await page.setViewportSize({ width: 900, height: 800 });
 await go(P1, 17);
 await clickAt([P1[0] - R * 0.7, P1[1] + R * 0.7], 700);
 const card = page.getByRole('button', { name: 'Edit hintuan' });
@@ -371,6 +373,7 @@ check(
 check('  and nothing is sent to the database', writesSince(n).length === 0, said(writesSince(n)));
 await dismissToasts();
 await page.keyboard.press('Escape');
+await page.setViewportSize({ width: 1280, height: 800 });
 
 // ---- 8. Undo to no points leaves no draft
 await go(at(0, 0), 15);
