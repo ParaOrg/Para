@@ -189,7 +189,7 @@ async function openRouteFromPlace(page) {
   // so the card is opened in a narrow window and the trip seen in a wide one.
   // Any card open is closed first: in a narrow window its sheet would cover the place.
   const viewport = page.viewportSize();
-  const close = page.getByRole('button', { name: 'Close' });
+  const close = page.getByTestId('card').getByRole('button', { name: 'Close' });
   if (await close.count()) await close.first().click();
   await page.setViewportSize({ width: 900, height: 800 });
   await tapAt(page, [LINE.at(-1)[0] + 0.0003, LINE.at(-1)[1] - 0.0002], 17);
