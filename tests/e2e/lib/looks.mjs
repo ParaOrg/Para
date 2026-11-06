@@ -62,6 +62,17 @@ export function lookReaders() {
             : null,
         ]),
       ),
+      // Each road mode with a colour of its own at rest (2026-11-06): null where the layer is missing.
+      roads: Object.fromEntries(
+        ['uv-express', 'ejeep', 'bus', 'ferry'].map((l) => [
+          l,
+          m.getLayer(`saved-routes-road-${l}`)
+            ? m.getPaintProperty(`saved-routes-road-${l}`, 'line-color')
+            : null,
+        ]),
+      ),
+      casing: m.getPaintProperty('saved-routes-casing', 'line-color'),
+      litCasing: m.getPaintProperty('saved-routes-selected-casing', 'line-color'),
       lit: m.getPaintProperty('saved-routes-selected', 'line-color'),
       shaded,
     };

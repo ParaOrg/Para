@@ -5,7 +5,13 @@ import { MAP_COLOURS, MAP_PAINT } from '@/design-system/foundation/map-colours';
 import { LAYERS, firstLayerOfType } from './layers';
 import { litOpacity } from './lighting';
 import { CASING_EXTRA, litWidth, roadWidth } from './line-style';
-import { RAIL_AT_REST, RESTING_FILTER, ROUTES_LINE } from './rail-rest-layers';
+import {
+  RAIL_AT_REST,
+  ROAD_AT_REST,
+  ROUTES_LINE,
+  ROUTES_LINE_COLOUR,
+  SAVED_REST_FILTER,
+} from './rail-rest-layers';
 import { routesData } from './saved-routes-data';
 import { ROUTES_HIT_LAYER } from './tap';
 import type { Direction } from '../model/routes';
@@ -53,7 +59,10 @@ export function addSavedRoutes(
       type: 'line',
       source: SRC,
       layout: { 'line-cap': 'round', 'line-join': 'round' },
-      paint: { 'line-color': MAP_PAINT['Paint/casing'], 'line-width': roadWidth(CASING_EXTRA) },
+      paint: {
+        'line-color': MAP_COLOURS['Map/RouteLine/casing'],
+        'line-width': roadWidth(CASING_EXTRA),
+      },
     },
     before,
   );
@@ -63,22 +72,19 @@ export function addSavedRoutes(
       type: 'line',
       source: SRC,
       layout: { 'line-cap': 'round', 'line-join': 'round' },
-      filter: RESTING_FILTER[LINE],
-      paint: {
-        'line-color': MAP_COLOURS['Map/RouteLine/surface-default'],
-        'line-width': roadWidth(0),
-      },
+      filter: SAVED_REST_FILTER[LINE],
+      paint: { 'line-color': ROUTES_LINE_COLOUR, 'line-width': roadWidth(0) },
     },
     before,
   );
-  for (const { id, colour } of Object.values(RAIL_AT_REST))
+  for (const { id, colour } of [...Object.values(ROAD_AT_REST), ...Object.values(RAIL_AT_REST)])
     map.addLayer(
       {
         id,
         type: 'line',
         source: SRC,
         layout: { 'line-cap': 'round', 'line-join': 'round' },
-        filter: RESTING_FILTER[id],
+        filter: SAVED_REST_FILTER[id],
         paint: { 'line-color': colour, 'line-width': roadWidth(0) },
       },
       before,
@@ -96,7 +102,7 @@ export function addSavedRoutes(
       source: SRC,
       layout: { 'line-cap': 'round', 'line-join': 'round' },
       paint: {
-        'line-color': MAP_PAINT['Paint/casing'],
+        'line-color': MAP_COLOURS['Map/RouteLine/casing'],
         'line-width': litWidth(CASING_EXTRA),
         'line-opacity': litOpacity(),
         // Switched off while nothing is lit, and from the start (layer-switch.ts): at once, never between.

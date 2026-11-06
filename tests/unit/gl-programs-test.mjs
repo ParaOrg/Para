@@ -165,11 +165,48 @@ test("a train line at rest is drawn by the resting line's program, one layer a l
     assert.ok(order.indexOf(rail.id) > order.indexOf('saved-routes-line'));
     assert.ok(order.indexOf(rail.id) < order.indexOf('saved-routes-selected-casing'));
   }
-  assert.deepEqual(resting.filter, ['==', ['get', 'line'], '']);
+  assert.deepEqual(resting.filter, [
+    'all',
+    ['==', ['get', 'line'], ''],
+    ['!', ['in', ['get', 'look'], ['literal', ['uv-express', 'ejeep', 'bus', 'ferry']]]],
+  ]);
   assert.deepEqual(
     rails.map((r) => r.filter),
     ['LRT-1', 'LRT-2', 'MRT-3'].map((l) => ['==', ['get', 'line'], l]),
   );
+});
+
+// The owner's ruling of 2026-11-06: a road route rests in its mode's colour. Jeep's is the resting
+// line's own; UV Express, E-Jeep, Bus and the ferry each rest in a layer of their own, one colour
+// each, on the resting line's program, and between them every road route is drawn at rest once.
+test("a road mode at rest is drawn by the resting line's program, one layer a mode", () => {
+  const layers = [
+    { id: 'background', type: 'background' },
+    { id: 'road-label', type: 'symbol' },
+  ];
+  const map = {
+    addSource: () => {},
+    addLayer: (spec, before) =>
+      layers.splice(before ? layers.findIndex((l) => l.id === before) : layers.length, 0, spec),
+    getLayer: (id) => layers.find((l) => l.id === id),
+    getLayersOrder: () => layers.map((l) => l.id),
+  };
+  addSavedRoutes(map);
+  const resting = map.getLayer('saved-routes-line');
+  const looks = ['uv-express', 'ejeep', 'bus', 'ferry'];
+  const roads = looks.map((l) => map.getLayer(`saved-routes-road-${l}`));
+  for (const road of roads) {
+    assert.ok(road, 'a resting layer for each road mode with a colour of its own');
+    assert.equal(programOf(road), programOf(resting));
+    assert.equal(typeof road.paint['line-color'], 'string', 'one colour, not an expression');
+  }
+  assert.deepEqual(
+    roads.map((r) => r.filter),
+    looks.map((l) => ['all', ['==', ['get', 'line'], ''], ['==', ['get', 'look'], l]]),
+  );
+  // The casing under them all, resting and lit, in Map/RouteLine/casing.
+  for (const id of ['saved-routes-casing', 'saved-routes-selected-casing'])
+    assert.equal(map.getLayer(id)?.paint['line-color'], '#262626');
 });
 
 test("the rest of a ride past a picked hintuan is drawn by the resting line's program, compiled at load", () => {

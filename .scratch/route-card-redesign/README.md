@@ -33,6 +33,7 @@ New variables: `Card/{Jeep,UVExpress,Ejeep,Bus}/{…-surface, …-surface-second
 13. **Station codes** ("PL01") from `rail-codes.ts` where one exists, otherwise nothing. The S and E icons beside them go.
 14. **The filter on the map** (step 7): the filter starts at All with each new list. Changing it frames the routes still lit, as ⇆ does, and lets a Selected card go. A hintuan's or terminal's own card does not follow it.
 15. **No hotspot pins on the commuter map, for now**: no terminal or hintuan flag zoomed in and no dot zoomed out. One switch, `SHOW_HOTSPOT_PINS` in `public-map-app.tsx`, turns them back on. The boxes, their names and their taps stay. The studio and the contributor page keep their pins.
+16. **Map lines in their mode's colours** (step 9): a road route rests in its card's line colour: Jeep blue-700, UV Express neutral-400, E-Jeep neutral-300 (their cards' border shades, so they show on the light basemap), Bus orange-700, the ferry its own Map/Ferry/surface. Trains keep their pales. Every line, resting and lit, is cased in neutral-800 (Map/RouteLine/casing), trains included. Lit lines keep their rule: a card's or trip's colour, the selected purple while a whole list is lit. The contributor page's lines are unchanged for now.
 
 ## Status (handed over 2026-11-06)
 
@@ -52,7 +53,7 @@ This session stopped here; the owner's own sessions carry on. Each PR is stacked
 | 7 | Commuter map wiring | Merged: [#812](https://github.com/ParaOrg/Para/pull/812), 406.8 kB. The filter lights the map; its framing is checked where an LRT line runs over a jeep road |
 | 7b | The hotspot pins off on the commuter map (decision 15) | Merged: [#813](https://github.com/ParaOrg/Para/pull/813), 406.9 kB |
 | 8 | Studio wiring | Open PR (branch `claude/route-card-studio-wiring`) |
-| 9 | Map lines in the mode colours | Not started |
+| 9 | Map lines in the mode colours | Open PR (branch `claude/route-lines-mode-colours`). Screenshots for the owner's morning check are linked in the PR |
 
 ### Step 4: the reviewer's findings, fixed
 
@@ -126,4 +127,6 @@ The builder designed these for now, or left them out. Each waits for the owner's
 - the S and E icons beside station codes;
 - operator logos;
 - tricycle and P2P looks;
-- the map line colours for E-Jeep and UV Express.
+- the map line colours for E-Jeep and UV Express (their cards' border shades for now);
+- the casing's width under the route lines (1 px a side, CASING_EXTRA, as it was), and whether the trains and the ferry wear the neutral-800 casing too;
+- a jeep's lit line when its card is picked: Jeep's blue, the same as its rest, set apart only by its width and its chevrons.
