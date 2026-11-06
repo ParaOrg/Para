@@ -55,7 +55,8 @@ This session stopped here; the owner's own sessions carry on. Each PR is stacked
 | 8 | Studio wiring | Merged: [#815](https://github.com/ParaOrg/Para/pull/815), 406.9 kB. group-test's filter check runs once two live routes share a road |
 | 9 | Map lines in the mode colours | Merged: [#818](https://github.com/ParaOrg/Para/pull/818), 407.2 kB. For the owner's morning check: `shots-step-9/` (light basemap, 393 and 1440 wide: Cubao, with jeeps beside LRT-2 and MRT-3, and the Pasig ferry) |
 | 9b | The counters count the cards, a place and mode each (a fix to step 4) | Merged: [#821](https://github.com/ParaOrg/Para/pull/821), 407.2 kB |
-| 10 | One shadow look: the RouteCard's Figma shadows in shadow-route-card-* | Open PR (branch `claude/route-card-shadows`) |
+| 10 | One shadow look: the RouteCard's Figma shadows in shadow-route-card-* | Merged: [#822](https://github.com/ParaOrg/Para/pull/822), 407.2 kB |
+| 10b | The commuter map keeps each hotspot's dot zoomed out (Q28) | Open PR (branch `claude/commuter-hotspot-dots`) |
 
 ### Step 4: the reviewer's findings, fixed
 
