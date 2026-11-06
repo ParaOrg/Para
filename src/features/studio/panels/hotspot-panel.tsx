@@ -13,6 +13,7 @@ import type { SaveIntent } from './save-intent';
 import { BESIDE_BODY } from './sheet';
 import { TerminalChecklist } from './terminal-checklist';
 import { useHotspotSave } from './use-hotspot-save';
+import { useLineStamps } from './use-line-stamps';
 import { useNearLines } from './use-near-lines';
 import { useUnpublish } from './use-unpublish';
 import { linksThrough, directionsStartingIn } from '../data/hotspots-geometry';
@@ -139,6 +140,7 @@ export function HotspotPanel({
   const [opened] = useState({ fields, outline });
   const isChanged = fields !== opened.fields || outline !== opened.outline;
   const status = isPublished && fields === opened.fields ? 'published' : 'draft';
+  const stamps = useLineStamps('hotspot', existing?.id ?? null);
   const unpublishing = useUnpublish({
     kind: 'hotspot',
     subjectId: isPublished ? (existing?.id ?? null) : null,
@@ -238,7 +240,7 @@ export function HotspotPanel({
           <PassesThrough groups={hintuanGroups} />
         )}
 
-        <LineDetail points={ring.length} pointsTerm="Corners" status={status} />
+        <LineDetail points={ring.length} pointsTerm="Corners" status={status} {...stamps} />
 
         {error && (
           <p role="alert" className="text-sm text-content-error">

@@ -1,9 +1,7 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-
 import { draftRefusal } from '../data/draft-save';
-import { takeDown } from '../data/drafts';
-import { reviewKeys } from '../data/review-keys';
-import type { DraftKind } from '../data/review-schema';
+import { reviewMessage } from '../data/review-commands';
+import type { DraftKind, ReviewResult } from '../data/review-schema';
+import { useUnpublishMutation } from '../data/use-unpublish-mutation';
 
 interface UseUnpublishOptions {
   /** What the sidebar is showing: a route or a hotspot. */
@@ -14,33 +12,39 @@ interface UseUnpublishOptions {
   onUnpublished?: () => void;
 }
 
+/** Why an Unpublish took nothing off, in the editor's words; null when it did. */
+function unpublishRefusal(result: ReviewResult): string | null {
+  if (result.code === 'unpublished') return null;
+  // A hotspot that ends a published route: the sidebar's words name the route ending there.
+  if (result.code === 'blocked') return draftRefusal(result);
+  return reviewMessage(result);
+}
+
 /**
  * The sidebar's Unpublish: takes a published route or hotspot off the public map at the next
- * publish, asking first. Today's take-down, as Drafts' Take down runs it (review-subjects.tsx),
- * until the database's unpublish also leaves it a draft (.scratch/codebase-review/database.md).
- * Every review read is stale after it.
+ * publish, asking first, and leaves it a draft (useUnpublishMutation).
  */
 export function useUnpublish({ kind, subjectId, onUnpublished }: UseUnpublishOptions) {
-  const client = useQueryClient();
-  const mutation = useMutation({
-    mutationFn: async (id: string) => {
-      const refusal = draftRefusal(await takeDown(kind, id));
-      if (refusal) throw new Error(refusal);
-    },
-    onSuccess: () => onUnpublished?.(),
-    onSettled: () => client.invalidateQueries({ queryKey: reviewKeys.all }),
-  });
+  const mutation = useUnpublishMutation();
 
   const unpublish = (name: string) => {
     if (!subjectId) return;
     if (!window.confirm(`Unpublish "${name}"? It leaves the public map at the next publish.`))
       return;
-    mutation.mutate(subjectId);
+    mutation.mutate(
+      { kind, subjectId },
+      {
+        onSuccess: (result) => {
+          if (result.code === 'unpublished') onUnpublished?.();
+        },
+      },
+    );
   };
 
+  const refusal = mutation.data ? unpublishRefusal(mutation.data) : null;
   return {
     isBusy: mutation.isPending,
-    error: mutation.error ? mutation.error.message : null,
+    error: mutation.error ? mutation.error.message : refusal,
     unpublish,
   };
 }

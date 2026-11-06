@@ -330,3 +330,22 @@ unpublished and published back, a take-down and put-back) must raise nothing and
 `studio-drafts.sh`, which change the map only through the draft functions, run again over it. On a second
 database, without draft_published, the apply refuses and writes no ledger row. On a third, apply then revert
 twice leaves the schema as before, and re-applying passes the check.
+
+## schema-snapshot.sh
+
+`../schema/snapshot.sql` is the `public` and `private` schemas as the live project has them, in one file:
+tables, columns, indexes, functions as they stand after every copy, triggers, row-security policies and
+grants, and no rows. It ends having to read three migrations to know what one function does now (review M5,
+M6). It is never applied.
+
+    PSQL="docker exec -i pg-verify psql -U postgres" bash supabase/verify/schema-snapshot.sh           # check, run last by run.sh
+    PSQL="docker exec -i pg-verify psql -U postgres" bash supabase/verify/schema-snapshot.sh --write   # rewrite
+
+The script builds a database from every migration the ledger lists, in the ledger's order (not the file
+names' order), each through its paste file where it has one, as the owner applied it. It then dumps the two
+schemas (`pg_dump --schema-only --no-owner`). The check fails when the snapshot differs. When a migration is
+recorded as applied, add it to `APPLIED` in the script and rewrite the snapshot in the same change. A
+migration not yet applied stays out until it is.
+
+It is rebuilt here, not read from the live project, so it has what the migrations made. It does not have
+what Supabase adds around them, such as `service_role`'s grants and Supabase's own schemas.

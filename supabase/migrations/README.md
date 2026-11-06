@@ -53,6 +53,14 @@ after every one.
 
 Create new files with `supabase migration new <name>`; the CLI supplies a timestamped filename. Leave the existing numbered files unchanged. Record the ledger version the project actually assigns after the owner approves and applies a migration. Until then, mark its row **not applied live**.
 
+## The schema in one file
+
+`supabase/schema/snapshot.sql` is the schema as every applied migration leaves it, in one file to read. Read
+it to see what a table, function or rule is now. It is never applied; changes still go through a migration
+here. `supabase/verify/schema-snapshot.sh` rebuilds it in ledger order and fails CI when it is out of date.
+When a migration is recorded as applied, add it to that script's `APPLIED` list and rewrite the snapshot
+(`--write`) in the same change.
+
 ## Applying a file from the SQL editor
 
 The dashboard's SQL editor runs a file but does not write the ledger, so add
