@@ -94,6 +94,30 @@ export const LocatorNote: Story = {
   },
 };
 
+/**
+ * In the app, the locate button tapped with the phone's location off and Google's "Turn on
+ * location?" dialog declined (its words are the locator's, locator-note.ts LOCATION_OFF_NOTE).
+ */
+export const LocatorLocationOffInTheApp: Story = {
+  args: {
+    mapNote: {
+      note: {
+        id: 'location',
+        title: 'Location is off',
+        body: 'Turn it on in Quick Settings to see where you are.',
+      },
+      timesGiven: 1,
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(await canvas.findByTestId('toast')).toHaveTextContent('Location is off');
+    await expect(canvas.getByRole('alert')).toHaveTextContent(
+      'Location is off. Turn it on in Quick Settings to see where you are.',
+    );
+  },
+};
+
 /** The recorder and the locator both say location is wrong: one toast, the recorder's. */
 export const RecorderAndLocator: Story = {
   args: { problem: LOCATION_BLOCKED_PROBLEM, mapNote: LOCATOR_NOTE },

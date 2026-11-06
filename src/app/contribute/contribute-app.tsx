@@ -1,7 +1,7 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import { useState } from 'react';
 
-import { ContributePage } from '@/features/contribute';
+import { ContributePage, checkLocationOn, isNativeApp } from '@/features/contribute';
 import { ContributorLocation } from '@/features/locator';
 import { createQueryClient } from '@/shared/lib/query-client';
 import { ErrorBoundary } from '@/shared/ui/error-boundary';
@@ -35,6 +35,9 @@ export function ContributeApp() {
               above={mark}
               onNote={onNote}
               onWhere={onWhere}
+              // The app's only: on the web the tap stays the browser's own gesture, as Safari's
+              // compass prompt needs.
+              checkLocationOn={isNativeApp() ? checkLocationOn : undefined}
             />
           )}
         />

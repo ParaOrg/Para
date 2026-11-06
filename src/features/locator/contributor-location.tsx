@@ -7,7 +7,7 @@ import { coarse } from '@/features/routes/map/map-view';
 
 import { isLocationGranted } from './location-permission';
 import { Locator } from './locator';
-import type { LocatorNote } from './locator-note';
+import { LOCATION_OFF_NOTE, type LocatorNote } from './locator-note';
 import { LocatorOnMap } from './locator-on-map';
 import { circleRadius, type Fix } from './locator-rules';
 import { useLocator } from './use-locator';
@@ -27,6 +27,13 @@ interface ContributorLocationProps {
   onNote?: (note: LocatorNote | null) => void;
   /** Where the dot is, at each fix: its place and its accuracy ring's radius in metres. */
   onWhere?: (where: LocatorWhere | null) => void;
+  /**
+   * The contributor app's: whether the phone's location is on, asked as the button is tapped, with
+   * Google's "Turn on location?" dialog when it is off. "off" says so in the page's toast, at each
+   * tap, and nothing is asked of the browser; "unknown" taps as the web does. Without it (the
+   * web), the button asks the browser.
+   */
+  checkLocationOn?: () => Promise<'on' | 'off' | 'unknown'>;
 }
 
 /** Where the contributor's dot is drawn: the page's paused frost clears round it. */
@@ -64,6 +71,7 @@ export function ContributorLocation({
   above,
   onNote,
   onWhere,
+  checkLocationOn,
 }: ContributorLocationProps) {
   const locator = useLocator(map, { compass: coarse, snap: 'low', offset: clearOfBars });
   const { mood, face, beat, poke } = useLocatorMood(locator);
@@ -102,11 +110,28 @@ export function ContributorLocation({
     if (!isRefused && camera !== 'tracked' && camera !== 'compass') latestTap.current();
   }, [isRecording, status, camera]);
 
+  // The button's tap, in the app: location turned on first, or a word that it is off. A browser
+  // gives no refusal while the phone's location is off, only a wait of 20 s with nothing said.
+  const latestOnNote = useRef(onNote);
+  useEffect(() => {
+    latestOnNote.current = onNote;
+  });
+  const handleTap = () => {
+    if (!checkLocationOn) {
+      tap();
+      return;
+    }
+    void checkLocationOn().then((setting) => {
+      if (setting === 'off') latestOnNote.current?.(LOCATION_OFF_NOTE);
+      else latestTap.current();
+    });
+  };
+
   return (
     <>
       {map && (
         <Locator
-          locator={locator}
+          locator={checkLocationOn ? { ...locator, tap: handleTap } : locator}
           map={map}
           isMapLoaded={isMapLoaded}
           basemaps={BASEMAPS}

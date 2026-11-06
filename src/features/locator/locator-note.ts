@@ -28,6 +28,13 @@ const UNAVAILABLE_NOTE: LocatorNote = {
   body: 'This browser cannot give one.',
 };
 
+/** The contributor app's, when the phone's location is off and stays off after Google's dialog. */
+export const LOCATION_OFF_NOTE: LocatorNote = {
+  id: LOCATOR_NOTE_ID,
+  title: 'Location is off',
+  body: 'Turn it on in Quick Settings to see where you are.',
+};
+
 const NO_FIX_NOTE: LocatorNote = {
   id: LOCATOR_NOTE_ID,
   title: 'No fix yet',
