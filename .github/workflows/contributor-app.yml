@@ -160,8 +160,8 @@ jobs:
 
   # The ride notification's taps on an emulator (scripts/apk/emulator-notification.sh): Lakad or
   # Sakay, Pause, Resume and Finish, done natively with the page leaving them, as a page asleep
-  # does; and the location service in the foreground, or not, after each, as the plugin's internals
-  # make it (ParaServiceWatchers.java). The emulator ride's APK, with its driver.
+  # does; and the ride's service in the foreground, or not, after each, as RideActionReceiver stops
+  # and starts it (RideService.java). The emulator ride's APK, with its driver.
   emulator-notification:
     if: ${{ !startsWith(github.ref, 'refs/tags/app-v') }}
     runs-on: ubuntu-latest
