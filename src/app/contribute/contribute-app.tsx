@@ -38,6 +38,7 @@ export function ContributeApp() {
               // The app's only: on the web the tap stays the browser's own gesture, as Safari's
               // compass prompt needs.
               checkLocationOn={isNativeApp() ? checkLocationOn : undefined}
+              remembersLastPlace={isNativeApp()}
             />
           )}
         />

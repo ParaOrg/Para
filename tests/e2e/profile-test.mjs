@@ -1687,15 +1687,33 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
   await page.reload({ waitUntil: 'load' });
   fake.next.list = 'hold';
   await openHistory(page);
-  await page.getByRole('status').filter({ hasText: 'Loading…' }).waitFor();
+  const stillComing = page.getByRole('status').filter({ hasText: 'Loading your rides' });
+  await stillComing.waitFor();
   check(
-    "while the account's uploads load, this phone's own are already listed",
-    (await row(page, 'Only here').count()) === 1,
+    "while the account's uploads load, this phone's own are already listed, the rest as skeletons",
+    (await row(page, 'Only here').count()) === 1 &&
+      (await page.locator('[data-history-skeleton]').count()) === 1,
   );
   await shot(page, '4-history-loading');
+  // No answer in 8 s: the skeletons give way to the line with no signal, and Try again.
+  const givenUp = page
+    .getByRole('alert')
+    .filter({ hasText: "No signal — can't load your uploads" });
+  check(
+    '  no answer in 8 s: History says so, with Try again, and still lists its own',
+    await givenUp.waitFor({ timeout: 12000 }).then(
+      () => true,
+      () => false,
+    ),
+  );
+  // Try again asks afresh, and the rest arrive: the line and the skeletons go.
+  await page.getByRole('button', { name: 'Try again' }).click();
   fake.release();
   await row(page, 'Also phone A').waitFor();
-  check('  and the rest arrive', (await page.getByText('Loading…').count()) === 0);
+  check(
+    '  Try again: the rest arrive, and the line goes',
+    (await stillComing.count()) === 0 && (await givenUp.count()) === 0,
+  );
 
   // The page stays on #history through the reload, and asks for the list as it opens.
   fake.next.list = 'offline';

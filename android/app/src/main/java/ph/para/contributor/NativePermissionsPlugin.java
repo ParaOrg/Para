@@ -8,7 +8,6 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
-import android.os.PowerManager;
 import android.provider.Settings;
 import android.util.Log;
 
@@ -147,15 +146,13 @@ public class NativePermissionsPlugin extends Plugin {
     }
     /**
      * The phone's maker (lower case) and Android version, which decide which permissions exist and
-     * whose battery steps apply, and whether Android already lets Para run unrestricted.
+     * whether Keep Para recording applies, and whether the phone's location switch is on.
      */
     @PluginMethod
     public void deviceInfo(PluginCall call) {
-        PowerManager power = (PowerManager) getContext().getSystemService(Context.POWER_SERVICE);
         JSObject state = new JSObject();
         state.put("sdk", Build.VERSION.SDK_INT);
         state.put("manufacturer", Build.MANUFACTURER.toLowerCase(Locale.ROOT));
-        state.put("isUnrestricted", power.isIgnoringBatteryOptimizations(getContext().getPackageName()));
         LocationManager location = (LocationManager) getContext().getSystemService(Context.LOCATION_SERVICE);
         state.put("isLocationOn", location != null && LocationManagerCompat.isLocationEnabled(location));
         call.resolve(state);
@@ -172,6 +169,42 @@ public class NativePermissionsPlugin extends Plugin {
             return;
         }
         call.resolve();
+    }
+
+    /**
+     * The makers' own screens that let an app start and run in the background (MIUI's Autostart,
+     * and the like), as package and activity. Not every phone has one, or lets it be opened: each
+     * is tried in turn, and Para's own page is the answer when none opens.
+     */
+    private static final String[][] AUTOSTART_SCREENS = {
+        {"com.miui.securitycenter", "com.miui.permcenter.autostart.AutoStartManagementActivity"},
+        {"com.coloros.safecenter", "com.coloros.safecenter.permission.startup.StartupAppListActivity"},
+        {"com.coloros.safecenter", "com.coloros.safecenter.startupapp.StartupAppListActivity"},
+        {"com.oppo.safe", "com.oppo.safe.permission.startup.StartupAppListActivity"},
+        {"com.vivo.permissionmanager", "com.vivo.permissionmanager.activity.BgStartUpManagerActivity"},
+        {"com.iqoo.secure", "com.iqoo.secure.ui.phoneoptimize.AddWhiteListActivity"},
+        {"com.huawei.systemmanager", "com.huawei.systemmanager.startupmgr.ui.StartupNormalAppListActivity"},
+        {"com.huawei.systemmanager", "com.huawei.systemmanager.optimize.process.ProtectActivity"},
+        {"com.oneplus.security", "com.oneplus.security.chainlaunch.view.ChainLaunchAppListActivity"},
+        {"com.samsung.android.lool", "com.samsung.android.sm.ui.battery.BatteryActivity"},
+    };
+
+    /** The maker's Autostart or battery screen for Para; Para's own page if the phone has none. */
+    @PluginMethod
+    public void openAutostartSettings(PluginCall call) {
+        for (String[] screen : AUTOSTART_SCREENS) {
+            Intent intent = new Intent()
+                .setClassName(screen[0], screen[1])
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            try {
+                getContext().startActivity(intent);
+                call.resolve();
+                return;
+            } catch (android.content.ActivityNotFoundException | SecurityException none) {
+                // Not on this phone, or not one an app may open: the next one, then Para's page.
+            }
+        }
+        openAppSettings(call);
     }
 
     /** Para's page in the phone's Settings, where Permissions and Battery are one tap away. */

@@ -1,10 +1,11 @@
 import { useRef, useState } from 'react';
 
-import { hasSeenBatteryNotice, markBatteryNoticeSeen } from './battery-notice-flag';
-import { batteryHelpFor, type BatteryHelp } from './battery-steps';
+import { hasSeenKeepRecording, markKeepRecordingSeen } from './keep-recording-flag';
+import { stopsBackgroundApps } from './keep-recording-makers';
 import {
   checkNativePermissions,
   openAppSettings,
+  openAutostartSettings,
   openLocationSettings,
   readDeviceInfo,
   requestNativePermission,
@@ -16,7 +17,8 @@ import { firstMissing, neededPermissions } from './permission-steps';
 export type GateStep =
   | { kind: 'permission'; permission: NativePermission }
   | { kind: 'refused'; permission: NativePermission }
-  | { kind: 'battery'; help: BatteryHelp }
+  /** Once, on a phone whose maker stops background apps: Keep Para recording. */
+  | { kind: 'keep-recording' }
   /** The phone's location switch is off: no ride can record until it is on. */
   | { kind: 'location-off' };
 
@@ -29,16 +31,17 @@ export interface StartGate {
   handleStart: () => void;
   handleContinue: () => void;
   handleRecordAnyway: () => void;
-  handleBatteryDone: () => void;
+  handleKeepRecordingDone: () => void;
   handleOpenSettings: () => void;
+  handleOpenAutostartSettings: () => void;
   handleOpenLocationSettings: () => void;
   handleClose: () => void;
 }
 
 /**
  * What stands between a tap on Start and the recording in the app: the permissions, asked for in
- * order with a reason each (notifications, location, then "all the time"), and, once, the
- * battery help for a maker known to stop background apps. A refusal says what still works; the
+ * order with a reason each (notifications, location, then "all the time"), and, once, Keep
+ * Para recording on a phone whose maker stops background apps. A refusal says what still works; the
  * contributor may record anyway unless it is location. With the phone's location switch off no
  * ride starts: the card says so, and the next Start checks again.
  */
@@ -54,10 +57,11 @@ export function useStartGate(onStart: () => void): StartGate {
     setStep(null);
   };
 
-  const startOrShowBattery = (info: DeviceInfo) => {
-    const help = batteryHelpFor(info.manufacturer);
-    if (help && !info.isUnrestricted && !hasSeenBatteryNotice()) {
-      setStep({ kind: 'battery', help });
+  const startOrKeepRecording = (info: DeviceInfo) => {
+    // Shown whether or not battery restrictions are off: the maker's Autostart is a switch of its
+    // own, which Android cannot report, and it alone stops a ride when the app is left.
+    if (stopsBackgroundApps(info.manufacturer) && !hasSeenKeepRecording()) {
+      setStep({ kind: 'keep-recording' });
       return;
     }
     setStep(null);
@@ -72,7 +76,7 @@ export function useStartGate(onStart: () => void): StartGate {
     const missing = firstMissing(await checkNativePermissions(), needed);
     if (missing) setStep({ kind: 'permission', permission: missing });
     else if (!info.isLocationOn) setStep({ kind: 'location-off' });
-    else startOrShowBattery(info);
+    else startOrKeepRecording(info);
   };
 
   const handleStart = () => {
@@ -98,14 +102,18 @@ export function useStartGate(onStart: () => void): StartGate {
     checkAll().catch(fail);
   };
 
-  const handleBatteryDone = () => {
-    markBatteryNoticeSeen();
+  const handleKeepRecordingDone = () => {
+    markKeepRecordingSeen();
     setStep(null);
     onStart();
   };
 
   const handleOpenSettings = () => {
     openAppSettings().catch(fail);
+  };
+
+  const handleOpenAutostartSettings = () => {
+    openAutostartSettings().catch(fail);
   };
 
   const handleOpenLocationSettings = () => {
@@ -118,8 +126,9 @@ export function useStartGate(onStart: () => void): StartGate {
     handleStart,
     handleContinue,
     handleRecordAnyway,
-    handleBatteryDone,
+    handleKeepRecordingDone,
     handleOpenSettings,
+    handleOpenAutostartSettings,
     handleOpenLocationSettings,
     handleClose: () => setStep(null),
   };

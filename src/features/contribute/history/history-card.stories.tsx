@@ -104,6 +104,45 @@ export const Uploaded: Story = {
   },
 };
 
+/** An editor drew a route from this ride: the card says which, so the contributor sees it used. */
+export const UsedOnTheMap: Story = {
+  args: { usedFor: ['SM Fairview → Cubao'] },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByText('On the map: SM Fairview → Cubao')).toBeInTheDocument();
+  },
+};
+
+/** Several routes drawn from one ride: their names, joined on one line. */
+export const UsedOnTheMapSeveral: Story = {
+  args: {
+    usedFor: ['SM Fairview → Cubao', 'Cubao → SM Fairview', 'Novaliches hintuan'],
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(
+      canvas.getByText('On the map: SM Fairview → Cubao, Cubao → SM Fairview, Novaliches hintuan'),
+    ).toBeInTheDocument();
+  },
+};
+
+/** Names too long for two lines at the card's width: the line stops at two, with an ellipsis. */
+export const UsedOnTheMapLong: Story = {
+  args: {
+    usedFor: [
+      'SM City Fairview terminal behind the Regalado Avenue entrance → Quezon Memorial Circle',
+      'Quezon Memorial Circle jeepney stop under the footbridge → SM City Fairview terminal',
+      'Novaliches Bayan via Quirino Highway and Susano Road → Cubao via Marcos Highway',
+    ],
+  },
+  play: async ({ canvasElement }) => {
+    const line = within(canvasElement).getByText(/^On the map: SM City Fairview terminal/);
+    await expect(line).toHaveClass('line-clamp-2');
+    // Clamped: the text is taller than the box that shows it.
+    await expect(line.scrollHeight).toBeGreaterThan(line.clientHeight);
+  },
+};
+
 /** A tap anywhere on the card opens the ride's screen, where it can be deleted. */
 export const OpensItsRide: Story = {
   play: async ({ args, canvasElement }) => {

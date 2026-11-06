@@ -8,6 +8,7 @@ export type RpcName =
   | 'delete_my_account'
   | 'finish_claim'
   | 'get_my_stats'
+  | 'get_my_uses'
   | 'get_profile'
   | 'save_contribution'
   | 'set_profile';

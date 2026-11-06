@@ -74,6 +74,7 @@ const itemsOf = (
   uploads,
   isOnPhone: (recording) => !elsewhere.some((other) => other.id === recording.id),
   factsOf: () => ({ distanceM: 12_400, isWalkOnly: false, trail: null }),
+  usedOf: () => [],
   load,
 });
 

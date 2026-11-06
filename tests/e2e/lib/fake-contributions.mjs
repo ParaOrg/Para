@@ -43,7 +43,8 @@
 //   logout = 'hold'             the sign-out waits until `fake.release()` (a Logout in flight)
 //
 // get_my_stats answers `fake.stats`, the account's numbers as one row; left null, the function is
-// not there (404 PGRST202), as before its migration is applied.
+// not there (404 PGRST202), as before its migration is applied. get_my_uses answers `fake.uses`,
+// the rows as migration my_contribution_uses gives them (none by default).
 //   offline       the save request fails as with no signal
 //   lostAnswer    the save is stored, then the answer is lost on the way back
 //   hold          the save waits until `fake.release()` (an upload in flight)
@@ -166,6 +167,8 @@ export async function fakeContributions(page) {
     /** The account's numbers for get_my_stats, as statsRow takes them; null: no such function. */
     stats: null,
     statsRequests: 0,
+    /** get_my_uses' rows: { contribution_id, kind, name } for each ride an editor used. */
+    uses: [],
     deleteAccountRequests: 0,
     /** The accounts delete_my_account deleted, in order. */
     deletedAccounts: [],
@@ -412,6 +415,9 @@ export async function fakeContributions(page) {
         });
       }
       return json(route, 200, [statsRow(fake.stats)]);
+    }
+    if (url.pathname === '/rest/v1/rpc/get_my_uses' && method === 'POST') {
+      return json(route, 200, fake.uses);
     }
     if (url.pathname === '/rest/v1/rpc/set_profile' && method === 'POST') {
       fake.profileRequests += 1;

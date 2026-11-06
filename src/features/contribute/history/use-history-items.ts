@@ -1,11 +1,14 @@
-import { keepPreviousData, useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo } from 'react';
 
 import { historyKeys } from './history-keys';
 import { mergeHistory } from './history-merge';
 import { rideFactsOf, storedFactsOf, uploadFactsOf, type RideFacts } from './ride-facts';
+import { accountKeys } from '../api/account-keys';
 import { UploadError } from '../api/upload-problem';
 import { useAccountUploadsQuery } from '../api/use-account-uploads-query';
+import { useMyUsesQuery } from '../api/use-my-uses-query';
+import { askAgain, useLoadGiveUp } from '../common/use-load-give-up';
 import { fixOfRow } from '../recorder/recording-fixes';
 import type { Recording } from '../storage/recording-schema';
 import { loadFixes, updateRecording } from '../storage/recording-store';
@@ -26,6 +29,8 @@ export interface HistoryItems {
   isOnPhone: (recording: Recording) => boolean;
   /** Its distance and trail: read from its fixes on this phone, or what the database keeps of an upload from another; null until read. */
   factsOf: (recording: Recording) => RideFacts | null;
+  /** What an editor made of it on the map, by name: route directions and hintuans; empty for nothing yet. */
+  usedOf: (recording: Recording) => readonly string[];
   load: HistoryLoad;
 }
 
@@ -40,9 +45,17 @@ function loadStateOf(query: {
   return 'ready';
 }
 
+const NO_SIGNAL_MESSAGE = "No signal — can't load your uploads";
+
+/** What History says of its load: none while it goes well, and why not once it fails or is given up. */
+function loadMessage(hasGivenUp: boolean, error: unknown): string | null {
+  if (hasGivenUp) return NO_SIGNAL_MESSAGE;
+  return error ? loadMessageOf(error) : null;
+}
+
 const loadMessageOf = (error: unknown): string =>
   error instanceof UploadError && error.problem === 'offline'
-    ? "No signal — can't load your uploads"
+    ? NO_SIGNAL_MESSAGE
     : "Can't load your uploads right now";
 
 /**
@@ -63,6 +76,8 @@ async function factsFromFixes(recording: Recording): Promise<RideFacts> {
   return facts;
 }
 
+const NONE: readonly string[] = [];
+
 /**
  * What History lists: this phone's recordings merged with the account's uploads from the
  * database, whichever phone sent them, less those deleted from History here (`hidden`). A
@@ -76,6 +91,11 @@ export function useHistoryItems(
   hidden: ReadonlySet<string>,
 ): HistoryItems {
   const query = useAccountUploadsQuery();
+  const uses = useMyUsesQuery().data;
+  const queryClient = useQueryClient();
+  // A load with no answer after a while is said as one with no signal, with Try again.
+  const queryState = loadStateOf(query);
+  const giveUp = useLoadGiveUp(queryState === 'loading');
   const needsFixes = saved.filter(
     (recording) =>
       recording.distanceM === undefined || (pictures !== undefined && !pictures.has(recording.id)),
@@ -126,10 +146,14 @@ export function useHistoryItems(
       const upload = uploadById.get(recording.id);
       return upload ? uploadFactsOf(upload) : null;
     },
+    usedOf: (recording) => uses?.get(recording.id) ?? NONE,
     load: {
-      state: loadStateOf(query),
-      message: query.isError ? loadMessageOf(query.error) : null,
-      onRetry: () => void query.refetch(),
+      state: giveUp.hasGivenUp ? 'error' : queryState,
+      message: loadMessage(giveUp.hasGivenUp, query.isError ? query.error : null),
+      onRetry: () => {
+        giveUp.restart();
+        void askAgain(queryClient, accountKeys.uploads(), query.refetch);
+      },
     },
   };
 }
