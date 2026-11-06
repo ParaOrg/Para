@@ -320,6 +320,7 @@ flowchart TD
   features_studio_review --> features_studio_maps
   shared_ui --> design_system_primitives
   shared_ui --> shared_hooks
+  shared_ui --> shared_utils
   styles --> design_system_foundation
 ```
 
@@ -371,7 +372,7 @@ flowchart TD
 | `shared/hooks` | — |
 | `shared/lib` | — |
 | `shared/types` | — |
-| `shared/ui` | `design-system/primitives`, `shared/hooks` |
+| `shared/ui` | `design-system/primitives`, `shared/hooks`, `shared/utils` |
 | `shared/utils` | — |
 | `styles` | `design-system/foundation` |
 

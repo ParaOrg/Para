@@ -23,8 +23,11 @@ export interface RecorderProblems {
 /**
  * The recorder's two slots for what went wrong, so a location error never hides a storage
  * failure: storage stays until a new recording starts, location clears when the next fix arrives.
+ * Location is the recorder's to say only while it records (`isRecording`): a ride stopped with no
+ * fix since leaves it behind, and it would hold the one location toast against the locate
+ * button's own note (PageToasts), stale, or closed and so silent.
  */
-export function useRecorderProblems(): RecorderProblems {
+export function useRecorderProblems(isRecording: boolean): RecorderProblems {
   const [storageProblem, setStorageProblem] = useState<PageProblem | null>(null);
   const [locationProblem, setLocationProblem] = useState<PageProblem | null>(null);
   // Another tab holds the recorder: this one shows why and starts nothing.
@@ -52,7 +55,7 @@ export function useRecorderProblems(): RecorderProblems {
   }
 
   return {
-    problem: storageProblem ?? locationProblem,
+    problem: storageProblem ?? (isRecording ? locationProblem : null),
     reportStore,
     showOtherTab,
     clearOtherTab,

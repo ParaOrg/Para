@@ -15,6 +15,7 @@ import {
   snapAfterTap,
   swallowTheTapsClick,
   type SheetHeights,
+  type SheetShape,
   type Snap,
 } from './sheet-gesture';
 
@@ -46,6 +47,8 @@ interface SheetGesturesOptions {
   docked: () => boolean;
   /** Set for a fitted sheet: it moves between Low and open only. Null for Low, Middle and Max. */
   fitted: FittedSheet | null;
+  /** Its Low and Max (BottomSheet's `shape`). */
+  shape: SheetShape;
   /** False: a pull or a flick down from Low rests at Low, and only Escape (or the page) closes it. */
   closesOnPull: boolean;
 }
@@ -77,6 +80,7 @@ export function useSheetGestures({
   show,
   docked,
   fitted,
+  shape,
   closesOnPull,
 }: SheetGesturesOptions): SheetGestures {
   // A fitted sheet has no Middle or Max of its own: what would land there lands open. A sheet that
@@ -95,12 +99,13 @@ export function useSheetGestures({
   const afterTap = (from: Snap): Snap =>
     fitted ? (from === 'low' ? fitted.open : 'low') : snapAfterTap(from);
   /** The magnets of a sheet on a map `h` tall. */
-  const heightsOf = (h: number): SheetHeights => (fitted ? fitted.heightsFor(h) : heightsFor(h));
-  // Read by the listeners bound once below: today's snap, settle and magnets,
+  const heightsOf = (h: number): SheetHeights =>
+    fitted ? fitted.heightsFor(h) : heightsFor(h, shape);
+  // Read by the listeners bound once below: today's snap, settle, magnets and shape,
   // written as the render commits, before a finger or a wheel can come.
-  const now = useRef({ snap, settle, heightsOf, isFitted: fitted !== null });
+  const now = useRef({ snap, settle, heightsOf, shape, isFitted: fitted !== null });
   useLayoutEffect(() => {
-    now.current = { snap, settle, heightsOf, isFitted: fitted !== null };
+    now.current = { snap, settle, heightsOf, shape, isFitted: fitted !== null };
   });
 
   // When a finger or a mouse last pressed on the sheet: focus that follows a
@@ -136,7 +141,13 @@ export function useSheetGestures({
         }
         if (y - pull.startY <= DRAG_PX / 3) return;
         const h = sheet.offsetHeight;
-        pull.track = follow(pull.startY, pull.t, shownAt('max', h), h, now.current.heightsOf(h));
+        pull.track = follow(
+          pull.startY,
+          pull.t,
+          shownAt('max', h, now.current.shape),
+          h,
+          now.current.heightsOf(h),
+        );
         setDragging(true);
       }
       e.preventDefault();
@@ -200,7 +211,7 @@ export function useSheetGestures({
     const raises =
       handle.contains(target) || (snap === 'low' && !!bodyRef.current?.contains(target));
     const h = sheet.offsetHeight;
-    const track = follow(e.clientY, e.timeStamp, shownAt(snap, h), h, heightsOf(h));
+    const track = follow(e.clientY, e.timeStamp, shownAt(snap, h, shape), h, heightsOf(h));
     let moving = false;
 
     // Followed on the window, not the sheet: a finger or a mouse dragged

@@ -1,6 +1,6 @@
 import { readFixLog } from './native-fix-log';
 import { startNativeWatch } from './native-location';
-import { setRideNoticeState } from './ride-notice';
+import { readRideEvents, setRideNoticeState } from './ride-notice';
 import { fixOfRow, rowOfFix, takeWatchedFixes } from '../recorder/recording-fixes';
 import { newRecording } from '../recorder/recording-transitions';
 import type { Recording } from '../storage/recording-schema';
@@ -44,7 +44,13 @@ async function snapshot(recordingId: string): Promise<string> {
   const times = rows.map((row) => row.time);
   const sorted = times.every((time, index) => index === 0 || time > times[index - 1]);
   const log = await readFixLog();
-  return `rows=${rows.length} first=${times[0] ?? 0} last=${times[times.length - 1] ?? 0} sorted=${sorted} native=${log.fixes.length}`;
+  // The taps on the notification as the page reads them (RidePlugin.events), for
+  // emulator-notification.sh: the page applies only the taps it can read.
+  const taps = await readRideEvents().then(
+    (events) => String(events.length),
+    () => 'unreadable',
+  );
+  return `rows=${rows.length} first=${times[0] ?? 0} last=${times[times.length - 1] ?? 0} sorted=${sorted} native=${log.fixes.length} taps=${taps}`;
 }
 
 /**
