@@ -224,6 +224,16 @@ grep -q 'Ride finished' "$OUT/notification-finished.txt" && pass "the notificati
 EVENTS=$(ride_events)
 [ "$EVENTS" = "mode pause resume finish " ] && pass "the page has every tap waiting, in order: $EVENTS" \
   || fail "the taps kept for the page: '$EVENTS'"
+# The page reads them too (RidePlugin.events), as it does to apply them: the driver's next report
+# (every 30 s, emulator-ride.ts) counts what it read.
+PAGE_TAPS=""
+for _ in $(seq 1 45); do
+  PAGE_TAPS=$(grep -o 'PARA_RIDE report .*taps=[a-z0-9]*' "$OUT/logcat.txt" | tail -1 | grep -o 'taps=[a-z0-9]*$')
+  [ "$PAGE_TAPS" = "taps=4" ] && break
+  sleep 1
+done
+[ "$PAGE_TAPS" = "taps=4" ] && pass "the page reads the four taps it is to apply" \
+  || fail "the page reads the taps as '$PAGE_TAPS', not taps=4: it would apply none"
 
 kill "$FEED_PID" "$LOGCAT_PID" 2> /dev/null
 {
