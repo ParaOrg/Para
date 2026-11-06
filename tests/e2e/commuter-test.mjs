@@ -1112,10 +1112,12 @@ if (PART !== 1) {
         );
       };
       const before = await listedNow();
-      // A card at rest: the checks above may leave one picked.
-      const firstCard = chooser
-        .locator('[data-testid="chooser-origin"][data-state="rest"]')
-        .first();
+      // A card at rest, held by its place in the list: the checks above may leave one picked, and
+      // a `[data-state="rest"]` locator would move off it once it is picked.
+      const restAt = await cards.evaluateAll((els) =>
+        els.findIndex((e) => e.dataset.state === 'rest'),
+      );
+      const firstCard = cards.nth(Math.max(restAt, 0));
       await firstCard.locator('[data-testid="chooser-select"]').click();
       const pickedFirst = (await inState(firstCard, 'selected')) === 'selected';
       const agree = [];
