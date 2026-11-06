@@ -1,5 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 
+import { cn } from '@/shared/utils/cn';
+
 import { CARD_SURFACE, CARD_TEXT } from './livery-card';
 import { RailwayBadge } from './railway-badge';
 import { RAILWAY_LIVERY } from '../model/liveries';
@@ -12,7 +14,7 @@ const meta = {
     (Story, { args }) => {
       const livery = RAILWAY_LIVERY[args.railway];
       return (
-        <div className={'flex p-4 font-sn-pro ' + CARD_SURFACE[livery] + ' ' + CARD_TEXT[livery]}>
+        <div className={cn('flex p-4 font-sn-pro', CARD_SURFACE[livery], CARD_TEXT[livery])}>
           <Story />
         </div>
       );

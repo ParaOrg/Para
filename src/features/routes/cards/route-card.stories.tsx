@@ -242,7 +242,7 @@ export const MixedModes: Story = {
   },
   play: async ({ canvasElement }) => {
     const rows = within(canvasElement).getAllByTestId('chooser-item');
-    // Jeepney's two rows, then Bus's one, then Train's two at the bottom.
+    // Jeep's two rows, then Bus's one, then Train's two at the bottom.
     await expect(rows.map((r) => r.textContent)).toEqual([
       'Tala',
       'Lagro',
@@ -251,7 +251,7 @@ export const MixedModes: Story = {
       'Antipolo',
     ]);
     const canvas = within(canvasElement);
-    await expect(canvas.getByText('Jeepney')).toBeVisible();
+    await expect(canvas.getByText('Jeep')).toBeVisible();
     await expect(canvas.getByText('Train')).toBeVisible();
     await expect(canvas.getByText('Bus')).toBeVisible();
   },

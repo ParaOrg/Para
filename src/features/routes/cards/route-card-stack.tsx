@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 
 import { RouteCard } from './route-card';
 import { RouteCardRailway } from './route-card-railway';
+import { MODE_LABEL, groupByMode } from './route-modes';
 import { routeCards, type Listing } from '../model/departures';
 import type { Livery } from '../model/liveries';
 import { stationCode } from '../model/rail-codes';
@@ -10,7 +11,7 @@ import { vehicleOf } from '../model/vehicles';
 
 /** A card picked: which card it is, the place it stands for, the directions its rows list, and its colour, for the map to light them in. */
 export interface PickedPlace {
-  /** The card's key (routeCards): a place has a card per train line and bound besides its own. */
+  /** The card's key (routeCards): a place has a card per mode, and per train line and bound. */
   card: string;
   from: string;
   ids: readonly string[];
@@ -44,11 +45,22 @@ function originCodeOf(directions: readonly { v: Direction }[]): string | null {
 }
 
 /**
- * Routes one way round as RouteCards: a card per place they leave from
- * (departures), and per train line and bound or the ferry a RouteCardRailway
- * besides (routeCards), each in its livery — its first row's mode's, or a
+ * What a card draws at its top: a road card its first row group's mode word (RouteCard draws none
+ * when that group rides nothing drawn, as P2P and tricycle), a train or ferry card its line.
+ */
+function drawnModeOf(place: ReturnType<typeof routeCards>[number]): string | null {
+  if (place.railway) return place.railway;
+  const [first] = groupByMode(place.directions.map((d) => ({ vehicle: vehicleOf(d.v) })));
+  return first?.vehicle ? MODE_LABEL[first.vehicle] : null;
+}
+
+/**
+ * Routes one way round as RouteCards: a card per place they leave from and
+ * mode, run by mode (routeCards), and per train line and bound or the ferry a
+ * RouteCardRailway, each in its livery — its first row's mode's, or a
  * train's or the ferry's line's own (liveryOf) — with a row per drawn
- * direction. One card at a time is Selected, and the map lights its
+ * direction. A run of one mode names it on its first card only: a card
+ * names its mode unless the card before drew the same word. One card at a time is Selected, and the map lights its
  * directions alone; a row opens its trip straight away, whether its card is
  * picked or not, and picks none: selecting it too is confusing (the owner's
  * call), and the trip's ‹ comes back to every card at rest. The route list
@@ -115,7 +127,7 @@ export function RouteCardStack({
             key={p.card}
             testId={testId}
             livery={p.livery}
-            showsMode={i === 0 || places[i - 1].livery !== p.livery}
+            showsMode={i === 0 || drawnModeOf(places[i - 1]) !== drawnModeOf(p)}
             state={selected === p.card ? 'selected' : 'rest'}
             routeOrigin={p.from}
             endPoints={p.directions.map((d) => ({

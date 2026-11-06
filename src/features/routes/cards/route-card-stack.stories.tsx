@@ -195,3 +195,23 @@ export const StackedList: Story = {
     await expect(modes.map((m) => m.textContent)).toEqual(['Jeep', 'UV Express', 'E-Jeep', 'Bus']);
   },
 };
+
+/**
+ * A run led by a card that draws no mode: Tala's P2P wears UV Express's colours but rides nothing
+ * drawn, so Bigte's UV Express card after it still names its mode.
+ */
+export const RunLedByP2p: Story = {
+  args: {
+    routes: [
+      road('p2p', 'Tala', 'Makati', 'p2p'),
+      road('uv', 'Bigte', 'Buendia', 'uv_express'),
+      road('uv2', 'Bigte', 'SM North', 'uv_express'),
+    ],
+  },
+  play: async ({ canvasElement }) => {
+    const cards = within(canvasElement).getAllByTestId('card-origin');
+    await expect(cards.map((c) => c.dataset.livery)).toEqual(['uv-express', 'uv-express']);
+    await expect(within(cards[0]).queryByText('UV Express')).toBeNull();
+    await expect(within(cards[1]).getByText('UV Express')).toBeVisible();
+  },
+};
