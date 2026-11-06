@@ -43,8 +43,10 @@ This session stopped here; the owner's own sessions carry on. Each PR is stacked
 | 3 | RouteCard restyle | Merged: [#781](https://github.com/ParaOrg/Para/pull/781), 412.6 kB. Its profile-test failure did not come back on a fresh run |
 | 4 | RouteCardStackedList, with the railway card | Merged: [#786](https://github.com/ParaOrg/Para/pull/786), 412.6 kB. Its profile-test failure (a race in the contributor's claim check) passed on re-run |
 | 5 | The Controller, with the filter | Merged: [#788](https://github.com/ParaOrg/Para/pull/788), 412.6 kB. The filter and its empty state designed for now. Its icons were moved into a sprite, to stay within the budget. |
-| 5b | The route icons into a sprite (size) | [#791](https://github.com/ParaOrg/Para/pull/791): the remaining inline drawings into `route-icons.svg`, 412.7 → 404.5 kB, room for steps 6–9 |
-| 6 | Sheet layout: docked on desktop, the mobile Controller at the bottom, Max full screen | Open PR (branch `claude/route-card-sheet`) |
+| 5b | The route icons into a sprite (size) | Merged: [#791](https://github.com/ParaOrg/Para/pull/791): the remaining inline drawings into `route-icons.svg`, 412.7 → 404.5 kB, room for steps 6–9 |
+| 6 | Sheet layout: docked on desktop, the mobile Controller at the bottom, Max full screen | Merged: [#794](https://github.com/ParaOrg/Para/pull/794), 406.1 kB. Its profile-test failures came from staging's #793 and were fixed by #796; phone-test once ran into its 30-minute timeout on a slow runner and passed on re-run |
+| 6a | The sheet's scroll lag (no look change) | Merged: [#797](https://github.com/ParaOrg/Para/pull/797), 406.3 kB. The chevrons pause while the map is out of sight; the dock host is written only at rest |
+| 6b | The trip card's two plays (test-only) | Open PR (branch `claude/trip-card-plays`) |
 | 7 | Commuter map wiring | Not started |
 | 8 | Studio wiring | Not started |
 | 9 | Map lines in the mode colours | Not started |
