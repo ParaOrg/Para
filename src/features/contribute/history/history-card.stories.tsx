@@ -121,9 +121,7 @@ export const UsedOnTheMapSeveral: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(
-      canvas.getByText(
-        'On the map: SM Fairview → Cubao, Cubao → SM Fairview, Novaliches hintuan',
-      ),
+      canvas.getByText('On the map: SM Fairview → Cubao, Cubao → SM Fairview, Novaliches hintuan'),
     ).toBeInTheDocument();
   },
 };
