@@ -82,6 +82,20 @@ export function ContributorLocation({
     onWhere?.(fix ? { at: fix.at, ringM: circleRadius(fix.accuracy) } : null);
   }, [fix, onWhere]);
 
+  // The app's "Location is off" is out: the first fix takes it back, however the locator was
+  // started (the button, a recording, the permission already granted), as a fix takes back the
+  // browser's own notes (Locator).
+  const isOffSaid = useRef(false);
+  const latestOnNote = useRef(onNote);
+  useEffect(() => {
+    latestOnNote.current = onNote;
+  });
+  useEffect(() => {
+    if (!fix || !isOffSaid.current) return;
+    isOffSaid.current = false;
+    latestOnNote.current?.(null);
+  }, [fix]);
+
   // The latest tap, for effects that must not re-run when the hook hands out a new one.
   const latestTap = useRef(tap);
   useEffect(() => {
@@ -112,12 +126,6 @@ export function ContributorLocation({
 
   // The button's tap, in the app: location turned on first, or a word that it is off. A browser
   // gives no refusal while the phone's location is off, only a wait of 20 s with nothing said.
-  const latestOnNote = useRef(onNote);
-  useEffect(() => {
-    latestOnNote.current = onNote;
-  });
-  // The app's "Location is off" is out, for the next tap that gets through to take back.
-  const isOffSaid = useRef(false);
   const handleTap = () => {
     if (!checkLocationOn) {
       tap();
@@ -128,12 +136,6 @@ export function ContributorLocation({
         isOffSaid.current = true;
         latestOnNote.current?.(LOCATION_OFF_NOTE);
         return;
-      }
-      // Location is on now: the word that it was off is taken back, as a fix takes back the
-      // browser's notes (Locator), which come again by themselves if they still hold.
-      if (isOffSaid.current) {
-        isOffSaid.current = false;
-        latestOnNote.current?.(null);
       }
       latestTap.current();
     });
