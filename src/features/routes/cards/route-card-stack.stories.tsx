@@ -129,7 +129,7 @@ export const OneSelected: Story = { args: { back: true, selected: 'SM Fairview|j
 export const AStation: Story = {
   args: { routes: cubao },
   play: async ({ canvasElement }) => {
-    const cards = within(canvasElement).getAllByTestId('chooser-origin');
+    const cards = within(canvasElement).getAllByTestId('card-origin');
     await expect(cards.map((c) => c.dataset.livery)).toEqual([
       expect.any(String),
       'light-rail-way-two',

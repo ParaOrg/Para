@@ -92,12 +92,11 @@ export function RouteCardRailway({
       data-testid={`${testId}-origin`}
       data-livery={livery}
       data-state={state}
-      className={
-        'relative isolate flex w-full flex-col items-start gap-2.5 overflow-clip border-y-0-6 py-2 font-sn-pro ' +
-        CARD_SURFACE[livery] +
-        ' ' +
-        CARD_TEXT[livery]
-      }
+      className={cn(
+        'relative isolate flex w-full flex-col items-start gap-2.5 overflow-clip border-y-0-6 py-2 font-sn-pro',
+        CARD_SURFACE[livery],
+        CARD_TEXT[livery],
+      )}
     >
       <img
         src={CARD_BLOB[livery].src}
@@ -113,10 +112,10 @@ export function RouteCardRailway({
         </span>
         <p
           data-testid={`${testId}-pill`}
-          className={
-            'rounded-full px-2.5 py-0.5 text-lg/7 font-medium whitespace-nowrap ' +
-            RAILWAY_PILL[railway]
-          }
+          className={cn(
+            'rounded-full px-2.5 py-0.5 text-lg/7 font-medium whitespace-nowrap',
+            RAILWAY_PILL[railway],
+          )}
         >
           {PILL_LABEL[railway]}
           {bound && <span className="sr-only">, {bound}</span>}
@@ -165,10 +164,10 @@ export function RouteCardRailway({
       </div>
       <span
         aria-hidden
-        className={
-          'pointer-events-none absolute inset-0 ' +
-          (isSelected ? CARD_SHADOW_SELECTED[livery] : CARD_SHADOW[livery])
-        }
+        className={cn(
+          'pointer-events-none absolute inset-0',
+          isSelected ? CARD_SHADOW_SELECTED[livery] : CARD_SHADOW[livery],
+        )}
       />
     </div>
   );

@@ -60,11 +60,12 @@ function drawnModeOf(place: ReturnType<typeof routeCards>[number]): string | nul
  * RouteCardRailway, each in its livery — its first row's mode's, or a
  * train's or the ferry's line's own (liveryOf) — with a row per drawn
  * direction. A run of one mode names it on its first card only: a card
- * names its mode unless the card before drew the same word. One card at a time is Selected, and the map lights its
- * directions alone; a row opens its trip straight away, whether its card is
- * picked or not, and picks none: selecting it too is confusing (the owner's
- * call), and the trip's ‹ comes back to every card at rest. The route list
- * stacks them under its header; the public map's HintuanCard under its
+ * names its mode unless the card before drew the same word. One card at a
+ * time is Selected, and the map lights its directions alone; a row opens
+ * its trip straight away, whether its card is picked or not, and picks
+ * none: selecting it too is confusing (the owner's call), and the trip's
+ * ‹ comes back to every card at rest. The route list stacks them under its
+ * header; the public map's HintuanCard under its
  * place's boxes, the routes stopping at the Selected one; the studio's
  * hotspot card under "Routes that pass through", or a terminal's "Routes that
  * stage here" — edge to edge in all three.
