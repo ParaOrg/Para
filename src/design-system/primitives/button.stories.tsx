@@ -14,11 +14,11 @@ const NavIcon = (
 /** Each card fill on the card it belongs to: the card's surface, and its words. */
 const CARD_FILLS = [
   { fill: 'card-red', card: 'bg-card-red-surface text-content-inverse' },
-  { fill: 'card-orange', card: 'bg-card-orange-surface text-content-inverse' },
-  { fill: 'card-violet', card: 'bg-card-violet-surface text-content-inverse' },
-  { fill: 'card-rose', card: 'bg-card-rose-surface text-content-inverse' },
-  { fill: 'card-fuchsia', card: 'bg-card-fuchsia-surface text-content-inverse' },
-  { fill: 'card-pink', card: 'bg-card-pink-surface text-content-inverse' },
+  { fill: 'card-bus', card: 'bg-card-bus-surface text-content-inverse' },
+  { fill: 'card-jeep', card: 'bg-card-jeep-surface text-content-inverse' },
+  { fill: 'card-uv-express', card: 'bg-card-uv-express-surface text-content-inverse' },
+  { fill: 'card-ejeep', card: 'bg-card-ejeep-surface text-content-inverse' },
+  { fill: 'card-jeep', card: 'bg-card-jeep-surface text-content-inverse' },
   {
     fill: 'map-rail-light-rail-way-one',
     card: 'bg-map-rail-light-rail-way-one-surface text-content-inverse',

@@ -36,8 +36,8 @@ New variables: `Card/{Jeep,UVExpress,Ejeep,Bus}/{…-surface, …-surface-second
 
 | # | Pull request | Status |
 | --- | --- | --- |
-| 1 | Tokens: the mode card variables, added only | In review |
-| 2 | Deletions, and mode → look (decisions 10 and 7) | |
+| 1 | Tokens: the mode card variables, added only | [#779](https://github.com/ParaOrg/Para/pull/779) |
+| 2 | Deletions, and mode → look (decisions 10 and 7) | In review |
 | 3 | RouteCard restyle | |
 | 4 | RouteCardStackedList, with the railway card | |
 | 5 | The Controller, with the filter | |
@@ -49,6 +49,15 @@ New variables: `Card/{Jeep,UVExpress,Ejeep,Bus}/{…-surface, …-surface-second
 ## Token naming
 
 Figma's leaf names repeat their group (`Card/Jeep/Jeep-surface`). The tokens drop the repeat: `--card-jeep-surface`, `bg-card-jeep-surface`. Camel case splits as the train lines' do (`UVExpress` → `uv-express`).
+
+## Choices made for now
+
+- **A card's colour is its mode's** (`liveryOf`): the first row's route's mode, a train's line or the ferry. Tricycle and any mode with no look wear Jeep's, the commonest; P2P wears UV Express's.
+- **Past a picked hintuan** the rest of a trip's line had its card's pale. The modes have no pale variable, so a road mode's rest of the ride is drawn as a line at rest (Map/RouteLine/surface-default). Trains and the ferry keep their own pale.
+- **A trip's rail and a pressed row** take each mode's `surface-secondary`, its darker step, where the old liveries had Timeline/surface.
+- **On the light cards** (UV Express, E-Jeep) the picked hintuan's pill is dark (on-surface) with the card's colour for words, as MRT-3's yellow does; the mode chip's vehicle is in on-surface.
+- **Lit lines** for UV Express and E-Jeep are their `surface-border` with dark chevrons, until step 9 checks them on the basemap.
+- **Draft** in the studio's line detail and **Retry** on the contributor's history keep their orange (orange/700), now through `Card/Bus/Bus-surface`.
 
 ## Waiting on the owner
 

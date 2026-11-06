@@ -1,5 +1,5 @@
 import type { MapLibreMap } from 'maplibre-gl';
-import { useMemo, useState, type RefObject } from 'react';
+import { useState, type RefObject } from 'react';
 
 import type { SheetHeight } from '@/shared/ui/bottom-sheet';
 import type { Snap } from '@/shared/ui/sheet-gesture';
@@ -12,7 +12,7 @@ import type { Highlight } from './use-saved-routes';
 import { isChoosing, sharedSnap, tripBack, tripBehindHolds } from '../cards/card-stack';
 import { useTripLivery } from '../cards/trip-card';
 import { routeCards, sharingAnEnd, type Listing } from '../model/departures';
-import { cardLiveries, type Livery } from '../model/liveries';
+import { liveryOf, type Livery } from '../model/liveries';
 import type { Direction } from '../model/routes';
 
 interface Routes<V extends Direction> {
@@ -70,31 +70,19 @@ export function useCardStack<V extends Direction, S extends { id: string }>(
   // The colour a card wore — in the list, or in a hotspot's card — for the
   // trip picked from it. Read only as the trip opens, and only while that
   // card stands behind it: a card of several routes wears one of them
-  // (liveries.ts), so the same trip opened again any other way wears its own
-  // route's kept colour. Once open, the trip keeps what it opened in until it
+  // (its first row's mode's), so the same trip opened again any other way wears its own
+  // route's. Once open, the trip keeps what it opened in until it
   // closes — through SWITCH, and even when a tap on its own line closes the
   // list behind it: a card never changes colour while it is open (the owner's
   // call).
   const [worn, setWorn] = useState<{ id: string; livery: Livery } | null>(null);
   const tripLivery = useTripLivery(saved.selected, worn, choosing || !!hotspots.selected);
-  // A list of one RouteCard: its routes wear that card's colour, picked or
-  // not, a pick only bringing the camera to them (the owner's call). The
-  // colour is the one the card is drawn in (cardLiveries keeps a jeepney
-  // route's draw for the visit, and a train's is its line's, so the card
-  // reads the same). Only while the list is what is up: behind a place's card
-  // it decides nothing (showingOf).
+  // A list of one RouteCard: its routes wear that card's colour, picked or not, a pick only
+  // bringing the camera to them (the owner's call). Only while the list is what is up: behind a
+  // place's card it decides nothing (showingOf).
   const onlyPlace =
     choosing && !hotspots.selected ? routeCards(saved.candidates, saved.back, saved.listing) : [];
-  // Its rows' routes, the first row's first, as RouteCardStack keys the card
-  // (a card is never empty; the ids are uuids, with no space to split on).
-  const onlyRoutes =
-    onlyPlace.length === 1 ? onlyPlace[0].directions.map((d) => d.v.routeId).join(' ') : null;
-  // Its line, a train's or the ferry: then the line's colour, as the card wears.
-  const onlyLine = onlyPlace.length === 1 ? onlyPlace[0].railway : null;
-  const onlyLivery = useMemo(
-    () => (onlyRoutes ? cardLiveries([onlyRoutes.split(' ')], [onlyLine])[0] : null),
-    [onlyRoutes, onlyLine],
-  );
+  const onlyLivery = onlyPlace.length === 1 ? liveryOf(onlyPlace[0].directions[0].v) : null;
   // What is lit wears the colour of the card it answers: the open trip's, the
   // picked RouteCard's, or a list's only card's; a list of several with none
   // picked lights its routes in the selected blue (the owner's call).

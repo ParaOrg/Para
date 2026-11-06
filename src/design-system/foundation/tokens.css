@@ -190,10 +190,8 @@
   --surface-transparent-inverse: color-mix(in srgb, var(--color-white) 60%, transparent);
   --surface-transparent-secondary: color-mix(in srgb, var(--color-white) 70%, transparent);
 
-  /* The jeepney-livery cards. Figma: Card/… — red, orange, violet, rose, fuchsia
-     and pink (pink: RouteCard 4071:7014); no yellow livery, as it is not good on
-     the eyes. Each livery's surface-pale is the rest of a lit line past a picked
-     hintuan. */
+  /* Red and green mean a ride's End and Start, never a route: no card wears them as its colour.
+     Figma keeps them in Card (Depreciated). */
   --card-red-surface: var(--color-red-800);
   --card-red-surface-pale: var(--color-red-300);
   --card-red-border-primary: var(--color-red-900);
@@ -203,26 +201,6 @@
      where the surfaces' own shades are too dark to read. No green livery exists. */
   --card-red-surface-light: var(--color-red-400);
   --card-green-surface-light: var(--color-green-500);
-  --card-orange-surface: var(--color-orange-700);
-  --card-orange-surface-pale: var(--color-orange-300);
-  --card-orange-border-primary: var(--color-orange-800);
-  --card-orange-timeline-surface: var(--color-orange-900);
-  --card-violet-surface: var(--color-violet-700);
-  --card-violet-surface-pale: var(--color-violet-300);
-  --card-violet-border-primary: var(--color-violet-800);
-  --card-violet-timeline-surface: var(--color-violet-900);
-  --card-rose-surface: var(--color-rose-700);
-  --card-rose-surface-pale: var(--color-rose-300);
-  --card-rose-border-primary: var(--color-rose-800);
-  --card-rose-timeline-surface: var(--color-rose-900);
-  --card-fuchsia-surface: var(--color-fuchsia-700);
-  --card-fuchsia-surface-pale: var(--color-fuchsia-300);
-  --card-fuchsia-border-primary: var(--color-fuchsia-800);
-  --card-fuchsia-timeline-surface: var(--color-fuchsia-800);
-  --card-pink-surface: var(--color-pink-700);
-  --card-pink-surface-pale: var(--color-pink-300);
-  --card-pink-border-primary: var(--color-pink-800);
-  --card-pink-timeline-surface: var(--color-pink-900);
 
   /* The mode cards: a RouteCard's colours by the kind of ride (RouteCard, 4629:22776).
      Figma: Card/Jeep/Jeep-surface… The leaf repeats its group, so the token drops the
@@ -295,7 +273,7 @@
   /* Its circle's hairline, at 75%, and the beam's colour (3870:5247). */
   --map-locator-indicator-overlay-border: var(--color-parabrand-800);
   /* The studio's Contributors map, where a contribution's ways show: papunta in blue/700,
-     pabalik in the orange of Card/orange/surface. Provisional: not named in Figma yet. */
+     pabalik in orange/700. Provisional: not named in Figma yet. */
   --map-trail-papunta: var(--color-blue-700);
   --map-trail-pabalik: var(--color-orange-700);
   /* The contributor page's own trail: walked (Lakad: round dashes, a foot along it) in the blue
@@ -379,26 +357,6 @@
   --color-card-bus-surface-secondary: var(--card-bus-surface-secondary);
   --color-card-bus-surface-border: var(--card-bus-surface-border);
   --color-card-bus-on-surface: var(--card-bus-on-surface);
-  --color-card-orange-surface: var(--card-orange-surface);
-  --color-card-orange-surface-pale: var(--card-orange-surface-pale);
-  --color-card-orange-border-primary: var(--card-orange-border-primary);
-  --color-card-orange-timeline-surface: var(--card-orange-timeline-surface);
-  --color-card-violet-surface: var(--card-violet-surface);
-  --color-card-violet-surface-pale: var(--card-violet-surface-pale);
-  --color-card-violet-border-primary: var(--card-violet-border-primary);
-  --color-card-violet-timeline-surface: var(--card-violet-timeline-surface);
-  --color-card-rose-surface: var(--card-rose-surface);
-  --color-card-rose-surface-pale: var(--card-rose-surface-pale);
-  --color-card-rose-border-primary: var(--card-rose-border-primary);
-  --color-card-rose-timeline-surface: var(--card-rose-timeline-surface);
-  --color-card-fuchsia-surface: var(--card-fuchsia-surface);
-  --color-card-fuchsia-surface-pale: var(--card-fuchsia-surface-pale);
-  --color-card-fuchsia-border-primary: var(--card-fuchsia-border-primary);
-  --color-card-fuchsia-timeline-surface: var(--card-fuchsia-timeline-surface);
-  --color-card-pink-surface: var(--card-pink-surface);
-  --color-card-pink-surface-pale: var(--card-pink-surface-pale);
-  --color-card-pink-border-primary: var(--card-pink-border-primary);
-  --color-card-pink-timeline-surface: var(--card-pink-timeline-surface);
 
   --color-error-surface: var(--error-surface);
   --color-error-surface-secondary: var(--error-surface-secondary);

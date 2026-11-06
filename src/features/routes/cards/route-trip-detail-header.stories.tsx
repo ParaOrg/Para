@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 
 import { CARD_SURFACE, CARD_TEXT } from './livery-card';
 import { RouteTripDetailHeader } from './route-trip-detail-header';
-import { JEEPNEY_LIVERIES } from '../model/liveries';
+import { ROAD_LIVERIES } from '../model/liveries';
 
 /**
  * The header on its card's colour, as the top of a trip's card shows it: that
@@ -57,23 +57,23 @@ export const Mrt3Southbound: Story = {
 /**
  * A train on a jeep-coloured card, opened from a hotspot's card: its words keep the line's colour.
  */
-export const TrainOnAJeepCard: Story = { args: { livery: 'orange' } };
+export const TrainOnAJeepCard: Story = { args: { livery: 'bus' } };
 
 /** An end the line's table does not know: no bound, the line's code alone, rounded both ends. */
 export const NoBound: Story = { args: { way: null } };
 
 /** A jeep's trip (Variant2, 4181:10845): the Jeepney and the way showing, in its card's colour. */
-export const Jeepney: Story = { args: { vehicle: 'Jeepney', way: 'Papunta', livery: 'orange' } };
+export const Jeepney: Story = { args: { vehicle: 'Jeepney', way: 'Papunta', livery: 'bus' } };
 
 export const JeepneyPabalik: Story = {
-  args: { vehicle: 'Jeepney', way: 'Pabalik', livery: 'violet' },
+  args: { vehicle: 'Jeepney', way: 'Pabalik', livery: 'jeep' },
 };
 
 /** Variant3 (4188:11147). No bus is on the published map yet. */
-export const Bus: Story = { args: { vehicle: 'Bus', way: 'Papunta', livery: 'orange' } };
+export const Bus: Story = { args: { vehicle: 'Bus', way: 'Papunta', livery: 'bus' } };
 
 /** Variant4 (4188:11159). No e-jeep is on the published map yet. */
-export const EJeep: Story = { args: { vehicle: 'E-Jeep', way: 'Papunta', livery: 'pink' } };
+export const EJeep: Story = { args: { vehicle: 'E-Jeep', way: 'Papunta', livery: 'jeep' } };
 
 /** Variant5 (4189:11181). */
 export const Ferry: Story = { args: { vehicle: 'Ferry', way: 'Papunta', livery: 'ferry' } };
@@ -82,7 +82,7 @@ export const Ferry: Story = { args: { vehicle: 'Ferry', way: 'Papunta', livery: 
 export const EveryJeepneyLivery: Story = {
   render: (args) => (
     <div className="flex w-[369px] flex-col gap-1">
-      {JEEPNEY_LIVERIES.map((livery) => (
+      {ROAD_LIVERIES.map((livery) => (
         <div
           key={livery}
           className={'rounded-2xl ' + CARD_SURFACE[livery] + ' ' + CARD_TEXT[livery]}
@@ -112,12 +112,12 @@ export const Phone: Story = {
  * card's own words colour (CARD_TEXT), white on a jeep's dark card — the one
  * thing that tells it from UP – Toki, which reads the same.
  */
-export const LoopOnViolet: Story = {
-  args: { vehicle: 'Jeepney', way: 'Ikot', livery: 'violet', name: 'UP – Ikot' },
+export const LoopOnJeep: Story = {
+  args: { vehicle: 'Jeepney', way: 'Ikot', livery: 'jeep', name: 'UP – Ikot' },
 };
 
-export const LoopOnOrange: Story = {
-  args: { vehicle: 'Jeepney', way: 'Ikot', livery: 'orange', name: 'UP – Toki' },
+export const LoopOnBus: Story = {
+  args: { vehicle: 'Jeepney', way: 'Ikot', livery: 'bus', name: 'UP – Toki' },
 };
 
 /** On MRT-3's yellow the words are dark, as the card's are. */

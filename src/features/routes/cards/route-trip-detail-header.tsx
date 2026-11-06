@@ -31,15 +31,14 @@ const LINE_WORDS = {
 /**
  * Every other vehicle's words: its card's surface. Figma's jeep, bus, e-jeep and ferry variants
  * draw them in LRT-1's green, the Default's copied; the card's own colour is used, as a train's are
- * its line's. MRT-3's yellow card gives Content/primary, as a train's does. TODO: the design for
- * these words is not confirmed.
+ * its line's. MRT-3's yellow card gives Content/primary, as a train's does, and the light UV Express
+ * and E-Jeep cards their on-surface. TODO: the design for these words is not confirmed.
  */
 const CARD_WORDS = {
-  orange: 'text-card-orange-surface',
-  violet: 'text-card-violet-surface',
-  rose: 'text-card-rose-surface',
-  fuchsia: 'text-card-fuchsia-surface',
-  pink: 'text-card-pink-surface',
+  jeep: 'text-card-jeep-surface',
+  'uv-express': 'text-card-uv-express-on-surface',
+  ejeep: 'text-card-ejeep-on-surface',
+  bus: 'text-card-bus-surface',
   'light-rail-way-one': 'text-map-rail-light-rail-way-one-surface',
   'light-rail-way-two': 'text-map-rail-light-rail-way-two-surface',
   'metro-rail-way-three': 'text-content-primary',

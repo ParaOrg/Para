@@ -1,12 +1,12 @@
-import { useMemo, type ReactNode } from 'react';
+import type { ReactNode } from 'react';
 
 import { RouteCard } from './route-card';
 import { RouteCardRailway } from './route-card-railway';
 import { routeCards, type Listing } from '../model/departures';
-import { cardLiveries, type Livery } from '../model/liveries';
+import { liveryOf, type Livery } from '../model/liveries';
 import { stationCode } from '../model/rail-codes';
 import { directionEnds, railLineOf, type Direction } from '../model/routes';
-import { isRailwayVehicle, vehicleOf } from '../model/vehicles';
+import { vehicleOf } from '../model/vehicles';
 
 /** A card picked: which card it is, the place it stands for, the directions its rows list, and its colour, for the map to light them in. */
 export interface PickedPlace {
@@ -46,9 +46,8 @@ function originCodeOf(directions: readonly { v: Direction }[]): string | null {
 /**
  * Routes one way round as RouteCards: a card per place they leave from
  * (departures), and per train line and bound or the ferry a RouteCardRailway
- * besides (routeCards), each in its livery — liveries.ts: its first row's route's, at
- * random, kept for the visit, the same the other way round, never two alike
- * side by side; a train's, its line's own, never drawn — with a row per drawn
+ * besides (routeCards), each in its livery — its first row's mode's, or a
+ * train's or the ferry's line's own (liveryOf) — with a row per drawn
  * direction. One card at a time is Selected, and the map lights its
  * directions alone; a row opens its trip straight away, whether its card is
  * picked or not, and picks none: selecting it too is confusing (the owner's
@@ -70,26 +69,9 @@ export function RouteCardStack({
 }: Props) {
   const places = routeCards(routes, back, listing);
 
-  // Drawn once per stack, not per render. Each card by its rows' routes,
-  // its first row's first (routeCards leaves no card empty), after its
-  // line and a bar ('' before it for a jeepney's): a train or ferry card
-  // wears its line's colour, never a draw (cardLiveries). The ids are uuids, with
-  // no space, bar or newline to split on. String(), because the React
-  // Compiler cannot tell what routeCards' join gives is a string, and
-  // would otherwise drop the memo below as one that may change under it.
-  const cardKey = String(
-    places
-      .map((p) => (p.railway ?? '') + '|' + p.directions.map((d) => d.v.routeId).join(' '))
-      .join('\n'),
-  );
-  const liveries = useMemo(() => {
-    if (!cardKey) return [];
-    const cards = cardKey.split('\n').map((card) => card.split('|'));
-    return cardLiveries(
-      cards.map(([, routes]) => routes.split(' ')),
-      cards.map(([line]) => (isRailwayVehicle(line) ? line : null)),
-    );
-  }, [cardKey]);
+  // A card wears its first row's mode's colour, a train or ferry card its line's (liveryOf);
+  // routeCards leaves no card empty.
+  const liveries = places.map((p) => liveryOf(p.directions[0].v));
 
   const byId = new Map(places.flatMap((p) => p.directions.map((d) => [d.v.id, d.v] as const)));
 

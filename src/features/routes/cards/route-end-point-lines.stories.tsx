@@ -10,7 +10,7 @@ const meta = {
   args: { position: 'top' },
   decorators: [
     (Story) => (
-      <div className="flex h-10 w-12 bg-card-orange-surface text-content-inverse">
+      <div className="bg-card-orange-surface flex h-10 w-12 text-content-inverse">
         <Story />
       </div>
     ),

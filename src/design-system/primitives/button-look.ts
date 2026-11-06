@@ -61,10 +61,11 @@ const VARIANT = {
  * Primary's fill: brand blue, or the card it sits on (for the timeline's Set
  * as start, which sits on top of its card: the Figma instance, 4147:11947,
  * overrides the fill to Card/red/surface). On a card it is the card's
- * surface, pressed down to the card's Timeline/surface as a pressed row of it
- * is, a train's line's own Map/Rail/<line>/… on its card. A card's fill sets
- * no words: they are the card's own, inherited (white, and dark on MRT-3's
- * yellow), so they read as the card's do.
+ * surface, pressed down to its darker step as a pressed row of it is: a mode's
+ * Card/<Mode>/…-surface-secondary, a train's line's own Map/Rail/<line>/…
+ * Timeline/surface. A card's fill sets no words: they are the card's own,
+ * inherited (white, and dark on the light cards and MRT-3's yellow), so they
+ * read as the card's do.
  */
 type PrimaryFill = keyof typeof PRIMARY_FILL;
 
@@ -74,11 +75,11 @@ export type CardFill = Exclude<PrimaryFill, 'brand'>;
 const PRIMARY_FILL = {
   brand: 'bg-brand-surface text-content-inverse usable:active:bg-brand-surface-secondary',
   'card-red': 'bg-card-red-surface usable:active:bg-card-red-timeline-surface',
-  'card-orange': 'bg-card-orange-surface usable:active:bg-card-orange-timeline-surface',
-  'card-violet': 'bg-card-violet-surface usable:active:bg-card-violet-timeline-surface',
-  'card-rose': 'bg-card-rose-surface usable:active:bg-card-rose-timeline-surface',
-  'card-fuchsia': 'bg-card-fuchsia-surface usable:active:bg-card-fuchsia-timeline-surface',
-  'card-pink': 'bg-card-pink-surface usable:active:bg-card-pink-timeline-surface',
+  'card-jeep': 'bg-card-jeep-surface usable:active:bg-card-jeep-surface-secondary',
+  'card-uv-express':
+    'bg-card-uv-express-surface usable:active:bg-card-uv-express-surface-secondary',
+  'card-ejeep': 'bg-card-ejeep-surface usable:active:bg-card-ejeep-surface-secondary',
+  'card-bus': 'bg-card-bus-surface usable:active:bg-card-bus-surface-secondary',
   'map-rail-light-rail-way-one':
     'bg-map-rail-light-rail-way-one-surface usable:active:bg-map-rail-light-rail-way-one-timeline-surface',
   'map-rail-light-rail-way-two':

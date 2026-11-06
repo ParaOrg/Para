@@ -53,13 +53,13 @@ export const OnACard: Story = {
   args: {
     variant: 'primary',
     size: 'small',
-    fill: 'card-orange',
+    fill: 'card-bus',
     firstIcon: undefined,
     lastIcon: ArrowIcon,
   },
   decorators: [
     (Story) => (
-      <div className="bg-card-orange-surface p-4 text-content-inverse">
+      <div className="bg-card-bus-surface p-4 text-content-inverse">
         <Story />
       </div>
     ),

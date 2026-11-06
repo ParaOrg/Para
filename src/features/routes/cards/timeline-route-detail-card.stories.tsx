@@ -101,8 +101,7 @@ const meta = {
   ],
   parameters: { layout: 'fullscreen' },
   args: {
-    // Violet: Figma's frames (3762:3546) are drawn yellow, no longer a livery.
-    livery: 'violet',
+    livery: 'jeep',
     // 12.8 km, as Figma's frame has it; its pesos on today's rule.
     metres: 12_800,
     fare: { regular: '₱30–32', discounted: '₱24–26' },
@@ -270,14 +269,11 @@ export const NoHintuan: Story = {
   },
 };
 
-/** Orange (Figma draws the Timeline set in red), with Content/inverse words. */
-export const Orange: Story = { args: { livery: 'orange' } };
+/** Bus (Figma draws the Timeline set in red), with Content/inverse words. */
+export const Bus: Story = { args: { livery: 'bus' } };
 
-/** Fuchsia, with Content/inverse words, like orange. */
-export const Fuchsia: Story = { args: { livery: 'fuchsia' } };
-
-/** Pink (4071:7014), with Content/inverse words, like fuchsia. */
-export const Pink: Story = { args: { livery: 'pink' } };
+/** Ejeep, with Content/inverse words, like bus. */
+export const Ejeep: Story = { args: { livery: 'ejeep' } };
 
 /** SWITCHed: the way back, so SWITCH reads Papunta, the way a tap leads. */
 export const TheWayBack: Story = {
@@ -327,7 +323,7 @@ export const ALongWay: Story = { args: { hintuans: aLongWay }, play: openFold };
 /** Place names too long for one line wrap; they are never cut. How a wrapped row sits on the rail is not drawn yet. */
 export const LongNames: Story = {
   args: {
-    livery: 'orange',
+    livery: 'bus',
     metres: 8_600,
     fare: { regular: '₱24–26', discounted: '₱19–21' },
     routeOrigin: 'Novaliches (Bayan) via Zabarte',
@@ -351,24 +347,24 @@ export const FloatingOpened: Story = { parameters: { frame: 'wide' }, play: open
 export const Tablet: Story = { parameters: { frame: 'tablet' } };
 
 /**
- * A hintuan picked, orange — the Timeline set's Selected row, drawn on Figma's red card (3769:2895, 3778:3183):
- * Amparo's dot a white ring round the rail's orange, its name ExtraBold, and a white pill with the
- * pesos from Tala to there in the card's orange. Opened, since the fold keeps it.
+ * A hintuan picked, bus — the Timeline set's Selected row, drawn on Figma's red card (3769:2895, 3778:3183):
+ * Amparo's dot a white ring round the rail's bus, its name ExtraBold, and a white pill with the
+ * pesos from Tala to there in the card's bus. Opened, since the fold keeps it.
  */
-export const PickedOrange: Story = {
-  args: { livery: 'orange', picked: 'h3' },
+export const PickedBus: Story = {
+  args: { livery: 'bus', picked: 'h3' },
   play: pickedAsDrawn,
 };
 
-/** Fuchsia, as orange: the pill white, its pesos in the card's fuchsia. */
-export const PickedFuchsia: Story = {
-  args: { livery: 'fuchsia', picked: 'h3' },
+/** E-Jeep: the light card's pill the other way round, on-surface under the card's colour. */
+export const PickedEjeep: Story = {
+  args: { livery: 'ejeep', picked: 'h3' },
   play: pickedAsDrawn,
 };
 
-/** Pink, as fuchsia: the pill white, its pesos in the card's pink. */
-export const PickedPink: Story = {
-  args: { livery: 'pink', picked: 'h3' },
+/** Jeep, as Bus: the pill white, its pesos in the card's blue. */
+export const PickedJeep: Story = {
+  args: { livery: 'jeep', picked: 'h3' },
   play: pickedAsDrawn,
 };
 
@@ -467,10 +463,10 @@ export const EndsShowTheWhole: Story = {
 };
 
 /** Where the trip leaves from, picked: its dot a white ring round the rail's colour, as a picked hintuan's; its name and the tiles as they were. */
-export const OriginPicked: Story = { args: { livery: 'orange', endPicked: 'from' } };
+export const OriginPicked: Story = { args: { livery: 'bus', endPicked: 'from' } };
 
 /** Where the trip goes, picked, the same way. */
-export const DestinationPicked: Story = { args: { livery: 'orange', endPicked: 'to' } };
+export const DestinationPicked: Story = { args: { livery: 'bus', endPicked: 'to' } };
 
 /**
  * A pick is in the ride, so it never folds away: View less folds only the rows after it, and opened

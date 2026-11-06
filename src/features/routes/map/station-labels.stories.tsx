@@ -117,7 +117,7 @@ const meta = {
     ),
   ],
   parameters: { layout: 'fullscreen' },
-  args: { selected: direction, hotspots, rows, livery: 'rose', onPick: fn() },
+  args: { selected: direction, hotspots, rows, livery: 'uv-express', onPick: fn() },
 } satisfies Meta<typeof OnAnEmptyMap>;
 
 export default meta;
@@ -183,7 +183,7 @@ export const AtRest: Story = {
       await expect(station).not.toHaveAttribute('data-far');
       await expect(labelOpacity(station)).toBe('1');
       await expect(getComputedStyle(dotOf(station)).backgroundColor).toBe(
-        wornBy(CARD_SURFACE.rose),
+        wornBy(CARD_SURFACE['uv-express']),
       );
     }
     // Both apps give `onPick`: each dot and its name are one button, named for the row.
@@ -224,13 +224,15 @@ export const WithARide: Story = {
       await expect(station).toHaveAttribute('data-paled');
       await expect(labelOpacity(station)).toBe('0.6');
       await expect(getComputedStyle(dotOf(station)).backgroundColor).toBe(
-        wornBy(CARD_SURFACE_PALE.rose),
+        wornBy(CARD_SURFACE_PALE['uv-express']),
       );
     }
     const inside = stationNamed(stations, 'Pangarap');
     await expect(inside).not.toHaveAttribute('data-paled');
     await expect(labelOpacity(inside)).toBe('1');
-    await expect(getComputedStyle(dotOf(inside)).backgroundColor).toBe(wornBy(CARD_SURFACE.rose));
+    await expect(getComputedStyle(dotOf(inside)).backgroundColor).toBe(
+      wornBy(CARD_SURFACE['uv-express']),
+    );
   },
 };
 
@@ -253,7 +255,7 @@ export const StartAlone: Story = {
       await expect(station).toHaveAttribute('data-paled');
       await expect(labelOpacity(station)).toBe('0.6');
       await expect(getComputedStyle(dotOf(station)).backgroundColor).toBe(
-        wornBy(CARD_SURFACE_PALE.rose),
+        wornBy(CARD_SURFACE_PALE['uv-express']),
       );
     }
   },
