@@ -632,7 +632,8 @@ behave as before. One function and one trigger; no table, grant or row changes.
 
 # Applying lock_map_tables to the live project
 
-**Not applied live.** Safe to apply now: the studio on `main` and on `staging` writes the map only through
+**Applied live 2026-11-06** (ledger `20261106022456`) from its paste file; its check passed. Do not reapply.
+The studio on `main` and on `staging` writes the map only through
 the draft functions. Clean-up step 4 of `.scratch/codebase-review/database.md` (H1). Editors could still
 insert, update and delete `route`, `route_variant`, `stop` and `route_stop` directly (0005, 0015), so an old
 cached studio, a script or a browser console could change or hard-delete published rows with no draft, no

@@ -6020,7 +6020,7 @@ GRANT SELECT,INSERT ON TABLE public.point_batch TO authenticated;
 --
 
 GRANT SELECT ON TABLE public.route TO anon;
-GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.route TO authenticated;
+GRANT SELECT ON TABLE public.route TO authenticated;
 
 
 --
@@ -6028,7 +6028,7 @@ GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.route TO authenticated;
 --
 
 GRANT SELECT ON TABLE public.route_stop TO anon;
-GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.route_stop TO authenticated;
+GRANT SELECT ON TABLE public.route_stop TO authenticated;
 
 
 --
@@ -6036,7 +6036,7 @@ GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.route_stop TO authenticated;
 --
 
 GRANT SELECT ON TABLE public.route_variant TO anon;
-GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.route_variant TO authenticated;
+GRANT SELECT ON TABLE public.route_variant TO authenticated;
 
 
 --
@@ -6044,7 +6044,7 @@ GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.route_variant TO authenticated
 --
 
 GRANT SELECT ON TABLE public.stop TO anon;
-GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE public.stop TO authenticated;
+GRANT SELECT ON TABLE public.stop TO authenticated;
 
 
 --
