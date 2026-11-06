@@ -35,13 +35,13 @@ export async function readRideTaps(recordingId: string): Promise<RideTaps | null
 
 /**
  * The ride found open as the page opens, with the taps made on the notification while it was gone
- * applied and stored; on the web, as it was.
+ * applied and stored, and whether the app's service still records it; on the web, as it was.
  */
 export async function applyOpeningRideTaps(
   recording: Recording | null,
-): Promise<{ recording: Recording | null; isFinished: boolean }> {
+): Promise<{ recording: Recording | null; isFinished: boolean; isStillRecording: boolean }> {
   if (import.meta.env.MODE !== 'apk' || !isNativeApp() || isEmulatorRide) {
-    return { recording, isFinished: false };
+    return { recording, isFinished: false, isStillRecording: false };
   }
   const { applyOpeningTaps } = await import('../native/apply-ride-taps');
   return applyOpeningTaps(recording);

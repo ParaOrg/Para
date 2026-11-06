@@ -14,6 +14,8 @@ export type RecorderOpening =
       rows: FixRow[];
       /** Finished from the app's notification: it opens on its Save form. */
       isFinished: boolean;
+      /** Still recorded by the app's service, swiped from Recents or not: it opens recording. */
+      isStillRecording: boolean;
     };
 
 interface OpeningSteps {
@@ -42,17 +44,18 @@ export async function openRecorder({
   if (!isOurs) return { kind: 'other-tab' };
   const found = all.find((r) => r.status !== 'saved') ?? null;
   let open = found;
-  let isFinished = false;
+  // What the app says of the ride: finished from its notification, or still recording.
+  let fromApp = { isFinished: false, isStillRecording: false };
   try {
     if (found) await importNativeFixes(found);
     // The taps made on the app's notification while the page was gone.
     const tapped = await applyOpeningRideTaps(found);
     open = tapped.recording;
-    isFinished = tapped.isFinished;
+    fromApp = tapped;
   } catch (error) {
     onNativeLogProblem(error);
   }
   const rows = open ? await loadFixes(open.id) : [];
   if (isCancelled()) return null;
-  return open ? { kind: 'open', recording: open, rows, isFinished } : { kind: 'nothing-open' };
+  return open ? { ...fromApp, kind: 'open', recording: open, rows } : { kind: 'nothing-open' };
 }

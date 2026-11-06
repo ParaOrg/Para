@@ -172,4 +172,12 @@ test('a recording found open carries on after its last stored row, with the writ
 
 test('a recording found stopped carries on paused, with Save and Resume', () => {
   assert.equal(reopenPoint(stoppedAt(STARTED + 60_000), []).phase, 'paused');
+  // Stopped on the page, the app's service has nothing to record: paused whatever it says.
+  assert.equal(reopenPoint(stoppedAt(STARTED + 60_000), [], true).phase, 'paused');
+});
+
+test("a recording the app's service still records opens recording, not cut off", () => {
+  // Swiped from Recents, the app's service went on: the page opens on the ride, still recording.
+  assert.equal(reopenPoint(running(), [], true).phase, 'recording');
+  assert.equal(reopenPoint(running(), [], false).phase, 'unfinished');
 });
