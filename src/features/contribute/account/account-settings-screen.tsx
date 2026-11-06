@@ -6,6 +6,7 @@ import { useFocusHeading } from '@/shared/hooks/use-focus-heading';
 import { cn } from '@/shared/utils/cn';
 
 import type { ProfileFields } from './account-fields';
+import { GeneralBar } from './general-bar';
 import { PasswordButtonField } from './password-button-field';
 import { ProfileForm } from './profile-form';
 import { SettingsHeader } from './settings-header';
@@ -30,13 +31,16 @@ interface AccountSettingsScreenProps {
   onSave: (fields: ProfileFields) => void;
   onOpenChangePassword: () => void;
   onOpenDeleteAccount: () => void;
+  /** Keep Para recording, in the Android app only: the maker's Autostart screen. */
+  onOpenKeepRecording?: () => void;
   onBack: () => void;
 }
 
 /**
  * Account settings (Figma 4540:4821), from Account's General: the name and number to change, with
  * Save changes and Cancel rising once either is changed; the email as it is; Password, which
- * opens Change password; and Delete account, which opens Delete account. Shown only on Ready, so never
+ * opens Change password; in the app, Keep Para recording, which opens the maker's Autostart screen;
+ * and Delete account, which opens Delete account. Shown only on Ready, so never
  * while a recording runs.
  */
 export function AccountSettingsScreen({
@@ -50,6 +54,7 @@ export function AccountSettingsScreen({
   onSave,
   onOpenChangePassword,
   onOpenDeleteAccount,
+  onOpenKeepRecording,
   onBack,
 }: AccountSettingsScreenProps) {
   const headingRef = useFocusHeading();
@@ -111,6 +116,9 @@ export function AccountSettingsScreen({
               </p>
             )}
           </div>
+          {onOpenKeepRecording && (
+            <GeneralBar icon="settings" label="Keep Para recording" onClick={onOpenKeepRecording} />
+          )}
           <div className="*:w-full">
             <Button
               variant="plain"

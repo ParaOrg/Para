@@ -1,33 +1,34 @@
 import { Button } from '@/design-system/primitives/button';
 import { useFocusHeading } from '@/shared/hooks/use-focus-heading';
 
-import type { BatteryHelp } from './battery-steps';
-
-interface BatteryPanelProps {
-  help: BatteryHelp;
+interface KeepRecordingPanelProps {
+  /** The maker's Autostart or battery screen, or Para's own page in Settings. */
   onOpenSettings: () => void;
   onDone: () => void;
 }
 
-/** Shown once on a phone whose maker stops background apps: how to let Para keep recording. */
-export function BatteryPanel({ help, onOpenSettings, onDone }: BatteryPanelProps) {
+/**
+ * Shown once, at the first Start on a phone whose maker stops background apps: how to let Para
+ * keep recording once the app is left. Done starts the ride. Account settings keeps the way back.
+ */
+export function KeepRecordingPanel({ onOpenSettings, onDone }: KeepRecordingPanelProps) {
   const headingRef = useFocusHeading();
   return (
     <section
-      aria-labelledby="battery-heading"
+      aria-labelledby="keep-recording-heading"
       className="flex flex-col gap-3 bg-surface p-4 font-sn-pro text-content-primary"
     >
       <h1
-        id="battery-heading"
+        id="keep-recording-heading"
         ref={headingRef}
         tabIndex={-1}
         className="text-xl/7 font-extrabold focus:outline-none"
       >
-        Let Para run in the background
+        Keep Para recording
       </h1>
       <p className="text-base/6">
-        {help.maker} phones can stop apps that run with the screen off, which would cut a recording
-        short. To prevent it: {help.steps}
+        Your phone may stop Para when you leave the app. Turn on Autostart so your rides keep
+        recording.
       </p>
       <div className="flex gap-3">
         <Button variant="primary" label="Open settings" onClick={onOpenSettings} />

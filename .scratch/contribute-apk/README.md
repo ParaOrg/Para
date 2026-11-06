@@ -21,3 +21,11 @@ The builder chose these for now, from the owner's decisions. Each waits for the 
   the phone's location switch is off. Instead a card shows, in the Start gate's other panels' style:
   the location icon, "Turn on location", "Para needs your location to record your ride.", and
   **Go to Settings** (the phone's Location settings) beside **Close**. The next Start checks again.
+- **Keep Para recording** (`native/keep-recording-panel.tsx`): it replaces the battery card.
+  - **When it shows:** once, at the first Start, on Xiaomi, Redmi, POCO, Oppo, realme, Vivo, iQOO, Huawei, Honor, OnePlus and Samsung. It shows even when battery restrictions are already off, because Android cannot report the maker's Autostart switch.
+  - **What it says:** "Keep Para recording" and "Your phone may stop Para when you leave the app. Turn on Autostart so your rides keep recording."
+  - **Its buttons:**
+    - **Open settings** opens the maker's Autostart or battery screen, or Para's page in Settings when the phone has none.
+    - **Done** starts the ride.
+  - **Its look:** card A's layout, without an icon, because no icon was drawn for it. It keeps the old card's Done.
+  - **In Account settings:** a "Keep Para recording" row, in the app only, opens the same screen. It uses GeneralBar's Settings icon and sits above Delete account.

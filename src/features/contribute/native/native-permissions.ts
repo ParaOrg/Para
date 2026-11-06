@@ -29,6 +29,7 @@ interface NativePermissionsPlugin {
   deviceInfo: () => Promise<unknown>;
   openAppSettings: () => Promise<void>;
   openLocationSettings: () => Promise<void>;
+  openAutostartSettings: () => Promise<void>;
   checkLocationOn: () => Promise<unknown>;
 }
 
@@ -53,6 +54,14 @@ export async function readDeviceInfo(): Promise<DeviceInfo> {
 /** Opens Para's page in the phone's Settings. */
 export function openAppSettings(): Promise<void> {
   return getPlugin().openAppSettings();
+}
+
+/**
+ * Opens the maker's Autostart or battery screen for Para (MIUI's Autostart, and the like), or
+ * Para's own page in Settings on a phone that has none.
+ */
+export function openAutostartSettings(): Promise<void> {
+  return getPlugin().openAutostartSettings();
 }
 
 /** Opens the phone's Location settings, where its switch is. */
