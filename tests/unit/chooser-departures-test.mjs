@@ -60,13 +60,13 @@ test('the list’s cards and count follow it: two routes, two cards', () => {
   assert.deepEqual(
     cards.map((c) => [c.card, c.directions.map((d) => d.v.id)]),
     [
-      ['SM Fairview', ['cubao-out']],
-      ['Novaliches', ['tala-back']],
+      ['SM Fairview|jeep', ['cubao-out']],
+      ['Novaliches|jeep', ['tala-back']],
     ],
   );
   assert.deepEqual(
     routeCards([...cubao, ...tala], false).map((c) => c.card),
-    ['SM Fairview'],
+    ['SM Fairview|jeep'],
   );
 });
 

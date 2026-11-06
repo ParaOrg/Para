@@ -12,7 +12,7 @@ import type { Highlight } from './use-saved-routes';
 import { isChoosing, sharedSnap, tripBack, tripBehindHolds } from '../cards/card-stack';
 import { useTripLivery } from '../cards/trip-card';
 import { routeCards, sharingAnEnd, type Listing } from '../model/departures';
-import { liveryOf, type Livery } from '../model/liveries';
+import type { Livery } from '../model/liveries';
 import type { Direction } from '../model/routes';
 
 interface Routes<V extends Direction> {
@@ -82,7 +82,7 @@ export function useCardStack<V extends Direction, S extends { id: string }>(
   // place's card it decides nothing (showingOf).
   const onlyPlace =
     choosing && !hotspots.selected ? routeCards(saved.candidates, saved.back, saved.listing) : [];
-  const onlyLivery = onlyPlace.length === 1 ? liveryOf(onlyPlace[0].directions[0].v) : null;
+  const onlyLivery = onlyPlace.length === 1 ? onlyPlace[0].livery : null;
   // What is lit wears the colour of the card it answers: the open trip's, the
   // picked RouteCard's, or a list's only card's; a list of several with none
   // picked lights its routes in the selected blue (the owner's call).

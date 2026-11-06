@@ -1,3 +1,5 @@
+import { cn } from '@/shared/utils/cn';
+
 import {
   BLOB_PLACE,
   CARD_BLOB,
@@ -60,8 +62,10 @@ const PILL_LABEL = {
  * Figma's RouteCardRailway (4261:15199): one card per line and bound, in the
  * line's own colours. Over the station's name, its vehicle in a chip and the
  * line's pill beside it, both in the pill's colours; the name has the origin's
- * badge after it, and under it a row per station it goes to (RouteEndPointBar),
- * each with its station's badge in the row's slot. The ferry has no badges.
+ * station code after it, and under it a row per station it goes to
+ * (RouteEndPointBar), each with its station's code in the row's slot
+ * (RouteCardRailway, 4633:25360). A station rail-codes.ts does not know, and
+ * the ferry, show no code.
  *
  * It behaves as RouteCard does: a row opens its trip; a tap anywhere else
  * selects the card, or lets it go, State=Selected pressing it in under the
@@ -88,31 +92,30 @@ export function RouteCardRailway({
       data-testid={`${testId}-origin`}
       data-livery={livery}
       data-state={state}
-      className={
-        'relative isolate flex w-full flex-col items-start gap-2.5 overflow-clip border-y-[0.6px] py-2 font-sn-pro ' +
-        CARD_SURFACE[livery] +
-        ' ' +
-        CARD_TEXT[livery]
-      }
+      className={cn(
+        'relative isolate flex w-full flex-col items-start gap-2.5 overflow-clip border-y-0-6 py-2 font-sn-pro',
+        CARD_SURFACE[livery],
+        CARD_TEXT[livery],
+      )}
     >
       <img
         src={CARD_BLOB[livery].src}
         alt=""
         aria-hidden
-        className={BLOB_PLACE + ' ' + CARD_BLOB[livery].className}
+        className={cn(BLOB_PLACE, CARD_BLOB[livery].className)}
       />
       <div className="flex w-full items-center gap-2 px-4 pt-2">
-        <span aria-hidden className={'shrink-0 rounded-md p-1 ' + RAILWAY_PILL[railway]}>
+        <span aria-hidden className={cn('shrink-0 rounded-md p-1', RAILWAY_PILL[railway])}>
           <span className="block size-6 *:size-full">
             <VehicleIcon vehicle={railway} />
           </span>
         </span>
         <p
           data-testid={`${testId}-pill`}
-          className={
-            'rounded-full px-2.5 py-0.5 text-xl/7 font-semibold whitespace-nowrap ' +
-            RAILWAY_PILL[railway]
-          }
+          className={cn(
+            'rounded-full px-2.5 py-0.5 text-lg/7 font-medium whitespace-nowrap',
+            RAILWAY_PILL[railway],
+          )}
         >
           {PILL_LABEL[railway]}
           {bound && <span className="sr-only">, {bound}</span>}
@@ -131,9 +134,7 @@ export function RouteCardRailway({
           >
             {routeOrigin}
           </button>
-          {railLine && originCode && (
-            <RailwayBadge kind="start" railway={railLine} code={originCode} />
-          )}
+          {railLine && originCode && <RailwayBadge railway={railLine} code={originCode} />}
         </div>
         <ul className="flex w-full flex-col">
           {endPoints.map((e, index) => (
@@ -148,7 +149,7 @@ export function RouteCardRailway({
                   e.stationCode && (
                     <>
                       <span className="sr-only">, </span>
-                      <RailwayBadge kind="end" railway={railLine} code={e.stationCode} />
+                      <RailwayBadge railway={railLine} code={e.stationCode} />
                     </>
                   )
                 }
@@ -163,10 +164,10 @@ export function RouteCardRailway({
       </div>
       <span
         aria-hidden
-        className={
-          'pointer-events-none absolute inset-0 ' +
-          (isSelected ? CARD_SHADOW_SELECTED[livery] : CARD_SHADOW[livery])
-        }
+        className={cn(
+          'pointer-events-none absolute inset-0',
+          isSelected ? CARD_SHADOW_SELECTED[livery] : CARD_SHADOW[livery],
+        )}
       />
     </div>
   );

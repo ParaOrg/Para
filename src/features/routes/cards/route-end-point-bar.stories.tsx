@@ -76,7 +76,7 @@ export const WithSlot: Story = {
     position: 'bottom',
     routeDirection: 'Recto',
     size: 'xl',
-    slot: <RailwayBadge kind="end" railway="LRT-2" code="PL01" />,
+    slot: <RailwayBadge railway="LRT-2" code="PL01" />,
   },
 };
 
