@@ -10,8 +10,7 @@ interface LocationOffPanelProps {
 
 /**
  * Start with the phone's location switch off: no ride starts, and this says why and where to turn
- * it on. The next Start checks again. The look is the builder's for now, from the panels beside
- * it (owner to design later, .scratch/contribute-apk/README.md).
+ * it on. The next Start checks again.
  */
 export function LocationOffPanel({ onOpenSettings, onClose }: LocationOffPanelProps) {
   const headingRef = useFocusHeading();
