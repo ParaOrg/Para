@@ -242,7 +242,7 @@ export function Workshop({ session, recovery }: WorkshopProps) {
             saveFlow={saveFlow}
             contribution={contribution}
           />
-          {/* `data-dock-host`: the open card's sheet says where its top is here, for the pill to follow (BottomSheet); the New + says what it stands in the corner. */}
+          {/* `data-dock-host`: the open card's sheet says where its top is here at rest, and on what follows it (`data-dock-follower`) as a finger drags it (BottomSheet); the New + says what it stands in the corner. */}
           <div
             ref={root}
             data-map-box
