@@ -647,8 +647,9 @@ if (!onLine) {
   // effects, its camera waits for the page's turn (commit-turn.ts; the
   // cheap-phone plan, step 15, 2026-10-05). It stays on the commuter, at the
   // zoom it followed at.
-  // A list where routes share the road, or a trip's card: either has a handle.
-  const handle = page.locator('button[data-testid="dock-handle"]:visible').first();
+  // A list where routes share the road, or a trip's card: either has a handle. The list's draws
+  // nothing, kept for the keyboard alone, so the height is set as a keyboard sets it.
+  const handle = page.locator('button[data-testid="dock-handle"]').first();
   if (!(await handle.count())) {
     check(
       'a card set to another height while the camera follows: it stays on the commuter',
@@ -661,7 +662,8 @@ if (!onLine) {
     await mapIdle(page);
     const following = await camera(page);
     const was = await onScreen(page, p);
-    await handle.click();
+    await handle.focus();
+    await page.keyboard.press('Enter');
     // The sheet at its new height, and the camera after it.
     await cardsSettled(page);
     const now = await camera(page);

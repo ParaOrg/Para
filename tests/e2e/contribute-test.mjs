@@ -3172,6 +3172,21 @@ const REFUSING_LOCATION = () => {
       .allInnerTexts()
       .then((texts) => texts.join(' | ')),
   );
+  // Paused, the recorder is not locating: its closed problem no longer holds the one location
+  // toast, and the locate button's own note is said at its tap.
+  await page.getByRole('button', { name: 'Pause', exact: true }).click();
+  await tapRefused();
+  check(
+    "  paused, a tap on the locate button says its own note, not held back by the recorder's closed one",
+    await refused.waitFor({ timeout: 5000 }).then(
+      () => true,
+      () => false,
+    ),
+    await page
+      .getByTestId('toast')
+      .allInnerTexts()
+      .then((texts) => texts.join(' | ')),
+  );
   check('  no page errors', errors.length === 0, errors.join('; '));
   await page.context().close();
 }

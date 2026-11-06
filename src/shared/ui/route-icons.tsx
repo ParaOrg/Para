@@ -25,7 +25,6 @@ const ROUTE_SPRITE_VIEW_BOX = {
   information: '0 0 24 24',
   start: '0 0 24 24',
   end: '0 0 24 24',
-  routes: '0 0 24 24',
   'close-large': '0 0 28 28',
   'arrow-left-right-large': '0 0 28 28',
   'filter-large': '0 0 28 28',
@@ -104,14 +103,6 @@ export function StartIcon() {
 /** The E disc before where a ride ends (StartIcon's pair). */
 export function EndIcon() {
   return <RouteSpriteIcon id="end" />;
-}
-
-/**
- * Figma's Routes (4192:12133), 24 across, drawn at 28: before the count over
- * the route list ("2 Routes").
- */
-export function RoutesIcon() {
-  return <RouteSpriteIcon id="routes" />;
 }
 
 /**
