@@ -107,6 +107,7 @@ export function Locator({
   return (
     <div
       data-testid="locator-dock"
+      data-dock-follower
       className={
         'pointer-events-none absolute inset-0 z-[5] ' +
         'transition-[translate] duration-sheet ease-enter in-data-dock-dragging:transition-none motion-reduce:transition-none ' +
