@@ -1,4 +1,4 @@
-import type { WatchError } from '../native-bridge/native-contract';
+import type { RIDE_FIX_PROBLEM_CODES, WatchError } from '../native-bridge/native-contract';
 
 const PERMISSION_DENIED = 1;
 const POSITION_UNAVAILABLE = 2;
@@ -20,4 +20,15 @@ export function watchErrorOfThrown(error: unknown): WatchError {
     code: typeof code === 'string' ? code : undefined,
     message: error instanceof Error ? error.message : 'The native watch failed.',
   });
+}
+
+/** What the ride's service says when it cannot record (RideService.java), as the browser numbers it. */
+export function watchErrorOfRideProblem(problem: {
+  code: (typeof RIDE_FIX_PROBLEM_CODES)[number];
+  message: string;
+}): WatchError {
+  return {
+    code: problem.code === 'DENIED' ? PERMISSION_DENIED : POSITION_UNAVAILABLE,
+    message: problem.message,
+  };
 }

@@ -25,8 +25,11 @@ final class RideState {
     private static final String PREFERENCES = "para.ride";
 
     String recordingId = "";
-    /** The page's background-geolocation watcher: the one a tap stops, or starts again. */
-    String watcherId = "";
+    /**
+     * The page's watch is on (it holds the ride as recording): a Pause tapped here is then one it
+     * will apply, and its Resume can be done here too (RideNotification.canResumeHere).
+     */
+    boolean isPageWatching = false;
     String phase = NONE;
     /** "walk" (Lakad) or "ride" (Sakay). */
     String mode = "walk";
@@ -45,7 +48,7 @@ final class RideState {
         SharedPreferences stored = preferences(context);
         RideState state = new RideState();
         state.recordingId = stored.getString("recordingId", "");
-        state.watcherId = stored.getString("watcherId", "");
+        state.isPageWatching = stored.getBoolean("isPageWatching", false);
         state.phase = stored.getString("phase", NONE);
         state.mode = stored.getString("mode", "walk");
         state.startedAt = stored.getLong("startedAt", 0);
@@ -59,7 +62,7 @@ final class RideState {
         // commit(), not apply(): the process may be killed right after a tap.
         preferences(context).edit()
             .putString("recordingId", recordingId)
-            .putString("watcherId", watcherId)
+            .putBoolean("isPageWatching", isPageWatching)
             .putString("phase", phase)
             .putString("mode", mode)
             .putLong("startedAt", startedAt)

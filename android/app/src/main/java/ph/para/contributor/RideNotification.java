@@ -27,18 +27,19 @@ import java.util.Locale;
 /**
  * The ride's one notification: the recording card (Time, the mode, Distance), on the lock screen
  * too, and opened, the card's own bars under it: Pause and Lakad or Sakay while recording, Resume
- * and Finish while paused. It is the location
- * service's own foreground notification, taken over: posted under the service's id
- * (BackgroundGeolocationService's 28351) on its channel, so there is only ever one. Paused and
- * finished, the service is gone and the same id carries it as an ordinary notification.
+ * and Finish while paused. While recording it is the ride's service's foreground notification
+ * (RideService), so there is only ever one; paused and finished, the service is gone and the same
+ * id carries it as an ordinary notification.
  *
  * Its figures are said as the card says them (common/format.ts timeFigure and distanceFigure),
  * and updated quietly: every ten seconds under a minute, then each minute.
  */
 final class RideNotification {
-    /** BackgroundGeolocationService's NOTIFICATION_ID: the service's notification is this one. */
+    /**
+     * The notification's id and channel: those of the location plugin's service, which carried the
+     * ride before RideService did, so a phone updated mid-ride still has one notification.
+     */
     static final int ID = 28351;
-    /** The plugin's channel (its package name), made the same way here if the plugin has not yet. */
     private static final String CHANNEL = "com.equimaps.capacitor_background_geolocation";
 
     private static final long TICK_UNDER_A_MINUTE_MS = 10_000;
@@ -73,6 +74,15 @@ final class RideNotification {
     }
 
     /** The notification for the ride now: also what the service shows when a tap starts it again. */
+    /** The ride's notification for RideService to go into the foreground with, its channel made. */
+    static Notification forService(Context context, RideState state) {
+        Context app = context.getApplicationContext();
+        NotificationManager manager = (NotificationManager) app.getSystemService(Context.NOTIFICATION_SERVICE);
+        if (manager != null) ensureChannel(app, manager);
+        if (RideState.RECORDING.equals(state.phase)) tickAfter(app, state);
+        return build(app, state);
+    }
+
     static Notification build(Context context, RideState state) {
         long now = System.currentTimeMillis();
         String time = timeText(state.elapsedMs(now) / 1000);
@@ -245,12 +255,12 @@ final class RideNotification {
     }
 
     /**
-     * Whether Resume can be done here: the page is alive (frozen or not) and its watcher was let go
-     * by a tap here, so the service started again hands its fixes to the page's own callback. A
-     * ride the page paused itself holds no watcher (watcherId ''): its Resume is the page's.
+     * Whether Resume can be done here: the page is alive (frozen or not) and its watch was still on
+     * when the pause was tapped here, so it takes the resume where the pause was (the page applies
+     * them as a pair). A ride the page paused itself has no watch on: its Resume is the page's.
      */
     static boolean canResumeHere(RideState state) {
-        return RidePlugin.isPageAlive() && state.watcherId != null && !state.watcherId.isEmpty();
+        return RidePlugin.isPageAlive() && state.isPageWatching;
     }
 
     /**
@@ -301,18 +311,19 @@ final class RideNotification {
     }
 
     /**
-     * The page is gone (its activity destroyed): the service stopped with it, so a ride recording
-     * records no more. Its notification goes, as the location service's own went; a paused or
-     * finished ride keeps its notification, which opens the app.
+     * The page is gone (its activity destroyed, or the app swiped away). A ride recording records
+     * on in its own service (RideService), and its notification stays; a paused or finished ride
+     * keeps its notification too, whose Resume then opens the app. A ride the page said was
+     * recording with no service left to record it ends here: nothing records it.
      */
     static void pageGone(Context context) {
         Context app = context.getApplicationContext();
         RideState state = RideState.read(app);
-        if (RideState.RECORDING.equals(state.phase)) {
+        state.isPageWatching = false;
+        if (RideState.RECORDING.equals(state.phase) && !RideService.isRunning()) {
             state.phase = RideState.NONE;
-            state.watcherId = "";
-            state.write(app);
         }
+        state.write(app);
         post(app);
     }
 
