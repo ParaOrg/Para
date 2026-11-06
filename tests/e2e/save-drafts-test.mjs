@@ -717,14 +717,14 @@ const nameField = () => page.getByPlaceholder('SM Fairview Ilalim');
 async function editHintuan(spot, name) {
   await go(spot, 17);
   await clickAt([spot[0] + R * 0.7, spot[1] - R * 0.7], 700);
-  const edit = page.getByRole('button', { name: 'Edit hintuan' });
-  if ((await edit.count()) === 0) {
+  // On a computer the tap opens the hintuan straight into its sidebar, with no card or Edit.
+  const sidebar = page.getByTestId('sidebar');
+  if (!(await sidebar.isVisible())) {
     const row = page.getByRole('button', { name: /Stand-in Tail/ });
     if (await row.count()) await row.first().click();
-    await page.waitForTimeout(500);
   }
-  await edit.click();
-  await page.waitForTimeout(400);
+  await sidebar.waitFor({ timeout: 10000 });
+  openedBeside.push((await page.getByRole('button', { name: 'Edit hintuan' }).count()) === 0);
   await done();
   // The name the form opened with: the editor's own draft's, when there is one.
   shownName = await nameField().inputValue();
@@ -736,9 +736,14 @@ async function editHintuan(spot, name) {
   return writesSince(from);
 }
 let shownName = '';
+const openedBeside = [];
 const tailRevision = tables.stop.find((x) => x.id === tail?.id)?.revision;
 w = await editHintuan(P2, 'Stand-in Tail Renamed');
 const tailDraft = draftOf('hotspot', tail?.id);
+check(
+  'on a computer a tap on a saved hintuan opens it straight in the sidebar, with no card',
+  openedBeside[0] === true,
+);
 check(
   "editing a saved hintuan is a draft of it, built on the stop's revision",
   !!tailDraft &&
@@ -773,6 +778,8 @@ check(
 );
 
 // ---- 8. Take a hintuan down
+// Delete is on the hintuan's card, which a computer's tap goes past: a narrow window keeps it.
+await page.setViewportSize({ width: 900, height: 800 });
 await go(P1, 17);
 await clickAt([P1[0] + R * 0.7, P1[1] - R * 0.7], 700);
 {
@@ -786,6 +793,7 @@ await clickAt([P1[0] + R * 0.7, P1[1] - R * 0.7], 700);
 n = log.length;
 await page.getByRole('button', { name: 'Delete' }).click();
 await waitFor(() => tables.stop.find((x) => x.id === head?.id)?.status === 'taken_down');
+await page.setViewportSize({ width: 1280, height: 800 });
 w = writesSince(n);
 check(
   'Delete on a hintuan no route ends at takes it down: one take_down, no row deleted',

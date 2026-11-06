@@ -32,7 +32,8 @@ interface StudioHotspotCardProps {
   canEdit: boolean;
   /**
    * On a computer an editor's tap opens the hotspot straight into its editing sidebar; the card
-   * shows only when it cannot: another editor's draft, or the draft could not be read.
+   * shows only when it cannot: another editor's draft, or the draft could not be read. Read as
+   * the card opens: a window widened under an open card leaves it a card.
    */
   opensInSidebar: boolean;
   clearOfOpen: Camera['clearOfOpen'];
@@ -96,7 +97,8 @@ export function StudioHotspotCard({
     draw.loadArea(opened.kind, opened.id, hotspotRing(opened));
   };
   // Not behind a trip: a card hidden there is waiting for the trip's ‹, not opened.
-  const isToSidebar = opensInSidebar && canEdit && !saved.selected;
+  const [opensInSidebarAtOpen] = useState(opensInSidebar);
+  const isToSidebar = opensInSidebarAtOpen && canEdit && !saved.selected;
   const canOpenInSidebar = isToSidebar && held === null;
   const openInSidebar = useEffectEvent(() => void handleEdit());
   // The drawing and the map's camera are outside React: started once the draft is known to be free.

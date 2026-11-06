@@ -185,9 +185,14 @@ async function openRouteFromPlace(page) {
   // Inside the place's box, clear of the line's end and the draft's marker.
   // The draft's marker may sit over the place: leave it out of the tap's way.
   await page.addStyleTag({ content: '.maplibregl-marker { pointer-events: none !important; }' });
+  // The place's card lists its routes; a computer's tap goes past it into editing the place,
+  // so the card is opened in a narrow window and the trip seen in a wide one.
+  const viewport = page.viewportSize();
+  await page.setViewportSize({ width: 900, height: 800 });
   await tapAt(page, [LINE.at(-1)[0] + 0.0003, LINE.at(-1)[1] - 0.0002], 17);
   await page.getByTestId('card-item').first().click();
   await page.waitForTimeout(700);
+  if (viewport) await page.setViewportSize(viewport);
 }
 
 const body = async (page) => (await page.locator('body').innerText()).replace(/\s+/g, ' ');
