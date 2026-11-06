@@ -380,7 +380,7 @@ A feature's `index.ts` is the only door into it for code outside the feature. Wh
 
 ### `features/contribute`
 
-`ContributePage`, `ContributeLocatorSlot`, `connectContributions`, `hasOpenRecording`, `askForPersistentStorage`, `applySlowloadIfAsked`, `applySlowmoIfAsked`, `isNativeApp`, `prepareNativeApp`, `runEmulatorRide`
+`ContributePage`, `ContributeLocatorSlot`, `connectContributions`, `hasOpenRecording`, `askForPersistentStorage`, `applySlowloadIfAsked`, `applySlowmoIfAsked`, `checkLocationOn`, `isNativeApp`, `prepareNativeApp`, `runEmulatorRide`
 
 ### `features/locator`
 
