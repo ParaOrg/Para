@@ -3,6 +3,7 @@ package ph.para.contributor;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.PowerManager;
@@ -12,6 +13,7 @@ import android.util.Log;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.IntentSenderRequest;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.core.location.LocationManagerCompat;
 
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
@@ -134,7 +136,22 @@ public class NativePermissionsPlugin extends Plugin {
         state.put("sdk", Build.VERSION.SDK_INT);
         state.put("manufacturer", Build.MANUFACTURER.toLowerCase(Locale.ROOT));
         state.put("isUnrestricted", power.isIgnoringBatteryOptimizations(getContext().getPackageName()));
+        LocationManager location = (LocationManager) getContext().getSystemService(Context.LOCATION_SERVICE);
+        state.put("isLocationOn", location != null && LocationManagerCompat.isLocationEnabled(location));
         call.resolve(state);
+    }
+
+    /** The phone's Location settings, where its switch is; Para's own page if a phone has none. */
+    @PluginMethod
+    public void openLocationSettings(PluginCall call) {
+        Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        try {
+            getContext().startActivity(intent);
+        } catch (android.content.ActivityNotFoundException none) {
+            openAppSettings(call);
+            return;
+        }
+        call.resolve();
     }
 
     /** Para's page in the phone's Settings, where Permissions and Battery are one tap away. */

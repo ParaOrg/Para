@@ -18,6 +18,8 @@ const deviceInfoSchema = z.object({
   sdk: z.number(),
   manufacturer: z.string(),
   isUnrestricted: z.boolean(),
+  /** The phone's own location switch. */
+  isLocationOn: z.boolean(),
 });
 export type DeviceInfo = z.infer<typeof deviceInfoSchema>;
 
@@ -26,6 +28,7 @@ interface NativePermissionsPlugin {
   requestPermissions: (options: { permissions: NativePermission[] }) => Promise<unknown>;
   deviceInfo: () => Promise<unknown>;
   openAppSettings: () => Promise<void>;
+  openLocationSettings: () => Promise<void>;
   checkLocationOn: () => Promise<unknown>;
 }
 
@@ -50,6 +53,11 @@ export async function readDeviceInfo(): Promise<DeviceInfo> {
 /** Opens Para's page in the phone's Settings. */
 export function openAppSettings(): Promise<void> {
   return getPlugin().openAppSettings();
+}
+
+/** Opens the phone's Location settings, where its switch is. */
+export function openLocationSettings(): Promise<void> {
+  return getPlugin().openLocationSettings();
 }
 
 const locationSettingSchema = z.object({ location: z.enum(['on', 'off', 'unknown']) });
