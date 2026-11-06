@@ -629,3 +629,34 @@ behave as before. One function and one trigger; no table, grant or row changes.
 - Applied, and it must be withdrawn: run `20261105160000_draft_published_revert.sql`.
 
 - Applied, and it must be withdrawn: run `20261105180000_keep_uploads_on_user_delete_revert.sql`.
+
+# Applying lock_map_tables to the live project
+
+**Applied live 2026-11-06** (ledger `20261106022456`) from its paste file; its check passed. Do not reapply.
+The studio on `main` and on `staging` writes the map only through
+the draft functions. Clean-up step 4 of `.scratch/codebase-review/database.md` (H1). Editors could still
+insert, update and delete `route`, `route_variant`, `stop` and `route_stop` directly (0005, 0015), so an old
+cached studio, a script or a browser console could change or hard-delete published rows with no draft, no
+publish and no takedown record. Now `authenticated` keeps select only; the draft functions, which run with
+their owner's rights, are unchanged. The write policies stay, inert without the grants. `service_role` (the
+overview backfill) is unchanged. No table, function or row changes.
+
+| File | What it does |
+| --- | --- |
+| `20261105190000_lock_map_tables_apply.sql` | One transaction. Checks `draft_published` is in the ledger, and this is not. Applies `migrations/20261105190000_lock_map_tables.sql` (carried unchanged; `verify/lock-map-tables.sh` checks the copy). Checks `authenticated` writes none of the four tables and still reads them. Writes the ledger row `lock_map_tables`. Any failed check raises and nothing is changed. A second run stops at the first check and changes nothing. |
+| `20261105190000_lock_map_tables_check.sql` | Part one adds a test editor, two places and a route, proves every direct write refused and the draft functions working, then rolls all of it back. Part two is read-only: 4 rows, all `ok` should be `t`. |
+| `20261105190000_lock_map_tables_revert.sql` | One transaction: grants the direct writes back and removes the ledger row. Touches no data. Safe to run twice. |
+
+## Steps
+
+1. Run `20261105190000_lock_map_tables_apply.sql`. It ends with `COMMIT`; an error means nothing changed.
+2. Run `20261105190000_lock_map_tables_check.sql`: part one ends with `ROLLBACK` and no error; part two gives
+   4 rows, all `ok = t`.
+3. Record the ledger version
+   (`select version from supabase_migrations.schema_migrations where name = 'lock_map_tables';`)
+   in `migrations/README.md`. The types do not change.
+
+## Recovery
+
+- Apply failed: nothing changed. The message names what it found.
+- Applied, and it must be withdrawn: run `20261105190000_lock_map_tables_revert.sql`.
