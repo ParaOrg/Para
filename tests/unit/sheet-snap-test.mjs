@@ -3,11 +3,15 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  CARD_SHAPE,
   LOW_PX,
   fitHeightsFor,
   fitSnap,
   follow,
   heightsFor,
+  shownAt,
+  slide,
+  slideShowing,
   snapAfterTap,
   snapFor,
 } from '../../src/shared/ui/sheet-gesture.ts';
@@ -161,4 +165,40 @@ test('a fitted sheet lets go on Low or open, never between', () => {
   // A drag never shows more than its content.
   const track = follow(700, 0, LOW_PX, 800, fitted);
   assert.equal(track.move(0, 16), 520);
+});
+
+// A sheet with a shape of its own (BottomSheet's `shape`): the route list's Low 240 and a Max that
+// fills the screen.
+const LIST_SHAPE = { lowPx: 240, isMaxFull: true };
+
+test('a shape of its own: its Low, Middle as every card has it, and a Max of the whole map', () => {
+  assert.deepEqual(heightsFor(844, LIST_SHAPE), { low: 240, middle: 464, max: 844 });
+  assert.equal(shownAt('max', 844, LIST_SHAPE), 844);
+  assert.equal(shownAt(0.5, 844, LIST_SHAPE), 422);
+});
+
+test('a tall Low on a short map, a phone on its side, never stands above Middle', () => {
+  assert.deepEqual(heightsFor(393, LIST_SHAPE), { low: 216, middle: 216, max: 393 });
+});
+
+test('a Max that fills the screen slides to the top, and a drag never past it', () => {
+  assert.equal(slide('max', LIST_SHAPE), '0px');
+  assert.equal(
+    slide(0.5, LIST_SHAPE),
+    'calc(100% - 0.5 * (100% - 0px) - env(safe-area-inset-bottom))',
+  );
+  assert.equal(
+    slideShowing(300, LIST_SHAPE),
+    'max(0px, calc(100% - 300px - env(safe-area-inset-bottom)))',
+  );
+  assert.equal(
+    slide('low', LIST_SHAPE),
+    'calc(100% - min(240px, 55%) - env(safe-area-inset-bottom))',
+  );
+});
+
+test('every other card keeps its shape: CARD_SHAPE is the default', () => {
+  assert.deepEqual(heightsFor(844, CARD_SHAPE), heightsFor(844));
+  assert.equal(slide('max', CARD_SHAPE), slide('max'));
+  assert.equal(CARD_SHAPE.lowPx, LOW_PX);
 });

@@ -10,8 +10,10 @@ import {
 
 import { useDialogFocus } from '@/shared/hooks/use-dialog-focus';
 import { useEscape } from '@/shared/hooks/use-escape';
+import { cn } from '@/shared/utils/cn';
 
 import {
+  CARD_SHAPE,
   MAX_STRIP_PX,
   fitHeightsFor,
   fitSnap,
@@ -19,6 +21,7 @@ import {
   slide,
   slideShowing,
   snapName,
+  type SheetShape,
   type Snap,
   type SnapName,
 } from './sheet-gesture';
@@ -46,9 +49,11 @@ interface Props {
    * list's, a trip's and a place's (the public map's HintuanCard) panel in
    * the top-left corner from `@float:` (`corner`, the default), or the card
    * the studio's hotspot card floats as, 16 in, from `@wide:` (`card`). What it
-   * holds reads which with `sheet-floating:` and `sheet-low:` (global.css).
+   * holds reads which with `sheet-floating:` and `sheet-low:` (global.css). `dock`: the route
+   * list's, docked the map's whole height on the left from `@float:`, 368 wide (Figma 4633:22034),
+   * its `footer` standing beside it.
    */
-  floats?: 'corner' | 'card';
+  floats?: 'corner' | 'card' | 'dock';
   /**
    * The height, when the caller keeps it: sheets that stand in for one
    * another — the route list, a hotspot's card and the trip opened from
@@ -68,6 +73,25 @@ interface Props {
    * closing means leaving it. On for every other card: down from Low, it closes.
    */
   closesOnPull?: boolean;
+  /**
+   * Its own Low and Max, where they differ from every card's: the route list's Low shows its first
+   * card above its Controller, and its Max fills the screen (Figma 4633:25575). Every other card's
+   * by default (CARD_SHAPE).
+   */
+  shape?: SheetShape;
+  /**
+   * `hidden`: no HandleNotch drawn, where Figma draws none (the route list), but the button stays
+   * for the keyboard and a screen reader: Tab reaches it, it says the height and moves it, and it
+   * shows as the notch while it has the keyboard's focus.
+   */
+  handle?: 'shown' | 'hidden';
+  /**
+   * Drawn at the sheet's foot on the screen, whatever its height, following a drag: the route
+   * list's Controller, the cards scrolling under it (4633:25516). Its buttons, and what they pop
+   * up, keep their taps; the rest of its row lets them through to the cards. Floating as a
+   * `dock`, it stands beside the sheet instead, at its top.
+   */
+  footer?: ReactNode;
   children: ReactNode;
 }
 
@@ -84,6 +108,7 @@ export interface SheetHeight {
 const FLOATS_AT = {
   corner:
     '@float:inset-auto @float:top-0 @float:left-0 @float:max-h-full @float:w-96 @float:pt-0 @float:pb-0',
+  dock: '@float:inset-auto @float:inset-y-0 @float:left-0 @float:w-92 @float:overflow-visible @float:pt-0 @float:pb-0',
   card:
     '@wide:inset-auto @wide:top-4 @wide:left-4 @wide:w-80 @wide:max-w-[calc(100%-2rem)] @wide:max-h-[calc(100%-2rem)] ' +
     '@wide:rounded-xl @wide:shadow-xl @wide:ring-1 @wide:ring-black/10 @wide:pt-4 @wide:pb-4',
@@ -131,6 +156,9 @@ export function BottomSheet({
   height,
   fits = false,
   closesOnPull = true,
+  shape = CARD_SHAPE,
+  handle = 'shown',
+  footer,
   children,
 }: Props) {
   const own = useRef<HTMLDivElement>(null);
@@ -178,7 +206,7 @@ export function BottomSheet({
   // place's name tapped) is new, and without this it would show at Max for a
   // moment and glide down to its height. Never changed after, so React
   // leaves the drag's and the glide's --sheet-y alone.
-  const [opensAt] = useState(() => ({ '--sheet-y': slide(snap) }) as CSSProperties);
+  const [opensAt] = useState(() => ({ '--sheet-y': slide(snap, shape) }) as CSSProperties);
   useDialogFocus(own, hidden);
   // A sheet left open under an inert page (the studio's other maps) is out of reach, Escape too.
   useEscape(() => {
@@ -203,14 +231,14 @@ export function BottomSheet({
   // hidden sheet's change, or one unmounting, leaves another's drag alone.
   const markedRef = useRef(false);
   useLayoutEffect(() => {
-    if (!dragging) at(slide(snap));
+    if (!dragging) at(slide(snap, shape));
     // What follows the sheet on the page (the LocatorButton) glides with it,
     // or keeps up with the finger.
     const mark = dragging && !hidden;
     if (mark === markedRef.current) return;
     own.current?.closest('[data-dock-host]')?.toggleAttribute('data-dock-dragging', mark);
     markedRef.current = mark;
-  }, [snap, dragging, hidden]);
+  }, [snap, dragging, hidden, shape]);
   // A flick that closes the sheet unmounts it mid-drag, before the effect
   // above runs with the drag over, and the page would keep the attribute: the
   // LocatorButton would stop gliding for good. The host is held from the
@@ -224,7 +252,7 @@ export function BottomSheet({
 
   /** Docked, not floating: the notch is drawn only then. */
   const docked = () => handleRef.current?.offsetParent != null;
-  const show = (shown: number) => at(slideShowing(shown));
+  const show = (shown: number) => at(slideShowing(shown, shape));
   const { onPointerDown, onBodyFocus, afterTap } = useSheetGestures({
     sheet: own,
     handle: handleRef,
@@ -237,6 +265,7 @@ export function BottomSheet({
     show,
     docked,
     fitted,
+    shape,
     closesOnPull,
   });
   const handleLabel = fitted
@@ -261,6 +290,8 @@ export function BottomSheet({
       data-testid={testId}
       data-snap={snapName(snap)}
       data-floats={floats}
+      data-low-px={shape.lowPx}
+      data-max-full={shape.isMaxFull || undefined}
       hidden={hidden}
       style={opensAt}
       onPointerDown={onPointerDown}
@@ -288,7 +319,7 @@ export function BottomSheet({
         title={handleLabel}
         onClick={() => setSnap(afterTap(snap))}
         // HandleNotch: 8 above the bar, 4 below (Figma 3742:1049).
-        className="flex w-full shrink-0 touch-none justify-center pt-2 pb-1 sheet-floating:hidden"
+        className={cn(HANDLE[handle], 'shrink-0 touch-none justify-center sheet-floating:hidden')}
       >
         <span aria-hidden className="h-1.5 w-12 rounded-full bg-surface-quaternary" />
       </button>
@@ -304,16 +335,44 @@ export function BottomSheet({
         }
         // At Max the sheet stands a gap down the map (sheetGesture), as much
         // of it under the screen's bottom: padded by that, its list scrolls to the end.
-        style={
-          snap === 'max'
-            ? { paddingBottom: 'calc(var(--map-safe-top) + ' + MAX_STRIP_PX + 'px)' }
-            : undefined
-        }
+        style={snap === 'max' ? maxBodyStyle(shape) : undefined}
       >
         {fits ? <div ref={contentRef}>{children}</div> : children}
       </div>
+      {footer && (
+        <div
+          data-testid="sheet-footer"
+          data-sheet-footer
+          className={
+            'pointer-events-none absolute inset-x-0 bottom-(--sheet-y) pb-[env(safe-area-inset-bottom)] ' +
+            '[&_[popover]]:pointer-events-auto [&_button]:pointer-events-auto ' +
+            'sheet-floating:top-0 sheet-floating:right-auto sheet-floating:bottom-auto sheet-floating:left-full sheet-floating:pb-0'
+          }
+        >
+          {footer}
+        </div>
+      )}
     </div>
   );
+}
+
+/** The handle drawn, or kept for the keyboard alone (BottomSheet's `handle`). */
+const HANDLE = {
+  shown: 'flex w-full pt-2 pb-1',
+  // Focused from the keyboard, it shows as the notch every other card draws: focus is always seen.
+  hidden:
+    'sr-only focus-visible:not-sr-only focus-visible:flex focus-visible:w-full focus-visible:pt-2 focus-visible:pb-1',
+} satisfies Record<NonNullable<Props['handle']>, string>;
+
+/**
+ * The body at Max. A sheet leaving a strip of map stands that gap down the map, as much of it
+ * under the screen's bottom: padded by that, its list scrolls to the end. A sheet filling the
+ * screen runs behind the status bar instead: padded by it at the top, its first card clears it.
+ */
+function maxBodyStyle(shape: SheetShape): CSSProperties {
+  return shape.isMaxFull
+    ? { paddingTop: 'var(--map-safe-top)' }
+    : { paddingBottom: 'calc(var(--map-safe-top) + ' + MAX_STRIP_PX + 'px)' };
 }
 
 /**

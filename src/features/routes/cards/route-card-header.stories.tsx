@@ -4,11 +4,9 @@ import { fn } from 'storybook/test';
 import { RouteCardHeader } from './route-card-header';
 
 /**
- * The top of the route list and of a trip (Figma 3742:1049): Default, Routes
- * and the count, over a list; Variant2, ‹ back, over a trip. SWITCH names the
- * way a tap leads to (switchWord): Pabalik over Papunta and back, on a train
- * the other bound. It rests disabled when the other way round has nothing
- * drawn. Rendered by hand: its two shapes of props do not make one set of args.
+ * The top of a trip (Figma 3742:1049, Variant2): ‹ back, SWITCH and ✕. SWITCH names the way a
+ * tap leads to (switchWord): Pabalik over Papunta and back, on a train the other bound. It rests
+ * disabled when the other way round has nothing drawn.
  */
 const meta: Meta = {
   title: 'Features/Routes/RouteCardHeader',
@@ -37,29 +35,14 @@ type Story = StoryObj;
 // Papunta showing, so SWITCH names where a tap leads: Pabalik.
 const common = { onSwitch: fn(), onClose: fn(), switchable: true, back: false, way: 'Pabalik' };
 
-/** Over the route list: Routes and the count (4192:12133). */
-export const Default: Story = {
-  render: () => <RouteCardHeader {...common} routeCount="2 Routes" />,
-};
-
-/** Over the route list, one route. */
-export const OneRoute: Story = {
-  render: () => <RouteCardHeader {...common} routeCount="1 Route" />,
-};
-
-/** A tap with only hotspots under it: their count. */
-export const Hotspots: Story = {
-  render: () => <RouteCardHeader {...common} routeCount="2 Hotspots" />,
-};
-
 /** The way back showing: SWITCH reads Papunta, the way a tap leads. */
 export const WayBack: Story = {
-  render: () => <RouteCardHeader {...common} back way="Papunta" routeCount="2 Routes" />,
+  render: () => <RouteCardHeader {...common} back way="Papunta" onBackToList={fn()} />,
 };
 
 /** Nothing drawn the other way round: SWITCH rests disabled. */
 export const NothingToSwitchTo: Story = {
-  render: () => <RouteCardHeader {...common} switchable={false} routeCount="1 Route" />,
+  render: () => <RouteCardHeader {...common} switchable={false} onBackToList={fn()} />,
 };
 
 /** Over a trip (Variant2): ‹ back to what it was picked from. */
@@ -91,9 +74,4 @@ export const Phone: Story = {
 /** Over a loop's trip (UP – Ikot): ‹ and ✕, and no SWITCH, for a loop has no way back. */
 export const OverALoop: Story = {
   render: () => <RouteCardHeader {...common} way={null} onBackToList={fn()} />,
-};
-
-/** Over a list of loops alone: the count and ✕, no SWITCH. */
-export const OverLoopsAlone: Story = {
-  render: () => <RouteCardHeader {...common} way={null} routeCount="1 Route" />,
 };

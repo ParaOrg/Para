@@ -170,3 +170,15 @@ test('the ride records in a service that outlives the app, of type location', ()
   assert.match(service, /android:exported="false"/);
   assert.match(manifest, /android\.permission\.FOREGROUND_SERVICE_LOCATION/);
 });
+
+test("the app's plugins hand the page JSON as parsed arrays, never JSArray.from of a string", () => {
+  // JSArray.from takes an array: given a JSON string it answers null, and the page reads nothing
+  // (the notification's taps were never applied that way).
+  for (const name of ['RidePlugin', 'FixLogPlugin', 'NativePermissionsPlugin']) {
+    assert.doesNotMatch(java(name), /JSArray\.from\([^)]*toString\(\)/, `${name}.java`);
+  }
+  assert.match(
+    java('RidePlugin'),
+    /new JSArray\(RideState\.events\(getContext\(\)\)\.toString\(\)\)/,
+  );
+});
