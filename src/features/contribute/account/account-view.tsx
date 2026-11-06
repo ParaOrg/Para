@@ -108,12 +108,13 @@ export function AccountView({ recordings, statusOf }: AccountViewProps) {
   );
 }
 
+const STATS_OFFLINE = 'Your statistics show when you’re online.';
+
 /**
  * What the Commute Statistics show: the last numbers while they are asked again or when asking
  * fails, placeholders until the first come, a line when none could be had, and nothing at all
  * while the project has no stats to give (get_my_stats not there yet).
  */
-const STATS_OFFLINE = 'Your statistics show when you’re online.';
 
 function statsState(
   data: MyStats | undefined,

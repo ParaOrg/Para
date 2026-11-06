@@ -143,7 +143,9 @@ function StatsSkeleton() {
   const isShown = useIsSlowLoad(true);
   return (
     <div aria-busy="true" className="flex flex-col gap-4">
-      <p className="sr-only">Loading your statistics</p>
+      <p role="status" className="sr-only">
+        Loading your statistics
+      </p>
       <div aria-hidden className={cn('flex flex-col gap-4', !isShown && 'invisible')}>
         <div className="flex gap-4">
           <div className="flex flex-1 flex-col gap-4">

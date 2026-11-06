@@ -18,6 +18,12 @@ export interface LoadGiveUp {
 export function useLoadGiveUp(isLoading: boolean): LoadGiveUp {
   const [attempt, setAttempt] = useState(0);
   const [givenUpOn, setGivenUpOn] = useState<number | null>(null);
+  // A load that ends forgets it was given up, so the next one (a remount, a reload) waits afresh.
+  const [wasLoading, setWasLoading] = useState(isLoading);
+  if (wasLoading !== isLoading) {
+    setWasLoading(isLoading);
+    if (!isLoading) setGivenUpOn(null);
+  }
   useEffect(() => {
     if (!isLoading) return;
     const timer = setTimeout(() => setGivenUpOn(attempt), LOAD_GIVE_UP_MS);
