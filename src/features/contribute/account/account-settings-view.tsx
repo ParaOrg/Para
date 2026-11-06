@@ -1,10 +1,14 @@
+import { useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 
 import { messageOf } from './account-message';
 import { AccountSettingsScreen } from './account-settings-screen';
+import { accountKeys } from '../api/account-keys';
+import { ACCOUNT_MESSAGES } from '../api/account-problem';
 import { useAccountQuery } from '../api/use-account-query';
 import { useProfileQuery } from '../api/use-profile-query';
 import { useUpdateProfileMutation } from '../api/use-update-profile-mutation';
+import { askAgain, useLoadGiveUp } from '../common/use-load-give-up';
 
 // Keep Para recording exists in the Android app's build only: the web build never builds the
 // native chunk it opens.
@@ -31,6 +35,9 @@ export function AccountSettingsView({
 }: AccountSettingsViewProps) {
   const account = useAccountQuery();
   const profile = useProfileQuery();
+  const queryClient = useQueryClient();
+  // A profile with no answer after a while is said as with no signal, with Try again.
+  const giveUp = useLoadGiveUp(!profile.data && !profile.isError && profile.fetchStatus !== 'idle');
   const update = useUpdateProfileMutation();
   const [keepRecordingError, setKeepRecordingError] = useState<string | null>(null);
 
@@ -48,11 +55,14 @@ export function AccountSettingsView({
     <AccountSettingsScreen
       email={account.data?.email ?? ''}
       profile={profile.data ?? null}
-      loadError={profile.isError ? messageOf(profile.error) : null}
+      loadError={giveUp.hasGivenUp ? ACCOUNT_MESSAGES.offline : messageOf(profile.error)}
       isSaving={update.isPending}
       saveError={messageOf(update.error)}
       isPasswordChanged={isPasswordChanged}
-      onRetry={() => void profile.refetch()}
+      onRetry={() => {
+        giveUp.restart();
+        void askAgain(queryClient, accountKeys.profile(), profile.refetch);
+      }}
       onSave={(fields) => update.mutate(fields)}
       onOpenChangePassword={onOpenChangePassword}
       onOpenDeleteAccount={onOpenDeleteAccount}
