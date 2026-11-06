@@ -270,10 +270,14 @@ flowchart TD
   features_routes_map --> shared_ui
   features_routes_map --> shared_utils
   features_routes_model --> features_routes_geo
+  features_routes_model --> features_routes_published
   features_routes_model --> shared_utils
   features_routes_published --> features_routes_model
   features_routes_search --> design_system_primitives
+  features_routes_search --> features_routes_cards
   features_routes_search --> features_routes_model
+  features_routes_search --> features_routes_published
+  features_routes_search --> shared_ui
   features_routes_search --> shared_utils
   features_studio --> features_studio_auth
   features_studio --> features_studio_contributors
@@ -364,9 +368,9 @@ flowchart TD
 | `features/routes/cards` | `design-system/primitives`, `features/routes/model`, `shared/ui`, `shared/utils` |
 | `features/routes/geo` | `shared/utils` |
 | `features/routes/map` | `design-system/foundation`, `design-system/primitives`, `features/routes/cards`, `features/routes/geo`, `features/routes/model`, `shared/config`, `shared/hooks`, `shared/ui`, `shared/utils` |
-| `features/routes/model` | `features/routes/geo`, `shared/utils` |
+| `features/routes/model` | `features/routes/geo`, `features/routes/published`, `shared/utils` |
 | `features/routes/published` | `features/routes/model` |
-| `features/routes/search` | `design-system/primitives`, `features/routes/model`, `shared/utils` |
+| `features/routes/search` | `design-system/primitives`, `features/routes/cards`, `features/routes/model`, `features/routes/published`, `shared/ui`, `shared/utils` |
 | `features/studio` | `features/studio/auth`, `features/studio/contributors`, `features/studio/data`, `features/studio/drawing`, `features/studio/maps`, `features/studio/panels`, `features/studio/public-view`, `features/studio/review` |
 | `features/studio/auth` | `design-system/primitives`, `features/routes/map`, `features/studio/data`, `shared/lib`, `shared/ui` |
 | `features/studio/contributors` | `design-system/foundation`, `design-system/primitives`, `features/studio/data`, `features/studio/drawing`, `shared/utils` |

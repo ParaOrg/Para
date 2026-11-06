@@ -28,6 +28,7 @@ import { StationLabels } from '@/features/routes/map/station-labels';
 import { useCardCamera } from '@/features/routes/map/use-card-camera';
 import { useCardStack } from '@/features/routes/map/use-card-stack';
 import { useLitRides } from '@/features/routes/map/use-lit-rides';
+import { useLookAt } from '@/features/routes/map/use-look-at';
 import { useLoopTip } from '@/features/routes/map/use-loop-tip';
 import { useMapCredits } from '@/features/routes/map/use-map-credits';
 import { useSavedHotspots } from '@/features/routes/map/use-saved-hotspots';
@@ -179,6 +180,16 @@ export function PublicMapApp() {
   // The open trip's hintuans, worked out once per trip (useTripTimeline).
   const timeline = useTripTimeline(saved.selected, hotspots, tipId);
 
+  // Place search: what stops at a hotspot, by the published directions, and the camera to a
+  // landmark (.scratch/place-search, step 2).
+  const directionsById = new Map(saved.directions.map((direction) => [direction.id, direction]));
+  const directionsAt = (hotspotId: string) =>
+    hotspots
+      .linkedDirectionIds(hotspotId)
+      .map((id) => directionsById.get(id))
+      .filter((direction) => direction !== undefined);
+  const lookAt = useLookAt(map);
+
   // The map's credits, the Map Data Source sheet, opened by the ⓘ: the map and the cards under it
   // are out of reach while it is open.
   const credits = useMapCredits(root);
@@ -322,8 +333,10 @@ export function PublicMapApp() {
       */}
         <PlaceSearchBar
           hotspots={hotspots.hotspots}
+          directionsAt={directionsAt}
           whereNow={() => where.current?.at ?? null}
           onPick={(hotspot) => openPlace(hotspot.id)}
+          onLookAt={lookAt}
           isUnderUpdate={needRefresh}
           isUnderOfflinePill={offline || age.stale}
           isCardOpen={cards.open}

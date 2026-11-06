@@ -1,8 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { expect, fn, userEvent, within } from 'storybook/test';
+import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
 import { PlaceSearch } from './place-search';
 import type { Hotspot } from '../model/hotspots';
+import type { Direction, RouteSummary } from '../model/routes';
+import type { LandmarkFileRead } from '../published/fetch-landmarks';
+import type { Landmark } from '../published/landmark-file-schema';
 
 const hotspot = (
   id: string,
@@ -23,6 +26,30 @@ const hotspot = (
   line: null,
 });
 
+const route = (id: string, name: string, mode: RouteSummary['mode']): RouteSummary => ({
+  id,
+  signboard: null,
+  longName: null,
+  mode,
+  fareNote: null,
+  headHotspotId: 'h-a',
+  tailHotspotId: 'h-b',
+  via: null,
+  name,
+});
+
+const direction = (id: string, r: RouteSummary, name: string): Direction => ({
+  id,
+  routeId: r.id,
+  name,
+  originTerminal: null,
+  destinationTerminal: null,
+  shape: null,
+  reversed: false,
+  confidence: 'drawn',
+  route: r,
+});
+
 const HOTSPOTS: Hotspot[] = [
   hotspot('t1', 'SM Fairview Terminal B', 'SM Fairview', [121.06, 14.733], {
     kind: 'terminal',
@@ -35,7 +62,38 @@ const HOTSPOTS: Hotspot[] = [
   }),
   hotspot('h3', 'Cubao Farmers', 'Cubao', [121.054, 14.619]),
   hotspot('h4', 'Cubao Gateway', 'Gateway Cubao', [121.053, 14.621]),
+  hotspot('h5', 'Commonwealth Market Hintuan', 'Commonwealth Market', [121.0845, 14.6988]),
 ];
+
+const ROUTES: Record<string, Direction[]> = {
+  t1: [direction('d1', route('r1', 'SM Fairview – Quiapo', 'jeepney'), 'SM Fairview → Quiapo')],
+  h3: [
+    direction('d2', route('r2', 'Cubao – Quiapo', 'jeepney'), 'Cubao → Quiapo'),
+    direction('d3', route('r3', 'Cubao – PITX', 'bus'), 'Cubao → PITX'),
+  ],
+  h5: [
+    direction('d4', route('r4', 'Fairview – Quiapo', 'jeepney'), 'Fairview → Quiapo'),
+    direction('d5', route('r5', 'Commonwealth – Cubao', 'jeepney'), 'Commonwealth → Cubao'),
+  ],
+};
+
+const landmark = (
+  id: string,
+  name: string,
+  kind: Landmark['kind'],
+  point: [number, number],
+  aliases: string[] = [],
+): Landmark => ({ id, name, kind, point, reach: [point], aliases });
+
+const LANDMARKS: LandmarkFileRead = {
+  attribution: '© OpenStreetMap contributors',
+  landmarks: [
+    landmark('w1', 'Commonwealth High School', 'school', [121.0817, 14.699]),
+    landmark('w2', 'Fairview Terraces', 'mall', [121.06, 14.737]),
+    landmark('w3', 'La Mesa Watershed Gate', 'barangay', [121.0905, 14.7205]),
+    landmark('w4', 'SM City Fairview', 'mall', [121.0605, 14.733]),
+  ],
+};
 
 const LONG_NAMES: Hotspot[] = [
   hotspot(
@@ -51,7 +109,13 @@ const LONG_NAMES: Hotspot[] = [
 const meta = {
   title: 'Features/Routes/PlaceSearch',
   component: PlaceSearch,
-  args: { hotspots: HOTSPOTS, onPick: fn() },
+  args: {
+    hotspots: HOTSPOTS,
+    directionsAt: (id: string) => ROUTES[id] ?? [],
+    onPick: fn(),
+    onLookAt: fn(),
+    loadLandmarks: () => Promise.resolve(LANDMARKS),
+  },
   decorators: [
     (Story) => (
       <div className="w-80 bg-surface-tertiary p-4">
@@ -66,25 +130,31 @@ type Story = StoryObj<typeof meta>;
 
 const field = (canvasElement: HTMLElement) =>
   within(canvasElement).getByRole('combobox', { name: 'Search places' });
+const optionTexts = (canvasElement: HTMLElement) =>
+  within(canvasElement)
+    .getAllByRole('option')
+    .map((option) => option.textContent);
 
-/** Nothing typed: the field alone. */
+/** Nothing typed: the field alone, and no landmark asked for yet. */
 export const Default: Story = {
-  play: async ({ canvasElement }) => {
+  args: { loadLandmarks: fn(() => Promise.resolve(LANDMARKS)) },
+  play: async ({ args, canvasElement }) => {
     await expect(field(canvasElement)).toHaveAttribute('aria-expanded', 'false');
     await expect(within(canvasElement).queryByRole('listbox')).toBeNull();
+    await expect(args.loadLandmarks).not.toHaveBeenCalled();
   },
 };
 
 /**
  * A few letters in: the places they start, best match first, each with the name that matched
- * under its label when that name is another (Gateway Cubao's box is "Cubao Gateway").
+ * under its label when that name is another (Gateway Cubao's box is "Cubao Gateway"), and what
+ * rides from it.
  */
 export const Typing: Story = {
   play: async ({ canvasElement }) => {
     await userEvent.type(field(canvasElement), 'cub');
-    const options = within(canvasElement).getAllByRole('option');
-    await expect(options.map((option) => option.textContent)).toEqual([
-      'Cubao',
+    await expect(optionTexts(canvasElement)).toEqual([
+      'CubaoJeepneyBus',
       'Gateway CubaoCubao Gateway',
     ]);
   },
@@ -118,12 +188,56 @@ export const ResultActive: Story = {
   },
 };
 
+/**
+ * Para's places first, then the landmarks, marked so, with their credit. SM Fairview matched by
+ * its alias "Fairview" says so; SM City Fairview, a landmark of its name beside it, is the place
+ * and not listed twice.
+ */
+export const LandmarkResults: Story = {
+  play: async ({ canvasElement }) => {
+    await userEvent.type(field(canvasElement), 'fairview');
+    await waitFor(() => expect(optionTexts(canvasElement)).toHaveLength(2));
+    await expect(optionTexts(canvasElement)).toEqual([
+      'SM FairviewJeepneyFairview',
+      'Fairview TerracesMall · Landmark',
+    ]);
+    await expect(within(canvasElement).getByText('© OpenStreetMap contributors')).toBeVisible();
+  },
+};
+
 /** Located: each result says how far it is. */
 export const Located: Story = {
   args: { whereNow: () => [121.0531, 14.6211] },
   play: async ({ canvasElement }) => {
-    await userEvent.type(field(canvasElement), 'terminal');
+    await userEvent.type(field(canvasElement), 'cubao');
     await expect(within(canvasElement).getAllByRole('option')[0]).toHaveTextContent('km');
+  },
+};
+
+/** The landmark file on its way: Para's places show now, and a line says landmarks are coming. */
+export const LoadingLandmarks: Story = {
+  args: {
+    loadLandmarks: () =>
+      new Promise<LandmarkFileRead>(() => {
+        // Held: the file never arrives, so the story stays on its way.
+      }),
+  },
+  play: async ({ canvasElement }) => {
+    await userEvent.type(field(canvasElement), 'quiapo');
+    await expect(optionTexts(canvasElement)).toEqual(['Quiapo']);
+    await expect(within(canvasElement).getByText('Looking through landmarks…')).toBeVisible();
+  },
+};
+
+/** The landmark file failed (offline before it was kept): Para's places still show; Try again asks again. */
+export const LandmarksFailed: Story = {
+  args: { loadLandmarks: fn(() => Promise.reject(new Error('offline'))) },
+  play: async ({ args, canvasElement }) => {
+    await userEvent.type(field(canvasElement), 'quiapo');
+    const retry = await within(canvasElement).findByRole('button', { name: 'Try again' });
+    await expect(optionTexts(canvasElement)).toEqual(['Quiapo']);
+    await userEvent.click(retry);
+    await expect(args.loadLandmarks).toHaveBeenCalledTimes(2);
   },
 };
 
@@ -131,11 +245,42 @@ export const Located: Story = {
 export const NoMatch: Story = {
   play: async ({ canvasElement }) => {
     await userEvent.type(field(canvasElement), 'Monumento');
-    await expect(within(canvasElement).getByText('No place called ‘Monumento’ yet')).toBeVisible();
+    await expect(
+      await within(canvasElement).findByText('No place called ‘Monumento’ yet'),
+    ).toBeVisible();
     // No list is open, so the field says none is.
     await expect(field(canvasElement)).toHaveAttribute('aria-expanded', 'false');
     await userEvent.keyboard('{Escape}');
     await expect(field(canvasElement)).toHaveValue('');
+  },
+};
+
+/**
+ * A landmark chosen: the camera goes there, and the hintuans with routes within 500 m are listed,
+ * nearest first, each with where its routes go; one opens as a tap on it does.
+ */
+export const RoutesNearHere: Story = {
+  play: async ({ args, canvasElement }) => {
+    await userEvent.type(field(canvasElement), 'commonwealth high');
+    await waitFor(() => expect(optionTexts(canvasElement)).toHaveLength(1));
+    await userEvent.keyboard('{Enter}');
+    await expect(args.onLookAt).toHaveBeenCalledWith([121.0817, 14.699]);
+    const panel = within(canvasElement).getByRole('region', { name: 'Commonwealth High School' });
+    await expect(panel).toHaveTextContent('in a straight line');
+    const hintuan = within(panel).getByRole('button', { name: /Commonwealth Market Hintuan/ });
+    await expect(hintuan).toHaveTextContent('Quiapo, Cubao');
+    await userEvent.click(hintuan);
+    await expect(args.onPick).toHaveBeenCalledWith(expect.objectContaining({ id: 'h5' }));
+  },
+};
+
+/** A landmark with no Para hintuan within 500 m. */
+export const NoRoutesNearHere: Story = {
+  play: async ({ canvasElement }) => {
+    await userEvent.type(field(canvasElement), 'la mesa');
+    await waitFor(() => expect(optionTexts(canvasElement)).toHaveLength(1));
+    await userEvent.keyboard('{Enter}');
+    await expect(within(canvasElement).getByText('No Para routes near here yet')).toBeVisible();
   },
 };
 

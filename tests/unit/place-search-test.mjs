@@ -9,6 +9,7 @@ import {
   editDistance,
   foldForSearch,
   matchQuality,
+  placeVehicles,
   searchPlaces,
   searchablePlaces,
   typosAllowed,
@@ -197,4 +198,25 @@ test('the one-table typo match and the letter filter answer as the stretch-by-st
     assert.equal(matchQuality(query, name) === 'typo', expected, `${query} in ${name}`);
   }
   assert.ok(typos > 200, `only ${typos} typo matches were tried`);
+});
+
+test("a place's vehicles: what stops at any of its boxes, once each, in the vehicles' order", () => {
+  const [terminal, hintuan] = [
+    hotspot('Mode Terminal', { informal: 'Mode Place', kind: 'terminal' }),
+    hotspot('Mode Hintuan', { informal: 'Mode Place' }),
+  ];
+  const [place] = searchablePlaces([terminal, hintuan]);
+  const direction = (mode) => ({ id: mode, route: { mode, signboard: null, longName: null } });
+  const at = {
+    [terminal.id]: [direction('bus'), direction('jeepney')],
+    [hintuan.id]: [direction('jeepney'), direction('tricycle')],
+  };
+  assert.deepEqual(
+    placeVehicles(place, (id) => at[id] ?? []),
+    ['Jeepney', 'Bus'],
+  );
+  assert.deepEqual(
+    placeVehicles(place, () => []),
+    [],
+  );
 });

@@ -2,6 +2,8 @@ import { haversine, type LngLat } from '@/shared/utils/geo';
 
 import { hotspotLabel, type Hotspot } from './hotspots';
 import { placeKey } from './places';
+import type { Direction } from './routes';
+import { VEHICLES, vehicleOf, type Vehicle } from './vehicles';
 
 /*
  * Place search over Para's own places (.scratch/place-search/README.md, step 1):
@@ -228,4 +230,22 @@ export function searchPlaces(
       (a.distanceM ?? 0) - (b.distanceM ?? 0) ||
       a.place.label.localeCompare(b.place.label),
   );
+}
+
+/**
+ * What rides from a place (decision 9's mode icon): the vehicles of the directions stopping at
+ * any of its boxes, each once, in VEHICLES' order. Empty for a place nothing stops at yet.
+ */
+export function placeVehicles(
+  place: SearchPlace,
+  directionsAt: (hotspotId: string) => readonly Direction[],
+): Vehicle[] {
+  const riding = new Set<Vehicle>();
+  for (const hotspot of place.hotspots) {
+    for (const direction of directionsAt(hotspot.id)) {
+      const vehicle = vehicleOf(direction);
+      if (vehicle) riding.add(vehicle);
+    }
+  }
+  return VEHICLES.filter((vehicle) => riding.has(vehicle));
 }

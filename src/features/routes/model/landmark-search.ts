@@ -1,6 +1,6 @@
 import { haversine, type LngLat } from '@/shared/utils/geo';
 
-import type { Hotspot, HotspotLink } from './hotspots';
+import type { Hotspot } from './hotspots';
 import {
   distanceToPlace,
   foldForSearch,
@@ -125,7 +125,7 @@ export interface HintuanNearHere {
   hintuan: Hotspot;
   /** Straight-line metres from the landmark. */
   distanceM: number;
-  /** The directions linked to it, in link order. */
+  /** The directions that stop there, as the map's hotspots tell them (linkedDirectionIds). */
   directionIds: string[];
 }
 
@@ -138,7 +138,7 @@ export interface HintuanNearHere {
 export function routesNearHere(
   points: readonly LngLat[],
   hotspots: readonly Hotspot[],
-  links: readonly HotspotLink[],
+  directionIdsAt: (hotspotId: string) => string[],
 ): HintuanNearHere[] {
   const near: HintuanNearHere[] = [];
   for (const hotspot of hotspots) {
@@ -147,10 +147,7 @@ export function routesNearHere(
       ...points.map((point) => haversine(point, hotspot.point.coordinates)),
     );
     if (distanceM > NEAR_HERE_M) continue;
-    const directionIds = links
-      .filter((link) => link.hotspotId === hotspot.id)
-      .sort((a, b) => a.sequence - b.sequence)
-      .map((link) => link.directionId);
+    const directionIds = directionIdsAt(hotspot.id);
     if (directionIds.length > 0) near.push({ hintuan: hotspot, distanceM, directionIds });
   }
   return near.sort(

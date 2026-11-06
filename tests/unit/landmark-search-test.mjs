@@ -33,6 +33,12 @@ const hotspot = (
   createdAt: '2026-01-01T00:00:00Z',
   line: null,
 });
+// The map's linkedDirectionIds: a hotspot's directions in link order.
+const byLinks = (links) => (hotspotId) =>
+  links
+    .filter((link) => link.hotspotId === hotspotId)
+    .sort((a, b) => a.sequence - b.sequence)
+    .map((link) => link.directionId);
 const landmark = (id, name, kind, point, aliases = []) => ({ id, name, kind, point, aliases });
 // The tests hand in plain landmarks; the app folds them once, as the file is read.
 const searchLandmarks = (query, landmarks, from) =>
@@ -158,7 +164,7 @@ test('routes near here: hintuans with routes within 500 m, nearest first', () =>
     { directionId: 'd4', hotspotId: far.id, sequence: 1 },
     { directionId: 'd5', hotspotId: terminal.id, sequence: 1 },
   ];
-  const result = routesNearHere([at], [near, nearer, unserved, far, terminal], links);
+  const result = routesNearHere([at], [near, nearer, unserved, far, terminal], byLinks(links));
   assert.deepEqual(
     result.map(({ hintuan, directionIds }) => [hintuan.name, directionIds]),
     [
@@ -174,14 +180,14 @@ test("a street's routes near here look from every point along it", () => {
   const along = hotspot('Halfway Hintuan', { at: [121.05, 14.6] });
   const links = [{ directionId: 'd9', hotspotId: along.id, sequence: 1 }];
   // 5 km from the street's middle point, 100 m from one of its points.
-  assert.deepEqual(routesNearHere([[121.0, 14.6]], [along], links), []);
+  assert.deepEqual(routesNearHere([[121.0, 14.6]], [along], byLinks(links)), []);
   const near = routesNearHere(
     [
       [121.0, 14.6],
       [121.0491, 14.6],
     ],
     [along],
-    links,
+    byLinks(links),
   );
   assert.deepEqual(
     near.map(({ hintuan }) => hintuan.name),
@@ -199,7 +205,7 @@ test("the file reader gives every landmark its reach: the point, and a street's 
 
 test('routes near here is empty where Para has no routes', () => {
   assert.deepEqual(
-    routesNearHere([[121.5, 14.9]], [hotspot('Somewhere', { at: [121.0, 14.6] })], []),
+    routesNearHere([[121.5, 14.9]], [hotspot('Somewhere', { at: [121.0, 14.6] })], byLinks([])),
     [],
   );
 });
