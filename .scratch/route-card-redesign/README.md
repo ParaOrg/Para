@@ -39,22 +39,24 @@ This session stopped here; the owner's own sessions carry on. Each PR is stacked
 | # | Step | Status |
 | --- | --- | --- |
 | 1 | Tokens: the mode card variables, added only | Merged: [#779](https://github.com/ParaOrg/Para/pull/779) |
-| 2 | Deletions, and mode → look (decisions 10 and 7) | Open PR: [#780](https://github.com/ParaOrg/Para/pull/780). ds-reviewer PASS, `npm run check` green. The phone-test failure was the suites, not the app: they still looked up the deleted `card-<livery>-surface-pale` for the dots along a road ride's rest, which the app rings in Map/RouteLine/surface-default. Fixed in the phone, commuter and group suites. |
-| 3 | RouteCard restyle | Open PR: [#781](https://github.com/ParaOrg/Para/pull/781). ds-reviewer PASS, `npm run check` green. Left: CI's **profile-test** failed (not diagnosed yet; [job](https://github.com/ParaOrg/Para/actions/runs/42166094812/job/127722910522)), and #780 first. |
-| 4 | RouteCardStackedList, with the railway card | Branch `claude/route-card-list` pushed, **no PR yet**. `npm run check` green; locally the commuter suite passed every check it reached. Left: the ds-reviewer's findings, below. |
-| 5 | The Controller, with the filter | Not started in the repo; drafted (below). |
+| 2 | Deletions, and mode → look (decisions 10 and 7) | Merged: [#780](https://github.com/ParaOrg/Para/pull/780), 412.5 kB. Its phone-test failure was the suites, not the app: they looked up the deleted `card-<livery>-surface-pale`; the dots along a road ride's rest ring in Map/RouteLine/surface-default |
+| 3 | RouteCard restyle | Merged: [#781](https://github.com/ParaOrg/Para/pull/781), 412.6 kB. Its profile-test failure did not come back on a fresh run |
+| 4 | RouteCardStackedList, with the railway card | Open PR (branch `claude/route-card-list`): the reviewers' findings below are fixed |
+| 5 | The Controller, with the filter | Built on `claude/route-card-controller`, stacked on step 4; its PR follows step 4's merge |
 | 6 | Sheet layout: docked on desktop, the mobile Controller at the bottom, Max full screen | Not started |
 | 7 | Commuter map wiring | Not started |
 | 8 | Studio wiring | Not started |
 | 9 | Map lines in the mode colours | Not started |
 
-### Step 4: the reviewer's findings, still to fix
+### Step 4: the reviewer's findings, fixed
 
 1. **A run can lose its mode's name.** `showsMode` turns off when the card before has the same livery, but a card draws its mode only when its first row has a vehicle. P2P (UV Express's colours) and tricycle (Jeep's) have none, so a run led by one draws no name at all (the unit test's `Tala|uv-express` before `Bigte|uv-express` shows it). Fix: compare what the previous card drew, the `MODE_LABEL` of its first row's `vehicleOf`, not the livery; add a story with a P2P card leading a run.
 2. `route-card.stories.tsx`, `MixedModes`: the play looks for "Jeepney"; the card says "Jeep".
 3. `route-card-stack.tsx`: `PickedPlace.card` and the component's comment still say a card per place; it is now a card per place and mode, run by mode.
 4. `route-card-railway.tsx`: a comment cites "RouteCardStackedList, 4633:25360"; that node is RouteCardRailway.
 5. `route-card-railway.tsx` and `railway-badge.stories.tsx` join classes with `+`; use `cn()`.
+
+A second review found three more `+` joins in `route-card-railway.tsx` and a comment left unwrapped; fixed too, with `AStation`'s play, which looked for the wrong test id.
 
 ### Step 5: what the Figma says, and the draft
 
@@ -69,6 +71,7 @@ This session stopped here; the owner's own sessions carry on. Each PR is stacked
 - **Size:** MapLibre, React and the shared code together were 412.9 of 413 kB at the start; step 2 brought it to 412.5, step 3 to 412.6 (`node --experimental-strip-types scripts/checks/health.mjs` after `npm run build`). There is very little room: measure every PR.
 - **Card keys** are now `${place}|${livery}` for a road card (`Tala|jeep`); stories and tests that held a card Selected by its place name were changed to match.
 - **A local browser suite** needs a dev server on its own port (`npx vite --port 5197 --strictPort`, then `PARA_BASE=http://localhost:5197`). Rebuilding Storybook, or editing a file under the repo, while it runs makes Vite reload the page and the suite crash on `window.__map`. In this container the project's Playwright wants browser build 1248 while 1243 is installed: point `PLAYWRIGHT_BROWSERS_PATH` at a folder that links `chromium_headless_shell-1248` to `/opt/pw-browsers/chromium_headless_shell-1243`.
+- **Story plays are not checked by CI.** Storybook's `currentRender.phase` reads `finished` even when a play throws, so it proves nothing. Listen instead for the preview channel's `playFunctionThrewException` and `unhandledErrorsWhilePlaying` on a static build: wrap `window.__STORYBOOK_ADDONS_CHANNEL__`'s `emit` in an init script (a Playwright `addInitScript`), guarding `JSON.stringify`, which DOM arguments break.
 - The map-colours test's name converter now splits an acronym (`UVExpress` → `uv-express`).
 
 ## Token naming
