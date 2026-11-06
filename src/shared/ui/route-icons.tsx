@@ -5,7 +5,7 @@
  * when they are open — the same drawing as Figma's chevron-up, so one icon
  * serves both. Each is Figma's own path, kept in route-icons.svg (or the
  * vehicles' in vehicle-icons.svg), a file the page fetches rather than paths
- * in its JS: inline, they weighed on the public page's budget. Each fills with
+ * in its JS, which would count against the public page's budget. Each fills with
  * currentColor so it takes the text colour of wherever it sits — the file draws
  * them in Content/primary or Content/inverse, never a colour of their own.
  */
