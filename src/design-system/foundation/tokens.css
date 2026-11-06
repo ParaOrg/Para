@@ -528,10 +528,12 @@
     inset 0 -0.6px 0 0 rgb(0 0 0 / 0.24), inset 0.6px 0 0 0 rgb(0 0 0 / 0.24),
     inset -0.6px 0 0 0 rgb(0 0 0 / 0.24), inset 0 0.6px 0 0 rgb(0 0 0 / 0.24);
 
+  /* A RouteCard at rest, and the boxes and buttons that share its look (Route/RouteCardPrimary
+   * and Route/RouteCardInverse, 4629:22776): lit along the top, shaded along the bottom. */
   --shadow-route-card-primary:
-    inset 0 3px 2px 0 rgb(255 255 255 / 0.28), inset 0 -3px 4px 0 rgb(0 0 0 / 0.28);
+    inset 0 -2px 4px 0 rgb(0 0 0 / 0.24), inset 0 2px 4px 0 rgb(255 255 255 / 0.24);
   --shadow-route-card-inverse:
-    inset 0 3px 2px 0 rgb(255 255 255 / 0.4), inset 0 -3px 3px 0 rgb(0 0 0 / 0.2);
+    inset 0 -4px 8px 0 rgb(0 0 0 / 0.08), inset 0 3px 8px 0 rgb(255 255 255 / 0.64);
 
   /* A bottom sheet, lifted off the map (BottomSheet/TopShadow, 3817:6007; its Figma
    * effect style is named BottomToolbar/TopShadow). */
@@ -554,9 +556,10 @@
   /* The commuter's dot, lifted off the map in a deep blue (LocatorDotShadow, 3870:5242). */
   --shadow-locator-dot-shadow: 0 2px 8px 0 rgb(1 27 85 / 0.48);
 
-  /* A RouteCard's State=Selected: pressed in, lit from the top left. */
+  /* A RouteCard's State=Selected: pressed in, lit from the top left
+   * (Route/RouteCardPrimarySelected, 4633:25526). Figma draws no inverse one, so that token is not Figma's. */
   --shadow-route-card-primary-selected:
-    inset 3px 3px 8px 0 rgb(12 12 12 / 0.64), inset -1px -1px 1px 0 rgb(18 18 18 / 0.24);
+    inset -2px -2px 4px 0 rgb(18 18 18 / 0.16), inset 3px 3px 8px 0 rgb(12 12 12 / 0.56);
   --shadow-route-card-inverse-selected:
     inset 2.5px 2.5px 8px 0 rgb(47 47 47 / 0.72), inset -1px -1px 2px 0 rgb(0 0 0 / 0.32);
 }
