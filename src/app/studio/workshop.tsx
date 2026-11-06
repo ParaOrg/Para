@@ -316,6 +316,7 @@ export function Workshop({ session, recovery }: WorkshopProps) {
                 camera={camera}
                 trip={trip}
                 canEdit={canEdit}
+                isWideScreen={isWideScreen}
                 opening={opening}
                 deletes={deletes}
                 hush={hush}

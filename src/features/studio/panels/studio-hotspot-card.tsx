@@ -1,5 +1,5 @@
 import type { MapLibreMap } from 'maplibre-gl';
-import { useState } from 'react';
+import { useEffect, useEffectEvent, useRef, useState } from 'react';
 
 import { APP_MOVE } from '@/features/routes/map/map-view';
 import type { useCardCamera } from '@/features/routes/map/use-card-camera';
@@ -30,6 +30,11 @@ interface StudioHotspotCardProps {
   draw: Pick<Drawing, 'loadArea'>;
   height: SheetHeight;
   canEdit: boolean;
+  /**
+   * On a computer an editor's tap opens the hotspot straight into its editing sidebar; the card
+   * shows only when it cannot: another editor's draft, or the draft could not be read.
+   */
+  opensInSidebar: boolean;
   clearOfOpen: Camera['clearOfOpen'];
   onPickOnPlaceCard: Camera['pickOnPlaceCard'];
   onOpenTrip: Camera['openTrip'];
@@ -52,6 +57,7 @@ export function StudioHotspotCard({
   draw,
   height,
   canEdit,
+  opensInSidebar,
   clearOfOpen,
   onPickOnPlaceCard,
   onOpenTrip,
@@ -66,16 +72,20 @@ export function StudioHotspotCard({
   const [hasEditFailed, setHasEditFailed] = useState(false);
   // A draft that could not be read for Edit is not opened over: the card says it could not check.
   const held = lock ?? (hasEditFailed ? { state: 'unknown' as const } : null);
+  // One Edit at a time: StrictMode runs the sidebar's opening effect twice.
+  const isEditing = useRef(false);
   const handleEdit = async () => {
     const s = hotspots.selected;
-    if (!s) return;
-    setHasEditFailed(false);
+    if (!s || isEditing.current) return;
+    isEditing.current = true;
     let opened: HotspotRow;
     try {
       opened = (await fetchToEdit(s)).hotspot;
     } catch {
       setHasEditFailed(true);
       return;
+    } finally {
+      isEditing.current = false;
     }
     onCloseAll();
     // A RouteCard picked on the way here, on this card or in the list, took in
@@ -85,6 +95,19 @@ export function StudioHotspotCard({
     if (map && map.getZoom() < 16) map.flyTo({ center: s.point.coordinates, zoom: 16 }, APP_MOVE);
     draw.loadArea(opened.kind, opened.id, hotspotRing(opened));
   };
+  // Not behind a trip: a card hidden there is waiting for the trip's ‹, not opened.
+  const isToSidebar = opensInSidebar && canEdit && !saved.selected;
+  const canOpenInSidebar = isToSidebar && held === null;
+  const openInSidebar = useEffectEvent(() => void handleEdit());
+  // The drawing and the map's camera are outside React: started once the draft is known to be free.
+  useEffect(() => {
+    // handleEdit sets state only after its read resolves, never in the effect's own turn.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (canOpenInSidebar) openInSidebar();
+  }, [canOpenInSidebar]);
+  // While the draft is checked and read, nothing: the sidebar is on its way.
+  if (isToSidebar && (held === null || held.state === 'checking')) return null;
+
   return (
     <HotspotCard
       routeCards={{
@@ -118,7 +141,10 @@ export function StudioHotspotCard({
         ) : (
           <CardActions
             editLabel={hotspot.kind === 'terminal' ? 'Edit terminal' : 'Edit hintuan'}
-            onEdit={() => void handleEdit()}
+            onEdit={() => {
+              setHasEditFailed(false);
+              void handleEdit();
+            }}
             onDelete={() => {
               if (hotspots.selected) void onDeleteHotspot(hotspots.selected);
             }}
