@@ -32,7 +32,10 @@ const ROUTES = [
 const kept = (filter) => ROUTES.filter((d) => passesModeFilter(d, filter)).map((d) => d.id);
 
 test('All keeps every route', () => {
-  assert.deepEqual(kept('all'), ROUTES.map((d) => d.id));
+  assert.deepEqual(
+    kept('all'),
+    ROUTES.map((d) => d.id),
+  );
 });
 
 test('each option keeps its own ride', () => {
