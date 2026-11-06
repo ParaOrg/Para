@@ -16,14 +16,13 @@ import {
   CARD_SHAPE,
   MAX_STRIP_PX,
   fitHeightsFor,
-  fitSnap,
   measureSafeTop,
+  shownAt,
   slide,
   slideShowing,
   snapName,
   type SheetShape,
   type Snap,
-  type SnapName,
 } from './sheet-gesture';
 import { useSheetGestures, type FittedSheet } from './use-sheet-gestures';
 
@@ -125,19 +124,18 @@ const FLOATS_AT = {
  * the owner's pick.
  *
  * On a phone it is BottomSheetConfiguration (Figma 3815:5637), square along
- * the top: a HandleNotch over the header, and three heights (sheetGesture) —
- * Low, the header and the top of the first card, a tap on it raising the
- * sheet; Middle, where it opens; Max, which leaves only a strip of map
- * (MAX_STRIP_PX), clear of a phone's notch. It is always the whole map tall
- * and slides (`--sheet-y`), so moving between heights is one smooth
- * `translate`: a drag on the handle or the header follows the finger and, let
- * go, glides to a height: a swipe moves one height, up or down, the owner's
- * pick; a flick goes to the end, Max or Low, like Google's and Apple's maps;
- * down from Low, it closes. Below Max the body does not scroll: a
- * swipe on it moves the sheet, the owner's pick; at Max it scrolls, and a
- * pull down from its top takes hold of the sheet, as a drag does: let go,
- * it steps down to Middle; flicked, to Low (sheetGesture's snapFor). A tap on
- * the handle goes round, Low → Middle → Max → Low.
+ * the top: a HandleNotch over the header. It opens at Low, the header and the
+ * top of the first card, and moves freely from there to full height, which
+ * leaves only a strip of map (MAX_STRIP_PX), clear of a phone's notch: the
+ * owner's rule. It is always the whole map tall and slides (`--sheet-y`), so
+ * moving is one smooth `translate`: a drag on the handle or the header follows
+ * the finger and, let go, stays where it is; only Low keeps a magnet, let go
+ * near it or flicked down from anywhere (sheetGesture's snapFor). Pulled
+ * below half of Low, or flicked down from it, the sheet closes. Below full
+ * height the body does not scroll: a swipe on it moves the sheet, the owner's
+ * pick; at full it scrolls, and a pull down from its top takes hold of the
+ * sheet, as a drag does. A tap on the handle, Enter on it, or a wheel's push
+ * steps a third of the map, up from Low and down from full (stepFrom).
  *
  * Its siblings: sheet-gesture.ts decides the heights and the drags, and
  * measures the status bar; use-sheet-gestures.ts binds the finger, the mouse
@@ -168,7 +166,7 @@ export function BottomSheet({
   const headRef = useRef<HTMLDivElement>(null);
   const bodyRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
-  const [ownSnap, setOwnSnap] = useState<Snap>('middle');
+  const [ownSnap, setOwnSnap] = useState<Snap>('low');
   const setSnap = height?.onSnap ?? setOwnSnap;
   // A fitted sheet's measure: the map's height, and its handle, header and content's together.
   const [fit, setFit] = useState<{ mapPx: number; contentPx: number } | null>(null);
@@ -190,23 +188,24 @@ export function BottomSheet({
     return () => observer.disconnect();
   }, [fits]);
   const fitted: FittedSheet | null =
-    fits && fit
-      ? {
-          heightsFor: (h) => fitHeightsFor(h, fit.contentPx),
-          open: fitSnap(fit.mapPx, fit.contentPx),
-        }
-      : null;
-  const keptSnap = height?.snap ?? ownSnap;
-  // Open, a fitted sheet stands at its content's height as it is now: the content can change.
-  const snap = fitted && keptSnap !== 'low' ? fitted.open : keptSnap;
+    fits && fit ? { heightsFor: (h) => fitHeightsFor(h, fit.contentPx) } : null;
+  const snap = height?.snap ?? ownSnap;
+  /**
+   * Where the sheet rests at `to`: a CSS length that follows the map's size, or, for a fitted
+   * sheet, its content's height measured, which no CSS length knows.
+   */
+  const restAt = (to: Snap): string =>
+    fitted && fit
+      ? slideShowing(shownAt(to, fit.mapPx, fitted.heightsFor(fit.mapPx)), shape)
+      : slide(to, shape);
   // A finger on it: the glide is off, and --sheet-y is the drag's, written
   // straight onto the sheet move by move rather than rendered.
   const [dragging, setDragging] = useState(false);
   // The status bar's height as this sheet sees it, before anything asks for Max's height.
   useLayoutEffect(() => measureSafeTop(own.current), []);
   // Where it first stands, drawn with it: a card opening over another (a
-  // place's name tapped) is new, and without this it would show at Max for a
-  // moment and glide down to its height. Never changed after, so React
+  // place's name tapped) is new, and without this it would show at full height
+  // for a moment and glide down to its height. Never changed after, so React
   // leaves the drag's and the glide's --sheet-y alone.
   const [opensAt] = useState(() => ({ '--sheet-y': slide(snap, shape) }) as CSSProperties);
   useDialogFocus(own, hidden);
@@ -240,14 +239,15 @@ export function BottomSheet({
   // hidden sheet's change, or one unmounting, leaves another's drag alone.
   const markedRef = useRef(false);
   useLayoutEffect(() => {
-    if (!dragging) at(slide(snap, shape));
+    if (!dragging) at(restAt(snap));
     // What follows the sheet on the page (the LocatorButton) glides with it,
     // or keeps up with the finger.
     const mark = dragging && !hidden;
     if (mark === markedRef.current) return;
     own.current?.closest('[data-dock-host]')?.toggleAttribute('data-dock-dragging', mark);
     markedRef.current = mark;
-  }, [snap, dragging, hidden, shape]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- restAt reads `fit`, listed
+  }, [snap, dragging, hidden, shape, fit]);
   // A flick that closes the sheet unmounts it mid-drag, before the effect
   // above runs with the drag over, and the page would keep the attribute: the
   // LocatorButton would stop gliding for good. The host is held from the
@@ -262,7 +262,7 @@ export function BottomSheet({
   /** Docked, not floating: the notch is drawn only then. */
   const docked = () => handleRef.current?.offsetParent != null;
   const show = (shown: number) => at(slideShowing(shown, shape), true);
-  const { onPointerDown, onBodyFocus, afterTap } = useSheetGestures({
+  const { onPointerDown, onBodyFocus, afterTap, isStepUp } = useSheetGestures({
     sheet: own,
     handle: handleRef,
     head: headRef,
@@ -277,9 +277,7 @@ export function BottomSheet({
     shape,
     closesOnPull,
   });
-  const handleLabel = fitted
-    ? FITTED_HANDLE_LABEL[snap === 'low' ? 'low' : 'open']
-    : HANDLE_LABEL[snapName(snap)];
+  const handleLabel = handleLabelFor(snap, isStepUp(snap));
 
   const setRefs = useCallback(
     (el: HTMLDivElement | null) => {
@@ -340,11 +338,11 @@ export function BottomSheet({
         onFocus={onBodyFocus}
         className={
           'min-h-0 flex-1 scrollbar-none sheet-floating:touch-auto sheet-floating:overflow-y-auto [&::-webkit-scrollbar]:hidden ' +
-          (snap === 'max' ? 'overflow-y-auto' : 'touch-none overflow-hidden')
+          (snap === 'full' ? 'overflow-y-auto' : 'touch-none overflow-hidden')
         }
-        // At Max the sheet stands a gap down the map (sheetGesture), as much
+        // At full height the sheet stands a gap down the map (sheetGesture), as much
         // of it under the screen's bottom: padded by that, its list scrolls to the end.
-        style={snap === 'max' ? maxBodyStyle(shape) : undefined}
+        style={snap === 'full' ? fullBodyStyle(shape) : undefined}
       >
         {fits ? <div ref={contentRef}>{children}</div> : children}
       </div>
@@ -374,32 +372,23 @@ const HANDLE = {
 } satisfies Record<NonNullable<Props['handle']>, string>;
 
 /**
- * The body at Max. A sheet leaving a strip of map stands that gap down the map, as much of it
- * under the screen's bottom: padded by that, its list scrolls to the end. A sheet filling the
+ * The body at full height. A sheet leaving a strip of map stands that gap down the map, as much of
+ * it under the screen's bottom: padded by that, its list scrolls to the end. A sheet filling the
  * screen runs behind the status bar instead: padded by it at the top, its first card clears it.
  */
-function maxBodyStyle(shape: SheetShape): CSSProperties {
+function fullBodyStyle(shape: SheetShape): CSSProperties {
   return shape.isMaxFull
     ? { paddingTop: 'var(--map-safe-top)' }
     : { paddingBottom: 'calc(var(--map-safe-top) + ' + MAX_STRIP_PX + 'px)' };
 }
 
 /**
- * What a screen reader hears on the handle: the height the sheet is at, and
- * what Enter does.
+ * What a screen reader hears on the handle: the height the sheet is at, and which way Enter steps
+ * it, a third of the screen (stepFrom).
  */
-const HANDLE_LABEL = {
-  low: 'Sheet lowered. Raise to half the screen',
-  middle: 'Sheet at half the screen. Raise to full screen',
-  max: 'Sheet at full screen. Lower it',
-  free: 'Sheet raised past half the screen. Raise to full screen',
-} satisfies Record<SnapName, string>;
-
-/** The same for a fitted sheet, which has two heights: lowered, and raised to its content. */
-/** A fitted sheet's two heights, as its handle names them. */
-type FittedSnapName = 'low' | 'open';
-
-const FITTED_HANDLE_LABEL = {
-  low: 'Sheet lowered. Raise it',
-  open: 'Sheet raised. Lower it',
-} satisfies Record<FittedSnapName, string>;
+function handleLabelFor(snap: Snap, isUp: boolean): string {
+  const step = isUp ? 'Raise it a third' : 'Lower it a third';
+  if (snap === 'low') return `Sheet lowered. ${step}`;
+  if (snap === 'full') return `Sheet at full height. ${step}`;
+  return `Sheet at ${Math.round(snap * 100)}% of the screen. ${step}`;
+}

@@ -57,8 +57,8 @@ export function useCardStack<V extends Direction, S extends { id: string }>(
   const choosing = isChoosing(saved.candidates, hotspots.candidates);
 
   // One height for the sheets that stand in for one another: a pick and ‹
-  // keep it; with nothing open it goes back to Middle (sharedSnap).
-  const [snap, setSnap] = useState<Snap>('middle');
+  // keep it; with nothing open it goes back to Low (sharedSnap).
+  const [snap, setSnap] = useState<Snap>('low');
   const anyOpen = !!saved.selected || !!hotspots.selected || choosing;
   const resting = sharedSnap(snap, anyOpen);
   if (resting !== snap) setSnap(resting);

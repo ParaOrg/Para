@@ -28,7 +28,7 @@ function Rows({ count }: { count: number }) {
 
 /**
  * Keeps the height as the public map does (`height`), starting where the
- * story says: a sheet left to keep its own always opens at Middle.
+ * story says: a sheet left to keep its own always opens at Low.
  */
 function Keeping({ startsAt, ...props }: ComponentProps<typeof BottomSheet> & { startsAt: Snap }) {
   const [snap, setSnap] = useState<Snap>(startsAt);
@@ -89,37 +89,51 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** On a phone it opens at Middle: the handle, the header, and the top of the body. */
-export const Middle: Story = {};
-
-/** Low: the header and the top of the first row; a tap on the handle raises it. */
+/** On a phone it opens at Low: the header and the top of the first row; a tap on the handle raises it a third. */
 export const Low: Story = {
-  render: (args) => <Keeping {...args} startsAt="low" />,
-  args: { height: { snap: 'low', onSnap: fn() } },
-};
-
-/** Max: the whole map but a strip of it, the body scrolling under the header. */
-export const Max: Story = {
-  render: (args) => <Keeping {...args} startsAt="max" />,
-  args: { height: { snap: 'max', onSnap: fn() }, children: <Rows count={30} /> },
-};
-
-/** A free height between Middle and Max, set by a caller rather than a drag: its body still, and the handle says so. */
-export const Free: Story = {
-  render: (args) => <Keeping {...args} startsAt={0.75} />,
-  args: { height: { snap: 0.75, onSnap: fn() } },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(canvas.getByTestId('card')).toHaveAttribute('data-snap', 'free');
+    await expect(canvas.getByTestId('card')).toHaveAttribute('data-snap', 'low');
     await expect(canvas.getByTestId('dock-handle')).toHaveAccessibleName(
-      'Sheet raised past half the screen. Raise to full screen',
+      'Sheet lowered. Raise it a third',
     );
   },
 };
 
+/** Full height: the whole map but a strip of it, the body scrolling under the header. */
+export const Full: Story = {
+  render: (args) => <Keeping {...args} startsAt="full" />,
+  args: { height: { snap: 'full', onSnap: fn() }, children: <Rows count={30} /> },
+};
+
 /**
- * Fitted (`fits`, Figma 4560:12422): two heights, Low and its content's. The handle opens it only
- * as tall as its three rows, the map in sight above, and lowers it again.
+ * Left between Low and full, where a drag let go: its body still, and the handle says how high it
+ * is.
+ */
+export const Free: Story = {
+  render: (args) => <Keeping {...args} startsAt={0.55} />,
+  args: { height: { snap: 0.55, onSnap: fn() } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByTestId('card')).toHaveAttribute('data-snap', 'free');
+    await expect(canvas.getByTestId('dock-handle')).toHaveAccessibleName(
+      'Sheet at 55% of the screen. Raise it a third',
+    );
+  },
+};
+
+/** Presses Enter on `handle` until `sheet` is at `end`, at most four times; how many it took. */
+async function enterUntil(sheet: HTMLElement, end: 'low' | 'full'): Promise<number> {
+  for (let presses = 1; presses <= 4; presses++) {
+    await userEvent.keyboard('{Enter}');
+    if (sheet.getAttribute('data-snap') === end) return presses;
+  }
+  return Infinity;
+}
+
+/**
+ * Fitted (`fits`, Figma 4560:12422): its highest is its content's height, the map in sight above.
+ * The handle raises it there, three rows needing less than a third, and lowers it again.
  */
 export const FitsContent: Story = {
   render: (args) => <Keeping {...args} startsAt="low" />,
@@ -127,40 +141,47 @@ export const FitsContent: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const handle = canvas.getByTestId('dock-handle');
-    await expect(handle).toHaveAccessibleName('Sheet lowered. Raise it');
+    await expect(handle).toHaveAccessibleName('Sheet lowered. Raise it a third');
     await userEvent.click(handle);
-    await expect(handle).toHaveAccessibleName('Sheet raised. Lower it');
-    await expect(canvas.getByTestId('card')).toHaveAttribute('data-snap', 'free');
+    await expect(canvas.getByTestId('card')).toHaveAttribute('data-snap', 'full');
+    await expect(handle).toHaveAccessibleName('Sheet at full height. Lower it a third');
     await userEvent.click(handle);
     await expect(canvas.getByTestId('card')).toHaveAttribute('data-snap', 'low');
   },
 };
 
-/** Fitted, with more than the map holds: it opens to Max, and its body scrolls there. */
+/** Fitted, with more than the map holds: the handle raises it a third at a time to full height, where its body scrolls. */
 export const FitsTallContent: Story = {
   render: (args) => <Keeping {...args} startsAt="low" />,
   args: { fits: true, height: { snap: 'low', onSnap: fn() }, children: <Rows count={30} /> },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await userEvent.click(canvas.getByTestId('dock-handle'));
-    await expect(canvas.getByTestId('card')).toHaveAttribute('data-snap', 'max');
+    const sheet = canvas.getByTestId('card');
+    canvas.getByTestId('dock-handle').focus();
+    await expect(await enterUntil(sheet, 'full')).toBeLessThanOrEqual(3);
   },
 };
 
-/** The handle from the keyboard goes round: Middle → Max → Low → Middle, and says where it is. */
-export const HandleGoesRound: Story = {
+/**
+ * The handle from the keyboard steps a third of the screen: up from Low to full, then down to Low
+ * again, and says each time how high the sheet is and which way it goes next.
+ */
+export const HandleStepsThirds: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const sheet = canvas.getByTestId('card');
     const handle = canvas.getByTestId('dock-handle');
-    await expect(handle).toHaveAccessibleName('Sheet at half the screen. Raise to full screen');
     handle.focus();
     await userEvent.keyboard('{Enter}');
-    await expect(sheet).toHaveAttribute('data-snap', 'max');
+    await expect(sheet).toHaveAttribute('data-snap', 'free');
+    await expect(handle.getAttribute('aria-label')).toMatch(
+      /^Sheet at \d+% of the screen\. Raise it a third$/,
+    );
+    await expect(await enterUntil(sheet, 'full')).toBeLessThanOrEqual(3);
+    await expect(handle).toHaveAccessibleName('Sheet at full height. Lower it a third');
     await userEvent.keyboard('{Enter}');
-    await expect(sheet).toHaveAttribute('data-snap', 'low');
-    await userEvent.keyboard('{Enter}');
-    await expect(sheet).toHaveAttribute('data-snap', 'middle');
+    await expect(handle.getAttribute('aria-label')).toMatch(/Lower it a third$/);
+    await expect(await enterUntil(sheet, 'low')).toBeLessThanOrEqual(3);
     handle.blur();
   },
 };
@@ -289,7 +310,7 @@ const footer = (
   </div>
 );
 
-/** A sheet with a shape of its own (`shape`), as the route list's: Low 240, a Max that fills the screen. */
+/** A sheet with a shape of its own (`shape`), as the route list's: Low 240, a full height that fills the screen. */
 const LIST_SHAPE = { lowPx: 240, isMaxFull: true };
 
 /** `shape` at Low: 240 tall, its own Low rather than every card's 133. */
@@ -309,10 +330,14 @@ export const ShapeLow: Story = {
   },
 };
 
-/** `shape` at Max: the whole screen, no strip of map above it. */
-export const ShapeMaxFills: Story = {
-  render: (args) => <Keeping {...args} startsAt="max" />,
-  args: { shape: LIST_SHAPE, height: { snap: 'max', onSnap: fn() }, children: <Rows count={30} /> },
+/** `shape` at full height: the whole screen, no strip of map above it. */
+export const ShapeFullFills: Story = {
+  render: (args) => <Keeping {...args} startsAt="full" />,
+  args: {
+    shape: LIST_SHAPE,
+    height: { snap: 'full', onSnap: fn() },
+    children: <Rows count={30} />,
+  },
   play: async ({ canvasElement }) => {
     const host = canvasElement.querySelector('[data-dock-host]') ?? canvasElement;
     const sheet = within(canvasElement).getByTestId('card');
@@ -329,11 +354,11 @@ export const HandleHidden: Story = {
   args: { handle: 'hidden', header: null },
   play: async ({ canvasElement }) => {
     const handle = within(canvasElement).getByTestId('dock-handle');
-    await expect(handle).toHaveAccessibleName('Sheet at half the screen. Raise to full screen');
+    await expect(handle).toHaveAccessibleName('Sheet lowered. Raise it a third');
     await expect(handle.getBoundingClientRect().height).toBeLessThanOrEqual(1);
     handle.focus();
     await userEvent.keyboard('{Enter}');
-    await expect(within(canvasElement).getByTestId('card')).toHaveAttribute('data-snap', 'max');
+    await expect(within(canvasElement).getByTestId('card')).toHaveAttribute('data-snap', 'free');
   },
 };
 

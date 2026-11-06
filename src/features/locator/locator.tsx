@@ -3,7 +3,7 @@ import { useEffect, useRef, type ReactNode } from 'react';
 
 import type { Basemap } from '@/features/routes/map/basemap';
 import type { LabelsPlace } from '@/features/routes/map/location-labels';
-import { DOCK_TOP_CSS, slide } from '@/shared/ui/sheet-gesture';
+import { DOCK_TOP_CSS, FRAMED_SHARE, slide } from '@/shared/ui/sheet-gesture';
 
 import { LocationAndMapControl } from './location-and-map-control';
 import { LocatorButton } from './locator-button';
@@ -97,13 +97,13 @@ export function Locator({
     latestOnNote.current?.(note);
   }, [status, noFix, taps]);
 
-  // Never above Middle's top. With no card, the map's foot: short of a
+  // Never above the framed height's top (FRAMED_SHARE). With no card, the map's foot: short of a
   // phone's home bar, and of what the page stands in the corner (`--dock-foot`,
   // the studio's New buttons). `--dock-gap` and `--dock-right` set the column's
   // gap over that foot and from the right edge; the contributor page sets them,
   // the public map keeps 0.75rem each.
   const y = docked
-    ? `max(var(--dock-y, 100%), ${dockCap === 'top' ? DOCK_TOP_CSS : slide('middle')})`
+    ? `max(var(--dock-y, 100%), ${dockCap === 'top' ? DOCK_TOP_CSS : slide(FRAMED_SHARE)})`
     : 'calc(100% - max(env(safe-area-inset-bottom), var(--dock-foot, 0px)))';
   return (
     <div

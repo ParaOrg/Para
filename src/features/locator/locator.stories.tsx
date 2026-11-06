@@ -94,29 +94,29 @@ const meta = {
   title: 'Features/Locator/Locator',
   component: Specimen,
   parameters: { layout: 'fullscreen' },
-  args: { snap: 'middle', state: locator(), onNote: fn() },
+  args: { snap: 0.55, state: locator(), onNote: fn() },
 } satisfies Meta<typeof Specimen>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** ScreenLocationBehavior (3870:5941): 12 above the sheet at Middle. */
-export const AtMiddle: Story = {};
+/** ScreenLocationBehavior (3870:5941): 12 above the sheet, raised to the framed height. */
+export const AtFramedHeight: Story = {};
 
 /** Following the sheet down to Low. */
 export const AtLow: Story = { args: { snap: 'low' } };
 
-/** The sheet let go past Middle: the button stays where Middle left it, under the sheet. */
-export const AboveMiddle: Story = { args: { snap: 0.8 } };
+/** The sheet let go higher: the button stays at the framed height, under the sheet. */
+export const AboveFramedHeight: Story = { args: { snap: 0.8 } };
 
-/** At Max: the sheet covers it. */
-export const AtMax: Story = { args: { snap: 'max' } };
+/** At full height: the sheet covers it. */
+export const AtFull: Story = { args: { snap: 'full' } };
 
-/** Over a fitted sheet raised past Middle (`dockCap` top): it rides on the sheet, in sight. */
-export const AboveMiddleOverFitted: Story = { args: { snap: 0.8, dockCap: 'top' } };
+/** Over a fitted sheet raised past the framed height (`dockCap` top): it rides on the sheet, in sight. */
+export const AboveFramedHeightOverFitted: Story = { args: { snap: 0.8, dockCap: 'top' } };
 
-/** Over a fitted sheet at Max: it stops at DOCK_TOP_CSS, room for it under the status bar, and the sheet covers it. */
-export const AtMaxOverFitted: Story = { args: { snap: 'max', dockCap: 'top' } };
+/** Over a fitted sheet at full height: it stops at DOCK_TOP_CSS, room for it under the status bar, and the sheet covers it. */
+export const AtFullOverFitted: Story = { args: { snap: 'full', dockCap: 'top' } };
 
 /** Wide, the card in the corner: bottom right, clear of the credit line, wherever the card is. */
 export const Wide: Story = {

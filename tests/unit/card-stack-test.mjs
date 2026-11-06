@@ -68,9 +68,9 @@ test('no ‹ when no other route sharing an end is drawn that way round', () => 
   assert.equal(tripBack(null, [talaNova, talaFv], false), null);
 });
 
-test('the shared height stays as left while a card is open, Middle once none is', () => {
-  for (const snap of ['low', 'middle', 'max', 0.7]) assert.equal(sharedSnap(snap, true), snap);
-  for (const snap of ['low', 'middle', 'max', 0.7]) assert.equal(sharedSnap(snap, false), 'middle');
+test('the shared height stays as left while a card is open, Low once none is', () => {
+  for (const snap of ['low', 'full', 0.7]) assert.equal(sharedSnap(snap, true), snap);
+  for (const snap of ['low', 'full', 0.7]) assert.equal(sharedSnap(snap, false), 'low');
 });
 
 test("a trip behind a place's card holds only while that card is open and no trip is", () => {

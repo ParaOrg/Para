@@ -126,11 +126,11 @@ export function useCardCamera<V extends Direction, S extends Hotspot>(
   const rideLine = ride.startId !== null ? (ride.ridden?.line ?? null) : null;
   const [endPicks, setEndPicks] = useState(0);
   useRideOverview(cam, rideLine && [rideLine], endPicks, openSheet, cards.snap);
-  /** An end picked after a start: the sheet to Middle, or, there already, the camera alone. */
-  const takeInTheRide = () => {
-    if (cards.height.snap === 'middle') setEndPicks((n) => n + 1);
-    else cards.height.onSnap('middle');
-  };
+  /**
+   * An end picked after a start: the camera takes in the ride, the sheet left where it is (the
+   * owner's rule: once raised, the commuter moves it).
+   */
+  const takeInTheRide = () => setEndPicks((n) => n + 1);
   // The sheet settled at another height: what the card on show frames, again,
   // in the map it leaves — a trip's route, or its ride from a start to an
   // end; a picked card's routes or what the list lights, a hotspot's place
@@ -230,14 +230,10 @@ export function useCardCamera<V extends Direction, S extends Hotspot>(
     },
 
     /**
-     * A trip's "Other routes": the sheet to Middle from wherever it is, so
-     * the map shows the route the camera takes in (the owner's call), and
-     * that route's trip in this one's place.
+     * A trip's "Other routes": that route's trip in this one's place, the
+     * sheet left where it is (the owner's rule).
      */
-    otherRoute: (v: { id: string }) => {
-      if (cards.height.snap !== 'middle') cards.height.onSnap('middle');
-      saved.select(v.id, { keepList: true });
-    },
+    otherRoute: (v: { id: string }) => saved.select(v.id, { keepList: true }),
 
     /**
      * A RouteCard on a hotspot's card picked, or let go: the camera from

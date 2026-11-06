@@ -43,44 +43,39 @@ export function swallowTheTapsClick(x: number, y: number) {
 }
 
 /**
- * The three heights of BottomSheetConfiguration (Figma 3815:5637), on a
- * phone: Low, the header and a trip's origin along the bottom (3814:3976);
- * Middle, two fifths of the screen, where a trip opens (3813:3755, 3815:4040);
- * Max, the whole screen, the header at the top and the rest scrolling under
- * it (3815:4306). A drag always lets go on one of the three; a number, the
- * share of Max a sheet shows, is a height set some other way.
+ * Where a sheet rests (the owner's rule): at Low, at full height, or at any height between, as a
+ * share of the map's height. A drag lets go where it ends, but near Low, or flicked down, it goes
+ * to Low (snapFor). Full is what Max was: the whole screen but a strip of map at the top, or all of
+ * it for the route list (SheetShape).
  */
-export type Snap = 'low' | 'middle' | 'max' | number;
+export type Snap = 'low' | 'full' | number;
 
-/** What a sheet at `snap` is called on it (`data-snap`) and by a screen reader: a free height is `free`. */
-export type SnapName = 'low' | 'middle' | 'max' | 'free';
-/** The name a snap goes by, for `data-snap` and the handle's label. */
+/** What a sheet at `snap` is called on it (`data-snap`): a height between is `free`. */
+export type SnapName = 'low' | 'full' | 'free';
+/** The name a snap goes by, for `data-snap`. */
 export const snapName = (snap: Snap): SnapName => (typeof snap === 'number' ? 'free' : snap);
 
-/** Covering more of the map than Middle does: Max, or a free height. */
-export const aboveMiddle = (snap: Snap) => snap === 'max' || typeof snap === 'number';
-
 /**
- * Where a tap on the handle, or Enter on it, takes the sheet: round, Low →
- * Middle → Max → Low, the owner's defaults; from a free height, on up to Max.
- * Pulls go by snapFor.
- */
-export function snapAfterTap(snap: Snap): Snap {
-  return snap === 'low' ? 'middle' : snap === 'max' ? 'low' : 'max';
-}
-
-/**
- * A flick faster than this, in pixels a millisecond, goes to the end its way
- * even down, where a slower swipe steps down one height: 0.5 ÷ 0.4, the
- * owner's pick from trying it. The speed is read over the last moves only.
+ * A flick faster than this, in pixels a millisecond: down, it takes the sheet to Low from
+ * anywhere; up, it is no jump, and the sheet rests where the motion ends. The speed is read over
+ * the last moves only.
  */
 const FLICK = 1.25;
 
 /** How far back the speed at release is read: only the finger's last moves count. */
 const RECENT_MS = 100;
 
-/** Middle shows this much of the map: 55%, the owner's pick. */
-const MIDDLE = 0.55;
+/** Let go this close above Low, a sheet goes to Low: Low's magnet, the owner's ~80 px. */
+export const LOW_MAGNET_PX = 80;
+
+/**
+ * The height the camera frames a point above when the sheet is higher (framedAt), and the most the
+ * buttons on the map rise with a sheet (Locator): 55% of the map, what Middle showed.
+ */
+export const FRAMED_SHARE = 0.55;
+
+/** A keyboard's or a tap's step on the handle: a third of the map's height. */
+const STEP_SHARE = 1 / 3;
 
 /**
  * What Low shows, the same for every card, the owner's rule (Figma 3817:6007,
@@ -140,82 +135,72 @@ export const CARD_SHAPE: SheetShape = { lowPx: LOW_PX, isMaxFull: false };
 /** What Max leaves of the map above the sheet, as a CSS length. */
 const maxGapCss = (shape: SheetShape) => (shape.isMaxFull ? '0px' : MAX_GAP_CSS);
 
-/** What each magnet shows of a sheet `h` tall, the map's height. */
+/** What a sheet `h` tall, the map's height, shows at its two ends: Low and full. */
 export function heightsFor(
   h: number,
   shape: SheetShape = CARD_SHAPE,
-): Record<SnapName & ('low' | 'middle' | 'max'), number> {
-  const middle = Math.round(h * MIDDLE);
-  // A tall Low (the route list's) on a short map, a phone on its side: never above Middle.
-  return {
-    low: Math.min(shape.lowPx, middle),
-    middle,
-    max: shape.isMaxFull ? h : Math.max(0, h - safeTop - MAX_STRIP_PX),
-  };
+): { low: number; full: number } {
+  const full = shape.isMaxFull ? h : Math.max(0, h - safeTop - MAX_STRIP_PX);
+  // A tall Low (the route list's) on a short map, a phone on its side: never above the framed height.
+  return { low: Math.min(shape.lowPx, Math.round(h * FRAMED_SHARE), full), full };
 }
 
 /**
  * The highest the buttons on the map ride over a fitted sheet (Locator's dockCap `top`, the ride's
- * Back): room for the locator's column under the status bar. A sheet raised past it covers them,
- * as Middle does on the public map; pulled down, it brings them back.
+ * Back): room for the locator's column under the status bar. A sheet raised past it covers them;
+ * pulled down, it brings them back.
  */
 export const DOCK_TOP_CSS = 'calc(var(--map-safe-top) + 128px)';
 
-/** A sheet's magnets: what it shows at Low, Middle and Max (heightsFor), or a fitted sheet's (fitHeightsFor). */
+/** A sheet's two ends: what it shows at Low and at full (heightsFor), or a fitted sheet's (fitHeightsFor). */
 export type SheetHeights = ReturnType<typeof heightsFor>;
 
 /**
- * A fitted sheet's two heights, as `heights` (BottomSheet's `fits`): Low, and open at its
- * content's height, `contentPx`, never above Max nor below Low. Middle and Max are both the
- * open height, so a drag that would reach either lands open.
+ * A fitted sheet's two ends (BottomSheet's `fits`): Low, and its content's height, `contentPx`,
+ * never above full nor below Low. It moves freely between them.
  */
 export function fitHeightsFor(h: number, contentPx: number): SheetHeights {
-  const { low, max } = heightsFor(h);
-  const open = Math.max(low, Math.min(max, Math.round(contentPx)));
-  return { low, middle: open, max: open };
+  const { low, full } = heightsFor(h);
+  return { low, full: Math.max(low, Math.min(full, Math.round(contentPx))) };
 }
 
-/**
- * A fitted sheet's open snap, for a map `h` tall and content `contentPx` tall: the share of Max
- * its content needs, or Max itself when the content needs all of it (and then scrolls).
- */
-export function fitSnap(h: number, contentPx: number): Snap {
-  const { max } = heightsFor(h);
-  if (max <= 0 || contentPx >= max) return 'max';
-  return Math.max(LOW_PX, contentPx) / max;
+/** What a sheet `h` tall shows at `snap`: Low's, full's, or its share of the map. */
+export function shownAt(snap: Snap, h: number, heights: SheetHeights = heightsFor(h)): number {
+  if (snap === 'low') return heights.low;
+  if (snap === 'full') return heights.full;
+  return Math.max(heights.low, Math.min(heights.full, Math.round(h * snap)));
 }
 
-/** What a sheet `h` tall shows at `snap`, a free height's included: a share of Max's. */
-export function shownAt(snap: Snap, h: number, shape: SheetShape = CARD_SHAPE): number {
-  const heights = heightsFor(h, shape);
-  return typeof snap === 'number' ? Math.round(heights.max * snap) : heights[snap];
+/** The snap a sheet `h` tall rests at showing `shown` px: Low, full, or its share of the map. */
+export function snapShowing(shown: number, h: number, heights: SheetHeights): Snap {
+  if (shown <= heights.low + 1) return 'low';
+  if (shown >= heights.full - 1) return 'full';
+  return h > 0 ? shown / h : 'low';
 }
 
 /** How far down a sheet at `snap` slides, as a CSS length: `100%` is its own height, the map's. */
 export function slide(snap: Snap, shape: SheetShape = CARD_SHAPE): string {
   const gap = maxGapCss(shape);
-  if (snap === 'max') return gap;
-  // Below Max its bottom padding is off the screen: what shows stands clear
+  if (snap === 'full') return gap;
+  // Below full its bottom padding is off the screen: what shows stands clear
   // of a phone's home indicator by lifting it that much.
-  if (snap === 'middle') return `calc(${(1 - MIDDLE) * 100}% - env(safe-area-inset-bottom))`;
   if (typeof snap === 'number')
-    return `calc(100% - ${snap} * (100% - ${gap}) - env(safe-area-inset-bottom))`;
-  // Never above Middle, as heightsFor has it.
-  return `calc(100% - min(${shape.lowPx}px, ${Math.round(MIDDLE * 100)}%) - env(safe-area-inset-bottom))`;
+    return `max(${gap}, calc(${(1 - snap) * 100}% - env(safe-area-inset-bottom)))`;
+  // Never above the framed height, as heightsFor has it.
+  return `calc(100% - min(${shape.lowPx}px, ${Math.round(FRAMED_SHARE * 100)}%) - env(safe-area-inset-bottom))`;
 }
 
-/** How far down a sheet slides while `shown` px of it follow a finger. Never above Max's top. */
+/** How far down a sheet slides while `shown` px of it follow a finger. Never above full's top. */
 export function slideShowing(shown: number, shape: SheetShape = CARD_SHAPE): string {
   return `max(${maxGapCss(shape)}, calc(100% - ${shown}px - env(safe-area-inset-bottom)))`;
 }
 
 /**
- * A finger, or a mouse, holding a sheet `h` tall that showed `from` when
- * it took hold at `startY`: how much shows as it moves, and where it lands
- * let go (snapFor). Its speed at release is the finger's over its last
- * RECENT_MS only, so a swipe that slowed before lifting is read as slow,
- * however fast it began; held still 80 ms before lifting, it is a
- * placement, not a flick. The touch pull at Max and the pointer drag share it.
+ * A finger, or a mouse, holding a sheet `h` tall that showed `from` when it took hold at
+ * `startY`: how much shows as it moves, and where it rests let go (snapFor). Its speed at release
+ * is the finger's over its last RECENT_MS only, so a swipe that slowed before lifting is read as
+ * slow, however fast it began; held still 80 ms before lifting, it is a placement, not a flick.
+ * The touch pull at full and the pointer drag share it.
  */
 export function follow(
   startY: number,
@@ -224,11 +209,10 @@ export function follow(
   h: number,
   heights: SheetHeights = heightsFor(h),
 ) {
-  const max = heights.max;
   let y = startY;
   let last = t;
   const moves: { at: number; t: number }[] = [{ at: startY, t }];
-  const shown = (at: number) => Math.max(0, Math.min(max, from + startY - at));
+  const shown = (at: number) => Math.max(0, Math.min(heights.full, from + startY - at));
   return {
     move(at: number, now: number): number {
       y = at;
@@ -237,55 +221,43 @@ export function follow(
       while (moves.length > 2 && now - moves[1].t > RECENT_MS) moves.shift();
       return shown(at);
     },
-    /** Where it lands let go at `at` (the last move's, when the release has no position). */
+    /** Where it rests let go at `at` (the last move's, when the release has no position). */
     release(now: number, at = y): Snap | 'close' {
       const first = moves.find((m) => last - m.t <= RECENT_MS) ?? moves[moves.length - 1];
       const dt = last - first.t;
       const v = now - last > 80 || dt <= 0 ? 0 : (first.at - y) / dt;
-      return snapFor(shown(at), v, heights, from);
+      return snapFor(shown(at), v, heights, h);
     },
   };
 }
 
 /**
- * Where a drag lets go, as Google's and Apple's maps do: the sheet follows the
- * finger. `shown` is how much of the sheet is on screen as the finger lifts,
- * `heights` what each magnet shows, `velocity` the finger's speed upwards in
- * px/ms (negative: downwards), `from` how much showed when it took hold.
- * A flick goes to the end in its direction: up, to Max, from Low or Middle
- * alike; down, to Low, from Max or Middle alike. A slower swipe moves one
- * height: up, Low to Middle and Middle to Max; down, Max to Middle and Middle
- * to Low. It goes on a second height when let go past halfway to it: from Low
- * to Max above halfway between Middle and Max, from Max to Low below halfway
- * between Middle and Low. It never rests between heights. A sheet pulled below
- * half of Low closes, however slowly, and so does a flick down from Low. A
- * move shorter than a tap's returns to the height nearest where it was let go.
+ * Where a drag lets go (the owner's rule): where it ends, the sheet following the finger and
+ * staying. Low alone keeps a magnet: let go within LOW_MAGNET_PX of it, or flicked down from
+ * anywhere, the sheet goes to Low. A flick up is no jump. Pulled below half of Low it closes,
+ * however slowly, and so does a flick down from Low. `shown` is how much of the sheet is on screen
+ * as the finger lifts, `velocity` the finger's speed upwards in px/ms (negative: downwards), `h`
+ * the map's height.
  */
 export function snapFor(
   shown: number,
   velocity: number,
   heights: SheetHeights,
-  from: number,
+  h: number,
 ): Snap | 'close' {
-  if (velocity >= FLICK) return 'max';
   if (velocity <= -FLICK) return shown > heights.low + 1 ? 'low' : 'close';
   if (shown < heights.low / 2) return 'close';
-  const travelled = shown - from;
-  if (travelled > DRAG_PX) {
-    if (from >= heights.middle - 1) return 'max';
-    return shown > (heights.middle + heights.max) / 2 ? 'max' : 'middle';
-  }
-  if (travelled < -DRAG_PX) {
-    if (from <= heights.middle + 1) return 'low';
-    return shown < (heights.low + heights.middle) / 2 ? 'low' : 'middle';
-  }
-  return nearest(shown, heights);
+  if (shown <= heights.low + LOW_MAGNET_PX) return 'low';
+  return snapShowing(shown, h, heights);
 }
 
-/** The height that shows closest to `shown`: Low, Middle or Max. */
-function nearest(shown: number, heights: SheetHeights): 'low' | 'middle' | 'max' {
-  const stops = ['low', 'middle', 'max'] as const;
-  return stops.reduce((best, stop) =>
-    Math.abs(heights[stop] - shown) < Math.abs(heights[best] - shown) ? stop : best,
-  );
+/**
+ * A tap on the handle, Enter on it, or a wheel's push: a third of the map up or down. `up`
+ * says which way; at either end the step turns round (BottomSheet keeps the way). Stepping
+ * down to within LOW_MAGNET_PX of Low lands on Low.
+ */
+export function stepFrom(snap: Snap, up: boolean, h: number, heights: SheetHeights): Snap {
+  const shown = shownAt(snap, h, heights) + (up ? 1 : -1) * Math.round(h * STEP_SHARE);
+  if (!up && shown <= heights.low + LOW_MAGNET_PX) return 'low';
+  return snapShowing(Math.max(heights.low, Math.min(heights.full, shown)), h, heights);
 }
