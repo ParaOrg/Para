@@ -2116,21 +2116,27 @@ const buttons = (page) =>
 }
 
 // ------------------------------------------------------- Keep recording on the form
+// Time on the Save form, on the page's clock: under the form's own two minutes (SAVE_FORM_SECONDS,
+// use-save-countdown.ts), after which it saves the ride by itself; the page's clock jumping past
+// them saves it at the countdown's next tick, which a Resume tapped in the same moment may lose to.
+// Long enough to show in the Time figure, whole minutes from a minute on, were it counted.
+const ON_THE_FORM_MS = 100_000;
 {
   const { page, errors } = await phone();
   const stats = async () =>
     (await page.getByRole('group', { name: 'Recording so far' }).innerText()).replace(/\n/g, ' ');
   const activeName = () => page.evaluate(() => document.activeElement?.getAttribute('aria-label'));
 
-  // (a) a Save after a switch, ten minutes on the form, and back.
+  // (a) a Save after a switch, a while on the form, and back.
   await page.getByRole('button', { name: 'Start Tracking' }).click();
   await page.getByRole('group', { name: 'Recording so far' }).waitFor();
   await ride(page, 0, 1200);
   await page.getByRole('button', { name: 'Switch to Sakay' }).click();
   await ride(page, 1190, 200);
+  const secondsBeforeForm = recordedSeconds(await stats());
   await finishRecording(page);
   await page.getByRole('heading', { name: 'Save Recording' }).waitFor({ timeout: 30000 });
-  await page.evaluate(() => window.__advance(600_000));
+  await page.evaluate((ms) => window.__advance(ms), ON_THE_FORM_MS);
   await page.getByRole('button', { name: 'Resume', exact: true }).click();
   await page.getByRole('button', { name: 'Pause', exact: true }).waitFor();
   check(
@@ -2140,9 +2146,9 @@ const buttons = (page) =>
   );
   const seconds = recordedSeconds(await stats());
   check(
-    '  Time does not count the ten minutes on the form',
-    seconds < 8 * 60,
-    `${seconds} s; ${await stats()}`,
+    '  Time does not count the time on the form',
+    seconds - secondsBeforeForm < 60,
+    `${secondsBeforeForm} s then ${seconds} s; ${await stats()}`,
   );
   await ride(page, 190, 50);
   await page.waitForTimeout(500);
@@ -2179,15 +2185,16 @@ const buttons = (page) =>
   await page.getByRole('button', { name: 'Start Tracking' }).click();
   await page.getByRole('group', { name: 'Recording so far' }).waitFor();
   await ride(page, 0, 300);
+  const secondsBeforeStop = recordedSeconds(await stats());
   await finishRecording(page);
   await page.getByRole('heading', { name: 'Save Recording' }).waitFor();
-  await page.evaluate(() => window.__advance(600_000));
+  await page.evaluate((ms) => window.__advance(ms), ON_THE_FORM_MS);
   await page.getByRole('button', { name: 'Resume', exact: true }).click();
   await page.getByRole('button', { name: 'Pause', exact: true }).waitFor();
   check(
     'Resume on the form after a stop by hand: recording again, Pause focused, no time for the form',
     (await activeName()) === 'Pause' &&
-      recordedSeconds(await stats()) < 8 * 60 &&
+      recordedSeconds(await stats()) - secondsBeforeStop < 60 &&
       (await page.evaluate(() => window.__watchers())) === 1,
     await stats(),
   );
