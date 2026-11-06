@@ -6,7 +6,12 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { BASEMAP_COPIES, FLAT_STYLE } from '../../src/features/contribute/map/basemap-copies.ts';
+import {
+  BASEMAP_COPIES,
+  FLAT_STYLE,
+  styleWithCopies,
+} from '../../src/features/contribute/map/basemap-copies.ts';
+import { BASEMAPS } from '../../src/features/routes/map/basemap.ts';
 
 const POSITRON = {
   id: 'positron',
@@ -16,7 +21,8 @@ const POSITRON = {
 const style = (id) => ({ version: 8, sources: {}, layers: [{ id, type: 'background' }] });
 
 /** A phone's storage, and the app's own files answering `builtIn` (or failing), for one test. */
-async function onPhone({ stored = {}, builtIn }, run) {
+async function onPhone({ stored = {}, builtIn, online = null }, run) {
+  const isOnline = { now: online !== null };
   const items = new Map(Object.entries(stored));
   const realStorage = globalThis.localStorage;
   const realFetch = globalThis.fetch;
@@ -27,6 +33,8 @@ async function onPhone({ stored = {}, builtIn }, run) {
   };
   globalThis.fetch = async (url) => {
     asked.push(url);
+    if (url.startsWith('https://') && !isOnline.now) throw new TypeError('Failed to fetch');
+    if (url.startsWith('https://')) return new Response(JSON.stringify(online));
     if (builtIn instanceof Error) throw builtIn;
     return builtIn === undefined
       ? new Response('', { status: 404 })
@@ -76,4 +84,24 @@ test('with no copy at all, or none readable, the map is flat: no roads, labels o
     );
   }
   assert.deepEqual(FLAT_STYLE, { version: 8, sources: {}, layers: [] });
+});
+
+test('the map is made with the style fetched, kept as fetched, undressed, a plain design too', async () => {
+  const plain = BASEMAPS.find((b) => !b.dressing);
+  const fetched = style('fetched');
+  await onPhone({ online: fetched }, async ({ items }) => {
+    const drawn = await styleWithCopies(plain, true);
+    assert.ok(drawn.layers.some((l) => l.id === 'fetched'));
+    assert.deepEqual(JSON.parse(items.get(`para.basemap-copy.v1.${plain.id}`)), fetched);
+  });
+});
+
+test('with no signal the map is made from the copy, dressed, and nothing is kept', async () => {
+  const monochrome = BASEMAPS.find((b) => b.dressing === 'monochrome');
+  await onPhone({ builtIn: style('built-in') }, async ({ items }) => {
+    const drawn = await styleWithCopies(monochrome, false);
+    assert.equal(drawn.version, 8);
+    assert.ok(drawn.layers.some((l) => l.id === 'built-in'));
+    assert.equal(items.size, 0);
+  });
 });

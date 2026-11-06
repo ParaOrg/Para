@@ -1,16 +1,38 @@
 import type { StyleSpecification } from 'maplibre-gl';
 
-import { isStyle, type Basemap, type StyleCopies } from '@/features/routes/map/basemap';
+import { isStyle, styleToDraw, type Basemap } from '@/features/routes/map/basemap';
 
 /**
- * The app's copies of the basemaps' styles, for a map made with no signal (basemap.ts,
- * initialStyle): the style last fetched on this phone, kept in its storage, else the one the app
- * was built with (vite.apk.config.ts, basemapStylesInTheApp), served from the app's own files,
- * else a flat map. Each copy is the style as fetched, before it is dressed. The tiles they point at
- * come once there is a signal again (use-map-reconnect.ts).
+ * What the contributor app's map is made with (MapView's `makeStyle`), in place of the public
+ * map's initialStyle: the style fetched, and kept as this phone's copy; with no signal, the copy
+ * (BASEMAP_COPIES), so the map still loads. Unlike initialStyle it always fetches, even a plain
+ * design, so that it has a copy of each.
  */
-export const BASEMAP_COPIES: StyleCopies = {
-  keep: (b, style) => {
+export async function styleWithCopies(
+  b: Basemap,
+  areLabelsShown: boolean,
+): Promise<StyleSpecification> {
+  let fetched: unknown = null;
+  try {
+    const response = await fetch(b.url);
+    if (response.ok) fetched = await response.json();
+  } catch {
+    // No signal, or no answer: the copy below.
+  }
+  if (isStyle(fetched)) BASEMAP_COPIES.keep(b, fetched);
+  const style = isStyle(fetched) ? fetched : await BASEMAP_COPIES.offline(b);
+  return styleToDraw(b, style, areLabelsShown);
+}
+
+/**
+ * The app's copies of the basemaps' styles, for a map made with no signal: the style last fetched
+ * on this phone, kept in its storage, else the one the app was built with (vite.apk.config.ts,
+ * basemapStylesInTheApp), served from the app's own files, else a flat map. Each copy is the style
+ * as fetched, before it is dressed. The tiles they point at come from the phone's cache
+ * (basemap-cache.ts), or once there is a signal again (use-map-reconnect.ts).
+ */
+export const BASEMAP_COPIES = {
+  keep: (b: Basemap, style: StyleSpecification): void => {
     try {
       localStorage.setItem(keyOf(b), JSON.stringify(style));
     } catch (error) {
@@ -18,7 +40,8 @@ export const BASEMAP_COPIES: StyleCopies = {
       console.warn('The basemap could not be kept for offline use.', error);
     }
   },
-  offline: async (b) => {
+  /** What to draw `b` with when it cannot be fetched: its copy, else a flat style. Never rejects. */
+  offline: async (b: Basemap): Promise<StyleSpecification> => {
     const kept = keptCopy(b);
     if (isStyle(kept)) return kept;
     try {
