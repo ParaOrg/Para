@@ -187,20 +187,36 @@ adb shell cmd uimode night no > /dev/null
 # on and its notification stays (RideService, stopWithTask false), with the activity gone. Makers
 # such as Xiaomi kill the whole app on this swipe unless it may run in the background (Autostart,
 # No restrictions); an emulator is stock Android, so this checks only what the app itself does.
-adb shell input keyevent KEYCODE_APP_SWITCH
-sleep 3
-SIZE=$(adb shell wm size | tr -d '\r' | grep -o '[0-9]*x[0-9]*' | tail -1)
-WIDTH=${SIZE%x*}
-HEIGHT=${SIZE#*x}
-adb shell input swipe $((WIDTH / 2)) $((HEIGHT / 2)) $((WIDTH / 2)) $((HEIGHT / 20)) 250
-sleep 3
+# The task removed as Recents removes it: first Android's own "clear recent apps", which removes
+# every task as a swipe does (only Para runs here); where that is missing, a swipe up on the
+# card's own bounds, read from the Recents screen. Which one landed is kept with the run.
+is_task_there() { adb shell dumpsys activity activities | tr -d '\r' | grep -q "$PKG/$ACTIVITY"; }
 adb shell input keyevent KEYCODE_HOME
 sleep 2
+adb shell am clear-recent-apps > "$OUT/swipe-clear-recents.txt" 2>&1
+sleep 3
+SWIPED_BY="clear-recent-apps"
+if is_task_there; then
+  SWIPED_BY="a swipe on its card"
+  adb shell input keyevent KEYCODE_APP_SWITCH
+  sleep 3
+  adb shell uiautomator dump /sdcard/recents.xml > /dev/null 2>&1
+  adb pull /sdcard/recents.xml "$OUT/recents.xml" > /dev/null 2>&1
+  CARD=$(grep -o 'resource-id="[^"]*\(snapshot\|task_view\|task\)[^"]*"[^>]*bounds="\[[0-9]*,[0-9]*\]\[[0-9]*,[0-9]*\]"' "$OUT/recents.xml" | head -1 \
+    | sed 's/.*bounds="\[\([0-9]*\),\([0-9]*\)\]\[\([0-9]*\),\([0-9]*\)\]"/\1 \2 \3 \4/')
+  if [ -n "$CARD" ]; then
+    read -r L T R B <<< "$CARD"
+    adb shell input swipe $(((L + R) / 2)) $(((T + B) / 2)) $(((L + R) / 2)) 10 200
+  fi
+  sleep 3
+  adb shell input keyevent KEYCODE_HOME
+  sleep 2
+fi
 adb shell dumpsys activity activities > "$OUT/activities-after-swipe.txt"
-if grep -q "$PKG/$ACTIVITY" "$OUT/activities-after-swipe.txt"; then
-  fail "swiped from Recents, yet the app's activity is still there (the swipe did not land)"
+if is_task_there; then
+  fail "removed from Recents (by $SWIPED_BY), yet the app's activity is still there: the removal did not land"
 else
-  pass "swiped from Recents: the app's activity is gone"
+  pass "removed from Recents by $SWIPED_BY: the app's activity is gone"
 fi
 SWIPED_AT=$(native_fixes)
 sleep 30
