@@ -3518,11 +3518,17 @@ const REFUSING_LOCATION = () => {
   await page.context().close();
 }
 
-// ------------------------------------- the published routes, faint under the trail, a picture only
-// The resting paints of the public map (map-colours.ts): Map/RouteLine/surface-default, and each
-// train line's Map/Rail/<line>/surface-pale.
+// ----------------------------- the published routes, under the trail, a picture only
+// The resting paints of the public map (rail-rest-layers.ts): Jeep's colour, UV Express's, E-Jeep's,
+// Bus's and the ferry's, and each train line's Map/Rail/<line>/surface-pale, over the neutral-800
+// casing (Map/RouteLine/casing).
+const PUBLISHED_CASING_PAINT = '#262626';
 const PUBLISHED_PAINT = {
-  'published-routes-line': '#c1bfff',
+  'published-routes-line': '#1447e6',
+  'published-saved-routes-road-uv-express': '#a1a1a1',
+  'published-saved-routes-road-ejeep': '#d4d4d4',
+  'published-saved-routes-road-bus': '#ca3500',
+  'published-saved-routes-road-ferry': '#003399',
   'published-saved-routes-rail-lrt-1': '#b7f5ca',
   'published-saved-routes-rail-lrt-2': '#d0b9ff',
   'published-saved-routes-rail-mrt-3': '#fff1b8',
@@ -3553,19 +3559,21 @@ const FIRST_IDLE = () => {
       trail: order.indexOf('recording-trail-casing'),
       firstLabel,
       colours: Object.keys(paint).map((id) => map.getPaintProperty(id, 'line-color')),
+      casingColour: map.getPaintProperty('published-routes-casing', 'line-color'),
       routes: map.getSource('published-routes').serialize().data.features.length,
       hit: order.filter((id) => id.startsWith('published') && /hit|selected/.test(id)),
     };
   }, PUBLISHED_PAINT);
   check(
-    "the published routes are on the contributor's map: a casing and the four resting lines",
+    "the published routes are on the contributor's map: a casing and the eight resting lines",
     layers.casing >= 0 && layers.at.every((i) => i > layers.casing) && layers.routes > 0,
     JSON.stringify(layers),
   );
   check(
-    "  pale, in the public map's resting paints (Map/RouteLine/surface-default, the trains' surface-pale)",
-    JSON.stringify(layers.colours) === JSON.stringify(Object.values(PUBLISHED_PAINT)),
-    JSON.stringify(layers.colours),
+    "  in the public map's resting paints: each road mode's colour, the trains' surface-pale, on the neutral-800 casing",
+    JSON.stringify(layers.colours) === JSON.stringify(Object.values(PUBLISHED_PAINT)) &&
+      layers.casingColour === PUBLISHED_CASING_PAINT,
+    `${JSON.stringify(layers.colours)} on ${layers.casingColour}`,
   );
   check(
     "  under the recording trail and under the map's labels, with no tap area and no lit layer",

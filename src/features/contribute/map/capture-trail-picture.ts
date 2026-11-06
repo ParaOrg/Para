@@ -122,7 +122,7 @@ export async function captureTrailPicture(
   const steps: string[] = [];
   const step = (name: string) =>
     steps.push(`${name} ${Math.round(performance.now() - startedAt)} ms`);
-  // The picture is the rider's own trail on the basemap: the faint published routes, there or
+  // The picture is the rider's own trail on the basemap: the published routes, there or
   // not yet by the time the form opens, are left out of every one alike.
   // Hidden as the capture starts, and again before the cut for routes that arrived meanwhile.
   const hiddenRoutes = new Set<string>();

@@ -1,8 +1,12 @@
 import type { GeoJSONSource, LineLayerSpecification, MapLibreMap } from 'maplibre-gl';
 
-import { MAP_COLOURS, MAP_PAINT } from '@/design-system/foundation/map-colours';
+import { MAP_COLOURS } from '@/design-system/foundation/map-colours';
 import { CASING_EXTRA, roadWidth } from '@/features/routes/map/line-style';
-import { RESTING_FILTER, ROUTES_LINE } from '@/features/routes/map/rail-rest-layers';
+import {
+  ROUTES_LINE,
+  ROUTES_LINE_COLOUR,
+  SAVED_REST_FILTER,
+} from '@/features/routes/map/rail-rest-layers';
 import { routesData, unpatched } from '@/features/routes/map/saved-routes-data';
 import { directionLine, type LineStringGeoJSON } from '@/features/routes/model/routes';
 import { fetchIndex } from '@/features/routes/published/fetch-index';
@@ -12,28 +16,25 @@ import {
   PUBLISHED_CASING,
   PUBLISHED_LAYERS,
   PUBLISHED_LINE,
-  PUBLISHED_RAIL,
+  PUBLISHED_RESTING,
   PUBLISHED_SRC,
   layerToGoUnder,
 } from './published-routes-layers';
 
 /*
  * The published routes behind a recording: every direction on the published map, painted as the
- * public map paints one at rest (the light blue, and each train line in its own pale), so a
- * contributor sees which roads Para already has. Only a picture: no tap area, no lighting, no card.
- * Its own source and layer ids, so nothing that listens for the public map's routes hears these.
+ * public map paints one at rest (each road mode in its colour, each train line in its own pale,
+ * every line on the neutral-800 casing), so a contributor sees which roads Para already has. Only
+ * a picture: no tap area, no lighting, no card. Its own source and layer ids, so nothing that
+ * listens for the public map's routes hears these.
  */
 
-/** The resting layers, the public map's paint under ids of their own: the light blue's and each train line's. */
+/** The resting layers, the public map's paint and filters under ids of their own. */
 const RESTING = [
-  {
-    id: PUBLISHED_LINE,
-    filter: RESTING_FILTER[ROUTES_LINE],
-    colour: MAP_COLOURS['Map/RouteLine/surface-default'],
-  },
-  ...PUBLISHED_RAIL.map(({ id, railId, colour }) => ({
+  { id: PUBLISHED_LINE, filter: SAVED_REST_FILTER[ROUTES_LINE], colour: ROUTES_LINE_COLOUR },
+  ...PUBLISHED_RESTING.map(({ id, restId, colour }) => ({
     id,
-    filter: RESTING_FILTER[railId],
+    filter: SAVED_REST_FILTER[restId],
     colour,
   })),
 ];
@@ -68,7 +69,7 @@ export async function drawPublishedRoutes(map: MapLibreMap): Promise<() => void>
   // `promoteId`: a full line replaces its overview by the direction's id.
   map.addSource(PUBLISHED_SRC, { type: 'geojson', promoteId: 'id', data: routesData(directions) });
   map.addLayer(
-    lineLayer(PUBLISHED_CASING, MAP_PAINT['Paint/casing'], {
+    lineLayer(PUBLISHED_CASING, MAP_COLOURS['Map/RouteLine/casing'], {
       'line-width': roadWidth(CASING_EXTRA),
     }),
     under,
