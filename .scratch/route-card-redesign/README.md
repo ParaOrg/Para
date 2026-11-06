@@ -32,6 +32,7 @@ New variables: `Card/{Jeep,UVExpress,Ejeep,Bus}/{…-surface, …-surface-second
 12. **The studio** uses the same list, layout and filter. Its trip card keeps its editor extras.
 13. **Station codes** ("PL01") from `rail-codes.ts` where one exists, otherwise nothing. The S and E icons beside them go.
 14. **The filter on the map** (step 7): the filter starts at All with each new list. Changing it frames the routes still lit, as ⇆ does, and lets a Selected card go. A hintuan's or terminal's own card does not follow it.
+15. **No hotspot pins on the commuter map, for now**: no terminal or hintuan flag zoomed in and no dot zoomed out. One switch, `SHOW_HOTSPOT_PINS` in `public-map-app.tsx`, turns them back on. The boxes, their names and their taps stay. The studio and the contributor page keep their pins.
 
 ## Status (handed over 2026-11-06)
 
