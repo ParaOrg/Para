@@ -146,3 +146,17 @@ test('the tiles are trimmed to the public map’s 1,000, the oldest first', asyn
     },
   );
 });
+
+test("a design switched to with no signal is drawn from the app's copy of its style", async () => {
+  const STYLE = `${HOST}/styles/liberty`;
+  const copy = { version: 8, sources: {}, layers: [] };
+  await withPhone(
+    () => null,
+    async () => {
+      const cache = basemapCache(HOST, Date.now, async (url) => (url === STYLE ? copy : null));
+      assert.deepEqual((await through(cache, STYLE, 'json')).data, copy);
+      // A file that is no design's style still fails as a request does.
+      await assert.rejects(through(cache, TILEJSON, 'json'));
+    },
+  );
+});
