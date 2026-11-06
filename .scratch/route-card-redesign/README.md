@@ -37,8 +37,8 @@ New variables: `Card/{Jeep,UVExpress,Ejeep,Bus}/{…-surface, …-surface-second
 | # | Pull request | Status |
 | --- | --- | --- |
 | 1 | Tokens: the mode card variables, added only | [#779](https://github.com/ParaOrg/Para/pull/779) |
-| 2 | Deletions, and mode → look (decisions 10 and 7) | In review |
-| 3 | RouteCard restyle | |
+| 2 | Deletions, and mode → look (decisions 10 and 7) | [#780](https://github.com/ParaOrg/Para/pull/780) |
+| 3 | RouteCard restyle | In review |
 | 4 | RouteCardStackedList, with the railway card | |
 | 5 | The Controller, with the filter | |
 | 6 | Sheet layout: docked on desktop, the mobile Controller at the bottom, Max full screen | |

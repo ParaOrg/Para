@@ -273,7 +273,13 @@ export const TrainFirstInData: Story = {
   },
 };
 
-/** A route with no drawn vehicle (P2P, tricycle) has no label; the rows stand alone. */
+/**
+ * A card that follows one of its mode in a list (RouteCardStackedList, 4633:19780): the mode is
+ * drawn on the run's first card only. The rows still name it to a screen reader.
+ */
+export const ModeShownAbove: Story = { args: { showsMode: false, routeOrigin: 'Bigte' } };
+
+/** A route with no drawn vehicle (tricycle) has no mode at the top; the rows stand alone. */
 export const NoMode: Story = {
   args: { endPoints: [{ id: 'a', routeDirection: 'Tala', vehicle: null }] },
 };

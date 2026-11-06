@@ -8,31 +8,28 @@ import {
 } from './livery-card';
 import { RouteEndPointBar } from './route-end-point-bar';
 import { RouteMode } from './route-mode';
-import { MODE_LABEL, groupByMode } from './route-modes';
+import { MODE_LABEL, groupByMode, type ModeGroup } from './route-modes';
 import type { Livery } from '../model/liveries';
 import type { Vehicle } from '../model/vehicles';
 
 /**
- * A place and the routes that leave it, in a jeepney's livery — Figma's
- * RouteCard set (3665:2265): the place in SN Pro Bold 24/32 and a row for each place
- * it goes to (RouteEndPointBar), joined to it by a tree line, under the
- * mode they ride (Modes, 4236:17040); rows of another mode stack below
- * as their own group. The Figma property Variants is `livery` here, the name
- * the tokens give these colours, because a variant in this codebase is a
- * direction. How each livery paints the card — surface, words, glow,
- * shadow — is livery-card.ts, shared with the trip card it opens.
+ * A place and the routes that leave it, in its mode's colours (RouteCard, 4629:22776): what they
+ * ride at the top (RouteMode), the place in SN Pro Bold 28/32, and a row for each place it goes to
+ * (RouteEndPointBar, Medium 17/24), joined to it by a tree line. A card lists one mode as a rule;
+ * rows of another mode, where the data mixes them, stack below under their own mode. How each
+ * livery paints the card (surface, words, glow, shadow) is livery-card.ts, shared with the trip
+ * card it opens.
  *
- * Figma's State: Rest, or Selected — pressed in, under the Selected shadow,
- * while the map lights its routes alone. A row opens its trip straight away;
- * a tap anywhere else on the card — its name, the room around its rows —
- * selects it, or lets it go. Which card is Selected, one at a time, is the
- * caller's to keep. The card carries no pesos: the trip's Expected fare does.
+ * In a list, a run of cards of one mode shows the mode on its first card only (`showsMode`,
+ * RouteCardStackedList, 4633:19780); the rows still carry it for a screen reader.
  *
- * A row's State (RouteEndPointBar, 3848:11928): Rest, or Pressed — while the
- * finger is down on it, the row in the card's timeline colour,
- * Card/<livery>/Timeline/surface; the trip opens as it lets go (a tap's
- * feedback, not kept once the trip is open; ROW_PRESSED, shared with the
- * trip's timeline).
+ * Figma's State: Rest, or Selected, pressed in under the Selected shadow while the map lights its
+ * routes alone; nothing else on the card changes. A row opens its trip straight away; a tap
+ * anywhere else on the card selects it, or lets it go. Which card is Selected, one at a time, is
+ * the caller's to keep. The card carries no pesos: the trip's Expected fare does.
+ *
+ * A row's State: Rest, or Pressed, the row in the card's darker step while the finger is down on
+ * it (ROW_PRESSED, shared with the trip's timeline): the one highlight a card shows of its own.
  */
 
 interface EndPoint {
@@ -52,6 +49,8 @@ interface Props {
   routeOrigin: string;
   /** One row per direction leaving it, in the order given. */
   endPoints: readonly EndPoint[];
+  /** Whether the mode is drawn at the top: false on a card that follows one of its mode. */
+  showsMode?: boolean;
   /** A tap on the card outside its rows: select it, or let it go. */
   onSelect: () => void;
   /** A row was tapped: open that direction. */
@@ -69,20 +68,43 @@ export function RouteCard({
   state,
   routeOrigin,
   endPoints,
+  showsMode = true,
   onSelect,
   onPick,
   testId,
 }: Props) {
   const selected = state === 'selected';
-  // Each mode's rows stand under its own label, so rows of one mode can move up past another's.
-  const groups = groupByMode(endPoints);
+  // Each mode's rows stand under its own mode, so rows of one mode can move up past another's.
+  const [first, ...others] = groupByMode(endPoints);
+  const rows = (group: ModeGroup<EndPoint>) => (
+    <ul
+      aria-label={group.vehicle ? MODE_LABEL[group.vehicle] : undefined}
+      className="flex w-full flex-col"
+    >
+      {group.items.map((e, index) => (
+        <li key={e.id}>
+          {/* `relative`: positioned after the name's stretched target, so drawn over it. */}
+          <RouteEndPointBar
+            routeDirection={e.routeDirection}
+            on={livery}
+            size="medium"
+            position={index === group.items.length - 1 ? 'bottom' : 'top'}
+            data-testid={`${testId}-item`}
+            data-direction={e.id}
+            onClick={() => onPick(e.id)}
+            className="relative"
+          />
+        </li>
+      ))}
+    </ul>
+  );
   return (
     <div
       data-testid={`${testId}-origin`}
       data-livery={livery}
       data-state={state}
       className={
-        'relative isolate flex w-full flex-col items-start gap-2 overflow-clip border-y-[0.6px] py-2 font-sn-pro ' +
+        'relative isolate flex w-full flex-col items-start gap-2 overflow-clip border-y-[0.6px] pt-4 pb-2.5 font-sn-pro ' +
         CARD_SURFACE[livery] +
         ' ' +
         CARD_TEXT[livery]
@@ -94,51 +116,39 @@ export function RouteCard({
         aria-hidden
         className={BLOB_PLACE + ' ' + CARD_BLOB[livery].className}
       />
-      <div className="flex w-full flex-col items-start px-4 pt-2">
-        {/* The name is the card's own target, stretched over all of it; the
-            rows are drawn over that, so they keep their own taps. At a
-            sheet's Low, one line of it (sheetGesture's LOW_PX). */}
-        <button
-          type="button"
-          data-testid={`${testId}-select`}
-          aria-pressed={selected}
-          onClick={onSelect}
-          className="w-full text-left text-2xl/8 font-bold after:absolute after:inset-0 sheet-low:line-clamp-1"
-        >
-          {routeOrigin}
-        </button>
+      {showsMode && first?.vehicle && (
+        <div className="flex px-4">
+          <RouteMode vehicle={first.vehicle} livery={livery} />
+        </div>
+      )}
+      <div className="flex w-full flex-col">
+        <div className="flex w-full px-4">
+          {/* The name is the card's own target, stretched over all of it; the rows are drawn over
+              that, so they keep their own taps. Long names wrap. At a sheet's Low, one line of it
+              (sheetGesture's LOW_PX). */}
+          <button
+            type="button"
+            data-testid={`${testId}-select`}
+            aria-pressed={selected}
+            onClick={onSelect}
+            className="w-full text-left text-3xl/8 font-bold after:absolute after:inset-0 sheet-low:line-clamp-1"
+          >
+            {routeOrigin}
+          </button>
+        </div>
+        {first && rows(first)}
       </div>
-      {groups.map(({ vehicle, items }) => (
+      {others.map((group) => (
         <div
-          key={vehicle ? MODE_LABEL[vehicle] : 'no-mode'}
-          role={vehicle ? 'group' : undefined}
-          aria-label={vehicle ? MODE_LABEL[vehicle] : undefined}
-          className="flex w-full flex-col"
+          key={group.vehicle ? MODE_LABEL[group.vehicle] : 'no-mode'}
+          className="flex w-full flex-col gap-2"
         >
-          {/* 14 in, Figma's (RouteEndPointGroup, 4265:12930): that puts the mode's icon over the
-              tree line, the first row straight under it. */}
-          {vehicle && (
-            <div className="flex px-3.5">
-              <RouteMode vehicle={vehicle} livery={livery} />
+          {group.vehicle && (
+            <div className="flex px-4">
+              <RouteMode vehicle={group.vehicle} livery={livery} />
             </div>
           )}
-          <ul className="flex w-full flex-col">
-            {items.map((e, index) => (
-              <li key={e.id}>
-                {/* `relative`: positioned after the name's stretched target, so
-                    drawn over it. */}
-                <RouteEndPointBar
-                  routeDirection={e.routeDirection}
-                  on={livery}
-                  position={index === items.length - 1 ? 'bottom' : 'top'}
-                  data-testid={`${testId}-item`}
-                  data-direction={e.id}
-                  onClick={() => onPick(e.id)}
-                  className="relative"
-                />
-              </li>
-            ))}
-          </ul>
+          {rows(group)}
         </div>
       ))}
       <span
