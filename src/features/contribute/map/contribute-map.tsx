@@ -78,7 +78,7 @@ interface ContributeMapProps {
 
 /**
  * The map under every screen: the public map's own view, with the published
- * routes faint on it and the published hotspots (boxes and pins, display-only),
+ * routes on it and the published hotspots (boxes and pins, display-only),
  * the recording's trail over them and the shell's locator
  * (the dot, and the button with the map-style picker) on top.
  */

@@ -9,7 +9,7 @@ const loadPublishedRoutes = retryingImport(() => import('./published-routes'));
 const loadDrawing: LoadDrawing = () =>
   loadPublishedRoutes().then(({ drawPublishedRoutes }) => drawPublishedRoutes);
 
-/** The published routes on the contributor's map, faint, once the map has loaded and settled. */
+/** The published routes on the contributor's map, once the map has loaded and settled. */
 export function usePublishedRoutes(map: MapLibreMap | null, isMapLoaded: boolean): void {
   useDrawnOnceSettled(map, isMapLoaded, loadDrawing, 'The published routes');
 }
