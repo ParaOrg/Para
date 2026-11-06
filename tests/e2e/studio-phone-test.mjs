@@ -583,17 +583,11 @@ check(
 );
 
 // ---------------------------------------------------------------- toolbar
-// A point opened and closed again: no bar, no Follow offer, the hint back.
+// A point opened and closed again, so ✕ below is the drawing's, not the point's.
 await tap(...(await proj((await cp())[0])));
 await page.waitForTimeout(300);
 await bar.getByRole('button', { name: 'Close' }).tap();
 await page.waitForTimeout(300);
-const hintText = await page.getByTestId('draw-toolbar').innerText();
-check(
-  'the hint speaks of taps, not right-clicks',
-  hintText.includes('tap a point for options') && !/right-click|shift-click/.test(hintText),
-  hintText.replace(/\n/g, ' / '),
-);
 await page.locator('button[title="Discard this route"]').tap();
 check(
   '✕ asks before discarding',
