@@ -92,15 +92,26 @@ export interface ReopenPoint {
   nextSeq: number;
   /** The fix writes the phone had not kept before the reload. */
   failedFixWrites: number;
-  /** Stopped on purpose: paused, with Save and Resume. Otherwise it was cut off mid-ride. */
-  phase: Extract<Phase, 'paused' | 'unfinished'>;
+  /**
+   * Stopped on purpose: paused, with Save and Resume. Still recorded by the app's service:
+   * recording, as it never stopped. Otherwise it was cut off mid-ride.
+   */
+  phase: Extract<Phase, 'paused' | 'unfinished' | 'recording'>;
 }
 
-/** Where `recording`, found open with its stored `rows` (in order), carries on. */
-export function reopenPoint(recording: Recording, rows: readonly FixRow[]): ReopenPoint {
+/**
+ * Where `recording`, found open with its stored `rows` (in order), carries on.
+ * `isStillRecording`: the app's service records it now, the page gone (swiped from Recents) or not.
+ */
+export function reopenPoint(
+  recording: Recording,
+  rows: readonly FixRow[],
+  isStillRecording = false,
+): ReopenPoint {
   return {
     nextSeq: rows.length > 0 ? rows[rows.length - 1].seq + 1 : 0,
     failedFixWrites: recording.failedFixWrites ?? 0,
-    phase: recording.status === 'stopped' ? 'paused' : 'unfinished',
+    phase:
+      recording.status === 'stopped' ? 'paused' : isStillRecording ? 'recording' : 'unfinished',
   };
 }

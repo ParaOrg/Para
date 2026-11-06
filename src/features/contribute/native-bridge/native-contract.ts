@@ -83,6 +83,9 @@ export const rideEventSchema = z.object({
 
 export type RideEvent = z.infer<typeof rideEventSchema>;
 
+/** What RidePlugin.java's recordingNow() returns: the ride its service records now, or null. */
+export const recordingNowSchema = z.object({ recordingId: z.nullable(z.string()) });
+
 /** What RidePlugin.java's events() returns. */
 export const rideEventsSchema = z.object({ events: z.array(rideEventSchema) });
 
