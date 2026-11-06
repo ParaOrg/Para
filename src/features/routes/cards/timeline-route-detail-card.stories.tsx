@@ -171,8 +171,13 @@ const pickedPesos = async (ctx: Parameters<NonNullable<Story['play']>>[0]) => {
 const pickedAsDrawn: Story['play'] = async (ctx) => {
   const { card, pill } = await pickedPesos(ctx);
   if (pill) {
-    // Its words' colour behind the pesos, its fill for them.
-    await expect(getComputedStyle(pill).backgroundColor).toBe(getComputedStyle(card).color);
+    // Figma's Timeline State=Selected (3769:2847): on Jeep and Bus the pill is Content/inverse;
+    // on the light UV Express and E-Jeep cards the other way round, the card's words behind the
+    // pesos (TIMELINE_PILL). Its pesos in the card's own colour either way.
+    const isLight = ['uv-express', 'ejeep'].includes(card.dataset.livery ?? '');
+    await expect(getComputedStyle(pill).backgroundColor).toBe(
+      isLight ? getComputedStyle(card).color : wornBy('bg-content-inverse'),
+    );
     await expect(getComputedStyle(pill).color).toBe(getComputedStyle(card).backgroundColor);
   }
 };
@@ -430,6 +435,13 @@ export const PickAndLetGo: Story = {
  * lets Amparo go and says which end to show; a second tap lets it go. Novaliches the same. One at a
  * time: each lets the others go.
  */
+/**
+ * The trip's ends by the place's name, whatever a screen reader hears after it: the ride's mark
+ * (", start") and, picked, its pesos.
+ */
+const TALA = /^Tala\b/;
+const NOVALICHES = /^Novaliches\b/;
+
 export const EndsShowTheWhole: Story = {
   args: { picked: 'h3' },
   play: async (ctx) => {
@@ -440,29 +452,29 @@ export const EndsShowTheWhole: Story = {
     const origin = () => canvas.getByTestId('trip-origin').getAttribute('data-state');
     const destination = () => canvas.getByTestId('trip-destination').getAttribute('data-state');
     await expect(selected()).toBe(1);
-    await userEvent.click(canvas.getByRole('button', { name: 'Tala', pressed: false }));
+    await userEvent.click(canvas.getByRole('button', { name: TALA, pressed: false }));
     await expect(args.onEnd).toHaveBeenLastCalledWith('from');
     await expect(selected()).toBe(0);
     await expect(origin()).toBe('selected');
     await expect(destination()).toBe('rest');
-    await userEvent.click(canvas.getByRole('button', { name: 'Tala', pressed: true }));
+    await userEvent.click(canvas.getByRole('button', { name: TALA, pressed: true }));
     await expect(origin()).toBe('rest');
     // Amparo let go by Tala folds the list back as it was: opened again to pick Amparo.
     await userEvent.click(canvas.getByRole('button', { name: /more hintuans/ }));
     await userEvent.click(await canvas.findByRole('button', { name: /Amparo/, pressed: false }));
     await expect(selected()).toBe(1);
-    await userEvent.click(canvas.getByRole('button', { name: 'Novaliches', pressed: false }));
+    await userEvent.click(canvas.getByRole('button', { name: NOVALICHES, pressed: false }));
     await expect(args.onEnd).toHaveBeenLastCalledWith('to');
     await expect(selected()).toBe(0);
     await expect(destination()).toBe('selected');
     await expect(canvas.queryByTestId('trip-hintuan-fare')).toBeNull();
-    await userEvent.click(canvas.getByRole('button', { name: 'Novaliches', pressed: true }));
+    await userEvent.click(canvas.getByRole('button', { name: NOVALICHES, pressed: true }));
     await expect(destination()).toBe('rest');
     // Picked again, then let go by the origin, picked in its place; and the
     // origin let go by a hintuan.
-    await userEvent.click(canvas.getByRole('button', { name: 'Novaliches', pressed: false }));
+    await userEvent.click(canvas.getByRole('button', { name: NOVALICHES, pressed: false }));
     await expect(destination()).toBe('selected');
-    await userEvent.click(canvas.getByRole('button', { name: 'Tala', pressed: false }));
+    await userEvent.click(canvas.getByRole('button', { name: TALA, pressed: false }));
     await expect(destination()).toBe('rest');
     await expect(origin()).toBe('selected');
     await userEvent.click(canvas.getByRole('button', { name: /Amparo/, pressed: false }));
