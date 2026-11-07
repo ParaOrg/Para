@@ -181,7 +181,11 @@ export default defineConfig({
             //    the hotspots' pin images and their layer, which the public map
             //    and the studio fetch once the boxes are drawn and the
             //    contributor page with its hotspots: no opening view shows a
-            //    pin. A
+            //    pin. Nor place search (routes/search, the place, landmark and
+            //    directions-at models, look-at): the studio imports it too, and
+            //    in `shared` it would count against the public page's opening
+            //    budget for code it already carried in its own chunk; apart, it
+            //    is one chunk both pages load. A
             //    module lands in `shared` when two chunks import it, whichever
             //    pages they are.
             {
