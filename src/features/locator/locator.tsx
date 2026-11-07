@@ -24,12 +24,12 @@ interface Props {
   /** A card is open: the button sits on its sheet rather than at the map's foot. */
   docked: boolean;
   /**
-   * Docked, it follows the sheet up to Middle and stays there, the sheet covering it above
-   * (`middle`, the public map's). A fitted sheet's open height is its content's, the map in sight
+   * Docked, it follows the sheet up to the framed height (FRAMED_SHARE) and stays there, the sheet
+   * covering it above (`framed`, the public map's). A fitted sheet's open height is its content's, the map in sight
    * above it, so the button rides on it up to just under the status bar (`top`, the contributor's
    * ride: DOCK_TOP_CSS), the sheet covering it only when its content fills the screen.
    */
-  dockCap?: 'middle' | 'top';
+  dockCap?: 'framed' | 'top';
   /** Stands directly above the pill, hidden while the Map Style card is open; the contributor's mark button. */
   above?: ReactNode;
   /**
@@ -51,7 +51,7 @@ const LABEL = {
  * LocationAndMap (4245:1966), the map-style button over the LocatorButton,
  * placed as ScreenLocationBehavior draws the LocatorButton (Figma
  * 3870:5941): at the map's right edge, 12 above the card's sheet, following
- * it down from Middle to Low; up past Middle it stays where Middle left it,
+ * it down to Low; up past the framed height (FRAMED_SHARE) it stays there,
  * and the sheet covers it (unless `dockCap` is `top`, over a fitted sheet,
  * where it rides higher, up to DOCK_TOP_CSS). With no card open it sits at the map's foot. Where
  * the card floats in the corner (`@float:`), which the frame does not show, it
@@ -71,7 +71,7 @@ export function Locator({
   basemapThumbnails,
   labelsPlace,
   docked,
-  dockCap = 'middle',
+  dockCap = 'framed',
   above,
   onNote,
 }: Props) {

@@ -1,6 +1,6 @@
 /**
  * How BottomSheet's handle and drags decide on a phone, for every card. It
- * also measures the status bar Max stands clear of (measureSafeTop). The
+ * also measures the status bar full height stands clear of (measureSafeTop). The
  * listeners that act on these are useSheetGestures'.
  */
 
@@ -45,7 +45,7 @@ export function swallowTheTapsClick(x: number, y: number) {
 /**
  * Where a sheet rests (the owner's rule): at Low, at full height, or at any height between, as a
  * share of the map's height. A drag lets go where it ends, but near Low, or flicked down, it goes
- * to Low (snapFor). Full is what Max was: the whole screen but a strip of map at the top, or all of
+ * to Low (snapFor). Full height is the whole screen but a strip of map at the top, or all of
  * it for the route list (SheetShape).
  */
 export type Snap = 'low' | 'full' | number;
@@ -70,7 +70,7 @@ export const LOW_MAGNET_PX = 80;
 
 /**
  * The height the camera frames a point above when the sheet is higher (framedAt), and the most the
- * buttons on the map rise with a sheet (Locator): 55% of the map, what Middle showed.
+ * buttons on the map rise with a sheet (Locator): 55% of the map.
  */
 export const FRAMED_SHARE = 0.55;
 
@@ -85,7 +85,7 @@ const STEP_SHARE = 1 / 3;
 export const LOW_PX = 133;
 
 /**
- * What Max leaves of the map at the top, as Google Maps does: the status
+ * What full height leaves of the map at the top, as Google Maps does: the status
  * bar's height, where the page runs behind it, and this strip under it, so
  * the commuter keeps their place: the owner's pick.
  */
@@ -104,7 +104,7 @@ function setSafeTop(px: number) {
 /** Whether measureSafeTop has read it: once a page. */
 let safeTopRead = false;
 /**
- * Reads the status bar's height, what Max leaves above its strip of map, as
+ * Reads the status bar's height, what full height leaves above its strip of map, as
  * `sheet` sees it: inside the studio's map box the variable is 0. 0 where the
  * page does not run behind the bar.
  */
@@ -119,20 +119,21 @@ export function measureSafeTop(sheet: Element | null) {
 }
 
 /**
- * A sheet's own Low and Max, where they differ from every other card's: the route list's Low
- * shows its first card above the Controller, and its Max fills the screen (BottomSheet's `shape`).
+ * A sheet's own Low and full height, where they differ from every other card's: the route list's
+ * Low shows its first card above the Controller, and its full height fills the screen
+ * (BottomSheet's `shape`).
  */
 export interface SheetShape {
   /** What Low shows, in px. */
   lowPx: number;
-  /** Whether Max fills the screen, leaving no strip of map. */
+  /** Whether full height fills the screen, leaving no strip of map. */
   isMaxFull: boolean;
 }
 
-/** Every card's shape but the route list's: LOW_PX at Low, a strip of map above Max. */
+/** Every card's shape but the route list's: LOW_PX at Low, a strip of map above full height. */
 export const CARD_SHAPE: SheetShape = { lowPx: LOW_PX, isMaxFull: false };
 
-/** What Max leaves of the map above the sheet, as a CSS length. */
+/** What full height leaves of the map above the sheet, as a CSS length. */
 const maxGapCss = (shape: SheetShape) => (shape.isMaxFull ? '0px' : MAX_GAP_CSS);
 
 /** What a sheet `h` tall, the map's height, shows at its two ends: Low and full. */
@@ -184,10 +185,13 @@ export function slide(snap: Snap, shape: SheetShape = CARD_SHAPE): string {
   if (snap === 'full') return gap;
   // Below full its bottom padding is off the screen: what shows stands clear
   // of a phone's home indicator by lifting it that much.
+  // Low: never above the framed height, as heightsFor has it.
+  const low = `calc(100% - min(${shape.lowPx}px, ${Math.round(FRAMED_SHARE * 100)}%) - env(safe-area-inset-bottom))`;
+  // A share of the map, never below this sheet's own Low: sheets share one height, and the route
+  // list's Low stands higher than a card's.
   if (typeof snap === 'number')
-    return `max(${gap}, calc(${(1 - snap) * 100}% - env(safe-area-inset-bottom)))`;
-  // Never above the framed height, as heightsFor has it.
-  return `calc(100% - min(${shape.lowPx}px, ${Math.round(FRAMED_SHARE * 100)}%) - env(safe-area-inset-bottom))`;
+    return `max(${gap}, min(calc(${(1 - snap) * 100}% - env(safe-area-inset-bottom)), ${low}))`;
+  return low;
 }
 
 /** How far down a sheet slides while `shown` px of it follow a finger. Never above full's top. */
@@ -247,6 +251,8 @@ export function snapFor(
 ): Snap | 'close' {
   if (velocity <= -FLICK) return shown > heights.low + 1 ? 'low' : 'close';
   if (shown < heights.low / 2) return 'close';
+  // The top first: a short sheet (a fitted one) may lie wholly within Low's magnet.
+  if (shown >= heights.full - 1) return 'full';
   if (shown <= heights.low + LOW_MAGNET_PX) return 'low';
   return snapShowing(shown, h, heights);
 }

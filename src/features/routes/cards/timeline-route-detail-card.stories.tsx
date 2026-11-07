@@ -673,29 +673,36 @@ export const LongNamesPicked: Story = {
 };
 
 /**
- * Figma's BottomSheetConfiguration (3815:5637), on a phone: the stories above open at Middle; a tap
- * on the HandleNotch goes round.
+ * Figma's BottomSheetConfiguration (3815:5637), on a phone: the stories above open at Low; a tap
+ * on the HandleNotch steps a third of the screen, up to full height and back. Taps it until the
+ * sheet is at `until`, or once with no `until`.
  */
-const tapHandle = async (canvasElement: HTMLElement, times: number) => {
+const tapHandle = async (canvasElement: HTMLElement, until?: 'full') => {
   const handle = within(canvasElement).getByTestId('dock-handle');
-  for (let i = 0; i < times; i++) await userEvent.click(handle);
+  const sheet = within(canvasElement).getByTestId('card');
+  for (let i = 0; i < 4; i++) {
+    await userEvent.click(handle);
+    if (!until || sheet.getAttribute('data-snap') === until) break;
+  }
   handle.blur();
 };
 
-/** Max: the whole map, the header at the top, the rest scrolling under it (3815:4306). */
-export const SheetMax: Story = {
+/** Full height: the whole map, the header at the top, the rest scrolling under it (3815:4306). */
+export const SheetFull: Story = {
   args: { hintuans: aLongWay },
   play: async (ctx) => {
     await openFold(ctx);
-    await tapHandle(ctx.canvasElement, 1);
-    await expect(within(ctx.canvasElement).getByTestId('card')).toHaveAttribute('data-snap', 'max');
+    await tapHandle(ctx.canvasElement, 'full');
+    await expect(within(ctx.canvasElement).getByTestId('card')).toHaveAttribute(
+      'data-snap',
+      'full',
+    );
   },
 };
 
-/** Low: the header and the origin along the bottom, the map above it (3814:3976). */
+/** Low, where it opens: the header and the origin along the bottom, the map above it (3814:3976). */
 export const SheetLow: Story = {
   play: async (ctx) => {
-    await tapHandle(ctx.canvasElement, 2);
     await expect(within(ctx.canvasElement).getByTestId('card')).toHaveAttribute('data-snap', 'low');
   },
 };
@@ -709,16 +716,16 @@ const longOrigin = 'Novaliches (Bayan) via Zabarte and Quirino Highway';
 export const SheetLowLongName: Story = {
   args: { ...LongNames.args, routeOrigin: longOrigin },
   play: async (ctx) => {
-    await tapHandle(ctx.canvasElement, 2);
     const origin = within(ctx.canvasElement).getByText(longOrigin);
     await waitFor(() => expect(origin.getBoundingClientRect().height).toBe(28));
   },
 };
 
-/** Middle with a long origin: all of it, on as many lines as it takes. */
-export const SheetMiddleLongName: Story = {
+/** Raised a third with a long origin: all of it, on as many lines as it takes. */
+export const SheetRaisedLongName: Story = {
   args: { ...LongNames.args, routeOrigin: longOrigin },
   play: async (ctx) => {
+    await tapHandle(ctx.canvasElement);
     const origin = within(ctx.canvasElement).getByText(longOrigin);
     await expect(origin.getBoundingClientRect().height).toBeGreaterThan(28);
   },

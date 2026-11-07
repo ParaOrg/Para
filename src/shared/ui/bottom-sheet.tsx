@@ -56,14 +56,15 @@ interface Props {
   /**
    * The height, when the caller keeps it: sheets that stand in for one
    * another — the route list, a hotspot's card and the trip opened from
-   * them — share one, so ‹ and a pick keep Low, Middle or Max as they were.
+   * them — share one, so ‹ and a pick keep the height as it was.
    * Without it, the sheet keeps its own.
    */
   height?: SheetHeight;
   /**
-   * Two heights, not three: Low, and open at its content's height, never above Max (where the
-   * content scrolls). For a card whose content is short and known, as a contributor's ride is
-   * (Figma 4560:12422): the map stays in sight above it. Off for every other card.
+   * Its highest is its content's height, never above full height (where the content scrolls): it
+   * moves freely between Low and there. For a card whose content is short and known, as a
+   * contributor's ride is (Figma 4560:12422): the map stays in sight above it. Off for every other
+   * card.
    */
   fits?: boolean;
   /**
@@ -73,8 +74,9 @@ interface Props {
    */
   closesOnPull?: boolean;
   /**
-   * Its own Low and Max, where they differ from every card's: the route list's Low shows its first
-   * card above its Controller, and its Max fills the screen (Figma 4633:25575). Every other card's
+   * Its own Low and full height, where they differ from every card's: the route list's Low shows
+   * its first card above its Controller, and its full height fills the screen (Figma 4633:25575).
+   * Every other card's
    * by default (CARD_SHAPE).
    */
   shape?: SheetShape;
@@ -201,7 +203,7 @@ export function BottomSheet({
   // A finger on it: the glide is off, and --sheet-y is the drag's, written
   // straight onto the sheet move by move rather than rendered.
   const [dragging, setDragging] = useState(false);
-  // The status bar's height as this sheet sees it, before anything asks for Max's height.
+  // The status bar's height as this sheet sees it, before anything asks for full height.
   useLayoutEffect(() => measureSafeTop(own.current), []);
   // Where it first stands, drawn with it: a card opening over another (a
   // place's name tapped) is new, and without this it would show at full height
@@ -238,16 +240,16 @@ export function BottomSheet({
   // Whether this sheet put the mark on the page: only it takes it off, so a
   // hidden sheet's change, or one unmounting, leaves another's drag alone.
   const markedRef = useRef(false);
+  const restY = restAt(snap);
   useLayoutEffect(() => {
-    if (!dragging) at(restAt(snap));
+    if (!dragging) at(restY);
     // What follows the sheet on the page (the LocatorButton) glides with it,
     // or keeps up with the finger.
     const mark = dragging && !hidden;
     if (mark === markedRef.current) return;
     own.current?.closest('[data-dock-host]')?.toggleAttribute('data-dock-dragging', mark);
     markedRef.current = mark;
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- restAt reads `fit`, listed
-  }, [snap, dragging, hidden, shape, fit]);
+  }, [restY, dragging, hidden]);
   // A flick that closes the sheet unmounts it mid-drag, before the effect
   // above runs with the drag over, and the page would keep the attribute: the
   // LocatorButton would stop gliding for good. The host is held from the

@@ -177,9 +177,8 @@ export function useCardCamera<V extends Direction, S extends Hotspot>(
 
     /**
      * A row picked on the trip, or its dot on the map (useRideTo's pick). An
-     * end picked after a start takes the sheet to Middle and the camera in to
-     * the ride between them (the owner's call): as the sheet settles there,
-     * or at once when it is already there.
+     * end picked after a start takes the camera in to the ride between them,
+     * the sheet left where it is (the owner's rule).
      */
     pickOnTrip: (id: string | null) => {
       const isNewEnd =

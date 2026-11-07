@@ -206,8 +206,8 @@ interface Props {
  * opening view at zoom 11 fits inside it on a screen 2,000 px wide. The south
  * edge is the nearest that lets a phone at its opening view (zoom 9.2) glide
  * UPLB, the UP Diliman – UPLB bus's end at 14.17°, into the map above a card
- * at Middle: the map may not show past this edge, and the card covers the
- * screen's lower half. The monthly tiles build covers this box
+ * raised to the framed height (55%): the map may not show past this edge, and
+ * the card covers the screen's lower half. The monthly tiles build covers this box
  * (scripts/tiles/area.mjs).
  */
 export const METRO_MANILA: [[number, number], [number, number]] = [

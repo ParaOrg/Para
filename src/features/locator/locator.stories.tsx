@@ -29,7 +29,7 @@ interface Args {
   /** What the page stands in the corner, as the studio's New buttons say it: the pill keeps above. */
   dockFootPx?: number;
   /** Locator's dockCap: `top` over a fitted sheet, the contributor's ride. */
-  dockCap?: 'middle' | 'top';
+  dockCap?: 'framed' | 'top';
   state: State;
   wide?: boolean;
   isMapLoaded?: boolean;

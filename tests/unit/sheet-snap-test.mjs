@@ -141,7 +141,10 @@ test('a tall Low on a short map, a phone on its side, never stands above the fra
 
 test('a full height that fills the screen slides to the top, and a drag never past it', () => {
   assert.equal(slide('full', LIST_SHAPE), '0px');
-  assert.equal(slide(0.5, LIST_SHAPE), 'max(0px, calc(50% - env(safe-area-inset-bottom)))');
+  assert.equal(
+    slide(0.5, LIST_SHAPE),
+    'max(0px, min(calc(50% - env(safe-area-inset-bottom)), calc(100% - min(240px, 55%) - env(safe-area-inset-bottom))))',
+  );
   assert.equal(
     slideShowing(300, LIST_SHAPE),
     'max(0px, calc(100% - 300px - env(safe-area-inset-bottom)))',
@@ -156,4 +159,25 @@ test('every other card keeps its shape: CARD_SHAPE is the default', () => {
   assert.deepEqual(heightsFor(H, CARD_SHAPE), heightsFor(H));
   assert.equal(slide('full', CARD_SHAPE), slide('full'));
   assert.equal(CARD_SHAPE.lowPx, LOW_PX);
+});
+
+test("a shared height below a sheet's own Low still shows its Low: the route list never sinks under 240", () => {
+  // 0.2 of an 844 map is 169 px, under the list's 240: it slides no lower than its Low.
+  assert.match(
+    slide(0.2, LIST_SHAPE),
+    /min\(calc\(80% - env\(safe-area-inset-bottom\)\), calc\(100% - min\(240px, 55%\)/,
+  );
+  assert.equal(shownAt(0.2, H, heightsFor(H, LIST_SHAPE)), 240);
+});
+
+test("a short fitted sheet, wholly within Low's magnet, still opens to its top by a drag", () => {
+  const short = fitHeightsFor(800, LOW_PX + 50);
+  assert.equal(snapFor(LOW_PX + 50, 0, short, 800), 'full');
+  assert.equal(snapFor(LOW_PX + 20, 0, short, 800), 'low');
+});
+
+test('a map not yet measured (0 tall) rests at Low', () => {
+  const none = heightsFor(0);
+  assert.equal(stepFrom('low', true, 0, none), 'low');
+  assert.equal(snapShowing(0, 0, none), 'low');
 });

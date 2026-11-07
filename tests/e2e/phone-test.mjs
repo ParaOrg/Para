@@ -2637,8 +2637,8 @@ const dragTo = async (from, to) => {
   return shown[from] - shown[to];
 };
 /**
- * The sheet raised a third from Low, a free height near half the map: where Middle stood before
- * the sheets moved freely. Whether it got there.
+ * The sheet raised a third from Low, a free height near half the map: a raised sheet, for the
+ * checks that want one. Whether it got there.
  */
 const toRaised = async () => {
   if (!(await handleTo('low'))) return false;
@@ -4542,7 +4542,7 @@ if (!routeA) {
       (78271.51696 * Math.cos((((r.bbox[1] + r.bbox[3]) / 2) * Math.PI) / 180) * 100) / 5000,
     );
     const toFull = await handleTo('full');
-    const atMax = await framedAboveCard(r.bbox);
+    const atFull = await framedAboveCard(r.bbox);
     const toLow = toFull && (await handleTo('low'));
     const atLow = await framedAboveCard(r.bbox);
     if (!toLow)
@@ -4554,12 +4554,12 @@ if (!routeA) {
     else {
       check(
         '  the sheet up to full height: the route taken in, no further out than 5 km on the scale bar',
-        atMax.zoom >= capZoom - 0.05,
-        `zoom ${atMax.zoom}, 5 km at ${capZoom.toFixed(2)}; ${JSON.stringify(atMax)}`,
+        atFull.zoom >= capZoom - 0.05,
+        `zoom ${atFull.zoom}, 5 km at ${capZoom.toFixed(2)}; ${JSON.stringify(atFull)}`,
       );
       check(
         '  at Low: in closer, the whole route above the sheet',
-        atLow.inside && atLow.zoom >= atMax.zoom - 0.05,
+        atLow.inside && atLow.zoom >= atFull.zoom - 0.05,
         JSON.stringify(atLow),
       );
     }
@@ -4586,7 +4586,7 @@ if (!routeA) {
             m.jumpTo({ center: [c.lng + 0.02, c.lat + 0.02], zoom: 16 });
           }),
       );
-      const toMiddle = await toRaised();
+      const raised = await toRaised();
       // The overview starts a beat after the sheet settles — most of a second
       // from a cold zoom-16 view, with the main thread busy over it (measured
       // on the refactor's base too, 2026-10-12): let it start, then end, as
@@ -4602,8 +4602,8 @@ if (!routeA) {
       const back = await framedAboveCard(r.bbox);
       check(
         '  moved away, then raised a third: the overview again, 5 km on the bar at the farthest',
-        toMiddle && back.zoom >= capZoom - 0.05 && (back.inside || back.zoom <= capZoom + 0.05),
-        `${toMiddle ? '' : `the sheet would not rise a third: data-snap=${await sheetState()}; `}${JSON.stringify(back)}`,
+        raised && back.zoom >= capZoom - 0.05 && (back.inside || back.zoom <= capZoom + 0.05),
+        `${raised ? '' : `the sheet would not rise a third: data-snap=${await sheetState()}; `}${JSON.stringify(back)}`,
       );
     }
 
@@ -4755,7 +4755,7 @@ if (!withOthers) {
     ));
   // At full height: another route leaves the sheet there (the owner's rule: nothing moves it for
   // the commuter).
-  const atMax = await handleTo('full');
+  const atFull = await handleTo('full');
   await rows.first().scrollIntoViewIfNeeded();
   await buttonTap(
     card().locator(`[data-testid="trip-other-route"][data-direction="${to.id}"]`),
@@ -4768,7 +4768,7 @@ if (!withOthers) {
     now.endsWith(toName) && lit.length === 1 && lit[0] === to.id,
     JSON.stringify({ trip: now, lit, want: to.id }),
   );
-  if (!atMax)
+  if (!atFull)
     check(
       '  at full height, the sheet stays there',
       false,

@@ -1,6 +1,7 @@
 import {
   useLayoutEffect,
   useRef,
+  useState,
   type FocusEvent as ReactFocusEvent,
   type PointerEvent as ReactPointerEvent,
   type RefObject,
@@ -62,7 +63,7 @@ interface SheetGestures {
 
 /**
  * How a finger or a mouse moves BottomSheet: the drag on the handle or the
- * header, the pull down from the list's top at Max, and the wheel's
+ * header, the pull down from the list's top at full height, and the wheel's
  * deliberate push. The sheet writes the DOM (`show`) and keeps `dragging`;
  * this decides where it goes (sheetGesture). Called after the sheet's two
  * dock-mark layout effects.
@@ -95,15 +96,16 @@ export function useSheetGestures({
   const heightsOf = (h: number): SheetHeights =>
     fitted ? fitted.heightsFor(h) : heightsFor(h, shape);
   // The way the handle's steps go: up from Low, down from full, and on the way they went between.
-  const goingUp = useRef(true);
+  // State, not a ref: the handle's label says which way the next step goes.
+  const [isGoingUp, setGoingUp] = useState(true);
   const isStepUp = (from: Snap): boolean =>
-    from === 'low' ? true : from === 'full' ? false : goingUp.current;
+    from === 'low' ? true : from === 'full' ? false : isGoingUp;
   /** Where a tap on the handle goes: a third of the map up or down (stepFrom). */
   const afterTap = (from: Snap): Snap => {
     const h = own.current?.offsetHeight ?? 0;
     const up = isStepUp(from);
     const next = stepFrom(from, up, h, heightsOf(h));
-    goingUp.current = next === 'full' ? false : next === 'low' ? true : up;
+    setGoingUp(next === 'full' ? false : next === 'low' ? true : up);
     return next;
   };
   // Read by the listeners bound once below: today's snap, settle, ends and step,

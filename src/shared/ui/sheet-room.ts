@@ -163,7 +163,7 @@ function showsAt(sheet: HTMLElement, snap: Snap): number {
   return shownAt(snap, h, heights) + (parseFloat(getComputedStyle(sheet).paddingBottom) || 0);
 }
 
-/** The sheet's own Low and Max, as BottomSheet writes them on it (its `shape`). */
+/** The sheet's own Low and full height, as BottomSheet writes them on it (its `shape`). */
 function shapeOf(sheet: HTMLElement): SheetShape {
   const lowPx = Number(sheet.dataset.lowPx);
   return {
@@ -191,8 +191,8 @@ export function clearOfSheet(
 const COVERED_ABOVE = 0.1;
 
 /**
- * Whether the map under `map` is out of sight or on the move under a finger: a docked sheet raised
- * over all but its top tenth, or a finger (or a mouse) holding a sheet (`data-dock-dragging`,
+ * Whether the map under `map` is out of sight or on the move under a finger: a docked sheet at full
+ * height, or raised over all but the map's top tenth, or a finger (or a mouse) holding a sheet (`data-dock-dragging`,
  * BottomSheet). What only moves for the eye, as the flowing chevrons do, waits meanwhile: each of
  * its steps costs a redraw the sheet's own frames then lack. A sheet floating beside the map covers
  * none.
@@ -205,9 +205,11 @@ export function isMapOutOfSight(map: HTMLElement): boolean {
     '[role="dialog"][data-snap]:not([data-snap="low"]):not([hidden])',
   );
   const under = map.getBoundingClientRect();
-  // Docked along the bottom: as wide as the map, its top above the map's top tenth's foot.
+  // Docked along the bottom, as wide as the map: at full height whatever strip it leaves, which
+  // a tall status bar widens; else with its top above the foot of the map's top tenth.
   return [...sheets].some((sheet) => {
     const over = sheet.getBoundingClientRect();
-    return over.width >= under.width - 1 && over.top - under.top < under.height * COVERED_ABOVE;
+    if (over.width < under.width - 1) return false;
+    return sheet.dataset.snap === 'full' || over.top - under.top < under.height * COVERED_ABOVE;
   });
 }
