@@ -1,5 +1,4 @@
 import { TextField } from '@/design-system/primitives/text-field';
-import { cn } from '@/shared/utils/cn';
 import type { LngLat } from '@/shared/utils/geo';
 
 import { PlaceSearchResults, resultId } from './place-search-results';
@@ -7,7 +6,6 @@ import { RoutesNearHere } from './routes-near-here';
 import type { LoadLandmarks } from './use-landmarks';
 import { usePlaceSearch } from './use-place-search';
 import type { Hotspot } from '../model/hotspots';
-import { routesNearHere } from '../model/landmark-search';
 import type { Direction } from '../model/routes';
 
 interface PlaceSearchProps {
@@ -51,7 +49,7 @@ export function PlaceSearch({
     onLookAt,
     loadLandmarks,
   });
-  const { listId, query, rows, landmarks, landmark, isOpen, hasList, activeIndex } = search;
+  const { listId, query, rows, landmarks, landmark, near, isOpen, hasList, activeIndex } = search;
   const hasActive = activeIndex >= 0;
 
   return (
@@ -84,27 +82,23 @@ export function PlaceSearch({
       {!isOpen && landmark && (
         <RoutesNearHere
           landmark={landmark}
-          near={routesNearHere(landmark.reach, hotspots, (id) =>
-            directionsAt(id).map((direction) => direction.id),
-          )}
+          near={near}
           directionsAt={directionsAt}
           onPick={search.handlePickHintuan}
           onClose={search.closeLandmark}
         />
       )}
+      {search.emptyMessage && (
+        <p className="rounded-xl bg-surface px-4 py-3 text-sm text-content-secondary shadow-large">
+          {search.emptyMessage}
+        </p>
+      )}
       {/*
         Mounted for as long as the search is, so a screen reader hears its text change; a live
         region inserted with its text already in is often not read at all.
       */}
-      <p
-        role="status"
-        className={cn(
-          search.emptyMessage
-            ? 'rounded-xl bg-surface px-4 py-3 text-sm text-content-secondary shadow-large'
-            : 'sr-only',
-        )}
-      >
-        {search.emptyMessage}
+      <p role="status" className="sr-only">
+        {search.announcement}
       </p>
     </div>
   );

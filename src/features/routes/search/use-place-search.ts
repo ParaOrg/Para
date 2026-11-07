@@ -7,6 +7,7 @@ import type { SearchRow } from './search-rows';
 import { useLandmarks, type LoadLandmarks } from './use-landmarks';
 import { useSearchRows } from './use-search-rows';
 import type { Hotspot } from '../model/hotspots';
+import { routesNearHere } from '../model/landmark-search';
 import type { PlaceMatch } from '../model/place-search';
 import type { Direction } from '../model/routes';
 import type { Landmark } from '../published/landmark-file-schema';
@@ -52,6 +53,24 @@ export function usePlaceSearch({
   const hasList = rows.length > 0;
   const isEmpty = isOpen && !hasList && landmarks.state.status !== 'loading';
   const emptyMessage = isEmpty ? `No place called ‘${query.trim()}’ yet` : '';
+  const hasFailed = landmarks.state.status === 'failed';
+  // The hintuans near the landmark chosen, for its panel (decision 8).
+  const near = landmark
+    ? routesNearHere(landmark.reach, hotspots, (id) =>
+        directionsAt(id).map((direction) => direction.id),
+      )
+    : [];
+  // What a screen reader hears as it changes: nothing matched, the landmarks failed, or the
+  // routes near a landmark just chosen. The field keeps focus, so nothing else would tell it.
+  const announcement = isOpen
+    ? [emptyMessage, hasFailed ? 'Landmarks didn’t load; Try again is below.' : '']
+        .filter(Boolean)
+        .join('. ')
+    : landmark
+      ? near.length > 0
+        ? `${near.length} Para ${near.length === 1 ? 'hintuan' : 'hintuans'} near ${landmark.name}`
+        : `No Para routes near ${landmark.name} yet`
+      : '';
 
   const handleQueryChange = (text: string) => {
     setQuery(text);
@@ -106,10 +125,12 @@ export function usePlaceSearch({
     rows,
     landmarks,
     landmark,
+    near,
     isOpen,
     hasList,
     activeIndex: hasActive ? activeIndex : -1,
     emptyMessage,
+    announcement,
     handleQueryChange,
     handlePick,
     handleKeyDown,

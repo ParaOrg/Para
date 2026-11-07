@@ -74,6 +74,8 @@ const ROUTES: Record<string, Direction[]> = {
   h5: [
     direction('d4', route('r4', 'Fairview – Quiapo', 'jeepney'), 'Fairview → Quiapo'),
     direction('d5', route('r5', 'Commonwealth – Cubao', 'jeepney'), 'Commonwealth → Cubao'),
+    direction('d6', route('r6', 'Commonwealth – Litex', 'jeepney'), 'Commonwealth → Litex'),
+    direction('d7', route('r7', 'Commonwealth – Philcoa', 'jeepney'), 'Commonwealth → Philcoa'),
   ],
 };
 
@@ -89,7 +91,7 @@ const LANDMARKS: LandmarkFileRead = {
   attribution: '© OpenStreetMap contributors',
   landmarks: [
     landmark('w1', 'Commonwealth High School', 'school', [121.0817, 14.699]),
-    landmark('w2', 'Fairview Terraces', 'mall', [121.06, 14.737]),
+    landmark('w2', 'Fairview Terraces', 'mall', [121.06, 14.737], ['Terraces Mall']),
     landmark('w3', 'La Mesa Watershed Gate', 'barangay', [121.0905, 14.7205]),
     landmark('w4', 'SM City Fairview', 'mall', [121.0605, 14.733]),
   ],
@@ -245,9 +247,12 @@ export const LandmarksFailed: Story = {
 export const NoMatch: Story = {
   play: async ({ canvasElement }) => {
     await userEvent.type(field(canvasElement), 'Monumento');
-    await expect(
-      await within(canvasElement).findByText('No place called ‘Monumento’ yet'),
-    ).toBeVisible();
+    // Shown under the field, and said by the status region in the same words.
+    const [shown] = await within(canvasElement).findAllByText('No place called ‘Monumento’ yet');
+    await expect(shown).toBeVisible();
+    await expect(within(canvasElement).getByRole('status')).toHaveTextContent(
+      'No place called ‘Monumento’ yet',
+    );
     // No list is open, so the field says none is.
     await expect(field(canvasElement)).toHaveAttribute('aria-expanded', 'false');
     await userEvent.keyboard('{Escape}');
@@ -268,7 +273,11 @@ export const RoutesNearHere: Story = {
     const panel = within(canvasElement).getByRole('region', { name: 'Commonwealth High School' });
     await expect(panel).toHaveTextContent('in a straight line');
     const hintuan = within(panel).getByRole('button', { name: /Commonwealth Market Hintuan/ });
-    await expect(hintuan).toHaveTextContent('Quiapo, Cubao');
+    // Four routes stop there: three are named, then how many more.
+    await expect(hintuan).toHaveTextContent('Quiapo, Cubao, Litex and 1 more');
+    await expect(within(canvasElement).getByRole('status')).toHaveTextContent(
+      '1 Para hintuan near Commonwealth High School',
+    );
     await userEvent.click(hintuan);
     await expect(args.onPick).toHaveBeenCalledWith(expect.objectContaining({ id: 'h5' }));
   },
@@ -281,6 +290,41 @@ export const NoRoutesNearHere: Story = {
     await waitFor(() => expect(optionTexts(canvasElement)).toHaveLength(1));
     await userEvent.keyboard('{Enter}');
     await expect(within(canvasElement).getByText('No Para routes near here yet')).toBeVisible();
+    await expect(within(canvasElement).getByRole('status')).toHaveTextContent(
+      'No Para routes near La Mesa Watershed Gate yet',
+    );
+    await userEvent.click(within(canvasElement).getByRole('button', { name: 'Close' }));
+    await expect(within(canvasElement).queryByRole('region')).toBeNull();
+  },
+};
+
+/** A landmark matched by another of its names: the row says which, after its kind. */
+export const LandmarkByAlias: Story = {
+  play: async ({ canvasElement }) => {
+    await userEvent.type(field(canvasElement), 'terraces mall');
+    await waitFor(() =>
+      expect(optionTexts(canvasElement)).toEqual([
+        'Fairview TerracesMall · Landmark · Terraces Mall',
+      ]),
+    );
+  },
+};
+
+/**
+ * The landmark file failed and no Para place matches either: the empty state and the failure
+ * show together, and a screen reader hears both. How they sit together is the owner's to design.
+ */
+export const LandmarksFailedNoMatch: Story = {
+  args: { loadLandmarks: () => Promise.reject(new Error('offline')) },
+  play: async ({ canvasElement }) => {
+    await userEvent.type(field(canvasElement), 'Monumento');
+    await expect(
+      await within(canvasElement).findByRole('button', { name: 'Try again' }),
+    ).toBeVisible();
+    await expect(within(canvasElement).getByText('No place called ‘Monumento’ yet')).toBeVisible();
+    await expect(within(canvasElement).getByRole('status')).toHaveTextContent(
+      'No place called ‘Monumento’ yet. Landmarks didn’t load; Try again is below.',
+    );
   },
 };
 

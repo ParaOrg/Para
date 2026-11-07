@@ -11,8 +11,6 @@ const LOOK_ZOOM = 16;
  * The camera to a point that is not a hotspot: a place search landmark (.scratch/place-search,
  * step 2). As close as a box shown, never farther out than the commuter already was.
  */
-export function useLookAt(map: MapLibreMap | null): (point: LngLat) => void {
-  return (point) => {
-    map?.flyTo({ center: point, zoom: Math.max(map.getZoom(), LOOK_ZOOM) }, APP_MOVE);
-  };
+export function lookAt(map: MapLibreMap | null, point: LngLat): void {
+  map?.flyTo({ center: point, zoom: Math.max(map.getZoom(), LOOK_ZOOM) }, APP_MOVE);
 }
