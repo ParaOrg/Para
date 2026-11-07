@@ -58,7 +58,8 @@ This session stopped here; the owner's own sessions carry on. Each PR is stacked
 | 9b | The counters count the cards, a place and mode each (a fix to step 4) | Merged: [#821](https://github.com/ParaOrg/Para/pull/821), 407.2 kB |
 | 10 | One shadow look: the RouteCard's Figma shadows in shadow-route-card-* | Merged: [#822](https://github.com/ParaOrg/Para/pull/822), 407.2 kB |
 | 10b | The commuter map keeps each hotspot's dot zoomed out (Q28) | Merged: [#827](https://github.com/ParaOrg/Para/pull/827), 407.2 kB |
-| 10c | Free-drag sheets (decision 17) | Open PR (branch `claude/free-drag-sheets`) |
+| 10c | Free-drag sheets (decision 17) | Merged: [#832](https://github.com/ParaOrg/Para/pull/832), 407.0 kB. loop-, pwa- and upload-test raise a sheet before reaching its rows |
+| 11 | Border/tertiary → neutral/300, as Figma has it | Open PR (branch `claude/border-tertiary`). It shows only in the token story's swatch: no component uses it |
 
 ### Step 4: the reviewer's findings, fixed
 
@@ -104,7 +105,7 @@ Figma's leaf names repeat their group (`Card/Jeep/Jeep-surface`). The tokens dro
 ## The owner's answers (2026-11-06)
 
 - **One shadow look everywhere.** The new Route/RouteCard… shadow values (4633:25526) go into the `shadow-route-card-*` tokens, and the HintuanCard's boxes and the contributor page's tracking button take them too. Not applied yet.
-- **Border/tertiary becomes neutral/300**, as Figma has it, in its own small PR that lists everywhere it shows. Not done yet.
+- **Border/tertiary becomes neutral/300**, as Figma has it, in its own small PR that lists everywhere it shows (step 11): only the token story's swatch, so nothing in the app changes look.
 - **Brand/surface-pale** (`color/parabrand/100`) is in Figma and not in the code. Nothing uses it yet; it is added when something does.
 
 ## The owner's answers on the sheet (2026-11-06, every recommendation)
