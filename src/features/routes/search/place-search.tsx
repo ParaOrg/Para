@@ -6,7 +6,9 @@ import { RoutesNearHere } from './routes-near-here';
 import type { LoadLandmarks } from './use-landmarks';
 import { usePlaceSearch } from './use-place-search';
 import type { Hotspot } from '../model/hotspots';
+import type { SearchPlace } from '../model/place-search';
 import type { Direction } from '../model/routes';
+import type { Landmark } from '../published/landmark-file-schema';
 
 interface PlaceSearchProps {
   hotspots: readonly Hotspot[];
@@ -21,6 +23,13 @@ interface PlaceSearchProps {
   onPick: (hotspot: Hotspot) => void;
   /** A landmark chosen: the camera to its point. */
   onLookAt: (point: LngLat) => void;
+  /**
+   * A landmark chosen, after the camera: given, it is the caller's (the studio marks the point);
+   * left out, the Para routes near it are listed under the field (decision 8).
+   */
+  onPickLandmark?: (landmark: Landmark) => void;
+  /** A word after a place's label, or null: the studio marks a new place still in a draft. */
+  noteOf?: (place: SearchPlace) => string | null;
   /** Where the landmarks come from: the file unless given (stories). */
   loadLandmarks?: LoadLandmarks;
 }
@@ -39,6 +48,8 @@ export function PlaceSearch({
   whereNow = NOWHERE,
   onPick,
   onLookAt,
+  onPickLandmark,
+  noteOf,
   loadLandmarks,
 }: PlaceSearchProps) {
   const search = usePlaceSearch({
@@ -47,6 +58,8 @@ export function PlaceSearch({
     whereNow,
     onPick,
     onLookAt,
+    onPickLandmark,
+    noteOf,
     loadLandmarks,
   });
   const { listId, query, rows, landmarks, landmark, near, isOpen, hasList, activeIndex } = search;

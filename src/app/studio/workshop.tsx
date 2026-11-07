@@ -12,6 +12,7 @@ import { useLoopTip } from '@/features/routes/map/use-loop-tip';
 import { useMapCredits } from '@/features/routes/map/use-map-credits';
 import { useSavedHotspots } from '@/features/routes/map/use-saved-hotspots';
 import { useSavedRoutes } from '@/features/routes/map/use-saved-routes';
+import { directionsAtHotspots } from '@/features/routes/model/directions-at';
 import {
   CONTRIBUTIONS,
   lineOf,
@@ -22,6 +23,7 @@ import {
   NEW_MENU_DOCK_FOOT,
   STUDIO_BASEMAPS,
   STUDIO_BASEMAP_THUMBNAILS,
+  StudioSearch,
   type ContributionStart,
   type usePasswordRecovery,
   useAuthFlow,
@@ -304,6 +306,21 @@ export function Workshop({ session, recovery }: WorkshopProps) {
               onOpenPlayground={handleOpenPlayground}
               onContributionStart={handleContributionStart}
             />
+
+            {/*
+              Place search (ticket 05) on the workshop and the Contributors map; the Public map's
+              own search serves that view. A card opens only in the workshop.
+            */}
+            {(isPlayground || isContributors) && (
+              <StudioSearch
+                map={map}
+                hotspots={hotspots.hotspots}
+                isSignedIn={isSignedIn}
+                directionsAt={directionsAtHotspots(saved.directions, hotspots.linkedDirectionIds)}
+                isDrawing={draw.drawing}
+                onOpenHotspot={isPlayground ? camera.openPlace : undefined}
+              />
+            )}
 
             {/* Out of the page's reach, not unmounted, on the other maps. */}
             <div inert={!isPlayground} className={isPlayground ? 'contents' : 'hidden'}>

@@ -9,7 +9,7 @@ import { useLandmarks, type LoadLandmarks } from './use-landmarks';
 import { useSearchRows } from './use-search-rows';
 import type { Hotspot } from '../model/hotspots';
 import { routesNearHere } from '../model/landmark-search';
-import type { PlaceMatch } from '../model/place-search';
+import type { PlaceMatch, SearchPlace } from '../model/place-search';
 import type { Direction } from '../model/routes';
 import type { Landmark } from '../published/landmark-file-schema';
 
@@ -19,8 +19,12 @@ export interface PlaceSearchInputs {
   whereNow: () => LngLat | null;
   onPick: (hotspot: Hotspot) => void;
   onLookAt: (point: LngLat) => void;
+  onPickLandmark?: (landmark: Landmark) => void;
+  noteOf?: (place: SearchPlace) => string | null;
   loadLandmarks?: LoadLandmarks;
 }
+
+const NO_NOTE = () => null;
 
 /** The box a place opens by, as a tap on its name would: its terminal, else its first box. */
 function boxToOpen(match: PlaceMatch): Hotspot {
@@ -38,6 +42,8 @@ export function usePlaceSearch({
   whereNow,
   onPick,
   onLookAt,
+  onPickLandmark,
+  noteOf = NO_NOTE,
   loadLandmarks,
 }: PlaceSearchInputs) {
   const listId = useId();
@@ -48,7 +54,7 @@ export function usePlaceSearch({
   // The landmark whose routes near here are open, after it was chosen.
   const [landmark, setLandmark] = useState<Landmark | null>(null);
   const landmarks = useLandmarks(loadLandmarks);
-  const rows = useSearchRows(query, hotspots, landmarks.state, from, directionsAt);
+  const rows = useSearchRows(query, hotspots, landmarks.state, from, directionsAt, noteOf);
   const isOpen = query.trim() !== '';
   const hasActive = activeIndex >= 0 && activeIndex < rows.length;
   const hasList = rows.length > 0;
@@ -85,7 +91,8 @@ export function usePlaceSearch({
       onPick(boxToOpen(row.match));
     } else {
       onLookAt(row.match.landmark.point);
-      setLandmark(row.match.landmark);
+      if (onPickLandmark) onPickLandmark(row.match.landmark);
+      else setLandmark(row.match.landmark);
     }
   };
 

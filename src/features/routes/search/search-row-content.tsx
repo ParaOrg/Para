@@ -17,6 +17,11 @@ export function SearchRowContent({ row }: SearchRowContentProps) {
       <span className="min-w-0 flex-1">
         <span className="flex items-center gap-2">
           <span className="truncate font-semibold">{place.label}</span>
+          {row.note && (
+            <span className="shrink-0 rounded-md bg-surface-secondary px-1.5 text-xs text-content-secondary">
+              {row.note}
+            </span>
+          )}
           {row.vehicles.length > 0 && (
             <span className="flex shrink-0 gap-1 text-content-secondary">
               {row.vehicles.map((vehicle) => (

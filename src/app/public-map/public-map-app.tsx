@@ -33,6 +33,7 @@ import { useLoopTip } from '@/features/routes/map/use-loop-tip';
 import { useMapCredits } from '@/features/routes/map/use-map-credits';
 import { useSavedHotspots } from '@/features/routes/map/use-saved-hotspots';
 import { useSavedRoutes } from '@/features/routes/map/use-saved-routes';
+import { directionsAtHotspots } from '@/features/routes/model/directions-at';
 import type { CommuterWhere } from '@/features/routes/model/loop-tip';
 import { placeKey } from '@/features/routes/model/places';
 import {
@@ -180,14 +181,8 @@ export function PublicMapApp() {
   // The open trip's hintuans, worked out once per trip (useTripTimeline).
   const timeline = useTripTimeline(saved.selected, hotspots, tipId);
 
-  // Place search: what stops at a hotspot, by the published directions, and the camera to a
-  // landmark (.scratch/place-search, step 2).
-  const directionsById = new Map(saved.directions.map((direction) => [direction.id, direction]));
-  const directionsAt = (hotspotId: string) =>
-    hotspots
-      .linkedDirectionIds(hotspotId)
-      .map((id) => directionsById.get(id))
-      .filter((direction) => direction !== undefined);
+  // Place search: what stops at a hotspot, by the published directions (.scratch/place-search).
+  const directionsAt = directionsAtHotspots(saved.directions, hotspots.linkedDirectionIds);
 
   // The map's credits, the Map Data Source sheet, opened by the ⓘ: the map and the cards under it
   // are out of reach while it is open.
