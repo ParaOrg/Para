@@ -5,6 +5,7 @@ import { lookAt } from '@/features/routes/map/look-at';
 import type { Hotspot } from '@/features/routes/model/hotspots';
 import type { Direction } from '@/features/routes/model/routes';
 import { PlaceSearch } from '@/features/routes/search/place-search';
+import type { LoadLandmarks } from '@/features/routes/search/use-landmarks';
 import type { LngLat } from '@/shared/utils/geo';
 
 import { SearchMark } from './search-mark';
@@ -21,6 +22,8 @@ interface StudioSearchProps {
   isDrawing: boolean;
   /** A hotspot chosen while nothing is drawn: its card, as a tap on its box opens it. */
   onOpenHotspot: (hotspotId: string) => void;
+  /** Where the landmarks come from: the file unless given (stories). */
+  loadLandmarks?: LoadLandmarks;
 }
 
 /**
@@ -36,6 +39,7 @@ export function StudioSearch({
   directionsAt,
   isDrawing,
   onOpenHotspot,
+  loadLandmarks,
 }: StudioSearchProps) {
   // Where the dot is, and which search put it there, so a second search on the same point shows anew.
   const [mark, setMark] = useState<{ at: LngLat; id: number } | null>(null);
@@ -68,6 +72,7 @@ export function StudioSearch({
           onPick={handlePick}
           onLookAt={(point) => lookAt(map, point)}
           onPickLandmark={(landmark) => showMark(landmark.point)}
+          loadLandmarks={loadLandmarks}
         />
       </div>
       {map && mark && <SearchMark key={mark.id} map={map} at={mark.at} />}
