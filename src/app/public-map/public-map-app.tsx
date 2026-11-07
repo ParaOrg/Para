@@ -75,6 +75,14 @@ const openOnRoutes = () =>
  */
 const SHOW_HOTSPOT_PINS = false;
 
+/**
+ * While a docked card stands at full height, the toast sits 12 under the card's ✕, so the ✕ stays
+ * in reach: the strip of map 24 (MAX_STRIP_PX), the handle's row 18 and the ✕ 40, then 12. A card
+ * floating in the corner (`@float:`) keeps the toast at the top.
+ */
+const TOAST_UNDER_FULL_CARD =
+  '@max-float:group-has-[[data-testid=card][data-snap=full]:not([hidden])]/map:[--toast-top:calc(env(safe-area-inset-top)+--spacing(23.5))]';
+
 /** The too-new map's Reload: the newer app, through the worker (pwa.ts). */
 const handleReloadNewer = () => void reloadForNewerApp();
 
@@ -201,7 +209,7 @@ export function PublicMapApp() {
       data-dock-host
       data-directions={saved.directions.length}
       className={cn(
-        '@container relative h-full w-full overflow-clip',
+        'group/map @container relative h-full w-full overflow-clip',
         needRefresh && '[--toast-top:calc(env(safe-area-inset-top)+--spacing(19))]',
         sheetTopUnderSearch(needRefresh, offline || age.stale),
       )}
@@ -339,9 +347,11 @@ export function PublicMapApp() {
         <Notices offline={offline} age={age} needRefresh={needRefresh} onUpdate={reloadToUpdate} />
         {/* What went wrong, at the top: the locator's note and a failed load. */}
         {hasToasts && (
-          <Suspense fallback={null}>
-            <PageToasts locatorNote={locatorNote} load={loadToast} />
-          </Suspense>
+          <div className={cn('contents', TOAST_UNDER_FULL_CARD)}>
+            <Suspense fallback={null}>
+              <PageToasts locatorNote={locatorNote} load={loadToast} />
+            </Suspense>
+          </div>
         )}
         {/* Held while the credits are open: one dialog at a time. */}
         {install.shouldShow && credits.state === 'shut' && (

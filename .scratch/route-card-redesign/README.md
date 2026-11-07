@@ -137,5 +137,5 @@ The builder designed these for now, or left them out. Each waits for the owner's
 - the casing's width under the route lines (1 px a side, CASING_EXTRA, as it was), and whether the trains and the ferry wear the neutral-800 casing too;
 - a jeep's lit line when its card is picked: Jeep's blue, the same as its rest, set apart only by its width and its chevrons (now #828's to settle);
 - Low's magnet (80 px) and the handle's step (a third of the map), the sheets' numbers for now;
-- at full height, the locator's problem toast covers the card's ✕, as it did at Max;
+- at full height, the locator's problem toast covers the card's ✕, as it did at Max: built for now (Q54), the toast sits 12 under the ✕ while a docked card is at full height;
 - the rest of a road trip's line past a picked hintuan, and the studio's dashed drafts: both still the light purple (Map/RouteLine/surface-default), which no resting line wears any more.
