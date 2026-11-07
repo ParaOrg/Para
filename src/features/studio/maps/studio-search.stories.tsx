@@ -108,7 +108,7 @@ const meta = {
   decorators: [
     (Story) => (
       <WithDrafts>
-        <div className="@container relative h-[30rem] w-[1100px] bg-surface-tertiary">
+        <div className="@container relative h-120 w-275 bg-surface-tertiary">
           <Story />
         </div>
       </WithDrafts>

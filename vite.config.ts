@@ -188,7 +188,7 @@ export default defineConfig({
               name: 'shared',
               minShareCount: 2,
               test: (id: string) =>
-                !/[\\/]src[\\/]((app|features)[\\/](studio|contribute)[\\/]|shared[\\/]ui[\\/]turnstile|features[\\/]routes[\\/]published[\\/](fetch-index|fetch-line|line-file-schema)\.ts$|features[\\/]routes[\\/]map[\\/]map-style\.tsx$|shared[\\/]ui[\\/](toast|toast-host|toast-queue|use-toast|standing-toasts)\.tsx?$|design-system[\\/]primitives[\\/](location-icon|switch)\.tsx$|features[\\/]locator[\\/](contributor-location\.tsx|location-permission\.ts)$|shared[\\/]utils[\\/]css-duration\.ts$|shared[\\/]lib[\\/]query-client\.ts$|features[\\/]routes[\\/]map[\\/](hotspot-pin-images\.ts|(terminal|hintuan)-pin-icon\.svg\?raw)$)/.test(
+                !/[\\/]src[\\/]((app|features)[\\/](studio|contribute)[\\/]|shared[\\/]ui[\\/]turnstile|features[\\/]routes[\\/]published[\\/](fetch-index|fetch-line|line-file-schema)\.ts$|features[\\/]routes[\\/](search[\\/]|model[\\/](place-search|landmark-search|directions-at)\.ts$|map[\\/]look-at\.ts$)|features[\\/]routes[\\/]map[\\/]map-style\.tsx$|shared[\\/]ui[\\/](toast|toast-host|toast-queue|use-toast|standing-toasts)\.tsx?$|design-system[\\/]primitives[\\/](location-icon|switch)\.tsx$|features[\\/]locator[\\/](contributor-location\.tsx|location-permission\.ts)$|shared[\\/]utils[\\/]css-duration\.ts$|shared[\\/]lib[\\/]query-client\.ts$|features[\\/]routes[\\/]map[\\/](hotspot-pin-images\.ts|(terminal|hintuan)-pin-icon\.svg\?raw)$)/.test(
                   id,
                 ),
             },

@@ -1,5 +1,5 @@
 import type { MapLibreMap } from 'maplibre-gl';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { lookAt } from '@/features/routes/map/look-at';
 import type { Hotspot } from '@/features/routes/model/hotspots';
@@ -10,8 +10,12 @@ import type { LoadLandmarks } from '@/features/routes/search/use-landmarks';
 import type { LngLat } from '@/shared/utils/geo';
 
 import { SearchMark } from './search-mark';
+import type { DraftRow } from '../data/review-schema';
 import { searchableHotspots } from '../data/search-hotspots';
 import { useReviewQuery } from '../data/use-review-query';
+
+/** No drafts: one list, so the memo below holds while signed out. */
+const NO_DRAFTS: readonly DraftRow[] = [];
 
 /** How long the dot stays where a search took the camera. */
 const MARK_MS = 8000;
@@ -63,8 +67,10 @@ export function StudioSearch({
 
   // Signed out, none: a disabled query still answers with what an earlier sign-in left cached.
   const draftsRead = useReviewQuery({ isEnabled: isSignedIn }).data;
-  const drafts = isSignedIn ? (draftsRead ?? []) : [];
-  const searchable = searchableHotspots(hotspots, drafts);
+  const drafts = (isSignedIn && draftsRead) || NO_DRAFTS;
+  // Memoised for a stable list: the search's own memo (useSearchRows) keys on it, and its landmark
+  // match costs up to some 20 ms, while the workshop renders far more often than this changes.
+  const searchable = useMemo(() => searchableHotspots(hotspots, drafts), [hotspots, drafts]);
   const isDraftPlace = (place: SearchPlace) =>
     place.hotspots.every((hotspot) => searchable.draftIds.has(hotspot.id));
 
