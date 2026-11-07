@@ -33,6 +33,8 @@ import { HOTSPOT_CONTENT } from '../../src/features/routes/map/colours.ts';
 import { litOpacity } from '../../src/features/routes/map/lighting.ts';
 import { litWidth } from '../../src/features/routes/map/line-style.ts';
 import { MAP_COLOURS } from '../../src/design-system/foundation/map-colours.ts';
+import { RESTING_FILTER, RESTING_LAYERS } from '../../src/features/routes/map/rail-rest-layers.ts';
+import { routesData } from '../../src/features/routes/map/saved-routes-data.ts';
 
 const read = (path) => readFileSync(new URL(path, import.meta.url), 'utf8');
 
@@ -202,6 +204,62 @@ test("a train line at rest is drawn by the resting line's program, one layer a l
     rails.map((r) => r.filter),
     ['LRT-1', 'LRT-2', 'MRT-3'].map((l) => ['==', ['get', 'line'], l]),
   );
+});
+
+// Every route is drawn at rest exactly once: every road route, whatever its mode, by the one pale
+// line, each train by its line's pale; and the studio's filter for the direction it is editing
+// hides it from every one of them.
+test('every route rests in exactly one resting layer, and the edited one in none', () => {
+  const line = {
+    type: 'LineString',
+    coordinates: [
+      [121, 14.6],
+      [121.01, 14.61],
+    ],
+  };
+  const route = (mode, routeCode = null) => ({ id: `${mode}${routeCode ?? ''}`, mode, routeCode });
+  const rows = [
+    route('jeepney'),
+    route('tricycle'),
+    route('p2p'),
+    route('uv_express'),
+    route('e_jeepney'),
+    route('bus'),
+    route('ferry'),
+    route('lrt', 'LRT-1'),
+    route('lrt', 'LRT-2'),
+    route('mrt', 'MRT-3'),
+  ].map((r) => ({ id: r.id, routeId: r.id, route: r, shape: line }));
+  const features = routesData(rows).features.map((f) => ({ type: 2, properties: f.properties }));
+  assert.equal(features.length, rows.length);
+  const drawnBy = (extra) => (feature) =>
+    RESTING_LAYERS.filter((id) =>
+      featureFilter(
+        extra ? ['all', RESTING_FILTER[id], extra] : RESTING_FILTER[id],
+        `layers.${id}.filter`,
+      ).filter({ zoom: 15 }, feature),
+    );
+  const expected = {
+    jeepney: ['saved-routes-line'],
+    tricycle: ['saved-routes-line'],
+    p2p: ['saved-routes-line'],
+    uv_express: ['saved-routes-line'],
+    e_jeepney: ['saved-routes-line'],
+    bus: ['saved-routes-line'],
+    ferry: ['saved-routes-line'],
+    'lrtLRT-1': ['saved-routes-rail-lrt-1'],
+    'lrtLRT-2': ['saved-routes-rail-lrt-2'],
+    'mrtMRT-3': ['saved-routes-rail-mrt-3'],
+  };
+  for (const f of features)
+    assert.deepEqual(drawnBy(null)(f), expected[f.properties.id], f.properties.id);
+  // As use-saved-routes-layers hides the direction the studio is editing.
+  for (const f of features)
+    assert.deepEqual(
+      drawnBy(['!=', ['get', 'id'], f.properties.id])(f),
+      [],
+      `${f.properties.id} hidden`,
+    );
 });
 
 test("the rest of a ride past a picked hintuan is drawn by the resting line's program, compiled at load", () => {

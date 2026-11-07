@@ -10,8 +10,8 @@ export const MAP_COLOURS = {
   'Map/RouteLine/surface-selected': '#4900be', // parabrand/800
   'Map/RouteLine/Arrow/Rest': '#ffffff', // white
   'Map/RouteLine/Arrow/Inverse': '#171717', // neutral/900
-  // Not named in Figma yet: the rim under every route line, so the pale modes (E-Jeep, UV Express)
-  // stand out on the light basemap.
+  // Not named in Figma yet: the rim under a lit route line, so a lit line in a pale mode's colour
+  // (E-Jeep, UV Express) stands out on the light basemap. A line at rest has none.
   'Map/RouteLine/casing': '#262626', // neutral/800
   'Map/RouteLine/Hintuan/surface-default': '#05df72', // green/400
   'Map/OverlayCard/Hintuan/surface': '#00c951', // green/500, at 30%

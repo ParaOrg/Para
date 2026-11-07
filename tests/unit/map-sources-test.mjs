@@ -308,7 +308,7 @@ const stops = index.stops;
  * What the routes' effect laid out before 2026-10-04, word for word, with
  * the one property added since: `line`, the train line a route runs on, ''
  * for every other, which picks the resting layer that draws it (a train's
- * pale, the owner's ask of 2026-10-13).
+ * pale).
  */
 const routesBefore = (rows) => ({
   type: 'FeatureCollection',
