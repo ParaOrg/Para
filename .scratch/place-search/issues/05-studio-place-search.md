@@ -1,6 +1,6 @@
 # 05: Studio place search
 
-Status: ready-for-agent (claimed by the place-search builder; starts once 03 merges)
+Status: resolved
 Type: task
 Blocked by: 03
 
