@@ -3519,6 +3519,20 @@ if (!shared) {
   const isPicked = async () =>
     (await wanted.count()) > 0 && (await wantedCard.getAttribute('data-state')) === 'selected';
   const wantedName = wantedCard.locator('[data-testid="chooser-select"]');
+  // At Low a tap on the list raises it a third and reaches nothing under it (the owner's rule):
+  // picking a card there takes a tap to raise, then a tap to pick. The camera is read once the
+  // raise has settled, as a new height frames the routes again.
+  const listAt = async () => chooser.first().getAttribute('data-snap');
+  const raisedFirst = (await listAt()) === 'low';
+  if (raisedFirst) {
+    await buttonTap(wantedName, async () => (await listAt()) !== 'low');
+    check(
+      '  at Low, a tap on a card raises the list a third and picks nothing',
+      (await listAt()) === 'free' && !(await isPicked()),
+      `data-snap=${await listAt()}; picked ${await isPicked()}`,
+    );
+  }
+  await cardsSettled(page);
   const camBeforeCardPick = await camNow();
   await buttonTap(wantedName, isPicked);
   const pickedIds = (await wanted.count()) ? await directionsIn(wantedCard) : [];
