@@ -101,6 +101,9 @@ const meta = {
   ],
   parameters: { layout: 'fullscreen' },
   args: {
+    // Raised, as a commuter has them before tapping a row: at Low a tap on the body raises the
+    // sheet and reaches nothing under it. The stories about the sheet's heights keep their own.
+    height: { snap: 0.55, onSnap: fn() },
     livery: 'jeep',
     // 12.8 km, as Figma's frame has it; its pesos on today's rule.
     metres: 12_800,
@@ -689,7 +692,7 @@ const tapHandle = async (canvasElement: HTMLElement, until?: 'full') => {
 
 /** Full height: the whole map, the header at the top, the rest scrolling under it (3815:4306). */
 export const SheetFull: Story = {
-  args: { hintuans: aLongWay },
+  args: { height: undefined, hintuans: aLongWay },
   play: async (ctx) => {
     await openFold(ctx);
     await tapHandle(ctx.canvasElement, 'full');
@@ -702,6 +705,7 @@ export const SheetFull: Story = {
 
 /** Low, where it opens: the header and the origin along the bottom, the map above it (3814:3976). */
 export const SheetLow: Story = {
+  args: { height: undefined },
   play: async (ctx) => {
     await expect(within(ctx.canvasElement).getByTestId('card')).toHaveAttribute('data-snap', 'low');
   },
@@ -714,7 +718,7 @@ const longOrigin = 'Novaliches (Bayan) via Zabarte and Quirino Highway';
 
 /** Low with a long origin: one line of it, 28 tall, cut short (3814:3976). */
 export const SheetLowLongName: Story = {
-  args: { ...LongNames.args, routeOrigin: longOrigin },
+  args: { height: undefined, ...LongNames.args, routeOrigin: longOrigin },
   play: async (ctx) => {
     const origin = within(ctx.canvasElement).getByText(longOrigin);
     await waitFor(() => expect(origin.getBoundingClientRect().height).toBe(28));
@@ -723,7 +727,7 @@ export const SheetLowLongName: Story = {
 
 /** Raised a third with a long origin: all of it, on as many lines as it takes. */
 export const SheetRaisedLongName: Story = {
-  args: { ...LongNames.args, routeOrigin: longOrigin },
+  args: { height: undefined, ...LongNames.args, routeOrigin: longOrigin },
   play: async (ctx) => {
     await tapHandle(ctx.canvasElement);
     const origin = within(ctx.canvasElement).getByText(longOrigin);

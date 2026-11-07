@@ -338,7 +338,8 @@ export const SheetLow: Story = {
 
 /** A filter with nothing to show under this tap: it says so, with a way back to All. */
 export const FilterWithNoMatch: Story = {
-  args: { modeFilter: { filter: 'all', onFilter: fn() } },
+  // Raised: at Low a tap on the body raises the sheet, and Show all routes is in the body.
+  args: { modeFilter: { filter: 'all', onFilter: fn() }, height: { snap: 0.55, onSnap: fn() } },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.click(canvas.getByRole('button', { name: 'Filter' }));

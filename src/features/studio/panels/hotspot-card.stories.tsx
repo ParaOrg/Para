@@ -99,6 +99,9 @@ const meta = {
   ],
   parameters: { layout: 'fullscreen' },
   args: {
+    // Raised, as a commuter has them before tapping a row: at Low a tap on the body raises the
+    // sheet and reaches nothing under it. The stories about the sheet's heights keep their own.
+    height: { snap: 0.55, onSnap: fn() },
     hotspot: terminal,
     linkedDirectionIds: [outbound.id, inbound.id],
     directions: [outbound, inbound],
@@ -244,7 +247,7 @@ export const RouteCardsTheWayBack: Story = {
  * sheet swallows after one.
  */
 export const RouteCardsPhone: Story = {
-  args: RouteCards.args,
+  args: { ...RouteCards.args, height: undefined },
   parameters: { phone: true },
   play: async ({ canvasElement }) => {
     const handle = within(canvasElement).getByTestId('dock-handle');
