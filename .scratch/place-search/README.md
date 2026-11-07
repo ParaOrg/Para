@@ -23,6 +23,7 @@ A commuter types a place and the map takes them there. Two steps: first Para's o
 - **Routes near here** (decision 8). A landmark that is not a Para place shows the hintuans within about 500 m, **straight-line** (not walking distance; the sheet says so), nearest first, each with its routes. None: "No Para routes near here yet".
 - **Results order** (decision 9). Para places first, with their mode icon; then landmarks, marked as landmarks.
 - **Credit** (decision 10). "© OpenStreetMap contributors" beside the results whenever a landmark is listed.
+- **Built** (ticket 03). `routes/published/fetch-landmarks.ts` reads the file in a chunk of its own on the first keystroke (`routes/search/use-landmarks.ts`), and imports none of the search's rules, which would otherwise move into the shared chunk the page always loads. `routes/model/landmark-search.ts` matches and ranks landmarks as places are, folded once as the file is read and behind a letter filter (1-22 ms a query over 7,066 on a laptop); a landmark of a Para place's name within 250 m is that place. Picking a landmark flies the camera there (`routes/map/look-at.ts`) and opens "routes near here" under the field, looking from its point and, for a street, every point along it. The offline worker keeps the file (`landmarks`, stale-while-revalidate).
 - **Rebuilding** (decision 11). Monthly or on demand, as a normal pull request. The script downloads one extract at build time; visitors never reach OpenStreetMap.
 
 ### The data and its licence
@@ -54,15 +55,17 @@ Designed for now from existing primitives and tokens, never final. Each needs th
 11. The bar's card behind the field (white, rounded, the large shadow) and its visible "Search places" label: built so the label reads over the map.
 12. Search while a card is open: on a phone, hidden for now; on a computer, the bar stays and the cards float under it (question 5, built). How the two look together has no story yet: the owner's call whether one is wanted.
 13. A search icon in the field: none exists in the design system, so none is drawn.
+14. The studio's search bar (ticket 05): its place on the three studio maps, and the temporary marker a landmark pick leaves.
 
 ## Tickets
 
 | # | Ticket | Status |
 | --- | --- | --- |
 | 01 | [The landmark file](issues/01-landmark-file.md) | resolved (#811) |
-| 02 | [Search Para's own places](issues/02-search-own-places.md) | in review |
-| 03 | [Landmarks and routes near here](issues/03-landmarks-in-search.md) | blocked by 01, 02 |
-| 04 | [The monthly rebuild](issues/04-monthly-rebuild.md) | needs the owner (question 2) |
+| 02 | [Search Para's own places](issues/02-search-own-places.md) | resolved (#817) |
+| 03 | [Landmarks and routes near here](issues/03-landmarks-in-search.md) | in review |
+| 04 | [The monthly rebuild](issues/04-monthly-rebuild.md) | resolved (#826) |
+| 05 | [Studio place search](issues/05-studio-place-search.md) | blocked by 03 |
 
 ## Questions sent to the hub (2026-11-06)
 

@@ -1,6 +1,6 @@
 # 02: Search Para's own places
 
-Status: ready-for-agent (claimed by the place-search builder; in review)
+Status: resolved
 Type: task
 Blocked by: the route card redesign's step 7 (`claude/route-card-commuter-wiring`) merging into `staging`
 

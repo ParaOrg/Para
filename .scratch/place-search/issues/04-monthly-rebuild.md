@@ -1,6 +1,6 @@
 # 04: The monthly rebuild
 
-Status: ready-for-agent (claimed by the place-search builder; in review)
+Status: resolved
 Type: task
 Blocked by: none (01 merged; the owner ticked the setting, 2026-11-06)
 

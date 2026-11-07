@@ -1,12 +1,15 @@
 import type { Hotspot } from '@/features/routes/model/hotspots';
+import type { Direction } from '@/features/routes/model/routes';
 import { PlaceSearch } from '@/features/routes/search/place-search';
 import { cn } from '@/shared/utils/cn';
 import type { LngLat } from '@/shared/utils/geo';
 
 interface PlaceSearchBarProps {
   hotspots: readonly Hotspot[];
+  directionsAt: (hotspotId: string) => readonly Direction[];
   whereNow: () => LngLat | null;
   onPick: (hotspot: Hotspot) => void;
+  onLookAt: (point: LngLat) => void;
   /** "Update Para!" is up, 24 below the top and 40 tall (Notices): the bar goes 12 under it. */
   isUnderUpdate: boolean;
   /** The offline pill is up, top left on a wide map (Notices): the bar goes under it there. */
@@ -43,8 +46,10 @@ export function sheetTopUnderSearch(isUnderUpdate: boolean, isUnderOfflinePill: 
  */
 export function PlaceSearchBar({
   hotspots,
+  directionsAt,
   whereNow,
   onPick,
+  onLookAt,
   isUnderUpdate,
   isUnderOfflinePill,
   isCardOpen,
@@ -63,7 +68,13 @@ export function PlaceSearchBar({
         isUnderOfflinePill && !isUnderUpdate && '@wide:top-[calc(env(safe-area-inset-top)+3.5rem)]',
       )}
     >
-      <PlaceSearch hotspots={hotspots} whereNow={whereNow} onPick={onPick} />
+      <PlaceSearch
+        hotspots={hotspots}
+        directionsAt={directionsAt}
+        whereNow={whereNow}
+        onPick={onPick}
+        onLookAt={onLookAt}
+      />
     </div>
   );
 }

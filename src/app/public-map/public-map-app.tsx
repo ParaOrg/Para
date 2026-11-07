@@ -21,6 +21,7 @@ import { useTripTimeline } from '@/features/routes/cards/use-trip-timeline';
 import { EndTitles } from '@/features/routes/map/end-titles';
 import { routesBounds } from '@/features/routes/map/framing';
 import { HintuanPin } from '@/features/routes/map/hintuan-pin';
+import { lookAt } from '@/features/routes/map/look-at';
 import { MapCreditsDock } from '@/features/routes/map/map-credits-dock';
 import { MapCreditsSheet } from '@/features/routes/map/map-credits-sheet';
 import { METRO_MANILA, MapView } from '@/features/routes/map/map-view';
@@ -179,6 +180,15 @@ export function PublicMapApp() {
   // The open trip's hintuans, worked out once per trip (useTripTimeline).
   const timeline = useTripTimeline(saved.selected, hotspots, tipId);
 
+  // Place search: what stops at a hotspot, by the published directions, and the camera to a
+  // landmark (.scratch/place-search, step 2).
+  const directionsById = new Map(saved.directions.map((direction) => [direction.id, direction]));
+  const directionsAt = (hotspotId: string) =>
+    hotspots
+      .linkedDirectionIds(hotspotId)
+      .map((id) => directionsById.get(id))
+      .filter((direction) => direction !== undefined);
+
   // The map's credits, the Map Data Source sheet, opened by the ⓘ: the map and the cards under it
   // are out of reach while it is open.
   const credits = useMapCredits(root);
@@ -322,8 +332,10 @@ export function PublicMapApp() {
       */}
         <PlaceSearchBar
           hotspots={hotspots.hotspots}
+          directionsAt={directionsAt}
           whereNow={() => where.current?.at ?? null}
           onPick={(hotspot) => openPlace(hotspot.id)}
+          onLookAt={(point) => lookAt(map, point)}
           isUnderUpdate={needRefresh}
           isUnderOfflinePill={offline || age.stale}
           isCardOpen={cards.open}

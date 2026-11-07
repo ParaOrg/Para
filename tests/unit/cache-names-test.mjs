@@ -37,6 +37,7 @@ test('the names are read from the source, so a renamed cache is checked too', ()
     'map-file',
     'map-lines',
     'signboards',
+    'landmarks',
     'basemap-meta',
     'basemap-tiles',
   ]);
