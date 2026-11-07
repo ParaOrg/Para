@@ -38,6 +38,14 @@ Known limits of the file:
 - OpenStreetMap's tags are what volunteers wrote: a "market" can be a food shop, a school can be listed under two names. The monthly rebuild picks up fixes made on OpenStreetMap; Para never edits the file by hand.
 - Places of worship are Christian churches only, as the owner listed (question 1).
 
+## Studio place search (ticket 05)
+
+The owner's yes (2026-11-06, decisions 43 to 48) and answers to questions 7 to 9 (2026-11-07):
+
+- The commuter's `PlaceSearch` at the top of the workshop and the Contributors map, computer size only (`studio/maps/studio-search.tsx`): centred, never over the Contributors panel or the hotspot card. The Public map view is an iframe of the public map, whose own search serves it.
+- It searches every hotspot row (unpublished ones too) and, signed in, the drafts (`studio/data/search-hotspots.ts`): a new place still in a draft is a hotspot of its own, marked "Draft"; a draft edit's new name and aliases also find its saved hotspot. Signed out, no drafts, even cached ones.
+- A saved hotspot in the workshop opens its card. A draft, a landmark, anything on the Contributors map, and anything found while a line is drawn only moves the camera and leaves a dot for 8 s. Nothing touches the drawing or a draft; no "make a hotspot here".
+
 ## Owner to design later
 
 Designed for now from existing primitives and tokens, never final. Each needs the owner's Figma:
@@ -55,7 +63,7 @@ Designed for now from existing primitives and tokens, never final. Each needs th
 11. The bar's card behind the field (white, rounded, the large shadow) and its visible "Search places" label: built so the label reads over the map.
 12. Search while a card is open: on a phone, hidden for now; on a computer, the bar stays and the cards float under it (question 5, built). How the two look together has no story yet: the owner's call whether one is wanted.
 13. A search icon in the field: none exists in the design system, so none is drawn.
-14. The studio's search bar (ticket 05): its place on the three studio maps, and the temporary marker a landmark pick leaves.
+14. The studio's search bar (ticket 05): its place on the workshop and the Contributors map, the "Draft" mark, and the dot a landmark or draft pick leaves (how it looks, how long it stays: 8 s for now).
 
 ## Tickets
 
@@ -65,7 +73,7 @@ Designed for now from existing primitives and tokens, never final. Each needs th
 | 02 | [Search Para's own places](issues/02-search-own-places.md) | resolved (#817) |
 | 03 | [Landmarks and routes near here](issues/03-landmarks-in-search.md) | in review |
 | 04 | [The monthly rebuild](issues/04-monthly-rebuild.md) | resolved (#826) |
-| 05 | [Studio place search](issues/05-studio-place-search.md) | blocked by 03 |
+| 05 | [Studio place search](issues/05-studio-place-search.md) | in review |
 
 ## Questions sent to the hub (2026-11-06)
 
