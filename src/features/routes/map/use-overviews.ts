@@ -18,7 +18,7 @@ import { directionLine, type Direction } from '../model/routes';
 
 /**
  * The farthest out the sheet going up takes the camera: the scale bar at 5 km
- * (the owner's call; 2.5 km is too close from Middle up). Further out than
+ * (the owner's call; 2.5 km is too close with the sheet raised). Further out than
  * that only by the commuter's own hand.
  */
 const RAISED_FARTHEST_M = 5000;
@@ -96,11 +96,11 @@ export function useSwitchOverview(
 }
 
 /**
- * The sheet settled at another height — Low, Middle, Max, or where a drag
- * left it: the camera takes in again what the card on show frames, in what
- * map the sheet leaves now (the owner's call). Routes are fitted whole, in
- * close above Low, out above Middle — and at Max, which on a phone leaves
- * only a strip of map, as at Middle (roomBeside); a place is brought into
+ * The sheet settled at another height — Low, full, or where a drag left it:
+ * the camera takes in again what the card on show frames, in what map the
+ * sheet leaves now (the owner's call). Routes are fitted whole, in close
+ * above Low, out above a raised sheet — and at full height, which on a phone
+ * leaves only a strip of map, as at the framed height (roomBeside); a place is brought into
  * view at its zoom. Whatever the commuter did to the map since, the overview
  * comes back. Going up, it zooms out no further than RAISED_FARTHEST_M on the
  * scale bar (the owner's call); coming down, the whole route. `frame` is read
@@ -138,10 +138,9 @@ export function useHeightOverview(
 }
 
 /**
- * An end picked after a start, the sheet already at Middle (the owner's
- * call): the camera takes in the ride from the start to the end, clear of the
- * sheet. Below or above Middle the sheet moves there first and
- * useHeightOverview frames the ride as it settles. `picks` counts those ends;
+ * An end picked after a start: the camera takes in the ride from the start to
+ * the end, clear of the sheet, which stays where it is (the owner's rule).
+ * `picks` counts those ends;
  * the ride is read in the render the pick makes, and with none there (an end
  * the line can't take the ride to) the camera stays, the pick's own glide
  * taking it there (useRideTo).

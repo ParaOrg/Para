@@ -33,7 +33,8 @@ New variables: `Card/{Jeep,UVExpress,Ejeep,Bus}/{…-surface, …-surface-second
 13. **Station codes** ("PL01") from `rail-codes.ts` where one exists, otherwise nothing. The S and E icons beside them go.
 14. **The filter on the map** (step 7): the filter starts at All with each new list. Changing it frames the routes still lit, as ⇆ does, and lets a Selected card go. A hintuan's or terminal's own card does not follow it.
 15. **No hotspot pins on the commuter map, for now**: no terminal or hintuan flag zoomed in. Zoomed out each hotspot keeps its small dot, so it stays in sight (Q28). One switch, `SHOW_HOTSPOT_PINS` in `public-map-app.tsx`, turns the flags back on. The boxes, their names, their dots and their taps stay. The studio and the contributor page keep their pins.
-16. **Map lines in their mode's colours** (step 9): a road route rests in its card's line colour: Jeep blue-700, UV Express neutral-400, E-Jeep neutral-300 (their cards' border shades, so they show on the light basemap), Bus orange-700, the ferry its own Map/Ferry/surface. Trains keep their pales. Every line, resting and lit, is cased in neutral-800 (Map/RouteLine/casing), trains included. Lit lines keep their rule: a card's or trip's colour, the selected purple while a whole list is lit. The contributor page's lines are unchanged for now.
+16. **Map lines** (step 9, #818), since changed by the owner: see PR #828 (the APK session's). At rest every road line is one pale brand colour (parabrand/300) with no border; active, a line takes its full colour with a neutral-800 border; trains keep their pales. #818's per-mode resting colours are what #828 replaces.
+17. **Free-drag sheets** (2026-11-07): every sheet (the route list, the trip and hotspot cards, the studio's list, the contributor's ride sheet) opens at Low and drags freely to full height, resting where it is let go. Only Low keeps a magnet: let go within 80 px of it, or flicked down from anywhere, it goes to Low; a flick down from Low closes it (Q49). Nothing raises a sheet for the commuter: picking an end, "Other routes" and a picked hintuan leave it where it is. At Low a tap on the body raises it a third and reaches nothing under it (Q50), so a card at Low takes a tap to raise, then a tap to pick. The handle, Enter and a wheel's push step a third of the map, up from Low to full and back (a wheel never raises from Low), and the handle says the height. `data-snap` is `low`, `free` or `full`; the map counts as covered above 90%.
 
 ## Status (handed over 2026-11-06)
 
@@ -56,7 +57,8 @@ This session stopped here; the owner's own sessions carry on. Each PR is stacked
 | 9 | Map lines in the mode colours | Merged: [#818](https://github.com/ParaOrg/Para/pull/818), 407.2 kB. For the owner's morning check: `shots-step-9/` (light basemap, 393 and 1440 wide: Cubao, with jeeps beside LRT-2 and MRT-3, and the Pasig ferry) |
 | 9b | The counters count the cards, a place and mode each (a fix to step 4) | Merged: [#821](https://github.com/ParaOrg/Para/pull/821), 407.2 kB |
 | 10 | One shadow look: the RouteCard's Figma shadows in shadow-route-card-* | Merged: [#822](https://github.com/ParaOrg/Para/pull/822), 407.2 kB |
-| 10b | The commuter map keeps each hotspot's dot zoomed out (Q28) | Open PR (branch `claude/commuter-hotspot-dots`) |
+| 10b | The commuter map keeps each hotspot's dot zoomed out (Q28) | Merged: [#827](https://github.com/ParaOrg/Para/pull/827), 407.2 kB |
+| 10c | Free-drag sheets (decision 17) | Open PR (branch `claude/free-drag-sheets`) |
 
 ### Step 4: the reviewer's findings, fixed
 
@@ -132,5 +134,6 @@ The builder designed these for now, or left them out. Each waits for the owner's
 - tricycle and P2P looks;
 - the map line colours for E-Jeep and UV Express (their cards' border shades for now);
 - the casing's width under the route lines (1 px a side, CASING_EXTRA, as it was), and whether the trains and the ferry wear the neutral-800 casing too;
-- a jeep's lit line when its card is picked: Jeep's blue, the same as its rest, set apart only by its width and its chevrons;
+- a jeep's lit line when its card is picked: Jeep's blue, the same as its rest, set apart only by its width and its chevrons (now #828's to settle);
+- Low's magnet (80 px) and the handle's step (a third of the map), the sheets' numbers for now;
 - the rest of a road trip's line past a picked hintuan, and the studio's dashed drafts: both still the light purple (Map/RouteLine/surface-default), which no resting line wears any more.

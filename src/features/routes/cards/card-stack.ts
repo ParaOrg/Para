@@ -36,11 +36,11 @@ export function tripBack(
 }
 
 /**
- * The height the sheets share: a pick and ‹ keep Low, Middle or Max as they
- * were; with nothing open it goes back to Middle, where every sheet opens.
+ * The height the sheets share: a pick and ‹ keep it as it was; with nothing
+ * open it goes back to Low, where every sheet opens (the owner's rule).
  */
 export function sharedSnap(snap: Snap, anyOpen: boolean): Snap {
-  return anyOpen ? snap : 'middle';
+  return anyOpen ? snap : 'low';
 }
 
 /**

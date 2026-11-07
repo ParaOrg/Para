@@ -375,8 +375,7 @@ export function PublicMapApp() {
             height={height}
             // "Other routes": that route's trip in this one's place, ‹ still to
             // what this one was picked from; the camera takes it in as it opens.
-            // The sheet goes to Middle from wherever it is, so the map shows it;
-            // the hintuans stay open or folded.
+            // The sheet stays where it is; the hintuans stay open or folded.
             onOtherRoute={otherRoute}
           />
         )}

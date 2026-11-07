@@ -303,29 +303,33 @@ export const TwoHotspots: Story = { args: { routes: [], hotspots: twoBoxes } };
 export const OneHintuanTwoBoxes: Story = { args: { routes: [], hotspots: oneHintuan } };
 
 /**
- * The list's sheet (4633:25516) opens at Middle (Phone, above). It draws no HandleNotch, but the
- * handle stays for the keyboard: a press on it goes round, Low → Middle → Max.
+ * The list's sheet (4633:25516) opens at Low. It draws no HandleNotch, but the handle stays for
+ * the keyboard: a press on it steps a third of the screen, up to full height and back. Presses
+ * Enter on it until the sheet is at `until`, or once with no `until`.
  */
-const tapHandle = async (canvasElement: HTMLElement, times: number) => {
+const pressHandle = async (canvasElement: HTMLElement, until?: 'full') => {
   const handle = within(canvasElement).getByTestId('dock-handle');
+  const sheet = within(canvasElement).getByTestId('chooser');
   handle.focus();
-  for (let i = 0; i < times; i++) await userEvent.keyboard('{Enter}');
+  for (let i = 0; i < 4; i++) {
+    await userEvent.keyboard('{Enter}');
+    if (!until || sheet.getAttribute('data-snap') === until) break;
+  }
   handle.blur();
 };
 
-/** Max (4633:25575): the whole screen, the places scrolling under the Controller. */
-export const SheetMax: Story = {
+/** Full height (4633:25575): the whole screen, the places scrolling under the Controller. */
+export const SheetFull: Story = {
   args: { routes: many },
   play: async ({ canvasElement }) => {
-    await tapHandle(canvasElement, 1);
-    await expect(within(canvasElement).getByTestId('chooser')).toHaveAttribute('data-snap', 'max');
+    await pressHandle(canvasElement, 'full');
+    await expect(within(canvasElement).getByTestId('chooser')).toHaveAttribute('data-snap', 'full');
   },
 };
 
-/** Low: the first card's mode and name above the Controller, 240 tall. */
+/** Low, where it opens: the first card's mode and name above the Controller, 240 tall. */
 export const SheetLow: Story = {
   play: async ({ canvasElement }) => {
-    await tapHandle(canvasElement, 2);
     const sheet = within(canvasElement).getByTestId('chooser');
     await expect(sheet).toHaveAttribute('data-snap', 'low');
     await expect(sheet).toHaveAttribute('data-low-px', '240');
@@ -334,7 +338,8 @@ export const SheetLow: Story = {
 
 /** A filter with nothing to show under this tap: it says so, with a way back to All. */
 export const FilterWithNoMatch: Story = {
-  args: { modeFilter: { filter: 'all', onFilter: fn() } },
+  // Raised: at Low a tap on the body raises the sheet, and Show all routes is in the body.
+  args: { modeFilter: { filter: 'all', onFilter: fn() }, height: { snap: 0.55, onSnap: fn() } },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.click(canvas.getByRole('button', { name: 'Filter' }));
@@ -351,16 +356,16 @@ export const FilterWithNoMatch: Story = {
 export const SheetLowLongName: Story = {
   args: { routes: longName },
   play: async ({ canvasElement }) => {
-    await tapHandle(canvasElement, 2);
     const name = within(canvasElement).getByText(LONG);
     await waitFor(() => expect(name.getBoundingClientRect().height).toBe(32));
   },
 };
 
-/** Middle with a long place: all of it, on as many lines as it takes. */
-export const SheetMiddleLongName: Story = {
+/** Raised a third with a long place: all of it, on as many lines as it takes. */
+export const SheetRaisedLongName: Story = {
   args: { routes: longName },
   play: async ({ canvasElement }) => {
+    await pressHandle(canvasElement);
     await expect(
       within(canvasElement).getByText(LONG).getBoundingClientRect().height,
     ).toBeGreaterThan(32);
@@ -398,19 +403,14 @@ const growingEnd = (livery: Livery) => (
 
 export const WithAnEnd: Story = { args: { end: growingEnd } };
 
-/** Short list, Low: the end fills what the sheet shows. */
-export const WithAnEndLow: Story = {
-  args: { end: growingEnd },
-  play: async ({ canvasElement }) => {
-    await tapHandle(canvasElement, 2);
-  },
-};
+/** Short list, Low, where it opens: the end fills what the sheet shows. */
+export const WithAnEndLow: Story = { args: { end: growingEnd } };
 
-/** Short list, Max: the end fills to the bottom of the screen. */
-export const WithAnEndMax: Story = {
+/** Short list, full height: the end fills to the bottom of the screen. */
+export const WithAnEndFull: Story = {
   args: { end: growingEnd },
   play: async ({ canvasElement }) => {
-    await tapHandle(canvasElement, 1);
+    await pressHandle(canvasElement, 'full');
   },
 };
 

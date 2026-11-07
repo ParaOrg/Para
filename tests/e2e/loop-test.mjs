@@ -245,7 +245,16 @@ const rowNames = (page) =>
   page
     .locator('[data-testid="trip-hintuan"]')
     .evaluateAll((els) => els.map((e) => e.textContent?.trim() ?? ''));
+/** The trip's sheet raised to full height, its rows all in reach: it opens at Low, and each tap on its handle steps a third. */
+const toFull = async (page) => {
+  const card = page.locator('[data-testid="card"]', { has: page.locator('[data-testid="trip"]') });
+  for (let i = 0; i < 4 && (await card.getAttribute('data-snap')) !== 'full'; i++) {
+    await card.getByTestId('dock-handle').click();
+    await page.waitForTimeout(400);
+  }
+};
 const openFold = async (page) => {
+  await toFull(page);
   const fold = page.locator('[data-testid="trip-fold"]');
   if ((await fold.count()) > 0) await fold.first().click();
   await page.waitForTimeout(300);
@@ -574,6 +583,9 @@ const closeTrip = async (page) => {
     '  and has no SWITCH over loops alone',
     (await page.locator('[data-testid="card-flip"]').count()) === 0,
   );
+  // The card opens at Low, where a tap on a row only raises it: the handle raises it first.
+  await page.locator('[data-testid="card"]').first().getByTestId('dock-handle').click();
+  await page.waitForTimeout(400);
   await page.locator('[data-testid="card-item"]').first().tap();
   await page.locator('[data-testid="trip"]').waitFor({ timeout: 15000 });
   await page.waitForTimeout(400);

@@ -7,7 +7,7 @@ const meta = {
   title: 'Features/Routes/MapCreditsDock',
   component: MapCreditsDock,
   // A phone-sized map: the dock host the card's sheet writes its top into (`--dock-y`), here
-  // held at 480 of 720, where a sheet at Middle would stand.
+  // held at 480 of 720, where a sheet raised to the framed height (55%) would stand.
   decorators: [
     (Story) => (
       <div
