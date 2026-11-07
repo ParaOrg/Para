@@ -32,7 +32,7 @@ New variables: `Card/{Jeep,UVExpress,Ejeep,Bus}/{…-surface, …-surface-second
 12. **The studio** uses the same list, layout and filter. Its trip card keeps its editor extras.
 13. **Station codes** ("PL01") from `rail-codes.ts` where one exists, otherwise nothing. The S and E icons beside them go.
 14. **The filter on the map** (step 7): the filter starts at All with each new list. Changing it frames the routes still lit, as ⇆ does, and lets a Selected card go. A hintuan's or terminal's own card does not follow it.
-15. **No hotspot pins on the commuter map, for now**: no terminal or hintuan flag zoomed in and no dot zoomed out. One switch, `SHOW_HOTSPOT_PINS` in `public-map-app.tsx`, turns them back on. The boxes, their names and their taps stay. The studio and the contributor page keep their pins.
+15. **No hotspot pins on the commuter map, for now**: no terminal or hintuan flag zoomed in. Zoomed out each hotspot keeps its small dot, so it stays in sight (Q28). One switch, `SHOW_HOTSPOT_PINS` in `public-map-app.tsx`, turns the flags back on. The boxes, their names, their dots and their taps stay. The studio and the contributor page keep their pins.
 16. **Map lines in their mode's colours** (step 9): a road route rests in its card's line colour: Jeep blue-700, UV Express neutral-400, E-Jeep neutral-300 (their cards' border shades, so they show on the light basemap), Bus orange-700, the ferry its own Map/Ferry/surface. Trains keep their pales. Every line, resting and lit, is cased in neutral-800 (Map/RouteLine/casing), trains included. Lit lines keep their rule: a card's or trip's colour, the selected purple while a whole list is lit. The contributor page's lines are unchanged for now.
 
 ## Status (handed over 2026-11-06)
@@ -55,7 +55,8 @@ This session stopped here; the owner's own sessions carry on. Each PR is stacked
 | 8 | Studio wiring | Merged: [#815](https://github.com/ParaOrg/Para/pull/815), 406.9 kB. group-test's filter check runs once two live routes share a road |
 | 9 | Map lines in the mode colours | Merged: [#818](https://github.com/ParaOrg/Para/pull/818), 407.2 kB. For the owner's morning check: `shots-step-9/` (light basemap, 393 and 1440 wide: Cubao, with jeeps beside LRT-2 and MRT-3, and the Pasig ferry) |
 | 9b | The counters count the cards, a place and mode each (a fix to step 4) | Merged: [#821](https://github.com/ParaOrg/Para/pull/821), 407.2 kB |
-| 10 | One shadow look: the RouteCard's Figma shadows in shadow-route-card-* | Open PR (branch `claude/route-card-shadows`) |
+| 10 | One shadow look: the RouteCard's Figma shadows in shadow-route-card-* | Merged: [#822](https://github.com/ParaOrg/Para/pull/822), 407.2 kB |
+| 10b | The commuter map keeps each hotspot's dot zoomed out (Q28) | Open PR (branch `claude/commuter-hotspot-dots`) |
 
 ### Step 4: the reviewer's findings, fixed
 

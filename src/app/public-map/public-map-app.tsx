@@ -67,9 +67,9 @@ const openOnRoutes = () =>
   openingDirections().then((directions) => (directions ? routesBounds(directions) : null));
 
 /**
- * Whether the commuter map draws the hotspots' pins (a terminal's or hintuan's flag zoomed in, its
- * dot zoomed out). Off for now: the boxes and their names say where each one
- * is, and a tap there opens it as before. The studio keeps its pins.
+ * Whether the commuter map draws the hotspots' pins zoomed in (a terminal's or hintuan's flag). Off
+ * for now: the boxes and their names say where each one is, and a tap there opens it as before.
+ * Zoomed out each keeps its small dot, so a hotspot stays in sight. The studio keeps its pins.
  */
 const SHOW_HOTSPOT_PINS = false;
 

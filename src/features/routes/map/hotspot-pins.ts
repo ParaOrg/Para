@@ -122,14 +122,12 @@ export const pinsOf = (hidden: string): FilterSpecification => ['!=', ['get', 'i
 /**
  * The pins' source, laid out from `hotspots`, and the dots' layer, below
  * PINS_FROM_ZOOM, added on top or under `before`. The pins' own layer joins it
- * once their images are here (addPinLayer). Without `shouldShowPins` the dots'
- * layer is there but not drawn, so it neither shows nor answers a tap.
+ * once their images are here (addPinLayer).
  */
 export function addHotspotPins(
   map: Pick<MapLibreMap, 'addSource' | 'addLayer'>,
   hotspots: readonly Hotspot[],
   before?: string,
-  shouldShowPins = true,
 ): void {
   map.addSource(PINS_SRC, { type: 'geojson', data: hotspotPinsData(hotspots) });
   map.addLayer(
@@ -138,10 +136,7 @@ export function addHotspotPins(
       type: 'circle',
       source: PINS_SRC,
       maxzoom: PINS_FROM_ZOOM,
-      layout: {
-        'circle-sort-key': TERMINAL_ON_TOP,
-        visibility: shouldShowPins ? 'visible' : 'none',
-      },
+      layout: { 'circle-sort-key': TERMINAL_ON_TOP },
       paint: {
         'circle-radius': [
           'interpolate',

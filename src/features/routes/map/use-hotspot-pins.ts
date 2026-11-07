@@ -12,7 +12,8 @@ const loadPinImages = retryingImport(() => import('./hotspot-pin-images'));
  * The hotspots' pins on `map`, fetched once its boxes are drawn and added then,
  * leaving out the box `hidden` names (the one the studio is editing), and
  * their images given again whenever a basemap switch loses them. Without
- * `shouldShowPins`, none: their chunk is not fetched.
+ * `shouldShowPins`, none, and their chunk is not fetched: the dots zoomed out
+ * come with the boxes either way.
  */
 export function useHotspotPins(
   map: MapLibreMap | null,

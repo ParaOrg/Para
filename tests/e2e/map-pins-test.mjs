@@ -2,14 +2,15 @@
 // contributor page, from the same hotspots in the studio's stand-in database and the committed map
 // file: a pin at each box's middle from the zoom where the scale bar first reads 500 m, a dot below
 // it, and the names from where the bar first reads 300 m. The public map draws no pins for now
-// (SHOW_HOTSPOT_PINS in public-map-app.tsx): its boxes and names stay, and a tap on a box opens it.
+// (SHOW_HOTSPOT_PINS in public-map-app.tsx), only the dots zoomed out: its boxes and names stay,
+// and a tap on a box or a dot opens it.
 //
 //   npm run dev                          (in another terminal)
 //   node tests/e2e/map-pins-test.mjs
 //   PARA_SHOTS=dir node tests/e2e/map-pins-test.mjs   keeps each page at both zooms
 //
-// What it proves: on the public map, no pin or dot is drawn, its chunk is not fetched, and the
-// boxes, their names and their taps work without them. In the studio, the pins and dots stand over the boxes
+// What it proves: on the public map, no pin is drawn and its chunk is not fetched, the dots show
+// zoomed out, and the boxes, their names, their dots and their taps work without the pins. In the studio, the pins and dots stand over the boxes
 // and the route lines and under the hotspots' names, and tapping a pin's head (off its box) or a
 // dot opens that box's card, as tapping the box does; on the contributor page the hotspots come
 // in after the map settles, in a chunk of their own, and a pin there is display-only: a tap on it
@@ -260,7 +261,10 @@ async function pinToTap(page, alone) {
   );
   if (SHOTS) await page.screenshot({ path: `${SHOTS}/public-zoomed-in.png` });
   await settle(page, at, ZOOMED_OUT);
-  check(`public map: zoomed out (${ZOOMED_OUT}), no dot`, !(await drawn(page, LAYER.dot, id)));
+  check(
+    `public map: zoomed out (${ZOOMED_OUT}), the box's dot, so the hotspot stays in sight`,
+    await comesIn(page, LAYER.dot, id),
+  );
   if (SHOTS) await page.screenshot({ path: `${SHOTS}/public-zoomed-out.png` });
   await settle(page, at, NAMES_IN);
   const names = await until(
@@ -280,6 +284,20 @@ async function pinToTap(page, alone) {
       3000,
     ),
     `on the box: ${middle.onBox}`,
+  );
+  await page.reload({ waitUntil: 'load' });
+  await page.waitForFunction(() => window.__map && window.__map.loaded(), null, { timeout: 30000 });
+  await waitForSource(page, 'saved-stops-pins', 30000);
+  await settle(page, at, ZOOMED_OUT);
+  const dot = await screenPoint(page, at);
+  await page.mouse.click(dot.x, dot.y);
+  check(
+    "public map: a tap on the dot opens the box's card",
+    await until(
+      () => isChosen(page, id),
+      (v) => v,
+      3000,
+    ),
   );
   check(
     "public map: the pins' chunk is never fetched",

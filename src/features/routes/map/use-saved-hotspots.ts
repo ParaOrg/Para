@@ -32,7 +32,7 @@ export function useSavedHotspots<S extends Hotspot>(
     drawing?: boolean;
     hiddenHotspotId?: string | null;
     muted?: boolean;
-    /** Whether the hotspots' pins and dots are drawn; their boxes and names are either way. */
+    /** Whether the hotspots' pins are drawn zoomed in; their dots, boxes and names are either way. */
     shouldShowPins?: boolean;
   } = {},
 ) {

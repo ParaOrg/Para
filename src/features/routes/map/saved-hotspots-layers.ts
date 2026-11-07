@@ -101,8 +101,7 @@ export interface HotspotsPlacement {
  * and the pins', and their layers, added to `map` under the routes: what
  * useSavedHotspotsLayers adds once a map is there, apart so a unit check can
  * read it (map-sources-test). The pins' images are hotspot-pin-images.ts's,
- * added beside this by whoever calls it. Without `shouldShowPins` no pin or
- * dot is drawn: the boxes and their names say where each hotspot is.
+ * added beside this by whoever calls it.
  */
 export function addSavedHotspots(
   map: Pick<
@@ -111,7 +110,6 @@ export function addSavedHotspots(
   >,
   hotspots: readonly Hotspot[] = [],
   placement: HotspotsPlacement = {},
-  shouldShowPins = true,
 ): void {
   // Under the routes, under the draft, and under the basemap's labels in
   // any case: a box never hides a street name.
@@ -244,7 +242,7 @@ export function addSavedHotspots(
     before,
   );
   // The pins over the boxes and the routes, the names over the pins.
-  addHotspotPins(map, hotspots, placement.marksUnder, shouldShowPins);
+  addHotspotPins(map, hotspots, placement.marksUnder);
   addHotspotLabels(map, SRC, placement.marksUnder);
 }
 
