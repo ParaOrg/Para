@@ -19,6 +19,7 @@ export interface PlaceSearchInputs {
   whereNow: () => LngLat | null;
   onPick: (hotspot: Hotspot) => void;
   onLookAt: (point: LngLat) => void;
+  onPickLandmark?: (landmark: Landmark) => void;
   loadLandmarks?: LoadLandmarks;
 }
 
@@ -38,6 +39,7 @@ export function usePlaceSearch({
   whereNow,
   onPick,
   onLookAt,
+  onPickLandmark,
   loadLandmarks,
 }: PlaceSearchInputs) {
   const listId = useId();
@@ -85,7 +87,8 @@ export function usePlaceSearch({
       onPick(boxToOpen(row.match));
     } else {
       onLookAt(row.match.landmark.point);
-      setLandmark(row.match.landmark);
+      if (onPickLandmark) onPickLandmark(row.match.landmark);
+      else setLandmark(row.match.landmark);
     }
   };
 

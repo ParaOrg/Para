@@ -12,6 +12,7 @@ import { useLoopTip } from '@/features/routes/map/use-loop-tip';
 import { useMapCredits } from '@/features/routes/map/use-map-credits';
 import { useSavedHotspots } from '@/features/routes/map/use-saved-hotspots';
 import { useSavedRoutes } from '@/features/routes/map/use-saved-routes';
+import { directionsAtHotspots } from '@/features/routes/model/directions-at';
 import {
   CONTRIBUTIONS,
   lineOf,
@@ -22,6 +23,7 @@ import {
   NEW_MENU_DOCK_FOOT,
   STUDIO_BASEMAPS,
   STUDIO_BASEMAP_THUMBNAILS,
+  StudioSearch,
   type ContributionStart,
   type usePasswordRecovery,
   useAuthFlow,
@@ -307,6 +309,14 @@ export function Workshop({ session, recovery }: WorkshopProps) {
 
             {/* Out of the page's reach, not unmounted, on the other maps. */}
             <div inert={!isPlayground} className={isPlayground ? 'contents' : 'hidden'}>
+              {/* Place search (ticket 05): a hotspot opens its card; while drawing, only the camera moves. */}
+              <StudioSearch
+                map={map}
+                hotspots={hotspots.hotspots}
+                directionsAt={directionsAtHotspots(saved.directions, hotspots.linkedDirectionIds)}
+                isDrawing={draw.drawing}
+                onOpenHotspot={camera.openPlace}
+              />
               <PlaygroundCards
                 map={map}
                 draw={draw}

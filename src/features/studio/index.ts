@@ -19,6 +19,7 @@ export { useFollow } from './drawing/use-follow';
 export { useLoopClosing } from './drawing/use-loop-closing';
 export { MapPlaceholder } from './maps/map-placeholder';
 export { MapSwitch } from './maps/map-switch';
+export { StudioSearch } from './maps/studio-search';
 export { useStudioMap } from './maps/use-studio-map';
 export { useWheelNavigation } from './maps/use-wheel-navigation';
 export { AccountPill } from './panels/account-pill';
