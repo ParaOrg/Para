@@ -1,10 +1,10 @@
 # 07: "Set as destination" for a landmark
 
-Status: needs-info
+Status: ready-for-agent (claimed by the place-search builder; starts after 06, once release 0.4.0 is in main)
 Type: task
-Blocked by: 06, and the owner's answers below
+Blocked by: 06, and release 0.4.0 merged into main (the hub says when)
 
-Not approved to build: a plan and questions only (the owner, 2026-11-07).
+Approved to build (the owner, 2026-11-07, every question as recommended), after ticket 06.
 
 ## What it would do
 
@@ -33,3 +33,12 @@ No new data and no database change: everything is in the published index and the
 
 - Unit checks for choosing E (the direction's hintuan nearest the landmark) and the candidates' order.
 - Stories and a phone-test check; shared code unchanged; a ds-reviewer PASS; CI green.
+
+## Answers (the owner, 2026-11-07, via the hub: all as recommended)
+
+1. "Go here" on each hintuan row of the routes-near-here panel.
+2. The route list of every direction stopping there, nearest hintuan first; the commuter picks one.
+3. The start is unchanged.
+4. The walk to the landmark: one line of text on the trip card, no line on the map.
+5. Changing rides is out of scope.
+6. Not kept on a reload.
