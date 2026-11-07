@@ -174,7 +174,7 @@
   /* Border. Figma: Border/… */
   --border-primary: var(--color-neutral-200);
   --border-secondary: var(--color-neutral-300);
-  --border-tertiary: var(--color-neutral-400);
+  --border-tertiary: var(--color-neutral-300);
   --border-error: var(--color-red-700);
   --border-plain: var(--color-white); /* the hotspot names' halo on the map */
 
