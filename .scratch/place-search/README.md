@@ -1,6 +1,6 @@
 # Place search
 
-Status: tickets 01 to 05 done; 06 approved, 07 a plan with questions. The owner said yes to this plan on 2026-11-06, with every recommended answer.
+Status: tickets 01 to 05 done; 06 and 07 approved, to build once release 0.4.0 is in main. The owner said yes to this plan on 2026-11-06, with every recommended answer.
 
 A commuter types a place and the map takes them there. Two steps: first Para's own places (feature bank F34), then OpenStreetMap landmarks for what Para has no hotspot for (a safe slice of F33: no geocoder at runtime). Words as in `CONTEXT.md`: a **place** is every hotspot sharing one informal name; a **landmark** here is a named OpenStreetMap point that may or may not be near a place.
 
@@ -76,7 +76,7 @@ Designed for now from existing primitives and tokens, never final. Each needs th
 | 04 | [The monthly rebuild](issues/04-monthly-rebuild.md) | resolved (#826) |
 | 05 | [Studio place search](issues/05-studio-place-search.md) | resolved (#830) |
 | 06 | [A pin where a landmark search lands](issues/06-search-pin.md) | waits for release 0.4.0 in main |
-| 07 | ["Set as destination" for a landmark](issues/07-landmark-as-destination.md) | needs the owner: questions in the ticket |
+| 07 | ["Set as destination" for a landmark](issues/07-landmark-as-destination.md) | approved; after 06, once release 0.4.0 is in main |
 
 ## Questions sent to the hub (2026-11-06)
 
