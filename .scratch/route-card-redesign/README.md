@@ -59,7 +59,7 @@ This session stopped here; the owner's own sessions carry on. Each PR is stacked
 | 10 | One shadow look: the RouteCard's Figma shadows in shadow-route-card-* | Merged: [#822](https://github.com/ParaOrg/Para/pull/822), 407.2 kB |
 | 10b | The commuter map keeps each hotspot's dot zoomed out (Q28) | Merged: [#827](https://github.com/ParaOrg/Para/pull/827), 407.2 kB |
 | 10c | Free-drag sheets (decision 17) | Merged: [#832](https://github.com/ParaOrg/Para/pull/832), 407.0 kB. loop-, pwa- and upload-test raise a sheet before reaching its rows |
-| 11 | Border/tertiary → neutral/300, as Figma has it | Open PR (branch `claude/border-tertiary`). It shows only in the token story's swatch: no component uses it |
+| 11 | Border/tertiary → neutral/300, as Figma has it | Merged: [#833](https://github.com/ParaOrg/Para/pull/833), 407.0 kB. It shows only in the token story's swatch: no component uses it |
 
 ### Step 4: the reviewer's findings, fixed
 
@@ -126,7 +126,7 @@ The builder designed these for now, or left them out. Each waits for the owner's
 - the list's sheet at Low (240 px: the first card's mode and name above the Controller), which Figma does not draw;
 - a way to change the list sheet's height without a handle, for the keyboard (today a visually hidden button, shown as the usual notch while it has the keyboard's focus);
 - the trip and place cards' width beside the 368 list (they stay 384);
-- the trip card at Max beside the list's full-screen Max (it keeps its strip of map);
+- the trip card at full height beside the list's, which fills the screen (it keeps its strip of map);
 - the loading, empty, error and long-content states;
 - the studio's version (the owner is revamping it all);
 - the route detail's new frame;
@@ -137,4 +137,5 @@ The builder designed these for now, or left them out. Each waits for the owner's
 - the casing's width under the route lines (1 px a side, CASING_EXTRA, as it was), and whether the trains and the ferry wear the neutral-800 casing too;
 - a jeep's lit line when its card is picked: Jeep's blue, the same as its rest, set apart only by its width and its chevrons (now #828's to settle);
 - Low's magnet (80 px) and the handle's step (a third of the map), the sheets' numbers for now;
+- at full height, the locator's problem toast covers the card's ✕, as it did at Max;
 - the rest of a road trip's line past a picked hintuan, and the studio's dashed drafts: both still the light purple (Map/RouteLine/surface-default), which no resting line wears any more.
