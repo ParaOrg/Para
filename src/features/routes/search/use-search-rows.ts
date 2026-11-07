@@ -6,7 +6,12 @@ import type { SearchRow } from './search-rows';
 import type { LandmarksState } from './use-landmarks';
 import type { Hotspot } from '../model/hotspots';
 import { combineResults, searchLandmarks } from '../model/landmark-search';
-import { placeVehicles, searchPlaces, searchablePlaces } from '../model/place-search';
+import {
+  placeVehicles,
+  searchPlaces,
+  searchablePlaces,
+  type SearchPlace,
+} from '../model/place-search';
 import type { Direction } from '../model/routes';
 
 /** The most results listed: more than a phone shows above its keyboard. */
@@ -24,6 +29,7 @@ export function useSearchRows(
   landmarks: LandmarksState,
   from: LngLat | null,
   directionsAt: (hotspotId: string) => readonly Direction[],
+  noteOf: (place: SearchPlace) => string | null,
 ): SearchRow[] {
   const places = useMemo(() => searchablePlaces(hotspots), [hotspots]);
   const landmarkList = landmarks.status === 'ready' ? landmarks.landmarks.landmarks : null;
@@ -42,6 +48,7 @@ export function useSearchRows(
       type: 'place' as const,
       match,
       vehicles: placeVehicles(match.place, directionsAt),
+      note: noteOf(match.place),
     })),
     ...matched.landmarks.map((match) => ({ type: 'landmark' as const, match })),
   ];

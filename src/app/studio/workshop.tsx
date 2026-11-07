@@ -307,16 +307,23 @@ export function Workshop({ session, recovery }: WorkshopProps) {
               onContributionStart={handleContributionStart}
             />
 
-            {/* Out of the page's reach, not unmounted, on the other maps. */}
-            <div inert={!isPlayground} className={isPlayground ? 'contents' : 'hidden'}>
-              {/* Place search (ticket 05): a hotspot opens its card; while drawing, only the camera moves. */}
+            {/*
+              Place search (ticket 05) on the workshop and the Contributors map; the Public map's
+              own search serves that view. A card opens only in the workshop.
+            */}
+            {(isPlayground || isContributors) && (
               <StudioSearch
                 map={map}
                 hotspots={hotspots.hotspots}
+                isSignedIn={isSignedIn}
                 directionsAt={directionsAtHotspots(saved.directions, hotspots.linkedDirectionIds)}
                 isDrawing={draw.drawing}
-                onOpenHotspot={camera.openPlace}
+                onOpenHotspot={isPlayground ? camera.openPlace : undefined}
               />
+            )}
+
+            {/* Out of the page's reach, not unmounted, on the other maps. */}
+            <div inert={!isPlayground} className={isPlayground ? 'contents' : 'hidden'}>
               <PlaygroundCards
                 map={map}
                 draw={draw}

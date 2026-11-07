@@ -9,8 +9,9 @@ import { reviewKeys } from './review-keys';
 import { reviewPlaceNames } from './review-names';
 import type { DraftRow } from './review-schema';
 
-export function useReviewQuery() {
-  return useQuery({ queryKey: reviewKeys.drafts(), queryFn: listDrafts });
+/** Every draft. `isEnabled` false reads nothing: studio search signed out has no drafts to show. */
+export function useReviewQuery({ isEnabled = true }: { isEnabled?: boolean } = {}) {
+  return useQuery({ queryKey: reviewKeys.drafts(), queryFn: listDrafts, enabled: isEnabled });
 }
 
 export function useReviewMutation() {

@@ -5,7 +5,13 @@ import type { LandmarkKind } from '../published/landmark-file-schema';
 
 /** One row of place search's results: a Para place with what rides from it, or a landmark. */
 export type SearchRow =
-  | { type: 'place'; match: PlaceMatch; vehicles: Vehicle[] }
+  | {
+      type: 'place';
+      match: PlaceMatch;
+      vehicles: Vehicle[];
+      /** A word after the place's label, from the caller: the studio's "Draft". */
+      note: string | null;
+    }
   | { type: 'landmark'; match: LandmarkMatch };
 
 /** A row's key, stable while the results stand: a place's by its name, a landmark's by its OSM id. */
