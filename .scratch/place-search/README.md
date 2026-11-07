@@ -1,6 +1,6 @@
 # Place search
 
-Status: done. The owner said yes to this plan on 2026-11-06, with every recommended answer.
+Status: tickets 01 to 05 done; 06 approved, 07 a plan with questions. The owner said yes to this plan on 2026-11-06, with every recommended answer.
 
 A commuter types a place and the map takes them there. Two steps: first Para's own places (feature bank F34), then OpenStreetMap landmarks for what Para has no hotspot for (a safe slice of F33: no geocoder at runtime). Words as in `CONTEXT.md`: a **place** is every hotspot sharing one informal name; a **landmark** here is a named OpenStreetMap point that may or may not be near a place.
 
@@ -59,7 +59,8 @@ Designed for now from existing primitives and tokens, never final. Each needs th
 7. The "© OpenStreetMap contributors" credit: where it sits beside the results.
 8. The "routes near here" view: header, the straight-line note, each hintuan with its routes, and "No Para routes near here yet".
 9. Long names in rows and in the field: truncate or wrap.
-10. The camera move to a landmark that is not a place: zoom level, and whether a marker shows.
+10. The camera move to a landmark that is not a place: zoom level. (The marker: a pin, ticket 06.)
+15. The landmark pin (ticket 06): built for now from the S and E pins' shape in a neutral colour.
 11. The bar's card behind the field (white, rounded, the large shadow) and its visible "Search places" label: built so the label reads over the map.
 12. Search while a card is open: on a phone, hidden for now; on a computer, the bar stays and the cards float under it (question 5, built). How the two look together has no story yet: the owner's call whether one is wanted.
 13. A search icon in the field: none exists in the design system, so none is drawn.
@@ -74,6 +75,8 @@ Designed for now from existing primitives and tokens, never final. Each needs th
 | 03 | [Landmarks and routes near here](issues/03-landmarks-in-search.md) | resolved (#829) |
 | 04 | [The monthly rebuild](issues/04-monthly-rebuild.md) | resolved (#826) |
 | 05 | [Studio place search](issues/05-studio-place-search.md) | resolved (#830) |
+| 06 | [A pin where a landmark search lands](issues/06-search-pin.md) | waits for release 0.4.0 in main |
+| 07 | ["Set as destination" for a landmark](issues/07-landmark-as-destination.md) | needs the owner: questions in the ticket |
 
 ## Questions sent to the hub (2026-11-06)
 
