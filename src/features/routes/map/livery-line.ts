@@ -23,8 +23,7 @@ export interface LineLook {
  * cards' words are. Past a picked hintuan the rest of the trip's line is a
  * train's surface-pale, and for a road mode Map/RouteLine/surface-default,
  * the light purple: the modes have no pale of their own. (A road route at
- * rest wears its line colour, ROAD_AT_REST, so this pale is the light purple
- * alone.)
+ * rest wears this pale too, ROUTES_LINE_COLOUR.)
  */
 const REST = MAP_COLOURS['Map/RouteLine/surface-default'];
 const WHITE_ARROW = MAP_COLOURS['Map/RouteLine/Arrow/Rest'];

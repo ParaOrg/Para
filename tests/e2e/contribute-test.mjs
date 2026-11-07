@@ -3550,6 +3550,7 @@ const FIRST_IDLE = () => {
     return {
       at: Object.keys(paint).map((id) => order.indexOf(id)),
       casing: order.indexOf('published-routes-casing'),
+      isCasingShown: map.getLayoutProperty('published-routes-casing', 'visibility') !== 'none',
       trail: order.indexOf('recording-trail-casing'),
       firstLabel,
       colours: Object.keys(paint).map((id) => map.getPaintProperty(id, 'line-color')),
@@ -3558,8 +3559,11 @@ const FIRST_IDLE = () => {
     };
   }, PUBLISHED_PAINT);
   check(
-    "the published routes are on the contributor's map: a casing and the four resting lines",
-    layers.casing >= 0 && layers.at.every((i) => i > layers.casing) && layers.routes > 0,
+    "the published routes are on the contributor's map: a casing, hidden (no rim at rest), and the four resting lines",
+    layers.casing >= 0 &&
+      !layers.isCasingShown &&
+      layers.at.every((i) => i > layers.casing) &&
+      layers.routes > 0,
     JSON.stringify(layers),
   );
   check(

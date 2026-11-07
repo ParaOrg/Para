@@ -4,7 +4,7 @@ import { useEffect, useRef } from 'react';
 import { useLayerSwitch } from './layer-switch';
 import { applyHidden, layOutOnce } from './layers';
 import { useLighting } from './lighting';
-import { RESTING_LAYERS, ROUTES_LINE, SAVED_REST_FILTER } from './rail-rest-layers';
+import { RESTING_FILTER, RESTING_LAYERS, ROUTES_LINE } from './rail-rest-layers';
 import { routesData, unpatched } from './saved-routes-data';
 import {
   CASING,
@@ -103,7 +103,7 @@ export function useSavedRoutesLayers(
       const filter: ExpressionSpecification = ['!=', ['get', 'id'], hidden];
       for (const id of [CASING, SELECTED_CASING, SELECTED, HIT]) map.setFilter(id, filter);
       // A resting layer keeps its own filter, the line it draws, with the hidden one taken out.
-      for (const id of RESTING_LAYERS) map.setFilter(id, ['all', SAVED_REST_FILTER[id], filter]);
+      for (const id of RESTING_LAYERS) map.setFilter(id, ['all', RESTING_FILTER[id], filter]);
     });
   }, [map, hiddenDirectionId]);
 

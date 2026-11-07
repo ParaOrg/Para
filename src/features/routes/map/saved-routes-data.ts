@@ -1,4 +1,3 @@
-import { liveryOf } from '../model/liveries';
 import { directionLine, railLineOf, type Direction, type LineStringGeoJSON } from '../model/routes';
 
 /**
@@ -20,8 +19,6 @@ export function routesData(rows: readonly Direction[]) {
           mode: v.route?.mode ?? 'jeepney',
           // The train line it runs on, '' for every other route: which resting layer draws it.
           line: railLineOf(v) ?? '',
-          // What it wears (liveryOf): which road mode's resting layer draws it.
-          look: liveryOf(v),
         },
         geometry: { type: 'LineString' as const, coordinates: line },
       })),
