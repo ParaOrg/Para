@@ -3,6 +3,7 @@ import { useId, useState, type KeyboardEvent } from 'react';
 import type { LngLat } from '@/shared/utils/geo';
 
 import { resultId } from './place-search-results';
+import { announce } from './search-announcement';
 import type { SearchRow } from './search-rows';
 import { useLandmarks, type LoadLandmarks } from './use-landmarks';
 import { useSearchRows } from './use-search-rows';
@@ -60,17 +61,13 @@ export function usePlaceSearch({
         directionsAt(id).map((direction) => direction.id),
       )
     : [];
-  // What a screen reader hears as it changes: nothing matched, the landmarks failed, or the
-  // routes near a landmark just chosen. The field keeps focus, so nothing else would tell it.
-  const announcement = isOpen
-    ? [emptyMessage, hasFailed ? 'Landmarks didn’t load; Try again is below.' : '']
-        .filter(Boolean)
-        .join('. ')
-    : landmark
-      ? near.length > 0
-        ? `${near.length} Para ${near.length === 1 ? 'hintuan' : 'hintuans'} near ${landmark.name}`
-        : `No Para routes near ${landmark.name} yet`
-      : '';
+  const announcement = announce({
+    isOpen,
+    emptyMessage,
+    hasFailed,
+    landmark,
+    nearCount: near.length,
+  });
 
   const handleQueryChange = (text: string) => {
     setQuery(text);
