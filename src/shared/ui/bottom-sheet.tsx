@@ -389,7 +389,7 @@ function fullBodyStyle(shape: SheetShape): CSSProperties {
  * it, a third of the screen (stepFrom).
  */
 function handleLabelFor(snap: Snap, isUp: boolean): string {
-  const step = isUp ? 'Raise it a third' : 'Lower it a third';
+  const step = `${isUp ? 'Raise' : 'Lower'} it a third`;
   if (snap === 'low') return `Sheet lowered. ${step}`;
   if (snap === 'full') return `Sheet at full height. ${step}`;
   return `Sheet at ${Math.round(snap * 100)}% of the screen. ${step}`;
