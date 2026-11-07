@@ -76,8 +76,7 @@ interface Props {
   /**
    * Its own Low and full height, where they differ from every card's: the route list's Low shows
    * its first card above its Controller, and its full height fills the screen (Figma 4633:25575).
-   * Every other card's
-   * by default (CARD_SHAPE).
+   * Every other card's by default (CARD_SHAPE).
    */
   shape?: SheetShape;
   /**
@@ -136,8 +135,9 @@ const FLOATS_AT = {
  * below half of Low, or flicked down from it, the sheet closes. Below full
  * height the body does not scroll: a swipe on it moves the sheet, the owner's
  * pick; at full it scrolls, and a pull down from its top takes hold of the
- * sheet, as a drag does. A tap on the handle, Enter on it, or a wheel's push
- * steps a third of the map, up from Low and down from full (stepFrom).
+ * sheet, as a drag does. A tap on the handle or Enter on it steps a third of
+ * the map, up from Low and down from full (stepFrom); a wheel's push steps the
+ * same between them, but never raises a sheet from Low.
  *
  * Its siblings: sheet-gesture.ts decides the heights and the drags, and
  * measures the status bar; use-sheet-gestures.ts binds the finger, the mouse
@@ -386,11 +386,11 @@ function fullBodyStyle(shape: SheetShape): CSSProperties {
 
 /**
  * What a screen reader hears on the handle: the height the sheet is at, and which way Enter steps
- * it, a third of the screen (stepFrom).
+ * it, a third of the map (stepFrom).
  */
 function handleLabelFor(snap: Snap, isUp: boolean): string {
   const step = `${isUp ? 'Raise' : 'Lower'} it a third`;
   if (snap === 'low') return `Sheet lowered. ${step}`;
   if (snap === 'full') return `Sheet at full height. ${step}`;
-  return `Sheet at ${Math.round(snap * 100)}% of the screen. ${step}`;
+  return `Sheet at ${Math.round(snap * 100)}% of the map. ${step}`;
 }

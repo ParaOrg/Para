@@ -126,7 +126,8 @@ export function useSheetGestures({
   // At full height, the pull down from the list's top. Touch events, not
   // pointer ones: the browser takes a scroll for itself and cancels the
   // pointer, but a non-passive touchmove can still be claimed. A wheel's
-  // deliberate push steps the sheet a third, as a tap on the handle does.
+  // deliberate push steps the sheet a third, as a tap on the handle does,
+  // but never raises it from Low.
   useLayoutEffect(() => {
     const body = bodyRef.current;
     const sheet = own.current;

@@ -676,8 +676,8 @@ export const LongNamesPicked: Story = {
 };
 
 /**
- * Figma's BottomSheetConfiguration (3815:5637), on a phone: the stories above open at Low; a tap
- * on the HandleNotch steps a third of the screen, up to full height and back. Taps it until the
+ * Figma's BottomSheetConfiguration (3815:5637), on a phone: the stories above sit raised (0.55, from
+ * the meta), these below open at Low; a tap on the HandleNotch steps a third of the map, up to full height and back. Taps it until the
  * sheet is at `until`, or once with no `until`.
  */
 const tapHandle = async (canvasElement: HTMLElement, until?: 'full') => {

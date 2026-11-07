@@ -117,7 +117,7 @@ export const Free: Story = {
     const canvas = within(canvasElement);
     await expect(canvas.getByTestId('card')).toHaveAttribute('data-snap', 'free');
     await expect(canvas.getByTestId('dock-handle')).toHaveAccessibleName(
-      'Sheet at 55% of the screen. Raise it a third',
+      'Sheet at 55% of the map. Raise it a third',
     );
   },
 };
@@ -163,7 +163,7 @@ export const FitsTallContent: Story = {
 };
 
 /**
- * The handle from the keyboard steps a third of the screen: up from Low to full, then down to Low
+ * The handle from the keyboard steps a third of the map: up from Low to full, then down to Low
  * again, and says each time how high the sheet is and which way it goes next.
  */
 export const HandleStepsThirds: Story = {
@@ -175,7 +175,7 @@ export const HandleStepsThirds: Story = {
     await userEvent.keyboard('{Enter}');
     await expect(sheet).toHaveAttribute('data-snap', 'free');
     await expect(handle.getAttribute('aria-label')).toMatch(
-      /^Sheet at \d+% of the screen\. Raise it a third$/,
+      /^Sheet at \d+% of the map\. Raise it a third$/,
     );
     await expect(await enterUntil(sheet, 'full')).toBeLessThanOrEqual(3);
     await expect(handle).toHaveAccessibleName('Sheet at full height. Lower it a third');

@@ -258,9 +258,9 @@ export function snapFor(
 }
 
 /**
- * A tap on the handle, Enter on it, or a wheel's push: a third of the map up or down. `up`
- * says which way; at either end the step turns round (BottomSheet keeps the way). Stepping
- * down to within LOW_MAGNET_PX of Low lands on Low.
+ * A tap on the handle, Enter on it, or a wheel's push (never from Low): a third of the map up
+ * or down. `up` says which way; at either end the step turns round (BottomSheet keeps the
+ * way). Stepping down to within LOW_MAGNET_PX of Low lands on Low.
  */
 export function stepFrom(snap: Snap, up: boolean, h: number, heights: SheetHeights): Snap {
   const shown = shownAt(snap, h, heights) + (up ? 1 : -1) * Math.round(h * STEP_SHARE);

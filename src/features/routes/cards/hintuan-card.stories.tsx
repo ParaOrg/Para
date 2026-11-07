@@ -332,7 +332,10 @@ export const OneBox: Story = {
 };
 
 /** On a phone: a bottom sheet, opening at Low. */
-export const Phone: Story = { args: { hotspot: teraccess2 }, parameters: { phone: true } };
+export const Phone: Story = {
+  args: { hotspot: teraccess2, height: undefined },
+  parameters: { phone: true },
+};
 
 /** Opened from a trip's name for the place on the map: ‹ goes back to the trip. */
 export const OverATrip: Story = {

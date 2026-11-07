@@ -27,7 +27,7 @@ test('each end of a map 844 tall: Low 133, full all of it but a 24 px strip', ()
   assert.deepEqual(heights, { low: LOW_PX, full: 820 });
 });
 
-test('let go anywhere between, it stays there: no Middle, no Max to jump to', () => {
+test('let go anywhere between, it stays there', () => {
   assert.equal(snapFor(400, 0, heights, H), 400 / H);
   assert.equal(snapFor(600, 0.1, heights, H), 600 / H);
   assert.equal(
