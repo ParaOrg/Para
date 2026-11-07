@@ -1,6 +1,6 @@
 # Place search
 
-Status: building. The owner said yes to this plan on 2026-11-06, with every recommended answer.
+Status: done. The owner said yes to this plan on 2026-11-06, with every recommended answer.
 
 A commuter types a place and the map takes them there. Two steps: first Para's own places (feature bank F34), then OpenStreetMap landmarks for what Para has no hotspot for (a safe slice of F33: no geocoder at runtime). Words as in `CONTEXT.md`: a **place** is every hotspot sharing one informal name; a **landmark** here is a named OpenStreetMap point that may or may not be near a place.
 
@@ -71,9 +71,9 @@ Designed for now from existing primitives and tokens, never final. Each needs th
 | --- | --- | --- |
 | 01 | [The landmark file](issues/01-landmark-file.md) | resolved (#811) |
 | 02 | [Search Para's own places](issues/02-search-own-places.md) | resolved (#817) |
-| 03 | [Landmarks and routes near here](issues/03-landmarks-in-search.md) | in review |
+| 03 | [Landmarks and routes near here](issues/03-landmarks-in-search.md) | resolved (#829) |
 | 04 | [The monthly rebuild](issues/04-monthly-rebuild.md) | resolved (#826) |
-| 05 | [Studio place search](issues/05-studio-place-search.md) | in review |
+| 05 | [Studio place search](issues/05-studio-place-search.md) | resolved (#830) |
 
 ## Questions sent to the hub (2026-11-06)
 

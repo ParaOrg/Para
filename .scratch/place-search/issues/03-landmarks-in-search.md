@@ -1,6 +1,6 @@
 # 03: Landmarks and routes near here
 
-Status: ready-for-agent
+Status: resolved
 Type: task
 Blocked by: 01, 02
 
