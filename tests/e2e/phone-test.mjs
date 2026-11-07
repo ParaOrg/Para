@@ -4107,13 +4107,17 @@ const restore = async (want) => {
   for (let i = 0; i < 6 && (await sheetState()) !== want; i++) await tapHandle();
   return (await sheetState()) === want;
 };
-/** How much of the card shows above the map's foot, in px. */
+/**
+ * How much of the card shows, in px: its height less how far it is slid down, read against where
+ * it stands unslid (its offset parent's top plus its own offset).
+ */
 const shownNow = () =>
   card()
     .first()
-    .evaluate((el) =>
-      Math.round(el.parentElement.getBoundingClientRect().bottom - el.getBoundingClientRect().top),
-    );
+    .evaluate((el) => {
+      const unslid = (el.offsetParent?.getBoundingClientRect().top ?? 0) + el.offsetTop;
+      return Math.round(el.offsetHeight - (el.getBoundingClientRect().top - unslid));
+    });
 /** Where the card should rest at 55% of the map, in px shown. */
 const halfShown = () =>
   card()
