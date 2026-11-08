@@ -507,6 +507,26 @@ const buttonTap = async (locator, done) => {
   return true;
 };
 
+/**
+ * A finger's tap on `locator`, tried again (up to three times) while `done` is not yet true: for a
+ * check that a click with no touch before it would pass by mistake. Whatever it set going comes to
+ * rest.
+ */
+const touchTap = async (locator, done) => {
+  for (let i = 0; i < 3; i++) {
+    const b = await locator
+      .first()
+      .boundingBox({ timeout: 2000 })
+      .catch(() => null);
+    if (!b) return false;
+    await page.touchscreen.tap(b.x + b.width / 2, b.y + b.height / 2);
+    await settled();
+    if (await until(done, Boolean, 1500)) break;
+  }
+  await cardsSettled(page);
+  return true;
+};
+
 /** Where the camera is: its centre and zoom. */
 const camNow = () =>
   page.evaluate(() => {
@@ -3525,7 +3545,10 @@ if (!shared) {
   const listAt = async () => chooser.first().getAttribute('data-snap');
   const raisedFirst = (await listAt()) === 'low';
   if (raisedFirst) {
-    await buttonTap(wantedName, async () => (await listAt()) !== 'low');
+    // Touches only, retried if the runner drops one: buttonTap's fallback, a click sent straight
+    // to the button, comes with no touch before it, as a keyboard's does, and a keyboard's click
+    // picks at Low by design.
+    await touchTap(wantedName, async () => (await listAt()) !== 'low');
     check(
       '  at Low, a tap on a card raises the list a third and picks nothing',
       (await listAt()) === 'free' && !(await isPicked()),
