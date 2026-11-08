@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react';
+
 import { TextField } from '@/design-system/primitives/text-field';
 import type { LngLat } from '@/shared/utils/geo';
 
@@ -32,6 +34,11 @@ interface PlaceSearchProps {
   noteOf?: (place: SearchPlace) => string | null;
   /** Where the landmarks come from: the file unless given (stories). */
   loadLandmarks?: LoadLandmarks;
+  /**
+   * What marks a landmark on the map while its routes near here are open: the public map's pin
+   * (ticket 06). Gone once the search is cleared, another result picked or the panel closed.
+   */
+  renderLandmarkPin?: (landmark: Landmark) => ReactNode;
 }
 
 const NOWHERE = () => null;
@@ -51,6 +58,7 @@ export function PlaceSearch({
   onPickLandmark,
   noteOf,
   loadLandmarks,
+  renderLandmarkPin,
 }: PlaceSearchProps) {
   const search = usePlaceSearch({
     hotspots,
@@ -92,6 +100,7 @@ export function PlaceSearch({
           onRetry={landmarks.retry}
         />
       )}
+      {!isOpen && landmark && renderLandmarkPin?.(landmark)}
       {!isOpen && landmark && (
         <RoutesNearHere
           landmark={landmark}

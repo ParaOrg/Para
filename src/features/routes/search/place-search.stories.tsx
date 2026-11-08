@@ -298,6 +298,36 @@ export const NoRoutesNearHere: Story = {
   },
 };
 
+/**
+ * The landmark's pin (ticket 06) follows its panel: there while the routes near a landmark are
+ * open, moved by another pick, gone once the panel closes or the search is typed in again. The
+ * real pin is a map marker (LandmarkPin's own stories); a line of text stands in for it here.
+ */
+export const LandmarkPinFollowsThePanel: Story = {
+  args: {
+    renderLandmarkPin: (picked: Landmark) => <p data-testid="pin">Pin at {picked.name}</p>,
+  },
+  play: async ({ canvasElement }) => {
+    const pin = () => within(canvasElement).queryByTestId('pin');
+    const pick = async (text: string) => {
+      await userEvent.clear(field(canvasElement));
+      await userEvent.type(field(canvasElement), text);
+      await waitFor(() => expect(optionTexts(canvasElement)).toHaveLength(1));
+      await userEvent.keyboard('{Enter}');
+    };
+    await expect(pin()).toBeNull();
+    await pick('commonwealth high');
+    await expect(pin()).toHaveTextContent('Pin at Commonwealth High School');
+    // Typing again clears it before any result is picked.
+    await userEvent.type(field(canvasElement), 'la');
+    await expect(pin()).toBeNull();
+    await pick('la mesa');
+    await expect(pin()).toHaveTextContent('Pin at La Mesa Watershed Gate');
+    await userEvent.click(within(canvasElement).getByRole('button', { name: 'Close' }));
+    await expect(pin()).toBeNull();
+  },
+};
+
 /** A landmark matched by another of its names: the row says which, after its kind. */
 export const LandmarkByAlias: Story = {
   play: async ({ canvasElement }) => {
