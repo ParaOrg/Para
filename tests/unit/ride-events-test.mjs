@@ -10,6 +10,10 @@ import {
   foldRideEvents,
   withRideTaps,
 } from '../../src/features/contribute/recorder/ride-events.ts';
+import {
+  noteRideWatch,
+  setRideNoticeState,
+} from '../../src/features/contribute/native/ride-notice.ts';
 import { noticePhaseOf } from '../../src/features/contribute/recorder/notice-phase.ts';
 import { trailOf } from '../../src/features/contribute/recorder/recording-rules.ts';
 import { newRecording } from '../../src/features/contribute/recorder/recording-transitions.ts';
@@ -118,4 +122,12 @@ test('the ride notification is told nothing while the page loads, and no ride ou
   assert.equal(noticePhaseOf('paused'), 'paused');
   for (const phase of ['ready', 'unfinished', 'form'])
     assert.equal(noticePhaseOf(phase), 'none', phase);
+});
+
+// Outside the app every word to the plugin throws, so a word sent shows as a throw.
+test('a watch starting under a "no ride" still standing sends nothing: it would stop the new ride', () => {
+  const noRide = { recordingId: '', phase: 'none', mode: 'walk', startedAt: 0, pausedSeconds: 0 };
+  assert.throws(() => setRideNoticeState({ ...noRide, stoppedAt: null }), /not running inside/);
+  assert.doesNotThrow(() => noteRideWatch(true));
+  assert.doesNotThrow(() => noteRideWatch(false));
 });

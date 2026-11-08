@@ -27,8 +27,9 @@ import com.google.android.gms.location.Priority;
  * The ride's recording, in Para's own foreground service: started by the contributor's Start
  * (RidePlugin.startRecording), it keeps the location coming whether or not the page is there. It
  * is started, not bound, and does not stop with the app's task, so swiping the app away leaves it
- * recording; only Pause, Finish (the page's or the notification's) or a refused permission stops
- * it. Its notification is the ride's own (RideNotification).
+ * recording; only Pause, Finish (the page's or the notification's), a refused permission, or the
+ * page telling of a ride that is not recording (RidePlugin.setState) stops it. Its notification
+ * is the ride's own (RideNotification).
  *
  * Each fix goes straight to the fix log (FixLog), in this process, and on to the page while it is
  * there to hear (RidePlugin.tellFix); a page frozen or gone imports the log when it wakes or opens
