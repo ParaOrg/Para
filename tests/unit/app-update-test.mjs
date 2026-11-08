@@ -85,13 +85,15 @@ test('the workflow writes a file the app reads, and refuses a contradictory one'
   assert.throws(() => latestReleaseText({ ...input, apkUrl: 'nope' }), /not a release file/);
 });
 
-test('a native answer is text only when it is a 2xx answer with a text body', () => {
+test('a native answer is the text of a 2xx answer, a JSON one read already as its JSON text', () => {
   assert.equal(textOfResponse({ status: 200, data: '{}' }), '{}');
   assert.equal(textOfResponse({ status: 299, data: 'x' }), 'x');
   assert.throws(() => textOfResponse({ status: 404, data: 'Not Found' }), /HTTP 404/);
   assert.throws(() => textOfResponse({ status: 302, data: '' }), /HTTP 302/);
   assert.throws(() => textOfResponse({ status: 500, data: '' }), /HTTP 500/);
-  assert.throws(() => textOfResponse({ status: 200, data: { a: 1 } }), /not text/);
+  // The phone's client reads an application/json answer itself (the public site's /data/ files).
+  assert.equal(textOfResponse({ status: 200, data: { a: 1 } }), '{"a":1}');
+  assert.equal(textOfResponse({ status: 200, data: [1, 2] }), '[1,2]');
 });
 
 test('the release file is read from what the phone answers; only a bad file is warned about', async (t) => {
