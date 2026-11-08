@@ -82,6 +82,13 @@ public class RidePlugin extends Plugin {
         state.pausedSince = RideState.PAUSED.equals(state.phase) && stoppedAt != null ? stoppedAt : 0;
         state.finishedAt = 0;
         state.write(getContext());
+        if (!RideState.RECORDING.equals(state.phase) && RideService.isRunning()) {
+            // Only a ride recording keeps the service: one left running (restarted by Android after
+            // the app was killed, say) would keep its foreground notification, which cancel() cannot
+            // take away, showing a ride that is over.
+            RideService.stop(getContext());
+            RideNotification.postAgainSoon(getContext());
+        }
         RideNotification.post(getContext());
         call.resolve();
     }

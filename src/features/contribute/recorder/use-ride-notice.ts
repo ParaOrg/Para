@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type RefObject } from 'react';
 
+import { noticePhaseOf } from './notice-phase';
 import { pausedSecondsOf } from './recording-figures';
 import { currentMode } from './recording-rules';
 import type { Phase } from './recording-state';
@@ -39,7 +40,9 @@ export function useRideNotice({
   setPhase,
 }: RideNoticeOptions): void {
   const recordingId = recording?.id ?? '';
-  const noticePhase = phase === 'recording' || phase === 'paused' ? phase : 'none';
+  // Null while the page loads: it tells nothing until it knows the ride the phone holds.
+  const told = noticePhaseOf(phase);
+  const noticePhase = told ?? 'none';
   const mode = currentMode(recording?.modes ?? []);
   const startedAt = recording?.startedAt ?? 0;
   const stoppedAt = recording?.stoppedAt ?? null;
@@ -54,7 +57,7 @@ export function useRideNotice({
 
   // The notification follows the ride: outside React, so it is told, not rendered.
   useEffect(() => {
-    if (!isCaughtUp) return;
+    if (!isCaughtUp || told === null) return;
     tellRideNotice({
       recordingId,
       phase: noticePhase,
@@ -65,7 +68,7 @@ export function useRideNotice({
     }).catch((error: unknown) => {
       console.warn('The ride notification could not be told where the ride is.', error);
     });
-  }, [isCaughtUp, recordingId, noticePhase, mode, startedAt, pausedSeconds, stoppedAt]);
+  }, [isCaughtUp, told, recordingId, noticePhase, mode, startedAt, pausedSeconds, stoppedAt]);
 
   // The latest of each, for taps heard outside a render.
   const latest = useRef({ keep, finish, setPhase });
