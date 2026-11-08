@@ -44,7 +44,7 @@ const SHADOW_SELECTED = 'shadow-route-card-primary-selected';
 const LOOK = {
   resume: { text: 'Resume', name: 'Resume', surface: BRAND, icon: 'play' },
   pause: { text: 'Pause', name: 'Pause', surface: BRAND, icon: 'pause' },
-  stop: { text: 'Stop', name: 'Stop', surface: RED, icon: 'pause' },
+  stop: { text: 'Stop', name: 'Stop', surface: RED, icon: 'finish' },
   finish: { text: 'Finish', name: 'Finish', surface: DARK, icon: 'finish' },
   sakay: { text: 'Sakay', name: 'Switch to Sakay', surface: GREEN, icon: 'switch' },
   lakad: { text: 'Lakad', name: 'Switch to Lakad', surface: BLUE, icon: 'switch' },
