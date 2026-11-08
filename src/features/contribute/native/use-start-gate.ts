@@ -44,9 +44,9 @@ export interface StartGate {
  * What stands between a tap on Start and the recording in the app: the permissions, asked for in
  * order with a reason each (notifications, location, then "all the time"); once, Android's own
  * dialog to let Para run in the background; and, once, Keep Para recording on a phone whose maker
- * stops background apps. A refusal says what still works; the
- * contributor may record anyway unless it is location. With the phone's location switch off no
- * ride starts: the card says so, and the next Start checks again.
+ * stops background apps. A refusal says what still works; the contributor may record anyway unless
+ * it is location. With the phone's location switch off no ride starts: the card says so, and the
+ * next Start checks again.
  */
 export function useStartGate(onStart: () => void): StartGate {
   const [step, setStep] = useState<GateStep | null>(null);
