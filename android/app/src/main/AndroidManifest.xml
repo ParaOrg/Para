@@ -79,4 +79,7 @@
     <!-- Android 14 and later: a foreground service of type location (RideService). -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Android's own "Let Para always run in the background?" dialog, at the first Start
+         (NativePermissionsPlugin.askBatteryUnrestricted). -->
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
 </manifest>

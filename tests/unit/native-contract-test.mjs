@@ -118,6 +118,34 @@ test('RideState writes each field of a tap the page reads, and the page hears it
   }
 });
 
+test('NativePermissionsPlugin answers the battery dialog and says whether Para is unrestricted', () => {
+  const source = java('NativePermissionsPlugin');
+  assertHas(
+    source,
+    'NativePermissionsPlugin.java',
+    /public void askBatteryUnrestricted\(PluginCall call\)/,
+    'askBatteryUnrestricted(PluginCall)',
+  );
+  assertHas(
+    source,
+    'NativePermissionsPlugin.java',
+    /result\.put\("isUnrestricted"/,
+    'result.put("isUnrestricted")',
+  );
+  assertHas(
+    source,
+    'NativePermissionsPlugin.java',
+    /state\.put\("isBatteryUnrestricted"/,
+    'state.put("isBatteryUnrestricted")',
+  );
+  assertHas(
+    readFileSync('android/app/src/main/AndroidManifest.xml', 'utf8'),
+    'AndroidManifest.xml',
+    /android\.permission\.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS/,
+    'REQUEST_IGNORE_BATTERY_OPTIMIZATIONS',
+  );
+});
+
 test('RidePlugin.setState stops a service left running for a ride that is not recording', () => {
   // Its foreground notification cannot be cancelled while it runs: a ride over would stay on show.
   assertHas(

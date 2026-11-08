@@ -8,9 +8,11 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.PowerManager;
 import android.provider.Settings;
 import android.util.Log;
 
+import androidx.activity.result.ActivityResult;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.IntentSenderRequest;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -20,6 +22,7 @@ import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
+import com.getcapacitor.annotation.ActivityCallback;
 import com.getcapacitor.annotation.CapacitorPlugin;
 import com.getcapacitor.annotation.Permission;
 import com.google.android.gms.common.api.ResolvableApiException;
@@ -146,7 +149,8 @@ public class NativePermissionsPlugin extends Plugin {
     }
     /**
      * The phone's maker (lower case) and Android version, which decide which permissions exist and
-     * whether Keep Para recording applies, and whether the phone's location switch is on.
+     * whether Keep Para recording applies, whether the phone's location switch is on, and whether
+     * Android already lets Para run in the background unrestricted.
      */
     @PluginMethod
     public void deviceInfo(PluginCall call) {
@@ -155,7 +159,47 @@ public class NativePermissionsPlugin extends Plugin {
         state.put("manufacturer", Build.MANUFACTURER.toLowerCase(Locale.ROOT));
         LocationManager location = (LocationManager) getContext().getSystemService(Context.LOCATION_SERVICE);
         state.put("isLocationOn", location != null && LocationManagerCompat.isLocationEnabled(location));
+        state.put("isBatteryUnrestricted", isBatteryUnrestricted());
         call.resolve(state);
+    }
+
+    /** Whether Android leaves Para out of its battery optimisations: it may run on in the background. */
+    private boolean isBatteryUnrestricted() {
+        PowerManager power = (PowerManager) getContext().getSystemService(Context.POWER_SERVICE);
+        return power != null && power.isIgnoringBatteryOptimizations(getContext().getPackageName());
+    }
+
+    /**
+     * Android's own "Let Para always run in the background?" dialog, for a ride that goes on when
+     * the app is left (some makers' Android, MIUI's among them, honours it as No restrictions).
+     * Answers whether Para is unrestricted once the dialog is closed; at once when it already is,
+     * or when the phone has no such dialog.
+     */
+    @PluginMethod
+    public void askBatteryUnrestricted(PluginCall call) {
+        if (isBatteryUnrestricted()) {
+            answerBattery(call);
+            return;
+        }
+        Intent intent = new Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)
+            .setData(Uri.fromParts("package", getContext().getPackageName(), null));
+        try {
+            startActivityForResult(call, intent, "batteryAnswered");
+        } catch (RuntimeException noDialog) {
+            Log.w(TAG, "The battery dialog could not be shown.", noDialog);
+            answerBattery(call);
+        }
+    }
+
+    @ActivityCallback
+    private void batteryAnswered(PluginCall call, ActivityResult result) {
+        if (call != null) answerBattery(call);
+    }
+
+    private void answerBattery(PluginCall call) {
+        JSObject result = new JSObject();
+        result.put("isUnrestricted", isBatteryUnrestricted());
+        call.resolve(result);
     }
 
     /** The phone's Location settings, where its switch is; Para's own page if a phone has none. */
