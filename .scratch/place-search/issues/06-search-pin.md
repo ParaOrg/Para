@@ -1,8 +1,7 @@
 # 06: A pin where a landmark search lands
 
-Status: ready-for-agent (claimed by the place-search builder; starts once release 0.4.0 is in main)
+Status: resolved (built into release 0.4.0: the owner moved it there, their Q71)
 Type: task
-Blocked by: release 0.4.0 merged into main (the hub says when)
 
 The owner's answers, 2026-11-07 (their Q59 to Q63, all as recommended). Closes the marker half of item 10 in `../README.md`'s "Owner to design later" list.
 

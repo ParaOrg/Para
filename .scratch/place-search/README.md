@@ -1,6 +1,6 @@
 # Place search
 
-Status: tickets 01 to 05 done; 06 and 07 approved, to build once release 0.4.0 is in main. The owner said yes to this plan on 2026-11-06, with every recommended answer.
+Status: tickets 01 to 06 done; 07 approved, to build after release 0.4.0. The owner said yes to this plan on 2026-11-06, with every recommended answer, and moved 06 into 0.4.0 (their Q71).
 
 A commuter types a place and the map takes them there. Two steps: first Para's own places (feature bank F34), then OpenStreetMap landmarks for what Para has no hotspot for (a safe slice of F33: no geocoder at runtime). Words as in `CONTEXT.md`: a **place** is every hotspot sharing one informal name; a **landmark** here is a named OpenStreetMap point that may or may not be near a place.
 
@@ -24,6 +24,7 @@ A commuter types a place and the map takes them there. Two steps: first Para's o
 - **Results order** (decision 9). Para places first, with their mode icon; then landmarks, marked as landmarks.
 - **Credit** (decision 10). "© OpenStreetMap contributors" beside the results whenever a landmark is listed.
 - **Built** (ticket 03). `routes/published/fetch-landmarks.ts` reads the file in a chunk of its own on the first keystroke (`routes/search/use-landmarks.ts`), and imports none of the search's rules, which would otherwise move into the shared chunk the page always loads. `routes/model/landmark-search.ts` matches and ranks landmarks as places are, folded once as the file is read and behind a letter filter (1-22 ms a query over 7,066 on a laptop); a landmark of a Para place's name within 250 m is that place. Picking a landmark flies the camera there (`routes/map/look-at.ts`) and opens "routes near here" under the field, looking from its point and, for a street, every point along it. The offline worker keeps the file (`landmarks`, stale-while-revalidate).
+- **Built** (ticket 06). `routes/map/landmark-pin.tsx`: a pin on a picked landmark's point while its routes near here are open, moved by another pick, gone once the search is typed in again or the panel closes. The public map draws it through PlaceSearch's `renderLandmarkPin` slot; the studio marks a landmark with its own dot (ticket 05).
 - **Rebuilding** (decision 11). Monthly or on demand, as a normal pull request. The script downloads one extract at build time; visitors never reach OpenStreetMap.
 
 ### The data and its licence
@@ -60,7 +61,7 @@ Designed for now from existing primitives and tokens, never final. Each needs th
 8. The "routes near here" view: header, the straight-line note, each hintuan with its routes, and "No Para routes near here yet".
 9. Long names in rows and in the field: truncate or wrap.
 10. The camera move to a landmark that is not a place: zoom level. (The marker: a pin, ticket 06.)
-15. The landmark pin (ticket 06): built for now from the S and E pins' shape in a neutral colour.
+15. The landmark pin (ticket 06): built for now as the picked hintuan's filled circle (TimelineDot) in Content/primary, no name beside it (the panel's heading names it), popped as the S and E pins pop.
 11. The bar's card behind the field (white, rounded, the large shadow) and its visible "Search places" label: built so the label reads over the map.
 12. Search while a card is open: on a phone, hidden for now; on a computer, the bar stays and the cards float under it (question 5, built). How the two look together has no story yet: the owner's call whether one is wanted.
 13. A search icon in the field: none exists in the design system, so none is drawn.
@@ -75,8 +76,8 @@ Designed for now from existing primitives and tokens, never final. Each needs th
 | 03 | [Landmarks and routes near here](issues/03-landmarks-in-search.md) | resolved (#829) |
 | 04 | [The monthly rebuild](issues/04-monthly-rebuild.md) | resolved (#826) |
 | 05 | [Studio place search](issues/05-studio-place-search.md) | resolved (#830) |
-| 06 | [A pin where a landmark search lands](issues/06-search-pin.md) | waits for release 0.4.0 in main |
-| 07 | ["Set as destination" for a landmark](issues/07-landmark-as-destination.md) | approved; after 06, once release 0.4.0 is in main |
+| 06 | [A pin where a landmark search lands](issues/06-search-pin.md) | resolved (into 0.4.0, the owner's Q71) |
+| 07 | ["Set as destination" for a landmark](issues/07-landmark-as-destination.md) | approved; after release 0.4.0 |
 
 ## Questions sent to the hub (2026-11-06)
 

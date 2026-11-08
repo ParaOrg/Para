@@ -9,9 +9,9 @@ import { LandmarkPin } from './landmark-pin';
 
 import 'maplibre-gl/dist/maplibre-gl.css';
 
-/** Sample points only: Fairview Terraces, and SM City Fairview south of it. */
+/** Sample points only: one landmark, and another a little south of it, both inside the frame. */
 const FIRST: LngLat = [121.06, 14.737];
-const SECOND: LngLat = [121.0605, 14.733];
+const SECOND: LngLat = [121.0605, 14.7355];
 const ZOOM = 15;
 
 interface OnAnEmptyMapProps {
@@ -133,7 +133,7 @@ export const AnotherPick: Story = {
     );
     await waitFor(async () => {
       const after = await centreOf(canvasElement, await pinOf(canvasElement));
-      await expect(after.y).toBeGreaterThan(before.y + 100);
+      await expect(after.y).toBeGreaterThan(before.y + 40);
     });
     await expect(canvasElement.querySelectorAll('[data-testid="landmark-pin"]')).toHaveLength(1);
   },
