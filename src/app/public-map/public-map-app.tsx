@@ -334,6 +334,7 @@ export function PublicMapApp() {
         the map does (openPlace). On a wide map the cards float under it (sheetTopUnderSearch).
       */}
         <PlaceSearchBar
+          map={map}
           hotspots={hotspots.hotspots}
           directionsAt={directionsAt}
           whereNow={() => where.current?.at ?? null}

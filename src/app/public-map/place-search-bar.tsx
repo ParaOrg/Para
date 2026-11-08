@@ -1,3 +1,6 @@
+import type { MapLibreMap } from 'maplibre-gl';
+
+import { LandmarkPin } from '@/features/routes/map/landmark-pin';
 import type { Hotspot } from '@/features/routes/model/hotspots';
 import type { Direction } from '@/features/routes/model/routes';
 import { PlaceSearch } from '@/features/routes/search/place-search';
@@ -5,6 +8,8 @@ import { cn } from '@/shared/utils/cn';
 import type { LngLat } from '@/shared/utils/geo';
 
 interface PlaceSearchBarProps {
+  /** The map a landmark's pin goes on; none yet, no pin. */
+  map: MapLibreMap | null;
   hotspots: readonly Hotspot[];
   directionsAt: (hotspotId: string) => readonly Direction[];
   whereNow: () => LngLat | null;
@@ -45,6 +50,7 @@ export function sheetTopUnderSearch(isUnderUpdate: boolean, isUnderOfflinePill: 
  * Stepped down under the page's notices rather than over them.
  */
 export function PlaceSearchBar({
+  map,
   hotspots,
   directionsAt,
   whereNow,
@@ -74,6 +80,10 @@ export function PlaceSearchBar({
         whereNow={whereNow}
         onPick={onPick}
         onLookAt={onLookAt}
+        // Keyed on the landmark: another pick pops a fresh circle where it landed.
+        renderLandmarkPin={(landmark) =>
+          map && <LandmarkPin key={landmark.id} map={map} at={landmark.point} />
+        }
       />
     </div>
   );

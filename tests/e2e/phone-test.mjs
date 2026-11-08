@@ -5044,6 +5044,90 @@ if (!routeA) {
   );
 }
 
+// ------------------------------------- 6b. place search: a landmark's pin
+// A landmark picked in place search (.scratch/place-search, ticket 06) leaves a
+// pin on its point while its routes near here are open: another pick moves it,
+// closing the panel takes it away. Two malls from today's landmark file, each
+// the only landmark of its name, a kilometre or more apart; the page is still on
+// the made-up map, whose places share no name with them, so each is listed as a
+// landmark, not as a Para place.
+{
+  const file = await (await fetch(`${BASE}/data/landmarks.v1.json`)).json();
+  const named = new Map();
+  for (const l of file.landmarks) named.set(l.name, (named.get(l.name) ?? 0) + 1);
+  const malls = file.landmarks.filter((l) => l.kind === 'mall' && named.get(l.name) === 1);
+  const first = malls[0];
+  const second = malls.find(
+    (l) => Math.hypot(l.point[0] - first.point[0], l.point[1] - first.point[1]) > 0.01,
+  );
+  const field = page.getByRole('combobox', { name: 'Search places' });
+  const pins = page.locator('[data-testid="landmark-pin"]');
+  const pick = async (landmark) => {
+    await field.fill(landmark.name);
+    const row = page
+      .getByRole('option')
+      .filter({ hasText: landmark.name })
+      .filter({ hasText: 'Landmark' })
+      .first();
+    await row.waitFor({ timeout: 10000 });
+    await row.click();
+    await mapIdle(page);
+  };
+  // How far the pin's circle is from the landmark's point on screen, in px.
+  const pinOff = async (landmark) => {
+    const at = await project(page, landmark.point);
+    const frame = await canvasBox();
+    const circle = await pins
+      .first()
+      .locator(':scope > span')
+      .first()
+      .boundingBox()
+      .catch(() => null);
+    if (!circle || !frame) return Infinity;
+    return Math.hypot(
+      circle.x + circle.width / 2 - (frame.x + at[0]),
+      circle.y + circle.height / 2 - (frame.y + at[1]),
+    );
+  };
+  await closeCard();
+  if (!first || !second) {
+    console.log('SKIP  place search: two malls a kilometre apart in the landmark file');
+  } else {
+    await pick(first);
+    const firstOff = await until(
+      () => pinOff(first),
+      (d) => d < 2,
+      3000,
+    );
+    check(
+      'a landmark picked in search leaves a pin on its point',
+      (await pins.count()) === 1 && firstOff < 2,
+      `${first.name}: ${await pins.count()} pin(s), ${firstOff.toFixed(1)} px off`,
+    );
+    await pick(second);
+    const secondOff = await until(
+      () => pinOff(second),
+      (d) => d < 2,
+      3000,
+    );
+    check(
+      'another landmark picked moves the pin there',
+      (await pins.count()) === 1 && secondOff < 2,
+      `${second.name}: ${await pins.count()} pin(s), ${secondOff.toFixed(1)} px off`,
+    );
+    await page
+      .getByRole('region', { name: second.name })
+      .getByRole('button', { name: 'Close' })
+      .click();
+    const left = await until(
+      () => pins.count(),
+      (n) => n === 0,
+      2000,
+    );
+    check('closing its routes near here takes the pin away', left === 0, `${left} pin(s)`);
+  }
+}
+
 // --------------------------------------------------------- 7. housekeeping
 if (tapsByHand)
   console.log(
