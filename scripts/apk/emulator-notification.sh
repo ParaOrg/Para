@@ -228,6 +228,25 @@ is_foreground && pass "swiped away: the service is still in the foreground" \
 adb shell dumpsys notification --noredact > "$OUT/notification-swiped.txt"
 grep -q 'Recording' "$OUT/notification-swiped.txt" && pass "swiped away: the notification still says Recording" \
   || fail "swiped away, the Recording notification is gone"
+# Some makers' Android (MIUI: the owner's POCO) kills the app's process when it is swiped from
+# Recents, the service with it. With no task left, no page comes back: Android restarts the service
+# alone (START_STICKY), and it has to record on by itself.
+PID_SWIPED=$(adb shell pidof "$PKG" | tr -d '\r')
+mark() { adb shell log -t PARA_RIDE_TEST "$1"; }
+mark "killed-away"
+[ -n "$PID_SWIPED" ] && adb shell "kill -9 $PID_SWIPED"
+sleep 5
+KILLED_AT=$(native_fixes)
+sleep 60
+SINCE_KILL=$(native_fixes)
+adb shell dumpsys activity services "$PKG" > "$OUT/services-killed-away.txt"
+adb shell dumpsys notification --noredact > "$OUT/notification-killed-away.txt"
+is_task_there && echo "note: the app's activity came back after the kill" | tee "$OUT/killed-away-task.txt"
+[ $((SINCE_KILL - KILLED_AT)) -ge 30 ] \
+  && pass "killed away from Recents: the service records on by itself ($KILLED_AT then $SINCE_KILL in 60 s)" \
+  || fail "killed away from Recents, the ride stopped recording: $KILLED_AT then $SINCE_KILL in 60 s"
+is_foreground && pass "killed away: the service is back in the foreground" \
+  || fail "killed away, the service did not come back in the foreground"
 # Opened again: the page takes the ride up where the service has it, and the taps below go on.
 adb shell am start -n "$PKG/$ACTIVITY"
 sleep 30
