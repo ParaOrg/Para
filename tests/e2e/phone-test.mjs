@@ -508,20 +508,36 @@ const buttonTap = async (locator, done) => {
 };
 
 /**
- * A finger's tap on `locator`, tried again (up to three times) while `done` is not yet true: for a
- * check that a click with no touch before it would pass by mistake. Whatever it set going comes to
- * rest.
+ * A finger's tap on `locator`, for a check that a click with no touch before it would pass by
+ * mistake (buttonTap's fallback is one, as a keyboard's is). A touch the runner drops is sent again
+ * as a finger sends it: pointerdown and pointerup, then the click, at the same spot. Whatever it
+ * set going comes to rest.
  */
 const touchTap = async (locator, done) => {
-  for (let i = 0; i < 3; i++) {
-    const b = await locator
-      .first()
-      .boundingBox({ timeout: 2000 })
-      .catch(() => null);
-    if (!b) return false;
-    await page.touchscreen.tap(b.x + b.width / 2, b.y + b.height / 2);
-    await settled();
-    if (await until(done, Boolean, 1500)) break;
+  const b = await locator
+    .first()
+    .boundingBox({ timeout: 2000 })
+    .catch(() => null);
+  if (!b) return false;
+  const at = { x: b.x + b.width / 2, y: b.y + b.height / 2 };
+  await page.touchscreen.tap(at.x, at.y);
+  await settled();
+  if (!(await until(done, Boolean, 1500))) {
+    tapsByHand++;
+    await locator.first().evaluate((el, { x, y }) => {
+      const finger = { bubbles: true, cancelable: true, composed: true, clientX: x, clientY: y };
+      const pointer = {
+        ...finger,
+        pointerId: 91,
+        pointerType: 'touch',
+        isPrimary: true,
+        button: 0,
+      };
+      el.dispatchEvent(new PointerEvent('pointerdown', { ...pointer, buttons: 1 }));
+      el.dispatchEvent(new PointerEvent('pointerup', { ...pointer, buttons: 0 }));
+      el.dispatchEvent(new MouseEvent('click', { ...finger, detail: 1, button: 0 }));
+    }, at);
+    await until(done, Boolean, 1500);
   }
   await cardsSettled(page);
   return true;
@@ -3545,9 +3561,8 @@ if (!shared) {
   const listAt = async () => chooser.first().getAttribute('data-snap');
   const raisedFirst = (await listAt()) === 'low';
   if (raisedFirst) {
-    // Touches only, retried if the runner drops one: buttonTap's fallback, a click sent straight
-    // to the button, comes with no touch before it, as a keyboard's does, and a keyboard's click
-    // picks at Low by design.
+    // A finger's tap: buttonTap's fallback, a click sent straight to the button, comes with no
+    // touch before it, as a keyboard's does, and a keyboard's click picks at Low by design.
     await touchTap(wantedName, async () => (await listAt()) !== 'low');
     check(
       '  at Low, a tap on a card raises the list a third and picks nothing',
