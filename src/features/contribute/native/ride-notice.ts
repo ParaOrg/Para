@@ -42,9 +42,14 @@ export function setRideNoticeState(state: RideNoticeState): Promise<void> {
   return send();
 }
 
-/** The page's watch started, or stopped. */
+/**
+ * The page's watch started, or stopped. Told again only for a ride recording: for any other the
+ * notification is told no watch whatever this says, and a "no ride" still standing from before a
+ * Start would, sent again, stop the service the Start has just set going (RidePlugin.setState).
+ */
 export function noteRideWatch(isOn: boolean): void {
   isWatching = isOn;
+  if (lastState?.phase !== 'recording') return;
   void send().catch((error: unknown) => {
     console.warn('The ride notification could not be told of the watch.', error);
   });

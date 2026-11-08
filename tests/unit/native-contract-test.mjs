@@ -118,6 +118,16 @@ test('RideState writes each field of a tap the page reads, and the page hears it
   }
 });
 
+test('RidePlugin.setState stops a service left running for a ride that is not recording', () => {
+  // Its foreground notification cannot be cancelled while it runs: a ride over would stay on show.
+  assertHas(
+    java('RidePlugin'),
+    'RidePlugin.java',
+    /!RideState\.RECORDING\.equals\(state\.phase\) && RideService\.isRunning\(\)\)\s*\{[\s\S]*?RideService\.stop\(getContext\(\)\)/,
+    'setState: RideService.stop for a phase not RECORDING',
+  );
+});
+
 test('FixLog writes each key of a fix line and of the log the page reads', () => {
   const source = java('FixLog');
   for (const key of [...Object.keys(fixLineSchema.shape), ...Object.keys(fixLogSchema.shape)]) {
