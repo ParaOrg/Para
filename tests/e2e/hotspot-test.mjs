@@ -234,13 +234,18 @@ for (let attempt = 0; attempt < 5; attempt++) {
   });
   if (settled) break;
 }
+// Only where the canvas itself is the topmost element: the place search bar sits over the
+// top of the map.
 const onRoad = await page.evaluate((line) => {
   const m = window.__map,
-    { clientWidth: w, clientHeight: h } = m.getCanvas();
+    canvas = m.getCanvas(),
+    { clientWidth: w, clientHeight: h } = canvas,
+    rect = canvas.getBoundingClientRect();
   const picked = [];
   for (const c of line) {
     const p = m.project(c);
     if (p.x < 80 || p.x > w - 80 || p.y < h / 2 - 320 || p.y > h / 2 + 260) continue;
+    if (document.elementFromPoint(rect.left + p.x, rect.top + p.y) !== canvas) continue;
     if (picked.every(([x, y]) => Math.hypot(p.x - x, p.y - y) >= 120)) picked.push([p.x, p.y]);
     if (picked.length === 2) break;
   }
