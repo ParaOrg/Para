@@ -9,8 +9,6 @@ import {
 } from '@/features/routes/map/rail-rest-layers';
 import { routesData, unpatched } from '@/features/routes/map/saved-routes-data';
 import { directionLine, type LineStringGeoJSON } from '@/features/routes/model/routes';
-import { fetchIndex } from '@/features/routes/published/fetch-index';
-import { fetchLine } from '@/features/routes/published/fetch-line';
 
 import {
   PUBLISHED_CASING,
@@ -20,6 +18,7 @@ import {
   PUBLISHED_SRC,
   layerToGoUnder,
 } from './published-routes-layers';
+import { readPublishedIndex, readPublishedLine } from './published-source';
 
 /*
  * The published routes behind a recording: every direction on the published map, painted as the
@@ -65,7 +64,7 @@ function lineLayer(
  * again; rejects when the index cannot be read, and the map then shows no routes.
  */
 export async function drawPublishedRoutes(map: MapLibreMap): Promise<() => void> {
-  const { directions } = await fetchIndex();
+  const { directions } = await readPublishedIndex();
   if (map.getSource(PUBLISHED_SRC)) return () => undefined;
 
   const under = layerToGoUnder(map);
@@ -112,7 +111,7 @@ export async function drawPublishedRoutes(map: MapLibreMap): Promise<() => void>
       const id = String(feature.properties.id ?? '');
       if (!id || asked.has(id) || !drawn.has(id)) continue;
       asked.add(id);
-      fetchLine(id).then(
+      readPublishedLine(id).then(
         (line) => {
           if (!line || isRemoved) return;
           arrived.set(id, line);

@@ -9,9 +9,9 @@ import {
   removeSavedHotspots,
 } from '@/features/routes/map/saved-hotspots-layers';
 import { maskStations } from '@/features/routes/map/station-mask';
-import { fetchIndex } from '@/features/routes/published/fetch-index';
 
 import { PUBLISHED_CASING, layerToGoUnder } from './published-routes-layers';
+import { readPublishedIndex } from './published-source';
 
 /*
  * The published hotspots behind a recording: every box on the published map, its pin and its
@@ -32,7 +32,7 @@ function trailLayer(map: MapLibreMap): string | undefined {
  * them off again; rejects when the index cannot be read, and the map then shows no hotspots.
  */
 export async function drawPublishedHotspots(map: MapLibreMap): Promise<() => void> {
-  const { hotspots } = await fetchIndex();
+  const { hotspots } = await readPublishedIndex();
   if (map.getSource(SRC)) return () => undefined;
 
   const marksUnder = trailLayer(map);

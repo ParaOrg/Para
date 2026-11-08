@@ -95,6 +95,14 @@ function parseIndex(raw: unknown, url: string, schema: number): Index {
 }
 
 /**
+ * The published index as read from a file's text already fetched, at `url`: the same refusals as
+ * the page's own load. For a reader that fetches it another way (the contributor app's).
+ */
+export function readIndexFile(raw: unknown, url: string): Index {
+  return parseIndex(raw, url, MAP_FILE_SCHEMA);
+}
+
+/**
  * The copy the worker kept of the index itself, else the newest older one.
  * The worker falls back to its copy only when the network fails or takes over
  * 3 s (scripts/node/offline-worker-caches.ts, the map-file rule): a server's
