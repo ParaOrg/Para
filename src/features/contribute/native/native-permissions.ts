@@ -19,6 +19,8 @@ const deviceInfoSchema = z.object({
   manufacturer: z.string(),
   /** The phone's own location switch. */
   isLocationOn: z.boolean(),
+  /** Android leaves Para out of its battery optimisations: it may run on in the background. */
+  isBatteryUnrestricted: z.boolean(),
 });
 export type DeviceInfo = z.infer<typeof deviceInfoSchema>;
 
@@ -29,6 +31,7 @@ interface NativePermissionsPlugin {
   openAppSettings: () => Promise<void>;
   openLocationSettings: () => Promise<void>;
   openAutostartSettings: () => Promise<void>;
+  askBatteryUnrestricted: () => Promise<unknown>;
   checkLocationOn: () => Promise<unknown>;
 }
 
@@ -45,7 +48,7 @@ export async function requestNativePermission(
   return statesSchema.parse(await getPlugin().requestPermissions({ permissions: [permission] }));
 }
 
-/** The phone's Android version and maker, and whether its location switch is on. */
+/** The phone's Android version and maker, its location switch, and Para's battery freedom. */
 export async function readDeviceInfo(): Promise<DeviceInfo> {
   return deviceInfoSchema.parse(await getPlugin().deviceInfo());
 }
@@ -61,6 +64,16 @@ export function openAppSettings(): Promise<void> {
  */
 export function openAutostartSettings(): Promise<void> {
   return getPlugin().openAutostartSettings();
+}
+
+const batteryAnswerSchema = z.object({ isUnrestricted: z.boolean() });
+
+/**
+ * Android's own "Let Para always run in the background?" dialog. Resolves once it is closed, with
+ * whether Para is unrestricted now; at once when it already is, or the phone has no such dialog.
+ */
+export async function askBatteryUnrestricted(): Promise<boolean> {
+  return batteryAnswerSchema.parse(await getPlugin().askBatteryUnrestricted()).isUnrestricted;
 }
 
 /** Opens the phone's Location settings, where its switch is. */

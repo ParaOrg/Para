@@ -1,8 +1,10 @@
 import { useRef, useState } from 'react';
 
+import { hasAskedBatteryDialog, markBatteryDialogAsked } from './battery-dialog-flag';
 import { hasSeenKeepRecording, markKeepRecordingSeen } from './keep-recording-flag';
 import { stopsBackgroundApps } from './keep-recording-makers';
 import {
+  askBatteryUnrestricted,
   checkNativePermissions,
   openAppSettings,
   openAutostartSettings,
@@ -40,8 +42,9 @@ export interface StartGate {
 
 /**
  * What stands between a tap on Start and the recording in the app: the permissions, asked for in
- * order with a reason each (notifications, location, then "all the time"), and, once, Keep
- * Para recording on a phone whose maker stops background apps. A refusal says what still works; the
+ * order with a reason each (notifications, location, then "all the time"); once, Android's own
+ * dialog to let Para run in the background; and, once, Keep Para recording on a phone whose maker
+ * stops background apps. A refusal says what still works; the
  * contributor may record anyway unless it is location. With the phone's location switch off no
  * ride starts: the card says so, and the next Start checks again.
  */
@@ -57,7 +60,15 @@ export function useStartGate(onStart: () => void): StartGate {
     setStep(null);
   };
 
-  const startOrKeepRecording = (info: DeviceInfo) => {
+  const startOrKeepRecording = async (info: DeviceInfo) => {
+    // Once, at the first Start: Android's own dialog to let Para run on in the background. A no,
+    // or a phone with no such dialog, still starts the ride.
+    if (!info.isBatteryUnrestricted && !hasAskedBatteryDialog()) {
+      markBatteryDialogAsked();
+      await askBatteryUnrestricted().catch((error: unknown) => {
+        console.warn('Android would not ask to let Para run in the background.', error);
+      });
+    }
     // Shown whether or not battery restrictions are off: the maker's Autostart is a switch of its
     // own, which Android cannot report, and it alone stops a ride when the app is left.
     if (stopsBackgroundApps(info.manufacturer) && !hasSeenKeepRecording()) {
@@ -76,7 +87,7 @@ export function useStartGate(onStart: () => void): StartGate {
     const missing = firstMissing(await checkNativePermissions(), needed);
     if (missing) setStep({ kind: 'permission', permission: missing });
     else if (!info.isLocationOn) setStep({ kind: 'location-off' });
-    else startOrKeepRecording(info);
+    else await startOrKeepRecording(info);
   };
 
   const handleStart = () => {

@@ -27,8 +27,8 @@ export function KeepRecordingPanel({ onOpenSettings, onDone }: KeepRecordingPane
         Keep Para recording
       </h1>
       <p className="text-base/6">
-        Your phone may stop Para when you leave the app. Turn on Autostart so your rides keep
-        recording.
+        Your phone may stop Para when you leave the app. Turn on Autostart and set Battery saver to
+        No restrictions so your rides keep recording.
       </p>
       <div className="flex gap-3">
         <Button variant="primary" label="Open settings" onClick={onOpenSettings} />

@@ -118,6 +118,34 @@ test('RideState writes each field of a tap the page reads, and the page hears it
   }
 });
 
+test('NativePermissionsPlugin answers the battery dialog and says whether Para is unrestricted', () => {
+  const source = java('NativePermissionsPlugin');
+  assertHas(
+    source,
+    'NativePermissionsPlugin.java',
+    /public void askBatteryUnrestricted\(PluginCall call\)/,
+    'askBatteryUnrestricted(PluginCall)',
+  );
+  assertHas(
+    source,
+    'NativePermissionsPlugin.java',
+    /result\.put\("isUnrestricted"/,
+    'result.put("isUnrestricted")',
+  );
+  assertHas(
+    source,
+    'NativePermissionsPlugin.java',
+    /state\.put\("isBatteryUnrestricted"/,
+    'state.put("isBatteryUnrestricted")',
+  );
+  assertHas(
+    readFileSync('android/app/src/main/AndroidManifest.xml', 'utf8'),
+    'AndroidManifest.xml',
+    /android\.permission\.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS/,
+    'REQUEST_IGNORE_BATTERY_OPTIMIZATIONS',
+  );
+});
+
 test('FixLog writes each key of a fix line and of the log the page reads', () => {
   const source = java('FixLog');
   for (const key of [...Object.keys(fixLineSchema.shape), ...Object.keys(fixLogSchema.shape)]) {
