@@ -507,6 +507,42 @@ const buttonTap = async (locator, done) => {
   return true;
 };
 
+/**
+ * A finger's tap on `locator`, for a check that a click with no touch before it would pass by
+ * mistake (buttonTap's fallback is one, as a keyboard's is). A touch the runner drops is sent again
+ * as a finger sends it: pointerdown and pointerup, then the click, at the same spot. Whatever it
+ * set going comes to rest.
+ */
+const touchTap = async (locator, done) => {
+  const b = await locator
+    .first()
+    .boundingBox({ timeout: 2000 })
+    .catch(() => null);
+  if (!b) return false;
+  const at = { x: b.x + b.width / 2, y: b.y + b.height / 2 };
+  await page.touchscreen.tap(at.x, at.y);
+  await settled();
+  if (!(await until(done, Boolean, 1500))) {
+    tapsByHand++;
+    await locator.first().evaluate((el, { x, y }) => {
+      const finger = { bubbles: true, cancelable: true, composed: true, clientX: x, clientY: y };
+      const pointer = {
+        ...finger,
+        pointerId: 91,
+        pointerType: 'touch',
+        isPrimary: true,
+        button: 0,
+      };
+      el.dispatchEvent(new PointerEvent('pointerdown', { ...pointer, buttons: 1 }));
+      el.dispatchEvent(new PointerEvent('pointerup', { ...pointer, buttons: 0 }));
+      el.dispatchEvent(new MouseEvent('click', { ...finger, detail: 1, button: 0 }));
+    }, at);
+    await until(done, Boolean, 1500);
+  }
+  await cardsSettled(page);
+  return true;
+};
+
 /** Where the camera is: its centre and zoom. */
 const camNow = () =>
   page.evaluate(() => {
@@ -3525,7 +3561,9 @@ if (!shared) {
   const listAt = async () => chooser.first().getAttribute('data-snap');
   const raisedFirst = (await listAt()) === 'low';
   if (raisedFirst) {
-    await buttonTap(wantedName, async () => (await listAt()) !== 'low');
+    // A finger's tap: buttonTap's fallback, a click sent straight to the button, comes with no
+    // touch before it, as a keyboard's does, and a keyboard's click picks at Low by design.
+    await touchTap(wantedName, async () => (await listAt()) !== 'low');
     check(
       '  at Low, a tap on a card raises the list a third and picks nothing',
       (await listAt()) === 'free' && !(await isPicked()),
