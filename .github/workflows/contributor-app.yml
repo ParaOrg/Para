@@ -89,6 +89,12 @@ jobs:
         working-directory: android
         run: ./gradlew assembleDebug --no-daemon
 
+      # The ride's rules (android/app/src/main/java/ph/para/contributor/ride/), on the JVM: every
+      # state and outside event in docs/architecture/state-machines.md that has a rule.
+      - name: Test the ride's rules (JUnit)
+        working-directory: android
+        run: ./gradlew testDebugUnitTest --no-daemon
+
       - uses: actions/upload-artifact@v7
         with:
           name: para-contributor-debug
