@@ -17,10 +17,10 @@ import { join } from 'node:path';
 import { distanceFigure, timeFigure } from '../../src/features/contribute/common/format.ts';
 import {
   liveFigures,
-  pausedSecondsOf,
   summaryEnd,
 } from '../../src/features/contribute/recorder/recording-figures.ts';
 import { summarize } from '../../src/features/routes/model/ride-recording.ts';
+import { historyOf } from '../../src/features/contribute/recorder/ride-history.ts';
 
 const JAVA = 'android/app/src/main/java/ph/para/contributor';
 const notificationSource = readFileSync(`${JAVA}/RideNotification.java`, 'utf8');
@@ -40,20 +40,32 @@ function javaMethod(source, signature) {
   throw new Error(`the Java method ${signature} never closes`);
 }
 
-// A clock line: "elapsed <phase> <startedAt> <pausedMs> <pausedSince> <now> [<tap>@<time>...]". The
-// ride is made as RidePlugin.setState makes it from what the page tells it (RideCodec.fromSummary),
-// then each tap on the notification is applied as RideActionReceiver applies it (RideMachine).
+// A clock line: "elapsed <phase> <startedAt> <gaps> <stoppedAt> <now> [<tap>@<time>...]", the gaps
+// "from-to,..." (or "-"), stoppedAt 0 for none. The ride is made as RidePlugin.setState makes it
+// from what the page tells it (its paused gaps, and a pause running from stoppedAt), then each tap on
+// the notification is applied as RideActionReceiver applies it (RideMachine).
 const DRIVER = `
 import java.util.Locale;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 import ph.para.contributor.ride.Ride;
-import ph.para.contributor.ride.RideCodec;
 import ph.para.contributor.ride.RideMachine;
 
 public class NativeFigures {
     static long elapsedMs(String[] part) {
-        Ride ride = RideCodec.fromSummary("r", part[1], "walk", Long.parseLong(part[2]),
-            Long.parseLong(part[3]), Long.parseLong(part[4]), 0, 0);
+        long startedAt = Long.parseLong(part[2]);
+        List<Ride.Gap> gaps = new ArrayList<>();
+        for (String gap : part[3].equals("-") ? new String[0] : part[3].split(",")) {
+            String[] ends = gap.split("-");
+            gaps.add(new Ride.Gap(Long.parseLong(ends[0]), Long.parseLong(ends[1]), Ride.GAP_PAUSED));
+        }
+        long stoppedAt = Long.parseLong(part[4]);
+        if (part[1].equals(Ride.PAUSED) && stoppedAt > 0) gaps.add(new Ride.Gap(stoppedAt, 0, Ride.GAP_PAUSED));
+        Ride ride = new Ride("r", part[1], Ride.TROUBLE_NONE, startedAt, 0, startedAt,
+            Collections.singletonList(new Ride.ModeSwitch(startedAt, Ride.WALK)), gaps);
         for (int index = 6; index < part.length; index++) {
             String[] tap = part[index].split("@");
             long time = Long.parseLong(tap[1]);
@@ -168,9 +180,11 @@ test('distanceText says what the card says at metres ending in 50 (1150 m, 1450 
 // a tap on the notification moves it, against the card's own clock for the same ride.
 
 test('the ride the clock reads is made from the page as RidePlugin and the taps make it', () => {
-  assert.match(pluginSource, /RideCodec\.fromSummary\(/);
-  assert.match(pluginSource, /pausedSeconds == null \? 0 : Math\.round\(pausedSeconds \* 1000\)/);
-  assert.match(pluginSource, /isPaused && stoppedAt != null \? stoppedAt : 0/);
+  assert.match(pluginSource, /RideJson\.gapsOf\(call\.getArray\("gaps"\)\)/);
+  assert.match(
+    pluginSource,
+    /RideState\.PAUSED\.equals\(phase\) && stoppedAt != null\) \{\s*gaps\.add\(new Ride\.Gap\(stoppedAt, 0, Ride\.GAP_PAUSED\)\)/,
+  );
   assert.match(receiverSource, /RideMachine\.pause\(ride, now\)/);
   assert.match(receiverSource, /RideMachine\.resume\(ride, now\)/);
   assert.match(receiverSource, /RideMachine\.finish\(ride, now\)/);
@@ -185,6 +199,7 @@ const ride = ({ gaps = [], stoppedAt = null }) => ({
   startedAt: T0,
   stoppedAt: stoppedAt === null ? null : s(stoppedAt),
   status: stoppedAt === null ? 'recording' : 'stopped',
+  modes: [{ time: T0, to: 'walk' }],
   gaps,
 });
 
@@ -192,10 +207,11 @@ const ride = ({ gaps = [], stoppedAt = null }) => ({
 const toldState = (recording, phase, taps = []) => ({
   phase,
   startedAt: recording.startedAt,
-  pausedMs: Math.round(pausedSecondsOf(recording) * 1000),
-  pausedSince: phase === 'paused' && recording.stoppedAt !== null ? recording.stoppedAt : 0,
+  gaps: historyOf(recording).gaps.filter((gap) => gap.reason === 'paused'),
+  stoppedAt: phase === 'paused' && recording.stoppedAt !== null ? recording.stoppedAt : 0,
   taps,
 });
+const gapsText = (gaps) => gaps.map((gap) => `${gap.from}-${gap.to}`).join(',') || '-';
 
 const CLOCKS = {
   'no pause, recording': {
@@ -268,13 +284,12 @@ test(`the notification's clock reads what the card's does (${Object.keys(CLOCKS)
   const native = runJava(
     cases.map(
       ({ state, now }) =>
-        `elapsed ${[state.phase, state.startedAt, state.pausedMs, state.pausedSince, now, ...state.taps].join(' ')}`,
+        `elapsed ${[state.phase, state.startedAt, gapsText(state.gaps), state.stoppedAt, now, ...state.taps].join(' ')}`,
     ),
   );
   cases.forEach(({ name, page, now }, index) => {
     const nativeMs = Number(native[index]);
     const cardMs = cardClockMs(page, now);
-    // pausedSeconds crosses as a double and is rounded to the millisecond.
     assert.ok(Math.abs(nativeMs - cardMs) < 1, `${name}: native ${nativeMs} ms, card ${cardMs} ms`);
     assert.equal(
       runJava([`time ${Math.trunc(nativeMs / 1000)}`])[0],

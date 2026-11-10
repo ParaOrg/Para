@@ -164,15 +164,12 @@ public class RideService extends Service {
 
     /**
      * The ride cannot record (`why`): it is paused where it stands (RideMachine.refused), so no card
-     * says "Recording" while nothing records. The page applies the pause when it wakes, and Resume
+     * says "Recording" while nothing records. The page reads the pause when it wakes, and Resume
      * (in the app, once the permission is back) records again.
      */
     private void failed(String why) {
         long now = System.currentTimeMillis();
-        boolean wasRecording = Rides.now(this).is(Ride.RECORDING);
-        Rides.apply(this, current -> RideMachine.refused(current, now, why));
-        if (wasRecording) {
-            RideState.addEvent(this, "pause", now, null);
+        if (!Rides.apply(this, current -> RideMachine.refused(current, now, why)).effects.isEmpty()) {
             RidePlugin.tellPage();
         }
         RideNotification.post(this);

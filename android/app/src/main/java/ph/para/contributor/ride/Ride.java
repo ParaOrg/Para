@@ -126,11 +126,34 @@ public final class Ride {
         if (open != null) end = open.from;
         else if (is(FINISHED) && finishedAt > 0) end = finishedAt;
         else if (isCutOff()) end = lastFixAt;
-        long lost = 0;
+        return Math.max(0, end - startedAt - pausedMs());
+    }
+
+    /**
+     * The time paused, as the page's card counts it (recording-figures.ts pausedSecondsOf): the
+     * closed "paused" gaps, those that overlap or touch counted once. Time lost to a cut-off
+     * ("resumed") counts as the ride's, as on the page.
+     */
+    long pausedMs() {
+        List<Gap> paused = new ArrayList<>();
         for (Gap gap : gaps) {
-            if (!gap.isOpen()) lost += gap.to - gap.from;
+            if (!gap.isOpen() && GAP_PAUSED.equals(gap.reason)) paused.add(gap);
         }
-        return Math.max(0, end - startedAt - lost);
+        Collections.sort(paused, (a, b) -> Long.compare(a.from, b.from));
+        long total = 0;
+        long from = 0;
+        long to = Long.MIN_VALUE;
+        for (Gap gap : paused) {
+            if (gap.from > to) {
+                if (to != Long.MIN_VALUE) total += to - from;
+                from = gap.from;
+                to = gap.to;
+            } else {
+                to = Math.max(to, gap.to);
+            }
+        }
+        if (to != Long.MIN_VALUE) total += to - from;
+        return total;
     }
 
     Ride with(String phase, String trouble, long finishedAt, long lastFixAt,
