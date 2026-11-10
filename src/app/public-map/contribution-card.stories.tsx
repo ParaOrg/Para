@@ -1,20 +1,24 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, within } from 'storybook/test';
 
-import { RouteCard } from '@/features/routes/cards/route-card';
-import type { Livery } from '@/features/routes/model/liveries';
+import { RouteCard, type RouteCardRide } from '@/features/routes/cards/route-card';
+import { RAILWAY_LIVERY, type Livery } from '@/features/routes/model/liveries';
 
 import { ContributionCard } from './contribution-card';
 
 /** The card as it sits in the list: right after the last route card, in that card's livery. */
 function AfterRouteCard({ livery, origin }: { livery: Livery; origin: string }) {
+  const ride: RouteCardRide =
+    livery === RAILWAY_LIVERY['MRT-3']
+      ? { kind: 'rail', railway: 'MRT-3', bound: null, originCode: null }
+      : { kind: 'road', livery };
   return (
     <div className="w-97.5">
       <RouteCard
-        livery={livery}
+        ride={ride}
         state="rest"
         routeOrigin={origin}
-        endPoints={[{ id: 'a', routeDirection: 'Tala', vehicle: 'Jeepney' }]}
+        endPoints={[{ id: 'a', routeDirection: 'Tala', vehicle: 'Jeepney', stationCode: null }]}
         onSelect={() => undefined}
         onPick={() => undefined}
         testId="chooser"

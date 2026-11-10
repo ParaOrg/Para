@@ -15,6 +15,21 @@ export const MODE_LABEL = {
   'UV Express': 'UV Express',
 } satisfies Record<Vehicle, string>;
 
+/**
+ * What a RouteCard's mode badge says (RouteCard, 4629:22776): a road vehicle's word, or a train's
+ * line, "LRT 1", as Figma writes it.
+ */
+export const MODE_BADGE_LABEL = {
+  'LRT-1': 'LRT 1',
+  'LRT-2': 'LRT 2',
+  'MRT-3': 'MRT 3',
+  Jeepney: 'Jeep',
+  'E-Jeep': 'E-Jeep',
+  Bus: 'Bus',
+  Ferry: 'Ferry',
+  'UV Express': 'UV Express',
+} satisfies Record<Vehicle, string>;
+
 export interface ModeGroup<T> {
   /** The mode the group's label names; null for rows that ride nothing the design draws. */
   vehicle: Vehicle | null;

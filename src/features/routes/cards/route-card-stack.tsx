@@ -1,8 +1,6 @@
 import type { ReactNode } from 'react';
 
 import { RouteCard } from './route-card';
-import { RouteCardRailway } from './route-card-railway';
-import { MODE_LABEL, groupByMode } from './route-modes';
 import { routeCards, type Listing } from '../model/departures';
 import type { Livery } from '../model/liveries';
 import { stationCode } from '../model/rail-codes';
@@ -44,31 +42,23 @@ function originCodeOf(directions: readonly { v: Direction }[]): string | null {
   return first && line ? stationCode(line, directionEnds(first.v).from) : null;
 }
 
-/**
- * What a card draws at its top: a road card its first row group's mode word (RouteCard draws none
- * when that group rides nothing drawn, as P2P and tricycle), a train or ferry card its line.
- */
-function drawnModeOf(place: ReturnType<typeof routeCards>[number]): string | null {
-  if (place.railway) return place.railway;
-  const [first] = groupByMode(place.directions.map((d) => ({ vehicle: vehicleOf(d.v) })));
-  return first?.vehicle ? MODE_LABEL[first.vehicle] : null;
+/** A row's station code at its end, as its line's table codes it; null off a train line or for an unknown station. */
+function endCodeOf(v: Direction): string | null {
+  const line = railLineOf(v);
+  return line && stationCode(line, directionEnds(v).to);
 }
 
 /**
- * Routes one way round as RouteCards: a card per place they leave from and
- * mode, run by mode (routeCards), and per train line and bound or the ferry a
- * RouteCardRailway, each in its livery — its first row's mode's, or a
- * train's or the ferry's line's own (liveryOf) — with a row per drawn
- * direction. A run of one mode names it on its first card only: a card
- * names its mode unless the card before drew the same word. One card at a
- * time is Selected, and the map lights its directions alone; a row opens
- * its trip straight away, whether its card is picked or not, and picks
- * none: selecting it too is confusing (the owner's call), and the trip's
- * ‹ comes back to every card at rest. The route list stacks them under its
- * header; the public map's HintuanCard under its
- * place's boxes, the routes stopping at the Selected one; the studio's
- * hotspot card under "Routes that pass through", or a terminal's "Routes that
- * stage here" — edge to edge in all three.
+ * Routes one way round as RouteCards, edge to edge (RouteCardStackedList, 4633:19780): a card per
+ * place they leave from and mode, run by mode (routeCards), and per train line and bound or the
+ * ferry, each in its livery — its first row's mode's, or a train's or the ferry's line's own
+ * (liveryOf) — with a row per drawn direction. Every card shows its mode, the cards after one of
+ * the same mode too. One card at a time is Selected, and the map lights its directions alone; a
+ * row opens its trip straight away, whether its card is picked or not, and picks none: selecting it
+ * too is confusing (the owner's call), and the trip's ‹ comes back to every card at rest. The route
+ * list stacks them over its Controller; the public map's HintuanCard under its place's boxes, the
+ * routes stopping at the Selected one; the studio's hotspot card under "Routes that pass through",
+ * or a terminal's "Routes that stage here".
  */
 export function RouteCardStack({
   routes,
@@ -102,45 +92,32 @@ export function RouteCardStack({
 
   return (
     <>
-      {places.map((p, i) =>
-        p.railway ? (
-          <RouteCardRailway
-            key={p.card}
-            testId={testId}
-            railway={p.railway}
-            bound={p.bound}
-            state={selected === p.card ? 'selected' : 'rest'}
-            routeOrigin={p.from}
-            originCode={originCodeOf(p.directions)}
-            endPoints={p.directions.map((d) => {
-              const line = railLineOf(d.v);
-              return {
-                id: d.v.id,
-                routeDirection: d.to,
-                stationCode: line && stationCode(line, directionEnds(d.v).to),
-              };
-            })}
-            onSelect={() => pick(p)}
-            onPick={(id) => open(id, p.livery)}
-          />
-        ) : (
-          <RouteCard
-            key={p.card}
-            testId={testId}
-            livery={p.livery}
-            showsMode={i === 0 || drawnModeOf(places[i - 1]) !== drawnModeOf(p)}
-            state={selected === p.card ? 'selected' : 'rest'}
-            routeOrigin={p.from}
-            endPoints={p.directions.map((d) => ({
-              id: d.v.id,
-              routeDirection: d.to,
-              vehicle: vehicleOf(d.v),
-            }))}
-            onSelect={() => pick(p)}
-            onPick={(id) => open(id, p.livery)}
-          />
-        ),
-      )}
+      {places.map((p) => (
+        <RouteCard
+          key={p.card}
+          testId={testId}
+          ride={
+            p.railway
+              ? {
+                  kind: 'rail',
+                  railway: p.railway,
+                  bound: p.bound,
+                  originCode: originCodeOf(p.directions),
+                }
+              : { kind: 'road', livery: p.livery }
+          }
+          state={selected === p.card ? 'selected' : 'rest'}
+          routeOrigin={p.from}
+          endPoints={p.directions.map((d) => ({
+            id: d.v.id,
+            routeDirection: d.to,
+            vehicle: vehicleOf(d.v),
+            stationCode: endCodeOf(d.v),
+          }))}
+          onSelect={() => pick(p)}
+          onPick={(id) => open(id, p.livery)}
+        />
+      ))}
       {end && places.length > 0 && end(places[places.length - 1].livery)}
     </>
   );
