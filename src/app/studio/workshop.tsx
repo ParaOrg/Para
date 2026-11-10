@@ -30,6 +30,7 @@ import {
   useDrawing,
   useFollow,
   useOpenDraft,
+  useDraftOnly,
   useLoopClosing,
   useSaveFlow,
   useSaveTarget,
@@ -159,7 +160,17 @@ export function Workshop({ session, recovery }: WorkshopProps) {
   const canEdit = isSignedIn;
 
   // What the save panel saves into, and where the drawing is headed.
-  const target = useSaveTarget(draw, saved.directions, hotspots.hotspots);
+  // Routes and hotspots that are drafts only: the sidebar opens on them as on approved ones.
+  const draftOnly = useDraftOnly({
+    isSignedIn,
+    directions: saved.directions,
+    hotspots: hotspots.hotspots,
+  });
+  const target = useSaveTarget(
+    draw,
+    [...saved.directions, ...draftOnly.directions],
+    hotspots.hotspots,
+  );
   const { extendEnds } = target;
   // A right-click on saved lines while drawing, and opening a direction's drawing.
   const { onFollow, opening } = useFollow({
@@ -169,14 +180,19 @@ export function Workshop({ session, recovery }: WorkshopProps) {
     target,
     setNotice,
   });
-  // A draft tapped on the map opens into editing: Edit route on the editor's own, the card on
-  // another editor's; the rest wait in Drafts.
+  // A draft tapped on the map opens into its sidebar: Edit route on the editor's own, the card on
+  // another editor's (useOpenDraft).
   const handleOpenDraft = useOpenDraft({
     directions: saved.directions,
+    draftDirections: draftOnly.directions,
+    hotspots: hotspots.hotspots,
+    draftHotspots: draftOnly.hotspots,
     userId: session?.user.id ?? null,
     draw,
     opening,
     openTrip: cards.openTrip,
+    openPlace: camera.openPlace,
+    setNotice,
   });
 
   // A return trip starts where the other way ended, shows it faintly, and can close the loop.
@@ -243,6 +259,7 @@ export function Workshop({ session, recovery }: WorkshopProps) {
             target={target}
             saveFlow={saveFlow}
             contribution={contribution}
+            draftHotspots={draftOnly.hotspots}
           />
           {/* `data-dock-host`: the open card's sheet says where its top is here at rest, and on what follows it (`data-dock-follower`) as a finger drags it (BottomSheet); the New + says what it stands in the corner. */}
           <div

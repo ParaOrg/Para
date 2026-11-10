@@ -270,6 +270,23 @@ check(
     approvedWrites(w).length === 0,
   said(w),
 );
+// ---- 1a. A hintuan that is a draft only opens in its sidebar from a tap on its mark
+await go(P1, 17);
+await clickAt(P1, 700);
+const hotspotPanel = page.getByTestId('hotspot-panel');
+await waitFor(async () => (await hotspotPanel.count()) > 0);
+check(
+  "a tap on a new hintuan's draft opens its sidebar on the draft, with no review sheet",
+  (await hotspotPanel.count()) === 1 &&
+    (await page.getByPlaceholder('SM Fairview Ilalim').inputValue()) === 'Stand-in Head' &&
+    (await page.locator('dialog[open]').count()) === 0,
+);
+check(
+  '  and offers Approve',
+  await hotspotPanel.getByRole('button', { name: 'Approve' }).isVisible(),
+);
+await hotspotPanel.getByRole('button', { name: 'Exit' }).click();
+await waitFor(async () => (await hotspotPanel.count()) === 0);
 await approveAll();
 const head = tables.stop.find((s) => s.name === 'Stand-in Head');
 const tail = tables.stop.find((s) => s.name === 'Stand-in Tail');
@@ -321,6 +338,23 @@ check(
   '  the drawing kept on the device is gone',
   (await page.evaluate(() => localStorage.getItem('para.draft.v1'))) === null,
 );
+// ---- 2a. A route that is a draft only opens in its sidebar from a tap on its dashed line
+await openCard(OUT[1]);
+await waitFor(async () => (await pointsShown()) > 0);
+check(
+  "a tap on a new route's draft opens it into its sidebar, with no review sheet",
+  (await pointsShown()) === OUT.length && (await page.locator('dialog[open]').count()) === 0,
+  `${await pointsShown()} points`,
+);
+const draftPanel = page.getByTestId('route-panel');
+check(
+  '  the sidebar says it is a draft, and offers Approve',
+  /Status\s+Draft/.test(await page.getByTestId('line-detail').innerText()) &&
+    (await draftPanel.getByText('Draft', { exact: true }).first().isVisible()) &&
+    (await draftPanel.getByRole('button', { name: 'Approve' }).isVisible()),
+);
+await draftPanel.getByRole('button', { name: 'Exit' }).click();
+await waitFor(async () => (await pointsShown()) === 0);
 await approveAll();
 const route = tables.route.find((r) => r.id === routeDraft?.subject_id);
 const outV = tables.route_variant.find((v) => v.id === outDraft?.id);
