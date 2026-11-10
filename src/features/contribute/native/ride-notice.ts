@@ -11,6 +11,7 @@ import {
 interface RidePlugin {
   setState: (state: RideState) => Promise<void>;
   now: () => Promise<unknown>;
+  shareDiagnostics: () => Promise<void>;
   addListener: (
     event: typeof RIDE_EVENT_NAME,
     listener: () => void,
@@ -50,6 +51,14 @@ export function noteRideWatch(isOn: boolean): void {
   void send().catch((error: unknown) => {
     console.warn('The ride notification could not be told of the watch.', error);
   });
+}
+
+/**
+ * Opens Android's share sheet with the ride's diagnostics log as text. Nothing leaves the phone
+ * unless the contributor picks where it goes (ADR 0004).
+ */
+export function shareRideDiagnostics(): Promise<void> {
+  return getPlugin().shareDiagnostics();
 }
 
 /** The ride as the phone has it, with its history, and whether its service records now. */
