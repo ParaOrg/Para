@@ -134,7 +134,7 @@ export function AccountSettingsScreen({
               error={keepRecordingError}
             />
           )}
-          {/* No Figma design yet (the owner's Q97): Keep Para recording's look, until one. */}
+          {/* No Figma design yet: Keep Para recording's look until there is one. */}
           {onShareDiagnostics && (
             <AppSettingRow
               label="Share ride diagnostics"
