@@ -106,7 +106,7 @@ const statusList = search.getByRole('list', { name: /take down or put back/i });
 await statusList.getByRole('button', { name: 'Take down' }).first().waitFor();
 await shot('04-search-take-down');
 await statusList.getByRole('button', { name: 'Take down' }).first().click();
-await search.getByText('Updated published data').waitFor();
+await search.getByRole('status').filter({ hasText: 'Updated published data' }).waitFor();
 assert.equal((await api(`stop?id=eq.${subjectId}`))[0].status, 'taken_down', 'taken down');
 await statusList.getByRole('button', { name: 'Put back' }).first().waitFor();
 await shot('05-search-put-back');
