@@ -20,6 +20,7 @@ export interface PlaceSearchInputs {
   onPick: (hotspot: Hotspot) => void;
   onLookAt: (point: LngLat) => void;
   onPickLandmark?: (landmark: Landmark) => void;
+  onSearchRestart?: () => void;
   noteOf?: (place: SearchPlace) => string | null;
   loadLandmarks?: LoadLandmarks;
 }
@@ -43,6 +44,7 @@ export function usePlaceSearch({
   onPick,
   onLookAt,
   onPickLandmark,
+  onSearchRestart,
   noteOf = NO_NOTE,
   loadLandmarks,
 }: PlaceSearchInputs) {
@@ -81,6 +83,7 @@ export function usePlaceSearch({
     setFrom(text.trim() === '' ? null : whereNow());
     if (text.trim() !== '') {
       setLandmark(null);
+      onSearchRestart?.();
       landmarks.ask();
     }
   };
@@ -105,7 +108,10 @@ export function usePlaceSearch({
   const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Escape') {
       if (isOpen) handleQueryChange('');
-      else setLandmark(null);
+      else {
+        setLandmark(null);
+        onSearchRestart?.();
+      }
     } else if (event.key === 'ArrowDown' && hasList) {
       event.preventDefault();
       moveTo(hasActive ? (activeIndex + 1) % rows.length : 0);

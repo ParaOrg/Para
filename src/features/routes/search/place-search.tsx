@@ -30,6 +30,11 @@ interface PlaceSearchProps {
    * left out, the Para routes near it are listed under the field (decision 8).
    */
   onPickLandmark?: (landmark: Landmark) => void;
+  /**
+   * The search starts over: something typed, or Escape with nothing typed. What a pick left behind
+   * goes then, as the routes near a landmark do; the studio takes its dot away.
+   */
+  onSearchRestart?: () => void;
   /** A word after a place's label, or null: the studio marks a new place still in a draft. */
   noteOf?: (place: SearchPlace) => string | null;
   /** Where the landmarks come from: the file unless given (stories). */
@@ -56,6 +61,7 @@ export function PlaceSearch({
   onPick,
   onLookAt,
   onPickLandmark,
+  onSearchRestart,
   noteOf,
   loadLandmarks,
   renderLandmarkPin,
@@ -67,6 +73,7 @@ export function PlaceSearch({
     onPick,
     onLookAt,
     onPickLandmark,
+    onSearchRestart,
     noteOf,
     loadLandmarks,
   });

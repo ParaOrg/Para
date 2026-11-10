@@ -11,8 +11,8 @@ interface SearchMarkProps {
 
 /**
  * A small dot where a studio search took the camera (ticket 05, decision 45), so the editor sees
- * what was found. It marks nothing and catches no tap; StudioSearch takes it away after a while.
- * A look for now, from the tokens; the owner designs it.
+ * what was found. It marks nothing and catches no tap; StudioSearch takes it away when the search
+ * starts over or another result is picked. A look for now, from the tokens; the owner designs it.
  */
 export function SearchMark({ map, at }: SearchMarkProps) {
   const el = useMarkerElement(
