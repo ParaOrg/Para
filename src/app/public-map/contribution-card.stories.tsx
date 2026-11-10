@@ -3,7 +3,7 @@ import { expect, within } from 'storybook/test';
 
 import { RouteCard, type RouteCardRide } from '@/features/routes/cards/route-card';
 import { isRoadLivery, type Livery, type RoadLivery } from '@/features/routes/model/liveries';
-import type { RailwayVehicle } from '@/features/routes/model/vehicles';
+import type { RailwayVehicle, Vehicle } from '@/features/routes/model/vehicles';
 
 import { ContributionCard } from './contribution-card';
 
@@ -14,6 +14,14 @@ const RAILWAY_OF = {
   'metro-rail-way-three': 'MRT-3',
   ferry: 'Ferry',
 } satisfies Record<Exclude<Livery, RoadLivery>, RailwayVehicle>;
+
+/** What each road livery's card rides, so its badge names its own mode. */
+const VEHICLE_OF = {
+  jeep: 'Jeepney',
+  'uv-express': 'UV Express',
+  ejeep: 'E-Jeep',
+  bus: 'Bus',
+} satisfies Record<RoadLivery, Vehicle>;
 
 /** The card as it sits in the list: right after the last route card, in that card's livery. */
 function AfterRouteCard({ livery, origin }: { livery: Livery; origin: string }) {
@@ -30,7 +38,7 @@ function AfterRouteCard({ livery, origin }: { livery: Livery; origin: string }) 
           {
             id: 'a',
             routeDirection: 'Tala',
-            vehicle: ride.kind === 'rail' ? ride.railway : 'Jeepney',
+            vehicle: ride.kind === 'rail' ? ride.railway : VEHICLE_OF[ride.livery],
             stationCode: null,
           },
         ]}
