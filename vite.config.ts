@@ -187,7 +187,7 @@ export default defineConfig({
             //    budget for code it already carried in its own chunk; apart, it
             //    is one chunk both pages load. Nor the footbridge layer and its
             //    reader (.scratch/footbridges), fetched at street level by the
-            //    public map and, behind its toggle, by the studio. A
+            //    public map. A
             //    module lands in `shared` when two chunks import it, whichever
             //    pages they are.
             {
