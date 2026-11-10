@@ -86,6 +86,22 @@ X3 is the page's honest answer to X1 once it opens: it offers Resume and Stop at
 
 The emulator's driver build (`VITE_EMULATOR_RIDE=1`) holds the card itself, so `useRideNotice` and the page's `setState` are never exercised there (#845's bugs could not show). No emulator has an OEM killer: MIUI cells are phone tests or mocks. Location off and on, airplane mode, battery saver, Doze, a permission revoke and a clock change can all be driven with `adb shell` and are the regression checks for the build.
 
+### Since the audit
+
+The Ride module (Design A, the owner's Q92) was built after this audit. The native side now owns the
+ride: `ride/RideMachine.java` holds every rule above as plain Java with JUnit tests, `Rides.java`
+runs it on the phone, and the page reads the ride's history (`RidePlugin.now`) instead of replaying
+taps. Tickets 01 to 04 are resolved (#857, #858); 05 (clock set back) and 06 (a failed fix-log
+write) are open. The rows marked ❌ for those four now read as below.
+
+| Event | Now |
+| --- | --- |
+| MIUI-style kill, no restart | the card goes by itself 2.5 min after its last post; the page opens the ride cut off, with Resume or Stop at its last fix |
+| Phone reboot, app update | the card says "Your ride stopped when the phone restarted. Open Para to carry on or save it."; nothing records by itself |
+| Location switched off | the card says "Location is off: not recording", and the page hears it; on again, Recording |
+| No fix for 2 minutes, location on | the card says "No location: not recording" |
+| A process starts with a ride cut off | no card says Recording: only a running service shows it |
+
 ### Invariants for the Ride module
 
 Checked where the native side can check them, healed where it can, and each breach written to the phone's own diagnostics log (ADR 0004: it leaves the phone only by the contributor's choice).

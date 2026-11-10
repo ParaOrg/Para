@@ -1,8 +1,11 @@
 package ph.para.contributor;
 
+import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.location.Location;
 
-import com.getcapacitor.JSArray;
+import java.util.List;
+
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
@@ -10,15 +13,15 @@ import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
 
 import ph.para.contributor.ride.Ride;
-import ph.para.contributor.ride.RideCodec;
 import ph.para.contributor.ride.RideMachine;
 
 /**
  * The page's way to the ride's notification (native/ride-notice.ts) and to its recording
  * (native/native-location.ts). While awake, the page says where the ride is (setState) and the
- * notification follows it. It takes the taps made on the notification (events), applies them, and
- * drops them (dropEvents); a tap while it is awake reaches it at once ("rideEvent"). Its Start
- * starts the ride's service (startRecording), whose fixes reach it while it is there ("rideFix").
+ * notification follows it. It reads the ride as the phone has it (now), with the taps made on the
+ * notification while it slept in its history; a tap while it is awake is told at once ("rideEvent"),
+ * and it reads the ride again. Its Start starts the ride's service (startRecording), whose fixes
+ * reach it while it is there ("rideFix").
  */
 @CapacitorPlugin(name = "Ride")
 public class RidePlugin extends Plugin {
@@ -29,7 +32,7 @@ public class RidePlugin extends Plugin {
         return page != null;
     }
 
-    /** Tells the page a tap was made, if it is there to hear: it reads the events. */
+    /** Tells the page the ride changed on the phone (a tap on the card), if it is there to hear: it reads it again. */
     static synchronized void tellPage() {
         if (page != null) page.notifyListeners("rideEvent", new JSObject());
     }
@@ -78,27 +81,22 @@ public class RidePlugin extends Plugin {
     }
 
     /**
-     * Where the page, awake, holds the ride: kept as it says (the page is the ride's truth while it
-     * is there), keeping what only the phone knows (why it has no location) for the same ride still
-     * recording.
+     * Where the page, awake, holds the ride, with its history (its switches and its paused gaps):
+     * kept as it says, put together with what the phone knows (RideMachine.told).
      */
     @PluginMethod
     public void setState(PluginCall call) {
         String recordingId = call.getString("recordingId", "");
         String phase = call.getString("phase", RideState.NONE);
         Long startedAt = call.getLong("startedAt");
-        Double pausedSeconds = call.getDouble("pausedSeconds");
         Long stoppedAt = call.getLong("stoppedAt");
-        boolean isPaused = RideState.PAUSED.equals(phase);
-        Ride told = RideCodec.fromSummary(
-            recordingId == null ? "" : recordingId,
-            phase,
-            call.getString("mode", Ride.WALK),
-            startedAt == null ? 0 : startedAt,
-            pausedSeconds == null ? 0 : Math.round(pausedSeconds * 1000),
-            isPaused && stoppedAt != null ? stoppedAt : 0,
-            0,
-            0);
+        long start = startedAt == null ? 0 : startedAt;
+        List<Ride.Gap> gaps = RideJson.gapsOf(call.getArray("gaps"));
+        if (RideState.PAUSED.equals(phase) && stoppedAt != null) {
+            gaps.add(new Ride.Gap(stoppedAt, 0, Ride.GAP_PAUSED));
+        }
+        Ride told = new Ride(recordingId == null ? "" : recordingId, phase, Ride.TROUBLE_NONE, start, 0, start,
+            RideJson.modesOf(call.getArray("modes")), gaps);
         RideState.setPageWatching(getContext(), Boolean.TRUE.equals(call.getBoolean("isWatching", false)));
         Rides.apply(getContext(), kept -> RideMachine.told(kept, told));
         if (!RideState.RECORDING.equals(phase) && RideService.isRunning()) {
@@ -139,48 +137,45 @@ public class RidePlugin extends Plugin {
     }
 
     /**
-     * The ride the service is recording now, or null: the page asks as it opens, so a ride that
-     * went on recording while the app was gone (swiped from Recents, or its page rebuilt) opens
-     * recording, not cut off.
+     * The ride as the phone has it, with its history, and whether its service records now: the page
+     * reads it as it opens and as it wakes, and puts it together with its own
+     * (recorder/ride-taps.ts). A ride that went on recording while the app was gone opens recording.
      */
     @PluginMethod
-    public void recordingNow(PluginCall call) {
-        Ride ride = Rides.now(getContext());
-        boolean isRecording = RideService.isRunning() && ride.isRecordingLive() && !ride.recordingId.isEmpty();
+    public void now(PluginCall call) {
         JSObject result = new JSObject();
-        result.put("recordingId", isRecording ? ride.recordingId : JSObject.NULL);
+        result.put("ride", RideJson.of(Rides.now(getContext())));
+        result.put("isServiceRunning", RideService.isRunning());
         call.resolve(result);
     }
 
-    /** The ride's diagnostics log (RideDiagnostics), for the contributor to read or share. */
+    /**
+     * Opens Android's share sheet with the ride's diagnostics log (RideDiagnostics) as text, from
+     * the contributor's own tap (Account settings). Nothing is sent unless they pick where it goes
+     * (ADR 0004). Resolves once the sheet is open.
+     */
     @PluginMethod
-    public void diagnostics(PluginCall call) {
-        JSObject result = new JSObject();
-        result.put("text", RideDiagnostics.read(getContext()));
-        call.resolve(result);
-    }
-
-    @PluginMethod
-    public void events(PluginCall call) {
-        JSObject result = new JSObject();
-        try {
-            // Parsed from the events' JSON. Not JSArray.from, which takes an array, not a string:
-            // given one it answers null, and the page then had no taps to apply.
-            result.put("events", new JSArray(RideState.events(getContext()).toString()));
-        } catch (Exception unreadable) {
-            result.put("events", new JSArray());
-        }
-        call.resolve(result);
-    }
-
-    @PluginMethod
-    public void dropEvents(PluginCall call) {
-        Long time = call.getLong("time");
-        if (time == null) {
-            call.reject("time is required.");
+    public void shareDiagnostics(PluginCall call) {
+        if (getActivity() == null) {
+            call.reject("No screen to open the share sheet from.");
             return;
         }
-        RideState.dropEvents(getContext(), time);
+        String log = RideDiagnostics.read(getContext());
+        String text = "Para ride diagnostics (app " + versionName() + ")\n\n"
+            + (log.isEmpty() ? "Nothing went wrong with a ride on this phone.\n" : log);
+        Intent send = new Intent(Intent.ACTION_SEND)
+            .setType("text/plain")
+            .putExtra(Intent.EXTRA_SUBJECT, "Para ride diagnostics")
+            .putExtra(Intent.EXTRA_TEXT, text);
+        getActivity().startActivity(Intent.createChooser(send, "Share ride diagnostics"));
         call.resolve();
+    }
+
+    private String versionName() {
+        try {
+            return getContext().getPackageManager().getPackageInfo(getContext().getPackageName(), 0).versionName;
+        } catch (PackageManager.NameNotFoundException unknown) {
+            return "unknown";
+        }
     }
 }

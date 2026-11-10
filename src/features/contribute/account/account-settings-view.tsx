@@ -10,10 +10,11 @@ import { useProfileQuery } from '../api/use-profile-query';
 import { useUpdateProfileMutation } from '../api/use-update-profile-mutation';
 import { askAgain, useLoadGiveUp } from '../common/use-load-give-up';
 
-// Keep Para recording exists in the Android app's build only: the web build never builds the
-// native chunk it opens.
+// Keep Para recording and Share ride diagnostics exist in the Android app's build only: the web
+// build never builds the native chunks they open.
 const IS_NATIVE_BUILD = import.meta.env.MODE === 'apk';
 const KEEP_RECORDING_FAILED = 'Para could not open your phone’s settings. Try again.';
+const SHARE_DIAGNOSTICS_FAILED = 'Para could not open sharing. Try again.';
 
 interface AccountSettingsViewProps {
   /** The password was just changed, on Change password. */
@@ -40,6 +41,7 @@ export function AccountSettingsView({
   const giveUp = useLoadGiveUp(!profile.data && !profile.isError && profile.fetchStatus !== 'idle');
   const update = useUpdateProfileMutation();
   const [keepRecordingError, setKeepRecordingError] = useState<string | null>(null);
+  const [shareDiagnosticsError, setShareDiagnosticsError] = useState<string | null>(null);
 
   const handleOpenKeepRecording = () => {
     setKeepRecordingError(null);
@@ -52,6 +54,16 @@ export function AccountSettingsView({
       .catch((error: unknown) => {
         console.warn('The phone’s Autostart settings could not be opened.', error);
         setKeepRecordingError(KEEP_RECORDING_FAILED);
+      });
+  };
+
+  const handleShareDiagnostics = () => {
+    setShareDiagnosticsError(null);
+    import('../native/ride-notice')
+      .then((module) => module.shareRideDiagnostics())
+      .catch((error: unknown) => {
+        console.warn('The ride diagnostics could not be shared.', error);
+        setShareDiagnosticsError(SHARE_DIAGNOSTICS_FAILED);
       });
   };
 
@@ -72,6 +84,8 @@ export function AccountSettingsView({
       onOpenDeleteAccount={onOpenDeleteAccount}
       onOpenKeepRecording={IS_NATIVE_BUILD ? handleOpenKeepRecording : undefined}
       keepRecordingError={keepRecordingError}
+      onShareDiagnostics={IS_NATIVE_BUILD ? handleShareDiagnostics : undefined}
+      shareDiagnosticsError={shareDiagnosticsError}
       onBack={onBack}
     />
   );

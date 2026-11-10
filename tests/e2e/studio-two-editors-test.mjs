@@ -273,6 +273,11 @@ check(
   !(await body(b.page)).includes(A_ID) && !(await body(b.page)).includes('a@example.com'),
 );
 check('  and B has sent no write', writesOf(db).length === writesBefore);
+check(
+  "  the card offers B Approve on A's draft, and no Discard: only its maker discards it",
+  (await b.page.getByRole('button', { name: 'Approve', exact: true }).count()) === 1 &&
+    (await b.page.getByRole('button', { name: /^Discard/ }).count()) === 0,
+);
 
 // B's Drafts list says it too, and marks the draft a Draft.
 await b.page.getByRole('button', { name: /^Drafts \(\d+\)$/ }).click();

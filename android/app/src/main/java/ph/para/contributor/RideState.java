@@ -3,10 +3,6 @@ package ph.para.contributor;
 import android.content.Context;
 import android.content.SharedPreferences;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import ph.para.contributor.ride.Ride;
 import ph.para.contributor.ride.RideCodec;
 
@@ -14,9 +10,7 @@ import ph.para.contributor.ride.RideCodec;
  * Where the phone keeps the ride (ride.Ride) between processes: SharedPreferences, written at once.
  * Rides changes it, through RideMachine's rules; nothing else writes the ride but the page's own
  * setState while it is awake.
- *
- * It also keeps the taps made on the notification that the page has not taken yet. The page applies
- * them, in order, when it wakes (native/ride-notice.ts), and drops them.
+
  */
 final class RideState {
     static final String NONE = "none";
@@ -61,8 +55,8 @@ final class RideState {
             .putLong("lastFixAt", ride.lastFixAt)
             .putString("modes", RideCodec.modesText(ride.modes))
             .putString("gaps", RideCodec.gapsText(ride.gaps))
-            // The summary an older app kept: gone, so it is never read over the history.
-            .remove("mode").remove("pausedMs").remove("pausedSince")
+            // The summary and the taps an older app kept: gone, so they are never read over the history.
+            .remove("mode").remove("pausedMs").remove("pausedSince").remove("events")
             .commit();
     }
 
@@ -76,39 +70,5 @@ final class RideState {
 
     static synchronized void setPageWatching(Context context, boolean isWatching) {
         preferences(context).edit().putBoolean("isPageWatching", isWatching).commit();
-    }
-
-    /** Adds a tap made on the notification, for the page to apply when it wakes. */
-    static synchronized void addEvent(Context context, String kind, long time, String to) {
-        try {
-            JSONArray events = events(context);
-            JSONObject event = new JSONObject().put("kind", kind).put("time", time);
-            if (to != null) event.put("to", to);
-            event.put("recordingId", ride(context).recordingId);
-            events.put(event);
-            preferences(context).edit().putString("events", events.toString()).commit();
-        } catch (JSONException ignored) {
-            // Built from plain values: it cannot fail.
-        }
-    }
-
-    /** The taps the page has not taken yet, oldest first. */
-    static synchronized JSONArray events(Context context) {
-        try {
-            return new JSONArray(preferences(context).getString("events", "[]"));
-        } catch (JSONException unreadable) {
-            return new JSONArray();
-        }
-    }
-
-    /** Drops the taps up to `time`: the page has applied them. */
-    static synchronized void dropEvents(Context context, long time) {
-        JSONArray kept = new JSONArray();
-        JSONArray events = events(context);
-        for (int index = 0; index < events.length(); index++) {
-            JSONObject event = events.optJSONObject(index);
-            if (event != null && event.optLong("time") > time) kept.put(event);
-        }
-        preferences(context).edit().putString("events", kept.toString()).commit();
     }
 }

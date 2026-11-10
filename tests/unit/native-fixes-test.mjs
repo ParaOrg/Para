@@ -20,6 +20,7 @@ import {
   canRecordWithout,
   firstMissing,
   neededPermissions,
+  isLocationReady,
 } from '../../src/features/contribute/native/permission-steps.ts';
 
 const fix = (timestamp) => ({ timestamp, coords: { longitude: 121, latitude: 14, accuracy: 5 } });
@@ -154,4 +155,19 @@ test("each maker's phones get their group's steps, its company's whole name too"
   for (const maker of ['Google', 'motorola', 'constructor', '']) {
     assert.equal(brandOf(maker), null, maker);
   }
+});
+
+test("Start with location off asks Google's dialog, and only its yes starts the ride", async () => {
+  let asked = 0;
+  const answer = (location) => async () => {
+    asked += 1;
+    return location;
+  };
+  assert.equal(await isLocationReady(true, answer('off')), true);
+  assert.equal(asked, 0, 'location on: no dialog');
+  assert.equal(await isLocationReady(false, answer('on')), true);
+  assert.equal(await isLocationReady(false, answer('off')), false);
+  // No Google Play services: no dialog to show, so the Turn on location card.
+  assert.equal(await isLocationReady(false, answer('unknown')), false);
+  assert.equal(asked, 3);
 });

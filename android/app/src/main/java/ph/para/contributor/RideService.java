@@ -13,6 +13,7 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
+import android.os.SystemClock;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -27,6 +28,7 @@ import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.Priority;
 
+import ph.para.contributor.ride.FixClock;
 import ph.para.contributor.ride.Ride;
 import ph.para.contributor.ride.RideMachine;
 import ph.para.contributor.ride.RideStep;
@@ -57,12 +59,19 @@ public class RideService extends Service {
     private static final long CHECK_EVERY_MS = 30_000;
 
     private static boolean isRunning = false;
+    /** The fixes' clock for this process: anchored by its first fix. */
+    private static final FixClock CLOCK = new FixClock();
 
     private final Handler handler = new Handler(Looper.getMainLooper());
     private final Runnable check = new Runnable() {
         @Override
         public void run() {
             long now = System.currentTimeMillis();
+            long moved = CLOCK.changeSince(now, SystemClock.elapsedRealtime());
+            if (moved != 0) {
+                RideDiagnostics.note(RideService.this, Rides.now(RideService.this).recordingId,
+                    "the phone's clock moved " + (moved / 1000) + " s from the fixes' time; fixes keep their own");
+            }
             if (Rides.apply(RideService.this, ride -> RideMachine.check(ride, now)).has(RideStep.Effect.DIAGNOSE)) {
                 RidePlugin.tellFixProblem("UNAVAILABLE", "No location for two minutes.");
             }
@@ -89,9 +98,12 @@ public class RideService extends Service {
         @Override
         public void onLocationResult(@NonNull LocationResult result) {
             for (Location location : result.getLocations()) {
+                // Kept at a time the phone's clock being changed cannot move back (FixClock).
+                location.setTime(CLOCK.timeOf(location.getTime(), location.getElapsedRealtimeNanos() / 1_000_000));
                 FixLog.append(RideService.this, location);
                 RidePlugin.tellFix(location);
-                Rides.fix(RideService.this, location.getTime());
+                // The fix check counts on the clock the ride does, not the fixes' own.
+                Rides.fix(RideService.this, System.currentTimeMillis());
             }
         }
     };
@@ -164,15 +176,12 @@ public class RideService extends Service {
 
     /**
      * The ride cannot record (`why`): it is paused where it stands (RideMachine.refused), so no card
-     * says "Recording" while nothing records. The page applies the pause when it wakes, and Resume
+     * says "Recording" while nothing records. The page reads the pause when it wakes, and Resume
      * (in the app, once the permission is back) records again.
      */
     private void failed(String why) {
         long now = System.currentTimeMillis();
-        boolean wasRecording = Rides.now(this).is(Ride.RECORDING);
-        Rides.apply(this, current -> RideMachine.refused(current, now, why));
-        if (wasRecording) {
-            RideState.addEvent(this, "pause", now, null);
+        if (!Rides.apply(this, current -> RideMachine.refused(current, now, why)).effects.isEmpty()) {
             RidePlugin.tellPage();
         }
         RideNotification.post(this);

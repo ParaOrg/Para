@@ -1,6 +1,6 @@
 # 04: A process start shows a stale Recording card for a moment
 
-Status: ready-for-agent
+Status: resolved
 Type: task
 Blocked by: 02
 
@@ -17,3 +17,7 @@ Post a recording card only when the service runs (invariant 1); otherwise post n
 ## Acceptance checks
 
 - Unit on the card decision: RideState `recording` with no service gives no card.
+
+## Comments
+
+Resolved by #857: a recording card is posted only while the service runs (RideCard), and RidePlugin.load marks a ride with no service cut off.

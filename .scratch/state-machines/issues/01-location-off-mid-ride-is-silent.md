@@ -1,6 +1,6 @@
 # 01: Location switched off mid-ride is silent
 
-Status: ready-for-agent
+Status: resolved
 Type: task
 Blocked by: none
 
@@ -21,3 +21,7 @@ Invariant 3 (`docs/architecture/state-machines.md`): while recording, a fix in t
 
 - Emulator: `cmd location set-location-enabled false` mid-ride: the card's words change within 2 minutes, the log has a line; on again, fixes resume and the card says Recording.
 - Unit: the staleness rule (last fix time, now, the 2-minute limit) as a pure function.
+
+## Comments
+
+Resolved by #858: the service hears the location switch and runs the 2-minute fix check; the card says "Location is off: not recording" or "No location: not recording" (Q95, Q96), and the page hears UNAVAILABLE. Emulator check: location off then on, in emulator-notification.sh.

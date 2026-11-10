@@ -1,6 +1,6 @@
 # 05: A clock set back mid-ride drops fixes
 
-Status: ready-for-agent
+Status: resolved
 Type: task
 Blocked by: none
 
@@ -18,3 +18,7 @@ Order and deduplicate by elapsed realtime natively; keep the wall-clock time for
 
 - Unit: in the page's dedupe (`takeWatchedFixes`), a fix with an older wall time but a newer elapsed time is kept.
 - Emulator: `date -s` back an hour mid-ride (root): fixes keep arriving in the log.
+
+## Comments
+
+Resolved by the FixClock pull request: RideService keeps each fix at the first fix's wall time plus the elapsed time since, so a clock set back or forward no longer moves fix times, and the log and the page keep them all. A clock change of more than a minute is written to the diagnostics log. The page's own times (Start, Pause) still read the wall clock. Emulator check: the clock set back an hour mid-ride, in emulator-notification.sh.

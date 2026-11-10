@@ -239,4 +239,25 @@ public class RideMachineTest {
         Ride pausedByPage = RideCodec.fromSummary("r1", Ride.PAUSED, Ride.WALK, T0, 0, T0 + 2 * MINUTE, 0, 0);
         assertEquals(Ride.TROUBLE_NONE, RideMachine.told(off, pausedByPage).ride.trouble);
     }
+
+    @Test
+    public void thePageTellingKeepsATapItHasNotTaken() {
+        Ride tapped = RideMachine.switchMode(recording(), T0 + MINUTE).ride;
+        Ride told = RideCodec.fromSummary("r1", Ride.RECORDING, Ride.WALK, T0, 0, 0, 0, 0);
+        Ride kept = RideMachine.told(tapped, told).ride;
+        assertEquals(Ride.RIDE, kept.mode());
+        assertEquals(2, kept.modes.size());
+    }
+
+    @Test
+    public void pausesThatOverlapAreCountedOnceAndALostStretchIsNot() {
+        Ride ride = new Ride("r1", Ride.RECORDING, Ride.TROUBLE_NONE, T0, 0, T0,
+            java.util.Collections.singletonList(new Ride.ModeSwitch(T0, Ride.WALK)),
+            java.util.Arrays.asList(
+                new Ride.Gap(T0 + 10 * SECOND, T0 + 30 * SECOND, Ride.GAP_PAUSED),
+                new Ride.Gap(T0 + 20 * SECOND, T0 + 40 * SECOND, Ride.GAP_PAUSED),
+                new Ride.Gap(T0 + 40 * SECOND, T0 + 50 * SECOND, Ride.GAP_PAUSED),
+                new Ride.Gap(T0 + 60 * SECOND, T0 + 90 * SECOND, Ride.GAP_RESUMED)));
+        assertEquals(60 * SECOND, ride.elapsedMs(T0 + 100 * SECOND));
+    }
 }
