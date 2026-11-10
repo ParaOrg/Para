@@ -147,6 +147,15 @@ jobs:
           echo "preview=$preview" >> "$GITHUB_OUTPUT"
           echo "public=$public studio=$studio contribute=$contribute build=$build drawing=$drawing"
 
+      # Which areas of Para the pull request touches (areas.json): a warning, never a failure,
+      # when it spans more than one.
+      - name: Areas touched
+        if: github.event_name == 'pull_request'
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+        run: git diff --name-only "$BASE...$HEAD" | node scripts/checks/pr-areas.mjs
+
   build:
     name: Build and unit checks
     needs: changes
