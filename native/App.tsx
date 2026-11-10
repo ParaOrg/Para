@@ -3,7 +3,8 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { indexSchema, type Index } from '../src/features/routes/published/index-schema';
+import { readIndexFile } from '../src/features/routes/published/fetch-index';
+import type { Index } from '../src/features/routes/published/index-schema';
 
 /** Our own tiles and style (ADR 0007), the same the web map reads. */
 const STYLE_URL = 'https://para-tiles.para-ph-info.workers.dev/styles/liberty';
@@ -32,7 +33,7 @@ export default function App() {
         return res.json();
       })
       .then((raw) => {
-        setIndex(indexSchema.parse(raw));
+        setIndex(readIndexFile(raw, INDEX_URL));
         setTiming((t) => ({ ...t, index: since() }));
       })
       .catch((error: unknown) => setTiming((t) => ({ ...t, error: String(error) })));
