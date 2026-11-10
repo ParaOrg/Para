@@ -20,7 +20,14 @@ export function DraftAlert({
   isKeeping = false,
   keepNotice = null,
 }: DraftAlertProps) {
-  if (!error && !keepNotice) return null;
+  // The status region stays mounted, empty or not, so a screen reader hears the kept notice arrive;
+  // out of the flow (sr-only) while there is nothing to see, so the form's gaps stay as they were.
+  const status = (
+    <p role="status" className={keepNotice ? 'text-sm text-content-secondary' : 'sr-only'}>
+      {keepNotice}
+    </p>
+  );
+  if (!error && !keepNotice) return status;
   return (
     <div className="flex flex-col items-start gap-2">
       {error && (
@@ -37,11 +44,7 @@ export function DraftAlert({
           disabled={isKeeping}
         />
       )}
-      {keepNotice && (
-        <p role="status" className="text-sm text-content-secondary">
-          {keepNotice}
-        </p>
-      )}
+      {status}
     </div>
   );
 }

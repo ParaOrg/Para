@@ -1,4 +1,4 @@
-import { useEffect, useId } from 'react';
+import { useEffect, useId, useRef } from 'react';
 
 import { Button } from '@/design-system/primitives/button';
 
@@ -18,17 +18,28 @@ interface HeldDraftSheetProps {
 }
 
 /**
- * A small sheet over the map for another editor's draft of a new route or place (the owner's
- * Q122): its name, who is changing it, and Approve, which any editor may press. Nothing in it is
- * editable, as on a card with a lock. A look for now, until the owner designs it.
+ * A small sheet over the map for another editor's draft of a new route or place: its name, who is
+ * changing it, and Approve, which any editor may press. Nothing in it is editable, as on a card
+ * with a lock. Focus moves to its heading as it opens and back where it was as it closes; it is
+ * not modal, so the map stays live. A look for now, until the owner designs it.
  */
 export function HeldDraftSheet({ draft, places, onApproved, onClose }: HeldDraftSheetProps) {
   const headingId = useId();
   const { lock, retry } = useDraftRowLock(draft);
-  // Escape closes it, as a card's ✕ does.
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  // The sheet appears where nothing was focused: a keyboard or a screen reader starts at its name,
+  // and goes back to what it was on as the sheet closes.
+  useEffect(() => {
+    const before = document.activeElement;
+    headingRef.current?.focus();
+    return () => {
+      if (before instanceof HTMLElement && before.isConnected) before.focus();
+    };
+  }, []);
+  // Escape closes it, as a card's ✕ does; not an Escape a field or a dialog has already answered.
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose();
+      if (event.key === 'Escape' && !event.defaultPrevented) onClose();
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
@@ -41,7 +52,12 @@ export function HeldDraftSheet({ draft, places, onApproved, onClose }: HeldDraft
       className="absolute bottom-4 left-1/2 z-20 flex w-80 max-w-[calc(100%-2rem)] -translate-x-1/2 flex-col gap-3 rounded-xl bg-surface p-4 font-sn-pro shadow-large"
     >
       <div className="flex items-start justify-between gap-3">
-        <h2 id={headingId} className="text-base font-semibold text-content-primary">
+        <h2
+          id={headingId}
+          ref={headingRef}
+          tabIndex={-1}
+          className="text-base font-semibold text-content-primary outline-none"
+        >
           {reviewDraftOf(draft, places).label}
         </h2>
         <Button variant="plain" size="small" label="Close" onClick={onClose} />

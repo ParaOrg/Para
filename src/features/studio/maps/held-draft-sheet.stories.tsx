@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import type { Session } from '@supabase/supabase-js';
 import { QueryClientProvider } from '@tanstack/react-query';
-import { expect, fn, userEvent, within } from 'storybook/test';
+import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
 import { createQueryClient } from '@/shared/lib/query-client';
 
@@ -76,7 +76,10 @@ type Story = StoryObj<typeof meta>;
 export const ByName: Story = {
   play: async ({ canvasElement }) => {
     const sheet = within(canvasElement);
-    await expect(sheet.getByRole('heading', { name: 'Lagro Terminal' })).toBeVisible();
+    // Focus moves to its name in an effect, after the first paint.
+    await waitFor(() =>
+      expect(sheet.getByRole('heading', { name: 'Lagro Terminal' })).toHaveFocus(),
+    );
     await expect(await sheet.findByText(/Being changed by Marisol/)).toBeVisible();
     await expect(sheet.getByRole('button', { name: 'Approve' })).toBeEnabled();
     await expect(sheet.queryByRole('button', { name: /Discard/ })).toBeNull();
@@ -84,7 +87,14 @@ export const ByName: Story = {
 };
 
 /** No name on file for the maker: plain words. */
-export const NoNameOnFile: Story = { decorators: [withEditor(new Map())] };
+export const NoNameOnFile: Story = {
+  decorators: [withEditor(new Map())],
+  play: async ({ canvasElement }) => {
+    await expect(
+      await within(canvasElement).findByText(/Being changed by another editor/),
+    ).toBeVisible();
+  },
+};
 
 /** Close, and Escape, close it. */
 export const Closes: Story = {

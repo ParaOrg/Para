@@ -25,10 +25,11 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** Nothing failed: nothing shows. */
+/** Nothing failed: nothing shows, only the empty status region a screen reader listens to. */
 export const Quiet: Story = {
   play: async ({ canvasElement }) => {
     await expect(within(canvasElement).queryByRole('alert')).toBeNull();
+    await expect(within(canvasElement).getByRole('status')).toBeEmptyDOMElement();
   },
 };
 
@@ -62,4 +63,9 @@ export const Kept: Story = {
   play: async ({ canvasElement }) => {
     await expect(within(canvasElement).getByRole('status')).toHaveTextContent(KEPT);
   },
+};
+
+/** Keep my draft refused (another change was under way): the conflict, the button again, and why. */
+export const KeepRefused: Story = {
+  args: { error: CONFLICT, onKeep: fn(), keepNotice: reviewMessage({ code: 'busy' }) },
 };

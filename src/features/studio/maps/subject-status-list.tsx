@@ -1,13 +1,15 @@
 import { useState } from 'react';
 
-import { Button } from '@/design-system/primitives/button';
-
+import { SubjectStatusView } from './subject-status-view';
 import type { PublicationSubject } from '../data/publication';
 import { reviewMessage } from '../data/review-commands';
 import { usePublicationQuery, useSubjectStatusMutation } from '../data/use-review-query';
 
 /** How many routes and places a search lists: the search box is narrow, a name narrows it. */
 const MAX_SHOWN = 5;
+
+/** Said when a take down or put back did not reach the database, in place of the raw error. */
+export const NOT_CHANGED = 'Couldn’t change it. Check your connection and try again.';
 
 interface SubjectStatusListProps {
   /** What is typed in the studio's search. */
@@ -25,8 +27,8 @@ const QUESTION = {
 
 /**
  * Under the studio's search: the approved and taken-down routes and places whose name holds what is
- * typed, each with Take down or Put back (the owner's Q121). A taken-down route is on no map, so
- * this is where it is found again. A look for now, until the owner designs it.
+ * typed, each with Take down or Put back. A taken-down route is on no map, so this is where it is
+ * found again. Its look is SubjectStatusView's.
  */
 export function SubjectStatusList({ query, onChanged }: SubjectStatusListProps) {
   const publication = usePublicationQuery();
@@ -37,83 +39,41 @@ export function SubjectStatusList({ query, onChanged }: SubjectStatusListProps) 
   const handlePress = (subject: PublicationSubject) => {
     if (mutation.isPending || !window.confirm(QUESTION[subject.status](subject.label))) return;
     setNotice(null);
-    mutation.mutate(subject, {
-      onSuccess: (result) => {
-        const isChanged = result.code === 'taken_down' || result.code === 'put_back';
+    mutation.mutateAsync(subject).then(
+      (result) => {
         setNotice(
           result.code === 'blocked'
             ? 'A route still ends here. Change or take down that route first.'
             : reviewMessage(result),
         );
-        if (isChanged) onChanged();
+        if (result.code === 'taken_down' || result.code === 'put_back') onChanged();
       },
-    });
+      () => setNotice(NOT_CHANGED),
+    );
   };
 
-  const said = (notice ?? mutation.error) && (
-    <p role="status" className="px-4 py-2 text-sm text-content-secondary">
-      {notice ?? mutation.error?.message}
-    </p>
-  );
-  if (text.length < 2) return said ? <Panel>{said}</Panel> : null;
-  if (publication.isPending)
-    return (
-      <Panel>
-        <p role="status" className="px-4 py-2 text-sm text-content-secondary">
-          Reading routes and places…
-        </p>
-      </Panel>
-    );
-  if (publication.isError)
-    return (
-      <Panel>
-        <div className="flex items-center justify-between gap-3 px-4 py-2 text-sm">
-          <p role="alert">Couldn’t read the routes and places to take down.</p>
-          <Button
-            variant="secondary"
-            size="small"
-            label="Try again"
-            onClick={() => void publication.refetch()}
-          />
-        </div>
-      </Panel>
-    );
-  const matches = publication.data.subjects
-    .filter((subject) => subject.label.toLowerCase().includes(text))
-    .slice(0, MAX_SHOWN);
-  if (matches.length === 0) return said ? <Panel>{said}</Panel> : null;
+  const matches =
+    text.length < 2 || !publication.data
+      ? []
+      : publication.data.subjects
+          .filter((subject) => subject.label.toLowerCase().includes(text))
+          .slice(0, MAX_SHOWN);
   return (
-    <Panel>
-      <h3 className="px-4 pt-2 text-xs font-medium text-content-tertiary">Take down or put back</h3>
-      {said}
-      <ul aria-label="Routes and places to take down or put back">
-        {matches.map((subject) => (
-          <li
-            key={`${subject.kind}:${subject.id}`}
-            className="flex items-center justify-between gap-3 px-4 py-2"
-          >
-            <div className="min-w-0">
-              <p className="truncate text-sm text-content-primary">{subject.label}</p>
-              <p className="text-xs text-content-tertiary">
-                {subject.kind === 'route' ? 'Route' : 'Place'} ·{' '}
-                {subject.status === 'approved' ? 'Published' : 'Taken down'}
-              </p>
-            </div>
-            <Button
-              variant="secondary"
-              size="small"
-              label={subject.status === 'approved' ? 'Take down' : 'Put back'}
-              disabled={mutation.isPending}
-              onClick={() => handlePress(subject)}
-            />
-          </li>
-        ))}
-      </ul>
-    </Panel>
+    <SubjectStatusView
+      state={
+        text.length < 2
+          ? 'idle'
+          : publication.isPending
+            ? 'reading'
+            : publication.isError
+              ? 'failed'
+              : 'ready'
+      }
+      matches={matches}
+      notice={notice}
+      isBusy={mutation.isPending}
+      onPress={handlePress}
+      onRetry={() => void publication.refetch()}
+    />
   );
-}
-
-/** The search's own panel look (PlaceSearchResults), so the list reads as part of the search. */
-function Panel({ children }: { children: React.ReactNode }) {
-  return <section className="rounded-xl bg-surface py-1 shadow-large">{children}</section>;
 }

@@ -50,7 +50,7 @@ interface PlaceSearchProps {
    * (ticket 06). Gone once the search is cleared, another result picked or the panel closed.
    */
   renderLandmarkPin?: (landmark: Landmark) => ReactNode;
-  /** Under the results, from what is typed: the studio's routes and places to take down. */
+  /** Rendered under the results, from what is typed. */
   renderAfterResults?: (query: string) => ReactNode;
 }
 
