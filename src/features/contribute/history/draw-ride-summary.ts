@@ -107,14 +107,23 @@ function drawDot(ctx: CanvasRenderingContext2D, [x, y]: [number, number], fill: 
   ctx.fill();
 }
 
-/** One of the figures under the names: its value large, its label small above it. */
-function drawFigure(ctx: CanvasRenderingContext2D, x: number, label: string, value: string) {
+/**
+ * One of the figures under the names: its value large, its label small above it, both squeezed
+ * into `width` when longer (`UV Express` is wider than its third of the card).
+ */
+function drawFigure(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  width: number,
+  label: string,
+  value: string,
+) {
   ctx.fillStyle = MUTED;
   ctx.font = `500 32px ${FONT}`;
-  ctx.fillText(label, x, 1085);
+  ctx.fillText(label, x, 1085, width);
   ctx.fillStyle = INK;
   ctx.font = `700 64px ${FONT}`;
-  ctx.fillText(value, x, 1160);
+  ctx.fillText(value, x, 1160, width);
 }
 
 /**
@@ -161,11 +170,14 @@ export function drawRideSummary(
   }
 
   const column = width / 3;
+  // A gap between figures, none after the last: it may run to the card's margin.
+  const figure = column - 24;
   if (summary.distance) {
-    drawFigure(ctx, PAD, 'Distance', `${summary.distance.value} ${summary.distance.unit}`);
+    const { value, unit } = summary.distance;
+    drawFigure(ctx, PAD, figure, 'Distance', `${value} ${unit}`);
   }
-  drawFigure(ctx, PAD + column, 'Time', summary.time);
-  if (summary.mode) drawFigure(ctx, PAD + 2 * column, 'Mode', summary.mode);
+  drawFigure(ctx, PAD + column, figure, 'Time', summary.time);
+  if (summary.mode) drawFigure(ctx, PAD + 2 * column, column, 'Mode', summary.mode);
 
   ctx.fillStyle = MUTED;
   ctx.font = `500 32px ${FONT}`;
