@@ -27,6 +27,7 @@ The goals: a codebase that is easy to review, work that scales, and an app whose
 
 - Hand independent work to other sessions. At most about four build at the same time: the limit is how much the owner can review, not how fast the sessions work.
 - Each session owns folders, not tasks. No two sessions edit the same file at the same time.
+- The folders make five areas (`areas.json`): commuter, studio, contributor, contributor APK and shared. A pull request stays in one area where it can; CI warns when one spans several.
 - Work that touches files most open pull requests touch (a rename, a pass over comments, file splits) waits until those pull requests land.
 - One browser suite at a time in a container.
 - Testing follows the size of the change. A simple change (copy, a token, a class, a one-line fix) is pushed without running the checks; CI still runs on its pull request. A medium or hard change, or any change the owner asks to be tested, runs `npm run check` and the browser suites it reaches before pushing.
