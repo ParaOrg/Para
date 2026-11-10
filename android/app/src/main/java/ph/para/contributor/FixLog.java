@@ -39,6 +39,10 @@ final class FixLog {
     // (recording-fixes.ts takeWatchedFixes): the log keeps the fixes the page will.
     private static long lastTime = Long.MIN_VALUE;
     private static boolean isLastTimeKnown = false;
+    // The fixes this process could not write for the recording being logged (a full phone, say).
+    // Said in the diagnostics log at the first, and in all when the log is sealed: with the page
+    // asleep nothing else holds them.
+    private static int failedWrites = 0;
 
     private FixLog() {}
 
@@ -64,6 +68,7 @@ final class FixLog {
         isSealed = false;
         File file = fileOf(context);
         if (file.exists() && recordingIdOf(file).equals(recordingId)) return;
+        failedWrites = 0;
         write(file, new JSONObject().put("recordingId", recordingId).toString(), false);
         lastTime = Long.MIN_VALUE;
         isLastTimeKnown = true;
@@ -89,8 +94,14 @@ final class FixLog {
             if (location.hasAccuracy()) line.put("accuracyM", location.getAccuracy());
             write(file, line.toString(), true);
             lastTime = location.getTime();
-        } catch (IOException | JSONException ignored) {
-            // The page still gets this fix live; losing it here must not stop the service.
+        } catch (IOException | JSONException unwritten) {
+            // The page still gets this fix live if it is awake; losing it here must not stop the
+            // service, but it is said, once, where the contributor can share it.
+            failedWrites++;
+            if (failedWrites == 1) {
+                RideDiagnostics.note(context, recordingIdOf(file),
+                    "a fix could not be written to the fix log (" + unwritten + "); with the page asleep it is lost");
+            }
         }
     }
 
@@ -135,6 +146,10 @@ final class FixLog {
         isSealed = true;
         isLastTimeKnown = false;
         File file = fileOf(context);
+        if (failedWrites > 0) {
+            RideDiagnostics.note(context, recordingIdOf(file), failedWrites + " fixes could not be written to the fix log");
+            failedWrites = 0;
+        }
         if (!file.exists()) return;
         String[] lines = readText(file).split("\n");
         StringBuilder kept = new StringBuilder();
