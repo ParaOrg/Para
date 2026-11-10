@@ -42,9 +42,10 @@ native_fixes() {
   lines=$(adb shell "run-as $PKG cat files/fixlog.ndjson" 2> /dev/null | tr -d '\r' | wc -l)
   echo $((lines > 0 ? lines - 1 : 0))
 }
-# The taps kept for the page, from the app's own preferences.
-ride_events() {
-  adb shell "run-as $PKG cat shared_prefs/para.ride.xml" 2> /dev/null | tr -d '\r' | grep -o '&quot;kind&quot;:&quot;[a-z]*' | sed 's/.*;//' | tr '\n' ' '
+# One field of the ride as the phone keeps it (RideState: SharedPreferences), read as the app's user.
+ride_field() {
+  adb shell "run-as $PKG cat shared_prefs/para.ride.xml" 2> /dev/null | tr -d '\r' \
+    | grep -o "name=\"$1\">[^<]*" | sed 's/.*">//'
 }
 # Whether the location service is in the foreground now.
 is_foreground() {
@@ -329,19 +330,28 @@ adb shell dumpsys notification --noredact > "$OUT/notification-finished.txt"
 grep -q 'Ride finished' "$OUT/notification-finished.txt" && pass "the notification says the ride waits to be saved" \
   || fail "no 'Ride finished' notification"
 
-EVENTS=$(ride_events)
-[ "$EVENTS" = "mode pause resume finish " ] && pass "the page has every tap waiting, in order: $EVENTS" \
-  || fail "the taps kept for the page: '$EVENTS'"
-# The page reads them too (RidePlugin.events), as it does to apply them: the driver's next report
-# (every 30 s, emulator-ride.ts) counts what it read.
-PAGE_TAPS=""
+# The ride's history, as the phone keeps it: Sakay where it was tapped, the pause and its Resume, and
+# the time lost to the update before the ride was carried on; and finished.
+MODES=$(ride_field modes)
+GAPS=$(ride_field gaps)
+echo "phase=$(ride_field phase) modes=$MODES gaps=$GAPS" > "$OUT/ride-history.txt"
+[ "$(ride_field phase)" = finished ] && pass "the phone holds the ride finished" \
+  || fail "the phone holds the ride as '$(ride_field phase)', not finished"
+echo "$MODES" | grep -q ':walk,[0-9]*:ride' && pass "the history has Sakay where it was tapped: $MODES" \
+  || fail "the history's modes are '$MODES', with no Sakay after Lakad"
+echo "$GAPS" | grep -q ':paused' && echo "$GAPS" | grep -q ':resumed' \
+  && pass "the history has the pause and the time lost to the update: $GAPS" \
+  || fail "the history's gaps are '$GAPS'"
+# The page reads it too (RidePlugin.now), as it does to apply it: the driver's next report (every
+# 30 s, emulator-ride.ts) says what it read.
+PAGE_RIDE=""
 for _ in $(seq 1 45); do
-  PAGE_TAPS=$(grep -o 'PARA_RIDE report .*taps=[a-z0-9]*' "$OUT/logcat.txt" | tail -1 | grep -o 'taps=[a-z0-9]*$')
-  [ "$PAGE_TAPS" = "taps=4" ] && break
+  PAGE_RIDE=$(grep -o 'PARA_RIDE report .*ride=[a-z0-9:=]*' "$OUT/logcat.txt" | tail -1 | grep -o 'ride=[a-z0-9:=]*$')
+  [ "$PAGE_RIDE" = "ride=finished:modes=2:gaps=2" ] && break
   sleep 1
 done
-[ "$PAGE_TAPS" = "taps=4" ] && pass "the page reads the four taps it is to apply" \
-  || fail "the page reads the taps as '$PAGE_TAPS', not taps=4: it would apply none"
+[ "$PAGE_RIDE" = "ride=finished:modes=2:gaps=2" ] && pass "the page reads the ride's history: $PAGE_RIDE" \
+  || fail "the page reads the ride as '$PAGE_RIDE', not ride=finished:modes=2:gaps=2"
 
 kill "$FEED_PID" "$LOGCAT_PID" 2> /dev/null
 {

@@ -97,9 +97,10 @@ public final class RideMachine {
     }
 
     /**
-     * The page, awake, says where the ride is (`told`, its summary): it is the truth while it is
-     * there. What only the phone knows carries over to the same ride still recording: why it has no
-     * location, and when its last fix came.
+     * The page, awake, says where the ride is (`told`, with its history): it is the truth while it is
+     * there. The history it tells is put together with the phone's (RideHistory), so a tap on the
+     * card the page has not taken yet is kept. What only the phone knows carries over to the same
+     * ride still recording: why it has no location, and when its last fix came.
      */
     public static RideStep told(Ride ride, Ride told) {
         if (told.is(Ride.NONE) || told.recordingId.isEmpty()) {
@@ -111,7 +112,7 @@ public final class RideMachine {
             boolean isStillRecording = ride.is(Ride.RECORDING) && told.is(Ride.RECORDING);
             String trouble = isStillRecording && isLocationTrouble(ride.trouble) ? ride.trouble : Ride.TROUBLE_NONE;
             kept = told.with(told.phase, trouble, told.finishedAt, Math.max(ride.lastFixAt, told.lastFixAt),
-                told.modes, told.gaps);
+                RideHistory.modes(told.modes, ride.modes), RideHistory.gaps(told.gaps, ride.gaps));
         }
         return RideStep.to(kept).then(Effect.POST_CARD).done();
     }

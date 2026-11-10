@@ -11,22 +11,26 @@ import { readFileSync } from 'node:fs';
 import {
   fixLineSchema,
   fixLogSchema,
+  NATIVE_RIDE_PHASES,
+  nativeRideSchema,
   NO_ACCURACY_M,
   PLUGIN_NAMES,
-  RIDE_EVENT_KINDS,
+  RIDE_CUT_OFF_TROUBLES,
   RIDE_EVENT_NAME,
   RIDE_FIX_EVENT_NAME,
   RIDE_FIX_PROBLEM_CODES,
   RIDE_FIX_PROBLEM_EVENT_NAME,
+  RIDE_GAP_REASONS,
   RIDE_MODES,
   RIDE_PHASES,
-  recordingNowSchema,
-  rideEventSchema,
+  rideNowSchema,
   rideStateSchema,
 } from '../../src/features/contribute/native-bridge/native-contract.ts';
 
 const JAVA = 'android/app/src/main/java/ph/para/contributor';
 const java = (name) => readFileSync(`${JAVA}/${name}.java`, 'utf8');
+/** A source of the ride's rules (ride/), plain Java. */
+const rule = (name) => readFileSync(`${JAVA}/ride/${name}.java`, 'utf8');
 
 const escape = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
@@ -76,46 +80,50 @@ test('RideState names each phase the page sends', () => {
   }
 });
 
-test('the notification writes the modes the page reads', () => {
-  const source = java('RideActionReceiver');
-  for (const mode of RIDE_MODES) {
-    assertHas(source, 'RideActionReceiver.java', new RegExp(`"${mode}"`), `the mode "${mode}"`);
-  }
-});
-
-test('RideActionReceiver keeps a tap of each kind the page applies, and no other', () => {
-  const source = java('RideActionReceiver');
-  const kept = [...source.matchAll(/RideState\.addEvent\(app, "(\w+)"/g)].map((match) => match[1]);
-  assert.deepEqual([...new Set(kept)].sort(), [...RIDE_EVENT_KINDS].sort());
-});
-
-test('RideState writes each field of a tap the page reads, and the page hears its event', () => {
-  const state = java('RideState');
-  for (const field of Object.keys(rideEventSchema.shape)) {
-    assertHas(state, 'RideState.java', new RegExp(`\\.put\\("${field}"`), `.put("${field}")`);
-  }
-  assertHas(
-    java('RidePlugin'),
-    'RidePlugin.java',
-    new RegExp(`notifyListeners\\("${RIDE_EVENT_NAME}"`),
-    `notifyListeners("${RIDE_EVENT_NAME}")`,
-  );
-  assertHas(java('RidePlugin'), 'RidePlugin.java', /result\.put\("events"/, 'result.put("events")');
-  // The ride its service records now, which the page asks as it opens (recorder-opening.ts).
-  assertHas(
-    java('RidePlugin'),
-    'RidePlugin.java',
-    /public void recordingNow\(PluginCall call\)/,
-    'recordingNow(PluginCall)',
-  );
-  for (const key of Object.keys(recordingNowSchema.shape)) {
+test("the ride's rules name every phase, mode, gap and cut-off the page reads", () => {
+  const source = rule('Ride');
+  const named = [
+    ...NATIVE_RIDE_PHASES,
+    ...RIDE_MODES,
+    ...RIDE_GAP_REASONS,
+    ...RIDE_CUT_OFF_TROUBLES,
+  ];
+  for (const name of named) {
     assertHas(
-      java('RidePlugin'),
+      source,
+      'ride/Ride.java',
+      new RegExp(`public static final String \\w+ = "${name}";`),
+      `"${name}"`,
+    );
+  }
+});
+
+test('RidePlugin.now gives the ride by every key the page reads', () => {
+  const plugin = java('RidePlugin');
+  assertHas(plugin, 'RidePlugin.java', /public void now\(PluginCall call\)/, 'now(PluginCall)');
+  for (const key of Object.keys(rideNowSchema.shape)) {
+    assertHas(
+      plugin,
       'RidePlugin.java',
       new RegExp(`result\\.put\\("${key}"`),
       `result.put("${key}")`,
     );
   }
+  const json = java('RideJson');
+  const keys = [...Object.keys(nativeRideSchema.shape), 'time', 'to', 'from', 'reason'];
+  for (const key of keys) {
+    assertHas(json, 'RideJson.java', new RegExp(`\\.put\\("${key}"`), `.put("${key}")`);
+  }
+  // What the page tells is read by the same keys.
+  for (const key of ['time', 'to', 'from', 'reason']) {
+    assertHas(json, 'RideJson.java', new RegExp(`\\.opt\\w+\\("${key}"`), `.opt…("${key}")`);
+  }
+  assertHas(
+    plugin,
+    'RidePlugin.java',
+    new RegExp(`notifyListeners\\("${RIDE_EVENT_NAME}"`),
+    `notifyListeners("${RIDE_EVENT_NAME}")`,
+  );
 });
 
 test('NativePermissionsPlugin answers the battery dialog and says whether Para is unrestricted', () => {
@@ -231,8 +239,5 @@ test("the app's plugins hand the page JSON as parsed arrays, never JSArray.from 
   for (const name of ['RidePlugin', 'FixLogPlugin', 'NativePermissionsPlugin']) {
     assert.doesNotMatch(java(name), /JSArray\.from\([^)]*toString\(\)/, `${name}.java`);
   }
-  assert.match(
-    java('RidePlugin'),
-    /new JSArray\(RideState\.events\(getContext\(\)\)\.toString\(\)\)/,
-  );
+  assert.doesNotMatch(java('RideJson'), /JSArray\.from\(/, 'RideJson.java');
 });

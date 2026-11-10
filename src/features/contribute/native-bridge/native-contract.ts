@@ -22,18 +22,24 @@ export const PLUGIN_NAMES = {
  */
 export const NO_ACCURACY_M = 1_000;
 
-// The ride's notification (RidePlugin.java, RideState.java).
+// The ride on the phone (RidePlugin.java, RideState.java, ride/Ride.java).
 
-/** The ride's phases as the page tells them. RideState also has "finished", which only a tap makes. */
+/** The ride's phases as the page tells them. The phone also has "finished", which only a tap makes. */
 export const RIDE_PHASES = ['recording', 'paused', 'none'] as const;
+
+/** The ride's phases as the phone has them (ride/Ride.java). */
+export const NATIVE_RIDE_PHASES = ['none', 'recording', 'paused', 'finished'] as const;
 
 /** Lakad and Sakay, as both sides write them. */
 export const RIDE_MODES = ['walk', 'ride'] as const satisfies readonly Mode[];
 
-/** The kinds of tap RideActionReceiver.java keeps for the page. */
-export const RIDE_EVENT_KINDS = ['mode', 'pause', 'resume', 'finish'] as const;
+/** The gaps both sides keep in the ride's history (ride/Ride.java GAP_PAUSED, GAP_RESUMED). */
+export const RIDE_GAP_REASONS = ['paused', 'resumed'] as const;
 
-/** What RidePlugin.java tells the page as a tap is made while it is awake. */
+/** Why a ride recording is cut off: nothing records it (ride/Ride.java). */
+export const RIDE_CUT_OFF_TROUBLES = ['cut-off', 'phone-restarted'] as const;
+
+/** What RidePlugin.java tells the page as the ride changes on the phone while it is awake. */
 export const RIDE_EVENT_NAME = 'rideEvent';
 
 /** What RidePlugin.java hands the page each fix of the ride's service as, while it is there. */
@@ -52,14 +58,26 @@ export const rideFixProblemSchema = z.object({
 
 export type RideFixProblem = z.infer<typeof rideFixProblemSchema>;
 
-/** What the page tells the notification (RidePlugin.java setState). */
+const modeSwitchSchema = z.object({ time: z.number(), to: z.enum(RIDE_MODES) });
+
+/** A gap in the ride's history; `to` is 0 while it runs (a pause now). */
+const rideGapSchema = z.object({
+  from: z.number(),
+  to: z.number(),
+  reason: z.enum(RIDE_GAP_REASONS),
+});
+
+export type RideGap = z.infer<typeof rideGapSchema>;
+
+/** What the page tells the phone (RidePlugin.java setState): where the ride is, with its history. */
 export const rideStateSchema = z.object({
   recordingId: z.string(),
   phase: z.enum(RIDE_PHASES),
-  mode: z.enum(RIDE_MODES),
   startedAt: z.number(),
-  /** Time paused before now, the pause now running left out. */
-  pausedSeconds: z.number(),
+  /** Each switch of mode, the first at the start. */
+  modes: z.array(modeSwitchSchema),
+  /** Its closed paused and resumed gaps. */
+  gaps: z.array(rideGapSchema),
   /** Where a paused ride stopped. */
   stoppedAt: z.nullable(z.number()),
   /** The page's watch is on: the ride's service records for it (native/native-location.ts). */
@@ -71,36 +89,36 @@ export type RideState = z.infer<typeof rideStateSchema>;
 /** Where the ride is, as the recorder says it; native/ride-notice.ts adds whether it watches. */
 export type RideNoticeState = Omit<RideState, 'isWatching'>;
 
-/** A tap made on the notification while the page slept (RideState.java addEvent). */
-export const rideEventSchema = z.object({
-  kind: z.enum(RIDE_EVENT_KINDS),
-  time: z.number(),
-  /** The mode switched to, on a `mode` tap. */
-  to: z.optional(z.enum(RIDE_MODES)),
-  /** The recording it was tapped on. */
+/** The ride as the phone has it (RidePlugin.java now, RideJson.java). */
+export const nativeRideSchema = z.object({
   recordingId: z.string(),
+  phase: z.enum(NATIVE_RIDE_PHASES),
+  /** What is wrong, if anything: "none", or why it has no location, or why it is cut off. */
+  trouble: z.string(),
+  startedAt: z.number(),
+  finishedAt: z.number(),
+  lastFixAt: z.number(),
+  modes: z.array(modeSwitchSchema),
+  gaps: z.array(rideGapSchema),
 });
 
-export type RideEvent = z.infer<typeof rideEventSchema>;
+export type NativeRide = z.infer<typeof nativeRideSchema>;
 
-/** What RidePlugin.java's recordingNow() returns: the ride its service records now, or null. */
-export const recordingNowSchema = z.object({ recordingId: z.nullable(z.string()) });
+/** What RidePlugin.java's now() returns. */
+export const rideNowSchema = z.object({ ride: nativeRideSchema, isServiceRunning: z.boolean() });
 
-/** What RidePlugin.java's events() returns. */
-export const rideEventsSchema = z.object({ events: z.array(rideEventSchema) });
+export type RideNow = z.infer<typeof rideNowSchema>;
 
-/** What a run of taps on the notification did to a ride, in order. */
+/** What the phone's ride did that the page has to take: its switches, its gaps, and its Stop. */
 export interface RideTaps {
-  /** Each switch of mode, where it was tapped. */
+  /** Each switch of mode, where it was made. */
   switches: { time: number; to: Mode }[];
-  /** Each pause that was resumed: native kept no fix inside it. */
-  pauses: { from: number; to: number }[];
+  /** Each closed gap: a pause resumed, or the time lost before a cut-off ride was resumed. */
+  gaps: { from: number; to: number; reason: RideGap['reason'] }[];
   /** A pause not resumed yet: the ride stands stopped there. */
   openPause: number | null;
   /** Finish: the ride waits for its details. */
   finishedAt: number | null;
-  /** The last tap's time: those up to it are taken. */
-  lastTime: number;
 }
 
 // The native fix log (FixLog.java, FixLogPlugin.java).

@@ -1,19 +1,16 @@
 import { lazyPlugin } from '../native-bridge/native-app';
 import {
   PLUGIN_NAMES,
-  recordingNowSchema,
-  rideEventsSchema,
+  rideNowSchema,
   RIDE_EVENT_NAME,
-  type RideEvent,
   type RideNoticeState,
+  type RideNow,
   type RideState,
 } from '../native-bridge/native-contract';
 
 interface RidePlugin {
   setState: (state: RideState) => Promise<void>;
-  events: () => Promise<unknown>;
-  recordingNow: () => Promise<unknown>;
-  dropEvents: (options: { time: number }) => Promise<void>;
+  now: () => Promise<unknown>;
   addListener: (
     event: typeof RIDE_EVENT_NAME,
     listener: () => void,
@@ -55,22 +52,12 @@ export function noteRideWatch(isOn: boolean): void {
   });
 }
 
-/** The ride the app's service is recording now, or null when it records none. */
-export async function readRecordingNow(): Promise<string | null> {
-  return recordingNowSchema.parse(await getPlugin().recordingNow()).recordingId;
+/** The ride as the phone has it, with its history, and whether its service records now. */
+export async function readRideNow(): Promise<RideNow> {
+  return rideNowSchema.parse(await getPlugin().now());
 }
 
-/** The taps made on the notification that the page has not applied yet, oldest first. */
-export async function readRideEvents(): Promise<RideEvent[]> {
-  return rideEventsSchema.parse(await getPlugin().events()).events;
-}
-
-/** Forgets the taps up to `time`: the page has applied them. */
-export function dropRideEvents(time: number): Promise<void> {
-  return getPlugin().dropEvents({ time: Math.floor(time) });
-}
-
-/** Hears a tap on the notification while the page is awake; returns what stops hearing. */
+/** Hears the ride change on the phone (a tap on the card) while the page is awake; returns what stops hearing. */
 export function onRideEvent(listener: () => void): () => void {
   const handle = getPlugin().addListener(RIDE_EVENT_NAME, listener);
   return () => {

@@ -101,7 +101,6 @@ final class Rides {
             // From the background without an exemption (Android 12 and later), say.
             long now = System.currentTimeMillis();
             apply(app, current -> RideMachine.refused(current, now, "the service could not start: " + refused));
-            RideState.addEvent(app, "pause", now, null);
             RidePlugin.tellPage();
         }
     }
