@@ -137,7 +137,7 @@ for (let tries = 0; tries < 3 && !isConflictSeen; tries++) {
     routePanel.waitFor({ state: 'detached' }).then(() => 'approved'),
     routePanel
       .getByRole('alert')
-      .filter({ hasText: 'Published data changed since this draft began' })
+      .filter({ hasText: 'Another editor published a change since this draft began' })
       .waitFor()
       .then(() => 'conflict'),
   ]);

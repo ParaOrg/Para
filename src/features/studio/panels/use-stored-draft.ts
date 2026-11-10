@@ -23,6 +23,10 @@ interface UseStoredDraftOptions {
 }
 
 const DISCARD_QUESTION = 'Discard this draft? What is published stays as it is.';
+/** The conflict, said beside Keep my draft: what happened and the two ways on. */
+export const KEEPABLE_CONFLICT =
+  'Another editor published a change since this draft began. Keep your draft to approve it over theirs, or discard it.';
+
 /** Said once Keep my draft has moved the draft onto the approved revision now. */
 export const KEPT = 'Draft kept on the latest published version. Approve it again when ready.';
 const KEEP_QUESTION =
@@ -105,7 +109,11 @@ export function useStoredDraft({
     approve,
     isApproving: mutation.isPending && mutation.variables.action === 'publish',
     /** Why Approve or Discard did nothing, in the editor's words; null when nothing failed. */
-    error: mutation.error ? mutation.error.message : refusal,
+    error: mutation.error
+      ? mutation.error.message
+      : conflictRevision !== undefined
+        ? KEEPABLE_CONFLICT
+        : refusal,
     footer: {
       hasDraft: draft !== null,
       draftBusy: mutation.isPending ? mutation.variables.action : null,
