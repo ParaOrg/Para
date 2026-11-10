@@ -156,6 +156,12 @@ jobs:
           HEAD: ${{ github.event.pull_request.head.sha }}
         run: git diff --name-only "$BASE...$HEAD" | node scripts/checks/pr-areas.mjs
 
+      # The glossary's banned words (scripts/checks/glossary-words.json) kept out of src/, docs/
+      # and CONTEXT.md: CONTEXT.md's words, not the ones it says to avoid. Here, not in the build
+      # job, because a change to the docs alone runs no build; it needs nothing but Node.
+      - name: Glossary
+        run: node scripts/checks/glossary.mjs
+
   build:
     name: Build and unit checks
     needs: changes
