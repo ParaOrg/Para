@@ -2,23 +2,38 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, within } from 'storybook/test';
 
 import { RouteCard, type RouteCardRide } from '@/features/routes/cards/route-card';
-import { RAILWAY_LIVERY, type Livery } from '@/features/routes/model/liveries';
+import { isRoadLivery, type Livery, type RoadLivery } from '@/features/routes/model/liveries';
+import type { RailwayVehicle } from '@/features/routes/model/vehicles';
 
 import { ContributionCard } from './contribution-card';
 
+/** The line that wears each train or ferry livery. */
+const RAILWAY_OF = {
+  'light-rail-way-one': 'LRT-1',
+  'light-rail-way-two': 'LRT-2',
+  'metro-rail-way-three': 'MRT-3',
+  ferry: 'Ferry',
+} satisfies Record<Exclude<Livery, RoadLivery>, RailwayVehicle>;
+
 /** The card as it sits in the list: right after the last route card, in that card's livery. */
 function AfterRouteCard({ livery, origin }: { livery: Livery; origin: string }) {
-  const ride: RouteCardRide =
-    livery === RAILWAY_LIVERY['MRT-3']
-      ? { kind: 'rail', railway: 'MRT-3', bound: null, originCode: null }
-      : { kind: 'road', livery };
+  const ride: RouteCardRide = isRoadLivery(livery)
+    ? { kind: 'road', livery }
+    : { kind: 'rail', railway: RAILWAY_OF[livery], bound: null, originCode: null };
   return (
     <div className="w-97.5">
       <RouteCard
         ride={ride}
         state="rest"
         routeOrigin={origin}
-        endPoints={[{ id: 'a', routeDirection: 'Tala', vehicle: 'Jeepney', stationCode: null }]}
+        endPoints={[
+          {
+            id: 'a',
+            routeDirection: 'Tala',
+            vehicle: ride.kind === 'rail' ? ride.railway : 'Jeepney',
+            stationCode: null,
+          },
+        ]}
         onSelect={() => undefined}
         onPick={() => undefined}
         testId="chooser"

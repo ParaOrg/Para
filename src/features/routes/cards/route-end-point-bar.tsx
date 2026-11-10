@@ -22,7 +22,7 @@ type RouteEndPointBarProps = Omit<
   on: Livery | 'surface';
   /** Where the row sits among its rows, which decides how its tree line ends. */
   position: RouteEndPointPosition;
-  /** Figma's ❄️ Slot, after the name: a station's badge on a RouteCardRailway. Empty on every other row. */
+  /** Figma's ❄️ Slot, after the name: a station's code on a train RouteCard's rows. Empty on every other row. */
   slot?: ReactNode;
   /**
    * The row's words: base, SemiBold 17/24, 40 tall (a trip's Other routes); medium, Medium 17/24,
@@ -53,7 +53,7 @@ const ON_CARD = 'gap-2 px-3';
 /**
  * Figma's .RouteEndPointBar (3848:11928): a route by where it goes, the tree line before it, a
  * button that opens it. One component where Figma has one, so a change to the row is made once: a
- * RouteCard's rows, a RouteCardRailway's and a trip's "Other routes".
+ * RouteCard's rows, a train's and a road mode's alike, and a trip's "Other routes".
  */
 export function RouteEndPointBar({
   routeDirection,

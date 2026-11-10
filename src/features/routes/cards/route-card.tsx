@@ -6,7 +6,7 @@ import { ROUTE_CARD_BLOB_PLACE, ROUTE_CARD_SURFACE, ROUTE_CARD_TEXT } from './ro
 import { RouteCardMode } from './route-card-mode';
 import { RouteEndPointBar } from './route-end-point-bar';
 import { MODE_LABEL, groupByMode, type ModeGroup } from './route-modes';
-import { RAILWAY_LIVERY, type Livery } from '../model/liveries';
+import { RAILWAY_LIVERY, type RoadLivery } from '../model/liveries';
 import type { Bound } from '../model/rail-codes';
 import type { RailwayVehicle, Vehicle } from '../model/vehicles';
 
@@ -15,7 +15,7 @@ import type { RailwayVehicle, Vehicle } from '../model/vehicles';
  * livery its routes wear, or a train line's or the ferry's, in the line's own.
  */
 export type RouteCardRide =
-  | { kind: 'road'; livery: Livery }
+  | { kind: 'road'; livery: RoadLivery }
   | {
       kind: 'rail';
       railway: RailwayVehicle;

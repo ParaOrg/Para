@@ -185,8 +185,8 @@
   --surface-quaternary: var(--color-neutral-200);
   --surface-error: var(--color-red-100);
   --surface-success: var(--color-green-100);
-  /* The dark chip on a light card: a RouteCard's mode and code badges on UV Express, E-Jeep and
-     MRT-3 (RouteBadge, 4629:22776). */
+  /* The dark on a light card (RouteCard, 4629:22776): the RouteBadge chips on UV Express, E-Jeep
+     and MRT-3, and MRT-3's words on its yellow. */
   --surface-inverse: var(--color-neutral-900);
   /* Black at 60%: what dims the page under a dialog laid over it, the install
      prompt's (3732:2512). Figma keeps the 60 as the variable's opacity

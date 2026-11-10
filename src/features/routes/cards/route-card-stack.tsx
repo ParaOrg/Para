@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 
 import { RouteCard } from './route-card';
 import { routeCards, type Listing } from '../model/departures';
-import type { Livery } from '../model/liveries';
+import { isRoadLivery, type Livery } from '../model/liveries';
 import { stationCode } from '../model/rail-codes';
 import { directionEnds, railLineOf, type Direction } from '../model/routes';
 import { vehicleOf } from '../model/vehicles';
@@ -55,7 +55,7 @@ function endCodeOf(v: Direction): string | null {
  * (liveryOf) — with a row per drawn direction. Every card shows its mode, the cards after one of
  * the same mode too. One card at a time is Selected, and the map lights its directions alone; a
  * row opens its trip straight away, whether its card is picked or not, and picks none: selecting it
- * too is confusing (the owner's call), and the trip's ‹ comes back to every card at rest. The route
+ * too is confusing, and the trip's ‹ comes back to every card at rest. The route
  * list stacks them over its Controller; the public map's HintuanCard under its place's boxes, the
  * routes stopping at the Selected one; the studio's hotspot card under "Routes that pass through",
  * or a terminal's "Routes that stage here".
@@ -104,7 +104,8 @@ export function RouteCardStack({
                   bound: p.bound,
                   originCode: originCodeOf(p.directions),
                 }
-              : { kind: 'road', livery: p.livery }
+              : // A road card's livery is its mode's; one unnamed wears Jeep's, as liveryOf has it.
+                { kind: 'road', livery: isRoadLivery(p.livery) ? p.livery : 'jeep' }
           }
           state={selected === p.card ? 'selected' : 'rest'}
           routeOrigin={p.from}
