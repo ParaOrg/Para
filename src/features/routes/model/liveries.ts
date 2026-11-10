@@ -6,12 +6,15 @@ import { railwayOf, type RailwayVehicle } from './vehicles';
  * Card/Bus. A route's card, its trip and its line wear its mode's.
  */
 export const ROAD_LIVERIES = ['jeep', 'uv-express', 'ejeep', 'bus'] as const;
-type RoadLivery = (typeof ROAD_LIVERIES)[number];
+export type RoadLivery = (typeof ROAD_LIVERIES)[number];
+
+export const isRoadLivery = (livery: string): livery is RoadLivery =>
+  (ROAD_LIVERIES as readonly string[]).includes(livery);
 
 /**
  * A train route's colour is its line's (Map/Rail/LightRailWayOne, LightRailWayTwo and
- * MetroRailWayThree, by the line its routeCode names); the ferry's is Map/Ferry (RouteCardRailway,
- * 4261:15199).
+ * MetroRailWayThree, by the line its routeCode names); the ferry's is Map/Ferry (RouteCard,
+ * 4629:22776).
  */
 export const RAILWAY_LIVERY = {
   'LRT-1': 'light-rail-way-one',

@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 
 import { hasAskedBatteryDialog, markBatteryDialogAsked } from './battery-dialog-flag';
 import { hasSeenKeepRecording, markKeepRecordingSeen } from './keep-recording-flag';
-import { stopsBackgroundApps } from './keep-recording-makers';
+import { brandOf, type KeepRecordingBrand } from './keep-recording-makers';
 import {
   askBatteryUnrestricted,
   checkLocationOn,
@@ -20,8 +20,8 @@ import { firstMissing, isLocationReady, neededPermissions } from './permission-s
 export type GateStep =
   | { kind: 'permission'; permission: NativePermission }
   | { kind: 'refused'; permission: NativePermission }
-  /** Once, on a phone whose maker stops background apps: Keep Para recording. */
-  | { kind: 'keep-recording' }
+  /** Once, on a phone whose maker stops background apps: Keep Para recording, in its steps. */
+  | { kind: 'keep-recording'; brand: KeepRecordingBrand }
   /** The phone's location switch is off: no ride can record until it is on. */
   | { kind: 'location-off' };
 
@@ -73,8 +73,9 @@ export function useStartGate(onStart: () => void): StartGate {
     }
     // Shown whether or not battery restrictions are off: the maker's Autostart is a switch of its
     // own, which Android cannot report, and it alone stops a ride when the app is left.
-    if (stopsBackgroundApps(info.manufacturer) && !hasSeenKeepRecording()) {
-      setStep({ kind: 'keep-recording' });
+    const brand = brandOf(info.manufacturer);
+    if (brand && !hasSeenKeepRecording()) {
+      setStep({ kind: 'keep-recording', brand });
       return;
     }
     setStep(null);
@@ -134,7 +135,7 @@ export function useStartGate(onStart: () => void): StartGate {
   };
 
   const handleOpenAutostartSettings = () => {
-    openAutostartSettings().catch(fail);
+    openAutostartSettings(step?.kind === 'keep-recording' ? step.brand : null).catch(fail);
   };
 
   const handleOpenLocationSettings = () => {

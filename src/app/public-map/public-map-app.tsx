@@ -29,6 +29,7 @@ import { METRO_MANILA, MapView } from '@/features/routes/map/map-view';
 import { StationLabels } from '@/features/routes/map/station-labels';
 import { useCardCamera } from '@/features/routes/map/use-card-camera';
 import { useCardStack } from '@/features/routes/map/use-card-stack';
+import { useFootbridges } from '@/features/routes/map/use-footbridges';
 import { useLitRides } from '@/features/routes/map/use-lit-rides';
 import { useLoopTip } from '@/features/routes/map/use-loop-tip';
 import { useMapCredits } from '@/features/routes/map/use-map-credits';
@@ -185,6 +186,8 @@ export function PublicMapApp() {
   const offline = useOffline();
   // The phone's status bar in the map's colour (status-bar.ts).
   useStatusBarColour(map);
+  // The footbridges from street level in, fetched the first time it is reached (.scratch/footbridges).
+  useFootbridges(map);
   const age = useMapAge(saved.directions);
   const needRefresh = useNeedRefresh();
   // The install prompt, once the routes are on the map (useInstallPrompt).
@@ -339,11 +342,7 @@ export function PublicMapApp() {
         {map && goalLandmark && (
           <LandmarkPin key={goalLandmark.id} map={map} at={goalLandmark.point} />
         )}
-
-        {/*
-        Place search (.scratch/place-search, step 1): a place chosen opens as its name tapped on
-        the map does (openPlace). On a wide map the cards float under it (sheetTopUnderSearch).
-      */}
+        {/* Place search: a place opens as its name tapped does; wide, the cards float under it. */}
         <PlaceSearchBar
           map={map}
           hotspots={hotspots.hotspots}

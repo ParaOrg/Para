@@ -138,6 +138,7 @@ function TokensPage() {
         />
         <Swatch box="bg-surface-error" token="…/surface-error" cls="bg-surface-error" />
         <Swatch box="bg-surface-success" token="…/surface-success" cls="bg-surface-success" />
+        <Swatch box="bg-surface-inverse" token="…/surface-inverse" cls="bg-surface-inverse" />
         <Swatch
           box="bg-surface-transparent"
           token="…/surface-transparent"

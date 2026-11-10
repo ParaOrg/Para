@@ -122,6 +122,8 @@ export const MAP_PAINT = {
   'Paint/daylight-avenue-edge': '#ced2d9', // a shade darker
   'Paint/daylight-street': '#ffffff', // streets and service roads, white
   'Paint/daylight-street-edge': '#ebe5da', // a whisper on the ground, no strong casing
+  'Paint/footbridge': '#525252', // neutral/600: a footbridge over a road or rail, firmer than the basemap's dashed path
+  'Paint/footbridge-elevator': '#262626', // neutral/800: an elevator up to a footbridge, ringed in Paint/casing
   'Paint/draw-line': '#4900be', // parabrand/800: the line being drawn, its points' rims, a new hotspot's fill
   'Paint/draw-handle-arm': '#ff6467', // red/400: a curve's handle line
   'Paint/draw-handle-dot': '#e7000b', // red/600: the dot at a handle's end, what a drag holds
