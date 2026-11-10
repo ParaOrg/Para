@@ -154,3 +154,23 @@ export function routesNearHere(
     (a, b) => a.distanceM - b.distanceM || a.hintuan.name.localeCompare(b.hintuan.name),
   );
 }
+
+/**
+ * Where a direction would leave a commuter going to a landmark (ticket 07): of the hintuans near it
+ * (`near`, nearest first), the nearest that direction stops at; null when it stops at none.
+ */
+export function nearestStopOn(
+  directionId: string,
+  near: readonly HintuanNearHere[],
+): HintuanNearHere | null {
+  return near.find((stop) => stop.directionIds.includes(directionId)) ?? null;
+}
+
+/**
+ * The walk from the ride's end to the landmark, in words for the trip card (ticket 07): straight-line
+ * metres, to the nearest 10 and never under 10, so "about" is honest.
+ */
+export function walkToLandmark(distanceM: number, landmarkName: string): string {
+  const metres = Math.max(10, Math.round(distanceM / 10) * 10);
+  return `About ${metres} m to ${landmarkName}, in a straight line`;
+}

@@ -21,6 +21,7 @@ import { useTripTimeline } from '@/features/routes/cards/use-trip-timeline';
 import { EndTitles } from '@/features/routes/map/end-titles';
 import { routesBounds } from '@/features/routes/map/framing';
 import { HintuanPin } from '@/features/routes/map/hintuan-pin';
+import { LandmarkPin } from '@/features/routes/map/landmark-pin';
 import { lookAt } from '@/features/routes/map/look-at';
 import { MapCreditsDock } from '@/features/routes/map/map-credits-dock';
 import { MapCreditsSheet } from '@/features/routes/map/map-credits-sheet';
@@ -158,6 +159,11 @@ export function PublicMapApp() {
     otherRoute,
     pickOnPlaceCard,
     openPlace,
+    openTripFromPlace,
+    goHere,
+    letGoalGo,
+    goalLandmark,
+    walk,
     openRide,
     openTrip,
     backFromTrip,
@@ -329,6 +335,11 @@ export function PublicMapApp() {
           />
         )}
 
+        {/* The landmark "Go here" made the goal: its pin stays while the goal holds (ticket 07). */}
+        {map && goalLandmark && (
+          <LandmarkPin key={goalLandmark.id} map={map} at={goalLandmark.point} />
+        )}
+
         {/*
         Place search (.scratch/place-search, step 1): a place chosen opens as its name tapped on
         the map does (openPlace). On a wide map the cards float under it (sheetTopUnderSearch).
@@ -340,6 +351,8 @@ export function PublicMapApp() {
           whereNow={() => where.current?.at ?? null}
           onPick={(hotspot) => openPlace(hotspot.id)}
           onLookAt={(point) => lookAt(map, point)}
+          onGoHere={(landmark, near, hintuan) => goHere(landmark, near, hintuan.id)}
+          onSearchRestart={letGoalGo}
           isUnderUpdate={needRefresh}
           isUnderOfflinePill={offline || age.stale}
           isCardOpen={cards.open}
@@ -379,6 +392,7 @@ export function PublicMapApp() {
             startCode={ride.startCode}
             onSetStart={ride.setStart}
             onRemoveStart={ride.removeStart}
+            walk={walk}
             onPick={pickOnTrip}
             onEnd={endOnTrip}
             endPicked={ride.endPicked}
@@ -417,7 +431,7 @@ export function PublicMapApp() {
             hotspots={hotspots.hotspots}
             linkedDirectionIds={hotspots.linkedDirectionIds}
             directions={saved.directions}
-            onSelectDirection={openTrip}
+            onSelectDirection={openTripFromPlace}
             // Its Selected row tapped again: no box is the one until a row is picked.
             deselected={hotspots.letGone}
             onDeselect={() => {
