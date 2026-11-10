@@ -8,13 +8,13 @@ import { isDrawn, isLoop, type DirectionRow } from '@/features/routes/model/rout
 import type { Timeline } from '@/features/routes/model/timeline';
 import type { SheetHeight } from '@/shared/ui/bottom-sheet';
 
+import { LockedDraft } from './locked-draft';
 import { TripCardExtras } from './trip-card-extras';
 import type { useDeleteActions } from './use-delete-actions';
+import { useDraftLock } from './use-draft-lock';
 import { signboardUrl } from '../data/signboards';
 import type { Drawing } from '../drawing/use-drawing';
 import type { useFollow } from '../drawing/use-follow';
-import { DraftLockNotice } from '../review/draft-lock-notice';
-import { useDraftLock } from '../review/use-draft-lock';
 
 type Saved = ReturnType<typeof useSavedRoutes<DirectionRow>>;
 type Hotspots = ReturnType<typeof useSavedHotspots<HotspotRow>>;
@@ -101,7 +101,18 @@ export function StudioTripCard({
           hotspots={hotspots.hotspots}
           hotspotsAlong={hotspots.hotspotsAlong}
           canEdit={isEditable}
-          notice={canEdit && lock && <DraftLockNotice lock={lock} onRetry={retry} />}
+          notice={
+            canEdit &&
+            lock && (
+              <LockedDraft
+                kind="route"
+                subjectId={direction.routeId}
+                lock={lock}
+                onRetry={retry}
+                onApproved={() => void saved.reload()}
+              />
+            )
+          }
           onEdit={() => {
             const v = saved.selected;
             if (!v) return;
