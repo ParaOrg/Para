@@ -96,10 +96,10 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     process.exit(0);
   }
   const basePath = process.argv[process.argv.indexOf('--base') + 1];
-  const previous =
-    process.argv.includes('--base') && existsSync(basePath)
-      ? JSON.parse(readFileSync(basePath, 'utf8'))
-      : null;
+  // The base branch's baseline; none (or an empty file) where the base has no baseline yet.
+  const baseText =
+    process.argv.includes('--base') && existsSync(basePath) ? readFileSync(basePath, 'utf8') : '';
+  const previous = baseText.trim() === '' ? null : JSON.parse(baseText);
   const problems = problemsOf(long, baseline, previous);
   for (const problem of problems) console.error(`FAIL  ${problem}`);
   const shorter = Object.keys(baseline).filter((path) => (long[path] ?? 0) < baseline[path]).length;
