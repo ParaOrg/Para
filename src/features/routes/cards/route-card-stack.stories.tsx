@@ -122,7 +122,7 @@ export const InAHotspotCard: Story = { parameters: { frame: 'hotspot' } };
 export const OneSelected: Story = { args: { back: true, selected: 'SM Fairview|jeep' } };
 
 /**
- * A station: its jeeps on its RouteCard, then a RouteCardRailway per line and
+ * A station: its jeeps on its RouteCard, then a RouteCard per line and
  * bound — LRT-2 Eastbound, LRT-2 Westbound with two stations — and the
  * ferry's, each in its line's colours. Sample places, not the real map.
  */
