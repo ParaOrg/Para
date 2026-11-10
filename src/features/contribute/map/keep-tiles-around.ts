@@ -36,12 +36,17 @@ export async function warmTiles(cache: BasemapCache, urls: readonly string[]): P
 
 /** How far around a ride's start its map is kept: past a short ride, not a whole city. */
 export const KEEP_AROUND_M = 6000;
+/**
+ * How far its street-level tiles (the source's last zoom) are kept: those are most of the data,
+ * 7.8 of 10.7 MB for 6 km around the Oblation on 2026-11-10, against 5.7 MB in all with this.
+ */
+export const KEEP_STREETS_M = 3000;
 /** The coarsest zoom kept: wider than the city is not needed to find one's way. */
 const KEEP_MIN_ZOOM = 10;
 
 /**
  * Keeps the basemap's tiles for KEEP_AROUND_M around `at`, every zoom the style's vector sources
- * have from KEEP_MIN_ZOOM up (closer zooms draw from the last), so the ride's surroundings draw
+ * have from KEEP_MIN_ZOOM up, the last (closer zooms draw from it) for KEEP_STREETS_M, so the ride's surroundings draw
  * if the signal drops later (Gab, 2026-11-10: a ride begun offline showed no map). Does nothing
  * on the web page, with no signal, or for a style whose sources give no tile template.
  * ponytail: one square at the start; along the route as the ride goes if this proves short.
@@ -63,8 +68,10 @@ function tileUrlsAround(map: MapLibreMap, at: LngLat): string[] {
     const template = source.type === 'vector' ? source.tiles?.[0] : undefined;
     if (source.type !== 'vector' || !template) return [];
     const maxZoom = source.maxzoom ?? 14;
-    return tilesAround(at, KEEP_AROUND_M, Math.min(KEEP_MIN_ZOOM, maxZoom), maxZoom).map((tile) =>
-      tileUrl(template, tile),
-    );
+    const minZoom = Math.min(KEEP_MIN_ZOOM, maxZoom);
+    return [
+      ...(maxZoom > minZoom ? tilesAround(at, KEEP_AROUND_M, minZoom, maxZoom - 1) : []),
+      ...tilesAround(at, KEEP_STREETS_M, maxZoom, maxZoom),
+    ].map((tile) => tileUrl(template, tile));
   });
 }
