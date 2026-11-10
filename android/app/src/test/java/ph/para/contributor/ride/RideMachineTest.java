@@ -50,6 +50,15 @@ public class RideMachineTest {
     }
 
     @Test
+    public void startOfTheRideRecordingStartsItsServiceAgain() {
+        Ride live = recording();
+        RideStep step = RideMachine.start(live, "r1", T0 + MINUTE);
+        assertSame(live, step.ride);
+        assertTrue(step.has(Effect.START_SERVICE));
+        assertFalse(step.has(Effect.POST_CARD));
+    }
+
+    @Test
     public void pauseSealsTheLogAndStopsTheService() {
         RideStep step = RideMachine.pause(recording(), T0 + MINUTE);
         assertEquals(Ride.PAUSED, step.ride.phase);

@@ -21,9 +21,15 @@ public final class RideMachine {
 
     private RideMachine() {}
 
-    /** Start: a new ride, on Lakad. The same ride paused or cut off resumes instead. */
+    /**
+     * Start: a new ride, on Lakad. The same ride paused or cut off resumes instead; the same ride
+     * recording has its service started again, which does nothing to a service already running.
+     */
     public static RideStep start(Ride ride, String recordingId, long now) {
         if (recordingId == null || recordingId.isEmpty()) return RideStep.same(ride);
+        if (ride.recordingId.equals(recordingId) && ride.isRecordingLive()) {
+            return RideStep.to(ride).then(Effect.BEGIN_LOG).then(Effect.START_SERVICE).done();
+        }
         if (ride.recordingId.equals(recordingId) && !ride.is(Ride.NONE)) return resume(ride, now);
         if (!ride.is(Ride.NONE)) {
             return RideStep.to(ride).diagnose("start refused: ride " + ride.recordingId + " is still open").done();
