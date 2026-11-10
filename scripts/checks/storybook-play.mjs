@@ -2,6 +2,10 @@
 // `npm run build-storybook`) served here, each story opened in Playwright's Chromium, and what the
 // preview says of it read from its own channel. A failure names the story, its file and the error.
 //
+// The stories that failed when this check came in are listed, each with its reason, in
+// storybook-play-baseline.json, and the list may only shrink: a story not listed that fails, fails
+// the check; a listed one that passes now, or is gone, fails it too until its line is deleted.
+//
 //   npm run build-storybook && node scripts/checks/storybook-play.mjs [storybook-static]
 //
 // What it relies on, checked against Storybook 10.6.5: the static build's index.json (entries of
@@ -13,11 +17,13 @@
 // here, and this comment says what to check.
 import { createServer } from 'node:http';
 import { readFileSync, existsSync } from 'node:fs';
-import { extname, join, normalize, resolve } from 'node:path';
+import { dirname, extname, join, normalize, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import { chromium } from 'playwright';
 
 const ROOT = resolve(process.argv[2] ?? 'storybook-static');
+const BASELINE = join(dirname(fileURLToPath(import.meta.url)), 'storybook-play-baseline.json');
 const WORKERS = Number(process.env.STORYBOOK_PLAY_WORKERS ?? 4);
 const STORY_TIMEOUT_MS = 20_000;
 const TYPES = {
@@ -103,7 +109,14 @@ const { base, close } = await serve(ROOT);
 const browser = await chromium.launch(
   process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {},
 );
-const failures = [];
+// The stories listed as failing, by id, whatever their area.
+const listed = new Map(
+  Object.values(JSON.parse(readFileSync(BASELINE, 'utf8')).areas).flatMap((stories) =>
+    Object.entries(stories),
+  ),
+);
+const failed = new Set();
+const problems = [];
 let next = 0;
 await Promise.all(
   Array.from({ length: WORKERS }, async () => {
@@ -112,19 +125,30 @@ await Promise.all(
     while (next < stories.length) {
       const story = stories[next++];
       const why = await runStory(page, base, story).catch((error) => String(error));
-      if (why) {
-        failures.push(story);
-        console.error(
-          `FAIL  ${story.title} › ${story.name} (${story.importPath}, ${story.id})\n${why.replace(/^/gm, '      ')}`,
-        );
-      }
+      if (!why) continue;
+      failed.add(story.id);
+      if (listed.has(story.id)) continue;
+      problems.push(story.id);
+      console.error(
+        `FAIL  ${story.title} › ${story.name} (${story.importPath}, ${story.id})\n${why.replace(/^/gm, '      ')}`,
+      );
     }
     await page.close();
   }),
 );
 await browser.close();
 close();
+const ids = new Set(stories.map((story) => story.id));
+for (const id of listed.keys()) {
+  let stale = null;
+  if (!ids.has(id)) stale = 'listed in the baseline, but there is no such story now';
+  else if (!failed.has(id)) stale = 'listed in the baseline, but it passes now';
+  if (stale === null) continue;
+  problems.push(id);
+  console.error(`FAIL  ${id}: ${stale}. Delete its line from storybook-play-baseline.json.`);
+}
+const stillListed = [...failed].filter((id) => listed.has(id)).length;
 console.info(
-  `${stories.length - failures.length} of ${stories.length} stories rendered and played.`,
+  `${stories.length - failed.size} of ${stories.length} stories rendered and played; ${stillListed} failed as listed in the baseline.`,
 );
-process.exit(failures.length === 0 ? 0 : 1);
+process.exit(problems.length === 0 ? 0 : 1);

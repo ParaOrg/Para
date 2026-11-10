@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { expect, fn, userEvent, within } from 'storybook/test';
+import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
 import { LogoutConfirm } from './logout-confirm';
 
@@ -33,7 +33,7 @@ export const Default: Story = {
     await expect(
       canvas.getByRole('alertdialog', { name: 'Are you sure you want to logout?' }),
     ).toBeVisible();
-    await expect(canvas.getByRole('button', { name: 'Cancel' })).toHaveFocus();
+    await waitFor(() => expect(canvas.getByRole('button', { name: 'Cancel' })).toHaveFocus());
   },
 };
 
