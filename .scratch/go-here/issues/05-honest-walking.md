@@ -1,6 +1,6 @@
 # 05: Honest walking
 
-Status: logic ready-for-agent; the dashed line, the card's lines and the button wait for the owner's design ("Owner designs first" 3 and 4)
+Status: words and maps link built; the footbridge hint waits for the hub's word on the roads file; the dashed line, the card's lines and the button wait for the owner's design ("Owner designs first" 3 and 4)
 Type: task
 
 Footbridges' ticket 04 (the walk hint) is folded in here.
@@ -24,3 +24,15 @@ Footbridges' ticket 04 (the walk hint) is folded in here.
   - the link for each platform;
   - the hint: a walk that crosses and one that doesn't, a footbridge on either side, none within reach, two roads crossed.
 - **Later, with the design:** stories and a phone-test check; CI green.
+
+## Answer (so far)
+
+**Built:** `routes/model/honest-walk.ts`.
+- `roundedWalkM` and `walkWords`: "About 300 m in a straight line". Place search's `walkToLandmark` now shares the rounding.
+- `mapsLink`: a `geo:` link on Android, Apple Maps walking directions on an iPhone, openstreetmap.org's walking directions on a computer; never Google.
+- `mapsPlatformOf` reads the platform from the user agent.
+- Unit checks: `tests/unit/honest-walk-test.mjs`.
+
+**The footbridge hint: measured, not built.**
+- **What it needs.** The major roads as lines. Trunk, primary and secondary within 1 km of a hintuan are 4,840 ways, 321 kB (69 kB gzipped), simplified to 5 m. All of them in the map's box are 719 kB (163 kB gzipped).
+- **Why it waits.** That is a second public file, bigger than the footbridge file, built monthly with it and fetched with the trip card's walk. It waits for the hub's word.

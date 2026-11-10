@@ -1,5 +1,6 @@
 import { haversine, type LngLat } from '@/shared/utils/geo';
 
+import { roundedWalkM } from './honest-walk';
 import type { Hotspot } from './hotspots';
 import {
   distanceToPlace,
@@ -171,6 +172,5 @@ export function nearestStopOn(
  * metres, to the nearest 10 and never under 10, so "about" is honest.
  */
 export function walkToLandmark(distanceM: number, landmarkName: string): string {
-  const metres = Math.max(10, Math.round(distanceM / 10) * 10);
-  return `About ${metres} m to ${landmarkName}, in a straight line`;
+  return `About ${roundedWalkM(distanceM)} m to ${landmarkName}, in a straight line`;
 }
