@@ -158,6 +158,16 @@ jobs:
       # ESLint: the rules the standards name are errors (eslint.config.js).
       - name: Lint
         run: npm run lint
+      # No new source file over 150 lines; the long ones already there are held to their length,
+      # and on a pull request the list of them may only shrink (scripts/checks/long-files.mjs).
+      - name: Long files
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+        run: |
+          if [ -n "$BASE" ] && git fetch --quiet --no-tags --depth=1 origin "$BASE"; then
+            git show "$BASE:scripts/checks/long-files-baseline.json" > "$RUNNER_TEMP/long-files-base.json" 2> /dev/null || true
+          fi
+          node scripts/checks/long-files.mjs --base "$RUNNER_TEMP/long-files-base.json"
       # docs/architecture.md is generated from src/: a change to the structure
       # that did not regenerate it fails here (`npm run docs:architecture`).
       - name: Architecture page
@@ -168,6 +178,11 @@ jobs:
       # Node's own test runner, no browser: every tests/unit/*-test.mjs.
       - name: The unit checks
         run: npm run test:unit
+      # The code-health page: `npm run health` (long files, comments, stories, the build's
+      # weights) on the run's summary, so every run shows it. It measures and never fails.
+      - name: Code health
+        if: always()
+        run: npm run --silent health >> "$GITHUB_STEP_SUMMARY" || true
       # The builds pwa-test, handover-test and contribute-offline-test run in `vite preview`, made
       # once here for preview-suite. Each reads the suites' .env.local as well as .env.production
       # (a build reads both, the latter winning), so it is the build those suites would make.

@@ -42,7 +42,7 @@ The goals: a codebase that is easy to review, work that scales, and an app whose
 ## Keeping the codebase easy to scan
 
 - **Comments say why.** Who asked for a change, when, and what the code used to do go in the commit message and the pull request, not in the code (`.claude/CLAUDE.md`, Comments).
-- **Files stay under about 150 lines** (`.claude/CLAUDE.md`, Components). Long files are split folder by folder, biggest first.
+- **Files stay under about 150 lines** (`.claude/CLAUDE.md`, Components). A new source file over 150 lines fails CI (`npm run check:long-files`); those already long are listed in `scripts/checks/long-files-baseline.json`, each held to its length, and the list may only shrink. Long files are split folder by folder, biggest first.
 - **An architecture page built from the code:** the apps, the features, what each exposes, which part uses which, and where the data flows. CI checks that it is current. Planned.
 - **System design:** a few diagrams of how data moves (studio, database, publish, map files, public map; and the driver app once it is designed), with each big decision in `docs/adr/`. Planned.
-- **A code-health page each release:** files over the limit, lint warnings left, the app's size against its budget, the test count, and components without stories. Planned.
+- **A code-health page:** `npm run health` (files over the limit, comments, components without stories, the app's size against its budget), on every CI run's summary, and pasted into each release's summary.
