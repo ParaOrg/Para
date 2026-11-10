@@ -23,6 +23,9 @@ import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.Priority;
 
+import ph.para.contributor.ride.Ride;
+import ph.para.contributor.ride.RideMachine;
+
 /**
  * The ride's recording, in Para's own foreground service: started by the contributor's Start
  * (RidePlugin.startRecording), it keeps the location coming whether or not the page is there. It
@@ -35,14 +38,14 @@ import com.google.android.gms.location.Priority;
  * there to hear (RidePlugin.tellFix); a page frozen or gone imports the log when it wakes or opens
  * (native/import-fix-log.ts). The fix rate is one a second, the page's own (ADR 0006).
  *
- * Android may kill the process; the service is sticky, so it comes back without its intent and,
- * if RideState still has the ride recording, records on. The fixes in the gap are lost, as they
- * would be to any app.
+ * What the ride is, and every change to it, is RideMachine's (through Rides): the service records
+ * while the ride is recording and says when Android refuses it. Android may kill the process; the
+ * service is sticky, so it comes back without its intent and, if the ride is still recording,
+ * records on. The fixes in the gap are lost, as they would be to any app.
  */
 public class RideService extends Service {
     private static final String TAG = "ParaRide";
     private static final String START = "ph.para.contributor.ride.service.START";
-    private static final String RECORDING_ID = "recordingId";
     private static final long INTERVAL_MS = 1_000;
 
     private static boolean isRunning = false;
@@ -54,16 +57,17 @@ public class RideService extends Service {
             for (Location location : result.getLocations()) {
                 FixLog.append(RideService.this, location);
                 RidePlugin.tellFix(location);
+                Rides.fix(RideService.this, location.getTime());
             }
         }
     };
 
-    /** Starts recording `recordingId`, from the contributor's own tap: Start, or Resume. */
-    static void start(Context context, String recordingId) {
-        Intent intent = new Intent(context, RideService.class)
-            .setAction(START)
-            .putExtra(RECORDING_ID, recordingId);
-        ContextCompat.startForegroundService(context, intent);
+    /**
+     * Records the ride kept (Rides), from the contributor's own tap: Start, or Resume. Only Rides
+     * calls it, as a step of the ride's rules asks.
+     */
+    static void start(Context context) {
+        ContextCompat.startForegroundService(context, new Intent(context, RideService.class).setAction(START));
     }
 
     /** Stops recording: no more fixes, and the service and its foreground go. */
@@ -83,35 +87,19 @@ public class RideService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        // Sticky and brought back by Android, with no intent: the ride goes on if it still records.
-        RideState state = RideState.read(this);
+        long now = System.currentTimeMillis();
         boolean isRestart = intent == null || !START.equals(intent.getAction());
-        if (isRestart && !RideState.RECORDING.equals(state.phase)) {
+        // Sticky and brought back by Android, with no intent: the ride goes on if it still records.
+        Ride ride = isRestart
+            ? Rides.apply(this, current -> RideMachine.serviceRestarted(current, now)).ride
+            : Rides.now(this);
+        if (!ride.isRecordingLive()) {
+            // Started for a ride that is not recording (stopped meanwhile): nothing to record.
             stopSelf();
             return START_NOT_STICKY;
         }
-        if (!isRestart && !RideState.RECORDING.equals(state.phase)) {
-            // Recording from this tap on, before the page says so: an app swiped away at once
-            // still has a ride to record. The page tells the rest (RidePlugin.setState).
-            String recordingId = intent.getStringExtra(RECORDING_ID);
-            long now = System.currentTimeMillis();
-            if (recordingId != null && !recordingId.isEmpty() && !recordingId.equals(state.recordingId)) {
-                // A new ride: nothing of the last one's clock or mode carries over.
-                state.recordingId = recordingId;
-                state.startedAt = now;
-                state.pausedMs = 0;
-                state.finishedAt = 0;
-                state.mode = "walk";
-            } else if (state.pausedSince > 0) {
-                // The same ride resumed in the page: its pause is counted, as the receiver counts one.
-                state.pausedMs += now - state.pausedSince;
-            }
-            state.phase = RideState.RECORDING;
-            state.pausedSince = 0;
-            state.write(this);
-        }
-        if (!inForeground(RideNotification.forService(this, state))) {
-            failed(state);
+        if (!inForeground(RideNotification.forService(this, ride))) {
+            failed("Android refused the foreground");
             return START_NOT_STICKY;
         }
         if (!LocationManagerCompat.isLocationEnabled(locationManager())) {
@@ -128,7 +116,7 @@ public class RideService extends Service {
         } catch (SecurityException refused) {
             Log.w(TAG, "The location permission is missing; the ride records no more.", refused);
             RidePlugin.tellFixProblem("DENIED", "Location permission is missing.");
-            failed(state);
+            failed("the location permission is missing");
             return START_NOT_STICKY;
         }
         synchronized (RideService.class) {
@@ -140,23 +128,15 @@ public class RideService extends Service {
     }
 
     /**
-     * The ride cannot record (Android refused the foreground, or the permission is gone): it is
-     * paused where it stands, as the notification's Pause pauses it, so no card says "Recording"
-     * while nothing records. The page applies the pause when it wakes, and Resume (in the app, once
-     * the permission is back) records again.
+     * The ride cannot record (`why`): it is paused where it stands (RideMachine.refused), so no card
+     * says "Recording" while nothing records. The page applies the pause when it wakes, and Resume
+     * (in the app, once the permission is back) records again.
      */
-    private void failed(RideState state) {
+    private void failed(String why) {
         long now = System.currentTimeMillis();
-        if (RideState.RECORDING.equals(state.phase)) {
-            try {
-                FixLog.end(this, now);
-            } catch (Exception error) {
-                Log.e(TAG, "The fix log could not be sealed.", error);
-            }
-            state.phase = RideState.PAUSED;
-            state.pausedSince = now;
-            state.isPageWatching = false;
-            state.write(this);
+        boolean wasRecording = Rides.now(this).is(Ride.RECORDING);
+        Rides.apply(this, current -> RideMachine.refused(current, now, why));
+        if (wasRecording) {
             RideState.addEvent(this, "pause", now, null);
             RidePlugin.tellPage();
         }

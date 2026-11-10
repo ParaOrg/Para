@@ -96,6 +96,26 @@ public final class RideMachine {
         return RideStep.to(Ride.NO_RIDE).then(Effect.STOP_SERVICE).then(Effect.POST_CARD).done();
     }
 
+    /**
+     * The page, awake, says where the ride is (`told`, its summary): it is the truth while it is
+     * there. What only the phone knows carries over to the same ride still recording: why it has no
+     * location, and when its last fix came.
+     */
+    public static RideStep told(Ride ride, Ride told) {
+        if (told.is(Ride.NONE) || told.recordingId.isEmpty()) {
+            if (ride.is(Ride.NONE)) return RideStep.same(ride);
+            return RideStep.to(Ride.NO_RIDE).then(Effect.POST_CARD).done();
+        }
+        Ride kept = told;
+        if (ride.recordingId.equals(told.recordingId)) {
+            boolean isStillRecording = ride.is(Ride.RECORDING) && told.is(Ride.RECORDING);
+            String trouble = isStillRecording && isLocationTrouble(ride.trouble) ? ride.trouble : Ride.TROUBLE_NONE;
+            kept = told.with(told.phase, trouble, told.finishedAt, Math.max(ride.lastFixAt, told.lastFixAt),
+                told.modes, told.gaps);
+        }
+        return RideStep.to(kept).then(Effect.POST_CARD).done();
+    }
+
     /** A fix at `time`: the fix check counts from it, and a missing location is found again. */
     public static RideStep fix(Ride ride, long time) {
         if (!ride.isRecordingLive()) return RideStep.same(ride);
