@@ -122,7 +122,8 @@ service with a visible "Para is recording" notification.
 - The notification's Pause and Finish stop the service; Resume starts it again while the page is
   alive and its watch was on, as before. A page gone no longer ends a recording ride.
 - `ParaServiceWatchers.java` and `ParaApplication`'s broadcast listener are gone with the
-  plugin's service. The npm plugin is still installed, pinned at `1.3.1`, but the page no longer
-  calls it; removing it is a change of its own.
+  plugin's service, and the npm plugin `@capacitor-community/background-geolocation` is removed
+  (the owner's yes, once the phone test of RideService passed). The app declares the location,
+  foreground service and notification permissions in its own manifest.
 - Google Play asks an app with a location foreground service for a declaration and a short video
   (`.scratch/contribute-apk/play-declaration.md`); the app is not on the Play Store today.

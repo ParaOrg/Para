@@ -69,9 +69,8 @@
     <!-- Permissions -->
 
     <uses-permission android:name="android.permission.INTERNET" />
-    <!-- Location and the notification also come from the background-geolocation plugin's own
-         manifest; RideService needs them whether or not the plugin does. "Allow all the time" is
-         ours: see NativePermissionsPlugin. -->
+    <!-- Location, its foreground service and the notification, for RideService; NativePermissionsPlugin
+         asks for each, "Allow all the time" included. -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
