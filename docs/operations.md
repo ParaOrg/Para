@@ -17,7 +17,7 @@ Written 2026-10-28 from the repo and from what the hub checked live that day. An
 | **The owner's own computer and password manager** | The backup's private GPG key (never on GitHub, R2 or Supabase); the app key passphrase; recovery codes | The owner | Password manager and an offline copy (backup.yml step 3) |
 | **Facebook** | The page the consent wording links as the way to reach the owner (`src/features/contribute/consent/consent-panel.tsx`; the screen is off while the owner redesigns it, ADR 0004) | The owner | (owner to confirm) |
 | **The privacy policy** | Para's privacy policy, a document the owner holds; not in the repo | The owner | – |
-| **Services Para uses without an account** | OpenStreetMap data through Geofabrik's extract and Planetiler (tiles.yml); OpenFreeMap's styles, sprite and glyphs, copied monthly (`scripts/tiles/fetch-assets.mjs`); the public OSRM demo router for the studio's snapping; Esri and AWS's elevation tiles for the studio's Satellite and Terrain designs (`studio-basemaps.ts`) | – | – |
+| **Services Para uses without an account** | OpenStreetMap data through Geofabrik's extract and Planetiler (tiles.yml), and through openstreetmap.fr's Metro Manila extract for place search's landmark file (landmarks.yml); OpenFreeMap's styles, sprite and glyphs, copied monthly (`scripts/tiles/fetch-assets.mjs`); the public OSRM demo router for the studio's snapping; Esri and AWS's elevation tiles for the studio's Satellite and Terrain designs (`studio-basemaps.ts`) | – | – |
 | **Google Play and Apple** | Nothing yet. The commuter app is planned for both stores (ADR 0008); the contributor app is a direct download (ADR 0006) | – | – |
 
 The addresses (checked live 2026-10-28):
@@ -91,6 +91,12 @@ Each says what you'd see, the first check, and the fix. When the alert workflow 
 - **You'd see:** a red Tiles run (monthly, 18:00 UTC on the 3rd, which is 02:00 Manila on the 4th), and GitHub's email.
 - **First check:** the run's `::error::` line (tiles.yml): a secret missing from the `tiles` environment, an endpoint not in R2's shape, the area check, or Planetiler's download.
 - **Fix:** the live tiles keep serving the last good build (`tiles/current.json` only moves on a checked upload), so there is no rush. Fix the cause, then Run workflow with upload ticked, from `main`.
+
+### The landmark refresh failed
+
+- **You'd see:** a red Landmarks run (monthly, 19:37 UTC on the 8th, which is 03:37 Manila on the 9th), and the `alert` issue it opens.
+- **First check:** the failed step (landmarks.yml): the download from openstreetmap.fr or its MD5, osmium, the file's own check (`scripts/landmarks/check.mjs`), or the comparison refusing a file that lost more than 20% of its landmarks.
+- **Fix:** place search keeps the committed `public/data/landmarks.v1.json`, so there is no rush. Fix the cause, or, if a shrink is real (a tagging change on OpenStreetMap), Run workflow with "allow shrink" ticked. The run opens a pull request into staging; nothing merges by itself.
 
 ### A sign-in or Turnstile error
 

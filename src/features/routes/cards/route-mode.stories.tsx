@@ -4,14 +4,14 @@ import { CARD_SURFACE, CARD_TEXT } from './livery-card';
 import { RouteMode } from './route-mode';
 import { VEHICLES } from '../model/vehicles';
 
-/** Figma's Modes (4236:17040): the vehicle in the card's orange on a white chip, the word in the card's white. */
+/** Figma's Modes (4236:17040): what a card's routes ride, on a Bus card. */
 const meta = {
   title: 'Features/Routes/RouteMode',
   component: RouteMode,
-  args: { vehicle: 'Jeepney', livery: 'orange' },
+  args: { vehicle: 'Bus', livery: 'bus' },
   decorators: [
     (Story) => (
-      <div className="w-96 bg-card-orange-surface p-3 text-content-inverse">
+      <div className={'w-96 p-3 ' + CARD_SURFACE.bus + ' ' + CARD_TEXT.bus}>
         <Story />
       </div>
     ),
@@ -22,7 +22,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /** Property 1=Jeepney, which the card calls Jeep. */
-export const Jeepney: Story = {};
+export const Jeepney: Story = { args: { vehicle: 'Jeepney' } };
 
 /** Property 1=Train: every rail line says "Train" on a card. */
 export const Train: Story = { args: { vehicle: 'MRT-3' } };
@@ -39,12 +39,12 @@ export const Bus: Story = { args: { vehicle: 'Bus' } };
 /** Property 1=UV Express. */
 export const UvExpress: Story = { args: { vehicle: 'UV Express' } };
 
-/** Violet: the chip's vehicle in Card/violet/surface. */
-export const OnViolet: Story = {
-  args: { livery: 'violet' },
+/** Jeep: the chip's vehicle in Card/Jeep/Jeep-surface. */
+export const OnJeep: Story = {
+  args: { livery: 'jeep' },
   decorators: [
     (Story) => (
-      <div className={'w-96 p-3 ' + CARD_SURFACE.violet + ' ' + CARD_TEXT.violet}>
+      <div className={'w-96 p-3 ' + CARD_SURFACE.jeep + ' ' + CARD_TEXT.jeep}>
         <Story />
       </div>
     ),
@@ -57,7 +57,7 @@ export const EveryVehicle: Story = {
     <ul className="flex flex-col gap-2">
       {VEHICLES.map((vehicle) => (
         <li key={vehicle}>
-          <RouteMode vehicle={vehicle} livery="orange" />
+          <RouteMode vehicle={vehicle} livery="bus" />
         </li>
       ))}
     </ul>

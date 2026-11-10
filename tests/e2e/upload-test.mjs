@@ -219,9 +219,16 @@ const openRide = async (page, name) => {
   await row(page, name).locator('[data-ride-card]').click();
   await page.getByTestId('dock-handle').waitFor();
 };
-/** The ride's sheet raised, so its Status row and Delete this record can be reached. */
+/**
+ * The ride's sheet raised to full height, so its Status row and Delete this record can be
+ * reached: it opens at Low, and each tap on its handle steps a third.
+ */
 const raiseSheet = async (page) => {
-  await page.getByTestId('dock-handle').click();
+  const sheet = page.locator('[data-snap]', { has: page.getByTestId('dock-handle') }).first();
+  for (let i = 0; i < 4 && (await sheet.getAttribute('data-snap')) !== 'full'; i++) {
+    await page.getByTestId('dock-handle').click();
+    await page.waitForTimeout(400);
+  }
   await page.getByRole('button', { name: 'Delete this record' }).waitFor();
 };
 const deleteQuestion = (page) =>

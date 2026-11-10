@@ -3,21 +3,29 @@ import { expect, fn, userEvent, within } from 'storybook/test';
 
 import { ResetPassword } from './reset-password';
 
+/**
+ * The open dialog, to query inside. Found, not got: it opens in an effect, which a built
+ * Storybook runs only after the play has begun (install-prompt.stories.tsx).
+ */
+async function openDialog(canvasElement: HTMLElement) {
+  return within(await within(canvasElement.ownerDocument.body).findByRole('dialog'));
+}
+
+/** Escape as the browser answers it: a scripted keypress is untrusted, so the play sends `cancel`. */
+function pressEscape(canvasElement: HTMLElement) {
+  canvasElement.ownerDocument
+    .querySelector('dialog[open]')
+    ?.dispatchEvent(new Event('cancel', { cancelable: true }));
+}
+
 const meta = {
   title: 'Features/Studio/ResetPassword',
   component: ResetPassword,
-  // The dialog dims the map it sits over, so give it a map-sized box. The
-  // `phone` parameter gives it a handset's width, as card-actions.stories.tsx
-  // does: a reset link is most often opened from a phone's mail.
+  // A modal dialog sits in the top layer, against the viewport, over a map-coloured page. A
+  // Phone story sets the viewport (as InstallPrompt's do), not a box.
   decorators: [
-    (Story, ctx) => (
-      <div
-        className={
-          ctx.parameters.phone
-            ? 'relative h-160 w-[390px] bg-surface-quaternary'
-            : 'relative h-160 bg-surface-quaternary'
-        }
-      >
+    (Story) => (
+      <div className="h-160 bg-surface-quaternary">
         <Story />
       </div>
     ),
@@ -29,13 +37,25 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** Back from a reset link, signed in by it: choose the new password. */
-export const Default: Story = {};
+/**
+ * Back from a reset link, signed in by it: choose the new password. Escape leaves it open:
+ * keeping the old password is Skip for now, a choice made on purpose.
+ */
+export const Default: Story = {
+  play: async ({ canvasElement, args }) => {
+    const canvas = await openDialog(canvasElement);
+    pressEscape(canvasElement);
+    await expect(canvas.getByRole('heading', { name: 'Choose a new password' })).toBeVisible();
+    await expect(args.onDone).not.toHaveBeenCalled();
+  },
+};
 
 /** Skip for now keeps the old password and closes the dialog. */
 export const Skipped: Story = {
   play: async ({ canvasElement, args }) => {
-    await userEvent.click(within(canvasElement).getByRole('button', { name: 'Skip for now' }));
+    await userEvent.click(
+      (await openDialog(canvasElement)).getByRole('button', { name: 'Skip for now' }),
+    );
     await expect(args.onDone).toHaveBeenCalledOnce();
   },
 };
@@ -43,9 +63,12 @@ export const Skipped: Story = {
 /** The two passwords differ: refused before anything is sent, and the dialog stays. */
 export const PasswordsDiffer: Story = {
   play: async ({ canvasElement, args }) => {
-    const canvas = within(canvasElement);
-    await userEvent.type(canvas.getByPlaceholderText('New password'), 'New-password-22');
-    await userEvent.type(canvas.getByPlaceholderText('Confirm new password'), 'New-password-23');
+    const canvas = await openDialog(canvasElement);
+    await userEvent.type(canvas.getByLabelText('New password', { exact: true }), 'New-password-22');
+    await userEvent.type(
+      canvas.getByLabelText('Confirm new password', { exact: true }),
+      'New-password-23',
+    );
     await userEvent.click(canvas.getByRole('button', { name: 'Save password' }));
     await expect(canvas.getByText('The two passwords do not match.')).toBeVisible();
     await expect(args.onDone).not.toHaveBeenCalled();
@@ -55,12 +78,15 @@ export const PasswordsDiffer: Story = {
 /** A password without a number: refused before anything is sent, in the rule's own words. */
 export const RuleBroken: Story = {
   play: async ({ canvasElement, args }) => {
-    const canvas = within(canvasElement);
-    await expect(canvas.getByPlaceholderText('New password')).toHaveAccessibleDescription(
-      'At least 8 characters, with letters and numbers',
+    const canvas = await openDialog(canvasElement);
+    await expect(
+      canvas.getByLabelText('New password', { exact: true }),
+    ).toHaveAccessibleDescription('At least 8 characters, with letters and numbers');
+    await userEvent.type(canvas.getByLabelText('New password', { exact: true }), 'only-letters');
+    await userEvent.type(
+      canvas.getByLabelText('Confirm new password', { exact: true }),
+      'only-letters',
     );
-    await userEvent.type(canvas.getByPlaceholderText('New password'), 'only-letters');
-    await userEvent.type(canvas.getByPlaceholderText('Confirm new password'), 'only-letters');
     await userEvent.click(canvas.getByRole('button', { name: 'Save password' }));
     await expect(
       canvas.getByText('Use at least 8 characters, with letters and numbers'),
@@ -73,11 +99,11 @@ export const RuleBroken: Story = {
 export const Invite: Story = {
   args: { isInvite: true },
   play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+    const canvas = await openDialog(canvasElement);
     await expect(canvas.getByRole('heading', { name: 'Set your password' })).toBeVisible();
     await expect(canvas.queryByRole('button', { name: 'Skip for now' })).toBeNull();
   },
 };
 
 /** At phone width. */
-export const Phone: Story = { parameters: { phone: true } };
+export const Phone: Story = { globals: { viewport: { value: 'mobile1', isRotated: false } } };

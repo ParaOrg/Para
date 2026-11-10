@@ -35,64 +35,41 @@ const draft = {
   submitted_at: null,
 };
 
-test('approval sends the reviewed draft revision through the guarded RPC', async () => {
+test('Publish sends the draft revision on screen to publish_draft, in one call', async () => {
   const { client, log } = fakeSupabase(() => ({ data: { code: 'approved' } }));
   setSupabase(client);
-  assert.equal((await runReviewCommand({ action: 'approve', draft })).code, 'approved');
-  assert.equal(log[0].op, 'approve_reviewed_draft');
-  assert.deepEqual(log[0].payload, { p_draft: 'd', p_revision: 3 });
-});
-test('Approve on a draft not yet submitted submits it, then approves the revision submitting gave it', async () => {
-  const { client, log } = fakeSupabase((query) =>
-    query.op === 'submit_draft'
-      ? { data: { code: 'submitted', draft: { ...draft, status: 'pending', revision: 4 } } }
-      : { data: { code: 'approved' } },
-  );
-  setSupabase(client);
-  const result = await runReviewCommand({
-    action: 'approve',
-    draft: { ...draft, status: 'draft' },
-  });
-  assert.equal(result.code, 'approved');
+  assert.equal((await runReviewCommand({ action: 'publish', draft })).code, 'approved');
   assert.deepEqual(
     log.map((entry) => [entry.op, entry.payload]),
-    [
-      ['submit_draft', { p_draft: 'd', p_revision: 3 }],
-      ['approve_reviewed_draft', { p_draft: 'd', p_revision: 4 }],
-    ],
+    [['publish_draft', { p_draft: 'd', p_revision: 3 }]],
   );
 });
-test('a refused submit is the answer, and nothing is approved', async () => {
-  const { client, log } = fakeSupabase(() => ({
+test('a refused publish is the answer', async () => {
+  const { client } = fakeSupabase(() => ({
     data: { code: 'revision_mismatch', current_revision: 5 },
   }));
   setSupabase(client);
-  const result = await runReviewCommand({
-    action: 'approve',
-    draft: { ...draft, status: 'draft' },
-  });
+  const result = await runReviewCommand({ action: 'publish', draft });
   assert.equal(result.code, 'revision_mismatch');
-  assert.deepEqual(
-    log.map((entry) => entry.op),
-    ['submit_draft'],
-  );
 });
-test('editing sent-back facts preserves geometry and the complete link set', async () => {
+test("editing a draft's facts preserves geometry and the complete link set", async () => {
   const { client, log } = fakeSupabase((query) => ({
-    data: { ...draft, status: 'draft', revision: 4, payload: query.payload.payload },
+    data: {
+      code: 'ok',
+      created: false,
+      draft: { ...draft, revision: 4, payload: query.payload.p_payload },
+    },
   }));
   setSupabase(client);
-  await saveDraftFacts({ ...draft, status: 'draft' }, { name: ' Corrected place ' });
+  await saveDraftFacts(draft, { name: ' Corrected place ' });
   assert.deepEqual(
     log.map((q) => [q.table, q.op]),
-    [['draft', 'update']],
+    [['rpc', 'save_draft']],
   );
-  assert.equal(log[0].payload.payload.stop.name, 'Corrected place');
-  assert.deepEqual(log[0].payload.payload.stop.point, draft.payload.stop.point);
-  assert.deepEqual(log[0].payload.payload.links, draft.payload.links);
-  assert.ok(
-    log[0].filters.some(([op, key, value]) => op === 'eq' && key === 'revision' && value === 3),
-  );
+  assert.equal(log[0].payload.p_payload.stop.name, 'Corrected place');
+  assert.deepEqual(log[0].payload.p_payload.stop.point, draft.payload.stop.point);
+  assert.deepEqual(log[0].payload.p_payload.links, draft.payload.links);
+  assert.equal(log[0].payload.p_revision, 3);
 });
 test('comparison detects moved geometry even with the same number of points', () => {
   const before = {

@@ -1,4 +1,4 @@
-// A hotspot's point, the centroid of its box (src/features/routes/geo/ring.ts,
+// A hotspot's point, the centroid of its box (src/features/routes/geo/box-centre.ts,
 // ringCentroid). Its shoelace sums were taken from 0°, and at Manila's
 // longitude they cancelled the digits that mattered: a 10 m box's centroid
 // landed some 60 m away, outside its own box (review of 2026-10-03).
@@ -8,7 +8,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { haversine } from '../../src/shared/utils/geo.ts';
 import { pointInRing } from '../../src/features/routes/geo/ring.ts';
-import { ringCentroid } from '../../src/features/studio/data/hotspot-ring.ts';
+import { ringCentroid } from '../../src/features/routes/geo/box-centre.ts';
 
 // About 10 m by 8 m on Quirino Highway, 6-decimal corners as saved.
 const box = [

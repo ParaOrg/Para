@@ -44,8 +44,11 @@ _Avoid_: missing direction, placeholder
 A route's two ends, both places. The head is where the jeeps are based and
 wait; the name reads head first. Shared by both directions. Either end may
 be a hintuan — "Tala – Malaria" ends where the jeeps turn around, terminal
-or not.
-_Avoid_: origin/destination, start/end, from/to (those belong to a direction)
+or not. The studio's screens call them **Origin** / **Destination** (the
+owner's, 2026-11-05: more formal and easier to understand); the concept stays
+Head / Tail in the code, the database and this glossary.
+_Avoid_: start/end, from/to (those belong to a direction); Origin and
+Destination outside the studio's labels
 
 **Via**:
 The one place that tells apart two routes sharing both ends by different
@@ -82,11 +85,25 @@ end — `Tala – SM Fairview` becomes `Tala – Novaliches`. Its own route, gro
 by the end it shares. Drawn with the studio's Extend (built 2026-09-25).
 _Avoid_: variant, branch
 
+**Attached start** / **Attached end**:
+A short extra line from another terminal that joins a route's main line
+partway along (an attached start), or leaves it partway along to another
+terminal (an attached end). For routes that leave from more than one
+terminal yet are one route, with one main line and one name. A route may
+have several of each. The route keeps its name, the main start's; an attached
+stretch never renames it. On the way back, an attached terminal can be where
+the jeep ends. Drawn in the studio's Attach mode. Planned, decided
+2026-11-05, not built (ADR 0009).
+_Avoid_: branch, variant, second start, sub-route
+
 **Signboard**:
 The short informal wording a jeep is called out by — `TALA – SM FAIRVIEW` —
-written by the editor in the jeepneys' own style. Optional, except on a loop,
-which is called by it. It is the editor's words, never the app's: the route
-name is generated, the signboard is not.
+written by the editor in the jeepneys' own style. Since 2026-11-05 the
+studio no longer asks for it on a route: an uploaded signboard picture will
+stand for it (a design to come). A loop still needs a name, typed in a field
+labelled **Ikot name** and stored as the signboard, so existing loops keep
+theirs. It is the editor's words, never the app's: the route name is
+generated, the signboard is not.
 _Avoid_: route name, label
 
 ### Places
@@ -208,18 +225,20 @@ The studio's map where editors draw. Every route and hotspot goes Draft →
 Pending → Approved there.
 _Avoid_: Drafts map, sandbox, staging
 
-**Draft** / **Pending** / **Approved**:
+**Draft** / **Published**:
 A route or hotspot being drawn or changed, seen by editors only, one at a time
-per route or hotspot; a draft submitted for review; what commuters get at the
-next publish. Any editor approves, their own work included.
-_Avoid_: push, publish (the nightly publish is something else), staging
-
-**Send back**:
-Return a pending draft to its editor, with a note.
+per route or hotspot; and what commuters get at the next publish. The studio's
+**Publish** makes a draft published in one press (it was Draft → Pending →
+Approved until 2026-11-05; Approved is Published's name in the database);
+**Unpublish** takes a published route or hotspot off the public map at the
+next publish and leaves it a draft to work on. Any editor publishes, their own
+work included. A published route can have a draft of its next change at the
+same time.
+_Avoid_: pending, approve and send back (retired); push; staging
 
 **Take down** / **Put back**:
-Remove an approved route or hotspot from the public map at the next publish;
-undo it.
+What Unpublish does underneath: remove a published route or hotspot from the
+public map at the next publish; undo it.
 _Avoid_: delete (a taken-down row is kept)
 
 **Public map**:

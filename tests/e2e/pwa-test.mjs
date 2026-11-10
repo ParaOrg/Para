@@ -96,7 +96,7 @@ console.log(`preview at ${base}`);
  * Opens a trip as a commuter does, by a tap on its line. A production build
  * keeps its map to itself (no window.__map) and trip links went on
  * 2026-10-03, so the line is found on a screenshot: a pixel in the colour
- * routes rest in (Map/RouteLine/surface-default, #8ec5ff), away from the
+ * routes rest in (Map/RouteLine/surface-default, #c1bfff), away from the
  * screen's edges. A tap there opens a trip, or the route list where routes
  * share the road, whose first row then opens one. The directions it may be,
  * with its name: the row's own when the list was used, else every direction
@@ -122,7 +122,7 @@ async function openSomeTrip(page) {
         for (let x = Math.round(width * 0.1); x < width * 0.9; x += 2) {
           const k = (y * width + x) * 4;
           if (
-            Math.abs(data[k] - 0x8e) + Math.abs(data[k + 1] - 0xc5) + Math.abs(data[k + 2] - 0xff) <
+            Math.abs(data[k] - 0xc1) + Math.abs(data[k + 1] - 0xbf) + Math.abs(data[k + 2] - 0xff) <
             12
           )
             hits.push([x / scale, y / scale]);
@@ -145,7 +145,12 @@ async function openSomeTrip(page) {
   let viaList = null;
   if (!(await trip.count()) && (await row.count())) {
     viaList = await row.first().getAttribute('data-direction');
+    // The list opens at Low, where a tap on a row only raises it: a second tap picks.
     await row.first().tap();
+    await trip
+      .first()
+      .waitFor({ timeout: 2000 })
+      .catch(() => row.first().tap());
     await trip
       .first()
       .waitFor({ timeout: 10000 })
@@ -208,7 +213,7 @@ try {
     await page.goto(`${base}/studio/`, { waitUntil: 'load' });
     // The positive control: the two negatives below mean nothing on a blank page.
     const door = await page
-      .getByText('Sign in to Para Studio')
+      .getByText('Studio sign in')
       .waitFor({ timeout: 15000 })
       .then(
         () => true,

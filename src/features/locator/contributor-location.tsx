@@ -1,13 +1,15 @@
 import type { MapLibreMap } from 'maplibre-gl';
-import { useEffect, useRef, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 
 import { BASEMAPS } from '@/features/routes/map/basemap';
 import { BASEMAP_THUMBNAILS } from '@/features/routes/map/basemap-thumbnails';
 import { coarse } from '@/features/routes/map/map-view';
 
+import { keepLastKnown, readLastKnown, type LastKnown } from './last-known';
+import { LastKnownDot } from './last-known-dot';
 import { isLocationGranted } from './location-permission';
 import { Locator } from './locator';
-import type { LocatorNote } from './locator-note';
+import { LOCATION_OFF_NOTE, type LocatorNote } from './locator-note';
 import { LocatorOnMap } from './locator-on-map';
 import { circleRadius, type Fix } from './locator-rules';
 import { useLocator } from './use-locator';
@@ -27,7 +29,27 @@ interface ContributorLocationProps {
   onNote?: (note: LocatorNote | null) => void;
   /** Where the dot is, at each fix: its place and its accuracy ring's radius in metres. */
   onWhere?: (where: LocatorWhere | null) => void;
+  /**
+   * The contributor app's: whether the phone's location is on, asked as the button is tapped, with
+   * Google's "Turn on location?" dialog when it is off. "off" says so in the page's toast, at each
+   * tap, and nothing is asked of the browser; "unknown" taps as the web does. Without it (the
+   * web), the button asks the browser.
+   */
+  checkLocationOn?: () => Promise<'on' | 'off' | 'unknown'>;
+  /**
+   * The contributor app's: where the phone last was stays on the map, greyed out with how long
+   * ago, while location is off or no fix comes, and is kept on the phone for the next start.
+   * Display only: it never becomes ride data. Without it (the web), the map shows only a live dot.
+   */
+  remembersLastPlace?: boolean;
 }
+
+/** A fix older than this is not where the phone is now: the last known place shows instead. */
+const LIVE_FIX_MS = 30_000;
+/** How often a live fix is kept on the phone: often enough, without a write a second. */
+const KEEP_EVERY_MS = 15_000;
+/** How often the last known place's clock is read again: its pill says minutes. */
+const LAST_KNOWN_TICK_MS = 15_000;
 
 /** Where the contributor's dot is drawn: the page's paused frost clears round it. */
 export interface LocatorWhere {
@@ -64,6 +86,8 @@ export function ContributorLocation({
   above,
   onNote,
   onWhere,
+  checkLocationOn,
+  remembersLastPlace = false,
 }: ContributorLocationProps) {
   const locator = useLocator(map, { compass: coarse, snap: 'low', offset: clearOfBars });
   const { mood, face, beat, poke } = useLocatorMood(locator);
@@ -73,6 +97,43 @@ export function ContributorLocation({
   useEffect(() => {
     onWhere?.(fix ? { at: fix.at, ringM: circleRadius(fix.accuracy) } : null);
   }, [fix, onWhere]);
+
+  // The app's "Location is off" is out: the first fix takes it back, however the locator was
+  // started (the button, a recording, the permission already granted), as a fix takes back the
+  // browser's own notes (Locator).
+  const isOffSaid = useRef(false);
+  const latestOnNote = useRef(onNote);
+  useEffect(() => {
+    latestOnNote.current = onNote;
+  });
+  useEffect(() => {
+    if (!fix || !isOffSaid.current) return;
+    isOffSaid.current = false;
+    latestOnNote.current?.(null);
+  }, [fix]);
+
+  // Where the phone last was: this run's last fix, kept even once the locator lets its fix go (a
+  // permission taken back), else the place an earlier run kept.
+  const [lastPlace, setLastPlace] = useState<LastKnown | null>(() =>
+    remembersLastPlace ? readLastKnown() : null,
+  );
+  if (remembersLastPlace && fix && fix.time !== lastPlace?.time) {
+    setLastPlace({ at: fix.at, time: fix.time });
+  }
+  // Each live fix kept on the phone, for the next start.
+  const keptAt = useRef(0);
+  useEffect(() => {
+    if (!remembersLastPlace || !fix || fix.time - keptAt.current < KEEP_EVERY_MS) return;
+    keptAt.current = fix.time;
+    keepLastKnown({ at: fix.at, time: fix.time });
+  }, [fix, remembersLastPlace]);
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (!remembersLastPlace) return;
+    const timer = window.setInterval(() => setNow(Date.now()), LAST_KNOWN_TICK_MS);
+    return () => window.clearInterval(timer);
+  }, [remembersLastPlace]);
+  const isFixLive = !!fix && (!remembersLastPlace || now - fix.time < LIVE_FIX_MS);
 
   // The latest tap, for effects that must not re-run when the hook hands out a new one.
   const latestTap = useRef(tap);
@@ -102,11 +163,28 @@ export function ContributorLocation({
     if (!isRefused && camera !== 'tracked' && camera !== 'compass') latestTap.current();
   }, [isRecording, status, camera]);
 
+  // The button's tap, in the app: location turned on first, or a word that it is off. A browser
+  // gives no refusal while the phone's location is off, only a wait of 20 s with nothing said.
+  const handleTap = () => {
+    if (!checkLocationOn) {
+      tap();
+      return;
+    }
+    void checkLocationOn().then((setting) => {
+      if (setting === 'off') {
+        isOffSaid.current = true;
+        latestOnNote.current?.(LOCATION_OFF_NOTE);
+        return;
+      }
+      latestTap.current();
+    });
+  };
+
   return (
     <>
       {map && (
         <Locator
-          locator={locator}
+          locator={checkLocationOn ? { ...locator, tap: handleTap } : locator}
           map={map}
           isMapLoaded={isMapLoaded}
           basemaps={BASEMAPS}
@@ -118,7 +196,8 @@ export function ContributorLocation({
           onNote={onNote}
         />
       )}
-      {map && locator.fix && (
+      {map && !isFixLive && lastPlace && <LastKnownDot map={map} place={lastPlace} now={now} />}
+      {map && locator.fix && isFixLive && (
         <LocatorOnMap
           map={map}
           fix={locator.fix}

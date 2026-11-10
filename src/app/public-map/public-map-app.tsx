@@ -1,14 +1,5 @@
 import type { MapLibreMap } from 'maplibre-gl';
-import {
-  lazy,
-  Suspense,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-  type ComponentType,
-} from 'react';
-import { flushSync } from 'react-dom';
+import { Suspense, useRef, useState } from 'react';
 
 import { CommuterLocation, useGazeHush, type LocatorNote } from '@/features/locator';
 import {
@@ -30,14 +21,19 @@ import { useTripTimeline } from '@/features/routes/cards/use-trip-timeline';
 import { EndTitles } from '@/features/routes/map/end-titles';
 import { routesBounds } from '@/features/routes/map/framing';
 import { HintuanPin } from '@/features/routes/map/hintuan-pin';
+import { lookAt } from '@/features/routes/map/look-at';
+import { MapCreditsDock } from '@/features/routes/map/map-credits-dock';
+import { MapCreditsSheet } from '@/features/routes/map/map-credits-sheet';
 import { METRO_MANILA, MapView } from '@/features/routes/map/map-view';
 import { StationLabels } from '@/features/routes/map/station-labels';
 import { useCardCamera } from '@/features/routes/map/use-card-camera';
 import { useCardStack } from '@/features/routes/map/use-card-stack';
 import { useLitRides } from '@/features/routes/map/use-lit-rides';
 import { useLoopTip } from '@/features/routes/map/use-loop-tip';
+import { useMapCredits } from '@/features/routes/map/use-map-credits';
 import { useSavedHotspots } from '@/features/routes/map/use-saved-hotspots';
 import { useSavedRoutes } from '@/features/routes/map/use-saved-routes';
+import { directionsAtHotspots } from '@/features/routes/model/directions-at';
 import type { CommuterWhere } from '@/features/routes/model/loop-tip';
 import { placeKey } from '@/features/routes/model/places';
 import {
@@ -47,64 +43,14 @@ import {
 } from '@/features/routes/published/fetch-index';
 import { fetchLine } from '@/features/routes/published/fetch-line';
 import { useTurn } from '@/shared/hooks/commit-turn';
-import { useEscape } from '@/shared/hooks/use-escape';
 import { retryingLazy } from '@/shared/lib/retrying-lazy';
 import { cn } from '@/shared/utils/cn';
 import { retryingImport } from '@/shared/utils/retrying-import';
 
 import { ContributionCard } from './contribution-card';
-import { MapCreditsDock } from './map-credits-dock';
 import type { SaidNote } from './page-toasts';
+import { PlaceSearchBar, sheetTopUnderSearch } from './place-search-bar';
 import { useStatusBarColour } from './status-bar';
-
-interface CreditsSheetProps {
-  onClose: () => void;
-  onClosed: () => void;
-  /** The sheet's code could not be fetched: the page shows the credits another way. */
-  onUnavailable: () => void;
-}
-
-interface CreditsOnTheirWayProps {
-  /** Escape or a tap while the sheet's code is on its way: the open is called off. */
-  onCancel: () => void;
-}
-
-/**
- * While the sheet's code is on its way the page is out of reach under it: Escape or a tap calls
- * the open off rather than leave the page stuck.
- */
-function CreditsOnTheirWay({ onCancel }: CreditsOnTheirWayProps) {
-  useEscape(onCancel);
-  useEffect(() => {
-    const listensFrom = performance.now();
-    const handleClick = (e: MouseEvent) => {
-      if (e.timeStamp >= listensFrom) onCancel();
-    };
-    window.addEventListener('click', handleClick);
-    return () => window.removeEventListener('click', handleClick);
-  }, [onCancel]);
-  return null;
-}
-
-/** Stands in for the sheet when its code could not be fetched: it hands the credits back. */
-function CreditsUnavailable({ onUnavailable }: CreditsSheetProps) {
-  useEffect(onUnavailable, [onUnavailable]);
-  return null;
-}
-
-// The Map Data Source sheet, fetched on the ⓘ's first tap: the opening page does not carry it.
-// Precached, so it opens offline too; a fetch that fails all the same never blanks the page: the
-// credits go back to MapLibre's corner (CreditsUnavailable). Caught here rather than by an error
-// boundary, which would add its code to what both pages share.
-const MapDataSourceSheet = lazy<ComponentType<CreditsSheetProps>>(() =>
-  import('@/features/routes/map/map-data-source-view').then(
-    (module) => ({ default: module.MapDataSourceView }),
-    (error: unknown) => {
-      console.warn("The map's credits could not be fetched; its corner shows them.", error);
-      return { default: CreditsUnavailable };
-    },
-  ),
-);
 
 // The toasts, fetched the first time the page has something to say: the opening page does not
 // carry them. Precached, so they come offline too; a fetch that fails all the same never blanks
@@ -121,6 +67,21 @@ const PageToasts = retryingLazy(() =>
  */
 const openOnRoutes = () =>
   openingDirections().then((directions) => (directions ? routesBounds(directions) : null));
+
+/**
+ * Whether the commuter map draws the hotspots' pins zoomed in (a terminal's or hintuan's flag). Off
+ * for now: the boxes and their names say where each one is, and a tap there opens it as before.
+ * Zoomed out each keeps its small dot, so a hotspot stays in sight. The studio keeps its pins.
+ */
+const SHOW_HOTSPOT_PINS = false;
+
+/**
+ * While a docked card stands at full height, the toast sits 12 under the card's ✕, so the ✕ stays
+ * in reach: the strip of map 24 (MAX_STRIP_PX), the handle's row 18 and the ✕ 40, then 12. A card
+ * floating in the corner (`@float:`) keeps the toast at the top.
+ */
+const TOAST_UNDER_FULL_CARD =
+  '@max-float:group-has-[[data-testid=card][data-snap=full]:not([hidden])]/map:[--toast-top:calc(env(safe-area-inset-top)+--spacing(23.5))]';
 
 /** The too-new map's Reload: the newer app, through the worker (pwa.ts). */
 const handleReloadNewer = () => void reloadForNewerApp();
@@ -143,7 +104,10 @@ export function PublicMapApp() {
   // read as it is lit (fetch-line.ts).
   const saved = useSavedRoutes(map, loadDirectionsFromFile, { loadLine: fetchLine });
   // While a trip is open, the map lights only the trip.
-  const hotspots = useSavedHotspots(map, loadHotspotsFromFile, { muted: !!saved.selected });
+  const hotspots = useSavedHotspots(map, loadHotspotsFromFile, {
+    muted: !!saved.selected,
+    shouldShowPins: SHOW_HOTSPOT_PINS,
+  });
   // A load problem, and a published map too new for this app (loadProblems).
   const problems = loadProblems([saved, hotspots]);
   // Each Try again answered: one that fails again says so again, after its toast closed.
@@ -190,6 +154,7 @@ export function PublicMapApp() {
     clearOfOpen,
     switchTrip,
     flipList,
+    filterList,
     otherRoute,
     pickOnPlaceCard,
     openPlace,
@@ -224,45 +189,19 @@ export function PublicMapApp() {
   // The open trip's hintuans, worked out once per trip (useTripTimeline).
   const timeline = useTripTimeline(saved.selected, hotspots, tipId);
 
+  // Place search: what stops at a hotspot, by the published directions (.scratch/place-search).
+  const directionsAt = directionsAtHotspots(saved.directions, hotspots.linkedDirectionIds);
+
   // The map's credits, the Map Data Source sheet, opened by the ⓘ: the map and the cards under it
-  // are out of reach while it is open. As it starts down, focus goes back to the ⓘ and the page
-  // is live again; it unmounts once it has gone. Each opening is a sheet of its own, so one
-  // opened while the last slides down rises afresh.
-  const [credits, setCredits] = useState<'shut' | 'open' | 'leaving'>('shut');
-  const [creditsOpenings, setCreditsOpenings] = useState(0);
-  const creditsButtonRef = useRef<HTMLButtonElement>(null);
-  const openCredits = () => {
-    setCreditsOpenings((n) => n + 1);
-    setCredits('open');
-  };
-  const closeCredits = useCallback(() => {
-    flushSync(() => setCredits('leaving'));
-    creditsButtonRef.current?.focus();
-  }, []);
-  const creditsGone = useCallback(() => setCredits('shut'), []);
-  // The sheet's code could not be fetched: MapLibre's corner credits come back in the ⓘ's place,
-  // so the licences' credit stays on the map.
-  const [isCreditsSheetMissing, setIsCreditsSheetMissing] = useState(false);
-  const creditsSheetMissing = useCallback(() => {
-    setIsCreditsSheetMissing(true);
-    setCredits('shut');
-  }, []);
-  // Focus to the credits as they are now: MapLibre's corner ⓘ, back in the map.
-  useEffect(() => {
-    if (!isCreditsSheetMissing) return;
-    root.current?.querySelector<HTMLElement>('.maplibregl-ctrl-attrib-button')?.focus();
-  }, [isCreditsSheetMissing, root]);
-  // Called off while the sheet's code was still on its way.
-  const cancelCredits = useCallback(() => {
-    flushSync(() => setCredits('shut'));
-    creditsButtonRef.current?.focus();
-  }, []);
+  // are out of reach while it is open.
+  const credits = useMapCredits(root);
 
   return (
     // `data-directions`: how many the index brought, for the suites on a
     // production build, where the map itself is out of their reach.
-    // `data-dock-host`: the open card's sheet says where its top is here,
-    // for the LocatorButton to follow (BottomSheet). While "Update Para!"
+    // `data-dock-host`: the open card's sheet says where its top is here
+    // at rest, and on what follows it (`data-dock-follower`, the LocatorButton,
+    // the map's ⓘ) as a finger drags it (BottomSheet). While "Update Para!"
     // waits, a toast sits 12 under it rather than over it: the button's 24
     // from the top and its 40 tall (Notices), `--toast-top` (ToastHost).
     <div
@@ -270,12 +209,13 @@ export function PublicMapApp() {
       data-dock-host
       data-directions={saved.directions.length}
       className={cn(
-        '@container relative h-full w-full overflow-clip',
+        'group/map @container relative h-full w-full overflow-clip',
         needRefresh && '[--toast-top:calc(env(safe-area-inset-top)+--spacing(19))]',
+        sheetTopUnderSearch(needRefresh, offline || age.stale),
       )}
     >
       {/* Out of reach under the credits, the map and every card alike. */}
-      <div inert={credits === 'open'} className="contents">
+      <div inert={credits.state === 'open'} className="contents">
         {/*
         No count of routes and hotspots in a corner, and no +, − or compass:
         the owner leaves them off as clutter for commuters.
@@ -292,11 +232,15 @@ export function PublicMapApp() {
           zoomButtons={false}
           maxBounds={METRO_MANILA}
           openOn={openOnRoutes}
-          areCreditsShown={isCreditsSheetMissing}
+          areCreditsShown={credits.isSheetMissing}
           hasMapStyleButton={false}
         />
-        {!isCreditsSheetMissing && (
-          <MapCreditsDock isDocked={cards.open} onOpen={openCredits} buttonRef={creditsButtonRef} />
+        {!credits.isSheetMissing && (
+          <MapCreditsDock
+            isDocked={cards.open}
+            onOpen={credits.open}
+            buttonRef={credits.buttonRef}
+          />
         )}
         {/*
         The commuter's own position, and the camera with them, kept clear of
@@ -385,16 +329,33 @@ export function PublicMapApp() {
           />
         )}
 
+        {/*
+        Place search (.scratch/place-search, step 1): a place chosen opens as its name tapped on
+        the map does (openPlace). On a wide map the cards float under it (sheetTopUnderSearch).
+      */}
+        <PlaceSearchBar
+          map={map}
+          hotspots={hotspots.hotspots}
+          directionsAt={directionsAt}
+          whereNow={() => where.current?.at ?? null}
+          onPick={(hotspot) => openPlace(hotspot.id)}
+          onLookAt={(point) => lookAt(map, point)}
+          isUnderUpdate={needRefresh}
+          isUnderOfflinePill={offline || age.stale}
+          isCardOpen={cards.open}
+        />
         {/* How old the map is, and a new version waiting. */}
         <Notices offline={offline} age={age} needRefresh={needRefresh} onUpdate={reloadToUpdate} />
         {/* What went wrong, at the top: the locator's note and a failed load. */}
         {hasToasts && (
-          <Suspense fallback={null}>
-            <PageToasts locatorNote={locatorNote} load={loadToast} />
-          </Suspense>
+          <div className={cn('contents', TOAST_UNDER_FULL_CARD)}>
+            <Suspense fallback={null}>
+              <PageToasts locatorNote={locatorNote} load={loadToast} />
+            </Suspense>
+          </div>
         )}
         {/* Held while the credits are open: one dialog at a time. */}
-        {install.shouldShow && credits === 'shut' && (
+        {install.shouldShow && credits.state === 'shut' && (
           <InstallPrompt onInstall={install.install} onLater={install.postpone} />
         )}
         {saved.selected && tripLivery && timeline && (
@@ -425,8 +386,7 @@ export function PublicMapApp() {
             height={height}
             // "Other routes": that route's trip in this one's place, ‹ still to
             // what this one was picked from; the camera takes it in as it opens.
-            // The sheet goes to Middle from wherever it is, so the map shows it;
-            // the hintuans stay open or folded.
+            // The sheet stays where it is; the hintuans stay open or folded.
             onOtherRoute={otherRoute}
           />
         )}
@@ -491,6 +451,7 @@ export function PublicMapApp() {
             back={saved.back}
             listing={saved.listing}
             onFlip={flipList}
+            modeFilter={{ filter: saved.modeFilter, onFilter: filterList }}
             selected={saved.highlight?.where === 'list' ? saved.highlight.card : null}
             onSelect={(p) => saved.highlightCard(p && { where: 'list', ...p })}
             onRoute={openTrip}
@@ -500,16 +461,7 @@ export function PublicMapApp() {
           />
         )}
       </div>
-      {credits !== 'shut' && (
-        <Suspense fallback={<CreditsOnTheirWay onCancel={cancelCredits} />}>
-          <MapDataSourceSheet
-            key={creditsOpenings}
-            onClose={closeCredits}
-            onClosed={creditsGone}
-            onUnavailable={creditsSheetMissing}
-          />
-        </Suspense>
-      )}
+      <MapCreditsSheet credits={credits} />
     </div>
   );
 }

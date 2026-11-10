@@ -12,7 +12,9 @@ import type { LngLat } from '@/shared/utils/geo';
 
 import { lineToFollow } from './borrow';
 import type { Drawing } from './use-drawing';
+import { drawingToEdit } from '../data/drawing-to-edit';
 import { withDrawing } from '../data/live';
+import { useReadRouteDraft } from '../data/use-route-to-edit-query';
 
 /** What a right-click on an ikot's line says: it is not followed. */
 export const NO_END_TO_FOLLOW = 'An ikot has no end to go on from.';
@@ -41,6 +43,7 @@ export function useFollow({
   target: FollowTarget;
   setNotice: (text: string) => void;
 }) {
+  const readRouteDraft = useReadRouteDraft();
   /**
    * A right-click on saved lines while drawing, or a finger's Follow chip
    * (point-bar.tsx): join the one going the way
@@ -92,11 +95,18 @@ export function useFollow({
   /**
    * A direction's drawing is not in the list (live.ts DIRECTION_SELECT): read
    * it for the one being opened, then hand it to the tool. A read that fails
-   * is a notice, and the tool is never started on an empty drawing.
+   * is a notice, and the tool is never started on an empty drawing. To edit,
+   * the line is the editor's own draft of it when there is one
+   * (drawing-to-edit.ts); to extend or follow, the approved line, which is
+   * what a borrowed line names.
    */
-  const opening = async (v: DirectionRow, then: (d: DirectionDrawing) => void) => {
+  const opening = async (
+    v: DirectionRow,
+    then: (d: DirectionDrawing) => void,
+    { isToEdit = false }: { isToEdit?: boolean } = {},
+  ) => {
     try {
-      then(await withDrawing(v));
+      then(await (isToEdit ? drawingToEdit(v, readRouteDraft) : withDrawing(v)));
     } catch (e) {
       setNotice(
         `Couldn't open ${v.name ?? 'this direction'}: ${e instanceof Error ? e.message : String(e)}`,

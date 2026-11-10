@@ -5,6 +5,7 @@ import { Button } from '@/design-system/primitives/button';
 import { FieldError } from '@/design-system/primitives/field-error';
 import { TextAreaField } from '@/design-system/primitives/text-area-field';
 import { TextField } from '@/design-system/primitives/text-field';
+import { useFocusHeading } from '@/shared/hooks/use-focus-heading';
 
 import { fareFromText } from './fare-text';
 import { RideField } from './ride-field';
@@ -12,7 +13,6 @@ import { RideSheet } from './ride-sheet';
 import { StopRecordingScreen } from './stop-recording-screen';
 import { useSaveCountdown } from './use-save-countdown';
 import { countdownText } from '../common/format';
-import { useFocusHeading } from '../common/use-focus-heading';
 import type { RecordingFigures } from '../recorder/recording-figures';
 import type { RecordingDetails } from '../recorder/recording-state';
 import type { RideKind } from '../storage/recording-schema';

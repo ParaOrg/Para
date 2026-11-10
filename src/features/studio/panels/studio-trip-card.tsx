@@ -106,7 +106,7 @@ export function StudioTripCard({
             const v = saved.selected;
             if (!v) return;
             onClose();
-            void opening(v, draw.load);
+            void opening(v, draw.load, { isToEdit: true });
           }}
           onDelete={() => {
             if (saved.selected) void onDelete(saved.selected);

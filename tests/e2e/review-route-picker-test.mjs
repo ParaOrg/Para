@@ -31,10 +31,19 @@ await page.route(/router\.project-osrm\.org|routing\.openstreetmap\.de/, (r) =>
 await page.goto('http://127.0.0.1:4180/studio/');
 await page.getByRole('button', { name: 'New route, terminal or hintuan' }).click();
 await page.getByRole('menuitem', { name: /Routes/ }).click();
-await page.mouse.click(180, 400);
-await page.mouse.click(250, 450);
-await page.mouse.click(300, 420);
-await page.getByRole('button', { name: /Done/ }).click();
+// From the map's own corner: on a computer the route's form opens left of it and moves it.
+await page
+  .getByTestId('sidebar')
+  .or(page.getByRole('button', { name: /Done/ }))
+  .first()
+  .waitFor();
+const mapBox = await page.locator('canvas.maplibregl-canvas').boundingBox();
+await page.mouse.click(mapBox.x + 180, mapBox.y + 352);
+await page.mouse.click(mapBox.x + 250, mapBox.y + 402);
+await page.mouse.click(mapBox.x + 300, mapBox.y + 372);
+// On a computer the route's form already stands beside the map; narrower, Done opens it.
+if (!(await page.getByTestId('sidebar').isVisible()))
+  await page.getByRole('button', { name: /Done/ }).click();
 await page.getByTestId('save-head').selectOption({ label: '+ New place here…' });
 const group = page.getByRole('group', { name: 'New place for the head', exact: true });
 await group.getByLabel(/Ground name/).fill('Preview route head');
@@ -45,8 +54,10 @@ const tail = page.getByRole('group', { name: 'New place for the tail', exact: tr
 await tail.getByLabel(/Ground name/).fill('Preview route tail');
 await tail.getByRole('button', { name: 'Save place', exact: true }).click();
 await tail.waitFor({ state: 'detached' });
-await page.getByRole('button', { name: 'Save', exact: true }).click();
-await page.getByRole('button', { name: 'Save', exact: true }).waitFor({ state: 'detached' });
+await page.getByRole('button', { name: 'Save as draft', exact: true }).click();
+await page
+  .getByRole('button', { name: 'Save as draft', exact: true })
+  .waitFor({ state: 'detached' });
 await page.getByRole('button', { name: /^Drafts \(\d+\)$/ }).click();
 const text = await page.getByRole('dialog').innerText();
 assert.ok(text.includes('Preview route head'));
@@ -70,17 +81,8 @@ await routeItem.getByRole('button', { name: 'Review changes', exact: true }).cli
 await page.getByRole('button', { name: 'Approve', exact: true }).waitFor();
 assert.equal(await page.getByRole('button', { name: 'Approve', exact: true }).isDisabled(), true);
 for (const place of [head, tailDraft]) {
-  const submitted = await api('rpc/submit_draft', {
-    p_draft: place.id,
-    p_revision: place.revision,
-  });
   assert.equal(
-    (
-      await api('rpc/approve_reviewed_draft', {
-        p_draft: place.id,
-        p_revision: submitted.draft.revision,
-      })
-    ).code,
+    (await api('rpc/publish_draft', { p_draft: place.id, p_revision: place.revision })).code,
     'approved',
   );
 }
@@ -92,7 +94,7 @@ await page.waitForFunction(() =>
 );
 await page.getByRole('button', { name: 'Approve', exact: true }).click();
 await page.getByRole('button', { name: 'Approve', exact: true }).click();
-await page.getByRole('status').filter({ hasText: 'Approved. The Studio map' }).waitFor();
+await page.getByRole('status').filter({ hasText: 'Published. The Studio map' }).waitFor();
 assert.equal((await api(`route?id=eq.${route.subject_id}`)).length, 1);
 assert.equal((await api('route?select=id')).length, beforeRoutes + 1);
 assert.equal((await api('stop?select=id')).length, beforePlaces + 2);

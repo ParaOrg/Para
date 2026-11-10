@@ -57,8 +57,6 @@ const uploadsOf = (statuses: Record<string, UploadStatus>, fallback: UploadStatu
     statusOf,
     waitingCount: 0,
     upload: fn(),
-    removeUploaded: fn(() => Promise.resolve()),
-    canRemove: (recording) => statusOf(recording).state === 'uploaded',
     check: null,
   };
 };
@@ -76,6 +74,7 @@ const itemsOf = (
   uploads,
   isOnPhone: (recording) => !elsewhere.some((other) => other.id === recording.id),
   factsOf: () => ({ distanceM: 12_400, isWalkOnly: false, trail: null }),
+  usedOf: () => [],
   load,
 });
 

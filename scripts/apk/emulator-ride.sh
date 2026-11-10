@@ -167,8 +167,13 @@ ride = [r for _, r in ride]
 services = open(f"{out}/services.txt", errors="replace").read()
 notification = open(f"{out}/notification.txt", errors="replace").read()
 errors = [r for r in ride if r.startswith(("error", "write-failed", "report-failed"))]
+unread_published = [l for l in log if "could not be shown on the map" in l]
 
 rows_after_import = int(imported[0]["rows"]) if imported else 0
+last_kept = f"tiles={reports[-1].get('tiles', '?')} meta={reports[-1].get('meta', '?')}" if reports else "no report"
+as_count = lambda value: int(value) if value and value.isdigit() else 0
+last_kept_tiles = as_count(reports[-1].get("tiles")) if reports else 0
+last_kept_meta = as_count(reports[-1].get("meta")) if reports else 0
 last_rows = int(reports[-1]["rows"]) if reports else 0
 # The page's own answer (caught): the ride held the log's last fix, read in the same look.
 keeps_every_fix = lambda f: f.get("caught") == "true" and int(f["native"]) > 0 and f.get("sorted") == "true"
@@ -189,12 +194,19 @@ checks = {
     f"the ride went on after the reopening ({last_rows} > {rows_after_import})": last_rows > rows_after_import + 60,
     "no fix is out of order at the end": bool(reports) and reports[-1].get("sorted") == "true",
     "no error was reported": not errors,
+    # The app's build carries no published map: its page reads the public site's (published-source.ts).
+    "the map read the published routes and hotspots": not unread_published,
+    # The map under the driver's screens kept the basemap it drew, in the WebView's Cache Storage
+    # (basemap-cache.ts), as a phone's must to draw it with no signal.
+    f"the map kept its basemap tiles and files on the phone ({last_kept})": last_kept_tiles > 0
+    and last_kept_meta > 0,
 }
 lines = [f"{'PASS' if ok else 'FAIL'}: {name}" for name, ok in checks.items()]
 lines.append("")
 lines.append(f"imported after a rebuild: {rebuilt}")
 lines.append(f"imported after the kill: {imported}")
 lines.append(f"errors: {errors}")
+lines.append(f"published map unread: {unread_published[:3]}")
 lines.append(f"reports: {reports}")
 passed = all(checks.values())
 open(f"{out}/summary.txt", "w").write(("PASS" if passed else "FAIL") + "\n" + "\n".join(lines) + "\n")

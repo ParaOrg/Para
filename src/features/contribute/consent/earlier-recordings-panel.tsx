@@ -1,6 +1,5 @@
 import { Button } from '@/design-system/primitives/button';
-
-import { useFocusHeading } from '../common/use-focus-heading';
+import { useFocusHeading } from '@/shared/hooks/use-focus-heading';
 
 /** The question about recordings made before the current consent text, and what answers it. */
 export interface EarlierQuestion {

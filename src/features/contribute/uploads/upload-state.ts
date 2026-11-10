@@ -6,10 +6,9 @@ export type UploadStatus =
   /** Waiting for the check that a person is uploading, before this phone's first upload. */
   | { state: 'checking' }
   | { state: 'uploading' }
-  | { state: 'uploaded'; at: number; by: string; problem?: string }
+  | { state: 'uploaded'; at: number; by: string }
   /** `message` is the whole sentence; `brief` is its reason alone, for History, whose layout says the rest. */
   | { state: 'failed'; message: string; brief: string; willRetry: boolean }
-  | { state: 'removing' }
   | { state: 'removed'; byEditor?: boolean }
   /** Not sent on its own: made before the current consent text, and the person kept it on the phone. */
   | { state: 'held' }

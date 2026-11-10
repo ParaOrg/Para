@@ -14,6 +14,15 @@ import type { AreaTarget, Borrow, FollowOffer, Picking } from './drawing-types';
  */
 export const ECHO_MS = 700;
 
+/**
+ * A mouse drag let go back near its press still ends in a click, straight
+ * after: one this soon is the drag's (the pen's, a handle's), adding nothing.
+ */
+export const CLICK_AFTER_MS = 50;
+
+/** A mouse press that moves this far is a drag (the pen's, a bend's): MapLibre's click tolerance. */
+export const DRAG_PX = 3;
+
 /** A feature of the drawing's layers, carrying its point's or its gap's index. */
 export interface IndexedFeature {
   properties?: { index?: number };
@@ -29,12 +38,22 @@ export interface DrawRefs {
   borrow: RefObject<Borrow | null>;
   follow: RefObject<((directionIds: string[], at: LngLat, offered?: LngLat) => void) | undefined>;
   selected: RefObject<number | null>;
+  /** Draw (freehand) or Snap: whether a drag on empty map shapes a curve (draw-pen.ts). */
+  freehand: RefObject<boolean>;
+  /** Move: clicks select and drag points, handles and the line, and never add a point. */
+  moving: RefObject<boolean>;
+  /** The handle the last point, placed smooth, sends the stretch still to come (curves.ts, outHandle). */
+  pendingOut: RefObject<{ point: LngLat; out: LngLat } | null>;
 }
 
 /** What the pointer does to the drawing. */
 export interface DrawActions {
   setPicking: (p: Picking) => void;
   addPoint: (point: LngLat) => Promise<void>;
+  /** A curve's handles reshaped (draw-handle-drag.ts): the stretches as they now bend. */
+  reshape: (next: readonly Segment[]) => void;
+  /** A smooth point, its handles mirrored, `out` toward the next stretch (draw-pen.ts). */
+  addSmoothPoint: (point: LngLat, out: LngLat) => Promise<void>;
   insertPoint: (gap: number, point: LngLat) => Promise<void>;
   deletePoint: (idx: number) => Promise<void>;
   toggleSegment: (gap: number) => Promise<void>;
@@ -44,6 +63,8 @@ export interface DrawActions {
   markStandIn: (s: Segment) => void;
   isStandIn: (s: Segment) => boolean;
   select: (i: number | null) => void;
+  /** Shows point `i`'s handles alone, or none (null). */
+  showHandlesAt: (i: number | null) => void;
   setFollowOffer: (o: FollowOffer | null) => void;
 }
 
@@ -57,6 +78,8 @@ export interface DrawContext {
   canvas: HTMLCanvasElement;
   refs: DrawRefs;
   actions: DrawActions;
+  /** Space held: a press on the map pans, as in a pen tool, rather than shaping a curve (draw-pen.ts). */
+  pan: { isSpaceHeld: boolean };
   /** The point being dragged, by mouse or finger, whether it has moved, and its stretches' modes. */
   drag: { idx: number | null; moved: boolean; modes: ModesAround };
   /**
@@ -65,6 +88,10 @@ export interface DrawContext {
    */
   echo: { until: number; lastTouchEnd: number };
 }
+
+/** The cursor at rest over empty map: an arrow in Move, where a click adds nothing; else a crosshair. */
+export const restCursor = (ctx: DrawContext): string =>
+  ctx.refs.moving.current ? 'default' : 'crosshair';
 
 /** Whether a click now is the echo of a touch already answered. */
 export const isEcho = (ctx: DrawContext): boolean => performance.now() < ctx.echo.until;

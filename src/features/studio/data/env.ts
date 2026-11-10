@@ -9,3 +9,22 @@ import * as z from 'zod/mini';
 export const turnstileSiteKey: string | null =
   z.optional(z.string().check(z.minLength(1))).parse(import.meta.env.VITE_TURNSTILE_SITE_KEY) ??
   null;
+
+const nonEmpty = z.string().check(z.minLength(1));
+
+/**
+ * A value, or null when it is missing or empty. Never a throw: this runs as
+ * the page loads, and a throw there leaves a white page (supabase.ts).
+ */
+function valueOrNull(value: unknown): string | null {
+  const parsed = nonEmpty.safeParse(value);
+  return parsed.success ? parsed.data : null;
+}
+
+/** The Supabase project's address, or null when the build has none (supabase.ts says so). */
+export const supabaseUrl: string | null = valueOrNull(import.meta.env.VITE_SUPABASE_URL);
+
+/** Its publishable key: public by design, protected by row level security. */
+export const supabasePublishableKey: string | null = valueOrNull(
+  import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+);

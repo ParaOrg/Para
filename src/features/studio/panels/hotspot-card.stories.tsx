@@ -99,6 +99,9 @@ const meta = {
   ],
   parameters: { layout: 'fullscreen' },
   args: {
+    // Raised, as a commuter has them before tapping a row: at Low a tap on the body raises the
+    // sheet and reaches nothing under it. The stories about the sheet's heights keep their own.
+    height: { snap: 0.55, onSnap: fn() },
     hotspot: terminal,
     linkedDirectionIds: [outbound.id, inbound.id],
     directions: [outbound, inbound],
@@ -212,7 +215,10 @@ export const RouteCards: Story = {
 
 /** Tala's card picked: pressed in, its routes lit on the map. */
 export const RouteCardsSelected: Story = {
-  args: { ...RouteCards.args, routeCards: { selected: 'Tala', onSelect: fn(), onShown: fn() } },
+  args: {
+    ...RouteCards.args,
+    routeCards: { selected: 'Tala|jeep', onSelect: fn(), onShown: fn() },
+  },
 };
 
 /** ⇄ pressed: the way back, a card per place — Novaliches, SM Fairview — never alike side by side; it lets a picked card go. */
@@ -234,21 +240,23 @@ export const RouteCardsTheWayBack: Story = {
 };
 
 /**
- * On a phone, at Max: the cards scroll in the sheet under the hotspot's
- * name. It opens at Middle, as every sheet does (BottomSheet); the handle's
- * Enter raises it, a click alone, so the story does not hang on how a
- * synthetic pointer tap's events line up with the click the sheet swallows
- * after one.
+ * On a phone, at full height: the cards scroll in the sheet under the
+ * hotspot's name. It opens at Low, as every sheet does (BottomSheet); the
+ * handle's Enter raises it a third at a time, a click alone, so the story does
+ * not hang on how a synthetic pointer tap's events line up with the click the
+ * sheet swallows after one.
  */
 export const RouteCardsPhone: Story = {
-  args: RouteCards.args,
+  args: { ...RouteCards.args, height: undefined },
   parameters: { phone: true },
   play: async ({ canvasElement }) => {
     const handle = within(canvasElement).getByTestId('dock-handle');
+    const sheet = within(canvasElement).getByTestId('card');
     handle.focus();
-    await userEvent.keyboard('{Enter}');
+    for (let i = 0; i < 4 && sheet.getAttribute('data-snap') !== 'full'; i++)
+      await userEvent.keyboard('{Enter}');
     handle.blur();
-    await expect(within(canvasElement).getByTestId('card')).toHaveAttribute('data-snap', 'max');
+    await expect(sheet).toHaveAttribute('data-snap', 'full');
   },
 };
 

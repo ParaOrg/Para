@@ -4,7 +4,7 @@ import { CARD_SURFACE } from './livery-card';
 import { RideMark } from './ride-mark';
 
 /**
- * Start's circled S and End's circled E on the orange card. Their ring and letter are white, so a
+ * Start's circled S and End's circled E on the bus card. Their ring and letter are white, so a
  * white page would hide them. `isSmall` keeps the size and changes only the spacing, the way a
  * hintuan's row places the mark.
  */
@@ -13,7 +13,7 @@ const meta = {
   component: RideMark,
   decorators: [
     (Story) => (
-      <div className={'inline-flex p-3 ' + CARD_SURFACE.orange}>
+      <div className={'inline-flex p-3 ' + CARD_SURFACE.bus}>
         <Story />
       </div>
     ),

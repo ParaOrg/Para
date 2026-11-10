@@ -176,7 +176,7 @@ test('the state the clock reads is made from the page as RidePlugin and the taps
     /state\.pausedSince = RideState\.PAUSED\.equals\(state\.phase\) && stoppedAt != null \? stoppedAt : 0;/,
   );
   assert.match(receiverSource, /state\.pausedSince = now;/);
-  assert.match(receiverSource, /resumed\.pausedMs \+= now - resumed\.pausedSince;/);
+  assert.match(receiverSource, /state\.pausedMs \+= now - state\.pausedSince;/);
   assert.match(receiverSource, /state\.finishedAt = now;/);
 });
 

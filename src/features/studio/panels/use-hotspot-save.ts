@@ -1,78 +1,69 @@
-import { useRef, useState, type FormEvent } from 'react';
-
-import type { HotspotRow } from '@/features/routes/model/hotspots';
+import { useRef, useState } from 'react';
 
 import { hotspotRefusal, type HotspotCheck } from './hotspot-checks';
+import { NOT_PUBLISHED, type SaveIntent } from './save-intent';
 import { draftRefusal, saveHotspotDraft } from '../data/draft-save';
-import { STUDIO_DRAFTS } from '../data/flags';
-import { saveHotspot } from '../data/hotspots-write';
-
-/** What a save writes: saveHotspot's input. */
-type SaveHotspotInput = Parameters<typeof saveHotspot>[0];
+import type { SaveHotspotInput } from '../data/hotspot-save-input';
+import { reviewMessage } from '../data/review-commands';
+import { useReviewMutation } from '../data/use-review-query';
 
 interface UseHotspotSaveOptions {
-  onSaved: (s: HotspotRow) => void;
-  /** Hears the row a save wrote, the moment it is in, to keep it beyond the panel. */
-  onWritten?: (hotspotId: string) => void;
-  /** With STUDIO_DRAFTS on: the save is a draft, and the map is unchanged. */
-  /** Hears the hotspot the draft holds, for what was made from it. */
+  /** Hears the hotspot the draft holds, for what was made from it. The map is unchanged until approval. */
   onDrafted?: (hotspotId: string) => void;
+  /** Hears the hotspot a publish made published: the map has changed. */
+  onPublished?: (hotspotId: string) => void;
 }
 
 /**
- * The hotspot panel's save: the refusals first (hotspotRefusal), then the
- * write, busy while it runs, its error in the panel's words.
+ * The hotspot panel's save: the refusals first (hotspotRefusal), then the draft and, for Publish,
+ * its approval in the same press; busy with what was asked while it runs, its error in the
+ * panel's words.
  */
-export function useHotspotSave({ onSaved, onWritten, onDrafted }: UseHotspotSaveOptions) {
-  const [busy, setBusy] = useState(false);
+export function useHotspotSave({ onDrafted, onPublished }: UseHotspotSaveOptions) {
+  const [busy, setBusy] = useState<SaveIntent | null>(null);
   const [error, setError] = useState<string | null>(null);
-  // The row as a save wrote it, when its links failed after: the retry
-  // updates it rather than inserting the box again (SavePanel's `written`).
-  // The studio keeps it in the outline itself (onWritten, adoptHotspot), so ✕
-  // and a reload keep it too; here otherwise, as in the stories.
-  const [writtenId, setOwnWritten] = useState<string | null>(null);
-  const setWrittenId = (id: string) => {
-    setOwnWritten(id);
-    onWritten?.(id);
-  };
-
   // A new hotspot's id for its draft, the same on every retry (useRouteSave's newRouteId).
   const newHotspotId = useRef<string | null>(null);
+  const review = useReviewMutation();
 
-  /** Saves the form, `check` the refusal's view of it, `input` what is written. */
-  async function submit(
-    e: FormEvent,
+  /** Saves the form, `check` the refusal's view of it, `input` what is written, as `intent` asks. */
+  async function save(
     check: HotspotCheck,
     input: Omit<SaveHotspotInput, 'hotspotId'>,
+    intent: SaveIntent,
   ) {
-    e.preventDefault();
     setError(null);
     const refusal = hotspotRefusal(check);
     if (refusal) {
       setError(refusal);
       return;
     }
-    setBusy(true);
+    setBusy(intent);
     try {
-      if (STUDIO_DRAFTS) {
-        newHotspotId.current ??= crypto.randomUUID();
-        const { result, hotspotId } = await saveHotspotDraft(
-          { hotspotId: check.hotspotId, ...input },
-          newHotspotId.current,
-        );
-        const refusal = draftRefusal(result);
-        if (refusal) throw new Error(refusal);
-        if (onDrafted) onDrafted(hotspotId);
-        else setBusy(false);
+      newHotspotId.current ??= crypto.randomUUID();
+      const { result, hotspotId } = await saveHotspotDraft(
+        { hotspotId: check.hotspotId, ...input },
+        newHotspotId.current,
+      );
+      const refusal = draftRefusal(result);
+      if (refusal) throw new Error(refusal);
+      // Publish is the draft save and then publish_draft at the revision it saved, in one press.
+      if (intent === 'publish') {
+        if (!result.draft) throw new Error(NOT_PUBLISHED);
+        const published = await review.mutateAsync({ action: 'publish', draft: result.draft });
+        if (published.code !== 'approved')
+          throw new Error(`${NOT_PUBLISHED} ${reviewMessage(published)}`);
+        if (onPublished) onPublished(hotspotId);
+        else setBusy(null);
         return;
       }
-      const saved = await saveHotspot({ hotspotId: check.hotspotId, ...input }, setWrittenId);
-      onSaved(saved);
+      if (onDrafted) onDrafted(hotspotId);
+      else setBusy(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
-      setBusy(false);
+      setBusy(null);
     }
   }
 
-  return { busy, error, setError, writtenId, submit };
+  return { busy, error, setError, save };
 }

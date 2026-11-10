@@ -1,3 +1,5 @@
+import { authErrorMessage } from './auth-error-message';
+
 /** The shortest password the project takes (Supabase Auth, "Minimum password length"). */
 export const PASSWORD_MIN_LENGTH = 8;
 
@@ -20,6 +22,13 @@ export function meetsPasswordRule(password: string): boolean {
 }
 
 /** What to say for an error Supabase gave on setting a password: the rule for `weak_password`. */
-export function setPasswordErrorMessage(error: { code?: string; message: string }): string {
-  return error.code === 'weak_password' ? PASSWORD_RULE_ERROR : error.message;
+export function setPasswordErrorMessage(error: {
+  name?: string;
+  code?: string;
+  message: string;
+  status?: number;
+}): string {
+  if (error.code === 'weak_password') return PASSWORD_RULE_ERROR;
+  if (error.code === 'same_password') return 'The new password is the same as the current one.';
+  return authErrorMessage(error, 'That password was not accepted. Try again.');
 }

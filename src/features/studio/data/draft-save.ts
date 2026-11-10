@@ -3,9 +3,9 @@ import type { DirectionRow } from '@/features/routes/model/routes';
 
 import { directionRows } from './direction-rows';
 import { hotspotDraftBase, routeDraftState, stateForNewLine } from './draft-reads';
-import { claimDraft, updateDraft, type DraftKind, type ReviewResult } from './drafts';
+import { claimDraft, saveDraft, type DraftKind, type ReviewResult } from './drafts';
 import { hotspotPayloadOf } from './hotspot-draft-state';
-import type { SaveHotspotInput } from './hotspots-write';
+import type { SaveHotspotInput } from './hotspot-save-input';
 import {
   hintuanLinksFor,
   withDirectionEmptied,
@@ -13,7 +13,7 @@ import {
   withSignboards,
 } from './route-draft-edits';
 import { routePayloadOf, servedRouteOf, type DraftBase } from './route-draft-state';
-import type { SaveInput } from './routes-write';
+import type { SaveInput } from './route-save-input';
 
 // The studio's saves as drafts (0022): each builds the subject's whole state —
 // a route with every direction and each direction's complete link set, or a
@@ -35,13 +35,13 @@ async function storeDraft(
   base: DraftBase,
   payload: Record<string, unknown>,
 ): Promise<ReviewResult> {
-  if (base.draft) return updateDraft(base.draft.id, base.draft.revision, payload);
+  if (base.draft) return saveDraft(base.draft.id, base.draft.revision, payload);
   const claimed = await claimDraft(kind, base.subjectId, base.isNew, base.baseRevision, payload);
   if (claimed.code === 'ok' && claimed.created === false) {
     // A new subject's id is this form's own: a draft already under it is this
     // form's earlier save whose answer was lost, so it is brought up to date.
     if (base.isNew && claimed.draft)
-      return updateDraft(claimed.draft.id, claimed.draft.revision, payload);
+      return saveDraft(claimed.draft.id, claimed.draft.revision, payload);
     return { code: 'revision_mismatch', draft: claimed.draft };
   }
   return claimed;
@@ -125,7 +125,6 @@ export function draftRefusal(r: ReviewResult): string | null {
     case 'taken_down':
       return null;
     case 'revision_mismatch':
-    case 'already_pending':
       return 'Someone else changed this draft since you opened it. Close this and open it again to see their version.';
     case 'conflict':
       return 'This changed on the map since you opened it. Close this and open it again.';
@@ -139,6 +138,8 @@ export function draftRefusal(r: ReviewResult): string | null {
     case 'payload_incomplete':
       return 'The draft was refused as incomplete. Nothing was saved.';
     default:
-      return `Nothing was saved (${r.code}).`;
+      // The code says which rule refused; the editor gets what to do, the console the code.
+      console.warn(`A draft save was refused: ${r.code}`);
+      return 'Nothing was saved. Refresh and try again.';
   }
 }

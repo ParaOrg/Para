@@ -8,7 +8,14 @@ import { isLoop, type DirectionRow } from '@/features/routes/model/routes';
 import type { LngLat } from '@/shared/utils/geo';
 
 import { ROUTE_COLOUR, isGeoJSON } from './draw-layers';
-import { loopClosingPoint, outboundFeatures, outboundFor, returnTripStart } from './loop-closing';
+import {
+  loopClosingPoint,
+  outboundFeatures,
+  outboundFor,
+  returnTripStart,
+  whyCannotCloseLoop,
+} from './loop-closing';
+import { useConnectHint } from './use-connect-hint';
 import type { Drawing } from './use-drawing';
 
 /*
@@ -94,7 +101,9 @@ export interface LoopPlan {
  * begins that drawing with its first point already on the outbound line's last.
  *
  * A new route, or a loop being edited, has no other way to join: it closes on
- * its own first point, so a line can go round and end where it began.
+ * its own first point, so a line can go round and end where it began. Near
+ * where it may close, the cursor shows a connect badge, and a click there
+ * closes it (use-connect-hint.ts).
  */
 export function useLoopClosing(
   map: MapLibreMap | null,
@@ -139,11 +148,21 @@ export function useLoopClosing(
     !hasJoin() &&
     (target.directionId === null ? target.routeId === null : !!editedLoop && isLoop(editedLoop));
   const first = controlPoints[0];
+  const outboundStart = outbound && loopClosingPoint(outbound);
   // A copy: the drawing finds its points by identity, so the stored one would be taken for itself.
-  if (ownStart && first)
-    return { loop: { closeAt: [first[0], first[1]], other: null }, startReturnTrip };
+  const loop: LoopPlan | null =
+    ownStart && first
+      ? { closeAt: [first[0], first[1]], other: null }
+      : outboundStart
+        ? { closeAt: outboundStart, other: slotReversed === false ? 'pabalik' : 'papunta' }
+        : null;
 
-  const closeAt = outbound && loopClosingPoint(outbound);
-  const other = slotReversed === false ? 'pabalik' : 'papunta';
-  return { loop: closeAt ? { closeAt, other } : null, startReturnTrip };
+  // Where a click closes the line: only while the toolbar's button could.
+  const closable =
+    loop && !whyCannotCloseLoop(controlPoints, loop.closeAt, loop.other === null)
+      ? loop.closeAt
+      : null;
+  useConnectHint(map, closable);
+
+  return { loop, startReturnTrip };
 }

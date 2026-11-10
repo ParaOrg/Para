@@ -2,10 +2,11 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
 import {
-  approveDraft,
   discardDraft,
   listDrafts,
-  submitDraft,
+  publishDraft,
+  saveDraft,
+  unpublish,
 } from '../../src/features/studio/data/drafts.ts';
 import { reviewResultSchema } from '../../src/features/studio/data/review-schema.ts';
 import { setSupabase } from '../../src/features/studio/data/supabase.ts';
@@ -30,12 +31,12 @@ const row = (id, status = 'draft') => ({
 test('review RPC results reject unknown codes rather than trusting a cast', async () => {
   const { client } = fakeSupabase(() => ({ data: { code: 'approved_typo' } }));
   setSupabase(client);
-  await assert.rejects(approveDraft('d'), /review result.*code/);
+  await assert.rejects(publishDraft('d', 3), /review result.*code/);
 });
 
 for (const result of [
   null,
-  { code: 'submitted', draft: { id: 'partial' } },
+  { code: 'ok', draft: { id: 'partial' } },
   { code: 'conflict', current_revision: '7' },
   { code: 'conflict', current_revision: -1 },
   { code: 'conflict', current_revision: 1.5 },
@@ -47,12 +48,28 @@ for (const result of [
 }
 
 test('validates and retains draft and revision information on an RPC answer', async () => {
-  const draft = row('d', 'pending');
-  const { client, log } = fakeSupabase(() => ({ data: { code: 'submitted', draft } }));
+  const draft = row('d');
+  const { client, log } = fakeSupabase(() => ({ data: { code: 'ok', created: false, draft } }));
   setSupabase(client);
-  assert.deepEqual(await submitDraft('d', 3), { code: 'submitted', draft });
-  assert.equal(log[0].op, 'submit_draft');
-  assert.deepEqual(log[0].payload, { p_draft: 'd', p_revision: 3 });
+  assert.deepEqual(await saveDraft('d', 3, { version: 1 }), { code: 'ok', created: false, draft });
+  assert.equal(log[0].op, 'save_draft');
+  assert.deepEqual(log[0].payload, { p_draft: 'd', p_revision: 3, p_payload: { version: 1 } });
+});
+
+test('publish carries the revision the editor saw; unpublish names the subject', async () => {
+  const { client, log } = fakeSupabase((q) =>
+    q.op === 'publish_draft' ? { data: { code: 'approved' } } : { data: { code: 'unpublished' } },
+  );
+  setSupabase(client);
+  assert.equal((await publishDraft('d', 3)).code, 'approved');
+  assert.equal((await unpublish('hotspot', 'h')).code, 'unpublished');
+  assert.deepEqual(
+    log.map((q) => [q.op, q.payload]),
+    [
+      ['publish_draft', { p_draft: 'd', p_revision: 3 }],
+      ['unpublish', { p_kind: 'hotspot', p_subject_id: 'h' }],
+    ],
+  );
 });
 
 test('discard carries the revision when the reviewer supplies one', async () => {
@@ -67,7 +84,7 @@ test('discard carries the revision when the reviewer supplies one', async () => 
 test('RPC transport failure is distinct from a lifecycle refusal and is not retried', async () => {
   const { client, log } = fakeSupabase(() => ({ error: { message: 'Connection interrupted' } }));
   setSupabase(client);
-  await assert.rejects(approveDraft('d'), /approve_draft: Connection interrupted/);
+  await assert.rejects(publishDraft('d', 3), /publish_draft: Connection interrupted/);
   assert.equal(log.length, 1);
 });
 
@@ -147,7 +164,7 @@ test('discard from a pending draft always carries a revision guard', async () =>
   assert.deepEqual(log[0].payload, { p_draft: 'd', p_revision: 3 });
 });
 
-test('a missing draft or conflict never claims approval', () => {
+test('a missing draft or conflict never claims it was published', () => {
   assert.match(reviewMessage({ code: 'no_draft' }), /no longer available/);
   assert.match(reviewMessage({ code: 'conflict' }), /changed since/);
   assert.match(reviewMessage({ code: 'revision_mismatch' }), /Someone changed/);

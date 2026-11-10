@@ -4,6 +4,7 @@ import { MAP_OPACITY } from '@/design-system/foundation/map-colours';
 
 import { HOTSPOT_COLOUR, HOTSPOT_CONTENT, HOTSPOT_OPACITY } from './colours';
 import { hatch, hatchOf } from './hotspot-hatch';
+import { DOT, PIN, PINS_SRC, addHotspotPins, pinsOf } from './hotspot-pins';
 import { LAYERS, firstLayerOfType } from './layers';
 import { hotspotsData } from './saved-hotspots-data';
 import { HINTUAN_LABEL, LABEL, addHotspotLabels, labelsOf } from './saved-hotspots-labels';
@@ -79,14 +80,28 @@ export function hiddenHotspotFilters(hidden: string): [string, FilterSpecificati
     [HATCH, boxes],
     [LABEL, labelsOf('terminal', hidden)],
     [HINTUAN_LABEL, labelsOf('hintuan', hidden)],
+    [DOT, pinsOf(hidden)],
+    [PIN, pinsOf(hidden)],
   ];
 }
 
 /**
- * The saved hotspots' source, laid out from `hotspots`, and the place wash's,
- * and their layers, added to `map` under the routes: what
+ * Where a map other than the public map's and the studio's puts the
+ * hotspots: the boxes under `boxesUnder`, and the pins and names under
+ * `marksUnder` (the contributor page's, under its published routes and its
+ * trail). Unset, the boxes go under the routes and the marks on top.
+ */
+export interface HotspotsPlacement {
+  boxesUnder?: string;
+  marksUnder?: string;
+}
+
+/**
+ * The saved hotspots' source, laid out from `hotspots`, and the place wash's
+ * and the pins', and their layers, added to `map` under the routes: what
  * useSavedHotspotsLayers adds once a map is there, apart so a unit check can
- * read it (map-sources-test).
+ * read it (map-sources-test). The pins' images are hotspot-pin-images.ts's,
+ * added beside this by whoever calls it.
  */
 export function addSavedHotspots(
   map: Pick<
@@ -94,14 +109,17 @@ export function addSavedHotspots(
     'addSource' | 'addLayer' | 'getLayersOrder' | 'getLayer' | 'hasImage' | 'addImage'
   >,
   hotspots: readonly Hotspot[] = [],
+  placement: HotspotsPlacement = {},
 ): void {
   // Under the routes, under the draft, and under the basemap's labels in
   // any case: a box never hides a street name.
-  const before = map.getLayer(ROUTES_ABOVE)
-    ? ROUTES_ABOVE
-    : map.getLayer(DRAW_ABOVE)
-      ? DRAW_ABOVE
-      : firstLayerOfType(map, 'symbol');
+  const before =
+    placement.boxesUnder ??
+    (map.getLayer(ROUTES_ABOVE)
+      ? ROUTES_ABOVE
+      : map.getLayer(DRAW_ABOVE)
+        ? DRAW_ABOVE
+        : firstLayerOfType(map, 'symbol'));
 
   // `promoteId`: the feature state a tap sets is keyed on the hotspot's id
   // (its box and its label point share it, so both carry the state).
@@ -223,5 +241,30 @@ export function addSavedHotspots(
     },
     before,
   );
-  addHotspotLabels(map, SRC);
+  // The pins over the boxes and the routes, the names over the pins.
+  addHotspotPins(map, hotspots, placement.marksUnder);
+  addHotspotLabels(map, SRC, placement.marksUnder);
+}
+
+/** Takes off what addSavedHotspots added: a map that drew the hotspots only for a while. */
+export function removeSavedHotspots(
+  map: Pick<MapLibreMap, 'getLayer' | 'removeLayer' | 'getSource' | 'removeSource'>,
+): void {
+  for (const id of [
+    LABEL,
+    HINTUAN_LABEL,
+    PIN,
+    DOT,
+    HATCH,
+    SIBLINGS,
+    OUTLINE,
+    FILL,
+    WASH_EDGE,
+    WASH,
+  ]) {
+    if (map.getLayer(id)) map.removeLayer(id);
+  }
+  for (const id of [PINS_SRC, WASH_SRC, SRC]) {
+    if (map.getSource(id)) map.removeSource(id);
+  }
 }

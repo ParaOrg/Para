@@ -21,14 +21,15 @@ const OSRM = 'https://router.project-osrm.org/route/v1/driving';
  * Without a limit the router silently takes the nearest road however far away
  * it is: a click in the La Mesa watershed snapped to Quirino Highway 1.2 km
  * off and looked like success. With the limit the router refuses, and a
- * refused gap is drawn dashed, where it can be seen and fixed.
+ * refused gap is drawn straight, and the toolbar counts it, where it can be
+ * seen and fixed.
  */
 const SNAP_RADIUS_M = 25;
 
 /**
  * The public router allows about one request a second. Requests are spaced
  * this far apart across the page, so a quick run of clicks queues instead of
- * being refused — and a refusal draws a good stretch as a dashed straight line.
+ * being refused — and a refusal draws a good stretch as a straight line.
  */
 const REQUEST_GAP_MS = 1000;
 
@@ -127,6 +128,21 @@ async function route(points: LngLat[], signal?: AbortSignal): Promise<Segment[]>
     if (coordinates.length < 2) throw new RouterRefusal('Degenerate', 'a gap with no length');
     return { snap: 'snapped' as const, coordinates, streets: streetRuns(leg.steps) };
   });
+}
+
+/**
+ * The road from `from` to `to`, as a click at `to` would add it: Snap's live
+ * preview. One request through the same page-wide queue as every other, so a
+ * preview never takes the router past its one a second. Throws as `route`
+ * does: a refusal, no answer, or an abort; the caller shows nothing then.
+ */
+export async function previewRoute(
+  from: LngLat,
+  to: LngLat,
+  signal: AbortSignal,
+): Promise<LngLat[]> {
+  const [leg] = await route([from, to], signal);
+  return leg.coordinates;
 }
 
 /** The roads a leg follows as runs of one name, in order. Unnamed ways stay in, so the lengths add up. */

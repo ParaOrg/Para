@@ -5,15 +5,18 @@ import { MAP_COLOURS, MAP_PAINT } from '@/design-system/foundation/map-colours';
 import { LAYERS, firstLayerOfType } from './layers';
 import { litOpacity } from './lighting';
 import { CASING_EXTRA, litWidth, roadWidth } from './line-style';
-import { RAIL_AT_REST, RESTING_FILTER, ROUTES_LINE } from './rail-rest-layers';
+import { RAIL_AT_REST, RESTING_FILTER, ROUTES_LINE, ROUTES_LINE_COLOUR } from './rail-rest-layers';
 import { routesData } from './saved-routes-data';
 import { ROUTES_HIT_LAYER } from './tap';
 import type { Direction } from '../model/routes';
 
 /*
  * The saved directions on the map: their source and their layers (five, and
- * a resting one for each train line). What lights them is lighting.ts's, and
- * the hook that keeps them in step is use-saved-routes-layers.ts.
+ * a resting one for each train line, rail-rest-layers.ts). At rest every road
+ * route is the brand pale and every train its line's pale, with no rim; lit,
+ * a line wears its card's colour (or the selected blue) on the neutral-800
+ * casing. What lights them is lighting.ts's, and the hook that keeps them in
+ * step is use-saved-routes-layers.ts.
  */
 
 export const SRC = 'saved-routes';
@@ -47,13 +50,18 @@ export function addSavedRoutes(
     promoteId: 'id',
     data: routesData(rows),
   });
+  // No rim at rest: the casing stays as a layer, hidden, for the hotspots' boxes and the babaan
+  // sides that are laid under it (saved-hotspots-layers.ts, babaan-sides.ts).
   map.addLayer(
     {
       id: CASING,
       type: 'line',
       source: SRC,
-      layout: { 'line-cap': 'round', 'line-join': 'round' },
-      paint: { 'line-color': MAP_PAINT['Paint/casing'], 'line-width': roadWidth(CASING_EXTRA) },
+      layout: { 'line-cap': 'round', 'line-join': 'round', visibility: 'none' },
+      paint: {
+        'line-color': MAP_COLOURS['Map/RouteLine/casing'],
+        'line-width': roadWidth(CASING_EXTRA),
+      },
     },
     before,
   );
@@ -64,10 +72,7 @@ export function addSavedRoutes(
       source: SRC,
       layout: { 'line-cap': 'round', 'line-join': 'round' },
       filter: RESTING_FILTER[LINE],
-      paint: {
-        'line-color': MAP_COLOURS['Map/RouteLine/surface-default'],
-        'line-width': roadWidth(0),
-      },
+      paint: { 'line-color': ROUTES_LINE_COLOUR, 'line-width': roadWidth(0) },
     },
     before,
   );
@@ -96,7 +101,7 @@ export function addSavedRoutes(
       source: SRC,
       layout: { 'line-cap': 'round', 'line-join': 'round' },
       paint: {
-        'line-color': MAP_PAINT['Paint/casing'],
+        'line-color': MAP_COLOURS['Map/RouteLine/casing'],
         'line-width': litWidth(CASING_EXTRA),
         'line-opacity': litOpacity(),
         // Switched off while nothing is lit, and from the start (layer-switch.ts): at once, never between.

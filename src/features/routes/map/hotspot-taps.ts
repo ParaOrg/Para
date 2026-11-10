@@ -1,7 +1,14 @@
 import type { MapLibreMap, MapMouseEvent } from 'maplibre-gl';
 import { useEffect, type RefObject } from 'react';
 
-import { ROUTES_HIT_LAYER, HOTSPOTS_FILL_LAYER, bindHover, resolveTap, tapTargets } from './tap';
+import {
+  ROUTES_HIT_LAYER,
+  HOTSPOTS_FILL_LAYER,
+  HOTSPOT_TAP_LAYERS,
+  bindHover,
+  resolveTap,
+  tapTargets,
+} from './tap';
 import type { Hotspot } from '../model/hotspots';
 
 /*
@@ -60,12 +67,12 @@ export function useHotspotTaps<S extends Hotspot>(
     };
 
     map.on('click', onMapClick);
-    // The hand over a box only where a pointer can hover, and from when one
-    // can, as over a line (route-taps.ts; bindHover).
-    const unhover = bindHover(map, FILL, enter, leave);
+    // The hand over a box, its pin or its dot only where a pointer can hover,
+    // and from when one can, as over a line (route-taps.ts; bindHover).
+    const unhovers = HOTSPOT_TAP_LAYERS.map((layer) => bindHover(map, layer, enter, leave));
     return () => {
       map.off('click', onMapClick);
-      unhover();
+      for (const unhover of unhovers) unhover();
     };
   }, [map, drawing, byId, setSelectedId, setCandidates]);
 }

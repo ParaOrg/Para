@@ -27,14 +27,14 @@ function AfterRouteCard({ livery, origin }: { livery: Livery; origin: string }) 
 const meta = {
   title: 'App/PublicMap/ContributionCard',
   component: ContributionCard,
-  args: { livery: 'orange' },
+  args: { livery: 'bus' },
   render: ({ livery }) => <AfterRouteCard livery={livery} origin="Novaliches (Bayan)" />,
 } satisfies Meta<typeof ContributionCard>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** After a red jeepney card (orange is the livery's name): the Primary blob. The other jeepney liveries and LRT lines reuse these blobs. The card is empty and hidden from assistive technology. */
+/** After a Bus card: the Primary blob, which Jeep and the train lines reuse. The card is empty and hidden from assistive technology. */
 export const AfterJeepneyCard: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -55,8 +55,8 @@ export const AfterFerryCard: Story = {
   render: ({ livery }) => <AfterRouteCard livery={livery} origin="Escolta" />,
 };
 
-/** After a violet card, whose blob is the brighter Inverse one. */
-export const AfterVioletCard: Story = {
-  args: { livery: 'violet' },
+/** After an E-Jeep card, whose blob is the brighter Inverse one. */
+export const AfterEjeepCard: Story = {
+  args: { livery: 'ejeep' },
   render: ({ livery }) => <AfterRouteCard livery={livery} origin="Fairview" />,
 };

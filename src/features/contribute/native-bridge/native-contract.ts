@@ -9,12 +9,11 @@ import * as z from 'zod/mini';
 
 import type { Mode } from '@/features/routes/model/ride-recording';
 
-/** The names the app's plugins register under: @CapacitorPlugin(name) in the Java, or the npm plugin's. */
+/** The names the app's plugins register under: @CapacitorPlugin(name) in the Java. */
 export const PLUGIN_NAMES = {
   ride: 'Ride',
   fixLog: 'FixLog',
   nativePermissions: 'NativePermissions',
-  backgroundGeolocation: 'BackgroundGeolocation',
 } as const;
 
 /**
@@ -37,6 +36,22 @@ export const RIDE_EVENT_KINDS = ['mode', 'pause', 'resume', 'finish'] as const;
 /** What RidePlugin.java tells the page as a tap is made while it is awake. */
 export const RIDE_EVENT_NAME = 'rideEvent';
 
+/** What RidePlugin.java hands the page each fix of the ride's service as, while it is there. */
+export const RIDE_FIX_EVENT_NAME = 'rideFix';
+
+/** What RidePlugin.java tells the page when the ride's service cannot record. */
+export const RIDE_FIX_PROBLEM_EVENT_NAME = 'rideFixProblem';
+
+/** Why the ride's service cannot record: no permission, or no location to give. */
+export const RIDE_FIX_PROBLEM_CODES = ['DENIED', 'UNAVAILABLE'] as const;
+
+export const rideFixProblemSchema = z.object({
+  code: z.enum(RIDE_FIX_PROBLEM_CODES),
+  message: z.string(),
+});
+
+export type RideFixProblem = z.infer<typeof rideFixProblemSchema>;
+
 /** What the page tells the notification (RidePlugin.java setState). */
 export const rideStateSchema = z.object({
   recordingId: z.string(),
@@ -47,14 +62,14 @@ export const rideStateSchema = z.object({
   pausedSeconds: z.number(),
   /** Where a paused ride stopped. */
   stoppedAt: z.nullable(z.number()),
-  /** The page's location watcher while recording, '' while it holds none. */
-  watcherId: z.string(),
+  /** The page's watch is on: the ride's service records for it (native/native-location.ts). */
+  isWatching: z.boolean(),
 });
 
 export type RideState = z.infer<typeof rideStateSchema>;
 
-/** Where the ride is, as the recorder says it; native/ride-notice.ts adds the watcher. */
-export type RideNoticeState = Omit<RideState, 'watcherId'>;
+/** Where the ride is, as the recorder says it; native/ride-notice.ts adds whether it watches. */
+export type RideNoticeState = Omit<RideState, 'isWatching'>;
 
 /** A tap made on the notification while the page slept (RideState.java addEvent). */
 export const rideEventSchema = z.object({
@@ -67,6 +82,9 @@ export const rideEventSchema = z.object({
 });
 
 export type RideEvent = z.infer<typeof rideEventSchema>;
+
+/** What RidePlugin.java's recordingNow() returns: the ride its service records now, or null. */
+export const recordingNowSchema = z.object({ recordingId: z.nullable(z.string()) });
 
 /** What RidePlugin.java's events() returns. */
 export const rideEventsSchema = z.object({ events: z.array(rideEventSchema) });
@@ -101,7 +119,7 @@ export const fixLogSchema = z.object({
   fixes: z.array(z.unknown()),
 });
 
-// Fixes and failures, from the browser's watch or the location plugin.
+// Fixes and failures, from the browser's watch or the ride's service.
 
 /** The part of a position the recorder uses; the browser's and the app's both fit it. */
 export interface WatchedFix {

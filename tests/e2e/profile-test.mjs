@@ -1321,9 +1321,11 @@ async function seed(page, id, name, upload) {
   /**
    * A touch tap on `name` that drifts `drift` px along the bar before it lifts; once the move
    * shows, it is held a quarter into the pill's glide and the pill read, from the page and from
-   * its pixels. A press the harness was too slow to keep under the hold is tried again.
+   * its pixels. A press the harness was too slow to keep under the hold is tried again, from
+   * `from`: a hold opens the tab all the same (the slide's settle), and a tap on the tab already
+   * open has no glide to read, so every try after it would find none.
    */
-  const driftedTap = async (name, drift) => {
+  const driftedTap = async (name, drift, from, fromShows) => {
     for (let attempt = 0; attempt < 3; attempt += 1) {
       await noMove();
       await page.waitForTimeout(300);
@@ -1360,6 +1362,13 @@ async function seed(page, id, name, upload) {
       const [pressMs] = await page.evaluate(() => window.presses);
       if (!isMoving || pressMs >= 250) {
         await noMove();
+        const isOpened =
+          (await page.locator(`.tab-toolbar [data-tab="${name}"][aria-current="page"]`).count()) >
+          0;
+        if (isOpened) {
+          await page.locator(`.tab-toolbar button[data-tab="${from}"]`).click();
+          await fromShows().waitFor();
+        }
         continue;
       }
       const placed = await page.evaluate(() => {
@@ -1390,12 +1399,13 @@ async function seed(page, id, name, upload) {
   };
   const isBetween = (value, a, b) => value > Math.min(a, b) + 4 && value < Math.max(a, b) - 4;
 
-  for (const [drift, to, from, shows] of [
-    [9, 'history', 'record', () => heading('History')],
-    [12, 'record', 'history', () => start(page)],
+  const shows = { history: () => heading('History'), record: () => start(page) };
+  for (const [drift, to, from] of [
+    [9, 'history', 'record'],
+    [12, 'record', 'history'],
   ]) {
-    const seen = await driftedTap(to, drift);
-    await shows().waitFor();
+    const seen = await driftedTap(to, drift, from, shows[from]);
+    await shows[to]().waitFor();
     const paintedCentre = seen?.painted ? (seen.painted.from + seen.painted.to) / 2 : null;
     check(
       `${drift === 9 ? '' : '  '}a touch tap that drifts ${drift} px opens ${to === 'history' ? 'History' : 'Record'}, the pill a quarter into its glide between the tabs, not at the end`,
@@ -1677,15 +1687,33 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
   await page.reload({ waitUntil: 'load' });
   fake.next.list = 'hold';
   await openHistory(page);
-  await page.getByRole('status').filter({ hasText: 'Loading…' }).waitFor();
+  const stillComing = page.getByRole('status').filter({ hasText: 'Loading your rides' });
+  await stillComing.waitFor();
   check(
-    "while the account's uploads load, this phone's own are already listed",
-    (await row(page, 'Only here').count()) === 1,
+    "while the account's uploads load, this phone's own are already listed, the rest as skeletons",
+    (await row(page, 'Only here').count()) === 1 &&
+      (await page.locator('[data-history-skeleton]').count()) === 1,
   );
   await shot(page, '4-history-loading');
+  // No answer in 8 s: the skeletons give way to the line with no signal, and Try again.
+  const givenUp = page
+    .getByRole('alert')
+    .filter({ hasText: "No signal — can't load your uploads" });
+  check(
+    '  no answer in 8 s: History says so, with Try again, and still lists its own',
+    await givenUp.waitFor({ timeout: 12000 }).then(
+      () => true,
+      () => false,
+    ),
+  );
+  // Try again asks afresh, and the rest arrive: the line and the skeletons go.
+  await page.getByRole('button', { name: 'Try again' }).click();
   fake.release();
   await row(page, 'Also phone A').waitFor();
-  check('  and the rest arrive', (await page.getByText('Loading…').count()) === 0);
+  check(
+    '  Try again: the rest arrive, and the line goes',
+    (await stillComing.count()) === 0 && (await givenUp.count()) === 0,
+  );
 
   // The page stays on #history through the reload, and asks for the list as it opens.
   fake.next.list = 'offline';
@@ -1752,19 +1780,6 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
     "an editor signed in here sees only its own uploads in History, not everyone's",
     (await page.getByRole('listitem').count()) === 1,
     String(await page.getByRole('listitem').count()),
-  );
-  const others = [...database.rows.keys()].filter((id) => id !== mine);
-  await page.evaluate(
-    (ids) =>
-      import('/src/features/contribute/api/upload-contribution.ts').then((upload) =>
-        Promise.all(ids.map((id) => upload.removeUpload(id))),
-      ),
-    others,
-  );
-  check(
-    "  and removing someone else's upload does nothing, though the session could delete it",
-    others.length > 0 && others.every((id) => database.rows.has(id)),
-    `${others.length} others`,
   );
   check('  no page errors', errors.length === 0, errors.join(' | '));
 }
@@ -1859,6 +1874,16 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
 // ------------ signing out leaves a claim waiting for its own account
 {
   const { page, fake } = await phone();
+  // A claim waits only while it cannot finish: here, no answer comes for it while signed in, as
+  // with no signal. Without this the page finishes it as its own account, rightly, whenever it
+  // looks (the account read, the page shown or online), and whether that came before the logout
+  // was a race the check lost now and then. Each call is told apart by whether the sign-out was in.
+  let isSignedOut = false;
+  const finishesAfterSignOut = [];
+  await page.route(/\/rest\/v1\/rpc\/finish_claim/, (route) => {
+    if (isSignedOut) finishesAfterSignOut.push(route.request().url());
+    return route.abort('internetdisconnected');
+  });
   await start(page).waitFor({ timeout: 30000 });
   await page.evaluate(
     ([id]) =>
@@ -1877,6 +1902,7 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
   await page
     .getByRole('heading', { name: 'Welcome Contributor', level: 1 })
     .waitFor({ timeout: 15000 });
+  isSignedOut = true;
   await page.evaluate(() => window.dispatchEvent(new Event('online')));
   await page.waitForTimeout(500);
   const kept = JSON.parse(
@@ -1884,8 +1910,10 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
   );
   check(
     'Logout keeps a waiting claim, still bound to its account, and finishes nothing',
-    kept?.accountId === ACCOUNT_ID && !fake.claims.includes('finish_claim'),
-    JSON.stringify({ kept, claims: fake.claims }),
+    kept?.accountId === ACCOUNT_ID &&
+      finishesAfterSignOut.length === 0 &&
+      !fake.claims.includes('finish_claim'),
+    JSON.stringify({ kept, finishesAfterSignOut, claims: fake.claims }),
   );
 }
 
@@ -2711,24 +2739,72 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
       });
     });
 
+  /**
+   * Lets the page run until `isThere` holds, its clock held still while anything it loads (data
+   * from the fake server, code from the dev server) is on its way, and moved on a millisecond at a
+   * time only while nothing is: a chained `setTimeout(0)`, such as TanStack Query's notices, is due
+   * a millisecond on under Playwright's clock. So the page's own time counts its work, never the
+   * runner's speed.
+   */
+  const runHeldUntil = async (page, inFlight, isThere) => {
+    const deadline = Date.now() + 15_000;
+    while (!(await isThere())) {
+      if (Date.now() > deadline) throw new Error('The page did not get there with its clock held');
+      // What is due now runs at once; then the page is given a moment to do the work it leads to.
+      await page.clock.runFor(0);
+      await new Promise((resolve) => setTimeout(resolve, 10));
+      if (inFlight.size === 0 && !(await isThere())) await page.clock.runFor(1);
+    }
+  };
+  /** The page's requests to the fake server and the dev server not yet answered, from now on. */
+  const watchLoads = (page) => {
+    const inFlight = new Set();
+    const isLoad = (request) =>
+      /^https:\/\/[^/]+\.supabase\.co\//.test(request.url()) || request.url().startsWith(BASE);
+    page.on('request', (request) => isLoad(request) && inFlight.add(request));
+    page.on('requestfinished', (request) => inFlight.delete(request));
+    page.on('requestfailed', (request) => inFlight.delete(request));
+    return inFlight;
+  };
+
   // A quick load shows none: History and Account open on what loads at once, with no flash.
+  // "Quick" is by the page's own clock, held still while the loads are on their way: a slow
+  // runner takes longer in real time, but the 300 ms timer cannot fire before the data is in.
   {
     const { page, fake, errors } = await phone();
     fake.stats = SOME_STATS;
     await start(page).waitFor({ timeout: 30000 });
     await watchForSkeletons(page);
+    const inFlight = watchLoads(page);
+    await page.clock.install();
+    await page.clock.pauseAt((await page.evaluate(() => Date.now())) + 1000);
+    const heldAt = await page.evaluate(() => performance.now());
     await openHistory(page);
-    await page.getByRole('heading', { level: 1, name: 'History' }).waitFor();
-    await page.locator('[aria-busy="true"]').waitFor({ state: 'detached', timeout: 10000 });
+    await runHeldUntil(
+      page,
+      inFlight,
+      async () =>
+        (await page.getByRole('heading', { level: 1, name: 'History' }).count()) === 1 &&
+        (await page.locator('[aria-busy="true"]').count()) === 0,
+    );
     await toolbarRecord(page).click();
     await accountTab(page).click();
-    await page
+    const statsIn = page
       .getByRole('region', { name: 'Commute Statistics' })
-      .getByText('Total time')
-      .waitFor();
+      .getByText('Total time');
+    await runHeldUntil(
+      page,
+      inFlight,
+      async () =>
+        (await statsIn.count()) === 1 && (await page.locator('[aria-busy="true"]').count()) === 0,
+    );
+    const heldFor = (await page.evaluate(() => performance.now())) - heldAt;
+    // Then time moves on past the delay: a timer the loads left behind would show a skeleton now.
+    await page.clock.runFor(1000);
     check(
       'a load quicker than 300 ms shows no skeleton, on History or on Account',
-      (await page.evaluate(() => window.__sawSkeleton)) === false,
+      heldFor < 300 && (await page.evaluate(() => window.__sawSkeleton)) === false,
+      JSON.stringify({ heldFor }),
     );
     check('  no page errors', errors.length === 0, errors.join(' | '));
   }

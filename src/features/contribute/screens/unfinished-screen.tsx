@@ -1,11 +1,11 @@
 import type { Ref } from 'react';
 
 import { CreditsButton } from '@/features/routes/map/credits-button';
+import { useFocusHeading } from '@/shared/hooks/use-focus-heading';
 
 import { RecordingCard } from './recording-card';
 import { TrackingButton } from './tracking-button';
 import { BackToMapButton } from '../common/back-to-map-button';
-import { useFocusHeading } from '../common/use-focus-heading';
 import { useHeightVar } from '../common/use-height-var';
 import type { RecordingFigures } from '../recorder/recording-figures';
 

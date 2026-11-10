@@ -10,22 +10,19 @@ interface UploadsStillThereOptions {
   /** Whether to ask: uploads are available, there is consent, and something was uploaded. */
   shouldAsk: boolean;
   savedRef: RefObject<readonly Recording[]>;
-  /** Whether a recording is being sent or removed, or has a status from this visit. */
+  /** Whether a recording is being sent, or has a status from this visit. */
   isBusy: (recordingId: string) => boolean;
-  /** Hears who this phone is, or null when it is not signed in. */
-  onIdentity: (identity: string | null) => void;
   setStatus: (recordingId: string, status: UploadStatus) => void;
 }
 
 /**
- * Who this phone is, so the list can say which uploads it may remove, and which of its uploads an
- * editor has since deleted in the studio: those are marked removed on the phone.
+ * Which of this phone's uploads an editor has since deleted in the studio: those are marked
+ * removed on the phone, so they can be sent again.
  */
 export function useUploadsStillThere({
   shouldAsk,
   savedRef,
   isBusy,
-  onIdentity,
   setStatus,
 }: UploadsStillThereOptions): void {
   useEffect(() => {
@@ -33,9 +30,7 @@ export function useUploadsStillThere({
     let isCurrent = true;
     const settle = async () => {
       const id = await currentIdentity();
-      if (!isCurrent) return;
-      onIdentity(id);
-      if (!id) return;
+      if (!isCurrent || !id) return;
       const there = await uploadsStillThere();
       for (const recording of savedRef.current) {
         if (!isGoneFromPara(recording, id, there) || isBusy(recording.id)) continue;
@@ -53,5 +48,5 @@ export function useUploadsStillThere({
     return () => {
       isCurrent = false;
     };
-  }, [shouldAsk, savedRef, isBusy, onIdentity, setStatus]);
+  }, [shouldAsk, savedRef, isBusy, setStatus]);
 }

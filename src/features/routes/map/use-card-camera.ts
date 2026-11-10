@@ -18,6 +18,7 @@ import { framedBy, type Framed } from '../cards/card-stack';
 import type { PickedPlace } from '../cards/route-card-stack';
 import type { Hotspot } from '../model/hotspots';
 import type { Livery } from '../model/liveries';
+import type { ModeFilter } from '../model/mode-filter';
 import { routeTimeline } from '../model/ride';
 import { directionLine, type Direction } from '../model/routes';
 
@@ -28,6 +29,7 @@ interface Routes<V extends Direction> {
   litDirections: readonly V[];
   select: (id: string | null, opts?: { keepList?: boolean }) => void;
   flip: () => void;
+  filterModes: (filter: ModeFilter) => void;
   highlightCard: (h: Highlight | null) => void;
 }
 
@@ -124,11 +126,11 @@ export function useCardCamera<V extends Direction, S extends Hotspot>(
   const rideLine = ride.startId !== null ? (ride.ridden?.line ?? null) : null;
   const [endPicks, setEndPicks] = useState(0);
   useRideOverview(cam, rideLine && [rideLine], endPicks, openSheet, cards.snap);
-  /** An end picked after a start: the sheet to Middle, or, there already, the camera alone. */
-  const takeInTheRide = () => {
-    if (cards.height.snap === 'middle') setEndPicks((n) => n + 1);
-    else cards.height.onSnap('middle');
-  };
+  /**
+   * An end picked after a start: the camera takes in the ride, the sheet left where it is (the
+   * owner's rule: once raised, the commuter moves it).
+   */
+  const takeInTheRide = () => setEndPicks((n) => n + 1);
   // The sheet settled at another height: what the card on show frames, again,
   // in the map it leaves — a trip's route, or its ride from a start to an
   // end; a picked card's routes or what the list lights, a hotspot's place
@@ -175,9 +177,8 @@ export function useCardCamera<V extends Direction, S extends Hotspot>(
 
     /**
      * A row picked on the trip, or its dot on the map (useRideTo's pick). An
-     * end picked after a start takes the sheet to Middle and the camera in to
-     * the ride between them (the owner's call): as the sheet settles there,
-     * or at once when it is already there.
+     * end picked after a start takes the camera in to the ride between them,
+     * the sheet left where it is (the owner's rule).
      */
     pickOnTrip: (id: string | null) => {
       const isNewEnd =
@@ -221,15 +222,17 @@ export function useCardCamera<V extends Direction, S extends Hotspot>(
       switched();
     },
 
-    /**
-     * A trip's "Other routes": the sheet to Middle from wherever it is, so
-     * the map shows the route the camera takes in (the owner's call), and
-     * that route's trip in this one's place.
-     */
-    otherRoute: (v: { id: string }) => {
-      if (cards.height.snap !== 'middle') cards.height.onSnap('middle');
-      saved.select(v.id, { keepList: true });
+    /** The route list's filter: the camera takes in what it leaves lit, as for SWITCH (the owner's call). */
+    filterList: (filter: ModeFilter) => {
+      saved.filterModes(filter);
+      switched();
     },
+
+    /**
+     * A trip's "Other routes": that route's trip in this one's place, the
+     * sheet left where it is (the owner's rule).
+     */
+    otherRoute: (v: { id: string }) => saved.select(v.id, { keepList: true }),
 
     /**
      * A RouteCard on a hotspot's card picked, or let go: the camera from

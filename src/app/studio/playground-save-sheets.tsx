@@ -12,6 +12,8 @@ import {
 
 interface PlaygroundSaveSheetsProps {
   isPlayground: boolean;
+  /** A route's form beside the map while it is drawn (StudioSaveSheets). */
+  isBeside: boolean;
   draw: ReturnType<typeof useDrawing>;
   saved: ReturnType<typeof useSavedRoutes<DirectionRow>>;
   hotspots: ReturnType<typeof useSavedHotspots<HotspotRow>>;
@@ -26,6 +28,7 @@ interface PlaygroundSaveSheetsProps {
  */
 export function PlaygroundSaveSheets({
   isPlayground,
+  isBeside,
   draw,
   saved,
   hotspots,
@@ -33,27 +36,25 @@ export function PlaygroundSaveSheets({
   saveFlow,
   contribution,
 }: PlaygroundSaveSheetsProps) {
-  const { isSaving, setIsSaving, onSaved, onSavedHotspot, onDrafted } = saveFlow;
+  const { isSaving, setIsSaving, onDrafted, onPublished, onUnpublished } = saveFlow;
 
   return (
     <div inert={!isPlayground} className={isPlayground ? 'contents' : 'hidden'}>
       <StudioSaveSheets
         isSaving={isSaving}
+        isBeside={isBeside}
         draw={draw}
         saved={saved}
         hotspots={hotspots}
         target={target}
-        onSaved={(v) => {
-          void contribution.recordSaved(v.id, draw.controlPoints);
-          onSaved(v);
-        }}
-        onSavedHotspot={(s) => {
-          void contribution.recordSaved(s.id, draw.controlPoints);
-          onSavedHotspot(s);
-        }}
         onDrafted={(subjectId) => {
           void contribution.recordSaved(subjectId, draw.controlPoints);
           onDrafted();
+        }}
+        onUnpublished={onUnpublished}
+        onPublished={(subjectId) => {
+          void contribution.recordSaved(subjectId, draw.controlPoints);
+          onPublished();
         }}
         onCancel={() => setIsSaving(false)}
       />

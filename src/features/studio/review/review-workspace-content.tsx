@@ -1,5 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 import { Button } from '@/design-system/primitives/button';
 
@@ -19,7 +20,12 @@ const TABS: { id: ReviewTab; label: string }[] = [
   { id: 'subjects', label: 'Routes and places' },
   { id: 'publication', label: 'Waiting for publication' },
 ];
-export function ReviewWorkspaceContent({ map, onChanged }: StudioReviewProps) {
+export function ReviewWorkspaceContent({
+  map,
+  onChanged,
+  buttonSlot = null,
+  onOpenDraft,
+}: StudioReviewProps) {
   const client = useQueryClient();
   const query = useReviewQuery();
   const names = useReviewNames(query.data ?? []);
@@ -28,11 +34,25 @@ export function ReviewWorkspaceContent({ map, onChanged }: StudioReviewProps) {
   const [tab, setTab] = useState<ReviewTab>('drafts');
   const [draftId, setDraftId] = useState<string | null>(null);
   const dialogRef = useRef<HTMLDialogElement>(null);
-  const openDraft = useCallback((id: string) => {
-    setDraftId(id);
-    setTab('drafts');
-    setIsOpen(true);
-  }, []);
+  // A draft tapped on the map opens straight into editing where it can (onOpenDraft); else in
+  // Drafts, to be reviewed.
+  // onOpenDraft is a new function every render (useOpenDraft); the ref keeps openDraft, which the
+  // map's draft layers listen with, changing only when the drafts do.
+  const drafts = query.data;
+  const onOpenDraftRef = useRef(onOpenDraft);
+  useEffect(() => {
+    onOpenDraftRef.current = onOpenDraft;
+  }, [onOpenDraft]);
+  const openDraft = useCallback(
+    (id: string, directionId?: string) => {
+      const draft = drafts?.find((d) => d.id === id);
+      if (draft && onOpenDraftRef.current?.(draft, directionId)) return;
+      setDraftId(id);
+      setTab('drafts');
+      setIsOpen(true);
+    },
+    [drafts],
+  );
   useEffect(
     () =>
       subscribeReviewChanges(() => {
@@ -45,6 +65,17 @@ export function ReviewWorkspaceContent({ map, onChanged }: StudioReviewProps) {
     if (isOpen && dialog && !dialog.open) dialog.showModal();
     return () => dialog?.close();
   }, [isOpen]);
+  const draftsButton = (
+    <Button
+      variant="secondary"
+      size="small"
+      label={query.data ? `Drafts (${query.data.length})` : 'Drafts'}
+      onClick={() => {
+        setDraftId(null);
+        setIsOpen(true);
+      }}
+    />
+  );
   return (
     <>
       {query.data && (
@@ -53,16 +84,11 @@ export function ReviewWorkspaceContent({ map, onChanged }: StudioReviewProps) {
           <DraftMarkers map={map} drafts={query.data} places={names} onReview={openDraft} />
         </>
       )}
-      <div className="absolute top-44 right-4 z-10 max-w-[calc(100%-2rem)]">
-        <Button
-          variant="secondary"
-          label={query.data ? `Drafts (${query.data.length})` : 'Drafts'}
-          onClick={() => {
-            setDraftId(null);
-            setIsOpen(true);
-          }}
-        />
-      </div>
+      {buttonSlot ? (
+        createPortal(draftsButton, buttonSlot)
+      ) : (
+        <div className="absolute top-44 right-4 z-10 max-w-[calc(100%-2rem)]">{draftsButton}</div>
+      )}
       <dialog
         ref={dialogRef}
         aria-labelledby="studio-review-title"

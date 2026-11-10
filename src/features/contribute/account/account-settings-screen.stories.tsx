@@ -143,3 +143,25 @@ export const OpensDeleteAccount: Story = {
     await expect(args.onOpenDeleteAccount).toHaveBeenCalled();
   },
 };
+
+/** In the Android app: Keep Para recording, over Delete account, opens the maker's Autostart. */
+export const InTheApp: Story = {
+  args: { onOpenKeepRecording: fn() },
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole('button', { name: 'Keep Para recording' }));
+    await expect(args.onOpenKeepRecording).toHaveBeenCalledOnce();
+  },
+};
+
+/** In the app, the phone's settings would not open: one line under the row says so. */
+export const InTheAppNotOpened: Story = {
+  args: {
+    onOpenKeepRecording: fn(),
+    keepRecordingError: 'Para could not open your phone’s settings. Try again.',
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole('alert')).toHaveTextContent('could not open');
+  },
+};

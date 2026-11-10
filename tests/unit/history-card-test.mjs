@@ -21,14 +21,10 @@ import { FAILED } from '../../src/features/contribute/uploads/upload-failures.ts
 
 const failed = (reason) => ({ state: 'failed', ...FAILED[reason] });
 
-test('uploaded is green, whoever sent it; a removal that failed says why, in red', () => {
+test('uploaded is green, whoever sent it', () => {
   assert.deepEqual(cardStatusOf({ state: 'uploaded', at: 1, by: 'p' }, true), {
     tone: 'uploaded',
     words: 'Uploaded',
-  });
-  assert.deepEqual(cardStatusOf({ state: 'uploaded', at: 1, by: 'p', problem: 'Not removed' }), {
-    tone: 'problem',
-    words: 'Not removed',
   });
 });
 
@@ -87,7 +83,7 @@ test('the ride sheet offers Tap to upload for one kept back or taken off Para, a
 });
 
 test('Delete this record waits only while an upload is under way', () => {
-  for (const state of ['checking', 'uploading', 'removing']) {
+  for (const state of ['checking', 'uploading']) {
     assert.equal(isMidUpload({ state }), true, state);
   }
   for (const status of [

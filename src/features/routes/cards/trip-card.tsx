@@ -9,7 +9,7 @@ import { FREE, type Fare, type Fares } from './trip-fare';
 import { useFareKind } from './use-fare-kind';
 import { otherDirection, otherRoutesFrom, switchWord, wayWord } from '../model/departures';
 import { manilaDate, rideFare } from '../model/fares';
-import { cardLiveries, type Livery } from '../model/liveries';
+import { liveryOf, type Livery } from '../model/liveries';
 import { railBound } from '../model/rail-codes';
 import { railFares } from '../model/rail-fares';
 import {
@@ -26,13 +26,12 @@ import {
   type Direction,
 } from '../model/routes';
 import type { Timeline } from '../model/timeline';
-import { railwayOf, vehicleOf } from '../model/vehicles';
+import { vehicleOf } from '../model/vehicles';
 
 /**
  * The trip's colour, one owner for it: decided as the trip opens — the RouteCard's it was picked
  * from, in the list or a hotspot's card, while that card stands behind it (a card of several routes
- * wears its first row's, liveries.ts), else its route's for the visit (drawn when first met, kept
- * after; a train's is its line's, never drawn) — and kept until it closes, through SWITCH and even
+ * wears its first row's), else its own (liveryOf) — and kept until it closes, through SWITCH and even
  * when a tap on its own line closes the list behind it: a card never changes colour while it is
  * open. Its line wears it too, so the page reads it, not the card. Settled while rendering, as
  * derived state is, so the card never shows a frame in the wrong colour.
@@ -45,9 +44,7 @@ export function useTripLivery(
   const [tripWears, setTripWears] = useState<{ routeId: string; livery: Livery } | null>(null);
   let tripLivery = open && tripWears?.routeId === open.routeId ? tripWears.livery : null;
   if (open && !tripLivery) {
-    tripLivery =
-      (wornBehind && worn?.id === open.id ? worn.livery : undefined) ??
-      cardLiveries([[open.routeId]], [railwayOf(open)])[0];
+    tripLivery = (wornBehind && worn?.id === open.id ? worn.livery : undefined) ?? liveryOf(open);
     setTripWears({ routeId: open.routeId, livery: tripLivery });
   } else if (!open && tripWears) {
     setTripWears(null);
@@ -59,7 +56,7 @@ export function useTripLivery(
  * The chosen direction as Figma's trip card (TimelineRouteDetailCard), from what the map file
  * knows: its ends as the list names them, the whole ride's length and pesos, the hintuans on the
  * way, and its colour — the one its RouteCard wore, when it was picked from one, in the list or in
- * a hotspot's card; its route's, kept for the visit, when not. SWITCH turns it round, what it was
+ * a hotspot's card; its own route's, when not. SWITCH turns it round, what it was
  * picked from staying behind it, and the card keeps the colour it opened in: turned round, it is
  * still the same card.
  *

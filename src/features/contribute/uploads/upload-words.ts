@@ -21,14 +21,12 @@ export const UPLOAD_WORDS = {
   },
   checking: { card: SENDING, toast: ON_ITS_WAY },
   uploading: { card: SENDING, toast: ON_ITS_WAY },
-  // An uploaded one whose removal failed says that problem on its card instead.
   uploaded: { card: 'Uploaded', toast: ON_ITS_WAY },
   // Any other failure's card says its own brief reason (upload-failures.ts).
   failed: {
     card: { offline: WAITING_FOR_SIGNAL, retry: 'Tap retry upload' },
     toast: { online: ON_ITS_WAY, offline: SENDS_WHEN_ONLINE },
   },
-  removing: { card: 'Removing…', toast: KEPT_ON_PHONE },
   removed: {
     card: { byEditor: 'Removed by an editor', byYou: ONLY_ON_PHONE },
     toast: KEPT_ON_PHONE,

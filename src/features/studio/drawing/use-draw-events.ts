@@ -3,8 +3,11 @@ import { useEffect } from 'react';
 
 import { clickHandlers } from './draw-clicks';
 import type { DrawActions, DrawContext, DrawRefs } from './draw-context';
-import { HIT_LAYER, POINT_LAYER } from './draw-layers';
+import { handleDragHandlers } from './draw-handle-drag';
+import { HANDLE_DOT_LAYER, HIT_LAYER, POINT_LAYER } from './draw-layers';
+import { lineBendHandlers } from './draw-line-bend';
 import { mouseHandlers } from './draw-mouse';
+import { penHandlers } from './draw-pen';
 import { touchHandlers } from './draw-touch';
 
 /**
@@ -12,8 +15,11 @@ import { touchHandlers } from './draw-touch';
  * the line inserts one, a right-click deletes a point or asks to follow a
  * saved line (draw-clicks.ts); a mouse drags a point (draw-mouse.ts); a
  * finger does the same through touch events, and a tap or a long-press on or
- * beside a point selects it for the point bar (draw-touch.ts). The
- * arithmetic they share is draw-gestures.ts.
+ * beside a point selects it for the point bar (draw-touch.ts). In Draw, a
+ * mouse's press and drag places a smooth point (draw-pen.ts), and a curve's
+ * handle is dragged, or a point double-clicked between corner and smooth
+ * (draw-handle-drag.ts), and a Draw stretch bent by its line
+ * (draw-line-bend.ts). The arithmetic they share is draw-gestures.ts.
  *
  * The handlers are bound once per drawing and read the drawing through its
  * refs, which every mutator keeps current. They share one context, `ctx`:
@@ -30,6 +36,8 @@ export function useDrawEvents(
   const {
     setPicking,
     addPoint,
+    addSmoothPoint,
+    reshape,
     insertPoint,
     deletePoint,
     toggleSegment,
@@ -39,6 +47,7 @@ export function useDrawEvents(
     markStandIn,
     isStandIn,
     select,
+    showHandlesAt,
     setFollowOffer,
   } = actions;
   useEffect(() => {
@@ -46,7 +55,7 @@ export function useDrawEvents(
     if (!map.getLayer(POINT_LAYER) || !map.getLayer(HIT_LAYER)) return;
 
     const canvas = map.getCanvas();
-    canvas.style.cursor = 'crosshair';
+    canvas.style.cursor = refs.moving.current ? 'default' : 'crosshair';
     // A finger held on the map is a long-press, not a call for iOS's callout.
     canvas.style.setProperty('-webkit-touch-callout', 'none');
 
@@ -63,6 +72,8 @@ export function useDrawEvents(
       actions: {
         setPicking,
         addPoint,
+        addSmoothPoint,
+        reshape,
         insertPoint,
         deletePoint,
         toggleSegment,
@@ -72,9 +83,11 @@ export function useDrawEvents(
         markStandIn,
         isStandIn,
         select,
+        showHandlesAt,
         setFollowOffer,
       },
       drag: { idx: null, moved: false, modes: [undefined, undefined] },
+      pan: { isSpaceHeld: false },
       echo: { until: -Infinity, lastTouchEnd: -Infinity },
     };
     const { onMapClick, onLineClick, onPointContext, onMapContext } = clickHandlers(ctx);
@@ -84,6 +97,9 @@ export function useDrawEvents(
       ctx,
       mouse,
     );
+    const detachPen = penHandlers(ctx).attach();
+    const detachHandles = handleDragHandlers(ctx).attach(HANDLE_DOT_LAYER);
+    const detachBend = lineBendHandlers(ctx).attach();
 
     // The line's handler first: MapLibre calls click listeners in the order
     // they were added, and a tap on the line that closes the point bar must
@@ -103,6 +119,9 @@ export function useDrawEvents(
     map.on('mouseleave', HIT_LAYER, leave);
 
     return () => {
+      detachPen();
+      detachHandles();
+      detachBend();
       map.off('click', onMapClick);
       map.off('click', HIT_LAYER, onLineClick);
       map.off('mousedown', POINT_LAYER, onPointDown);
@@ -132,6 +151,8 @@ export function useDrawEvents(
     refs,
     setPicking,
     addPoint,
+    addSmoothPoint,
+    reshape,
     insertPoint,
     deletePoint,
     toggleSegment,
@@ -141,6 +162,7 @@ export function useDrawEvents(
     markStandIn,
     isStandIn,
     select,
+    showHandlesAt,
     setFollowOffer,
   ]);
 }

@@ -10,6 +10,12 @@ import {
   foldRideEvents,
   withRideTaps,
 } from '../../src/features/contribute/recorder/ride-events.ts';
+import {
+  noteRideWatch,
+  setRideNoticeState,
+} from '../../src/features/contribute/native/ride-notice.ts';
+import { noticePhaseOf } from '../../src/features/contribute/recorder/notice-phase.ts';
+import { trailOf } from '../../src/features/contribute/recorder/recording-rules.ts';
 import { newRecording } from '../../src/features/contribute/recorder/recording-transitions.ts';
 
 const ID = 'ride-1';
@@ -88,4 +94,40 @@ test('taps on another recording are not this one’s, though they count as taken
   const taps = foldRideEvents([{ ...tap('pause', 120), recordingId: 'other' }], ID);
   assert.equal(taps.openPause, null);
   assert.equal(taps.lastTime, at(120));
+});
+
+test('Sakay tapped with the screen off splits the trail at the tap, not when the page woke', () => {
+  // A fix a second for ten minutes, 5 m apart; Sakay tapped at 1:00, the page awake at 9:00.
+  const fixes = Array.from({ length: 600 }, (_, s) => ({
+    time: at(s),
+    at: [121.0 + (s * 5) / 107_600, 14.6],
+    accuracyM: 5,
+  }));
+  const taps = foldRideEvents([tap('mode', 60, 'ride')], ID);
+  const { recording } = withRideTaps(newRecording(ID, T0), taps);
+  const { lines } = trailOf(fixes, recording.modes);
+  assert.deepEqual(
+    lines.map((line) => line.mode),
+    ['walk', 'ride'],
+  );
+  // The walked line ends, and the ridden one starts, at the fix taken at the tap.
+  assert.deepEqual(lines[0].path.at(-1), fixes[60].at);
+  assert.deepEqual(lines[1].path[0], fixes[60].at);
+});
+
+test('the ride notification is told nothing while the page loads, and no ride outside one', () => {
+  // A "no ride" told while loading would end a ride the app's service still records.
+  assert.equal(noticePhaseOf('loading'), null);
+  assert.equal(noticePhaseOf('recording'), 'recording');
+  assert.equal(noticePhaseOf('paused'), 'paused');
+  for (const phase of ['ready', 'unfinished', 'form'])
+    assert.equal(noticePhaseOf(phase), 'none', phase);
+});
+
+// Outside the app every word to the plugin throws, so a word sent shows as a throw.
+test('a watch starting under a "no ride" still standing sends nothing: it would stop the new ride', () => {
+  const noRide = { recordingId: '', phase: 'none', mode: 'walk', startedAt: 0, pausedSeconds: 0 };
+  assert.throws(() => setRideNoticeState({ ...noRide, stoppedAt: null }), /not running inside/);
+  assert.doesNotThrow(() => noteRideWatch(true));
+  assert.doesNotThrow(() => noteRideWatch(false));
 });

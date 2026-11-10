@@ -189,14 +189,14 @@ check("  phone B cannot delete phone A's upload", bDeletesA === 0);
 const studioContext = await browser.newContext({ viewport: { width: 1280, height: 800 } });
 const studio = await newPage(studioContext);
 await studio.goto(`${BASE}/studio/?map=contributors`, { waitUntil: 'load' });
-await studio.getByText('Sign in to Para Studio').waitFor({ timeout: 30000 });
+await studio.getByText('Studio sign in').waitFor({ timeout: 30000 });
 check(
   'a signed-out visitor meets the studio sign-in, and no upload is read',
   (await studio.getByRole('list', { name: 'Uploads' }).count()) === 0,
 );
 await shot(studio, '3-studio-signed-out');
-await studio.getByPlaceholder('you@example.com').fill('preview@para.test');
-await studio.getByPlaceholder('Password').fill('preview');
+await studio.getByRole('textbox', { name: 'Email', exact: true }).fill('preview@para.test');
+await studio.getByLabel('Password', { exact: true }).fill('preview');
 await studio.locator('button[type="submit"]').click();
 await studio.getByRole('list', { name: 'Uploads' }).waitFor({ timeout: 20000 });
 const rows = await studio
@@ -384,8 +384,8 @@ await recordAndSave(shared.page, 'Same browser', 14.76);
 const phoneSession = await shared.page.evaluate((k) => localStorage.getItem(k), PHONE_KEY);
 const sharedStudio = await newPage(shared.context);
 await sharedStudio.goto(`${BASE}/studio/?map=contributors`, { waitUntil: 'load' });
-await sharedStudio.getByPlaceholder('you@example.com').fill('preview@para.test');
-await sharedStudio.getByPlaceholder('Password').fill('preview');
+await sharedStudio.getByRole('textbox', { name: 'Email', exact: true }).fill('preview@para.test');
+await sharedStudio.getByLabel('Password', { exact: true }).fill('preview');
 await sharedStudio.locator('button[type="submit"]').click();
 await sharedStudio.getByRole('list', { name: 'Uploads' }).waitFor({ timeout: 20000 });
 check(

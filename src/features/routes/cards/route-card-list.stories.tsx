@@ -9,6 +9,7 @@ import { CARD_SURFACE, CARD_TEXT } from './livery-card';
 import { RouteCardList } from './route-card-list';
 import type { Hotspot } from '../model/hotspots';
 import type { Livery } from '../model/liveries';
+import type { ModeFilter } from '../model/mode-filter';
 import type { Direction } from '../model/routes';
 
 /** Sample data only, shaped like the published map. Not the real map. */
@@ -87,7 +88,7 @@ const longName: Direction[] = [
   direction('l', `${LONG} – Tala`, `Tala → ${LONG}`, 8.6, true),
 ];
 
-/** Their ways back still slots: nothing to SWITCH to. */
+/** Their ways back still slots: nothing for ⇆ to turn to. */
 const oneWay: Direction[] = [
   direction('c', 'Lagro – Fatima', 'Lagro → Fatima', 2.5),
   direction('c', 'Lagro – Fatima', 'Fatima → Lagro', 2.5, true, false),
@@ -134,13 +135,27 @@ const FRAME = {
 } satisfies Record<Frame, string>;
 const frameOf = (p: { frame?: Frame }) => FRAME[p.frame ?? 'phone'];
 
-/** Keeps the Selected card as the apps do, so a story can be tapped through; SWITCH lets it go. */
+/**
+ * Keeps the Selected card and the way round as the apps do, and the filter where a story gives
+ * one, so a story can be tapped through; ⇆ lets the card go. Without a filter, as the public map
+ * and the studio pass none yet, the Controller has no sliders.
+ */
 function Picking(props: ComponentProps<typeof RouteCardList>) {
   const [selected, setSelected] = useState(props.selected);
   const [back, setBack] = useState(props.back);
+  const [filter, setFilter] = useState<ModeFilter>(props.modeFilter?.filter ?? 'all');
   return (
     <RouteCardList
       {...props}
+      modeFilter={
+        props.modeFilter && {
+          filter,
+          onFilter: (next) => {
+            props.modeFilter?.onFilter(next);
+            setFilter(next);
+          },
+        }
+      }
       back={back}
       onFlip={() => {
         props.onFlip();
@@ -161,9 +176,9 @@ const meta = {
   component: RouteCardList,
   render: (args) => <Picking {...args} />,
   // A map-sized box, marked @container as the apps' roots are: the list docks
-  // along its bottom, and sits in the top-left corner from 1024 wide
-  // (`@float:`) — Figma's frames at 393, 640 and 1024. Never taller than the
-  // canvas, so the story itself does not scroll.
+  // along its bottom, and from 1024 wide (`@float:`) the map's whole height on
+  // the left, the Controller beside it — Figma's frames at 393, 768 and 1024.
+  // Never taller than the canvas, so the story itself does not scroll.
   decorators: [
     (Story, ctx) => (
       <div
@@ -192,17 +207,27 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** On a phone, the way there: a card per place, docked along the bottom. The colours are drawn at random. */
+/**
+ * On a phone, the way there: a card per place, docked along the bottom. Each card wears its mode's
+ * colour. No filter kept, as on the live maps until they pass one: ✕ and ⇆ alone.
+ */
 export const Phone: Story = {};
 
-/** SWITCHed: out of Tala both ways, one card — "1 Route". */
+/** With a filter kept by the caller: the sliders beside ⇆. */
+export const WithAFilter: Story = { args: { modeFilter: { filter: 'all', onFilter: fn() } } };
+
+/** A filter on, Jeep: the dot on the sliders, and only the jeeps' cards. */
+export const FilteredToJeep: Story = { args: { modeFilter: { filter: 'jeep', onFilter: fn() } } };
+
+/** Turned round with ⇆: out of Tala both ways, one card — "1 Route". */
 export const Switched: Story = { args: { back: true } };
 
 /** Tala's card picked: pressed in, its routes alone lit on the map. */
-export const ACardSelected: Story = { args: { back: true, selected: 'Tala' } };
+export const ACardSelected: Story = { args: { back: true, selected: 'Tala|jeep' } };
 
 /**
- * From 1024 wide, flush in the top-left corner, 384 wide (Figma 3750:1911).
+ * From 1024 wide (Figma 4633:22034): docked the map's whole height on the left, 368 wide, the
+ * Controller a column beside it over the map.
  */
 export const Floating: Story = { parameters: { frame: 'wide' } };
 
@@ -212,10 +237,10 @@ export const Floating: Story = { parameters: { frame: 'wide' } };
  */
 export const Tablet: Story = { parameters: { frame: 'tablet' } };
 
-/** Taller than the room: the cards scroll under the header. */
+/** Taller than the room: the cards scroll under the Controller. */
 export const ManyPlaces: Story = { args: { routes: many } };
 
-/** The other way round is not drawn yet: SWITCH rests disabled. */
+/** The other way round is not drawn yet: ⇆ rests disabled. */
 export const NothingTheOtherWay: Story = { args: { routes: oneWay } };
 
 /**
@@ -234,7 +259,7 @@ export const EveryLineUnderTheTap: Story = {
   args: { routes: underOneFinger },
   play: async ({ canvasElement }) => {
     const list = within(canvasElement);
-    await expect(list.getByText('2 Routes')).toBeInTheDocument();
+    await expect(list.getByRole('dialog', { name: '2 Routes' })).toBeInTheDocument();
     await expect(list.getByText('Novaliches')).toBeInTheDocument();
     await expect(list.getByText('Tala')).toBeInTheDocument();
   },
@@ -248,7 +273,7 @@ export const WayRoundOnly: Story = {
   args: { routes: underOneFinger, listing: 'way-round' },
   play: async ({ canvasElement }) => {
     const list = within(canvasElement);
-    await expect(list.getByText('1 Route')).toBeInTheDocument();
+    await expect(list.getByRole('dialog', { name: '1 Route' })).toBeInTheDocument();
     await expect(list.queryByText('Novaliches')).toBeNull();
   },
 };
@@ -266,8 +291,8 @@ export const WithAHotspotFloating: Story = {
 };
 
 /**
- * Two boxes and no line: "2 Hotspots", with no route to count, and nothing to
- * SWITCH.
+ * Two boxes and no line: "2 Hotspots", with no route to count, and nothing for
+ * ⇆ to turn.
  */
 export const TwoHotspots: Story = { args: { routes: [], hotspots: twoBoxes } };
 
@@ -278,29 +303,52 @@ export const TwoHotspots: Story = { args: { routes: [], hotspots: twoBoxes } };
 export const OneHintuanTwoBoxes: Story = { args: { routes: [], hotspots: oneHintuan } };
 
 /**
- * Figma's BottomSheetConfiguration (3815:5637) holds the list too: it opens at
- * Middle (Phone, above); a tap on the HandleNotch goes round.
+ * The list's sheet (4633:25516) opens at Low. It draws no HandleNotch, but the handle stays for
+ * the keyboard: a press on it steps a third of the screen, up to full height and back. Presses
+ * Enter on it until the sheet is at `until`, or once with no `until`.
  */
-const tapHandle = async (canvasElement: HTMLElement, times: number) => {
+const pressHandle = async (canvasElement: HTMLElement, until?: 'full') => {
   const handle = within(canvasElement).getByTestId('dock-handle');
-  for (let i = 0; i < times; i++) await userEvent.click(handle);
+  const sheet = within(canvasElement).getByTestId('chooser');
+  handle.focus();
+  for (let i = 0; i < 4; i++) {
+    await userEvent.keyboard('{Enter}');
+    if (!until || sheet.getAttribute('data-snap') === until) break;
+  }
   handle.blur();
 };
 
-/** Max: the whole map, the count at the top, the places scrolling under it. */
-export const SheetMax: Story = {
+/** Full height (4633:25575): the whole screen, the places scrolling under the Controller. */
+export const SheetFull: Story = {
   args: { routes: many },
   play: async ({ canvasElement }) => {
-    await tapHandle(canvasElement, 1);
-    await expect(within(canvasElement).getByTestId('chooser')).toHaveAttribute('data-snap', 'max');
+    await pressHandle(canvasElement, 'full');
+    await expect(within(canvasElement).getByTestId('chooser')).toHaveAttribute('data-snap', 'full');
   },
 };
 
-/** Low: the count, SWITCH and the top of the first card, as a trip's card does (3817:6007). */
+/** Low, where it opens: the first card's mode and name above the Controller, 240 tall. */
 export const SheetLow: Story = {
   play: async ({ canvasElement }) => {
-    await tapHandle(canvasElement, 2);
-    await expect(within(canvasElement).getByTestId('chooser')).toHaveAttribute('data-snap', 'low');
+    const sheet = within(canvasElement).getByTestId('chooser');
+    await expect(sheet).toHaveAttribute('data-snap', 'low');
+    await expect(sheet).toHaveAttribute('data-low-px', '240');
+  },
+};
+
+/** A filter with nothing to show under this tap: it says so, with a way back to All. */
+export const FilterWithNoMatch: Story = {
+  // Raised: at Low a tap on the body raises the sheet, and Show all routes is in the body.
+  args: { modeFilter: { filter: 'all', onFilter: fn() }, height: { snap: 0.55, onSnap: fn() } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole('button', { name: 'Filter' }));
+    const card = within(canvasElement.ownerDocument.body).getByTestId('mode-filter');
+    await userEvent.click(within(card).getByText('Ferry'));
+    await expect(canvas.getByText('No Ferry routes here')).toBeVisible();
+    await expect(canvas.getByRole('dialog', { name: '0 Routes' })).toBeInTheDocument();
+    await userEvent.click(canvas.getByRole('button', { name: 'Show all routes' }));
+    await expect(canvas.queryByText('No Ferry routes here')).toBeNull();
   },
 };
 
@@ -308,16 +356,16 @@ export const SheetLow: Story = {
 export const SheetLowLongName: Story = {
   args: { routes: longName },
   play: async ({ canvasElement }) => {
-    await tapHandle(canvasElement, 2);
     const name = within(canvasElement).getByText(LONG);
     await waitFor(() => expect(name.getBoundingClientRect().height).toBe(32));
   },
 };
 
-/** Middle with a long place: all of it, on as many lines as it takes. */
-export const SheetMiddleLongName: Story = {
+/** Raised a third with a long place: all of it, on as many lines as it takes. */
+export const SheetRaisedLongName: Story = {
   args: { routes: longName },
   play: async ({ canvasElement }) => {
+    await pressHandle(canvasElement);
     await expect(
       within(canvasElement).getByText(LONG).getBoundingClientRect().height,
     ).toBeGreaterThan(32);
@@ -340,7 +388,7 @@ const ikotLoop: Direction = {
 /** A loop in the list, beside Tala's routes: its row says Ikot, and it is there whichever way round the list is. */
 export const WithALoop: Story = { args: { routes: [...talaRoutes, ikotLoop] } };
 
-/** Only a loop: no way back to turn to, so no SWITCH. */
+/** Only a loop: no way back to turn to, so no ⇆. */
 export const OnlyALoop: Story = { args: { routes: [ikotLoop] } };
 
 /**
@@ -355,19 +403,14 @@ const growingEnd = (livery: Livery) => (
 
 export const WithAnEnd: Story = { args: { end: growingEnd } };
 
-/** Short list, Low: the end fills what the sheet shows. */
-export const WithAnEndLow: Story = {
-  args: { end: growingEnd },
-  play: async ({ canvasElement }) => {
-    await tapHandle(canvasElement, 2);
-  },
-};
+/** Short list, Low, where it opens: the end fills what the sheet shows. */
+export const WithAnEndLow: Story = { args: { end: growingEnd } };
 
-/** Short list, Max: the end fills to the bottom of the screen. */
-export const WithAnEndMax: Story = {
+/** Short list, full height: the end fills to the bottom of the screen. */
+export const WithAnEndFull: Story = {
   args: { end: growingEnd },
   play: async ({ canvasElement }) => {
-    await tapHandle(canvasElement, 1);
+    await pressHandle(canvasElement, 'full');
   },
 };
 

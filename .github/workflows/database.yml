@@ -10,8 +10,9 @@
 #      contributor-accounts.sh).
 #   2. `review`: the isolated review preview (scripts/preview/README.md) on its
 #      own Postgres and PostgREST containers, then review-test (the studio in a
-#      browser: draft, submit, approve, send back) and review-publication-test
-#      (approve, then the real publisher in a copy of the repository).
+#      browser: draft, publish, take down and put back, conflict, discard) and
+#      review-publication-test (publish, then the real publisher in a copy of
+#      the repository).
 #
 # On pull requests that touch the SQL, the code that calls it, the preview or
 # these suites; nightly; and on demand.
@@ -134,11 +135,10 @@ jobs:
           cp -a src scripts public .env.production /tmp/para-review-publish/
           ln -s "$PWD/node_modules" /tmp/para-review-publish/node_modules
           bash scripts/preview/reset-review.sh
-      # Step 5: the app built against the loopback server, drafts on, and
+      # Step 5: the app built against the loopback server, and
       # the server that stands in for Supabase's auth and proxies to PostgREST.
       - name: Build the preview and start its server
         env:
-          VITE_STUDIO_DRAFTS: '1'
           VITE_SUPABASE_URL: http://127.0.0.1:4180/api
           VITE_SUPABASE_PUBLISHABLE_KEY: isolated-preview-publishable
           VITE_BASEMAP_HOST: https://tiles.openfreemap.org

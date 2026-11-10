@@ -3,7 +3,6 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <application
-        android:name=".ParaApplication"
         android:allowBackup="false"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -27,6 +26,14 @@
             </intent-filter>
 
         </activity>
+
+        <!-- The ride's recording (RideService): started by the contributor's Start, and on when
+             the app is swiped away (stopWithTask false), until Pause or Finish. -->
+        <service
+            android:name=".RideService"
+            android:exported="false"
+            android:foregroundServiceType="location"
+            android:stopWithTask="false" />
 
         <!-- The ride notification's taps (RideNotification): only the app's own notification
              reaches it. -->
@@ -62,7 +69,17 @@
     <!-- Permissions -->
 
     <uses-permission android:name="android.permission.INTERNET" />
-    <!-- Location, the foreground service and the notification come from the background-geolocation
-         plugin's own manifest. "Allow all the time" is ours: see NativePermissionsPlugin. -->
+    <!-- Location and the notification also come from the background-geolocation plugin's own
+         manifest; RideService needs them whether or not the plugin does. "Allow all the time" is
+         ours: see NativePermissionsPlugin. -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <!-- Android 14 and later: a foreground service of type location (RideService). -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Android's own "Let Para always run in the background?" dialog, at the first Start
+         (NativePermissionsPlugin.askBatteryUnrestricted). -->
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
 </manifest>

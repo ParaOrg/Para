@@ -1,4 +1,4 @@
-// The last job of publish-map.yml, backup.yml and tiles.yml, when the run failed: opens the
+// The last job of publish-map.yml, backup.yml, tiles.yml and landmarks.yml, when the run failed: opens the
 // workflow's `alert` issue, or brings the open one up to date with a comment naming this run.
 // The watch closes it once the workflow's next run passes.
 //
@@ -19,12 +19,15 @@ const HINTS = {
     'Open the run and read the failed step: a missing secret or key is named there. Press "Run workflow" on Backup once it is fixed; the run prints sizes and counts only.',
   'tiles.yml':
     'Open the run and read the failed step. The live tiles stay the last build\'s until a run uploads, so nothing is broken for commuters yet. Press "Run workflow" with "upload" ticked on staging once it is fixed.',
+  'landmarks.yml':
+    'Open the run and read the failed step: a download from openstreetmap.fr, the file\'s check, or a shrink of more than 20% (tick "allow shrink" on "Run workflow" if it is real). The app keeps the committed landmark file meanwhile, so place search still works.',
 };
 
 const RUNBOOKS = {
   'publish-map.yml': runbookLink('a-publish-failed'),
   'backup.yml': runbookLink('a-backup-failed'),
   'tiles.yml': runbookLink('the-tiles-build-failed'),
+  'landmarks.yml': runbookLink('the-landmark-refresh-failed'),
 };
 
 const result = {

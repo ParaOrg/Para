@@ -14,8 +14,9 @@
 # (a line that ends far from its terminal, a hintuan the line passes without
 # being linked to it) lets the map go out and is written up for the owner.
 # If the file changed, the change is committed to main and the push deploys
-# as any other: Cloudflare's GitHub App gets the push like any other. If
-# nothing changed, nothing is committed: the script writes a byte-identical
+# as any other: Cloudflare's GitHub App gets the push like any other. The same
+# public/data/ files, and nothing else, are then committed onto staging, so its
+# preview serves the live map too. If nothing changed, nothing is committed: the script writes a byte-identical
 # file for unchanged data.
 #
 # The push goes over SSH with a repository deploy key (the secret
@@ -164,29 +165,66 @@ jobs:
           REMOTE: git@github.com:${{ github.repository }}.git
         run: |
           git add -A public/data
-          if git diff --cached --quiet; then
-            echo "The map is unchanged; nothing to commit."
-            exit 0
-          fi
+          is_changed=true
+          git diff --cached --quiet && is_changed=false
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -m "Publish map $(date -u '+%Y-%m-%d %H:%M UTC')"
           key="$RUNNER_TEMP/publish_deploy_key"
           hosts="$RUNNER_TEMP/publish_known_hosts"
           trap 'rm -f "$key" "$hosts"' EXIT
           ( umask 077; printf '%s\n' "$PUBLISH_DEPLOY_KEY" > "$key" )
           echo 'github.com ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCj7ndNxQowgcQnjshcLrqPEiiphnt+VTTvDP6mHBL9j1aNUkY4Ue1gvwnGLVlOhGeYrnZaMgRK6+PKCUXaDbC7qtbW8gIkhL7aGCsOr/C56SJMy/BCZfxd1nWzAOxSDPgVsmerOBYfNqltV9/hWCqBywINIR+5dIg6JTJ72pcEpEjcYgXkE2YEFXV1JHnsKgbLWNlhScqb2UmyRkQyytRLtL+38TGxkxCflmO+5Z8CSSNY7GidjMIZ7Q4zMjA2n1nGrlTDkzwDCsw+wqFPGQA179cnfGWOWRVruj16z6XyvxvjJwbz0wQZ75XK5tKSb7FNyeIEs4TT4jk+S4dhPeAUC5y+bDYirYgM4GC7uEnztnZyaVWQ7B381AK4Qdrwt51ZqExKbQpTUNn+EjqoTwvqNj4kqx5QUCI0ThS/YkOxJCXmPUWZbhjpCg56i+2aB6CmK2JGhn57K5mj0MNdBXA4/WnwH6XoPWJzK5Nyu2zB3nAZp+S5hpQs+p1vN1/wsjk=' > "$hosts"
           export GIT_SSH_COMMAND="ssh -i \"$key\" -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile=\"$hosts\""
-          # The owner may have pushed while this ran; go once more behind it.
-          # Output into publish.log for the issue. A key that is wrong or has no
-          # write access fails here, with git's own message above the hint.
-          {
-            git pull --rebase "$REMOTE" main || { git rebase --abort; exit 1; }
-            git push "$REMOTE" HEAD:main
-          } 2>&1 | tee -a "$RUNNER_TEMP/publish.log" || {
-            echo "If this is a permission or authentication error: the deploy key PUBLISH_DEPLOY_KEY is missing, wrong, or has no write access (Settings -> Deploy keys)." | tee -a "$RUNNER_TEMP/publish.log"
-            exit 1
-          }
+          if [ "$is_changed" = true ]; then
+            git commit -m "Publish map $(date -u '+%Y-%m-%d %H:%M UTC')"
+            # The owner may have pushed while this ran; go once more behind it.
+            # Output into publish.log for the issue. A key that is wrong or has no
+            # write access fails here, with git's own message above the hint.
+            {
+              git pull --rebase "$REMOTE" main || { git rebase --abort; exit 1; }
+              git push "$REMOTE" HEAD:main
+            } 2>&1 | tee -a "$RUNNER_TEMP/publish.log" || {
+              echo "If this is a permission or authentication error: the deploy key PUBLISH_DEPLOY_KEY is missing, wrong, or has no write access (Settings -> Deploy keys)." | tee -a "$RUNNER_TEMP/publish.log"
+              exit 1
+            }
+          else
+            echo "The map is unchanged; nothing to commit to main."
+          fi
+
+          # Staging gets the same data files, and only those, never a merge of
+          # main: main carries release code staging may not have yet. It runs
+          # on an unchanged day too, so a missed push (staging was being
+          # pushed to, or the key failed once) heals on the next run. Files
+          # are copied whole from main's tree; only the files this publish
+          # removed are removed. A push of public/data/ alone skips CI
+          # (paths-ignore) and deploys staging as any other push does.
+          # Staging has no ruleset; if it ever gets one, the deploy key must
+          # be a bypass actor there too.
+          published="$(git rev-parse HEAD)"
+          removed="$(git diff --name-only --diff-filter=D HEAD~1 HEAD -- public/data 2>/dev/null || true)"
+          [ "$is_changed" = true ] || removed=""
+          for attempt in 1 2 3; do
+            git fetch --quiet "$REMOTE" staging 2>&1 | tee -a "$RUNNER_TEMP/publish.log"
+            rm -rf "$RUNNER_TEMP/staging"
+            git worktree prune
+            git worktree add --quiet --detach "$RUNNER_TEMP/staging" FETCH_HEAD
+            git -C "$RUNNER_TEMP/staging" checkout "$published" -- public/data
+            if [ -n "$removed" ]; then
+              # shellcheck disable=SC2086
+              git -C "$RUNNER_TEMP/staging" rm -q --ignore-unmatch -- $removed
+            fi
+            if git -C "$RUNNER_TEMP/staging" diff --cached --quiet; then
+              echo "Staging already has this map."
+              exit 0
+            fi
+            git -C "$RUNNER_TEMP/staging" commit -q -m "Publish map $(date -u '+%Y-%m-%d %H:%M UTC') (data only, from main)"
+            if git -C "$RUNNER_TEMP/staging" push "$REMOTE" HEAD:staging 2>&1 | tee -a "$RUNNER_TEMP/publish.log"; then
+              exit 0
+            fi
+            echo "The push to staging was behind; fetching again (attempt $attempt of 3)." | tee -a "$RUNNER_TEMP/publish.log"
+          done
+          echo "Staging could not be updated; main has the map. The deploy key needs write access to staging, and staging must not forbid it." | tee -a "$RUNNER_TEMP/publish.log"
+          exit 1
 
       # One issue, "The map needs a look", is the whole story. Its body is
       # replaced on every run that has something to say, and a comment is

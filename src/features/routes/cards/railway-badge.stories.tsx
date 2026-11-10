@@ -1,5 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 
+import { cn } from '@/shared/utils/cn';
+
 import { CARD_SURFACE, CARD_TEXT } from './livery-card';
 import { RailwayBadge } from './railway-badge';
 import { RAILWAY_LIVERY } from '../model/liveries';
@@ -7,12 +9,12 @@ import { RAILWAY_LIVERY } from '../model/liveries';
 const meta = {
   title: 'Features/Routes/RailwayBadge',
   component: RailwayBadge,
-  args: { kind: 'start', railway: 'LRT-1', code: 'GL02' },
+  args: { railway: 'LRT-1', code: 'GL02' },
   decorators: [
     (Story, { args }) => {
       const livery = RAILWAY_LIVERY[args.railway];
       return (
-        <div className={'flex p-4 font-sn-pro ' + CARD_SURFACE[livery] + ' ' + CARD_TEXT[livery]}>
+        <div className={cn('flex p-4 font-sn-pro', CARD_SURFACE[livery], CARD_TEXT[livery])}>
           <Story />
         </div>
       );
@@ -23,19 +25,11 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** The origin's badge on LRT 1: the S disc and the station's code. */
-export const Start: Story = {};
+/** LRT 1: the station's code in the line's green on white. */
+export const LightRailWayOne: Story = {};
 
-/** A row's destination on LRT 1: the E disc and the code. */
-export const End: Story = { args: { kind: 'end', code: 'GL26' } };
-
-/** LRT 2's pair, in its own surface. */
+/** LRT 2, in its own surface. */
 export const LightRailWayTwo: Story = { args: { railway: 'LRT-2', code: 'PL01' } };
 
-/** MRT 3: dark chips with yellow words, the discs in Card/green and Card/red surface-light. */
+/** MRT 3: a dark chip with yellow words. */
 export const MetroRailWayThree: Story = { args: { railway: 'MRT-3', code: 'YL01' } };
-
-/** MRT 3's End. */
-export const MetroRailWayThreeEnd: Story = {
-  args: { railway: 'MRT-3', kind: 'end', code: 'YL13' },
-};

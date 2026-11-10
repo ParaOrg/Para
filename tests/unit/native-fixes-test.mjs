@@ -1,5 +1,5 @@
 // The app's native location (src/features/contribute/native/): which fixes the page still has to
-// take from the native log, which permissions each Android version has, and whose battery help applies.
+// take from the native log, which permissions each Android version has, and whose phone is shown Keep Para recording.
 //
 //   node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs tests/unit/native-fixes-test.mjs
 import { test } from 'node:test';
@@ -7,8 +7,11 @@ import assert from 'node:assert/strict';
 
 import { fixesAfter } from '../../src/features/contribute/recorder/recording-fixes.ts';
 import { parseFixLog } from '../../src/features/contribute/native/native-fix-log.ts';
-import { watchErrorOf } from '../../src/features/contribute/native/watch-error.ts';
-import { batteryHelpFor } from '../../src/features/contribute/native/battery-steps.ts';
+import {
+  watchErrorOf,
+  watchErrorOfRideProblem,
+} from '../../src/features/contribute/native/watch-error.ts';
+import { stopsBackgroundApps } from '../../src/features/contribute/native/keep-recording-makers.ts';
 import {
   canRecordWithout,
   firstMissing,
@@ -61,7 +64,7 @@ test('the first permission not granted is asked next, and only location is a mus
   assert.equal(canRecordWithout('backgroundLocation'), true);
 });
 
-test('battery help goes to the makers known to stop background apps, by any casing', () => {
+test('Keep Para recording goes to the makers known to stop background apps, by any casing', () => {
   for (const maker of [
     'xiaomi',
     'Xiaomi',
@@ -73,11 +76,13 @@ test('battery help goes to the makers known to stop background apps, by any casi
     'samsung',
     'HUAWEI',
     'honor',
+    'OnePlus',
+    ' iqoo ',
   ]) {
-    assert.ok(batteryHelpFor(maker)?.steps, maker);
+    assert.equal(stopsBackgroundApps(maker), true, maker);
   }
   for (const maker of ['google', 'motorola', 'nokia', '']) {
-    assert.equal(batteryHelpFor(maker), null, maker);
+    assert.equal(stopsBackgroundApps(maker), false, maker);
   }
 });
 
@@ -109,4 +114,15 @@ test('the plugin refusing because location is switched off is not a denied permi
     2,
   );
   assert.equal(watchErrorOf({ message: 'Service not running.' }).code, 2);
+});
+
+test("the ride's service saying it cannot record reads as the browser's denied, else unavailable", () => {
+  assert.deepEqual(
+    watchErrorOfRideProblem({ code: 'DENIED', message: 'Location permission is missing.' }),
+    { code: 1, message: 'Location permission is missing.' },
+  );
+  assert.equal(
+    watchErrorOfRideProblem({ code: 'UNAVAILABLE', message: 'Location services disabled.' }).code,
+    2,
+  );
 });

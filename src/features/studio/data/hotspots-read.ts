@@ -3,7 +3,6 @@ import * as z from 'zod/mini';
 import { hotspotLinkSchema, hotspotRowSchema } from '@/features/routes/model/hotspot-schema';
 import type { HotspotLink, HotspotRow } from '@/features/routes/model/hotspots';
 
-import { STUDIO_DRAFTS } from './flags';
 import { parsed, readAll } from './read-all';
 import { getSupabase } from './supabase';
 
@@ -30,12 +29,9 @@ export function listHotspots(): Promise<HotspotRow[]> {
   ).then((rows) =>
     parsed(
       hotspotRowSchema,
-      STUDIO_DRAFTS
-        ? rows.filter(
-            (row) =>
-              z.object({ status: z.optional(z.string()) }).parse(row).status !== 'taken_down',
-          )
-        : rows,
+      rows.filter(
+        (row) => z.object({ status: z.optional(z.string()) }).parse(row).status !== 'taken_down',
+      ),
       'hotspot',
     ),
   );

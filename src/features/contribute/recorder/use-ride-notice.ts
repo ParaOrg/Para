@@ -1,5 +1,6 @@
-import { useEffect, useRef, type RefObject } from 'react';
+import { useEffect, useRef, useState, type RefObject } from 'react';
 
+import { noticePhaseOf } from './notice-phase';
 import { pausedSecondsOf } from './recording-figures';
 import { currentMode } from './recording-rules';
 import type { Phase } from './recording-state';
@@ -27,7 +28,8 @@ interface RideNoticeOptions {
  * Lakad or Sakay, Pause, Resume and Finish, applied to the ride where they were made. The taps
  * made while the page slept are applied as it wakes; one made while it is awake, at once. A pause
  * already resumed is the ride's paused gap; a pause or a Finish standing is the recorder's own
- * Stop at its time. Nothing on the web.
+ * Stop at its time. The notification is told where a ride is only once its taps have been
+ * applied. Nothing on the web.
  */
 export function useRideNotice({
   phase,
@@ -38,14 +40,24 @@ export function useRideNotice({
   setPhase,
 }: RideNoticeOptions): void {
   const recordingId = recording?.id ?? '';
-  const noticePhase = phase === 'recording' || phase === 'paused' ? phase : 'none';
+  // Null while the page loads: it tells nothing until it knows the ride the phone holds.
+  const told = noticePhaseOf(phase);
+  const noticePhase = told ?? 'none';
   const mode = currentMode(recording?.modes ?? []);
   const startedAt = recording?.startedAt ?? 0;
   const stoppedAt = recording?.stoppedAt ?? null;
   const pausedSeconds = recording ? pausedSecondsOf(recording) : 0;
 
+  // The ride whose notification taps have been applied once since the page opened. Until they
+  // are, the ride the page holds may be older than the notification's: a Lakad or Sakay tapped
+  // there and not yet applied would be undone (RidePlugin.setState writes the mode it is told),
+  // and the next tap would switch from the wrong mode.
+  const [caughtUpId, setCaughtUpId] = useState('');
+  const isCaughtUp = noticePhase === 'none' || caughtUpId === recordingId;
+
   // The notification follows the ride: outside React, so it is told, not rendered.
   useEffect(() => {
+    if (!isCaughtUp || told === null) return;
     tellRideNotice({
       recordingId,
       phase: noticePhase,
@@ -56,7 +68,7 @@ export function useRideNotice({
     }).catch((error: unknown) => {
       console.warn('The ride notification could not be told where the ride is.', error);
     });
-  }, [recordingId, noticePhase, mode, startedAt, pausedSeconds, stoppedAt]);
+  }, [isCaughtUp, told, recordingId, noticePhase, mode, startedAt, pausedSeconds, stoppedAt]);
 
   // The latest of each, for taps heard outside a render.
   const latest = useRef({ keep, finish, setPhase });
@@ -83,6 +95,9 @@ export function useRideNotice({
         })
         .finally(() => {
           isApplying = false;
+          // Applied or not, the notification is told from now on: a failure is not left to hold
+          // it back for the rest of the ride.
+          setCaughtUpId(recordingId);
           if (isTappedMeanwhile) apply();
         });
     };

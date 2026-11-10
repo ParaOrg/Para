@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
 
 import { Button } from '@/design-system/primitives/button';
+import { useFocusHeading } from '@/shared/hooks/use-focus-heading';
 
 import { DELETE_ACCOUNT_LEAD, PHONE_AND_STATS, UPLOADS_KEPT } from './delete-account-words';
 import { HandQuestion } from './hand-question';
@@ -9,7 +10,6 @@ import { SettingsHeader } from './settings-header';
 import { useCountdown } from './use-countdown';
 import { SCREEN_HASH_ATTR } from '../common/data-attributes';
 import { useClosedWhenHidden } from '../common/use-closed-when-hidden';
-import { useFocusHeading } from '../common/use-focus-heading';
 import { useScreenEntry } from '../motion/use-screen-entry';
 import { SCREENS } from '../navigation/screen-routes';
 

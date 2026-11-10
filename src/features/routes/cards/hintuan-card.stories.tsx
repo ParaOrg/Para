@@ -172,6 +172,9 @@ const meta = {
   ],
   parameters: { layout: 'fullscreen' },
   args: {
+    // Raised, as a commuter has them before tapping a row: at Low a tap on the body raises the
+    // sheet and reaches nothing under it. The stories about the sheet's heights keep their own.
+    height: { snap: 0.55, onSnap: fn() },
     hotspot: terminal,
     hotspots,
     linkedDirectionIds: (id: string) => links[id] ?? [],
@@ -328,8 +331,11 @@ export const OneBox: Story = {
   },
 };
 
-/** On a phone: a bottom sheet at Middle. */
-export const Phone: Story = { args: { hotspot: teraccess2 }, parameters: { phone: true } };
+/** On a phone: a bottom sheet, opening at Low. */
+export const Phone: Story = {
+  args: { hotspot: teraccess2, height: undefined },
+  parameters: { phone: true },
+};
 
 /** Opened from a trip's name for the place on the map: ‹ goes back to the trip. */
 export const OverATrip: Story = {

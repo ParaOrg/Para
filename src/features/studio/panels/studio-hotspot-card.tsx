@@ -1,4 +1,5 @@
 import type { MapLibreMap } from 'maplibre-gl';
+import { useEffect, useEffectEvent, useRef, useState } from 'react';
 
 import { APP_MOVE } from '@/features/routes/map/map-view';
 import type { useCardCamera } from '@/features/routes/map/use-card-camera';
@@ -11,6 +12,7 @@ import type { SheetHeight } from '@/shared/ui/bottom-sheet';
 import { CardActions } from './card-actions';
 import { HotspotCard } from './hotspot-card';
 import type { useDeleteActions } from './use-delete-actions';
+import { useFetchHotspotToEdit } from '../data/use-hotspot-to-edit-query';
 import type { Drawing } from '../drawing/use-drawing';
 import { DraftLockNotice } from '../review/draft-lock-notice';
 import { useDraftLock } from '../review/use-draft-lock';
@@ -28,6 +30,12 @@ interface StudioHotspotCardProps {
   draw: Pick<Drawing, 'loadArea'>;
   height: SheetHeight;
   canEdit: boolean;
+  /**
+   * On a computer an editor's tap opens the hotspot straight into its editing sidebar; the card
+   * shows only when it cannot: another editor's draft, or the draft could not be read. Read as
+   * the card opens: a window widened under an open card leaves it a card.
+   */
+  opensInSidebar: boolean;
   clearOfOpen: Camera['clearOfOpen'];
   onPickOnPlaceCard: Camera['pickOnPlaceCard'];
   onOpenTrip: Camera['openTrip'];
@@ -50,6 +58,7 @@ export function StudioHotspotCard({
   draw,
   height,
   canEdit,
+  opensInSidebar,
   clearOfOpen,
   onPickOnPlaceCard,
   onOpenTrip,
@@ -59,6 +68,56 @@ export function StudioHotspotCard({
 }: StudioHotspotCardProps) {
   // Another editor's draft of this hotspot: it can be looked at, not changed.
   const { lock, retry } = useDraftLock('hotspot', hotspot.id);
+  // Edit opens the editor's own draft of the box when there is one: a save builds on it.
+  const fetchToEdit = useFetchHotspotToEdit();
+  const [hasEditFailed, setHasEditFailed] = useState(false);
+  // A draft that could not be read for Edit is not opened over: the card says it could not check.
+  const held = lock ?? (hasEditFailed ? { state: 'unknown' as const } : null);
+  // One Edit at a time: StrictMode runs the sidebar's opening effect twice.
+  const isEditing = useRef(false);
+  // A card closed, or another hotspot tapped, while the draft was read: that Edit is dropped.
+  const isMounted = useRef(true);
+  useEffect(() => {
+    isMounted.current = true;
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
+  const handleEdit = async () => {
+    const s = hotspots.selected;
+    if (!s || isEditing.current) return;
+    isEditing.current = true;
+    let opened: HotspotRow;
+    try {
+      opened = (await fetchToEdit(s)).hotspot;
+    } catch {
+      if (isMounted.current) setHasEditFailed(true);
+      return;
+    } finally {
+      isEditing.current = false;
+    }
+    if (!isMounted.current) return;
+    onCloseAll();
+    // A RouteCard picked on the way here, on this card or in the list, took in
+    // its routes whole and left the box a few pixels across: the outline opens
+    // on the box, in close enough to take its corners. Already that close, the
+    // map stays where it is.
+    if (map && map.getZoom() < 16) map.flyTo({ center: s.point.coordinates, zoom: 16 }, APP_MOVE);
+    draw.loadArea(opened.kind, opened.id, hotspotRing(opened));
+  };
+  // Read as the card opens. One opened behind a trip waits for the trip's ‹ as a card, not opened.
+  const [isToSidebarAtOpen] = useState(opensInSidebar && !saved.selected);
+  const isToSidebar = isToSidebarAtOpen && canEdit;
+  const canOpenInSidebar = isToSidebar && held === null;
+  const openInSidebar = useEffectEvent(() => void handleEdit());
+  // Edit starts once the lock's query says the draft is free: a query result, not an event, so
+  // it is started from an effect.
+  useEffect(() => {
+    if (canOpenInSidebar) openInSidebar();
+  }, [canOpenInSidebar]);
+  // While the draft is checked and read, nothing: the sidebar is on its way.
+  if (isToSidebar && (held === null || held.state === 'checking')) return null;
+
   return (
     <HotspotCard
       routeCards={{
@@ -81,23 +140,20 @@ export function StudioHotspotCard({
       }}
       actions={
         canEdit &&
-        (lock ? (
-          <DraftLockNotice lock={lock} onRetry={retry} />
+        (held ? (
+          <DraftLockNotice
+            lock={held}
+            onRetry={() => {
+              setHasEditFailed(false);
+              retry();
+            }}
+          />
         ) : (
           <CardActions
             editLabel={hotspot.kind === 'terminal' ? 'Edit terminal' : 'Edit hintuan'}
             onEdit={() => {
-              const s = hotspots.selected;
-              if (!s) return;
-              onCloseAll();
-              // A RouteCard picked on the way here, on this card or in
-              // the list, took in its routes whole and left the box a
-              // few pixels across: the outline opens on the box, in
-              // close enough to take its corners. Already that close,
-              // the map stays where it is.
-              if (map && map.getZoom() < 16)
-                map.flyTo({ center: s.point.coordinates, zoom: 16 }, APP_MOVE);
-              draw.loadArea(s.kind, s.id, hotspotRing(s));
+              setHasEditFailed(false);
+              void handleEdit();
             }}
             onDelete={() => {
               if (hotspots.selected) void onDeleteHotspot(hotspots.selected);

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useId, useMemo, useState, type FormEvent } from 'react';
 
 import { TextField } from '@/design-system/primitives/text-field';
 import { coarse } from '@/features/routes/map/map-view';
@@ -6,11 +6,16 @@ import { parseAliases, type HotspotRow } from '@/features/routes/model/hotspots'
 import { isLoop, type DirectionRow } from '@/features/routes/model/routes';
 
 import { groupBySignboard, knownInformalNames, tickedDirections } from './hotspot-checks';
+import { LineDetail } from './line-detail';
 import { PassesThrough } from './passes-through';
-import { FOOTER, OVERLAY, PANEL } from './sheet';
+import { SaveFooter } from './save-footer';
+import type { SaveIntent } from './save-intent';
+import { BESIDE_BODY } from './sheet';
 import { TerminalChecklist } from './terminal-checklist';
 import { useHotspotSave } from './use-hotspot-save';
+import { useLineStamps } from './use-line-stamps';
 import { useNearLines } from './use-near-lines';
+import { useUnpublish } from './use-unpublish';
 import { linksThrough, directionsStartingIn } from '../data/hotspots-geometry';
 import type { Drawing } from '../drawing/use-drawing';
 
@@ -24,16 +29,28 @@ interface HotspotPanelProps {
   directions: DirectionRow[];
   /** Every saved hotspot, so the informal-name box can offer the names already in use. */
   hotspots?: HotspotRow[];
-  onSaved: (s: HotspotRow) => void;
-  onCancel: () => void;
-  /** Hears the row a save wrote, the moment it is in, to keep it beyond this panel. */
-  onWritten?: (hotspotId: string) => void;
-  /** A save stored as a draft (STUDIO_DRAFTS). */
+  /** Back to the map, when the form covers it. Absent beside the map, where Exit ends the drawing. */
+  onCancel?: () => void;
+  /** Why a save can't go yet, said under the form; null when it can. Beside the map only. */
+  saveBlocked?: string | null;
+  /**
+   * The hotspot as it stands is published, has no draft and its outline is as it opened:
+   * Published until a field changes too.
+   */
+  isPublished?: boolean;
+  /** Hears the hotspot a save stored as a draft. */
   onDrafted?: (hotspotId: string) => void;
+  /** Hears the hotspot a publish made published: the map has changed. */
+  onPublished?: (hotspotId: string) => void;
+  /** The published hotspot came off the map (Unpublish). */
+  onUnpublished?: () => void;
 }
 
 /**
- * The save form for a hotspot outline. Name is the only required field.
+ * A hotspot's sidebar: beside the map on a computer the whole time its outline is drawn, over it
+ * at Done on a phone, as a route's is (SavePanel), wrapped by the caller in SaveBesideFrame or
+ * SaveSheetFrame. Its Information, then what it links, then its Line detail and the same footer.
+ * Name is the only required field.
  *
  * Terminal: a checklist of every direction, pre-ticked with the ones that
  * start inside the outline; the owner decides (TerminalChecklist). Hintuan:
@@ -47,11 +64,17 @@ export function HotspotPanel({
   existingLinks,
   directions,
   hotspots = [],
-  onSaved,
   onCancel,
-  onWritten,
+  saveBlocked = null,
+  isPublished = false,
   onDrafted,
+  onPublished,
+  onUnpublished,
 }: HotspotPanelProps) {
+  const headingId = useId();
+  const informalListId = useId();
+  const stopNameHintId = useId();
+  const isBeside = !onCancel;
   const area = draw.area;
   const kind = area?.kind ?? 'hintuan';
   const ring = draw.controlPoints;
@@ -68,12 +91,8 @@ export function HotspotPanel({
     () => knownInformalNames(hotspots, existing?.id),
     [hotspots, existing?.id],
   );
-  const { busy, error, setError, writtenId, submit } = useHotspotSave({
-    onSaved,
-    onWritten,
-    onDrafted,
-  });
-  const hotspotId = writtenId ?? existing?.id ?? area?.hotspotId ?? null;
+  const { busy, error, setError, save: saveHotspot } = useHotspotSave({ onDrafted, onPublished });
+  const hotspotId = existing?.id ?? area?.hotspotId ?? null;
 
   // The directions the outline can reach, read in full; Save waits for them.
   const lined = useNearLines(ring, directions, setError);
@@ -113,79 +132,107 @@ export function HotspotPanel({
   }
 
   const label = kind === 'terminal' ? 'Terminal' : 'Hintuan';
-  const swatch = kind === 'terminal' ? 'bg-sky-500' : 'bg-orange-500';
+
+  // What Exit would lose: the outline or a field changed since the sidebar opened. Whether the
+  // outline is as it opened is the caller's (isPublished): the form starts again on a read.
+  const fields = JSON.stringify([name, informal, [...ticked].sort()]);
+  const outline = JSON.stringify(ring);
+  const [opened] = useState({ fields, outline });
+  const isChanged = fields !== opened.fields || outline !== opened.outline;
+  const status = isPublished && fields === opened.fields ? 'published' : 'draft';
+  const stamps = useLineStamps('hotspot', existing?.id ?? null);
+  const unpublishing = useUnpublish({
+    kind: 'hotspot',
+    subjectId: isPublished ? (existing?.id ?? null) : null,
+    onUnpublished,
+  });
+
+  const save = (intent: SaveIntent) =>
+    void saveHotspot(
+      { ring, kind, hotspots, hotspotId, name, informal },
+      {
+        kind,
+        name,
+        informal,
+        aliases: parseAliases(aliasText, [name, informal]),
+        note,
+        ring,
+        directionIds: kind === 'terminal' ? [...ticked] : undefined,
+        directions: lines,
+      },
+      intent,
+    );
+  const handleSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    save('draft');
+  };
+  const handleExit = () => {
+    if (isChanged && !window.confirm('Discard your changes?')) return;
+    draw.cancel();
+  };
+  // The lines the outline reaches are read before a save can say what it links.
+  const blocked = saveBlocked ?? (lined ? null : 'Reading the lines near it…');
 
   return (
-    <div className={OVERLAY}>
-      <form
-        onSubmit={(e) =>
-          void submit(
-            e,
-            { ring, kind, hotspots, hotspotId, name, informal },
-            {
-              kind,
-              name,
-              informal,
-              aliases: parseAliases(aliasText, [name, informal]),
-              note,
-              ring,
-              directionIds: kind === 'terminal' ? [...ticked] : undefined,
-              directions: lines,
-            },
-          )
-        }
-        className={PANEL}
-      >
-        <h2 className="flex items-center gap-2 text-base font-medium text-neutral-900">
-          <span className={`inline-block h-3 w-3 rounded-sm ${swatch}`} />
-          {existing ? `Update this ${label.toLowerCase()}` : `Save this ${label.toLowerCase()}`}
-        </h2>
-        <p className="mt-1 text-xs text-neutral-500">{ring.length} corners</p>
-
-        <div className="mt-4">
-          <TextField
-            label={
-              <>
-                Ground name{' '}
-                <span className="text-content-disabled">(as written on the ground)</span>
-              </>
-            }
-            required
-            // eslint-disable-next-line jsx-a11y/no-autofocus -- this overlay opens for typing, so its first field takes focus; not on touch, where it would open the keyboard unasked
-            autoFocus={!coarse}
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            onClear={() => setName('')}
-            placeholder={kind === 'terminal' ? 'SM Fairview Terminal A' : 'SM Fairview Ilalim'}
-          />
-        </div>
-
-        <div className="mt-3">
-          <TextField
-            label={
-              <>
-                Stop name{' '}
-                <span className="text-content-disabled">(what people say — optional)</span>
-              </>
-            }
-            value={informal}
-            onChange={(e) => setInformal(e.target.value)}
-            onClear={() => setInformal('')}
-            list="para-informal-names"
-            aria-describedby="para-stop-name-hint"
-            placeholder="SM Fairview"
-          />
-          <datalist id="para-informal-names">
-            {knownInformal.map((n) => (
-              <option key={n} value={n} />
-            ))}
-          </datalist>
-          <p id="para-stop-name-hint" className="mt-1 text-[11px] text-content-disabled">
-            Boxes that share a hotspot name are one hotspot, whatever is written on each. Route
-            names read it
-            {kind === 'terminal' ? '; a hotspot has one terminal.' : '.'}
+    <form
+      onSubmit={handleSubmit}
+      aria-labelledby={headingId}
+      data-testid="hotspot-panel"
+      className={isBeside ? 'flex min-h-0 flex-1 flex-col' : undefined}
+    >
+      <div className={isBeside ? BESIDE_BODY : 'flex flex-col gap-5'}>
+        <section className="flex flex-col gap-3">
+          <h2 id={headingId} className="text-xl/7 font-semibold text-content-primary">
+            {label} Information
+          </h2>
+          <p className="-mt-2 text-xs text-content-quaternary">
+            {existing ? `Update this ${label.toLowerCase()}` : `Save this ${label.toLowerCase()}`}
           </p>
-        </div>
+          <div>
+            <TextField
+              label={
+                <>
+                  Ground name{' '}
+                  <span className="text-content-disabled">(as written on the ground)</span>
+                </>
+              }
+              required
+              // eslint-disable-next-line jsx-a11y/no-autofocus -- the sheet over the map opens for typing, so its first field takes focus; not on touch, where it would open the keyboard unasked, nor beside the map, where the keys still draw
+              autoFocus={!coarse && !isBeside}
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              onClear={() => setName('')}
+              placeholder={kind === 'terminal' ? 'SM Fairview Terminal A' : 'SM Fairview Ilalim'}
+            />
+          </div>
+
+          <div>
+            <TextField
+              label={
+                <>
+                  Stop name{' '}
+                  <span className="text-content-disabled">(what people say — optional)</span>
+                </>
+              }
+              value={informal}
+              onChange={(e) => setInformal(e.target.value)}
+              onClear={() => setInformal('')}
+              list={informalListId}
+              aria-describedby={stopNameHintId}
+              placeholder="SM Fairview"
+            />
+            <datalist id={informalListId}>
+              {knownInformal.map((n) => (
+                <option key={n} value={n} />
+              ))}
+            </datalist>
+            <p id={stopNameHintId} className="mt-1 text-[11px] text-content-disabled">
+              Boxes that share a hotspot name are one hotspot, whatever is written on each. Route
+              names read it
+              {kind === 'terminal' ? '; a hotspot has one terminal.' : '.'}
+            </p>
+          </div>
+        </section>
 
         {kind === 'terminal' ? (
           <TerminalChecklist groups={groups} ticked={ticked} onToggle={toggle} />
@@ -193,25 +240,31 @@ export function HotspotPanel({
           <PassesThrough groups={hintuanGroups} />
         )}
 
-        {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
+        <LineDetail points={ring.length} pointsTerm="Corners" status={status} {...stamps} />
 
-        <div className={FOOTER}>
-          <button
-            type="button"
-            onClick={onCancel}
-            className="flex-1 rounded-lg px-4 py-2.5 text-sm font-medium text-neutral-600 ring-1 ring-neutral-300"
-          >
-            Back to map
-          </button>
-          <button
-            type="submit"
-            disabled={busy || ring.length < 3 || !lined}
-            className="flex-1 rounded-lg bg-neutral-900 px-4 py-2.5 text-sm font-medium text-white disabled:opacity-50"
-          >
-            {busy ? 'Saving…' : existing ? 'Save changes' : `Save ${label.toLowerCase()}`}
-          </button>
-        </div>
-      </form>
-    </div>
+        {error && (
+          <p role="alert" className="text-sm text-content-error">
+            {error}
+          </p>
+        )}
+        {unpublishing.error && (
+          <p role="alert" className="text-sm text-content-error">
+            {unpublishing.error}
+          </p>
+        )}
+        {blocked && <p className="text-sm text-content-quaternary">{blocked}</p>}
+      </div>
+
+      <SaveFooter
+        busyIntent={busy}
+        status={status}
+        isUnpublishing={unpublishing.isBusy}
+        onUnpublish={() => unpublishing.unpublish(existing?.name ?? `this ${label.toLowerCase()}`)}
+        saveBlocked={blocked}
+        onExit={handleExit}
+        onCancel={onCancel}
+        onPublish={() => save('publish')}
+      />
+    </form>
   );
 }

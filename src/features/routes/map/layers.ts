@@ -20,6 +20,9 @@ export const LAYERS = {
   hotspotsFill: 'saved-stops-fill',
   /** A hintuan's name. */
   hotspotsHintuanLabel: 'saved-stops-label-hintuan',
+  /** A hotspot's pin at its box's middle, zoomed in, and its dot zoomed out: a tap asks them too. */
+  hotspotsPin: 'saved-stops-pin',
+  hotspotsDot: 'saved-stops-dot',
   /** The line being drawn: its rim, and its snapped and freehand stretches. */
   drawCasing: 'draw-line-casing',
   drawSnapped: 'draw-line-snapped',

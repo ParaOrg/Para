@@ -2,15 +2,16 @@ import { useEffect, useRef } from 'react';
 
 import { Button } from '@/design-system/primitives/button';
 import { TextField } from '@/design-system/primitives/text-field';
+import { useFocusHeading } from '@/shared/hooks/use-focus-heading';
 import { cn } from '@/shared/utils/cn';
 
 import type { ProfileFields } from './account-fields';
+import { GeneralBar } from './general-bar';
 import { PasswordButtonField } from './password-button-field';
 import { ProfileForm } from './profile-form';
 import { SettingsHeader } from './settings-header';
 import { SCREEN_HASH_ATTR } from '../common/data-attributes';
 import { Skeleton } from '../common/skeleton';
-import { useFocusHeading } from '../common/use-focus-heading';
 import { useIsSlowLoad } from '../common/use-is-slow-load';
 import { useScreenEntry } from '../motion/use-screen-entry';
 import { SCREENS } from '../navigation/screen-routes';
@@ -30,13 +31,18 @@ interface AccountSettingsScreenProps {
   onSave: (fields: ProfileFields) => void;
   onOpenChangePassword: () => void;
   onOpenDeleteAccount: () => void;
+  /** Keep Para recording, in the Android app only: the maker's Autostart screen. */
+  onOpenKeepRecording?: () => void;
+  /** One line when Keep Para recording could not open the phone's settings. */
+  keepRecordingError?: string | null;
   onBack: () => void;
 }
 
 /**
  * Account settings (Figma 4540:4821), from Account's General: the name and number to change, with
  * Save changes and Cancel rising once either is changed; the email as it is; Password, which
- * opens Change password; and Delete account, which opens Delete account. Shown only on Ready, so never
+ * opens Change password; in the app, Keep Para recording, which opens the maker's Autostart screen;
+ * and Delete account, which opens Delete account. Shown only on Ready, so never
  * while a recording runs.
  */
 export function AccountSettingsScreen({
@@ -50,6 +56,8 @@ export function AccountSettingsScreen({
   onSave,
   onOpenChangePassword,
   onOpenDeleteAccount,
+  onOpenKeepRecording,
+  keepRecordingError = null,
   onBack,
 }: AccountSettingsScreenProps) {
   const headingRef = useFocusHeading();
@@ -111,6 +119,20 @@ export function AccountSettingsScreen({
               </p>
             )}
           </div>
+          {onOpenKeepRecording && (
+            <div className="flex flex-col gap-1.5">
+              <GeneralBar
+                icon="settings"
+                label="Keep Para recording"
+                onClick={onOpenKeepRecording}
+              />
+              {keepRecordingError && (
+                <p role="alert" className="text-sm/5 text-content-quaternary">
+                  {keepRecordingError}
+                </p>
+              )}
+            </div>
+          )}
           <div className="*:w-full">
             <Button
               variant="plain"

@@ -1,6 +1,7 @@
 import { lazyPlugin } from '../native-bridge/native-app';
 import {
   PLUGIN_NAMES,
+  recordingNowSchema,
   rideEventsSchema,
   RIDE_EVENT_NAME,
   type RideEvent,
@@ -11,6 +12,7 @@ import {
 interface RidePlugin {
   setState: (state: RideState) => Promise<void>;
   events: () => Promise<unknown>;
+  recordingNow: () => Promise<unknown>;
   dropEvents: (options: { time: number }) => Promise<void>;
   addListener: (
     event: typeof RIDE_EVENT_NAME,
@@ -20,16 +22,18 @@ interface RidePlugin {
 
 const getPlugin = lazyPlugin<RidePlugin>(PLUGIN_NAMES.ride);
 
-// The page's watcher (native-location.ts) and the last state said: the notification needs both,
-// and they change apart.
-let watcherId = '';
+// Whether the page's watch is on (native-location.ts) and the last state said: the notification
+// needs both, and they change apart.
+let isWatching = false;
 let lastState: RideNoticeState | null = null;
 
 function send(): Promise<void> {
   if (!lastState) return Promise.resolve();
-  // Paused, the page holds no watcher: the notification's Resume then opens the app.
-  const held = lastState.phase === 'recording' ? watcherId : '';
-  return getPlugin().setState({ ...lastState, watcherId: held });
+  // Paused, the page has no watch on: the notification's Resume then opens the app.
+  return getPlugin().setState({
+    ...lastState,
+    isWatching: isWatching && lastState.phase === 'recording',
+  });
 }
 
 /** Tells the notification where the ride is now. */
@@ -38,12 +42,22 @@ export function setRideNoticeState(state: RideNoticeState): Promise<void> {
   return send();
 }
 
-/** The page's watcher started (its id) or let go (''). */
-export function noteRideWatcher(id: string): void {
-  watcherId = id;
+/**
+ * The page's watch started, or stopped. Told again only for a ride recording: for any other the
+ * notification is told no watch whatever this says, and a "no ride" still standing from before a
+ * Start would, sent again, stop the service the Start has just set going (RidePlugin.setState).
+ */
+export function noteRideWatch(isOn: boolean): void {
+  isWatching = isOn;
+  if (lastState?.phase !== 'recording') return;
   void send().catch((error: unknown) => {
     console.warn('The ride notification could not be told of the watch.', error);
   });
+}
+
+/** The ride the app's service is recording now, or null when it records none. */
+export async function readRecordingNow(): Promise<string | null> {
+  return recordingNowSchema.parse(await getPlugin().recordingNow()).recordingId;
 }
 
 /** The taps made on the notification that the page has not applied yet, oldest first. */
