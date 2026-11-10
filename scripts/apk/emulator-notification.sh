@@ -20,7 +20,8 @@
 #         Resume and Finish
 #   ~3:10 Resume: the service is in the foreground again and fixes are kept
 #   ~3:40 location switched off, then on: the card says so, then Recording
-#   ~4:20 the app updated (installed again): the card says the ride stopped; opened, it records
+#   ~4:20 the phone's clock set back an hour: fixes still kept; then set right
+#   ~4:45 the app updated (installed again): the card says the ride stopped; opened, it records
 #   ~5:30 Finish: no fix after it, and the notification says the ride waits to be saved
 #
 # The service's state after Pause and after Resume is what RideActionReceiver does with
@@ -299,6 +300,17 @@ grep -q 'Recording' "$OUT/notification-location-on.txt" && ! grep -q 'Location i
   && pass "location on again: the card says Recording" || fail "location on again, the card does not say Recording"
 [ "$(native_fixes)" -gt "$ON_AT" ] && pass "location on again: fixes kept again" \
   || fail "location on again, yet no fix kept"
+
+# The phone's clock set back an hour mid-ride (ticket 05): fixes are kept at the time FixClock
+# gives them, which only goes forward, so the log keeps taking them. The clock is set right after.
+adb shell settings put global auto_time 0
+adb shell "date @$(( $(date +%s) - 3600 ))" > /dev/null
+BACK_AT=$(native_fixes)
+sleep 20
+[ "$(native_fixes)" -gt "$BACK_AT" ] && pass "clock set back an hour: fixes still kept" \
+  || fail "clock set back an hour, the log kept no fix"
+adb shell "date @$(date +%s)" > /dev/null
+adb shell settings put global auto_time 1
 
 # The app updated mid-ride (Q94): installing kills the process and the service, and nothing records
 # it after. The card says the ride stopped; the app opened again carries on the ride.
