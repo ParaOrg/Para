@@ -1,6 +1,6 @@
 # Footbridges
 
-Status: plan only, no code. The owner approved the direction (Q56 a, b and c; Q57; Q58). The questions below go to the owner through the hub before any ticket starts.
+Status: building. The owner approved the direction (Q56 a, b and c; Q57; Q58) and answered every question below as recommended (Q104 to Q112, 2026-11-10). Ticket 01 is built; 02 to 05 follow in order.
 
 A commuter in Metro Manila often has to cross a road on foot before or after a ride. Footbridges are how they do it on the big roads, and today Para shows none. Three parts:
 
@@ -94,11 +94,11 @@ Counted from the same Metro Manila extract the landmark file is built from (open
 
 | # | Ticket | Status |
 | --- | --- | --- |
-| 01 | [The footbridge file](issues/01-footbridge-file.md) | needs-triage: waits for the owner's answers |
-| 02 | [Footbridges on the commuter map](issues/02-commuter-layer.md) | needs-triage; after 01 |
-| 03 | [Footbridges in the studio](issues/03-studio-layer.md) | needs-triage; after 01 |
-| 04 | [A footbridge hint on the walk (design 1)](issues/04-walk-hint.md) | needs-triage; after 01 |
-| 05 | [Walking routing in the browser (design 2): research](issues/05-walk-routing-research.md) | needs-triage; only if the owner asks for turn-by-turn |
+| 01 | [The footbridge file](issues/01-footbridge-file.md) | built: 413 footbridges, 66 kB (17.6 kB gzipped) |
+| 02 | [Footbridges on the commuter map](issues/02-commuter-layer.md) | ready-for-agent; after 01 |
+| 03 | [Footbridges in the studio](issues/03-studio-layer.md) | ready-for-agent; after 01 |
+| 04 | [A footbridge hint on the walk (design 1)](issues/04-walk-hint.md) | ready-for-agent; after 01 |
+| 05 | [Walking routing in the browser (design 2): research](issues/05-walk-routing-research.md) | ready-for-agent: research only, after 04 |
 
 ## Questions for the owner (each with a recommendation)
 
@@ -111,6 +111,25 @@ Counted from the same Metro Manila extract the landmark file is built from (open
 7. **The owner's exports (Footbridge-lines.geojson, Footbridge-nodes.geojson)?** Recommended: a one-time cross-check, not committed and not a source. The monthly OpenStreetMap build is the source, so the layer improves as volunteers map. If the owner wants the comparison by feature, not just counts, the hub attaches the files to the session for ticket 01.
 8. **The same monthly build and pull request as the landmarks?** Recommended: yes. One download, one pull request with both files, the footbridge count in its comparison table.
 9. **The studio's layer: on or off by default?** Recommended: off, with a toggle beside the studio's other map layers. Editors turn it on when they place a hintuan near a crossing.
+
+## Answers (the owner, 2026-11-10, via the hub: all as recommended)
+
+1. Only footbridges over a road or rail line.
+2. From street level, about zoom 15, under the routes; no toggle.
+3. Elevators marked; steps not at first.
+4. No tap on a footbridge at first.
+5. Design 1 now; Design 2 only as research.
+6. No public routing service at runtime.
+7. The owner's exports: a one-time cross-check, not committed.
+8. The same monthly build and pull request as the landmarks.
+9. The studio's layer off by default, with a toggle.
+
+## The first file (ticket 01)
+
+From the 2026-11-05 extract:
+- **Counts.** 413 footbridges (the footways on a bridge that join one another, counted as one, kept when one of them crosses a road or rail line). 60 of them are named and 33 have an elevator.
+- **Size.** 66 kB, 17.6 kB gzipped.
+- **Against the owner's exports.** The owner's 874 lines are ways, so they compare with the 1,171 footway-bridge ways of the counts above, not with the 413 footbridges.
 
 ## Owner to design later
 
