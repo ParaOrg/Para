@@ -25,16 +25,6 @@
       "features-routes-routelinelabel--default": "expected 'oklch(0.708 0 none)' to be 'oklch(0.87 0 none)' // Object.is equality",
       "features-routes-routelinelabel--unselected": "expected 'oklch(0.708 0 none)' to be 'oklch(0.87 0 none)' // Object.is equality"
     },
-    "studio": {
-      "features-studio-changepassword--new-passwords-differ": "Unable to find an element with the text: The two new passwords do not match.. This could be because the text is broken up by multiple elements. In this case, yo",
-      "features-studio-changepassword--rule-broken": "Unable to find an element with the text: Use at least 8 characters, with letters and numbers. This could be because the text is broken up by multiple elements. ",
-      "features-studio-changepassword--same-as-current": "Unable to find an element with the text: The new password is the same as the current one.. This could be because the text is broken up by multiple elements. In ",
-      "features-studio-connecthint--near-the-first-point": "Unable to find an element by: [data-testid=\"connect-hint\"]",
-      "features-studio-drawtoolbar--keys": "expected \"redo\" to be called once, but got 0 times",
-      "features-studio-newmenu--open": "expect(element).toHaveFocus()",
-      "features-studio-newplaceform--head": "expect(element).toHaveFocus()",
-      "features-studio-noteditor--default": "Unable to find an accessible element with the role \"heading\" and name \"This account isn't an editor\"",
-      "features-studio-phoneblock--asking": "Unable to find a label with the text of: Why block it? (optional)"
-    }
+    "studio": {}
   }
 }

@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useState } from 'react';
 import type { ComponentProps } from 'react';
-import { expect, fn, userEvent, within } from 'storybook/test';
+import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
 import { NewMenu } from './new-menu';
 
@@ -55,7 +55,8 @@ export const Open: Story = {
     const canvas = within(canvasElement);
     await expect(canvas.getByRole('button', PLUS)).toHaveAttribute('aria-expanded', 'true');
     await expect(canvas.getAllByRole('menuitem')).toHaveLength(3);
-    await expect(canvas.getByRole('menuitem', { name: /Routes/ })).toHaveFocus();
+    // The first item takes the focus once the menu has opened, a frame after it shows.
+    await waitFor(() => expect(canvas.getByRole('menuitem', { name: /Routes/ })).toHaveFocus());
   },
 };
 
