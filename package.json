@@ -16,6 +16,7 @@
     "preview": "vite preview",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
+    "check:stories": "storybook build --quiet && node scripts/checks/storybook-play.mjs",
     "docs:architecture": "node scripts/docs/architecture.mjs",
     "docs:architecture:check": "node scripts/docs/architecture.mjs --check",
     "health": "node scripts/checks/health.mjs",

@@ -2,11 +2,7 @@
   "about": "Stories whose play failed when this check came in (2026-11-10): play functions had never run in CI. The list may only shrink: a story not here that fails, fails CI; a story here that passes, or no longer exists, fails CI until its line is deleted. Grouped by the area whose session fixes it; each line says why it failed.",
   "areas": {
     "contributor": {},
-    "shared": {
-      "shared-ui-toasthost--hidden-by-its-id": "expect(element).toHaveFocus()",
-      "shared-ui-toasthost--info-held-while-focused": "expect(element).toHaveFocus()",
-      "shared-ui-toasthost--problem-stays-until-its-action": "expect(element).toHaveFocus()"
-    },
+    "shared": {},
     "routes": {
       "features-routes-basemapcontrol--close-button-closes": "Unable to find an accessible element with the role \"dialog\" and name \"Map Style\"",
       "features-routes-basemapcontrol--escape-closes": "Unable to find an accessible element with the role \"dialog\" and name \"Map Style\"",
