@@ -2,19 +2,24 @@ import { useId, type ReactNode } from 'react';
 
 import { cn } from '@/shared/utils/cn';
 
-/** Whether what the sidebar shows is a draft, or what commuters get at the next publish. */
-export type LineStatus = 'draft' | 'published';
+/**
+ * What the sidebar shows: a draft stored for it, what commuters get at the next publish, or a
+ * line or change not saved anywhere yet.
+ */
+export type LineStatus = 'draft' | 'published' | 'unsaved';
 
 const STATUS_LABEL = {
   draft: 'Draft',
   published: 'Published',
+  unsaved: 'Not saved',
 } satisfies Record<LineStatus, string>;
 
-// Draft in orange (Figma 4300:20893), Published in Content/success (4614:15082). The word says it
-// too, so the colour is never the only sign.
+// Draft in orange (Figma 4300:20893), Published in Content/success (4614:15082), Not saved as a
+// label reads. The word says it too, so the colour is never the only sign.
 const STATUS_COLOUR = {
   draft: 'text-content-warning',
   published: 'text-content-success',
+  unsaved: 'text-content-quaternary',
 } satisfies Record<LineStatus, string>;
 
 /** What a fact not known yet reads, as Figma draws it. */

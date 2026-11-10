@@ -40,6 +40,8 @@ interface StudioSaveSheetsProps {
   onPublished?: (subjectId: string) => void;
   /** A published route or hotspot unpublished: the map has changed. */
   onUnpublished?: () => void;
+  /** The editor's own draft was dropped (Discard draft): the drawing ends. */
+  onDiscarded?: () => void;
   onCancel: () => void;
 }
 
@@ -58,6 +60,7 @@ export function StudioSaveSheets({
   onDrafted,
   onPublished,
   onUnpublished,
+  onDiscarded,
   onCancel,
 }: StudioSaveSheetsProps) {
   // The hotspot being edited, when the area trace came from a saved one.
@@ -112,6 +115,11 @@ export function StudioSaveSheets({
     client.removeQueries({ queryKey: reviewKeys.draftsOf() });
     onPublished?.(subjectId);
   };
+  // A discard leaves no draft to read: the next Edit or card reads afresh.
+  const handleDiscarded = () => {
+    client.removeQueries({ queryKey: reviewKeys.draftsOf() });
+    onDiscarded?.();
+  };
   const routeForm = {
     draw,
     existing: target.editing && draftedRoute ? { ...target.editing, route: draftedRoute } : null,
@@ -122,6 +130,7 @@ export function StudioSaveSheets({
     onDrafted: handleDrafted,
     onPublished: handlePublished,
     onUnpublished,
+    onDiscarded: handleDiscarded,
     onPlaceSaved: () => void hotspots.reload(),
   };
 
@@ -142,6 +151,7 @@ export function StudioSaveSheets({
     onDrafted: handleDrafted,
     onPublished: handlePublished,
     onUnpublished,
+    onDiscarded: handleDiscarded,
   };
 
   return (
