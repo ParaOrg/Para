@@ -5,6 +5,7 @@ import { coarse } from '@/features/routes/map/map-view';
 import { parseAliases, type HotspotRow } from '@/features/routes/model/hotspots';
 import { isLoop, type DirectionRow } from '@/features/routes/model/routes';
 
+import { DraftBadge } from './draft-badge';
 import { groupBySignboard, knownInformalNames, tickedDirections } from './hotspot-checks';
 import { LineDetail } from './line-detail';
 import { PassesThrough } from './passes-through';
@@ -15,6 +16,7 @@ import { TerminalChecklist } from './terminal-checklist';
 import { useHotspotSave } from './use-hotspot-save';
 import { useLineStamps } from './use-line-stamps';
 import { useNearLines } from './use-near-lines';
+import { useStoredDraft } from './use-stored-draft';
 import { useUnpublish } from './use-unpublish';
 import { linksThrough, directionsStartingIn } from '../data/hotspots-geometry';
 import type { Drawing } from '../drawing/use-drawing';
@@ -44,6 +46,8 @@ interface HotspotPanelProps {
   onPublished?: (hotspotId: string) => void;
   /** The published hotspot came off the map (Unpublish). */
   onUnpublished?: () => void;
+  /** The editor's own draft of the hotspot was dropped (Discard draft). */
+  onDiscarded?: () => void;
 }
 
 /**
@@ -70,6 +74,7 @@ export function HotspotPanel({
   onDrafted,
   onPublished,
   onUnpublished,
+  onDiscarded,
 }: HotspotPanelProps) {
   const headingId = useId();
   const informalListId = useId();
@@ -162,6 +167,14 @@ export function HotspotPanel({
       },
       intent,
     );
+  const stored = useStoredDraft({
+    kind: 'hotspot',
+    subjectId: existing?.id ?? null,
+    isChanged,
+    publishForm: () => save('publish'),
+    onApproved: () => onPublished?.(existing?.id ?? ''),
+    onDiscarded,
+  });
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     save('draft');
@@ -182,9 +195,12 @@ export function HotspotPanel({
     >
       <div className={isBeside ? BESIDE_BODY : 'flex flex-col gap-5'}>
         <section className="flex flex-col gap-3">
-          <h2 id={headingId} className="text-xl/7 font-semibold text-content-primary">
-            {label} Information
-          </h2>
+          <div className="flex items-center gap-2">
+            <h2 id={headingId} className="text-xl/7 font-semibold text-content-primary">
+              {label} Information
+            </h2>
+            {stored.footer.hasDraft && <DraftBadge />}
+          </div>
           <p className="-mt-2 text-xs text-content-quaternary">
             {existing ? `Update this ${label.toLowerCase()}` : `Save this ${label.toLowerCase()}`}
           </p>
@@ -247,9 +263,9 @@ export function HotspotPanel({
             {error}
           </p>
         )}
-        {unpublishing.error && (
+        {(unpublishing.error ?? stored.error) && (
           <p role="alert" className="text-sm text-content-error">
-            {unpublishing.error}
+            {unpublishing.error ?? stored.error}
           </p>
         )}
         {blocked && <p className="text-sm text-content-quaternary">{blocked}</p>}
@@ -263,7 +279,7 @@ export function HotspotPanel({
         saveBlocked={blocked}
         onExit={handleExit}
         onCancel={onCancel}
-        onPublish={() => save('publish')}
+        {...stored.footer}
       />
     </form>
   );

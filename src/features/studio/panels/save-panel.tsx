@@ -3,6 +3,7 @@ import { useId, useState, type FormEvent } from 'react';
 import { hotspotLabel } from '@/features/routes/model/hotspots';
 import { LOOP_WORD } from '@/features/routes/model/routes';
 
+import { DraftBadge } from './draft-badge';
 import { IkotNameField } from './ikot-name-field';
 import { LineDetail } from './line-detail';
 import { LoopToggle } from './loop-toggle';
@@ -14,6 +15,7 @@ import { SaveTimeline } from './save-timeline';
 import { BESIDE_BODY } from './sheet';
 import { useLineStamps } from './use-line-stamps';
 import { useSavePanel, type UseSavePanelOptions } from './use-save-panel';
+import { useStoredDraft } from './use-stored-draft';
 import { useUnpublish } from './use-unpublish';
 import { ViaField } from './via-field';
 
@@ -29,6 +31,8 @@ interface SavePanelProps extends UseSavePanelOptions {
   isPublished?: boolean;
   /** The published route came off the map (Unpublish). */
   onUnpublished?: () => void;
+  /** The editor's own draft of the route was dropped (Discard draft). */
+  onDiscarded?: () => void;
 }
 
 /**
@@ -49,6 +53,7 @@ export function SavePanel({
   onCancel,
   isPublished = false,
   onUnpublished,
+  onDiscarded,
   ...options
 }: SavePanelProps) {
   const headingId = useId();
@@ -78,6 +83,14 @@ export function SavePanel({
     subjectId: isPublished ? (existing?.route.id ?? null) : null,
     onUnpublished,
   });
+  const stored = useStoredDraft({
+    kind: 'route',
+    subjectId: panel.parent?.id ?? null,
+    isChanged,
+    publishForm: () => void panel.submit('publish'),
+    onApproved: () => options.onPublished?.(existing?.id ?? panel.parent?.id ?? ''),
+    onDiscarded,
+  });
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -97,9 +110,12 @@ export function SavePanel({
     >
       <div className={isBeside ? BESIDE_BODY : 'flex flex-col gap-5'}>
         <section className="flex flex-col gap-3">
-          <h2 id={headingId} className="text-xl/7 font-semibold text-content-primary">
-            Route Information
-          </h2>
+          <div className="flex items-center gap-2">
+            <h2 id={headingId} className="text-xl/7 font-semibold text-content-primary">
+              Route Information
+            </h2>
+            {stored.footer.hasDraft && <DraftBadge />}
+          </div>
           <p className="-mt-2 text-xs text-content-quaternary">
             {panelTitle({ isEdit: !!existing, isReturnTrip: !!options.route, isLoop })}
             {routeLocked && ' · the ends belong to the route, so both directions share them'}
@@ -185,9 +201,9 @@ export function SavePanel({
             {panel.error}
           </p>
         )}
-        {unpublishing.error && (
+        {(unpublishing.error ?? stored.error) && (
           <p role="alert" className="text-sm text-content-error">
-            {unpublishing.error}
+            {unpublishing.error ?? stored.error}
           </p>
         )}
 
@@ -202,7 +218,7 @@ export function SavePanel({
         saveBlocked={saveBlocked}
         onExit={handleExit}
         onCancel={onCancel}
-        onPublish={() => void panel.submit('publish')}
+        {...stored.footer}
       />
     </form>
   );

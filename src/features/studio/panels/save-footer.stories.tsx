@@ -86,3 +86,44 @@ export const Unpublishing: Story = {
     await expect(canvas.getByRole('button', { name: 'Exit' })).toBeDisabled();
   },
 };
+
+/** A draft is stored (own or another editor's): Publish reads Approve. */
+export const WithDraft: Story = {
+  args: { hasDraft: true },
+  play: async ({ canvasElement }) => {
+    const names = within(canvasElement)
+      .getAllByRole('button')
+      .map((b) => b.textContent);
+    await expect(names).toEqual(['Exit', 'Approve', 'Save as draft']);
+  },
+};
+
+/** The editor's own draft: Discard beside Exit, asking nothing here (the panel asks). */
+export const OwnDraft: Story = {
+  args: { hasDraft: true, onDiscard: fn() },
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement);
+    const names = canvas.getAllByRole('button').map((b) => b.textContent);
+    await expect(names).toEqual(['Exit', 'Discard', 'Approve', 'Save as draft']);
+    await userEvent.click(canvas.getByRole('button', { name: 'Discard' }));
+    await expect(args.onDiscard).toHaveBeenCalled();
+  },
+};
+
+/** Approving the stored draft: Approve says so, and nothing can be pressed twice. */
+export const Approving: Story = {
+  args: { hasDraft: true, onDiscard: fn(), draftBusy: 'publish' },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole('button', { name: 'Approving…' })).toBeDisabled();
+    await expect(canvas.getByRole('button', { name: 'Discard' })).toBeDisabled();
+  },
+};
+
+/** Discarding: Discard says so. */
+export const Discarding: Story = {
+  args: { hasDraft: true, onDiscard: fn(), draftBusy: 'discard' },
+  play: async ({ canvasElement }) => {
+    await expect(within(canvasElement).getByRole('button', { name: 'Discarding…' })).toBeDisabled();
+  },
+};
