@@ -1,12 +1,12 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
-import { CARD_SURFACE, CARD_TEXT } from './livery-card';
-import { RailwayBadge } from './railway-badge';
+import { RouteBadge } from './route-badge';
+import { ROUTE_CARD_SURFACE, ROUTE_CARD_TEXT } from './route-card-look';
 import { RouteEndPointBar } from './route-end-point-bar';
 
 /**
- * Figma's .RouteEndPointBar (3848:11928): RouteCard (on a card's colour, 40 tall) and
+ * Figma's .RouteEndPointBar (3848:11928): RouteCard (on a card's colour, medium, 32 tall) and
  * RouteTripDetail (on the sheet's surface, rounded, 40 tall), each at Rest and Pressed, the tree
  * line before the place. Pressed is a browser state, `:active`: hold a row to see it; the stories
  * force it with the pressed fill.
@@ -21,7 +21,7 @@ const meta = {
         className={
           args.on === 'surface'
             ? 'w-96 bg-surface p-3'
-            : 'w-96 ' + CARD_SURFACE[args.on] + ' ' + CARD_TEXT[args.on]
+            : 'w-96 ' + ROUTE_CARD_SURFACE[args.on] + ' ' + ROUTE_CARD_TEXT[args.on]
         }
       >
         <Story />
@@ -49,34 +49,36 @@ export const OnSurfacePressed: Story = { args: { className: 'bg-surface-tertiary
 /** The last row of a trip's "Other routes": the line ends at its stub. */
 export const OnSurfaceLast: Story = { args: { position: 'bottom' } };
 
-/** RouteCard at Rest, on an bus card: its words, 40 tall. */
+/** RouteCard at Rest, on a bus card: Medium 17/24, 32 tall. */
 export const OnBus: Story = {
-  args: { on: 'bus' },
+  args: { on: 'bus', size: 'medium' },
   play: async ({ canvasElement }) => {
     const row = within(canvasElement).getByRole('button', { name: 'SM Fairview' });
-    await expect(row.getBoundingClientRect().height).toBe(40);
+    await expect(row.getBoundingClientRect().height).toBe(32);
   },
 };
 
 /** RouteCard Pressed: Card/Bus/Bus-surface-secondary. */
 export const OnBusPressed: Story = {
-  args: { on: 'bus', className: 'bg-card-bus-surface-secondary' },
+  args: { on: 'bus', size: 'medium', className: 'bg-card-bus-surface-secondary' },
 };
 
 /** The last row of a card's group: the line ends at its stub. */
-export const OnBusLast: Story = { args: { on: 'bus', position: 'bottom' } };
+export const OnBusLast: Story = { args: { on: 'bus', size: 'medium', position: 'bottom' } };
 
 /** On MRT-3's yellow the row and its line take the card's dark words. */
-export const OnDarkWords: Story = { args: { on: 'metro-rail-way-three', position: 'bottom' } };
+export const OnDarkWords: Story = {
+  args: { on: 'metro-rail-way-three', size: 'medium', position: 'bottom' },
+};
 
-/** The ❄️ Slot filled, after the name: a station's badge, as RouteCardRailway puts it. */
+/** The ❄️ Slot filled, after the name: a station's code, as a train RouteCard puts it. */
 export const WithSlot: Story = {
   args: {
     on: 'light-rail-way-two',
     position: 'bottom',
     routeDirection: 'Recto',
-    size: 'xl',
-    slot: <RailwayBadge railway="LRT-2" code="PL01" />,
+    size: 'medium',
+    slot: <RouteBadge label="PL01" livery="light-rail-way-two" />,
   },
 };
 
