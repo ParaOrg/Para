@@ -303,7 +303,8 @@ try {
   await page.waitForSelector('canvas.maplibregl-canvas', { timeout: 20000 });
   await mapLoad(page);
   // The worker stores what came as each response lands, a tile from the basemap's host as slowly
-  // as that host answers: read the caches until a tile is in, for up to 20 s.
+  // as that host answers: read the caches until a tile is in, for up to 60 s. OpenFreeMap has taken
+  // longer than 20 s (staging run 42792842300: no tile at 20 s, four in the cache a second later).
   const readCaches = () =>
     page.evaluate(async () => {
       const names = await window.caches.keys();
@@ -316,7 +317,7 @@ try {
     readCaches,
     (now) =>
       Object.entries(now).some(([n, urls]) => n.includes('basemap-tiles') && urls.length > 0),
-    20000,
+    60000,
   );
   check('online: no offline notice', (await page.locator('[data-testid="offline"]').count()) === 0);
 
