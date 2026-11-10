@@ -23,6 +23,12 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "plugins": ["@maplibre/maplibre-react-native"]
+    "plugins": ["@maplibre/maplibre-react-native"],
+    "extra": {
+      "eas": {
+        "projectId": "ef228f4e-8197-4fa4-9a99-32ea2aed4ce6"
+      }
+    },
+    "owner": "semariquit"
   }
 }
