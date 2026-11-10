@@ -6,7 +6,7 @@ import { ROW_PRESSED } from './livery-card';
 import { RouteEndPointLines, type RouteEndPointPosition } from './route-end-point-lines';
 import type { Livery } from '../model/liveries';
 
-type RouteEndPointBarSize = 'base' | 'medium' | 'xl';
+type RouteEndPointBarSize = 'base' | 'medium';
 
 type RouteEndPointBarProps = Omit<
   ComponentPropsWithoutRef<'button'>,
@@ -26,8 +26,7 @@ type RouteEndPointBarProps = Omit<
   slot?: ReactNode;
   /**
    * The row's words: base, SemiBold 17/24, 40 tall (a trip's Other routes); medium, Medium 17/24,
-   * 32 tall, its tree line at full strength (RouteCard, 4629:22776); xl, SemiBold 20/28
-   * (RouteCardRailway, 4633:25360).
+   * 32 tall, its tree line at full strength (RouteCard, 4629:22776).
    */
   size?: RouteEndPointBarSize;
 };
@@ -36,12 +35,10 @@ const BAR = 'flex w-full items-center text-left';
 const SIZE_CLASSES = {
   base: 'text-base/6 font-semibold',
   medium: 'text-base/6 font-medium',
-  xl: 'text-xl/7 font-semibold',
 } satisfies Record<RouteEndPointBarSize, string>;
 const WORDS_PADDING = {
   base: 'py-2',
   medium: 'py-1',
-  xl: 'py-2',
 } satisfies Record<RouteEndPointBarSize, string>;
 // Pressed, Background/surface-tertiary, as Figma's RouteTripDetail Pressed draws it. The hover is
 // tertiary too.

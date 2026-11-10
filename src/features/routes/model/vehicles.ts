@@ -10,7 +10,7 @@ import { isFerry, RAIL_LINES, railLineOf, type Direction } from './routes';
 export const VEHICLES = [...RAIL_LINES, 'Jeepney', 'E-Jeep', 'Bus', 'Ferry', 'UV Express'] as const;
 export type Vehicle = (typeof VEHICLES)[number];
 
-/** What rides a line of its own, a train or the ferry: a RouteCardRailway's Property 1 (4261:15199). */
+/** What rides a line of its own, a train or the ferry: a rail RouteCard's line (RouteCard, 4629:22776). */
 export const RAILWAY_VEHICLES = [...RAIL_LINES, 'Ferry'] as const;
 export type RailwayVehicle = (typeof RAILWAY_VEHICLES)[number];
 
