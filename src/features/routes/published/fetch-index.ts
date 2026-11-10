@@ -1,7 +1,6 @@
 import { indexOutlineSchema, indexSchema, type Index } from './index-schema';
 import {
   EARLY_MAP_FILE,
-  MAP_FILE_CACHE,
   MAP_FILE_SCHEMA,
   MAP_FILE_TOO_NEW,
   MAP_FILE_URL,
@@ -115,18 +114,30 @@ async function storedCopy(): Promise<Index | null> {
   );
 }
 
+/**
+ * Where a copy kept from an earlier visit is read: a map file's JSON by its path, or null when
+ * none is kept or it does not read. The web gives its pages the browser's Cache Storage
+ * (routes/map/map-file-store.ts, the worker's MAP_FILE_CACHE); the commuter app (ADR 0008) gives
+ * its own. Until one is given there is no copy: the network's answer only.
+ */
+export type MapFileStore = (url: string) => Promise<unknown>;
+
+let readStored: MapFileStore = async () => null;
+
+/** The page's or the app's store of earlier copies, given once as it starts. */
+export function setMapFileStore(store: MapFileStore): void {
+  readStored = store;
+}
+
 /** The newest older copy the worker kept, if any (STORED_OLD). A copy that does not read is passed over. */
 async function storedOldCopy(
   candidates: readonly { url: string; schema: number }[] = STORED_OLD,
 ): Promise<Index | null> {
-  // eslint-disable-next-line no-restricted-globals -- moves behind an interface in .scratch/commuter-app/issues/03
-  if (typeof caches === 'undefined') return null;
   for (const { url, schema } of candidates) {
-    // eslint-disable-next-line no-restricted-globals -- moves behind an interface in .scratch/commuter-app/issues/03
-    const res = await caches.match(url, { cacheName: MAP_FILE_CACHE }).catch(() => undefined);
-    if (!res?.ok) continue;
+    const raw = await readStored(url).catch(() => null);
+    if (raw === null || raw === undefined) continue;
     try {
-      return parseIndex(await res.json(), url, schema);
+      return parseIndex(raw, url, schema);
     } catch {
       continue;
     }

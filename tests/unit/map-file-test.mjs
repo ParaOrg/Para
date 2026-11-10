@@ -20,13 +20,17 @@ import { readdirSync, readFileSync } from 'node:fs';
 let n = 0;
 /** A fresh copy of the module, since it caches the first successful load. */
 import * as contract from '../../src/features/routes/published/map-file.ts';
+import { cacheStorageMapFiles } from '../../src/features/routes/map/map-file-store.ts';
 
 /** The two fetchers afresh (their module-level state with them), with the contract's names beside. */
 const fresh = async () => {
   const k = n++;
+  const index = await import(`../../src/features/routes/published/fetch-index.ts?case=${k}`);
+  // The pages give the reader their Cache Storage (src/app/*/main.tsx): here a stand-in for it.
+  index.setMapFileStore(cacheStorageMapFiles);
   return {
     ...contract,
-    ...(await import(`../../src/features/routes/published/fetch-index.ts?case=${k}`)),
+    ...index,
     ...(await import(`../../src/features/routes/published/fetch-line.ts?case=${k}`)),
   };
 };
