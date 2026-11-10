@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
+import { refreshDraftBase } from '../../src/features/studio/data/draft-base.ts';
 import { assertNotAnothersDraft } from '../../src/features/studio/data/draft-guard.ts';
 import { setSupabase } from '../../src/features/studio/data/supabase.ts';
 
@@ -41,4 +42,17 @@ test('with no name on file, or the names unreadable, the refusal says another ed
       return true;
     });
   }
+});
+
+test("Keep my draft (refresh_draft_base) is refused on another editor's draft", async () => {
+  clientAs('b', [{ user_id: 'a', name: 'Marisol' }]);
+  const other = {
+    id: 'd',
+    kind: 'route',
+    revision: 1,
+    status: 'draft',
+    editor_id: 'a',
+    payload: {},
+  };
+  await assert.rejects(refreshDraftBase(other, 4), /being changed by Marisol/);
 });

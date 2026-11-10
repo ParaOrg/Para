@@ -236,6 +236,7 @@ export function Workshop({ session, recovery }: WorkshopProps) {
 
   // The map's credits, opened by its ⓘ as on the public map: the page is out of reach under them.
   const credits = useMapCredits(root);
+  const reloadMap = () => void Promise.all([saved.reload(), hotspots.reload()]);
 
   return (
     <div className="relative flex h-full w-full flex-col">
@@ -333,6 +334,7 @@ export function Workshop({ session, recovery }: WorkshopProps) {
                 directionsAt={directionsAtHotspots(saved.directions, hotspots.linkedDirectionIds)}
                 isDrawing={draw.drawing}
                 onOpenHotspot={isPlayground ? camera.openPlace : undefined}
+                onSubjectChanged={isPlayground ? reloadMap : undefined}
               />
             )}
 

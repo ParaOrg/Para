@@ -82,7 +82,12 @@ export function PlaygroundTools({
       )}
 
       {isSignedIn && !draw.drawing && !isSaving && !isAccountDialogOpen && (
-        <StudioDrafts key={session?.user.id} map={map} onOpenDraft={onOpenDraft} />
+        <StudioDrafts
+          key={session?.user.id}
+          map={map}
+          onOpenDraft={onOpenDraft}
+          onApproved={() => void Promise.all([saved.reload(), hotspots.reload()])}
+        />
       )}
 
       {contribution.start && (

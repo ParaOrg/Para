@@ -1,10 +1,16 @@
 import { hotspotRing, type HotspotRow } from '@/features/routes/model/hotspots';
 import type { DirectionDrawing, DirectionRow } from '@/features/routes/model/routes';
 
-import { isAnothersDraft, lockMessage } from '../data/draft-lock';
+import { isAnothersDraft } from '../data/draft-lock';
 import type { DraftRow } from '../data/review-schema';
 import { useFetchHotspotToEdit } from '../data/use-hotspot-to-edit-query';
 import type { Drawing } from '../drawing/use-drawing';
+
+/**
+ * What a tap on a draft did: opened it (its sidebar or its card), found it held by another editor
+ * with no card to open (the map then shows its own sheet), or could not read it (a notice says so).
+ */
+export type DraftOpening = 'opened' | 'held' | 'unreadable';
 
 /** Said when a draft's line or outline cannot be read from it. */
 export const CANNOT_OPEN = 'This draft cannot be opened: its line or outline could not be read.';
@@ -39,8 +45,8 @@ interface UseOpenDraftOptions {
  * Edit route on it, a route that is a draft only included; another editor's opens the route's
  * card, which says who is changing it. A tapped line opens its own direction; a marker, which
  * names none, the route's first drawn one. A hotspot on the map opens its card, which opens its
- * sidebar; one that is a draft only opens its outline to edit. True when it opened; else a notice
- * says why: another editor's draft of a subject with no approved row has no card to open yet.
+ * sidebar; one that is a draft only opens its outline to edit. Another editor's draft of a subject
+ * with no approved row has no card: 'held', and the map shows its sheet (HeldDraftSheet).
  */
 export function useOpenDraft({
   directions,
@@ -57,33 +63,28 @@ export function useOpenDraft({
   const fetchToEdit = useFetchHotspotToEdit();
   const isAnothers = (draft: DraftRow) => userId !== null && isAnothersDraft(draft, userId);
 
-  // Another editor's draft of a route or hotspot with no approved row has no card to open: the
-  // map says who holds it. A draft whose payload cannot be read says so.
-  const heldByAnother = () => {
-    setNotice(lockMessage({ state: 'other', name: null }));
-    return false;
-  };
-  const cannotOpen = () => {
+  // A draft whose payload cannot be read says so.
+  const cannotOpen = (): DraftOpening => {
     setNotice(CANNOT_OPEN);
-    return false;
+    return 'unreadable';
   };
 
-  const openHotspot = (draft: DraftRow): boolean => {
+  const openHotspot = (draft: DraftRow): DraftOpening => {
     if (hotspots.some((s) => s.id === draft.subject_id)) {
       openPlace(draft.subject_id);
-      return true;
+      return 'opened';
     }
     const drafted = draftHotspots.find((s) => s.id === draft.subject_id);
     if (!drafted) return cannotOpen();
-    if (isAnothers(draft)) return heldByAnother();
+    if (isAnothers(draft)) return 'held';
     fetchToEdit(drafted).then(
       ({ hotspot }) => draw.loadArea(hotspot.kind, hotspot.id, hotspotRing(hotspot)),
       (err: unknown) => setNotice(err instanceof Error ? err.message : String(err)),
     );
-    return true;
+    return 'opened';
   };
 
-  return (draft: DraftRow, directionId?: string): boolean => {
+  return (draft: DraftRow, directionId?: string): DraftOpening => {
     if (draft.kind === 'hotspot') return openHotspot(draft);
     const isDrawnOf = (v: DirectionRow) =>
       v.routeId === draft.subject_id &&
@@ -92,12 +93,12 @@ export function useOpenDraft({
     const approved = directions.find(isDrawnOf);
     if (approved && isAnothers(draft)) {
       openTrip(approved);
-      return true;
+      return 'opened';
     }
     const direction = approved ?? draftDirections.find(isDrawnOf);
     if (!direction) return cannotOpen();
-    if (isAnothers(draft)) return heldByAnother();
+    if (isAnothers(draft)) return 'held';
     void opening(direction, draw.load, { isToEdit: true });
-    return true;
+    return 'opened';
   };
 }

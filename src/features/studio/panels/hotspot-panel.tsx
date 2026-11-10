@@ -5,6 +5,7 @@ import { coarse } from '@/features/routes/map/map-view';
 import { parseAliases, type HotspotRow } from '@/features/routes/model/hotspots';
 import { isLoop, type DirectionRow } from '@/features/routes/model/routes';
 
+import { DraftAlert } from './draft-alert';
 import { DraftBadge } from './draft-badge';
 import { groupBySignboard, knownInformalNames, tickedDirections } from './hotspot-checks';
 import { LineDetail } from './line-detail';
@@ -268,11 +269,7 @@ export function HotspotPanel({
             {error}
           </p>
         )}
-        {(unpublishing.error ?? stored.error) && (
-          <p role="alert" className="text-sm text-content-error">
-            {unpublishing.error ?? stored.error}
-          </p>
-        )}
+        <DraftAlert error={unpublishing.error ?? stored.error} {...stored.keeping} />
         {blocked && <p className="text-sm text-content-quaternary">{blocked}</p>}
       </div>
 

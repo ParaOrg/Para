@@ -99,9 +99,25 @@ await page.getByTitle('Published Para public map').waitFor();
 await shot('03-public-view');
 await page.getByText('Playground', { exact: true }).click();
 
+// Take down and put back, from the studio's search (the owner's Q121): the place just published.
+const search = page.getByTestId('studio-search');
+await search.getByRole('combobox', { name: 'Search places' }).fill('Preview approved');
+const statusList = search.getByRole('list', { name: /take down or put back/i });
+await statusList.getByRole('button', { name: 'Take down' }).first().waitFor();
+await shot('04-search-take-down');
+await statusList.getByRole('button', { name: 'Take down' }).first().click();
+await search.getByText('Updated published data').waitFor();
+assert.equal((await api(`stop?id=eq.${subjectId}`))[0].status, 'taken_down', 'taken down');
+await statusList.getByRole('button', { name: 'Put back' }).first().waitFor();
+await shot('05-search-put-back');
+await statusList.getByRole('button', { name: 'Put back' }).first().click();
+await statusList.getByRole('button', { name: 'Take down' }).first().waitFor();
+assert.equal((await api(`stop?id=eq.${subjectId}`))[0].status, 'approved', 'put back');
+await search.getByRole('combobox', { name: 'Search places' }).fill('');
+
 // The seeded route drafts, one built on a revision another editor has since changed. Approve on
-// each, unchanged, publishes it as stored; the stale one is refused with a conflict and kept,
-// and its maker discards it from the sidebar.
+// each, unchanged, publishes it as stored; the stale one is refused with a conflict, Keep my
+// draft moves it onto the approved revision now (refresh_draft_base), and Approve then lands.
 const routes = await api('route?select=id,revision');
 const stale = (await api('draft?select=*')).find(
   (draft) =>
@@ -132,18 +148,37 @@ assert.ok(
   (await api(`draft?id=eq.${stale.id}`)).length === 1,
   'a refused approval keeps the draft',
 );
-await shot('04-conflict');
-await routePanel.getByRole('button', { name: 'Discard', exact: true }).click();
-await toast('Draft discarded');
-assert.equal((await api(`draft?id=eq.${stale.id}`)).length, 0, 'Discard drops the draft');
-await shot('05-discarded');
+await routePanel.getByRole('alert').scrollIntoViewIfNeeded();
+await shot('06-conflict-keep-my-draft');
+await routePanel.getByRole('button', { name: 'Keep my draft', exact: true }).click();
+await routePanel.getByText('Draft kept on the latest published version').waitFor();
+const live = (await api(`route?id=eq.${stale.subject_id}&select=revision`))[0].revision;
+assert.equal(
+  (await api(`draft?id=eq.${stale.id}`))[0].base_revision,
+  live,
+  'Keep my draft moves the draft onto the approved revision now',
+);
+await routePanel.getByText('Draft kept on the latest published version').scrollIntoViewIfNeeded();
+await shot('07-kept');
+await routePanel.getByRole('button', { name: 'Approve', exact: true }).click();
+await routePanel.waitFor({ state: 'detached' });
+assert.equal((await api(`draft?id=eq.${stale.id}`)).length, 0, 'the kept draft is approved');
 
-// On a phone the browser-drawn draft still opens from its mark.
-await page.setViewportSize({ width: 390, height: 844 });
+// The browser-drawn place's own draft, discarded from its sidebar.
 await page.getByRole('button', { name: 'Draft: Browser-drawn draft place' }).dispatchEvent('click');
-await shot('06-phone');
+const placePanel = page.getByTestId('hotspot-panel');
+await placePanel.getByRole('button', { name: 'Discard', exact: true }).click();
+await toast('Draft discarded');
+assert.ok(
+  !(await api('draft?select=*')).some((d) => d.payload.stop?.name === 'Browser-drawn draft place'),
+  'Discard drops the draft',
+);
+
+// On a phone the studio still opens with its drafts' marks.
+await page.setViewportSize({ width: 390, height: 844 });
+await shot('08-phone');
 assert.deepEqual(errors, []);
 console.log(
-  'PASS: draft → open from its mark → Approve → wait → publish → Public; stale draft refused, then discarded; phone; no page errors',
+  'PASS: draft → open from its mark → Approve → wait → publish → Public; take down and put back from search; stale draft refused, kept, approved; discard; phone; no page errors',
 );
 await browser.close();
