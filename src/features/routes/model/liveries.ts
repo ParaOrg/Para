@@ -13,8 +13,8 @@ export const isRoadLivery = (livery: string): livery is RoadLivery =>
 
 /**
  * A train route's colour is its line's (Map/Rail/LightRailWayOne, LightRailWayTwo and
- * MetroRailWayThree, by the line its routeCode names); the ferry's is Map/Ferry (RouteCardRailway,
- * 4261:15199).
+ * MetroRailWayThree, by the line its routeCode names); the ferry's is Map/Ferry (RouteCard,
+ * 4629:22776).
  */
 export const RAILWAY_LIVERY = {
   'LRT-1': 'light-rail-way-one',
