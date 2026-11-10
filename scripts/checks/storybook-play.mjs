@@ -18,7 +18,7 @@ import { extname, join, normalize, resolve } from 'node:path';
 import { chromium } from 'playwright';
 
 const ROOT = resolve(process.argv[2] ?? 'storybook-static');
-const WORKERS = 4;
+const WORKERS = Number(process.env.STORYBOOK_PLAY_WORKERS ?? 4);
 const STORY_TIMEOUT_MS = 20_000;
 const TYPES = {
   '.html': 'text/html',
