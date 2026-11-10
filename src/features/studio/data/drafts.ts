@@ -38,7 +38,6 @@ type ReviewFunctions = Pick<
   | 'unpublish'
   | 'take_down'
   | 'put_back'
-  | 'refresh_draft_base'
 >;
 
 export async function callReview<TName extends keyof ReviewFunctions>(

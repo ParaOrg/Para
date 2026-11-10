@@ -1,10 +1,9 @@
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo } from 'react';
 
 import { listDrafts } from './drafts';
 import { fetchPublicationState } from './publication';
 import { runReviewCommand } from './review-commands';
-import { fetchReviewComparison } from './review-comparison';
 import { reviewKeys } from './review-keys';
 import { reviewPlaceNames } from './review-names';
 import type { DraftRow } from './review-schema';
@@ -25,17 +24,6 @@ export function useReviewMutation() {
 
 export function usePublicationQuery() {
   return useQuery({ queryKey: reviewKeys.publication(), queryFn: fetchPublicationState });
-}
-
-export function useComparisonQuery(draft: DraftRow) {
-  return useQuery({
-    queryKey: reviewKeys.comparison(draft.id, draft.revision),
-    queryFn: () => fetchReviewComparison(draft),
-    // A new revision of the same draft keeps the comparison on screen while it
-    // reloads, so the details form beneath it is not unmounted mid-edit.
-    placeholderData: (previous, previousQuery) =>
-      previousQuery?.queryKey[2] === draft.id ? keepPreviousData(previous) : undefined,
-  });
 }
 
 export function useReviewNames(drafts: DraftRow[]) {
