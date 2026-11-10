@@ -9,6 +9,10 @@ import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
 
+import ph.para.contributor.ride.Ride;
+import ph.para.contributor.ride.RideCodec;
+import ph.para.contributor.ride.RideMachine;
+
 /**
  * The page's way to the ride's notification (native/ride-notice.ts) and to its recording
  * (native/native-location.ts). While awake, the page says where the ride is (setState) and the
@@ -55,6 +59,12 @@ public class RidePlugin extends Plugin {
         synchronized (RidePlugin.class) {
             page = this;
         }
+        // A ride recording with no service now was cut off while the app was gone (a kill nothing
+        // restarted): said so, and its card taken away, before the page asks.
+        if (!RideService.isRunning()) {
+            long now = System.currentTimeMillis();
+            Rides.apply(getContext(), ride -> RideMachine.serviceMissing(ride, now));
+        }
         // Resume, which depends on the page being there, changes what it does.
         RideNotification.post(getContext());
     }
@@ -67,22 +77,31 @@ public class RidePlugin extends Plugin {
         RideNotification.pageGone(getContext());
     }
 
+    /**
+     * Where the page, awake, holds the ride: kept as it says (the page is the ride's truth while it
+     * is there), keeping what only the phone knows (why it has no location) for the same ride still
+     * recording.
+     */
     @PluginMethod
     public void setState(PluginCall call) {
-        RideState state = RideState.read(getContext());
-        state.recordingId = call.getString("recordingId", "");
-        state.isPageWatching = Boolean.TRUE.equals(call.getBoolean("isWatching", false));
-        state.phase = call.getString("phase", RideState.NONE);
-        state.mode = call.getString("mode", "walk");
+        String recordingId = call.getString("recordingId", "");
+        String phase = call.getString("phase", RideState.NONE);
         Long startedAt = call.getLong("startedAt");
-        state.startedAt = startedAt == null ? 0 : startedAt;
         Double pausedSeconds = call.getDouble("pausedSeconds");
-        state.pausedMs = pausedSeconds == null ? 0 : Math.round(pausedSeconds * 1000);
         Long stoppedAt = call.getLong("stoppedAt");
-        state.pausedSince = RideState.PAUSED.equals(state.phase) && stoppedAt != null ? stoppedAt : 0;
-        state.finishedAt = 0;
-        state.write(getContext());
-        if (!RideState.RECORDING.equals(state.phase) && RideService.isRunning()) {
+        boolean isPaused = RideState.PAUSED.equals(phase);
+        Ride told = RideCodec.fromSummary(
+            recordingId == null ? "" : recordingId,
+            phase,
+            call.getString("mode", Ride.WALK),
+            startedAt == null ? 0 : startedAt,
+            pausedSeconds == null ? 0 : Math.round(pausedSeconds * 1000),
+            isPaused && stoppedAt != null ? stoppedAt : 0,
+            0,
+            0);
+        RideState.setPageWatching(getContext(), Boolean.TRUE.equals(call.getBoolean("isWatching", false)));
+        Rides.apply(getContext(), kept -> RideMachine.told(kept, told));
+        if (!RideState.RECORDING.equals(phase) && RideService.isRunning()) {
             // Only a ride recording keeps the service: one left running (restarted by Android after
             // the app was killed, say) would keep its foreground notification, which cancel() cannot
             // take away, showing a ride that is over.
@@ -104,7 +123,8 @@ public class RidePlugin extends Plugin {
             call.reject("recordingId is required.");
             return;
         }
-        RideService.start(getContext(), recordingId);
+        long now = System.currentTimeMillis();
+        Rides.apply(getContext(), ride -> RideMachine.start(ride, recordingId, now));
         call.resolve();
     }
 
@@ -121,17 +141,22 @@ public class RidePlugin extends Plugin {
     /**
      * The ride the service is recording now, or null: the page asks as it opens, so a ride that
      * went on recording while the app was gone (swiped from Recents, or its page rebuilt) opens
-     * recording, not cut off. Recording is the service running with the ride's state at RECORDING.
+     * recording, not cut off.
      */
     @PluginMethod
     public void recordingNow(PluginCall call) {
-        RideState state = RideState.read(getContext());
-        boolean isRecording = RideService.isRunning()
-            && RideState.RECORDING.equals(state.phase)
-            && state.recordingId != null
-            && !state.recordingId.isEmpty();
+        Ride ride = Rides.now(getContext());
+        boolean isRecording = RideService.isRunning() && ride.isRecordingLive() && !ride.recordingId.isEmpty();
         JSObject result = new JSObject();
-        result.put("recordingId", isRecording ? state.recordingId : JSObject.NULL);
+        result.put("recordingId", isRecording ? ride.recordingId : JSObject.NULL);
+        call.resolve(result);
+    }
+
+    /** The ride's diagnostics log (RideDiagnostics), for the contributor to read or share. */
+    @PluginMethod
+    public void diagnostics(PluginCall call) {
+        JSObject result = new JSObject();
+        result.put("text", RideDiagnostics.read(getContext()));
         call.resolve(result);
     }
 

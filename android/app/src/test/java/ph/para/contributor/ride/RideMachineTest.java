@@ -219,4 +219,24 @@ public class RideMachineTest {
         assertTrue(step.has(Effect.POST_CARD));
         assertTrue(RideMachine.phoneRestarted(Ride.NO_RIDE, T0).effects.isEmpty());
     }
+
+    @Test
+    public void thePageSayingNoRideEndsIt() {
+        RideStep step = RideMachine.told(recording(), Ride.NO_RIDE);
+        assertEquals(Ride.NONE, step.ride.phase);
+        assertTrue(step.has(Effect.POST_CARD));
+        assertTrue(RideMachine.told(Ride.NO_RIDE, Ride.NO_RIDE).effects.isEmpty());
+    }
+
+    @Test
+    public void thePageKeepsWhatOnlyThePhoneKnows() {
+        Ride off = RideMachine.locationOff(RideMachine.fix(recording(), T0 + MINUTE).ride, T0 + MINUTE).ride;
+        Ride told = RideCodec.fromSummary("r1", Ride.RECORDING, Ride.RIDE, T0, 0, 0, 0, 0);
+        Ride kept = RideMachine.told(off, told).ride;
+        assertEquals(Ride.TROUBLE_LOCATION_OFF, kept.trouble);
+        assertEquals(T0 + MINUTE, kept.lastFixAt);
+        assertEquals(Ride.RIDE, kept.mode());
+        Ride pausedByPage = RideCodec.fromSummary("r1", Ride.PAUSED, Ride.WALK, T0, 0, T0 + 2 * MINUTE, 0, 0);
+        assertEquals(Ride.TROUBLE_NONE, RideMachine.told(off, pausedByPage).ride.trouble);
+    }
 }

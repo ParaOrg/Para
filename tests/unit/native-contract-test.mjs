@@ -151,7 +151,7 @@ test('RidePlugin.setState stops a service left running for a ride that is not re
   assertHas(
     java('RidePlugin'),
     'RidePlugin.java',
-    /!RideState\.RECORDING\.equals\(state\.phase\) && RideService\.isRunning\(\)\)\s*\{[\s\S]*?RideService\.stop\(getContext\(\)\)/,
+    /!RideState\.RECORDING\.equals\(phase\) && RideService\.isRunning\(\)\)\s*\{[\s\S]*?RideService\.stop\(getContext\(\)\)/,
     'setState: RideService.stop for a phase not RECORDING',
   );
 });
