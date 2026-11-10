@@ -2,14 +2,17 @@ import {
   AJAXError,
   addProtocol,
   type AddProtocolAction,
+  type MapLibreMap,
   type RequestParameters,
   type RequestTransformFunction,
 } from 'maplibre-gl';
 
 import { BASEMAPS } from '@/features/routes/map/basemap';
 import { basemapCacheRules, type BasemapCacheRules } from '@/shared/config/basemap-cache-rules';
+import type { LngLat } from '@/shared/utils/geo';
 
 import { BASEMAP_COPIES } from './basemap-copies';
+import { tilesAround, tileUrl } from './tiles-around';
 
 /**
  * The contributor app's keeping of the basemap: it has no service worker, so the map's own
@@ -24,7 +27,16 @@ export interface BasemapCache {
   transformRequest: RequestTransformFunction;
   /** What the protocol answers MapLibre with. */
   load: AddProtocolAction;
+  /**
+   * Fetches and keeps each tile at `urls` the cache has no fresh copy of, a few at a time, so
+   * those places draw later with no signal. Settles with how many it kept; a failed tile is
+   * skipped, not retried.
+   */
+  warm: (urls: readonly string[]) => Promise<number>;
 }
+
+/** How many tiles `warm` asks for at once: enough to be quick, few enough not to crowd the ride. */
+const WARM_AT_ONCE = 4;
 
 const PROTOCOL = 'para-basemap';
 const PREFIX = `${PROTOCOL}://`;
@@ -84,7 +96,33 @@ export function basemapCache(
     return response;
   };
 
+  const isFresh = (kept: Response | undefined): boolean =>
+    kept !== undefined && now() - Number(kept.headers.get(KEPT_AT)) < MAX_AGE_MS;
+
+  const warm = async (urls: readonly string[]): Promise<number> => {
+    const tiles = urls.filter((url) => kindOf(rules, url) === 'tiles');
+    const cache = await caches.open(LIMITS.tiles.name);
+    let kept = 0;
+    for (let i = 0; i < tiles.length; i += WARM_AT_ONCE) {
+      await Promise.all(
+        tiles.slice(i, i + WARM_AT_ONCE).map(async (url) => {
+          if (isFresh(await cache.match(url))) return;
+          try {
+            const response = await fetch(url);
+            if (response.status !== 200) return;
+            await keep('tiles', url, response);
+            kept += 1;
+          } catch {
+            // No signal now, or the host is down: the map asks again when it needs the tile.
+          }
+        }),
+      );
+    }
+    return kept;
+  };
+
   return {
+    warm,
     transformRequest: (url) => (kindOf(rules, url) ? { url: `${PREFIX}${url}` } : undefined),
     load: async (params, abortController) => {
       const url = params.url.slice(PREFIX.length);
@@ -93,7 +131,7 @@ export function basemapCache(
       const kept = await (await caches.open(LIMITS[kind].name)).match(url);
       const { signal } = abortController;
       if (kind === 'tiles') {
-        if (kept && now() - Number(kept.headers.get(KEPT_AT)) < MAX_AGE_MS) {
+        if (kept && isFresh(kept)) {
           return { data: await bodyOf(kept, params) };
         }
         try {
@@ -138,6 +176,8 @@ async function bodyOf(response: Response, params: RequestParameters): Promise<un
 }
 
 let isAdded = false;
+/** The app's cache once made: null on the web page, which has its worker instead. */
+let phoneCache: BasemapCache | null = null;
 
 /**
  * The app's basemap cache, its protocol added to MapLibre once; null where it cannot be kept.
@@ -149,9 +189,35 @@ export function keepBasemapOnThePhone(host: string): RequestTransformFunction | 
     return design ? BASEMAP_COPIES.offline(design) : null;
   });
   if (!cache) return undefined;
+  phoneCache = cache;
   if (!isAdded) {
     addProtocol(PROTOCOL, cache.load);
     isAdded = true;
   }
   return cache.transformRequest;
+}
+
+/** How far around a ride's start its map is kept: past a short ride, not a whole city. */
+export const KEEP_AROUND_M = 6000;
+/** The coarsest zoom kept: wider than the city is not needed to find one's way. */
+const KEEP_MIN_ZOOM = 10;
+
+/**
+ * Keeps the basemap's tiles for KEEP_AROUND_M around `at`, every zoom the style's vector sources
+ * have from KEEP_MIN_ZOOM up (closer zooms draw from the last), so the ride's surroundings draw
+ * if the signal drops later (Gab, 2026-11-10: a ride begun offline showed no map). Does nothing
+ * on the web page, with no signal, or for a style whose sources give no tile template.
+ * ponytail: one square at the start; along the route as the ride goes if this proves short.
+ */
+export async function keepTilesAround(map: MapLibreMap, at: LngLat): Promise<number> {
+  if (!phoneCache || !navigator.onLine) return 0;
+  const urls = Object.values(map.getStyle().sources).flatMap((source) => {
+    const template = source.type === 'vector' ? source.tiles?.[0] : undefined;
+    if (source.type !== 'vector' || !template) return [];
+    const maxZoom = source.maxzoom ?? 14;
+    return tilesAround(at, KEEP_AROUND_M, Math.min(KEEP_MIN_ZOOM, maxZoom), maxZoom).map((tile) =>
+      tileUrl(template, tile),
+    );
+  });
+  return phoneCache.warm(urls);
 }
