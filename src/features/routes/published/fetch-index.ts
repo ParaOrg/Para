@@ -175,8 +175,10 @@ export function fetchIndex(): Promise<Index> {
         return parseIndex(raw, MAP_FILE_URL, MAP_FILE_SCHEMA);
       },
       async (e: unknown) => {
-        // No network and nothing stored under this path: an update made offline.
-        const old = await storedOldCopy();
+        // No network. On the web the worker has already answered with its copy of this path when
+        // it had one, so this is an update made offline: an older path's copy. An app with no
+        // worker (the commuter app's store) may hold this path's copy itself, so it is asked first.
+        const old = await storedCopy();
         if (!old) throw e;
         stale = true;
         return old;
