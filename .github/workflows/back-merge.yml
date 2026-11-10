@@ -1,12 +1,15 @@
-# The back-merge (draft, docs/agents/release-rhythm.md, the owner's Q32): opens one pull request
-# taking `main` into `staging`, or updates the open one, and starts its checks. Runs only by hand
-# ("Run workflow") until the owner says yes; then `push: branches: [main]` is added.
+# The back-merge (docs/agents/release-rhythm.md, the owner's Q32): after every push to `main` (a
+# publish or a release), opens one pull request taking `main` into `staging`, or updates the open
+# one, and starts its checks. The owner merges it by hand once they pass. "Run workflow" does the
+# same on demand.
 #
 # A pull request opened with GITHUB_TOKEN starts no workflow, so CI and the contributor app's
-# workflow are started on the branch by hand (workflow_dispatch, which GITHUB_TOKEN may start).
+# workflow are started on the branch here (workflow_dispatch, which GITHUB_TOKEN may start).
 name: Back-merge
 
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
 
 concurrency:
