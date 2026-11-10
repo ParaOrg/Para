@@ -123,12 +123,22 @@ RIGHT=$(bar_text notification-recording right)
 [ "$LEFT" = Pause ] && [ "$RIGHT" = Sakay ] && pass "opened, the card's bars: $LEFT and $RIGHT" \
   || fail "opened, the card's bars are '$LEFT' and '$RIGHT', not Pause and Sakay"
 bars_level notification-recording "opened"
-# Sakay, tapped on the screen: the bar's own tap.
+# Sakay, tapped on the screen: the bar's own tap. A tap on the screen can miss (the shade still
+# settling), so the switch is read back from the ride the phone keeps, and the tap made once more
+# if it did not land: a miss then fails here, as a tap, not later as a history that lost it.
 SAKAY_AT=$(bar_middle notification-recording right)
 if [ -n "$SAKAY_AT" ]; then
   adb shell input tap $SAKAY_AT
   sleep 3
-  pass "Sakay tapped on the bar, at $SAKAY_AT"
+  if ! ride_field modes | grep -q ':ride'; then
+    echo "note: the first Sakay tap at $SAKAY_AT did not land; tapped again" | tee "$OUT/sakay-tap.txt"
+    shade notification-recording-again
+    SAKAY_AT=$(bar_middle notification-recording-again right)
+    [ -n "$SAKAY_AT" ] && adb shell input tap $SAKAY_AT
+    sleep 3
+  fi
+  ride_field modes | grep -q ':ride' && pass "Sakay tapped on the bar, at $SAKAY_AT: the ride is on Sakay" \
+    || fail "Sakay tapped on the bar at $SAKAY_AT, twice, and the ride is not on Sakay: $(ride_field modes)"
 else
   fail "no Sakay bar on the screen to tap"
 fi
