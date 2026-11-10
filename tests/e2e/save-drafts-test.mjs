@@ -353,8 +353,19 @@ check(
     (await draftPanel.getByText('Draft', { exact: true }).first().isVisible()) &&
     (await draftPanel.getByRole('button', { name: 'Approve' }).isVisible()),
 );
-await draftPanel.getByRole('button', { name: 'Exit' }).click();
+// Approve with nothing changed publishes the stored draft at the revision read: no new save.
+n = log.length;
+await draftPanel.getByRole('button', { name: 'Approve' }).click();
 await waitFor(async () => (await pointsShown()) === 0);
+w = writesSince(n);
+check(
+  "  Approve publishes the stored draft as it is: publish_draft at the draft's revision, no save",
+  rpcs(w, 'publish_draft').length === 1 &&
+    rpcs(w, 'save_draft').length === 0 &&
+    rpcs(w, 'claim_draft').length === 0 &&
+    !tables.draft.some((d) => d.id === routeDraft?.id),
+  said(w),
+);
 await approveAll();
 const route = tables.route.find((r) => r.id === routeDraft?.subject_id);
 const outV = tables.route_variant.find((v) => v.id === outDraft?.id);

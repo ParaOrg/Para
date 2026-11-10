@@ -11,11 +11,11 @@ import type { SheetHeight } from '@/shared/ui/bottom-sheet';
 
 import { CardActions } from './card-actions';
 import { HotspotCard } from './hotspot-card';
+import { LockedDraft } from './locked-draft';
 import type { useDeleteActions } from './use-delete-actions';
+import { useDraftLock } from './use-draft-lock';
 import { useFetchHotspotToEdit } from '../data/use-hotspot-to-edit-query';
 import type { Drawing } from '../drawing/use-drawing';
-import { DraftLockNotice } from '../review/draft-lock-notice';
-import { useDraftLock } from '../review/use-draft-lock';
 
 type Saved = ReturnType<typeof useSavedRoutes<DirectionRow>>;
 type Hotspots = ReturnType<typeof useSavedHotspots<HotspotRow>>;
@@ -26,7 +26,7 @@ interface StudioHotspotCardProps {
   hotspot: HotspotRow;
   map: MapLibreMap | null;
   saved: Pick<Saved, 'directions' | 'selected' | 'highlight' | 'showCard' | 'highlightCard'>;
-  hotspots: Pick<Hotspots, 'hotspots' | 'selected' | 'linkedDirectionIds' | 'show'>;
+  hotspots: Pick<Hotspots, 'hotspots' | 'selected' | 'linkedDirectionIds' | 'show' | 'reload'>;
   draw: Pick<Drawing, 'loadArea'>;
   height: SheetHeight;
   canEdit: boolean;
@@ -141,12 +141,15 @@ export function StudioHotspotCard({
       actions={
         canEdit &&
         (held ? (
-          <DraftLockNotice
+          <LockedDraft
+            kind="hotspot"
+            subjectId={hotspot.id}
             lock={held}
             onRetry={() => {
               setHasEditFailed(false);
               retry();
             }}
+            onApproved={() => void hotspots.reload()}
           />
         ) : (
           <CardActions

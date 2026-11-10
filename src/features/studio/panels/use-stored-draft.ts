@@ -12,10 +12,10 @@ interface UseStoredDraftOptions {
   kind: DraftKind;
   /** The route or hotspot the sidebar shows; null for one never saved. */
   subjectId: string | null;
-  /** Whether the form or the line changed since the sidebar opened. */
-  isChanged: boolean;
+  /** Whether the form or the line changed since the sidebar opened; none, on a card. */
+  isChanged?: boolean;
   /** The form's own Publish: saves what is on screen as the draft, then publishes it. */
-  publishForm: () => void;
+  publishForm?: () => void;
   /** It was approved as stored: the map has changed, and the drawing ends. */
   onApproved?: () => void;
   /** It was discarded: what is published stands as it was, and the drawing ends. */
@@ -33,7 +33,7 @@ const DISCARD_QUESTION = 'Discard this draft? What is published stays as it is.'
 export function useStoredDraft({
   kind,
   subjectId,
-  isChanged,
+  isChanged = false,
   publishForm,
   onApproved,
   onDiscarded,
@@ -67,13 +67,17 @@ export function useStoredDraft({
     result && result.code !== 'approved' && result.code !== 'discarded'
       ? reviewMessage(result)
       : null;
+  const approve = () => run('publish');
   return {
+    /** Approve, the stored draft as it is: what a card offers on another editor's draft. */
+    approve,
+    isApproving: mutation.isPending && mutation.variables.action === 'publish',
     /** Why Approve or Discard did nothing, in the editor's words; null when nothing failed. */
     error: mutation.error ? mutation.error.message : refusal,
     footer: {
       hasDraft: draft !== null,
       draftBusy: mutation.isPending ? mutation.variables.action : null,
-      onPublish: draft && !isChanged ? () => run('publish') : publishForm,
+      onPublish: (draft && !isChanged) || !publishForm ? approve : publishForm,
       onDiscard: isOwn && onDiscarded ? () => run('discard') : undefined,
     },
   };
