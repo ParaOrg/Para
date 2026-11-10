@@ -37,6 +37,7 @@ The builder chose these for now, from the owner's decisions. Each waits for the 
 - **Keep Para recording** (`native/keep-recording-panel.tsx`): it replaces the battery card.
   - **When it shows:** once, at the first Start, on Xiaomi, Redmi, POCO, Oppo, realme, Vivo, iQOO, Huawei, Honor, OnePlus and Samsung. It shows even when battery restrictions are already off, because Android cannot report the maker's Autostart switch.
   - **What it says:** "Keep Para recording" and "Your phone may stop Para when you leave the app. Turn on Autostart and set Battery saver to No restrictions so your rides keep recording."
+  - **By brand (Q78):** on a phone of a known group it says "<group> phones may stop Para when you leave the app. So your rides keep recording:" and that group's numbered steps (`native/keep-recording-steps.ts`). Groups: Xiaomi/Redmi/POCO, OPPO/realme/OnePlus, vivo/iQOO, Infinix/Tecno, Samsung, Huawei/Honor. Open settings goes to that group's own screen where the phone lets an app open it (Samsung: Para's page in Settings), else Para's page. The numbered list has no Figma frame yet.
   - **Its buttons:**
     - **Open settings** opens the maker's Autostart or battery screen, or Para's page in Settings when the phone has none.
     - **Done** starts the ride.

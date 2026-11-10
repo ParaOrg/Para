@@ -11,7 +11,11 @@ import {
   watchErrorOf,
   watchErrorOfRideProblem,
 } from '../../src/features/contribute/native/watch-error.ts';
-import { stopsBackgroundApps } from '../../src/features/contribute/native/keep-recording-makers.ts';
+import {
+  brandOf,
+  stopsBackgroundApps,
+} from '../../src/features/contribute/native/keep-recording-makers.ts';
+import { KEEP_RECORDING_STEPS } from '../../src/features/contribute/native/keep-recording-steps.ts';
 import {
   canRecordWithout,
   firstMissing,
@@ -125,4 +129,29 @@ test("the ride's service saying it cannot record reads as the browser's denied, 
     watchErrorOfRideProblem({ code: 'UNAVAILABLE', message: 'Location services disabled.' }).code,
     2,
   );
+});
+
+test("each maker's phones get their group's steps, its company's whole name too", () => {
+  const groups = {
+    Xiaomi: 'xiaomi',
+    POCO: 'xiaomi',
+    Redmi: 'xiaomi',
+    OPPO: 'oppo',
+    realme: 'oppo',
+    OnePlus: 'oppo',
+    vivo: 'vivo',
+    iQOO: 'vivo',
+    'INFINIX MOBILITY LIMITED': 'transsion',
+    TECNO: 'transsion',
+    samsung: 'samsung',
+    HUAWEI: 'huawei',
+    HONOR: 'huawei',
+  };
+  for (const [maker, brand] of Object.entries(groups)) {
+    assert.equal(brandOf(maker), brand, maker);
+    assert.ok(KEEP_RECORDING_STEPS[brand].steps.length > 0, brand);
+  }
+  for (const maker of ['Google', 'motorola', 'constructor', '']) {
+    assert.equal(brandOf(maker), null, maker);
+  }
 });
