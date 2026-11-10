@@ -144,7 +144,7 @@ may write them; GPS traces are each editor's own.
 
 Recorded:
 
-- [ADR 0001](adr/0001-visitors-read-a-published-file.md): commuters read published static files,
+- [ADR 0001](adr/0001-commuters-read-a-published-file.md): commuters read published static files,
   never the database.
 - [ADR 0002](adr/0002-route-names-are-generated-from-the-ends.md): a route's name is generated
   from its ends, with no override.
