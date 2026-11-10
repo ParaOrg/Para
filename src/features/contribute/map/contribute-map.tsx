@@ -8,11 +8,12 @@ import { basemapHost } from '@/shared/config/env';
 import { prefersReducedMotion } from '@/shared/utils/motion';
 import { retryingImport } from '@/shared/utils/retrying-import';
 
-import { keepBasemapOnThePhone, keepTilesAround } from './basemap-cache';
+import { keepBasemapOnThePhone } from './basemap-cache';
 import { styleWithCopies } from './basemap-copies';
 import type { MapWhere } from './map-where';
 import type { PausedFrostProps } from './paused-frost';
 import { RIDE_FRAME_PADDING, trailBounds } from './trail-picture-frame';
+import { useKeepRideTiles } from './use-keep-ride-tiles';
 import { useMapReconnect } from './use-map-reconnect';
 import { usePublishedHotspots } from './use-published-hotspots';
 import { usePublishedRoutes } from './use-published-routes';
@@ -24,6 +25,8 @@ const MAKE_STYLE = import.meta.env.MODE === 'apk' ? styleWithCopies : undefined;
 // And the basemap's tiles, sprite and glyphs it has seen, in its Cache Storage.
 const BASEMAP_REQUESTS =
   import.meta.env.MODE === 'apk' ? keepBasemapOnThePhone(basemapHost) : undefined;
+// And the tiles around a ride's start, fetched as it starts (use-keep-ride-tiles.ts).
+const useKeepTiles = import.meta.env.MODE === 'apk' ? useKeepRideTiles : () => undefined;
 
 // Fetched when a recording's form opens, not with the page.
 const loadCapture = retryingImport(() => import('./capture-trail-picture'));
@@ -119,23 +122,7 @@ export function ContributeMap({
     };
   }, [isRecording, PausedFrost]);
 
-  // A ride's surroundings kept on the phone once the rider's dot is known with signal, so its map
-  // still draws if the signal drops on the way. Once a ride; a ride begun with no signal tries
-  // again at the next fix once there is one.
-  const keptForRide = useRef(false);
-  const at = where?.at;
-  useEffect(() => {
-    if (!isRecording) {
-      keptForRide.current = false;
-      return;
-    }
-    if (keptForRide.current || !map || !isMapLoaded || !at || !navigator.onLine) return;
-    keptForRide.current = true;
-    keepTilesAround(map, at).catch((error: unknown) => {
-      // Storage full or the style unread: the map keeps what it shows, as before.
-      console.warn('The map around the ride could not be kept for offline use.', error);
-    });
-  }, [isRecording, map, isMapLoaded, at]);
+  useKeepTiles(map, isMapLoaded, isRecording, where?.at);
 
   // A map made with no signal is made again once there is one (use-map-reconnect.ts).
   const mapAttempt = useMapReconnect(map, isMapLoaded);

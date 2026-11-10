@@ -8,6 +8,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
 import { basemapCache } from '../../src/features/contribute/map/basemap-cache.ts';
+import { warmTiles } from '../../src/features/contribute/map/keep-tiles-around.ts';
 
 const HOST = 'https://tiles.openfreemap.org';
 const TILE = `${HOST}/planet/20261101_001001_pt/14/13700/7600.pbf`;
@@ -161,36 +162,42 @@ test("a design switched to with no signal is drawn from the app's copy of its st
   );
 });
 
-test('warm keeps tiles the phone lacks, so they draw later with no signal', async () => {
+test('warmTiles keeps tiles the phone lacks, so they draw later with no signal', async () => {
   let isOnline = true;
   const second = `${HOST}/planet/20261101_001001_pt/14/13701/7600.pbf`;
   await withPhone(
     (url) => (isOnline ? `tile ${url.slice(-14)}` : null),
     async ({ asked }) => {
       const cache = basemapCache(HOST);
-      assert.equal(await cache.warm([TILE, second, TILEJSON, 'https://example.com/1/2/3.pbf']), 2);
+      await warmTiles(cache, [TILE, second, 'https://example.com/1/2/3.pbf']);
       assert.deepEqual(asked, [TILE, second], 'only the host’s tiles are fetched');
+      await settle();
       isOnline = false;
       assert.equal(text((await through(cache, second)).data), `tile ${second.slice(-14)}`);
     },
   );
 });
 
-test('warm skips a fresh tile, asks again for one past 30 days, and survives no signal', async () => {
+test('warmTiles skips a fresh tile, asks again for one past 30 days, and survives no signal', async () => {
   let time = 0;
   let isOnline = true;
   await withPhone(
     () => (isOnline ? 'tile' : null),
     async ({ asked }) => {
       const cache = basemapCache(HOST, () => time);
-      assert.equal(await cache.warm([TILE]), 1);
-      assert.equal(await cache.warm([TILE]), 0, 'fresh: not fetched again');
+      await warmTiles(cache, [TILE]);
+      await settle();
+      assert.equal(asked.length, 1);
+      await warmTiles(cache, [TILE]);
+      assert.equal(asked.length, 1, 'fresh: not fetched again');
       time = 31 * DAY;
-      assert.equal(await cache.warm([TILE]), 1, 'stale: fetched again');
+      await warmTiles(cache, [TILE]);
+      assert.equal(asked.length, 2, 'stale: fetched again');
+      await settle();
       isOnline = false;
       time = 62 * DAY;
-      assert.equal(await cache.warm([TILE]), 0, 'no signal: nothing kept, nothing thrown');
-      assert.equal(asked.length, 3);
+      await warmTiles(cache, [TILE, `${HOST}/planet/20261101_001001_pt/14/1/1.pbf`]);
+      assert.equal(asked.length, 4, 'no signal: both asked, nothing thrown');
     },
   );
 });
