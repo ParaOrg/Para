@@ -117,6 +117,15 @@ test('standing in a hinto adds no distance, but the leg that leaves it does', ()
   assert.ok(Math.abs(pathLengthM(fixes, hintos) - 100) < 1);
 });
 
+// Gab, 2026-11-10: a 37-minute walk read 0 m. At 1.3 m/s a walk stays within 25 m for
+// 19 s, so all of it is a hinto; its moves past WANDER_M still count.
+test('a walk is slow enough to be a hinto, and its distance still counts', () => {
+  const fixes = Array.from({ length: 301 }, (_, s) => fix(s, s * 1.3));
+  const hintos = hintosOf(fixes);
+  assert.equal(hintos.length, 1, 'the whole walk is one hinto');
+  assert.ok(Math.abs(pathLengthM(fixes, hintos) - 390) < 5);
+});
+
 test('a hinto is 8 s or more within 25 m of where it began', () => {
   const fixes = [fix(0), fix(4, 10, 0), fix(8, 20, 0), fix(9, 200, 0), fix(10, 400, 0)];
   const hintos = hintosOf(fixes);

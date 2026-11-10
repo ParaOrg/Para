@@ -106,18 +106,30 @@ export function keptFixes(fixes: readonly Fix[]): Fix[] {
   return kept;
 }
 
+/** Within a hinto, a move shorter than this from the last point counted is the phone's wander. */
+export const WANDER_M = 20;
+
 /**
  * The length of the path through these fixes, in metres. Across a gap the
- * straight line counts. Within a hinto it does not: standing still, the phone's
- * position wanders a few metres, and every wander is a leg that would add up.
+ * straight line counts. Within a hinto a leg counts only once the position is
+ * WANDER_M from the last point counted: standing still, the phone's position
+ * wanders a few metres, and every wander is a leg that would add up. A walk is
+ * slow enough to be a hinto too (25 m in 8 s or more), and it does move on, so
+ * it still counts (Gab, 2026-11-10: a 37-minute walk read 0 m).
  */
 export function pathLengthM(fixes: readonly Fix[], hintos: readonly Hinto[] = []): number {
   const inside = (fix: Fix) => hintos.find((h) => fix.time >= h.from && fix.time <= h.to);
   let total = 0;
-  for (let i = 1; i < fixes.length; i++) {
-    const was = inside(fixes[i - 1]);
-    if (was && was === inside(fixes[i])) continue;
-    total += distanceM(fixes[i - 1].at, fixes[i].at);
+  let [counted] = fixes;
+  let was = counted && inside(counted);
+  for (const fix of fixes.slice(1)) {
+    const now = inside(fix);
+    const leg = distanceM(counted.at, fix.at);
+    if (!now || now !== was || leg >= WANDER_M) {
+      total += leg;
+      counted = fix;
+    }
+    was = now;
   }
   return total;
 }
