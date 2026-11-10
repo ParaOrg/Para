@@ -100,6 +100,8 @@ export default defineConfig([
     'dist/',
     'dist-apk/',
     'android/',
+    // The commuter app spike (Expo): linted by its own `npx expo lint`.
+    'native/',
     'storybook-static/',
     'node_modules/',
     'public/',
