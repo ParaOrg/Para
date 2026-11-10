@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Map as MapLibreMap } from 'maplibre-gl';
+import { Map as MapLibreMap, setWorkerUrl } from 'maplibre-gl';
+import maplibreWorkerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
 import { useEffect, useRef } from 'react';
 import { expect, waitFor } from 'storybook/test';
 
@@ -7,6 +8,11 @@ import { FOOTBRIDGE_LAYERS, addFootbridgeLayer } from './footbridge-layer';
 import type { Footbridge } from '../published/footbridge-file-schema';
 
 import 'maplibre-gl/dist/maplibre-gl.css';
+
+// MapLibre parses a GeoJSON source in its worker, and a story's map has no MapView to say where
+// the worker is (map-view.tsx): without this, a built Storybook asks for a worker file that does not
+// exist, the source never loads and nothing is drawn. Vite resolves the address in dev and build.
+setWorkerUrl(maplibreWorkerUrl);
 
 /** Sample footbridges only: one across a road with an elevator at its end, one covered. */
 const FOOTBRIDGES: Footbridge[] = [
