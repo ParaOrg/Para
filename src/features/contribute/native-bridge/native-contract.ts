@@ -14,6 +14,7 @@ export const PLUGIN_NAMES = {
   ride: 'Ride',
   fixLog: 'FixLog',
   nativePermissions: 'NativePermissions',
+  shareImage: 'ShareImage',
 } as const;
 
 /**
