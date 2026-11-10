@@ -64,14 +64,19 @@ type Story = StoryObj<typeof meta>;
 export const JeepRide: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
+    // Close, the safe answer, has focus as the card opens.
+    await expect(canvas.getByRole('button', { name: 'Close' })).toHaveFocus();
     await expect(await canvas.findByRole('img', {}, { timeout: 5000 })).toBeVisible();
     await expect(canvas.getByRole('button', { name: 'Share' })).toBeEnabled();
   },
 };
 
-/** An upload from another phone: no trail here, the plain ground in its place. */
+/**
+ * An upload from another phone: no trail here, the plain ground in its place. A UV Express, the
+ * widest vehicle, squeezed into its column.
+ */
 export const NoTrail: Story = {
-  args: { trail: null },
+  args: { trail: null, summary: { ...SUMMARY, mode: 'UV Express' } },
 };
 
 /** A walk with a long name: the name cut at two lines, Lakad for the vehicle, no destination. */

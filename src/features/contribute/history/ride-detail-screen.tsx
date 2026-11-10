@@ -77,6 +77,14 @@ export function RideDetailScreen({ ride, onBack }: RideDetailScreenProps) {
     deleteRef.current?.querySelector('button')?.focus();
   }, [isAsking]);
 
+  // Close hands focus back to Share ride summary, which was inert under the card.
+  const summaryOpener = useRef<HTMLElement | null>(null);
+  useEffect(() => {
+    if (isShowingSummary) return;
+    summaryOpener.current?.focus();
+    summaryOpener.current = null;
+  }, [isShowingSummary]);
+
   const handleKeep = () => {
     shouldReturnFocus.current = true;
     setIsAsking(false);
@@ -128,7 +136,12 @@ export function RideDetailScreen({ ride, onBack }: RideDetailScreenProps) {
               canDelete={ride.canDelete}
               deleteRef={deleteRef}
               onDelete={() => setIsAsking(true)}
-              onSummary={() => setIsShowingSummary(true)}
+              onSummary={() => {
+                if (document.activeElement instanceof HTMLElement) {
+                  summaryOpener.current = document.activeElement;
+                }
+                setIsShowingSummary(true);
+              }}
             />
           </BottomSheet>
         </div>

@@ -107,7 +107,13 @@ export function RideSummaryPreview({
             disabled={!png || isSharing}
             onClick={() => void handleShare()}
           />
-          <Button variant="plain" label="Close" disabled={isSharing} onClick={onClose} />
+          <Button
+            variant="plain"
+            label="Close"
+            disabled={isSharing}
+            onClick={onClose}
+            data-safe-answer
+          />
         </div>
       </div>
     </section>
