@@ -3,7 +3,8 @@ import { Map as MapLibreMap } from 'maplibre-gl';
 import { useEffect, useRef } from 'react';
 import { expect, waitFor } from 'storybook/test';
 
-import { FOOTBRIDGE_LAYERS, addFootbridgeLayer } from './footbridge-layer';
+import { addFootbridgeLayer } from './footbridge-layer';
+import { FOOTBRIDGE_LAYERS } from './footbridge-zoom';
 import type { Footbridge } from '../published/footbridge-file-schema';
 
 import 'maplibre-gl/dist/maplibre-gl.css';
