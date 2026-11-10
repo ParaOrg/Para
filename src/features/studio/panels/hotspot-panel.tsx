@@ -144,7 +144,20 @@ export function HotspotPanel({
   const outline = JSON.stringify(ring);
   const [opened] = useState({ fields, outline });
   const isChanged = fields !== opened.fields || outline !== opened.outline;
-  const status = isPublished && fields === opened.fields ? 'published' : 'draft';
+  const stored = useStoredDraft({
+    kind: 'hotspot',
+    subjectId: existing?.id ?? null,
+    isChanged,
+    publishForm: () => save('publish'),
+    onApproved: () => onPublished?.(existing?.id ?? ''),
+    onDiscarded,
+  });
+  // Draft only when one is stored; published and as it was, Published; else nothing saved yet.
+  const status = stored.footer.hasDraft
+    ? 'draft'
+    : isPublished && fields === opened.fields
+      ? 'published'
+      : 'unsaved';
   const stamps = useLineStamps('hotspot', existing?.id ?? null);
   const unpublishing = useUnpublish({
     kind: 'hotspot',
@@ -167,14 +180,6 @@ export function HotspotPanel({
       },
       intent,
     );
-  const stored = useStoredDraft({
-    kind: 'hotspot',
-    subjectId: existing?.id ?? null,
-    isChanged,
-    publishForm: () => save('publish'),
-    onApproved: () => onPublished?.(existing?.id ?? ''),
-    onDiscarded,
-  });
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     save('draft');

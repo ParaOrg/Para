@@ -84,7 +84,7 @@ export function SaveFooter({
           disabled={isBusy}
         />
       )}
-      {status === 'published' && onUnpublish ? (
+      {status === 'published' && onUnpublish && !hasDraft ? (
         <Grow>
           <Button
             variant="secondary"

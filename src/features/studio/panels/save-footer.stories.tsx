@@ -127,3 +127,9 @@ export const Discarding: Story = {
     await expect(within(canvasElement).getByRole('button', { name: 'Discarding…' })).toBeDisabled();
   },
 };
+
+/** Over the map on a phone with the editor's own draft: four buttons on one line. */
+export const OverTheMapWithDraft: Story = {
+  args: { onExit: undefined, onCancel: fn(), hasDraft: true, onDiscard: fn() },
+  globals: { viewport: { value: 'mobile1', isRotated: false } },
+};

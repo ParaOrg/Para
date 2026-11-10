@@ -76,13 +76,6 @@ export function SavePanel({
   const line = JSON.stringify(draw.controlPoints);
   const [opened] = useState({ fields, line });
   const isChanged = fields !== opened.fields || line !== opened.line;
-  const status = isPublished && fields === opened.fields ? 'published' : 'draft';
-  const stamps = useLineStamps('route', panel.parent?.id ?? null);
-  const unpublishing = useUnpublish({
-    kind: 'route',
-    subjectId: isPublished ? (existing?.route.id ?? null) : null,
-    onUnpublished,
-  });
   const stored = useStoredDraft({
     kind: 'route',
     subjectId: panel.parent?.id ?? null,
@@ -90,6 +83,18 @@ export function SavePanel({
     publishForm: () => void panel.submit('publish'),
     onApproved: () => options.onPublished?.(existing?.id ?? panel.parent?.id ?? ''),
     onDiscarded,
+  });
+  // Draft only when one is stored; published and as it was, Published; else nothing saved yet.
+  const status = stored.footer.hasDraft
+    ? 'draft'
+    : isPublished && fields === opened.fields
+      ? 'published'
+      : 'unsaved';
+  const stamps = useLineStamps('route', panel.parent?.id ?? null);
+  const unpublishing = useUnpublish({
+    kind: 'route',
+    subjectId: isPublished ? (existing?.route.id ?? null) : null,
+    onUnpublished,
   });
 
   const handleSubmit = (e: FormEvent) => {
