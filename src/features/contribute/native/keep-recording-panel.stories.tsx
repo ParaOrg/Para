@@ -51,13 +51,3 @@ export const Samsung: Story = { args: { brand: 'samsung' } };
 
 /** Huawei and Honor: App launch. */
 export const Huawei: Story = { args: { brand: 'huawei' } };
-
-/** No group's steps (not shown at Start today): the words every phone takes. */
-export const AnyPhone: Story = {
-  args: { brand: null },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await expect(canvas.queryByRole('list')).toBeNull();
-    await expect(canvas.getByText(/Turn on Autostart and set Battery saver/)).toBeVisible();
-  },
-};

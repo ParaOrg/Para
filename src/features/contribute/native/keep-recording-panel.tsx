@@ -5,8 +5,8 @@ import type { KeepRecordingBrand } from './keep-recording-makers';
 import { KEEP_RECORDING_STEPS } from './keep-recording-steps';
 
 interface KeepRecordingPanelProps {
-  /** The phone's maker's group, for its own steps; null says it the way every phone takes it. */
-  brand: KeepRecordingBrand | null;
+  /** The phone's maker's group, for its own steps. */
+  brand: KeepRecordingBrand;
   /** The maker's Autostart or battery screen, or Para's own page in Settings. */
   onOpenSettings: () => void;
   onDone: () => void;
@@ -19,7 +19,7 @@ interface KeepRecordingPanelProps {
  */
 export function KeepRecordingPanel({ brand, onOpenSettings, onDone }: KeepRecordingPanelProps) {
   const headingRef = useFocusHeading();
-  const steps = brand ? KEEP_RECORDING_STEPS[brand] : null;
+  const steps = KEEP_RECORDING_STEPS[brand];
   return (
     <section
       aria-labelledby="keep-recording-heading"
@@ -33,24 +33,14 @@ export function KeepRecordingPanel({ brand, onOpenSettings, onDone }: KeepRecord
       >
         Keep Para recording
       </h1>
-      {steps ? (
-        <>
-          <p className="text-base/6">
-            {steps.phones} phones may stop Para when you leave the app. So your rides keep
-            recording:
-          </p>
-          <ol className="flex list-decimal flex-col gap-1 pl-6 text-base/6">
-            {steps.steps.map((step) => (
-              <li key={step}>{step}</li>
-            ))}
-          </ol>
-        </>
-      ) : (
-        <p className="text-base/6">
-          Your phone may stop Para when you leave the app. Turn on Autostart and set Battery saver
-          to No restrictions so your rides keep recording.
-        </p>
-      )}
+      <p className="text-base/6">
+        {steps.phones} phones may stop Para when you leave the app. So your rides keep recording:
+      </p>
+      <ol className="flex list-decimal flex-col gap-1 pl-6 text-base/6">
+        {steps.steps.map((step) => (
+          <li key={step}>{step}</li>
+        ))}
+      </ol>
       <div className="flex gap-3">
         <Button variant="primary" label="Open settings" onClick={onOpenSettings} />
         <Button variant="secondary" label="Done" onClick={onDone} />
