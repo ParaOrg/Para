@@ -283,6 +283,42 @@ export const RoutesNearHere: Story = {
   },
 };
 
+/**
+ * "Go here" on a hintuan near a landmark (ticket 07): the landmark, the hintuans near it and the
+ * one chosen go to the map, which opens that hintuan's routes; the panel closes.
+ */
+export const GoHere: Story = {
+  args: { onGoHere: fn() },
+  play: async ({ args, canvasElement }) => {
+    await userEvent.type(field(canvasElement), 'commonwealth high');
+    await waitFor(() => expect(optionTexts(canvasElement)).toHaveLength(1));
+    await userEvent.keyboard('{Enter}');
+    const panel = within(canvasElement).getByRole('region', { name: 'Commonwealth High School' });
+    await userEvent.click(
+      within(panel).getByRole('button', {
+        name: 'Go here: Commonwealth Market Hintuan, for Commonwealth High School',
+      }),
+    );
+    await expect(args.onGoHere).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'w1' }),
+      [expect.objectContaining({ hintuan: expect.objectContaining({ id: 'h5' }) })],
+      expect.objectContaining({ id: 'h5' }),
+    );
+    await expect(args.onPick).not.toHaveBeenCalled();
+    await expect(within(canvasElement).queryByRole('region')).toBeNull();
+  },
+};
+
+/** Without the map's handler (the studio's), no "Go here" on the rows. */
+export const NoGoHere: Story = {
+  play: async ({ canvasElement }) => {
+    await userEvent.type(field(canvasElement), 'commonwealth high');
+    await waitFor(() => expect(optionTexts(canvasElement)).toHaveLength(1));
+    await userEvent.keyboard('{Enter}');
+    await expect(within(canvasElement).queryByRole('button', { name: /Go here/ })).toBeNull();
+  },
+};
+
 /** A landmark with no Para hintuan within 500 m. */
 export const NoRoutesNearHere: Story = {
   play: async ({ canvasElement }) => {

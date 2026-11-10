@@ -49,7 +49,13 @@ import {
 } from './lib/harness.mjs';
 import { routesFraming } from './lib/framing.mjs';
 import { centroidOf, pointInPolygon } from './lib/geo.mjs';
-import { PAPUNTA_ID, PAPUNTA_TAP, WEST_TERMINAL, serveTwoWayMap } from './fixtures/two-way-map.mjs';
+import {
+  PAPUNTA_ID,
+  PAPUNTA_TAP,
+  TWO_WAY_MAP,
+  WEST_TERMINAL,
+  serveTwoWayMap,
+} from './fixtures/two-way-map.mjs';
 import {
   colourOf,
   endRings,
@@ -5125,6 +5131,87 @@ if (!routeA) {
       2000,
     );
     check('closing its routes near here takes the pin away', left === 0, `${left} pin(s)`);
+  }
+}
+
+// ------------------------------- 6c. "Go here": a trip that ends near a landmark
+// "Go here" on a hintuan near a landmark (ticket 07) opens that place's routes;
+// a route picked there opens its trip with its end already picked at the
+// hintuan nearest the landmark, the walk from there said on the card, and the
+// landmark's pin still on the map. Today's landmark file, the made-up map's
+// hintuans: the landmark nearest any of them, within 400 m.
+{
+  const file = await (await fetch(`${BASE}/data/landmarks.v1.json`)).json();
+  const named = new Map();
+  for (const l of file.landmarks) named.set(l.name, (named.get(l.name) ?? 0) + 1);
+  const hintuans = TWO_WAY_MAP.stops.filter((st) => st.kind === 'hintuan');
+  const metres = ([ax, ay], [bx, by]) => {
+    const k = Math.PI / 180;
+    const x = (bx - ax) * k * Math.cos(((ay + by) / 2) * k);
+    return 6371000 * Math.hypot(x, (by - ay) * k);
+  };
+  const nearest = file.landmarks
+    .filter((l) => named.get(l.name) === 1 && l.kind !== 'street')
+    .map((l) => ({
+      l,
+      d: Math.min(...hintuans.map((h) => metres(l.point, h.point.coordinates))),
+    }))
+    .filter(({ d }) => d < 400)
+    .sort((a, b) => a.d - b.d)[0]?.l;
+  await closeCard();
+  if (!nearest) {
+    console.log('SKIP  "Go here": no landmark within 400 m of the made-up map');
+  } else {
+    const field = page.getByRole('combobox', { name: 'Search places' });
+    await field.fill(nearest.name);
+    const row = page
+      .getByRole('option')
+      .filter({ hasText: nearest.name })
+      .filter({ hasText: 'Landmark' })
+      .first();
+    await row.waitFor({ timeout: 10000 });
+    await row.click();
+    await mapIdle(page);
+    await page
+      .getByRole('region', { name: nearest.name })
+      .getByRole('button', { name: /^Go here:/ })
+      .first()
+      .click();
+    const placeRoute = page
+      .locator('[data-testid="card"]:not([hidden]) button[data-testid="card-item"]:enabled')
+      .first();
+    const listed = await placeRoute
+      .waitFor({ timeout: 10000 })
+      .then(() => true)
+      .catch(() => false);
+    check('"Go here" opens that hintuan\'s routes', listed);
+    if (listed) {
+      // Sent to the row itself: at the sheet's resting height it can sit below the screen.
+      await placeRoute.dispatchEvent('click');
+      const walk = page.getByTestId('trip-walk');
+      const said = await walk
+        .waitFor({ timeout: 10000 })
+        .then(() => walk.innerText())
+        .catch(() => '');
+      await cardsSettled(page);
+      const ends = await page.locator('[data-testid="hintuan-pin"]').count();
+      const goalPins = await page.locator('[data-testid="landmark-pin"]').count();
+      check(
+        'a route picked there opens its trip ending near the landmark, the walk said',
+        /^About \d+ m to .+, in a straight line$/.test(said) &&
+          said.includes(nearest.name) &&
+          ends === 1 &&
+          goalPins === 1,
+        `"${said}"; ${ends} end pin(s), ${goalPins} landmark pin(s)`,
+      );
+      await closeCard();
+      const gone = await until(
+        () => page.locator('[data-testid="landmark-pin"]').count(),
+        (n) => n === 0,
+        2000,
+      );
+      check('closing the cards lets the landmark go', gone === 0, `${gone} landmark pin(s)`);
+    }
   }
 }
 
