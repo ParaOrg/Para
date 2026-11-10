@@ -20,6 +20,8 @@ interface PlaygroundSaveSheetsProps {
   target: ReturnType<typeof useSaveTarget>;
   saveFlow: ReturnType<typeof useSaveFlow>;
   contribution: ReturnType<typeof useContributionStart>;
+  /** Hotspots that are drafts only, which the sidebar opens as it does approved ones. */
+  draftHotspots: readonly HotspotRow[];
 }
 
 /**
@@ -35,6 +37,7 @@ export function PlaygroundSaveSheets({
   target,
   saveFlow,
   contribution,
+  draftHotspots,
 }: PlaygroundSaveSheetsProps) {
   const { isSaving, setIsSaving, onDrafted, onPublished, onUnpublished, onDiscarded } = saveFlow;
 
@@ -47,6 +50,7 @@ export function PlaygroundSaveSheets({
         saved={saved}
         hotspots={hotspots}
         target={target}
+        draftHotspots={draftHotspots}
         onDrafted={(subjectId) => {
           void contribution.recordSaved(subjectId, draw.controlPoints);
           onDrafted();

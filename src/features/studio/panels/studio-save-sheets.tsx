@@ -34,6 +34,8 @@ interface StudioSaveSheetsProps {
   saved: Pick<Saved, 'directions'>;
   hotspots: Pick<Hotspots, 'hotspots' | 'linkedDirectionIds' | 'reload'>;
   target: Pick<SaveTarget, 'editing' | 'parentRoute' | 'slotReversed'>;
+  /** Hotspots that are drafts only (useDraftOnly): an outline drawn for one opens on its draft. */
+  draftHotspots?: readonly HotspotRow[];
   /** Hears what a save stored as a draft. */
   onDrafted?: (subjectId: string) => void;
   /** A draft published, a route's or a hotspot's: the map has changed. */
@@ -62,10 +64,11 @@ export function StudioSaveSheets({
   onUnpublished,
   onDiscarded,
   onCancel,
+  draftHotspots = [],
 }: StudioSaveSheetsProps) {
-  // The hotspot being edited, when the area trace came from a saved one.
+  // The hotspot being edited, when the area trace came from a saved one, or from a draft only.
   const approvedHotspot = draw.area?.hotspotId
-    ? (hotspots.hotspots.find((s) => s.id === draw.area?.hotspotId) ?? null)
+    ? ([...hotspots.hotspots, ...draftHotspots].find((s) => s.id === draw.area?.hotspotId) ?? null)
     : null;
   // As the editor's own draft has it, when there is one: what the save builds on. The card's
   // Edit read it fresh into the cache just before, so it is here from the first render.
