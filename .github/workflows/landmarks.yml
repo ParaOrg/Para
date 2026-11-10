@@ -1,0 +1,168 @@
+# The monthly refresh of place search's landmark file (.scratch/place-search, ticket 04) and the
+# map's footbridge file (.scratch/footbridges, ticket 01): scripts/landmarks/build.sh rebuilds
+# public/data/landmarks.v1.json and public/data/footbridges.v1.json from openstreetmap.fr's
+# Metro Manila extract, and, when either changed, the run opens one pull request into staging with
+# the count of each kind, and of footbridges, before and after. Nothing merges by itself: a person, or the session that
+# owns place search, merges it like any other pull request, and only the owner merges into main.
+#
+# A pull request that changes the script or this file builds and checks the file, and opens
+# nothing. The schedule and "Run workflow" build from staging and open the pull request.
+#
+# THE OWNER'S SETUP (done 2026-11-06): Settings -> Actions -> General -> "Allow GitHub Actions to
+# create and approve pull requests". A pull request opened with the workflow's own token starts
+# no workflow by itself, so this run starts CI on the refresh branch with "Run workflow" (allowed
+# for the token); its checks land on the branch's commit, which the pull request shows.
+#
+# Commuters never reach OpenStreetMap: this run downloads the extract once, at build time. The
+# data is ODbL; each file carries its licence and credit (scripts/landmarks/landmark-file.mjs,
+# scripts/footbridges/footbridge-file.mjs).
+# osmium-tool comes from apt on the runner; nothing here is an npm dependency.
+name: Landmarks
+
+on:
+  schedule:
+    # The 8th of each month, 19:37 UTC = 03:37 in Manila: after the tiles' build on the 3rd.
+    - cron: '37 19 8 * *'
+  workflow_dispatch:
+    inputs:
+      allow_shrink:
+        description: Open the pull request even if the file lost more than 20% of its landmarks
+        type: boolean
+        default: false
+  pull_request:
+    paths:
+      - .github/workflows/landmarks.yml
+      - scripts/landmarks/**
+      - scripts/footbridges/**
+
+permissions:
+  contents: read
+
+concurrency:
+  group: landmarks-${{ github.event_name == 'pull_request' && github.ref || 'refresh' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build:
+    name: Build and check the landmark file
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+          # The schedule runs on the default branch; the refresh is built on staging, where it lands.
+          ref: ${{ github.event_name == 'pull_request' && github.ref || 'staging' }}
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - name: Install osmium-tool
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq osmium-tool
+      - name: Keep the committed files to compare
+        # The footbridge file may not exist yet: compare.mjs reads a missing one as empty.
+        run: |
+          cp public/data/landmarks.v1.json "$RUNNER_TEMP/before.json"
+          cp public/data/footbridges.v1.json "$RUNNER_TEMP/footbridges-before.json" || true
+      - name: Build the file
+        run: scripts/landmarks/build.sh "$RUNNER_TEMP/landmarks"
+      - name: Compare with the committed file
+        env:
+          ALLOW_SHRINK: ${{ inputs.allow_shrink && '1' || '0' }}
+        run: |
+          node scripts/landmarks/compare.mjs "$RUNNER_TEMP/before.json" public/data/landmarks.v1.json > "$RUNNER_TEMP/counts.md"
+          echo >> "$RUNNER_TEMP/counts.md"
+          node scripts/footbridges/compare.mjs "$RUNNER_TEMP/footbridges-before.json" public/data/footbridges.v1.json >> "$RUNNER_TEMP/counts.md"
+          cat "$RUNNER_TEMP/counts.md" >> "$GITHUB_STEP_SUMMARY"
+          git add -N public/data/footbridges.v1.json
+          if git diff --quiet -- public/data/landmarks.v1.json public/data/footbridges.v1.json; then
+            echo "The files are unchanged: nothing to open." >> "$GITHUB_STEP_SUMMARY"
+          else
+            mkdir -p "$RUNNER_TEMP/refresh"
+            cp public/data/landmarks.v1.json public/data/footbridges.v1.json "$RUNNER_TEMP/counts.md" "$RUNNER_TEMP/refresh/"
+          fi
+      - uses: actions/upload-artifact@v7
+        if: github.event_name != 'pull_request'
+        with:
+          name: landmarks-refresh
+          path: ${{ runner.temp }}/refresh/
+          if-no-files-found: ignore
+          retention-days: 7
+
+  # Its own job, so only it holds a token that can write, and never on a pull request.
+  open-pull-request:
+    name: Open the refresh pull request
+    needs: build
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      pull-requests: write
+      actions: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: staging
+      - uses: actions/download-artifact@v8
+        id: refresh
+        continue-on-error: true
+        with:
+          name: landmarks-refresh
+          path: ${{ runner.temp }}/refresh
+      - name: Push the branch, open the pull request, start CI on it
+        # No artifact when the file was unchanged: the download fails softly and this is skipped.
+        if: steps.refresh.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          branch="landmarks/refresh-$(date -u +%F)-$GITHUB_RUN_ID"
+          cp "$RUNNER_TEMP/refresh/landmarks.v1.json" public/data/landmarks.v1.json
+          cp "$RUNNER_TEMP/refresh/footbridges.v1.json" public/data/footbridges.v1.json
+          extract_at="$(node -e "console.log(JSON.parse(require('fs').readFileSync('public/data/landmarks.v1.json','utf8')).extract_at)")"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git switch -c "$branch"
+          git add public/data/landmarks.v1.json public/data/footbridges.v1.json
+          git commit -m "Landmark and footbridge files: the OpenStreetMap extract of $extract_at" \
+            -m "The monthly refresh (.github/workflows/landmarks.yml), run $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID."
+          git push origin "$branch"
+          {
+            echo "The monthly refresh of place search's landmark file and the map's footbridge file, from OpenStreetMap's Metro Manila extract of $extract_at (ODbL, © OpenStreetMap contributors)."
+            echo
+            cat "$RUNNER_TEMP/refresh/counts.md"
+            echo
+            echo "Built by run $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID. Check the counts: a big drop in one kind is a tagging change on OpenStreetMap or a broken filter. CI was started on the branch by the run; nothing merges by itself."
+          } > "$RUNNER_TEMP/body.md"
+          gh pr create --base staging --head "$branch" \
+            --title "Landmark and footbridge files: the OpenStreetMap extract of ${extract_at%%T*}" \
+            --body-file "$RUNNER_TEMP/body.md"
+          gh workflow run ci.yml --ref "$branch"
+
+  # When the run failed: opens or updates this workflow's `alert` issue (scripts/watch).
+  alert:
+    needs: [build, open-pull-request]
+    if: failure() && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+          sparse-checkout: scripts/watch
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - name: Open or update the alert issue
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          WORKFLOW_NAME: ${{ github.workflow }}
+          WORKFLOW_FILE: landmarks.yml
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: node scripts/watch/report-failed-run.mjs

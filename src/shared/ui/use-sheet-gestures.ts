@@ -1,6 +1,7 @@
 import {
   useLayoutEffect,
   useRef,
+  useState,
   type FocusEvent as ReactFocusEvent,
   type PointerEvent as ReactPointerEvent,
   type RefObject,
@@ -8,22 +9,20 @@ import {
 
 import {
   DRAG_PX,
-  aboveMiddle,
   follow,
   heightsFor,
   shownAt,
-  snapAfterTap,
+  stepFrom,
   swallowTheTapsClick,
   type SheetHeights,
+  type SheetShape,
   type Snap,
 } from './sheet-gesture';
 
-/** A sheet whose open height is its content's (BottomSheet's `fits`): Low, and open. */
+/** A sheet whose highest is its content's height (BottomSheet's `fits`), not the screen's. */
 export interface FittedSheet {
-  /** Its two heights, as magnets, for a map `h` tall (fitHeightsFor). */
+  /** Its two ends for a map `h` tall: Low, and its content's height (fitHeightsFor). */
   heightsFor: (h: number) => SheetHeights;
-  /** Where it rests open (fitSnap). */
-  open: Snap;
 }
 
 interface SheetGesturesOptions {
@@ -33,7 +32,7 @@ interface SheetGesturesOptions {
   handle: RefObject<HTMLButtonElement | null>;
   /** The header, fixed at the top. */
   head: RefObject<HTMLDivElement | null>;
-  /** The body, scrolling under the header at Max. */
+  /** The body, scrolling under the header at full height. */
   body: RefObject<HTMLDivElement | null>;
   snap: Snap;
   setSnap: (snap: Snap) => void;
@@ -44,23 +43,27 @@ interface SheetGesturesOptions {
   show: (shown: number) => void;
   /** Docked, not floating. */
   docked: () => boolean;
-  /** Set for a fitted sheet: it moves between Low and open only. Null for Low, Middle and Max. */
+  /** Set for a fitted sheet, whose full height is its content's; null for every other. */
   fitted: FittedSheet | null;
+  /** Its Low and full (BottomSheet's `shape`). */
+  shape: SheetShape;
   /** False: a pull or a flick down from Low rests at Low, and only Escape (or the page) closes it. */
   closesOnPull: boolean;
 }
 
 interface SheetGestures {
   onPointerDown: (e: ReactPointerEvent<HTMLDivElement>) => void;
-  /** The body's onFocus rule: focus from the keyboard below Max raises the sheet; a press's does not. */
+  /** The body's onFocus rule: focus from the keyboard below full raises the sheet; a press's does not. */
   onBodyFocus: (e: ReactFocusEvent<HTMLDivElement>) => void;
   /** Where a tap on the handle takes the sheet from `from`: a pointer's and Enter's alike. */
   afterTap: (from: Snap) => Snap;
+  /** Which way the next tap on the handle goes: up, or, from full until Low, down. */
+  isStepUp: (from: Snap) => boolean;
 }
 
 /**
  * How a finger or a mouse moves BottomSheet: the drag on the handle or the
- * header, the pull down from the list's top at Max, and the wheel's
+ * header, the pull down from the list's top at full height, and the wheel's
  * deliberate push. The sheet writes the DOM (`show`) and keeps `dragging`;
  * this decides where it goes (sheetGesture). Called after the sheet's two
  * dock-mark layout effects.
@@ -77,30 +80,39 @@ export function useSheetGestures({
   show,
   docked,
   fitted,
+  shape,
   closesOnPull,
 }: SheetGesturesOptions): SheetGestures {
-  // A fitted sheet has no Middle or Max of its own: what would land there lands open. A sheet that
-  // does not close on a pull rests at Low instead.
-  const landing = (next: Snap | 'close'): Snap | 'close' => {
-    if (next === 'close') return closesOnPull ? 'close' : 'low';
-    return fitted && (next === 'middle' || next === 'max') ? fitted.open : next;
-  };
+  // A sheet that does not close on a pull rests at Low instead.
+  const landing = (next: Snap | 'close'): Snap | 'close' =>
+    next === 'close' && !closesOnPull ? 'low' : next;
   const settle = (next: Snap | 'close') => {
     setDragging(false);
     const at = landing(next);
     if (at === 'close') onClose();
     else setSnap(at);
   };
-  /** Where a tap on the handle goes: round the three heights, or a fitted sheet's two. */
-  const afterTap = (from: Snap): Snap =>
-    fitted ? (from === 'low' ? fitted.open : 'low') : snapAfterTap(from);
-  /** The magnets of a sheet on a map `h` tall. */
-  const heightsOf = (h: number): SheetHeights => (fitted ? fitted.heightsFor(h) : heightsFor(h));
-  // Read by the listeners bound once below: today's snap, settle and magnets,
+  /** The two ends of a sheet on a map `h` tall. */
+  const heightsOf = (h: number): SheetHeights =>
+    fitted ? fitted.heightsFor(h) : heightsFor(h, shape);
+  // The way the handle's steps go: up from Low, down from full, and on the way they went between.
+  // State, not a ref: the handle's label says which way the next step goes.
+  const [isGoingUp, setGoingUp] = useState(true);
+  const isStepUp = (from: Snap): boolean =>
+    from === 'low' ? true : from === 'full' ? false : isGoingUp;
+  /** Where a tap on the handle goes: a third of the map up or down (stepFrom). */
+  const afterTap = (from: Snap): Snap => {
+    const h = own.current?.offsetHeight ?? 0;
+    const up = isStepUp(from);
+    const next = stepFrom(from, up, h, heightsOf(h));
+    setGoingUp(next === 'full' ? false : next === 'low' ? true : up);
+    return next;
+  };
+  // Read by the listeners bound once below: today's snap, settle, ends and step,
   // written as the render commits, before a finger or a wheel can come.
-  const now = useRef({ snap, settle, heightsOf, isFitted: fitted !== null });
+  const now = useRef({ snap, settle, heightsOf, afterTap });
   useLayoutEffect(() => {
-    now.current = { snap, settle, heightsOf, isFitted: fitted !== null };
+    now.current = { snap, settle, heightsOf, afterTap };
   });
 
   // When a finger or a mouse last pressed on the sheet: focus that follows a
@@ -111,10 +123,11 @@ export function useSheetGestures({
   const drag = useRef<AbortController | null>(null);
   useLayoutEffect(() => () => drag.current?.abort(), []);
 
-  // At Max, the pull down from the list's top. Touch events, not pointer
-  // ones: the browser takes a scroll for itself and cancels the pointer, but
-  // a non-passive touchmove can still be claimed. A wheel does the same at
-  // the top of the list, and turned the other way at Middle raises the sheet.
+  // At full height, the pull down from the list's top. Touch events, not
+  // pointer ones: the browser takes a scroll for itself and cancels the
+  // pointer, but a non-passive touchmove can still be claimed. A wheel's
+  // deliberate push steps the sheet a third, as a tap on the handle does,
+  // but never raises it from Low.
   useLayoutEffect(() => {
     const body = bodyRef.current;
     const sheet = own.current;
@@ -122,7 +135,7 @@ export function useSheetGestures({
     let pull: { startY: number; t: number; track: ReturnType<typeof follow> | null } | null = null;
 
     const start = (e: TouchEvent) => {
-      if (now.current.snap !== 'max' || !docked() || e.touches.length !== 1) return;
+      if (now.current.snap !== 'full' || !docked() || e.touches.length !== 1) return;
       pull = { startY: e.touches[0].clientY, t: e.timeStamp, track: null };
     };
     const move = (e: TouchEvent) => {
@@ -136,7 +149,8 @@ export function useSheetGestures({
         }
         if (y - pull.startY <= DRAG_PX / 3) return;
         const h = sheet.offsetHeight;
-        pull.track = follow(pull.startY, pull.t, shownAt('max', h), h, now.current.heightsOf(h));
+        const heights = now.current.heightsOf(h);
+        pull.track = follow(pull.startY, pull.t, shownAt('full', h, heights), h, heights);
         setDragging(true);
       }
       e.preventDefault();
@@ -158,18 +172,19 @@ export function useSheetGestures({
       if (e.timeStamp - lastWheel > 200) pushed = 0;
       lastWheel = e.timeStamp;
       const at = now.current.snap;
-      if ((at === 'max' && body.scrollTop > 0) || e.timeStamp - scrolledAt < 300) {
+      if ((at === 'full' && body.scrollTop > 0) || e.timeStamp - scrolledAt < 300) {
         scrolledAt = e.timeStamp;
         pushed = 0;
         return;
       }
       pushed += e.deltaY;
-      if (aboveMiddle(at) && pushed < -DRAG_PX) {
+      const h = sheet.offsetHeight;
+      if (at !== 'low' && pushed < -DRAG_PX) {
         pushed = 0;
-        now.current.settle(now.current.isFitted ? 'low' : 'middle');
-      } else if (at !== 'max' && at !== 'low' && pushed > DRAG_PX) {
+        now.current.settle(stepFrom(at, false, h, now.current.heightsOf(h)));
+      } else if (at !== 'full' && at !== 'low' && pushed > DRAG_PX) {
         pushed = 0;
-        now.current.settle('max');
+        now.current.settle(stepFrom(at, true, h, now.current.heightsOf(h)));
       }
     };
     const bound = new AbortController();
@@ -193,14 +208,15 @@ export function useSheetGestures({
     // One pointer at a time, a mouse's main button only, and docked only.
     if (drag.current || e.button !== 0 || !sheet || !handle || !docked()) return;
     const target = e.target instanceof Node ? e.target : null;
-    // At Max the body scrolls as a list does; the header brings the sheet down.
-    if (snap === 'max' && !headRef.current?.contains(target) && !handle.contains(target)) return;
+    // At full height the body scrolls as a list does; the header brings the sheet down.
+    if (snap === 'full' && !headRef.current?.contains(target) && !handle.contains(target)) return;
     // At Low the top of the body is not for picking: a tap there raises the
     // sheet, as one on the handle does.
     const raises =
       handle.contains(target) || (snap === 'low' && !!bodyRef.current?.contains(target));
     const h = sheet.offsetHeight;
-    const track = follow(e.clientY, e.timeStamp, shownAt(snap, h), h, heightsOf(h));
+    const heights = heightsOf(h);
+    const track = follow(e.clientY, e.timeStamp, shownAt(snap, h, heights), h, heights);
     let moving = false;
 
     // Followed on the window, not the sheet: a finger or a mouse dragged
@@ -220,7 +236,7 @@ export function useSheetGestures({
       hotspot();
       if (moving || raises) swallowTheTapsClick(ev.clientX, ev.clientY);
       if (moving) now.current.settle(track.release(ev.timeStamp, ev.clientY));
-      else if (raises) now.current.settle(afterTap(snap));
+      else if (raises) now.current.settle(now.current.afterTap(snap));
     };
     const cancel = (ev: PointerEvent) => {
       if (ev.pointerId !== e.pointerId) return;
@@ -238,15 +254,14 @@ export function useSheetGestures({
     window.addEventListener('pointercancel', cancel, on);
   };
 
-  // Focus from the keyboard below Max lands on rows that may be below the
-  // screen: the sheet rises to Max, where the list scrolls them into view.
+  // Focus from the keyboard below full lands on rows that may be below the
+  // screen: the sheet rises to full height, where the list scrolls them into view.
   // Focus that follows a press is the press's own and leaves the sheet where
   // it is.
   const onBodyFocus = (e: ReactFocusEvent<HTMLDivElement>) => {
     const fromKeys = e.timeStamp - lastPress.current > 800 && e.target.matches(':focus-visible');
-    const top = fitted ? fitted.open : 'max';
-    if (snap !== top && fromKeys && docked()) setSnap(top);
+    if (snap !== 'full' && fromKeys && docked()) setSnap('full');
   };
 
-  return { onPointerDown, onBodyFocus, afterTap };
+  return { onPointerDown, onBodyFocus, afterTap, isStepUp };
 }

@@ -95,17 +95,21 @@ const centerOnLand = async () => {
 
 // Canvas pixels of the centred saved route's own vertices in the current view,
 // in order along it, each at least `gap` px from every earlier pick and clear of
-// the cards and the toolbar. They are on a road, so the router routes a gap
-// between any two.
+// the cards and the toolbar, and of anything else over the map (the place search
+// bar at the top): a pixel counts only where the canvas itself is the topmost
+// element. They are on a road, so the router routes a gap between any two.
 const roadPixels = async (n, gap) =>
   page.evaluate(
     ([line, n, gap]) => {
       const m = window.__map,
-        { clientWidth: w, clientHeight: h } = m.getCanvas();
+        canvas = m.getCanvas(),
+        { clientWidth: w, clientHeight: h } = canvas,
+        rect = canvas.getBoundingClientRect();
       const picked = [];
       for (const c of line) {
         const p = m.project(c);
         if (p.x < 80 || p.x > w - 80 || p.y < 80 || p.y > h - 140) continue;
+        if (document.elementFromPoint(rect.left + p.x, rect.top + p.y) !== canvas) continue;
         if (picked.every(([x, y]) => Math.hypot(p.x - x, p.y - y) >= gap)) picked.push([p.x, p.y]);
         if (picked.length === n) break;
       }

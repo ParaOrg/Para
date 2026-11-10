@@ -56,7 +56,7 @@ export function TimelineTop({
         />
         <span className="flex min-w-0 flex-1 items-start gap-1 pb-3 pl-2">
           {mark && <RideMark mark={mark} />}
-          {/* At a sheet's Low, one line of it (sheetGesture's LOW_PX); from Middle up, all of it. */}
+          {/* At a sheet's Low, one line of it (sheetGesture's LOW_PX); raised, all of it. */}
           <span
             data-part="name"
             className={

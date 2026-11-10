@@ -167,11 +167,14 @@
   --content-inverse-secondary: var(--color-neutral-200);
   --content-error: var(--color-red-700);
   --content-success: var(--color-green-700);
+  /* Something not done yet that needs a hand: the studio's Draft, the contributor's Retry.
+     Provisional: not named in Figma yet. */
+  --content-warning: var(--color-orange-700);
 
   /* Border. Figma: Border/… */
   --border-primary: var(--color-neutral-200);
   --border-secondary: var(--color-neutral-300);
-  --border-tertiary: var(--color-neutral-400);
+  --border-tertiary: var(--color-neutral-300);
   --border-error: var(--color-red-700);
   --border-plain: var(--color-white); /* the hotspot names' halo on the map */
 
@@ -182,6 +185,9 @@
   --surface-quaternary: var(--color-neutral-200);
   --surface-error: var(--color-red-100);
   --surface-success: var(--color-green-100);
+  /* The dark on a light card (RouteCard, 4629:22776): the RouteBadge chips on UV Express, E-Jeep
+     and MRT-3, and MRT-3's words on its yellow. */
+  --surface-inverse: var(--color-neutral-900);
   /* Black at 60%: what dims the page under a dialog laid over it, the install
      prompt's (3732:2512). Figma keeps the 60 as the variable's opacity
      (opacity/60); here it is in the value, since the token means the
@@ -190,10 +196,8 @@
   --surface-transparent-inverse: color-mix(in srgb, var(--color-white) 60%, transparent);
   --surface-transparent-secondary: color-mix(in srgb, var(--color-white) 70%, transparent);
 
-  /* The jeepney-livery cards. Figma: Card/… — red, orange, violet, rose, fuchsia
-     and pink (pink: RouteCard 4071:7014); no yellow livery, as it is not good on
-     the eyes. Each livery's surface-pale is the rest of a lit line past a picked
-     hintuan. */
+  /* Red and green mean a ride's End and Start, never a route: no card wears them as its colour.
+     Figma keeps them in Card (Depreciated). */
   --card-red-surface: var(--color-red-800);
   --card-red-surface-pale: var(--color-red-300);
   --card-red-border-primary: var(--color-red-900);
@@ -203,26 +207,27 @@
      where the surfaces' own shades are too dark to read. No green livery exists. */
   --card-red-surface-light: var(--color-red-400);
   --card-green-surface-light: var(--color-green-500);
-  --card-orange-surface: var(--color-orange-700);
-  --card-orange-surface-pale: var(--color-orange-300);
-  --card-orange-border-primary: var(--color-orange-800);
-  --card-orange-timeline-surface: var(--color-orange-900);
-  --card-violet-surface: var(--color-violet-700);
-  --card-violet-surface-pale: var(--color-violet-300);
-  --card-violet-border-primary: var(--color-violet-800);
-  --card-violet-timeline-surface: var(--color-violet-900);
-  --card-rose-surface: var(--color-rose-700);
-  --card-rose-surface-pale: var(--color-rose-300);
-  --card-rose-border-primary: var(--color-rose-800);
-  --card-rose-timeline-surface: var(--color-rose-900);
-  --card-fuchsia-surface: var(--color-fuchsia-700);
-  --card-fuchsia-surface-pale: var(--color-fuchsia-300);
-  --card-fuchsia-border-primary: var(--color-fuchsia-800);
-  --card-fuchsia-timeline-surface: var(--color-fuchsia-800);
-  --card-pink-surface: var(--color-pink-700);
-  --card-pink-surface-pale: var(--color-pink-300);
-  --card-pink-border-primary: var(--color-pink-800);
-  --card-pink-timeline-surface: var(--color-pink-900);
+
+  /* The mode cards: a RouteCard's colours by the kind of ride (RouteCard, 4629:22776).
+     Figma: Card/Jeep/Jeep-surface… The leaf repeats its group, so the token drops the
+     repeat: Card/Jeep/Jeep-surface is --card-jeep-surface. surface-border is the hairline
+     above and below a card, surface-secondary its darker step, on-surface what is written. */
+  --card-jeep-surface: var(--color-blue-700);
+  --card-jeep-surface-secondary: var(--color-blue-800);
+  --card-jeep-surface-border: var(--color-blue-800);
+  --card-jeep-on-surface: var(--color-white);
+  --card-uv-express-surface: var(--color-neutral-300);
+  --card-uv-express-surface-secondary: var(--color-neutral-400);
+  --card-uv-express-surface-border: var(--color-neutral-400);
+  --card-uv-express-on-surface: var(--color-neutral-950);
+  --card-ejeep-surface: var(--color-neutral-50);
+  --card-ejeep-surface-secondary: var(--color-neutral-300);
+  --card-ejeep-surface-border: var(--color-neutral-300);
+  --card-ejeep-on-surface: var(--color-neutral-800);
+  --card-bus-surface: var(--color-orange-700);
+  --card-bus-surface-secondary: var(--color-orange-800);
+  --card-bus-surface-border: var(--color-orange-800);
+  --card-bus-on-surface: var(--color-neutral-50);
 
   /* Error actions — the destructive button, whose fill is a semantic rather
      than a bare primitive. Figma: Error/… */
@@ -239,11 +244,14 @@
 
   /* The map: its route lines and hintuans. Figma: Map/… Two looks, no
      opacity — every line at rest, the selected one drawn over it: see-through
-     lines stack and confuse. */
+     lines stack and confuse. Every road route rests in surface-default, with
+     no rim (rail-rest-layers.ts), as does the rest of a road trip past a
+     picked hintuan. A lit line is cased in route-line-casing. */
   --map-route-line-surface-default: var(--color-parabrand-300);
   --map-route-line-surface-selected: var(--color-parabrand-800);
   --map-route-line-arrow-rest: var(--color-white);
   --map-route-line-arrow-inverse: var(--color-neutral-900);
+  --map-route-line-casing: var(--color-neutral-800);
   /* A lit line where it passes a hintuan. */
   --map-route-line-hintuan-surface-default: var(--color-green-400);
   /* The hotspot boxes on the map: HotspotOverlayCard (3837:11308). Figma gives
@@ -274,7 +282,7 @@
   /* Its circle's hairline, at 75%, and the beam's colour (3870:5247). */
   --map-locator-indicator-overlay-border: var(--color-parabrand-800);
   /* The studio's Contributors map, where a contribution's ways show: papunta in blue/700,
-     pabalik in the orange of Card/orange/surface. Provisional: not named in Figma yet. */
+     pabalik in orange/700. Provisional: not named in Figma yet. */
   --map-trail-papunta: var(--color-blue-700);
   --map-trail-pabalik: var(--color-orange-700);
   /* The contributor page's own trail: walked (Lakad: round dashes, a foot along it) in the blue
@@ -319,6 +327,7 @@
   --color-content-inverse-secondary: var(--content-inverse-secondary);
   --color-content-error: var(--content-error);
   --color-content-success: var(--content-success);
+  --color-content-warning: var(--content-warning);
 
   --color-border-primary: var(--border-primary);
   --color-border-secondary: var(--border-secondary);
@@ -330,6 +339,7 @@
   --color-surface-secondary: var(--surface-secondary);
   --color-surface-tertiary: var(--surface-tertiary);
   --color-surface-quaternary: var(--surface-quaternary);
+  --color-surface-inverse: var(--surface-inverse);
   --color-surface-error: var(--surface-error);
   --color-surface-success: var(--surface-success);
   --color-surface-transparent: var(--surface-transparent);
@@ -342,26 +352,22 @@
   --color-card-red-timeline-surface: var(--card-red-timeline-surface);
   --color-card-red-surface-light: var(--card-red-surface-light);
   --color-card-green-surface-light: var(--card-green-surface-light);
-  --color-card-orange-surface: var(--card-orange-surface);
-  --color-card-orange-surface-pale: var(--card-orange-surface-pale);
-  --color-card-orange-border-primary: var(--card-orange-border-primary);
-  --color-card-orange-timeline-surface: var(--card-orange-timeline-surface);
-  --color-card-violet-surface: var(--card-violet-surface);
-  --color-card-violet-surface-pale: var(--card-violet-surface-pale);
-  --color-card-violet-border-primary: var(--card-violet-border-primary);
-  --color-card-violet-timeline-surface: var(--card-violet-timeline-surface);
-  --color-card-rose-surface: var(--card-rose-surface);
-  --color-card-rose-surface-pale: var(--card-rose-surface-pale);
-  --color-card-rose-border-primary: var(--card-rose-border-primary);
-  --color-card-rose-timeline-surface: var(--card-rose-timeline-surface);
-  --color-card-fuchsia-surface: var(--card-fuchsia-surface);
-  --color-card-fuchsia-surface-pale: var(--card-fuchsia-surface-pale);
-  --color-card-fuchsia-border-primary: var(--card-fuchsia-border-primary);
-  --color-card-fuchsia-timeline-surface: var(--card-fuchsia-timeline-surface);
-  --color-card-pink-surface: var(--card-pink-surface);
-  --color-card-pink-surface-pale: var(--card-pink-surface-pale);
-  --color-card-pink-border-primary: var(--card-pink-border-primary);
-  --color-card-pink-timeline-surface: var(--card-pink-timeline-surface);
+  --color-card-jeep-surface: var(--card-jeep-surface);
+  --color-card-jeep-surface-secondary: var(--card-jeep-surface-secondary);
+  --color-card-jeep-surface-border: var(--card-jeep-surface-border);
+  --color-card-jeep-on-surface: var(--card-jeep-on-surface);
+  --color-card-uv-express-surface: var(--card-uv-express-surface);
+  --color-card-uv-express-surface-secondary: var(--card-uv-express-surface-secondary);
+  --color-card-uv-express-surface-border: var(--card-uv-express-surface-border);
+  --color-card-uv-express-on-surface: var(--card-uv-express-on-surface);
+  --color-card-ejeep-surface: var(--card-ejeep-surface);
+  --color-card-ejeep-surface-secondary: var(--card-ejeep-surface-secondary);
+  --color-card-ejeep-surface-border: var(--card-ejeep-surface-border);
+  --color-card-ejeep-on-surface: var(--card-ejeep-on-surface);
+  --color-card-bus-surface: var(--card-bus-surface);
+  --color-card-bus-surface-secondary: var(--card-bus-surface-secondary);
+  --color-card-bus-surface-border: var(--card-bus-surface-border);
+  --color-card-bus-on-surface: var(--card-bus-on-surface);
 
   --color-error-surface: var(--error-surface);
   --color-error-surface-secondary: var(--error-surface-secondary);
@@ -376,6 +382,7 @@
   --color-map-route-line-surface-selected: var(--map-route-line-surface-selected);
   --color-map-route-line-arrow-rest: var(--map-route-line-arrow-rest);
   --color-map-route-line-arrow-inverse: var(--map-route-line-arrow-inverse);
+  --color-map-route-line-casing: var(--map-route-line-casing);
   --color-map-route-line-hintuan-surface-default: var(--map-route-line-hintuan-surface-default);
   --color-map-overlay-card-hintuan-surface: var(--map-overlay-card-hintuan-surface);
   --color-map-overlay-card-hintuan-surface-selected: var(
@@ -525,10 +532,12 @@
     inset 0 -0.6px 0 0 rgb(0 0 0 / 0.24), inset 0.6px 0 0 0 rgb(0 0 0 / 0.24),
     inset -0.6px 0 0 0 rgb(0 0 0 / 0.24), inset 0 0.6px 0 0 rgb(0 0 0 / 0.24);
 
+  /* A RouteCard at rest, and the boxes and buttons that share its look (Route/RouteCardPrimary
+   * and Route/RouteCardInverse, 4629:22776): lit along the top, shaded along the bottom. */
   --shadow-route-card-primary:
-    inset 0 3px 2px 0 rgb(255 255 255 / 0.28), inset 0 -3px 4px 0 rgb(0 0 0 / 0.28);
+    inset 0 -2px 4px 0 rgb(0 0 0 / 0.24), inset 0 2px 4px 0 rgb(255 255 255 / 0.24);
   --shadow-route-card-inverse:
-    inset 0 3px 2px 0 rgb(255 255 255 / 0.4), inset 0 -3px 3px 0 rgb(0 0 0 / 0.2);
+    inset 0 -4px 8px 0 rgb(0 0 0 / 0.08), inset 0 3px 8px 0 rgb(255 255 255 / 0.64);
 
   /* A bottom sheet, lifted off the map (BottomSheet/TopShadow, 3817:6007; its Figma
    * effect style is named BottomToolbar/TopShadow). */
@@ -551,9 +560,10 @@
   /* The commuter's dot, lifted off the map in a deep blue (LocatorDotShadow, 3870:5242). */
   --shadow-locator-dot-shadow: 0 2px 8px 0 rgb(1 27 85 / 0.48);
 
-  /* A RouteCard's State=Selected: pressed in, lit from the top left. */
+  /* A RouteCard's State=Selected: pressed in, lit from the top left
+   * (Route/RouteCardPrimarySelected, 4633:25526). Figma draws no inverse one, so that token is not Figma's. */
   --shadow-route-card-primary-selected:
-    inset 3px 3px 8px 0 rgb(12 12 12 / 0.64), inset -1px -1px 1px 0 rgb(18 18 18 / 0.24);
+    inset -2px -2px 4px 0 rgb(18 18 18 / 0.16), inset 3px 3px 8px 0 rgb(12 12 12 / 0.56);
   --shadow-route-card-inverse-selected:
     inset 2.5px 2.5px 8px 0 rgb(47 47 47 / 0.72), inset -1px -1px 2px 0 rgb(0 0 0 / 0.32);
 }

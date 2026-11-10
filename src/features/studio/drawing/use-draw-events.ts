@@ -55,7 +55,7 @@ export function useDrawEvents(
     if (!map.getLayer(POINT_LAYER) || !map.getLayer(HIT_LAYER)) return;
 
     const canvas = map.getCanvas();
-    canvas.style.cursor = 'crosshair';
+    canvas.style.cursor = refs.moving.current ? 'default' : 'crosshair';
     // A finger held on the map is a long-press, not a call for iOS's callout.
     canvas.style.setProperty('-webkit-touch-callout', 'none');
 

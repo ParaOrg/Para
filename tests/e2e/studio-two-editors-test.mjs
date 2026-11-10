@@ -1,9 +1,9 @@
 // Two editors, one route: "being changed by", looked at and not changed, then
-// discarded and taken over. /studio/?e2e=1 with VITE_STUDIO_DRAFTS=1, against
+// discarded and taken over. /studio/?e2e=1, against
 // a stand-in for the database that two pages share; no router, no tiles, no
 // account, nothing reaches the live project.
 //
-//   VITE_STUDIO_DRAFTS=1 npm run dev       (in another terminal)
+//   npm run dev                            (in another terminal)
 //   node tests/e2e/studio-two-editors-test.mjs
 //
 // What it checks: editor A edits a route and saves, which stores a draft
@@ -178,17 +178,24 @@ async function openRoute(page) {
 }
 
 /**
- * Opens the route's trip card from the place at its end. A tap on the line
- * would not do once there is a draft: its dashed line lies on the route's and
- * takes the tap, which opens the review.
+ * Opens the route's trip card from the place at its end, clear of the draft's
+ * dashed line, so the card is reached the same way whoever's draft is on it.
  */
 async function openRouteFromPlace(page) {
   // Inside the place's box, clear of the line's end and the draft's marker.
   // The draft's marker may sit over the place: leave it out of the tap's way.
   await page.addStyleTag({ content: '.maplibregl-marker { pointer-events: none !important; }' });
+  // The place's card lists its routes; a computer's tap goes past it into editing the place,
+  // so the card is opened in a narrow window and the trip seen in a wide one.
+  // Any card open is closed first: in a narrow window its sheet would cover the place.
+  const viewport = page.viewportSize();
+  const close = page.getByTestId('card').getByRole('button', { name: 'Close' });
+  if (await close.count()) await close.first().click();
+  await page.setViewportSize({ width: 900, height: 800 });
   await tapAt(page, [LINE.at(-1)[0] + 0.0003, LINE.at(-1)[1] - 0.0002], 17);
   await page.getByTestId('card-item').first().click();
   await page.waitForTimeout(700);
+  if (viewport) await page.setViewportSize(viewport);
 }
 
 const body = async (page) => (await page.locator('body').innerText()).replace(/\s+/g, ' ');
@@ -200,13 +207,18 @@ const APPROVED_TABLES = ['route', 'route_variant', 'route_stop', 'stop'];
 /** Edit route → Update: the editor's own save, which becomes a draft. On a computer the form is beside the map, with no Done. */
 async function editAndSave(page) {
   await page.getByRole('button', { name: 'Edit route' }).click();
-  await page.waitForFunction(() => /\d+ points?\b/.test(document.body.innerText));
+  await page.waitForFunction(() => /\d+ points?\b|\bPoints\s+\d+/.test(document.body.innerText));
   await page
     .waitForFunction(() => !document.body.innerText.includes('snapping…'), null, { timeout: 15000 })
     .catch(() => {});
-  if (!(await page.getByTestId('route-panel').isVisible()))
+  if (!(await page.getByTestId('sidebar').isVisible()))
     await page.getByRole('button', { name: /Done/ }).click();
-  await page.getByRole('button', { name: /^(Save|Update)$/ }).click();
+  // Published and unchanged, the sidebar offers Unpublish, not a save: a via makes it a change.
+  await page.getByLabel('Via (if applicable)').fill('Two Editors Road');
+  await page
+    .getByRole('button', { name: /^(Publish|Save as draft)$/ })
+    .last()
+    .click();
   await page.getByText('Saved as a draft').waitFor({ timeout: 10000 });
 }
 
@@ -236,6 +248,15 @@ check(
 // ---- B opens the same route: looks, cannot change.
 const b = await editor(B_ID, 'b@example.com', db);
 const writesBefore = writesOf(db).length;
+// A tap on A's dashed line opens the route's card, to read: no review sheet and no editing.
+await openRoute(b.page);
+await b.page.getByText('Being changed by Marisol').waitFor({ timeout: 10000 });
+check(
+  "B's tap on A's draft line opens the route's card to read, with no review sheet",
+  (await b.page.locator('dialog[open]').count()) === 0 &&
+    (await b.page.getByTestId('sidebar').count()) === 0 &&
+    (await b.page.getByRole('button', { name: 'Edit route' }).count()) === 0,
+);
 await openRouteFromPlace(b.page);
 await b.page.getByText('Being changed by Marisol').waitFor({ timeout: 10000 });
 check(
@@ -252,6 +273,11 @@ check(
   !(await body(b.page)).includes(A_ID) && !(await body(b.page)).includes('a@example.com'),
 );
 check('  and B has sent no write', writesOf(db).length === writesBefore);
+check(
+  "  the card offers B Approve on A's draft, and no Discard: only its maker discards it",
+  (await b.page.getByRole('button', { name: 'Approve', exact: true }).count()) === 1 &&
+    (await b.page.getByRole('button', { name: /^Discard/ }).count()) === 0,
+);
 
 // B's Drafts list says it too, and marks the draft a Draft.
 await b.page.getByRole('button', { name: /^Drafts \(\d+\)$/ }).click();
@@ -330,7 +356,7 @@ await load(b.page);
 await openRouteFromPlace(b.page);
 await b.page.getByRole('button', { name: 'Edit route' }).waitFor();
 await b.page.getByRole('button', { name: 'Edit route' }).click();
-await b.page.waitForFunction(() => /\d+ points?/.test(document.body.innerText));
+await b.page.waitForFunction(() => /\d+ points?|\bPoints\s+\d+/.test(document.body.innerText));
 db.tables.editor_name = [{ user_id: A_ID, name: 'Marisol' }];
 db.tables.draft.push({
   id: 'eeeeeeee-0000-4000-8000-0000000000aa',
@@ -348,9 +374,14 @@ db.tables.draft.push({
   submitted_at: null,
 });
 const staleWrites = writesOf(db).length;
-if (!(await b.page.getByTestId('route-panel').isVisible()))
+if (!(await b.page.getByTestId('sidebar').isVisible()))
   await b.page.getByRole('button', { name: /Done/ }).click();
-await b.page.getByRole('button', { name: /^(Save|Update)$/ }).click();
+// Published and unchanged, the sidebar offers Unpublish, not a save: a via makes it a change.
+await b.page.getByLabel('Via (if applicable)').fill('Two Editors Road');
+await b.page
+  .getByRole('button', { name: /^(Publish|Save as draft)$/ })
+  .last()
+  .click();
 await b.page.getByText('This is being changed by Marisol').waitFor({ timeout: 10000 });
 check(
   "B's save from a card opened before A's draft is refused, and nothing is written",

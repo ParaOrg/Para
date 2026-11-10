@@ -13,7 +13,7 @@
 import { mkdirSync } from 'node:fs';
 import { chromium } from 'playwright';
 import { fakeContributions } from './lib/fake-contributions.mjs';
-import { BASE, bareStyle, harness, nodeFetch, until } from './lib/harness.mjs';
+import { BASE, bareStyle, harness, nodeFetch, until, waitFor } from './lib/harness.mjs';
 import { checkLocationLabels } from './lib/location-labels.mjs';
 import { mapControlsInTabOrder } from './lib/tab-order.mjs';
 
@@ -2116,21 +2116,27 @@ const buttons = (page) =>
 }
 
 // ------------------------------------------------------- Keep recording on the form
+// Time on the Save form, on the page's clock: under the form's own two minutes (SAVE_FORM_SECONDS,
+// use-save-countdown.ts), after which it saves the ride by itself; the page's clock jumping past
+// them saves it at the countdown's next tick, which a Resume tapped in the same moment may lose to.
+// Long enough to show in the Time figure, whole minutes from a minute on, were it counted.
+const ON_THE_FORM_MS = 100_000;
 {
   const { page, errors } = await phone();
   const stats = async () =>
     (await page.getByRole('group', { name: 'Recording so far' }).innerText()).replace(/\n/g, ' ');
   const activeName = () => page.evaluate(() => document.activeElement?.getAttribute('aria-label'));
 
-  // (a) a Save after a switch, ten minutes on the form, and back.
+  // (a) a Save after a switch, a while on the form, and back.
   await page.getByRole('button', { name: 'Start Tracking' }).click();
   await page.getByRole('group', { name: 'Recording so far' }).waitFor();
   await ride(page, 0, 1200);
   await page.getByRole('button', { name: 'Switch to Sakay' }).click();
   await ride(page, 1190, 200);
+  const secondsBeforeForm = recordedSeconds(await stats());
   await finishRecording(page);
   await page.getByRole('heading', { name: 'Save Recording' }).waitFor({ timeout: 30000 });
-  await page.evaluate(() => window.__advance(600_000));
+  await page.evaluate((ms) => window.__advance(ms), ON_THE_FORM_MS);
   await page.getByRole('button', { name: 'Resume', exact: true }).click();
   await page.getByRole('button', { name: 'Pause', exact: true }).waitFor();
   check(
@@ -2140,9 +2146,9 @@ const buttons = (page) =>
   );
   const seconds = recordedSeconds(await stats());
   check(
-    '  Time does not count the ten minutes on the form',
-    seconds < 8 * 60,
-    `${seconds} s; ${await stats()}`,
+    '  Time does not count the time on the form',
+    seconds - secondsBeforeForm < 60,
+    `${secondsBeforeForm} s then ${seconds} s; ${await stats()}`,
   );
   await ride(page, 190, 50);
   await page.waitForTimeout(500);
@@ -2179,15 +2185,16 @@ const buttons = (page) =>
   await page.getByRole('button', { name: 'Start Tracking' }).click();
   await page.getByRole('group', { name: 'Recording so far' }).waitFor();
   await ride(page, 0, 300);
+  const secondsBeforeStop = recordedSeconds(await stats());
   await finishRecording(page);
   await page.getByRole('heading', { name: 'Save Recording' }).waitFor();
-  await page.evaluate(() => window.__advance(600_000));
+  await page.evaluate((ms) => window.__advance(ms), ON_THE_FORM_MS);
   await page.getByRole('button', { name: 'Resume', exact: true }).click();
   await page.getByRole('button', { name: 'Pause', exact: true }).waitFor();
   check(
     'Resume on the form after a stop by hand: recording again, Pause focused, no time for the form',
     (await activeName()) === 'Pause' &&
-      recordedSeconds(await stats()) < 8 * 60 &&
+      recordedSeconds(await stats()) - secondsBeforeStop < 60 &&
       (await page.evaluate(() => window.__watchers())) === 1,
     await stats(),
   );
@@ -3172,6 +3179,21 @@ const REFUSING_LOCATION = () => {
       .allInnerTexts()
       .then((texts) => texts.join(' | ')),
   );
+  // Paused, the recorder is not locating: its closed problem no longer holds the one location
+  // toast, and the locate button's own note is said at its tap.
+  await page.getByRole('button', { name: 'Pause', exact: true }).click();
+  await tapRefused();
+  check(
+    "  paused, a tap on the locate button says its own note, not held back by the recorder's closed one",
+    await refused.waitFor({ timeout: 5000 }).then(
+      () => true,
+      () => false,
+    ),
+    await page
+      .getByTestId('toast')
+      .allInnerTexts()
+      .then((texts) => texts.join(' | ')),
+  );
   check('  no page errors', errors.length === 0, errors.join('; '));
   await page.context().close();
 }
@@ -3528,6 +3550,7 @@ const FIRST_IDLE = () => {
     return {
       at: Object.keys(paint).map((id) => order.indexOf(id)),
       casing: order.indexOf('published-routes-casing'),
+      isCasingShown: map.getLayoutProperty('published-routes-casing', 'visibility') !== 'none',
       trail: order.indexOf('recording-trail-casing'),
       firstLabel,
       colours: Object.keys(paint).map((id) => map.getPaintProperty(id, 'line-color')),
@@ -3536,8 +3559,11 @@ const FIRST_IDLE = () => {
     };
   }, PUBLISHED_PAINT);
   check(
-    "the published routes are on the contributor's map: a casing and the four resting lines",
-    layers.casing >= 0 && layers.at.every((i) => i > layers.casing) && layers.routes > 0,
+    "the published routes are on the contributor's map: a casing, hidden (no rim at rest), and the four resting lines",
+    layers.casing >= 0 &&
+      !layers.isCasingShown &&
+      layers.at.every((i) => i > layers.casing) &&
+      layers.routes > 0,
     JSON.stringify(layers),
   );
   check(
@@ -3730,6 +3756,67 @@ const FIRST_IDLE = () => {
     '  the page notes it once, in the console only',
     warnings.filter((w) => w.includes('published routes could not be shown')).length === 1,
     JSON.stringify(warnings),
+  );
+  check('  no page errors', errors.length === 0, errors.join('; '));
+  await page.context().close();
+}
+
+// --------------------------- no signal as the page opens: the map comes once the phone is back online
+{
+  const { page, errors } = await phone();
+  let tilesAsked = 0;
+  let isStyleReachable = false;
+  // A design with one vector source whose tiles are empty, so the tiles asked can be counted; the
+  // style itself unreachable until the signal comes back.
+  await page.route(/tiles\.openfreemap\.org/, (route) => {
+    const url = route.request().url();
+    if (/\/stand-in\//.test(url)) {
+      tilesAsked += 1;
+      return route.fulfill({ status: 204, body: '' });
+    }
+    if (!/\/styles\//.test(url)) return route.fulfill({ status: 404, body: '' });
+    if (!isStyleReachable) return route.abort('internetdisconnected');
+    return route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        version: 8,
+        sources: {
+          openmaptiles: {
+            type: 'vector',
+            tiles: ['https://tiles.openfreemap.org/stand-in/{z}/{x}/{y}.pbf'],
+          },
+        },
+        layers: [
+          { id: 'bg', type: 'background', paint: { 'background-color': '#eeeeee' } },
+          { id: 'road', type: 'line', source: 'openmaptiles', 'source-layer': 'road' },
+        ],
+      }),
+    });
+  });
+  const isLoaded = () => page.locator('[data-testid="map-view"][data-loaded]').count();
+  await page.reload({ waitUntil: 'load' });
+  await page.getByRole('button', { name: 'Start Tracking' }).waitFor({ timeout: 20000 });
+  await page.waitForTimeout(3000);
+  check('with no signal as the page opens, the map does not load', (await isLoaded()) === 0);
+  isStyleReachable = true;
+  await page.evaluate(() => window.dispatchEvent(new Event('online')));
+  const cameBack = await page
+    .locator('[data-testid="map-view"][data-loaded]')
+    .waitFor({ timeout: 20000 })
+    .then(
+      () => true,
+      () => false,
+    );
+  check('  once the phone is back online, the map loads by itself, with no reload', cameBack);
+  await waitFor(() => tilesAsked > 0, 10000);
+  const before = tilesAsked;
+  await page.evaluate(() => window.dispatchEvent(new Event('online')));
+  await waitFor(() => tilesAsked > before, 10000);
+  check(
+    "  and the signal coming back again asks the basemap's tiles afresh, for any that failed",
+    tilesAsked > before,
+    `${before} then ${tilesAsked}`,
   );
   check('  no page errors', errors.length === 0, errors.join('; '));
   await page.context().close();

@@ -36,5 +36,3 @@ export const WithLine: Story = { args: { hasLine: true } };
 export const Phone: Story = {
   globals: { viewport: { value: 'mobile1', isRotated: false } },
 };
-
-export const Public: Story = { args: { map: 'public' } };

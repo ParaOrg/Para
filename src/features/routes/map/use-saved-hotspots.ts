@@ -28,7 +28,13 @@ import { orderLinked } from '../model/timeline';
 export function useSavedHotspots<S extends Hotspot>(
   map: MapLibreMap | null,
   load: () => Promise<{ hotspots: S[]; links: HotspotLink[] }>,
-  opts: { drawing?: boolean; hiddenHotspotId?: string | null; muted?: boolean } = {},
+  opts: {
+    drawing?: boolean;
+    hiddenHotspotId?: string | null;
+    muted?: boolean;
+    /** Whether the hotspots' pins are drawn zoomed in; their dots, boxes and names are either way. */
+    shouldShowPins?: boolean;
+  } = {},
 ) {
   const muted = opts.muted ?? false;
   const [hotspots, setHotspots] = useState<S[]>([]);
@@ -110,7 +116,7 @@ export function useSavedHotspots<S extends Hotspot>(
 
   // ----------------------------------------------------------------- layers
 
-  useSavedHotspotsLayers(map, hotspots, opts.hiddenHotspotId, marks, hull);
+  useSavedHotspotsLayers(map, hotspots, opts.hiddenHotspotId, marks, hull, opts.shouldShowPins);
 
   // ----------------------------------------------------------------- events
 

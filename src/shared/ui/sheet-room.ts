@@ -5,7 +5,14 @@
  * the arithmetic under them takes rects.
  */
 
-import { aboveMiddle, shownAt, type Snap } from './sheet-gesture';
+import {
+  CARD_SHAPE,
+  FRAMED_SHARE,
+  heightsFor,
+  shownAt,
+  type SheetShape,
+  type Snap,
+} from './sheet-gesture';
 
 /** MapLibre's fit padding, a side at a time. */
 export interface Room {
@@ -36,9 +43,27 @@ export function clearOfDock(
   if (!dock || dock.hidden) return [0, 0];
   return clearOfRects(
     map.getBoundingClientRect(),
-    dock.getBoundingClientRect(),
+    dockRect(dock),
     snap ? showsAt(dock, snap) : undefined,
   );
+}
+
+/**
+ * The dock's box on the page, with what stands beside it: a docked list's footer, its Controller,
+ * sits over the map at its right (BottomSheet's `floats="dock"`), and the camera keeps clear of it
+ * too. Along the bottom the footer is inside the sheet, and the box is the sheet's own.
+ */
+function dockRect(dock: HTMLElement): Rect {
+  const sheet = dock.getBoundingClientRect();
+  const footer = dock.querySelector('[data-sheet-footer]')?.getBoundingClientRect();
+  if (!footer || footer.left < sheet.right - 1) return sheet;
+  return {
+    top: sheet.top,
+    bottom: sheet.bottom,
+    left: sheet.left,
+    right: Math.max(sheet.right, footer.right),
+    height: sheet.height,
+  };
 }
 
 /**
@@ -56,13 +81,14 @@ export function clearOfRects(map: Rect, dock: Rect | null, shows?: number): [num
 
 /**
  * The height a sheet is measured at when the camera glides to a point under
- * it: its own, or Middle when it is higher — the sheet stays put, as the
- * owner keeps it, and what the camera brings in is there to see when it comes
- * down. A whole route fitted is framed at the sheet's own height
- * (roomBeside).
+ * it: its own, or FRAMED_SHARE of the map when it is higher — the sheet stays
+ * put, as the owner keeps it, and what the camera brings in is there to see
+ * when it comes down. A whole route fitted is framed at the sheet's own
+ * height (roomBeside).
  */
 export function framedAt(snap: Snap): Snap {
-  return aboveMiddle(snap) ? 'middle' : snap;
+  if (snap === 'full') return FRAMED_SHARE;
+  return typeof snap === 'number' ? Math.min(snap, FRAMED_SHARE) : snap;
 }
 
 /**
@@ -77,15 +103,16 @@ export const FIT_ROOM_MIN_PX = 48;
  * The room a sheet leaves for a whole route the camera fits, as MapLibre's
  * fit padding: beside the sheet where it floats in the corner, above it where
  * it is docked along the bottom, at its own height (the owner's pick: in
- * close above Low, out above Middle). Where it leaves less than
- * FIT_ROOM_MIN_PX — Max, which leaves only a strip of map (MAX_STRIP_PX) — at
- * Middle's (`framedAt`), so the route is there to see as it comes down.
+ * close above Low, out above a raised sheet). Where it leaves less than
+ * FIT_ROOM_MIN_PX — full height, which leaves only a strip of map
+ * (MAX_STRIP_PX) — at framedAt's, so the route is there to see as it comes
+ * down.
  */
 export function roomBeside(map: HTMLElement, dock: HTMLElement | null, snap: Snap): Room {
   if (!dock || dock.hidden) return roomFromRects(map.getBoundingClientRect(), null, 0, 0, snap);
   return roomFromRects(
     map.getBoundingClientRect(),
-    dock.getBoundingClientRect(),
+    dockRect(dock),
     showsAt(dock, snap),
     showsAt(dock, framedAt(snap)),
     snap,
@@ -116,8 +143,8 @@ export function roomFromRects(
     return room;
   }
   let shown = shows;
-  // Max leaves only a strip of map (MAX_STRIP_PX): framed as at Middle, as when it covered it all.
-  if (snap === 'max' || map.height - shown < FIT_ROOM_MIN_PX) shown = showsFramed;
+  // Full height leaves only a strip of map (MAX_STRIP_PX): framed at framedAt's, as when it covered it all.
+  if (snap === 'full' || map.height - shown < FIT_ROOM_MIN_PX) shown = showsFramed;
   // A thin strip above a tall sheet: the margins give way, so the route still fits.
   const margin = Math.max(0, Math.min(FIT_MARGIN_PX, (map.height - shown - FIT_ROOM_MIN_PX) / 2));
   room.top = margin;
@@ -126,13 +153,23 @@ export function roomFromRects(
 }
 
 /**
- * How much of a docked sheet shows at `snap`: below Max, lifted clear of a
- * phone's home indicator by its bottom padding, as `slide` lifts it.
+ * How much of a docked sheet shows at `snap`: below full height, lifted clear
+ * of a phone's home indicator by its bottom padding, as `slide` lifts it.
  */
 function showsAt(sheet: HTMLElement, snap: Snap): number {
   const h = sheet.offsetHeight;
-  if (snap === 'max') return shownAt('max', h);
-  return shownAt(snap, h) + (parseFloat(getComputedStyle(sheet).paddingBottom) || 0);
+  const heights = heightsFor(h, shapeOf(sheet));
+  if (snap === 'full') return shownAt('full', h, heights);
+  return shownAt(snap, h, heights) + (parseFloat(getComputedStyle(sheet).paddingBottom) || 0);
+}
+
+/** The sheet's own Low and full height, as BottomSheet writes them on it (its `shape`). */
+function shapeOf(sheet: HTMLElement): SheetShape {
+  const lowPx = Number(sheet.dataset.lowPx);
+  return {
+    lowPx: Number.isFinite(lowPx) && lowPx > 0 ? lowPx : CARD_SHAPE.lowPx,
+    isMaxFull: sheet.hasAttribute('data-max-full'),
+  };
 }
 
 /**
@@ -148,4 +185,31 @@ export function clearOfSheet(
   snap: Snap,
 ): [number, number] {
   return clearOfDock(map, dock, framedAt(snap));
+}
+
+/** A sheet whose top is within this share of the map's top covers it (isMapOutOfSight): above 90%. */
+const COVERED_ABOVE = 0.1;
+
+/**
+ * Whether the map under `map` is out of sight or on the move under a finger: a docked sheet at full
+ * height, or raised over all but the map's top tenth, or a finger (or a mouse) holding a sheet (`data-dock-dragging`,
+ * BottomSheet). What only moves for the eye, as the flowing chevrons do, waits meanwhile: each of
+ * its steps costs a redraw the sheet's own frames then lack. A sheet floating beside the map covers
+ * none.
+ */
+export function isMapOutOfSight(map: HTMLElement): boolean {
+  const host = map.closest('[data-dock-host]');
+  if (!host) return false;
+  if (host.hasAttribute('data-dock-dragging')) return true;
+  const sheets = host.querySelectorAll<HTMLElement>(
+    '[role="dialog"][data-snap]:not([data-snap="low"]):not([hidden])',
+  );
+  const under = map.getBoundingClientRect();
+  // Docked along the bottom, as wide as the map: at full height whatever strip it leaves, which
+  // a tall status bar widens; else with its top above the foot of the map's top tenth.
+  return [...sheets].some((sheet) => {
+    const over = sheet.getBoundingClientRect();
+    if (over.width < under.width - 1) return false;
+    return sheet.dataset.snap === 'full' || over.top - under.top < under.height * COVERED_ABOVE;
+  });
 }

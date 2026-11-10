@@ -8,7 +8,7 @@ const meta = {
   component: ReviewConfirmation,
   parameters: { layout: 'padded' },
   args: {
-    action: 'approve',
+    action: 'publish',
     draft: {
       id: 'draft-a',
       label: 'UP Ikot',

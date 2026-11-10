@@ -51,7 +51,7 @@ export function OtherMaps({
         />
       )}
       {studioMap === 'public' ? (
-        <StudioPublicView hasLine={hasLine} onOpenPlayground={onOpenPlayground} />
+        <StudioPublicView />
       ) : (
         !isContributors &&
         studioMap !== 'playground' && (

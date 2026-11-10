@@ -37,7 +37,7 @@ Much of the codebase predates this file.
 | Storybook | Component development and documentation |
 | vite-plugin-pwa | Installable, offline-capable mobile app |
 | Cloudflare Turnstile | The bot check on a contributor's first save and on the studio's sign-in. Cloudflare's own script, loaded on those two pages only; no npm package |
-| Capacitor 8 | The contributor app: the contributor page's own build inside a native Android shell, with `@capacitor-community/background-geolocation` for recording with the screen off and `@capacitor/haptics` for the toolbar's slide ticks. The web bundle carries none of it (ADR 0006) |
+| Capacitor 8 | The contributor app: the contributor page's own build inside a native Android shell, with its own foreground service (`RideService`) for recording with the screen off and `@capacitor/haptics` for the toolbar's slide ticks. The web bundle carries none of it (ADR 0006) |
 | Cloudflare R2 | The weekly encrypted backup of contributions, written by a GitHub workflow. Nothing in the app reads it |
 | ESLint 10 + Prettier | Automatic enforcement of these standards. Every rule is an error (since 2026-10-14): a new rule warns only until the tree is clean of it. jsx-a11y's ESLint peer range is overridden in package.json until it declares 10 |
 
@@ -60,7 +60,8 @@ src/
 │   │   ├── geo/                # The pass and babaan-side rules.
 │   │   ├── map/                # The map view (the one MapLibre owner), its basemap and layers, the route and hotspot layers and hooks.
 │   │   ├── published/          # The published map's reader: the index and the line files, for the public map and the studio's Public map.
-│   │   └── cards/              # The cards and timelines.
+│   │   ├── cards/              # The cards and timelines.
+│   │   └── search/             # Place search: the field and its results.
 │   ├── locator/                # "Where am I". index.ts is its public API.
 │   ├── published-map/          # Tracks the published map's freshness and runs the installed app's updates. index.ts.
 │   ├── studio/                 # The editor. The public page never loads it. index.ts.
@@ -78,7 +79,7 @@ Outside `src/`, `android/` is the contributor app's native Android project (Capa
 
 Create only the folders a feature actually needs. Don't scaffold empty ones.
 
-A large feature groups by concern (`routes`: model, geo, map, published, cards; `studio`: auth, data, drawing, panels), because that is the layering the code has: no React in a model, MapLibre only in a map folder. The kind folders (`components`, `hooks`, `api`, `schemas`, `utils`) are the default for a small feature and appear inside a concern folder when it grows.
+A large feature groups by concern (`routes`: model, geo, map, published, cards, search; `studio`: auth, data, drawing, panels), because that is the layering the code has: no React in a model, MapLibre only in a map folder. The kind folders (`components`, `hooks`, `api`, `schemas`, `utils`) are the default for a small feature and appear inside a concern folder when it grows.
 
 ### Import rules
 

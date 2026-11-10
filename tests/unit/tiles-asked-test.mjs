@@ -84,15 +84,16 @@ test('the public map notes its tiles, the studio none, and the worker asks for t
     'utf8',
   );
   assert.match(view, /import \{ noteTile \} from '\.\/tiles-asked'/);
-  // Only with `openOn`, which only the public map passes.
-  assert.match(view, /\.\.\.\(openOn \? \{ transformRequest: noteTile \} : \{\}\)/);
-  assert.equal(view.match(/transformRequest/g).length, 1, 'no other transform');
+  // Only with `openOn`, which only the public map passes; otherwise the page's own transform, which
+  // only the contributor app passes (its basemap cache), and the studio none.
+  assert.match(view, /transformRequest: openOn \? noteTile : transformRequest,/);
   const studio = readFileSync(
     new URL('../../src/app/studio/workshop.tsx', import.meta.url),
     'utf8',
   );
   assert.match(studio, /<MapView\b/, 'the studio renders its MapView here');
   assert.doesNotMatch(studio, /openOn/);
+  assert.doesNotMatch(studio, /transformRequest/);
 
   const pwa = readFileSync(
     new URL('../../src/features/published-map/pwa.ts', import.meta.url),

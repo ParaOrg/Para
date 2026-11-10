@@ -344,3 +344,16 @@ test('a fetched style is dressed only once it is one: version 8, its sources and
     );
   }
 });
+
+test('the public map and the studio, with no signal, still hand MapLibre the URL', async () => {
+  const monochrome = BASEMAPS.find((b) => b.dressing === 'monochrome');
+  const realFetch = globalThis.fetch;
+  globalThis.fetch = async () => {
+    throw new TypeError('Failed to fetch');
+  };
+  try {
+    assert.equal(await initialStyle(monochrome, true), monochrome.url);
+  } finally {
+    globalThis.fetch = realFetch;
+  }
+});

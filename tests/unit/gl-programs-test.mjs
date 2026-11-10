@@ -32,6 +32,9 @@ import { namePaint } from '../../src/features/routes/map/saved-hotspots-labels.t
 import { HOTSPOT_CONTENT } from '../../src/features/routes/map/colours.ts';
 import { litOpacity } from '../../src/features/routes/map/lighting.ts';
 import { litWidth } from '../../src/features/routes/map/line-style.ts';
+import { MAP_COLOURS } from '../../src/design-system/foundation/map-colours.ts';
+import { RESTING_FILTER, RESTING_LAYERS } from '../../src/features/routes/map/rail-rest-layers.ts';
+import { routesData } from '../../src/features/routes/map/saved-routes-data.ts';
 
 const read = (path) => readFileSync(new URL(path, import.meta.url), 'utf8');
 
@@ -136,6 +139,37 @@ test('the same pixels as the step it replaces: nothing below 15, the lit stretch
 
 // ------------------------------------------------------------ the rest of a ride (2026-10-12)
 
+// The owner's route-line rule: at rest every road route is one pale, the brand's, and every train
+// its line's pale, with no rim; lit, a line wears its colour on the neutral-800 casing.
+test('at rest one pale line and no rim; lit, the neutral-800 casing', () => {
+  const layers = [
+    { id: 'background', type: 'background' },
+    { id: 'road-label', type: 'symbol' },
+  ];
+  const map = {
+    addSource: () => {},
+    addLayer: (spec, before) =>
+      layers.splice(before ? layers.findIndex((l) => l.id === before) : layers.length, 0, spec),
+    getLayer: (id) => layers.find((l) => l.id === id),
+    getLayersOrder: () => layers.map((l) => l.id),
+  };
+  addSavedRoutes(map);
+  assert.equal(
+    map.getLayer('saved-routes-line').paint['line-color'],
+    MAP_COLOURS['Map/RouteLine/surface-default'],
+  );
+  assert.deepEqual(
+    layers.filter((l) => l.id.startsWith('saved-routes-road-')).map((l) => l.id),
+    [],
+    'no road mode rests in a colour of its own',
+  );
+  // The resting casing is there, for what is laid under it, and drawn by no one.
+  assert.equal(map.getLayer('saved-routes-casing').layout.visibility, 'none');
+  const lit = map.getLayer('saved-routes-selected-casing');
+  assert.equal(lit.paint['line-color'], MAP_COLOURS['Map/RouteLine/casing']);
+  assert.equal(lit.layout.visibility, undefined);
+});
+
 // The owner's ask of 2026-10-13: a train line rests in its own line's pale.
 // A layer a line, each one colour, so the opening frames compile no program
 // for them that the light blue's does not; and between them every route is
@@ -170,6 +204,62 @@ test("a train line at rest is drawn by the resting line's program, one layer a l
     rails.map((r) => r.filter),
     ['LRT-1', 'LRT-2', 'MRT-3'].map((l) => ['==', ['get', 'line'], l]),
   );
+});
+
+// Every route is drawn at rest exactly once: every road route, whatever its mode, by the one pale
+// line, each train by its line's pale; and the studio's filter for the direction it is editing
+// hides it from every one of them.
+test('every route rests in exactly one resting layer, and the edited one in none', () => {
+  const line = {
+    type: 'LineString',
+    coordinates: [
+      [121, 14.6],
+      [121.01, 14.61],
+    ],
+  };
+  const route = (mode, routeCode = null) => ({ id: `${mode}${routeCode ?? ''}`, mode, routeCode });
+  const rows = [
+    route('jeepney'),
+    route('tricycle'),
+    route('p2p'),
+    route('uv_express'),
+    route('e_jeepney'),
+    route('bus'),
+    route('ferry'),
+    route('lrt', 'LRT-1'),
+    route('lrt', 'LRT-2'),
+    route('mrt', 'MRT-3'),
+  ].map((r) => ({ id: r.id, routeId: r.id, route: r, shape: line }));
+  const features = routesData(rows).features.map((f) => ({ type: 2, properties: f.properties }));
+  assert.equal(features.length, rows.length);
+  const drawnBy = (extra) => (feature) =>
+    RESTING_LAYERS.filter((id) =>
+      featureFilter(
+        extra ? ['all', RESTING_FILTER[id], extra] : RESTING_FILTER[id],
+        `layers.${id}.filter`,
+      ).filter({ zoom: 15 }, feature),
+    );
+  const expected = {
+    jeepney: ['saved-routes-line'],
+    tricycle: ['saved-routes-line'],
+    p2p: ['saved-routes-line'],
+    uv_express: ['saved-routes-line'],
+    e_jeepney: ['saved-routes-line'],
+    bus: ['saved-routes-line'],
+    ferry: ['saved-routes-line'],
+    'lrtLRT-1': ['saved-routes-rail-lrt-1'],
+    'lrtLRT-2': ['saved-routes-rail-lrt-2'],
+    'mrtMRT-3': ['saved-routes-rail-mrt-3'],
+  };
+  for (const f of features)
+    assert.deepEqual(drawnBy(null)(f), expected[f.properties.id], f.properties.id);
+  // As use-saved-routes-layers hides the direction the studio is editing.
+  for (const f of features)
+    assert.deepEqual(
+      drawnBy(['!=', ['get', 'id'], f.properties.id])(f),
+      [],
+      `${f.properties.id} hidden`,
+    );
 });
 
 test("the rest of a ride past a picked hintuan is drawn by the resting line's program, compiled at load", () => {

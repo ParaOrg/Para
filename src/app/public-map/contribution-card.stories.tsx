@@ -1,20 +1,46 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, within } from 'storybook/test';
 
-import { RouteCard } from '@/features/routes/cards/route-card';
-import type { Livery } from '@/features/routes/model/liveries';
+import { RouteCard, type RouteCardRide } from '@/features/routes/cards/route-card';
+import { isRoadLivery, type Livery, type RoadLivery } from '@/features/routes/model/liveries';
+import type { RailwayVehicle, RoadVehicle } from '@/features/routes/model/vehicles';
 
 import { ContributionCard } from './contribution-card';
 
+/** The line that wears each train or ferry livery. */
+const RAILWAY_OF = {
+  'light-rail-way-one': 'LRT-1',
+  'light-rail-way-two': 'LRT-2',
+  'metro-rail-way-three': 'MRT-3',
+  ferry: 'Ferry',
+} satisfies Record<Exclude<Livery, RoadLivery>, RailwayVehicle>;
+
+/** What each road livery's card rides, so its badge names its own mode. */
+const VEHICLE_OF = {
+  jeep: 'Jeepney',
+  'uv-express': 'UV Express',
+  ejeep: 'E-Jeep',
+  bus: 'Bus',
+} satisfies Record<RoadLivery, RoadVehicle>;
+
 /** The card as it sits in the list: right after the last route card, in that card's livery. */
 function AfterRouteCard({ livery, origin }: { livery: Livery; origin: string }) {
+  const ride: RouteCardRide = isRoadLivery(livery)
+    ? { kind: 'road', livery, vehicle: VEHICLE_OF[livery] }
+    : { kind: 'rail', railway: RAILWAY_OF[livery], bound: null, originCode: null };
   return (
     <div className="w-97.5">
       <RouteCard
-        livery={livery}
+        ride={ride}
         state="rest"
         routeOrigin={origin}
-        endPoints={[{ id: 'a', routeDirection: 'Tala', vehicle: 'Jeepney' }]}
+        endPoints={[
+          {
+            id: 'a',
+            routeDirection: 'Tala',
+            stationCode: null,
+          },
+        ]}
         onSelect={() => undefined}
         onPick={() => undefined}
         testId="chooser"
@@ -27,14 +53,14 @@ function AfterRouteCard({ livery, origin }: { livery: Livery; origin: string }) 
 const meta = {
   title: 'App/PublicMap/ContributionCard',
   component: ContributionCard,
-  args: { livery: 'orange' },
+  args: { livery: 'bus' },
   render: ({ livery }) => <AfterRouteCard livery={livery} origin="Novaliches (Bayan)" />,
 } satisfies Meta<typeof ContributionCard>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** After a red jeepney card (orange is the livery's name): the Primary blob. The other jeepney liveries and LRT lines reuse these blobs. The card is empty and hidden from assistive technology. */
+/** After a Bus card: the Primary blob, which Jeep and the train lines reuse. The card is empty and hidden from assistive technology. */
 export const AfterJeepneyCard: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -55,8 +81,8 @@ export const AfterFerryCard: Story = {
   render: ({ livery }) => <AfterRouteCard livery={livery} origin="Escolta" />,
 };
 
-/** After a violet card, whose blob is the brighter Inverse one. */
-export const AfterVioletCard: Story = {
-  args: { livery: 'violet' },
+/** After an E-Jeep card, whose blob is the brighter Inverse one. */
+export const AfterEjeepCard: Story = {
+  args: { livery: 'ejeep' },
   render: ({ livery }) => <AfterRouteCard livery={livery} origin="Fairview" />,
 };

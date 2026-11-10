@@ -186,7 +186,7 @@ const styleOutlineSchema = z.looseObject({
   layers: z.array(z.unknown()),
 });
 
-function isStyle(raw: unknown): raw is StyleSpecification {
+export function isStyle(raw: unknown): raw is StyleSpecification {
   return styleOutlineSchema.safeParse(raw).success;
 }
 
@@ -208,10 +208,22 @@ export async function initialStyle(
     const r = await fetch(b.url);
     if (!r.ok) return b.url;
     const style: unknown = await r.json();
-    return isStyle(style) ? withLocationLabels(dressed(b, style), areLabelsShown) : b.url;
+    return isStyle(style) ? styleToDraw(b, style, areLabelsShown) : b.url;
   } catch {
     return b.url;
   }
+}
+
+/**
+ * A fetched style as the map draws `b`: dressed, its labels shown or hidden. For a page that makes
+ * its own (MapView's `makeStyle`: the contributor app's, with its copies).
+ */
+export function styleToDraw(
+  b: Basemap,
+  style: StyleSpecification,
+  areLabelsShown: boolean,
+): StyleSpecification {
+  return withLocationLabels(dressed(b, style), areLabelsShown);
 }
 
 // -------------------------------------------------------------- the switch

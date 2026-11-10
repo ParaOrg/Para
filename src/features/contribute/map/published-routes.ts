@@ -1,12 +1,14 @@
 import type { GeoJSONSource, LineLayerSpecification, MapLibreMap } from 'maplibre-gl';
 
-import { MAP_COLOURS, MAP_PAINT } from '@/design-system/foundation/map-colours';
+import { MAP_PAINT } from '@/design-system/foundation/map-colours';
 import { CASING_EXTRA, roadWidth } from '@/features/routes/map/line-style';
-import { RESTING_FILTER, ROUTES_LINE } from '@/features/routes/map/rail-rest-layers';
+import {
+  RESTING_FILTER,
+  ROUTES_LINE,
+  ROUTES_LINE_COLOUR,
+} from '@/features/routes/map/rail-rest-layers';
 import { routesData, unpatched } from '@/features/routes/map/saved-routes-data';
 import { directionLine, type LineStringGeoJSON } from '@/features/routes/model/routes';
-import { fetchIndex } from '@/features/routes/published/fetch-index';
-import { fetchLine } from '@/features/routes/published/fetch-line';
 
 import {
   PUBLISHED_CASING,
@@ -16,20 +18,21 @@ import {
   PUBLISHED_SRC,
   layerToGoUnder,
 } from './published-routes-layers';
+import { readPublishedIndex, readPublishedLine } from './published-source';
 
 /*
  * The published routes behind a recording: every direction on the published map, painted as the
- * public map paints one at rest (the light blue, and each train line in its own pale), so a
+ * public map paints one at rest (the brand pale, each train line in its own pale, and no rim), so a
  * contributor sees which roads Para already has. Only a picture: no tap area, no lighting, no card.
  * Its own source and layer ids, so nothing that listens for the public map's routes hears these.
  */
 
-/** The resting layers, the public map's paint under ids of their own: the light blue's and each train line's. */
+/** The resting layers, the public map's paint under ids of their own: the road routes' and each train line's. */
 const RESTING = [
   {
     id: PUBLISHED_LINE,
     filter: RESTING_FILTER[ROUTES_LINE],
-    colour: MAP_COLOURS['Map/RouteLine/surface-default'],
+    colour: ROUTES_LINE_COLOUR,
   },
   ...PUBLISHED_RAIL.map(({ id, railId, colour }) => ({
     id,
@@ -61,18 +64,18 @@ function lineLayer(
  * again; rejects when the index cannot be read, and the map then shows no routes.
  */
 export async function drawPublishedRoutes(map: MapLibreMap): Promise<() => void> {
-  const { directions } = await fetchIndex();
+  const { directions } = await readPublishedIndex();
   if (map.getSource(PUBLISHED_SRC)) return () => undefined;
 
   const under = layerToGoUnder(map);
   // `promoteId`: a full line replaces its overview by the direction's id.
   map.addSource(PUBLISHED_SRC, { type: 'geojson', promoteId: 'id', data: routesData(directions) });
-  map.addLayer(
-    lineLayer(PUBLISHED_CASING, MAP_PAINT['Paint/casing'], {
-      'line-width': roadWidth(CASING_EXTRA),
-    }),
-    under,
-  );
+  // No rim at rest, as on the public map: the casing stays as a layer, hidden, for the hotspots'
+  // boxes laid under it (published-hotspots.ts).
+  const casing = lineLayer(PUBLISHED_CASING, MAP_PAINT['Paint/casing'], {
+    'line-width': roadWidth(CASING_EXTRA),
+  });
+  map.addLayer({ ...casing, layout: { ...casing.layout, visibility: 'none' } }, under);
   for (const { id, filter, colour } of RESTING) {
     map.addLayer({ ...lineLayer(id, colour, { 'line-width': roadWidth(0) }), filter }, under);
   }
@@ -108,7 +111,7 @@ export async function drawPublishedRoutes(map: MapLibreMap): Promise<() => void>
       const id = String(feature.properties.id ?? '');
       if (!id || asked.has(id) || !drawn.has(id)) continue;
       asked.add(id);
-      fetchLine(id).then(
+      readPublishedLine(id).then(
         (line) => {
           if (!line || isRemoved) return;
           arrived.set(id, line);

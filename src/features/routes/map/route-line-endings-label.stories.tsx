@@ -16,7 +16,7 @@ const meta = {
       </div>
     ),
   ],
-  args: { name: 'Label', livery: 'rose' },
+  args: { name: 'Label', livery: 'uv-express' },
 } satisfies Meta<typeof RouteLineEndingsLabel>;
 
 export default meta;
@@ -141,7 +141,7 @@ export const Default: Story = {
   play: async ({ canvasElement }) => {
     const pill = pillOf(canvasElement);
     await expect(signOf(pill)).toBe('none');
-    await expect(getComputedStyle(pill).backgroundColor).toBe(wornBy('bg-card-rose-surface'));
+    await expect(getComputedStyle(pill).backgroundColor).toBe(wornBy('bg-card-uv-express-surface'));
     await expect(knobbFill(pill)).toBe(getComputedStyle(pill).backgroundColor);
   },
 };

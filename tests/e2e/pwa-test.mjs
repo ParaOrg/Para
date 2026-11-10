@@ -145,7 +145,12 @@ async function openSomeTrip(page) {
   let viaList = null;
   if (!(await trip.count()) && (await row.count())) {
     viaList = await row.first().getAttribute('data-direction');
+    // The list opens at Low, where a tap on a row only raises it: a second tap picks.
     await row.first().tap();
+    await trip
+      .first()
+      .waitFor({ timeout: 2000 })
+      .catch(() => row.first().tap());
     await trip
       .first()
       .waitFor({ timeout: 10000 })
@@ -208,7 +213,7 @@ try {
     await page.goto(`${base}/studio/`, { waitUntil: 'load' });
     // The positive control: the two negatives below mean nothing on a blank page.
     const door = await page
-      .getByText('Sign in to Para Studio')
+      .getByText('Studio sign in')
       .waitFor({ timeout: 15000 })
       .then(
         () => true,

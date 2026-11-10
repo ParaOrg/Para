@@ -534,7 +534,7 @@ if (!spot) {
       const onMap = async () =>
         page.evaluate(async () => {
           const trip = document.querySelector('[data-testid="trip"]');
-          // The card's pale, Card/<livery>/surface-pale (tokens.css's own variable; the
+          // A road ride's rest: a line at rest, Map/RouteLine/surface-default (its own variable; the
           // @theme inline alias is never emitted), as the DOM computes it, oklch as the
           // rings come: what the dots along the rest wear.
           const probe = document.createElement('span');
@@ -545,7 +545,7 @@ if (!spot) {
             ? `var(--map-rail-${livery}-surface-pale)`
             : livery === 'ferry'
               ? 'var(--map-ferry-surface-pale)'
-              : `var(--card-${livery}-surface-pale)`;
+              : 'var(--map-route-line-surface-default)';
           document.body.append(probe);
           const cardPale = getComputedStyle(probe).backgroundColor;
           probe.remove();
@@ -815,6 +815,45 @@ if (!spot) {
         `caught ${mixed.ids.length} line(s), ${after.shown}`,
       );
     }
+  }
+  // The filter, in the studio as on the public map (README decisions 12 and 14): under each kind
+  // of ride the map lights just what the list shows, All lights the whole list again, and a new
+  // list starts at All. Last, as a filter moves the camera.
+  {
+    const all = await reopen(false);
+    const filterButton = chooser.locator('[data-testid="chooser-filter"]');
+    const filterTo = async (label) => {
+      await filterButton.click();
+      await page.getByRole('radio', { name: label, exact: true }).click();
+      await page.waitForTimeout(500);
+    };
+    const agree = [];
+    for (const label of ['Jeep', 'E-Jeep', 'Bus', 'LRT', 'MRT', 'Ferry']) {
+      await filterTo(label);
+      const under = await read();
+      agree.push({
+        label,
+        listed: under.listed.length,
+        ok: same([...new Set(under.lit)], under.listed),
+      });
+    }
+    check(
+      "the studio list's filter lights just what the list shows under each kind of ride",
+      all.length > 0 && agree.every((a) => a.ok) && agree.some((a) => a.listed < all.length),
+      agree.map((a) => `${a.label} ${a.ok ? 'ok' : 'off'} ${a.listed}`).join(', ') +
+        ` of ${all.length}`,
+    );
+    await filterTo('All');
+    const whole = await read();
+    check(
+      '  All lights the whole list again',
+      same([...new Set(whole.lit)], all) && same(whole.listed, all),
+      `${new Set(whole.lit).size} lit, ${whole.listed.length} listed of ${all.length}`,
+    );
+    await filterTo('Ferry');
+    await reopen(false);
+    const label = await filterButton.getAttribute('aria-label');
+    check('  a new list starts at All', label === 'Filter', String(label));
   }
 }
 

@@ -11,7 +11,7 @@ set -euo pipefail
 cd "$(dirname "$0")"
 export PSQL=${PSQL:?set PSQL to a psql command for a disposable server}
 PG_DUMP=${PG_DUMP:-${PSQL/psql/pg_dump}}
-NAME=20261105170000_retire_review_steps
+NAME=20261110190000_retire_review_steps
 apply() { $PSQL -d "$DB" -v ON_ERROR_STOP=1 -q "$@" 2>&1 | { grep -v '^NOTICE\|^WARNING' || true; }; }
 fresh() {
   $PSQL -d postgres -qc "set client_min_messages = warning" -c "drop database if exists $DB" -c "create database $DB"

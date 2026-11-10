@@ -647,8 +647,9 @@ if (!onLine) {
   // effects, its camera waits for the page's turn (commit-turn.ts; the
   // cheap-phone plan, step 15, 2026-10-05). It stays on the commuter, at the
   // zoom it followed at.
-  // A list where routes share the road, or a trip's card: either has a handle.
-  const handle = page.locator('button[data-testid="dock-handle"]:visible').first();
+  // A list where routes share the road, or a trip's card: either has a handle. The list's draws
+  // nothing, kept for the keyboard alone, so the height is set as a keyboard sets it.
+  const handle = page.locator('button[data-testid="dock-handle"]').first();
   if (!(await handle.count())) {
     check(
       'a card set to another height while the camera follows: it stays on the commuter',
@@ -661,7 +662,8 @@ if (!onLine) {
     await mapIdle(page);
     const following = await camera(page);
     const was = await onScreen(page, p);
-    await handle.click();
+    await handle.focus();
+    await page.keyboard.press('Enter');
     // The sheet at its new height, and the camera after it.
     await cardsSettled(page);
     const now = await camera(page);
@@ -736,6 +738,58 @@ check(
   await until(() => toastSays(page2, 'Location is off for this site'), 5000),
   `${await toast2.count()} toast(s)`,
 );
+// A trip's card raised to full height under that toast: the toast moves down clear of the
+// card's ✕, which stays in reach. The trip opened from a route line in sight; a list where
+// routes share the road takes a tap to raise it at Low, and one more to pick.
+{
+  const at = await page2.evaluate(() => {
+    const m = window.__map;
+    const { clientWidth: w, clientHeight: h } = m.getContainer();
+    for (const f of m.queryRenderedFeatures({ layers: ['saved-routes-hit'] })) {
+      if (f.geometry.type !== 'LineString') continue;
+      for (const c of f.geometry.coordinates) {
+        const p = m.project(c);
+        if (p.x > w * 0.15 && p.x < w * 0.85 && p.y > h * 0.3 && p.y < h * 0.6) return [p.x, p.y];
+      }
+    }
+    return null;
+  });
+  const card = page2.locator('[data-testid="card"]:not([hidden])').first();
+  const trip = page2.locator('[data-testid="trip"]');
+  if (at) {
+    await page2.touchscreen.tap(at[0], at[1]);
+    const row = page2.locator(
+      '[data-testid="chooser"] [data-testid="chooser-item"][data-direction]',
+    );
+    await until(async () => (await trip.count()) > 0 || (await row.count()) > 0, 8000);
+    for (let i = 0; i < 2 && !(await trip.count()) && (await row.count()); i++) {
+      await row.first().tap();
+      await until(async () => (await trip.count()) > 0, 2000);
+    }
+    for (
+      let i = 0;
+      i < 4 && (await trip.count()) && (await card.getAttribute('data-snap')) !== 'full';
+      i++
+    ) {
+      await card.getByTestId('dock-handle').focus();
+      await page2.keyboard.press('Enter');
+      await cardsSettled(page2);
+    }
+  }
+  const close = card.getByRole('button', { name: 'Close' }).first();
+  const placed = (await trip.count())
+    ? {
+        snap: await card.getAttribute('data-snap'),
+        closeBottom: await close.evaluate((e) => e.getBoundingClientRect().bottom),
+        toastTop: await toast2.evaluate((e) => e.getBoundingClientRect().top),
+      }
+    : null;
+  check(
+    "  over a trip's card at full height it sits 12 under the card's ✕, the ✕ in reach",
+    placed?.snap === 'full' && Math.abs(placed.toastTop - (placed.closeBottom + 12)) <= 1,
+    placed ? JSON.stringify(placed) : 'no trip opened from a route line',
+  );
+}
 await ctx2.close();
 
 // ---------------------------------------------------------- no fix, ever

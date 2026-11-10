@@ -1,3 +1,4 @@
+import { liveryOf, ROAD_LIVERIES, type Livery } from './liveries';
 import { otherBound, railBound, type Bound } from './rail-codes';
 import {
   directionEndHotspots,
@@ -9,7 +10,7 @@ import {
   type RouteSummary,
   type Direction,
 } from './routes';
-import { railwayOf, type RailwayVehicle } from './vehicles';
+import { railwayOf, vehicleOf, type RailwayVehicle, type Vehicle } from './vehicles';
 
 /*
  * Choosing among directions: a route's two, those under a tap grouped by
@@ -116,9 +117,8 @@ function byPlace<V extends Direction>(chosen: readonly V[]): Departures<V>[] {
 }
 
 /**
- * Which directions a list of routes lists: the way round shown alone
- * (drawnDepartures), or every line, a route with none drawn that way by its
- * other (chooserDepartures): the route list under a tap.
+ * Which directions a list of routes lists: the way round shown alone (drawnDepartures), or, under
+ * a tap, every line, a route with none drawn that way by its other (chooserDepartures).
  */
 export type Listing = 'way-round' | 'every-line';
 
@@ -137,20 +137,23 @@ export function listedDepartures<V extends Direction>(
 export interface RouteCardGroup<V extends Direction> extends Departures<V> {
   /** What tells the card from the others in its list, and what a pick keeps as Selected. */
   card: string;
-  /** A RouteCardRailway's line, a train's or Ferry; null for a road vehicle's RouteCard. */
+  /** A train or ferry card's line; null for a road vehicle's RouteCard. */
   railway: RailwayVehicle | null;
+  /** The card's colours: its road mode's, or its line's (liveryOf). */
+  livery: Livery;
+  /** What its directions ride, its badge; null for a ride the design draws none for (P2P, tricycle). */
+  vehicle: Vehicle | null;
   /** A train card's bound, railBound; null on the ferry, on a road card, or when a line's table does not know an end. */
   bound: Bound | null;
 }
 
 /**
- * The cards a list shows one way round: listedDepartures, with every place's
- * train and ferry directions taken off to a RouteCardRailway each, one card
- * per line and bound: Cubao's LRT-2 Eastbound and its LRT-2 Westbound are two
- * cards, both Cubao. Every road card comes first, then every train card, then
- * the ferry's, each kind in the order met: the lines sit under the road
- * routes, never between them (the owner's call). A road card is known by its
- * place, a line card by its place, line and bound.
+ * The cards a list shows one way round: listedDepartures, with a place's directions split into a
+ * RouteCard per road mode and per train line and bound or the ferry: Tala's jeeps, its UV Express
+ * and its P2P are three cards, and Cubao's LRT-2 Eastbound and Westbound two more. The cards run by
+ * mode (RouteCardStackedList, 4633:19780): the jeeps, UV Express, the e-jeeps, the buses, then the
+ * trains and the ferry, each mode in the order its places are met. A road card is known by its
+ * place and mode, a line card by its place, line and bound.
  */
 export function routeCards<V extends Direction>(
   directions: readonly V[],
@@ -158,43 +161,42 @@ export function routeCards<V extends Direction>(
   listing: Listing = 'way-round',
 ): RouteCardGroup<V>[] {
   const cards = listedDepartures(directions, back, listing).flatMap((place) => {
-    const road: RouteCardGroup<V> = {
-      card: place.from,
-      from: place.from,
-      railway: null,
-      bound: null,
-      directions: [],
-    };
-    const lines = new Map<string, RouteCardGroup<V>>();
+    const byCard = new Map<string, RouteCardGroup<V>>();
     for (const d of place.directions) {
       const railway = railwayOf(d.v);
-      if (!railway) {
-        road.directions.push(d);
-        continue;
-      }
-      const bound = railBound(d.v);
-      const card = `${place.from}|${railway}|${bound ?? ''}`;
-      const group = lines.get(card) ?? { card, from: place.from, railway, bound, directions: [] };
+      const livery = liveryOf(d.v);
+      const vehicle = vehicleOf(d.v);
+      const bound = railway ? railBound(d.v) : null;
+      // A ride with no badge (P2P, in UV Express's livery) stands apart from the one it shares with.
+      const road = `${place.from}|${livery}${vehicle ? '' : `|${d.v.route?.mode ?? ''}`}`;
+      const card = railway ? `${place.from}|${railway}|${bound ?? ''}` : road;
+      const group = byCard.get(card) ?? {
+        card,
+        from: place.from,
+        railway,
+        livery,
+        vehicle,
+        bound,
+        directions: [],
+      };
       group.directions.push(d);
-      lines.set(card, group);
+      byCard.set(card, group);
     }
-    return [...(road.directions.length ? [road] : []), ...lines.values()];
+    return [...byCard.values()];
   });
-  // A stable sort: each kind keeps the order met.
-  return cards.sort((a, b) => cardRank(a.railway) - cardRank(b.railway));
+  return cards.sort((a, b) => cardRank(a) - cardRank(b)); // Stable: a mode keeps the order met.
 }
 
-/** Where a card's kind sits in its list: road, then train, then ferry. */
-function cardRank(railway: RailwayVehicle | null): number {
-  if (!railway) return 0;
-  return railway === 'Ferry' ? 2 : 1;
+/** Where a card's mode sits in its list: the road modes in ROAD_LIVERIES' order, then train, then ferry. */
+function cardRank(card: { railway: RailwayVehicle | null; livery: Livery }): number {
+  if (card.railway) return ROAD_LIVERIES.length + (card.railway === 'Ferry' ? 1 : 0);
+  return ROAD_LIVERIES.findIndex((l) => l === card.livery);
 }
 
 /**
- * The direction a route opens with when it is picked as a whole: the outbound
- * when it has a line, else the return — predictable, and ⇄ is one tap away
- * (the owner's call). Null only for a route with nothing drawn, which no tap
- * can reach.
+ * The direction a route opens with when it is picked as a whole: the outbound when it has a line,
+ * else the return — predictable, and ⇄ is one tap away (the owner's call). Null only for a route
+ * with nothing drawn, which no tap can reach.
  */
 export function directionToOpen<V extends Direction>(directions: readonly V[]): V | null {
   return (

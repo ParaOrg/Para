@@ -1,29 +1,30 @@
 // The app's ride notification says the recording card's Time and Distance while the page sleeps,
-// worked out natively (RideNotification.java timeText and distanceText, RideState.java elapsedMs).
+// worked out natively (RideNotification.java timeText and distanceText, ride/Ride.java elapsedMs).
 // They must say what the card says (common/format.ts timeFigure and distanceFigure, and the card's
-// clock in recorder/recording-figures.ts). Those Java classes need Android to compile whole, so
-// this lifts the methods out of the sources as they are written, compiles them with javac beside
-// a small driver, and runs both sides on the same inputs.
+// clock in recorder/recording-figures.ts). RideNotification needs Android to compile whole, so this
+// lifts its two methods out of the source as written; the ride's rules (ride/) are plain Java and
+// are compiled whole. All of it goes to javac beside a small driver, and both sides run on the same
+// inputs.
 //
 //   node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs tests/unit/native-figures-test.mjs
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { distanceFigure, timeFigure } from '../../src/features/contribute/common/format.ts';
 import {
   liveFigures,
-  pausedSecondsOf,
   summaryEnd,
 } from '../../src/features/contribute/recorder/recording-figures.ts';
 import { summarize } from '../../src/features/routes/model/ride-recording.ts';
+import { historyOf } from '../../src/features/contribute/recorder/ride-history.ts';
 
 const JAVA = 'android/app/src/main/java/ph/para/contributor';
 const notificationSource = readFileSync(`${JAVA}/RideNotification.java`, 'utf8');
-const stateSource = readFileSync(`${JAVA}/RideState.java`, 'utf8');
+const RIDE = `${JAVA}/ride`;
 const pluginSource = readFileSync(`${JAVA}/RidePlugin.java`, 'utf8');
 const receiverSource = readFileSync(`${JAVA}/RideActionReceiver.java`, 'utf8');
 
@@ -39,26 +40,41 @@ function javaMethod(source, signature) {
   throw new Error(`the Java method ${signature} never closes`);
 }
 
-/** The line in `source` matching `pattern`, as written. */
-function javaLine(source, pattern) {
-  const line = source.split('\n').find((text) => pattern.test(text));
-  assert.ok(line, `no Java line matches ${pattern}`);
-  return line.trim();
-}
-
-// RideState's fields, bare: elapsedMs reads them, and the driver sets them for each case.
+// A clock line: "elapsed <phase> <startedAt> <gaps> <stoppedAt> <now> [<tap>@<time>...]", the gaps
+// "from-to,..." (or "-"), stoppedAt 0 for none. The ride is made as RidePlugin.setState makes it
+// from what the page tells it (its paused gaps, and a pause running from stoppedAt), then each tap on
+// the notification is applied as RideActionReceiver applies it (RideMachine).
 const DRIVER = `
 import java.util.Locale;
 
-public class NativeFigures {
-    ${javaLine(stateSource, /static final String FINISHED = /)}
-    String phase;
-    long startedAt;
-    long pausedMs;
-    long pausedSince;
-    long finishedAt;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
-    ${javaMethod(stateSource, 'long elapsedMs(long now)')}
+import ph.para.contributor.ride.Ride;
+import ph.para.contributor.ride.RideMachine;
+
+public class NativeFigures {
+    static long elapsedMs(String[] part) {
+        long startedAt = Long.parseLong(part[2]);
+        List<Ride.Gap> gaps = new ArrayList<>();
+        for (String gap : part[3].equals("-") ? new String[0] : part[3].split(",")) {
+            String[] ends = gap.split("-");
+            gaps.add(new Ride.Gap(Long.parseLong(ends[0]), Long.parseLong(ends[1]), Ride.GAP_PAUSED));
+        }
+        long stoppedAt = Long.parseLong(part[4]);
+        if (part[1].equals(Ride.PAUSED) && stoppedAt > 0) gaps.add(new Ride.Gap(stoppedAt, 0, Ride.GAP_PAUSED));
+        Ride ride = new Ride("r", part[1], Ride.TROUBLE_NONE, startedAt, 0, startedAt,
+            Collections.singletonList(new Ride.ModeSwitch(startedAt, Ride.WALK)), gaps);
+        for (int index = 6; index < part.length; index++) {
+            String[] tap = part[index].split("@");
+            long time = Long.parseLong(tap[1]);
+            if (tap[0].equals("pause")) ride = RideMachine.pause(ride, time).ride;
+            else if (tap[0].equals("resume")) ride = RideMachine.resume(ride, time).ride;
+            else ride = RideMachine.finish(ride, time).ride;
+        }
+        return ride.elapsedMs(Long.parseLong(part[5]));
+    }
 
     ${javaMethod(notificationSource, 'static String timeText(long seconds)')}
 
@@ -74,13 +90,7 @@ public class NativeFigures {
             } else if (part[0].equals("distance")) {
                 out.append(distanceText(Double.parseDouble(part[1])));
             } else {
-                NativeFigures state = new NativeFigures();
-                state.phase = part[1];
-                state.startedAt = Long.parseLong(part[2]);
-                state.pausedMs = Long.parseLong(part[3]);
-                state.pausedSince = Long.parseLong(part[4]);
-                state.finishedAt = Long.parseLong(part[5]);
-                out.append(state.elapsedMs(Long.parseLong(part[6])));
+                out.append(elapsedMs(part));
             }
             out.append('\\n');
         }
@@ -93,7 +103,10 @@ let classes;
 before(() => {
   classes = mkdtempSync(join(tmpdir(), 'native-figures-'));
   writeFileSync(join(classes, 'NativeFigures.java'), DRIVER);
-  execFileSync('javac', ['-d', classes, join(classes, 'NativeFigures.java')]);
+  const rules = readdirSync(RIDE)
+    .filter((name) => name.endsWith('.java'))
+    .map((name) => join(RIDE, name));
+  execFileSync('javac', ['-d', classes, join(classes, 'NativeFigures.java'), ...rules]);
 });
 after(() => rmSync(classes, { recursive: true, force: true }));
 
@@ -112,7 +125,7 @@ const said = (figure) => `${figure.value} ${figure.unit}`;
 // Time: the notification hands timeText whole seconds (elapsedMs / 1000); the card floors.
 
 test('the notification hands timeText the clock in whole seconds', () => {
-  assert.match(notificationSource, /timeText\(state\.elapsedMs\(now\) \/ 1000\)/);
+  assert.match(notificationSource, /timeText\(ride\.elapsedMs\(now\) \/ 1000\)/);
 });
 
 const TIME_MS = [
@@ -163,21 +176,18 @@ test('distanceText says what the card says at metres ending in 50 (1150 m, 1450 
   assert.deepEqual(apart, [], `${apart.length} of ${metres.length} differ`);
 });
 
-// The clock: what the page tells RidePlugin.setState, turned into RideState as it turns it, and
-// as a tap on the notification moves it, against the card's own clock for the same ride.
+// The clock: what the page tells RidePlugin.setState, turned into the ride as it turns it, and as
+// a tap on the notification moves it, against the card's own clock for the same ride.
 
-test('the state the clock reads is made from the page as RidePlugin and the taps make it', () => {
+test('the ride the clock reads is made from the page as RidePlugin and the taps make it', () => {
+  assert.match(pluginSource, /RideJson\.gapsOf\(call\.getArray\("gaps"\)\)/);
   assert.match(
     pluginSource,
-    /state\.pausedMs = pausedSeconds == null \? 0 : Math\.round\(pausedSeconds \* 1000\);/,
+    /RideState\.PAUSED\.equals\(phase\) && stoppedAt != null\) \{\s*gaps\.add\(new Ride\.Gap\(stoppedAt, 0, Ride\.GAP_PAUSED\)\)/,
   );
-  assert.match(
-    pluginSource,
-    /state\.pausedSince = RideState\.PAUSED\.equals\(state\.phase\) && stoppedAt != null \? stoppedAt : 0;/,
-  );
-  assert.match(receiverSource, /state\.pausedSince = now;/);
-  assert.match(receiverSource, /resumed\.pausedMs \+= now - resumed\.pausedSince;/);
-  assert.match(receiverSource, /state\.finishedAt = now;/);
+  assert.match(receiverSource, /RideMachine\.pause\(ride, now\)/);
+  assert.match(receiverSource, /RideMachine\.resume\(ride, now\)/);
+  assert.match(receiverSource, /RideMachine\.finish\(ride, now\)/);
 });
 
 const T0 = Date.UTC(2026, 10, 2, 0, 0, 0);
@@ -189,17 +199,19 @@ const ride = ({ gaps = [], stoppedAt = null }) => ({
   startedAt: T0,
   stoppedAt: stoppedAt === null ? null : s(stoppedAt),
   status: stoppedAt === null ? 'recording' : 'stopped',
+  modes: [{ time: T0, to: 'walk' }],
   gaps,
 });
 
-/** RideState as RidePlugin.setState makes it from what the page tells it. */
-const toldState = (recording, phase) => ({
+/** What the page tells RidePlugin.setState, then the taps made on the notification after it. */
+const toldState = (recording, phase, taps = []) => ({
   phase,
   startedAt: recording.startedAt,
-  pausedMs: Math.round(pausedSecondsOf(recording) * 1000),
-  pausedSince: phase === 'paused' && recording.stoppedAt !== null ? recording.stoppedAt : 0,
-  finishedAt: 0,
+  gaps: historyOf(recording).gaps.filter((gap) => gap.reason === 'paused'),
+  stoppedAt: phase === 'paused' && recording.stoppedAt !== null ? recording.stoppedAt : 0,
+  taps,
 });
+const gapsText = (gaps) => gaps.map((gap) => `${gap.from}-${gap.to}`).join(',') || '-';
 
 const CLOCKS = {
   'no pause, recording': {
@@ -233,39 +245,23 @@ const CLOCKS = {
   'a pause tapped on the notification': {
     // Recording, then Pause tapped at 250 s; the page, waking, stops the ride there.
     page: ride({ gaps: [paused(60, 90)], stoppedAt: 250 }),
-    state: () => ({
-      ...toldState(ride({ gaps: [paused(60, 90)] }), 'recording'),
-      phase: 'paused',
-      pausedSince: s(250),
-    }),
+    state: () => toldState(ride({ gaps: [paused(60, 90)] }), 'recording', [`pause@${s(250)}`]),
     now: 900,
   },
   'a resume tapped on the notification': {
     // Paused by a tap at 250 s, resumed by a tap at 410 s; the page, waking, adds the pause.
     page: ride({ gaps: [paused(60, 90), paused(250, 410)] }),
-    state: () => {
-      const tapped = {
-        ...toldState(ride({ gaps: [paused(60, 90)] }), 'recording'),
-        phase: 'paused',
-        pausedSince: s(250),
-      };
-      return {
-        ...tapped,
-        phase: 'recording',
-        pausedMs: tapped.pausedMs + (s(410) - tapped.pausedSince),
-        pausedSince: 0,
-      };
-    },
+    state: () =>
+      toldState(ride({ gaps: [paused(60, 90)] }), 'recording', [
+        `pause@${s(250)}`,
+        `resume@${s(410)}`,
+      ]),
     now: 500,
   },
   'a finish tapped on the notification': {
     // Finish tapped at 640 s while recording; the page, waking, stops the ride there.
     page: ride({ gaps: [paused(60, 90)], stoppedAt: 640 }),
-    state: () => ({
-      ...toldState(ride({ gaps: [paused(60, 90)] }), 'recording'),
-      phase: 'finished',
-      finishedAt: s(640),
-    }),
+    state: () => toldState(ride({ gaps: [paused(60, 90)] }), 'recording', [`finish@${s(640)}`]),
     now: 2_000,
   },
 };
@@ -288,13 +284,12 @@ test(`the notification's clock reads what the card's does (${Object.keys(CLOCKS)
   const native = runJava(
     cases.map(
       ({ state, now }) =>
-        `elapsed ${state.phase} ${state.startedAt} ${state.pausedMs} ${state.pausedSince} ${state.finishedAt} ${now}`,
+        `elapsed ${[state.phase, state.startedAt, gapsText(state.gaps), state.stoppedAt, now, ...state.taps].join(' ')}`,
     ),
   );
   cases.forEach(({ name, page, now }, index) => {
     const nativeMs = Number(native[index]);
     const cardMs = cardClockMs(page, now);
-    // pausedSeconds crosses as a double and is rounded to the millisecond.
     assert.ok(Math.abs(nativeMs - cardMs) < 1, `${name}: native ${nativeMs} ms, card ${cardMs} ms`);
     assert.equal(
       runJava([`time ${Math.trunc(nativeMs / 1000)}`])[0],

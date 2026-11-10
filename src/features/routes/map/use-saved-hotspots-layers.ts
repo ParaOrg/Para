@@ -32,6 +32,7 @@ export function useSavedHotspotsLayers(
   hiddenHotspotId: string | null | undefined,
   marks: ReadonlyMap<string, BoxMark>,
   hull: Ring,
+  shouldShowPins = true,
 ) {
   // The hotspots the source was last laid out from: added with them when they are already in,
   // laid out in the one worker round trip that adds the source rather
@@ -114,5 +115,5 @@ export function useSavedHotspotsLayers(
       }
     });
   }, [map, hiddenHotspotId]);
-  useHotspotPins(map, hiddenNow);
+  useHotspotPins(map, hiddenNow, shouldShowPins);
 }

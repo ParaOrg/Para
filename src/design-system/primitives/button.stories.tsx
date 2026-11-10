@@ -14,11 +14,10 @@ const NavIcon = (
 /** Each card fill on the card it belongs to: the card's surface, and its words. */
 const CARD_FILLS = [
   { fill: 'card-red', card: 'bg-card-red-surface text-content-inverse' },
-  { fill: 'card-orange', card: 'bg-card-orange-surface text-content-inverse' },
-  { fill: 'card-violet', card: 'bg-card-violet-surface text-content-inverse' },
-  { fill: 'card-rose', card: 'bg-card-rose-surface text-content-inverse' },
-  { fill: 'card-fuchsia', card: 'bg-card-fuchsia-surface text-content-inverse' },
-  { fill: 'card-pink', card: 'bg-card-pink-surface text-content-inverse' },
+  { fill: 'card-jeep', card: 'bg-card-jeep-surface text-card-jeep-on-surface' },
+  { fill: 'card-uv-express', card: 'bg-card-uv-express-surface text-card-uv-express-on-surface' },
+  { fill: 'card-ejeep', card: 'bg-card-ejeep-surface text-card-ejeep-on-surface' },
+  { fill: 'card-bus', card: 'bg-card-bus-surface text-card-bus-on-surface' },
   {
     fill: 'map-rail-light-rail-way-one',
     card: 'bg-map-rail-light-rail-way-one-surface text-content-inverse',
@@ -31,6 +30,7 @@ const CARD_FILLS = [
     fill: 'map-rail-metro-rail-way-three',
     card: 'bg-map-rail-metro-rail-way-three-surface text-content-primary',
   },
+  { fill: 'map-ferry', card: 'bg-map-ferry-surface text-content-inverse' },
 ] as const satisfies readonly { fill: CardFill; card: string }[];
 
 const meta = {

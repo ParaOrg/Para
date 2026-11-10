@@ -19,7 +19,7 @@ interface CardStatusLineProps {
 
 const TONE_CLASSES: Record<CardStatusTone, string> = {
   uploaded: 'text-content-success',
-  retry: 'text-card-orange-surface',
+  retry: 'text-content-warning',
   quiet: 'text-content-quaternary',
   problem: 'text-content-error',
 };

@@ -1,6 +1,7 @@
 import { readFixLog } from './native-fix-log';
 import { startNativeWatch } from './native-location';
-import { setRideNoticeState } from './ride-notice';
+import { readRideNow, setRideNoticeState } from './ride-notice';
+import { LIMITS } from '../map/basemap-cache';
 import { fixOfRow, rowOfFix, takeWatchedFixes } from '../recorder/recording-fixes';
 import { newRecording } from '../recorder/recording-transitions';
 import type { Recording } from '../storage/recording-schema';
@@ -17,17 +18,21 @@ function say(line: string): void {
 
 /**
  * Waits for the page's own load (recorder-opening.ts) to import the native log: until the ride holds
- * the log's last fix, as read in the same look. True once it does; false when it gives up after a
- * minute, and the report then shows what the ride holds. The service goes on writing meanwhile, so
- * a count read later may be a fix ahead of the ride: this answer is the one the test reads.
+ * every fix the service had kept before this page opened (`performance.timeOrigin`, after the last
+ * page was gone). True once it does; false when it gives up after a minute, and the report then
+ * shows what the ride holds. The ride's service records on through a rebuilt activity and a reopened
+ * app (RideService), so the log keeps growing while the page loads: the fixes after the page opened
+ * are the live watch's to take (startNativeWatch), not the opening import's, and are not waited for.
  */
 async function waitForImport(recordingId: string): Promise<boolean> {
+  const openedAt = performance.timeOrigin;
   const giveUpAt = Date.now() + IMPORT_GIVE_UP_MS;
   while (Date.now() < giveUpAt) {
     const log = await readFixLog();
     const rows = await loadFixes(recordingId);
-    const logEnd = log.fixes[log.fixes.length - 1]?.timestamp ?? 0;
-    if (log.recordingId === recordingId && (rows[rows.length - 1]?.time ?? 0) >= logEnd) {
+    const keptBefore = log.fixes.filter((fix) => fix.timestamp <= openedAt);
+    const keptEnd = keptBefore[keptBefore.length - 1]?.timestamp ?? 0;
+    if (log.recordingId === recordingId && (rows[rows.length - 1]?.time ?? 0) >= keptEnd) {
       return true;
     }
     await new Promise((resolve) => setTimeout(resolve, IMPORT_POLL_MS));
@@ -35,12 +40,29 @@ async function waitForImport(recordingId: string): Promise<boolean> {
   return false;
 }
 
+/**
+ * What the app's basemap cache holds (basemap-cache.ts), for emulator-ride.sh: the map loads under
+ * the driver's screens as on a phone, so its tiles and files are kept in the WebView's own Cache
+ * Storage, or not. `none` where the WebView has no Cache Storage.
+ */
+async function keptBasemap(): Promise<string> {
+  if (typeof caches === 'undefined') return 'tiles=none meta=none';
+  const count = async (name: string) => String((await (await caches.open(name)).keys()).length);
+  return `tiles=${await count(LIMITS.tiles.name)} meta=${await count(LIMITS.meta.name)}`;
+}
+
 async function snapshot(recordingId: string): Promise<string> {
   const rows = await loadFixes(recordingId);
   const times = rows.map((row) => row.time);
   const sorted = times.every((time, index) => index === 0 || time > times[index - 1]);
   const log = await readFixLog();
-  return `rows=${rows.length} first=${times[0] ?? 0} last=${times[times.length - 1] ?? 0} sorted=${sorted} native=${log.fixes.length}`;
+  // The phone's ride as the page reads it (RidePlugin.now), for emulator-notification.sh: the page
+  // applies only the history it can read.
+  const ride = await readRideNow().then(
+    ({ ride: { phase, modes, gaps } }) => `${phase}:modes=${modes.length}:gaps=${gaps.length}`,
+    () => 'unreadable',
+  );
+  return `rows=${rows.length} first=${times[0] ?? 0} last=${times[times.length - 1] ?? 0} sorted=${sorted} native=${log.fixes.length} ride=${ride} ${await keptBasemap()}`;
 }
 
 /**
@@ -87,9 +109,9 @@ export async function runEmulatorRide(): Promise<void> {
   await setRideNoticeState({
     recordingId,
     phase: 'recording',
-    mode: 'walk',
     startedAt: recording.startedAt,
-    pausedSeconds: 0,
+    modes: recording.modes,
+    gaps: [],
     stoppedAt: null,
   });
   say(`${open ? 'resumed' : 'watching'} id=${recordingId}`);

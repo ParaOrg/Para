@@ -28,6 +28,8 @@ interface PlaygroundCardsProps {
   camera: ReturnType<typeof useCardCamera<DirectionRow, HotspotRow>>;
   trip: ReturnType<typeof useStudioTrip>;
   canEdit: boolean;
+  /** A computer's screen: a tapped hotspot opens in the sidebar (StudioHotspotCard). */
+  isWideScreen: boolean;
   opening: ReturnType<typeof useFollow>['opening'];
   deletes: ReturnType<typeof useDeleteActions>;
   hush: ReturnType<typeof useGazeHush>['hush'];
@@ -48,6 +50,7 @@ export function PlaygroundCards({
   camera,
   trip,
   canEdit,
+  isWideScreen,
   opening,
   deletes,
   hush,
@@ -60,6 +63,7 @@ export function PlaygroundCards({
     clearOfOpen,
     switchTrip,
     flipList,
+    filterList,
     pickOnPlaceCard,
     openTrip,
     backFromTrip,
@@ -132,6 +136,7 @@ export function PlaygroundCards({
           draw={draw}
           height={height}
           canEdit={canEdit}
+          opensInSidebar={isWideScreen}
           clearOfOpen={clearOfOpen}
           onPickOnPlaceCard={pickOnPlaceCard}
           onOpenTrip={openTrip}
@@ -156,6 +161,7 @@ export function PlaygroundCards({
           back={saved.back}
           listing={saved.listing}
           onFlip={flipList}
+          modeFilter={{ filter: saved.modeFilter, onFilter: filterList }}
           selected={saved.highlight?.where === 'list' ? saved.highlight.card : null}
           onSelect={(p) => saved.highlightCard(p && { where: 'list', ...p })}
           onRoute={openTrip}

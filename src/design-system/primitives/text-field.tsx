@@ -13,6 +13,8 @@ type TextFieldProps = Omit<
   type?: 'text' | 'email' | 'tel' | 'url';
   /** Figma's Variant3: the message shown under the field. */
   error?: string;
+  /** Figma's Variant3 box with no message: the form's one message is under another field. */
+  isInvalid?: boolean;
   /**
    * Figma's Close icon: shown while the field holds something, a press empties it (the caller
    * sets the value to '') and puts the caret back in it. Without it, the field has no icon.
@@ -29,6 +31,7 @@ export function TextField({
   label,
   type = 'text',
   error,
+  isInvalid = false,
   onClear,
   disabled = false,
   id,
@@ -40,6 +43,7 @@ export function TextField({
   const fieldId = id ?? ownId;
   const errorId = `${fieldId}-error`;
   const isErrorShown = !!error && !disabled;
+  const isMarkedInvalid = (isErrorShown || isInvalid) && !disabled;
   const inputRef = useRef<HTMLInputElement | null>(null);
   const setRef = (node: HTMLInputElement | null) => {
     inputRef.current = node;
@@ -53,6 +57,7 @@ export function TextField({
       id={fieldId}
       label={label}
       error={error}
+      isInvalid={isInvalid}
       errorId={errorId}
       isDisabled={disabled}
       trailing={
@@ -80,7 +85,7 @@ export function TextField({
         id={fieldId}
         type={type}
         disabled={disabled}
-        aria-invalid={isErrorShown || undefined}
+        aria-invalid={isMarkedInvalid || undefined}
         aria-describedby={describedBy(ownDescription, isErrorShown ? errorId : undefined)}
         className={FIELD_CONTROL + (canClear ? '' : ' pr-3')}
       />

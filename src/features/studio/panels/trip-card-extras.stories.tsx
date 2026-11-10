@@ -6,8 +6,8 @@ import type { HotspotRow } from '@/features/routes/model/hotspots';
 import type { DirectionRow, LineStringGeoJSON } from '@/features/routes/model/routes';
 import { createQueryClient } from '@/shared/lib/query-client';
 
+import { DraftLockNotice } from './draft-lock-notice';
 import { TripCardExtras } from './trip-card-extras';
-import { DraftLockNotice } from '../review/draft-lock-notice';
 
 /** Sample data only, shaped like saved rows. Not read from Supabase. */
 const line: LineStringGeoJSON = {

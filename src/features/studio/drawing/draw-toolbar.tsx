@@ -3,23 +3,15 @@ import { useState } from 'react';
 import { coarsePointer } from '@/features/routes/map/tap';
 import { cn } from '@/shared/utils/cn';
 
-import { CloseLoop } from './close-loop';
 import { DrawCount } from './draw-count';
 import { PILL, TOOL } from './draw-toolbar-look';
 import { PickBar } from './pick-bar';
 import { FollowChip, PointBar, PutBack } from './point-bar';
 import { SnapDraw } from './snap-draw';
-import {
-  drawHint,
-  uTurnWarning,
-  whyCannotSave,
-  withCommand,
-  type ExtendEnds,
-} from './toolbar-text';
+import { whyCannotSave, withCommand, type ExtendEnds } from './toolbar-text';
 import { UndoRedo } from './undo-redo';
 import { useDrawKeys } from './use-draw-keys';
 import type { Drawing } from './use-drawing';
-import type { LoopPlan } from './use-loop-closing';
 
 interface DrawToolbarProps {
   draw: Drawing;
@@ -37,15 +29,15 @@ interface DrawToolbarProps {
    * keep buttons can say which part they keep in the jeep's own order.
    */
   ends?: ExtendEnds | null;
-  /** While drawing a route's return trip: where the loop closes (use-loop-closing.ts). */
-  loop?: LoopPlan | null;
 }
 
 /**
  * Replaces the single idle button while drawing: Undo | Redo in one pill and
- * Snap | Draw | Done in another, after the owner's frame (4304:21645), with
- * the count above them. Deliberately small: the map is the document, and
- * this is the only chrome allowed to compete with it.
+ * Move · Snap · Draw | Done in another, after the owner's frame. No Close the
+ * loop (a line closes by its first point's badge), and no hint and no count: the owner's toolbar has neither, and what is drawn so
+ * far is read out to a screen reader instead (draw-count.tsx). Deliberately
+ * small: the map is the document, and this is the only chrome allowed to
+ * compete with it.
  *
  * Serves both a route trace and a hotspot outline. The outline needs three
  * corners, has no router to wait for, and has no Snap | Draw switch because
@@ -58,39 +50,28 @@ interface DrawToolbarProps {
  * only hides the selected point's handles; it never cancels, because cancel
  * discards the whole trace, and that should not be one stray key away.
  */
-export function DrawToolbar({
-  draw,
-  onDone,
-  keys = true,
-  ends = null,
-  loop = null,
-}: DrawToolbarProps) {
+export function DrawToolbar({ draw, onDone, keys = true, ends = null }: DrawToolbarProps) {
   if (draw.picking) return <PickBar draw={draw} ends={ends} />;
-  return <Toolbar draw={draw} onDone={onDone} keys={keys} loop={loop} />;
+  return <Toolbar draw={draw} onDone={onDone} keys={keys} />;
 }
 
 function Toolbar({
   draw,
   onDone,
   keys,
-  loop,
 }: {
   draw: Drawing;
   onDone: (() => void) | undefined;
   keys: boolean;
-  loop: LoopPlan | null;
 }) {
   const points = draw.controlPoints.length;
   const area = draw.area;
   const noun = area ? 'corner' : 'point';
-  const uTurns = draw.uTurns.length;
-  // A phone has no hover for a title, no right-click and no shift key: it is
-  // told what a finger does, asked before ✕ throws the drawing away, and
-  // gets the point bar (point-bar.tsx) for what the mouse's clicks do.
+  // A phone has no right-click and no shift key: it is asked before ✕ throws
+  // the drawing away, and gets the point bar (point-bar.tsx) for what the
+  // mouse's clicks do.
   const finger = coarsePointer();
   const [confirming, setConfirming] = useState(false);
-  const [uTurnHelp, setUTurnHelp] = useState(false);
-  const uTurnText = uTurnWarning(uTurns);
   const doneReason = whyCannotSave(draw);
   const canDone = doneReason === null;
 
@@ -104,43 +85,17 @@ function Toolbar({
     onDone: () => onDone?.(),
   });
 
-  const hint = drawHint({
-    uTurnHelp: uTurnHelp ? uTurnText : null,
-    isFinger: finger,
-    isArea: !!area,
-    points,
-    loopOther: loop?.other ?? null,
-  });
-  const contextual = draw.selected !== null || draw.canPutBack || draw.followOffer !== null;
-
   return (
     <div
       data-testid="draw-toolbar"
       className="absolute bottom-[calc(1.5rem+env(safe-area-inset-bottom))] left-1/2 z-10 flex w-max max-w-[calc(100%-2rem)] -translate-x-1/2 flex-col items-center gap-2"
     >
-      {/* Dragging and right-clicking are not discoverable on a bare map (drawHint). */}
-      {hint && !contextual && (
-        <p
-          className={
-            finger
-              ? 'rounded-full bg-surface-transparent px-3 py-1.5 text-center text-xs text-content-inverse'
-              : 'text-center text-[11px] text-content-quaternary [text-shadow:0_1px_2px_white]'
-          }
-        >
-          {hint}
-        </p>
-      )}
-
       <PointBar draw={draw} />
       <PutBack draw={draw} />
       <FollowChip draw={draw} />
 
-      <DrawCount
-        draw={draw}
-        isFinger={finger}
-        doneReason={doneReason}
-        onUTurnHelp={() => setUTurnHelp(!uTurnHelp)}
-      />
+      {/* The count, for a screen reader only: the owner's toolbar shows none. */}
+      <DrawCount draw={draw} />
 
       {confirming ? (
         <div className={PILL}>
@@ -161,12 +116,6 @@ function Toolbar({
       ) : (
         <div className="flex flex-wrap items-center justify-center gap-2">
           <UndoRedo draw={draw} noun={noun} />
-
-          {loop && (
-            <div className={PILL}>
-              <CloseLoop draw={draw} loop={loop} />
-            </div>
-          )}
 
           <div className={PILL}>
             {!area && <SnapDraw draw={draw} />}

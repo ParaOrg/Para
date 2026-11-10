@@ -128,7 +128,7 @@ const meta = {
     direction: talaToNovaliches,
     directions: [talaToNovaliches, novalichesToTala],
     timeline: talaTimeline,
-    livery: 'violet',
+    livery: 'jeep',
     onBackToList: fn(),
     onSwitch: fn(),
     onClose: fn(),
@@ -139,7 +139,7 @@ const meta = {
     onEnd: fn(),
     endPicked: null,
     dockRef: fn(),
-    height: { snap: 'middle', onSnap: fn() },
+    height: { snap: 0.55, onSnap: fn() },
   },
 } satisfies Meta<typeof TripCard>;
 
@@ -159,8 +159,8 @@ const openFold: Story['play'] = async ({ canvasElement }) => {
 /** A jeep's trip, opened from the list: its ends, its length, and the pesos its metres come to today. */
 export const Jeepney: Story = {};
 
-/** Raised to Max: every hintuan on the way in sight. */
-export const JeepneyMax: Story = { args: { height: { snap: 'max', onSnap: fn() } } };
+/** Raised to full height: every hintuan on the way in sight. */
+export const JeepneyFull: Story = { args: { height: { snap: 'full', onSnap: fn() } } };
 
 /** SWITCH turns it round: the way back is drawn, so the card asks for that direction. */
 export const TurnsRound: Story = {
@@ -213,7 +213,7 @@ export const NoList: Story = {
 
 /** A hintuan picked: its pill prices the ride from Tala to there. */
 export const PickedHintuan: Story = {
-  args: { picked: 'amparo', pickedMetres: 7_300, height: { snap: 'max', onSnap: fn() } },
+  args: { picked: 'amparo', pickedMetres: 7_300, height: { snap: 'full', onSnap: fn() } },
   play: openFold,
 };
 
@@ -225,7 +225,7 @@ export const OtherRoutes: Story = {
   args: {
     directions: [talaToNovaliches, novalichesToTala, talaToFairview],
     onOtherRoute: fn(),
-    height: { snap: 'max', onSnap: fn() },
+    height: { snap: 'full', onSnap: fn() },
   },
   play: async ({ args, canvasElement }) => {
     const other = within(canvasElement).getByTestId('trip-other-route');
@@ -252,7 +252,7 @@ export const Train: Story = {
     livery: 'light-rail-way-one',
     picked: 'carriedo',
     pickedCode: 'CAR',
-    height: { snap: 'max', onSnap: fn() },
+    height: { snap: 'full', onSnap: fn() },
   },
   // Carriedo picked: the stations before it on the ride, EDSA the one after
   // it, shown as it is, so nothing folds.
@@ -361,7 +361,7 @@ export const LongContent: Story = {
       'Novaliches (Bayan) via Zabarte',
       Array.from({ length: 30 }, (_, i) => `Hintuan ${i + 1}`),
     ),
-    height: { snap: 'max', onSnap: fn() },
+    height: { snap: 'full', onSnap: fn() },
   },
 };
 
@@ -393,7 +393,7 @@ const ikotTimeline: Timeline = {
  * and again at the bottom, the tiles the whole loop's, and no SWITCH.
  */
 export const Loop: Story = {
-  args: { direction: ikot, directions: [ikot], timeline: ikotTimeline, livery: 'orange' },
+  args: { direction: ikot, directions: [ikot], timeline: ikotTimeline, livery: 'bus' },
   play: async ({ canvasElement }) => {
     const card = within(canvasElement);
     await expect(card.queryByTestId('card-switch')).toBeNull();
@@ -407,7 +407,7 @@ export const LoopPicked: Story = {
     direction: ikot,
     directions: [ikot],
     timeline: ikotTimeline,
-    livery: 'orange',
+    livery: 'bus',
     picked: 'quezon-hall',
     pickedMetres: 2_100,
   },

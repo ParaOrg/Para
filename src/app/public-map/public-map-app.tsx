@@ -21,17 +21,21 @@ import { useTripTimeline } from '@/features/routes/cards/use-trip-timeline';
 import { EndTitles } from '@/features/routes/map/end-titles';
 import { routesBounds } from '@/features/routes/map/framing';
 import { HintuanPin } from '@/features/routes/map/hintuan-pin';
+import { LandmarkPin } from '@/features/routes/map/landmark-pin';
+import { lookAt } from '@/features/routes/map/look-at';
 import { MapCreditsDock } from '@/features/routes/map/map-credits-dock';
 import { MapCreditsSheet } from '@/features/routes/map/map-credits-sheet';
 import { METRO_MANILA, MapView } from '@/features/routes/map/map-view';
 import { StationLabels } from '@/features/routes/map/station-labels';
 import { useCardCamera } from '@/features/routes/map/use-card-camera';
 import { useCardStack } from '@/features/routes/map/use-card-stack';
+import { useFootbridges } from '@/features/routes/map/use-footbridges';
 import { useLitRides } from '@/features/routes/map/use-lit-rides';
 import { useLoopTip } from '@/features/routes/map/use-loop-tip';
 import { useMapCredits } from '@/features/routes/map/use-map-credits';
 import { useSavedHotspots } from '@/features/routes/map/use-saved-hotspots';
 import { useSavedRoutes } from '@/features/routes/map/use-saved-routes';
+import { directionsAtHotspots } from '@/features/routes/model/directions-at';
 import type { CommuterWhere } from '@/features/routes/model/loop-tip';
 import { placeKey } from '@/features/routes/model/places';
 import {
@@ -47,6 +51,7 @@ import { retryingImport } from '@/shared/utils/retrying-import';
 
 import { ContributionCard } from './contribution-card';
 import type { SaidNote } from './page-toasts';
+import { PlaceSearchBar, sheetTopUnderSearch } from './place-search-bar';
 import { useStatusBarColour } from './status-bar';
 
 // The toasts, fetched the first time the page has something to say: the opening page does not
@@ -64,6 +69,21 @@ const PageToasts = retryingLazy(() =>
  */
 const openOnRoutes = () =>
   openingDirections().then((directions) => (directions ? routesBounds(directions) : null));
+
+/**
+ * Whether the commuter map draws the hotspots' pins zoomed in (a terminal's or hintuan's flag). Off
+ * for now: the boxes and their names say where each one is, and a tap there opens it as before.
+ * Zoomed out each keeps its small dot, so a hotspot stays in sight. The studio keeps its pins.
+ */
+const SHOW_HOTSPOT_PINS = false;
+
+/**
+ * While a docked card stands at full height, the toast sits 12 under the card's ✕, so the ✕ stays
+ * in reach: the strip of map 24 (MAX_STRIP_PX), the handle's row 18 and the ✕ 40, then 12. A card
+ * floating in the corner (`@float:`) keeps the toast at the top.
+ */
+const TOAST_UNDER_FULL_CARD =
+  '@max-float:group-has-[[data-testid=card][data-snap=full]:not([hidden])]/map:[--toast-top:calc(env(safe-area-inset-top)+--spacing(23.5))]';
 
 /** The too-new map's Reload: the newer app, through the worker (pwa.ts). */
 const handleReloadNewer = () => void reloadForNewerApp();
@@ -86,7 +106,10 @@ export function PublicMapApp() {
   // read as it is lit (fetch-line.ts).
   const saved = useSavedRoutes(map, loadDirectionsFromFile, { loadLine: fetchLine });
   // While a trip is open, the map lights only the trip.
-  const hotspots = useSavedHotspots(map, loadHotspotsFromFile, { muted: !!saved.selected });
+  const hotspots = useSavedHotspots(map, loadHotspotsFromFile, {
+    muted: !!saved.selected,
+    shouldShowPins: SHOW_HOTSPOT_PINS,
+  });
   // A load problem, and a published map too new for this app (loadProblems).
   const problems = loadProblems([saved, hotspots]);
   // Each Try again answered: one that fails again says so again, after its toast closed.
@@ -133,9 +156,15 @@ export function PublicMapApp() {
     clearOfOpen,
     switchTrip,
     flipList,
+    filterList,
     otherRoute,
     pickOnPlaceCard,
     openPlace,
+    openTripFromPlace,
+    goHere,
+    letGoalGo,
+    goalLandmark,
+    walk,
     openRide,
     openTrip,
     backFromTrip,
@@ -157,6 +186,8 @@ export function PublicMapApp() {
   const offline = useOffline();
   // The phone's status bar in the map's colour (status-bar.ts).
   useStatusBarColour(map);
+  // The footbridges from street level in, fetched the first time it is reached (.scratch/footbridges).
+  useFootbridges(map);
   const age = useMapAge(saved.directions);
   const needRefresh = useNeedRefresh();
   // The install prompt, once the routes are on the map (useInstallPrompt).
@@ -167,6 +198,9 @@ export function PublicMapApp() {
   // The open trip's hintuans, worked out once per trip (useTripTimeline).
   const timeline = useTripTimeline(saved.selected, hotspots, tipId);
 
+  // Place search: what stops at a hotspot, by the published directions (.scratch/place-search).
+  const directionsAt = directionsAtHotspots(saved.directions, hotspots.linkedDirectionIds);
+
   // The map's credits, the Map Data Source sheet, opened by the ⓘ: the map and the cards under it
   // are out of reach while it is open.
   const credits = useMapCredits(root);
@@ -174,8 +208,9 @@ export function PublicMapApp() {
   return (
     // `data-directions`: how many the index brought, for the suites on a
     // production build, where the map itself is out of their reach.
-    // `data-dock-host`: the open card's sheet says where its top is here,
-    // for the LocatorButton to follow (BottomSheet). While "Update Para!"
+    // `data-dock-host`: the open card's sheet says where its top is here
+    // at rest, and on what follows it (`data-dock-follower`, the LocatorButton,
+    // the map's ⓘ) as a finger drags it (BottomSheet). While "Update Para!"
     // waits, a toast sits 12 under it rather than over it: the button's 24
     // from the top and its 40 tall (Notices), `--toast-top` (ToastHost).
     <div
@@ -183,8 +218,9 @@ export function PublicMapApp() {
       data-dock-host
       data-directions={saved.directions.length}
       className={cn(
-        '@container relative h-full w-full overflow-clip',
+        'group/map @container relative h-full w-full overflow-clip',
         needRefresh && '[--toast-top:calc(env(safe-area-inset-top)+--spacing(19))]',
+        sheetTopUnderSearch(needRefresh, offline || age.stale),
       )}
     >
       {/* Out of reach under the credits, the map and every card alike. */}
@@ -302,13 +338,33 @@ export function PublicMapApp() {
           />
         )}
 
+        {/* The landmark "Go here" made the goal: its pin stays while the goal holds (ticket 07). */}
+        {map && goalLandmark && (
+          <LandmarkPin key={goalLandmark.id} map={map} at={goalLandmark.point} />
+        )}
+        {/* Place search: a place opens as its name tapped does; wide, the cards float under it. */}
+        <PlaceSearchBar
+          map={map}
+          hotspots={hotspots.hotspots}
+          directionsAt={directionsAt}
+          whereNow={() => where.current?.at ?? null}
+          onPick={(hotspot) => openPlace(hotspot.id)}
+          onLookAt={(point) => lookAt(map, point)}
+          onGoHere={(landmark, near, hintuan) => goHere(landmark, near, hintuan.id)}
+          onSearchRestart={letGoalGo}
+          isUnderUpdate={needRefresh}
+          isUnderOfflinePill={offline || age.stale}
+          isCardOpen={cards.open}
+        />
         {/* How old the map is, and a new version waiting. */}
         <Notices offline={offline} age={age} needRefresh={needRefresh} onUpdate={reloadToUpdate} />
         {/* What went wrong, at the top: the locator's note and a failed load. */}
         {hasToasts && (
-          <Suspense fallback={null}>
-            <PageToasts locatorNote={locatorNote} load={loadToast} />
-          </Suspense>
+          <div className={cn('contents', TOAST_UNDER_FULL_CARD)}>
+            <Suspense fallback={null}>
+              <PageToasts locatorNote={locatorNote} load={loadToast} />
+            </Suspense>
+          </div>
         )}
         {/* Held while the credits are open: one dialog at a time. */}
         {install.shouldShow && credits.state === 'shut' && (
@@ -335,6 +391,7 @@ export function PublicMapApp() {
             startCode={ride.startCode}
             onSetStart={ride.setStart}
             onRemoveStart={ride.removeStart}
+            walk={walk}
             onPick={pickOnTrip}
             onEnd={endOnTrip}
             endPicked={ride.endPicked}
@@ -342,8 +399,7 @@ export function PublicMapApp() {
             height={height}
             // "Other routes": that route's trip in this one's place, ‹ still to
             // what this one was picked from; the camera takes it in as it opens.
-            // The sheet goes to Middle from wherever it is, so the map shows it;
-            // the hintuans stay open or folded.
+            // The sheet stays where it is; the hintuans stay open or folded.
             onOtherRoute={otherRoute}
           />
         )}
@@ -374,7 +430,7 @@ export function PublicMapApp() {
             hotspots={hotspots.hotspots}
             linkedDirectionIds={hotspots.linkedDirectionIds}
             directions={saved.directions}
-            onSelectDirection={openTrip}
+            onSelectDirection={openTripFromPlace}
             // Its Selected row tapped again: no box is the one until a row is picked.
             deselected={hotspots.letGone}
             onDeselect={() => {
@@ -408,6 +464,7 @@ export function PublicMapApp() {
             back={saved.back}
             listing={saved.listing}
             onFlip={flipList}
+            modeFilter={{ filter: saved.modeFilter, onFilter: filterList }}
             selected={saved.highlight?.where === 'list' ? saved.highlight.card : null}
             onSelect={(p) => saved.highlightCard(p && { where: 'list', ...p })}
             onRoute={openTrip}

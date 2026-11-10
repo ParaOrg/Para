@@ -1,3 +1,5 @@
+import type { Segment } from '@/shared/utils/geo';
+
 import type { AreaTarget } from './drawing-types';
 
 /**
@@ -14,6 +16,11 @@ export function isTyping(target: EventTarget | null): boolean {
   const el = target as HTMLElement | null;
   if (!el) return false;
   return el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName);
+}
+
+/** How many of a route's stretches go straight (Draw's, or refused by the router): the count's "N straight". */
+export function straightCount(segments: readonly (Segment | undefined)[]): number {
+  return segments.filter((s) => s?.snap === 'freehand').length;
 }
 
 /** Whether the keyboard is a Mac's, whose shortcuts read ⌘ for Ctrl. */
@@ -59,13 +66,6 @@ export function keepOptions(ends: ExtendEnds | null): KeepOption[] {
   );
 }
 
-/** The U-turn warning, for one ringed point or several. */
-export function uTurnWarning(uTurns: number): string {
-  return uTurns === 1
-    ? 'The route turns back on itself at the ringed point, drawn in amber. Drag the point to the corner to fix it, or keep it if the jeep really turns there.'
-    : 'The route turns back on itself at the ringed points, drawn in amber. Drag a point to its corner to fix it, or keep it if the jeep really turns there.';
-}
-
 /** Why Done cannot be pressed yet; null when it can. */
 export function whyNotDone(
   points: number,
@@ -98,53 +98,4 @@ export function whyCannotSave(draw: SaveableDrawing): string | null {
     isArea ? 'corner' : 'point',
     draw.snapping > 0 || draw.unresolved,
   );
-}
-
-/** What the drawing toolbar's hint reads from. */
-export interface HintState {
-  /** The U-turn warning asked for: it takes the hint's place. */
-  uTurnHelp: string | null;
-  /** A phone: told what a finger does. */
-  isFinger: boolean;
-  /** Drawing a hotspot's outline, not a route. */
-  isArea: boolean;
-  points: number;
-  /** A return trip being drawn: the way already drawn, which the faint line under it shows. */
-  loopOther?: string | null;
-}
-
-/**
- * The line over the toolbar: the U-turn warning when asked for; else, on a
- * phone, what a finger does; with a mouse, what its drags and clicks do once
- * there is a point. Dragging and right-clicking are not discoverable on a
- * bare map.
- */
-export function drawHint({
-  uTurnHelp,
-  isFinger,
-  isArea,
-  points,
-  loopOther = null,
-}: HintState): string | null {
-  if (uTurnHelp !== null) return uTurnHelp;
-  if (loopOther !== null && !isArea && points === 0) {
-    return `Tap the dot where ${loopOther} ended: this line starts there`;
-  }
-  if (loopOther !== null && !isArea && points === 1) {
-    return `This line starts where ${loopOther} ended (the dot). Close the loop ends it where ${loopOther} began (the ring)`;
-  }
-  if (isFinger) {
-    if (isArea) {
-      return points === 0
-        ? 'Tap the corners of the hotspot'
-        : 'Tap to add a corner · tap a corner for options · drag one to move';
-    }
-    return points === 0
-      ? 'Tap where the jeep starts'
-      : 'Tap to add · tap a point for options · drag a point to move';
-  }
-  if (points === 0) return null;
-  return isArea
-    ? 'drag a corner to move · right-click to delete · click an edge to insert a corner'
-    : 'drag a point to move · right-click it to delete · click the line to insert · shift-click a stretch to straighten it · right-click a saved route to follow it to its end';
 }

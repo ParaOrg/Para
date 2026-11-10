@@ -133,7 +133,7 @@ test("the public map's subjects: the same keys, gazed at the same places, as Pub
       ...nothing,
       candidates: [a, b],
       litDirections: [a],
-      highlight: { where: 'list', card: 'Tala', from: 'Tala', ids: ['a1'], livery: 'violet' },
+      highlight: { where: 'list', card: 'Tala', from: 'Tala', ids: ['a1'], livery: 'jeep' },
     },
     {
       ...nothing,

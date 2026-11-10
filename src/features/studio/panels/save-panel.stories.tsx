@@ -1,12 +1,16 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
 import type { HotspotRow } from '@/features/routes/model/hotspots';
 import type { RouteRow, DirectionRow } from '@/features/routes/model/routes';
+import { createQueryClient } from '@/shared/lib/query-client';
 import { M_PER_DEG, type LngLat, type Segment } from '@/shared/utils/geo';
 
 import { SaveBesideFrame, SaveSheetFrame } from './save-frames';
 import { SavePanel } from './save-panel';
+import { reviewKeys } from '../data/review-keys';
+import type { DraftRow } from '../data/review-schema';
 import type { Drawing } from '../drawing/use-drawing';
 
 /** Two terminals, one near each end of the sample line, so the pickers have something to guess. */
@@ -50,9 +54,9 @@ const hotspots: HotspotRow[] = [
 
 /**
  * Just the parts of a drawing the panel reads. Sample data only: a story has no
- * Supabase client, so pressing Save here shows an error and writes nothing.
+ * Supabase client, so pressing a save here shows an error and writes nothing.
  */
-function drawing(segments: Segment[], uTurns = 0): Drawing {
+function drawing(segments: Segment[]): Drawing {
   const controlPoints: LngLat[] = [
     [121.043326, 14.742006],
     [121.04184, 14.742003],
@@ -64,7 +68,7 @@ function drawing(segments: Segment[], uTurns = 0): Drawing {
     line: controlPoints,
     segments,
     metres: 640,
-    uTurns: Array.from({ length: uTurns }, (_, i) => ({ point: i + 1, stub: [], metres: 60 })),
+    uTurns: [],
   } as unknown as Drawing;
 }
 
@@ -77,12 +81,30 @@ const routed = (streets?: Segment['streets']): Segment => ({
   streets,
 });
 
+/** A query client, holding the route's stored draft when there is one. */
+function clientWith(draft: DraftRow | undefined) {
+  const client = createQueryClient();
+  if (draft) client.setQueryData(reviewKeys.draftOf('route', draft.subject_id), draft);
+  return client;
+}
+
+/** The footer's save, the form's submit. */
+const saveButton = (canvas: ReturnType<typeof within>) =>
+  canvas.getByRole('button', { name: 'Save as draft' });
+
 const meta = {
   title: 'Features/Studio/SavePanel',
   component: SavePanel,
   // The panel covers the map it sits over, so give it a map-sized box. The
   // `beside` parameter stands it left of the map instead, as on a computer.
+  // Publish asks the review queries, so the panel sits under a query client of its own. The
+  // `storedDraft` parameter puts a draft of the route in it, as Edit route's read leaves one.
   decorators: [
+    (Story, ctx) => (
+      <QueryClientProvider client={clientWith(ctx.parameters.storedDraft)}>
+        <Story />
+      </QueryClientProvider>
+    ),
     (Story, ctx) =>
       ctx.parameters.beside ? (
         <div className="flex h-176 bg-neutral-200">
@@ -111,7 +133,6 @@ const meta = {
     existing: null,
     route: null,
     hotspots,
-    onSaved: fn(),
     onCancel: fn(),
   },
 } satisfies Meta<typeof SavePanel>;
@@ -141,22 +162,6 @@ export const WithAStraightStretch: Story = {
 /** A route saved before names were recorded: no list, and a hint how to get one. */
 export const RoutedBeforeNames: Story = {
   args: { draw: drawing([routed(), routed()]) },
-};
-
-/** The route turns back on itself at a point: warned before saving. */
-export const WithAUTurn: Story = {
-  args: {
-    draw: drawing(
-      [
-        routed([{ name: 'Sinai Street', metres: 160 }]),
-        routed([
-          { name: 'Sinai Street', metres: 60 },
-          { name: 'Assyria Street', metres: 55 },
-        ]),
-      ],
-      1,
-    ),
-  },
 };
 
 const hintuan = (
@@ -220,9 +225,8 @@ function drawingBack(): Drawing {
 
 /**
  * Tala – SM Fairview exists with its outbound drawn; this is its return trip,
- * drawn from SM Fairview. The panel leads with the direction — "SM Fairview →
- * Tala" — because "to Tala" under a locked "Tala – SM Fairview" reads as not
- * reversed at all.
+ * drawn from SM Fairview. The panel says "Draw the return trip" over the
+ * route's locked ends.
  */
 export const TheReturnTrip: Story = {
   args: { route: talaFairview, slotReversed: true, draw: drawingBack() },
@@ -337,13 +341,79 @@ export const EditRoute: Story = {
   },
 };
 
+/**
+ * A published route opened with Edit route, beside the map: Line detail says Published and the
+ * footer offers Unpublish, until the line or a field changes: then Not saved, with the saves.
+ */
+export const EditRoutePublished: Story = {
+  parameters: { beside: true },
+  args: { ...EditRoute.args, isPublished: true, onCancel: undefined, saveBlocked: null },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByTestId('line-detail')).toHaveTextContent('StatusPublished');
+    await expect(canvas.getByRole('button', { name: 'Unpublish' })).toBeVisible();
+    await userEvent.type(canvas.getByLabelText('Via (if applicable)'), 'Zabarte');
+    await expect(canvas.getByTestId('line-detail')).toHaveTextContent('StatusNot saved');
+    await expect(canvas.getByRole('button', { name: 'Save as draft' })).toBeVisible();
+  },
+};
+
+/**
+ * A route with a draft stored for it (here another editor's, as no one is signed in): the Draft
+ * badge by the heading, Line detail says Draft, and Publish reads Approve.
+ */
+export const EditRouteWithDraft: Story = {
+  parameters: {
+    beside: true,
+    storedDraft: {
+      id: 'sample-draft',
+      kind: 'route',
+      subject_id: 'sample-route',
+      is_new: false,
+      base_revision: 3,
+      revision: 1,
+      status: 'draft',
+      payload: {},
+      note: null,
+      editor_id: 'another-editor',
+      created_at: '2026-11-09T08:00:00Z',
+      updated_at: '2026-11-09T08:00:00Z',
+      submitted_at: null,
+    } satisfies DraftRow,
+  },
+  args: { ...EditRoute.args, onCancel: undefined, saveBlocked: null },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByText('Draft', { selector: 'span' })).toBeVisible();
+    await expect(canvas.getByTestId('line-detail')).toHaveTextContent('StatusDraft');
+    await expect(canvas.getByRole('button', { name: 'Approve' })).toBeVisible();
+    await expect(canvas.queryByRole('button', { name: 'Discard' })).toBeNull();
+  },
+};
+
+/**
+ * Unpublish refused (here, with no database to reach): the sidebar stays, and says why in an
+ * alert the screen reader announces.
+ */
+export const EditRoutePublishedUnpublishRefused: Story = {
+  parameters: { beside: true },
+  args: { ...EditRoute.args, isPublished: true, onCancel: undefined, saveBlocked: null },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    window.confirm = () => true;
+    await userEvent.click(canvas.getByRole('button', { name: 'Unpublish' }));
+    await expect(await canvas.findByRole('alert')).toBeVisible();
+    await expect(canvas.getByRole('button', { name: 'Unpublish' })).toBeEnabled();
+  },
+};
+
 /** Edit route onto ends another route already has: refused in one sentence, before anything is written. */
 export const EditRouteEndsTaken: Story = {
   args: EditRoute.args,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.selectOptions(canvas.getByTestId('save-head'), 'Lagro');
-    await userEvent.click(canvas.getByRole('button', { name: 'Update' }));
+    await userEvent.click(saveButton(canvas));
     await expect(
       await canvas.findByText(/Another route already runs between these two places/),
     ).toBeVisible();
@@ -357,7 +427,7 @@ export const EditRouteTurnedRound: Story = {
     const canvas = within(canvasElement);
     await userEvent.selectOptions(canvas.getByTestId('save-head'), 'SM Fairview');
     await userEvent.selectOptions(canvas.getByTestId('save-tail'), 'Tala');
-    await userEvent.click(canvas.getByRole('button', { name: 'Update' }));
+    await userEvent.click(saveButton(canvas));
     await expect(
       await canvas.findByText(/Head and tail swapped would turn the route round/),
     ).toBeVisible();
@@ -419,7 +489,7 @@ export const NewIkot: Story = {
     const canvas = within(canvasElement);
     await expect(canvas.getByRole('checkbox', { name: /Ikot: goes round, no ends/ })).toBeChecked();
     await expect(canvas.queryByTestId('save-head')).toBeNull();
-    await expect(canvas.getByRole('heading', { name: 'Save this ikot' })).toBeVisible();
+    await expect(canvas.getByRole('heading', { name: 'Route Information' })).toBeVisible();
     await expect(canvas.getByTestId('save-timeline')).toHaveTextContent('Tala');
   },
 };
@@ -429,8 +499,8 @@ export const IkotWithoutASignboard: Story = {
   args: NewIkot.args,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await userEvent.click(canvas.getByRole('button', { name: 'Save' }));
-    await expect(await canvas.findByText(/An ikot is called by its signboard/)).toBeVisible();
+    await userEvent.click(saveButton(canvas));
+    await expect(await canvas.findByText(/An ikot is called by its Ikot name/)).toBeVisible();
   },
 };
 
@@ -439,8 +509,8 @@ export const IkotSignboardTaken: Story = {
   args: { ...NewIkot.args, directions: [upIkot] },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await userEvent.type(canvas.getByLabelText(/Signboard/), ' up – IKOT');
-    await userEvent.click(canvas.getByRole('button', { name: 'Save' }));
+    await userEvent.type(canvas.getByLabelText('Ikot name'), ' up – IKOT');
+    await userEvent.click(saveButton(canvas));
     await expect(await canvas.findByText(/Another ikot already has this signboard/)).toBeVisible();
   },
 };
@@ -452,8 +522,8 @@ export const OpenLineTickedAsAnIkot: Story = {
     const canvas = within(canvasElement);
     await expect(canvas.getByRole('checkbox', { name: /Ikot/ })).not.toBeChecked();
     await userEvent.click(canvas.getByRole('checkbox', { name: /Ikot/ }));
-    await userEvent.type(canvas.getByLabelText(/Signboard/), 'UP – Ikot');
-    await userEvent.click(canvas.getByRole('button', { name: 'Save' }));
+    await userEvent.type(canvas.getByLabelText('Ikot name'), 'UP – Ikot');
+    await userEvent.click(saveButton(canvas));
     await expect(await canvas.findByText(/An ikot ends where it began/)).toBeVisible();
   },
 };
@@ -466,25 +536,52 @@ export const EditIkot: Story = {
     const toggle = canvas.getByRole('checkbox', { name: /Ikot: goes round, no ends/ });
     await expect(toggle).toBeChecked();
     await expect(toggle).toBeDisabled();
-    await expect(canvas.getByRole('heading', { name: 'Update this ikot' })).toBeVisible();
+    await expect(canvas.getByRole('heading', { name: 'Route Information' })).toBeVisible();
   },
 };
 
 /**
- * At a phone's width: the sheet fills the screen, Save held at its foot. The
- * sheet's `max-sm` reads the viewport, not the box, hence the phone viewport.
+ * At a phone's width: the sheet fills the screen, its footer held at its foot, Back to map in
+ * Exit's place. The sheet's `max-sm` reads the viewport, not the box, hence the phone viewport.
  */
 export const Phone: Story = {
   globals: { viewport: { value: 'mobile1', isRotated: false } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole('button', { name: 'Back to map' })).toBeVisible();
+    await expect(canvas.queryByRole('button', { name: 'Exit' })).toBeNull();
+    await expect(canvas.getByRole('button', { name: 'Publish' })).toBeVisible();
+  },
 };
 
-/** Beside the map on a computer: no Back to map, and Save is the drawing's Done. */
+/** Beside the map on a computer: Exit in Back to map's place, and the footer's saves are Done. */
 export const BesideTheMap: Story = {
   parameters: { beside: true },
   args: { onCancel: undefined, saveBlocked: null },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole('button', { name: 'Exit' })).toBeVisible();
+    await expect(canvas.queryByRole('button', { name: 'Back to map' })).toBeNull();
+    await expect(canvas.getByRole('button', { name: 'Publish' })).toBeVisible();
+  },
 };
 
-/** Beside the map before the line is long enough: Save waits, and says why. */
+/** An ikot beside the map: Ikot name in Origin and Destination's place, then Via and the mode. */
+export const BesideTheMapIkot: Story = {
+  parameters: { beside: true },
+  args: { onCancel: undefined, saveBlocked: null, existing: null },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole('checkbox', { name: /Ikot: goes round, no ends/ }));
+    const labels = [...canvasElement.querySelectorAll('label')].map((l) => l.textContent.trim());
+    const fields = labels.filter((l) =>
+      ['Ikot name', 'Via (if applicable)', 'Transportation mode', 'Origin'].includes(l),
+    );
+    await expect(fields).toEqual(['Ikot name', 'Via (if applicable)', 'Transportation mode']);
+  },
+};
+
+/** Beside the map before the line is long enough: the footer's saves wait, and say why. */
 export const BesideTheMapTooShort: Story = {
   parameters: { beside: true },
   args: {
@@ -499,7 +596,7 @@ export const BesideTheMapTooShort: Story = {
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(canvas.getByRole('button', { name: 'Save' })).toBeDisabled();
+    await expect(saveButton(canvas)).toBeDisabled();
     await expect(canvas.getByText('Add at least 2 points')).toBeVisible();
     await expect(canvas.queryByRole('button', { name: 'Back to map' })).toBeNull();
   },

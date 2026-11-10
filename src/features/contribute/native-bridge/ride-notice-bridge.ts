@@ -24,37 +24,30 @@ export async function tellRideNotice(state: RideNoticeState): Promise<void> {
 }
 
 /**
- * The taps made on the notification for `recordingId` that the page has not applied yet, folded;
- * null on the web, or when there are none.
+ * What the phone's ride holds for `recordingId` (its switches, gaps and Stop), for the page to
+ * apply; null on the web, or when the phone holds another ride or none.
  */
 export async function readRideTaps(recordingId: string): Promise<RideTaps | null> {
   if (import.meta.env.MODE !== 'apk' || !isNativeApp() || isEmulatorRide) return null;
-  const { foldUnappliedTaps } = await import('../native/apply-ride-taps');
-  return foldUnappliedTaps(recordingId);
+  const { readNativeTaps } = await import('../native/apply-ride-taps');
+  return readNativeTaps(recordingId);
 }
 
 /**
- * The ride found open as the page opens, with the taps made on the notification while it was gone
- * applied and stored; on the web, as it was.
+ * The ride found open as the page opens, with what the phone did to it while the page was gone
+ * applied and stored, and whether the app's service still records it; on the web, as it was.
  */
 export async function applyOpeningRideTaps(
   recording: Recording | null,
-): Promise<{ recording: Recording | null; isFinished: boolean }> {
+): Promise<{ recording: Recording | null; isFinished: boolean; isStillRecording: boolean }> {
   if (import.meta.env.MODE !== 'apk' || !isNativeApp() || isEmulatorRide) {
-    return { recording, isFinished: false };
+    return { recording, isFinished: false, isStillRecording: false };
   }
   const { applyOpeningTaps } = await import('../native/apply-ride-taps');
   return applyOpeningTaps(recording);
 }
 
-/** Forgets the taps up to `time`, once applied. */
-export async function dropRideTaps(time: number): Promise<void> {
-  if (import.meta.env.MODE !== 'apk' || !isNativeApp() || isEmulatorRide) return;
-  const { dropRideEvents } = await import('../native/ride-notice');
-  await dropRideEvents(time);
-}
-
-/** Hears a tap on the notification while the page is awake; returns what stops hearing. */
+/** Hears the ride change on the phone while the page is awake; returns what stops hearing. */
 export function onRideTap(listener: () => void): () => void {
   if (import.meta.env.MODE !== 'apk' || !isNativeApp() || isEmulatorRide) return () => undefined;
   let stop: (() => void) | null = null;

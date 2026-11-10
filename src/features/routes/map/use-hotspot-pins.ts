@@ -11,11 +11,17 @@ const loadPinImages = retryingImport(() => import('./hotspot-pin-images'));
 /**
  * The hotspots' pins on `map`, fetched once its boxes are drawn and added then,
  * leaving out the box `hidden` names (the one the studio is editing), and
- * their images given again whenever a basemap switch loses them.
+ * their images given again whenever a basemap switch loses them. Without
+ * `shouldShowPins`, none, and their chunk is not fetched: the dots zoomed out
+ * come with the boxes either way.
  */
-export function useHotspotPins(map: MapLibreMap | null, hidden: RefObject<string | null>): void {
+export function useHotspotPins(
+  map: MapLibreMap | null,
+  hidden: RefObject<string | null>,
+  shouldShowPins = true,
+): void {
   useEffect(() => {
-    if (!map) return;
+    if (!map || !shouldShowPins) return;
     let isGone = false;
     let addImages: ((map: MapLibreMap) => void) | null = null;
     const handleImageMissing = (event: MapStyleImageMissingEvent) => {
@@ -36,5 +42,5 @@ export function useHotspotPins(map: MapLibreMap | null, hidden: RefObject<string
       isGone = true;
       map.off('styleimagemissing', handleImageMissing);
     };
-  }, [map, hidden]);
+  }, [map, hidden, shouldShowPins]);
 }

@@ -2,6 +2,7 @@ import type { GeoJSONSource, MapLibreMap } from 'maplibre-gl';
 import { useEffect, useMemo } from 'react';
 
 import { MAP_COLOURS } from '@/design-system/foundation/map-colours';
+import { isMapOutOfSight } from '@/shared/ui/sheet-room';
 import { haversine, metresPerPixel, type LngLat } from '@/shared/utils/geo';
 import { prefersReducedMotion } from '@/shared/utils/motion';
 
@@ -346,7 +347,9 @@ export function useDirectionArrows(map: MapLibreMap | null, rides: readonly Ride
   useEffect(() => {
     const src = map?.getSource<GeoJSONSource>(SRC);
     if (!map || !src) return;
-    return flowChevrons(map, src, lines, litAcross);
+    return flowChevrons(map, src, lines, litAcross, undefined, () =>
+      isMapOutOfSight(map.getContainer()),
+    );
   }, [map, lines, hitReady]);
 }
 
@@ -363,7 +366,8 @@ export interface FlowClock {
  * each cut to `across(zoom)` pixels: the flow, the rest when steps come too
  * slow, and the drawing again as the map moves (useDirectionArrows, and the
  * studio's drawing). A `clock` passed in carries the flow on from where it
- * was; without one, it starts afresh. Returns the clean-up.
+ * was; without one, it starts afresh. While `isPaused` says so, they wait where they are and
+ * flow on from there after. Returns the clean-up.
  */
 export function flowChevrons(
   map: MapLibreMap,
@@ -371,6 +375,7 @@ export function flowChevrons(
   lines: readonly (readonly LngLat[])[],
   across: (zoom: number) => number,
   clock: FlowClock = { flowed: 0 },
+  isPaused: () => boolean = () => false,
 ): () => void {
   const drawn = lines.filter((l) => l.length > 1);
   if (drawn.length === 0) {
@@ -467,6 +472,14 @@ export function flowChevrons(
   };
   const tick = (now: number) => {
     if (moving || now - last < STEP_MS) {
+      frame = requestAnimationFrame(tick);
+      return;
+    }
+    // Out of sight or under a finger (isPaused): they wait where they are, their clock with them,
+    // and flow on from there once the map shows again. Waiting is not being slow.
+    if (isPaused()) {
+      last = now;
+      slow = 0;
       frame = requestAnimationFrame(tick);
       return;
     }

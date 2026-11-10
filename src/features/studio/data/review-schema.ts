@@ -3,22 +3,20 @@ import * as z from 'zod/mini';
 export type DraftKind = 'route' | 'hotspot';
 export type DraftStatus = 'draft' | 'pending';
 
-/** The machine codes approve_draft and friends answer with (0022). */
+/** The machine codes publish_draft and friends answer with (0022, 20261105160000_draft_published). */
 const reviewCodeSchema = z.enum([
   'ok',
   'approved',
-  'submitted',
-  'sent_back',
   'discarded',
   'taken_down',
   'put_back',
-  'already_pending',
+  'unpublished',
   'conflict',
   'revision_mismatch',
   'no_draft',
   'not_your_draft',
-  'not_pending',
   'not_approved',
+  'not_published',
   'not_taken_down',
   'subject_exists',
   'subject_gone',
@@ -46,6 +44,8 @@ export const draftRowSchema = z.object({
   payload: z.unknown(),
   note: z.nullable(z.string()),
   editor_id: z.nullable(z.string()),
+  /** Who saved it last: its maker, or another editor once the maker's account is gone. */
+  last_saved_by: z.optional(z.nullable(z.string())),
   created_at: z.string(),
   updated_at: z.string(),
   submitted_at: z.nullable(z.string()),
