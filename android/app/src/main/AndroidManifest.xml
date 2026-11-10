@@ -41,6 +41,17 @@
             android:name=".RideActionReceiver"
             android:exported="false" />
 
+        <!-- A ride cut off by a phone restart or an app update gets its card (RideRestartReceiver).
+             Not exported: both broadcasts come from the system, which reaches it all the same. -->
+        <receiver
+            android:name=".RideRestartReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
+
         <!-- The emulator test lost the app when Play Services' font provider died: Android kills an
              app that holds a provider in a dying process, even one with a foreground service.
              Emoji support (AndroidX's emoji2) is what connects to it at start, and a WebView page
@@ -78,6 +89,8 @@
     <!-- Android 14 and later: a foreground service of type location (RideService). -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- RideRestartReceiver: the card of a ride cut off by a phone restart. -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <!-- Android's own "Let Para always run in the background?" dialog, at the first Start
          (NativePermissionsPlugin.askBatteryUnrestricted). -->
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />

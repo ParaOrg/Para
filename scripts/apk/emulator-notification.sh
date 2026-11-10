@@ -19,7 +19,9 @@
 #   ~2:40 Pause: no fix is kept from then on, and the service leaves the foreground; the shade:
 #         Resume and Finish
 #   ~3:10 Resume: the service is in the foreground again and fixes are kept
-#   ~3:40 Finish: no fix after it, and the notification says the ride waits to be saved
+#   ~3:40 location switched off, then on: the card says so, then Recording
+#   ~4:20 the app updated (installed again): the card says the ride stopped; opened, it records
+#   ~5:30 Finish: no fix after it, and the notification says the ride waits to be saved
 #
 # The service's state after Pause and after Resume is what RideActionReceiver does with
 # RideService: it stops at Pause and Finish and starts again at Resume.
@@ -279,6 +281,43 @@ AFTER=$(native_fixes)
   || fail "resumed, yet no fix kept: $RESUMED_AT then $AFTER"
 is_foreground && pass "resumed: the service is in the foreground again" \
   || fail "resumed, the service is not in the foreground (the plugin's internals changed?)"
+
+# Location switched off mid-ride (ticket 01): the card says so within the service's next look at the
+# switch (it hears the switch at once), and says Recording again once it is on and fixes come.
+adb shell cmd location set-location-enabled false
+sleep 10
+adb shell dumpsys notification --noredact > "$OUT/notification-location-off.txt"
+grep -q 'Location is off: not recording' "$OUT/notification-location-off.txt" \
+  && pass "location off: the card says 'Location is off: not recording'" \
+  || fail "location off, the card does not say so"
+adb shell cmd location set-location-enabled true
+ON_AT=$(native_fixes)
+sleep 20
+adb shell dumpsys notification --noredact > "$OUT/notification-location-on.txt"
+grep -q 'Recording' "$OUT/notification-location-on.txt" && ! grep -q 'Location is off' "$OUT/notification-location-on.txt" \
+  && pass "location on again: the card says Recording" || fail "location on again, the card does not say Recording"
+[ "$(native_fixes)" -gt "$ON_AT" ] && pass "location on again: fixes kept again" \
+  || fail "location on again, yet no fix kept"
+
+# The app updated mid-ride (Q94): installing kills the process and the service, and nothing records
+# it after. The card says the ride stopped; the app opened again carries on the ride.
+mark "updated"
+adb install -r "$APK" > "$OUT/install-mid-ride.txt" 2>&1
+sleep 10
+adb shell dumpsys notification --noredact > "$OUT/notification-updated.txt"
+grep -q 'Your ride stopped when the phone restarted' "$OUT/notification-updated.txt" \
+  && pass "updated mid-ride: the card says the ride stopped" || fail "updated mid-ride, no 'Your ride stopped' card"
+is_foreground && fail "updated mid-ride, yet a service records (it should not start by itself)" \
+  || pass "updated mid-ride: nothing records by itself"
+adb shell am start -n "$PKG/$ACTIVITY"
+sleep 30
+REOPENED_AT=$(native_fixes)
+sleep 15
+[ "$(native_fixes)" -gt "$REOPENED_AT" ] && pass "opened after the update: the ride records again" \
+  || fail "opened after the update, the ride does not record"
+adb shell run-as "$PKG" cat files/diagnostics.log > "$OUT/diagnostics.log" 2> /dev/null
+grep -q 'phone restart or an app update' "$OUT/diagnostics.log" \
+  && pass "the diagnostics log says the update cut the ride off" || fail "no diagnostics line for the update"
 
 tap FINISH
 FINISHED_AT=$(native_fixes)

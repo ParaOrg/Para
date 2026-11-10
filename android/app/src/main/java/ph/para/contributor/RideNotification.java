@@ -101,8 +101,9 @@ final class RideNotification {
         long now = System.currentTimeMillis();
         String time = timeText(ride.elapsedMs(now) / 1000);
         String distance = distanceText(distanceM(context, ride));
-        // A ride with no location yet shows as recording until the owner's design for it (Q95).
         boolean isRecording = RideCard.RECORDING.equals(card) || RideCard.NO_LOCATION.equals(card);
+        // Recording, but no fix coming: the card says so, in the owner's words until its design (Q95).
+        String status = RideCard.NO_LOCATION.equals(card) ? lostText(ride) : isRecording ? "Recording" : "Paused";
         boolean isFinished = RideCard.FINISHED.equals(card);
         String mode = Ride.RIDE.equals(ride.mode()) ? "Sakay" : "Lakad";
 
@@ -138,9 +139,9 @@ final class RideNotification {
         }
 
         RemoteViews closed = new RemoteViews(context.getPackageName(), R.layout.ride_notification);
-        fillCard(context, closed, ride, isRecording, time, distance);
+        fillCard(context, closed, ride, isRecording, status, time, distance);
         RemoteViews opened = new RemoteViews(context.getPackageName(), R.layout.ride_notification_expanded);
-        fillCard(context, opened, ride, isRecording, time, distance);
+        fillCard(context, opened, ride, isRecording, status, time, distance);
 
         // The card's own bars (recording-screen.tsx): Pause and the mode a tap switches to while
         // recording, Resume and Finish while paused.
@@ -165,7 +166,7 @@ final class RideNotification {
 
         builder
             // Said by screen readers and by watches, which do not show the card.
-            .setContentTitle(isRecording ? "Recording · " + mode : "Paused")
+            .setContentTitle(RideCard.RECORDING.equals(card) ? "Recording · " + mode : status)
             .setContentText(time + " · " + distance)
             .setStyle(new NotificationCompat.DecoratedCustomViewStyle())
             .setCustomContentView(closed)
@@ -181,13 +182,13 @@ final class RideNotification {
 
     /** The figures, as the card shows them: the same ids in the closed card and the opened one. */
     private static void fillCard(Context context, RemoteViews card, Ride ride, boolean isRecording,
-                                 String time, String distance) {
+                                 String status, String time, String distance) {
         boolean isSakay = Ride.RIDE.equals(ride.mode());
         String mode = isSakay ? "Sakay" : "Lakad";
         card.setTextViewText(R.id.ride_time, figure(context, time));
         card.setTextViewText(R.id.ride_distance, figure(context, distance));
         card.setTextViewText(R.id.ride_mode, isRecording ? mode : "--");
-        card.setTextViewText(R.id.ride_status, isRecording ? "Recording" : "Paused");
+        card.setTextViewText(R.id.ride_status, status);
         card.setTextColor(R.id.ride_status, color(context, isRecording ? R.color.ride_content_disabled : R.color.ride_content_quaternary));
         int ring = !isRecording ? R.color.ride_paused_ring : isSakay ? R.color.ride_sakay_ring : R.color.ride_lakad_ring;
         int dot = !isRecording ? R.color.ride_paused_dot : isSakay ? R.color.ride_sakay_dot : R.color.ride_lakad_dot;
@@ -222,6 +223,13 @@ final class RideNotification {
         NotificationCompat.Action asAction() {
             return new NotificationCompat.Action.Builder(0, text, tap).build();
         }
+    }
+
+    /** Why a ride recording has no fix coming: the switch is off, or none came for two minutes. */
+    private static String lostText(Ride ride) {
+        return Ride.TROUBLE_LOCATION_OFF.equals(ride.trouble)
+            ? "Location is off: not recording"
+            : "No location: not recording";
     }
 
     /** "12 min" with its unit in the card's lighter colour, as the card's Stat draws it. */
