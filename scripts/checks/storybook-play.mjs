@@ -23,6 +23,7 @@ import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
 
 const ROOT = resolve(process.argv[2] ?? 'storybook-static');
+const ONLY = process.env.STORYBOOK_PLAY_ONLY ?? '';
 const BASELINE = join(dirname(fileURLToPath(import.meta.url)), 'storybook-play-baseline.json');
 const WORKERS = Number(process.env.STORYBOOK_PLAY_WORKERS ?? 4);
 const STORY_TIMEOUT_MS = 20_000;
@@ -102,9 +103,10 @@ if (!existsSync(join(ROOT, 'index.json'))) {
   console.error(`No Storybook build at ${ROOT}: run \`npm run build-storybook\` first.`);
   process.exit(1);
 }
-const stories = Object.values(
-  JSON.parse(readFileSync(join(ROOT, 'index.json'), 'utf8')).entries,
-).filter((entry) => entry.type === 'story');
+const stories = Object.values(JSON.parse(readFileSync(join(ROOT, 'index.json'), 'utf8')).entries)
+  .filter((entry) => entry.type === 'story')
+  // STORYBOOK_PLAY_ONLY=<text>: only the stories whose id holds it, every failure said, while fixing.
+  .filter((entry) => !ONLY || entry.id.includes(ONLY));
 const { base, close } = await serve(ROOT);
 const browser = await chromium.launch(
   process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {},
@@ -127,7 +129,7 @@ await Promise.all(
       const why = await runStory(page, base, story).catch((error) => String(error));
       if (!why) continue;
       failed.add(story.id);
-      if (listed.has(story.id)) continue;
+      if (listed.has(story.id) && !ONLY) continue;
       problems.push(story.id);
       console.error(
         `FAIL  ${story.title} › ${story.name} (${story.importPath}, ${story.id})\n${why.replace(/^/gm, '      ')}`,
@@ -139,7 +141,7 @@ await Promise.all(
 await browser.close();
 close();
 const ids = new Set(stories.map((story) => story.id));
-for (const id of listed.keys()) {
+for (const id of ONLY ? [] : listed.keys()) {
   let stale = null;
   if (!ids.has(id)) stale = 'listed in the baseline, but there is no such story now';
   else if (!failed.has(id)) stale = 'listed in the baseline, but it passes now';

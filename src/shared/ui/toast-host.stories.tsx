@@ -220,8 +220,9 @@ export const InfoHeldWhileFocused: Story = {
     await waitFor(() => expect(canvas.queryByTestId('toast')).toBeNull());
     await userEvent.click(canvas.getByRole('button', { name: 'Say info' }));
     await waitFor(() => expect(canvas.getByTestId('toast')).toBeVisible());
-    // The toast follows the screen's buttons in the page's order: Say a fix, then its ✕.
-    canvas.getByRole('button', { name: 'Say a fix' }).focus();
+    // The toast follows the screen's buttons in the page's order: the last of them, then its ✕.
+    const last = canvas.getByRole('button', { name: 'Say it short' });
+    last.focus();
     await userEvent.tab();
     await waitFor(() =>
       expect(
@@ -231,7 +232,7 @@ export const InfoHeldWhileFocused: Story = {
     await wait(INFO_TOAST_MS + 500);
     await expect(canvas.getByTestId('toast')).toBeVisible();
     await userEvent.tab({ shift: true });
-    await waitFor(() => expect(canvas.getByRole('button', { name: 'Say a fix' })).toHaveFocus());
+    await waitFor(() => expect(last).toHaveFocus());
     await waitFor(() => expect(canvas.queryByTestId('toast')).toBeNull(), {
       timeout: INFO_TOAST_MS + 2000,
     });
@@ -246,16 +247,19 @@ export const ProblemStaysUntilItsAction: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const sayFix = canvas.getByRole('button', { name: 'Say a fix' });
+    const last = canvas.getByRole('button', { name: 'Say it short' });
     await userEvent.click(sayFix);
     await waitFor(() => expect(canvas.getByTestId('toast')).toBeVisible());
     await wait(INFO_TOAST_MS + 500);
     await expect(canvas.getByTestId('toast')).toBeVisible();
-    // The toast follows the screen in the page's order: one Tab from Say a fix reaches its action.
+    // The toast follows the screen in the page's order: one Tab from its last button reaches the
+    // toast's action.
+    last.focus();
     await userEvent.tab();
     await waitFor(() => expect(canvas.getByRole('button', { name: 'Retry' })).toHaveFocus());
     await userEvent.keyboard('{Enter}');
     await waitFor(() => expect(canvas.queryByTestId('toast')).toBeNull());
-    await waitFor(() => expect(sayFix).toHaveFocus());
+    await waitFor(() => expect(last).toHaveFocus());
   },
 };
 
@@ -268,16 +272,17 @@ export const HiddenByItsId: Story = {
     const canvas = within(canvasElement);
     const sayFix = canvas.getByRole('button', { name: 'Say a fix' });
     const fixed = canvas.getByRole('button', { name: 'Fixed in a second' });
+    const last = canvas.getByRole('button', { name: 'Say it short' });
     // Showing, held both ways.
     await userEvent.click(sayFix);
     await waitFor(() => expect(canvas.getByTestId('toast')).toBeVisible());
     await userEvent.click(fixed);
-    sayFix.focus();
+    last.focus();
     await userEvent.tab();
     await waitFor(() => expect(canvas.getByRole('button', { name: 'Retry' })).toHaveFocus());
     await userEvent.hover(canvas.getByTestId('toast'));
     await waitFor(() => expect(canvas.queryByTestId('toast')).toBeNull(), { timeout: 3000 });
-    await waitFor(() => expect(sayFix).toHaveFocus());
+    await waitFor(() => expect(last).toHaveFocus());
     // Waiting behind an info: it never shows.
     await userEvent.click(canvas.getByRole('button', { name: 'Say info' }));
     await userEvent.click(sayFix);
