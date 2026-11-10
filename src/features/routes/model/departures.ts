@@ -117,9 +117,8 @@ function byPlace<V extends Direction>(chosen: readonly V[]): Departures<V>[] {
 }
 
 /**
- * Which directions a list of routes lists: the way round shown alone
- * (drawnDepartures), or every line, a route with none drawn that way by its
- * other (chooserDepartures): the route list under a tap.
+ * Which directions a list of routes lists: the way round shown alone (drawnDepartures), or, under
+ * a tap, every line, a route with none drawn that way by its other (chooserDepartures).
  */
 export type Listing = 'way-round' | 'every-line';
 
@@ -138,7 +137,7 @@ export function listedDepartures<V extends Direction>(
 export interface RouteCardGroup<V extends Direction> extends Departures<V> {
   /** What tells the card from the others in its list, and what a pick keeps as Selected. */
   card: string;
-  /** A RouteCardRailway's line, a train's or Ferry; null for a road vehicle's RouteCard. */
+  /** A train or ferry card's line; null for a road vehicle's RouteCard. */
   railway: RailwayVehicle | null;
   /** The card's colours: its road mode's, or its line's (liveryOf). */
   livery: Livery;
@@ -149,15 +148,12 @@ export interface RouteCardGroup<V extends Direction> extends Departures<V> {
 }
 
 /**
- * The cards a list shows one way round: listedDepartures, with a place's
- * directions split into a RouteCard per road mode and a RouteCardRailway per
- * train line and bound or the ferry: Tala's jeeps and its UV Express are two
- * cards, and so are its UV Express and its P2P, though both wear UV Express's
- * colours, as every mode stands apart under its own badge, and Cubao's LRT-2 Eastbound and Westbound two more, all Tala's or
- * Cubao's. The cards run by mode (RouteCardStackedList, 4633:19780): the jeeps,
- * UV Express, the e-jeeps, the buses, then the trains and the ferry, each mode
- * in the order its places are met. A road card is known by its place and mode, a line card by
- * its place, line and bound.
+ * The cards a list shows one way round: listedDepartures, with a place's directions split into a
+ * RouteCard per road mode and per train line and bound or the ferry: Tala's jeeps, its UV Express
+ * and its P2P are three cards, and Cubao's LRT-2 Eastbound and Westbound two more. The cards run by
+ * mode (RouteCardStackedList, 4633:19780): the jeeps, UV Express, the e-jeeps, the buses, then the
+ * trains and the ferry, each mode in the order its places are met. A road card is known by its
+ * place and mode, a line card by its place, line and bound.
  */
 export function routeCards<V extends Direction>(
   directions: readonly V[],
@@ -171,11 +167,8 @@ export function routeCards<V extends Direction>(
       const livery = liveryOf(d.v);
       const vehicle = vehicleOf(d.v);
       const bound = railway ? railBound(d.v) : null;
-      // A ride with no badge of its own shares a livery with one that has (P2P wears UV Express's),
-      // so its card is told apart by its mode.
-      const road = vehicle
-        ? `${place.from}|${livery}`
-        : `${place.from}|${livery}|${d.v.route?.mode ?? ''}`;
+      // A ride with no badge (P2P, in UV Express's livery) stands apart from the one it shares with.
+      const road = `${place.from}|${livery}${vehicle ? '' : `|${d.v.route?.mode ?? ''}`}`;
       const card = railway ? `${place.from}|${railway}|${bound ?? ''}` : road;
       const group = byCard.get(card) ?? {
         card,
@@ -191,8 +184,7 @@ export function routeCards<V extends Direction>(
     }
     return [...byCard.values()];
   });
-  // A stable sort: each mode keeps the order met.
-  return cards.sort((a, b) => cardRank(a) - cardRank(b));
+  return cards.sort((a, b) => cardRank(a) - cardRank(b)); // Stable: a mode keeps the order met.
 }
 
 /** Where a card's mode sits in its list: the road modes in ROAD_LIVERIES' order, then train, then ferry. */
@@ -202,10 +194,9 @@ function cardRank(card: { railway: RailwayVehicle | null; livery: Livery }): num
 }
 
 /**
- * The direction a route opens with when it is picked as a whole: the outbound
- * when it has a line, else the return — predictable, and ⇄ is one tap away
- * (the owner's call). Null only for a route with nothing drawn, which no tap
- * can reach.
+ * The direction a route opens with when it is picked as a whole: the outbound when it has a line,
+ * else the return — predictable, and ⇄ is one tap away (the owner's call). Null only for a route
+ * with nothing drawn, which no tap can reach.
  */
 export function directionToOpen<V extends Direction>(directions: readonly V[]): V | null {
   return (
