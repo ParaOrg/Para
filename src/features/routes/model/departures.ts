@@ -153,8 +153,7 @@ export interface RouteCardGroup<V extends Direction> extends Departures<V> {
  * cards, and Cubao's LRT-2 Eastbound and Westbound two more, all Tala's or
  * Cubao's. The cards run by mode (RouteCardStackedList, 4633:19780): the jeeps,
  * UV Express, the e-jeeps, the buses, then the trains and the ferry, each mode
- * in the order its places are met, so a list draws a mode's name once, on its
- * run's first card. A road card is known by its place and mode, a line card by
+ * in the order its places are met. A road card is known by its place and mode, a line card by
  * its place, line and bound.
  */
 export function routeCards<V extends Direction>(
