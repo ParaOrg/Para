@@ -1,5 +1,7 @@
 package ph.para.contributor;
 
+import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.location.Location;
 
 import java.util.List;
@@ -147,11 +149,33 @@ public class RidePlugin extends Plugin {
         call.resolve(result);
     }
 
-    /** The ride's diagnostics log (RideDiagnostics), for the contributor to read or share. */
+    /**
+     * Opens Android's share sheet with the ride's diagnostics log (RideDiagnostics) as text, from
+     * the contributor's own tap (Account settings). Nothing is sent unless they pick where it goes
+     * (ADR 0004). Resolves once the sheet is open.
+     */
     @PluginMethod
-    public void diagnostics(PluginCall call) {
-        JSObject result = new JSObject();
-        result.put("text", RideDiagnostics.read(getContext()));
-        call.resolve(result);
+    public void shareDiagnostics(PluginCall call) {
+        if (getActivity() == null) {
+            call.reject("No screen to open the share sheet from.");
+            return;
+        }
+        String log = RideDiagnostics.read(getContext());
+        String text = "Para ride diagnostics (app " + versionName() + ")\n\n"
+            + (log.isEmpty() ? "Nothing went wrong with a ride on this phone.\n" : log);
+        Intent send = new Intent(Intent.ACTION_SEND)
+            .setType("text/plain")
+            .putExtra(Intent.EXTRA_SUBJECT, "Para ride diagnostics")
+            .putExtra(Intent.EXTRA_TEXT, text);
+        getActivity().startActivity(Intent.createChooser(send, "Share ride diagnostics"));
+        call.resolve();
+    }
+
+    private String versionName() {
+        try {
+            return getContext().getPackageManager().getPackageInfo(getContext().getPackageName(), 0).versionName;
+        } catch (PackageManager.NameNotFoundException unknown) {
+            return "unknown";
+        }
     }
 }
