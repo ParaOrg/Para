@@ -855,3 +855,33 @@ export const SignboardsAndOtherRoutes: Story = {
     ).toBeTruthy();
   },
 };
+
+/**
+ * A trip opened by "Go here" from a landmark (ticket 07): its end picked at the hintuan nearest
+ * the landmark, and under the tiles, first, how far the walk is from there, in a straight line.
+ * With a line's own note too, the walk comes before it.
+ */
+export const WalkToALandmark: Story = {
+  args: {
+    ...Ferry.args,
+    picked: 'h3',
+    walk: 'About 300 m to SM North EDSA, in a straight line',
+  },
+  play: async ({ canvasElement, args }) => {
+    const card = within(canvasElement);
+    const walk = card.getByTestId('trip-walk');
+    await expect(walk.textContent).toBe(args.walk);
+    const note = card.getByTestId('trip-note');
+    await expect(
+      walk.compareDocumentPosition(note) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  },
+};
+
+/** No goal: no walk line. */
+export const NoWalk: Story = {
+  args: { picked: 'h3' },
+  play: async ({ canvasElement }) => {
+    await expect(within(canvasElement).queryByTestId('trip-walk')).toBeNull();
+  },
+};

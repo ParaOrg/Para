@@ -266,6 +266,7 @@ flowchart TD
   features_routes_map --> features_routes_cards
   features_routes_map --> features_routes_geo
   features_routes_map --> features_routes_model
+  features_routes_map --> features_routes_published
   features_routes_map --> shared_config
   features_routes_map --> shared_hooks
   features_routes_map --> shared_ui
@@ -371,7 +372,7 @@ flowchart TD
 | `features/published-map` | `design-system/primitives`, `features/routes/map`, `features/routes/published`, `shared/ui`, `shared/utils` |
 | `features/routes/cards` | `design-system/primitives`, `features/routes/model`, `shared/ui`, `shared/utils` |
 | `features/routes/geo` | `shared/utils` |
-| `features/routes/map` | `design-system/foundation`, `design-system/primitives`, `features/routes/cards`, `features/routes/geo`, `features/routes/model`, `shared/config`, `shared/hooks`, `shared/ui`, `shared/utils` |
+| `features/routes/map` | `design-system/foundation`, `design-system/primitives`, `features/routes/cards`, `features/routes/geo`, `features/routes/model`, `features/routes/published`, `shared/config`, `shared/hooks`, `shared/ui`, `shared/utils` |
 | `features/routes/model` | `features/routes/geo`, `features/routes/published`, `shared/utils` |
 | `features/routes/published` | `features/routes/model` |
 | `features/routes/search` | `design-system/primitives`, `features/routes/cards`, `features/routes/model`, `features/routes/published`, `shared/ui`, `shared/utils` |
