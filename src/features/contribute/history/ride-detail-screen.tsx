@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { IconButton } from '@/design-system/primitives/icon-button';
 import { BottomSheet } from '@/shared/ui/bottom-sheet';
@@ -9,6 +9,8 @@ import type { CardStatus } from './card-status';
 import { RideDetailBody } from './ride-detail-body';
 import { rideDetailsOf } from './ride-details';
 import type { RideFacts } from './ride-facts';
+import { rideSummaryOf } from './ride-summary';
+import { RideSummaryPreview } from './ride-summary-preview';
 import { rideFullNameOf, rideTitleOf } from './ride-title';
 import { ArrowLeftIcon } from '../account/arrow-left-icon';
 import { HandQuestion } from '../account/hand-question';
@@ -54,6 +56,16 @@ export function RideDetailScreen({ ride, onBack }: RideDetailScreenProps) {
   const [snap, setSnap] = useState<Snap>('low');
   const [isAsking, setIsAsking] = useState(false);
   useClosedWhenHidden(setIsAsking, false);
+  const [isShowingSummary, setIsShowingSummary] = useState(false);
+  useClosedWhenHidden(setIsShowingSummary, false);
+  const recording = ride?.recording;
+  const facts = ride?.facts ?? null;
+  // Memoised so the card is drawn once per opening, not on each render of the screen.
+  const summary = useMemo(
+    () => (recording ? rideSummaryOf(recording, facts) : null),
+    [recording, facts],
+  );
+  const isCovered = isAsking || isShowingSummary;
   const deleteRef = useRef<HTMLDivElement>(null);
   const shouldReturnFocus = useRef(false);
   const isFolded = snap === 'low';
@@ -80,7 +92,7 @@ export function RideDetailScreen({ ride, onBack }: RideDetailScreenProps) {
           content fills the screen covers it, and pulled down, brings it back. Under the
           question, out of reach: its Escape and focus are the question's alone. */}
       <div
-        inert={isAsking}
+        inert={isCovered}
         data-dock-follower
         className="absolute inset-0 transition-[translate] duration-sheet ease-enter in-data-dock-dragging:transition-none motion-reduce:transition-none"
         // With no sheet yet (the ride still being found), at the map's foot.
@@ -97,7 +109,7 @@ export function RideDetailScreen({ ride, onBack }: RideDetailScreenProps) {
         </div>
       </div>
       {ride && (
-        <div inert={isAsking} className="pointer-events-auto">
+        <div inert={isCovered} className="pointer-events-auto">
           <BottomSheet
             label={`Your ride: ${rideTitleOf(ride.recording)}`}
             testId="card"
@@ -116,8 +128,19 @@ export function RideDetailScreen({ ride, onBack }: RideDetailScreenProps) {
               canDelete={ride.canDelete}
               deleteRef={deleteRef}
               onDelete={() => setIsAsking(true)}
+              onSummary={() => setIsShowingSummary(true)}
             />
           </BottomSheet>
+        </div>
+      )}
+      {ride && summary && isShowingSummary && (
+        <div className="pointer-events-auto">
+          <RideSummaryPreview
+            summary={summary}
+            trail={ride.facts?.trail ?? null}
+            startedAt={ride.recording.startedAt}
+            onClose={() => setIsShowingSummary(false)}
+          />
         </div>
       )}
       {ride && isAsking && (

@@ -20,12 +20,14 @@ interface RideDetailBodyProps {
   /** Keep it hands focus back to the button that asked. */
   deleteRef: RefObject<HTMLDivElement | null>;
   onDelete: () => void;
+  /** Opens the ride's summary card, to share. */
+  onSummary: () => void;
 }
 
 /**
  * The ride sheet's body, under its name (Figma 4569:4974): Commute Information, the upload's
- * Status its last row, the Description, read only and left out when none was written, and Delete
- * this record.
+ * Status its last row, the Description, read only and left out when none was written, Share ride
+ * summary (not in the frame yet) and Delete this record.
  */
 export function RideDetailBody({
   status,
@@ -36,6 +38,7 @@ export function RideDetailBody({
   canDelete,
   deleteRef,
   onDelete,
+  onSummary,
 }: RideDetailBodyProps) {
   const commuteHeadingId = useId();
   const descriptionHeadingId = useId();
@@ -79,15 +82,18 @@ export function RideDetailBody({
           </p>
         </section>
       )}
-      <div ref={deleteRef} className="flex flex-col">
-        <Button
-          variant="plain"
-          tone="error"
-          label="Delete this record"
-          firstIcon={<DeleteIcon />}
-          disabled={!canDelete}
-          onClick={onDelete}
-        />
+      <div className="flex flex-col gap-3">
+        <Button variant="secondary" label="Share ride summary" onClick={onSummary} />
+        <div ref={deleteRef} className="flex flex-col">
+          <Button
+            variant="plain"
+            tone="error"
+            label="Delete this record"
+            firstIcon={<DeleteIcon />}
+            disabled={!canDelete}
+            onClick={onDelete}
+          />
+        </div>
       </div>
     </div>
   );
