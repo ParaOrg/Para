@@ -1,6 +1,6 @@
 // A ride's summary card: what it says (src/features/contribute/history/ride-summary.ts), how its
 // names break into lines (draw-ride-summary.ts wrapLines) and the file it is saved as
-// (share-ride-summary.ts summaryFileName).
+// (share-ride-summary.ts summaryFileName), and the bytes the app's share sheet gets (native-share.ts).
 //
 //   node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs tests/unit/ride-summary-test.mjs
 import { test } from 'node:test';
@@ -8,6 +8,8 @@ import assert from 'node:assert/strict';
 import { rideSummaryOf } from '../../src/features/contribute/history/ride-summary.ts';
 import { pathEnds, wrapLines } from '../../src/features/contribute/history/draw-ride-summary.ts';
 import { summaryFileName } from '../../src/features/contribute/history/share-ride-summary.ts';
+import { blobToBase64 } from '../../src/features/contribute/native/native-share.ts';
+import { readFileSync } from 'node:fs';
 
 const T0 = Date.UTC(2026, 0, 25, 0, 0, 0);
 const RIDE = {
@@ -72,4 +74,19 @@ test('the file is dated by the ride’s day in Manila', () => {
 test('a sketch path gives back where it begins and ends', () => {
   assert.deepEqual(pathEnds('M12 30L40.5 22L88 7'), { first: [12, 30], last: [88, 7] });
   assert.equal(pathEnds(''), null);
+});
+
+test("the app's share sheet gets every byte of a picture bigger than one piece", async () => {
+  const bytes = Uint8Array.from({ length: 100_000 }, (_, i) => (i * 7) % 256);
+  const base64 = await blobToBase64(new Blob([bytes], { type: 'image/png' }));
+  assert.equal(base64, Buffer.from(bytes).toString('base64'));
+});
+
+test("the file name passes the plugin's own check on names", () => {
+  const java = readFileSync(
+    'android/app/src/main/java/ph/para/contributor/ShareImagePlugin.java',
+    'utf8',
+  );
+  const [, pattern] = java.match(/fileName\.matches\("([^"]+)"\)/);
+  assert.match(summaryFileName(T0), new RegExp(`^${pattern.replaceAll('\\\\', '\\')}$`));
 });

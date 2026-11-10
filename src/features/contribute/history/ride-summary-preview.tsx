@@ -21,7 +21,7 @@ const OUTCOME_TEXT: Record<ShareOutcome, string | null> = {
   shared: null,
   saved: 'Saved to your downloads.',
   cancelled: null,
-  screenshot: 'This app cannot share pictures yet. Take a screenshot of the card to share it.',
+  screenshot: 'The picture could not be shared. Take a screenshot of the card to share it.',
 };
 
 /**

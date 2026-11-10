@@ -1,29 +1,39 @@
 import { isNativeApp } from '../native-bridge/native-app';
 
 /**
- * How handing the card on went: shared, saved as a file, the share sheet closed unused, or neither
- * possible here (the Android app), so the rider takes a screenshot.
+ * How handing the card on went: shared, saved as a file, the share sheet closed unused, or the
+ * Android app's share sheet failed to open, so the rider takes a screenshot.
  */
 export type ShareOutcome = 'shared' | 'saved' | 'cancelled' | 'screenshot';
+
+const SHARE_TITLE = 'My ride on Para';
 
 /**
  * The card handed to the phone's share sheet where the browser can share files (Chrome on Android,
  * Safari on iPhone), else saved as a download. The Android app's WebView has neither Web Share nor
- * a download handler (Capacitor adds none), so there a link's download would do nothing.
- * ponytail: a screenshot in the app until @capacitor/share is approved (a new dependency).
+ * a download handler, so there the picture goes to Android's share sheet through our own plugin.
  */
 export async function shareOrSave(blob: Blob, fileName: string): Promise<ShareOutcome> {
+  if (import.meta.env.MODE === 'apk' && isNativeApp()) {
+    try {
+      const { shareNativeImage } = await import('../native/native-share');
+      await shareNativeImage(blob, fileName, SHARE_TITLE);
+      return 'shared';
+    } catch (error) {
+      console.warn('The ride card could not be shared from the app.', error);
+      return 'screenshot';
+    }
+  }
   const file = new File([blob], fileName, { type: blob.type });
   if (navigator.canShare?.({ files: [file] })) {
     try {
-      await navigator.share({ files: [file], title: 'My ride on Para' });
+      await navigator.share({ files: [file], title: SHARE_TITLE });
       return 'shared';
     } catch (error) {
       if (error instanceof DOMException && error.name === 'AbortError') return 'cancelled';
       // Anything else (a permission the browser withheld): save it instead.
     }
   }
-  if (isNativeApp()) return 'screenshot';
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
