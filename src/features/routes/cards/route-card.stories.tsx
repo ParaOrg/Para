@@ -2,20 +2,14 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
 import { RouteCard, type RouteCardEndPoint, type RouteCardRide } from './route-card';
-import type { Vehicle } from '../model/vehicles';
 
-/** Rows to the given places, all riding one vehicle, with no station codes. */
-const roadRows = (vehicle: Vehicle, places: readonly string[]): RouteCardEndPoint[] =>
-  places.map((place, i) => ({
-    id: String(i),
-    routeDirection: place,
-    vehicle,
-    stationCode: null,
-  }));
+/** Rows to the given places, with no station codes. */
+const roadRows = (places: readonly string[]): RouteCardEndPoint[] =>
+  places.map((place, i) => ({ id: String(i), routeDirection: place, stationCode: null }));
 
 /** One train row, to a station and its code. */
-const trainRow = (vehicle: Vehicle, place: string, code: string | null): RouteCardEndPoint[] => [
-  { id: 'a', routeDirection: place, vehicle, stationCode: code },
+const trainRow = (place: string, code: string | null): RouteCardEndPoint[] => [
+  { id: 'a', routeDirection: place, stationCode: code },
 ];
 
 const meta = {
@@ -32,10 +26,10 @@ const meta = {
     ),
   ],
   args: {
-    ride: { kind: 'road', livery: 'jeep' },
+    ride: { kind: 'road', livery: 'jeep', vehicle: 'Jeepney' },
     state: 'rest',
     routeOrigin: 'Tala',
-    endPoints: roadRows('Jeepney', ['SM Fairview', 'Novaliches']),
+    endPoints: roadRows(['SM Fairview', 'Novaliches']),
     onSelect: fn(),
     onPick: fn(),
     testId: 'chooser',
@@ -66,27 +60,27 @@ export const Jeep: Story = {
 /** Property 1=Variant2, UV Express: a light card, dark words, under Route/RouteCardInverse; a dark badge. */
 export const UvExpress: Story = {
   args: {
-    ride: { kind: 'road', livery: 'uv-express' },
+    ride: { kind: 'road', livery: 'uv-express', vehicle: 'UV Express' },
     routeOrigin: 'SM Fairview',
-    endPoints: roadRows('UV Express', ['SM North', 'Buendia']),
+    endPoints: roadRows(['SM North', 'Buendia']),
   },
 };
 
 /** Property 1=Variant3, E-Jeep: as UV Express, in Card/Ejeep. */
 export const Ejeep: Story = {
   args: {
-    ride: { kind: 'road', livery: 'ejeep' },
+    ride: { kind: 'road', livery: 'ejeep', vehicle: 'E-Jeep' },
     routeOrigin: 'Palmer',
-    endPoints: roadRows('E-Jeep', ['SM Fairview', 'Novaliches', 'Philcoa', 'Cubao']),
+    endPoints: roadRows(['SM Fairview', 'Novaliches', 'Philcoa', 'Cubao']),
   },
 };
 
 /** Property 1=Bus: Card/Bus under Route/RouteCardPrimary. */
 export const Bus: Story = {
   args: {
-    ride: { kind: 'road', livery: 'bus' },
+    ride: { kind: 'road', livery: 'bus', vehicle: 'Bus' },
     routeOrigin: 'S. Palay',
-    endPoints: roadRows('Bus', ['GMA', 'PITX']),
+    endPoints: roadRows(['GMA', 'PITX']),
   },
 };
 
@@ -105,7 +99,7 @@ export const LightRailWayOne: Story = {
   args: {
     ride: LRT_1,
     routeOrigin: 'Fernando Poe Jr.',
-    endPoints: trainRow('LRT-1', 'Dr. Santos', 'GL26'),
+    endPoints: trainRow('Dr. Santos', 'GL26'),
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -121,7 +115,7 @@ export const MetroRailWayThree: Story = {
   args: {
     ride: { kind: 'rail', railway: 'MRT-3', bound: 'Southbound', originCode: 'YL01' },
     routeOrigin: 'North Avenue',
-    endPoints: trainRow('MRT-3', 'Taft Avenue', 'YL13'),
+    endPoints: trainRow('Taft Avenue', 'YL13'),
   },
 };
 
@@ -130,7 +124,7 @@ export const LightRailWayTwo: Story = {
   args: {
     ride: { kind: 'rail', railway: 'LRT-2', bound: 'Westbound', originCode: 'PL13' },
     routeOrigin: 'Antipolo',
-    endPoints: trainRow('LRT-2', 'Recto', 'PL01'),
+    endPoints: trainRow('Recto', 'PL01'),
   },
   play: async ({ canvasElement }) => {
     await expect(within(canvasElement).getByText('LRT 2')).toBeVisible();
@@ -142,7 +136,7 @@ export const Ferry: Story = {
   args: {
     ride: { kind: 'rail', railway: 'Ferry', bound: null, originCode: null },
     routeOrigin: 'Escolta',
-    endPoints: trainRow('Ferry', 'Pinagbuhatan', null),
+    endPoints: trainRow('Pinagbuhatan', null),
   },
 };
 
@@ -161,7 +155,7 @@ export const LightRailWayOneSelected: Story = {
 export const AllDestinations: Story = {
   args: {
     routeOrigin: 'SM Fairview',
-    endPoints: roadRows('Jeepney', [
+    endPoints: roadRows([
       'Tala',
       'Novaliches (Bayan)',
       'Quiapo',
@@ -182,7 +176,7 @@ export const AllDestinations: Story = {
 export const LongNames: Story = {
   args: {
     routeOrigin: 'Fairview Teraccess Transport Terminal',
-    endPoints: roadRows('Jeepney', ['Novaliches (Bayan) via Zabarte and Quirino Highway']),
+    endPoints: roadRows(['Novaliches (Bayan) via Zabarte and Quirino Highway']),
   },
 };
 
@@ -191,7 +185,7 @@ export const LongStationName: Story = {
   args: {
     ride: LRT_1,
     routeOrigin: 'Fernando Poe Jr. (formerly Roosevelt) Station',
-    endPoints: trainRow('LRT-1', 'Dr. Santos (formerly Sucat) Station', 'GL26'),
+    endPoints: trainRow('Dr. Santos (formerly Sucat) Station', 'GL26'),
   },
 };
 
@@ -200,7 +194,7 @@ export const MissingCodeAndBound: Story = {
   args: {
     ride: { kind: 'rail', railway: 'LRT-1', bound: null, originCode: null },
     routeOrigin: 'Fernando Poe Jr.',
-    endPoints: trainRow('LRT-1', 'North Triangle', null),
+    endPoints: trainRow('North Triangle', null),
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -209,32 +203,15 @@ export const MissingCodeAndBound: Story = {
   },
 };
 
-/**
- * A road card whose rows ride two modes, where the data mixes them: each mode's rows stand under
- * its own badge, in the order each first appears.
- */
-export const MixedModes: Story = {
-  args: {
-    routeOrigin: 'Cubao',
-    endPoints: [
-      { id: 'a', routeDirection: 'Tala', vehicle: 'Jeepney', stationCode: null },
-      { id: 'b', routeDirection: 'Pier 4', vehicle: 'Bus', stationCode: null },
-      { id: 'c', routeDirection: 'Lagro', vehicle: 'Jeepney', stationCode: null },
-    ],
-  },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    const rows = canvas.getAllByTestId('chooser-item');
-    await expect(rows.map((r) => r.textContent)).toEqual(['Tala', 'Lagro', 'Pier 4']);
-    await expect(canvas.getByText('Bus')).toBeVisible();
-  },
-};
-
 /** A ride Figma draws no badge for (P2P, tricycle): the card starts at its place. */
 export const NoMode: Story = {
   args: {
-    ride: { kind: 'road', livery: 'uv-express' },
-    endPoints: [{ id: 'a', routeDirection: 'Ayala', vehicle: null, stationCode: null }],
+    ride: { kind: 'road', livery: 'uv-express', vehicle: null },
+    routeOrigin: 'UP Diliman',
+    endPoints: roadRows(['UPLB']),
+  },
+  play: async ({ canvasElement }) => {
+    await expect(within(canvasElement).queryByText('UV Express')).toBeNull();
   },
 };
 

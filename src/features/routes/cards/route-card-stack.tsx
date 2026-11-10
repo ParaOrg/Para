@@ -5,7 +5,7 @@ import { routeCards, type Listing } from '../model/departures';
 import { isRoadLivery, type Livery } from '../model/liveries';
 import { stationCode } from '../model/rail-codes';
 import { directionEnds, railLineOf, type Direction } from '../model/routes';
-import { vehicleOf } from '../model/vehicles';
+import { isRailwayVehicle } from '../model/vehicles';
 
 /** A card picked: which card it is, the place it stands for, the directions its rows list, and its colour, for the map to light them in. */
 export interface PickedPlace {
@@ -105,14 +105,17 @@ export function RouteCardStack({
                   originCode: originCodeOf(p.directions),
                 }
               : // A road card's livery is its mode's; one unnamed wears Jeep's, as liveryOf has it.
-                { kind: 'road', livery: isRoadLivery(p.livery) ? p.livery : 'jeep' }
+                {
+                  kind: 'road',
+                  livery: isRoadLivery(p.livery) ? p.livery : 'jeep',
+                  vehicle: p.vehicle && !isRailwayVehicle(p.vehicle) ? p.vehicle : null,
+                }
           }
           state={selected === p.card ? 'selected' : 'rest'}
           routeOrigin={p.from}
           endPoints={p.directions.map((d) => ({
             id: d.v.id,
             routeDirection: d.to,
-            vehicle: vehicleOf(d.v),
             stationCode: endCodeOf(d.v),
           }))}
           onSelect={() => pick(p)}

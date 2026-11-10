@@ -14,6 +14,9 @@ export type Vehicle = (typeof VEHICLES)[number];
 export const RAILWAY_VEHICLES = [...RAIL_LINES, 'Ferry'] as const;
 export type RailwayVehicle = (typeof RAILWAY_VEHICLES)[number];
 
+/** What rides the road: a RouteCard's mode badge on a road card. */
+export type RoadVehicle = Exclude<Vehicle, RailwayVehicle>;
+
 export const isRailwayVehicle = (word: string): word is RailwayVehicle =>
   (RAILWAY_VEHICLES as readonly string[]).includes(word);
 

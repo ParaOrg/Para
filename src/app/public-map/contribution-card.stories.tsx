@@ -3,7 +3,7 @@ import { expect, within } from 'storybook/test';
 
 import { RouteCard, type RouteCardRide } from '@/features/routes/cards/route-card';
 import { isRoadLivery, type Livery, type RoadLivery } from '@/features/routes/model/liveries';
-import type { RailwayVehicle, Vehicle } from '@/features/routes/model/vehicles';
+import type { RailwayVehicle, RoadVehicle } from '@/features/routes/model/vehicles';
 
 import { ContributionCard } from './contribution-card';
 
@@ -21,12 +21,12 @@ const VEHICLE_OF = {
   'uv-express': 'UV Express',
   ejeep: 'E-Jeep',
   bus: 'Bus',
-} satisfies Record<RoadLivery, Vehicle>;
+} satisfies Record<RoadLivery, RoadVehicle>;
 
 /** The card as it sits in the list: right after the last route card, in that card's livery. */
 function AfterRouteCard({ livery, origin }: { livery: Livery; origin: string }) {
   const ride: RouteCardRide = isRoadLivery(livery)
-    ? { kind: 'road', livery }
+    ? { kind: 'road', livery, vehicle: VEHICLE_OF[livery] }
     : { kind: 'rail', railway: RAILWAY_OF[livery], bound: null, originCode: null };
   return (
     <div className="w-97.5">
@@ -38,7 +38,6 @@ function AfterRouteCard({ livery, origin }: { livery: Livery; origin: string }) 
           {
             id: 'a',
             routeDirection: 'Tala',
-            vehicle: ride.kind === 'rail' ? ride.railway : VEHICLE_OF[ride.livery],
             stationCode: null,
           },
         ]}

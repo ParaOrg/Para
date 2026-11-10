@@ -5,17 +5,22 @@ import { RouteBadge } from './route-badge';
 import { ROUTE_CARD_BLOB_PLACE, ROUTE_CARD_SURFACE, ROUTE_CARD_TEXT } from './route-card-look';
 import { RouteCardMode } from './route-card-mode';
 import { RouteEndPointBar } from './route-end-point-bar';
-import { MODE_LABEL, groupByMode, type ModeGroup } from './route-modes';
+import { MODE_LABEL } from './route-modes';
 import { RAILWAY_LIVERY, type RoadLivery } from '../model/liveries';
 import type { Bound } from '../model/rail-codes';
-import type { RailwayVehicle, Vehicle } from '../model/vehicles';
+import type { RailwayVehicle, RoadVehicle } from '../model/vehicles';
 
 /**
  * What a card's routes ride, which sets its colours and its badges: a road mode's card, in the
  * livery its routes wear, or a train line's or the ferry's, in the line's own.
  */
 export type RouteCardRide =
-  | { kind: 'road'; livery: RoadLivery }
+  | {
+      kind: 'road';
+      livery: RoadLivery;
+      /** The mode its badge names; null for a ride Figma draws no badge for (P2P, tricycle). */
+      vehicle: RoadVehicle | null;
+    }
   | {
       kind: 'rail';
       railway: RailwayVehicle;
@@ -30,8 +35,6 @@ export interface RouteCardEndPoint {
   id: string;
   /** Figma's routeDirection: the place this direction goes to. */
   routeDirection: string;
-  /** What the direction rides: on a road card, the mode it is grouped under. */
-  vehicle: Vehicle | null;
   /** The station's code, `PL27`, at the row's end; null on a road card, the ferry, or an unknown station. */
   stationCode: string | null;
 }
@@ -56,13 +59,11 @@ interface RouteCardProps {
 }
 
 /**
- * A place and the routes that leave it, in its ride's colours (RouteCard, 4629:22776): what they
- * ride at the top (RouteCardMode: the vehicle and its badge, and a train's bound), the place in
- * Bold 24/32, and a row for each place it goes to (RouteEndPointBar), joined to it by a tree line.
- * A train card has the station codes beside the origin and at each row's end.
- *
- * A road card lists one mode as a rule; rows of another mode, where the data mixes them, stack
- * below under their own mode's badge.
+ * A place and the routes that leave it on one ride, in that ride's colours (RouteCard, 4629:22776):
+ * what they ride at the top (RouteCardMode: the vehicle and its badge, and a train's bound), the
+ * place in Bold 24/32, and a row for each place it goes to (RouteEndPointBar), joined to it by a
+ * tree line. A train card has the station codes beside the origin and at each row's end. A place
+ * with several rides has a card for each (routeCards).
  *
  * A row opens its trip straight away; a tap anywhere else on the card selects it, or lets it go.
  * Which card is Selected, one at a time, is the caller's to keep.
@@ -79,48 +80,7 @@ export function RouteCard({
   const isSelected = state === 'selected';
   const isRail = ride.kind === 'rail';
   const livery = isRail ? RAILWAY_LIVERY[ride.railway] : ride.livery;
-  // A train or ferry card is one line, under one badge; a road card's rows stand under their modes.
-  const groups: ModeGroup<RouteCardEndPoint>[] = isRail
-    ? [{ vehicle: ride.railway, items: [...endPoints] }]
-    : groupByMode(endPoints);
-  const [first, ...others] = groups;
-
-  const mode = (group: ModeGroup<RouteCardEndPoint>) =>
-    group.vehicle && (
-      <div className="flex px-3">
-        <RouteCardMode vehicle={group.vehicle} bound={isRail ? ride.bound : null} livery={livery} />
-      </div>
-    );
-  const rows = (group: ModeGroup<RouteCardEndPoint>) => (
-    <ul
-      aria-label={group.vehicle ? MODE_LABEL[group.vehicle] : undefined}
-      className="flex w-full flex-col"
-    >
-      {group.items.map((e, index) => (
-        <li key={e.id}>
-          {/* `relative`: positioned after the name's stretched target, so drawn over it. */}
-          <RouteEndPointBar
-            routeDirection={e.routeDirection}
-            on={livery}
-            size="medium"
-            position={index === group.items.length - 1 ? 'bottom' : 'top'}
-            slot={
-              e.stationCode && (
-                <>
-                  <span className="sr-only">, </span>
-                  <RouteBadge label={e.stationCode} livery={livery} />
-                </>
-              )
-            }
-            data-testid={`${testId}-item`}
-            data-direction={e.id}
-            onClick={() => onPick(e.id)}
-            className="relative"
-          />
-        </li>
-      ))}
-    </ul>
-  );
+  const vehicle = isRail ? ride.railway : ride.vehicle;
 
   return (
     <div
@@ -139,7 +99,11 @@ export function RouteCard({
         aria-hidden
         className={cn(ROUTE_CARD_BLOB_PLACE, CARD_BLOB[livery].className)}
       />
-      {first && mode(first)}
+      {vehicle && (
+        <div className="flex px-3">
+          <RouteCardMode vehicle={vehicle} bound={isRail ? ride.bound : null} livery={livery} />
+        </div>
+      )}
       <div className="flex w-full flex-col">
         <div className="flex w-full items-center gap-2 px-3">
           {/* The name is the card's own target, stretched over all of it; the rows are drawn over
@@ -156,17 +120,32 @@ export function RouteCard({
           </button>
           {isRail && ride.originCode && <RouteBadge label={ride.originCode} livery={livery} />}
         </div>
-        {first && rows(first)}
+        <ul aria-label={vehicle ? MODE_LABEL[vehicle] : undefined} className="flex w-full flex-col">
+          {endPoints.map((e, index) => (
+            <li key={e.id}>
+              {/* `relative`: positioned after the name's stretched target, so drawn over it. */}
+              <RouteEndPointBar
+                routeDirection={e.routeDirection}
+                on={livery}
+                size="medium"
+                position={index === endPoints.length - 1 ? 'bottom' : 'top'}
+                slot={
+                  e.stationCode && (
+                    <>
+                      <span className="sr-only">, </span>
+                      <RouteBadge label={e.stationCode} livery={livery} />
+                    </>
+                  )
+                }
+                data-testid={`${testId}-item`}
+                data-direction={e.id}
+                onClick={() => onPick(e.id)}
+                className="relative"
+              />
+            </li>
+          ))}
+        </ul>
       </div>
-      {others.map((group) => (
-        <div
-          key={group.vehicle ? MODE_LABEL[group.vehicle] : 'no-mode'}
-          className="flex w-full flex-col gap-0.5"
-        >
-          {mode(group)}
-          {rows(group)}
-        </div>
-      ))}
       <span
         aria-hidden
         className={cn(
