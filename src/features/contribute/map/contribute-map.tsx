@@ -119,8 +119,9 @@ export function ContributeMap({
     };
   }, [isRecording, PausedFrost]);
 
-  // A ride's surroundings kept on the phone once it starts with signal and the rider's dot is
-  // known, so its map still draws if the signal drops on the way. Once a ride.
+  // A ride's surroundings kept on the phone once the rider's dot is known with signal, so its map
+  // still draws if the signal drops on the way. Once a ride; a ride begun with no signal tries
+  // again at the next fix once there is one.
   const keptForRide = useRef(false);
   const at = where?.at;
   useEffect(() => {
@@ -128,7 +129,7 @@ export function ContributeMap({
       keptForRide.current = false;
       return;
     }
-    if (keptForRide.current || !map || !isMapLoaded || !at) return;
+    if (keptForRide.current || !map || !isMapLoaded || !at || !navigator.onLine) return;
     keptForRide.current = true;
     keepTilesAround(map, at).catch((error: unknown) => {
       // Storage full or the style unread: the map keeps what it shows, as before.
