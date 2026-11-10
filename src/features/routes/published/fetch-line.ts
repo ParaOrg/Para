@@ -1,5 +1,5 @@
 import { lineFileSchema } from './line-file-schema';
-import { LINES_URL } from './map-file';
+import { LINES_URL, mapFileAt } from './map-file';
 import type { LineStringGeoJSON } from '../model/geojson-schema';
 import { keepLinePass } from '../model/line-pass';
 
@@ -18,7 +18,7 @@ const lines = new Map<string, Promise<LineStringGeoJSON | null>>();
 export function fetchLine(id: string): Promise<LineStringGeoJSON | null> {
   let line = lines.get(id);
   if (!line) {
-    line = fetch(`${LINES_URL}${encodeURIComponent(id)}.json`, { cache: 'no-cache' })
+    line = fetch(mapFileAt(`${LINES_URL}${encodeURIComponent(id)}.json`), { cache: 'no-cache' })
       .then(async (res) => {
         if (!res.ok) throw new Error(`${LINES_URL}${id}.json: HTTP ${res.status}`);
         return readLineFile(await res.json(), id);

@@ -3,6 +3,7 @@ import {
   EARLY_MAP_FILE,
   MAP_FILE_SCHEMA,
   MAP_FILE_URL,
+  mapFileAt,
   SERVED_FROM_HEADER,
   STORED_OLD,
   type EarlyMapFile,
@@ -47,7 +48,10 @@ function takeEarly(): EarlyMapFile | null {
  */
 function ask(): Promise<{ res: Response; json: () => Promise<unknown> }> {
   const own = () =>
-    fetch(MAP_FILE_URL, { cache: 'no-cache' }).then((res) => ({ res, json: () => res.json() }));
+    fetch(mapFileAt(MAP_FILE_URL), { cache: 'no-cache' }).then((res) => ({
+      res,
+      json: () => res.json(),
+    }));
   const early = takeEarly();
   if (!early) return own();
   return early.then(
