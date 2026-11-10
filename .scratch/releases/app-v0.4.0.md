@@ -162,7 +162,7 @@ The route icons moved into a sprite the page fetches (#791), which freed room fo
 
 ## Known issues
 
-- **Story plays:** 59 Storybook plays fail, and they fail the same way on the build from before the route card redesign. CI doesn't run plays, so they don't show as red there. They are:
+- **Story plays:** 59 Storybook plays of 1,307 fail at staging's head (re-run for this release; 1,248 pass), the same 59 as on the build from before the route card redesign. CI doesn't run plays, so they don't show as red there. They are:
   - the contributor screens' focus plays (26);
   - the map style control (11);
   - the hotspot pins (6);
