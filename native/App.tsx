@@ -3,13 +3,15 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { readIndexFile } from '../src/features/routes/published/fetch-index';
+import { fetchIndex } from '../src/features/routes/published/fetch-index';
 import type { Index } from '../src/features/routes/published/index-schema';
+import { setMapFileOrigin } from '../src/features/routes/published/map-file';
 
 /** Our own tiles and style (ADR 0007), the same the web map reads. */
 const STYLE_URL = 'https://para-tiles.para-ph-info.workers.dev/styles/liberty';
-/** The published map (ADR 0001): the index carries every direction's overview line. */
-const INDEX_URL = 'https://www.para-commute.org/data/index.v5.json';
+// The published map (ADR 0001), read by the web's own reader from the site: the index carries
+// every direction's overview line. No store yet, so offline there is no copy (ticket 06).
+setMapFileOrigin('https://www.para-commute.org');
 const MANILA: [number, number] = [121.03, 14.6];
 const BRAND = '#4900be'; // parabrand/800, as the web's selected route line
 
@@ -27,13 +29,9 @@ export default function App() {
   const since = () => Date.now() - startedAt.current;
 
   useEffect(() => {
-    fetch(INDEX_URL)
-      .then((res) => {
-        if (!res.ok) throw new Error(`index: HTTP ${res.status}`);
-        return res.json();
-      })
-      .then((raw) => {
-        setIndex(readIndexFile(raw, INDEX_URL));
+    fetchIndex()
+      .then((file) => {
+        setIndex(file);
         setTiming((t) => ({ ...t, index: since() }));
       })
       .catch((error: unknown) => setTiming((t) => ({ ...t, error: String(error) })));
