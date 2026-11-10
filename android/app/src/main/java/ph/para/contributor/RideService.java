@@ -2,12 +2,15 @@ package ph.para.contributor;
 
 import android.app.Notification;
 import android.app.Service;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.ServiceInfo;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.Build;
+import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 import android.util.Log;
@@ -17,6 +20,7 @@ import androidx.core.content.ContextCompat;
 import androidx.core.location.LocationManagerCompat;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationAvailability;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
@@ -25,6 +29,7 @@ import com.google.android.gms.location.Priority;
 
 import ph.para.contributor.ride.Ride;
 import ph.para.contributor.ride.RideMachine;
+import ph.para.contributor.ride.RideStep;
 
 /**
  * The ride's recording, in Para's own foreground service: started by the contributor's Start
@@ -48,10 +53,39 @@ public class RideService extends Service {
     private static final String START = "ph.para.contributor.ride.service.START";
     private static final long INTERVAL_MS = 1_000;
 
+    /** How often the ride's fix check runs (RideMachine.check) while recording. */
+    private static final long CHECK_EVERY_MS = 30_000;
+
     private static boolean isRunning = false;
+
+    private final Handler handler = new Handler(Looper.getMainLooper());
+    private final Runnable check = new Runnable() {
+        @Override
+        public void run() {
+            long now = System.currentTimeMillis();
+            if (Rides.apply(RideService.this, ride -> RideMachine.check(ride, now)).has(RideStep.Effect.DIAGNOSE)) {
+                RidePlugin.tellFixProblem("UNAVAILABLE", "No location for two minutes.");
+            }
+            handler.postDelayed(this, CHECK_EVERY_MS);
+        }
+    };
+    // The phone's location switch, heard while the service runs: off and on are said at once.
+    private final BroadcastReceiver locationSwitch = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            noteLocationSwitch();
+        }
+    };
+    private boolean isHearingSwitch = false;
 
     private FusedLocationProviderClient locations;
     private final LocationCallback callback = new LocationCallback() {
+        @Override
+        public void onLocationAvailability(@NonNull LocationAvailability availability) {
+            // No location to give: said now if the switch is off; a silence otherwise is the check's.
+            if (!availability.isLocationAvailable()) noteLocationSwitch();
+        }
+
         @Override
         public void onLocationResult(@NonNull LocationResult result) {
             for (Location location : result.getLocations()) {
@@ -102,9 +136,8 @@ public class RideService extends Service {
             failed("Android refused the foreground");
             return START_NOT_STICKY;
         }
-        if (!LocationManagerCompat.isLocationEnabled(locationManager())) {
-            RidePlugin.tellFixProblem("UNAVAILABLE", "Location services disabled.");
-        }
+        hearLocationSwitch();
+        noteLocationSwitch();
         try {
             // Asked again on each start: a second Start or Resume replaces the request, never adds one.
             locations.removeLocationUpdates(callback);
@@ -122,6 +155,8 @@ public class RideService extends Service {
         synchronized (RideService.class) {
             isRunning = true;
         }
+        handler.removeCallbacks(check);
+        handler.postDelayed(check, CHECK_EVERY_MS);
         // In the foreground now: the card counts on (RideNotification's quiet updates).
         RideNotification.post(this);
         return START_STICKY;
@@ -161,6 +196,25 @@ public class RideService extends Service {
         }
     }
 
+    /** The location switch as it is now, told to the ride: off is said, on counts afresh. */
+    private void noteLocationSwitch() {
+        long now = System.currentTimeMillis();
+        if (LocationManagerCompat.isLocationEnabled(locationManager())) {
+            Rides.apply(this, ride -> RideMachine.locationOn(ride, now));
+            return;
+        }
+        if (Rides.apply(this, ride -> RideMachine.locationOff(ride, now)).has(RideStep.Effect.POST_CARD)) {
+            RidePlugin.tellFixProblem("UNAVAILABLE", "Location services disabled.");
+        }
+    }
+
+    private void hearLocationSwitch() {
+        if (isHearingSwitch) return;
+        ContextCompat.registerReceiver(this, locationSwitch,
+            new IntentFilter(LocationManager.PROVIDERS_CHANGED_ACTION), ContextCompat.RECEIVER_NOT_EXPORTED);
+        isHearingSwitch = true;
+    }
+
     private LocationManager locationManager() {
         return (LocationManager) getSystemService(Context.LOCATION_SERVICE);
     }
@@ -168,6 +222,11 @@ public class RideService extends Service {
     @Override
     public void onDestroy() {
         locations.removeLocationUpdates(callback);
+        handler.removeCallbacks(check);
+        if (isHearingSwitch) {
+            unregisterReceiver(locationSwitch);
+            isHearingSwitch = false;
+        }
         synchronized (RideService.class) {
             isRunning = false;
         }
