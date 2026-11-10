@@ -15,6 +15,8 @@ import {
   setRideNoticeState,
 } from '../../src/features/contribute/native/ride-notice.ts';
 import { noticePhaseOf } from '../../src/features/contribute/recorder/notice-phase.ts';
+import { historyOf } from '../../src/features/contribute/recorder/ride-history.ts';
+import { RIDE_GAP_REASONS } from '../../src/features/contribute/native-bridge/native-contract.ts';
 import { trailOf } from '../../src/features/contribute/recorder/recording-rules.ts';
 import { newRecording } from '../../src/features/contribute/recorder/recording-transitions.ts';
 
@@ -149,4 +151,22 @@ test('a watch starting under a "no ride" still standing sends nothing: it would 
   assert.throws(() => setRideNoticeState({ ...noRide, stoppedAt: null }), /not running inside/);
   assert.doesNotThrow(() => noteRideWatch(true));
   assert.doesNotThrow(() => noteRideWatch(false));
+});
+
+test('the history told to the phone keeps every gap reason the phone keeps, and no other', () => {
+  const recording = {
+    ...newRecording(ID, T0),
+    gaps: [
+      { from: at(10), to: at(20), reasons: ['paused'] },
+      { from: at(30), to: at(40), reasons: ['resumed'] },
+      { from: at(50), to: at(60), reasons: ['silent'] },
+      { from: at(70), to: at(80), reasons: ['hidden', 'paused'] },
+    ],
+  };
+  const { gaps } = historyOf(recording);
+  assert.deepEqual(
+    [...new Set(gaps.map((gap) => gap.reason))].sort(),
+    [...RIDE_GAP_REASONS].sort(),
+  );
+  assert.equal(gaps.length, 3);
 });
