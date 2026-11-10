@@ -1,6 +1,6 @@
 # 02: A kill with no restart (MIUI) leaves a card that says Recording
 
-Status: ready-for-agent
+Status: resolved
 Type: task
 Blocked by: none
 
@@ -20,3 +20,7 @@ The card must not outlive the recording. Proposed: post the recording card with 
 
 - Emulator: `am force-stop` mid-ride (no restart, as MIUI): no **Recording** card 3 minutes later; a diagnostics line on the next opening ("ride found cut off").
 - The existing swipe-and-kill check still passes (the sticky restart keeps the card).
+
+## Comments
+
+Resolved by #857: the recording card expires 2.5 min after its last post (Q93), and RideCard never shows Recording without a running service. A MIUI-like kill with no restart has no emulator check yet: stock Android restarts the service.

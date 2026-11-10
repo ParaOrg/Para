@@ -1,6 +1,6 @@
 # 03: A reboot or an app update stops the ride silently
 
-Status: ready-for-human
+Status: resolved
 Type: task
 Blocked by: the owner's choice below
 
@@ -21,3 +21,7 @@ Both broadcasts are allowed to start a location foreground service from the back
 
 - Emulator: reboot mid-ride (`adb reboot`, wait for boot): the card chosen above; the page opens `unfinished`.
 - Emulator: `adb install -r` mid-ride: the same.
+
+## Comments
+
+The owner chose A (Q94). Resolved by #858: RideRestartReceiver marks the ride cut off and posts "Your ride stopped when the phone restarted. Open Para to carry on or save it." Emulator check: the APK installed again mid-ride, then opened to carry on. A reboot is not checked on the emulator.
