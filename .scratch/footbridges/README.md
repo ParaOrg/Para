@@ -1,6 +1,6 @@
 # Footbridges
 
-Status: building. The owner approved the direction (Q56 a, b and c; Q57; Q58) and answered every question below as recommended (Q104 to Q112, 2026-11-10). Ticket 01 is built; 02 to 05 follow in order.
+Status: building. The owner approved the direction (Q56 a, b and c; Q57; Q58) and answered every question below as recommended (Q104 to Q112, 2026-11-10). Tickets 01 and 02 are built; 03 to 05 follow in order.
 
 A commuter in Metro Manila often has to cross a road on foot before or after a ride. Footbridges are how they do it on the big roads, and today Para shows none. Three parts:
 
@@ -95,7 +95,7 @@ Counted from the same Metro Manila extract the landmark file is built from (open
 | # | Ticket | Status |
 | --- | --- | --- |
 | 01 | [The footbridge file](issues/01-footbridge-file.md) | built: 413 footbridges, 66 kB (17.6 kB gzipped) |
-| 02 | [Footbridges on the commuter map](issues/02-commuter-layer.md) | ready-for-agent; after 01 |
+| 02 | [Footbridges on the commuter map](issues/02-commuter-layer.md) | built |
 | 03 | [Footbridges in the studio](issues/03-studio-layer.md) | ready-for-agent; after 01 |
 | 04 | [A footbridge hint on the walk (design 1)](issues/04-walk-hint.md) | ready-for-agent; after 01 |
 | 05 | [Walking routing in the browser (design 2): research](issues/05-walk-routing-research.md) | ready-for-agent: research only, after 04 |
@@ -135,9 +135,9 @@ From the 2026-11-05 extract:
 
 Built for now from existing tokens, never final. Each needs the owner's Figma:
 
-1. The footbridge line on the commuter map: colour, width, casing, dash, and how it sits against routes, hotspots and the basemap's own bridges.
+1. The footbridge line on the commuter map: colour, width, casing, dash, and how it sits against routes, hotspots and the basemap's own bridges. Built for now as a solid neutral/600 line (`Paint/footbridge`), 2 px at zoom 15 to 5 px at 18, under everything of Para's.
 2. Covered footbridges: marked differently or not.
-3. The elevator mark (and steps, if ever).
+3. The elevator mark (and steps, if ever). Built for now as a neutral/800 dot ringed in white (`Paint/footbridge-elevator`).
 4. The zoom where footbridges appear, and whether they fade in.
 5. The walk hint's words and place on the trip card (ticket 04), next to ticket 07's walk line.
 6. The studio's reference look and its toggle.
