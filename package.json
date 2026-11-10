@@ -9,7 +9,7 @@
     "build": "tsc --noEmit && tsc -p workers/tiles && vite build && node --experimental-strip-types scripts/checks/check-build.mjs",
     "typecheck": "tsc --noEmit && tsc -p workers/tiles",
     "lint": "eslint .",
-    "check": "npm run format:check && npm run lint && npm run check:glossary && npm run docs:architecture:check && npm run build && npm run test:unit",
+    "check": "npm run format:check && npm run lint && npm run check:long-files && npm run check:glossary && npm run docs:architecture:check && npm run build && npm run test:unit",
     "test": "npm run test:unit",
     "test:unit": "node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs --test \"tests/unit/*-test.mjs\"",
     "check:data": "node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs scripts/checks/check-map-data.mjs",
@@ -19,6 +19,7 @@
     "docs:architecture": "node scripts/docs/architecture.mjs",
     "docs:architecture:check": "node scripts/docs/architecture.mjs --check",
     "health": "node scripts/checks/health.mjs",
+    "check:long-files": "node scripts/checks/long-files.mjs",
     "check:glossary": "node scripts/checks/glossary.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
