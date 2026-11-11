@@ -1,0 +1,79 @@
+# Throwaway: runs upload-test 12 times on a CI runner to reproduce the send-from-History flake.
+# Never merged; the branch is deleted once the cause is known.
+name: Flake loop (upload-test)
+on:
+  push:
+    branches: [claude/flake-upload-loop]
+permissions:
+  contents: read
+jobs:
+  loop:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - id: playwright
+        run: |
+          echo "version=$(node -p "require('playwright/package.json').version")" >> "$GITHUB_OUTPUT"
+          echo "image=$ImageOS" >> "$GITHUB_OUTPUT"
+          echo "image-version=$ImageVersion" >> "$GITHUB_OUTPUT"
+      - id: chromium
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.image }}-${{ steps.playwright.outputs.version }}
+      - if: steps.chromium.outputs.cache-hit != 'true'
+        run: npx playwright install chromium
+      - id: debs
+        uses: actions/cache@v6
+        with:
+          path: ~/apt-debs
+          key: playwright-debs-${{ runner.os }}-${{ steps.playwright.outputs.image-version }}-${{ steps.playwright.outputs.version }}
+      - name: Install Chromium's system packages
+        run: |
+          if [ "${{ steps.debs.outputs.cache-hit }}" = true ] && sudo dpkg -i ~/apt-debs/*.deb; then
+            exit 0
+          fi
+          npx playwright install-deps chromium
+      - name: Dev server env, as ci.yml gives upload-test
+        run: |
+          cp .env.production .env.local
+          echo VITE_BASEMAP_HOST=https://tiles.openfreemap.org >> .env.local
+          echo VITE_TURNSTILE_SITE_KEY=1x00000000000000000000AA >> .env.local
+          echo VITE_CONTRIBUTIONS=0 >> .env.local
+          echo VITE_CONTRIBUTIONS=1 >> .env.local
+      - name: Start the dev server
+        run: |
+          npx vite --port 5173 --strictPort > vite.log 2>&1 &
+          for i in $(seq 1 60); do
+            curl -sf -o /dev/null http://localhost:5173/ && exit 0
+            sleep 1
+          done
+          exit 1
+      - name: upload-test, 12 times
+        env:
+          PARA_TURNSTILE: '1'
+        run: |
+          fails=0
+          for i in $(seq 1 12); do
+            node tests/e2e/upload-test.mjs > round.log 2>&1 || { fails=$((fails+1)); cp upload-test-send-from-history.png "round-$i.png" 2>/dev/null || true; }
+            echo "round $i: $(grep -E 'passed,' round.log)"
+            grep -E "FAIL" round.log | sed "s/^/round $i: /" | tee -a fails.txt || true
+          done
+          echo "rounds failed: $fails"
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: flake-loop
+          path: |
+            round-*.png
+            fails.txt
+            vite.log
+          if-no-files-found: ignore
