@@ -606,7 +606,7 @@ check('  and leaves the file in the bucket: the approved map may still list it',
 
 // ---- 4a. Delete while the editor already has a draft of the route: it joins the draft
 // The signboard's draft is still the editor's, unreviewed. Approving the delete in the same
-// press would publish that draft with it, so the delete is stored in it and waits in Drafts.
+// press would publish that draft with it, so the delete is stored in it and waits for its Approve.
 n = log.length;
 await page.getByRole('button', { name: 'Delete' }).click();
 await waitFor(async () => (await body()).includes('Added to your draft of'));

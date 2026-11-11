@@ -9,7 +9,7 @@ This page is generated from the code, so it cannot go stale. It shows the struct
 A unit is a folder: an app, a feature (or a concern folder of a feature that has them), a kind of shared code, a design-system layer, or the styles.
 
 - **app**: `contribute`, `public-map`, `studio`
-- **features**: `contribute`, `contribute/account`, `contribute/api`, `contribute/app-update`, `contribute/common`, `contribute/consent`, `contribute/history`, `contribute/map`, `contribute/motion`, `contribute/native`, `contribute/native-bridge`, `contribute/navigation`, `contribute/notices`, `contribute/recorder`, `contribute/screens`, `contribute/storage`, `contribute/toolbar`, `contribute/tutorial`, `contribute/uploads`, `locator`, `published-map`, `routes/cards`, `routes/geo`, `routes/map`, `routes/model`, `routes/published`, `routes/search`, `studio`, `studio/auth`, `studio/contributors`, `studio/data`, `studio/drawing`, `studio/maps`, `studio/panels`, `studio/public-view`, `studio/review`
+- **features**: `contribute`, `contribute/account`, `contribute/api`, `contribute/app-update`, `contribute/common`, `contribute/consent`, `contribute/history`, `contribute/map`, `contribute/motion`, `contribute/native`, `contribute/native-bridge`, `contribute/navigation`, `contribute/notices`, `contribute/recorder`, `contribute/screens`, `contribute/storage`, `contribute/toolbar`, `contribute/tutorial`, `contribute/uploads`, `locator`, `published-map`, `routes/cards`, `routes/geo`, `routes/map`, `routes/model`, `routes/published`, `routes/search`, `studio`, `studio/auth`, `studio/contributors`, `studio/data`, `studio/drawing`, `studio/maps`, `studio/panels`, `studio/public-view`
 - **shared**: `config`, `hooks`, `lib`, `types`, `ui`, `utils`
 - **design-system**: `foundation`, `primitives`
 - **styles**: `styles`
@@ -59,7 +59,6 @@ flowchart TD
     features_studio_maps["studio/maps"]
     features_studio_panels["studio/panels"]
     features_studio_public_view["studio/public-view"]
-    features_studio_review["studio/review"]
   end
   subgraph shared_layer["shared"]
     shared_config["config"]
@@ -288,7 +287,6 @@ flowchart TD
   features_studio --> features_studio_maps
   features_studio --> features_studio_panels
   features_studio --> features_studio_public_view
-  features_studio --> features_studio_review
   features_studio_auth --> design_system_primitives
   features_studio_auth --> features_routes_map
   features_studio_auth --> features_studio_data
@@ -316,6 +314,7 @@ flowchart TD
   features_studio_maps --> features_routes_model
   features_studio_maps --> features_routes_search
   features_studio_maps --> features_studio_data
+  features_studio_maps --> features_studio_panels
   features_studio_maps --> shared_utils
   features_studio_panels --> design_system_primitives
   features_studio_panels --> features_routes_cards
@@ -329,11 +328,6 @@ flowchart TD
   features_studio_panels --> shared_utils
   features_studio_public_view --> design_system_primitives
   features_studio_public_view --> features_studio_data
-  features_studio_review --> design_system_primitives
-  features_studio_review --> features_studio_auth
-  features_studio_review --> features_studio_data
-  features_studio_review --> features_studio_maps
-  features_studio_review --> features_studio_panels
   shared_ui --> design_system_primitives
   shared_ui --> shared_hooks
   shared_ui --> shared_utils
@@ -376,15 +370,14 @@ flowchart TD
 | `features/routes/model` | `features/routes/geo`, `features/routes/published`, `shared/utils` |
 | `features/routes/published` | `features/routes/model` |
 | `features/routes/search` | `design-system/primitives`, `features/routes/cards`, `features/routes/model`, `features/routes/published`, `shared/ui`, `shared/utils` |
-| `features/studio` | `features/studio/auth`, `features/studio/contributors`, `features/studio/data`, `features/studio/drawing`, `features/studio/maps`, `features/studio/panels`, `features/studio/public-view`, `features/studio/review` |
+| `features/studio` | `features/studio/auth`, `features/studio/contributors`, `features/studio/data`, `features/studio/drawing`, `features/studio/maps`, `features/studio/panels`, `features/studio/public-view` |
 | `features/studio/auth` | `design-system/primitives`, `features/routes/map`, `features/studio/data`, `shared/lib`, `shared/ui` |
 | `features/studio/contributors` | `design-system/foundation`, `design-system/primitives`, `features/studio/data`, `features/studio/drawing`, `shared/utils` |
 | `features/studio/data` | `features/routes/geo`, `features/routes/model`, `features/routes/published`, `features/studio/auth`, `shared/types`, `shared/utils` |
 | `features/studio/drawing` | `design-system/foundation`, `features/routes/map`, `features/routes/model`, `features/studio/data`, `shared/utils` |
-| `features/studio/maps` | `design-system/foundation`, `design-system/primitives`, `features/routes/map`, `features/routes/model`, `features/routes/search`, `features/studio/data`, `shared/utils` |
+| `features/studio/maps` | `design-system/foundation`, `design-system/primitives`, `features/routes/map`, `features/routes/model`, `features/routes/search`, `features/studio/data`, `features/studio/panels`, `shared/utils` |
 | `features/studio/panels` | `design-system/primitives`, `features/routes/cards`, `features/routes/geo`, `features/routes/map`, `features/routes/model`, `features/studio/auth`, `features/studio/data`, `features/studio/drawing`, `shared/ui`, `shared/utils` |
 | `features/studio/public-view` | `design-system/primitives`, `features/studio/data` |
-| `features/studio/review` | `design-system/primitives`, `features/studio/auth`, `features/studio/data`, `features/studio/maps`, `features/studio/panels` |
 | `shared/config` | — |
 | `shared/hooks` | — |
 | `shared/lib` | — |
@@ -411,7 +404,7 @@ A feature's `index.ts` is the only door into it for code outside the feature. Wh
 
 ### `features/studio`
 
-`AuthDialogs`, `NotEditor`, `SignIn`, `skipSignInForTests`, `useAuthFlow`, `usePasswordRecovery`, `StudioSessionProvider`, `useEditorSession`, `loadHotspotsFromSupabase`, `lineOf`, `listDirections`, `getSupabase`, `setSupabase`, `supabaseConfig`, `supabaseConfigError`, `DrawToolbar`, `STUDIO_BASEMAPS`, `STUDIO_BASEMAP_THUMBNAILS`, `useDrawing`, `useFollow`, `useLoopClosing`, `FootbridgesSwitch`, `MapPlaceholder`, `MapSwitch`, `StudioSearch`, `useStudioMap`, `useWheelNavigation`, `AccountPill`, `NEW_MENU_DOCK_FOOT`, `NewMenu`, `SaveToasts`, `StudioHotspotCard`, `StudioSaveSheets`, `StudioTripCard`, `useDeleteActions`, `useDraftOnly`, `useOpenDraft`, `useSaveFlow`, `useSaveTarget`, `useIsWideScreen`, `useStudioTrip`, `StudioReview`, `StudioPublicView`, `StudioContributors`, `ContributionHint`, `useContributionStart`, `ContributionStart`, `CONTRIBUTIONS`
+`AuthDialogs`, `NotEditor`, `SignIn`, `skipSignInForTests`, `useAuthFlow`, `usePasswordRecovery`, `StudioSessionProvider`, `useEditorSession`, `loadHotspotsFromSupabase`, `lineOf`, `listDirections`, `getSupabase`, `setSupabase`, `supabaseConfig`, `supabaseConfigError`, `DrawToolbar`, `STUDIO_BASEMAPS`, `STUDIO_BASEMAP_THUMBNAILS`, `useDrawing`, `useFollow`, `useLoopClosing`, `FootbridgesSwitch`, `MapPlaceholder`, `MapSwitch`, `StudioDrafts`, `StudioSearch`, `useStudioMap`, `useWheelNavigation`, `AccountPill`, `NEW_MENU_DOCK_FOOT`, `NewMenu`, `SaveToasts`, `StudioHotspotCard`, `StudioSaveSheets`, `StudioTripCard`, `useDeleteActions`, `useDraftOnly`, `useOpenDraft`, `useSaveFlow`, `useSaveTarget`, `useIsWideScreen`, `useStudioTrip`, `StudioPublicView`, `StudioContributors`, `ContributionHint`, `useContributionStart`, `ContributionStart`, `CONTRIBUTIONS`
 
 ## Entry points
 
