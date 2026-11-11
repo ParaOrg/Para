@@ -606,6 +606,54 @@ jobs:
             vite.log
           if-no-files-found: ignore
 
+  # Every story renders and its play passes (scripts/checks/storybook-play.mjs), against the
+  # built Storybook; the stories that failed when the check came in are listed, by area, in
+  # storybook-play-baseline.json, which may only shrink.
+  storybook:
+    name: Storybook plays
+    needs: changes
+    if: needs.changes.outputs.build == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - id: playwright
+        run: |
+          echo "version=$(node -p "require('playwright/package.json').version")" >> "$GITHUB_OUTPUT"
+          echo "image=$ImageOS" >> "$GITHUB_OUTPUT"
+          echo "image-version=$ImageVersion" >> "$GITHUB_OUTPUT"
+      - id: chromium
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.image }}-${{ steps.playwright.outputs.version }}
+      - if: steps.chromium.outputs.cache-hit != 'true'
+        run: npx playwright install chromium
+      - id: debs
+        uses: actions/cache@v6
+        with:
+          path: ~/apt-debs
+          key: playwright-debs-${{ runner.os }}-${{ steps.playwright.outputs.image-version }}-${{ steps.playwright.outputs.version }}
+      - name: Install Chromium's system packages
+        # From the cached .deb files when they restore; install-deps otherwise (and when dpkg
+        # refuses them), which then leaves its downloads in ~/apt-debs for the next run to cache.
+        run: |
+          if [ "${{ steps.debs.outputs.cache-hit }}" = true ] && sudo dpkg -i ~/apt-debs/*.deb; then
+            exit 0
+          fi
+          npx playwright install-deps chromium
+          mkdir -p ~/apt-debs
+          cp /var/cache/apt/archives/*.deb ~/apt-debs/
+      - name: Build Storybook
+        run: npm run build-storybook -- --quiet
+      - name: Every story renders and plays
+        run: node scripts/checks/storybook-play.mjs storybook-static
+
   # The drawing suites, against /studio/?e2e=1, the public router and the live
   # tables. On a pull request only for the editor's own code (see the top of this file). One at a time —
   # the router is shared — and once more after a minute if it was busy.

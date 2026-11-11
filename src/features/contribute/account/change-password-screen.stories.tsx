@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { expect, fn, userEvent, within } from 'storybook/test';
+import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
 import { NO_CAPTCHA } from './account-stories-args';
 import { ChangePasswordScreen } from './change-password-screen';
@@ -33,7 +33,9 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(canvas.getByRole('heading', { level: 1, name: 'Change password' })).toHaveFocus();
+    await waitFor(() =>
+      expect(canvas.getByRole('heading', { level: 1, name: 'Change password' })).toHaveFocus(),
+    );
     await expect(canvas.queryByRole('button', { name: 'Save changes' })).toBeNull();
   },
 };
@@ -76,7 +78,7 @@ export const WrongOldPassword: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     // Focus goes to the field, so a screen reader says what is wrong with it.
-    await expect(canvas.getByLabelText('Old password')).toHaveFocus();
+    await waitFor(() => expect(canvas.getByLabelText('Old password')).toHaveFocus());
     await expect(canvas.getByLabelText('Old password')).toHaveAccessibleDescription(
       /not your current password/,
     );
