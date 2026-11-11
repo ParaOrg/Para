@@ -3,17 +3,17 @@ import { useState } from 'react';
 import { Button } from '@/design-system/primitives/button';
 
 import { DraftFactsForm } from './draft-facts-form';
-import { DraftLockNotice } from './draft-lock-notice';
 import { ReviewConflict } from './review-conflict';
 import { ReviewFieldTable } from './review-field-table';
 import { ReviewGeometry } from './review-geometry';
-import { useDraftRowLock } from './use-draft-lock';
 import type { ReviewAction } from '../data/review-commands';
 import { reviewFields } from '../data/review-diff';
 import { reviewDraftOf } from '../data/review-label';
 import type { DraftRow } from '../data/review-schema';
 import { reviewSummary } from '../data/review-summary';
 import { useComparisonQuery } from '../data/use-review-query';
+import { DraftLockNotice } from '../panels/draft-lock-notice';
+import { useDraftRowLock } from '../panels/use-draft-lock';
 
 interface ReviewDetailsProps {
   draft: DraftRow;

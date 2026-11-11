@@ -22,15 +22,17 @@
 #      slowest by far, runs as three parts (COMMUTER_PART, see its top). What
 #      every job repeats is made once: the build job makes the preview builds
 #      the built-app suites run, and Playwright's Chromium is kept between runs.
-#   3. The drawing suites off the pull request's path. group, regression-
+#   3. The drawing suites only where they are needed. group, regression-
 #      gestures, hotspot, snap, extend and studio-phone draw through the public OSRM demo
 #      router (about one request a second, shared with the world) and read
 #      the live tables: slow, and at the router's mercy. They run on every
 #      push to main or staging (so a merge that breaks them is red on the
-#      branch within minutes), nightly on the default branch, and on demand —
-#      not on pull requests. A suite that fails is run once more after a
-#      minute, as tests/e2e/README.md tells a person to do; a second failure
-#      is real.
+#      branch within minutes), nightly on the default branch, on demand, and
+#      on a pull request that changes the editor (src/app/studio,
+#      src/features/studio), the routes' geometry rules (src/features/routes/geo)
+#      or the suites themselves, so a break is caught before it merges. A suite
+#      that fails is run once more after a minute, as tests/e2e/README.md tells
+#      a person to do; a second failure is real.
 #
 # The two checks a pull request shows keep their names, "Build and the public
 # map" and "The editor": each passes when everything under it passed or was
@@ -105,12 +107,17 @@ jobs:
             echo "preview=$ALL_PREVIEWS" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          echo "drawing=false" >> "$GITHUB_OUTPUT"
           files=$(git diff --name-only "$BASE...$HEAD")
           echo "Changed:"; echo "$files" | sed 's/^/  /'
-          public=false; studio=false; contribute=false; build=false
+          public=false; studio=false; contribute=false; build=false; drawing=false
           while IFS= read -r f; do
             [ -z "$f" ] && continue
+            # The drawing suites, for a change to the editor, the routes' geometry rules or the
+            # suites themselves: what they draw with.
+            case "$f" in
+              src/app/studio/*|src/features/studio/*|src/features/routes/geo/*|tests/e2e/group-test.mjs|tests/e2e/regression-gestures.mjs|tests/e2e/hotspot-test.mjs|tests/e2e/snap-test.mjs|tests/e2e/extend-test.mjs|tests/e2e/studio-phone-test.mjs)
+                drawing=true ;;
+            esac
             case "$f" in
               # Read by the build job alone: its architecture step, its unit checks, its guards.
               docs/architecture.md|tests/unit/*|scripts/checks/check-build.mjs|scripts/checks/build-weight.mjs|scripts/checks/build/*|scripts/docs/*|scripts/node/ts-resolve.mjs|scripts/node/ts-resolve-hook.mjs)
@@ -136,8 +143,24 @@ jobs:
           echo "studio=$studio" >> "$GITHUB_OUTPUT"
           echo "contribute=$contribute" >> "$GITHUB_OUTPUT"
           echo "build=$build" >> "$GITHUB_OUTPUT"
+          echo "drawing=$drawing" >> "$GITHUB_OUTPUT"
           echo "preview=$preview" >> "$GITHUB_OUTPUT"
-          echo "public=$public studio=$studio contribute=$contribute build=$build"
+          echo "public=$public studio=$studio contribute=$contribute build=$build drawing=$drawing"
+
+      # Which areas of Para the pull request touches (areas.json): a warning, never a failure,
+      # when it spans more than one.
+      - name: Areas touched
+        if: github.event_name == 'pull_request'
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+        run: git diff --name-only "$BASE...$HEAD" | node scripts/checks/pr-areas.mjs
+
+      # The glossary's banned words (scripts/checks/glossary-words.json) kept out of src/, docs/
+      # and CONTEXT.md: CONTEXT.md's words, not the ones it says to avoid. Here, not in the build
+      # job, because a change to the docs alone runs no build; it needs nothing but Node.
+      - name: Glossary
+        run: node scripts/checks/glossary.mjs
 
   build:
     name: Build and unit checks
@@ -158,6 +181,16 @@ jobs:
       # ESLint: the rules the standards name are errors (eslint.config.js).
       - name: Lint
         run: npm run lint
+      # No new source file over 150 lines; the long ones already there are held to their length,
+      # and on a pull request the list of them may only shrink (scripts/checks/long-files.mjs).
+      - name: Long files
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+        run: |
+          if [ -n "$BASE" ] && git fetch --quiet --no-tags --depth=1 origin "$BASE"; then
+            git show "$BASE:scripts/checks/long-files-baseline.json" > "$RUNNER_TEMP/long-files-base.json" 2> /dev/null || true
+          fi
+          node scripts/checks/long-files.mjs --base "$RUNNER_TEMP/long-files-base.json"
       # docs/architecture.md is generated from src/: a change to the structure
       # that did not regenerate it fails here (`npm run docs:architecture`).
       - name: Architecture page
@@ -168,6 +201,11 @@ jobs:
       # Node's own test runner, no browser: every tests/unit/*-test.mjs.
       - name: The unit checks
         run: npm run test:unit
+      # The code-health page: `npm run health` (long files, comments, stories, the build's
+      # weights) on the run's summary, so every run shows it. It measures and never fails.
+      - name: Code health
+        if: always()
+        run: npm run --silent health >> "$GITHUB_STEP_SUMMARY" || true
       # The builds pwa-test, handover-test and contribute-offline-test run in `vite preview`, made
       # once here for preview-suite. Each reads the suites' .env.local as well as .env.production
       # (a build reads both, the latter winning), so it is the build those suites would make.
@@ -569,7 +607,7 @@ jobs:
           if-no-files-found: ignore
 
   # The drawing suites, against /studio/?e2e=1, the public router and the live
-  # tables. Not on pull requests (see the top of this file). One at a time —
+  # tables. On a pull request only for the editor's own code (see the top of this file). One at a time —
   # the router is shared — and once more after a minute if it was busy.
   drawing:
     name: The drawing suites

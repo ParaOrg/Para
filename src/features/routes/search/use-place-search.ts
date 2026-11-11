@@ -8,7 +8,7 @@ import type { SearchRow } from './search-rows';
 import { useLandmarks, type LoadLandmarks } from './use-landmarks';
 import { useSearchRows } from './use-search-rows';
 import type { Hotspot } from '../model/hotspots';
-import { routesNearHere } from '../model/landmark-search';
+import { routesNearHere, type HintuanNearHere } from '../model/landmark-search';
 import type { PlaceMatch, SearchPlace } from '../model/place-search';
 import type { Direction } from '../model/routes';
 import type { Landmark } from '../published/landmark-file-schema';
@@ -21,6 +21,7 @@ export interface PlaceSearchInputs {
   onLookAt: (point: LngLat) => void;
   onPickLandmark?: (landmark: Landmark) => void;
   onSearchRestart?: () => void;
+  onGoHere?: (landmark: Landmark, near: readonly HintuanNearHere[], hintuan: Hotspot) => void;
   noteOf?: (place: SearchPlace) => string | null;
   loadLandmarks?: LoadLandmarks;
 }
@@ -45,6 +46,7 @@ export function usePlaceSearch({
   onLookAt,
   onPickLandmark,
   onSearchRestart,
+  onGoHere,
   noteOf = NO_NOTE,
   loadLandmarks,
 }: PlaceSearchInputs) {
@@ -129,6 +131,15 @@ export function usePlaceSearch({
     onPick(hintuan);
   };
 
+  // Given the caller's handler only: without it, the panel has no "Go here".
+  const handleGoHere =
+    onGoHere &&
+    ((hintuan: Hotspot) => {
+      if (!landmark) return;
+      setLandmark(null);
+      onGoHere(landmark, near, hintuan);
+    });
+
   return {
     listId,
     query,
@@ -145,6 +156,7 @@ export function usePlaceSearch({
     handlePick,
     handleKeyDown,
     handlePickHintuan,
+    handleGoHere,
     closeLandmark: () => setLandmark(null),
   };
 }

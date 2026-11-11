@@ -122,7 +122,7 @@ export const InAHotspotCard: Story = { parameters: { frame: 'hotspot' } };
 export const OneSelected: Story = { args: { back: true, selected: 'SM Fairview|jeep' } };
 
 /**
- * A station: its jeeps on its RouteCard, then a RouteCardRailway per line and
+ * A station: its jeeps on its RouteCard, then a RouteCard per line and
  * bound — LRT-2 Eastbound, LRT-2 Westbound with two stations — and the
  * ferry's, each in its line's colours. Sample places, not the real map.
  */
@@ -170,7 +170,8 @@ function road(id: string, from: string, to: string, mode: Direction['route']['mo
 
 /**
  * RouteCardStackedList (4633:19780): a card per place and mode, edge to edge, run by mode (Jeep,
- * UV Express, E-Jeep, Bus, then the trains); a run draws its mode on its first card only.
+ * UV Express, E-Jeep, Bus, then the trains). Every card shows its mode, the cards after one of
+ * the same mode too.
  */
 export const StackedList: Story = {
   args: {
@@ -192,15 +193,23 @@ export const StackedList: Story = {
   },
   play: async ({ canvasElement }) => {
     const modes = within(canvasElement).getAllByText(/^(Jeep|UV Express|E-Jeep|Bus)$/);
-    await expect(modes.map((m) => m.textContent)).toEqual(['Jeep', 'UV Express', 'E-Jeep', 'Bus']);
+    await expect(modes.map((m) => m.textContent)).toEqual([
+      'Jeep',
+      'Jeep',
+      'Jeep',
+      'UV Express',
+      'E-Jeep',
+      'Bus',
+      'Bus',
+    ]);
   },
 };
 
 /**
- * A run led by a card that draws no mode: Tala's P2P wears UV Express's colours but rides nothing
- * drawn, so Bigte's UV Express card after it still names its mode.
+ * A P2P card draws no mode (Figma has no badge for it) though it wears UV Express's colours; the
+ * UV Express card after it names its own.
  */
-export const RunLedByP2p: Story = {
+export const P2pBesideUvExpress: Story = {
   args: {
     routes: [
       road('p2p', 'Tala', 'Makati', 'p2p'),
@@ -213,5 +222,36 @@ export const RunLedByP2p: Story = {
     await expect(cards.map((c) => c.dataset.livery)).toEqual(['uv-express', 'uv-express']);
     await expect(within(cards[0]).queryByText('UV Express')).toBeNull();
     await expect(within(cards[1]).getByText('UV Express')).toBeVisible();
+  },
+};
+
+/**
+ * One place, several road modes: each mode stands apart on a card of its own, in its own colour and
+ * under its own badge — Tala's jeeps, its UV Express, its P2P (UV Express's colours, no badge), its
+ * e-jeep and its bus — and each is selected on its own.
+ */
+export const OnePlaceManyModes: Story = {
+  args: {
+    routes: [
+      road('j1', 'Tala', 'SM Fairview', 'jeepney'),
+      road('b1', 'Tala', 'PITX', 'bus'),
+      road('u1', 'Tala', 'Buendia', 'uv_express'),
+      road('p1', 'Tala', 'Makati', 'p2p'),
+      road('j2', 'Tala', 'Novaliches', 'jeepney'),
+      road('e1', 'Tala', 'Cubao', 'e_jeepney'),
+    ],
+  },
+  play: async ({ canvasElement }) => {
+    const cards = within(canvasElement).getAllByTestId('card-origin');
+    await expect(cards.map((c) => c.dataset.livery)).toEqual([
+      'jeep',
+      'uv-express',
+      'uv-express',
+      'ejeep',
+      'bus',
+    ]);
+    await expect(cards.map((c) => within(c).getAllByTestId('card-item').length)).toEqual([
+      2, 1, 1, 1, 1,
+    ]);
   },
 };

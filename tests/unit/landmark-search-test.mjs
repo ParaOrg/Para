@@ -10,9 +10,11 @@ import {
   NEAR_HERE_M,
   combineResults,
   isParaPlace,
+  nearestStopOn,
   routesNearHere,
   searchLandmarks as searchFolded,
   searchableLandmarks,
+  walkToLandmark,
 } from '../../src/features/routes/model/landmark-search.ts';
 import { searchPlaces, searchablePlaces } from '../../src/features/routes/model/place-search.ts';
 import { landmarkFileSchema } from '../../src/features/routes/published/landmark-file-schema.ts';
@@ -219,4 +221,30 @@ test('a search over the whole committed file answers within a keystroke', () => 
   // A laptop's figure; a phone may be several times slower. Recorded, and held loosely.
   console.error(`searchLandmarks over ${landmarks.length}: ${perQueryMs.toFixed(1)} ms a query`);
   assert.ok(perQueryMs < 200, `${perQueryMs} ms a query`);
+});
+
+// Ticket 07: "Go here" from a landmark. A trip opened for it ends at its direction's hintuan
+// nearest the landmark, and the card says how far the walk is from there.
+test("a direction's stop for a landmark is the nearest hintuan it stops at", () => {
+  const far = hotspot('Far Hintuan');
+  const near = hotspot('Near Hintuan');
+  const stops = [
+    { hintuan: near, distanceM: 120, directionIds: ['d1'] },
+    { hintuan: far, distanceM: 410, directionIds: ['d1', 'd2'] },
+  ];
+  assert.equal(nearestStopOn('d1', stops)?.hintuan.id, near.id);
+  // d2 stops only at the farther one: that is its end, though a nearer hintuan exists.
+  assert.equal(nearestStopOn('d2', stops)?.hintuan.id, far.id);
+  // A direction stopping at none of them has no stop for the landmark.
+  assert.equal(nearestStopOn('d3', stops), null);
+});
+
+test('the walk to a landmark is rounded to 10 m, never under 10', () => {
+  assert.equal(
+    walkToLandmark(296, 'SM North EDSA'),
+    'About 300 m to SM North EDSA, in a straight line',
+  );
+  assert.equal(walkToLandmark(304.9, 'X'), 'About 300 m to X, in a straight line');
+  assert.equal(walkToLandmark(3, 'X'), 'About 10 m to X, in a straight line');
+  assert.equal(walkToLandmark(0, 'X'), 'About 10 m to X, in a straight line');
 });

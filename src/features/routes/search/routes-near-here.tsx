@@ -1,5 +1,6 @@
 import { useId } from 'react';
 
+import { Button } from '@/design-system/primitives/button';
 import { CloseIcon } from '@/shared/ui/route-icons';
 
 import { LANDMARK_KIND_LABEL } from './search-rows';
@@ -16,6 +17,11 @@ interface RoutesNearHereProps {
   directionsAt: (hotspotId: string) => readonly Direction[];
   /** A hintuan chosen: opened as a tap on it does. */
   onPick: (hintuan: HintuanNearHere['hintuan']) => void;
+  /**
+   * "Go here" on a hintuan's row (ticket 07): the landmark made the trip's goal from there. Left
+   * out, no button.
+   */
+  onGoHere?: (hintuan: HintuanNearHere['hintuan']) => void;
   onClose: () => void;
 }
 
@@ -33,13 +39,15 @@ function routesInWords(directions: readonly Direction[]): string {
 /**
  * A landmark that is not a Para place (.scratch/place-search, decision 8): the hintuans within
  * about 500 m, straight-line, nearest first, each with where its routes go; or "No Para routes
- * near here yet". A look for now, from the tokens; the owner designs it.
+ * near here yet". Given `onGoHere`, each row has "Go here" (ticket 07). A look for now, from the
+ * tokens; the owner designs it.
  */
 export function RoutesNearHere({
   landmark,
   near,
   directionsAt,
   onPick,
+  onGoHere,
   onClose,
 }: RoutesNearHereProps) {
   const titleId = useId();
@@ -73,11 +81,11 @@ export function RoutesNearHere({
       ) : (
         <ul className="overflow-y-auto pb-1">
           {near.map(({ hintuan, distanceM }) => (
-            <li key={hintuan.id}>
+            <li key={hintuan.id} className="flex items-center gap-2 pr-4">
               <button
                 type="button"
                 onClick={() => onPick(hintuan)}
-                className="flex w-full items-baseline gap-3 px-4 py-2 text-left text-content-primary"
+                className="flex min-w-0 flex-1 items-baseline gap-3 py-2 pl-4 text-left text-content-primary"
               >
                 <span className="min-w-0 flex-1">
                   <span className="block truncate font-semibold">{hintuan.name}</span>
@@ -89,6 +97,15 @@ export function RoutesNearHere({
                   {Math.round(distanceM)} m
                 </span>
               </button>
+              {onGoHere && (
+                <Button
+                  variant="secondary"
+                  size="small"
+                  label="Go here"
+                  aria-label={`Go here: ${hintuan.name}, for ${landmark.name}`}
+                  onClick={() => onGoHere(hintuan)}
+                />
+              )}
             </li>
           ))}
         </ul>

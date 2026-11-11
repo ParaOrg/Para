@@ -70,6 +70,13 @@ export function useSaveFlow({
     setNotice(UNPUBLISHED);
   };
 
+  // A draft discarded: what is published is unchanged, so nothing on the map is read again.
+  const onDiscarded = () => {
+    setIsSaving(false);
+    cancelDrawing();
+    setNotice(reviewMessage({ code: 'discarded' }));
+  };
+
   return {
     isSaving,
     setIsSaving,
@@ -79,5 +86,6 @@ export function useSaveFlow({
     onDrafted,
     onPublished,
     onUnpublished,
+    onDiscarded,
   };
 }

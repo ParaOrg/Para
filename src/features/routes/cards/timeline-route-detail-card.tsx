@@ -56,6 +56,11 @@ type Props = Omit<TimelineRouteDetailProps, 'pickedPesos'> & {
   signboards?: readonly string[];
   /** Under the tiles, a line's own fixed words (LINE_NOTES): the ferry's days and where to check for a suspension. */
   note?: string;
+  /**
+   * Under the tiles, first: the walk from the ride's end to a landmark the commuter is going to
+   * (ticket 07), "About 300 m to SM North EDSA, in a straight line".
+   */
+  walk?: string | null;
   /** Under the tiles: what only the studio shows — its facts and its Edit, Extend and Delete. */
   children?: ReactNode;
 };
@@ -121,6 +126,7 @@ export function TimelineRouteDetailCard({
   onOtherRoute,
   signboards = [],
   note,
+  walk,
   children,
 }: Props) {
   const [own, setOwn] = useState(false);
@@ -188,6 +194,14 @@ export function TimelineRouteDetailCard({
           setTurns((t) => t + 1);
         }}
       />
+      {walk && (
+        <p
+          data-testid="trip-walk"
+          className="w-full px-3 pb-4 font-sn-pro text-sm/5 text-content-tertiary"
+        >
+          {walk}
+        </p>
+      )}
       {note && (
         <p
           data-testid="trip-note"

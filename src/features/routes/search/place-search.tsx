@@ -8,6 +8,7 @@ import { RoutesNearHere } from './routes-near-here';
 import type { LoadLandmarks } from './use-landmarks';
 import { usePlaceSearch } from './use-place-search';
 import type { Hotspot } from '../model/hotspots';
+import type { HintuanNearHere } from '../model/landmark-search';
 import type { SearchPlace } from '../model/place-search';
 import type { Direction } from '../model/routes';
 import type { Landmark } from '../published/landmark-file-schema';
@@ -35,6 +36,11 @@ interface PlaceSearchProps {
    * goes then, as the routes near a landmark do; the studio takes its dot away.
    */
   onSearchRestart?: () => void;
+  /**
+   * "Go here" on a hintuan near a landmark (ticket 07): the landmark, every hintuan near it and the
+   * one chosen, for the trip there. Left out, the panel has no "Go here" (the studio's).
+   */
+  onGoHere?: (landmark: Landmark, near: readonly HintuanNearHere[], hintuan: Hotspot) => void;
   /** A word after a place's label, or null: the studio marks a new place still in a draft. */
   noteOf?: (place: SearchPlace) => string | null;
   /** Where the landmarks come from: the file unless given (stories). */
@@ -62,6 +68,7 @@ export function PlaceSearch({
   onLookAt,
   onPickLandmark,
   onSearchRestart,
+  onGoHere,
   noteOf,
   loadLandmarks,
   renderLandmarkPin,
@@ -74,6 +81,7 @@ export function PlaceSearch({
     onLookAt,
     onPickLandmark,
     onSearchRestart,
+    onGoHere,
     noteOf,
     loadLandmarks,
   });
@@ -114,6 +122,7 @@ export function PlaceSearch({
           near={near}
           directionsAt={directionsAt}
           onPick={search.handlePickHintuan}
+          onGoHere={search.handleGoHere}
           onClose={search.closeLandmark}
         />
       )}

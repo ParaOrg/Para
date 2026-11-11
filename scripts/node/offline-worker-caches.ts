@@ -6,8 +6,8 @@ type RuntimeCaching = NonNullable<NonNullable<VitePWAOptions['workbox']>['runtim
 
 /**
  * What the public map's offline worker keeps as it is used: the published map's
- * index, its lines and signboards, place search's landmarks, and the basemap's
- * files and tiles. Workbox
+ * index, its lines and signboards, place search's landmarks, the footbridges,
+ * and the basemap's files and tiles. Workbox
  * copies each `urlPattern` function into the worker as text, so none of them may
  * reach a value outside itself; the basemap's host travels in its rules' regular
  * expressions instead.
@@ -142,6 +142,32 @@ export function runtimeCaches(basemapRules: BasemapCacheRules): RuntimeCaching {
       handler: 'StaleWhileRevalidate',
       options: {
         cacheName: 'landmarks',
+        cacheableResponse: { statuses: [200] },
+        expiration: { maxEntries: 1, purgeOnQuotaError: true },
+        plugins: [
+          {
+            // Only JSON: a file not there is the map's page, 200.
+            cacheWillUpdate: async ({ response }) =>
+              (response.headers.get('content-type') ?? '').startsWith('application/json')
+                ? response
+                : null,
+          },
+        ],
+      },
+    },
+    {
+      // The map's OpenStreetMap footbridges (.scratch/footbridges): read the
+      // first time the map reaches street level, then served from the copy
+      // kept at once and refreshed behind it, as the landmarks are. The file
+      // changes monthly and is some 20 kB over the wire; offline before the
+      // first read, the map simply draws none.
+      urlPattern: ({ url, request }) =>
+        request.method === 'GET' &&
+        url.origin === self.location.origin &&
+        url.pathname === '/data/footbridges.v1.json',
+      handler: 'StaleWhileRevalidate',
+      options: {
+        cacheName: 'footbridges',
         cacheableResponse: { statuses: [200] },
         expiration: { maxEntries: 1, purgeOnQuotaError: true },
         plugins: [

@@ -56,6 +56,7 @@ export function StartGate({ onStart }: StartGateProps) {
           )}
           {step.kind === 'keep-recording' && (
             <KeepRecordingPanel
+              brand={step.brand}
               onOpenSettings={gate.handleOpenAutostartSettings}
               onDone={gate.handleKeepRecordingDone}
             />
