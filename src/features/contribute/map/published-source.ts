@@ -1,13 +1,10 @@
 import { cacheStorageMapFiles } from '@/features/routes/map/map-file-store';
 import type { LineStringGeoJSON } from '@/features/routes/model/geojson-schema';
-import {
-  fetchIndex,
-  readIndexFile,
-  setMapFileStore,
-} from '@/features/routes/published/fetch-index';
+import { fetchIndex, setMapFileStore } from '@/features/routes/published/fetch-index';
 import { fetchLine, readLineFile } from '@/features/routes/published/fetch-line';
 import type { Index } from '@/features/routes/published/index-schema';
 import { LINES_URL, MAP_FILE_URL } from '@/features/routes/published/map-file';
+import { readIndexFile } from '@/features/routes/published/parse-index';
 
 import { nativeGetText } from '../native-bridge/native-app';
 
