@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { expect, fn, within } from 'storybook/test';
+import { expect, fn, waitFor, within } from 'storybook/test';
 
 import type { RecordingTrail } from '@/features/routes/map/recording-trail';
 
@@ -65,7 +65,7 @@ export const JeepRide: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     // Close, the safe answer, has focus as the card opens.
-    await expect(canvas.getByRole('button', { name: 'Close' })).toHaveFocus();
+    await waitFor(() => expect(canvas.getByRole('button', { name: 'Close' })).toHaveFocus());
     await expect(await canvas.findByRole('img', {}, { timeout: 5000 })).toBeVisible();
     await expect(canvas.getByRole('button', { name: 'Share' })).toBeEnabled();
   },
