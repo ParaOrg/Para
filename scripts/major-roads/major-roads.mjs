@@ -4,9 +4,10 @@
 // stretches within REACH_M of a published hotspot: a walk to board or from your stop starts or
 // ends at a hotspot and is never longer than that, so it can only cross a road that near.
 //
-// Usage: node scripts/major-roads/major-roads.mjs <features.geojsonseq> <extract_at> <out.json>
+// Usage: node --experimental-strip-types scripts/major-roads/major-roads.mjs <features.geojsonseq> <extract_at> <out.json>
 import { readFileSync, writeFileSync } from 'node:fs';
 
+import { pointToSegmentM, simplifyLine } from '../../src/shared/utils/geo.ts';
 import { majorRoadFileText } from './major-road-file.mjs';
 
 /** Go here's widest walk (WIDER_REACH_M in one-ride-options.ts; the unit check holds them equal). */
@@ -18,42 +19,8 @@ export const ROAD_KINDS = ['trunk', 'primary', 'secondary'];
 export const SIMPLIFY_M = 3;
 
 const RECORD_SEPARATOR = '\u001e';
-const RADIANS = Math.PI / 180;
-const EARTH_M = 6371000;
 const INDEX = new URL('../../public/data/index.v5.json', import.meta.url);
 const rounded = ([x, y]) => [+x.toFixed(5), +y.toFixed(5)];
-
-/** Metres from point p to segment ab, flat-earth around p: fine over a kilometre. */
-export function metresToSegment(p, a, b) {
-  const scale = Math.cos(p[1] * RADIANS);
-  const flat = ([x, y]) => [(x - p[0]) * scale, y - p[1]];
-  const [ax, ay] = flat(a);
-  const [bx, by] = flat(b);
-  const [dx, dy] = [bx - ax, by - ay];
-  const lengthSquared = dx * dx + dy * dy;
-  const t =
-    lengthSquared === 0 ? 0 : Math.max(0, Math.min(1, -(ax * dx + ay * dy) / lengthSquared));
-  return EARTH_M * RADIANS * Math.hypot(ax + t * dx, ay + t * dy);
-}
-
-/** A line with the vertices that bend it by less than SIMPLIFY_M dropped (Douglas-Peucker). */
-export function simplified(line) {
-  const keep = new Set([0, line.length - 1]);
-  const stack = [[0, line.length - 1]];
-  while (stack.length > 0) {
-    const [first, last] = stack.pop();
-    let farthest = -1;
-    let farthestM = SIMPLIFY_M;
-    for (let i = first + 1; i < last; i++) {
-      const m = metresToSegment(line[i], line[first], line[last]);
-      if (m > farthestM) [farthest, farthestM] = [i, m];
-    }
-    if (farthest === -1) continue;
-    keep.add(farthest);
-    stack.push([first, farthest], [farthest, last]);
-  }
-  return line.filter((_, i) => keep.has(i));
-}
 
 /** Lines chained where one ends at the vertex another starts from (OpenStreetMap splits roads). */
 export function joinedLines(lines) {
@@ -97,7 +64,7 @@ function nearHotspots(hotspots) {
     for (let cx = x0 - 1; cx <= x1 + 1; cx++)
       for (let cy = y0 - 1; cy <= y1 + 1; cy++)
         for (const point of grid.get(`${cx},${cy}`) ?? [])
-          if (metresToSegment(point, a, b) <= REACH_M) return true;
+          if (pointToSegmentM(point, a, b) <= REACH_M) return true;
     return false;
   };
 }
@@ -126,7 +93,7 @@ export function majorRoadsFrom(ways, hotspots) {
     roads.get(key).lines.push(...lines);
   }
   for (const road of roads.values()) {
-    road.lines = joinedLines(road.lines).map((line) => simplified(line).map(rounded));
+    road.lines = joinedLines(road.lines).map((line) => simplifyLine(line, SIMPLIFY_M).map(rounded));
   }
   const order = (road) => `${road.name ?? '￿'}\u0000${ROAD_KINDS.indexOf(road.kind)}`;
   return [...roads.values()].sort((a, b) => order(a).localeCompare(order(b)));

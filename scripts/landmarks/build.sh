@@ -67,6 +67,6 @@ node "$root/scripts/footbridges/check.mjs" "$root/public/data/footbridges.v1.jso
 
 # The major roads near the published hotspots, from the landmarks' own filter, which keeps the
 # trunk, primary and secondary roads (major-roads.mjs).
-node "$root/scripts/major-roads/major-roads.mjs" "$work/features.geojsonseq" "$extract_at" \
+node --experimental-strip-types "$root/scripts/major-roads/major-roads.mjs" "$work/features.geojsonseq" "$extract_at" \
   "$root/public/data/major-roads.v1.json"
 node "$root/scripts/major-roads/check.mjs" "$root/public/data/major-roads.v1.json"

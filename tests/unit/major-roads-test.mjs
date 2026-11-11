@@ -12,8 +12,6 @@ import {
   inputsFrom,
   joinedLines,
   majorRoadsFrom,
-  metresToSegment,
-  simplified,
 } from '../../scripts/major-roads/major-roads.mjs';
 import { WIDER_REACH_M } from '../../src/features/routes/model/one-ride-options.ts';
 
@@ -29,13 +27,6 @@ const way = (osmId, line, extra = {}) => ({
 
 test('the reach is the widest walk Go here offers', () => {
   assert.equal(REACH_M, WIDER_REACH_M);
-});
-
-test('metres to a segment: to its nearest point, or its nearer end', () => {
-  const a = [121.05, 14.599];
-  const b = [121.05, 14.601];
-  assert.ok(Math.abs(metresToSegment([121.051, 14.6], a, b) - 107.7) < 1);
-  assert.ok(Math.abs(metresToSegment([121.05, 14.602], a, b) - 111.2) < 1);
 });
 
 test('only the stretch within reach of a hotspot is kept', () => {
@@ -94,20 +85,17 @@ test('the same name as another kind, or no name, is another entry; named first',
   );
 });
 
-test('simplifying drops only the vertices that bend the line by less than SIMPLIFY_M', () => {
-  const straightish = [
+test('a slight bend is simplified away, a real one is kept', () => {
+  const line = (bend) => [
     [121.05, 14.6],
-    [121.0505, 14.60001],
+    [121.0505, 14.6 + bend],
     [121.051, 14.6],
   ];
-  assert.equal(simplified(straightish).length, 2);
-  const bent = [
-    [121.05, 14.6],
-    [121.0505, 14.6001],
-    [121.051, 14.6],
-  ];
-  assert.equal(simplified(bent).length, 3);
-  assert.ok(SIMPLIFY_M < 11);
+  const [slight] = majorRoadsFrom([way(1, line(0.00001))], [HOTSPOT]);
+  assert.equal(slight.lines[0].length, 2);
+  const [real] = majorRoadsFrom([way(1, line(0.0001))], [HOTSPOT]);
+  assert.equal(real.lines[0].length, 3);
+  assert.ok(SIMPLIFY_M > 1.2 && SIMPLIFY_M < 11);
 });
 
 test('from osmium: trunk, primary and secondary ways, not their links or smaller roads', () => {
