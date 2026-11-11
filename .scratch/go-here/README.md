@@ -1,6 +1,6 @@
 # Go here
 
-Status: plan only, no code. The owner approved "Go here" (Q113 to Q117 and Q119, all as recommended, 2026-11-10). This spec and its tickets come before any code; the questions below go to the owner through the hub.
+Status: building the logic. The owner approved "Go here" (Q113 to Q117 and Q119, 2026-11-10) and answered its questions as recommended (Q171 to Q178, 2026-11-11, below). Logic and data are built ahead; every screen waits for the owner's design.
 
 A commuter searches a place and asks Para how to get there on one ride, then rides it with Para's help. It grows from place search's ticket 07, "Go here" from a landmark's routes near here (`.scratch/place-search/`, merged for 0.4.1), and takes in footbridges' ticket 04, the walk hint (`.scratch/footbridges/`).
 
@@ -126,3 +126,16 @@ Never made up. Each needs the owner's Figma before its ticket draws it:
 5. **Fares on the list: the full line or the overview?** Recommended: the overview's length for the order, the full line's for the fare shown. A row says its fare once its line has come, never a guess.
 6. **The get-off reminder: words and vibration?** Recommended: "2 hintuans to go", then "Bababa ka na sa susunod" (Taglish, as the owner wrote it). Vibration off until the commuter turns it on, as some ride with the phone in a pocket. Only while Para is open, said so the first time.
 7. **Kept between visits?** Recommended: no, as every pick today. A reload starts from the map; nothing about where a commuter goes is stored.
+
+## Answers (the owner, 2026-11-11, via the hub: all as recommended, Q171 to Q178)
+
+1. 600 m straight-line each way; widened to 1 km, said so on the list, only when nothing is within 600 m.
+2. Ask once to turn location on; if not, a start picked with place search. Never the map's centre.
+3. Every option, best first; five on show, the rest behind "More ways".
+4. The phone's own maps app (`geo:` on Android, Apple Maps on iPhone), openstreetmap.org on a computer. No Google.
+5. A row's fare only once its full line is read, never a guess.
+6. "2 hintuans to go", then "Bababa ka na sa susunod". Vibration off until turned on. Only while Para is open, said so once.
+7. Nothing kept between visits.
+8. (Q178, the footbridge hint's roads) `major-roads.v1.json`, built monthly beside the footbridges, only the major roads near hintuans, fetched only with a Go here walk and never on the opening path; a ceiling of 500 kB.
+
+The screens still wait for the owner's designs ("Owner designs first" above).
