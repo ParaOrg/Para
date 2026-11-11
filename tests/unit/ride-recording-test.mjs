@@ -7,9 +7,7 @@ import assert from 'node:assert/strict';
 
 import { haversine } from '../../src/shared/utils/geo.ts';
 import {
-  BEARING_WINDOW_S,
   HINTO_MIN_SECONDS,
-  courseBearing,
   currentMode,
   distanceM,
   hintosOf,
@@ -23,6 +21,7 @@ import {
   silentGaps,
   summarize,
 } from '../../src/features/routes/model/ride-recording.ts';
+import { BEARING_WINDOW_S, courseBearing } from '../../src/features/routes/model/course-bearing.ts';
 
 const T0 = Date.UTC(2026, 9, 17, 6, 0, 0);
 /** A fix `s` seconds after the start, `east` metres east of Tala and `north` metres north. */
