@@ -24,7 +24,9 @@ type Story = StoryObj<typeof meta>;
 export const CountingDown: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(canvas.getByRole('heading', { level: 1, name: 'Delete account' })).toHaveFocus();
+    await waitFor(() =>
+      expect(canvas.getByRole('heading', { level: 1, name: 'Delete account' })).toHaveFocus(),
+    );
     await expect(canvas.getByRole('button', { name: /^Delete account \(\d\)$/ })).toBeDisabled();
   },
 };
@@ -55,7 +57,9 @@ export const Asked: Story = {
     const question = within(
       canvas.getByRole('alertdialog', { name: 'Do you want to delete your account?' }),
     );
-    await expect(question.getByRole('button', { name: 'No, I change my mind' })).toHaveFocus();
+    await waitFor(() =>
+      expect(question.getByRole('button', { name: 'No, I change my mind' })).toHaveFocus(),
+    );
     await userEvent.click(question.getByRole('button', { name: 'Delete this account' }));
     await expect(args.onDelete).toHaveBeenCalledTimes(1);
   },
