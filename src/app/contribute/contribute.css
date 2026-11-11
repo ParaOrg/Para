@@ -20,6 +20,7 @@
 @source '../../features/routes/map/map-data-source-sheet.tsx';
 @source '../../features/routes/map/map-style.tsx';
 @source '../../features/routes/map/location-labels-row.tsx';
+@source '../../features/routes/map/map-style-switch-row.tsx';
 @source '../../features/routes/map/map-style-button.tsx';
 @source '../../features/routes/map/map-type-icon.tsx';
 @source '../../features/routes/map/map-view.tsx';
