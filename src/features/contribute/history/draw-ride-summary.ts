@@ -90,8 +90,10 @@ export function drawRideSummary(
   ctx.fillStyle = MUTED;
   ctx.font = `500 32px ${FONT}`;
   ctx.fillText(summary.date, PAD, CARD_HEIGHT - 56);
+  // Where whoever sees the card gets the app: the download page the posters' QR codes open too.
   ctx.textAlign = 'right';
-  ctx.fillText('Mapped with Para', CARD_WIDTH - PAD, CARD_HEIGHT - 56);
+  ctx.fillStyle = BRAND;
+  ctx.fillText('para-commute.org/app', CARD_WIDTH - PAD, CARD_HEIGHT - 56);
   ctx.textAlign = 'left';
 }
 
