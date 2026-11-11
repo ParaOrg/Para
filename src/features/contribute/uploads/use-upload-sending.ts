@@ -4,7 +4,7 @@ import { loadPacking } from './packing/load-packing';
 import { FAILED, problemOfError } from './upload-failures';
 import { isSentOnItsOwn, storedUploadStatus } from './upload-rules';
 import type { UploadGate, UploadStatus } from './upload-state';
-import { uploadContribution } from '../api/upload-contribution';
+import { loadContributionRequests } from '../api/load-contribution-requests';
 import { UploadError } from '../api/upload-problem';
 import { sentConsentVersion } from '../consent/consent-version';
 import { fixOfRow } from '../recorder/recording-fixes';
@@ -34,9 +34,8 @@ export interface UploadSending {
 }
 
 /**
- * Sends saved recordings to Para. A recording is sent on its own when the
- * list holds it, and one that failed for a reason that passes is tried again when the phone comes
- * back online or to the front.
+ * Sends saved recordings to Para: each on its own once the list holds it, and one that failed for
+ * a reason that passes again when the phone comes back online or to the front.
  */
 export function useUploadSending({
   saved,
@@ -72,9 +71,11 @@ export function useUploadSending({
     setStatus(recording.id, { state: 'uploading' });
     try {
       const rows = await loadFixes(recording.id);
-      // Not fetched (offline before the worker kept it): the catch below takes it as no signal,
-      // so the send is tried again when the phone is back online.
-      const { packRecording } = await loadPacking();
+      // Not fetched (offline before the worker kept them): the catch takes it as no signal.
+      const [{ packRecording }, { uploadContribution }] = await Promise.all([
+        loadPacking(),
+        loadContributionRequests(),
+      ]);
       const packed = packRecording(
         recording,
         rows.map(fixOfRow),
@@ -127,9 +128,8 @@ export function useUploadSending({
     gateRef.current = { hasConsent: gate.hasConsent, earlier: gate.earlier };
   }, [gate.hasConsent, gate.earlier]);
 
-  // A recording not tried yet is sent as soon as the list holds it: the page
-  // opened, or one was just saved, or consent or the answer about earlier ones
-  // arrived. A change to the list for any other reason (a delete) retries nothing.
+  // A recording not tried yet is sent as soon as the list holds it: the page opened, or one was
+  // just saved, or consent or the answer about earlier ones arrived. A delete retries nothing.
   useEffect(() => {
     if (!isAvailable) return;
     for (const recording of saved) {

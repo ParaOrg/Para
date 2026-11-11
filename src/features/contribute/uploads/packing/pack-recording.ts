@@ -11,9 +11,9 @@ import { RECORDING_VERSION, type Recording } from '../../storage/recording-schem
 
 /**
  * The rules that made the totals, the hintos and the line; bump when ride-recording.ts changes them.
- * 2 counts hintos only while on ride.
+ * 2 counts hintos only while on ride. 3 counts a hinto's moves past WANDER_M, so a walk adds up.
  */
-export const RULES_VERSION = 2;
+export const RULES_VERSION = 3;
 
 /** The Philippines, as the database checks it. */
 const BOX = { south: 4, north: 22, west: 116, east: 127 } as const;
