@@ -59,3 +59,9 @@ recording only after it is saved.
   words they typed cleared (commit 71d6f805).
 - **Deleting a ride in the contributor app deletes it on that phone only** (#683). The upload stays
   on Para.
+
+## Amendment, 2026-11-11 (proposed with ADR 0010)
+
+The public map sends nothing except a report the commuter chooses to send, holding no location or identity
+([ADR 0010](0010-commuters-can-report-a-route-problem.md)). It goes to Para's own Worker at `/api/report`, never to
+the database; commuters still never read the database.

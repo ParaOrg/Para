@@ -49,3 +49,9 @@ The public map still sends nothing.
 The published map's index is now `index.v5.json`: shape 4 with the loops in. A
 loop has no head or tail, which a shape-4 app's schema refuses for the whole
 map, so `index.v4.json` and the older indexes are written without loops.
+
+## Amendment, 2026-11-11 (proposed with ADR 0010)
+
+The public map sends nothing except a report the commuter chooses to send, holding no location or identity
+([ADR 0010](0010-commuters-can-report-a-route-problem.md)). It goes to Para's own Worker at `/api/report`, never to
+the database; commuters still never read the database.
