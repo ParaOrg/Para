@@ -33,7 +33,10 @@ const withPhone = (info: ContributorInfo | null) => (Story: () => React.JSX.Elem
  * A client whose read of the phone failed, with or without what an earlier read gave. It does not
  * read again on mount, so the story shows the failure; Try again starts a read that never answers.
  */
-function failedClient(info: ContributorInfo | null): QueryClient {
+function failedClient(
+  info: ContributorInfo | null,
+  fetchStatus: 'idle' | 'fetching' = 'idle',
+): QueryClient {
   const client = createQueryClient();
   client.setQueryDefaults(contributionKeys.phone(PHONE), {
     staleTime: Infinity,
@@ -54,7 +57,7 @@ function failedClient(info: ContributorInfo | null): QueryClient {
       fetchMeta: null,
       isInvalidated: false,
       status: 'error',
-      fetchStatus: 'idle',
+      fetchStatus,
     },
   );
   return client;
@@ -172,5 +175,16 @@ export const TryAgain: Story = {
     await userEvent.click(canvas.getByRole('button', { name: 'Try again' }));
     await waitFor(() => expect(readsBegun).toBe(before + 1));
     await expect(canvas.getByText('Phone a697d4 has sent 14 uploads.')).toBeVisible();
+  },
+};
+
+/** A read again is under way: Try again is greyed and says so until it settles. */
+export const TryingAgain: Story = {
+  decorators: [
+    withClient(failedClient({ uploadCount: 14, blockedAt: null, blockNote: '' }, 'fetching')),
+  ],
+  play: async ({ canvasElement }) => {
+    const button = within(canvasElement).getByRole('button', { name: 'Trying…' });
+    await expect(button).toBeDisabled();
   },
 };
