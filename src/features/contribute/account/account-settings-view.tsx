@@ -45,8 +45,12 @@ export function AccountSettingsView({
 
   const handleOpenKeepRecording = () => {
     setKeepRecordingError(null);
-    import('../native/native-permissions')
-      .then((module) => module.openAutostartSettings())
+    Promise.all([import('../native/native-permissions'), import('../native/keep-recording-makers')])
+      .then(async ([permissions, makers]) => {
+        // The maker's own screen first, as Keep Para recording opens it at the first Start.
+        const { manufacturer } = await permissions.readDeviceInfo();
+        await permissions.openAutostartSettings(makers.brandOf(manufacturer));
+      })
       .catch((error: unknown) => {
         console.warn('The phone’s Autostart settings could not be opened.', error);
         setKeepRecordingError(KEEP_RECORDING_FAILED);

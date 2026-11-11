@@ -9,11 +9,10 @@
 // What it checks: editor A edits a route and saves, which stores a draft
 // under A's id. Editor B opens the same route and is told it is being changed
 // by A's name (from `editor_name`), sees no Edit, Extend, Delete or signboard
-// controls, and sends no write; B's Drafts list says the same under the
-// draft. With no name on file, B is told "another editor" and no id or email
-// shows. After A discards the draft, B reloads, can edit, and B's save
-// stores a draft under B's id. B reviewing A's draft is offered Approve but not
-// its details form. A card opened before A's draft cannot save over it, and a
+// controls, and sends no write; the card offers B Approve on A's draft and no
+// Discard. With no name on file, B is told "another editor" and no id or email
+// shows. A discards the draft from A's own sidebar; B reloads, can edit, and
+// B's save stores a draft under B's id. A card opened before A's draft cannot save over it, and a
 // direct update of A's draft by B changes nothing (the stand-in applies
 // draft_update as the migration 20261026090000 writes it). A hotspot's draft is held the same way: B's
 // card for it says so and offers no Edit or Delete.
@@ -172,8 +171,18 @@ async function tapAt(page, ll, zoom) {
   await page.waitForTimeout(700);
 }
 
-/** Opens the route's trip card by tapping its line. */
+/**
+ * Opens the route's trip card by tapping its line, once the line is drawn there: the map can be
+ * loaded before the route's data has come and been drawn, and a tap on an empty map opens nothing
+ * (seen once on a slow runner).
+ */
 async function openRoute(page) {
+  await page.evaluate(([c]) => window.__map.jumpTo({ center: c, zoom: 15 }), [MIDDLE]);
+  await page.waitForFunction(
+    (c) => window.__map.queryRenderedFeatures(window.__map.project(c)).length > 0,
+    MIDDLE,
+    { timeout: 15000 },
+  );
   await tapAt(page, MIDDLE, 15);
 }
 
@@ -226,6 +235,11 @@ async function editAndSave(page) {
 const a = await editor(A_ID, 'a@example.com', null);
 const db = a.db;
 await openRoute(a.page);
+// The card arrives a moment after the tap: waited for, so a slow runner is not read as no button.
+await a.page
+  .getByRole('button', { name: 'Edit route' })
+  .waitFor({ timeout: 10000 })
+  .catch(() => {});
 check(
   'A, with no draft on the route, is offered Edit route',
   (await a.page.getByRole('button', { name: 'Edit route' }).count()) === 1,
@@ -248,11 +262,11 @@ check(
 // ---- B opens the same route: looks, cannot change.
 const b = await editor(B_ID, 'b@example.com', db);
 const writesBefore = writesOf(db).length;
-// A tap on A's dashed line opens the route's card, to read: no review sheet and no editing.
+// A tap on A's dashed line opens the route's card, to read: no sidebar and no editing.
 await openRoute(b.page);
 await b.page.getByText('Being changed by Marisol').waitFor({ timeout: 10000 });
 check(
-  "B's tap on A's draft line opens the route's card to read, with no review sheet",
+  "B's tap on A's draft line opens the route's card to read, with no sidebar",
   (await b.page.locator('dialog[open]').count()) === 0 &&
     (await b.page.getByTestId('sidebar').count()) === 0 &&
     (await b.page.getByRole('button', { name: 'Edit route' }).count()) === 0,
@@ -279,39 +293,6 @@ check(
     (await b.page.getByRole('button', { name: /^Discard/ }).count()) === 0,
 );
 
-// B's Drafts list says it too, and marks the draft a Draft.
-await b.page.getByRole('button', { name: /^Drafts \(\d+\)$/ }).click();
-const item = b.page.getByRole('listitem').filter({ hasText: 'route · Draft' });
-await item.first().waitFor();
-// The name arrives after the list.
-await item.first().getByText('Being changed by Marisol').waitFor({ timeout: 10000 });
-check(
-  "B's Drafts list marks it Draft and says who is changing it",
-  (await item.first().innerText()).includes('route · Draft') &&
-    (await item.first().innerText()).includes('Being changed by Marisol'),
-);
-check(
-  "  and offers B no Discard on A's draft: only its maker discards it",
-  (await item.first().getByRole('button', { name: 'Discard…' }).count()) === 0,
-);
-
-// B can review that draft, but not edit its details or resolve its conflict.
-await item.first().getByRole('button', { name: 'Review changes' }).click();
-await b.page.getByText('Being changed by Marisol').waitFor();
-await b.page.getByRole('button', { name: 'Approve', exact: true }).waitFor({ timeout: 10000 });
-check(
-  '  and the review screen offers B no Discard either',
-  (await b.page.getByRole('button', { name: 'Discard…' }).count()) === 0,
-);
-check(
-  "B, reviewing A's draft, is offered Approve but not its details form",
-  (await b.page.getByRole('button', { name: 'Save draft details' }).count()) === 0 &&
-    (await b.page.getByRole('heading', { name: 'Edit draft details' }).count()) === 0,
-  (await body(b.page)).slice(0, 700),
-);
-await b.page.getByRole('button', { name: 'Back to drafts' }).click();
-await b.page.locator('dialog').getByRole('button', { name: 'Close', exact: true }).click();
-
 // ---- No name on file: plain words.
 db.tables.editor_name = db.tables.editor_name.filter((r) => r.user_id !== A_ID);
 await load(b.page);
@@ -322,18 +303,19 @@ check(
   !(await body(b.page)).includes(A_ID),
 );
 
-// ---- A discards; B can claim the route.
-await a.page.getByRole('button', { name: /^Drafts \(\d+\)$/ }).click();
-const own = a.page.getByRole('listitem').filter({ hasText: 'Discard…' });
-await own.first().waitFor();
+// ---- A discards from the sidebar; B can claim the route.
+// A tap on A's own dashed line opens it into Edit route, whose footer has Discard for its maker.
+a.page.on('dialog', (dialog) => void dialog.accept());
+await openRoute(a.page);
+const aPanel = a.page.getByTestId('route-panel');
+await aPanel.getByRole('button', { name: 'Discard', exact: true }).waitFor({ timeout: 10000 });
 check(
-  "A's own Drafts list marks it Draft and does not say another editor is changing it",
-  (await own.first().innerText()).includes('route · Draft') &&
-    !(await own.first().innerText()).includes('Being changed by'),
+  "A's own draft opens in A's sidebar, marked Draft, with Discard and Approve",
+  (await aPanel.getByText('Draft', { exact: true }).first().isVisible()) &&
+    (await aPanel.getByRole('button', { name: 'Approve', exact: true }).isVisible()),
 );
-await own.first().getByRole('button', { name: 'Discard…' }).click();
-await a.page.getByRole('button', { name: 'Discard draft', exact: true }).click();
-await a.page.getByRole('status').filter({ hasText: 'Draft discarded' }).waitFor();
+await aPanel.getByRole('button', { name: 'Discard', exact: true }).click();
+await a.page.getByText('Draft discarded').first().waitFor();
 check('A discards: no draft is left', db.tables.draft.length === 0);
 
 await load(b.page);

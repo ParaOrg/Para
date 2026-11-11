@@ -8,7 +8,7 @@ import { routeStateFromDraft } from './route-draft-state';
 
 /** Said when the editor's own draft has emptied the direction they asked to edit. */
 export const EMPTIED_IN_DRAFT =
-  'Your draft of this route deletes this direction. Review it in Drafts, or discard the draft there to edit the approved line.';
+  'Your draft of this route deletes this direction. Open the route’s other direction to approve or discard the draft.';
 
 /**
  * The drawing Edit route opens: the editor's own draft of the route when they

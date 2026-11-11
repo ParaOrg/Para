@@ -28,8 +28,12 @@ const errors = [];
 page.on('pageerror', (error) => errors.push(error.message));
 await bareStyle(page);
 await page.goto(`${BASE}/studio/`);
-await page.getByRole('button', { name: /^Drafts \(\d+\)$/ }).waitFor();
+// Every draft has a mark on the map; a tap opens it into its sidebar (useOpenDraft).
+const marks = page.getByRole('button', { name: /^Draft: / });
+await marks.first().waitFor();
 const shot = (name) => page.screenshot({ path: `${out}/${name}.png` });
+const toast = (text) => page.getByText(text).first().waitFor();
+page.on('dialog', (dialog) => void dialog.accept());
 // Draw and save through the real form: approved rows must remain unchanged.
 const beforeStops = (await api('stop?select=id')).length;
 await page.getByRole('button', { name: 'New route, terminal or hintuan' }).click();
@@ -57,47 +61,28 @@ assert.ok(
     (draft) => draft.payload.stop?.name === 'Browser-drawn draft place',
   ),
 );
-await shot('01-playground-markers');
-await page.getByRole('button', { name: /^Drafts \(\d+\)$/ }).click();
-await page.getByRole('button', { name: 'Review changes' }).first().waitFor();
-await shot('02-review-list');
-const li = page
-  .getByRole('listitem')
-  .filter({ has: page.getByRole('heading', { name: 'Preview new place', exact: true }) });
-await li.getByRole('button', { name: 'Review changes' }).click();
-await page
-  .getByRole('region', { name: 'What this draft does' })
-  .getByText('Adds this place')
-  .waitFor();
-await shot('03-draft-comparison');
-await page
-  .getByRole('textbox', { name: 'Ground name', exact: true })
-  .fill('Preview approved place');
-await page.getByRole('button', { name: 'Save draft details' }).click();
-await page.waitForFunction(() =>
-  [...document.querySelectorAll('button')].some(
-    (button) => button.textContent.trim() === 'Approve' && !button.disabled,
-  ),
-);
-await page.getByRole('button', { name: 'Approve', exact: true }).click();
-await shot('04-approve');
-await page.getByRole('button', { name: 'Approve', exact: true }).click();
-await page
-  .getByRole('status')
-  .filter({ hasText: 'Published. The Studio map shows it now' })
-  .waitFor();
+await shot('01-playground-marks');
+
+// A new place's draft opens in its sidebar, on the draft; Approve with a field changed saves it
+// and then publishes it, at the revision just saved.
+await page.getByRole('button', { name: 'Draft: Preview new place' }).dispatchEvent('click');
+const hotspotPanel = page.getByTestId('hotspot-panel');
+await hotspotPanel.waitFor();
+assert.equal(await page.getByPlaceholder('SM Fairview Ilalim').inputValue(), 'Preview new place');
+assert.ok(await hotspotPanel.getByText('Draft', { exact: true }).first().isVisible());
+await shot('02-draft-sidebar');
+await page.getByPlaceholder('SM Fairview Ilalim').fill('Preview approved place');
+await hotspotPanel.getByRole('button', { name: 'Approve', exact: true }).click();
+await toast('Published. The Studio map shows it now');
 const subjectId = '10000000-0000-4000-8000-000000000001';
 assert.equal((await api(`stop?id=eq.${subjectId}`))[0].name, 'Preview approved place');
+assert.equal((await api(`draft?subject_id=eq.${subjectId}`)).length, 0, 'the draft is gone');
 let publicIndex = await (await fetch(`${BASE}/data/index.v5.json`)).json();
 assert.equal(
   publicIndex.stops.some((stop) => stop.id === subjectId),
   false,
   'approval does not publish',
 );
-await page.getByRole('button', { name: 'Waiting for publication', exact: true }).click();
-await page.getByRole('heading', { name: 'Waiting for publication', exact: true }).waitFor();
-await shot('08-waiting-for-publication');
-await page.getByRole('button', { name: 'Close', exact: true }).click();
 await page.getByRole('button', { name: 'Publish sample changes' }).click();
 await page
   .getByRole('status')
@@ -111,56 +96,89 @@ assert.equal(
 );
 await page.getByText('Public', { exact: true }).click();
 await page.getByTitle('Published Para public map').waitFor();
-await shot('07-public-view');
+await shot('03-public-view');
 await page.getByText('Playground', { exact: true }).click();
-await page.getByRole('button', { name: /^Drafts \(\d+\)$/ }).click();
-await page.getByRole('button', { name: 'Routes and places', exact: true }).click();
-await page.getByRole('textbox', { name: 'Find a route or place' }).fill('Preview approved place');
-await page.getByRole('button', { name: 'Take down…' }).click();
-await shot('06-take-down');
-await page.getByRole('button', { name: 'Confirm take down' }).click();
-await page.getByRole('button', { name: 'Put back…' }).waitFor();
-assert.equal((await api(`stop?id=eq.${subjectId}`))[0].status, 'taken_down');
-await page.getByRole('button', { name: 'Put back…' }).click();
-await shot('06-put-back');
-await page.getByRole('button', { name: 'Confirm put back' }).click();
-await page.getByRole('button', { name: 'Take down…' }).waitFor();
-assert.equal((await api(`stop?id=eq.${subjectId}`))[0].status, 'approved');
-await page.getByRole('button', { name: 'Drafts', exact: true }).click();
-const drafts = await api('draft?select=*');
-// The seeded route draft whose route another editor changed after it was drafted.
+
+// Take down and put back, from the studio's search (the owner's Q121): the place just published.
+const search = page.getByTestId('studio-search');
+await search.getByRole('combobox', { name: 'Search places' }).fill('Preview approved');
+const statusList = search.getByRole('list', { name: /take down or put back/i });
+await statusList.getByRole('button', { name: 'Take down' }).first().waitFor();
+await shot('04-search-take-down');
+await statusList.getByRole('button', { name: 'Take down' }).first().click();
+await search.getByRole('status').filter({ hasText: 'Updated published data' }).waitFor();
+assert.equal((await api(`stop?id=eq.${subjectId}`))[0].status, 'taken_down', 'taken down');
+await statusList.getByRole('button', { name: 'Put back' }).first().waitFor();
+await shot('05-search-put-back');
+await statusList.getByRole('button', { name: 'Put back' }).first().click();
+await statusList.getByRole('button', { name: 'Take down' }).first().waitFor();
+assert.equal((await api(`stop?id=eq.${subjectId}`))[0].status, 'approved', 'put back');
+await search.getByRole('combobox', { name: 'Search places' }).fill('');
+
+// The seeded route drafts, one built on a revision another editor has since changed. Approve on
+// each, unchanged, publishes it as stored; the stale one is refused with a conflict, Keep my
+// draft moves it onto the approved revision now (refresh_draft_base), and Approve then lands.
 const routes = await api('route?select=id,revision');
-const conflict = drafts.find(
+const stale = (await api('draft?select=*')).find(
   (draft) =>
     draft.kind === 'route' &&
     routes.some((route) => route.id === draft.subject_id && route.revision !== draft.base_revision),
 );
-assert.ok(conflict);
-// Open each remaining route until its conflict panel is found.
-for (let at = 0; at < (await page.getByRole('button', { name: 'Review changes' }).count()); at++) {
-  await page.getByRole('button', { name: 'Review changes' }).nth(at).click();
-  await page.getByRole('button', { name: 'Refresh comparison' }).waitFor();
-  if (await page.getByRole('checkbox', { name: /I compared both/ }).count()) break;
-  await page.getByRole('button', { name: 'Back to drafts' }).click();
+assert.ok(stale, 'the seed has a stale route draft');
+const routePanel = page.getByTestId('route-panel');
+let isConflictSeen = false;
+for (let tries = 0; tries < 3 && !isConflictSeen; tries++) {
+  const routeMarks = page.getByRole('button', { name: /^Draft: (?!Browser-drawn)/ });
+  await routeMarks.first().dispatchEvent('click');
+  await routePanel.waitFor();
+  await routePanel.getByRole('button', { name: 'Approve', exact: true }).waitFor();
+  await routePanel.getByRole('button', { name: 'Approve', exact: true }).click();
+  const outcome = await Promise.race([
+    routePanel.waitFor({ state: 'detached' }).then(() => 'approved'),
+    routePanel
+      .getByRole('alert')
+      .filter({ hasText: 'Another editor published a change since this draft began' })
+      .waitFor()
+      .then(() => 'conflict'),
+  ]);
+  if (outcome === 'conflict') isConflictSeen = true;
 }
-assert.equal(await page.getByRole('button', { name: 'Approve', exact: true }).isDisabled(), true);
-await shot('09-conflict');
-await page.getByRole('checkbox', { name: /I compared both/ }).check();
-await page.getByRole('button', { name: 'Keep draft for a new review' }).click();
-// The conflict panel closes once the kept draft's new revision is on screen;
-// Approve was already there (disabled), so it says nothing about the keep.
-await page.getByRole('region', { name: 'Resolve conflict' }).waitFor({ state: 'detached' });
-await page.getByRole('button', { name: 'Approve', exact: true }).waitFor();
-await page.getByRole('button', { name: 'Discard…' }).click();
-await shot('05-discard');
-await page.getByRole('button', { name: 'Discard draft', exact: true }).click();
-await page.getByRole('status').filter({ hasText: 'Draft discarded' }).waitFor();
-await page.getByRole('button', { name: 'Close', exact: true }).click();
+assert.ok(isConflictSeen, 'the stale draft is refused with a conflict');
+assert.ok(
+  (await api(`draft?id=eq.${stale.id}`)).length === 1,
+  'a refused approval keeps the draft',
+);
+await routePanel.getByRole('alert').scrollIntoViewIfNeeded();
+await shot('06-conflict-keep-my-draft');
+await routePanel.getByRole('button', { name: 'Keep my draft', exact: true }).click();
+await routePanel.getByText('Draft kept on the latest published version').waitFor();
+const live = (await api(`route?id=eq.${stale.subject_id}&select=revision`))[0].revision;
+assert.equal(
+  (await api(`draft?id=eq.${stale.id}`))[0].base_revision,
+  live,
+  'Keep my draft moves the draft onto the approved revision now',
+);
+await routePanel.getByText('Draft kept on the latest published version').scrollIntoViewIfNeeded();
+await shot('07-kept');
+await routePanel.getByRole('button', { name: 'Approve', exact: true }).click();
+await routePanel.waitFor({ state: 'detached' });
+assert.equal((await api(`draft?id=eq.${stale.id}`)).length, 0, 'the kept draft is approved');
+
+// The browser-drawn place's own draft, discarded from its sidebar.
+await page.getByRole('button', { name: 'Draft: Browser-drawn draft place' }).dispatchEvent('click');
+const placePanel = page.getByTestId('hotspot-panel');
+await placePanel.getByRole('button', { name: 'Discard', exact: true }).click();
+await toast('Draft discarded');
+assert.ok(
+  !(await api('draft?select=*')).some((d) => d.payload.stop?.name === 'Browser-drawn draft place'),
+  'Discard drops the draft',
+);
+
+// On a phone the studio still opens with its drafts' marks.
 await page.setViewportSize({ width: 390, height: 844 });
-await page.getByRole('button', { name: /^Drafts \(\d+\)$/ }).click();
-await shot('10-phone-review');
+await shot('08-phone');
 assert.deepEqual(errors, []);
 console.log(
-  'PASS: draft → edit details → approve → wait → publish → Public, take down/put back, conflict, discard, mobile; no page errors',
+  'PASS: draft → open from its mark → Approve → wait → publish → Public; take down and put back from search; stale draft refused, kept, approved; discard; phone; no page errors',
 );
 await browser.close();

@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { expect, fn, userEvent, within } from 'storybook/test';
+import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
 import { Coachmark } from './coachmark';
 
@@ -51,7 +51,7 @@ type Story = StoryObj<typeof meta>;
 export const Above: Story = {
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
-    await expect(canvas.getByRole('button', { name: 'Next' })).toHaveFocus();
+    await waitFor(() => expect(canvas.getByRole('button', { name: 'Next' })).toHaveFocus());
     await userEvent.click(canvas.getByRole('button', { name: 'Skip' }));
     await expect(args.onClose).toHaveBeenCalled();
   },

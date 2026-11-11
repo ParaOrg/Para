@@ -10,7 +10,8 @@
 #      contributor-accounts.sh).
 #   2. `review`: the isolated review preview (scripts/preview/README.md) on its
 #      own Postgres and PostgREST containers, then review-test (the studio in a
-#      browser: draft, publish, take down and put back, conflict, discard) and
+#      browser: a draft opened from its mark, approved in its sidebar,
+#      published; a stale draft refused, then discarded) and
 #      review-publication-test (publish, then the real publisher in a copy of
 #      the repository).
 #

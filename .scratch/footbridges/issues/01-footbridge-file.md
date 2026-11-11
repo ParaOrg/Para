@@ -1,6 +1,6 @@
 # 01: The footbridge file
 
-Status: needs-triage (waits for the owner's answers to questions 1, 3, 7 and 8 in `../README.md`)
+Status: resolved (the owner's answers 1, 3, 7 and 8 as recommended)
 Type: task
 
 ## What to build
@@ -23,3 +23,13 @@ Type: task
 - Unit checks: the "over a road or rail" test on made-up lines (crossing, touching, parallel); access points matched to their footbridge; the file's schema; its size under 500 kB.
 - The first build's counts reported against `../README.md`'s table and the owner's 874 lines and 99 points.
 - `npm run check`; CI green; merged into staging.
+
+## Answer
+
+Built:
+- `scripts/footbridges/` makes the file: `footbridges.mjs` the rules, `footbridge-file.mjs` its shape and checker, `check.mjs`, `compare.mjs`.
+- `scripts/landmarks/build.sh` builds it from the same download.
+- `landmarks.yml` compares, carries and commits both files in one pull request.
+- The offline worker keeps it (`footbridges`).
+
+The first file: 413 footbridges, 60 named, 33 with an elevator; 66 kB, 17.6 kB gzipped. Unit checks: `tests/unit/footbridges-test.mjs` and `tests/unit/footbridge-file-test.mjs`.

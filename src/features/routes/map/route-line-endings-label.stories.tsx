@@ -141,7 +141,9 @@ export const Default: Story = {
   play: async ({ canvasElement }) => {
     const pill = pillOf(canvasElement);
     await expect(signOf(pill)).toBe('none');
-    await expect(getComputedStyle(pill).backgroundColor).toBe(wornBy('bg-card-uv-express-surface'));
+    await expect(getComputedStyle(pill).backgroundColor).toBe(
+      wornBy('bg-card-uv-express-surface-border'),
+    );
     await expect(knobbFill(pill)).toBe(getComputedStyle(pill).backgroundColor);
   },
 };
