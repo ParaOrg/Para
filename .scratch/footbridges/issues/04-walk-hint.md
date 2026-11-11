@@ -1,6 +1,6 @@
 # 04: A footbridge hint on the walk (design 1)
 
-Status: needs-triage (after 01; the owner's answer to question 5)
+Status: folded into Go here's honest walking (`.scratch/go-here/issues/05-honest-walking.md`, the owner's Q116), where it is built
 Type: task
 Blocked by: 01
 

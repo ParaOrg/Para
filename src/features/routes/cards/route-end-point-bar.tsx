@@ -6,7 +6,7 @@ import { ROW_PRESSED } from './livery-card';
 import { RouteEndPointLines, type RouteEndPointPosition } from './route-end-point-lines';
 import type { Livery } from '../model/liveries';
 
-type RouteEndPointBarSize = 'base' | 'medium' | 'xl';
+type RouteEndPointBarSize = 'base' | 'medium';
 
 type RouteEndPointBarProps = Omit<
   ComponentPropsWithoutRef<'button'>,
@@ -22,37 +22,35 @@ type RouteEndPointBarProps = Omit<
   on: Livery | 'surface';
   /** Where the row sits among its rows, which decides how its tree line ends. */
   position: RouteEndPointPosition;
-  /** Figma's ❄️ Slot, after the name: a station's badge on a RouteCardRailway. Empty on every other row. */
+  /** Figma's ❄️ Slot, after the name: a station's code on a train RouteCard's rows. Empty on every other row. */
   slot?: ReactNode;
   /**
    * The row's words: base, SemiBold 17/24, 40 tall (a trip's Other routes); medium, Medium 17/24,
-   * 36 tall, its tree line at full strength (RouteCard, 4629:22776); xl, SemiBold 20/28
-   * (RouteCardRailway, 4633:25360).
+   * 32 tall, its tree line at full strength (RouteCard, 4629:22776).
    */
   size?: RouteEndPointBarSize;
 };
 
-const BAR = 'flex w-full items-center px-4 text-left';
+const BAR = 'flex w-full items-center text-left';
 const SIZE_CLASSES = {
   base: 'text-base/6 font-semibold',
   medium: 'text-base/6 font-medium',
-  xl: 'text-xl/7 font-semibold',
 } satisfies Record<RouteEndPointBarSize, string>;
 const WORDS_PADDING = {
   base: 'py-2',
-  medium: 'py-1.5',
-  xl: 'py-2',
+  medium: 'py-1',
 } satisfies Record<RouteEndPointBarSize, string>;
 // Pressed, Background/surface-tertiary, as Figma's RouteTripDetail Pressed draws it. The hover is
 // tertiary too.
 const ON_SURFACE =
-  'gap-2 rounded-full text-content-primary transition-colors duration-quick ease-move hover:bg-surface-tertiary active:bg-surface-tertiary';
-const ON_CARD = 'gap-1';
+  'gap-2 rounded-full px-4 text-content-primary transition-colors duration-quick ease-move hover:bg-surface-tertiary active:bg-surface-tertiary';
+// RouteCard's 12 in from its edges, and 8 between the tree line and the words.
+const ON_CARD = 'gap-2 px-3';
 
 /**
  * Figma's .RouteEndPointBar (3848:11928): a route by where it goes, the tree line before it, a
  * button that opens it. One component where Figma has one, so a change to the row is made once: a
- * RouteCard's rows, a RouteCardRailway's and a trip's "Other routes".
+ * RouteCard's rows, a train's and a road mode's alike, and a trip's "Other routes".
  */
 export function RouteEndPointBar({
   routeDirection,
