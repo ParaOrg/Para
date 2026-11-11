@@ -80,9 +80,13 @@ begin
   end loop;
 end $$;
 
--- 3. The ledger row, under the file's name.
+-- 3. The ledger row, under the file's name. The version is now, or one past the newest row's
+--    where another migration was recorded in this same second.
 insert into supabase_migrations.schema_migrations (version, name, statements)
-select to_char(now() at time zone 'utc', 'YYYYMMDDHH24MISS'), 'route_end_indexes', '{}'
+select greatest(to_char(now() at time zone 'utc', 'YYYYMMDDHH24MISS'),
+                (select (max(version)::bigint + 1)::text from supabase_migrations.schema_migrations
+                 where version ~ '^[0-9]{14}$')),
+       'route_end_indexes', '{}'
 where not exists (select 1 from supabase_migrations.schema_migrations where name = 'route_end_indexes');
 
 commit;
