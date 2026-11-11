@@ -734,3 +734,34 @@ proves the old path still works.
 
 - Apply failed: nothing changed. The message names what it found.
 - Applied too early, or it must be withdrawn: run `20261110190000_retire_review_steps_revert.sql`.
+
+# Applying route_end_indexes to the live project
+
+**Not applied live.** It can be applied at any time: it adds two indexes and changes no row, no function and
+no grant.
+
+`route.head_stop_id` and `route.tail_stop_id` are foreign keys to `stop` with no index. Postgres looks a
+stop up in both whenever a stop row is deleted, and the rule that refuses to take down a hotspot which ends
+an approved route looks routes up by their ends. The two indexes keep those lookups short as the map grows.
+The indexes on the `*_by` columns, which the database advisor lists as unused, stay: they cover the foreign
+keys to `auth.users`, used when a user is deleted.
+
+| File | What it does |
+| --- | --- |
+| `20261112090000_route_end_indexes_apply.sql` | One transaction. Checks this is not in the ledger and `route` has both columns. Applies `migrations/20261112090000_route_end_indexes.sql` (carried unchanged; `verify/route-end-indexes.sh` checks the copy). Checks both indexes are there and usable, and writes the ledger row. A second run stops and changes nothing. |
+| `20261112090000_route_end_indexes_check.sql` | Read-only: 3 rows, all `ok` should be `t`. |
+| `20261112090000_route_end_indexes_revert.sql` | One transaction: drops the two indexes and removes the ledger row. Touches no data. Safe to run twice. |
+
+## Steps
+
+1. Run `20261112090000_route_end_indexes_apply.sql`. It ends with `COMMIT`; an error means nothing changed.
+2. Run `20261112090000_route_end_indexes_check.sql`: 3 rows, all `ok = t`.
+3. Record the ledger version
+   (`select version from supabase_migrations.schema_migrations where name = 'route_end_indexes';`)
+   in `migrations/README.md`, add `20261112090000_route_end_indexes` to `APPLIED` in
+   `verify/schema-snapshot.sh` and rewrite the snapshot (`--write`). No types change.
+
+## Recovery
+
+- Apply failed: nothing changed. The message names what it found.
+- It must be withdrawn: run `20261112090000_route_end_indexes_revert.sql`.

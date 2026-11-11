@@ -381,3 +381,14 @@ of a draft; save_draft still saves and names its saver; publish_draft still publ
 nothing and leave no row behind, and its 4 read-only rows must be `t`. `draft-published-race.sh` runs
 again over it. On a second database, without draft_published, the apply refuses and writes no ledger
 row. On a third, apply then revert twice leaves the schema as before, and re-applying passes the check.
+
+## route-end-indexes.sh
+
+`migrations/20261112090000_route_end_indexes.sql` on databases of its own, run by `run.sh` or alone:
+
+    PSQL="docker exec -i pg-verify psql -U postgres" bash supabase/verify/route-end-indexes.sh
+
+It applies every numbered migration, then `../apply/20261112090000_route_end_indexes_apply.sql` twice (the
+second run must stop and change nothing), and runs `…_check.sql`: 3 read-only rows, all `t`. With table
+scans turned off, a lookup of a route by either end must be planned through its new index. On a second
+database, apply then revert twice leaves the schema as before, and re-applying passes the check.
