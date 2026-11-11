@@ -84,7 +84,7 @@
   "src/features/routes/model/routes.ts": 270,
   "src/features/routes/model/signboard-svg.ts": 204,
   "src/features/routes/model/timeline.ts": 253,
-  "src/features/routes/published/fetch-index.ts": 225,
+  "src/features/routes/published/fetch-index.ts": 208,
   "src/features/routes/search/use-place-search.ts": 162,
   "src/features/studio/auth/change-password.tsx": 175,
   "src/features/studio/auth/sign-in-card.tsx": 161,
