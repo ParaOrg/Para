@@ -3,7 +3,6 @@ import type { CardFill } from '@/design-system/primitives/button-look';
 import blobInverse from './route-card-blob-inverse.svg';
 import blobPrimary from './route-card-blob-primary.svg';
 import type { Livery } from '../model/liveries';
-import type { RailwayVehicle } from '../model/vehicles';
 
 /**
  * How a livery paints a card, for the list's cards and a trip's card alike
@@ -26,7 +25,7 @@ import type { RailwayVehicle } from '../model/vehicles';
  * LRT-2 write in Content/inverse; MRT-3, on its yellow, in Content/primary —
  * dark words, but under the Primary shadow and Blob its frame draws, not the
  * Inverse ones. The ferry wears Map/Ferry as a train its line's, its words in
- * Content/inverse (RouteCardRailway, 4261:15199).
+ * Content/inverse (RouteCard, 4629:22776).
  */
 
 export const CARD_SURFACE = {
@@ -70,22 +69,6 @@ export const CARD_TEXT = {
   'light-rail-way-two': 'text-content-inverse',
   'metro-rail-way-three': 'text-content-primary',
   ferry: 'text-content-inverse',
-} satisfies Record<Livery, string>;
-
-/**
- * The mode's chip at a RouteCard's top (RouteCard, 4629:22776): the card's words' colour as its
- * fill and the card's own colour for its word, so it reads as the card turned inside out. A train
- * or ferry card wears its line's colours the same way, as its own chip does (RAILWAY_PILL).
- */
-export const MODE_CHIP = {
-  jeep: 'bg-card-jeep-on-surface text-card-jeep-surface',
-  'uv-express': 'bg-card-uv-express-on-surface text-card-uv-express-surface',
-  ejeep: 'bg-card-ejeep-on-surface text-card-ejeep-surface',
-  bus: 'bg-card-bus-on-surface text-card-bus-surface',
-  'light-rail-way-one': 'bg-content-inverse text-map-rail-light-rail-way-one-surface',
-  'light-rail-way-two': 'bg-content-inverse text-map-rail-light-rail-way-two-surface',
-  'metro-rail-way-three': 'bg-content-primary text-map-rail-metro-rail-way-three-surface',
-  ferry: 'bg-content-inverse text-map-ferry-surface',
 } satisfies Record<Livery, string>;
 
 // Drawn over the card, as Figma lays it: above the Blob and the words.
@@ -212,14 +195,3 @@ export const BUTTON_FILL = {
   'metro-rail-way-three': 'map-rail-metro-rail-way-three',
   ferry: 'map-ferry',
 } as const satisfies Record<Livery, CardFill>;
-
-/**
- * A railway card's chips and pill, and its station badges: the line's surface on white, and on
- * MRT-3's yellow its yellow on Content/primary (RouteCardRailway, 4261:15199).
- */
-export const RAILWAY_PILL = {
-  'LRT-1': 'bg-content-inverse text-map-rail-light-rail-way-one-surface',
-  'LRT-2': 'bg-content-inverse text-map-rail-light-rail-way-two-surface',
-  'MRT-3': 'bg-content-primary text-map-rail-metro-rail-way-three-surface',
-  Ferry: 'bg-content-inverse text-map-ferry-surface',
-} satisfies Record<RailwayVehicle, string>;
