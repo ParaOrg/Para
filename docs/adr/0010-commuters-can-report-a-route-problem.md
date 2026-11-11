@@ -21,7 +21,8 @@ words, when it came, and what an editor did with it (open, done or dismissed; wh
 `wrong_line`, `wrong_fare`, `wrong_stop`, `wrong_signboard`, `no_longer_runs` or `other` (Q150). The words are
 optional, up to 500 characters, and required for `other`. Nothing else, by the owner's rule:
 
-- **No IP address**, not even hashed: not in the table, not in the Worker's logs.
+- **No IP address**, not even hashed: not in the table, not in the Worker's logs. The client IP is passed only
+  to the rate-limit binding, in memory; it is never stored or logged (Q196).
 - **No location**, no device id, no account, no cookie. The table has no column that could hold one, and the
   check proves the columns are exactly these.
 
@@ -31,14 +32,20 @@ optional, up to 500 characters, and required for `other`. Nothing else, by the o
   `scripts/checks/check-build.mjs` still proves no `.supabase.co` reaches it.
 - Shows Cloudflare Turnstile before a report goes, as the contributor page does.
 
-**The Worker:**
+**The Worker** is the site's own, `para` (Q194). `run_worker_first: ["/api/*"]` sends only `/api/*` through its
+script, `workers/site/src/index.ts`; every other address is served from `dist/` as before. It:
 
-- Verifies the Turnstile token itself, with Cloudflare's siteverify, before anything else.
-- Rate-limits itself with the Workers Rate Limiting binding, not only with a zone WAF rule. The binding's key
-  is not stored anywhere.
+- Verifies the Turnstile token itself, with Cloudflare's siteverify. It sends the secret and the token only,
+  never the sender's address.
+- Rate-limits itself with the Workers Rate Limiting binding (`REPORT_LIMIT`, 5 a minute per sender), not only
+  with a zone WAF rule. The client IP is passed only to the rate-limit binding, in memory; it is never stored or
+  logged (Q196).
 - Never logs a request body, a header that names the sender, or the address it came from.
-- Holds the connection string as a Worker secret the owner sets. Its name and where to set it come with the
-  Worker's own change. The string is for the role `report_sender` through Supabase's transaction pooler.
+- Holds the connection string as the Worker secret `REPORT_DATABASE_URL`, and Turnstile's secret as
+  `TURNSTILE_SECRET_KEY`. The owner sets both: Workers & Pages → para → Settings → Variables and Secrets. The
+  string is for the role `report_sender` through Supabase's transaction pooler (`workers/site/README.md`).
+- Connects with the `postgres` driver (porsager, Q195), in the Worker's bundle only, under `nodejs_compat`. The
+  public page never carries it.
 - Accepts a POST of JSON only, checked with the same Zod schema the page uses (one shared module).
 - Maps the function's one-word answer (sent, bad_kind, bad_note, unknown_route, busy, route_full, full) to an HTTP status
   and a short message. It never passes a database error through.
