@@ -1,0 +1,40 @@
+{
+  "about": "Stories whose play failed when this check came in (2026-11-10): play functions had never run in CI. The list may only shrink: a story not here that fails, fails CI; a story here that passes, or no longer exists, fails CI until its line is deleted. Grouped by the area whose session fixes it; each line says why it failed.",
+  "areas": {
+    "contributor": {},
+    "shared": {},
+    "routes": {
+      "features-routes-basemapcontrol--close-button-closes": "Unable to find an accessible element with the role \"dialog\" and name \"Map Style\"",
+      "features-routes-basemapcontrol--escape-closes": "Unable to find an accessible element with the role \"dialog\" and name \"Map Style\"",
+      "features-routes-basemapcontrol--fiord-chosen": "Unable to find an accessible element with the role \"dialog\" and name \"Map Style\"",
+      "features-routes-basemapcontrol--leaves-then-goes": "Unable to find an accessible element with the role \"dialog\" and name \"Map Style\"",
+      "features-routes-basemapcontrol--open": "Unable to find an accessible element with the role \"dialog\" and name \"Map Style\"",
+      "features-routes-basemapcontrol--open-under-attribution": "Unable to find an accessible element with the role \"dialog\" and name \"Map Style\"",
+      "features-routes-basemapcontrol--reopen-while-leaving": "Unable to find an accessible element with the role \"dialog\" and name \"Map Style\"",
+      "features-routes-basemapcontrol--same-design-again": "Unable to find an accessible element with the role \"dialog\" and name \"Map Style\"",
+      "features-routes-basemapcontrol--still-under-reduced-motion": "Unable to find an accessible element with the role \"dialog\" and name \"Map Style\"",
+      "features-routes-basemapcontrol--tab-stays-inside": "Unable to find an accessible element with the role \"dialog\" and name \"Map Style\"",
+      "features-routes-basemapcontrol--tap-outside-closes": "Unable to find an accessible element with the role \"dialog\" and name \"Map Style\"",
+      "features-routes-hotspotpins--at-the-threshold": "expected +0 to be 2 // Object.is equality",
+      "features-routes-hotspotpins--mid-dot": "expected +0 to be 2 // Object.is equality",
+      "features-routes-hotspotpins--pins-come-in": "expected +0 to be 2 // Object.is equality",
+      "features-routes-hotspotpins--small-dot": "expected +0 to be 2 // Object.is equality",
+      "features-routes-hotspotpins--zoomed-in": "expected +0 to be 2 // Object.is equality",
+      "features-routes-hotspotpins--zoomed-out": "expected +0 to be 2 // Object.is equality",
+      "features-routes-routelineendingslabel--default": "expected 'oklch(0.708 0 none)' to be 'oklch(0.87 0 none)' // Object.is equality",
+      "features-routes-routelinelabel--default": "expected 'oklch(0.708 0 none)' to be 'oklch(0.87 0 none)' // Object.is equality",
+      "features-routes-routelinelabel--unselected": "expected 'oklch(0.708 0 none)' to be 'oklch(0.87 0 none)' // Object.is equality"
+    },
+    "studio": {
+      "features-studio-changepassword--new-passwords-differ": "Unable to find an element with the text: The two new passwords do not match.. This could be because the text is broken up by multiple elements. In this case, yo",
+      "features-studio-changepassword--rule-broken": "Unable to find an element with the text: Use at least 8 characters, with letters and numbers. This could be because the text is broken up by multiple elements. ",
+      "features-studio-changepassword--same-as-current": "Unable to find an element with the text: The new password is the same as the current one.. This could be because the text is broken up by multiple elements. In ",
+      "features-studio-connecthint--near-the-first-point": "Unable to find an element by: [data-testid=\"connect-hint\"]",
+      "features-studio-drawtoolbar--keys": "expected \"redo\" to be called once, but got 0 times",
+      "features-studio-newmenu--open": "expect(element).toHaveFocus()",
+      "features-studio-newplaceform--head": "expect(element).toHaveFocus()",
+      "features-studio-noteditor--default": "Unable to find an accessible element with the role \"heading\" and name \"This account isn't an editor\"",
+      "features-studio-phoneblock--asking": "Unable to find a label with the text of: Why block it? (optional)"
+    }
+  }
+}

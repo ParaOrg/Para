@@ -1,0 +1,58 @@
+# The back-merge (docs/agents/release-rhythm.md, the owner's Q32): after every push to `main` (a
+# publish or a release), opens one pull request taking `main` into `staging`, or updates the open
+# one, and starts its checks. The owner merges it by hand once they pass. "Run workflow" does the
+# same on demand.
+#
+# A pull request opened with GITHUB_TOKEN starts no workflow, so CI and the contributor app's
+# workflow are started on the branch here (workflow_dispatch, which GITHUB_TOKEN may start).
+name: Back-merge
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: back-merge
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  back-merge:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      pull-requests: write
+      actions: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      BRANCH: back-merge/main-into-staging
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Is staging behind main?
+        id: behind
+        run: |
+          git fetch --quiet origin staging
+          count=$(git rev-list --count origin/staging..origin/main)
+          echo "count=$count" >> "$GITHUB_OUTPUT"
+          echo "main has $count commits staging does not."
+
+      - name: Open or update the back-merge pull request, and start its checks
+        if: steps.behind.outputs.count != '0'
+        run: |
+          git push --force origin "origin/main:refs/heads/$BRANCH"
+          if [ -z "$(gh pr list --head "$BRANCH" --base staging --state open --json number --jq '.[].number')" ]; then
+            gh pr create --head "$BRANCH" --base staging \
+              --title "Back-merge: main into staging" \
+              --body "main has ${{ steps.behind.outputs.count }} commits staging does not: the nightly publish, or a release. Merge once its checks pass (docs/agents/release-rhythm.md)."
+          fi
+          gh workflow run ci.yml --ref "$BRANCH"
+          gh workflow run contributor-app.yml --ref "$BRANCH"
