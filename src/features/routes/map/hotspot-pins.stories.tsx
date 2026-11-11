@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { Map as MapLibreMap } from 'maplibre-gl';
+import { Map as MapLibreMap, setWorkerUrl } from 'maplibre-gl';
+import maplibreWorkerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
 import { useEffect, useRef } from 'react';
 import { expect, waitFor } from 'storybook/test';
 
@@ -53,6 +54,9 @@ interface HotspotPinsOnAMapProps {
   /** The map's zoom: from PINS_FROM_ZOOM a pin, below it a dot. */
   zoom: number;
 }
+
+// The map's worker, as map-view sets it: without it MapLibre 6 parses no GeoJSON, and draws nothing.
+setWorkerUrl(maplibreWorkerUrl);
 
 /**
  * The boxes, their dots and their pins, as the map draws them, on an empty
