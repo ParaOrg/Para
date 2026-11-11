@@ -21,14 +21,27 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** A new jeepney route: the lines are left out of the choices. Picking one hands it back. */
+/** A new jeepney route: the lines and P2P are left out of the choices. Picking one hands it back. */
 export const Jeepney: Story = {
   play: async ({ args, canvasElement }) => {
     const mode = within(canvasElement).getByRole('combobox', { name: 'Transportation mode' });
     await expect(mode).toBeEnabled();
     await expect(within(mode).queryByRole('option', { name: 'Ferry' })).toBeNull();
+    await expect(within(mode).queryByRole('option', { name: 'P2P bus' })).toBeNull();
     await userEvent.selectOptions(mode, 'UV Express');
     await expect(args.onChange).toHaveBeenCalledWith('uv_express');
+  },
+};
+
+/** A route saved as P2P before it was retired: its mode shows, and Bus is there to switch to. */
+export const SavedAsP2P: Story = {
+  args: { mode: 'p2p' },
+  play: async ({ args, canvasElement }) => {
+    const mode = within(canvasElement).getByRole('combobox', { name: 'Transportation mode' });
+    await expect(mode).toHaveValue('p2p');
+    await expect(mode).toBeEnabled();
+    await userEvent.selectOptions(mode, 'Bus');
+    await expect(args.onChange).toHaveBeenCalledWith('bus');
   },
 };
 
