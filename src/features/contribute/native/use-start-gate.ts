@@ -71,8 +71,7 @@ export function useStartGate(onStart: () => void): StartGate {
         console.warn('Android would not ask to let Para run in the background.', error);
       });
     }
-    // Shown whether or not battery restrictions are off: the maker's Autostart is a switch of its
-    // own, which Android cannot report, and it alone stops a ride when the app is left.
+    // Even with battery restrictions off: the maker's Autostart, which Android cannot report.
     const brand = brandOf(info.manufacturer);
     if (brand && !hasSeenKeepRecording()) {
       setStep({ kind: 'keep-recording', brand });
