@@ -1,6 +1,4 @@
 import type { RouteTripLineDetailPillContent } from './route-trip-line-detail-pill';
-import type { RailReach } from './timeline-rail';
-import type { TimelineStickConnection, TimelineStickVariant } from './timeline-stick';
 
 /** Where a ride starts (Start's S) or ends (End's E), before a row's name. */
 export type RideMarkKind = 'start' | 'end';
@@ -80,18 +78,4 @@ export function endRowPill(
   pickedPesos: string | undefined,
 ): RouteTripLineDetailPillContent | null {
   return start !== null && pickedPesos ? { code: pickedCode, pesos: pickedPesos } : null;
-}
-
-/**
- * A hintuan row's piece of the rail, from whether the rail runs on above its
- * dot and below it: a row the rail neither reaches nor leaves is its dot alone.
- */
-export function railPiece({ hasAbove, hasBelow }: RailReach): {
-  connection: TimelineStickConnection;
-  piece: TimelineStickVariant;
-} {
-  if (hasAbove && hasBelow) return { connection: 'connected', piece: 'middle' };
-  if (hasBelow) return { connection: 'connected', piece: 'middleTop' };
-  if (hasAbove) return { connection: 'connected', piece: 'middleBottom' };
-  return { connection: 'disconnected', piece: 'middle' };
 }

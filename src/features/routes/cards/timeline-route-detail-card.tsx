@@ -20,9 +20,8 @@ type Props = Omit<TimelineRouteDetailProps, 'pickedPesos'> & {
   /** …and for the ride between the picks, which the tile shows once an end is picked. */
   pickedFare?: Fare;
   /**
-   * Whether the tile shows the Discounted fare, and where a tap says so: the
-   * app keeps one for every trip (useFareKind). Without them, the card keeps
-   * its own, opening on Regular, as a story does.
+   * Whether the tile shows the Discounted fare, and where a tap says so: the app keeps one for every
+   * trip (useFareKind). Without them, the card keeps its own, opening on Regular, as a story does.
    */
   discounted?: boolean;
   onDiscounted?: (discounted: boolean) => void;
@@ -43,10 +42,7 @@ type Props = Omit<TimelineRouteDetailProps, 'pickedPesos'> & {
   dockRef?: Ref<HTMLDivElement>;
   /** Its height, shared with the list or card it was opened from (BottomSheet). */
   height?: SheetHeight;
-  /**
-   * "Other routes" under the stops: the other routes out of where
-   * this trip starts, each by where it goes. Empty or omitted, none is shown.
-   */
+  /** "Other routes" under the stops, out of where this trip starts. Empty or omitted, none. */
   otherRoutes?: readonly OtherRoute[];
   /** A row tapped: that route's trip in this one's place. */
   onOtherRoute?: (id: string) => void;
@@ -100,7 +96,8 @@ export function TimelineRouteDetailCard({
   onEnd,
   endPicked,
   routeDirection,
-  isTrain,
+  originCode,
+  destinationCode,
   isLoop,
   header,
   discounted: kept,
@@ -189,7 +186,8 @@ export function TimelineRouteDetailCard({
           onEnd={onEnd}
           endPicked={endPicked}
           routeDirection={routeDirection}
-          isTrain={isTrain}
+          originCode={originCode}
+          destinationCode={destinationCode}
           isLoop={isLoop}
           header={header}
         />

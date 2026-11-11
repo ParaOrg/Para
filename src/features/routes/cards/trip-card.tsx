@@ -10,7 +10,7 @@ import { useFareKind } from './use-fare-kind';
 import { otherDirection, otherRoutesFrom, switchWord } from '../model/departures';
 import { manilaDate, rideFare } from '../model/fares';
 import { liveryOf, type Livery } from '../model/liveries';
-import { railBound } from '../model/rail-codes';
+import { railBound, stationCode } from '../model/rail-codes';
 import { railFares } from '../model/rail-fares';
 import {
   directionEnds,
@@ -56,9 +56,8 @@ export function useTripLivery(
  * The chosen direction as Figma's trip card (TimelineRouteDetailCard), from what the map file
  * knows: its ends as the list names them, the whole ride's length and pesos, the hintuans on the
  * way, and its colour — the one its RouteCard wore, when it was picked from one, in the list or in
- * a hotspot's card; its own route's, when not. SWITCH turns it round, what it was
- * picked from staying behind it, and the card keeps the colour it opened in: turned round, it is
- * still the same card.
+ * a hotspot's card; its own route's, when not. SWITCH turns it round, what it was picked from
+ * staying behind it, and the card keeps the colour it opened in.
  *
  * A picked hintuan's pill prices the ride from the start to there, the same pesos the fare tile
  * then shows. The studio shows what an editor needs at the foot (`extras`): the same card, with
@@ -176,7 +175,8 @@ export function TripCard({
       dockRef={dockRef}
       height={height}
       routeDirection={to}
-      isTrain={line !== null}
+      originCode={line && stationCode(line, from)}
+      destinationCode={line && stationCode(line, to)}
       isLoop={loop}
       label={loop ? `${direction.name ?? from} (${LOOP_WORD})` : undefined}
       header={

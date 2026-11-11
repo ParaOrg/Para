@@ -26,9 +26,9 @@ function Stops({ livery, places }: { livery: Livery; places: readonly string[] }
         rail={rail}
         pressed={pressed}
         routeOrigin={origin}
-        mark={null}
+        mark="start"
         pill={null}
-        connection="connected"
+        state="rest"
         selected={false}
         onTap={fn()}
       />
@@ -39,15 +39,13 @@ function Stops({ livery, places }: { livery: Livery; places: readonly string[] }
           rail={rail}
           pressed={pressed}
           label={label}
-          isShown
-          isDrawn
           selected={false}
           pill={null}
           livery={livery}
-          connection="connected"
-          piece="middle"
+          state="rest"
           mark={null}
           action={null}
+          isFolded={false}
           onPick={fn()}
         />
       ))}
@@ -58,7 +56,8 @@ function Stops({ livery, places }: { livery: Livery; places: readonly string[] }
         routeDirection={destination}
         isEnd
         pill={null}
-        connection="connected"
+        state="rest"
+        isFolded={false}
         selected={false}
         onTap={fn()}
       />

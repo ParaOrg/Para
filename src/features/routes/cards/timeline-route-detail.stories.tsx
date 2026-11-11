@@ -128,32 +128,32 @@ export const HintuanPickedJeep: Story = {
 };
 
 /** LRT-1: the rail in Map/Rail/LightRailWayOne/Timeline/surface, Content/inverse words (4074:7402); a train's fold reads "N more stations". */
-export const LightRailWayOne: Story = { args: { livery: 'light-rail-way-one', isTrain: true } };
+export const LightRailWayOne: Story = { args: { livery: 'light-rail-way-one' } };
 
 /** Picked, LRT-1: the pill white, the station's code and pesos in the line's Timeline/surface, as Figma's frame draws it. */
 export const HintuanPickedLightRailWayOne: Story = {
-  args: { livery: 'light-rail-way-one', picked: 'h3', pickedCode: 'GL04', isTrain: true },
+  args: { livery: 'light-rail-way-one', picked: 'h3', pickedCode: 'GL04' },
   play: openFold,
 };
 
 /** LRT-2: the rail in Map/Rail/LightRailWayTwo/Timeline/surface, Content/inverse words (4080:4124). */
-export const LightRailWayTwo: Story = { args: { livery: 'light-rail-way-two', isTrain: true } };
+export const LightRailWayTwo: Story = { args: { livery: 'light-rail-way-two' } };
 
 /** Picked, LRT-2: the pill white, the station's code and pesos in the line's Timeline/surface, as Figma's frame draws it. */
 export const HintuanPickedLightRailWayTwo: Story = {
-  args: { livery: 'light-rail-way-two', picked: 'h3', pickedCode: 'PL04', isTrain: true },
+  args: { livery: 'light-rail-way-two', picked: 'h3', pickedCode: 'PL04' },
   play: openFold,
 };
 
 /** MRT-3: the rail in Map/Rail/MetroRailWayThree/Timeline/surface, Content/primary, dark, words (4080:4241). */
-export const MetroRailWayThree: Story = { args: { livery: 'metro-rail-way-three', isTrain: true } };
+export const MetroRailWayThree: Story = { args: { livery: 'metro-rail-way-three' } };
 
 /** Ferry: the rail in Map/Ferry/Timeline/surface. Figma draws no ferry trip yet; the card's own colours carry over. */
 export const Ferry: Story = { args: { livery: 'ferry' } };
 
 /** Picked, MRT-3: the pill white, the station's code and pesos in the line's Timeline/surface, as Figma's frame draws it. */
 export const HintuanPickedMetroRailWayThree: Story = {
-  args: { livery: 'metro-rail-way-three', picked: 'h3', pickedCode: 'YL06', isTrain: true },
+  args: { livery: 'metro-rail-way-three', picked: 'h3', pickedCode: 'YL06' },
   play: openFold,
 };
 
@@ -230,7 +230,6 @@ const onMrt3 = {
   routeOrigin: 'North Avenue',
   hintuans: mrt3,
   routeDirection: 'Taft Avenue',
-  isTrain: true,
   onSetStart: fn(),
   onRemoveStart: fn(),
 } as const;
@@ -392,7 +391,6 @@ const onLrt2 = {
   routeOrigin: 'Antipolo',
   hintuans: lrt2,
   routeDirection: 'Recto',
-  isTrain: true,
   pickedCode: 'YL60',
   pickedPesos: '₱13-24',
   onSetStart: fn(),

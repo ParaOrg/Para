@@ -1,7 +1,6 @@
 // What a trip card's rows wear for the picks (src/features/routes/cards/timeline-row-role.ts):
 // a hintuan row's S or E, its pill and the button under it (rowRole), the
-// origin's mark (originMark), an end row's pill (endRowPill) and a row's
-// piece of the rail (railPiece). The card's markup is
+// origin's mark (originMark) and an end row's pill (endRowPill). The card's markup is
 // timeline-route-detail-test's; these are the rules it draws from.
 //
 //   node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs tests/unit/timeline-row-role-test.mjs
@@ -11,7 +10,6 @@ import assert from 'node:assert/strict';
 import {
   endRowPill,
   originMark,
-  railPiece,
   rowRole,
 } from '../../src/features/routes/cards/timeline-row-role.ts';
 
@@ -81,23 +79,4 @@ test('an end row’s pill: code and pesos with a start and a fare, else none', (
   assert.equal(endRowPill(null, 'YL06', '₱20'), null);
   assert.equal(endRowPill('h2', 'YL06', undefined), null);
   assert.equal(endRowPill('h2', 'YL06', ''), null);
-});
-
-test('a row’s piece of the rail, from where the rail reaches it', () => {
-  assert.deepEqual(railPiece({ hasAbove: true, hasBelow: true }), {
-    connection: 'connected',
-    piece: 'middle',
-  });
-  assert.deepEqual(railPiece({ hasAbove: false, hasBelow: true }), {
-    connection: 'connected',
-    piece: 'middleTop',
-  });
-  assert.deepEqual(railPiece({ hasAbove: true, hasBelow: false }), {
-    connection: 'connected',
-    piece: 'middleBottom',
-  });
-  assert.deepEqual(railPiece({ hasAbove: false, hasBelow: false }), {
-    connection: 'disconnected',
-    piece: 'middle',
-  });
 });

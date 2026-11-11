@@ -25,8 +25,8 @@ interface RouteStopsCardProps {
   /** The stops, the timeline's rows: an `<ol>` of them. */
   children: ReactNode;
   /**
-   * Figma's Variants=Maximize: every stop shown, "View less" at the card's foot. Folded, "View
-   * more". Without `onToggleStops`, nothing folds and there is no button.
+   * Figma's Behavior=Expand: every stop shown, "View less" on the card's foot. Folded (Shrink), the
+   * card cut at 120, "View more". Without `onToggleStops`, nothing folds and there is no button.
    */
   isMaximized?: boolean;
   onToggleStops?: () => void;
@@ -55,6 +55,8 @@ export function RouteStopsCard({
           CARD_SURFACE[livery],
           CARD_TEXT[livery],
           STOPS_CARD_SHADOW[livery],
+          // Folded (Behavior=Shrink, 4681:29137): cut at 120, the first stop and the top of the next.
+          onToggleStops && !isMaximized && 'max-h-30',
         )}
       >
         {header}
