@@ -14,6 +14,8 @@ interface RouteListControllerProps {
   owner: ControllerOwner;
   /** PAPUNTA's word: the way showing (wayWord), or a train's bound. Null: none, as loops have no way back. */
   way: string | null;
+  /** Where a tap leads (switchWord), PAPUNTA's spoken hint. */
+  wayTo: string | null;
   /** False when the other way round has nothing drawn; PAPUNTA then rests disabled. */
   isSwitchable: boolean;
   /** Whether the way back is showing, for the suites (`data-back`). */
@@ -42,6 +44,7 @@ interface RouteListControllerProps {
 export function RouteListController({
   owner,
   way,
+  wayTo,
   isSwitchable,
   isBack,
   onSwitch,
@@ -65,9 +68,10 @@ export function RouteListController({
       )}
     >
       <div className="flex justify-center">
-        {way !== null && (
+        {way !== null && wayTo !== null && (
           <WayButton
             way={way}
+            wayTo={wayTo}
             data-testid={WAY_TEST_ID[owner]}
             data-back={isBack}
             disabled={!isSwitchable}

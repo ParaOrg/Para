@@ -10,6 +10,7 @@ import {
   listedDepartures,
   otherWayHasRoutes,
   routeCards,
+  switchWord,
   wayWord,
   type Listing,
 } from '../model/departures';
@@ -57,10 +58,8 @@ interface Props {
 }
 
 /**
- * The route list's own Low and Max: Low shows its first card's mode and name clear above the
- * Controller (its card's 16 top, mode 28, gap 8 and name 32, over the Controller's 78, with room to
- * spare on a short phone), and Max fills the screen (Figma 4633:25575). A constant, as
- * BottomSheet's `shape` wants one.
+ * The route list's own Low, its first card's mode and name clear above the Controller (16 + 28 +
+ * 8 + 32 over 78, with room to spare), and Max, the whole screen (Figma 4633:25575).
  */
 const LIST_SHAPE: SheetShape = { lowPx: 240, isMaxFull: true };
 
@@ -143,6 +142,7 @@ export function RouteCardList({
               ? null
               : wayWord(back, shownDirections)
           }
+          wayTo={switchWord(back, shownDirections)}
           isSwitchable={switchable}
           isBack={back}
           onSwitch={onFlip}
