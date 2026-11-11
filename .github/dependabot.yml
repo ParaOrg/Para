@@ -1,8 +1,16 @@
 # Dependabot opens pull requests into staging when an npm package or a
 # workflow action has a newer version, the same way a person's change
-# would go in. Minor and patch bumps come grouped, one pull request a week
-# per ecosystem, so they don't pile up; a major bump gets its own pull
-# request, since it can break things and wants a closer look.
+# would go in. Minor and patch bumps come grouped, so they don't pile up;
+# a major bump gets its own pull request, since it can break things and
+# wants a closer look.
+#
+# The npm bumps come as three groups, so one package that needs a code
+# change holds back only its own group: what runs in the app (runtime),
+# the map (map), and the tools that build and check it (tooling). A
+# package goes to the first group it fits.
+#
+# Nothing is proposed until it has been out for 7 days (cooldown): a bad
+# release is usually pulled or fixed within that.
 #
 # Security fixes are separate from these weekly bumps: GitHub opens them as
 # soon as an advisory lands, once the owner turns on Dependabot security
@@ -18,18 +26,35 @@ updates:
       time: '06:00'
       timezone: Asia/Manila
     open-pull-requests-limit: 5
+    cooldown:
+      default-days: 7
+    ignore:
+      # The types follow the Node the checks and the builds run on, 22.
+      - dependency-name: '@types/node'
+        update-types: ['version-update:semver-major']
     groups:
-      minor-and-patch:
+      runtime:
+        patterns: ['react', 'react-dom', 'zod', '@supabase/*', '@tanstack/*']
+        update-types: [minor, patch]
+      map:
+        patterns: ['maplibre-gl', '@maplibre/*']
+        update-types: [minor, patch]
+      tooling:
+        patterns: ['*']
         update-types: [minor, patch]
 
+  # `/` is the workflows; the second is the composite actions they call
+  # (.github/actions/<name>/action.yml), which `/` alone does not read.
   - package-ecosystem: github-actions
-    directory: /
+    directories: ['/', '/.github/actions/*']
     target-branch: staging
     schedule:
       interval: weekly
       day: monday
       time: '06:00'
       timezone: Asia/Manila
+    cooldown:
+      default-days: 7
     groups:
       actions:
         patterns: ['*']
