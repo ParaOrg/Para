@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, useState } from 'react';
 
 import { Button } from '@/design-system/primitives/button';
+import { Switch } from '@/design-system/primitives/switch';
 import type { RecordingTrail } from '@/features/routes/map/recording-trail';
 
 import { rideSummaryPng } from './draw-ride-summary';
@@ -38,6 +39,9 @@ export function RideSummaryPreview({
   const dialogRef = useRef<HTMLElement>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const titleId = useId();
+  const seeThroughId = useId();
+  // See-through: the words white on a clear ground, to lay over a photo in a story.
+  const [isSeeThrough, setIsSeeThrough] = useState(false);
   const [png, setPng] = useState<{ blob: Blob; url: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [note, setNote] = useState<string | null>(null);
@@ -47,7 +51,7 @@ export function RideSummaryPreview({
   useEffect(() => {
     let url: string | null = null;
     let isCurrent = true;
-    rideSummaryPng(summary, trail)
+    rideSummaryPng(summary, trail, isSeeThrough ? 'see-through' : 'card')
       .then((blob) => {
         if (!isCurrent) return;
         url = URL.createObjectURL(blob);
@@ -64,7 +68,7 @@ export function RideSummaryPreview({
       isCurrent = false;
       if (url) URL.revokeObjectURL(url);
     };
-  }, [summary, trail]);
+  }, [summary, trail, isSeeThrough]);
 
   const handleShare = async () => {
     if (!png) return;
@@ -95,7 +99,9 @@ export function RideSummaryPreview({
         >
           Ride summary
         </h2>
-        <div className="aspect-[4/5] w-full overflow-hidden rounded-2xl bg-surface-secondary shadow-lg">
+        <div
+          className={`aspect-[4/5] w-full overflow-hidden rounded-2xl shadow-lg ${isSeeThrough ? 'bg-surface-inverse' : 'bg-surface-secondary'}`}
+        >
           {png && (
             <img
               src={png.url}
@@ -103,6 +109,17 @@ export function RideSummaryPreview({
               className="size-full"
             />
           )}
+        </div>
+        <div className="flex items-center justify-between gap-4">
+          <span id={seeThroughId} className="text-base/6">
+            See-through, to put over a photo
+          </span>
+          <Switch
+            state={isSeeThrough ? 'on' : 'rest'}
+            labelledBy={seeThroughId}
+            disabled={isSharing}
+            onClick={() => setIsSeeThrough((was) => !was)}
+          />
         </div>
         {(error || note) && (
           <p role="status" className="text-center text-sm/5 text-content-quaternary">
