@@ -4,6 +4,7 @@ import { BottomSheet, type SheetHeight } from '@/shared/ui/bottom-sheet';
 
 import { RouteCardHeader } from './route-card-header';
 import { TimelineRouteDetail, type TimelineRouteDetailProps } from './timeline-route-detail';
+import { TripEndsCard } from './trip-ends-card';
 import { FREE, type Fare } from './trip-fare';
 import { TripOtherRoutes, type OtherRoute } from './trip-other-routes';
 import { TripSignboards } from './trip-signboards';
@@ -19,9 +20,8 @@ type Props = Omit<TimelineRouteDetailProps, 'pickedPesos'> & {
   /** …and for the ride between the picks, which the tile shows once an end is picked. */
   pickedFare?: Fare;
   /**
-   * Whether the tile shows the Discounted fare, and where a tap says so: the
-   * app keeps one for every trip (useFareKind). Without them, the card keeps
-   * its own, opening on Regular, as a story does.
+   * Whether the tile shows the Discounted fare, and where a tap says so: the app keeps one for every
+   * trip (useFareKind). Without them, the card keeps its own, opening on Regular, as a story does.
    */
   discounted?: boolean;
   onDiscounted?: (discounted: boolean) => void;
@@ -42,36 +42,27 @@ type Props = Omit<TimelineRouteDetailProps, 'pickedPesos'> & {
   dockRef?: Ref<HTMLDivElement>;
   /** Its height, shared with the list or card it was opened from (BottomSheet). */
   height?: SheetHeight;
-  /**
-   * Figma's "Other routes" under the tiles: the other routes out of where
-   * this trip starts, each by where it goes. Empty or omitted, none is shown.
-   */
+  /** "Other routes" under the stops, out of where this trip starts. Empty or omitted, none. */
   otherRoutes?: readonly OtherRoute[];
   /** A row tapped: that route's trip in this one's place. */
   onOtherRoute?: (id: string) => void;
-  /**
-   * Figma's "Signboard" (3919:11355): the boards this direction's jeeps show, as pictures, in their
-   * order — addresses of SVG files the studio uploaded. Empty or omitted, none is shown.
-   */
+  /** The direction's signboards (4680:25123): SVG files the studio uploaded, in order. None, no card. */
   signboards?: readonly string[];
-  /** Under the tiles, a line's own fixed words (LINE_NOTES): the ferry's days and where to check for a suspension. */
+  /** Under the stops, a line's own fixed words (LINE_NOTES): the ferry's days and where to check for a suspension. */
   note?: string;
   /**
-   * Under the tiles, first: the walk from the ride's end to a landmark the commuter is going to
+   * Under the stops, first: the walk from the ride's end to a landmark the commuter is going to
    * (ticket 07), "About 300 m to SM North EDSA, in a straight line".
    */
   walk?: string | null;
-  /** Under the tiles: what only the studio shows — its facts and its Edit, Extend and Delete. */
+  /** Last: what only the studio shows — its facts and its Edit, Extend and Delete. */
   children?: ReactNode;
 };
 
 /**
- * One direction as a trip — Figma's TimelineRouteDetailCard (3778:3183): RouteCardHeader's
- * Variant2; under it a card in the trip's colour (useTripLivery), inset from the sides and rounded,
- * where a rail runs from the origin (TimelineTop) down to the place it goes to
- * (TimelineBottomEndRoute); under the card the direction's signboards as pictures (Figma's
- * Signboard, 3919:11355, uploaded in the studio) in their own strip (4051:5528); then two tiles,
- * the ride's Distance and its fare.
+ * One direction as a trip (RouteTripDetail, 4681:32026), under RouteCardHeader's Variant2: its ends
+ * (TripEndsCard), the ride's Distance and fare tiles, the direction's signboards (uploaded in the
+ * studio), then its stops in the trip's colour (useTripLivery) on RouteStopsCard.
  *
  * The fare tile is a button: the pesos, and under them ↻ and which fare they are, Regular or
  * Discounted; a tap turns it to the other. With a hintuan picked it prices the ride from where the
@@ -84,11 +75,8 @@ type Props = Omit<TimelineRouteDetailProps, 'pickedPesos'> & {
  * start alone is no ride yet. A route no fare rule prices has no Expected fare tile, and Distance
  * takes the row (Figma draws nothing for it; the owner keeps this default).
  *
- * Under the tiles, "Other routes": a row per other route out of where the trip starts, each by
- * where it goes, as a RouteCard's rows are; a tap opens that route's trip in this one's place. With
- * none, there is no heading either.
- *
- * The card and its rail are TimelineRouteDetail's.
+ * Under the stops, "Other routes": the other routes out of where the trip starts (TripOtherRoutes);
+ * a tap opens that one's trip in this one's place. With none, no heading either.
  */
 export function TimelineRouteDetailCard({
   livery,
@@ -108,7 +96,8 @@ export function TimelineRouteDetailCard({
   onEnd,
   endPicked,
   routeDirection,
-  isTrain,
+  originCode,
+  destinationCode,
   isLoop,
   header,
   discounted: kept,
@@ -158,8 +147,27 @@ export function TimelineRouteDetailCard({
         />
       }
     >
-      {/* Under the header, whose 12 below is the gap (Figma 3778:3183). */}
-      <div className="w-full px-3">
+      {/* RouteTripDetail (4681:32026): its cards 16 apart, 12 in from the sides, under the
+          header, whose 12 below is the gap above them. */}
+      <div className="flex w-full flex-col gap-4 px-3 pb-6">
+        <TripEndsCard
+          routeOrigin={routeOrigin}
+          routeDirection={routeDirection}
+          way={way}
+          isSwitchable={switchable}
+          onSwitch={onSwitch}
+        />
+        <TripTiles
+          shown={shown}
+          shownMetres={shownMetres}
+          isDiscounted={discounted}
+          turns={turns}
+          onTurn={() => {
+            setDiscounted(!discounted);
+            setTurns((t) => t + 1);
+          }}
+        />
+        {signboards.length > 0 && <TripSignboards signboards={signboards} />}
         <TimelineRouteDetail
           livery={livery}
           routeOrigin={routeOrigin}
@@ -178,22 +186,12 @@ export function TimelineRouteDetailCard({
           onEnd={onEnd}
           endPicked={endPicked}
           routeDirection={routeDirection}
-          isTrain={isTrain}
+          originCode={originCode}
+          destinationCode={destinationCode}
           isLoop={isLoop}
           header={header}
         />
       </div>
-      {signboards.length > 0 && <TripSignboards signboards={signboards} />}
-      <TripTiles
-        shown={shown}
-        shownMetres={shownMetres}
-        isDiscounted={discounted}
-        turns={turns}
-        onTurn={() => {
-          setDiscounted(!discounted);
-          setTurns((t) => t + 1);
-        }}
-      />
       {walk && (
         <p
           data-testid="trip-walk"

@@ -146,16 +146,6 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/**
- * Opens the fold, as a rider's tap would — and lets go of it, since a tap
- * draws no focus ring. A train's says "N more stations".
- */
-const openFold: Story['play'] = async ({ canvasElement }) => {
-  const fold = within(canvasElement).getByRole('button', { name: /more (hintuans|stations)/ });
-  await userEvent.click(fold);
-  fold.blur();
-};
-
 /** A jeep's trip, opened from the list: its ends, its length, and the pesos its metres come to today. */
 export const Jeepney: Story = {};
 
@@ -211,10 +201,19 @@ export const NoList: Story = {
   render: (args) => <Keeping {...args} onBackToList={null} />,
 };
 
-/** A hintuan picked: its pill prices the ride from Tala to there. */
+/** A hintuan picked: the pick opens the stops, and its pill prices the ride from Tala to there. */
 export const PickedHintuan: Story = {
   args: { picked: 'amparo', pickedMetres: 7_300, height: { snap: 'full', onSnap: fn() } },
-  play: openFold,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByTestId('trip-view-more')).toHaveAttribute('aria-expanded', 'true');
+    const amparo = canvasElement.querySelector(
+      '[data-testid="trip-hintuan"][data-hintuan="amparo"]',
+    );
+    await expect(amparo?.getAttribute('data-state')).toBe('selected');
+    await expect(amparo?.querySelector('[data-part="end"]')).toBeTruthy();
+    await expect(canvas.getByTestId('trip-hintuan-fare')).toBeVisible();
+  },
 };
 
 /** The far end's row picked: the whole ride, that end on the map. */
@@ -288,7 +287,7 @@ export const TrainNoBound: Story = {
   },
 };
 
-/** The ferry: free, with the line's own words under the tiles. */
+/** The ferry: free, with the line's own words under the stops. */
 export const Ferry: Story = {
   args: {
     direction: direction('prfs', 'Escolta', 'Guadalupe', { mode: 'ferry', routeCode: 'PRFS' }),
@@ -336,7 +335,7 @@ export const Unpriced: Story = {
 /** No hintuans along the way yet: only its two ends. */
 export const NoHintuans: Story = { args: { timeline: timelineOf('Tala', 'Novaliches', []) } };
 
-/** The studio's: its facts and its Edit, Extend and Delete under the tiles (`extras`). */
+/** The studio's: its facts and its Edit, Extend and Delete at the foot (`extras`). */
 export const StudioExtras: Story = {
   args: {
     extras: (
@@ -389,7 +388,7 @@ const ikotTimeline: Timeline = {
 };
 
 /**
- * A loop's trip (UP – Ikot): "Ikot" where Papunta stands, the tip at the top
+ * A loop's trip (UP – Ikot): its name a badge after the mode's, the tip at the top
  * and again at the bottom, the tiles the whole loop's, and no SWITCH.
  */
 export const Loop: Story = {
@@ -397,7 +396,15 @@ export const Loop: Story = {
   play: async ({ canvasElement }) => {
     const card = within(canvasElement);
     await expect(card.queryByTestId('card-switch')).toBeNull();
-    await expect(card.getByText('Ikot')).toBeVisible();
+    await expect(card.getByText('UP – Ikot')).toBeVisible();
+  },
+};
+
+/** A loop with no name of its own: its badge says Ikot. */
+export const LoopNoName: Story = {
+  args: { ...Loop.args, direction: { ...ikot, name: null } },
+  play: async ({ canvasElement }) => {
+    await expect(within(canvasElement).getByText('Ikot')).toBeVisible();
   },
 };
 
