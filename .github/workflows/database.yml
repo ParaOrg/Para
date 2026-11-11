@@ -91,8 +91,34 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      # Playwright's Chromium, at the version package-lock pins.
-      - run: npx playwright install --with-deps chromium
+      # Playwright's Chromium and its system packages' .deb files, from the caches ci.yml keeps
+      # under the same keys, so the job does not need Ubuntu's mirror to start.
+      - id: playwright
+        run: |
+          echo "version=$(node -p "require('playwright/package.json').version")" >> "$GITHUB_OUTPUT"
+          echo "image=$ImageOS" >> "$GITHUB_OUTPUT"
+          echo "image-version=$ImageVersion" >> "$GITHUB_OUTPUT"
+      - id: chromium
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.image }}-${{ steps.playwright.outputs.version }}
+      - if: steps.chromium.outputs.cache-hit != 'true'
+        run: npx playwright install chromium
+      - id: debs
+        uses: actions/cache@v6
+        with:
+          path: ~/apt-debs
+          key: playwright-debs-${{ runner.os }}-${{ steps.playwright.outputs.image-version }}-${{ steps.playwright.outputs.version }}
+      - name: Install Chromium's system packages
+        # As in ci.yml: the cached .deb files when they restore, install-deps otherwise.
+        run: |
+          if [ "${{ steps.debs.outputs.cache-hit }}" = true ] && sudo dpkg -i ~/apt-debs/*.deb; then
+            exit 0
+          fi
+          npx playwright install-deps chromium
+          mkdir -p ~/apt-debs
+          cp /var/cache/apt/archives/*.deb ~/apt-debs/
       # Step 1 of scripts/preview/README.md: Postgres 17 as para-review-db on a
       # private network, no port published, checked by run.sh first.
       - name: Start the disposable database
