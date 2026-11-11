@@ -86,9 +86,9 @@ interface Props {
    */
   handle?: 'shown' | 'hidden';
   /**
-   * Drawn at the sheet's foot on the screen at any height: a route list's or a trip's Controller,
-   * the body scrolling under it (4679:23737), its row letting taps through but for its buttons.
-   * Floating, it is the sheet's top bar instead (4683:32635), the body making room under it.
+   * At the sheet's foot on the screen at any height, a list's or a trip's Controller, the body under
+   * it (4679:23737), letting taps through but for its buttons; floating, the sheet's top bar
+   * (4683:32635). Read before the body; the sheet says it has one (`data-footer`).
    */
   footer?: ReactNode;
   children: ReactNode;
@@ -298,6 +298,7 @@ export function BottomSheet({
       data-testid={testId}
       data-snap={snapName(snap)}
       data-floats={floats}
+      data-footer={footer ? '' : undefined}
       data-low-px={shape.lowPx}
       data-max-full={shape.isMaxFull || undefined}
       hidden={hidden}
@@ -334,7 +335,6 @@ export function BottomSheet({
       <div ref={headRef} className="shrink-0 touch-none sheet-floating:touch-auto">
         {header}
       </div>
-      {/* Before the body, so the page reads the Controller first; drawn over it either way. */}
       {footer && (
         <div
           data-testid="sheet-footer"

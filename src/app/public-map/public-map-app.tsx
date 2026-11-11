@@ -78,12 +78,12 @@ const openOnRoutes = () =>
 const SHOW_HOTSPOT_PINS = false;
 
 /**
- * While a docked card stands at full height, the toast sits 12 under the card's ✕, so the ✕ stays
- * in reach: the strip of map 24 (MAX_STRIP_PX), the handle's row 18 and the ✕ 40, then 12. A card
- * floating in the corner (`@float:`) keeps the toast at the top.
+ * While a docked card stands at full height, the toast sits 12 under its ✕ (map strip 24, handle
+ * 18, ✕ 40), so the ✕ stays in reach. A trip, its ‹ or ✕ in the Controller at its foot
+ * (`data-footer`), and a card floating in the corner (`@float:`) keep the toast at the top.
  */
 const TOAST_UNDER_FULL_CARD =
-  '@max-float:group-has-[[data-testid=card][data-snap=full]:not([hidden])]/map:[--toast-top:calc(env(safe-area-inset-top)+--spacing(23.5))]';
+  '@max-float:group-has-[[data-testid=card][data-snap=full]:not([hidden]):not([data-footer])]/map:[--toast-top:calc(env(safe-area-inset-top)+--spacing(23.5))]';
 
 /** The too-new map's Reload: the newer app, through the worker (pwa.ts). */
 const handleReloadNewer = () => void reloadForNewerApp();
