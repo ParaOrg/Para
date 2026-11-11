@@ -275,11 +275,9 @@ check(
 
 // ---- 2c. The map's ⓘ, as on the public map: at the map's bottom left, opening Map Data Source
 {
-  const drafts = await page.getByRole('button', { name: /^Drafts/ }).boundingBox();
   check(
-    'on a computer Drafts stands in the top bar, clear of the map and its controls',
-    !!drafts && drafts.y + drafts.height <= 48 && drafts.x + drafts.width <= 1280 - 16 + 1,
-    JSON.stringify(drafts),
+    'the top bar has no Drafts button: drafts open from the map',
+    (await page.getByRole('button', { name: /^Drafts/ }).count()) === 0,
   );
 
   const info = page.getByRole('button', { name: 'Map data sources' });
