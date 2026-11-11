@@ -17,6 +17,7 @@ export { STUDIO_BASEMAPS, STUDIO_BASEMAP_THUMBNAILS } from './drawing/studio-bas
 export { useDrawing } from './drawing/use-drawing';
 export { useFollow } from './drawing/use-follow';
 export { useLoopClosing } from './drawing/use-loop-closing';
+export { FootbridgesSwitch } from './maps/footbridges-switch';
 export { MapPlaceholder } from './maps/map-placeholder';
 export { MapSwitch } from './maps/map-switch';
 export { StudioDrafts } from './maps/studio-drafts';

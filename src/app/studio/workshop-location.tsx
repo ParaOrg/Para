@@ -9,7 +9,7 @@ import type { useSavedHotspots } from '@/features/routes/map/use-saved-hotspots'
 import type { useSavedRoutes } from '@/features/routes/map/use-saved-routes';
 import type { HotspotRow } from '@/features/routes/model/hotspots';
 import type { DirectionRow } from '@/features/routes/model/routes';
-import { STUDIO_BASEMAPS, STUDIO_BASEMAP_THUMBNAILS } from '@/features/studio';
+import { FootbridgesSwitch, STUDIO_BASEMAPS, STUDIO_BASEMAP_THUMBNAILS } from '@/features/studio';
 import type { Turn } from '@/shared/hooks/commit-turn';
 import { retryingLazy } from '@/shared/lib/retrying-lazy';
 import type { StandingToast } from '@/shared/ui/standing-toasts';
@@ -80,7 +80,7 @@ export function WorkshopLocation({
     : [];
 
   return (
-    <>
+    <FootbridgesSwitch map={map}>
       <CommuterLocation
         map={map}
         isMapLoaded={isMapLoaded}
@@ -108,6 +108,6 @@ export function WorkshopLocation({
           <StandingToasts toasts={toasts} />
         </Suspense>
       )}
-    </>
+    </FootbridgesSwitch>
   );
 }
