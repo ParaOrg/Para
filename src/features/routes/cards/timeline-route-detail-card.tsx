@@ -2,7 +2,7 @@ import { useState, type ReactNode, type Ref } from 'react';
 
 import { BottomSheet, type SheetHeight } from '@/shared/ui/bottom-sheet';
 
-import { RouteCardHeader } from './route-card-header';
+import { RouteListController } from './route-list-controller';
 import { TimelineRouteDetail, type TimelineRouteDetailProps } from './timeline-route-detail';
 import { TripEndsCard } from './trip-ends-card';
 import { FREE, type Fare } from './trip-fare';
@@ -25,17 +25,15 @@ type Props = Omit<TimelineRouteDetailProps, 'pickedPesos'> & {
    */
   discounted?: boolean;
   onDiscounted?: (discounted: boolean) => void;
-  /** SWITCH: the same route the other way. */
-  onSwitch: () => void;
-  /** False when the route has no other way drawn; SWITCH then rests disabled. */
+  onSwitch: () => void; // PAPUNTA and ⇅: the same route the other way, unless not `switchable`.
   switchable: boolean;
-  /** Whether this trip is the route's way back, for the suites (SWITCH's `data-back`). */
-  back: boolean;
-  /** The word on SWITCH (switchWord): the way a tap leads to, Pabalik or Papunta, or a train's other bound. Null: no SWITCH at all, as on a loop. */
+  back: boolean; // The way back, for the suites (PAPUNTA's `data-back`).
+  /** PAPUNTA's word (wayWord), the way showing, and ⇅'s name (switchWord), the way a tap leads to. Null on a loop. */
   way: string | null;
+  wayTo: string | null;
   /** The sheet's name for a screen reader, where `origin → destination` does not say it (a loop's). */
   label?: string;
-  /** ‹: back to what the trip was picked from — the list, a hotspot's card — or to its route with those sharing an end; null when there is none. */
+  /** ‹: back to what the trip was picked from — the list, a hotspot's card — or to its route with those sharing an end; null when there is none, and ✕ stands there. */
   onBackToList: (() => void) | null;
   onClose: () => void;
   /** The dock the card sits in, for the map to glide clear of it. */
@@ -60,9 +58,9 @@ type Props = Omit<TimelineRouteDetailProps, 'pickedPesos'> & {
 };
 
 /**
- * One direction as a trip (RouteTripDetail, 4681:32026), under RouteCardHeader's Variant2: its ends
- * (TripEndsCard), the ride's Distance and fare tiles, the direction's signboards (uploaded in the
- * studio), then its stops in the trip's colour (useTripLivery) on RouteStopsCard.
+ * One direction as a trip (RouteTripDetail, 4681:32026), with the Controller's bar: its ends
+ * (TripEndsCard), the ride's Distance and fare tiles, its signboards, then its stops in the trip's
+ * colour (useTripLivery) on RouteStopsCard.
  *
  * The fare tile is a button: the pesos, and under them ↻ and which fare they are, Regular or
  * Discounted; a tap turns it to the other. With a hintuan picked it prices the ride from where the
@@ -106,6 +104,7 @@ export function TimelineRouteDetailCard({
   switchable,
   back,
   way,
+  wayTo,
   label,
   onBackToList,
   onClose,
@@ -121,11 +120,9 @@ export function TimelineRouteDetailCard({
   const [own, setOwn] = useState(false);
   const discounted = kept ?? own;
   const setDiscounted = (d: boolean) => (onDiscounted ? onDiscounted(d) : setOwn(d));
-  // Each tap turns ↻ round once more: counted, so the next tap turns it again rather than back. It
-  // turns over `turn`, gentle at 6/10 as fast.
+  // Each tap turns ↻ round once more, counted, so the next tap turns it on rather than back.
   const [turns, setTurns] = useState(0);
-  // An end picked: the tiles read the ride between it and the start, a hintuan's row or, with a
-  // start, an end's. A start alone is no ride yet, the whole trip's shown.
+  // An end picked: the tiles read the ride from the start to it. A start alone is no ride yet.
   const hasRide = picked !== null || (start !== null && endPicked !== null);
   const shown = hasRide && pickedFare ? pickedFare : fare;
   const shownMetres = hasRide && pickedMetres !== undefined ? pickedMetres : metres;
@@ -136,24 +133,27 @@ export function TimelineRouteDetailCard({
       label={label ?? `${routeOrigin} → ${routeDirection}`}
       testId="card"
       onClose={onClose}
-      header={
-        <RouteCardHeader
-          onBackToList={onBackToList}
-          onSwitch={onSwitch}
-          switchable={switchable}
-          back={back}
+      header={null}
+      footer={
+        <RouteListController
+          owner="card"
           way={way}
+          wayTo={wayTo}
+          isSwitchable={switchable}
+          isBack={back}
+          onSwitch={onSwitch}
+          livery={livery}
+          onBack={onBackToList}
           onClose={onClose}
         />
       }
     >
-      {/* RouteTripDetail (4681:32026): its cards 16 apart, 12 in from the sides, under the
-          header, whose 12 below is the gap above them. */}
-      <div className="flex w-full flex-col gap-4 px-3 pb-6">
+      {/* Cards 16 apart, 12 in, clear of the Controller: 78 at a phone's foot, 64 on top floating. */}
+      <div className="flex w-full flex-col gap-4 px-3 pt-3 pb-24 sheet-floating:pt-19 sheet-floating:pb-6">
         <TripEndsCard
           routeOrigin={routeOrigin}
           routeDirection={routeDirection}
-          way={way}
+          way={wayTo}
           isSwitchable={switchable}
           onSwitch={onSwitch}
         />

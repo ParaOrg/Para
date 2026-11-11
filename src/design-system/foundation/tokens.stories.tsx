@@ -156,6 +156,14 @@ function TokensPage() {
         />
       </Group>
 
+      <Group title="Gradient">
+        <Swatch
+          box="bg-(image:--gradient-bottom-toolbar)"
+          token="Gradient/bottom-toolbar"
+          cls="bg-(image:--gradient-bottom-toolbar)"
+        />
+      </Group>
+
       <Group title="Card — End and Start (red and green)">
         <Swatch box="bg-trip-start" token="trip-start (a trip's Start)" cls="bg-trip-start" />
         <Swatch box="bg-trip-end" token="trip-end (a trip's End)" cls="bg-trip-end" />

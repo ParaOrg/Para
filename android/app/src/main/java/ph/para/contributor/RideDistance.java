@@ -132,15 +132,27 @@ final class RideDistance {
         return null;
     }
 
-    /** pathLengthM over the fixes that count, a hinto's wander left out: the card's distance. */
+    /** Within a hinto, a move shorter than this from the last point counted is the phone's wander. */
+    private static final double WANDER_M = 20;
+
+    /**
+     * pathLengthM over the fixes that count, a hinto's wander left out: the card's distance. Within
+     * a hinto a leg counts once the position is WANDER_M from the last point counted, so a walk,
+     * slow enough to be a hinto, still adds up.
+     */
     static double of(List<Fix> fixes) {
         List<Fix> kept = keptFixes(fixes);
         List<Hinto> hintos = hintosOf(kept);
         double total = 0;
+        if (kept.isEmpty()) return total;
+        Fix counted = kept.get(0);
         for (int i = 1; i < kept.size(); i++) {
+            Fix fix = kept.get(i);
             Hinto was = inside(kept.get(i - 1), hintos);
-            if (was != null && was == inside(kept.get(i), hintos)) continue;
-            total += distanceM(kept.get(i - 1), kept.get(i));
+            double leg = distanceM(counted, fix);
+            if (was != null && was == inside(fix, hintos) && leg < WANDER_M) continue;
+            total += leg;
+            counted = fix;
         }
         return total;
     }
