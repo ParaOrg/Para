@@ -577,8 +577,7 @@ Clean-up step 3 of `.scratch/codebase-review/database.md`, first half.
   as `publish_draft` (`private.apply_draft`), and the `draft_saver` trigger names whoever changes a draft's
   payload, so the old path stamps the new columns too.
 
-Retiring the old path is `20261110190000_retire_review_steps`, applied only after `main` has the new
-studio.
+Retiring the old path is `20261110190000_retire_review_steps`, applied live on 2026-11-11.
 
 | File | What it does |
 | --- | --- |
@@ -705,10 +704,9 @@ rules and the grant and definer tidy-ups (L1, L2, L5).
 
 # Applying retire_review_steps to the live project
 
-**Not applied live. Apply only after `main` has the new studio**, the one that saves with `save_draft`,
-publishes with `publish_draft` and unpublishes with `unpublish`. Staging and production share this
-database: the studio on an older `main` saves a draft by direct update and approves with `submit_draft`
-and `approve_reviewed_draft`, and both stop working the moment this is applied.
+**Applied live 2026-11-11** (ledger `20261111173006`) from its paste file; its check passed (4 rows, all `t`). Do
+not reapply. Main and staging both ran the studio that saves with `save_draft`, publishes with `publish_draft`
+and unpublishes with `unpublish`, so nothing called what it dropped.
 
 The second half of clean-up step 3: `approve_draft`, `approve_reviewed_draft`, `submit_draft` and
 `send_back_draft` are dropped, so approval has one way in, `publish_draft`, always with the revision check
