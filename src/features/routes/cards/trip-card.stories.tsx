@@ -146,16 +146,6 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/**
- * Opens the fold, as a rider's tap would — and lets go of it, since a tap
- * draws no focus ring. A train's says "N more stations".
- */
-const openFold: Story['play'] = async ({ canvasElement }) => {
-  const fold = within(canvasElement).getByRole('button', { name: /more (hintuans|stations)/ });
-  await userEvent.click(fold);
-  fold.blur();
-};
-
 /** A jeep's trip, opened from the list: its ends, its length, and the pesos its metres come to today. */
 export const Jeepney: Story = {};
 
@@ -211,10 +201,19 @@ export const NoList: Story = {
   render: (args) => <Keeping {...args} onBackToList={null} />,
 };
 
-/** A hintuan picked: its pill prices the ride from Tala to there. */
+/** A hintuan picked: the pick opens the stops, and its pill prices the ride from Tala to there. */
 export const PickedHintuan: Story = {
   args: { picked: 'amparo', pickedMetres: 7_300, height: { snap: 'full', onSnap: fn() } },
-  play: openFold,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByTestId('trip-view-more')).toHaveAttribute('aria-expanded', 'true');
+    const amparo = canvasElement.querySelector(
+      '[data-testid="trip-hintuan"][data-hintuan="amparo"]',
+    );
+    await expect(amparo?.getAttribute('data-state')).toBe('selected');
+    await expect(amparo?.querySelector('[data-part="end"]')).toBeTruthy();
+    await expect(canvas.getByTestId('trip-hintuan-fare')).toBeVisible();
+  },
 };
 
 /** The far end's row picked: the whole ride, that end on the map. */
