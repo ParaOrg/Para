@@ -520,7 +520,7 @@ if (!spot) {
         'no hintuan on this direction',
       );
     } else {
-      const fold = cardEl.locator('button[data-testid="trip-fold"]');
+      const fold = cardEl.locator('button[data-testid="trip-view-more"]');
       if ((await fold.count()) > 0) {
         await fold.first().click();
         await page.waitForTimeout(450);
