@@ -393,7 +393,7 @@ export const DockUnderSearch: Story = {
   },
 };
 
-/** `floats="dock"` on a wide screen: the map's whole height on the left, 368 wide, the footer beside it. */
+/** `floats="dock"` on a wide screen: the map's whole height on the left, 384 wide, the footer its top bar. */
 export const Dock: Story = {
   args: { floats: 'dock', footer, header: null, handle: 'hidden', children: <Rows count={30} /> },
   parameters: { phone: false },
@@ -401,8 +401,9 @@ export const Dock: Story = {
     const host = canvasElement.querySelector('[data-dock-host]') ?? canvasElement;
     const sheet = within(canvasElement).getByTestId('card').getBoundingClientRect();
     const foot = within(canvasElement).getByTestId('sheet-footer').getBoundingClientRect();
-    await expect(Math.round(sheet.width)).toBe(368);
+    await expect(Math.round(sheet.width)).toBe(384);
     await expect(Math.round(sheet.height)).toBe(Math.round(host.getBoundingClientRect().height));
-    await expect(Math.round(foot.left)).toBe(Math.round(sheet.right));
+    await expect(Math.round(foot.top)).toBe(Math.round(sheet.top));
+    await expect(Math.round(foot.width)).toBe(384);
   },
 };

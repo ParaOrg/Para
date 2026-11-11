@@ -13,8 +13,8 @@ interface SheetHeaderProps {
 /**
  * The header of the studio's hotspot card (HotspotCard): what was
  * tapped, and ✕ — the route cards' own IconButton, the owner's pick, so every
- * card closes the same way. The route list and a trip's card bring their own
- * header (RouteCardHeader). Their bodies sit 16 in, as this does (px-4).
+ * card closes the same way. The route list and a trip close from their own
+ * Controller instead. Their bodies sit 16 in, as this does (px-4).
  *
  * A page that builds its own Tailwind with source(none) must @source this file: its
  * classes are not seen otherwise (contribute.css does).
