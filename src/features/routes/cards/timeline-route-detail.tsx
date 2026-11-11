@@ -1,14 +1,7 @@
 import { Fragment, type ReactNode } from 'react';
 
-import {
-  BLOB_PLACE,
-  CARD_BLOB,
-  CARD_SHADOW,
-  CARD_SURFACE,
-  CARD_TEXT,
-  ROW_PRESSED,
-  TIMELINE_SURFACE,
-} from './livery-card';
+import { ROW_PRESSED, TIMELINE_SURFACE } from './livery-card';
+import { RouteStopsCard } from './route-stops-card';
 import { TimelineBottomEndRoute } from './timeline-bottom-end-route';
 import { TimelineDisclosure } from './timeline-disclosure';
 import { TimelineHintuan } from './timeline-hintuan';
@@ -178,23 +171,7 @@ export function TimelineRouteDetail({
   const pressed = ROW_PRESSED[livery];
 
   return (
-    <div
-      data-testid="trip"
-      data-livery={livery}
-      className={
-        'relative isolate flex w-full flex-col overflow-clip rounded-2xl border-y-[0.6px] font-sn-pro ' +
-        CARD_SURFACE[livery] +
-        ' ' +
-        CARD_TEXT[livery]
-      }
-    >
-      <img
-        src={CARD_BLOB[livery].src}
-        alt=""
-        aria-hidden
-        className={BLOB_PLACE + ' ' + CARD_BLOB[livery].className}
-      />
-      {header}
+    <RouteStopsCard livery={livery} header={header}>
       {/* The fold row keeps its place among the children whether open or not,
           so a keyboard's focus stays on it while the hintuans come and go. */}
       <ol ref={listRef} className="flex w-full flex-col">
@@ -281,10 +258,6 @@ export function TimelineRouteDetail({
           {hintuans[0]?.label}
         </span>
       )}
-      <span
-        aria-hidden
-        className={'pointer-events-none absolute inset-0 rounded-[inherit] ' + CARD_SHADOW[livery]}
-      />
-    </div>
+    </RouteStopsCard>
   );
 }

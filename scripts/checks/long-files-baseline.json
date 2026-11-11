@@ -43,7 +43,7 @@
   "src/features/routes/cards/route-card.tsx": 158,
   "src/features/routes/cards/timeline-hintuan.tsx": 170,
   "src/features/routes/cards/timeline-route-detail-card.tsx": 217,
-  "src/features/routes/cards/timeline-route-detail.tsx": 290,
+  "src/features/routes/cards/timeline-route-detail.tsx": 263,
   "src/features/routes/cards/trip-card.tsx": 267,
   "src/features/routes/geo/pass.ts": 168,
   "src/features/routes/map/basemap.ts": 283,
