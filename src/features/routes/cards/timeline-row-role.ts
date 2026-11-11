@@ -1,14 +1,14 @@
+import type { RouteStopSignKind } from './route-stop-sign';
 import type { RouteTripLineDetailPillContent } from './route-trip-line-detail-pill';
 
 /** Where a ride starts (Start's S) or ends (End's E), in its row's slot. */
-export type RideMarkKind = 'start' | 'end';
 
 /** An end of the trip, picked from its row: the origin (`from`) or the destination (`to`). */
 export type EndRow = 'from' | 'to';
 
 /** A row's part in the ride: its S or E, its pill, and the button under it. */
 export interface RowRole {
-  mark: RideMarkKind | null;
+  mark: RouteStopSignKind | null;
   pill: RouteTripLineDetailPillContent | null;
   action: { label: string; isRemove: boolean; onTap: () => void } | null;
 }
@@ -33,8 +33,11 @@ export interface RowRoleInput {
  * its end.
  */
 export function rowRole(row: RowRoleInput): RowRole {
-  const priced = (code: string | null) =>
-    row.pickedPesos ? { code, pesos: row.pickedPesos } : null;
+  // Priced, its code and the pesos; unpriced, a station's code alone (T1).
+  const priced = (code: string | null): RouteTripLineDetailPillContent | null => {
+    if (row.pickedPesos) return { code, pesos: row.pickedPesos };
+    return code === null ? null : { code };
+  };
   if (row.isStart) {
     return {
       mark: 'start',
@@ -62,7 +65,10 @@ export function rowRole(row: RowRoleInput): RowRole {
  * on; End's E when, a start picked, it is the ride's end, tapped with the
  * start kept; else nothing.
  */
-export function originMark(start: string | null, endPicked: EndRow | null): RideMarkKind | null {
+export function originMark(
+  start: string | null,
+  endPicked: EndRow | null,
+): RouteStopSignKind | null {
   if (start === null) return 'start';
   return endPicked === 'from' ? 'end' : null;
 }

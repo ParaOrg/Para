@@ -5,10 +5,12 @@ import { CloseIcon } from '@/shared/ui/route-icons';
 import { cn } from '@/shared/utils/cn';
 
 import { BUTTON_FILL } from './livery-card';
-import { RouteStopSlot, SignWords } from './route-stop-slot';
+import type { RouteStopSignKind } from './route-stop-sign';
+import { RouteStopSignWords } from './route-stop-sign-words';
+import { RouteStopSlot } from './route-stop-slot';
 import { RouteStopsTimelineRow, type TimelineRowState } from './route-stops-timeline-row';
 import type { RouteTripLineDetailPillContent } from './route-trip-line-detail-pill';
-import type { RideMarkKind, RowRole } from './timeline-row-role';
+import type { RowRole } from './timeline-row-role';
 import type { Livery } from '../model/liveries';
 
 interface TimelineHintuanProps {
@@ -24,11 +26,13 @@ interface TimelineHintuanProps {
   /** Its row's state (timelineRowStates). */
   state: TimelineRowState;
   /** The ride's start (S) or end (E) in its slot; null for any other row. */
-  mark: RideMarkKind | null;
+  mark: RouteStopSignKind | null;
   /** The button under the row: Set as start under the end, × Remove as start under the start. */
   action: RowRole['action'];
   /** Out of the stops' fold, under the card's clip: out of reach of a keyboard too. */
   isFolded: boolean;
+  /** The button under the row, under the clip whenever the stops are folded, even the first's. */
+  isActionFolded: boolean;
   onPick: (id: string) => void;
 }
 
@@ -48,6 +52,7 @@ export function TimelineHintuan({
   mark,
   action,
   isFolded,
+  isActionFolded,
   onPick,
 }: TimelineHintuanProps) {
   // × Remove as start takes its own button away: the keyboard's focus goes
@@ -69,7 +74,7 @@ export function TimelineHintuan({
         data-testid="trip-hintuan-pick"
         aria-pressed={selected}
         onClick={() => onPick(id)}
-        className={'flex w-full text-left ' + pressed}
+        className={cn('flex w-full text-left', pressed)}
       >
         <RouteStopsTimelineRow
           variant="middle"
@@ -78,7 +83,7 @@ export function TimelineHintuan({
           label={
             <>
               <span data-part="name">{label}</span>
-              <SignWords sign={mark} />
+              <RouteStopSignWords sign={mark} />
             </>
           }
           slot={<RouteStopSlot livery={livery} sign={mark} pill={pill} />}
@@ -87,7 +92,7 @@ export function TimelineHintuan({
       {/* Under the row, its own button (Figma Choosing and Variant3,
           4137:9887 and 4148:12161): a sibling of the row's, never inside it. */}
       {action && (
-        <div className="flex gap-2 px-4">
+        <div className="flex gap-2 px-4" inert={isActionFolded}>
           <span aria-hidden className={cn('w-6 shrink-0', isRailBelow && rail)} />
           <span className="pt-1.5 pb-2.5">
             <Button

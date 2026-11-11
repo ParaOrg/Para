@@ -1,4 +1,7 @@
-import { RouteStopSlot, SignWords } from './route-stop-slot';
+import { cn } from '@/shared/utils/cn';
+
+import { RouteStopSignWords } from './route-stop-sign-words';
+import { RouteStopSlot } from './route-stop-slot';
 import type { TimelineRowState } from './route-stops-timeline-row';
 import { RouteStopsTimelineRow } from './route-stops-timeline-row';
 import type { RouteTripLineDetailPillContent } from './route-trip-line-detail-pill';
@@ -48,7 +51,7 @@ export function TimelineBottomEndRoute({
         type="button"
         aria-pressed={selected}
         onClick={onTap}
-        className={'flex w-full text-left ' + pressed}
+        className={cn('flex w-full text-left', pressed)}
       >
         <RouteStopsTimelineRow
           variant="bottom"
@@ -57,7 +60,7 @@ export function TimelineBottomEndRoute({
           label={
             <>
               <span data-part="name">{routeDirection}</span>
-              <SignWords sign={sign} />
+              <RouteStopSignWords sign={sign} />
             </>
           }
           slot={<RouteStopSlot livery={livery} sign={sign} pill={pill} code={code} />}

@@ -46,6 +46,7 @@ function Stops({ livery, places }: { livery: Livery; places: readonly string[] }
           mark={null}
           action={null}
           isFolded={false}
+          isActionFolded={false}
           onPick={fn()}
         />
       ))}

@@ -1,7 +1,7 @@
 // A trip's stops as they first render (src/features/routes/cards/timeline-route-detail.tsx), Figma's
 // RouteStopsCard (4681:29138) and its RouteStopsTimeline rows (4611:10957): every stop drawn, the
 // card cut at 120 and the stops under the cut out of a keyboard's reach until "View more"; a pick
-// opens it (the owner, T2). Rendered to HTML by React's own server renderer, the component read
+// opens it (T2). Rendered to HTML by React's own server renderer, the component read
 // through Vite (it is TSX, which Node cannot strip). What a tap on View more does is phone-test's.
 //
 //   node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs tests/unit/timeline-route-detail-test.mjs

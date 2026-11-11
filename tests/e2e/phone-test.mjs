@@ -1300,14 +1300,14 @@ const tripChecks = async () => {
     skip('  its stops open folded, and open', 'no hintuan on this direction: nothing to fold');
   } else {
     const foldedHeight = await stopsHeight();
-    const inertFolded = await card().locator('[data-testid="trip-hintuan"][inert]').count();
+    const inertFolded = await card().locator('[data-testid="trip"] ol > li[inert]').count();
     await buttonTap(
       viewMore,
       async () => (await viewMore.getAttribute('aria-expanded')) === 'true',
     );
     await cardsSettled(page);
     const openHeight = await stopsHeight();
-    const inertOpen = await card().locator('[data-testid="trip-hintuan"][inert]').count();
+    const inertOpen = await card().locator('[data-testid="trip"] ol > li[inert]').count();
     check(
       '  its stops open folded, cut at 120 under View more, and View more shows them all',
       foldedHeight <= 120 &&
@@ -1409,7 +1409,7 @@ const tripChecks = async () => {
       `${selectedRows} Selected`,
     );
     // The ride runs from the origin to the picked row, which ends it (SelectedBottom); the stops
-    // after it stand alone, their dots without the rail (the owner's RouteStopsTimeline, T4).
+    // after it stand alone, their dots without the rail (RouteStopsTimeline, T4).
     const rails = await card().evaluate((c) => {
       const railOf = (el) => el?.querySelector('[data-rail]')?.getAttribute('data-rail') ?? null;
       const rows = [...c.querySelectorAll('[data-testid="trip-hintuan"]')];

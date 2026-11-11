@@ -1,12 +1,5 @@
 import type { TimelineRowState } from './route-stops-timeline-row';
-
-/** A picked ride's rows: the origin is -1, the destination the hintuans' count (rideRows). */
-export interface RideRows {
-  first: number;
-  last: number;
-  /** A loop's ride from a start down past the tip to an end above it. */
-  wraps?: true;
-}
+import type { RideRows } from '../model/ride-rows';
 
 /**
  * Each row's state on the timeline (RouteStopsTimeline, 4611:10957), the origin first and the
@@ -20,8 +13,8 @@ export function timelineRowStates(
   isStartAlone = false,
 ): TimelineRowState[] {
   const rows = Array.from({ length: hintuanCount + 2 }, (_, i) => i - 1);
-  if (!ride) return rows.map(() => 'rest');
   if (isStartAlone) return rows.map(() => 'unselected');
+  if (!ride) return rows.map(() => 'rest');
   const isInRide = (r: number) =>
     ride.wraps ? r <= ride.last || r >= ride.first : r >= ride.first && r <= ride.last;
   return rows.map((r) => {

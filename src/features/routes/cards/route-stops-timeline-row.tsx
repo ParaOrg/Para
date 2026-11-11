@@ -61,6 +61,18 @@ const WORDS = {
   small: 'py-2 text-sm/5',
 } satisfies Record<TimelineRowSize, string>;
 
+/** The dot at rest: its ring's padding and its white. Selected: its white and the centre in it. */
+const DOT_RING = { large: 'p-1.5', small: 'p-1' } satisfies Record<TimelineRowSize, string>;
+const DOT_WHITE = { large: 'size-3', small: 'size-2' } satisfies Record<TimelineRowSize, string>;
+const DOT_SELECTED_WHITE = {
+  large: 'size-5',
+  small: 'size-3',
+} satisfies Record<TimelineRowSize, string>;
+const DOT_SELECTED_CENTRE = {
+  large: 'size-3',
+  small: 'size-2',
+} satisfies Record<TimelineRowSize, string>;
+
 const COLUMN = {
   large: 'w-6',
   small: 'w-4',
@@ -121,19 +133,17 @@ function StopDot({ rail, size, isSelected }: StopDotProps) {
         <span
           className={cn(
             'grid place-items-center rounded-full bg-content-inverse',
-            size === 'large' ? 'size-5' : 'size-3',
+            DOT_SELECTED_WHITE[size],
           )}
         >
-          <span className={cn('rounded-full', size === 'large' ? 'size-3' : 'size-2', rail)} />
+          <span className={cn('rounded-full', DOT_SELECTED_CENTRE[size], rail)} />
         </span>
       </span>
     );
   }
   return (
-    <span className={cn('flex shrink-0 rounded-full', size === 'large' ? 'p-1.5' : 'p-1', rail)}>
-      <span
-        className={cn('rounded-full bg-content-inverse', size === 'large' ? 'size-3' : 'size-2')}
-      />
+    <span className={cn('flex shrink-0 rounded-full', DOT_RING[size], rail)}>
+      <span className={cn('rounded-full bg-content-inverse', DOT_WHITE[size])} />
     </span>
   );
 }

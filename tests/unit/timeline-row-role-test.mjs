@@ -61,8 +61,9 @@ test('the end: its E, its code and the ride’s pesos; Set as start only while n
   assert.equal(withStart.action, null);
 });
 
-test('an end with no fare has no pill', () => {
-  assert.equal(rowRole(row({ isEnd: true, pickedCode: 'YL06' })).pill, null);
+test('an end with no fare: a station its code alone (T1), a hintuan no pill', () => {
+  assert.deepEqual(rowRole(row({ isEnd: true, pickedCode: 'YL06' })).pill, { code: 'YL06' });
+  assert.equal(rowRole(row({ isEnd: true, pickedCode: null })).pill, null);
 });
 
 test('the origin wears the S with no start, the E as the ride’s end with one, else nothing', () => {

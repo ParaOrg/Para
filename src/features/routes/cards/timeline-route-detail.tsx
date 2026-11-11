@@ -25,7 +25,7 @@ export interface TimelineRouteDetailProps {
   start?: string | null;
   /** On a train, the start station's code, for its pill (Variant3, and Variant4 beside the end's). */
   startCode?: string | null;
-  /** On a train, the origin's and the destination's station codes, in their slots (owner, T1). */
+  /** On a train, the origin's and the destination's station codes, in their slots (T1). */
   originCode?: string | null;
   destinationCode?: string | null;
   /** Set as start, under the picked row while no start is picked. Without it, no button. */
@@ -76,7 +76,7 @@ export interface TimelineRouteDetailProps {
  * RouteStopsTimeline row (4611:10957), Start's S and End's E in their slots.
  *
  * It opens folded, the card cut at 120: the first stop and the top of the next, "View more" on its
- * foot; open, every stop, "View less". A route with no hintuans never folds (owner, T3). A pick
+ * foot; open, every stop, "View less". A route with no hintuans never folds (T3). A pick
  * opens it, so the picked stop is in sight; folding again is the rider's (T2). Folded, the stops
  * under the cut are out of a keyboard's reach too.
  *
@@ -108,23 +108,21 @@ export function TimelineRouteDetail({
   header,
 }: TimelineRouteDetailProps) {
   const canFold = hintuans.length > 0;
-  // Any pick opens the stops, so the picked one is in sight (owner, T2): one made as the trip
-  // opens, from a pin on the map, as one made after.
+  // Every pick opens the stops, so the picked one is in sight (T2): one made as the trip opens,
+  // from a pin on the map, one made after, and one in another's place.
   const hasPick = start !== null || picked !== null || endPicked !== null;
+  const picks = `${start}|${picked}|${endPicked}`;
   const [isMaximized, setIsMaximized] = useState(hasPick);
-  const [hadPick, setHadPick] = useState(hasPick);
-  if (hadPick !== hasPick) {
-    setHadPick(hasPick);
+  const [lastPicks, setLastPicks] = useState(picks);
+  if (lastPicks !== picks) {
+    setLastPicks(picks);
     if (hasPick) setIsMaximized(true);
   }
   const isFolded = canFold && !isMaximized;
   const rail = TIMELINE_SURFACE[livery];
   const pressed = ROW_PRESSED[livery];
   const isStartAlone = start !== null && picked === null && endPicked === null;
-  const lone = isStartAlone ? hintuans.findIndex((h) => h.id === start) : -1;
-  const ride =
-    rideRows(hintuans, start, picked, endPicked, isLoop) ??
-    (lone >= 0 ? { first: lone, last: lone } : null);
+  const ride = rideRows(hintuans, start, picked, endPicked, isLoop);
   const states = timelineRowStates(hintuans.length, ride, isStartAlone);
   const endPill = endRowPill(start, pickedCode, pickedPesos);
 
@@ -176,6 +174,7 @@ export function TimelineRouteDetail({
               state={states[i + 1] ?? 'rest'}
               action={action}
               isFolded={isFolded && i > 0}
+              isActionFolded={isFolded}
               onPick={onPick}
             />
           );

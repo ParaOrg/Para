@@ -1,7 +1,7 @@
 // Each stop's state on a trip's timeline (src/features/routes/cards/timeline-row-states.ts),
 // Figma's RouteStopsTimeline (4611:10957): Rest on the rail with nothing picked; with a ride
 // picked, its ends Selected or SelectedTop / SelectedBottom, the rows between Rest, the rows
-// outside it Unselected (the owner, T4).
+// outside it Unselected (T4).
 //
 //   node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs tests/unit/timeline-row-states-test.mjs
 import { test } from 'node:test';

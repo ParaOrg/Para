@@ -1,8 +1,11 @@
-import { RouteStopSlot, SignWords } from './route-stop-slot';
+import { cn } from '@/shared/utils/cn';
+
+import type { RouteStopSignKind } from './route-stop-sign';
+import { RouteStopSignWords } from './route-stop-sign-words';
+import { RouteStopSlot } from './route-stop-slot';
 import type { TimelineRowState } from './route-stops-timeline-row';
 import { RouteStopsTimelineRow } from './route-stops-timeline-row';
 import type { RouteTripLineDetailPillContent } from './route-trip-line-detail-pill';
-import type { RideMarkKind } from './timeline-row-role';
 import type { Livery } from '../model/liveries';
 
 interface TimelineTopProps {
@@ -12,7 +15,7 @@ interface TimelineTopProps {
   pressed: string;
   routeOrigin: string;
   /** Start's S or End's E in its slot, or neither (originMark). */
-  mark: RideMarkKind | null;
+  mark: RouteStopSignKind | null;
   /** As the ride's end, its pill in its slot; else null. */
   pill: RouteTripLineDetailPillContent | null;
   /** On a train, the origin station's code; null on the road or unknown. */
@@ -45,7 +48,7 @@ export function TimelineTop({
         type="button"
         aria-pressed={selected}
         onClick={onTap}
-        className={'flex w-full text-left ' + pressed}
+        className={cn('flex w-full text-left', pressed)}
       >
         <RouteStopsTimelineRow
           variant="top"
@@ -54,7 +57,7 @@ export function TimelineTop({
           label={
             <>
               <span data-part="name">{routeOrigin}</span>
-              <SignWords sign={mark} />
+              <RouteStopSignWords sign={mark} />
             </>
           }
           slot={<RouteStopSlot livery={livery} sign={mark} pill={pill} code={code} />}

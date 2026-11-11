@@ -38,6 +38,14 @@ export function rowsOutsideStartAlone(
   return new Set(rows.filter((r) => r.id !== startId).map((r) => r.id));
 }
 
+/** A picked ride's rows: the origin is -1, the destination the rows' count. */
+export interface RideRows {
+  first: number;
+  last: number;
+  /** A loop's ride from a start down past the tip to an end above it. */
+  wraps?: true;
+}
+
 /**
  * Where a picked ride lies on a trip's timeline: its first row and its last,
  * whichever of the start and the end is above (an end tapped above the start
@@ -63,7 +71,7 @@ export function rideRows(
   endId: string | null,
   endRow: 'from' | 'to' | null = null,
   isLoop = false,
-): { first: number; last: number; wraps?: true } | null {
+): RideRows | null {
   const startAt = startId === null ? -1 : rows.findIndex((r) => r.id === startId);
   if (startId !== null && startAt < 0) return null;
   if (endId === null) {

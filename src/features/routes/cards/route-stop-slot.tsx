@@ -30,9 +30,3 @@ export function RouteStopSlot({ livery, sign, pill, code = null }: RouteStopSlot
     </>
   );
 }
-
-/** For a screen reader, after the stop's name: the sign is for the eye. */
-export function SignWords({ sign }: { sign: RouteStopSignKind | null }) {
-  if (!sign) return null;
-  return <span className="sr-only">{sign === 'start' ? ', start' : ', end'}</span>;
-}
