@@ -1,5 +1,6 @@
 // How fast the public map is on a cheap phone: the production build, timed in
-// Chromium with the CPU slowed four times and on DevTools' "Slow 4G", at a
+// Chromium with the CPU slowed four times and on DevTools' "Slow 4G" (or, with
+// PARA_PROFILE=3g, six times and on its "3G"), at a
 // phone's 390×844, two device pixels per CSS pixel, touch. Written 2026-10-04
 // for the cheap-phone plan and grown by its Step 0 the same day, so that each
 // step of the plan is measured, not guessed.
@@ -9,6 +10,8 @@
 //   node scripts/research/phone-speed.mjs [runs]          (3 runs by default)
 //
 //   PARA_CHROMIUM       the Chromium to time in; Playwright's own without it
+//   PARA_PROFILE        the phone to pretend to be: slow-4g (the default; CPU 4× slower,
+//                         DevTools' Slow 4G) or 3g (CPU 6× slower, DevTools' 3G)
 //   PARA_BASEMAP_CACHE  where the basemap's files are kept, one per address
 //                         (default node_modules/.cache/phone-speed-basemap)
 //   JSON                  where to write every run and the summary; none without it
@@ -53,7 +56,7 @@
 // worker's script and what that worker asks for (Sec-Fetch-Dest: worker; the
 // script as referrer), and for the service worker's script and all it
 // fetches, its precache (Sec-Fetch-Dest: serviceworker; sw.js as referrer);
-// and the server holds the worker's own requests as Slow 4G would. DevTools'
+// and the server holds the worker's own requests as the profile would. DevTools'
 // sums are kept in the JSON beside them. Each target is its own link: Chrome
 // cannot slow two targets on one.
 //
@@ -168,17 +171,39 @@ const BASEMAP_HOST = 'tiles.openfreemap.org';
 const BASEMAP_PATTERN = { urlPattern: `*://${BASEMAP_HOST}/*`, requestStage: 'Request' };
 const isBasemap = (url) => !!url && new URL(url).host === BASEMAP_HOST;
 
+// The phone a run pretends to be: how slow its CPU, its network as DevTools'
+// preset of that name sends it, and the basemap's one link per page (the
+// plan's Step 0: one file at a time, a wait and then its bytes, at about the
+// preset's own speed).
+const PROFILES = {
+  'slow-4g': {
+    profile: 'Slow 4G',
+    cpuThrottlingRate: 4,
+    network: { latency: 562.5, downloadThroughput: 180000, uploadThroughput: 84375 },
+    // 150 ms, then 200 kB/s (the kB this prints, 1,024 B).
+    basemapLink: { latencyMs: 150, bytesPerSecond: 200 * 1024 },
+  },
+  // A slower phone on a worse signal. DevTools' "3G" (its "Slow 3G" until
+  // 2024): 500 kbit/s both ways less a fifth, and 400 ms five times over.
+  '3g': {
+    profile: '3G',
+    cpuThrottlingRate: 6,
+    network: { latency: 2000, downloadThroughput: 50000, uploadThroughput: 50000 },
+    basemapLink: { latencyMs: 400, bytesPerSecond: 50000 },
+  },
+};
+const PROFILE = PROFILES[process.env.PARA_PROFILE ?? 'slow-4g'];
+if (!PROFILE)
+  throw new Error(
+    `PARA_PROFILE is one of ${Object.keys(PROFILES).join(', ')}, not "${process.env.PARA_PROFILE}"`,
+  );
+
 const SETTINGS = {
   viewport: { width: 390, height: 844 },
   deviceScaleFactor: 2,
   isMobile: true,
   hasTouch: true,
-  cpuThrottlingRate: 4,
-  // DevTools' "Slow 4G" preset, as it sends it.
-  network: { latency: 562.5, downloadThroughput: 180000, uploadThroughput: 84375 },
-  // The basemap's one link per page (the plan's Step 0): 150 ms, then 200 kB/s
-  // (the kB this prints, 1,024 B), one file at a time.
-  basemapLink: { latencyMs: 150, bytesPerSecond: 200 * 1024 },
+  ...PROFILE,
   // Without these, headless Chrome reads every frame back on the main thread.
   chromiumArgs: [
     '--use-angle=swiftshader',
@@ -314,9 +339,9 @@ const sent = {
   sw: { bytes: 0, requests: 0 },
 };
 // Chrome cannot slow a dedicated worker (above), so its requests are held
-// here as Slow 4G would: one link, made afresh for each page.
+// here as the profile's network would: one link, made afresh for each page.
 let workerLink = null;
-const slow4G = () =>
+const slowLink = () =>
   serialLink({
     latencyMs: SETTINGS.network.latency,
     bytesPerSecond: SETTINGS.network.downloadThroughput,
@@ -683,7 +708,7 @@ async function phonePage({ serviceWorkers = 'block' } = {}) {
   let net = fresh();
   const throttle = {};
   for (const k of Object.keys(sent)) sent[k] = { bytes: 0, requests: 0 };
-  workerLink = slow4G();
+  workerLink = slowLink();
   const link = serialLink(SETTINGS.basemapLink);
   // The basemap files this page has had: its HTTP cache, as a phone keeps them.
   const had = new Set();
@@ -835,7 +860,7 @@ async function phonePage({ serviceWorkers = 'block' } = {}) {
       const url = kid.urls.get(p.requestId);
       if (msg.method === 'Network.loadingFinished' && !closed && !isBasemap(url)) {
         net[`${kid.kind}CdpBytes`] += p.encodedDataLength;
-        // From the network sooner than one Slow 4G round trip: not slowed.
+        // From the network sooner than one of the profile's round trips: not slowed.
         const asked = kid.asked.get(p.requestId);
         if (
           kid.kind === 'sw' &&
@@ -1341,7 +1366,7 @@ try {
     if (run.sw.swCapped) console.log('  the service worker did not finish installing in time');
     if (run.sw.swUnslowed)
       console.log(
-        `  ${run.sw.swUnslowed} of the service worker's requests came back sooner than a Slow 4G round trip: not slowed`,
+        `  ${run.sw.swUnslowed} of the service worker's requests came back sooner than a ${SETTINGS.profile} round trip: not slowed`,
       );
     for (const [s, want] of [
       ['listTap', 'list'],
@@ -1373,7 +1398,7 @@ if (failed || !runs.length) process.exit(1);
 const summary = {};
 const commit = git('rev-parse', '--short', 'HEAD');
 console.log(
-  `\n${commit}, Chromium ${chromiumVersion}: CPU ${SETTINGS.cpuThrottlingRate}× slower, Slow 4G, ` +
+  `\n${commit}, Chromium ${chromiumVersion}: CPU ${SETTINGS.cpuThrottlingRate}× slower, ${SETTINGS.profile}, ` +
     `${SETTINGS.viewport.width}×${SETTINGS.viewport.height} at ${SETTINGS.deviceScaleFactor}×. ${RUNS} run(s): median, then min–max\n`,
 );
 // A tap that opened anything but what it aimed at is left out of its
@@ -1443,7 +1468,7 @@ const throttled = Object.assign(
   ...runs.flatMap((r) => SCENARIOS.map((s) => r[s].throttle ?? {})),
 );
 console.log(
-  `DevTools' Slow 4G on the workers: ${
+  `DevTools' ${SETTINGS.profile} on the workers: ${
     Object.entries(throttled)
       .map(([k, v]) => `${k} ${v}`)
       .join(', ') || 'none attached'
