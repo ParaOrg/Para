@@ -42,4 +42,4 @@ export { StudioContributors } from './contributors/studio-contributors';
 export { ContributionHint } from './contributors/actions/contribution-hint';
 export { useContributionStart } from './contributors/actions/use-contribution-start';
 export type { ContributionStart } from './contributors/actions/contribution-start';
-export { CONTRIBUTIONS } from './data/flags';
+export { CONTRIBUTIONS } from './data/env';
