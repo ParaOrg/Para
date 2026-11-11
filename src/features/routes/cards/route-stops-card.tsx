@@ -20,8 +20,8 @@ const STOPS_CARD_SHADOW = {
 
 interface RouteStopsCardProps {
   livery: Livery;
-  /** At its top, what the trip rides (RouteStopsCardHeader). */
-  header: ReactNode;
+  /** At its top, what the trip rides (RouteStopsCardHeader); none on a trip that has no header yet. */
+  header?: ReactNode;
   /** The stops, the timeline's rows: an `<ol>` of them. */
   children: ReactNode;
   /**

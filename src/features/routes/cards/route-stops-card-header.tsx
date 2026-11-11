@@ -20,7 +20,8 @@ interface RouteStopsCardHeaderProps {
  * What a trip rides, atop its stops card (RouteStopsCard, 4681:29139): the vehicle, 24, on a chip,
  * then its RouteBadge at large, and on a train the bound's after it, as a RouteCard's top names
  * them (RouteCardMode). The chip wears the badge's colours, so a light card's is dark as its
- * badges are. The words are the badges'; the drawing is decoration.
+ * badges are. The words are the badges'; the drawing is decoration. It takes RouteTripDetailHeader's
+ * place, and its test id with it.
  */
 export function RouteStopsCardHeader({ vehicle, bound, livery }: RouteStopsCardHeaderProps) {
   return (
