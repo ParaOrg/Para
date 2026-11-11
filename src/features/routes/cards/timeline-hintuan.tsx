@@ -77,7 +77,7 @@ export function TimelineHintuan({
           rail={rail}
           label={
             <>
-              {label}
+              <span data-part="name">{label}</span>
               <SignWords sign={mark} />
             </>
           }

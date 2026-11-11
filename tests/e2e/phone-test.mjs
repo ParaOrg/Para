@@ -1642,7 +1642,7 @@ const tripChecks = async () => {
     // before it (HintuanLabel's HintuanEnd, Figma 4068:4791): 8px right of it
     // and centred on it, in SN Pro.
     const rowName = (
-      await pickButton.evaluate((b) => b.lastElementChild.firstElementChild.textContent)
+      await pickButton.evaluate((b) => b.querySelector('[data-part="name"]').textContent)
     ).trim();
     const title = await page.evaluate(() => {
       // The label: on a train line, End and the station's code in a pill of
