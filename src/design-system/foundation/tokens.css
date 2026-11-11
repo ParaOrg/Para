@@ -557,6 +557,40 @@
   /* A card raised high over the map: the "Track your routes" card (shadow-large, 4461:2601). */
   --shadow-large: 0 -1px 12px 0 rgb(0 0 0 / 0.04), 0 8px 16px 2px rgb(43 43 43 / 0.09);
 
+  /* A trip's stops card, lifted off the page in its own colour (RouteStopsCardShadow, 4681:29139).
+   * Figma draws the jeep's, Card/Jeep/surface at 12% and 24%; each livery takes its own surface the
+   * same way. */
+  --shadow-route-stops-card-jeep:
+    0 -1px 12px 0 color-mix(in oklab, var(--color-card-jeep-surface) 12%, transparent),
+    0 8px 16px 2px color-mix(in oklab, var(--color-card-jeep-surface) 24%, transparent);
+  --shadow-route-stops-card-uv-express:
+    0 -1px 12px 0 color-mix(in oklab, var(--color-card-uv-express-surface) 12%, transparent),
+    0 8px 16px 2px color-mix(in oklab, var(--color-card-uv-express-surface) 24%, transparent);
+  --shadow-route-stops-card-ejeep:
+    0 -1px 12px 0 color-mix(in oklab, var(--color-card-ejeep-surface) 12%, transparent),
+    0 8px 16px 2px color-mix(in oklab, var(--color-card-ejeep-surface) 24%, transparent);
+  --shadow-route-stops-card-bus:
+    0 -1px 12px 0 color-mix(in oklab, var(--color-card-bus-surface) 12%, transparent),
+    0 8px 16px 2px color-mix(in oklab, var(--color-card-bus-surface) 24%, transparent);
+  --shadow-route-stops-card-light-rail-way-one:
+    0 -1px 12px 0
+      color-mix(in oklab, var(--color-map-rail-light-rail-way-one-surface) 12%, transparent),
+    0 8px 16px 2px
+      color-mix(in oklab, var(--color-map-rail-light-rail-way-one-surface) 24%, transparent);
+  --shadow-route-stops-card-light-rail-way-two:
+    0 -1px 12px 0
+      color-mix(in oklab, var(--color-map-rail-light-rail-way-two-surface) 12%, transparent),
+    0 8px 16px 2px
+      color-mix(in oklab, var(--color-map-rail-light-rail-way-two-surface) 24%, transparent);
+  --shadow-route-stops-card-metro-rail-way-three:
+    0 -1px 12px 0
+      color-mix(in oklab, var(--color-map-rail-metro-rail-way-three-surface) 12%, transparent),
+    0 8px 16px 2px
+      color-mix(in oklab, var(--color-map-rail-metro-rail-way-three-surface) 24%, transparent);
+  --shadow-route-stops-card-ferry:
+    0 -1px 12px 0 color-mix(in oklab, var(--color-map-ferry-surface) 12%, transparent),
+    0 8px 16px 2px color-mix(in oklab, var(--color-map-ferry-surface) 24%, transparent);
+
   /* The commuter's dot, lifted off the map in a deep blue (LocatorDotShadow, 3870:5242). */
   --shadow-locator-dot-shadow: 0 2px 8px 0 rgb(1 27 85 / 0.48);
 

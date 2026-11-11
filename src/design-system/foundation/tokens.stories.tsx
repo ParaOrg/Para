@@ -551,6 +551,11 @@ function TokensPage() {
           cls="shadow-locator-dot-shadow"
         />
         <Swatch box="bg-surface shadow-large" token="shadow-large" cls="shadow-large" />
+        <Swatch
+          box="rounded-3xl bg-card-jeep-surface shadow-route-stops-card-jeep"
+          token="RouteStopsCardShadow"
+          cls="shadow-route-stops-card-jeep"
+        />
       </Group>
 
       <Group title="Type — SN Pro">
