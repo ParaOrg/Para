@@ -1,7 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
-import { RouteReportList, type RouteReportRow } from './route-report-list';
+import {
+  RouteReportList,
+  type RouteReportListState,
+  type RouteReportRow,
+} from './route-report-list';
 
 const meta = {
   title: 'Features/Studio/RouteReportList',
@@ -47,12 +51,13 @@ const REPORTS: RouteReportRow[] = [
     createdAt: NOW - 5 * 24 * HOUR,
   },
 ];
-const ready = (overrides = {}) => ({
+type ReadyState = Extract<RouteReportListState, { status: 'ready' }>;
+const ready = (overrides: Partial<ReadyState> = {}) => ({
   state: {
     status: 'ready' as const,
     reports: REPORTS,
     now: NOW,
-    busyId: null,
+    isBusy: false,
     notice: null,
     onResolve: fn(),
     ...overrides,
@@ -76,9 +81,9 @@ export const DoneAndDismiss: Story = {
   },
 };
 
-/** One is under way: every Done and Dismiss waits. */
+/** A Done or Dismiss is under way: every button waits. */
 export const Busy: Story = {
-  args: ready({ busyId: 'r1' }),
+  args: ready({ isBusy: true }),
   play: async ({ canvasElement }) => {
     for (const button of within(canvasElement).getAllByRole('button')) {
       await expect(button).toBeDisabled();
@@ -109,13 +114,15 @@ export const Failed: Story = {
   },
 };
 
-/** Before the reports migration is applied, the table is not there. */
+/** Before the reports migration is applied, the table is not there: trying again cannot help. */
 export const NotSetUp: Story = {
   args: {
     state: {
       status: 'error',
       message: 'Reports aren’t set up yet. They appear here once they are.',
-      onRetry: fn(),
     },
+  },
+  play: async ({ canvasElement }) => {
+    await expect(within(canvasElement).queryByRole('button')).toBeNull();
   },
 };

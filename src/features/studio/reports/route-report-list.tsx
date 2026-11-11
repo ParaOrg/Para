@@ -16,13 +16,15 @@ export interface RouteReportRow {
 
 export type RouteReportListState =
   | { status: 'loading' }
-  | { status: 'error'; message: string; onRetry: () => void }
+  /** A failure; Try again only where trying again can help (not before reports are set up). */
+  | { status: 'error'; message: string; onRetry?: () => void }
   | {
       status: 'ready';
+      /** Shown in the order given: the caller sends them newest first. */
       reports: RouteReportRow[];
       now: number;
-      /** The report whose Done or Dismiss is under way; the others wait. */
-      busyId: string | null;
+      /** A Done or Dismiss is under way: every button waits for it. */
+      isBusy: boolean;
       /** What the last Done or Dismiss did, in the editor's words. */
       notice: string | null;
       onResolve: (id: string, status: 'done' | 'dismissed') => void;
@@ -32,14 +34,16 @@ interface RouteReportListProps {
   state: RouteReportListState;
 }
 
-/** Commuters' open reports about routes, newest first, each with Done and Dismiss (ADR 0010). */
+/** Commuters' open reports about routes, each with Done and Dismiss (ADR 0010). */
 export function RouteReportList({ state }: RouteReportListProps) {
   if (state.status === 'loading') return <p role="status">Reading reports…</p>;
   if (state.status === 'error')
     return (
       <div className="flex flex-col items-start gap-2">
         <p role="alert">{state.message}</p>
-        <Button variant="secondary" size="small" label="Try again" onClick={state.onRetry} />
+        {state.onRetry && (
+          <Button variant="secondary" size="small" label="Try again" onClick={state.onRetry} />
+        )}
       </div>
     );
   const count = state.reports.length;
@@ -75,14 +79,14 @@ export function RouteReportList({ state }: RouteReportListProps) {
                   variant="secondary"
                   size="small"
                   label="Done"
-                  disabled={state.busyId !== null}
+                  disabled={state.isBusy}
                   onClick={() => state.onResolve(report.id, 'done')}
                 />
                 <Button
                   variant="secondary"
                   size="small"
                   label="Dismiss"
-                  disabled={state.busyId !== null}
+                  disabled={state.isBusy}
                   onClick={() => state.onResolve(report.id, 'dismissed')}
                 />
               </div>
