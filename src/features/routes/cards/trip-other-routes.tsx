@@ -14,7 +14,7 @@ interface TripOtherRoutesProps {
 }
 
 /**
- * Figma's "Other routes" under the tiles: a row per other route out of where the trip starts, each
+ * "Other routes" under the trip's stops: a row per other route out of where the trip starts, each
  * by where it goes, as a RouteCard's rows are; a tap opens that route's trip in this one's place.
  */
 export function TripOtherRoutes({ routes, onRoute }: TripOtherRoutesProps) {

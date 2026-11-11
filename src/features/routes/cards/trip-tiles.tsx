@@ -15,16 +15,10 @@ interface TripTilesProps {
   onTurn: () => void;
 }
 
-/**
- * 16 under the card, or under the signboards' strip (Figma 3778:3186). The tiles 8 apart (3778:3183,
- * its row 3886:6278).
- */
+/** The ride's two tiles, side by side and 12 apart (RouteTripDetail, 4680:25114). */
 export function TripTiles({ shown, shownMetres, isDiscounted, turns, onTurn }: TripTilesProps) {
   return (
-    <div
-      data-testid="trip-tiles"
-      className="flex w-full gap-2 bg-surface px-3 py-4 text-center font-sn-pro"
-    >
+    <div data-testid="trip-tiles" className="flex w-full gap-3 text-center font-sn-pro">
       <div className={TILE}>
         <span data-testid="trip-km" className={FIGURE}>
           {kmLabel(shownMetres)}
@@ -47,7 +41,7 @@ export function TripTiles({ shown, shownMetres, isDiscounted, turns, onTurn }: T
             onClick={onTurn}
             className={
               TILE +
-              ' transition-colors duration-quick ease-move hover:bg-surface-tertiary active:bg-surface-quaternary'
+              ' transition-colors duration-quick ease-move hover:bg-surface-secondary active:bg-surface-tertiary'
             }
           >
             <span data-testid="trip-fare" className={FIGURE}>
@@ -71,11 +65,10 @@ export function TripTiles({ shown, shownMetres, isDiscounted, turns, onTurn }: T
 }
 
 /**
- * One of the two tiles under the card, in Figma's row of them (3771:3055): its figure over its name
- * (the figure on top, 3778:3183), on Background/surface-secondary. Figma writes the figure in a raw
- * black; Content/primary is the token nearest it.
+ * One tile (4680:25115): its figure, Bold 24/32, over its name, Regular 14/20, on a white card
+ * rounded 24 under shadow-large. The fare's, a button, darkens a step under the finger.
  */
 const TILE =
-  'flex min-w-0 flex-1 basis-0 flex-col items-center justify-center gap-2 rounded-2xl bg-surface-secondary p-4';
+  'flex min-w-0 flex-1 basis-0 flex-col items-center justify-center gap-2 overflow-clip rounded-3xl bg-surface p-4 shadow-large';
 const FIGURE = 'block text-2xl/8 font-bold text-content-primary';
 const NAME = 'block text-sm/5 font-normal text-content-tertiary';

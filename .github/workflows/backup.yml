@@ -41,8 +41,11 @@
 #     After each `select private.add_months(12);` run
 #     `select private.grant_backup_reader();`, or the next backup fails on the
 #     new monthly piece.
-#  5. GitHub secrets (Settings -> Secrets and variables -> Actions, repository
-#     secrets). The exact names this workflow reads:
+#  5. GitHub secrets, in the Environment `backup` (Settings -> Environments ->
+#     New environment `backup`; Deployment branches and tags -> Selected
+#     branches -> `main` only). Environment secrets, not repository secrets:
+#     GitHub then hands them to this job only when it runs from `main`, never
+#     to another branch's copy of this file. The exact names this workflow reads:
 #       BACKUP_DATABASE_URL    postgresql://backup_reader.<project-ref>:<password>@<pooler-host>:5432/postgres
 #                              (the session pooler's string, port 5432: pg_dump
 #                              needs a session, not the transaction pooler on
@@ -113,6 +116,8 @@ jobs:
   backup:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
+    # The secrets are the `backup` environment's, which only `main` may use (setup step 5).
+    environment: backup
     env:
       # Must be at least the database's major version: pg_dump refuses a newer server.
       PG_MAJOR: '17'
@@ -135,7 +140,7 @@ jobs:
           missing=0
           for name in BACKUP_DATABASE_URL R2_ENDPOINT R2_ACCESS_KEY_ID R2_SECRET_ACCESS_KEY R2_BUCKET; do
             if [ -z "${!name}" ]; then
-              echo "::error::The GitHub secret $name is not set (setup step 5 in this file's header)."
+              echo "::error::The secret $name is not set in the 'backup' environment (setup step 5 in this file's header)."
               missing=1
             fi
           done

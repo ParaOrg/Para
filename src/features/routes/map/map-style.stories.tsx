@@ -1,9 +1,12 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { fn } from 'storybook/test';
+import { useState, type ReactNode } from 'react';
+import { expect, fn, userEvent, within } from 'storybook/test';
 
 import { BASEMAPS, type Basemap } from './basemap';
 import { BASEMAP_THUMBNAILS } from './basemap-thumbnails';
 import { MapStyle } from './map-style';
+import { MapStyleRowsContext } from './map-style-rows';
+import { MapStyleSwitchRow } from './map-style-switch-row';
 
 const meta = {
   title: 'Features/Routes/MapStyle',
@@ -66,4 +69,45 @@ export const Phone: Story = {
       </div>
     ),
   ],
+};
+
+/** The studio's Footbridges switch (.scratch/footbridges, ticket 03), as its page adds it. */
+function WithFootbridgesRow({ children }: { children: ReactNode }) {
+  const [isOn, setIsOn] = useState(false);
+  return (
+    <MapStyleRowsContext
+      value={
+        <MapStyleSwitchRow label="Footbridges" isOn={isOn} onToggle={() => setIsOn((on) => !on)} />
+      }
+    >
+      {children}
+    </MapStyleRowsContext>
+  );
+}
+
+/**
+ * In the studio: a page's own row under Location Labels, here Footbridges, off at first; a tap on
+ * its words turns it on. The public map adds none (Default).
+ */
+export const StudioFootbridges: Story = {
+  args: { basemaps: STUDIO_LIKE, selectedId: 'terrain' },
+  decorators: [
+    (Story) => (
+      <WithFootbridgesRow>
+        <Story />
+      </WithFootbridgesRow>
+    ),
+  ],
+  play: async ({ canvasElement }) => {
+    const card = within(canvasElement);
+    const footbridges = card.getByRole('switch', { name: 'Footbridges' });
+    await expect(footbridges).toHaveAttribute('aria-checked', 'false');
+    await userEvent.click(card.getByText('Footbridges'));
+    await expect(footbridges).toHaveAttribute('aria-checked', 'true');
+    // Under Location Labels, as the card's own rows come first.
+    const labels = card.getByRole('switch', { name: 'Location Labels' });
+    await expect(
+      labels.compareDocumentPosition(footbridges) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  },
 };

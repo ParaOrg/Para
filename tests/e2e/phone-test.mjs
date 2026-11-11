@@ -83,7 +83,7 @@ const {
     // The picked card holds every route the list shows.
     '  and lights just its routes',
     // A trip with no hintuans, here and under "Other routes".
-    '  its hintuans fold into one row, and open',
+    '  its stops open folded, and open',
     '  its hintuans left open, as they were',
     // The place has one box.
     '  another box from its row: Selected, the card staying at full height, the map there',
@@ -1288,73 +1288,44 @@ const tripChecks = async () => {
       `"${km}" / "${fare}", the sums "${want.km}" / "${want.fare}"`,
     );
 
-  // The hintuans fold into one row, "N more hintuans" ("N more stations" on a
-  // train, the owner's ask of 2026-10-15); opened, each is a row
-  // of its own, and "View less" folds them again (the owner's 3762:3546,
-  // with an s since 3778:3183). A lone hintuan is shown as it is, with
-  // nothing to fold.
-  const fold = card().locator('button[data-testid="trip-fold"]');
-  // The rows in sight: folded ones stay in the card, invisible, so that they
-  // can close in view (the fold's motion, 2026-09-29).
-  const hintuanRows = () => card().locator('[data-testid="trip-hintuan"]:visible').count();
-  /** The rows in sight once the fold has come to rest. */
-  const restingRows = async () => {
-    await cardsSettled(page);
-    return hintuanRows();
-  };
-  /** How long a row takes to open or fold, as it is now set to. */
-  const rowMotion = () =>
-    card()
-      .locator('[data-testid="trip-hintuan"]')
-      .first()
-      .evaluate((e) => getComputedStyle(e).transitionDuration);
-  if ((await fold.count()) === 0) {
-    skip(
-      '  its hintuans fold into one row, and open',
-      (await hintuanRows()) === 0
-        ? 'no hintuan on this direction yet'
-        : 'one hintuan on the way, shown as it is: nothing to fold',
-    );
+  // The stops open folded (the owner's RouteStopsCard, 4681:29138): every stop drawn, the card
+  // cut at 120 with "View more" on its foot, the stops under the cut out of a keyboard's reach;
+  // "View more" shows them all, "View less" folds them again. A route with no hintuans never folds.
+  const viewMore = card().locator('[data-testid="trip-view-more"]');
+  // Opened before a pick further down, so its row is in reach (a pick opens it too).
+  const fold = viewMore;
+  const stopsCard = card().locator('[data-testid="trip"]');
+  const stopsHeight = async () => (await stopsCard.boundingBox())?.height ?? 0;
+  if ((await viewMore.count()) === 0) {
+    skip('  its stops open folded, and open', 'no hintuan on this direction: nothing to fold');
   } else {
-    const folded = (await fold.first().innerText()).trim();
-    const n = Number(/^(\d+) more (hintuans|stations)$/.exec(folded)?.[1] ?? NaN);
-    // The rows' insides, drawn: none on a card just opened, folded, every
-    // one from the first opening on (the cheap-phone plan, step 11, 2026-10-04).
-    const drawnRows = () => card().locator('[data-testid="trip-hintuan-pick"]').count();
-    const drawnFolded = await drawnRows();
+    const foldedHeight = await stopsHeight();
+    const inertFolded = await card().locator('[data-testid="trip"] ol > li[inert]').count();
     await buttonTap(
-      fold,
-      async () => (await fold.first().getAttribute('aria-expanded')) === 'true',
+      viewMore,
+      async () => (await viewMore.getAttribute('aria-expanded')) === 'true',
     );
-    const opening = await rowMotion();
-    const shown = await restingRows();
+    await cardsSettled(page);
+    const openHeight = await stopsHeight();
+    const inertOpen = await card().locator('[data-testid="trip"] ol > li[inert]').count();
     check(
-      '  its hintuans fold into one row, "N more hintuans" (stations on a train), that opens to N rows',
-      n > 1 && shown === n && (await fold.first().innerText()).includes('View less'),
-      `"${folded}" opened to ${shown} row(s)`,
+      '  its stops open folded, cut at 120 under View more, and View more shows them all',
+      foldedHeight <= 120 &&
+        inertFolded > 0 &&
+        openHeight > foldedHeight &&
+        inertOpen === 0 &&
+        (await viewMore.innerText()).includes('View less'),
+      `${foldedHeight} px folded, ${inertFolded} stop(s) out of reach; ${openHeight} px open, ${inertOpen}`,
     );
-    const drawnOpen = await drawnRows();
     await buttonTap(
-      fold,
-      async () => (await fold.first().getAttribute('aria-expanded')) === 'false',
+      viewMore,
+      async () => (await viewMore.getAttribute('aria-expanded')) === 'false',
     );
-    const folding = await rowMotion();
+    await cardsSettled(page);
     check(
       '  "View less" folds them again',
-      (await restingRows()) === 0 && (await fold.first().innerText()).trim() === folded,
-      await fold.first().innerText(),
-    );
-    // The Motion tokens: open over gentle, fold over base (the owner's "try it").
-    check(
-      '  the rows open over 300 ms and fold over 200 ms',
-      opening.startsWith('0.3s') && folding.startsWith('0.2s'),
-      `${opening} / ${folding}`,
-    );
-    const drawnAgain = await drawnRows();
-    check(
-      '  folded rows are drawn only once opened, and stay drawn to fold in view',
-      drawnFolded === 0 && drawnOpen === n && drawnAgain === n,
-      `${drawnFolded} drawn folded as the card opened, ${drawnOpen} opened, ${drawnAgain} folded again, of ${n}`,
+      (await stopsHeight()) <= 120 && (await viewMore.innerText()).includes('View more'),
+      `${await stopsHeight()} px, "${await viewMore.innerText()}"`,
     );
   }
 
@@ -1430,76 +1401,35 @@ const tripChecks = async () => {
     const selectedRows = await card()
       .locator('[data-testid="trip-hintuan"][data-state="selected"]')
       .count();
-    const weight = await pickButton.evaluate(
-      (b) => getComputedStyle(b.lastElementChild.firstElementChild).fontWeight,
-    );
     check(
-      '  a hintuan row picks it: that one row Selected, its name ExtraBold',
+      '  a hintuan row picks it: that one row Selected',
       (await isPicked()) &&
         selectedRows === 1 &&
-        weight === '800' &&
         (await pickButton.getAttribute('aria-pressed')) === 'true',
-      `${selectedRows} Selected, weight ${weight}`,
+      `${selectedRows} Selected`,
     );
-    // The rail runs along the ride from the origin to the picked row, which
-    // ends it (MiddleBottom), and breaks there, running on again along the
-    // rows after it (the owner, 2026-10-16: "can you still connect those
-    // dots"; his Variant5). Their fold's row is next to the pick when it is
-    // closed, and carries no rail then, the destination its dot alone
-    // ("when close it should disconnect the disclosure", 4194:12562); open,
-    // it sits between the rows after the pick and the destination, the rail
-    // through it (4189:11483). Read one way, the fold turned, and read again.
-    const railsNow = () =>
-      card().evaluate((c) => {
-        const railOf = (el) => el?.querySelector('[data-rail]')?.getAttribute('data-rail') ?? null;
-        const rows = [...c.querySelectorAll('[data-testid="trip-hintuan"]')];
-        const at = rows.findIndex((r) => r.getAttribute('data-state') === 'selected');
-        const fold = c.querySelector('[data-testid="trip-fold"]');
-        return {
-          origin: railOf(c.querySelector('[data-testid="trip-origin"]')),
-          before: rows.slice(0, at).map(railOf).filter(Boolean),
-          picked: railOf(rows[at]),
-          afterCount: rows.length - at - 1,
-          after: rows
-            .slice(at + 1)
-            .filter((r) => r.classList.contains('visible'))
-            .map(railOf)
-            .filter(Boolean),
-          isFoldOpen: fold ? fold.getAttribute('aria-expanded') === 'true' : null,
-          fold: railOf(fold?.parentElement),
-          destination: railOf(c.querySelector('[data-testid="trip-destination"]')),
-        };
-      });
-    const isRailRight = (rails) => {
-      const isShut = rails.isFoldOpen === false;
-      return (
-        rails.origin === 'below' &&
+    // The ride runs from the origin to the picked row, which ends it (SelectedBottom); the stops
+    // after it stand alone, their dots without the rail (RouteStopsTimeline, T4).
+    const rails = await card().evaluate((c) => {
+      const railOf = (el) => el?.querySelector('[data-rail]')?.getAttribute('data-rail') ?? null;
+      const rows = [...c.querySelectorAll('[data-testid="trip-hintuan"]')];
+      const at = rows.findIndex((r) => r.getAttribute('data-state') === 'selected');
+      return {
+        origin: railOf(c.querySelector('[data-testid="trip-origin"]')),
+        before: rows.slice(0, at).map(railOf),
+        picked: railOf(rows[at]),
+        after: rows.slice(at + 1).map(railOf),
+        destination: railOf(c.querySelector('[data-testid="trip-destination"]')),
+      };
+    });
+    check(
+      '  the rail runs from the origin to the pick, the stops after it standing alone',
+      rails.origin === 'below' &&
         rails.before.every((r) => r === 'through') &&
         rails.picked === 'above' &&
-        rails.after.every((r, i) => r === (i === 0 ? 'below' : 'through')) &&
-        rails.fold === (rails.isFoldOpen === null ? null : isShut ? 'disconnected' : 'connected') &&
-        rails.destination === (rails.afterCount > 0 && !isShut ? 'above' : 'disconnected')
-      );
-    };
-    const railsFirst = await railsNow();
-    const afterFold = card().locator('[data-testid="trip-fold"][data-part="after"]');
-    let railsTurned = null;
-    if (railsFirst.isFoldOpen !== null) {
-      const turn = async (isOpen) => {
-        await afterFold.scrollIntoViewIfNeeded();
-        await buttonTap(
-          afterFold,
-          async () => (await afterFold.getAttribute('aria-expanded')) === String(isOpen),
-        );
-      };
-      await turn(!railsFirst.isFoldOpen);
-      railsTurned = await railsNow();
-      await turn(railsFirst.isFoldOpen);
-    }
-    check(
-      '  the rail runs from the origin to the pick and breaks there, on again after it, the fold by it without when closed',
-      isRailRight(railsFirst) && (railsTurned === null || isRailRight(railsTurned)),
-      JSON.stringify({ railsFirst, railsTurned }),
+        rails.after.every((r) => r === 'disconnected') &&
+        rails.destination === 'disconnected',
+      JSON.stringify(rails),
     );
     const pill = row.locator('[data-testid="trip-hintuan-fare"]');
     // On a train the station's code comes first, "GL04 ₱20" (the owner,
@@ -1712,7 +1642,7 @@ const tripChecks = async () => {
     // before it (HintuanLabel's HintuanEnd, Figma 4068:4791): 8px right of it
     // and centred on it, in SN Pro.
     const rowName = (
-      await pickButton.evaluate((b) => b.lastElementChild.firstElementChild.textContent)
+      await pickButton.evaluate((b) => b.querySelector('[data-part="name"]').textContent)
     ).trim();
     const title = await page.evaluate(() => {
       // The label: on a train line, End and the station's code in a pill of
@@ -3120,10 +3050,9 @@ if (routeA) {
     routeEnds.length === 2 && routeEnds.every((e) => text.includes(e)),
     r.signboard,
   );
-  // Dropped by the owner for now, to design later (2026-09-28). The words
-  // signboard went with them; the boards uploaded in the studio came back
-  // as pictures (3919:11355; under their own heading until 2026-10-12, in a
-  // strip between the card and the tiles since), left out here.
+  // Dropped by the owner for now, to design later. The boards uploaded in the
+  // studio are pictures on their own card, "Signboard" over them (4680:25123),
+  // left out here with their heading.
   const extras = await card()
     .first()
     .evaluate((c) => {
@@ -4790,7 +4719,7 @@ if (!withOthers) {
   const toName = (to.name ?? '').split(' → ')[1] ?? '';
   // Opened first: another route leaves the hintuans as they were, not folded
   // (the owner, 2026-10-01: "don't shrink it").
-  const tripFold = card().locator('[data-testid="trip-fold"]');
+  const tripFold = card().locator('[data-testid="trip-view-more"]');
   const openedFold =
     (await tripFold.count()) > 0 &&
     (await buttonTap(

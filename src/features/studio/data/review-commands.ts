@@ -33,20 +33,20 @@ export function reviewMessage(result: ReviewResult): string {
     case 'not_your_draft':
       return 'Only the editor who made this draft can discard it. Nothing was changed.';
     case 'ends_taken':
-      return 'Another approved route already uses these ends and via. Change them in the draft’s details below, or discard this draft.';
+      return 'Another approved route already uses these ends and via. Change them in the sidebar and save, or discard this draft.';
     case 'loop_taken':
-      return 'An approved loop already uses this signboard and via. Change them in the draft’s details below, or discard this draft.';
+      return 'An approved loop already uses this signboard and via. Change them in the sidebar and save, or discard this draft.';
     case 'terminal_place_taken':
-      return 'An approved terminal already uses this place. Review that terminal before trying again.';
+      return 'An approved terminal already uses this place. Check that terminal before trying again.';
     case 'bad_payload':
     case 'payload_incomplete':
       return 'The draft is incomplete. Nothing was published. Discard it and draw it again.';
     case 'subject_gone':
       return 'The original route or place no longer exists. Discard this draft and create it again.';
     case 'subject_exists':
-      return 'This route or place already exists. Refresh and review its current version.';
+      return 'This route or place already exists. Refresh and check its current version.';
     case 'blocked':
-      return 'A related place or route prevents this change. Review its dependencies first.';
+      return 'A related place or route prevents this change. Approve or change the places and routes it uses first.';
     case 'direction_clash':
     case 'direction_elsewhere':
       return 'The draft has conflicting directions. Discard it and draw it again.';
