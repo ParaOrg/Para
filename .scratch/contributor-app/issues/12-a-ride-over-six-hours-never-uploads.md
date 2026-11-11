@@ -1,7 +1,7 @@
 # 12: A ride over six hours never uploads, and nothing warns before it is too late
 
-Status: needs-triage
-Type: product decision, then a small change in the recorder
+Status: ready-for-agent
+Type: a change in the recorder and in packing (the logic); the look waits for the owner's design
 Who: the owner decides; then a builder session in `features/contribute`
 Source: the 2026-11-11 review, finding UX-04
 
@@ -32,3 +32,14 @@ Option 3. Option 1 keeps every new ride whole. Its second half rescues rides alr
 ## Where the code is
 
 `src/features/contribute/recorder/recording-limits.ts`, `uploads/packing/pack-recording.ts`, `uploads/upload-failures.ts`, `history/card-status.ts`; in the app, `android/.../ride/RideMachine.java` (where a time limit would live beside `FIX_LIMIT_MS`).
+
+## Answer
+
+The owner (Q181, 2026-11-11): option 3.
+
+- **Stop by itself at 6 hours.** A ride reaches 6 hours from Start, pauses included. The recorder stops and opens Save, as Finish does: the web recorder, and the app's `RideService` through `RideMachine`. Nothing is lost.
+- **Rescue rides already stuck.** When a saved ride is longer than 6 hours, `packRecording` packs and uploads its first 6 hours, not `'too-long'`. History then says the rest stayed on the phone. The rides now shown as "Longer than 6 hours" are retried once this ships.
+
+Ready for an agent: the stop at 6 hours, and the packing cut. Each comes with its unit tests (recording-transitions, pack-recording) and the native JUnit test (RideMachine).
+
+**Waiting for the owner's design, and not to be invented:** any message before or at the automatic stop, and History's line for a ride cut at 6 hours. Until the frames come, the automatic stop shows the Save form exactly as Finish does, and History keeps its existing upload lines. Both are on the design-later list in `.scratch/contribute-apk/README.md`.

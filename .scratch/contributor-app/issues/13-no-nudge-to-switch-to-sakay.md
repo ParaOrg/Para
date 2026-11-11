@@ -1,7 +1,7 @@
 # 13: Nothing suggests Sakay when the contributor is plainly riding
 
-Status: needs-triage
-Type: product decision
+Status: ready-for-agent
+Type: the detection logic is ready; the prompt's look waits for the owner's design
 Who: the owner
 Source: the 2026-11-11 review, finding UX-07; follows ticket 07's option 3
 
@@ -31,3 +31,15 @@ Option 1 first. It is the smallest change that keeps the contributor in charge, 
 ## Where the code is
 
 `src/features/contribute/recorder/` (`recording-transitions.ts`, `recording-state.ts`); in the app, `android/.../ride/RideMachine.java` and `RideCard.java` if the ride card offers it.
+
+## Answer
+
+The owner (Q182, 2026-11-11): option 1, a suggestion that is never an automatic switch.
+
+- After a sustained stretch on Lakad faster than walking, the recording offers "Switch to Sakay?".
+- The contributor confirms or ignores it. Confirming switches at that moment, as a tap does today.
+- Ignoring it changes nothing, and it is not asked again until the next sustained stretch.
+
+Ready for an agent: the detection only. It is a pure function in `recorder/` over the recent accepted fixes and the current mode. It says when a suggestion is due, with unit tests from recorded fixes: a jeepney on EDSA, walking, and a slow jeepney in traffic. Its numbers (speed and how long) are constants beside it, starting from about 15 km/h for a minute.
+
+**Waiting for the owner's design, and not to be invented:** the prompt itself, its place, words and buttons, and whether the app's ride card offers it. Until the frames come, nothing is shown: the detection is wired to nothing that draws. It is on the design-later list in `.scratch/contribute-apk/README.md`.
