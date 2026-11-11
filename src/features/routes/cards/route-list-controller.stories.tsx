@@ -39,6 +39,7 @@ const meta = {
   args: {
     owner: 'chooser',
     way: 'Papunta',
+    wayTo: 'Pabalik',
     isSwitchable: true,
     isBack: false,
     onSwitch: fn(),
@@ -67,6 +68,8 @@ export const Phone: Story = {
     const way = canvas.getByTestId('chooser-flip');
     // The capitals are the type's: its name is the word as written.
     await expect(way).toHaveAccessibleName('Papunta');
+    // …and where a tap leads, after it.
+    await expect(way).toHaveAccessibleDescription('turns to Pabalik');
     await expect(getComputedStyle(way).textTransform).toBe('uppercase');
     await expect(getComputedStyle(way).fontSize).toBe('17px');
     await expect(getComputedStyle(way).fontWeight).toBe('700');
@@ -104,10 +107,10 @@ export const ExtraSlot: Story = {
 };
 
 /** The way back showing: PAPUNTA reads Pabalik. */
-export const Back: Story = { args: { way: 'Pabalik', isBack: true } };
+export const Back: Story = { args: { way: 'Pabalik', wayTo: 'Papunta', isBack: true } };
 
 /** A train: its bound. */
-export const Bound: Story = { args: { way: 'Southbound' } };
+export const Bound: Story = { args: { way: 'Southbound', wayTo: 'Northbound' } };
 
 /** Nothing drawn the other way round: PAPUNTA rests disabled. */
 export const NotSwitchable: Story = {

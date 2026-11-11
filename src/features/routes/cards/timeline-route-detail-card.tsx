@@ -25,8 +25,7 @@ type Props = Omit<TimelineRouteDetailProps, 'pickedPesos'> & {
    */
   discounted?: boolean;
   onDiscounted?: (discounted: boolean) => void;
-  /** PAPUNTA and ⇅: the same route the other way; disabled unless `switchable`. */
-  onSwitch: () => void;
+  onSwitch: () => void; // PAPUNTA and ⇅: the same route the other way, unless not `switchable`.
   switchable: boolean;
   back: boolean; // The way back, for the suites (PAPUNTA's `data-back`).
   /** PAPUNTA's word (wayWord), the way showing, and ⇅'s name (switchWord), the way a tap leads to. Null on a loop. */
@@ -139,6 +138,7 @@ export function TimelineRouteDetailCard({
         <RouteListController
           owner="card"
           way={way}
+          wayTo={wayTo}
           isSwitchable={switchable}
           isBack={back}
           onSwitch={onSwitch}

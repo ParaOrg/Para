@@ -1,8 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { saveDraftFacts } from '../../src/features/studio/data/draft-facts.ts';
-import { refreshDraftBase } from '../../src/features/studio/data/review-comparison.ts';
+import { refreshDraftBase } from '../../src/features/studio/data/draft-base.ts';
 import { assertNotAnothersDraft } from '../../src/features/studio/data/draft-guard.ts';
 import { setSupabase } from '../../src/features/studio/data/supabase.ts';
 
@@ -45,16 +44,15 @@ test('with no name on file, or the names unreadable, the refusal says another ed
   }
 });
 
-test("the Drafts screen's edits and base refresh are refused on another editor's draft", async () => {
+test("Keep my draft (refresh_draft_base) is refused on another editor's draft", async () => {
   clientAs('b', [{ user_id: 'a', name: 'Marisol' }]);
   const other = {
     id: 'd',
-    kind: 'hotspot',
+    kind: 'route',
     revision: 1,
     status: 'draft',
     editor_id: 'a',
-    payload: { version: 1, stop: { name: 'Palma Hall', informal: null, note: null } },
+    payload: {},
   };
-  await assert.rejects(saveDraftFacts(other, { name: 'Changed' }), /being changed by Marisol/);
   await assert.rejects(refreshDraftBase(other, 4), /being changed by Marisol/);
 });

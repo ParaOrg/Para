@@ -3,6 +3,7 @@ import { useId, useState, type FormEvent } from 'react';
 import { hotspotLabel } from '@/features/routes/model/hotspots';
 import { LOOP_WORD } from '@/features/routes/model/routes';
 
+import { DraftAlert } from './draft-alert';
 import { DraftBadge } from './draft-badge';
 import { IkotNameField } from './ikot-name-field';
 import { LineDetail } from './line-detail';
@@ -206,11 +207,7 @@ export function SavePanel({
             {panel.error}
           </p>
         )}
-        {(unpublishing.error ?? stored.error) && (
-          <p role="alert" className="text-sm text-content-error">
-            {unpublishing.error ?? stored.error}
-          </p>
-        )}
+        <DraftAlert error={unpublishing.error ?? stored.error} {...stored.keeping} />
 
         {saveBlocked && <p className="text-sm text-content-quaternary">{saveBlocked}</p>}
       </div>

@@ -20,7 +20,7 @@ interface DeleteActionsOptions {
 
 /** What a delete says when it joined a draft the editor already had of the route. */
 function addedToDraft(v: DirectionRow): string {
-  return `Added to your draft of "${v.route?.name ?? 'this route'}". Review it in Drafts: the map changes once it is approved.`;
+  return `Added to your draft of "${v.route?.name ?? 'this route'}". Tap it on the map to approve it: the map changes once it is approved.`;
 }
 
 /**
@@ -30,7 +30,7 @@ function addedToDraft(v: DirectionRow): string {
  * back undoes. A trip's delete is approved at once
  * when it is the route draft's only change; if the editor already had a draft
  * of the route, the delete joins it unapproved. If the approval is refused, the
- * removal draft stays in Drafts and the notice says why.
+ * removal draft stays stored and the notice says why.
  */
 export function useDeleteActions({
   signedIn,
@@ -83,13 +83,13 @@ export function useDeleteActions({
       saved.select(null);
       // The confirm reviewed the delete and nothing else. A draft the editor already
       // had holds changes nobody has reviewed, and approving it would publish them with
-      // the delete, so the delete joins that draft and waits in Drafts with the rest.
+      // the delete, so the delete joins that draft and waits with the rest for its Approve.
       if (hasDraftAlready) {
         setNotice(addedToDraft(v));
         return;
       }
       // The delete is the draft's only change: approved in the same press, so it is gone
-      // and not parked in Drafts, where Discard would undo it.
+      // and not parked in a draft, where Discard would undo it.
       const approved =
         stored.draft && (await runReviewCommand({ action: 'publish', draft: stored.draft }));
       if (approved?.code === 'approved') {
