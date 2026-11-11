@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { IconButton } from '@/design-system/primitives/icon-button';
 import { BottomSheet } from '@/shared/ui/bottom-sheet';
@@ -9,13 +9,12 @@ import type { CardStatus } from './card-status';
 import { RideDetailBody } from './ride-detail-body';
 import { rideDetailsOf } from './ride-details';
 import type { RideFacts } from './ride-facts';
-import { rideSummaryOf } from './ride-summary';
-import { RideSummaryPreview } from './ride-summary-preview';
+import { RideHeader } from './ride-header';
 import { rideFullNameOf, rideTitleOf } from './ride-title';
+import { useRideSummary } from './use-ride-summary';
 import { ArrowLeftIcon } from '../account/arrow-left-icon';
 import { HandQuestion } from '../account/hand-question';
 import { SCREEN_HASH_ATTR } from '../common/data-attributes';
-import { ArrowRightIcon } from '../common/history-icons';
 import { useClosedWhenHidden } from '../common/use-closed-when-hidden';
 import { SCREENS } from '../navigation/screen-routes';
 import type { Recording } from '../storage/recording-schema';
@@ -56,16 +55,8 @@ export function RideDetailScreen({ ride, onBack }: RideDetailScreenProps) {
   const [snap, setSnap] = useState<Snap>('low');
   const [isAsking, setIsAsking] = useState(false);
   useClosedWhenHidden(setIsAsking, false);
-  const [isShowingSummary, setIsShowingSummary] = useState(false);
-  useClosedWhenHidden(setIsShowingSummary, false);
-  const recording = ride?.recording;
-  const facts = ride?.facts ?? null;
-  // Memoised so the card is drawn once per opening, not on each render of the screen.
-  const summary = useMemo(
-    () => (recording ? rideSummaryOf(recording, facts) : null),
-    [recording, facts],
-  );
-  const isCovered = isAsking || isShowingSummary;
+  const summary = useRideSummary(ride);
+  const isCovered = isAsking || summary.isShowing;
   const deleteRef = useRef<HTMLDivElement>(null);
   const shouldReturnFocus = useRef(false);
   const isFolded = snap === 'low';
@@ -76,14 +67,6 @@ export function RideDetailScreen({ ride, onBack }: RideDetailScreenProps) {
     shouldReturnFocus.current = false;
     deleteRef.current?.querySelector('button')?.focus();
   }, [isAsking]);
-
-  // Close hands focus back to Share ride summary, which was inert under the card.
-  const summaryOpener = useRef<HTMLElement | null>(null);
-  useEffect(() => {
-    if (isShowingSummary) return;
-    summaryOpener.current?.focus();
-    summaryOpener.current = null;
-  }, [isShowingSummary]);
 
   const handleKeep = () => {
     shouldReturnFocus.current = true;
@@ -136,26 +119,12 @@ export function RideDetailScreen({ ride, onBack }: RideDetailScreenProps) {
               canDelete={ride.canDelete}
               deleteRef={deleteRef}
               onDelete={() => setIsAsking(true)}
-              onSummary={() => {
-                if (document.activeElement instanceof HTMLElement) {
-                  summaryOpener.current = document.activeElement;
-                }
-                setIsShowingSummary(true);
-              }}
+              onSummary={summary.open}
             />
           </BottomSheet>
         </div>
       )}
-      {ride && summary && isShowingSummary && (
-        <div className="pointer-events-auto">
-          <RideSummaryPreview
-            summary={summary}
-            trail={ride.facts?.trail ?? null}
-            startedAt={ride.recording.startedAt}
-            onClose={() => setIsShowingSummary(false)}
-          />
-        </div>
-      )}
+      {summary.card}
       {ride && isAsking && (
         // Deleted, the ride is gone from History and its screen leaves by itself (history-view.tsx).
         <div className="pointer-events-auto">
@@ -174,27 +143,5 @@ export function RideDetailScreen({ ride, onBack }: RideDetailScreenProps) {
         </div>
       )}
     </section>
-  );
-}
-
-interface RideHeaderProps {
-  recording: Recording;
-}
-
-/** The sheet's head: the ride's name, and where it went after the arrow. */
-function RideHeader({ recording }: RideHeaderProps) {
-  return (
-    <div className="flex flex-col gap-1 px-5 pt-1 pb-8">
-      <h1 className="text-2xl/8 font-semibold break-words">{rideTitleOf(recording)}</h1>
-      {recording.endPointName && (
-        <p className="flex items-center gap-2 text-xl/7 font-medium text-content-quaternary">
-          <span aria-hidden className="size-7 shrink-0 *:size-full">
-            <ArrowRightIcon />
-          </span>
-          <span className="sr-only">to</span>
-          <span className="min-w-0 flex-1 break-words">{recording.endPointName}</span>
-        </p>
-      )}
-    </div>
   );
 }
