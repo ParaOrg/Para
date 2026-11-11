@@ -45,6 +45,9 @@ type Story = StoryObj<typeof meta>;
 const token = (name: string) =>
   getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 
+/** An easing as WAAPI writes it back: a built stylesheet's ".55" is "0.55". */
+const easingOf = (text: string) => text.replace(/(^|[\s(,])\.(\d)/g, '$10.$2');
+
 /**
  * Start tracking folding into a pill at its right (duration-quick, ease-exit), then opening into
  * the recording card in its place (duration-gentle, ease-move). Press Start tracking to see it.
@@ -60,7 +63,7 @@ export const Default: Story = {
     await expect(fold?.effect?.getTiming().duration).toBe(
       cssDurationMs(token('--transition-duration-quick')),
     );
-    await expect(fold?.effect?.getTiming().easing).toBe(token('--ease-exit'));
+    await expect(fold?.effect?.getTiming().easing).toBe(easingOf(token('--ease-exit')));
     await waitFor(() => expect(document.querySelector(`[${START_MORPH_ATTR}]`)).toBeNull(), {
       timeout: 2000,
     });

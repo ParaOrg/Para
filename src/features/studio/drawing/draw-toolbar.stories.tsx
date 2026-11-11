@@ -198,6 +198,8 @@ export const Drawn: Story = {
  * Draw and S is Snap, while no panel is open. Plain Enter is nothing.
  */
 export const Keys: Story = {
+  // Something to redo: Redo, by key as by button, does nothing when there is nothing to redo.
+  args: { draw: drawn({ canRedo: true }) },
   play: async ({ args }) => {
     // The keys are bound in an effect, which can land after play has started:
     // press until they are.

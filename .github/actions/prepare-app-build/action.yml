@@ -22,7 +22,13 @@ runs:
         yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
         "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-36" "build-tools;36.0.0"
 
+    # Gradle's own distribution and the dependencies are cached in Gradle's home. setup-gradle
+    # writes that cache only on the default branch (main) unless told otherwise, so pull requests
+    # into staging found none and downloaded Gradle every time: a services.gradle.org outage
+    # (2026-11-08) turned them red. staging writes it too, and its pull requests read it.
     - uses: gradle/actions/setup-gradle@v4
+      with:
+        cache-read-only: ${{ github.ref != 'refs/heads/main' && github.ref != 'refs/heads/staging' }}
 
     - shell: bash
       run: npm ci
