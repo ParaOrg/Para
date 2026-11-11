@@ -54,13 +54,15 @@ const expectFigmaType = async (pill: HTMLElement) => {
   await expect(pill.getBoundingClientRect().height).toBe(28);
 };
 
-/** Default (3846:11748): the name alone in the line's colour, a UV Express card's. */
+/** Default (3846:11748): the name alone in the line's colour, a UV Express line's (its card's surface-border). */
 export const Default: Story = {
   args: { variant: 'default' },
   play: async ({ canvasElement }) => {
     const pill = partOf(canvasElement, 'name');
     await expectFigmaType(pill);
-    await expect(getComputedStyle(pill).backgroundColor).toBe(wornBy('bg-card-uv-express-surface'));
+    await expect(getComputedStyle(pill).backgroundColor).toBe(
+      wornBy('bg-card-uv-express-surface-border'),
+    );
     await expect(canvasElement.querySelector('[data-part="end"]')).toBeNull();
     await expect(canvasElement.querySelector('.sr-only')).toBeNull();
     await expect(getComputedStyle(partOf(canvasElement, 'label')).opacity).toBe('1');
@@ -76,7 +78,9 @@ export const Unselected: Story = {
   play: async ({ canvasElement }) => {
     const pill = partOf(canvasElement, 'name');
     await expectFigmaType(pill);
-    await expect(getComputedStyle(pill).backgroundColor).toBe(wornBy('bg-card-uv-express-surface'));
+    await expect(getComputedStyle(pill).backgroundColor).toBe(
+      wornBy('bg-card-uv-express-surface-border'),
+    );
     await expect(getComputedStyle(partOf(canvasElement, 'label')).opacity).toBe('0.6');
     await expect(canvasElement.querySelector('.sr-only')).toBeNull();
   },

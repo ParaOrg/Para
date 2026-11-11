@@ -4,6 +4,8 @@ import { createRoot } from 'react-dom/client';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import '@/styles/global.css';
 import { listenForInstallOffer, registerServiceWorker } from '@/features/published-map';
+import { cacheStorageMapFiles } from '@/features/routes/map/map-file-store';
+import { setMapFileStore } from '@/features/routes/published/fetch-index';
 import { ErrorBoundary } from '@/shared/ui/error-boundary';
 import { PageErrorScreen } from '@/shared/ui/page-error-screen';
 
@@ -48,6 +50,8 @@ if (forwardTo) {
   // (src/features/routes/published/map-file.ts) and never talk to the database. That keeps
   // supabase-js out of this page's bundle, which scripts/checks/check-build.mjs proves.
   registerServiceWorker();
+  // With no signal, the map file the worker kept from an earlier visit (fetch-index.ts).
+  setMapFileStore(cacheStorageMapFiles);
   listenForInstallOffer();
   const root = document.getElementById('root');
   if (!root) throw new Error('index.html has no #root to draw the map into');
