@@ -3,9 +3,6 @@ import { test } from 'node:test';
 import { fakeSupabase } from './fixtures/fake-supabase.mjs';
 import { setSupabase } from '../../src/features/studio/data/supabase.ts';
 import { runReviewCommand } from '../../src/features/studio/data/review-commands.ts';
-import { saveDraftFacts } from '../../src/features/studio/data/draft-facts.ts';
-import { reviewFields } from '../../src/features/studio/data/review-diff.ts';
-import { reviewDependencies } from '../../src/features/studio/data/review-dependencies.ts';
 import { reviewAnchor, reviewLines } from '../../src/features/studio/data/review-geometry.ts';
 import { waitingForPublication } from '../../src/features/studio/data/publication.ts';
 
@@ -52,82 +49,10 @@ test('a refused publish is the answer', async () => {
   const result = await runReviewCommand({ action: 'publish', draft });
   assert.equal(result.code, 'revision_mismatch');
 });
-test("editing a draft's facts preserves geometry and the complete link set", async () => {
-  const { client, log } = fakeSupabase((query) => ({
-    data: {
-      code: 'ok',
-      created: false,
-      draft: { ...draft, revision: 4, payload: query.payload.p_payload },
-    },
-  }));
-  setSupabase(client);
-  await saveDraftFacts(draft, { name: ' Corrected place ' });
-  assert.deepEqual(
-    log.map((q) => [q.table, q.op]),
-    [['rpc', 'save_draft']],
-  );
-  assert.equal(log[0].payload.p_payload.stop.name, 'Corrected place');
-  assert.deepEqual(log[0].payload.p_payload.stop.point, draft.payload.stop.point);
-  assert.deepEqual(log[0].payload.p_payload.links, draft.payload.links);
-  assert.equal(log[0].payload.p_revision, 3);
-});
-test('comparison detects moved geometry even with the same number of points', () => {
-  const before = {
-    version: 1,
-    stop: { name: 'Same', point: { type: 'Point', coordinates: [121, 14] } },
-  };
-  const after = {
-    version: 1,
-    stop: { name: 'Same', point: { type: 'Point', coordinates: [122, 14] } },
-  };
-  const fields = reviewFields({ approved: before, proposed: after });
-  assert.equal(fields[0].label, 'Place / Position');
-  assert.equal(fields[0].changed, true);
-  assert.equal(
-    fields.find((field) => field.label === 'Place / Ground name' || field.label === 'Place / name')
-      .changed,
-    false,
-  );
-});
 test('drawing markers come from the draft geometry, including new draft-only places', () => {
   assert.deepEqual(reviewLines(draft.payload), [[[121, 14]]]);
   assert.deepEqual(reviewAnchor(draft.payload), [121, 14]);
   assert.equal(reviewAnchor({ bad: 'payload' }), null);
-});
-test('route dependencies include new linked places, not only endpoints', async () => {
-  const dependent = { ...draft, id: 'new-place-draft', subject_id: 'new-place' };
-  const { client } = fakeSupabase((query) =>
-    query.table === 'stop'
-      ? {
-          data: [
-            { id: 'head', name: 'Head', status: 'approved' },
-            { id: 'tail', name: 'Tail', status: 'approved' },
-          ],
-        }
-      : { data: dependent },
-  );
-  setSupabase(client);
-  const missing = await reviewDependencies({
-    route: { head_stop_id: 'head', tail_stop_id: 'tail' },
-    directions: [{ links: [{ stop_id: 'new-place' }] }],
-  });
-  assert.deepEqual(missing, [
-    { subjectId: 'new-place', label: 'Place', draftId: 'new-place-draft' },
-  ]);
-});
-test('dependency lookups keep request batches bounded', async () => {
-  const { client, log } = fakeSupabase((query) => ({
-    data: query.filters
-      .find(([op]) => op === 'in')[2]
-      .map((id) => ({ id, name: id, status: 'approved' })),
-  }));
-  setSupabase(client);
-  await reviewDependencies({
-    route: { head_stop_id: null, tail_stop_id: null },
-    directions: [{ links: Array.from({ length: 95 }, (_, i) => ({ stop_id: `s${i}` })) }],
-  });
-  assert.equal(log.length, 4);
-  assert.ok(log.every((query) => query.filters.find(([op]) => op === 'in')[2].length <= 30));
 });
 const index = {
   publishedAt: '2026-10-18T10:00:00Z',

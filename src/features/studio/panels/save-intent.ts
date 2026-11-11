@@ -6,7 +6,7 @@ export type SaveIntent = 'draft' | 'publish';
 
 /**
  * A publish that stopped after the draft save. The approval submits first, so a refusal after
- * it leaves the draft waiting in Drafts, where its Approve finishes the publish.
+ * it leaves the draft stored, and the sidebar's Approve finishes the publish.
  */
 export const NOT_PUBLISHED =
-  'Saved as a draft, not published. To publish it, open Drafts and approve it there.';
+  'Saved as a draft, not published. To publish it, tap it on the map and press Approve.';

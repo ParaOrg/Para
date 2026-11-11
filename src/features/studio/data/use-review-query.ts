@@ -1,10 +1,10 @@
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo } from 'react';
 
-import { listDrafts } from './drafts';
-import { fetchPublicationState } from './publication';
+import { refreshDraftBase } from './draft-base';
+import { listDrafts, putBack, takeDown } from './drafts';
+import { fetchPublicationState, type PublicationSubject } from './publication';
 import { runReviewCommand } from './review-commands';
-import { fetchReviewComparison } from './review-comparison';
 import { reviewKeys } from './review-keys';
 import { reviewPlaceNames } from './review-names';
 import type { DraftRow } from './review-schema';
@@ -23,19 +23,30 @@ export function useReviewMutation() {
   });
 }
 
-export function usePublicationQuery() {
-  return useQuery({ queryKey: reviewKeys.publication(), queryFn: fetchPublicationState });
+/** Keep my draft: the stale draft moved onto the approved revision now (draft-base.ts). */
+export function useKeepDraftMutation() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: ({ kept, revision }: { kept: DraftRow; revision: number }) =>
+      refreshDraftBase(kept, revision),
+    onSettled: () => client.invalidateQueries({ queryKey: reviewKeys.all }),
+  });
 }
 
-export function useComparisonQuery(draft: DraftRow) {
-  return useQuery({
-    queryKey: reviewKeys.comparison(draft.id, draft.revision),
-    queryFn: () => fetchReviewComparison(draft),
-    // A new revision of the same draft keeps the comparison on screen while it
-    // reloads, so the details form beneath it is not unmounted mid-edit.
-    placeholderData: (previous, previousQuery) =>
-      previousQuery?.queryKey[2] === draft.id ? keepPreviousData(previous) : undefined,
+/** Take down an approved route or place, or put a taken-down one back; the lists read again. */
+export function useSubjectStatusMutation() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (subject: PublicationSubject) =>
+      subject.status === 'approved'
+        ? takeDown(subject.kind, subject.id)
+        : putBack(subject.kind, subject.id),
+    onSettled: () => client.invalidateQueries({ queryKey: reviewKeys.all }),
   });
+}
+
+export function usePublicationQuery() {
+  return useQuery({ queryKey: reviewKeys.publication(), queryFn: fetchPublicationState });
 }
 
 export function useReviewNames(drafts: DraftRow[]) {
