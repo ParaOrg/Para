@@ -711,8 +711,8 @@ at `/api/report` and the studio's Reports list are later changes, so applying it
 
 | File | What it does |
 | --- | --- |
-| `20261111100000_route_report_apply.sql` | One transaction. Checks `lock_map_tables` is in the ledger, and this is not. Applies `migrations/20261111100000_route_report.sql` (carried unchanged; `verify/route-report.sh` checks the copy). Checks nobody can insert or delete a report through the API, editors update only the status, row security is on, anon and authenticated cannot reach `report.send_report` and `report_sender` can. Writes the ledger row `route_report`. Any failed check raises and nothing is changed. A second run stops at the first check and changes nothing. |
-| `20261111100000_route_report_check.sql` | Part one adds a test editor, a non-editor and routes, sends reports as `report_sender`, proves every cap and every refusal, then rolls all of it back. Part two is read-only: 6 rows, all `ok` should be `t`. |
+| `20261111100000_route_report_apply.sql` | One transaction. Checks `lock_map_tables` is in the ledger, and this is not. Applies `migrations/20261111100000_route_report.sql` (carried unchanged; `verify/route-report.sh` checks the copy). Checks nobody can insert or delete a report through the API, editors update only the status, row security is on, anon and authenticated cannot reach `report.submit_route_report` and `report_sender` can. Writes the ledger row `route_report`. Any failed check raises and nothing is changed. A second run stops at the first check and changes nothing. |
+| `20261111100000_route_report_check.sql` | Part one adds a test editor, a non-editor and routes, sends reports as `report_sender`, proves every kind and note rule, every cap and every refusal, then rolls all of it back. Part two is read-only: 6 rows, all `ok` should be `t`. |
 | `20261111100000_route_report_revert.sql` | One transaction: drops the function, the schema `report`, the table with every report in it, the trigger function and the role `report_sender`, and removes the ledger row. Safe to run twice. |
 
 ## Steps
@@ -725,7 +725,7 @@ at `/api/report` and the studio's Reports list are later changes, so applying it
 4. Record the ledger version
    (`select version from supabase_migrations.schema_migrations where name = 'route_report';`)
    in `migrations/README.md`. The types change (one table): regenerate them.
-5. Only when the Worker is ready (a later change): give `report_sender` a login and a long random password, by
+5. **Not now: only once step 2's Worker exists** (a later change). Then give `report_sender` a login and a long random password, by
    hand in the SQL editor, never in a file:
    `alter role report_sender with login password '<generated>';`. The Worker's connection string is then
    `postgresql://report_sender.<project-ref>:<password>@<pooler host>:6543/postgres` (the transaction pooler,

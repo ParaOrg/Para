@@ -3,10 +3,10 @@
 -- wanted (select * from public.route_report). One transaction; safe to run twice. Stop the
 -- Worker first: once this runs, every report it sends fails.
 begin;
-drop function if exists report.send_report(uuid, uuid, text);
+drop function if exists report.submit_route_report(uuid, uuid, text, text);
 drop schema if exists report;
 drop table if exists public.route_report;
-drop function if exists private.route_report_handled();
+drop function if exists private.route_report_resolved();
 -- Its grants went with the schema and the function, so nothing holds the role back.
 drop role if exists report_sender;
 delete from supabase_migrations.schema_migrations where name = 'route_report';

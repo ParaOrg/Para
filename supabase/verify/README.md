@@ -357,9 +357,9 @@ leaves the schema as before, line for line once the dumps are sorted (the two co
 
 It applies every earlier migration with the review flow's paste files through lock_map_tables, then
 `../apply/20261111100000_route_report_apply.sql` twice (the second run must stop and change nothing), and
-`…_check.sql`: its rolled-back behaviour part (report_sender sends a report and can do nothing else, every cap
-refuses at its limit, anon and a signed-in non-editor send and see nothing, an editor reads reports and sets only
-the status, with who and when filled in for them) must raise nothing and leave no row behind, and its 6 read-only
+`…_check.sql`: its rolled-back behaviour part (report_sender sends a report and can do nothing else, a kind off the
+list or an `other` with no words is refused, every cap refuses at its limit, anon and a signed-in non-editor send and see nothing, an editor reads reports and sets only
+the status, with who resolved it and when filled in for them) must raise nothing and leave no row behind, and its 6 read-only
 rows must be `t`. On a second database, without lock_map_tables, the apply refuses and writes no ledger row. On
 a third, apply then revert twice leaves the schema as before and the role `report_sender` gone, and re-applying
 passes the check. `report_sender` is a role of the whole server, so each database is dropped before the next.

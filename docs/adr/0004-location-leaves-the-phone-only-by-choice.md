@@ -63,5 +63,5 @@ recording only after it is saved.
 ## Amendment, 2026-11-11 (proposed with ADR 0010)
 
 The public map sends nothing except a report the commuter chooses to send, holding no location or identity
-([ADR 0010](0010-a-commuter-may-send-a-route-report.md)). It goes to Para's own Worker at `/api/report`, never to
+([ADR 0010](0010-commuters-can-report-a-route-problem.md)). It goes to Para's own Worker at `/api/report`, never to
 the database; commuters still never read the database.

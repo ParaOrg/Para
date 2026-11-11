@@ -26,24 +26,26 @@ end $$;
 -- >>> supabase/migrations/20261111100000_route_report.sql, unchanged
 -- ParaPo — a commuter can report a problem with a route: one table, one way in.
 --
--- ADR 0010 (docs/adr/0010-a-commuter-may-send-a-route-report.md), design B of Q158. The public
+-- ADR 0010 (docs/adr/0010-commuters-can-report-a-route-problem.md), design B of Q158. The public
 -- map posts a report to a Cloudflare Worker at its own origin, /api/report. The Worker checks
--- Turnstile and its own rate limit, then calls report.send_report over a Postgres connection as
+-- Turnstile and its own rate limit, then calls report.submit_route_report over a Postgres connection as
 -- report_sender, a role that may run that one function and nothing else. The public page holds
 -- no database address or key; the Worker holds the connection string as a secret.
 --
--- What a report holds: the route, optionally the direction, the commuter's words (1 to 500
--- characters), when it came, and what an editor did with it. Never an IP address (not even
+-- What a report holds: the route, optionally the direction, its kind (wrong_line, wrong_fare,
+-- wrong_stop, wrong_signboard, no_longer_runs or other: Q150), the commuter's words (optional, up
+-- to 500 characters, required for other), when it came, and what an editor did with it. Never an IP address (not even
 -- hashed), a location, a device id or an account: the owner's rule, and the table has no column
 -- that could hold one.
 --
 --   public.route_report  RLS on. Editors read it and set its status (open, done, dismissed);
---                        nobody inserts or deletes through the API. handled_by and handled_at
+--                        nobody inserts or deletes through the API. resolved_by and resolved_at
 --                        are set by a trigger when the status changes, never by the caller.
---   report.send_report   security definer, search_path ''. In the schema report, which the
+--   report.submit_route_report
+--                        security definer, search_path ''. In the schema report, which the
 --                        REST API does not expose; revoked from public, anon and authenticated,
---                        granted to report_sender only. Answers one word: sent, bad_note,
---                        unknown_route, busy, route_full or full. Caps, checked under one lock
+--                        granted to report_sender only. Answers one word: sent, bad_kind,
+--                        bad_note, unknown_route, busy, route_full or full. Caps, checked under one lock
 --                        so two reports cannot both slip under one: 20 a route in a rolling day,
 --                        30 in any minute, 2000 in any day, and 50,000 rows in all, so reports
 --                        cannot fill the 500 MB database (a row is under 1 kB).
@@ -60,11 +62,13 @@ create table if not exists public.route_report (
   id           uuid primary key default gen_random_uuid(),
   route_id     uuid not null references public.route (id) on delete cascade,
   direction_id uuid references public.route_variant (id) on delete set null,
-  note         text not null check (char_length(note) between 1 and 500),
+  kind         text not null check (kind in ('wrong_line', 'wrong_fare', 'wrong_stop', 'wrong_signboard',
+                                            'no_longer_runs', 'other')),
+  note         text check (char_length(note) between 1 and 500),
   status       text not null default 'open' check (status in ('open', 'done', 'dismissed')),
   created_at   timestamptz not null default now(),
-  handled_by   uuid references auth.users (id) on delete set null,
-  handled_at   timestamptz
+  resolved_by  uuid references auth.users (id) on delete set null,
+  resolved_at  timestamptz
 );
 comment on table public.route_report is
   'A problem a commuter reported with a route. Holds no IP, location, device id or account (ADR 0010).';
@@ -86,8 +90,8 @@ create policy route_report_editors_handle on public.route_report
   for update to authenticated
   using ((select private.is_editor())) with check ((select private.is_editor()));
 
--- Who handled it and when follow the status: an editor sets only the status.
-create or replace function private.route_report_handled()
+-- Who resolved it and when follow the status: an editor sets only the status.
+create or replace function private.route_report_resolved()
 returns trigger
 language plpgsql
 set search_path = ''
@@ -95,36 +99,43 @@ as $$
 begin
   if new.status is distinct from old.status then
     if new.status = 'open' then
-      new.handled_by := null;
-      new.handled_at := null;
+      new.resolved_by := null;
+      new.resolved_at := null;
     else
-      new.handled_by := auth.uid();
-      new.handled_at := now();
+      new.resolved_by := auth.uid();
+      new.resolved_at := now();
     end if;
   end if;
   return new;
 end;
 $$;
-revoke all on function private.route_report_handled() from public, anon, authenticated;
+revoke all on function private.route_report_resolved() from public, anon, authenticated;
 
-create or replace trigger route_report_handled
+create or replace trigger route_report_resolved
   before update of status on public.route_report
-  for each row execute function private.route_report_handled();
+  for each row execute function private.route_report_resolved();
 
 -- The one way in, in a schema the REST API does not expose.
 create schema if not exists report;
 revoke all on schema report from public;
 
-create or replace function report.send_report(p_route_id uuid, p_direction_id uuid, p_note text)
+create or replace function report.submit_route_report(
+  p_route_id uuid, p_direction_id uuid, p_kind text, p_note text
+)
 returns text
 language plpgsql
 security definer
 set search_path = ''
 as $$
 declare
-  v_note text := btrim(coalesce(p_note, ''));
+  v_note text := nullif(btrim(coalesce(p_note, '')), '');
 begin
-  if char_length(v_note) not between 1 and 500 then
+  if p_kind is null or p_kind not in ('wrong_line', 'wrong_fare', 'wrong_stop', 'wrong_signboard',
+                                      'no_longer_runs', 'other') then
+    return 'bad_kind';
+  end if;
+  -- Words are optional, at most 500 characters, and say what "other" is.
+  if char_length(v_note) > 500 or (p_kind = 'other' and v_note is null) then
     return 'bad_note';
   end if;
   if not exists (select 1 from public.route r where r.id = p_route_id and r.status = 'approved') then
@@ -148,11 +159,12 @@ begin
       where route_id = p_route_id and created_at > now() - interval '1 day') >= 20 then
     return 'route_full';
   end if;
-  insert into public.route_report (route_id, direction_id, note) values (p_route_id, p_direction_id, v_note);
+  insert into public.route_report (route_id, direction_id, kind, note)
+    values (p_route_id, p_direction_id, p_kind, v_note);
   return 'sent';
 end;
 $$;
-revoke all on function report.send_report(uuid, uuid, text) from public, anon, authenticated;
+revoke all on function report.submit_route_report(uuid, uuid, text, text) from public, anon, authenticated;
 
 -- The Worker's role: it may reach the schema and run the function, nothing else.
 do $$
@@ -163,7 +175,7 @@ begin
 end $$;
 alter role report_sender set statement_timeout = '5s';
 grant usage on schema report to report_sender;
-grant execute on function report.send_report(uuid, uuid, text) to report_sender;
+grant execute on function report.submit_route_report(uuid, uuid, text, text) to report_sender;
 -- <<< supabase/migrations/20261111100000_route_report.sql
 
 -- 2. After: the table is the editors' only, the function report_sender's only.
@@ -182,7 +194,7 @@ begin
     raise exception 'route_report: anon or report_sender can read route_report. Nothing was changed.';
   end if;
   if has_column_privilege('authenticated', 'public.route_report', 'note', 'update')
-     or has_column_privilege('authenticated', 'public.route_report', 'handled_by', 'update')
+     or has_column_privilege('authenticated', 'public.route_report', 'resolved_by', 'update')
      or not has_column_privilege('authenticated', 'public.route_report', 'status', 'update') then
     raise exception 'route_report: editors may update more than the status, or not the status. Nothing was changed.';
   end if;
@@ -191,12 +203,12 @@ begin
   end if;
   foreach r in array array['anon', 'authenticated'] loop
     if has_schema_privilege(r, 'report', 'usage')
-       or has_function_privilege(r, 'report.send_report(uuid, uuid, text)', 'execute') then
-      raise exception 'route_report: % can reach report.send_report. Nothing was changed.', r;
+       or has_function_privilege(r, 'report.submit_route_report(uuid, uuid, text, text)', 'execute') then
+      raise exception 'route_report: % can reach report.submit_route_report. Nothing was changed.', r;
     end if;
   end loop;
-  if not has_function_privilege('report_sender', 'report.send_report(uuid, uuid, text)', 'execute') then
-    raise exception 'route_report: report_sender cannot run report.send_report. Nothing was changed.';
+  if not has_function_privilege('report_sender', 'report.submit_route_report(uuid, uuid, text, text)', 'execute') then
+    raise exception 'route_report: report_sender cannot run report.submit_route_report. Nothing was changed.';
   end if;
 end $$;
 
