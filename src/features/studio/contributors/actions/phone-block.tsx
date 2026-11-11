@@ -6,6 +6,10 @@ import { TextAreaField } from '@/design-system/primitives/text-area-field';
 import { useContributorQuery, useBlockContributorMutation } from '../../data/use-contributor-query';
 import { manilaTime } from '../contribution-format';
 
+/** Said under the phone when a later read fails: what is shown is the last read. */
+export const STALE = (phoneCode: string) =>
+  `Couldn’t refresh phone ${phoneCode}. Showing what was last read.`;
+
 interface PhoneBlockProps {
   contributorId: string;
   phoneCode: string;
@@ -23,14 +27,20 @@ export function PhoneBlock({ contributorId, phoneCode }: PhoneBlockProps) {
   const phone = useContributorQuery(contributorId);
   const change = useBlockContributorMutation(contributorId);
 
+  const retry = () => void phone.refetch();
   if (phone.isPending) return <p aria-live="polite">Reading phone {phoneCode}…</p>;
-  if (phone.error)
+  // A later read that fails keeps what was read: only a first read that failed has nothing to show.
+  if (phone.data === undefined)
     return (
-      <p role="alert">
-        Phone {phoneCode} could not be read. {phone.error.message}
-      </p>
+      <div className="flex w-full flex-col items-start gap-2">
+        <p role="alert">
+          Phone {phoneCode} could not be read. {phone.error.message}
+        </p>
+        <Button variant="secondary" size="small" label="Try again" onClick={retry} />
+      </div>
     );
   const { uploadCount, blockedAt, blockNote } = phone.data;
+  const staleNotice = phone.error ? STALE(phoneCode) : null;
 
   const send = (isBlocking: boolean) =>
     change.mutate(
@@ -43,10 +53,22 @@ export function PhoneBlock({ contributorId, phoneCode }: PhoneBlockProps) {
       },
     );
 
+  // The status line stays mounted, so a screen reader hears the notice when it appears.
   const summary = (
-    <p>
-      Phone {phoneCode} has sent {uploadCount} {uploadCount === 1 ? 'upload' : 'uploads'}.
-    </p>
+    <>
+      <p>
+        Phone {phoneCode} has sent {uploadCount} {uploadCount === 1 ? 'upload' : 'uploads'}.
+      </p>
+      <p role="status" className="sr-only">
+        {staleNotice}
+      </p>
+      {staleNotice && (
+        <div className="flex items-center gap-2 text-sm text-content-secondary">
+          <p aria-hidden="true">{staleNotice}</p>
+          <Button variant="secondary" size="small" label="Try again" onClick={retry} />
+        </div>
+      )}
+    </>
   );
   if (blockedAt !== null) {
     return (

@@ -1,10 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { QueryClientProvider } from '@tanstack/react-query';
-import { expect, userEvent, within } from 'storybook/test';
+import { QueryClientProvider, type QueryClient } from '@tanstack/react-query';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { createQueryClient } from '@/shared/lib/query-client';
 
-import { PhoneBlock } from './phone-block';
+import { PhoneBlock, STALE } from './phone-block';
 import { contributionKeys } from '../../data/contribution-keys';
 import type { ContributorInfo } from '../../data/contributor-read';
 
@@ -28,6 +28,45 @@ const withPhone = (info: ContributorInfo | null) => (Story: () => React.JSX.Elem
     </QueryClientProvider>
   );
 };
+
+/**
+ * A client whose read of the phone failed, with or without what an earlier read gave. It does not
+ * read again on mount, so the story shows the failure; Try again starts a read that never answers.
+ */
+function failedClient(info: ContributorInfo | null): QueryClient {
+  const client = createQueryClient();
+  client.setQueryDefaults(contributionKeys.phone(PHONE), {
+    staleTime: Infinity,
+    retryOnMount: false,
+  });
+  client.getQueryCache().build(
+    client,
+    { queryKey: contributionKeys.phone(PHONE) },
+    {
+      data: info ?? undefined,
+      dataUpdateCount: info ? 1 : 0,
+      dataUpdatedAt: info ? Date.now() : 0,
+      error: new Error('The network dropped.'),
+      errorUpdateCount: 1,
+      errorUpdatedAt: Date.now(),
+      fetchFailureCount: 1,
+      fetchFailureReason: null,
+      fetchMeta: null,
+      isInvalidated: false,
+      status: 'error',
+      fetchStatus: 'idle',
+    },
+  );
+  return client;
+}
+
+const withClient = (client: QueryClient) => (Story: () => React.JSX.Element) => (
+  <QueryClientProvider client={client}>
+    <div className="w-96 bg-surface p-4 font-sn-pro text-sm text-content-secondary">
+      <Story />
+    </div>
+  </QueryClientProvider>
+);
 
 const meta = {
   title: 'Features/Studio/PhoneBlock',
@@ -68,3 +107,46 @@ export const Blocked: Story = {
 
 /** The read is still on its way: the query has no data and the story's database never answers. */
 export const Reading: Story = { decorators: [withPhone(null)] };
+
+/** The first read failed: nothing to show but why, and Try again. */
+export const FirstReadFailed: Story = {
+  decorators: [withClient(failedClient(null))],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole('alert')).toHaveTextContent('Phone a697d4 could not be read.');
+    await expect(canvas.getByRole('button', { name: 'Try again' })).toBeVisible();
+  },
+};
+
+const refreshFailed = failedClient({ uploadCount: 14, blockedAt: null, blockNote: '' });
+
+/** A later read failed: the phone stays as last read, Block still works, and a quiet notice says so. */
+export const RefreshFailed: Story = {
+  decorators: [withClient(refreshFailed)],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByText('Phone a697d4 has sent 14 uploads.')).toBeVisible();
+    await expect(canvas.getByRole('status')).toHaveTextContent(STALE('a697d4'));
+    await expect(canvas.queryByRole('alert')).toBeNull();
+    await expect(canvas.getByRole('button', { name: 'Block phone' })).toBeEnabled();
+  },
+};
+
+const tryAgain = failedClient({ uploadCount: 14, blockedAt: null, blockNote: '' });
+/** How many reads of the phone began: Try again starts one. */
+let readsBegun = 0;
+tryAgain.getQueryCache().subscribe((event) => {
+  if (event.type === 'updated' && event.action.type === 'fetch') readsBegun += 1;
+});
+
+/** Try again reads the phone again; the phone stays shown while it does. */
+export const TryAgain: Story = {
+  decorators: [withClient(tryAgain)],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const before = readsBegun;
+    await userEvent.click(canvas.getByRole('button', { name: 'Try again' }));
+    await waitFor(() => expect(readsBegun).toBe(before + 1));
+    await expect(canvas.getByText('Phone a697d4 has sent 14 uploads.')).toBeVisible();
+  },
+};
