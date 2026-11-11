@@ -187,6 +187,8 @@ interface Props {
    * the map says of itself, its failure included, stays under it.
    */
   isCovered?: boolean;
+  /** The studio's: the failure box with its diagnostics (MapFailure). Elsewhere, its first line alone. */
+  showsDiagnostics?: boolean;
   /**
    * What the map is made with in place of `initialStyle`: the contributor app's, which falls back
    * to its copies of the basemaps' styles, so it loads with no signal
@@ -231,6 +233,7 @@ export function MapView({
   creditsAtBottom = false,
   areCreditsShown = true,
   isCovered = false,
+  showsDiagnostics = false,
   makeStyle = initialStyle,
   transformRequest,
 }: Props) {
@@ -433,6 +436,12 @@ export function MapView({
           console.warn('[map]', message);
           return;
         }
+        // The routes are drawn: a tile, glyph or sprite of the basemap that did not come is
+        // not the map failing, though 'load' still waits on it.
+        if (routesDrawn(made)) {
+          console.warn('[map]', message);
+          return;
+        }
         console.error('[map]', message, e);
         setError(message);
         void diagnose(basemap.url).then(setDiag);
@@ -523,6 +532,7 @@ export function MapView({
           dom={dom}
           trace={trace}
           styleUrl={basemap.url}
+          showsDiagnostics={showsDiagnostics}
         />
       )}
     </>

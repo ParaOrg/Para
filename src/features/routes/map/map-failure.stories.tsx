@@ -20,13 +20,23 @@ const meta = {
     dom: null,
     trace: [],
     styleUrl: 'https://tiles.openfreemap.org/styles/positron',
+    showsDiagnostics: true,
   },
 } satisfies Meta<typeof MapFailure>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** Just failed: the message and the style's address, before the device has answered. */
+/** What a commuter and a contributor read: the one line, and none of the diagnostics. */
+export const OutsideTheStudio: Story = {
+  args: {
+    showsDiagnostics: false,
+    diagnosis: { webgl: 'webgl2', renderer: 'Adreno (TM) 610', styleFetch: 'HTTP 503 after 80ms' },
+    trace: ['styledata@212ms'],
+  },
+};
+
+/** In the studio, just failed: the message and the style's address, before the device has answered. */
 export const JustFailed: Story = {};
 
 /** The device has answered: WebGL, the renderer, the style's fetch, the container and the events. */
