@@ -11,9 +11,12 @@ const loadKeepTiles = /* @__PURE__ */ retryingImport(() => import('./keep-tiles-
  * A ride's surroundings kept on the phone once the rider's dot is known with signal, so its map
  * still draws if the signal drops on the way (keep-tiles-around.ts). Once a ride; a ride begun
  * with no signal tries again at the next fix once there is one. The app's alone: the web page has
- * its worker, and contribute-map.tsx leaves this out of its build.
+ * its worker, so the web build has a hook that does nothing instead.
  */
-export function useKeepRideTiles(
+export const useKeepRideTiles =
+  import.meta.env.MODE === 'apk' ? useKeepTilesInApp : () => undefined;
+
+function useKeepTilesInApp(
   map: MapLibreMap | null,
   isMapLoaded: boolean,
   isRecording: boolean,

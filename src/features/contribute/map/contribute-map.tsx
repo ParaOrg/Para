@@ -25,13 +25,10 @@ const MAKE_STYLE = import.meta.env.MODE === 'apk' ? styleWithCopies : undefined;
 // And the basemap's tiles, sprite and glyphs it has seen, in its Cache Storage.
 const BASEMAP_REQUESTS =
   import.meta.env.MODE === 'apk' ? keepBasemapOnThePhone(basemapHost) : undefined;
-// And the tiles around a ride's start, fetched as it starts (use-keep-ride-tiles.ts).
-const useKeepTiles = import.meta.env.MODE === 'apk' ? useKeepRideTiles : () => undefined;
 
 // Fetched when a recording's form opens, not with the page.
 const loadCapture = retryingImport(() => import('./capture-trail-picture'));
-// The paused frost, out of the page's opening: fetched once a recording is on, before any pause,
-// so its first ease in plays.
+// The paused frost, out of the page's opening: fetched once a recording is on, before any pause, so its first ease in plays.
 const loadFrost = retryingImport(() => import('./paused-frost'));
 
 /** What the page draws on the map besides the trail: the shell's locator, which this feature may not import. */
@@ -80,10 +77,9 @@ interface ContributeMapProps {
 }
 
 /**
- * The map under every screen: the public map's own view, with the published
- * routes faint on it and the published hotspots (boxes and pins, display-only),
- * the recording's trail over them and the shell's locator
- * (the dot, and the button with the map-style picker) on top.
+ * The map under every screen: the public map's own view, with the published routes faint on it
+ * and the published hotspots (boxes and pins, display-only), the recording's trail over them and
+ * the shell's locator (the dot, and the button with the map-style picker) on top.
  */
 export function ContributeMap({
   track,
@@ -122,13 +118,12 @@ export function ContributeMap({
     };
   }, [isRecording, PausedFrost]);
 
-  useKeepTiles(map, isMapLoaded, isRecording, where?.at);
-
   // A map made with no signal is made again once there is one (use-map-reconnect.ts).
   const mapAttempt = useMapReconnect(map, isMapLoaded);
 
   usePublishedRoutes(map, isMapLoaded);
   usePublishedHotspots(map, isMapLoaded);
+  useKeepRideTiles(map, isMapLoaded, isRecording, where?.at);
   useRecordingTrail(map, ride?.trail ?? track.trail);
 
   // Once each time a ride's screen opens, its whole trail framed above the folded sheet. A ride
