@@ -19,6 +19,10 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+/** Made-up words the stories type: long enough, with a digit, as the screen's rule asks. */
+const TYPED = 'jeepney-to-cubao-7';
+const MISTYPED = 'jeepney-to-cubao-8';
+
 /** Figma 4461:5382: no back arrow, the code has signed the phone in. */
 export const Default: Story = {
   play: async ({ canvasElement }) => {
@@ -30,8 +34,8 @@ export const Default: Story = {
 export const NotMatching: Story = {
   play: async ({ args, canvasElement }) => {
     const canvas = within(canvasElement);
-    await userEvent.type(canvas.getByLabelText('New password'), 'a-better-passw0rd');
-    await userEvent.type(canvas.getByLabelText('Confirm password'), 'a-better-passw0d');
+    await userEvent.type(canvas.getByLabelText('New password'), TYPED);
+    await userEvent.type(canvas.getByLabelText('Confirm password'), MISTYPED);
     await userEvent.click(canvas.getByRole('button', { name: 'Save' }));
     await expect(canvas.getByText("The passwords don't match")).toBeVisible();
     await expect(args.onSubmit).not.toHaveBeenCalled();
@@ -42,13 +46,10 @@ export const NotMatching: Story = {
 export const Matching: Story = {
   play: async ({ args, canvasElement }) => {
     const canvas = within(canvasElement);
-    await userEvent.type(canvas.getByLabelText('New password'), 'a-better-passw0rd');
-    await userEvent.type(canvas.getByLabelText('Confirm password'), 'a-better-passw0rd');
+    await userEvent.type(canvas.getByLabelText('New password'), TYPED);
+    await userEvent.type(canvas.getByLabelText('Confirm password'), TYPED);
     await userEvent.click(canvas.getByRole('button', { name: 'Save' }));
-    await expect(args.onSubmit).toHaveBeenCalledWith({
-      password: 'a-better-passw0rd',
-      confirmation: 'a-better-passw0rd',
-    });
+    await expect(args.onSubmit).toHaveBeenCalledWith({ password: TYPED, confirmation: TYPED });
   },
 };
 
