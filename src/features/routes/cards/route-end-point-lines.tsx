@@ -10,7 +10,7 @@ interface RouteEndPointLinesProps {
    * past its arrow; Bottom, the last row, the line ending at its arrow.
    */
   position: RouteEndPointPosition;
-  /** At Figma's opacity/80, as a RouteCardRailway's and a trip's rows draw it; else at full. */
+  /** At Figma's opacity/80, as a trip's Other routes draw it; else at full. */
   isFaint?: boolean;
 }
 

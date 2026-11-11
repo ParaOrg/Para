@@ -48,6 +48,9 @@ jobs:
         with:
           languages: ${{ matrix.language }}
           build-mode: none
+          # The CodeQL bundle the runner image already holds, not a download of the one linked to
+          # this action's version: a release download outage (2026-11-08) turned the check red.
+          tools: toolcache
 
       - uses: github/codeql-action/analyze@v4
         with:
