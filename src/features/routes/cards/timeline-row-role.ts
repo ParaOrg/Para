@@ -1,6 +1,6 @@
 import type { RouteTripLineDetailPillContent } from './route-trip-line-detail-pill';
 
-/** Where a ride starts (Start's S) or ends (End's E), before a row's name. */
+/** Where a ride starts (Start's S) or ends (End's E), in its row's slot. */
 export type RideMarkKind = 'start' | 'end';
 
 /** An end of the trip, picked from its row: the origin (`from`) or the destination (`to`). */

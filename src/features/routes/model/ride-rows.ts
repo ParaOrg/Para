@@ -6,9 +6,9 @@
 /**
  * The rows of a trip's timeline outside its ride: outside the stretch between
  * the start's row and the end's, whichever is above. A null start is the
- * origin; with no end, no ride, and nothing outside it. The card folds these
- * rows, its rail broken where the ride starts and ends (the owner's Variant5,
- * 4151:13619), and the map's dots along them wear the pale.
+ * origin; with no end, no ride, and nothing outside it. On the card these
+ * rows stand alone, off the rail (timelineRowStates), and the map's dots along
+ * them wear the pale.
  */
 export function rowsOutsideRide(
   rows: readonly { id: string }[],
@@ -48,7 +48,7 @@ export function rowsOutsideStartAlone(
  * of these (another trip's, a moment before it goes): the whole ride.
  * `endRow`, an end row picked with the start kept (rideToEnd): the ride from
  * the start's row to the destination, the row count, or back to the origin,
- * -1. The one rule the card's rail and folds read (rowsOutsideRide).
+ * -1. The one rule the card's rows and the map's pale read (rowsOutsideRide).
  *
  * On a loop (`isLoop`) the rows are what lies between its tip at the top and
  * the tip again at the bottom, and a ride only goes forward, round: an
