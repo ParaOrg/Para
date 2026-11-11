@@ -120,4 +120,5 @@ PSQL="$PSQL" PG_DUMP="$PG_DUMP" bash draft-published.sh
 PSQL="$PSQL" PG_DUMP="$PG_DUMP" bash keep-uploads-on-user-delete.sh
 PSQL="$PSQL" PG_DUMP="$PG_DUMP" bash lock-map-tables.sh
 PSQL="$PSQL" PG_DUMP="$PG_DUMP" bash drop-dead-weight.sh
+PSQL="$PSQL" PG_DUMP="$PG_DUMP" bash route-report.sh
 PSQL="$PSQL" PG_DUMP="$PG_DUMP" bash schema-snapshot.sh
