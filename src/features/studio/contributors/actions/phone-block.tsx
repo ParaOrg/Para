@@ -7,7 +7,7 @@ import { useContributorQuery, useBlockContributorMutation } from '../../data/use
 import { manilaTime } from '../contribution-format';
 
 /** Said under the phone when a later read fails: what is shown is the last read. */
-export const STALE = (phoneCode: string) =>
+const staleNotice = (phoneCode: string) =>
   `Couldn’t refresh phone ${phoneCode}. Showing what was last read.`;
 
 interface PhoneBlockProps {
@@ -27,7 +27,7 @@ export function PhoneBlock({ contributorId, phoneCode }: PhoneBlockProps) {
   const phone = useContributorQuery(contributorId);
   const change = useBlockContributorMutation(contributorId);
 
-  const retry = () => void phone.refetch();
+  const handleRetry = () => void phone.refetch();
   if (phone.isPending) return <p aria-live="polite">Reading phone {phoneCode}…</p>;
   // A later read that fails keeps what was read: only a first read that failed has nothing to show.
   if (phone.data === undefined)
@@ -36,11 +36,11 @@ export function PhoneBlock({ contributorId, phoneCode }: PhoneBlockProps) {
         <p role="alert">
           Phone {phoneCode} could not be read. {phone.error.message}
         </p>
-        <Button variant="secondary" size="small" label="Try again" onClick={retry} />
+        <Button variant="secondary" size="small" label="Try again" onClick={handleRetry} />
       </div>
     );
   const { uploadCount, blockedAt, blockNote } = phone.data;
-  const staleNotice = phone.error ? STALE(phoneCode) : null;
+  const notice = phone.error ? staleNotice(phoneCode) : null;
 
   const send = (isBlocking: boolean) =>
     change.mutate(
@@ -60,12 +60,12 @@ export function PhoneBlock({ contributorId, phoneCode }: PhoneBlockProps) {
         Phone {phoneCode} has sent {uploadCount} {uploadCount === 1 ? 'upload' : 'uploads'}.
       </p>
       <p role="status" className="sr-only">
-        {staleNotice}
+        {notice}
       </p>
-      {staleNotice && (
+      {notice && (
         <div className="flex items-center gap-2 text-sm text-content-secondary">
-          <p aria-hidden="true">{staleNotice}</p>
-          <Button variant="secondary" size="small" label="Try again" onClick={retry} />
+          <p aria-hidden="true">{notice}</p>
+          <Button variant="secondary" size="small" label="Try again" onClick={handleRetry} />
         </div>
       )}
     </>

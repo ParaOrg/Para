@@ -4,7 +4,7 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { createQueryClient } from '@/shared/lib/query-client';
 
-import { PhoneBlock, STALE } from './phone-block';
+import { PhoneBlock } from './phone-block';
 import { contributionKeys } from '../../data/contribution-keys';
 import type { ContributorInfo } from '../../data/contributor-read';
 
@@ -126,9 +126,33 @@ export const RefreshFailed: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(canvas.getByText('Phone a697d4 has sent 14 uploads.')).toBeVisible();
-    await expect(canvas.getByRole('status')).toHaveTextContent(STALE('a697d4'));
+    await expect(canvas.getByRole('status')).toHaveTextContent(
+      'Couldn’t refresh phone a697d4. Showing what was last read.',
+    );
     await expect(canvas.queryByRole('alert')).toBeNull();
     await expect(canvas.getByRole('button', { name: 'Block phone' })).toBeEnabled();
+  },
+};
+
+/** A later read failed on a blocked phone: the notice sits above when it was blocked, and Unblock. */
+export const RefreshFailedBlocked: Story = {
+  decorators: [
+    withClient(
+      failedClient({
+        uploadCount: 14,
+        blockedAt: Date.UTC(2026, 9, 19, 4, 0, 0),
+        blockNote: 'Sends rides that are walks',
+      }),
+    ),
+  ],
+};
+
+/** A later read failed while the editor is asking why to block: the notice sits in the question. */
+export const RefreshFailedAsking: Story = {
+  decorators: [withClient(failedClient({ uploadCount: 14, blockedAt: null, blockNote: '' }))],
+  play: async (context) => {
+    await Asking.play?.(context);
+    await expect(within(context.canvasElement).getByRole('status')).not.toBeEmptyDOMElement();
   },
 };
 
