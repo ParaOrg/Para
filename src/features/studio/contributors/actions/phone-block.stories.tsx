@@ -10,10 +10,16 @@ import type { ContributorInfo } from '../../data/contributor-read';
 
 const PHONE = 'a697d4aa-0000-4000-8000-000000000001';
 
-/** A client that already has the phone, so the story needs no database. */
+/**
+ * A client that already has the phone and keeps it, so the story needs no database: without
+ * staleTime the card would read the phone again as it mounts, and fail with none.
+ */
 const withPhone = (info: ContributorInfo | null) => (Story: () => React.JSX.Element) => {
   const client = createQueryClient();
-  if (info) client.setQueryData(contributionKeys.phone(PHONE), info);
+  if (info) {
+    client.setQueryDefaults(contributionKeys.phone(PHONE), { staleTime: Infinity });
+    client.setQueryData(contributionKeys.phone(PHONE), info);
+  }
   return (
     <QueryClientProvider client={client}>
       <div className="w-96 bg-surface p-4 font-sn-pro text-sm text-content-secondary">

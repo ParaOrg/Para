@@ -406,6 +406,63 @@ let chosenPin;
   await page.close();
 }
 
+// --------------------------------------------------------- the studio's footbridges
+// The studio's footbridges (.scratch/footbridges, ticket 03): off at first, so nothing is asked
+// for even at street level; the Map Style card's Footbridges switch draws them, and off again
+// hides them without asking for the file a second time.
+{
+  const file = JSON.parse(readFileSync('public/data/footbridges.v1.json', 'utf8'));
+  const withLift = file.footbridges.find((f) =>
+    (f.access ?? []).some((a) => a.kind === 'elevator'),
+  );
+  const lift = withLift.access.find((a) => a.kind === 'elevator').point;
+  const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
+  await signInAsEditor(page);
+  await fakeStudioDb(page, {
+    stop: index.stops.map((s) => ({
+      ...s,
+      owner_id: 'owner',
+      status: 'approved',
+      revision: 1,
+      line: s.line ?? null,
+    })),
+  });
+  const asked = [];
+  page.on('request', (r) => {
+    if (/footbridges\.v1\.json/.test(r.url())) asked.push(r.url());
+  });
+  const errors = await open(page, '/studio/?e2e=1');
+  await settle(page, lift, 17);
+  check('studio: at zoom 17 with the switch off, no footbridge file asked for', asked.length === 0);
+  const drawnNow = () =>
+    page.evaluate(() =>
+      window.__map.getLayer('footbridges-line')
+        ? window.__map.queryRenderedFeatures({ layers: ['footbridges-line'] }).length
+        : 0,
+    );
+  const flip = async () => {
+    await page.getByRole('button', { name: 'Map design' }).click();
+    await page.getByRole('switch', { name: 'Footbridges' }).click();
+    await page.keyboard.press('Escape');
+  };
+  await flip();
+  await settle(page, lift, 17);
+  const on = await until(drawnNow, (n) => n > 0, 10000);
+  check('studio: the Footbridges switch on, the footbridges drawn', on > 0, `${on}`);
+  await flip();
+  const off = await until(drawnNow, (n) => n === 0, 5000);
+  check('studio: the switch off again, none drawn', off === 0, `${off}`);
+  await flip();
+  const again = await until(drawnNow, (n) => n > 0, 5000);
+  check(
+    'studio: on once more, drawn again, the file asked for once in all',
+    again > 0 && asked.length === 1,
+    `${again} drawn; ${asked.length} asked`,
+  );
+  check('studio, footbridges: no page errors', errors.length === 0, errors.join('; '));
+  await page.close();
+}
+
 // ------------------------------------------------------------ the contributor page
 {
   const context = await browser.newContext({
