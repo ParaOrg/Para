@@ -107,7 +107,7 @@ export function EndIcon() {
 
 /**
  * The vehicles at the top of a trip's card (RouteTripDetailHeader), a card's
- * modes (RouteMode) and a train card's chip, Figma's own drawings at 32
+ * mode (RouteCardMode), Figma's own drawings at 32
  * across: Train (4170:7029), Jeep (4188:11144, here JeepneyIcon, not the
  * side-on Jeep above), EJeep (4188:11168), Bus (4188:11156), Ferry
  * (4189:11183) and UV Express (4236:17067, drawn at 24). They live in one sprite the page fetches, not as paths in its

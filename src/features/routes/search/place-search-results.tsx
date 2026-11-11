@@ -36,62 +36,69 @@ export function PlaceSearchResults({
   const hasLandmarkRow = rows.some((row) => row.type === 'landmark');
 
   return (
-    <div className="flex max-h-80 flex-col overflow-y-auto rounded-xl bg-surface py-1 shadow-large">
-      {rows.length > 0 && (
-        <ul id={id} role="listbox" aria-label="Places">
-          {rows.map((row, index) => (
-            // eslint-disable-next-line jsx-a11y/click-events-have-key-events -- a combobox's keys stay on its field (PlaceSearch's arrows and Enter); the row only takes the pointer
-            <li
-              key={rowKey(row)}
-              id={resultId(id, index)}
-              role="option"
-              aria-selected={index === activeIndex}
-              // The field keeps focus: a press here must not blur it before the pick lands.
-              onMouseDown={(event) => event.preventDefault()}
-              onClick={() => onPick(row)}
-              className={cn(
-                'flex cursor-pointer items-baseline gap-3 px-4 py-2 text-content-primary',
-                index === activeIndex && 'bg-surface-secondary',
-              )}
+    <div className="rounded-xl bg-surface shadow-large">
+      {/*
+        The scroll box clips its rows to its own rounded box. Without it, headless Chromium's
+        full-page capture left a hole in the map below the list, as tall as the rows scrolled out
+        of sight. The shadow stays on the box outside, which clip-path would cut away.
+      */}
+      <div className="flex max-h-80 flex-col overflow-y-auto rounded-xl py-1 [clip-path:inset(0_round_var(--radius-xl))]">
+        {rows.length > 0 && (
+          <ul id={id} role="listbox" aria-label="Places">
+            {rows.map((row, index) => (
+              // eslint-disable-next-line jsx-a11y/click-events-have-key-events -- a combobox's keys stay on its field (PlaceSearch's arrows and Enter); the row only takes the pointer
+              <li
+                key={rowKey(row)}
+                id={resultId(id, index)}
+                role="option"
+                aria-selected={index === activeIndex}
+                // The field keeps focus: a press here must not blur it before the pick lands.
+                onMouseDown={(event) => event.preventDefault()}
+                onClick={() => onPick(row)}
+                className={cn(
+                  'flex cursor-pointer items-baseline gap-3 px-4 py-2 text-content-primary',
+                  index === activeIndex && 'bg-surface-secondary',
+                )}
+              >
+                <SearchRowContent row={row} />
+                {row.match.distanceM !== null && (
+                  <span className="shrink-0 text-sm text-content-tertiary">
+                    {kmLabel(row.match.distanceM)}
+                  </span>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
+        {landmarks.status === 'loading' && (
+          <p className="px-4 py-2 text-sm text-content-secondary">Looking through landmarks…</p>
+        )}
+        {landmarks.status === 'failed' && (
+          <p className="flex items-baseline gap-2 px-4 py-2 text-sm text-content-secondary">
+            Landmarks didn’t load. Para’s own places still show.
+            <button
+              type="button"
+              onClick={onRetry}
+              className="font-semibold text-content-primary underline"
             >
-              <SearchRowContent row={row} />
-              {row.match.distanceM !== null && (
-                <span className="shrink-0 text-sm text-content-tertiary">
-                  {kmLabel(row.match.distanceM)}
-                </span>
-              )}
-            </li>
-          ))}
-        </ul>
-      )}
-      {landmarks.status === 'loading' && (
-        <p className="px-4 py-2 text-sm text-content-secondary">Looking through landmarks…</p>
-      )}
-      {landmarks.status === 'failed' && (
-        <p className="flex items-baseline gap-2 px-4 py-2 text-sm text-content-secondary">
-          Landmarks didn’t load. Para’s own places still show.
-          <button
-            type="button"
-            onClick={onRetry}
-            className="font-semibold text-content-primary underline"
-          >
-            Try again
-          </button>
-        </p>
-      )}
-      {hasLandmarkRow && landmarks.status === 'ready' && (
-        <p className="px-4 pt-1 pb-2 text-xs text-content-tertiary">
-          Landmarks{' '}
-          <a
-            href="https://www.openstreetmap.org/copyright"
-            target="_blank"
-            rel="noreferrer"
-            className="underline"
-          >
-            {landmarks.landmarks.attribution}
-          </a>
-        </p>
-      )}
+              Try again
+            </button>
+          </p>
+        )}
+        {hasLandmarkRow && landmarks.status === 'ready' && (
+          <p className="px-4 pt-1 pb-2 text-xs text-content-tertiary">
+            Landmarks{' '}
+            <a
+              href="https://www.openstreetmap.org/copyright"
+              target="_blank"
+              rel="noreferrer"
+              className="underline"
+            >
+              {landmarks.landmarks.attribution}
+            </a>
+          </p>
+        )}
+      </div>
     </div>
   );
 }

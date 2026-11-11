@@ -1,0 +1,16 @@
+{
+  "about": "Words CONTEXT.md's glossary says to avoid, kept out of src/, docs/ and CONTEXT.md by scripts/checks/glossary.mjs. Each says what to write instead. Add a word only where every use of it is wrong: the glossary also avoids everyday words (line, stop, path) that are right elsewhere.",
+  "words": [
+    {
+      "word": "visitor",
+      "use": "commuter",
+      "why": "The person on the public map is a commuter (CONTEXT.md, Commuter; the owner, 2026-10-15)."
+    }
+  ],
+  "skip": {
+    "docs/research/": "Research notes, written before the glossary named the commuter.",
+    "docs/big-file-wave/": "Plans of past work, naming tests by the names they had then.",
+    "docs/archive/": "Archived plans and reviews, kept as they were.",
+    "docs/plan-studio-2026-10-04.md": "A past plan, kept as it was."
+  }
+}

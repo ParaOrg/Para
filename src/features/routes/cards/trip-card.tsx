@@ -89,6 +89,7 @@ export function TripCard({
   onOtherRoute,
   signboardUrl = publishedSignboard,
   extras,
+  walk = null,
   onDrawOtherWay,
 }: {
   direction: Direction;
@@ -126,6 +127,8 @@ export function TripCard({
   signboardUrl?: (name: string) => string;
   /** Under the tiles, the studio's alone: its facts and its Edit, Extend and Delete. */
   extras?: ReactNode;
+  /** The walk from the ride's end to the landmark "Go here" was for (ticket 07), or null. */
+  walk?: string | null;
   /**
    * The studio's: with the other way not drawn yet, SWITCH starts drawing it
    * instead of resting disabled. The public map passes none.
@@ -201,6 +204,7 @@ export function TripCard({
       onClose={onClose}
       signboards={(direction.signboards ?? []).map(signboardUrl)}
       note={LINE_NOTES[direction.route?.routeCode ?? '']}
+      walk={walk}
       otherRoutes={others.map((v) => ({
         id: v.id,
         to: directionRowName(v),

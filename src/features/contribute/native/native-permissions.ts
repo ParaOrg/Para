@@ -1,5 +1,6 @@
 import * as z from 'zod/mini';
 
+import type { KeepRecordingBrand } from './keep-recording-makers';
 import { lazyPlugin } from '../native-bridge/native-app';
 import { PLUGIN_NAMES } from '../native-bridge/native-contract';
 
@@ -30,7 +31,7 @@ interface NativePermissionsPlugin {
   deviceInfo: () => Promise<unknown>;
   openAppSettings: () => Promise<void>;
   openLocationSettings: () => Promise<void>;
-  openAutostartSettings: () => Promise<void>;
+  openAutostartSettings: (options: { brand: string }) => Promise<void>;
   askBatteryUnrestricted: () => Promise<unknown>;
   checkLocationOn: () => Promise<unknown>;
 }
@@ -62,8 +63,8 @@ export function openAppSettings(): Promise<void> {
  * Opens the maker's Autostart or battery screen for Para (MIUI's Autostart, and the like), or
  * Para's own page in Settings on a phone that has none.
  */
-export function openAutostartSettings(): Promise<void> {
-  return getPlugin().openAutostartSettings();
+export function openAutostartSettings(brand: KeepRecordingBrand | null): Promise<void> {
+  return getPlugin().openAutostartSettings({ brand: brand ?? '' });
 }
 
 const batteryAnswerSchema = z.object({ isUnrestricted: z.boolean() });
