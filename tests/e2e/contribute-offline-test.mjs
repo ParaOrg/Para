@@ -22,6 +22,7 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { fakeContributions, session } from './lib/fake-contributions.mjs';
 import { harness, until } from './lib/harness.mjs';
+import { checkPolicies, watchPolicies } from './lib/policy.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const require = createRequire(join(root, 'package.json'));
@@ -110,6 +111,7 @@ const phone = {
 
 try {
   const context = await browser.newContext(phone);
+  const flagged = await watchPolicies(context);
   await context.addInitScript(
     ([key, signedIn]) => {
       // Once only: the end of the suite signs the phone out, and a reload must not sign it back in.
@@ -421,6 +423,7 @@ try {
   );
 
   check('no page errors', errors.length === 0, errors.slice(0, 3).join(' | '));
+  checkPolicies(check, flagged);
   await context.close();
 } finally {
   writeFileSync(workerFile, workerSource);

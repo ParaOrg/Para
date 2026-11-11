@@ -16,18 +16,41 @@
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: geolocation=(self), camera=(), microphone=(), payment=(), usb=()
 
+# Each page's content policy, report-only for now: the browser notes in its
+# console what the policy would have stopped and stops nothing. It names what
+# the page may load and where from, so that when it is enforced a script or a
+# request the page never meant is refused. One policy per page and none under
+# /*: two would be joined into one header. The suites that run on a build fail
+# on anything a policy flags (tests/e2e/lib/policy.mjs), and the build guard
+# holds each page to one policy (scripts/checks/build/content-policy.mjs).
+#
+# The public map. Its own files; the basemap from Para's tiles host, or from
+# OpenFreeMap, the way back (ADR 0007). The hash is the one inline script, the
+# early request for the map file (map-file-early.ts): the build guard fails,
+# and prints the new hash, when that script changes. Inline style attributes
+# are allowed for the "Loading map…" text in index.html, styled before any
+# stylesheet has arrived; no inline stylesheet is.
+/
+  Content-Security-Policy-Report-Only: default-src 'self'; script-src 'self' 'sha256-AkH2fhxZlq/UdT9BZ6A4gX0vUKVNV2+nlTnthO1omhY='; connect-src 'self' https://tiles.para-commute.org https://tiles.openfreemap.org; worker-src 'self' blob:; img-src 'self' data: blob:; style-src-attr 'unsafe-inline'
+
 # The editor is for one person. Keep it out of search results, and out of
 # other sites' frames, where a page could dress it up and steer its clicks.
+# Its policy adds what only it uses: the database, Turnstile's script and
+# frame on the sign-in, the router that snaps a drawn line to roads, and the
+# satellite and terrain pictures its basemaps can show.
 /studio/*
   X-Robots-Tag: noindex
   X-Frame-Options: DENY
   Content-Security-Policy: frame-ancestors 'none'
+  Content-Security-Policy-Report-Only: default-src 'self'; script-src 'self' https://challenges.cloudflare.com; frame-src https://challenges.cloudflare.com; connect-src 'self' https://smzwbqxttdyvohuizynl.supabase.co https://tiles.para-commute.org https://tiles.openfreemap.org https://router.project-osrm.org https://server.arcgisonline.com https://elevation-tiles-prod.s3.amazonaws.com; worker-src 'self' blob:; img-src 'self' data: blob:
 
 # The contributor page has a sign-in, a password, the consent and delete
-# buttons: keep it out of other sites' frames for the same reason.
+# buttons: keep it out of other sites' frames for the same reason. Its policy
+# adds the database it uploads to and Turnstile's script and frame.
 /contribute/*
   X-Frame-Options: DENY
   Content-Security-Policy: frame-ancestors 'none'
+  Content-Security-Policy-Report-Only: default-src 'self'; script-src 'self' https://challenges.cloudflare.com; frame-src https://challenges.cloudflare.com; connect-src 'self' https://smzwbqxttdyvohuizynl.supabase.co https://tiles.para-commute.org https://tiles.openfreemap.org; worker-src 'self' blob:; img-src 'self' data: blob:
 
 # Signboards (0010): SVGs uploaded in the studio, cleaned twice
 # (signboardSvg.ts). Shown as pictures they run nothing; opened on their own
