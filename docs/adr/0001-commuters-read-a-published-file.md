@@ -1,0 +1,51 @@
+---
+status: accepted
+date: 2026-09-22
+---
+
+# Commuters read a published file, never the database
+
+> Amended 2026-10-07: the one `map.json` became the published map, an index and line files. See [the amendment](#amendment-2026-10-07).
+
+The public map at `/` reads one static file, `public/data/map.json`, rebuilt
+from the studio's tables by a nightly workflow (and by hand on demand) and
+committed to `main`. Commuters never call the database. We chose this over a
+live read because it keeps the promise that a commuter asks nothing of anyone
+— no account, no key in the browser, no request to a backend, so no coordinate
+or identity can ever be sent — and because Cloudflare serves a static file
+free and without limit while the database's free tier meters egress and
+pauses for idleness. The map keeps working if the database is down or paused,
+and git history keeps every published version.
+
+## Consequences
+
+- A change the editor saves is seen by commuters when it is published, not
+  the moment it is saved. For a curated map that is the right way round.
+- Anything the public map needs must be in the file: when a feature needs a
+  new column (links, ends, informal names), the publish script grows with it.
+- The publish script refuses a file that lost more than 30% of a table's
+  rows, since an empty answer from the database is a normal HTTP 200.
+
+## Amendment, 2026-10-07
+
+The one file became a set, the published map: `index.v4.json`, a line file
+per direction under `lines/`, and the signboards. `map.json` is still written
+for installed apps that have not updated. The decision stands: commuters read
+static files, never the database.
+
+## Amendment, 2026-10-16
+
+The owner named the person on the public map a commuter (2026-10-15). The
+record and its file name now say so (2026-11-10), and the links to it were
+moved with it.
+
+## Amendment, 2026-10-17
+
+What commuters see is what was approved, then published
+([ADR 0003](0003-commuters-see-approved-work.md)); the contributor page sends
+recordings by choice ([ADR 0004](0004-location-leaves-the-phone-only-by-choice.md)).
+The public map still sends nothing.
+
+The published map's index is now `index.v5.json`: shape 4 with the loops in. A
+loop has no head or tail, which a shape-4 app's schema refuses for the whole
+map, so `index.v4.json` and the older indexes are written without loops.

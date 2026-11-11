@@ -30,6 +30,7 @@ import {
   useDrawing,
   useFollow,
   useOpenDraft,
+  useDraftOnly,
   useLoopClosing,
   useSaveFlow,
   useSaveTarget,
@@ -159,7 +160,17 @@ export function Workshop({ session, recovery }: WorkshopProps) {
   const canEdit = isSignedIn;
 
   // What the save panel saves into, and where the drawing is headed.
-  const target = useSaveTarget(draw, saved.directions, hotspots.hotspots);
+  // Routes and hotspots that are drafts only: the sidebar opens on them as on approved ones.
+  const draftOnly = useDraftOnly({
+    isSignedIn,
+    directions: saved.directions,
+    hotspots: hotspots.hotspots,
+  });
+  const target = useSaveTarget(
+    draw,
+    [...saved.directions, ...draftOnly.directions],
+    hotspots.hotspots,
+  );
   const { extendEnds } = target;
   // A right-click on saved lines while drawing, and opening a direction's drawing.
   const { onFollow, opening } = useFollow({
@@ -169,14 +180,19 @@ export function Workshop({ session, recovery }: WorkshopProps) {
     target,
     setNotice,
   });
-  // A draft tapped on the map opens into editing: Edit route on the editor's own, the card on
-  // another editor's; the rest wait in Drafts.
+  // A draft tapped on the map opens into its sidebar: Edit route on the editor's own, the card on
+  // another editor's (useOpenDraft).
   const handleOpenDraft = useOpenDraft({
     directions: saved.directions,
+    draftDirections: draftOnly.directions,
+    hotspots: hotspots.hotspots,
+    draftHotspots: draftOnly.hotspots,
     userId: session?.user.id ?? null,
     draw,
     opening,
     openTrip: cards.openTrip,
+    openPlace: camera.openPlace,
+    setNotice,
   });
 
   // A return trip starts where the other way ended, shows it faintly, and can close the loop.
@@ -220,7 +236,7 @@ export function Workshop({ session, recovery }: WorkshopProps) {
 
   // The map's credits, opened by its ⓘ as on the public map: the page is out of reach under them.
   const credits = useMapCredits(root);
-  const [draftsSlot, setDraftsSlot] = useState<HTMLDivElement | null>(null);
+  const reloadMap = () => void Promise.all([saved.reload(), hotspots.reload()]);
 
   return (
     <div className="relative flex h-full w-full flex-col">
@@ -228,8 +244,6 @@ export function Workshop({ session, recovery }: WorkshopProps) {
         {/* The studio's top bar: everything on the map starts below it. Provisional until the owner's Figma frame. */}
         <div className="relative flex h-[calc(3rem+env(safe-area-inset-top))] shrink-0 items-center justify-center border-b border-border-primary bg-surface px-4 pt-[env(safe-area-inset-top)]">
           <MapSwitch ref={switchRef} value={studioMap} onChange={chooseStudioMap} />
-          {/* Drafts, on a computer: in the bar, clear of the map's controls (StudioReview). */}
-          <div ref={setDraftsSlot} className="absolute right-4 bottom-0 flex h-12 items-center" />
         </div>
         {/* The route's form left of the map while a line is drawn on a computer, and the map. */}
         <div className="flex min-h-0 flex-1">
@@ -243,6 +257,7 @@ export function Workshop({ session, recovery }: WorkshopProps) {
             target={target}
             saveFlow={saveFlow}
             contribution={contribution}
+            draftHotspots={draftOnly.hotspots}
           />
           {/* `data-dock-host`: the open card's sheet says where its top is here at rest, and on what follows it (`data-dock-follower`) as a finger drags it (BottomSheet); the New + says what it stands in the corner. */}
           <div
@@ -319,6 +334,7 @@ export function Workshop({ session, recovery }: WorkshopProps) {
                 directionsAt={directionsAtHotspots(saved.directions, hotspots.linkedDirectionIds)}
                 isDrawing={draw.drawing}
                 onOpenHotspot={isPlayground ? camera.openPlace : undefined}
+                onSubjectChanged={isPlayground ? reloadMap : undefined}
               />
             )}
 
@@ -341,7 +357,6 @@ export function Workshop({ session, recovery }: WorkshopProps) {
               />
               <PlaygroundTools
                 map={map}
-                draftsSlot={isWideScreen ? draftsSlot : null}
                 onOpenDraft={handleOpenDraft}
                 session={session}
                 auth={auth}

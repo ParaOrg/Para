@@ -9,6 +9,8 @@ import { M_PER_DEG, type LngLat, type Segment } from '@/shared/utils/geo';
 
 import { SaveBesideFrame, SaveSheetFrame } from './save-frames';
 import { SavePanel } from './save-panel';
+import { reviewKeys } from '../data/review-keys';
+import type { DraftRow } from '../data/review-schema';
 import type { Drawing } from '../drawing/use-drawing';
 
 /** Two terminals, one near each end of the sample line, so the pickers have something to guess. */
@@ -79,6 +81,13 @@ const routed = (streets?: Segment['streets']): Segment => ({
   streets,
 });
 
+/** A query client, holding the route's stored draft when there is one. */
+function clientWith(draft: DraftRow | undefined) {
+  const client = createQueryClient();
+  if (draft) client.setQueryData(reviewKeys.draftOf('route', draft.subject_id), draft);
+  return client;
+}
+
 /** The footer's save, the form's submit. */
 const saveButton = (canvas: ReturnType<typeof within>) =>
   canvas.getByRole('button', { name: 'Save as draft' });
@@ -88,10 +97,11 @@ const meta = {
   component: SavePanel,
   // The panel covers the map it sits over, so give it a map-sized box. The
   // `beside` parameter stands it left of the map instead, as on a computer.
-  // Publish asks the review queries, so the panel sits under a query client of its own.
+  // Publish asks the review queries, so the panel sits under a query client of its own. The
+  // `storedDraft` parameter puts a draft of the route in it, as Edit route's read leaves one.
   decorators: [
-    (Story) => (
-      <QueryClientProvider client={createQueryClient()}>
+    (Story, ctx) => (
+      <QueryClientProvider client={clientWith(ctx.parameters.storedDraft)}>
         <Story />
       </QueryClientProvider>
     ),
@@ -333,7 +343,7 @@ export const EditRoute: Story = {
 
 /**
  * A published route opened with Edit route, beside the map: Line detail says Published and the
- * footer offers Unpublish, until the line or a field changes.
+ * footer offers Unpublish, until the line or a field changes: then Not saved, with the saves.
  */
 export const EditRoutePublished: Story = {
   parameters: { beside: true },
@@ -343,8 +353,41 @@ export const EditRoutePublished: Story = {
     await expect(canvas.getByTestId('line-detail')).toHaveTextContent('StatusPublished');
     await expect(canvas.getByRole('button', { name: 'Unpublish' })).toBeVisible();
     await userEvent.type(canvas.getByLabelText('Via (if applicable)'), 'Zabarte');
-    await expect(canvas.getByTestId('line-detail')).toHaveTextContent('StatusDraft');
+    await expect(canvas.getByTestId('line-detail')).toHaveTextContent('StatusNot saved');
     await expect(canvas.getByRole('button', { name: 'Save as draft' })).toBeVisible();
+  },
+};
+
+/**
+ * A route with a draft stored for it (here another editor's, as no one is signed in): the Draft
+ * badge by the heading, Line detail says Draft, and Publish reads Approve.
+ */
+export const EditRouteWithDraft: Story = {
+  parameters: {
+    beside: true,
+    storedDraft: {
+      id: 'sample-draft',
+      kind: 'route',
+      subject_id: 'sample-route',
+      is_new: false,
+      base_revision: 3,
+      revision: 1,
+      status: 'draft',
+      payload: {},
+      note: null,
+      editor_id: 'another-editor',
+      created_at: '2026-11-09T08:00:00Z',
+      updated_at: '2026-11-09T08:00:00Z',
+      submitted_at: null,
+    } satisfies DraftRow,
+  },
+  args: { ...EditRoute.args, onCancel: undefined, saveBlocked: null },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByText('Draft', { selector: 'span' })).toBeVisible();
+    await expect(canvas.getByTestId('line-detail')).toHaveTextContent('StatusDraft');
+    await expect(canvas.getByRole('button', { name: 'Approve' })).toBeVisible();
+    await expect(canvas.queryByRole('button', { name: 'Discard' })).toBeNull();
   },
 };
 

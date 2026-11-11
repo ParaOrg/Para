@@ -6,7 +6,7 @@ import { useFocusHeading } from '@/shared/hooks/use-focus-heading';
 import { cn } from '@/shared/utils/cn';
 
 import type { ProfileFields } from './account-fields';
-import { GeneralBar } from './general-bar';
+import { AppSettingRow } from './app-setting-row';
 import { PasswordButtonField } from './password-button-field';
 import { ProfileForm } from './profile-form';
 import { SettingsHeader } from './settings-header';
@@ -35,14 +35,20 @@ interface AccountSettingsScreenProps {
   onOpenKeepRecording?: () => void;
   /** One line when Keep Para recording could not open the phone's settings. */
   keepRecordingError?: string | null;
+  /** Share ride diagnostics, in the Android app only: the share sheet with the ride's log. */
+  onShareDiagnostics?: () => void;
+  /** One line when Share ride diagnostics could not open the share sheet. */
+  shareDiagnosticsError?: string | null;
   onBack: () => void;
 }
 
 /**
  * Account settings (Figma 4540:4821), from Account's General: the name and number to change, with
  * Save changes and Cancel rising once either is changed; the email as it is; Password, which
- * opens Change password; in the app, Keep Para recording, which opens the maker's Autostart screen;
- * and Delete account, which opens Delete account. Shown only on Ready, so never
+ * opens Change password; in the app, Keep Para recording, which opens the maker's Autostart screen,
+ * and Share ride diagnostics, which opens Android's share sheet with the ride's own log (ADR 0004:
+ * it leaves the phone only where the contributor sends it); and Delete account, which opens
+ * Delete account. Shown only on Ready, so never
  * while a recording runs.
  */
 export function AccountSettingsScreen({
@@ -58,6 +64,8 @@ export function AccountSettingsScreen({
   onOpenDeleteAccount,
   onOpenKeepRecording,
   keepRecordingError = null,
+  onShareDiagnostics,
+  shareDiagnosticsError = null,
   onBack,
 }: AccountSettingsScreenProps) {
   const headingRef = useFocusHeading();
@@ -120,18 +128,19 @@ export function AccountSettingsScreen({
             )}
           </div>
           {onOpenKeepRecording && (
-            <div className="flex flex-col gap-1.5">
-              <GeneralBar
-                icon="settings"
-                label="Keep Para recording"
-                onClick={onOpenKeepRecording}
-              />
-              {keepRecordingError && (
-                <p role="alert" className="text-sm/5 text-content-quaternary">
-                  {keepRecordingError}
-                </p>
-              )}
-            </div>
+            <AppSettingRow
+              label="Keep Para recording"
+              onClick={onOpenKeepRecording}
+              error={keepRecordingError}
+            />
+          )}
+          {/* No Figma design yet: Keep Para recording's look until there is one. */}
+          {onShareDiagnostics && (
+            <AppSettingRow
+              label="Share ride diagnostics"
+              onClick={onShareDiagnostics}
+              error={shareDiagnosticsError}
+            />
           )}
           <div className="*:w-full">
             <Button

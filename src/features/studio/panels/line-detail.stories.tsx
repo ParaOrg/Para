@@ -40,6 +40,16 @@ export const Draft: Story = {
   },
 };
 
+/** Not saved: a new line, or a change to a published one, with no draft stored for it yet. */
+export const NotSaved: Story = {
+  args: { status: 'unsaved' },
+  play: async ({ canvasElement }) => {
+    const detail = within(canvasElement).getByTestId('line-detail');
+    await expect(detail).toHaveTextContent('StatusNot saved');
+    await expect(detail).not.toHaveTextContent('Last edited');
+  },
+};
+
 /** Published, as Figma 4614:15082 draws it: Published in green, and Last edited. */
 export const Published: Story = {
   args: { status: 'published' },

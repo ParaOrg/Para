@@ -3,6 +3,8 @@ import { useId, useState, type FormEvent } from 'react';
 import { hotspotLabel } from '@/features/routes/model/hotspots';
 import { LOOP_WORD } from '@/features/routes/model/routes';
 
+import { DraftAlert } from './draft-alert';
+import { DraftBadge } from './draft-badge';
 import { IkotNameField } from './ikot-name-field';
 import { LineDetail } from './line-detail';
 import { LoopToggle } from './loop-toggle';
@@ -14,6 +16,7 @@ import { SaveTimeline } from './save-timeline';
 import { BESIDE_BODY } from './sheet';
 import { useLineStamps } from './use-line-stamps';
 import { useSavePanel, type UseSavePanelOptions } from './use-save-panel';
+import { useStoredDraft } from './use-stored-draft';
 import { useUnpublish } from './use-unpublish';
 import { ViaField } from './via-field';
 
@@ -29,6 +32,8 @@ interface SavePanelProps extends UseSavePanelOptions {
   isPublished?: boolean;
   /** The published route came off the map (Unpublish). */
   onUnpublished?: () => void;
+  /** The editor's own draft of the route was dropped (Discard draft). */
+  onDiscarded?: () => void;
 }
 
 /**
@@ -49,6 +54,7 @@ export function SavePanel({
   onCancel,
   isPublished = false,
   onUnpublished,
+  onDiscarded,
   ...options
 }: SavePanelProps) {
   const headingId = useId();
@@ -71,7 +77,20 @@ export function SavePanel({
   const line = JSON.stringify(draw.controlPoints);
   const [opened] = useState({ fields, line });
   const isChanged = fields !== opened.fields || line !== opened.line;
-  const status = isPublished && fields === opened.fields ? 'published' : 'draft';
+  const stored = useStoredDraft({
+    kind: 'route',
+    subjectId: panel.parent?.id ?? null,
+    isChanged,
+    publishForm: () => void panel.submit('publish'),
+    onApproved: () => options.onPublished?.(existing?.id ?? panel.parent?.id ?? ''),
+    onDiscarded,
+  });
+  // Draft only when one is stored; published and as it was, Published; else nothing saved yet.
+  const status = stored.footer.hasDraft
+    ? 'draft'
+    : isPublished && fields === opened.fields
+      ? 'published'
+      : 'unsaved';
   const stamps = useLineStamps('route', panel.parent?.id ?? null);
   const unpublishing = useUnpublish({
     kind: 'route',
@@ -97,9 +116,12 @@ export function SavePanel({
     >
       <div className={isBeside ? BESIDE_BODY : 'flex flex-col gap-5'}>
         <section className="flex flex-col gap-3">
-          <h2 id={headingId} className="text-xl/7 font-semibold text-content-primary">
-            Route Information
-          </h2>
+          <div className="flex items-center gap-2">
+            <h2 id={headingId} className="text-xl/7 font-semibold text-content-primary">
+              Route Information
+            </h2>
+            {stored.footer.hasDraft && <DraftBadge />}
+          </div>
           <p className="-mt-2 text-xs text-content-quaternary">
             {panelTitle({ isEdit: !!existing, isReturnTrip: !!options.route, isLoop })}
             {routeLocked && ' · the ends belong to the route, so both directions share them'}
@@ -185,11 +207,7 @@ export function SavePanel({
             {panel.error}
           </p>
         )}
-        {unpublishing.error && (
-          <p role="alert" className="text-sm text-content-error">
-            {unpublishing.error}
-          </p>
-        )}
+        <DraftAlert error={unpublishing.error ?? stored.error} {...stored.keeping} />
 
         {saveBlocked && <p className="text-sm text-content-quaternary">{saveBlocked}</p>}
       </div>
@@ -202,7 +220,7 @@ export function SavePanel({
         saveBlocked={saveBlocked}
         onExit={handleExit}
         onCancel={onCancel}
-        onPublish={() => void panel.submit('publish')}
+        {...stored.footer}
       />
     </form>
   );

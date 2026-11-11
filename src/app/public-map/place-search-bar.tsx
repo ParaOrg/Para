@@ -2,7 +2,9 @@ import type { MapLibreMap } from 'maplibre-gl';
 
 import { LandmarkPin } from '@/features/routes/map/landmark-pin';
 import type { Hotspot } from '@/features/routes/model/hotspots';
+import type { HintuanNearHere } from '@/features/routes/model/landmark-search';
 import type { Direction } from '@/features/routes/model/routes';
+import type { Landmark } from '@/features/routes/published/landmark-file-schema';
 import { PlaceSearch } from '@/features/routes/search/place-search';
 import { cn } from '@/shared/utils/cn';
 import type { LngLat } from '@/shared/utils/geo';
@@ -15,6 +17,10 @@ interface PlaceSearchBarProps {
   whereNow: () => LngLat | null;
   onPick: (hotspot: Hotspot) => void;
   onLookAt: (point: LngLat) => void;
+  /** "Go here" on a hintuan near a landmark (ticket 07). */
+  onGoHere: (landmark: Landmark, near: readonly HintuanNearHere[], hintuan: Hotspot) => void;
+  /** The search started over: a landmark's "Go here" is let go. */
+  onSearchRestart: () => void;
   /** "Update Para!" is up, 24 below the top and 40 tall (Notices): the bar goes 12 under it. */
   isUnderUpdate: boolean;
   /** The offline pill is up, top left on a wide map (Notices): the bar goes under it there. */
@@ -56,6 +62,8 @@ export function PlaceSearchBar({
   whereNow,
   onPick,
   onLookAt,
+  onGoHere,
+  onSearchRestart,
   isUnderUpdate,
   isUnderOfflinePill,
   isCardOpen,
@@ -80,6 +88,8 @@ export function PlaceSearchBar({
         whereNow={whereNow}
         onPick={onPick}
         onLookAt={onLookAt}
+        onGoHere={onGoHere}
+        onSearchRestart={onSearchRestart}
         // Keyed on the landmark: another pick pops a fresh circle where it landed.
         renderLandmarkPin={(landmark) =>
           map && <LandmarkPin key={landmark.id} map={map} at={landmark.point} />

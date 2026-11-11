@@ -31,7 +31,12 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.LocationSettingsRequest;
 import com.google.android.gms.location.Priority;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 /**
  * What a recording needs from Android that the page asks for in its own words first: the three
@@ -217,26 +222,51 @@ public class NativePermissionsPlugin extends Plugin {
 
     /**
      * The makers' own screens that let an app start and run in the background (MIUI's Autostart,
-     * and the like), as package and activity. Not every phone has one, or lets it be opened: each
-     * is tried in turn, and Para's own page is the answer when none opens.
+     * and the like), as package and activity, by the group the page names (keep-recording-makers.ts).
+     * Not every phone has one, or lets it be opened: each is tried in turn, and Para's own page is
+     * the answer when none opens. Samsung's step is in Para's own page (Battery), so it has none.
      */
-    private static final String[][] AUTOSTART_SCREENS = {
-        {"com.miui.securitycenter", "com.miui.permcenter.autostart.AutoStartManagementActivity"},
-        {"com.coloros.safecenter", "com.coloros.safecenter.permission.startup.StartupAppListActivity"},
-        {"com.coloros.safecenter", "com.coloros.safecenter.startupapp.StartupAppListActivity"},
-        {"com.oppo.safe", "com.oppo.safe.permission.startup.StartupAppListActivity"},
-        {"com.vivo.permissionmanager", "com.vivo.permissionmanager.activity.BgStartUpManagerActivity"},
-        {"com.iqoo.secure", "com.iqoo.secure.ui.phoneoptimize.AddWhiteListActivity"},
-        {"com.huawei.systemmanager", "com.huawei.systemmanager.startupmgr.ui.StartupNormalAppListActivity"},
-        {"com.huawei.systemmanager", "com.huawei.systemmanager.optimize.process.ProtectActivity"},
-        {"com.oneplus.security", "com.oneplus.security.chainlaunch.view.ChainLaunchAppListActivity"},
-        {"com.samsung.android.lool", "com.samsung.android.sm.ui.battery.BatteryActivity"},
-    };
+    private static final Map<String, String[][]> AUTOSTART_SCREENS = new LinkedHashMap<>();
+    static {
+        AUTOSTART_SCREENS.put("xiaomi", new String[][] {
+            {"com.miui.securitycenter", "com.miui.permcenter.autostart.AutoStartManagementActivity"},
+        });
+        AUTOSTART_SCREENS.put("oppo", new String[][] {
+            {"com.coloros.safecenter", "com.coloros.safecenter.permission.startup.StartupAppListActivity"},
+            {"com.coloros.safecenter", "com.coloros.safecenter.startupapp.StartupAppListActivity"},
+            {"com.oppo.safe", "com.oppo.safe.permission.startup.StartupAppListActivity"},
+            {"com.oneplus.security", "com.oneplus.security.chainlaunch.view.ChainLaunchAppListActivity"},
+        });
+        AUTOSTART_SCREENS.put("vivo", new String[][] {
+            {"com.vivo.permissionmanager", "com.vivo.permissionmanager.activity.BgStartUpManagerActivity"},
+            {"com.iqoo.secure", "com.iqoo.secure.ui.phoneoptimize.AddWhiteListActivity"},
+        });
+        AUTOSTART_SCREENS.put("transsion", new String[][] {
+            {"com.transsion.phonemaster", "com.cyin.himgr.autostart.AutoStartActivity"},
+        });
+        AUTOSTART_SCREENS.put("huawei", new String[][] {
+            {"com.huawei.systemmanager", "com.huawei.systemmanager.startupmgr.ui.StartupNormalAppListActivity"},
+            {"com.huawei.systemmanager", "com.huawei.systemmanager.optimize.process.ProtectActivity"},
+            {"com.hihonor.systemmanager", "com.hihonor.systemmanager.startupmgr.ui.StartupNormalAppListActivity"},
+        });
+        AUTOSTART_SCREENS.put("samsung", new String[0][]);
+    }
 
-    /** The maker's Autostart or battery screen for Para; Para's own page if the phone has none. */
+    /**
+     * The maker's Autostart screen for Para, the screens of the group the page names ("brand")
+     * first; Para's own page if the phone has none. A brand with none of its own (Samsung) goes
+     * straight to Para's page; no brand tries every maker's.
+     */
     @PluginMethod
     public void openAutostartSettings(PluginCall call) {
-        for (String[] screen : AUTOSTART_SCREENS) {
+        String brand = call.getString("brand", "");
+        List<String[]> screens = new ArrayList<>();
+        if (AUTOSTART_SCREENS.containsKey(brand)) {
+            screens.addAll(Arrays.asList(AUTOSTART_SCREENS.get(brand)));
+        } else {
+            for (String[][] group : AUTOSTART_SCREENS.values()) screens.addAll(Arrays.asList(group));
+        }
+        for (String[] screen : screens) {
             Intent intent = new Intent()
                 .setClassName(screen[0], screen[1])
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);

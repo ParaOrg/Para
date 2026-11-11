@@ -185,6 +185,9 @@
   --surface-quaternary: var(--color-neutral-200);
   --surface-error: var(--color-red-100);
   --surface-success: var(--color-green-100);
+  /* The dark on a light card (RouteCard, 4629:22776): the RouteBadge chips on UV Express, E-Jeep
+     and MRT-3, and MRT-3's words on its yellow. */
+  --surface-inverse: var(--color-neutral-900);
   /* Black at 60%: what dims the page under a dialog laid over it, the install
      prompt's (3732:2512). Figma keeps the 60 as the variable's opacity
      (opacity/60); here it is in the value, since the token means the
@@ -204,6 +207,10 @@
      where the surfaces' own shades are too dark to read. No green livery exists. */
   --card-red-surface-light: var(--color-red-400);
   --card-green-surface-light: var(--color-green-500);
+  /* A trip's Start and End (the ends card, RouteTripDetail 4681:32026): Figma binds them to the
+     deprecated Card (Depreciated)/green and red surfaces, so these name them for what they mean. */
+  --trip-start: var(--color-green-700);
+  --trip-end: var(--color-red-800);
 
   /* The mode cards: a RouteCard's colours by the kind of ride (RouteCard, 4629:22776).
      Figma: Card/Jeep/Jeep-surface… The leaf repeats its group, so the token drops the
@@ -336,6 +343,7 @@
   --color-surface-secondary: var(--surface-secondary);
   --color-surface-tertiary: var(--surface-tertiary);
   --color-surface-quaternary: var(--surface-quaternary);
+  --color-surface-inverse: var(--surface-inverse);
   --color-surface-error: var(--surface-error);
   --color-surface-success: var(--surface-success);
   --color-surface-transparent: var(--surface-transparent);
@@ -348,6 +356,8 @@
   --color-card-red-timeline-surface: var(--card-red-timeline-surface);
   --color-card-red-surface-light: var(--card-red-surface-light);
   --color-card-green-surface-light: var(--card-green-surface-light);
+  --color-trip-start: var(--trip-start);
+  --color-trip-end: var(--trip-end);
   --color-card-jeep-surface: var(--card-jeep-surface);
   --color-card-jeep-surface-secondary: var(--card-jeep-surface-secondary);
   --color-card-jeep-surface-border: var(--card-jeep-surface-border);
@@ -552,6 +562,40 @@
 
   /* A card raised high over the map: the "Track your routes" card (shadow-large, 4461:2601). */
   --shadow-large: 0 -1px 12px 0 rgb(0 0 0 / 0.04), 0 8px 16px 2px rgb(43 43 43 / 0.09);
+
+  /* A trip's stops card, lifted off the page in its own colour (RouteStopsCardShadow, 4681:29139).
+   * Figma draws the jeep's, Card/Jeep/surface at 12% and 24%; each livery takes its own surface the
+   * same way. */
+  --shadow-route-stops-card-jeep:
+    0 -1px 12px 0 color-mix(in oklab, var(--color-card-jeep-surface) 12%, transparent),
+    0 8px 16px 2px color-mix(in oklab, var(--color-card-jeep-surface) 24%, transparent);
+  --shadow-route-stops-card-uv-express:
+    0 -1px 12px 0 color-mix(in oklab, var(--color-card-uv-express-surface) 12%, transparent),
+    0 8px 16px 2px color-mix(in oklab, var(--color-card-uv-express-surface) 24%, transparent);
+  --shadow-route-stops-card-ejeep:
+    0 -1px 12px 0 color-mix(in oklab, var(--color-card-ejeep-surface) 12%, transparent),
+    0 8px 16px 2px color-mix(in oklab, var(--color-card-ejeep-surface) 24%, transparent);
+  --shadow-route-stops-card-bus:
+    0 -1px 12px 0 color-mix(in oklab, var(--color-card-bus-surface) 12%, transparent),
+    0 8px 16px 2px color-mix(in oklab, var(--color-card-bus-surface) 24%, transparent);
+  --shadow-route-stops-card-light-rail-way-one:
+    0 -1px 12px 0
+      color-mix(in oklab, var(--color-map-rail-light-rail-way-one-surface) 12%, transparent),
+    0 8px 16px 2px
+      color-mix(in oklab, var(--color-map-rail-light-rail-way-one-surface) 24%, transparent);
+  --shadow-route-stops-card-light-rail-way-two:
+    0 -1px 12px 0
+      color-mix(in oklab, var(--color-map-rail-light-rail-way-two-surface) 12%, transparent),
+    0 8px 16px 2px
+      color-mix(in oklab, var(--color-map-rail-light-rail-way-two-surface) 24%, transparent);
+  --shadow-route-stops-card-metro-rail-way-three:
+    0 -1px 12px 0
+      color-mix(in oklab, var(--color-map-rail-metro-rail-way-three-surface) 12%, transparent),
+    0 8px 16px 2px
+      color-mix(in oklab, var(--color-map-rail-metro-rail-way-three-surface) 24%, transparent);
+  --shadow-route-stops-card-ferry:
+    0 -1px 12px 0 color-mix(in oklab, var(--color-map-ferry-surface) 12%, transparent),
+    0 8px 16px 2px color-mix(in oklab, var(--color-map-ferry-surface) 24%, transparent);
 
   /* The commuter's dot, lifted off the map in a deep blue (LocatorDotShadow, 3870:5242). */
   --shadow-locator-dot-shadow: 0 2px 8px 0 rgb(1 27 85 / 0.48);

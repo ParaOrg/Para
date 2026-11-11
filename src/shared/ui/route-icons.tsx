@@ -1,13 +1,7 @@
 /**
- * The icons the route cards use, drawn as in Figma: the Jeep beside a hintuan
- * card's count and Close in the header; and the trip card's: ‹ (chevron-left) back to the list, and
- * the chevron down on the row that folds its hintuans, turned to point up
- * when they are open — the same drawing as Figma's chevron-up, so one icon
- * serves both. Each is Figma's own path, kept in route-icons.svg (or the
- * vehicles' in vehicle-icons.svg), a file the page fetches rather than paths
- * in its JS, which would count against the public page's budget. Each fills with
- * currentColor so it takes the text colour of wherever it sits — the file draws
- * them in Content/primary or Content/inverse, never a colour of their own.
+ * The route cards' icons, each Figma's own path in route-icons.svg (the vehicles' in
+ * vehicle-icons.svg): a file the page fetches, not paths in its JS, which would count against the
+ * public page's budget. Each fills with currentColor, taking the text colour of wherever it sits.
  */
 
 import routeSprite from './route-icons.svg?url&no-inline';
@@ -28,6 +22,7 @@ const ROUTE_SPRITE_VIEW_BOX = {
   'close-large': '0 0 28 28',
   'arrow-left-right-large': '0 0 28 28',
   'filter-large': '0 0 28 28',
+  'arrow-up-down': '0 0 20 20',
 } as const;
 
 type RouteSpriteId = keyof typeof ROUTE_SPRITE_VIEW_BOX;
@@ -106,8 +101,8 @@ export function EndIcon() {
 }
 
 /**
- * The vehicles at the top of a trip's card (RouteTripDetailHeader), a card's
- * modes (RouteMode) and a train card's chip, Figma's own drawings at 32
+ * The vehicles at the top of a trip's card (RouteStopsCardHeader), a card's
+ * mode (RouteCardMode), Figma's own drawings at 32
  * across: Train (4170:7029), Jeep (4188:11144, here JeepneyIcon, not the
  * side-on Jeep above), EJeep (4188:11168), Bus (4188:11156), Ferry
  * (4189:11183) and UV Express (4236:17067, drawn at 24). They live in one sprite the page fetches, not as paths in its
@@ -168,6 +163,11 @@ export function CloseLargeIcon() {
 /** Figma's arrow-left-right-large (4633:22014), 28 across: the Controller's ⇆, every route the other way round. */
 export function ArrowLeftRightIcon() {
   return <RouteSpriteIcon id="arrow-left-right-large" />;
+}
+
+/** Figma's arrow-up-down, 20 across: the ⇅ on a trip's ends card, turning the trip round. */
+export function ArrowUpDownIcon() {
+  return <RouteSpriteIcon id="arrow-up-down" />;
 }
 
 /** Figma's filter-large (4633:22015), 28 across: the Controller's sliders, opening the route list's filter. */

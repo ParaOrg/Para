@@ -20,7 +20,8 @@
 # file for unchanged data.
 #
 # The push goes over SSH with a repository deploy key (the secret
-# PUBLISH_DEPLOY_KEY, write access), because main is protected: pull requests
+# PUBLISH_DEPLOY_KEY, write access, kept in the Environment `publish`, which
+# only `main` may use), because main is protected: pull requests
 # only, and the ruleset lets the deploy key, and nothing else, push straight
 # to it (docs/agents/main-protection.md). GITHUB_TOKEN cannot be a bypass
 # actor and is never a fallback here. A push made with a deploy key, unlike
@@ -81,6 +82,9 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    # The deploy key is the `publish` environment's, which only `main` may use
+    # (docs/agents/main-protection.md).
+    environment: publish
     steps:
       # First, so a missing key fails the run at once instead of at the push
       # after the whole publish. It writes into publish.log so the issue
@@ -90,7 +94,7 @@ jobs:
           PUBLISH_DEPLOY_KEY: ${{ secrets.PUBLISH_DEPLOY_KEY }}
         run: |
           if [ -z "$PUBLISH_DEPLOY_KEY" ]; then
-            msg="The secret PUBLISH_DEPLOY_KEY is not set, so the map cannot be pushed to main. Add the deploy key as that repository secret (docs/agents/main-protection.md)."
+            msg="The secret PUBLISH_DEPLOY_KEY is not set, so the map cannot be pushed to main. Add the deploy key as that secret in the 'publish' environment (docs/agents/main-protection.md)."
             echo "::error::$msg"
             echo "$msg" > "$RUNNER_TEMP/publish.log"
             exit 1

@@ -154,6 +154,20 @@ export function useRideTo(
   );
 
   /**
+   * A hintuan picked as the end on a direction as it opens, before it is the selected one (ticket
+   * 07: a trip opened for a landmark ends at the hintuan nearest it). Made for that direction, the
+   * pick survives the opening, as a jeep's SWITCH carries its picks over (carryTo).
+   */
+  const pickOn = useCallback(
+    (directionId: string, rowId: string) => {
+      setAtEnd(null);
+      carried.current = null;
+      setPicked({ directionId, rowId });
+    },
+    [setPicked, setAtEnd],
+  );
+
+  /**
    * An end row: that end picked, and the map gliding in to it as to a picked
    * hintuan; with no start, the whole ride again. With a start, it is the
    * ride's end, the start kept, and the camera takes in the ride rather
@@ -301,6 +315,7 @@ export function useRideTo(
      */
     pickedCode: endLabel && isRailLine(line) ? stationCode(line, endLabel) : null,
     pick,
+    pickOn,
     /** The row made the ride's start (Set as start), or null: the ride leaves where the direction does. */
     startId: liveStart?.rowId ?? null,
     /** Where the start is on the map: where the ride leaves on the line, else its hintuan's own point. */

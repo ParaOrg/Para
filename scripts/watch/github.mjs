@@ -60,7 +60,7 @@ export function gitHub({ repository, token }) {
         const issue = await call('POST', '/issues', {
           title: action.title,
           body: action.body,
-          labels: [ALERT_LABEL],
+          labels: [ALERT_LABEL, ...(action.labels ?? [])],
         });
         return issue.number;
       }
