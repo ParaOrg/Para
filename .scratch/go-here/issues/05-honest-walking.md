@@ -1,6 +1,6 @@
 # 05: Honest walking
 
-Status: words, maps link and the major-roads file built; the hint's logic next; the dashed line, the card's lines and the button wait for the owner's design ("Owner designs first" 3 and 4)
+Status: logic built (words, maps link, the major-roads file, the footbridge hint); the dashed line, the card's lines and the button wait for the owner's design ("Owner designs first" 3 and 4)
 Type: task
 
 Footbridges' ticket 04 (the walk hint) is folded in here.
@@ -40,3 +40,10 @@ Footbridges' ticket 04 (the walk hint) is folded in here.
 - **Not fetched yet.** Nothing in the app reads it until the hint's logic and the trip card's design. It is fetched only with a Go here walk, never on the opening path; its offline cache comes with that fetch.
 - **A hotspot published after the monthly build** has no roads round it until the next build: the hint then says nothing, never a wrong crossing.
 - Unit checks: `tests/unit/major-roads-test.mjs`, `tests/unit/major-road-file-test.mjs`.
+
+**The footbridge hint: built** (`routes/model/footbridge-hint.ts`).
+- `footbridgeHints(from, to, roads, footbridges)`: the major roads a straight walk crosses, in the order it meets them. A road's carriageways and kinds count as one road by its name, so a walk across EDSA reads once.
+- For each, the nearest footbridge that crosses that road, within 300 m of the crossing (`FOOTBRIDGE_REACH_M`): how far, on which side (north, east, south or west, by the larger leg), and whether it has an elevator. A footbridge over another road doesn't count.
+- `footbridgeHintWords`: "Cross Commonwealth Avenue by the footbridge 120 m south (elevator)", "Crosses Commonwealth Avenue: no footbridge mapped nearby", "a major road" when it has no name. The owner designs the final words ("Owner designs first" 3).
+- Unit checks: `tests/unit/footbridge-hint-test.mjs`, the fixture cases above plus the committed files: a walk across each of the 269 footbridge segments over a mapped road finds that footbridge. About 0.3 ms a walk.
+- **Not yet:** the fetch of the two files with a Go here walk, and the card's line. Both wait for the design.
