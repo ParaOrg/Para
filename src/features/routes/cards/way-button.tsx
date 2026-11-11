@@ -3,13 +3,20 @@ import type { ComponentPropsWithoutRef } from 'react';
 import { buttonClasses } from '@/design-system/primitives/button-look';
 import { ArrowLeftRightIcon } from '@/shared/ui/route-icons';
 
-type WayButtonProps = Omit<
+// No name of its own either: its name is its word.
+interface WayButtonProps extends Omit<
   ComponentPropsWithoutRef<'button'>,
-  'children' | 'className' | 'style' | 'type'
-> & {
+  | 'children'
+  | 'className'
+  | 'style'
+  | 'type'
+  | 'dangerouslySetInnerHTML'
+  | 'aria-label'
+  | 'aria-labelledby'
+> {
   /** The way that is showing (wayWord): Papunta, Pabalik, or a train's bound. */
   way: string;
-};
+}
 
 /**
  * PAPUNTA (Controller, 4679:23737 and 4683:32635): the Button's Special, its word the way that is

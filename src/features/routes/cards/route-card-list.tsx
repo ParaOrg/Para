@@ -71,7 +71,7 @@ const LIST_SHAPE: SheetShape = { lowPx: 240, isMaxFull: true };
  * Controller stands at the sheet's foot and the cards scroll under it; the sheet draws no handle
  * (one stays for the keyboard), its Low shows the first card above the Controller and its Max fills
  * the screen. On a wide screen the list docks the map's whole height on the left, 384 wide, under
- * the Controller as its brand blue top bar.
+ * the Controller as its top bar, in Card/Jeep.
  *
  * The grouping is departures': one way round at a time, and PAPUNTA flips them all. The map lights
  * every direction listed, the way round it is showing them; a tap on a card off its rows narrows

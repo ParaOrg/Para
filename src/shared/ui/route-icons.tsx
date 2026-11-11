@@ -154,12 +154,12 @@ export function UvExpressIcon() {
   return <SpriteIcon id="uv-express" />;
 }
 
-/** Figma's closeLarge (4633:22012), 28 across: the route list Controller's ✕. */
+/** Figma's closeLarge (4633:22012), 28 across: the Controller's ✕, on a list and a trip. */
 export function CloseLargeIcon() {
   return <RouteSpriteIcon id="close-large" />;
 }
 
-/** Figma's arrow-left-right-large (4633:22014), 28 across: the Controller's ⇆, every route the other way round. */
+/** Figma's arrow-left-right-large (4633:22014): the ⇆ before PAPUNTA's word on the Controller's wide bar. */
 export function ArrowLeftRightIcon() {
   return <RouteSpriteIcon id="arrow-left-right-large" />;
 }

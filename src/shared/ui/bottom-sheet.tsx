@@ -86,10 +86,9 @@ interface Props {
    */
   handle?: 'shown' | 'hidden';
   /**
-   * Drawn at the sheet's foot on the screen, whatever its height, following a drag: the
-   * Controller of a route list or a trip, what the sheet holds scrolling under it (4679:23737). Its
-   * buttons, and what they pop up, keep their taps; the rest of its row lets them through. Floating,
-   * it is the sheet's top bar instead (4683:32635): what the sheet holds makes room under it.
+   * Drawn at the sheet's foot on the screen at any height: a route list's or a trip's Controller,
+   * the body scrolling under it (4679:23737), its row letting taps through but for its buttons.
+   * Floating, it is the sheet's top bar instead (4683:32635), the body making room under it.
    */
   footer?: ReactNode;
   children: ReactNode;
@@ -335,6 +334,20 @@ export function BottomSheet({
       <div ref={headRef} className="shrink-0 touch-none sheet-floating:touch-auto">
         {header}
       </div>
+      {/* Before the body, so the page reads the Controller first; drawn over it either way. */}
+      {footer && (
+        <div
+          data-testid="sheet-footer"
+          data-sheet-footer
+          className={
+            'pointer-events-none absolute inset-x-0 bottom-(--sheet-y) z-10 pb-[env(safe-area-inset-bottom)] ' +
+            '[&_[popover]]:pointer-events-auto [&_button]:pointer-events-auto ' +
+            'sheet-floating:top-0 sheet-floating:bottom-auto sheet-floating:pb-0'
+          }
+        >
+          {footer}
+        </div>
+      )}
       <div
         ref={bodyRef}
         onFocus={onBodyFocus}
@@ -348,19 +361,6 @@ export function BottomSheet({
       >
         {fits ? <div ref={contentRef}>{children}</div> : children}
       </div>
-      {footer && (
-        <div
-          data-testid="sheet-footer"
-          data-sheet-footer
-          className={
-            'pointer-events-none absolute inset-x-0 bottom-(--sheet-y) pb-[env(safe-area-inset-bottom)] ' +
-            '[&_[popover]]:pointer-events-auto [&_button]:pointer-events-auto ' +
-            'sheet-floating:top-0 sheet-floating:bottom-auto sheet-floating:z-10 sheet-floating:pb-0'
-          }
-        >
-          {footer}
-        </div>
-      )}
     </div>
   );
 }

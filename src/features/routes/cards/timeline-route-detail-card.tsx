@@ -25,15 +25,12 @@ type Props = Omit<TimelineRouteDetailProps, 'pickedPesos'> & {
    */
   discounted?: boolean;
   onDiscounted?: (discounted: boolean) => void;
-  /** PAPUNTA and ⇅: the same route the other way. */
+  /** PAPUNTA and ⇅: the same route the other way; disabled unless `switchable`. */
   onSwitch: () => void;
-  /** False when the route has no other way drawn; PAPUNTA and ⇅ then rest disabled. */
   switchable: boolean;
-  /** Whether this trip is the route's way back, for the suites (PAPUNTA's `data-back`). */
-  back: boolean;
-  /** PAPUNTA's word (wayWord): the way showing, Papunta or Pabalik, or a train's bound. Null: none, as on a loop. */
+  back: boolean; // The way back, for the suites (PAPUNTA's `data-back`).
+  /** PAPUNTA's word (wayWord), the way showing, and ⇅'s name (switchWord), the way a tap leads to. Null on a loop. */
   way: string | null;
-  /** ⇅'s name (switchWord): the way a tap leads to. Null: no ⇅, as on a loop. */
   wayTo: string | null;
   /** The sheet's name for a screen reader, where `origin → destination` does not say it (a loop's). */
   label?: string;
@@ -62,9 +59,9 @@ type Props = Omit<TimelineRouteDetailProps, 'pickedPesos'> & {
 };
 
 /**
- * One direction as a trip (RouteTripDetail, 4681:32026), under the Controller's bar: its ends
- * (TripEndsCard), the ride's Distance and fare tiles, the direction's signboards (uploaded in the
- * studio), then its stops in the trip's colour (useTripLivery) on RouteStopsCard.
+ * One direction as a trip (RouteTripDetail, 4681:32026), with the Controller's bar: its ends
+ * (TripEndsCard), the ride's Distance and fare tiles, its signboards, then its stops in the trip's
+ * colour (useTripLivery) on RouteStopsCard.
  *
  * The fare tile is a button: the pesos, and under them ↻ and which fare they are, Regular or
  * Discounted; a tap turns it to the other. With a hintuan picked it prices the ride from where the
@@ -124,11 +121,9 @@ export function TimelineRouteDetailCard({
   const [own, setOwn] = useState(false);
   const discounted = kept ?? own;
   const setDiscounted = (d: boolean) => (onDiscounted ? onDiscounted(d) : setOwn(d));
-  // Each tap turns ↻ round once more: counted, so the next tap turns it again rather than back. It
-  // turns over `turn`, gentle at 6/10 as fast.
+  // Each tap turns ↻ round once more, counted, so the next tap turns it on rather than back.
   const [turns, setTurns] = useState(0);
-  // An end picked: the tiles read the ride between it and the start, a hintuan's row or, with a
-  // start, an end's. A start alone is no ride yet, the whole trip's shown.
+  // An end picked: the tiles read the ride from the start to it. A start alone is no ride yet.
   const hasRide = picked !== null || (start !== null && endPicked !== null);
   const shown = hasRide && pickedFare ? pickedFare : fare;
   const shownMetres = hasRide && pickedMetres !== undefined ? pickedMetres : metres;
@@ -153,8 +148,7 @@ export function TimelineRouteDetailCard({
         />
       }
     >
-      {/* RouteTripDetail (4681:32026): its cards 16 apart, 12 in from the sides and the top, clear
-          of the Controller's 78 at a phone's foot, and of its 64 on top where the sheet floats. */}
+      {/* Cards 16 apart, 12 in, clear of the Controller: 78 at a phone's foot, 64 on top floating. */}
       <div className="flex w-full flex-col gap-4 px-3 pt-3 pb-24 sheet-floating:pt-19 sheet-floating:pb-6">
         <TripEndsCard
           routeOrigin={routeOrigin}

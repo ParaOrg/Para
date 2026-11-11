@@ -72,10 +72,12 @@ export const Phone: Story = {
     await expect(getComputedStyle(way).fontWeight).toBe('700');
     await userEvent.click(way);
     await expect(args.onSwitch).toHaveBeenCalledTimes(1);
-    // PAPUNTA stands in the bar's middle.
+    // PAPUNTA stands in the bar's middle, ✕ drawn before it though read after it.
     const bar = canvas.getByTestId('chooser-controller').getBoundingClientRect();
     const box = way.getBoundingClientRect();
     await expect(Math.abs(box.left + box.width / 2 - (bar.left + bar.width / 2))).toBeLessThan(1);
+    const close = canvas.getByRole('button', { name: 'Close' }).getBoundingClientRect();
+    await expect(close.right).toBeLessThan(box.left);
   },
 };
 
@@ -164,7 +166,7 @@ const wide: Decorator[] = [
 ];
 
 /**
- * The list on a wide screen (4683:32635): the top bar, 64 tall, brand blue; ⇆ PAPUNTA and the
+ * The list on a wide screen (4683:32635): the top bar, 64 tall, in Card/Jeep; ⇆ PAPUNTA and the
  * sliders at the left in Brand/surface, ✕ at the right.
  */
 export const Wide: Story = {
@@ -174,16 +176,39 @@ export const Wide: Story = {
     const bar = canvas.getByTestId('chooser-controller');
     await expect(bar.getBoundingClientRect().height).toBe(64);
     const close = canvas.getByRole('button', { name: 'Close' }).getBoundingClientRect();
-    const way = canvas.getByTestId('chooser-flip').getBoundingClientRect();
-    await expect(close.left).toBeGreaterThan(way.right);
+    const papunta = canvas.getByTestId('chooser-flip');
+    await expect(close.left).toBeGreaterThan(papunta.getBoundingClientRect().right);
+    // Its word in Brand/surface on the wide bar, over the Special button's own.
+    const brand = getComputedStyle(document.documentElement).getPropertyValue('--brand-surface');
+    const probe = document.createElement('span');
+    probe.style.color = brand;
+    document.body.append(probe);
+    await expect(getComputedStyle(papunta).color).toBe(getComputedStyle(probe).color);
+    probe.remove();
   },
 };
 
 /** A trip on a wide screen: the bar in the trip's colour, ‹ at the right. */
 export const WideTrip: Story = {
-  args: { owner: 'card', filter: null, livery: 'jeep', onBack: fn() },
+  args: { owner: 'card', filter: null, livery: 'bus', onBack: fn() },
   decorators: wide,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const back = canvas.getByRole('button', { name: 'Back' }).getBoundingClientRect();
+    const bar = canvas.getByTestId('card-controller').getBoundingClientRect();
+    await expect(Math.round(bar.right - back.right)).toBe(12);
+    await expect(canvas.queryByRole('button', { name: 'Close' })).toBeNull();
+  },
 };
+
+/** Nothing drawn the other way round, on the wide bar: PAPUNTA rests disabled there too. */
+export const WideNotSwitchable: Story = { args: { isSwitchable: false }, decorators: wide };
+
+/** A filter on, on the wide bar: the dot on the sliders. */
+export const WideFiltered: Story = { args: { filter: 'bus' }, decorators: wide };
+
+/** The extra slot on the wide bar, after PAPUNTA. */
+export const WideExtraSlot: Story = { args: { ...ExtraSlot.args }, decorators: wide };
 
 /** Every livery's bar, as a trip wears it. */
 export const WideLiveries: Story = {

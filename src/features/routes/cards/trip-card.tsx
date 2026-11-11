@@ -31,7 +31,7 @@ import { vehicleOf } from '../model/vehicles';
 /**
  * The trip's colour, one owner for it: decided as the trip opens — the RouteCard's it was picked
  * from, in the list or a hotspot's card, while that card stands behind it (a card of several routes
- * wears its first row's), else its own (liveryOf) — and kept until it closes, through SWITCH and even
+ * wears its first row's), else its own (liveryOf) — and kept until it closes, through PAPUNTA and even
  * when a tap on its own line closes the list behind it: a card never changes colour while it is
  * open. Its line wears it too, so the page reads it, not the card. Settled while rendering, as
  * derived state is, so the card never shows a frame in the wrong colour.
@@ -56,7 +56,7 @@ export function useTripLivery(
  * The chosen direction as Figma's trip card (TimelineRouteDetailCard), from what the map file
  * knows: its ends as the list names them, the whole ride's length and pesos, the hintuans on the
  * way, and its colour — the one its RouteCard wore, when it was picked from one, in the list or in
- * a hotspot's card; its own route's, when not. SWITCH turns it round, what it was picked from
+ * a hotspot's card; its own route's, when not. PAPUNTA turns it round, what it was picked from
  * staying behind it, and the card keeps the colour it opened in.
  *
  * A picked hintuan's pill prices the ride from the start to there, the same pesos the fare tile
@@ -94,7 +94,7 @@ export function TripCard({
   direction: Direction;
   directions: readonly Direction[];
   timeline: Timeline;
-  /** The colour it opened in, kept through SWITCH; its line wears it too. */
+  /** The colour it opened in, kept through PAPUNTA; its line wears it too. */
   livery: Livery;
   onBackToList: (() => void) | null;
   onSwitch: (sibling: Direction) => void;
@@ -128,10 +128,7 @@ export function TripCard({
   extras?: ReactNode;
   /** The walk from the ride's end to the landmark "Go here" was for (ticket 07), or null. */
   walk?: string | null;
-  /**
-   * The studio's: with the other way not drawn yet, SWITCH starts drawing it
-   * instead of resting disabled. The public map passes none.
-   */
+  /** The studio's: with the other way not drawn, PAPUNTA starts drawing it, not resting disabled. */
   onDrawOtherWay?: () => void;
 }) {
   const loop = isLoop(direction);
@@ -143,7 +140,7 @@ export function TripCard({
   const line = railLineOf(direction);
   const vehicle = vehicleOf(direction);
   const sibling = otherDirection(directions, direction);
-  // A loop has no way back, so no SWITCH at all.
+  // A loop has no way back, so no PAPUNTA at all.
   const switchable = !loop && !!sibling && isDrawn(sibling);
   const canDrawOtherWay = !loop && !!sibling && !isDrawn(sibling) && !!onDrawOtherWay;
   // The whole ride, measured once on its full line — the index's figure, so
