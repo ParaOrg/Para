@@ -121,15 +121,13 @@ export function pathLengthM(fixes: readonly Fix[], hintos: readonly Hinto[] = []
   const inside = (fix: Fix) => hintos.find((h) => fix.time >= h.from && fix.time <= h.to);
   let total = 0;
   let [counted] = fixes;
-  let was = counted && inside(counted);
   for (const fix of fixes.slice(1)) {
     const now = inside(fix);
     const leg = distanceM(counted.at, fix.at);
-    if (!now || now !== was || leg >= WANDER_M) {
+    if (!now || now !== inside(counted) || leg >= WANDER_M) {
       total += leg;
       counted = fix;
     }
-    was = now;
   }
   return total;
 }
