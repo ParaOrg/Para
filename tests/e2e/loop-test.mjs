@@ -255,7 +255,7 @@ const toFull = async (page) => {
 };
 const openFold = async (page) => {
   await toFull(page);
-  const fold = page.locator('[data-testid="trip-fold"]');
+  const fold = page.locator('[data-testid="trip-view-more"][aria-expanded="false"]');
   if ((await fold.count()) > 0) await fold.first().click();
   await page.waitForTimeout(300);
 };
@@ -361,10 +361,14 @@ const closeTrip = async (page) => {
       (await bareCircles(page)).includes(PALMA.name),
     `${JSON.stringify(await endLabels(page))} / ${JSON.stringify(await bareCircles(page))}`,
   );
+  // The rows between the end and the start stand alone, outside the ride (the owner, T4).
+  const between = await page
+    .locator('[data-testid="trip-hintuan"] [data-rail]')
+    .evaluateAll((els) => els.map((e) => e.getAttribute('data-rail')));
   check(
-    '  the rows between the end and the start fold into one fold',
-    (await page.locator('[data-testid="trip-fold"]').count()) === 1 &&
-      (await page.locator('[data-testid="trip-fold"]').getAttribute('data-part')) === 'after',
+    '  the rows between the end and the start stand alone, off the rail',
+    between.includes('disconnected'),
+    between.join(),
   );
 
   // An end row with the start kept: either end is the tip, the ride goes on round to it.
