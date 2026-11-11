@@ -1,9 +1,8 @@
-import { MAP_COLOURS } from '@/design-system/foundation/map-colours';
 import type { RecordingTrail } from '@/features/routes/map/recording-trail';
-import type { Mode } from '@/features/routes/model/ride-recording';
 
+import { drawTrail } from './draw-summary-trail';
 import type { RideSummary } from './ride-summary';
-import { sketchLines } from './trail-sketch-paths';
+import { wrapLines } from './wrap-lines';
 
 /** A portrait 4:5 picture, the size feeds and stories crop least. */
 export const CARD_WIDTH = 1080;
@@ -14,99 +13,8 @@ const FONT = "'SN Pro', system-ui, sans-serif";
 const BRAND = '#4900be'; // parabrand/800, as Map/RouteLine/surface-selected
 const INK = '#171717'; // neutral/900
 const MUTED = '#737373'; // neutral/500
-const GROUND = '#f5f5f5'; // neutral/100
 /** The trail's box on the card, under the brand band. */
 const TRAIL = { x: PAD, y: 180, width: CARD_WIDTH - 2 * PAD, height: 620 };
-/** Room inside the trail's box, so the line and its end dots stay clear of the box's edge. */
-const TRAIL_INSET = 48;
-
-/** Each mode's line as the map and History's sketch draw it, thickened for the card's size. */
-const LINE_STYLE: Record<Mode, { stroke: string; dash: number[] }> = {
-  walk: { stroke: MAP_COLOURS['Map/Trail/lakad'], dash: [10, 26] },
-  ride: { stroke: MAP_COLOURS['Map/Trail/sakay'], dash: [] },
-};
-
-/**
- * Text broken into lines no wider than `width`, at most `max` of them, the last cut short with an
- * ellipsis when the words run on. `measure` is the canvas's measureText width, passed in so the
- * breaking can be tested without a canvas.
- */
-export function wrapLines(
-  text: string,
-  width: number,
-  max: number,
-  measure: (line: string) => number,
-): string[] {
-  const words = text.trim().split(/\s+/).filter(Boolean);
-  const lines: string[] = [];
-  let line = '';
-  for (const word of words) {
-    const next = line ? `${line} ${word}` : word;
-    if (measure(next) <= width || !line) {
-      line = next;
-      continue;
-    }
-    lines.push(line);
-    line = word;
-  }
-  if (line) lines.push(line);
-  if (lines.length <= max) return lines;
-  const kept = lines.slice(0, max);
-  let last = kept[max - 1];
-  while (last && measure(`${last}…`) > width) last = last.slice(0, -1).trimEnd();
-  kept[max - 1] = `${last}…`;
-  return kept;
-}
-
-function drawTrail(ctx: CanvasRenderingContext2D, trail: RecordingTrail | null) {
-  ctx.fillStyle = GROUND;
-  ctx.beginPath();
-  ctx.roundRect(TRAIL.x, TRAIL.y, TRAIL.width, TRAIL.height, 32);
-  ctx.fill();
-  // sketchLines keeps a margin sized for History's small picture: inset the box instead.
-  const lines = trail
-    ? sketchLines(trail, TRAIL.width - 2 * TRAIL_INSET, TRAIL.height - 2 * TRAIL_INSET)
-    : [];
-  if (lines.length === 0) return;
-  ctx.save();
-  ctx.translate(TRAIL.x + TRAIL_INSET, TRAIL.y + TRAIL_INSET);
-  ctx.lineCap = 'round';
-  ctx.lineJoin = 'round';
-  ctx.lineWidth = 12;
-  for (const line of lines) {
-    ctx.strokeStyle = LINE_STYLE[line.mode].stroke;
-    ctx.setLineDash(LINE_STYLE[line.mode].dash);
-    ctx.stroke(new Path2D(line.d));
-  }
-  ctx.setLineDash([]);
-  const start = pathEnds(lines[0].d)?.first;
-  const end = pathEnds(lines[lines.length - 1].d)?.last;
-  if (start) drawDot(ctx, start, MAP_COLOURS['Map/Trail/sakay']);
-  if (end) drawDot(ctx, end, INK);
-  ctx.restore();
-}
-
-/** A path's first and last points, read back from the `M x y L x y` sketchLines writes. */
-export function pathEnds(d: string): { first: [number, number]; last: [number, number] } | null {
-  const points = [...d.matchAll(/[ML](-?[\d.]+) (-?[\d.]+)/g)].map(
-    (m) => [Number(m[1]), Number(m[2])] as [number, number],
-  );
-  if (points.length === 0) return null;
-  return { first: points[0], last: points[points.length - 1] };
-}
-
-/** Where the ride began or ended: a filled dot ringed in white, as Strava marks them. */
-function drawDot(ctx: CanvasRenderingContext2D, [x, y]: [number, number], fill: string) {
-  ctx.beginPath();
-  ctx.arc(x, y, 18, 0, 2 * Math.PI);
-  ctx.fillStyle = '#ffffff';
-  ctx.fill();
-  ctx.beginPath();
-  ctx.arc(x, y, 12, 0, 2 * Math.PI);
-  ctx.fillStyle = fill;
-  ctx.fill();
-}
-
 /**
  * One of the figures under the names: its value large, its label small above it, both squeezed
  * into `width` when longer (`UV Express` is wider than its third of the card).
@@ -150,7 +58,7 @@ export function drawRideSummary(
   ctx.fillText('Ride summary', CARD_WIDTH - PAD, 82);
   ctx.textAlign = 'left';
 
-  drawTrail(ctx, trail);
+  drawTrail(ctx, trail, TRAIL);
 
   const width = CARD_WIDTH - 2 * PAD;
   ctx.fillStyle = INK;

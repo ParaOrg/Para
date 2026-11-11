@@ -1,12 +1,13 @@
 // A ride's summary card: what it says (src/features/contribute/history/ride-summary.ts), how its
-// names break into lines (draw-ride-summary.ts wrapLines) and the file it is saved as
+// names break into lines (wrap-lines.ts) and the file it is saved as
 // (share-ride-summary.ts summaryFileName), and the bytes the app's share sheet gets (native-share.ts).
 //
 //   node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs tests/unit/ride-summary-test.mjs
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { rideSummaryOf } from '../../src/features/contribute/history/ride-summary.ts';
-import { pathEnds, wrapLines } from '../../src/features/contribute/history/draw-ride-summary.ts';
+import { wrapLines } from '../../src/features/contribute/history/wrap-lines.ts';
+import { pathEnds } from '../../src/features/contribute/history/draw-summary-trail.ts';
 import { summaryFileName } from '../../src/features/contribute/history/share-ride-summary.ts';
 import { blobToBase64 } from '../../src/features/contribute/native/native-share.ts';
 import { readFileSync } from 'node:fs';
