@@ -734,3 +734,36 @@ proves the old path still works.
 
 - Apply failed: nothing changed. The message names what it found.
 - Applied too early, or it must be withdrawn: run `20261110190000_retire_review_steps_revert.sql`.
+
+# Applying drop_inert_write_policies to the live project
+
+**Not applied live.** It can be applied at any time after `lock_map_tables`: it changes what no role can do.
+
+`route`, `route_variant`, `stop` and `route_stop` each carry an insert, an update and a delete policy for
+editors, from 0005 and 0015. Since `lock_map_tables` no app role holds the grants those policies would apply
+to, and the map changes only through the draft functions, which are not subject to them. So the twelve
+policies decide nothing, and they go, leaving these tables with read policies only. Both read policies per
+table stay as two (one merged policy would make `anon` evaluate `private.is_editor()`, which it may not
+run), and so do `takedown`'s, which the nightly publish reads through.
+
+| File | What it does |
+| --- | --- |
+| `20261112100000_drop_inert_write_policies_apply.sql` | One transaction. Checks `lock_map_tables` is in the ledger, this is not, and no app role holds a write grant on the four tables. Applies `migrations/20261112100000_drop_inert_write_policies.sql` (carried unchanged; `verify/drop-inert-write-policies.sh` checks the copy). Checks the twelve are gone, the ten read policies are there and row level security is on, and writes the ledger row. A second run stops and changes nothing. |
+| `20261112100000_drop_inert_write_policies_check.sql` | Part one adds a test editor, a test account, two places and a route, proves every direct write refused for anon, the account and the editor, the reads unchanged and the draft functions working, then rolls all of it back. Part two is read-only: 5 rows, all `ok` should be `t`. |
+| `20261112100000_drop_inert_write_policies_revert.sql` | One transaction: re-creates the twelve policies as 0005 and 0015 wrote them and removes the ledger row. Touches no data. Safe to run twice. |
+
+## Steps
+
+1. Run `20261112100000_drop_inert_write_policies_apply.sql`. It ends with `COMMIT`; an error means nothing
+   changed.
+2. Run `20261112100000_drop_inert_write_policies_check.sql`: part one ends with `ROLLBACK` and no error; part
+   two gives 5 rows, all `ok = t`.
+3. Record the ledger version
+   (`select version from supabase_migrations.schema_migrations where name = 'drop_inert_write_policies';`)
+   in `migrations/README.md`, add `20261112100000_drop_inert_write_policies` to `APPLIED` in
+   `verify/schema-snapshot.sh` and rewrite the snapshot (`--write`). No types change.
+
+## Recovery
+
+- Apply failed: nothing changed. The message names what it found.
+- It must be withdrawn: run `20261112100000_drop_inert_write_policies_revert.sql`.

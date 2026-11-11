@@ -381,3 +381,21 @@ of a draft; save_draft still saves and names its saver; publish_draft still publ
 nothing and leave no row behind, and its 4 read-only rows must be `t`. `draft-published-race.sh` runs
 again over it. On a second database, without draft_published, the apply refuses and writes no ledger
 row. On a third, apply then revert twice leaves the schema as before, and re-applying passes the check.
+
+## drop-inert-write-policies.sh
+
+`migrations/20261112100000_drop_inert_write_policies.sql` on databases of its own, run by `run.sh` or alone:
+
+    PSQL="docker exec -i pg-verify psql -U postgres" bash supabase/verify/drop-inert-write-policies.sh
+
+It builds the database as live has it through draft_published, lock_map_tables and retire_review_steps,
+takes the publish's reads as `anon` (`publish-reads.sql`: the columns, filters and order
+`scripts/publish/read-database.mjs` asks for), then applies
+`../apply/20261112100000_drop_inert_write_policies_apply.sql` twice (the second run must stop and change
+nothing). The same reads must give the same rows, and the schema must differ by the twelve policies alone.
+`…_check.sql` then runs: its rolled-back part (every direct write refused for anon, an account that is no
+editor and an editor; the reads unchanged; the draft functions still publishing, unpublishing, taking down
+and putting back) must raise nothing and leave no row behind, and its 5 read-only rows must be `t`.
+`draft-published-race.sh` runs again over it. On a second database the apply refuses without
+lock_map_tables, and again while an app role holds a write grant, changing nothing. On a third, apply then
+revert twice leaves the schema as before, and re-applying passes the check.
