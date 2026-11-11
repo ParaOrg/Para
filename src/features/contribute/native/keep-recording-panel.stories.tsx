@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { expect, fn, userEvent, within } from 'storybook/test';
+import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
 import { KeepRecordingPanel } from './keep-recording-panel';
 
@@ -27,7 +27,9 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   play: async ({ args, canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(canvas.getByRole('heading', { name: 'Keep Para recording' })).toHaveFocus();
+    await waitFor(() =>
+      expect(canvas.getByRole('heading', { name: 'Keep Para recording' })).toHaveFocus(),
+    );
     await expect(canvas.getAllByRole('listitem')).toHaveLength(2);
     await expect(canvas.getByText('Turn on Autostart for Para.')).toBeVisible();
     await userEvent.click(canvas.getByRole('button', { name: 'Open settings' }));

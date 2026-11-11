@@ -2,16 +2,9 @@ import type { MapLibreMap } from 'maplibre-gl';
 
 import { MAP_PAINT } from '@/design-system/foundation/map-colours';
 
-import { FOOTBRIDGE_MIN_ZOOM } from './footbridge-zoom';
+import { FOOTBRIDGE_LAYERS, FOOTBRIDGE_MIN_ZOOM } from './footbridge-zoom';
 import { fetchFootbridges } from '../published/fetch-footbridges';
 import type { Footbridge } from '../published/footbridge-file-schema';
-
-/** The source and its layers, by name: the suites read them. */
-export const FOOTBRIDGE_LAYERS = {
-  source: 'footbridges',
-  line: 'footbridges-line',
-  elevator: 'footbridges-elevator',
-} as const;
 
 /** The footbridges as GeoJSON: each a multi-line, and each elevator a point. Steps are not drawn (answer 3). */
 export function footbridgeFeatures(footbridges: readonly Footbridge[]) {

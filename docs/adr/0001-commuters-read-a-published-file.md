@@ -3,14 +3,14 @@ status: accepted
 date: 2026-09-22
 ---
 
-# Visitors read a published file, never the database
+# Commuters read a published file, never the database
 
 > Amended 2026-10-07: the one `map.json` became the published map, an index and line files. See [the amendment](#amendment-2026-10-07).
 
 The public map at `/` reads one static file, `public/data/map.json`, rebuilt
 from the studio's tables by a nightly workflow (and by hand on demand) and
-committed to `main`. Visitors never call the database. We chose this over a
-live read because it keeps the promise that a visitor asks nothing of anyone
+committed to `main`. Commuters never call the database. We chose this over a
+live read because it keeps the promise that a commuter asks nothing of anyone
 — no account, no key in the browser, no request to a backend, so no coordinate
 or identity can ever be sent — and because Cloudflare serves a static file
 free and without limit while the database's free tier meters egress and
@@ -19,7 +19,7 @@ and git history keeps every published version.
 
 ## Consequences
 
-- A change the editor saves is seen by visitors when it is published, not
+- A change the editor saves is seen by commuters when it is published, not
   the moment it is saved. For a curated map that is the right way round.
 - Anything the public map needs must be in the file: when a feature needs a
   new column (links, ends, informal names), the publish script grows with it.
@@ -30,14 +30,14 @@ and git history keeps every published version.
 
 The one file became a set, the published map: `index.v4.json`, a line file
 per direction under `lines/`, and the signboards. `map.json` is still written
-for installed apps that have not updated. The decision stands: visitors read
+for installed apps that have not updated. The decision stands: commuters read
 static files, never the database.
 
 ## Amendment, 2026-10-16
 
-The owner named the person on the public map a commuter (2026-10-15), so
-"visitor" in this record now reads "commuter". The body and the file name stay
-as written, since links point to them.
+The owner named the person on the public map a commuter (2026-10-15). The
+record and its file name now say so (2026-11-10), and the links to it were
+moved with it.
 
 ## Amendment, 2026-10-17
 

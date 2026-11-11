@@ -37,7 +37,8 @@ type Story = StoryObj<typeof meta>;
 /** Near the first point: the badge, hidden from screen readers (the toolbar's button says it). */
 export const NearTheFirstPoint: Story = {
   play: async ({ canvasElement }) => {
-    const hint = within(canvasElement).getByTestId('connect-hint');
+    // The badge is placed in an effect, after the first paint.
+    const hint = await within(canvasElement).findByTestId('connect-hint');
     await expect(hint).toBeVisible();
     await expect(hint).toHaveAttribute('aria-hidden', 'true');
   },

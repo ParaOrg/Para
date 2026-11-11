@@ -123,7 +123,9 @@ export const Mixed: Story = {
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(canvas.getByRole('heading', { level: 1, name: 'History' })).toHaveFocus();
+    await waitFor(() =>
+      expect(canvas.getByRole('heading', { level: 1, name: 'History' })).toHaveFocus(),
+    );
     await expect(canvas.getAllByRole('heading', { level: 2 })).toHaveLength(5);
     await expect(canvas.getByRole('navigation', { name: 'Screens' })).toBeInTheDocument();
     await expect(
@@ -177,7 +179,9 @@ export const Scrolled: Story = {
     const list = canvasElement.querySelector('ul')?.parentElement;
     list?.scrollTo({ top: 400 });
     list?.dispatchEvent(new Event('scroll'));
-    await expect(canvasElement.querySelector('header')).toHaveClass('shadow-bottom-shadow');
+    await waitFor(() =>
+      expect(canvasElement.querySelector('header')).toHaveClass('shadow-bottom-shadow'),
+    );
   },
 };
 

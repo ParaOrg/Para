@@ -95,7 +95,8 @@ type Story = StoryObj<typeof meta>;
 const openCard = async (canvasElement: HTMLElement) => {
   const canvas = within(canvasElement);
   await userEvent.click(await canvas.findByRole('button', { name: 'Map design' }));
-  return canvas.getByRole('dialog', { name: 'Map Style' });
+  // The card's code loads when its button is first pressed (LazyMapStyle).
+  return canvas.findByRole('dialog', { name: 'Map Style' });
 };
 
 /** A mouse on the public map: nothing above it, so it takes the corner. Closed. */
