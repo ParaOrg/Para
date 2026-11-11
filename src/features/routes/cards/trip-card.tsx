@@ -61,7 +61,7 @@ export function useTripLivery(
  * still the same card.
  *
  * A picked hintuan's pill prices the ride from the start to there, the same pesos the fare tile
- * then shows. The studio shows what an editor needs under the tiles (`extras`): the same card, with
+ * then shows. The studio shows what an editor needs at the foot (`extras`): the same card, with
  * more below it.
  *
  * No link to a trip: the address does not follow the card.
@@ -125,7 +125,7 @@ export function TripCard({
   onOtherRoute?: (direction: Direction) => void;
   /** Where a signboard's file is read: beside the published map, or the studio's bucket. */
   signboardUrl?: (name: string) => string;
-  /** Under the tiles, the studio's alone: its facts and its Edit, Extend and Delete. */
+  /** At the foot, the studio's alone: its facts and its Edit, Extend and Delete. */
   extras?: ReactNode;
   /** The walk from the ride's end to the landmark "Go here" was for (ticket 07), or null. */
   walk?: string | null;

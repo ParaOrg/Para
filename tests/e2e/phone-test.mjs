@@ -3120,10 +3120,9 @@ if (routeA) {
     routeEnds.length === 2 && routeEnds.every((e) => text.includes(e)),
     r.signboard,
   );
-  // Dropped by the owner for now, to design later (2026-09-28). The words
-  // signboard went with them; the boards uploaded in the studio came back
-  // as pictures (3919:11355; under their own heading until 2026-10-12, in a
-  // strip between the card and the tiles since), left out here.
+  // Dropped by the owner for now, to design later. The boards uploaded in the
+  // studio are pictures on their own card, "Signboard" over them (4680:25123),
+  // left out here with their heading.
   const extras = await card()
     .first()
     .evaluate((c) => {

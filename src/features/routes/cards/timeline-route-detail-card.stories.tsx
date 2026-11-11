@@ -712,11 +712,11 @@ export const SheetLow: Story = {
 };
 
 /**
- * An origin too long for one line on a phone at 20/28 (LongNames' fits on one).
+ * An origin too long for one line on a phone at 17/24 (LongNames' fits on one).
  */
 const longOrigin = 'Novaliches (Bayan) via Zabarte and Quirino Highway';
 
-/** Low with a long origin: one line of it, 28 tall, cut short (3814:3976). */
+/** Low with a long origin: one line of it, 24 tall, cut short (3814:3976). */
 export const SheetLowLongName: Story = {
   args: { height: undefined, ...LongNames.args, routeOrigin: longOrigin },
   play: async (ctx) => {
@@ -737,7 +737,7 @@ export const SheetRaisedLongName: Story = {
 };
 
 /**
- * "Other routes" under the tiles (Figma 3778:3183): the other routes out of where the trip starts,
+ * "Other routes" under the stops: the other routes out of where the trip starts,
  * each by where it goes; a tap opens that route's trip in this one's place. With none, as in every
  * story above, the section is not there.
  */
@@ -829,7 +829,7 @@ export const ManySignboards: Story = {
   },
 };
 
-/** The signboards between the card and the tiles, and Other routes under the tiles, as the frame stacks them (3778:3183). */
+/** The signboards between the tiles and the stops, and Other routes under the stops. */
 export const SignboardsAndOtherRoutes: Story = {
   args: {
     signboards: [board('BAYAN', 'SIMBAHAN'), board('SM', 'FAIRVIEW')],
@@ -850,7 +850,7 @@ export const SignboardsAndOtherRoutes: Story = {
 
 /**
  * A trip opened by "Go here" from a landmark (ticket 07): its end picked at the hintuan nearest
- * the landmark, and under the tiles, first, how far the walk is from there, in a straight line.
+ * the landmark, and under the stops, first, how far the walk is from there, in a straight line.
  * With a line's own note too, the walk comes before it.
  */
 export const WalkToALandmark: Story = {

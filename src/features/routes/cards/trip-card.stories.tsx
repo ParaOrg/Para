@@ -288,7 +288,7 @@ export const TrainNoBound: Story = {
   },
 };
 
-/** The ferry: free, with the line's own words under the tiles. */
+/** The ferry: free, with the line's own words under the stops. */
 export const Ferry: Story = {
   args: {
     direction: direction('prfs', 'Escolta', 'Guadalupe', { mode: 'ferry', routeCode: 'PRFS' }),
@@ -336,7 +336,7 @@ export const Unpriced: Story = {
 /** No hintuans along the way yet: only its two ends. */
 export const NoHintuans: Story = { args: { timeline: timelineOf('Tala', 'Novaliches', []) } };
 
-/** The studio's: its facts and its Edit, Extend and Delete under the tiles (`extras`). */
+/** The studio's: its facts and its Edit, Extend and Delete at the foot (`extras`). */
 export const StudioExtras: Story = {
   args: {
     extras: (
@@ -389,7 +389,7 @@ const ikotTimeline: Timeline = {
 };
 
 /**
- * A loop's trip (UP – Ikot): "Ikot" where Papunta stands, the tip at the top
+ * A loop's trip (UP – Ikot): its name a badge after the mode's, the tip at the top
  * and again at the bottom, the tiles the whole loop's, and no SWITCH.
  */
 export const Loop: Story = {
@@ -398,6 +398,14 @@ export const Loop: Story = {
     const card = within(canvasElement);
     await expect(card.queryByTestId('card-switch')).toBeNull();
     await expect(card.getByText('UP – Ikot')).toBeVisible();
+  },
+};
+
+/** A loop with no name of its own: its badge says Ikot. */
+export const LoopNoName: Story = {
+  args: { ...Loop.args, direction: { ...ikot, name: null } },
+  play: async ({ canvasElement }) => {
+    await expect(within(canvasElement).getByText('Ikot')).toBeVisible();
   },
 };
 

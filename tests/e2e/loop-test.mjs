@@ -299,7 +299,7 @@ const closeTrip = async (page) => {
   );
   const header = await page.locator('[data-testid="trip-detail-header"]').innerText();
   check(
-    "  and says Ikot where Papunta stands, with the loop's name beside it",
+    '  and names the loop as a badge, with no Papunta or Pabalik',
     /Ikot/.test(header) && !/Papunta|Pabalik/.test(header) && header.includes('UP – Ikot'),
     header.replace(/\n/g, ' | '),
   );

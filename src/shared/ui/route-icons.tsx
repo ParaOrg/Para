@@ -101,7 +101,7 @@ export function EndIcon() {
 }
 
 /**
- * The vehicles at the top of a trip's card (RouteTripDetailHeader), a card's
+ * The vehicles at the top of a trip's card (RouteStopsCardHeader), a card's
  * mode (RouteCardMode), Figma's own drawings at 32
  * across: Train (4170:7029), Jeep (4188:11144, here JeepneyIcon, not the
  * side-on Jeep above), EJeep (4188:11168), Bus (4188:11156), Ferry

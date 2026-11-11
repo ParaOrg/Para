@@ -36,7 +36,7 @@ export interface TimelineRouteDetailProps {
   /**
    * The pesos of the ride between the picks, for the end's pill (the start's
    * says its code alone, though Variant4 draws the pesos on both): the fare
-   * the tile under the card shows, Regular or Discounted. Omitted when
+   * the fare tile shows, Regular or Discounted. Omitted when
    * unpriced, and no pill.
    */
   pickedPesos?: string;
@@ -69,8 +69,7 @@ export interface TimelineRouteDetailProps {
    */
   isLoop?: boolean;
   /**
-   * Above the first row, on the card's colour: a train's RouteTripDetailHeader,
-   * its line and bound (Figma 3778:3183). Jeeps and the ferry have none.
+   * Above the first row, on the card's colour: what the trip rides (RouteStopsCardHeader).
    */
   header?: ReactNode;
 }
@@ -110,7 +109,7 @@ export interface TimelineRouteDetailProps {
  * A hintuan's row picks it (Figma Timeline State=Selected, 3769:2847): its
  * dot turns to a white ring round a centre in the card's rail colour
  * (TimelineDot), its name ExtraBold, and a pill beside it holds the pesos from
- * where the trip leaves to there, the same the fare tile under the card shows,
+ * where the trip leaves to there, the same the fare tile shows,
  * Regular or Discounted as it is turned, while a circle like its dot pops up on
  * the map where it is, the route left whole. Tapping it again lets it go, the
  * fare tile the whole ride's again; one at a time. A picked row is in the

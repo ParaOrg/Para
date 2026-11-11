@@ -44,7 +44,7 @@ type Props = Omit<TimelineRouteDetailProps, 'pickedPesos'> & {
   /** Its height, shared with the list or card it was opened from (BottomSheet). */
   height?: SheetHeight;
   /**
-   * Figma's "Other routes" under the tiles: the other routes out of where
+   * "Other routes" under the stops: the other routes out of where
    * this trip starts, each by where it goes. Empty or omitted, none is shown.
    */
   otherRoutes?: readonly OtherRoute[];
@@ -52,14 +52,14 @@ type Props = Omit<TimelineRouteDetailProps, 'pickedPesos'> & {
   onOtherRoute?: (id: string) => void;
   /** The direction's signboards (4680:25123): SVG files the studio uploaded, in order. None, no card. */
   signboards?: readonly string[];
-  /** Under the tiles, a line's own fixed words (LINE_NOTES): the ferry's days and where to check for a suspension. */
+  /** Under the stops, a line's own fixed words (LINE_NOTES): the ferry's days and where to check for a suspension. */
   note?: string;
   /**
-   * Under the tiles, first: the walk from the ride's end to a landmark the commuter is going to
+   * Under the stops, first: the walk from the ride's end to a landmark the commuter is going to
    * (ticket 07), "About 300 m to SM North EDSA, in a straight line".
    */
   walk?: string | null;
-  /** Under the tiles: what only the studio shows — its facts and its Edit, Extend and Delete. */
+  /** Last: what only the studio shows — its facts and its Edit, Extend and Delete. */
   children?: ReactNode;
 };
 

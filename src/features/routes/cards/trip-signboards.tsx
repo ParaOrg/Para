@@ -15,13 +15,14 @@ export function TripSignboards({ signboards }: TripSignboardsProps) {
   const heading = useId();
   return (
     <section
+      data-testid="trip-signboards"
       aria-labelledby={heading}
       className="flex w-full flex-col gap-3 overflow-clip rounded-3xl bg-surface p-4 font-sn-pro shadow-large"
     >
       <h3 id={heading} className="text-lg/7 font-semibold text-content-primary">
         Signboard
       </h3>
-      <ul data-testid="trip-signboards" className="flex w-full flex-wrap gap-2">
+      <ul className="flex w-full flex-wrap gap-2">
         {signboards.map((src, i) => (
           <li key={src}>
             <img
