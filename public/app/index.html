@@ -1,0 +1,196 @@
+<!doctype html>
+<!--
+  The app's download page, /app/: what the QR codes on posters open, so their link never changes
+  when a new version comes out. Android gets the newest APK (GitHub's releases/latest always points
+  at it), an iPhone the contributor page in the browser. Plain HTML, copied as it is from public/:
+  no bundle, so it adds nothing to the map's or the contributor page's loads. The picture, logo and
+  fonts beside it are copies of src/features/published-map/install-welcome.webp,
+  src/features/contribute/account/para-logo.svg and the design system's SN Pro.
+-->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="color-scheme" content="only light" />
+    <title>Get the Para app</title>
+    <meta
+      name="description"
+      content="Record the jeepney routes you ride, and put them on Para's map of Metro Manila."
+    />
+    <link rel="icon" type="image/png" href="/icons/favicon.png" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <link
+      rel="preload"
+      href="/app/fonts/SNPro-SemiBold.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <style>
+      @font-face {
+        font-family: 'SN Pro';
+        src: url('/app/fonts/SNPro-Regular.woff2') format('woff2');
+        font-weight: 400;
+        font-display: swap;
+      }
+      @font-face {
+        font-family: 'SN Pro';
+        src: url('/app/fonts/SNPro-SemiBold.woff2') format('woff2');
+        font-weight: 600;
+        font-display: swap;
+      }
+      :root {
+        /* The design system's tokens (src/design-system/foundation/tokens.css). */
+        --brand: #4900be; /* parabrand-800 */
+        --brand-dark: #3b009a; /* parabrand-900 */
+        --brand-soft: #ececff; /* parabrand-100 */
+        --ink: #171717; /* neutral-900 */
+        --muted: #525252; /* neutral-600 */
+        --line: #e5e5e5; /* neutral-200 */
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: #ffffff;
+        color: var(--ink);
+        font:
+          400 1rem/1.5 'SN Pro',
+          system-ui,
+          sans-serif;
+      }
+      main {
+        max-width: 32rem;
+        margin: 0 auto;
+        padding: max(1.25rem, env(safe-area-inset-top)) 1.25rem
+          max(2.5rem, env(safe-area-inset-bottom));
+      }
+      .logo {
+        display: block;
+        height: 2.5rem;
+        width: auto;
+      }
+      .hero {
+        display: block;
+        width: 100%;
+        height: auto;
+        margin: 1.25rem 0 1.5rem;
+        border-radius: 1.5rem;
+        aspect-ratio: 768 / 403;
+        object-fit: cover;
+      }
+      h1 {
+        margin: 0 0 0.5rem;
+        font-size: 2rem;
+        line-height: 1.15;
+        font-weight: 600;
+      }
+      h2 {
+        margin: 0 0 0.25rem;
+        font-size: 1.25rem;
+        line-height: 1.3;
+        font-weight: 600;
+      }
+      p {
+        margin: 0 0 1rem;
+      }
+      .lead {
+        font-size: 1.125rem;
+        color: var(--muted);
+      }
+      section {
+        padding: 1.5rem 0;
+        border-top: 1px solid var(--line);
+      }
+      .button {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 3.25rem;
+        padding: 0.75rem 1.5rem;
+        border-radius: 999px;
+        background: var(--brand);
+        color: #ffffff;
+        font-weight: 600;
+        font-size: 1.125rem;
+        text-decoration: none;
+      }
+      .button:hover {
+        background: var(--brand-dark);
+      }
+      .button.plain {
+        background: var(--brand-soft);
+        color: var(--brand);
+      }
+      .button.plain:hover {
+        background: #dadaff; /* parabrand-200 */
+      }
+      a:focus-visible {
+        outline: 3px solid var(--brand);
+        outline-offset: 3px;
+      }
+      .note {
+        margin: 0.75rem 0 0;
+        font-size: 0.875rem;
+        color: var(--muted);
+      }
+      ol {
+        margin: 0.75rem 0 0;
+        padding-left: 1.25rem;
+        font-size: 0.875rem;
+        color: var(--muted);
+      }
+      .links {
+        display: grid;
+        gap: 0.75rem;
+      }
+      a {
+        color: var(--brand);
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <img class="logo" src="/app/para-logo.svg" alt="Para" width="98" height="64" />
+      <img class="hero" src="/app/welcome.webp" alt="" width="768" height="403" decoding="async" />
+      <h1>Map the jeep you ride</h1>
+      <p class="lead">
+        Para is a map of Metro Manila's jeepney routes, drawn from the rides of the people who take
+        them. The Para app records your ride, and once it's checked, your route is on the map for
+        every commuter.
+      </p>
+
+      <section aria-labelledby="android">
+        <h2 id="android">On Android</h2>
+        <p>Download the app and install it. It's free.</p>
+        <a
+          class="button"
+          href="https://github.com/ParaOrg/Para/releases/latest/download/para-contributor.apk"
+          >Download the Android app</a
+        >
+        <ol>
+          <li>Open the downloaded file, <b>para-contributor.apk</b>.</li>
+          <li>
+            If your phone asks, allow installs from your browser, then go back and tap Install.
+          </li>
+          <li>Open Para and make an account.</li>
+        </ol>
+      </section>
+
+      <section aria-labelledby="iphone">
+        <h2 id="iphone">On iPhone</h2>
+        <p>There's no iPhone app yet. You can record a ride in your browser instead.</p>
+        <a class="button plain" href="/contribute/">Record in the browser</a>
+      </section>
+
+      <section aria-labelledby="more">
+        <h2 id="more">More</h2>
+        <div class="links">
+          <a href="/">See the routes on the map</a>
+          <a href="mailto:para.ph.info@gmail.com">Questions? Email para.ph.info@gmail.com</a>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>
