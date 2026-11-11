@@ -27,7 +27,7 @@ import { fetchMyStats } from '../../src/features/contribute/api/fetch-my-stats.t
 import { fetchProfile } from '../../src/features/contribute/api/fetch-profile.ts';
 import { fetchStoredProfile } from '../../src/features/contribute/api/profile.ts';
 import { saveProfile } from '../../src/features/contribute/api/sign-up.ts';
-import { uploadContribution } from '../../src/features/contribute/api/upload-contribution.ts';
+import { uploadContribution } from '../../src/features/contribute/api/contribution-requests.ts';
 import {
   UploadError,
   isNoAnswer,
