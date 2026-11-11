@@ -125,7 +125,7 @@ export function useSavedRoutes<T extends Direction>(
   /**
    * The Selected RouteCard, whose directions alone are lit while no trip is
    * open; with none picked, a list lights every direction it shows, so it
-   * never lights nothing (the owner's call). SWITCH, a new list, a map tap,
+   * never lights nothing (the owner's call). PAPUNTA, a new list, a map tap,
    * opening a trip and closing let it go.
    */
   const [highlight, setHighlight] = useState<Highlight | null>(null);
@@ -139,7 +139,7 @@ export function useSavedRoutes<T extends Direction>(
     setBack((b) => !b);
     setHighlight(null);
   }, []);
-  /** The filter changed: a Selected card is let go, as ⇆ lets it go (the owner's call). */
+  /** The filter changed: a Selected card is let go, as PAPUNTA lets it go (the owner's call). */
   const filterModes = useCallback((filter: ModeFilter) => {
     setModeFilter(filter);
     setHighlight(null);

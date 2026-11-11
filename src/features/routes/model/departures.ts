@@ -242,7 +242,7 @@ export function sharingAnEnd<V extends Direction>(all: readonly V[], of: V): V[]
  * (TimelineRouteDetailCard, Figma 3778:3183): on Tala → Novaliches, Tala → SM
  * Fairview, and another route making the same trip, if there is one. One
  * direction each, drawn, leaving from the same hotspot as `of` does; its own
- * route's way back is SWITCH, not another route. An old file's route may
+ * route's way back is PAPUNTA, not another route. An old file's route may
  * carry no ends; it then has none.
  */
 export function otherRoutesFrom<V extends Direction>(all: readonly V[], of: V): V[] {
@@ -255,8 +255,8 @@ export function otherRoutesFrom<V extends Direction>(all: readonly V[], of: V): 
 
 /**
  * The word for the way that is showing — Papunta, there; Pabalik, the way
- * back — which the trip's bar is to name (PAPUNTA, decision 142). SWITCH
- * says the other way's word (switchWord).
+ * back — PAPUNTA's on the Controller, a list's and a trip's. The ⇅ on a
+ * trip's ends card says the other way's word (switchWord).
  *
  * On a train it is the bound the riders and the operators say, Northbound or
  * Southbound, Eastbound or Westbound on LRT-2 (railBound; the owner's call).
@@ -274,10 +274,10 @@ export function wayWord(back: boolean, showing: readonly Direction[]): string {
 }
 
 /**
- * The word on SWITCH is the way a tap leads to, not the way showing (the
- * owner's call): on a Papunta card SWITCH reads Pabalik, on a Pabalik one
- * Papunta, so a commuter reads where a tap leads. The showing way's word is
- * the header's (wayWord). On a train it is the other bound, Southbound on a
+ * The way a tap leads to, not the way showing: the name of the ⇅ on a trip's
+ * ends card, and the hintuan card's SWITCH. On a Papunta trip it is Pabalik,
+ * on a Pabalik one Papunta. The showing way's word is PAPUNTA's (wayWord).
+ * On a train it is the other bound, Southbound on a
  * Northbound card, by the same one-word-fits-all rule as wayWord's.
  */
 export function switchWord(back: boolean, showing: readonly Direction[]): string {
@@ -290,7 +290,7 @@ export function switchWord(back: boolean, showing: readonly Direction[]): string
 /**
  * Whether the way a list is not showing has any route to turn to: the other
  * way's drawn routes, not counting loops, which are in both. What decides
- * whether a list or a card offers SWITCH at all.
+ * whether a list or a trip offers PAPUNTA at all.
  */
 export function otherWayHasRoutes<V extends Direction>(
   directions: readonly V[],
