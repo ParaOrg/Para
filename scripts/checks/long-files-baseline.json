@@ -13,7 +13,7 @@
   "src/features/contribute/contribute-page.tsx": 535,
   "src/features/contribute/history/ride-detail-screen.tsx": 164,
   "src/features/contribute/history/use-history-items.ts": 159,
-  "src/features/contribute/map/basemap-cache.ts": 157,
+  "src/features/contribute/map/basemap-cache.ts": 156,
   "src/features/contribute/map/capture-trail-picture.ts": 172,
   "src/features/contribute/map/contribute-map.tsx": 224,
   "src/features/contribute/motion/start-morph.ts": 254,
