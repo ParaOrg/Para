@@ -80,6 +80,12 @@ Each says what you'd see, the first check, and the fix. When the alert workflow 
 - **First check:** the issue's log. `PUBLISH_DEPLOY_KEY is not set`, a permission error on the push, a shrink of more than 30%, a data problem from `check-map-data.mjs`, or the database unreachable.
 - **Fix:** a missing or wrong key: `docs/agents/main-protection.md`. A shrink that is deliberate: Run workflow with Force ticked. A data problem: fix the route in the studio, then Run workflow. Supabase down: see below; the live map keeps the last published file meanwhile (ADR 0001).
 
+### A publish didn't deploy
+
+- **You'd see:** the issue "Alert: a publish did not reach the live site". The nightly publish pushed a new map to `main` over 2 hours ago, and `www.para-commute.org` still serves the one before. The Publish map run itself is green: its job ends at the push.
+- **First check:** Cloudflare → Workers & Pages → `para` → Deployments. Is the latest build for `main` failed, or missing? Compare `published_at` in `https://www.para-commute.org/data/index.v5.json` with the same file on `main` in GitHub.
+- **Fix:** a failed build: read its log, then Retry deployment. No build at all: check that Workers Builds is still connected to the repository (Settings → Builds). Commuters keep the earlier map meanwhile, so nothing is lost; the issue closes itself once the live map matches `main`.
+
 ### A backup failed
 
 - **You'd see:** a red Backup run in Actions, and GitHub's email about a failed scheduled run.
