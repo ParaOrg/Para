@@ -1524,7 +1524,7 @@ if (PART === 1) {
           'no hintuan on this direction yet',
         );
       } else {
-        const fold = cardEl.locator('button[data-testid="trip-fold"]');
+        const fold = cardEl.locator('button[data-testid="trip-view-more"]');
         if ((await fold.count()) > 0) {
           await fold.first().click();
           await until(

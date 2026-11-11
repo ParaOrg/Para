@@ -15,7 +15,7 @@ const board = (label: string, width = 120) =>
       '</svg>',
   );
 
-/** The strip of signboards between a trip's card and its tiles, on a phone-wide sheet. */
+/** The signboards' card between a trip's tiles and its stops, on a phone-wide sheet. */
 const meta = {
   title: 'Features/Routes/TripSignboards',
   component: TripSignboards,
