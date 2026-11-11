@@ -1,6 +1,6 @@
 import type { RouteReportKind } from '@/features/routes/model/route-report-schema';
 
-/** How the studio names each kind of report. Proposed words, on the owner's design list. */
+/** How the studio names each kind of report: the owner's words (Q198). */
 export const REPORT_KIND_LABEL: Record<RouteReportKind, string> = {
   wrong_line: 'Wrong line on the map',
   wrong_fare: 'Wrong fare',
