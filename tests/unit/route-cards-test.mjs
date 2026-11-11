@@ -1,6 +1,6 @@
 // The cards a list shows (src/features/routes/model/departures.ts, routeCards):
 // a place's road directions on a RouteCard per mode, and its train and ferry
-// directions on a RouteCardRailway each, one per line and bound; the cards run
+// directions on a RouteCard each, one per line and bound; the cards run
 // by mode.
 //
 //   node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs tests/unit/route-cards-test.mjs
@@ -122,10 +122,28 @@ test('a place’s road modes are a card each, and the cards run by mode: jeep, U
     [
       ['Tala|jeep', 'jeep', ['jeep']],
       ['Bigte|jeep', 'jeep', ['jeep2']],
-      ['Tala|uv-express', 'uv-express', ['p2p']],
+      ['Tala|uv-express|p2p', 'uv-express', ['p2p']],
       ['Bigte|uv-express', 'uv-express', ['uv']],
       ['Tala|ejeep', 'ejeep', ['ejeep']],
       ['Tala|bus', 'bus', ['bus']],
+    ],
+  );
+});
+
+test('a place’s UV Express and its P2P are two cards, though both wear UV Express’s colours', () => {
+  const cards = routeCards(
+    [
+      direction('uv', 'Tala', 'Buendia', 'uv_express'),
+      direction('p2p', 'Tala', 'Makati', 'p2p'),
+      direction('uv2', 'Tala', 'SM North', 'uv_express'),
+    ],
+    false,
+  );
+  assert.deepEqual(
+    cards.map((c) => [c.card, c.livery, c.vehicle, c.directions.map((d) => d.v.id)]),
+    [
+      ['Tala|uv-express', 'uv-express', 'UV Express', ['uv', 'uv2']],
+      ['Tala|uv-express|p2p', 'uv-express', null, ['p2p']],
     ],
   );
 });

@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
-# Rebuilds the landmark file place search reads, public/data/landmarks.v1.json, from
-# OpenStreetMap (.scratch/place-search/README.md, step 2). Run it by hand or from the monthly
-# workflow, then commit the file as a normal pull request. Visitors never reach OpenStreetMap:
-# this runs once, here, and the app reads the committed file.
+# Rebuilds the landmark file place search reads, public/data/landmarks.v1.json, and the
+# footbridge file the map draws, public/data/footbridges.v1.json, from OpenStreetMap
+# (.scratch/place-search/README.md, step 2; .scratch/footbridges, ticket 01). Run it by hand or
+# from the monthly workflow, then commit the files as a normal pull request. Commuters never reach
+# OpenStreetMap: this runs once, here, and the app reads the committed files.
 #
 # One download: openstreetmap.fr's daily Metro Manila extract (about 60 MB), checked against its
 # MD5. osmium keeps the tags place search lists (decision 6: malls, schools, universities,
@@ -47,3 +48,17 @@ osmium export --overwrite "$work/filtered.osm.pbf" -f geojsonseq --add-unique-id
 node --experimental-strip-types "$root/scripts/landmarks/landmarks.mjs" "$work/features.geojsonseq" "$extract_at" \
   "$root/public/data/landmarks.v1.json"
 node "$root/scripts/landmarks/check.mjs" "$root/public/data/landmarks.v1.json"
+
+# The footbridges from the same download: footways on a bridge, the roads and rails they may
+# cross, and the elevators and steps that lead up to them (footbridges.mjs).
+osmium tags-filter --overwrite "$extract" \
+  w/bridge \
+  w/highway=motorway,motorway_link,trunk,trunk_link,primary,primary_link,secondary,secondary_link,tertiary,tertiary_link \
+  w/railway=rail,light_rail,subway \
+  n/highway=elevator,steps \
+  -o "$work/footbridges.osm.pbf"
+osmium export --overwrite "$work/footbridges.osm.pbf" -f geojsonseq --add-unique-id=type_id \
+  -o "$work/footbridges.geojsonseq"
+node "$root/scripts/footbridges/footbridges.mjs" "$work/footbridges.geojsonseq" "$extract_at" \
+  "$root/public/data/footbridges.v1.json"
+node "$root/scripts/footbridges/check.mjs" "$root/public/data/footbridges.v1.json"

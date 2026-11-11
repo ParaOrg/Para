@@ -54,3 +54,15 @@ export function firstMissing(
 export function canRecordWithout(permission: NativePermission): boolean {
   return permission !== 'location';
 }
+
+/**
+ * Whether a Start may go on with the phone's location: on already, or turned on from Google's
+ * "Turn on location?" dialog (`askToTurnOn`, asked only when it is off). "No, thanks", or a phone
+ * without the dialog ("unknown"), is no.
+ */
+export async function isLocationReady(
+  isLocationOn: boolean,
+  askToTurnOn: () => Promise<'on' | 'off' | 'unknown'>,
+): Promise<boolean> {
+  return isLocationOn || (await askToTurnOn()) === 'on';
+}

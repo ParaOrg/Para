@@ -17,10 +17,23 @@ import type { Highlight } from './use-saved-routes';
 import { framedBy, type Framed } from '../cards/card-stack';
 import type { PickedPlace } from '../cards/route-card-stack';
 import type { Hotspot } from '../model/hotspots';
+import { nearestStopOn, walkToLandmark, type HintuanNearHere } from '../model/landmark-search';
 import type { Livery } from '../model/liveries';
 import type { ModeFilter } from '../model/mode-filter';
 import { routeTimeline } from '../model/ride';
 import { directionLine, type Direction } from '../model/routes';
+import { rowOfBox } from '../model/timeline';
+import type { Landmark } from '../published/landmark-file-schema';
+
+/**
+ * A landmark made the goal by "Go here" (ticket 07): the hintuans near it, and, once a route is
+ * opened from the place's card, where that trip's end was picked for it.
+ */
+interface LandmarkGoal {
+  landmark: Landmark;
+  near: readonly HintuanNearHere[];
+  end: { directionId: string; rowId: string; distanceM: number } | null;
+}
 
 interface Routes<V extends Direction> {
   directions: readonly V[];
@@ -43,6 +56,8 @@ interface Hotspots<S extends Hotspot> {
 }
 
 interface Cards {
+  /** Any card up: with none, a landmark's "Go here" is let go. */
+  open: boolean;
   snap: Snap;
   backFromTrip: (() => void) | null;
   height: SheetHeight;
@@ -93,6 +108,15 @@ export function useCardCamera<V extends Direction, S extends Hotspot>(
     onGlide: () => cards.clearOf(tripDock)(),
     tipId: opts.tipId ?? null,
   });
+  // "Go here" from a landmark (ticket 07). Gone with the cards: once none is up, the trip it was
+  // for is over. Let go in the render that finds them closed, as the ride's picks are (useRidePicks).
+  const [goal, setGoal] = useState<LandmarkGoal | null>(null);
+  if (goal && !cards.open) setGoal(null);
+  // The walk from the trip's end to the landmark, while that end is the one picked for it.
+  const walk =
+    goal?.end && saved.selected?.id === goal.end.directionId && ride.pickedId === goal.end.rowId
+      ? walkToLandmark(goal.end.distanceM, goal.landmark.name)
+      : null;
   // The page, and the card's sheet on show in it, for what the camera keeps clear of.
   const root = useRef<HTMLDivElement>(null);
   const openSheet = () =>
@@ -165,6 +189,45 @@ export function useCardCamera<V extends Direction, S extends Hotspot>(
     openTrip: (v: { id: string }, livery?: Livery) => {
       keepForTrip();
       cards.openTrip(v, livery);
+    },
+
+    /** The landmark "Go here" made the goal, while it holds: its pin stays on the map. */
+    goalLandmark: goal?.landmark ?? null,
+    /** The walk to it from the trip's end, in words for the trip card; null unless that end is picked. */
+    walk,
+
+    /**
+     * "Go here" on a hintuan near a landmark (ticket 07): the landmark made the goal, and the
+     * hintuan's place opened, its routes listed as a tap on its name lists them.
+     */
+    goHere: (landmark: Landmark, near: readonly HintuanNearHere[], hotspotId: string) => {
+      setGoal({ landmark, near, end: null });
+      cards.openPlace(hotspotId, tripDock.current ? tripDock : hotspotDock);
+    },
+
+    /** The search started over: the goal let go. */
+    letGoalGo: () => setGoal(null),
+
+    /**
+     * A route picked on a place's card: its trip, the camera as it was kept for the trip's ‹. With
+     * a landmark the goal (ticket 07), its end is already picked at the hintuan nearest the
+     * landmark that the route stops at.
+     */
+    openTripFromPlace: (v: Direction, livery?: Livery) => {
+      keepForTrip();
+      cards.openTrip(v, livery);
+      const stop = goal && nearestStopOn(v.id, goal.near);
+      if (!stop) return;
+      const timeline = routeTimeline(
+        v,
+        hotspots.hotspots,
+        hotspots.hotspotsAlong(v.id, directionLine(v)),
+      );
+      const rows = [timeline.from, ...timeline.between, timeline.to].filter((r) => r !== null);
+      const rowId = rowOfBox(stop.hintuan, rows, hotspots.hotspots);
+      if (!rowId) return;
+      ride.pickOn(v.id, rowId);
+      setGoal({ ...goal, end: { directionId: v.id, rowId, distanceM: stop.distanceM } });
     },
 
     /** The trip's ‹ (useCardStack's), and the camera from before the trip back with the card. Null: no ‹. */

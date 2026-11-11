@@ -172,8 +172,18 @@ async function tapAt(page, ll, zoom) {
   await page.waitForTimeout(700);
 }
 
-/** Opens the route's trip card by tapping its line. */
+/**
+ * Opens the route's trip card by tapping its line, once the line is drawn there: the map can be
+ * loaded before the route's data has come and been drawn, and a tap on an empty map opens nothing
+ * (seen once on a slow runner).
+ */
 async function openRoute(page) {
+  await page.evaluate(([c]) => window.__map.jumpTo({ center: c, zoom: 15 }), [MIDDLE]);
+  await page.waitForFunction(
+    (c) => window.__map.queryRenderedFeatures(window.__map.project(c)).length > 0,
+    MIDDLE,
+    { timeout: 15000 },
+  );
   await tapAt(page, MIDDLE, 15);
 }
 
@@ -226,6 +236,11 @@ async function editAndSave(page) {
 const a = await editor(A_ID, 'a@example.com', null);
 const db = a.db;
 await openRoute(a.page);
+// The card arrives a moment after the tap: waited for, so a slow runner is not read as no button.
+await a.page
+  .getByRole('button', { name: 'Edit route' })
+  .waitFor({ timeout: 10000 })
+  .catch(() => {});
 check(
   'A, with no draft on the route, is offered Edit route',
   (await a.page.getByRole('button', { name: 'Edit route' }).count()) === 1,
@@ -273,6 +288,11 @@ check(
   !(await body(b.page)).includes(A_ID) && !(await body(b.page)).includes('a@example.com'),
 );
 check('  and B has sent no write', writesOf(db).length === writesBefore);
+check(
+  "  the card offers B Approve on A's draft, and no Discard: only its maker discards it",
+  (await b.page.getByRole('button', { name: 'Approve', exact: true }).count()) === 1 &&
+    (await b.page.getByRole('button', { name: /^Discard/ }).count()) === 0,
+);
 
 // B's Drafts list says it too, and marks the draft a Draft.
 await b.page.getByRole('button', { name: /^Drafts \(\d+\)$/ }).click();
