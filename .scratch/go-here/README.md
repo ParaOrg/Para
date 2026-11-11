@@ -98,7 +98,7 @@ Each is designed twice before it is built (two designs side by side, their costs
 | 02 | [The options list](issues/02-options-list.md) | 1 (113) | waits for the owner's design |
 | 03 | [Other routes for this ride](issues/03-other-routes-for-this-ride.md) | 1 (114) | ready-for-agent after 01; coordinate with the route card session |
 | 04 | [Re-plan from here](issues/04-replan-from-here.md) | 1 (115) | after 02; its button waits for the owner's design |
-| 05 | [Honest walking](issues/05-honest-walking.md) | 1 (116) | logic ready-for-agent; the dashed line and the button wait for the design |
+| 05 | [Honest walking](issues/05-honest-walking.md) | 1 (116) | words, maps link and the major-roads file built; the hint's logic next; the dashed line and the button wait for the design |
 | 06 | [The get-off countdown](issues/06-get-off-countdown.md) | 2 (117) | built: logic only |
 | 07 | [The get-off reminder](issues/07-get-off-reminder.md) | 2 (117) | waits for the owner's design |
 | 08 | [A hintuan graph, one transfer: design it twice](issues/08-hintuan-graph.md) | later (119) | research |

@@ -1,6 +1,6 @@
 # 05: Honest walking
 
-Status: words and maps link built; the footbridge hint waits for the hub's word on the roads file; the dashed line, the card's lines and the button wait for the owner's design ("Owner designs first" 3 and 4)
+Status: words, maps link and the major-roads file built; the hint's logic next; the dashed line, the card's lines and the button wait for the owner's design ("Owner designs first" 3 and 4)
 Type: task
 
 Footbridges' ticket 04 (the walk hint) is folded in here.
@@ -33,6 +33,10 @@ Footbridges' ticket 04 (the walk hint) is folded in here.
 - `mapsPlatformOf` reads the platform from the user agent.
 - Unit checks: `tests/unit/honest-walk-test.mjs`.
 
-**The footbridge hint: measured, not built.**
-- **What it needs.** The major roads as lines. Trunk, primary and secondary within 1 km of a hintuan are 4,840 ways, 321 kB (69 kB gzipped), simplified to 5 m. All of them in the map's box are 719 kB (163 kB gzipped).
-- **Why it waits.** That is a second public file, bigger than the footbridge file, built monthly with it and fetched with the trip card's walk. It waits for the hub's word.
+**The major-roads file: built** (the owner's answer to Q178).
+- **What.** `public/data/major-roads.v1.json`: the trunk, primary and secondary roads (not their links), only the stretches within 1 km of a published hotspot (Go here's widest walk, `WIDER_REACH_M`; a unit check holds the two equal). One entry per name and kind, OpenStreetMap's split ways chained end to start, simplified by at most 3 m, 5 decimals.
+- **Built monthly** by `scripts/landmarks/build.sh` from the landmarks' own filter (it already keeps those roads), checked by `scripts/major-roads/check.mjs`, compared in the same refresh pull request (`scripts/major-roads/compare.mjs`). ODbL, the same header as the other two files.
+- **Size.** From the 2026-11-05 extract: 275 roads (273 named), 716 lines, 536 km; 96 kB, 25 kB gzipped. The ceiling is 500 kB (unit check).
+- **Not fetched yet.** Nothing in the app reads it until the hint's logic and the trip card's design. It is fetched only with a Go here walk, never on the opening path; its offline cache comes with that fetch.
+- **A hotspot published after the monthly build** has no roads round it until the next build: the hint then says nothing, never a wrong crossing.
+- Unit checks: `tests/unit/major-roads-test.mjs`, `tests/unit/major-road-file-test.mjs`.

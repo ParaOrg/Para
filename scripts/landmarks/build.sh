@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 # Rebuilds the landmark file place search reads, public/data/landmarks.v1.json, and the
-# footbridge file the map draws, public/data/footbridges.v1.json, from OpenStreetMap
-# (.scratch/place-search/README.md, step 2; .scratch/footbridges, ticket 01). Run it by hand or
-# from the monthly workflow, then commit the files as a normal pull request. Commuters never reach
+# footbridge file the map draws, public/data/footbridges.v1.json, and the major roads Go here's
+# footbridge hint tests a walk against, public/data/major-roads.v1.json, from OpenStreetMap
+# (.scratch/place-search/README.md, step 2; .scratch/footbridges, ticket 01; .scratch/go-here,
+# ticket 05). Run it by hand or from the monthly workflow, then commit the files as a normal pull
+# request. Commuters never reach
 # OpenStreetMap: this runs once, here, and the app reads the committed files.
 #
 # One download: openstreetmap.fr's daily Metro Manila extract (about 60 MB), checked against its
@@ -62,3 +64,9 @@ osmium export --overwrite "$work/footbridges.osm.pbf" -f geojsonseq --add-unique
 node "$root/scripts/footbridges/footbridges.mjs" "$work/footbridges.geojsonseq" "$extract_at" \
   "$root/public/data/footbridges.v1.json"
 node "$root/scripts/footbridges/check.mjs" "$root/public/data/footbridges.v1.json"
+
+# The major roads near the published hotspots, from the landmarks' own filter, which keeps the
+# trunk, primary and secondary roads (major-roads.mjs).
+node "$root/scripts/major-roads/major-roads.mjs" "$work/features.geojsonseq" "$extract_at" \
+  "$root/public/data/major-roads.v1.json"
+node "$root/scripts/major-roads/check.mjs" "$root/public/data/major-roads.v1.json"
