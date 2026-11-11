@@ -191,6 +191,16 @@ export default defineConfig({
             //    Style card's rows, which the studio's switch joins. A
             //    module lands in `shared` when two chunks import it, whichever
             //    pages they are.
+            //  - contribute-core: the contributor page's client and its two error
+            //    kinds, which its opening and its lazy chunks (the claim, the
+            //    upload requests) both import. Left alone, Rolldown gives each a
+            //    file of its own, and every file the page opens with costs it
+            //    bytes against its budget (check-build.mjs); one file holds them.
+            {
+              name: 'contribute-core',
+              test: /[\\/]src[\\/]features[\\/]contribute[\\/]api[\\/](env|contribute-config|contribute-client|require-client|upload-problem|account-problem)\.ts$/,
+              priority: 1,
+            },
             {
               name: 'shared',
               minShareCount: 2,

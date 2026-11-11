@@ -28,6 +28,16 @@ export function PhoneBlock({ contributorId, phoneCode }: PhoneBlockProps) {
   const change = useBlockContributorMutation(contributorId);
 
   const handleRetry = () => void phone.refetch();
+  // Greyed while the read is under way, so a second tap cannot start another.
+  const retryButton = (
+    <Button
+      variant="secondary"
+      size="small"
+      label={phone.isFetching ? 'Trying…' : 'Try again'}
+      disabled={phone.isFetching}
+      onClick={handleRetry}
+    />
+  );
   if (phone.isPending) return <p aria-live="polite">Reading phone {phoneCode}…</p>;
   // A later read that fails keeps what was read: only a first read that failed has nothing to show.
   if (phone.data === undefined)
@@ -36,7 +46,7 @@ export function PhoneBlock({ contributorId, phoneCode }: PhoneBlockProps) {
         <p role="alert">
           Phone {phoneCode} could not be read. {phone.error.message}
         </p>
-        <Button variant="secondary" size="small" label="Try again" onClick={handleRetry} />
+        {retryButton}
       </div>
     );
   const { uploadCount, blockedAt, blockNote } = phone.data;
@@ -65,7 +75,7 @@ export function PhoneBlock({ contributorId, phoneCode }: PhoneBlockProps) {
       {notice && (
         <div className="flex items-center gap-2 text-sm text-content-secondary">
           <p aria-hidden="true">{notice}</p>
-          <Button variant="secondary" size="small" label="Try again" onClick={handleRetry} />
+          {retryButton}
         </div>
       )}
     </>
