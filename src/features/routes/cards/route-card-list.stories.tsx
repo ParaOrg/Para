@@ -88,7 +88,7 @@ const longName: Direction[] = [
   direction('l', `${LONG} – Tala`, `Tala → ${LONG}`, 8.6, true),
 ];
 
-/** Their ways back still slots: nothing for ⇆ to turn to. */
+/** Their ways back still slots: nothing for PAPUNTA to turn to. */
 const oneWay: Direction[] = [
   direction('c', 'Lagro – Fatima', 'Lagro → Fatima', 2.5),
   direction('c', 'Lagro – Fatima', 'Fatima → Lagro', 2.5, true, false),
@@ -137,7 +137,7 @@ const frameOf = (p: { frame?: Frame }) => FRAME[p.frame ?? 'phone'];
 
 /**
  * Keeps the Selected card and the way round as the apps do, and the filter where a story gives
- * one, so a story can be tapped through; ⇆ lets the card go. Without a filter, as the public map
+ * one, so a story can be tapped through; PAPUNTA lets the card go. Without a filter, as the public map
  * and the studio pass none yet, the Controller has no sliders.
  */
 function Picking(props: ComponentProps<typeof RouteCardList>) {
@@ -209,17 +209,17 @@ type Story = StoryObj<typeof meta>;
 
 /**
  * On a phone, the way there: a card per place, docked along the bottom. Each card wears its mode's
- * colour. No filter kept, as on the live maps until they pass one: ✕ and ⇆ alone.
+ * colour. No filter kept, as on the live maps until they pass one: ✕ and PAPUNTA alone.
  */
 export const Phone: Story = {};
 
-/** With a filter kept by the caller: the sliders beside ⇆. */
+/** With a filter kept by the caller: the sliders beside PAPUNTA. */
 export const WithAFilter: Story = { args: { modeFilter: { filter: 'all', onFilter: fn() } } };
 
 /** A filter on, Jeep: the dot on the sliders, and only the jeeps' cards. */
 export const FilteredToJeep: Story = { args: { modeFilter: { filter: 'jeep', onFilter: fn() } } };
 
-/** Turned round with ⇆: out of Tala both ways, one card — "1 Route". */
+/** Turned round with PAPUNTA: out of Tala both ways, one card — "1 Route". */
 export const Switched: Story = { args: { back: true } };
 
 /** Tala's card picked: pressed in, its routes alone lit on the map. */
@@ -240,7 +240,7 @@ export const Tablet: Story = { parameters: { frame: 'tablet' } };
 /** Taller than the room: the cards scroll under the Controller. */
 export const ManyPlaces: Story = { args: { routes: many } };
 
-/** The other way round is not drawn yet: ⇆ rests disabled. */
+/** The other way round is not drawn yet: PAPUNTA rests disabled. */
 export const NothingTheOtherWay: Story = { args: { routes: oneWay } };
 
 /**
@@ -292,7 +292,7 @@ export const WithAHotspotFloating: Story = {
 
 /**
  * Two boxes and no line: "2 Hotspots", with no route to count, and nothing for
- * ⇆ to turn.
+ * PAPUNTA to turn.
  */
 export const TwoHotspots: Story = { args: { routes: [], hotspots: twoBoxes } };
 
@@ -388,7 +388,7 @@ const ikotLoop: Direction = {
 /** A loop in the list, beside Tala's routes: its row says Ikot, and it is there whichever way round the list is. */
 export const WithALoop: Story = { args: { routes: [...talaRoutes, ikotLoop] } };
 
-/** Only a loop: no way back to turn to, so no ⇆. */
+/** Only a loop: no way back to turn to, so no PAPUNTA. */
 export const OnlyALoop: Story = { args: { routes: [ikotLoop] } };
 
 /**

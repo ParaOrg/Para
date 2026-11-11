@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 
 import { accountKeys } from './account-keys';
 import { readPendingClaim } from './claim-token';
-import { finishPendingClaim } from './earlier-identity';
+import { loadEarlierIdentity } from './load-earlier-identity';
 import { requireClient } from './require-client';
 
 /**
@@ -16,8 +16,8 @@ export function useClaimRetry(): void {
     const retry = () => {
       // Nothing is loaded or asked while there is no claim.
       if (!readPendingClaim()) return;
-      requireClient()
-        .then(finishPendingClaim)
+      Promise.all([requireClient(), loadEarlierIdentity()])
+        .then(([client, { finishPendingClaim }]) => finishPendingClaim(client))
         .then((moved) =>
           // The account's uploads now include the ones the claim moved.
           moved > 0

@@ -373,7 +373,8 @@ export default defineConfig([
     // so no React, MapLibre or browser global. A flat-config rule replaces the earlier block's
     // option for the same files, so the general patterns are repeated here. `fetch` stays allowed
     // because published/'s readers fetch the map files, and React Native has fetch too.
-    files: ['src/features/routes/{model,geo,published}/**/*.ts'],
+    // shared/utils/geo.ts is in it too: the three folders import it, so the app does.
+    files: ['src/features/routes/{model,geo,published}/**/*.ts', 'src/shared/utils/geo.ts'],
     rules: {
       'no-restricted-imports': [
         'error',

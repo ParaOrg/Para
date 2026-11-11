@@ -152,7 +152,7 @@ export const Jeepney: Story = {};
 /** Raised to full height: every hintuan on the way in sight. */
 export const JeepneyFull: Story = { args: { height: { snap: 'full', onSnap: fn() } } };
 
-/** SWITCH turns it round: the way back is drawn, so the card asks for that direction. */
+/** PAPUNTA turns it round: the way back is drawn, so the card asks for that direction. */
 export const TurnsRound: Story = {
   play: async ({ args, canvasElement }) => {
     const turn = within(canvasElement).getByTestId('card-switch');
@@ -170,7 +170,7 @@ export const TheWayBack: Story = {
   },
 };
 
-/** The way back still a slot: SWITCH rests disabled, and a tap asks for nothing. */
+/** The way back still a slot: PAPUNTA rests disabled, and a tap asks for nothing. */
 export const NoWayBack: Story = {
   args: { directions: [talaToNovaliches, { ...novalichesToTala, shape: null }] },
   play: async ({ args, canvasElement }) => {
@@ -181,7 +181,7 @@ export const NoWayBack: Story = {
   },
 };
 
-/** In the studio, the way back still a slot: SWITCH is open, and a tap starts drawing it. */
+/** In the studio, the way back still a slot: PAPUNTA is open, and a tap starts drawing it. */
 export const DrawTheWayBack: Story = {
   args: {
     directions: [talaToNovaliches, { ...novalichesToTala, shape: null }],
@@ -272,8 +272,8 @@ export const TrainMrt3: Story = {
 
 /**
  * A train whose end the line's table does not know: no bound, so the header shows the line alone,
- * and SWITCH falls back to Pabalik and Papunta, as over a mixed list (switchWord). TODO: what
- * SWITCH should say for a train with no known bound is not designed yet.
+ * and PAPUNTA falls back to Pabalik and Papunta, as over a mixed list (wayWord). TODO: what
+ * PAPUNTA should say for a train with no known bound is not designed yet.
  */
 export const TrainNoBound: Story = {
   args: {
@@ -389,7 +389,7 @@ const ikotTimeline: Timeline = {
 
 /**
  * A loop's trip (UP – Ikot): its name a badge after the mode's, the tip at the top
- * and again at the bottom, the tiles the whole loop's, and no SWITCH.
+ * and again at the bottom, the tiles the whole loop's, and no PAPUNTA.
  */
 export const Loop: Story = {
   args: { direction: ikot, directions: [ikot], timeline: ikotTimeline, livery: 'bus' },
