@@ -30,8 +30,8 @@ export const Default: Story = {
 export const NotMatching: Story = {
   play: async ({ args, canvasElement }) => {
     const canvas = within(canvasElement);
-    await userEvent.type(canvas.getByLabelText('New password'), 'a-better-password');
-    await userEvent.type(canvas.getByLabelText('Confirm password'), 'a-better-pasword');
+    await userEvent.type(canvas.getByLabelText('New password'), 'a-better-passw0rd');
+    await userEvent.type(canvas.getByLabelText('Confirm password'), 'a-better-passw0d');
     await userEvent.click(canvas.getByRole('button', { name: 'Save' }));
     await expect(canvas.getByText("The passwords don't match")).toBeVisible();
     await expect(args.onSubmit).not.toHaveBeenCalled();
@@ -42,12 +42,12 @@ export const NotMatching: Story = {
 export const Matching: Story = {
   play: async ({ args, canvasElement }) => {
     const canvas = within(canvasElement);
-    await userEvent.type(canvas.getByLabelText('New password'), 'a-better-password');
-    await userEvent.type(canvas.getByLabelText('Confirm password'), 'a-better-password');
+    await userEvent.type(canvas.getByLabelText('New password'), 'a-better-passw0rd');
+    await userEvent.type(canvas.getByLabelText('Confirm password'), 'a-better-passw0rd');
     await userEvent.click(canvas.getByRole('button', { name: 'Save' }));
     await expect(args.onSubmit).toHaveBeenCalledWith({
-      password: 'a-better-password',
-      confirmation: 'a-better-password',
+      password: 'a-better-passw0rd',
+      confirmation: 'a-better-passw0rd',
     });
   },
 };
