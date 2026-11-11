@@ -1,6 +1,6 @@
 # 03: Other routes for this ride
 
-Status: ready-for-agent after 01 (coordinate with the route card session first)
+Status: logic built; the wiring waits for 02 (a trip opened from Go here), with the route card session
 Type: task
 Blocked by: 01
 
@@ -14,3 +14,12 @@ Blocked by: 01
 ## Acceptance checks
 
 A story of the trip detail with a ride's options; a phone-test check; CI green; merged into staging after the route card session has seen it.
+
+## Answer (so far)
+
+**Built:** `routes/model/other-routes-for-ride.ts`, pure logic on top of `otherRoutesFrom`.
+- `otherRoutesForTrip(all, of, options)`: with a ride's options (the trip came from Go here), the other options' directions in their rank, never the trip's own. With none, `otherRoutesFrom(all, of)` as today.
+- `rideOptionFor(options, direction)`: the option a picked row stands for, so its trip opens with its own boarding hintuan and stop.
+- Unit checks: `tests/unit/other-routes-for-ride-test.mjs`.
+
+**Not changed:** `TripOtherRoutes` and the trip detail (the route card session's). The wiring is one line in `TripCard` (`otherRoutesForTrip` in place of `otherRoutesFrom`, given the options) plus a pick that passes `rideOptionFor`'s picks. It lands with 02, since no trip opens from Go here before the list exists, and goes to the route card session first.

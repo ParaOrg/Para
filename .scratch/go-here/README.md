@@ -96,7 +96,7 @@ Each is designed twice before it is built (two designs side by side, their costs
 | --- | --- | --- | --- |
 | 01 | [One-ride options: finding and ranking](issues/01-one-ride-options.md) | 1 (113) | built: logic only |
 | 02 | [The options list](issues/02-options-list.md) | 1 (113) | waits for the owner's design |
-| 03 | [Other routes for this ride](issues/03-other-routes-for-this-ride.md) | 1 (114) | ready-for-agent after 01; coordinate with the route card session |
+| 03 | [Other routes for this ride](issues/03-other-routes-for-this-ride.md) | 1 (114) | logic built; the wiring lands with 02, with the route card session |
 | 04 | [Re-plan from here](issues/04-replan-from-here.md) | 1 (115) | after 02; its button waits for the owner's design |
 | 05 | [Honest walking](issues/05-honest-walking.md) | 1 (116) | logic built (words, maps link, major roads, footbridge hint); the dashed line, the card's lines and the button wait for the design |
 | 06 | [The get-off countdown](issues/06-get-off-countdown.md) | 2 (117) | built: logic only |
