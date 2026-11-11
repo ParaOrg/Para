@@ -4,7 +4,7 @@ import { IconButton } from '@/design-system/primitives/icon-button';
 import { CloseIcon } from '@/shared/ui/route-icons';
 
 import type { Basemap } from './basemap';
-import { LocationLabelsRow } from './location-labels-row';
+import { MapStyleRows } from './map-style-rows';
 import type { MapStyleDirection } from './use-map-style-card';
 
 import './map-style.css';
@@ -35,7 +35,7 @@ interface MapStyleProps {
  * The MapStyle card (Figma 4179:10790): "Map Style" and ✕ over a picture of
  * each design, its name under it, the one shown ringed in Brand/surface (the
  * frame draws no ring). Three a row, so the studio's five wrap onto a second.
- * Under them, Location Labels (4474:6524): the basemap's own labels on or off.
+ * Under them, Location Labels and the page's own rows (MapStyleRows).
  * A pick switches the map behind and moves the ring; the card stays until ✕,
  * Escape or a tap outside, so whoever picked sees it.
  *
@@ -142,7 +142,7 @@ export function MapStyle({
           />
         ))}
       </div>
-      <LocationLabelsRow areShown={areLabelsShown} onToggle={onLabelsToggle} />
+      <MapStyleRows areLabelsShown={areLabelsShown} onLabelsToggle={onLabelsToggle} />
     </div>
   );
 }

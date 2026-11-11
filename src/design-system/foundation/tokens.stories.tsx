@@ -157,6 +157,8 @@ function TokensPage() {
       </Group>
 
       <Group title="Card — End and Start (red and green)">
+        <Swatch box="bg-trip-start" token="trip-start (a trip's Start)" cls="bg-trip-start" />
+        <Swatch box="bg-trip-end" token="trip-end (a trip's End)" cls="bg-trip-end" />
         <Swatch
           box="bg-card-red-surface border-3 border-card-red-border-primary"
           token="Card/red"
@@ -551,6 +553,11 @@ function TokensPage() {
           cls="shadow-locator-dot-shadow"
         />
         <Swatch box="bg-surface shadow-large" token="shadow-large" cls="shadow-large" />
+        <Swatch
+          box="rounded-3xl bg-card-jeep-surface shadow-route-stops-card-jeep"
+          token="RouteStopsCardShadow"
+          cls="shadow-route-stops-card-jeep"
+        />
       </Group>
 
       <Group title="Type — SN Pro">

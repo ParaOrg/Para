@@ -255,7 +255,7 @@ export function otherRoutesFrom<V extends Direction>(all: readonly V[], of: V): 
 
 /**
  * The word for the way that is showing — Papunta, there; Pabalik, the way
- * back — which a trip's RouteTripDetailHeader says beside its vehicle. SWITCH
+ * back — which the trip's bar is to name (PAPUNTA, decision 142). SWITCH
  * says the other way's word (switchWord).
  *
  * On a train it is the bound the riders and the operators say, Northbound or

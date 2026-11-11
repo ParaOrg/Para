@@ -27,12 +27,15 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** Focus starts on the heading; the contributor page is a link, signing in again a button. */
+/**
+ * Focus starts on the heading; the contributor page is a link, signing in again a button. The
+ * dialog opens in an effect, after the first paint: the play waits for it.
+ */
 export const Default: Story = {
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
     await expect(
-      canvas.getByRole('heading', { name: "This account isn't an editor" }),
+      await canvas.findByRole('heading', { name: "This account isn't an editor" }),
     ).toHaveFocus();
     await expect(canvas.getByRole('link', { name: 'Open the contributor page' })).toHaveAttribute(
       'href',

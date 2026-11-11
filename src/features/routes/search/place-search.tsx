@@ -50,6 +50,8 @@ interface PlaceSearchProps {
    * (ticket 06). Gone once the search is cleared, another result picked or the panel closed.
    */
   renderLandmarkPin?: (landmark: Landmark) => ReactNode;
+  /** Rendered under the results, from what is typed. */
+  renderAfterResults?: (query: string) => ReactNode;
 }
 
 const NOWHERE = () => null;
@@ -72,6 +74,7 @@ export function PlaceSearch({
   noteOf,
   loadLandmarks,
   renderLandmarkPin,
+  renderAfterResults,
 }: PlaceSearchProps) {
   const search = usePlaceSearch({
     hotspots,
@@ -131,6 +134,7 @@ export function PlaceSearch({
           {search.emptyMessage}
         </p>
       )}
+      {renderAfterResults?.(query)}
       {/*
         Mounted for as long as the search is, so a screen reader hears its text change; a live
         region inserted with its text already in is often not read at all.

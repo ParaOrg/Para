@@ -137,21 +137,20 @@ async function bodyOf(response: Response, params: RequestParameters): Promise<un
   return response.arrayBuffer();
 }
 
-let isAdded = false;
+let phoneCache: BasemapCache | null = null;
+/** The app's cache once made (keep-tiles-around.ts warms it); null on the web page, which has its worker. */
+export const phoneBasemapCache = (): BasemapCache | null => phoneCache;
 
 /**
- * The app's basemap cache, its protocol added to MapLibre once; null where it cannot be kept.
- * The map takes its `transformRequest` as it is made.
+ * The app's basemap cache, made once with its protocol added to MapLibre; null where it cannot be
+ * kept. The map takes its `transformRequest` as it is made.
  */
 export function keepBasemapOnThePhone(host: string): RequestTransformFunction | undefined {
-  const cache = basemapCache(host, Date.now, async (url) => {
+  if (phoneCache) return phoneCache.transformRequest;
+  phoneCache = basemapCache(host, Date.now, async (url) => {
     const design = BASEMAPS.find((b) => b.url === url);
     return design ? BASEMAP_COPIES.offline(design) : null;
   });
-  if (!cache) return undefined;
-  if (!isAdded) {
-    addProtocol(PROTOCOL, cache.load);
-    isAdded = true;
-  }
-  return cache.transformRequest;
+  if (phoneCache) addProtocol(PROTOCOL, phoneCache.load);
+  return phoneCache?.transformRequest;
 }

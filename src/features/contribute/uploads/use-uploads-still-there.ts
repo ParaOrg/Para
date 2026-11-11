@@ -2,7 +2,8 @@ import { useEffect, type RefObject } from 'react';
 
 import { isGoneFromPara } from './upload-rules';
 import type { UploadStatus } from './upload-state';
-import { currentIdentity, uploadsStillThere } from '../api/upload-contribution';
+import { loadContributionRequests } from '../api/load-contribution-requests';
+import { currentIdentity } from '../api/upload-contribution';
 import type { Recording } from '../storage/recording-schema';
 import { updateRecording } from '../storage/recording-store';
 
@@ -31,6 +32,7 @@ export function useUploadsStillThere({
     const settle = async () => {
       const id = await currentIdentity();
       if (!isCurrent || !id) return;
+      const { uploadsStillThere } = await loadContributionRequests();
       const there = await uploadsStillThere();
       for (const recording of savedRef.current) {
         if (!isGoneFromPara(recording, id, there) || isBusy(recording.id)) continue;

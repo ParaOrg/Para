@@ -1,0 +1,44 @@
+# Staging red: when a run of CI, Contributor app or Security on a push to staging fails, one
+# `alert` issue per workflow opens (labelled needs-triage), or the open one gets a comment naming
+# the run; the workflow's next passing run on staging closes it. GitHub emails the owner about a
+# new issue. A cancelled run (a newer push took its place) says nothing.
+# (scripts/watch/report-staging-run.mjs, with the watch's alert issues.)
+name: Staging red
+
+on:
+  workflow_run:
+    workflows: [CI, Contributor app, Security]
+    types: [completed]
+    branches: [staging]
+
+permissions:
+  contents: read
+
+jobs:
+  report:
+    if: >-
+      github.event.workflow_run.event == 'push' &&
+      (github.event.workflow_run.conclusion == 'failure' ||
+       github.event.workflow_run.conclusion == 'success')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+          sparse-checkout: scripts/watch
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - name: Open, update or close the staging alert
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          WORKFLOW_NAME: ${{ github.event.workflow_run.name }}
+          WORKFLOW_FILE: ${{ github.event.workflow_run.path }}
+          CONCLUSION: ${{ github.event.workflow_run.conclusion }}
+          RUN_URL: ${{ github.event.workflow_run.html_url }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: node scripts/watch/report-staging-run.mjs

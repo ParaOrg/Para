@@ -20,13 +20,17 @@ import { readdirSync, readFileSync } from 'node:fs';
 let n = 0;
 /** A fresh copy of the module, since it caches the first successful load. */
 import * as contract from '../../src/features/routes/published/map-file.ts';
+import { cacheStorageMapFiles } from '../../src/features/routes/map/map-file-store.ts';
 
 /** The two fetchers afresh (their module-level state with them), with the contract's names beside. */
 const fresh = async () => {
   const k = n++;
+  const index = await import(`../../src/features/routes/published/fetch-index.ts?case=${k}`);
+  // The pages give the reader their Cache Storage (src/app/*/main.tsx): here a stand-in for it.
+  index.setMapFileStore(cacheStorageMapFiles);
   return {
     ...contract,
-    ...(await import(`../../src/features/routes/published/fetch-index.ts?case=${k}`)),
+    ...index,
     ...(await import(`../../src/features/routes/published/fetch-line.ts?case=${k}`)),
   };
 };
@@ -830,4 +834,33 @@ test("step 16 (g): the map's age, the same date and the same copy, is the one al
   const first = { publishedAt: '2026-09-29T11:33:22Z', stale: false };
   assert.equal(sameAge(none, first), first, 'the first read sets it');
   assert.equal(sameAge(none, { publishedAt: null, stale: false }), none);
+});
+
+// Commuter-app ticket 03: the reader keeps no copies of its own. A page or app that gives no
+// store has the network's answer only, even with the browser's cache full; one that gives its
+// own store (the native app's) has its copy, marked stale.
+test('with no store given there is no stored copy; a store given is read instead', async () => {
+  globalThis.fetch = async () => {
+    throw new TypeError('Failed to fetch');
+  };
+  const copy = { ...base, published_at: '2026-09-30T00:00:00Z' };
+  try {
+    globalThis.caches = { match: async () => new Response(JSON.stringify(copy)) };
+    const k = n++;
+    const bare = await import(`../../src/features/routes/published/fetch-index.ts?case=${k}`);
+    await assert.rejects(bare.fetchIndex(), { message: 'Failed to fetch' });
+
+    delete globalThis.caches;
+    const own = await import(`../../src/features/routes/published/fetch-index.ts?case=${n++}`);
+    const asked = [];
+    own.setMapFileStore(async (url) => {
+      asked.push(url);
+      return url === contract.MAP_FILE_URL ? copy : null;
+    });
+    assert.equal((await own.fetchIndex()).publishedAt, copy.published_at);
+    assert.equal(own.indexIsStale(), true);
+    assert.deepEqual(asked, [contract.MAP_FILE_URL]);
+  } finally {
+    delete globalThis.caches;
+  }
 });

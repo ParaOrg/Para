@@ -49,8 +49,8 @@ export const ROUTE_BADGE = {
 } satisfies Record<Livery, string>;
 
 /**
- * The Blob's place on a RouteCard: 33 above the card's top, where the trip card's sits 73 above
- * (BLOB_PLACE), plus the 128 of blur room the files carry on every side. Pixels, as BLOB_PLACE's
+ * The Blob's place on a RouteCard: 33 above the card's top, where BLOB_PLACE's sits 73 above
+ * (the contribution card's), plus the 128 of blur room the files carry on every side. Pixels, as BLOB_PLACE's
  * are, so the glow stays put at a larger default text size.
  */
 export const ROUTE_CARD_BLOB_PLACE =
