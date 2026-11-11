@@ -49,8 +49,8 @@ interface Props {
    * the top-left corner from `@float:` (`corner`, the default), or the card
    * the studio's hotspot card floats as, 16 in, from `@wide:` (`card`). What it
    * holds reads which with `sheet-floating:` and `sheet-low:` (global.css). `dock`: the route
-   * list's, docked the map's whole height on the left from `@float:`, 368 wide (Figma 4633:22034),
-   * its `footer` standing beside it.
+   * list's, docked the map's whole height on the left from `@float:`, 384 wide (Figma 4683:32635),
+   * its `footer` its top bar.
    */
   floats?: 'corner' | 'card' | 'dock';
   /**
@@ -86,10 +86,10 @@ interface Props {
    */
   handle?: 'shown' | 'hidden';
   /**
-   * Drawn at the sheet's foot on the screen, whatever its height, following a drag: the route
-   * list's Controller, the cards scrolling under it (4633:25516). Its buttons, and what they pop
-   * up, keep their taps; the rest of its row lets them through to the cards. Floating as a
-   * `dock`, it stands beside the sheet instead, at its top.
+   * Drawn at the sheet's foot on the screen, whatever its height, following a drag: the
+   * Controller of a route list or a trip, what the sheet holds scrolling under it (4679:23737). Its
+   * buttons, and what they pop up, keep their taps; the rest of its row lets them through. Floating,
+   * it is the sheet's top bar instead (4683:32635): what the sheet holds makes room under it.
    */
   footer?: ReactNode;
   children: ReactNode;
@@ -110,7 +110,7 @@ export interface SheetHeight {
 const FLOATS_AT = {
   corner:
     '@float:inset-auto @float:top-[var(--sheet-float-top,0px)] @float:left-0 @float:max-h-[calc(100%-var(--sheet-float-top,0px))] @float:w-96 @float:pt-0 @float:pb-0',
-  dock: '@float:inset-auto @float:top-[var(--sheet-float-top,0px)] @float:bottom-0 @float:left-0 @float:w-92 @float:overflow-visible @float:pt-0 @float:pb-0',
+  dock: '@float:inset-auto @float:top-[var(--sheet-float-top,0px)] @float:bottom-0 @float:left-0 @float:w-96 @float:overflow-visible @float:pt-0 @float:pb-0',
   card:
     '@wide:inset-auto @wide:top-4 @wide:left-4 @wide:w-80 @wide:max-w-[calc(100%-2rem)] @wide:max-h-[calc(100%-2rem)] ' +
     '@wide:rounded-xl @wide:shadow-xl @wide:ring-1 @wide:ring-black/10 @wide:pt-4 @wide:pb-4',
@@ -355,7 +355,7 @@ export function BottomSheet({
           className={
             'pointer-events-none absolute inset-x-0 bottom-(--sheet-y) pb-[env(safe-area-inset-bottom)] ' +
             '[&_[popover]]:pointer-events-auto [&_button]:pointer-events-auto ' +
-            'sheet-floating:top-0 sheet-floating:right-auto sheet-floating:bottom-auto sheet-floating:left-full sheet-floating:pb-0'
+            'sheet-floating:top-0 sheet-floating:bottom-auto sheet-floating:z-10 sheet-floating:pb-0'
           }
         >
           {footer}

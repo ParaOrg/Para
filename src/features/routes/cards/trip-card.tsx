@@ -7,7 +7,7 @@ import { RouteStopsCardHeader } from './route-stops-card-header';
 import { TimelineRouteDetailCard } from './timeline-route-detail-card';
 import { FREE, type Fare, type Fares } from './trip-fare';
 import { useFareKind } from './use-fare-kind';
-import { otherDirection, otherRoutesFrom, switchWord } from '../model/departures';
+import { otherDirection, otherRoutesFrom, switchWord, wayWord } from '../model/departures';
 import { manilaDate, rideFare } from '../model/fares';
 import { liveryOf, type Livery } from '../model/liveries';
 import { railBound, stationCode } from '../model/rail-codes';
@@ -191,7 +191,8 @@ export function TripCard({
       }
       switchable={switchable || canDrawOtherWay}
       back={direction.reversed}
-      way={loop ? null : switchWord(direction.reversed, [direction])}
+      way={loop ? null : wayWord(direction.reversed, [direction])}
+      wayTo={loop ? null : switchWord(direction.reversed, [direction])}
       onSwitch={() => {
         if (sibling && switchable) onSwitch(sibling);
         else if (canDrawOtherWay) onDrawOtherWay?.();

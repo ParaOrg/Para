@@ -10,7 +10,7 @@ import {
   listedDepartures,
   otherWayHasRoutes,
   routeCards,
-  switchWord,
+  wayWord,
   type Listing,
 } from '../model/departures';
 import { hotspotLabel, type Hotspot } from '../model/hotspots';
@@ -32,7 +32,7 @@ interface Props {
    * trip opened on its own, `way-round`: the routes sharing its end its way.
    */
   listing: Listing;
-  /** ⇆: show them all the other way round. */
+  /** PAPUNTA: show them all the other way round. */
   onFlip: () => void;
   /** The place whose card is Selected, by name; null when none is. */
   selected: string | null;
@@ -58,8 +58,8 @@ interface Props {
 
 /**
  * The route list's own Low and Max: Low shows its first card's mode and name clear above the
- * Controller's ⇆ (its card's 16 top, mode 28, gap 8 and name 32, over the Controller's 144, with
- * room to spare on a short phone), and Max fills the screen (Figma 4633:25575). A constant, as
+ * Controller (its card's 16 top, mode 28, gap 8 and name 32, over the Controller's 78, with room to
+ * spare on a short phone), and Max fills the screen (Figma 4633:25575). A constant, as
  * BottomSheet's `shape` wants one.
  */
 const LIST_SHAPE: SheetShape = { lowPx: 240, isMaxFull: true };
@@ -67,20 +67,20 @@ const LIST_SHAPE: SheetShape = { lowPx: 240, isMaxFull: true };
 /**
  * Everything under a tap that hit more than one thing (Figma 4633:25516 on a phone, 4633:22034 on
  * a wide screen): a RouteCard per place and mode the routes leave from (RouteCardStack), edge to
- * edge, and the Controller (RouteListController): ✕, ⇆ and the filter. On a phone the Controller
- * stands at the sheet's foot and the cards scroll under it; the sheet draws no handle (one stays
- * for the keyboard), its Low shows the first card above the Controller and its Max fills the
- * screen. On a wide screen the list docks the map's whole height on the left, 368 wide, the
- * Controller a column beside it.
+ * edge, and the Controller (RouteListController): ✕, PAPUNTA and the filter. On a phone the
+ * Controller stands at the sheet's foot and the cards scroll under it; the sheet draws no handle
+ * (one stays for the keyboard), its Low shows the first card above the Controller and its Max fills
+ * the screen. On a wide screen the list docks the map's whole height on the left, 384 wide, under
+ * the Controller as its brand blue top bar.
  *
- * The grouping is departures': one way round at a time, and ⇆ flips them all. The map lights
+ * The grouping is departures': one way round at a time, and PAPUNTA flips them all. The map lights
  * every direction listed, the way round it is showing them; a tap on a card off its rows narrows
- * that to the card's, and a second tap, ⇆, a map tap or closing let it go. A row opens its trip
+ * that to the card's, and a second tap, PAPUNTA, a map tap or closing let it go. A row opens its trip
  * straight away and picks no card, and the trip's ‹ comes back to every card at rest.
  *
  * Only drawn directions are listed: a row that opens nothing is no row. Under a tap every line
  * under the finger is: a route with nothing drawn the way round showing is listed by its drawn
- * direction, under the place that leaves from (chooserDepartures). ⇆ rests disabled when the
+ * direction, under the place that leaves from (chooserDepartures). PAPUNTA rests disabled when the
  * other way round has nothing drawn, and is not there when only loops show.
  *
  * The filter (ModeFilterCard), where the caller keeps one, narrows the cards to one kind of ride,
@@ -136,12 +136,12 @@ export function RouteCardList({
       header={null}
       footer={
         <RouteListController
-          layout="auto"
-          // Only loops showing: they have no way back, so no ⇆.
+          owner="chooser"
+          // Only loops showing: they have no way back, so no PAPUNTA.
           way={
             shownDirections.length > 0 && shownDirections.every(isLoop)
               ? null
-              : switchWord(back, shownDirections)
+              : wayWord(back, shownDirections)
           }
           isSwitchable={switchable}
           isBack={back}
@@ -152,9 +152,9 @@ export function RouteCardList({
       }
     >
       {/* At least the sheet's height, so what `end` draws can grow into the room a short list
-          leaves; on a phone, padded by the Controller's height, so the last card scrolls clear of
-          it. */}
-      <div className="flex min-h-full flex-col pb-36 sheet-floating:pb-0">
+          leaves; padded by the Controller's height, at the foot on a phone and the top where the
+          list docks, so no card hides under it. */}
+      <div className="flex min-h-full flex-col pb-20 sheet-floating:pt-16 sheet-floating:pb-0">
         {hotspots.length > 0 && (
           // Full-bleed rows: a whole row is the target, not the words inside it.
           <ul className="border-t border-border-primary">

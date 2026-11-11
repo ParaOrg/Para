@@ -2,7 +2,7 @@ import { useState, type ReactNode, type Ref } from 'react';
 
 import { BottomSheet, type SheetHeight } from '@/shared/ui/bottom-sheet';
 
-import { RouteCardHeader } from './route-card-header';
+import { RouteListController } from './route-list-controller';
 import { TimelineRouteDetail, type TimelineRouteDetailProps } from './timeline-route-detail';
 import { TripEndsCard } from './trip-ends-card';
 import { FREE, type Fare } from './trip-fare';
@@ -25,17 +25,19 @@ type Props = Omit<TimelineRouteDetailProps, 'pickedPesos'> & {
    */
   discounted?: boolean;
   onDiscounted?: (discounted: boolean) => void;
-  /** SWITCH: the same route the other way. */
+  /** PAPUNTA and ⇅: the same route the other way. */
   onSwitch: () => void;
-  /** False when the route has no other way drawn; SWITCH then rests disabled. */
+  /** False when the route has no other way drawn; PAPUNTA and ⇅ then rest disabled. */
   switchable: boolean;
-  /** Whether this trip is the route's way back, for the suites (SWITCH's `data-back`). */
+  /** Whether this trip is the route's way back, for the suites (PAPUNTA's `data-back`). */
   back: boolean;
-  /** The word on SWITCH (switchWord): the way a tap leads to, Pabalik or Papunta, or a train's other bound. Null: no SWITCH at all, as on a loop. */
+  /** PAPUNTA's word (wayWord): the way showing, Papunta or Pabalik, or a train's bound. Null: none, as on a loop. */
   way: string | null;
+  /** ⇅'s name (switchWord): the way a tap leads to. Null: no ⇅, as on a loop. */
+  wayTo: string | null;
   /** The sheet's name for a screen reader, where `origin → destination` does not say it (a loop's). */
   label?: string;
-  /** ‹: back to what the trip was picked from — the list, a hotspot's card — or to its route with those sharing an end; null when there is none. */
+  /** ‹: back to what the trip was picked from — the list, a hotspot's card — or to its route with those sharing an end; null when there is none, and ✕ stands there. */
   onBackToList: (() => void) | null;
   onClose: () => void;
   /** The dock the card sits in, for the map to glide clear of it. */
@@ -60,7 +62,7 @@ type Props = Omit<TimelineRouteDetailProps, 'pickedPesos'> & {
 };
 
 /**
- * One direction as a trip (RouteTripDetail, 4681:32026), under RouteCardHeader's Variant2: its ends
+ * One direction as a trip (RouteTripDetail, 4681:32026), under the Controller's bar: its ends
  * (TripEndsCard), the ride's Distance and fare tiles, the direction's signboards (uploaded in the
  * studio), then its stops in the trip's colour (useTripLivery) on RouteStopsCard.
  *
@@ -106,6 +108,7 @@ export function TimelineRouteDetailCard({
   switchable,
   back,
   way,
+  wayTo,
   label,
   onBackToList,
   onClose,
@@ -136,24 +139,27 @@ export function TimelineRouteDetailCard({
       label={label ?? `${routeOrigin} → ${routeDirection}`}
       testId="card"
       onClose={onClose}
-      header={
-        <RouteCardHeader
-          onBackToList={onBackToList}
-          onSwitch={onSwitch}
-          switchable={switchable}
-          back={back}
+      header={null}
+      footer={
+        <RouteListController
+          owner="card"
           way={way}
+          isSwitchable={switchable}
+          isBack={back}
+          onSwitch={onSwitch}
+          livery={livery}
+          onBack={onBackToList}
           onClose={onClose}
         />
       }
     >
-      {/* RouteTripDetail (4681:32026): its cards 16 apart, 12 in from the sides, under the
-          header, whose 12 below is the gap above them. */}
-      <div className="flex w-full flex-col gap-4 px-3 pb-6">
+      {/* RouteTripDetail (4681:32026): its cards 16 apart, 12 in from the sides and the top, clear
+          of the Controller's 78 at a phone's foot, and of its 64 on top where the sheet floats. */}
+      <div className="flex w-full flex-col gap-4 px-3 pt-3 pb-24 sheet-floating:pt-19 sheet-floating:pb-6">
         <TripEndsCard
           routeOrigin={routeOrigin}
           routeDirection={routeDirection}
-          way={way}
+          way={wayTo}
           isSwitchable={switchable}
           onSwitch={onSwitch}
         />

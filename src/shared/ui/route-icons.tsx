@@ -1,8 +1,5 @@
-/**
- * The route cards' icons, each Figma's own path in route-icons.svg (the vehicles' in
- * vehicle-icons.svg): a file the page fetches, not paths in its JS, which would count against the
- * public page's budget. Each fills with currentColor, taking the text colour of wherever it sits.
- */
+/** The route cards' icons, Figma's paths in route-icons.svg and vehicle-icons.svg: files the page
+ * fetches, not paths in its JS (the public page's budget). Each fills with currentColor. */
 
 import routeSprite from './route-icons.svg?url&no-inline';
 import vehicleSprite from './vehicle-icons.svg?url&no-inline';
@@ -12,6 +9,7 @@ const ROUTE_SPRITE_VIEW_BOX = {
   jeep: '0 0 24 24',
   close: '0 0 24 24',
   'chevron-left': '0 0 24 24',
+  'chevron-left-large': '0 0 24 24',
   'chevron-down': '0 0 20 20',
   reload: '0 0 16 16',
   terminal: '0 0 20 20',
@@ -54,6 +52,11 @@ export function CloseIcon() {
 /** ‹, back to the card behind. */
 export function ChevronLeftIcon() {
   return <RouteSpriteIcon id="chevron-left" />;
+}
+
+/** Figma's chevron-left-large: the Controller's ‹, back to what the trip was picked from. */
+export function ChevronLeftLargeIcon() {
+  return <RouteSpriteIcon id="chevron-left-large" />;
 }
 
 /** The chevron on the row that folds a trip's hintuans; turned up when they are open. */
@@ -101,15 +104,11 @@ export function EndIcon() {
 }
 
 /**
- * The vehicles at the top of a trip's card (RouteStopsCardHeader), a card's
- * mode (RouteCardMode), Figma's own drawings at 32
- * across: Train (4170:7029), Jeep (4188:11144, here JeepneyIcon, not the
- * side-on Jeep above), EJeep (4188:11168), Bus (4188:11156), Ferry
- * (4189:11183) and UV Express (4236:17067, drawn at 24). They live in one sprite the page fetches, not as paths in its
- * JS, the owner's pick (inline, they took the public page over its 400 kB),
- * so Figma's paths keep their full precision. Its file is hashed, and the
- * offline precache holds it. Each draws in currentColor; the opacity is the
- * caller's.
+ * The vehicles at the top of a trip's card (RouteStopsCardHeader) and a card's mode
+ * (RouteCardMode), Figma's own drawings at 32 across: Train (4170:7029), Jeep (4188:11144, here
+ * JeepneyIcon, not the side-on Jeep above), EJeep (4188:11168), Bus (4188:11156), Ferry
+ * (4189:11183) and UV Express (4236:17067, drawn at 24). One sprite the page fetches (inline, they
+ * took the public page over its 400 kB), so the paths keep full precision; hashed and precached.
  */
 type SpriteId = 'train' | 'jeepney' | 'e-jeep' | 'bus' | 'ferry' | 'uv-express';
 

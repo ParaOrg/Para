@@ -160,6 +160,11 @@ function TokensPage() {
         <Swatch box="bg-trip-start" token="trip-start (a trip's Start)" cls="bg-trip-start" />
         <Swatch box="bg-trip-end" token="trip-end (a trip's End)" cls="bg-trip-end" />
         <Swatch
+          box="bg-(image:--gradient-bottom-toolbar)"
+          token="Gradient/bottom-toolbar"
+          cls="bg-(image:--gradient-bottom-toolbar)"
+        />
+        <Swatch
           box="bg-card-red-surface border-3 border-card-red-border-primary"
           token="Card/red"
           cls="bg-card-red-surface"

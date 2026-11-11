@@ -211,6 +211,9 @@
      deprecated Card (Depreciated)/green and red surfaces, so these name them for what they mean. */
   --trip-start: var(--color-green-700);
   --trip-end: var(--color-red-800);
+  /* Gradient/bottom-toolbar (4679:23737): the phone's Controller fades what scrolls under it
+     into neutral-300. Drawn with `bg-(image:--gradient-bottom-toolbar)`. */
+  --gradient-bottom-toolbar: linear-gradient(to bottom, transparent, var(--color-neutral-300));
 
   /* The mode cards: a RouteCard's colours by the kind of ride (RouteCard, 4629:22776).
      Figma: Card/Jeep/Jeep-surface… The leaf repeats its group, so the token drops the
