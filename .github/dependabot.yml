@@ -32,6 +32,14 @@ updates:
       # The types follow the Node the checks and the builds run on, 22.
       - dependency-name: '@types/node'
         update-types: ['version-update:semver-major']
+      # MapLibre stays on 6.7 until the build is made ready for a newer one: patch releases
+      # only. From 6.13.0 it ships its page and worker files differently, which the build's
+      # chunks and guards are made around, and 6.12.0, the last with the old layout, is about
+      # 15 kB gzipped heavier and over the shared size budget. Left in the group it kept every
+      # other update from merging. .scratch/maplibre-upgrade/issues/01-take-maplibre-6-13.md has
+      # the numbers and the steps; take this entry out with that work.
+      - dependency-name: 'maplibre-gl'
+        update-types: ['version-update:semver-minor', 'version-update:semver-major']
     groups:
       runtime:
         patterns: ['react', 'react-dom', 'zod', '@supabase/*', '@tanstack/*']
