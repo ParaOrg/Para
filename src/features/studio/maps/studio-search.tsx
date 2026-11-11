@@ -10,6 +10,7 @@ import type { LoadLandmarks } from '@/features/routes/search/use-landmarks';
 import type { LngLat } from '@/shared/utils/geo';
 
 import { SearchMark } from './search-mark';
+import { SubjectStatusList } from './subject-status-list';
 import type { DraftRow } from '../data/review-schema';
 import { searchableHotspots } from '../data/search-hotspots';
 import { useReviewQuery } from '../data/use-review-query';
@@ -33,6 +34,11 @@ interface StudioSearchProps {
   onOpenHotspot?: (hotspotId: string) => void;
   /** Where the landmarks come from: the file unless given (stories). */
   loadLandmarks?: LoadLandmarks;
+  /**
+   * A route or place taken down or put back from the search (SubjectStatusList): the map reads
+   * them again. Given on the workshop, signed in; without it the search lists none.
+   */
+  onSubjectChanged?: () => void;
 }
 
 /**
@@ -51,6 +57,7 @@ export function StudioSearch({
   isDrawing,
   onOpenHotspot,
   loadLandmarks,
+  onSubjectChanged,
 }: StudioSearchProps) {
   // Where the dot is, and which search put it there, so a second search on the same point shows
   // anew. It stays until the search starts over or another result is picked, as the commuter's
@@ -96,6 +103,11 @@ export function StudioSearch({
           onSearchRestart={() => setMark(null)}
           noteOf={(place) => (isDraftPlace(place) ? 'Draft' : null)}
           loadLandmarks={loadLandmarks}
+          renderAfterResults={
+            isSignedIn && onSubjectChanged
+              ? (query) => <SubjectStatusList query={query} onChanged={onSubjectChanged} />
+              : undefined
+          }
         />
       </div>
       {map && mark && <SearchMark key={mark.id} map={map} at={mark.at} />}

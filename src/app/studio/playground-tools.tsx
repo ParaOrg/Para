@@ -13,7 +13,7 @@ import {
   NewMenu,
   DrawToolbar,
   SaveToasts,
-  StudioReview,
+  StudioDrafts,
   ContributionHint,
   type useAuthFlow,
   type useContributionStart,
@@ -24,10 +24,8 @@ import {
 
 interface PlaygroundToolsProps {
   map: MapLibreMap | null;
-  /** Where Drafts stands in the top bar, on a computer (StudioReview's buttonSlot). */
-  draftsSlot?: HTMLElement | null;
-  /** A draft tapped on the map, opened into editing where it can be (useOpenDraft). */
-  onOpenDraft?: ComponentProps<typeof StudioReview>['onOpenDraft'];
+  /** A draft tapped on the map, opened into its sidebar (useOpenDraft). */
+  onOpenDraft: ComponentProps<typeof StudioDrafts>['onOpenDraft'];
   session: Session | null;
   auth: ReturnType<typeof useAuthFlow>;
   draw: ReturnType<typeof useDrawing>;
@@ -46,7 +44,7 @@ interface PlaygroundToolsProps {
 }
 
 /**
- * The Playground's tools over the map: the account pill, the review, an
+ * The Playground's tools over the map: the account pill, the drafts on the map, an
  * upload's hint, the toast, and the drawing's toolbar or the New +.
  */
 export function PlaygroundTools({
@@ -65,7 +63,6 @@ export function PlaygroundTools({
   isNewMenuOpen,
   onNewMenuOpenChange,
   onDone,
-  draftsSlot = null,
   onOpenDraft,
 }: PlaygroundToolsProps) {
   const { isSignedIn, isAccountDialogOpen, openSignIn, openPasswordChange } = auth;
@@ -85,15 +82,11 @@ export function PlaygroundTools({
       )}
 
       {isSignedIn && !draw.drawing && !isSaving && !isAccountDialogOpen && (
-        <StudioReview
+        <StudioDrafts
           key={session?.user.id}
           map={map}
-          buttonSlot={draftsSlot}
           onOpenDraft={onOpenDraft}
-          onChanged={() => {
-            void saved.reload();
-            void hotspots.reload();
-          }}
+          onApproved={() => void Promise.all([saved.reload(), hotspots.reload()])}
         />
       )}
 

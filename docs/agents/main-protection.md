@@ -30,11 +30,21 @@ An ed25519 key pair is a public half (goes to GitHub as the deploy key) and a pr
    - Key: paste the whole contents of `para-publish.pub` (`notepad para-publish.pub`).
    - Tick **Allow write access**.
    - **Add key**.
-4. Add the private key: **Settings** → **Secrets and variables** → **Actions** → **New repository secret**.
+4. Add the private key to the `publish` environment, which only `main` may use: **Settings** → **Environments** → **New environment**, name `publish`. Under **Deployment branches and tags** choose **Selected branches and tags** and add `main` only. Then, on that environment, **Add environment secret**.
    - Name: `PUBLISH_DEPLOY_KEY`
    - Secret: paste the whole contents of `para-publish` (`notepad para-publish`), including the `-----BEGIN OPENSSH PRIVATE KEY-----` and `-----END OPENSSH PRIVATE KEY-----` lines and the final newline.
    - **Add secret**.
 5. Delete both files from the computer: `Remove-Item para-publish, para-publish.pub`. Empty the Recycle Bin if you used Explorer.
+
+## Moving an existing key into the environment
+
+When `PUBLISH_DEPLOY_KEY` is already a repository secret (it was until the change that added `environment: publish`), the order keeps every nightly run working:
+
+1. Before that change reaches `main`, the owner creates the `publish` environment (`main` only) and adds the same key there as an environment secret, as in step 4. The repository secret stays.
+2. The change reaches `main` in a release. From then on the job reads the environment's copy.
+3. After one green nightly run, the owner deletes the repository secret.
+
+The backup's secrets move the same way, into the `backup` environment (`main` only); the backup.yml header's setup step 5 lists them.
 
 ## The hub's step afterwards
 

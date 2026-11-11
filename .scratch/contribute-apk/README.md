@@ -34,6 +34,8 @@ The builder chose these for now, from the owner's decisions. Each waits for the 
   card skeletons now), and after 8 s with no answer give way to their no-signal line with **Try
   again**. Commute Statistics' line had no Try again before; it now has the small secondary one
   History and Account settings use.
+- **A ride stopped at 6 hours** (ticket contributor-app 12, Q181): the recorder stops by itself at 6 hours and opens Save as Finish does. Any message before or at the stop, and History's line for an older ride uploaded as its first 6 hours, wait for frames.
+- **"Switch to Sakay?"** (ticket contributor-app 13, Q182): the suggestion after a sustained stretch faster than walking on Lakad. Its place, words and buttons, and whether the app's ride card offers it, wait for frames. Until then nothing is shown.
 - **Keep Para recording** (`native/keep-recording-panel.tsx`): it replaces the battery card.
   - **When it shows:** once, at the first Start, on Xiaomi, Redmi, POCO, Oppo, realme, Vivo, iQOO, Huawei, Honor, OnePlus and Samsung. It shows even when battery restrictions are already off, because Android cannot report the maker's Autostart switch.
   - **What it says (Q78):** "Keep Para recording", then "<group> phones may stop Para when you leave the app. So your rides keep recording:" and that group's numbered steps (`native/keep-recording-steps.ts`). Groups: Xiaomi/Redmi/POCO, OPPO/realme/OnePlus, vivo/iQOO, Infinix/Tecno, Samsung, Huawei/Honor. Open settings goes to that group's own screen where the phone lets an app open it (Samsung: Para's page in Settings), else Para's page. The numbered list has no Figma frame yet.
