@@ -109,6 +109,16 @@ Create each with `gh api -X POST repos/ParaOrg/Para/rulesets --input <file>.json
 
 The shapes come from GitHub's REST reference, "Create a repository ruleset": <https://docs.github.com/en/rest/repos/rules?apiVersion=2022-11-28#create-a-repository-ruleset>. For `bypass_actors` it says `actor_type` can be `DeployKey` ("If actor_type is DeployKey, this should be null" for `actor_id`) and that `pull_request` bypass mode "is not applicable for the DeployKey actor type".
 
+## Adding the secrets scan to the required checks
+
+Not done yet: the owner's step, once the nightly failures of Security open an alert (so a broken scan is seen the same day it would start blocking merges). Ruleset A is id 26126587. In its `required_status_checks`, add one line after "The editor":
+
+```json
+{ "context": "No secrets in the history", "integration_id": 15368 }
+```
+
+Read the ruleset with `gh api repos/ParaOrg/Para/rulesets/26126587`, add the line to its `rules`, and send the whole ruleset back with `gh api -X PUT repos/ParaOrg/Para/rulesets/26126587 --input <file>.json`. Don't add "No known holes in production dependencies": a new advisory for a package Para uses would block every merge the day it is published.
+
 ## Why CI skips the publish commit
 
 A deploy-key push starts other workflows, unlike `GITHUB_TOKEN`. `ci.yml` ignores a push that only touches `public/data/**` (`paths-ignore`): a full run on `main` includes the drawing suites, which go through the shared OSRM router, for a file the publish already checked with `check-map-data.mjs`; CI's own nightly run at 05:00 covers `main` right after. Pull requests are not filtered. The contributor app's release runs on `app-v*` tags only, and nothing in the publish pushes a tag.

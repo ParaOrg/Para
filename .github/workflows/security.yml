@@ -90,3 +90,29 @@ jobs:
 
       - name: npm audit
         run: npm audit --omit=dev --audit-level=high
+
+  # A failed nightly run opens the `alert` issue (scripts/watch/report-failed-run.mjs); the watch
+  # closes it once the next run passes. Not on a pull request, whose own checks say it failed.
+  alert:
+    needs: [secrets, audit]
+    if: failure() && github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+          sparse-checkout: scripts/watch
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - name: Open or update the alert issue
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          WORKFLOW_NAME: ${{ github.workflow }}
+          WORKFLOW_FILE: security.yml
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: node scripts/watch/report-failed-run.mjs
