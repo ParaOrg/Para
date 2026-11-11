@@ -720,8 +720,9 @@ const longOrigin = 'Novaliches (Bayan) via Zabarte and Quirino Highway';
 export const SheetLowLongName: Story = {
   args: { height: undefined, ...LongNames.args, routeOrigin: longOrigin },
   play: async (ctx) => {
-    const origin = within(ctx.canvasElement).getByText(longOrigin);
-    await waitFor(() => expect(origin.getBoundingClientRect().height).toBe(28));
+    const ends = within(within(ctx.canvasElement).getByTestId('trip-ends'));
+    const origin = ends.getByText(longOrigin);
+    await waitFor(() => expect(origin.getBoundingClientRect().height).toBe(24));
   },
 };
 
@@ -730,8 +731,8 @@ export const SheetRaisedLongName: Story = {
   args: { height: undefined, ...LongNames.args, routeOrigin: longOrigin },
   play: async (ctx) => {
     await tapHandle(ctx.canvasElement);
-    const origin = within(ctx.canvasElement).getByText(longOrigin);
-    await expect(origin.getBoundingClientRect().height).toBeGreaterThan(28);
+    const ends = within(within(ctx.canvasElement).getByTestId('trip-ends'));
+    await expect(ends.getByText(longOrigin).getBoundingClientRect().height).toBeGreaterThan(24);
   },
 };
 
@@ -765,8 +766,8 @@ const board = (top: string, under: string) =>
   );
 
 /**
- * Figma's Signboard (3919:11355): the direction's boards between the card and the tiles, in their
- * own white strip (Figma 4051:5528), 40 tall, 8 apart, 16 under the card and 16 over the tiles.
+ * The direction's boards on their own card, "Signboard" over them (4680:25123), 40 tall, 8 apart,
+ * between the tiles and the stops, 16 from each.
  */
 export const Signboards: Story = {
   args: { signboards: [board('BAYAN', 'SIMBAHAN'), board('SM', 'FAIRVIEW')] },
@@ -775,35 +776,26 @@ export const Signboards: Story = {
     const boards = canvas.getAllByTestId('trip-signboard');
     await expect(boards).toHaveLength(2);
     await waitFor(() => expect(boards[0].getBoundingClientRect().height).toBe(40));
-    // Under the card, over the tiles, and no heading over them.
-    const strip = canvas.getByTestId('trip-signboards');
+    // On their own card, "Signboard" over them, between the tiles and the stops, 16 from each.
+    const section = canvas.getByRole('region', { name: 'Signboard' });
     const card = canvas.getByTestId('trip');
     const tiles = canvas.getByTestId('trip-tiles');
-    await expect(
-      card.compareDocumentPosition(strip) & Node.DOCUMENT_POSITION_FOLLOWING,
-    ).toBeTruthy();
-    await expect(
-      strip.compareDocumentPosition(tiles) & Node.DOCUMENT_POSITION_FOLLOWING,
-    ).toBeTruthy();
-    await expect(canvas.queryByRole('heading', { name: 'Signboard' })).toBeNull();
-    const top = (el: Element) => el.getBoundingClientRect().top;
-    await expect(top(boards[0]) - card.getBoundingClientRect().bottom).toBe(16);
-    await expect(top(tiles) - boards[0].getBoundingClientRect().bottom).toBe(0);
-    await expect(getComputedStyle(tiles).paddingTop).toBe('16px');
+    const box = (el: Element) => el.getBoundingClientRect();
+    await expect(box(section).top - box(tiles).bottom).toBe(16);
+    await expect(box(card).top - box(section).bottom).toBe(16);
   },
 };
 
-/** None uploaded: no strip, the tiles 16 under the card. */
+/** None uploaded: no card, the stops 16 under the tiles. */
 export const NoSignboards: Story = {
   args: { signboards: [] },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(canvas.queryByTestId('trip-signboards')).toBeNull();
     const tiles = canvas.getByTestId('trip-tiles');
-    await expect(tiles.getBoundingClientRect().top).toBe(
-      canvas.getByTestId('trip').getBoundingClientRect().bottom,
-    );
-    await expect(getComputedStyle(tiles).paddingTop).toBe('16px');
+    await expect(
+      canvas.getByTestId('trip').getBoundingClientRect().top - tiles.getBoundingClientRect().bottom,
+    ).toBe(16);
   },
 };
 

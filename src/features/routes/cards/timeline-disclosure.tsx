@@ -48,7 +48,7 @@ export function TimelineDisclosure({
         className={'flex w-full items-start px-4 text-left ' + pressed}
       >
         <TimelineStick variant="disclosure" connection={connection} rail={rail} />
-        <span className="flex min-w-0 flex-1 items-center gap-1.5 py-2.5 pl-3 text-sm/5 font-normal whitespace-nowrap">
+        <span className="flex min-w-0 flex-1 items-center gap-1.5 py-2.5 pl-2 text-sm/5 font-normal whitespace-nowrap">
           {/* One chevron, turned: Figma's chevron-down, and its chevron-up opened. */}
           <span
             aria-hidden

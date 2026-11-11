@@ -119,7 +119,7 @@ export function TimelineHintuan({
             {mark && <RideMark mark={mark} isSmall />}
             <span
               className={
-                'flex min-w-0 flex-1 items-center gap-2 py-2.5 ' + (mark ? 'pl-1.5' : 'pl-3')
+                'flex min-w-0 flex-1 items-center gap-2 py-2.5 ' + (mark ? 'pl-1.5' : 'pl-2')
               }
             >
               <span
@@ -148,7 +148,7 @@ export function TimelineHintuan({
                 }
                 rail={rail}
               />
-              <span className="pt-1.5 pb-2.5 pl-3">
+              <span className="pt-1.5 pb-2.5 pl-2">
                 <Button
                   variant="primary"
                   size="small"

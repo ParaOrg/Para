@@ -3,11 +3,11 @@ import { useState, type ReactNode, type Ref } from 'react';
 import type { SheetHeight } from '@/shared/ui/bottom-sheet';
 import { lineLength } from '@/shared/utils/geo';
 
-import { RouteTripDetailHeader } from './route-trip-detail-header';
+import { RouteStopsCardHeader } from './route-stops-card-header';
 import { TimelineRouteDetailCard } from './timeline-route-detail-card';
 import { FREE, type Fare, type Fares } from './trip-fare';
 import { useFareKind } from './use-fare-kind';
-import { otherDirection, otherRoutesFrom, switchWord, wayWord } from '../model/departures';
+import { otherDirection, otherRoutesFrom, switchWord } from '../model/departures';
 import { manilaDate, rideFare } from '../model/fares';
 import { liveryOf, type Livery } from '../model/liveries';
 import { railBound } from '../model/rail-codes';
@@ -143,9 +143,6 @@ export function TripCard({
       : directionEnds(direction);
   const line = railLineOf(direction);
   const vehicle = vehicleOf(direction);
-  // A UV Express trip has no header: Figma draws its Modes label, but no
-  // RouteTripDetailHeader variant for it yet.
-  const headerVehicle = vehicle === 'UV Express' ? null : vehicle;
   const sibling = otherDirection(directions, direction);
   // A loop has no way back, so no SWITCH at all.
   const switchable = !loop && !!sibling && isDrawn(sibling);
@@ -183,13 +180,12 @@ export function TripCard({
       isLoop={loop}
       label={loop ? `${direction.name ?? from} (${LOOP_WORD})` : undefined}
       header={
-        headerVehicle && (
-          <RouteTripDetailHeader
-            vehicle={headerVehicle}
-            // A train's bound alone: with none, its line alone, never Papunta.
-            way={line ? railBound(direction) : wayWord(direction.reversed, [direction])}
+        vehicle && (
+          <RouteStopsCardHeader
+            vehicle={vehicle}
+            bound={line ? railBound(direction) : null}
             livery={livery}
-            name={loop ? (direction.name ?? undefined) : undefined}
+            name={loop ? (direction.name ?? LOOP_WORD) : undefined}
           />
         )
       }

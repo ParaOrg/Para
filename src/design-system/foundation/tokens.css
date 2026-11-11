@@ -207,6 +207,10 @@
      where the surfaces' own shades are too dark to read. No green livery exists. */
   --card-red-surface-light: var(--color-red-400);
   --card-green-surface-light: var(--color-green-500);
+  /* A trip's Start and End (the ends card, RouteTripDetail 4681:32026): Figma binds them to the
+     deprecated Card (Depreciated)/green and red surfaces, so these name them for what they mean. */
+  --trip-start: var(--color-green-700);
+  --trip-end: var(--color-red-800);
 
   /* The mode cards: a RouteCard's colours by the kind of ride (RouteCard, 4629:22776).
      Figma: Card/Jeep/Jeep-surface… The leaf repeats its group, so the token drops the
@@ -352,6 +356,8 @@
   --color-card-red-timeline-surface: var(--card-red-timeline-surface);
   --color-card-red-surface-light: var(--card-red-surface-light);
   --color-card-green-surface-light: var(--card-green-surface-light);
+  --color-trip-start: var(--trip-start);
+  --color-trip-end: var(--trip-end);
   --color-card-jeep-surface: var(--card-jeep-surface);
   --color-card-jeep-surface-secondary: var(--card-jeep-surface-secondary);
   --color-card-jeep-surface-border: var(--card-jeep-surface-border);

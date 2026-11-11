@@ -397,7 +397,7 @@ export const Loop: Story = {
   play: async ({ canvasElement }) => {
     const card = within(canvasElement);
     await expect(card.queryByTestId('card-switch')).toBeNull();
-    await expect(card.getByText('Ikot')).toBeVisible();
+    await expect(card.getByText('UP – Ikot')).toBeVisible();
   },
 };
 

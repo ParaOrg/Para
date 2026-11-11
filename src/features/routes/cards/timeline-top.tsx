@@ -24,10 +24,9 @@ interface TimelineTopProps {
 }
 
 /**
- * Figma's TimelineTop: the dot the rail leaves from, and the origin in SN Pro
- * ExtraBold 20/28 (3778:3183); the whole row is its button. Picked, its dot is
- * TimelineDot's Selected one. Its name is 12 above the first row (Timeline
- * set, 3716:1894).
+ * The timeline's first row (RouteStopsTimeline, in RouteStopsCard 4681:29139): the dot the rail
+ * leaves from, and the origin, Medium 17/24 as every stop is, ExtraBold picked; the whole row is
+ * its button. Picked, its dot is TimelineDot's Selected one.
  */
 export function TimelineTop({
   livery,
@@ -46,7 +45,7 @@ export function TimelineTop({
         type="button"
         aria-pressed={selected}
         onClick={onTap}
-        className={'flex w-full items-center px-4 pt-4 text-left ' + pressed}
+        className={'flex w-full items-start px-4 text-left ' + pressed}
       >
         <TimelineStick
           variant="top"
@@ -54,14 +53,14 @@ export function TimelineTop({
           rail={rail}
           dot={<TimelineDot rail={mark ? END_SIGN_LOOK[mark].surface : rail} selected={selected} />}
         />
-        <span className="flex min-w-0 flex-1 items-start gap-1 pb-3 pl-2">
-          {mark && <RideMark mark={mark} />}
-          {/* At a sheet's Low, one line of it (sheetGesture's LOW_PX); raised, all of it. */}
+        {mark && <RideMark mark={mark} isSmall />}
+        <span
+          className={'flex min-w-0 flex-1 items-center gap-2 py-2.5 ' + (mark ? 'pl-1.5' : 'pl-2')}
+        >
           <span
             data-part="name"
             className={
-              'min-w-0 flex-1 text-xl/7 font-extrabold sheet-low:line-clamp-1' +
-              (mark ? '' : ' pl-1')
+              'min-w-0 flex-1 text-base/6 ' + (selected ? 'font-extrabold' : 'font-medium')
             }
           >
             {routeOrigin}

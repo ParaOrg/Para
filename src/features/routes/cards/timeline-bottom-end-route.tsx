@@ -44,7 +44,7 @@ export function TimelineBottomEndRoute({
         type="button"
         aria-pressed={selected}
         onClick={onTap}
-        className={'flex w-full items-center px-4 pb-4 text-left ' + pressed}
+        className={'flex w-full items-start px-4 text-left ' + pressed}
       >
         <TimelineStick
           variant="bottom"
@@ -52,12 +52,16 @@ export function TimelineBottomEndRoute({
           rail={rail}
           dot={<TimelineDot rail={isEnd ? END_SIGN_LOOK.end.surface : rail} selected={selected} />}
         />
-        <span className={'flex min-w-0 flex-1 items-start gap-1 pt-3 ' + (isEnd ? 'pl-2' : 'pl-3')}>
-          {isEnd && <RideMark mark="end" />}
-          {/* Bold, Figma's text-xl/bold, as the trip frame (3778:3183) draws it.
-              The Timeline set (3716:1894) draws it Medium, ExtraBold picked;
-              the trip frame's Bold is kept. */}
-          <span data-part="name" className="min-w-0 flex-1 text-xl/7 font-bold">
+        {isEnd && <RideMark mark="end" isSmall />}
+        <span
+          className={'flex min-w-0 flex-1 items-center gap-2 py-2.5 ' + (isEnd ? 'pl-1.5' : 'pl-2')}
+        >
+          <span
+            data-part="name"
+            className={
+              'min-w-0 flex-1 text-base/6 ' + (selected ? 'font-extrabold' : 'font-medium')
+            }
+          >
             {routeDirection}
           </span>
           {/* After the name, so the name is still the row's first words; the circled letter is for the eye. */}

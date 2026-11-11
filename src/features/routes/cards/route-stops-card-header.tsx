@@ -14,6 +14,8 @@ interface RouteStopsCardHeaderProps {
   bound: Bound | null;
   /** The card it sits on. */
   livery: Livery;
+  /** A loop's signboard, UP – Ikot, a badge of its own after the mode's: what tells it from another loop. */
+  name?: string;
 }
 
 /**
@@ -23,9 +25,9 @@ interface RouteStopsCardHeaderProps {
  * badges are. The words are the badges'; the drawing is decoration. It takes RouteTripDetailHeader's
  * place, and its test id with it.
  */
-export function RouteStopsCardHeader({ vehicle, bound, livery }: RouteStopsCardHeaderProps) {
+export function RouteStopsCardHeader({ vehicle, bound, livery, name }: RouteStopsCardHeaderProps) {
   return (
-    <div data-testid="trip-detail-header" className="flex items-center gap-2 px-3 pt-3.5">
+    <div data-testid="trip-detail-header" className="flex flex-wrap items-center gap-2 px-3 pt-3.5">
       <span aria-hidden className={cn('flex shrink-0 rounded-lg p-1', ROUTE_BADGE[livery])}>
         <span className="block size-6 *:size-full">
           <VehicleIcon vehicle={vehicle} />
@@ -33,6 +35,7 @@ export function RouteStopsCardHeader({ vehicle, bound, livery }: RouteStopsCardH
       </span>
       <RouteBadge label={MODE_BADGE_LABEL[vehicle]} livery={livery} size="large" />
       {bound && <RouteBadge label={bound} livery={livery} size="large" />}
+      {name && <RouteBadge label={name} livery={livery} size="large" />}
     </div>
   );
 }

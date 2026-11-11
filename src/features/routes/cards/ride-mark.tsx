@@ -21,9 +21,9 @@ interface RideMarkProps {
  * End's pill is, whatever the line; the row's dot wears the same. They move with the picks: the S from the origin to a
  * start picked further on, the E from the destination to a picked end. For the
  * eye: every row that draws one says "start" or "end" after its name. 24 across, as
- * RouteSigns is, 12 after the rail: `isSmall`, on a hintuan's 16/24 line, 6
- * before the name and 10 down as the name's padding is; beside the ends' 20/28,
- * 8 before it and centred on it (Timeline set, 3716:1894).
+ * RouteSigns is, 12 after the rail: `isSmall`, on a stop's 17/24 line, 6
+ * before the name and 10 down as the name's padding is; otherwise 8 before a
+ * larger name and centred on it (Timeline set, 3716:1894).
  */
 export function RideMark({ mark, isSmall = false }: RideMarkProps) {
   return (
