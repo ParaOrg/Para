@@ -60,10 +60,7 @@ test('imports resolve from @/ and from relative paths, and packages resolve to n
   const from = 'features/routes/cards/route-card.tsx';
   assert.equal(resolveImport('@/shared/utils/geo', from), 'shared/utils/geo');
   assert.equal(resolveImport('../geo/pass', from), 'features/routes/geo/pass');
-  assert.equal(
-    resolveImport('./route-card-header', from),
-    'features/routes/cards/route-card-header',
-  );
+  assert.equal(resolveImport('./route-stops-card', from), 'features/routes/cards/route-stops-card');
   assert.equal(resolveImport('./sprite.svg?url', from), 'features/routes/cards/sprite.svg');
   assert.equal(resolveImport('react', from), null);
   assert.equal(resolveImport('maplibre-gl/dist/maplibre-gl.css', from), null);
