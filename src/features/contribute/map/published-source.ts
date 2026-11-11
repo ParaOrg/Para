@@ -1,8 +1,10 @@
+import { cacheStorageMapFiles } from '@/features/routes/map/map-file-store';
 import type { LineStringGeoJSON } from '@/features/routes/model/geojson-schema';
-import { fetchIndex, readIndexFile } from '@/features/routes/published/fetch-index';
+import { fetchIndex, setMapFileStore } from '@/features/routes/published/fetch-index';
 import { fetchLine, readLineFile } from '@/features/routes/published/fetch-line';
 import type { Index } from '@/features/routes/published/index-schema';
 import { LINES_URL, MAP_FILE_URL } from '@/features/routes/published/map-file';
+import { readIndexFile } from '@/features/routes/published/parse-index';
 
 import { nativeGetText } from '../native-bridge/native-app';
 
@@ -26,7 +28,12 @@ async function siteJson(path: string): Promise<unknown> {
 
 /** The published index, read once a page; a failure is not kept, so the next read tries again. */
 export function readPublishedIndex(): Promise<Index> {
-  if (import.meta.env.MODE !== 'apk') return fetchIndex();
+  if (import.meta.env.MODE !== 'apk') {
+    // With no signal, the map file the page's worker kept from an earlier visit. Given here, not
+    // in main.tsx, so the reader stays out of the page's opening chunk.
+    setMapFileStore(cacheStorageMapFiles);
+    return fetchIndex();
+  }
   appIndex ??= siteJson(MAP_FILE_URL)
     .then((raw) => readIndexFile(raw, MAP_FILE_URL))
     .catch((error: unknown) => {

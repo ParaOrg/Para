@@ -79,7 +79,7 @@
   "src/features/routes/model/place-search.ts": 251,
   "src/features/routes/model/places.ts": 152,
   "src/features/routes/model/rail-fares.ts": 316,
-  "src/features/routes/model/ride-recording.ts": 521,
+  "src/features/routes/model/ride-recording.ts": 472,
   "src/features/routes/model/ride.ts": 358,
   "src/features/routes/model/routes.ts": 270,
   "src/features/routes/model/signboard-svg.ts": 204,
