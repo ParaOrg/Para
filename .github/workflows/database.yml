@@ -54,8 +54,10 @@ jobs:
         image: postgres:17
         env:
           POSTGRES_PASSWORD: verify-only
+        # The health check goes over TCP, so the image's temporary first-start server (Unix
+        # socket only) never counts as ready.
         options: >-
-          --health-cmd "pg_isready -U postgres"
+          --health-cmd "pg_isready -h 127.0.0.1 -U postgres"
           --health-interval 2s
           --health-timeout 5s
           --health-retries 30
@@ -97,11 +99,22 @@ jobs:
         run: |
           docker network create para-review
           docker run -d --name para-review-db --network para-review -e POSTGRES_PASSWORD=preview-only postgres:17
-          for _ in $(seq 60); do
-            docker exec para-review-db pg_isready -U postgres -q && exit 0
+          # On first start the image runs a temporary server on the Unix socket only, to run its
+          # init scripts, then stops it and starts the real one. A check over the socket can pass
+          # against the temporary one just before it stops ("psql: no such socket" in the next
+          # step). Over TCP only the real server answers; three answers in a row confirm it.
+          answered=0
+          for _ in $(seq 90); do
+            if docker exec para-review-db psql -h 127.0.0.1 -U postgres -tAc 'select 1' > /dev/null 2>&1; then
+              answered=$((answered + 1))
+              [ "$answered" -ge 3 ] && exit 0
+            else
+              answered=0
+            fi
             sleep 1
           done
-          echo '::error::the disposable Postgres did not start'
+          echo '::error::the disposable Postgres did not answer over TCP three times in a row within 90 s'
+          docker logs para-review-db | tail -n 20
           exit 1
       - name: supabase/verify/run.sh on it
         env:
