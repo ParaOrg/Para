@@ -60,7 +60,8 @@ test('a part whose fetch fails draws nothing and throws nothing, and says so onc
   const { html, errors } = await drawn(Part);
   assert.deepEqual(errors, [], 'no error reaches a boundary');
   assert.doesNotMatch(html, /waiting/, 'it is done waiting');
-  assert.equal(html.replace(/<!--.*?-->/g, ''), '<main></main>');
+  assert.deepEqual(html.match(/<[a-z][^>]*>/g), ['<main>'], 'it draws no element of its own');
+  assert.doesNotMatch(html, />[^<]+</, 'and no text');
   assert.equal(warn.mock.callCount(), 1);
 });
 
