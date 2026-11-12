@@ -3,6 +3,7 @@ import type { RecordingTrail } from '@/features/routes/map/recording-trail';
 import { drawTrail } from './draw-summary-trail';
 import type { RideSummary } from './ride-summary';
 import { wrapLines } from './wrap-lines';
+import paraLogo from '../account/para-logo.svg';
 
 /** A portrait 4:5 picture, the size feeds and stories crop least. */
 export const CARD_WIDTH = 1080;
@@ -15,10 +16,9 @@ const INK = '#171717'; // neutral/900
 const MUTED = '#737373'; // neutral/500
 /** The trail's box on the card, under the brand band. */
 const TRAIL = { x: PAD, y: 180, width: CARD_WIDTH - 2 * PAD, height: 620 };
-/**
- * One of the figures under the names: its value large, its label small above it, both squeezed
- * into `width` when longer (`UV Express` is wider than its third of the card).
- */
+/** Para's logo in the band, at the SVG's own 97.77 by 64 shape, centred on the band's 132. */
+const LOGO = { width: 110, height: 72, y: 30 };
+/** A figure under the names: value large, label small above, both squeezed into `width`. */
 function drawFigure(
   ctx: CanvasRenderingContext2D,
   x: number,
@@ -43,6 +43,7 @@ export function drawRideSummary(
   ctx: CanvasRenderingContext2D,
   summary: RideSummary,
   trail: RecordingTrail | null,
+  logo: CanvasImageSource | null,
 ) {
   ctx.textBaseline = 'alphabetic';
   ctx.fillStyle = '#ffffff';
@@ -52,7 +53,8 @@ export function drawRideSummary(
   ctx.fillRect(0, 0, CARD_WIDTH, 132);
   ctx.fillStyle = '#ffffff';
   ctx.font = `800 56px ${FONT}`;
-  ctx.fillText('Para', PAD, 86);
+  if (logo) ctx.drawImage(logo, PAD, LOGO.y, LOGO.width, LOGO.height);
+  else ctx.fillText('Para', PAD, 86);
   ctx.font = `500 32px ${FONT}`;
   ctx.textAlign = 'right';
   ctx.fillText('Ride summary', CARD_WIDTH - PAD, 82);
@@ -104,18 +106,39 @@ export async function loadSummaryFonts(): Promise<void> {
   ).catch(() => undefined);
 }
 
+/** Para's logo (its file is purple) filled white for the band, or null when it does not load. */
+async function loadWhiteLogo(): Promise<HTMLCanvasElement | null> {
+  const image = new Image();
+  image.src = paraLogo;
+  const canvas = document.createElement('canvas');
+  canvas.width = 2 * LOGO.width; // twice the drawn size, to stay sharp
+  canvas.height = 2 * LOGO.height;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return null;
+  try {
+    await image.decode();
+  } catch {
+    return null;
+  }
+  ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+  ctx.globalCompositeOperation = 'source-in';
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  return canvas;
+}
+
 /** The card as a PNG, drawn on a canvas of its own. */
 export async function rideSummaryPng(
   summary: RideSummary,
   trail: RecordingTrail | null,
 ): Promise<Blob> {
-  await loadSummaryFonts();
+  const [logo] = await Promise.all([loadWhiteLogo(), loadSummaryFonts()]);
   const canvas = document.createElement('canvas');
   canvas.width = CARD_WIDTH;
   canvas.height = CARD_HEIGHT;
   const ctx = canvas.getContext('2d');
   if (!ctx) throw new Error('No 2D canvas on this browser.');
-  drawRideSummary(ctx, summary, trail);
+  drawRideSummary(ctx, summary, trail, logo);
   return new Promise((resolve, reject) =>
     canvas.toBlob(
       (blob) => (blob ? resolve(blob) : reject(new Error('The card could not be drawn.'))),
