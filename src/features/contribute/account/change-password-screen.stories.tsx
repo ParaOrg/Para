@@ -29,13 +29,18 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+// The screen focuses its heading in an effect as it opens, which can land after a story's first
+// click: a key typed then goes to the heading. So a story that types waits for that focus first.
+const opened = (canvas: ReturnType<typeof within>) =>
+  waitFor(() =>
+    expect(canvas.getByRole('heading', { level: 1, name: 'Change password' })).toHaveFocus(),
+  );
+
 /** Empty: no Save changes until something is typed. */
 export const Default: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await waitFor(() =>
-      expect(canvas.getByRole('heading', { level: 1, name: 'Change password' })).toHaveFocus(),
-    );
+    await opened(canvas);
     await expect(canvas.queryByRole('button', { name: 'Save changes' })).toBeNull();
   },
 };
@@ -44,6 +49,7 @@ export const Default: Story = {
 export const Typed: Story = {
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
+    await opened(canvas);
     await userEvent.type(canvas.getByLabelText('Old password'), 'oldpass123');
     await userEvent.type(canvas.getByLabelText('New password'), 'newpass456');
     await userEvent.type(canvas.getByLabelText('Confirm password'), 'newpass457');
@@ -57,6 +63,7 @@ export const Typed: Story = {
 export const Cancelled: Story = {
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
+    await opened(canvas);
     await userEvent.type(canvas.getByLabelText('Old password'), 'x');
     await userEvent.click(canvas.getByRole('button', { name: 'Cancel' }));
     await expect(args.onBack).toHaveBeenCalled();
@@ -102,6 +109,7 @@ export const NotChanged: Story = {
   args: { isBusy: false, error: "That's already your password. Choose a new one." },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
+    await opened(canvas);
     await userEvent.type(canvas.getByLabelText('Old password'), 'x');
     await expect(canvas.getByRole('alert')).toBeVisible();
   },
@@ -112,6 +120,7 @@ export const WaitingForCheck: Story = {
   args: { captcha: { ...NO_CAPTCHA, siteKey: '1x00000000000000000000AA', isReady: false } },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
+    await opened(canvas);
     await userEvent.type(canvas.getByLabelText('Old password'), 'x');
     await expect(canvas.getByRole('button', { name: 'Save changes' })).toBeDisabled();
   },
