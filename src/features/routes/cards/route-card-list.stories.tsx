@@ -260,6 +260,8 @@ export const EveryLineUnderTheTap: Story = {
   play: async ({ canvasElement }) => {
     const list = within(canvasElement);
     await expect(list.getByRole('dialog', { name: '2 Routes' })).toBeInTheDocument();
+    // Its heading, hidden from the eye, for a screen reader to move to.
+    await expect(list.getByRole('heading', { level: 2, name: 'Routes here' })).toBeInTheDocument();
     await expect(list.getByText('Novaliches')).toBeInTheDocument();
     await expect(list.getByText('Tala')).toBeInTheDocument();
   },

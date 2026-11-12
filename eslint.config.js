@@ -147,6 +147,16 @@ export default defineConfig([
         'error',
         { fixStyle: 'separate-type-imports' },
       ],
+      // No `enum` (.claude/CLAUDE.md, "Other naming rules"): an enum is code at run time and
+      // its own kind of type, where a union of literals or an `as const` object is neither.
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: 'TSEnumDeclaration',
+          message:
+            "Don't use `enum`. Use a union type or an `as const` object (.claude/CLAUDE.md, Naming conventions).",
+        },
+      ],
 
       // Imports: four groups, blank lines between, alphabetical within.
       // `tsc` already proves every import resolves, so the resolver rule is off
