@@ -92,6 +92,7 @@ const SOURCE = [
   'capacitor.config.ts',
   'scripts/**/*.ts',
   'workers/tiles/src/**/*.ts',
+  'workers/site/src/**/*.ts',
 ];
 
 export default defineConfig([
@@ -444,6 +445,7 @@ export default defineConfig([
       'eslint.config.js',
       // The Workers runtime requires a default export.
       'workers/tiles/src/index.ts',
+      'workers/site/src/index.ts',
     ],
     rules: {
       'import-x/no-default-export': 'off',
