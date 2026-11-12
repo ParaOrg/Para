@@ -2,7 +2,7 @@
 
 535 lines on `staging` at 540f6a88 (2026-11-11), held to that length by `scripts/checks/long-files-baseline.json`. It is the contributor page's one component: every hook the page needs is called here, and every screen is drawn from here. It is also the most changed source file in the repository: 99 commits touched it in the last 30 days (the list at the end), so two sessions rarely work on the contributor page without meeting in this file. The split is to give each reason to change a file of its own.
 
-Plan only: nothing under `src/` changes with this document. Line numbers are `staging`'s today; the implementer re-anchors on the quoted comments, since the file moves every day.
+Plan only: nothing under `src/` changes with this document. The moves are built by the session that owns `features/contribute`. Line numbers are `staging`'s today; the implementer re-anchors on the quoted comments, since the file moves every day.
 
 ## 1. What the file does today
 
