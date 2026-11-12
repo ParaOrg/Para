@@ -1,5 +1,7 @@
 import type { MapLibreMap } from 'maplibre-gl';
 
+import { isMapExposed } from '@/shared/config/env';
+
 /*
  * The map handed out on `window`, for the headless suites and the cheap-phone timer, and for no
  * one else. Dev builds do it, so the suites (tests/e2e/) can read real screen positions from the
@@ -15,8 +17,7 @@ import type { MapLibreMap } from 'maplibre-gl';
  * was made at and the first lines it draws, before its 'load' on the public map.
  */
 export function exposeMapEarly(map: MapLibreMap): void {
-  if (import.meta.env.DEV || import.meta.env.VITE_EXPOSE_MAP === '1')
-    (window as unknown as { __mapEarly?: MapLibreMap }).__mapEarly = map;
+  if (isMapExposed) (window as unknown as { __mapEarly?: MapLibreMap }).__mapEarly = map;
 }
 
 /**
@@ -25,7 +26,7 @@ export function exposeMapEarly(map: MapLibreMap): void {
  * suites to see what a tap compiles.
  */
 export function exposeMap(shown: MapLibreMap): void {
-  if (import.meta.env.DEV || import.meta.env.VITE_EXPOSE_MAP === '1') {
+  if (isMapExposed) {
     const w = window as unknown as { __map?: MapLibreMap; __programs?: () => string[] };
     w.__map = shown;
     w.__programs = () =>

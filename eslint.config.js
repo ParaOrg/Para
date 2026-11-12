@@ -95,6 +95,40 @@ const SOURCE = [
   'workers/site/src/**/*.ts',
 ];
 
+// No `enum` (.claude/CLAUDE.md, "Other naming rules"): an enum is code at run time and its own
+// kind of type, where a union of literals or an `as const` object is neither.
+const NO_ENUM = {
+  selector: 'TSEnumDeclaration',
+  message:
+    "Don't use `enum`. Use a union type or an `as const` object (.claude/CLAUDE.md, Naming conventions).",
+};
+
+// `import.meta.env` is read in the env modules alone (.claude/CLAUDE.md, "Validation with Zod"),
+// so every variable a page depends on is named, and checked, in one place per page. MODE, DEV and
+// PROD are Vite's own and may be read anywhere, for a branch the build works out.
+const ENV_MODULES = [
+  'src/shared/config/env.ts',
+  'src/features/studio/data/env.ts',
+  'src/features/contribute/api/env.ts',
+  'src/features/contribute/api/app-update-env.ts',
+];
+const ENV_MESSAGE =
+  "Read import.meta.env in an env module (src/shared/config/env.ts, or the feature's own env.ts) and import the value from there. MODE, DEV and PROD may be read anywhere.";
+const ENV_ONLY_IN_ENV_MODULES = [
+  {
+    // import.meta.env.VITE_X
+    selector:
+      "MemberExpression[object.type='MemberExpression'][object.object.type='MetaProperty'][object.property.name='env'][property.name!=/^(MODE|DEV|PROD)$/]",
+    message: ENV_MESSAGE,
+  },
+  {
+    // import.meta.env handed on whole: parse(import.meta.env), const { VITE_X } = import.meta.env
+    selector:
+      ":not(MemberExpression) > MemberExpression[object.type='MetaProperty'][property.name='env']",
+    message: ENV_MESSAGE,
+  },
+];
+
 export default defineConfig([
   globalIgnores([
     'dist/',
@@ -147,16 +181,11 @@ export default defineConfig([
         'error',
         { fixStyle: 'separate-type-imports' },
       ],
-      // No `enum` (.claude/CLAUDE.md, "Other naming rules"): an enum is code at run time and
-      // its own kind of type, where a union of literals or an `as const` object is neither.
-      'no-restricted-syntax': [
-        'error',
-        {
-          selector: 'TSEnumDeclaration',
-          message:
-            "Don't use `enum`. Use a union type or an `as const` object (.claude/CLAUDE.md, Naming conventions).",
-        },
-      ],
+      // No `as` to quiet the compiler (.claude/CLAUDE.md, "TypeScript"); `as const` is not one
+      // and passes. A warning until the tree is clean of it, folder by folder, then an error.
+      '@typescript-eslint/consistent-type-assertions': ['warn', { assertionStyle: 'never' }],
+      // No `enum`, and the build's variables read only in the env modules (both above).
+      'no-restricted-syntax': ['error', NO_ENUM, ...ENV_ONLY_IN_ENV_MODULES],
 
       // Imports: four groups, blank lines between, alphabetical within.
       // `tsc` already proves every import resolves, so the resolver rule is off
@@ -460,6 +489,12 @@ export default defineConfig([
     rules: {
       'import-x/no-default-export': 'off',
     },
+  },
+
+  {
+    // The env modules are where import.meta.env is read: the enum ban alone holds there.
+    files: ENV_MODULES,
+    rules: { 'no-restricted-syntax': ['error', NO_ENUM] },
   },
 
   {
