@@ -161,6 +161,14 @@ Where each key is made, and where its new value goes. Make the new one, put it i
 | `PARAPO_KEY_PASSPHRASE` | Not rotated: it unlocks the app signing key, and a new key means testers uninstall (make-app-signing-key.yml) | – | If it leaks, tell the hub before anything else |
 | The backup's GPG key | A new pair on your own computer (backup.yml step 3) | The public half: `.github/backup/owner-public-key.asc`, by pull request. The private half: your password manager and an offline copy | Keep the old private key: older backups only open with it |
 
+## Branch previews
+
+Every branch gets a preview address of its own, `<branch>-para…workers.dev`, built from that branch's code.
+
+**Don't sign in to the studio or the contributor page on a branch preview address.** Its code hasn't been reviewed and it talks to the live database. Test signed-in work on staging or locally.
+
+Looking at the public map on a preview is fine: it signs in to nothing. The lasting fix is a database of its own for staging and the previews ([the staging backend spec](../.scratch/staging-backend/spec.md)).
+
 ## Account safety checklist
 
 Tick each once, and look again each year.
