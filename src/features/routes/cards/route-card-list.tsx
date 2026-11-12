@@ -6,6 +6,7 @@ import type { SheetShape } from '@/shared/ui/sheet-gesture';
 import { ModeFilterEmpty } from './mode-filter-empty';
 import { RouteCardStack, type PickedPlace } from './route-card-stack';
 import { RouteListController } from './route-list-controller';
+import { RouteListHotspotRows } from './route-list-hotspot-rows';
 import {
   listedDepartures,
   otherWayHasRoutes,
@@ -14,7 +15,7 @@ import {
   wayWord,
   type Listing,
 } from '../model/departures';
-import { hotspotLabel, type Hotspot } from '../model/hotspots';
+import type { Hotspot } from '../model/hotspots';
 import type { Livery } from '../model/liveries';
 import { passesModeFilter, type ModeFilterControl } from '../model/mode-filter';
 import { hotspotCount } from '../model/places';
@@ -155,29 +156,9 @@ export function RouteCardList({
           leaves; padded by the Controller's height, at the foot on a phone and the top where the
           list docks, so no card hides under it. */}
       <div className="flex min-h-full flex-col pb-20 sheet-floating:pt-16 sheet-floating:pb-0">
-        {hotspots.length > 0 && (
-          // Full-bleed rows: a whole row is the target, not the words inside it.
-          <ul className="border-t border-border-primary">
-            {hotspots.map((s) => (
-              <li key={s.id} className="border-b border-border-primary last:border-b-0">
-                <button
-                  type="button"
-                  data-testid="chooser-item"
-                  onClick={() => onHotspot(s)}
-                  className="block w-full px-4 py-2.5 text-left hover:bg-surface-secondary"
-                >
-                  <span className="block truncate font-medium text-content-primary">
-                    {hotspotLabel(s)}
-                  </span>
-                  <span className="block truncate text-xs text-content-quaternary">
-                    {s.kind === 'terminal' ? 'Terminal' : 'Hintuan'}
-                    {hotspotLabel(s) !== s.name && ` · ${s.name}`}
-                  </span>
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
+        {/* The list's heading, for a screen reader to move to; nothing is drawn. */}
+        <h2 className="sr-only">Routes here</h2>
+        <RouteListHotspotRows hotspots={hotspots} onHotspot={onHotspot} />
         {modeFilter && filter !== 'all' && places.length === 0 && (
           <ModeFilterEmpty filter={filter} onShowAll={() => modeFilter.onFilter('all')} />
         )}
