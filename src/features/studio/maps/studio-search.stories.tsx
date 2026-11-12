@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useState, type ReactNode } from 'react';
+import { Map as MapLibreMap } from 'maplibre-gl';
+import { useEffect, useRef, useState, type ComponentProps, type ReactNode } from 'react';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
 import type { Hotspot } from '@/features/routes/model/hotspots';
@@ -9,6 +10,8 @@ import type { LandmarkFileRead } from '@/features/routes/published/fetch-landmar
 import { StudioSearch } from './studio-search';
 import { reviewKeys } from '../data/review-keys';
 import type { DraftRow } from '../data/review-schema';
+
+import 'maplibre-gl/dist/maplibre-gl.css';
 
 const hotspot = (id: string, name: string, informal: string, at: [number, number]): Hotspot => ({
   id,
@@ -87,6 +90,36 @@ function WithDrafts({ children }: { children: ReactNode }) {
     return next;
   });
   return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
+}
+
+/**
+ * The search on a real map, so its dot can be seen: an empty inline style stands in for the
+ * basemap, so the story fetches no tiles (as LandmarkPin's do).
+ */
+function OnAnEmptyMap(props: Omit<ComponentProps<typeof StudioSearch>, 'map'>) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [map, setMap] = useState<MapLibreMap | null>(null);
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const created = new MapLibreMap({
+      container: containerRef.current,
+      style: { version: 8, sources: {}, layers: [] },
+      center: [121.0335, 14.6535],
+      zoom: 15,
+      attributionControl: false,
+    });
+    setMap(created);
+    return () => {
+      setMap(null);
+      created.remove();
+    };
+  }, []);
+  return (
+    <>
+      <div ref={containerRef} className="absolute inset-0" />
+      <StudioSearch {...props} map={map} />
+    </>
+  );
 }
 
 const meta = {
@@ -194,5 +227,31 @@ export const ContributorsMap: Story = {
     await userEvent.type(field(canvasElement), 'cubao');
     await userEvent.keyboard('{Enter}');
     await expect(field(canvasElement)).toHaveValue('');
+  },
+};
+
+/**
+ * The dot a landmark leaves stays: no timer takes it. Typing again takes it away, and so does
+ * Escape with nothing typed; another pick puts it back.
+ */
+export const TheDotStays: Story = {
+  render: (args) => <OnAnEmptyMap {...args} />,
+  play: async ({ canvasElement }) => {
+    const dots = () => canvasElement.querySelectorAll('[data-testid="search-mark"]');
+    const pickTrinoma = async () => {
+      await userEvent.type(field(canvasElement), 'trinoma');
+      await waitFor(() =>
+        expect(within(canvasElement).getAllByRole('option')[0]).toHaveTextContent('Ayala Malls'),
+      );
+      await userEvent.keyboard('{Enter}');
+      await waitFor(() => expect(dots()).toHaveLength(1));
+    };
+    await pickTrinoma();
+    await userEvent.type(field(canvasElement), 'c');
+    await expect(dots()).toHaveLength(0);
+    await userEvent.clear(field(canvasElement));
+    await pickTrinoma();
+    await userEvent.keyboard('{Escape}');
+    await expect(dots()).toHaveLength(0);
   },
 };

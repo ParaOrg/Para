@@ -21,6 +21,7 @@ import { useTripTimeline } from '@/features/routes/cards/use-trip-timeline';
 import { EndTitles } from '@/features/routes/map/end-titles';
 import { routesBounds } from '@/features/routes/map/framing';
 import { HintuanPin } from '@/features/routes/map/hintuan-pin';
+import { LandmarkPin } from '@/features/routes/map/landmark-pin';
 import { lookAt } from '@/features/routes/map/look-at';
 import { MapCreditsDock } from '@/features/routes/map/map-credits-dock';
 import { MapCreditsSheet } from '@/features/routes/map/map-credits-sheet';
@@ -28,6 +29,7 @@ import { METRO_MANILA, MapView } from '@/features/routes/map/map-view';
 import { StationLabels } from '@/features/routes/map/station-labels';
 import { useCardCamera } from '@/features/routes/map/use-card-camera';
 import { useCardStack } from '@/features/routes/map/use-card-stack';
+import { useFootbridges } from '@/features/routes/map/use-footbridges';
 import { useLitRides } from '@/features/routes/map/use-lit-rides';
 import { useLoopTip } from '@/features/routes/map/use-loop-tip';
 import { useMapCredits } from '@/features/routes/map/use-map-credits';
@@ -76,12 +78,12 @@ const openOnRoutes = () =>
 const SHOW_HOTSPOT_PINS = false;
 
 /**
- * While a docked card stands at full height, the toast sits 12 under the card's ✕, so the ✕ stays
- * in reach: the strip of map 24 (MAX_STRIP_PX), the handle's row 18 and the ✕ 40, then 12. A card
- * floating in the corner (`@float:`) keeps the toast at the top.
+ * While a docked card stands at full height, the toast sits 12 under its ✕ (map strip 24, handle
+ * 18, ✕ 40), so the ✕ stays in reach. A trip, its ‹ or ✕ in the Controller at its foot
+ * (`data-footer`), and a card floating in the corner (`@float:`) keep the toast at the top.
  */
 const TOAST_UNDER_FULL_CARD =
-  '@max-float:group-has-[[data-testid=card][data-snap=full]:not([hidden])]/map:[--toast-top:calc(env(safe-area-inset-top)+--spacing(23.5))]';
+  '@max-float:group-has-[[data-testid=card][data-snap=full]:not([hidden]):not([data-footer])]/map:[--toast-top:calc(env(safe-area-inset-top)+--spacing(23.5))]';
 
 /** The too-new map's Reload: the newer app, through the worker (pwa.ts). */
 const handleReloadNewer = () => void reloadForNewerApp();
@@ -158,6 +160,11 @@ export function PublicMapApp() {
     otherRoute,
     pickOnPlaceCard,
     openPlace,
+    openTripFromPlace,
+    goHere,
+    letGoalGo,
+    goalLandmark,
+    walk,
     openRide,
     openTrip,
     backFromTrip,
@@ -179,6 +186,8 @@ export function PublicMapApp() {
   const offline = useOffline();
   // The phone's status bar in the map's colour (status-bar.ts).
   useStatusBarColour(map);
+  // The footbridges from street level in, fetched the first time it is reached (.scratch/footbridges).
+  useFootbridges(map);
   const age = useMapAge(saved.directions);
   const needRefresh = useNeedRefresh();
   // The install prompt, once the routes are on the map (useInstallPrompt).
@@ -329,10 +338,11 @@ export function PublicMapApp() {
           />
         )}
 
-        {/*
-        Place search (.scratch/place-search, step 1): a place chosen opens as its name tapped on
-        the map does (openPlace). On a wide map the cards float under it (sheetTopUnderSearch).
-      */}
+        {/* The landmark "Go here" made the goal: its pin stays while the goal holds (ticket 07). */}
+        {map && goalLandmark && (
+          <LandmarkPin key={goalLandmark.id} map={map} at={goalLandmark.point} />
+        )}
+        {/* Place search: a place opens as its name tapped does; wide, the cards float under it. */}
         <PlaceSearchBar
           map={map}
           hotspots={hotspots.hotspots}
@@ -340,6 +350,8 @@ export function PublicMapApp() {
           whereNow={() => where.current?.at ?? null}
           onPick={(hotspot) => openPlace(hotspot.id)}
           onLookAt={(point) => lookAt(map, point)}
+          onGoHere={(landmark, near, hintuan) => goHere(landmark, near, hintuan.id)}
+          onSearchRestart={letGoalGo}
           isUnderUpdate={needRefresh}
           isUnderOfflinePill={offline || age.stale}
           isCardOpen={cards.open}
@@ -379,6 +391,7 @@ export function PublicMapApp() {
             startCode={ride.startCode}
             onSetStart={ride.setStart}
             onRemoveStart={ride.removeStart}
+            walk={walk}
             onPick={pickOnTrip}
             onEnd={endOnTrip}
             endPicked={ride.endPicked}
@@ -417,7 +430,7 @@ export function PublicMapApp() {
             hotspots={hotspots.hotspots}
             linkedDirectionIds={hotspots.linkedDirectionIds}
             directions={saved.directions}
-            onSelectDirection={openTrip}
+            onSelectDirection={openTripFromPlace}
             // Its Selected row tapped again: no box is the one until a row is picked.
             deselected={hotspots.letGone}
             onDeselect={() => {

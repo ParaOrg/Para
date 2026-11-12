@@ -3,14 +3,14 @@ import { useState, type ReactNode, type Ref } from 'react';
 import type { SheetHeight } from '@/shared/ui/bottom-sheet';
 import { lineLength } from '@/shared/utils/geo';
 
-import { RouteTripDetailHeader } from './route-trip-detail-header';
+import { RouteStopsCardHeader } from './route-stops-card-header';
 import { TimelineRouteDetailCard } from './timeline-route-detail-card';
 import { FREE, type Fare, type Fares } from './trip-fare';
 import { useFareKind } from './use-fare-kind';
 import { otherDirection, otherRoutesFrom, switchWord, wayWord } from '../model/departures';
 import { manilaDate, rideFare } from '../model/fares';
 import { liveryOf, type Livery } from '../model/liveries';
-import { railBound } from '../model/rail-codes';
+import { railBound, stationCode } from '../model/rail-codes';
 import { railFares } from '../model/rail-fares';
 import {
   directionEnds,
@@ -31,7 +31,7 @@ import { vehicleOf } from '../model/vehicles';
 /**
  * The trip's colour, one owner for it: decided as the trip opens — the RouteCard's it was picked
  * from, in the list or a hotspot's card, while that card stands behind it (a card of several routes
- * wears its first row's), else its own (liveryOf) — and kept until it closes, through SWITCH and even
+ * wears its first row's), else its own (liveryOf) — and kept until it closes, through PAPUNTA and even
  * when a tap on its own line closes the list behind it: a card never changes colour while it is
  * open. Its line wears it too, so the page reads it, not the card. Settled while rendering, as
  * derived state is, so the card never shows a frame in the wrong colour.
@@ -56,12 +56,11 @@ export function useTripLivery(
  * The chosen direction as Figma's trip card (TimelineRouteDetailCard), from what the map file
  * knows: its ends as the list names them, the whole ride's length and pesos, the hintuans on the
  * way, and its colour — the one its RouteCard wore, when it was picked from one, in the list or in
- * a hotspot's card; its own route's, when not. SWITCH turns it round, what it was
- * picked from staying behind it, and the card keeps the colour it opened in: turned round, it is
- * still the same card.
+ * a hotspot's card; its own route's, when not. PAPUNTA turns it round, what it was picked from
+ * staying behind it, and the card keeps the colour it opened in.
  *
  * A picked hintuan's pill prices the ride from the start to there, the same pesos the fare tile
- * then shows. The studio shows what an editor needs under the tiles (`extras`): the same card, with
+ * then shows. The studio shows what an editor needs at the foot (`extras`): the same card, with
  * more below it.
  *
  * No link to a trip: the address does not follow the card.
@@ -89,12 +88,13 @@ export function TripCard({
   onOtherRoute,
   signboardUrl = publishedSignboard,
   extras,
+  walk = null,
   onDrawOtherWay,
 }: {
   direction: Direction;
   directions: readonly Direction[];
   timeline: Timeline;
-  /** The colour it opened in, kept through SWITCH; its line wears it too. */
+  /** The colour it opened in, kept through PAPUNTA; its line wears it too. */
   livery: Livery;
   onBackToList: (() => void) | null;
   onSwitch: (sibling: Direction) => void;
@@ -124,12 +124,11 @@ export function TripCard({
   onOtherRoute?: (direction: Direction) => void;
   /** Where a signboard's file is read: beside the published map, or the studio's bucket. */
   signboardUrl?: (name: string) => string;
-  /** Under the tiles, the studio's alone: its facts and its Edit, Extend and Delete. */
+  /** At the foot, the studio's alone: its facts and its Edit, Extend and Delete. */
   extras?: ReactNode;
-  /**
-   * The studio's: with the other way not drawn yet, SWITCH starts drawing it
-   * instead of resting disabled. The public map passes none.
-   */
+  /** The walk from the ride's end to the landmark "Go here" was for (ticket 07), or null. */
+  walk?: string | null;
+  /** The studio's: with the other way not drawn, PAPUNTA starts drawing it, not resting disabled. */
   onDrawOtherWay?: () => void;
 }) {
   const loop = isLoop(direction);
@@ -140,11 +139,8 @@ export function TripCard({
       : directionEnds(direction);
   const line = railLineOf(direction);
   const vehicle = vehicleOf(direction);
-  // A UV Express trip has no header: Figma draws its Modes label, but no
-  // RouteTripDetailHeader variant for it yet.
-  const headerVehicle = vehicle === 'UV Express' ? null : vehicle;
   const sibling = otherDirection(directions, direction);
-  // A loop has no way back, so no SWITCH at all.
+  // A loop has no way back, so no PAPUNTA at all.
   const switchable = !loop && !!sibling && isDrawn(sibling);
   const canDrawOtherWay = !loop && !!sibling && !isDrawn(sibling) && !!onDrawOtherWay;
   // The whole ride, measured once on its full line — the index's figure, so
@@ -176,23 +172,24 @@ export function TripCard({
       dockRef={dockRef}
       height={height}
       routeDirection={to}
-      isTrain={line !== null}
+      originCode={line && stationCode(line, from)}
+      destinationCode={line && stationCode(line, to)}
       isLoop={loop}
       label={loop ? `${direction.name ?? from} (${LOOP_WORD})` : undefined}
       header={
-        headerVehicle && (
-          <RouteTripDetailHeader
-            vehicle={headerVehicle}
-            // A train's bound alone: with none, its line alone, never Papunta.
-            way={line ? railBound(direction) : wayWord(direction.reversed, [direction])}
+        vehicle && (
+          <RouteStopsCardHeader
+            vehicle={vehicle}
+            bound={line ? railBound(direction) : null}
             livery={livery}
-            name={loop ? (direction.name ?? undefined) : undefined}
+            name={loop ? (direction.name ?? LOOP_WORD) : undefined}
           />
         )
       }
       switchable={switchable || canDrawOtherWay}
       back={direction.reversed}
-      way={loop ? null : switchWord(direction.reversed, [direction])}
+      way={loop ? null : wayWord(direction.reversed, [direction])}
+      wayTo={loop ? null : switchWord(direction.reversed, [direction])}
       onSwitch={() => {
         if (sibling && switchable) onSwitch(sibling);
         else if (canDrawOtherWay) onDrawOtherWay?.();
@@ -201,6 +198,7 @@ export function TripCard({
       onClose={onClose}
       signboards={(direction.signboards ?? []).map(signboardUrl)}
       note={LINE_NOTES[direction.route?.routeCode ?? '']}
+      walk={walk}
       otherRoutes={others.map((v) => ({
         id: v.id,
         to: directionRowName(v),

@@ -24,6 +24,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
+import ph.para.contributor.ride.Ride;
+import ph.para.contributor.ride.RideCard;
+import ph.para.contributor.ride.RideMachine;
+
 /**
  * The ride's one notification: the recording card (Time, the mode, Distance), on the lock screen
  * too, and opened, the card's own bars under it: Pause and Lakad or Sakay while recording, Resume
@@ -36,8 +40,9 @@ import java.util.Locale;
  */
 final class RideNotification {
     /**
-     * The notification's id and channel: those of the location plugin's service, which carried the
-     * ride before RideService did, so a phone updated mid-ride still has one notification.
+     * The notification's id and channel: those the location plugin's service used, which carried the
+     * ride before RideService did. Kept, so a phone updated keeps its one channel and the choices
+     * made for it in Android's settings.
      */
     static final int ID = 28351;
     private static final String CHANNEL = "com.equimaps.capacitor_background_geolocation";
@@ -56,20 +61,26 @@ final class RideNotification {
 
     private RideNotification() {}
 
-    /** Posts the notification for the ride as RideState has it, or takes it away when none is on. */
+    /**
+     * Posts the card for the ride as it is (RideCard says which), or takes it away when there is
+     * none. A recording card is posted to go by itself (RideCard.TIMEOUT_MS) unless posted again,
+     * which the ticks do while the service runs: a card whose process was killed does not stay saying
+     * "Recording".
+     */
     static void post(Context context) {
         Context app = context.getApplicationContext();
-        RideState state = RideState.read(app);
+        Ride ride = Rides.now(app);
+        String card = RideCard.of(ride, RideService.isRunning());
         NotificationManager manager = (NotificationManager) app.getSystemService(Context.NOTIFICATION_SERVICE);
         if (manager == null) return;
-        if (RideState.NONE.equals(state.phase)) {
+        if (RideCard.NONE.equals(card)) {
             stopTicking();
             manager.cancel(ID);
             return;
         }
         ensureChannel(app, manager);
-        manager.notify(ID, build(app, state));
-        if (RideState.RECORDING.equals(state.phase)) tickAfter(app, state);
+        manager.notify(ID, build(app, ride, card));
+        if (RideCard.expires(card)) tickAfter(app, ride);
         else stopTicking();
     }
 
@@ -78,22 +89,23 @@ final class RideNotification {
      * starts no ticking: the service does that once it is in the foreground (post), so a service
      * Android refuses leaves no card counting.
      */
-    static Notification forService(Context context, RideState state) {
+    static Notification forService(Context context, Ride ride) {
         Context app = context.getApplicationContext();
         NotificationManager manager = (NotificationManager) app.getSystemService(Context.NOTIFICATION_SERVICE);
         if (manager != null) ensureChannel(app, manager);
-        return build(app, state);
+        return build(app, ride, RideCard.RECORDING);
     }
 
-    /** The notification for the ride now: also what the service shows when a tap starts it again. */
-
-    static Notification build(Context context, RideState state) {
+    /** The notification for the ride now, as `card` (RideCard) shows it. */
+    static Notification build(Context context, Ride ride, String card) {
         long now = System.currentTimeMillis();
-        String time = timeText(state.elapsedMs(now) / 1000);
-        String distance = distanceText(distanceM(context, state));
-        boolean isRecording = RideState.RECORDING.equals(state.phase);
-        boolean isFinished = RideState.FINISHED.equals(state.phase);
-        String mode = "ride".equals(state.mode) ? "Sakay" : "Lakad";
+        String time = timeText(ride.elapsedMs(now) / 1000);
+        String distance = distanceText(distanceM(context, ride));
+        boolean isRecording = RideCard.RECORDING.equals(card) || RideCard.NO_LOCATION.equals(card);
+        // Recording, but no fix coming: the card says so, in the owner's words until its design (Q95).
+        String status = RideCard.NO_LOCATION.equals(card) ? lostText(ride) : isRecording ? "Recording" : "Paused";
+        boolean isFinished = RideCard.FINISHED.equals(card);
+        String mode = Ride.RIDE.equals(ride.mode()) ? "Sakay" : "Lakad";
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL)
             .setSmallIcon(R.mipmap.ic_launcher)
@@ -103,6 +115,18 @@ final class RideNotification {
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setCategory(NotificationCompat.CATEGORY_SERVICE)
             .setContentIntent(openApp(context));
+        // Posted again at each tick while the service runs; a card left by a killed process goes.
+        if (RideCard.expires(card)) builder.setTimeoutAfter(RideCard.TIMEOUT_MS);
+
+        if (RideCard.STOPPED_BY_RESTART.equals(card)) {
+            // Cut off by a phone restart or an app update: the ride waits on the phone (Q94).
+            return builder
+                .setContentTitle("Your ride stopped when the phone restarted.")
+                .setContentText("Open Para to carry on or save it.")
+                .setOngoing(false)
+                .setAutoCancel(true)
+                .build();
+        }
 
         if (isFinished) {
             // Stopped without the app opened: the ride waits on the phone for its details.
@@ -114,10 +138,10 @@ final class RideNotification {
                 .build();
         }
 
-        RemoteViews card = new RemoteViews(context.getPackageName(), R.layout.ride_notification);
-        fillCard(context, card, state, time, distance);
+        RemoteViews closed = new RemoteViews(context.getPackageName(), R.layout.ride_notification);
+        fillCard(context, closed, ride, isRecording, status, time, distance);
         RemoteViews opened = new RemoteViews(context.getPackageName(), R.layout.ride_notification_expanded);
-        fillCard(context, opened, state, time, distance);
+        fillCard(context, opened, ride, isRecording, status, time, distance);
 
         // The card's own bars (recording-screen.tsx): Pause and the mode a tap switches to while
         // recording, Resume and Finish while paused.
@@ -125,12 +149,12 @@ final class RideNotification {
             ? new Bar("Pause", "Pause", R.drawable.ride_icon_pause, R.drawable.ride_bar_brand,
                 action(context, RideActionReceiver.PAUSE))
             : new Bar("Resume", "Resume", R.drawable.ride_icon_play, R.drawable.ride_bar_brand,
-                resume(context, state));
+                resume(context));
         Bar right;
         if (!isRecording) {
             right = new Bar("Finish", "Finish", R.drawable.ride_icon_finish, R.drawable.ride_bar_finish,
                 action(context, RideActionReceiver.FINISH));
-        } else if ("ride".equals(state.mode)) {
+        } else if (Ride.RIDE.equals(ride.mode())) {
             right = new Bar("Lakad", "Switch to Lakad", R.drawable.ride_icon_switch, R.drawable.ride_bar_lakad,
                 action(context, RideActionReceiver.SWITCH));
         } else {
@@ -142,10 +166,10 @@ final class RideNotification {
 
         builder
             // Said by screen readers and by watches, which do not show the card.
-            .setContentTitle(isRecording ? "Recording · " + mode : "Paused")
+            .setContentTitle(RideCard.RECORDING.equals(card) ? "Recording · " + mode : status)
             .setContentText(time + " · " + distance)
             .setStyle(new NotificationCompat.DecoratedCustomViewStyle())
-            .setCustomContentView(card)
+            .setCustomContentView(closed)
             .setCustomBigContentView(opened)
             .setOngoing(true)
             // Where the card is not shown (a watch), the same taps as plain actions; on the phone the
@@ -157,16 +181,17 @@ final class RideNotification {
     }
 
     /** The figures, as the card shows them: the same ids in the closed card and the opened one. */
-    private static void fillCard(Context context, RemoteViews card, RideState state, String time, String distance) {
-        boolean isRecording = RideState.RECORDING.equals(state.phase);
-        String mode = "ride".equals(state.mode) ? "Sakay" : "Lakad";
+    private static void fillCard(Context context, RemoteViews card, Ride ride, boolean isRecording,
+                                 String status, String time, String distance) {
+        boolean isSakay = Ride.RIDE.equals(ride.mode());
+        String mode = isSakay ? "Sakay" : "Lakad";
         card.setTextViewText(R.id.ride_time, figure(context, time));
         card.setTextViewText(R.id.ride_distance, figure(context, distance));
         card.setTextViewText(R.id.ride_mode, isRecording ? mode : "--");
-        card.setTextViewText(R.id.ride_status, isRecording ? "Recording" : "Paused");
+        card.setTextViewText(R.id.ride_status, status);
         card.setTextColor(R.id.ride_status, color(context, isRecording ? R.color.ride_content_disabled : R.color.ride_content_quaternary));
-        int ring = !isRecording ? R.color.ride_paused_ring : "ride".equals(state.mode) ? R.color.ride_sakay_ring : R.color.ride_lakad_ring;
-        int dot = !isRecording ? R.color.ride_paused_dot : "ride".equals(state.mode) ? R.color.ride_sakay_dot : R.color.ride_lakad_dot;
+        int ring = !isRecording ? R.color.ride_paused_ring : isSakay ? R.color.ride_sakay_ring : R.color.ride_lakad_ring;
+        int dot = !isRecording ? R.color.ride_paused_dot : isSakay ? R.color.ride_sakay_dot : R.color.ride_lakad_dot;
         card.setInt(R.id.ride_dot_ring, "setColorFilter", color(context, ring));
         card.setInt(R.id.ride_dot, "setColorFilter", color(context, dot));
     }
@@ -200,6 +225,13 @@ final class RideNotification {
         }
     }
 
+    /** Why a ride recording has no fix coming: the switch is off, or none came for two minutes. */
+    private static String lostText(Ride ride) {
+        return Ride.TROUBLE_LOCATION_OFF.equals(ride.trouble)
+            ? "Location is off: not recording"
+            : "No location: not recording";
+    }
+
     /** "12 min" with its unit in the card's lighter colour, as the card's Stat draws it. */
     private static CharSequence figure(Context context, String text) {
         SpannableString spanned = new SpannableString(text);
@@ -226,10 +258,10 @@ final class RideNotification {
     }
 
     /** The ride's distance from the fixes the service kept (FixLog), as the card works it out. */
-    private static double distanceM(Context context, RideState state) {
+    private static double distanceM(Context context, Ride ride) {
         try {
             JSONObject log = FixLog.read(context, Long.MIN_VALUE);
-            if (!state.recordingId.equals(log.optString("recordingId"))) return 0;
+            if (!ride.recordingId.equals(log.optString("recordingId"))) return 0;
             JSONArray lines = log.getJSONArray("fixes");
             List<RideDistance.Fix> fixes = new ArrayList<>(lines.length());
             for (int index = 0; index < lines.length(); index++) {
@@ -263,16 +295,16 @@ final class RideNotification {
      * when the pause was tapped here, so it takes the resume where the pause was (the page applies
      * them as a pair). A ride the page paused itself has no watch on: its Resume is the page's.
      */
-    static boolean canResumeHere(RideState state) {
-        return RidePlugin.isPageAlive() && state.isPageWatching;
+    static boolean canResumeHere(Context context) {
+        return RidePlugin.isPageAlive() && RideState.isPageWatching(context);
     }
 
     /**
      * Resume: done here when it can be (canResumeHere). Otherwise it opens the app, where Resume
      * is one tap: Android lets a notification open an app only from its own tap, not a receiver.
      */
-    private static PendingIntent resume(Context context, RideState state) {
-        return canResumeHere(state) ? action(context, RideActionReceiver.RESUME) : openApp(context);
+    private static PendingIntent resume(Context context) {
+        return canResumeHere(context) ? action(context, RideActionReceiver.RESUME) : openApp(context);
     }
 
     private static PendingIntent openApp(Context context) {
@@ -285,7 +317,7 @@ final class RideNotification {
 
     private static void ensureChannel(Context context, NotificationManager manager) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O || manager.getNotificationChannel(CHANNEL) != null) return;
-        // As the plugin makes it (BackgroundGeolocation.load): silent, no lights, no vibration.
+        // As the location plugin made it: silent, no lights, no vibration.
         NotificationChannel channel = new NotificationChannel(CHANNEL,
             context.getString(R.string.capacitor_background_geolocation_notification_channel_name),
             NotificationManager.IMPORTANCE_DEFAULT);
@@ -296,9 +328,9 @@ final class RideNotification {
     }
 
     /** The next update: every ten seconds under a minute, then as each new minute begins. */
-    private static void tickAfter(Context context, RideState state) {
+    private static void tickAfter(Context context, Ride ride) {
         stopTicking();
-        long elapsed = state.elapsedMs(System.currentTimeMillis());
+        long elapsed = ride.elapsedMs(System.currentTimeMillis());
         long wait = elapsed < MINUTE_MS ? TICK_UNDER_A_MINUTE_MS : MINUTE_MS - (elapsed % MINUTE_MS);
         tick = () -> post(context);
         HANDLER.postDelayed(tick, wait);
@@ -317,17 +349,16 @@ final class RideNotification {
     /**
      * The page is gone (its activity destroyed, or the app swiped away). A ride recording records
      * on in its own service (RideService), and its notification stays; a paused or finished ride
-     * keeps its notification too, whose Resume then opens the app. A ride the page said was
-     * recording with no service left to record it ends here: nothing records it.
+     * keeps its notification too, whose Resume then opens the app. A ride recording with no service
+     * left to record it is cut off (RideMachine.serviceMissing): the page offers it as cut off.
      */
     static void pageGone(Context context) {
         Context app = context.getApplicationContext();
-        RideState state = RideState.read(app);
-        state.isPageWatching = false;
-        if (RideState.RECORDING.equals(state.phase) && !RideService.isRunning()) {
-            state.phase = RideState.NONE;
+        RideState.setPageWatching(app, false);
+        if (!RideService.isRunning()) {
+            long now = System.currentTimeMillis();
+            Rides.apply(app, ride -> RideMachine.serviceMissing(ride, now));
         }
-        state.write(app);
         post(app);
     }
 

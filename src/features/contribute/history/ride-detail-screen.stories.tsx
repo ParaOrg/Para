@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { expect, fn, userEvent, within } from 'storybook/test';
+import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
 import type { CardStatus } from './card-status';
 import { RideDetailScreen, type RideDetail } from './ride-detail-screen';
@@ -63,7 +63,10 @@ type Story = StoryObj<typeof meta>;
 async function openSheet(canvasElement: HTMLElement) {
   const canvas = within(canvasElement);
   await userEvent.click(canvas.getByTestId('dock-handle'));
-  await expect(canvas.getByTestId('dock-handle')).toHaveAccessibleName('Sheet raised. Lower it');
+  // Raised off Low: the handle says the height it is at now, no longer "Sheet lowered".
+  await waitFor(() =>
+    expect(canvas.getByTestId('dock-handle')).not.toHaveAccessibleName(/^Sheet lowered/),
+  );
 }
 
 /** Folded, as Figma draws it (4569:4933): the name, where it went, Back above the sheet. */

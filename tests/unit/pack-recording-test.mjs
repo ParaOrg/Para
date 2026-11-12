@@ -91,7 +91,7 @@ test('the details go in the database names and limits; the stand is a hinto', ()
     ['stop', 'save'],
   );
   assert.equal(payload.format_version, 2);
-  assert.equal(payload.rules_version, 2);
+  assert.equal(payload.rules_version, 3);
   assert.equal(payload.hintos.length, 1);
   assert.ok(payload.hintos[0].seconds >= 100 && payload.hintos[0].seconds <= 130);
   assert.equal(payload.line.type, 'LineString');

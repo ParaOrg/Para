@@ -5,6 +5,7 @@ import { Button } from '@/design-system/primitives/button';
 import type { LineStatus } from './line-detail';
 import type { SaveIntent } from './save-intent';
 import { FOOTER, FOOTER_BESIDE } from './sheet';
+import type { ReviewAction } from '../data/review-commands';
 
 interface SaveFooterProps {
   /** The save under way, if any: its button says so. */
@@ -24,12 +25,19 @@ interface SaveFooterProps {
   /** Over the map: back to the drawing, which is kept. */
   onCancel?: () => void;
   onPublish: () => void;
+  /** A draft is stored for it: Publish reads Approve, which publishes that draft. */
+  hasDraft?: boolean;
+  /** The editor's own stored draft: Discard draft, which drops it. */
+  onDiscard?: () => void;
+  /** What is under way on the stored draft (useStoredDraft): its button says so. */
+  draftBusy?: ReviewAction | null;
 }
 
 /**
  * The sidebar's footer: Exit, Publish, and Save as draft, the form's submit (Figma 4300:20893);
  * published and unchanged, Exit and Unpublish (4614:15082). Over the map on a phone, Back to map
- * stands in Exit's place, since the line is kept.
+ * stands in Exit's place, since the line is kept. With a draft stored, Publish reads Approve, and
+ * the maker has Discard beside Exit: a look for now, until the owner designs it.
  */
 export function SaveFooter({
   busyIntent,
@@ -40,8 +48,12 @@ export function SaveFooter({
   onExit,
   onCancel,
   onPublish,
+  hasDraft = false,
+  onDiscard,
+  draftBusy = null,
 }: SaveFooterProps) {
-  const isBusy = busyIntent !== null || isUnpublishing;
+  const isBusy = busyIntent !== null || isUnpublishing || draftBusy !== null;
+  const isPublishing = busyIntent === 'publish' || draftBusy === 'publish';
   return (
     <div className={onCancel ? FOOTER : FOOTER_BESIDE}>
       {onCancel ? (
@@ -62,7 +74,17 @@ export function SaveFooter({
           disabled={isBusy}
         />
       )}
-      {status === 'published' && onUnpublish ? (
+      {onDiscard && (
+        <Button
+          variant="plain"
+          tone="error"
+          size="small"
+          label={draftBusy === 'discard' ? 'Discarding…' : 'Discard'}
+          onClick={onDiscard}
+          disabled={isBusy}
+        />
+      )}
+      {status === 'published' && onUnpublish && !hasDraft ? (
         <Grow>
           <Button
             variant="secondary"
@@ -75,6 +97,7 @@ export function SaveFooter({
       ) : (
         <SaveButtons
           busyIntent={busyIntent}
+          publishLabel={publishLabel(hasDraft, isPublishing)}
           isDisabled={isBusy || saveBlocked !== null}
           blockedTitle={saveBlocked ?? undefined}
           onPublish={onPublish}
@@ -84,15 +107,28 @@ export function SaveFooter({
   );
 }
 
+/** Publish, or Approve when a draft is stored; while it runs, what it is doing. */
+function publishLabel(hasDraft: boolean, isPublishing: boolean): string {
+  if (hasDraft) return isPublishing ? 'Approving…' : 'Approve';
+  return isPublishing ? 'Publishing…' : 'Publish';
+}
+
 interface SaveButtonsProps {
   busyIntent: SaveIntent | null;
+  publishLabel: string;
   isDisabled: boolean;
   blockedTitle: string | undefined;
   onPublish: () => void;
 }
 
-/** A draft's two saves: Publish, and Save as draft, the form's submit. */
-function SaveButtons({ busyIntent, isDisabled, blockedTitle, onPublish }: SaveButtonsProps) {
+/** A draft's two saves: Publish (or Approve), and Save as draft, the form's submit. */
+function SaveButtons({
+  busyIntent,
+  publishLabel,
+  isDisabled,
+  blockedTitle,
+  onPublish,
+}: SaveButtonsProps) {
   return (
     <>
       <Grow>
@@ -100,7 +136,7 @@ function SaveButtons({ busyIntent, isDisabled, blockedTitle, onPublish }: SaveBu
           variant="secondary"
           size="small"
           type="button"
-          label={busyIntent === 'publish' ? 'Publishing…' : 'Publish'}
+          label={publishLabel}
           onClick={onPublish}
           disabled={isDisabled}
           title={blockedTitle}
@@ -122,5 +158,5 @@ function SaveButtons({ busyIntent, isDisabled, blockedTitle, onPublish }: SaveBu
 
 /** A footer button that takes its share of the row, as Figma's Publish and Save as draft do. */
 function Grow({ children }: { children: ReactNode }) {
-  return <div className="flex flex-1 *:w-full">{children}</div>;
+  return <div className="flex flex-1 *:w-full *:whitespace-nowrap">{children}</div>;
 }

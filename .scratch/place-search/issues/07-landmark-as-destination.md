@@ -1,8 +1,7 @@
 # 07: "Set as destination" for a landmark
 
-Status: ready-for-agent (claimed by the place-search builder; starts after 06, once release 0.4.0 is in main)
+Status: resolved (for 0.4.1)
 Type: task
-Blocked by: 06, and release 0.4.0 merged into main (the hub says when)
 
 Approved to build (the owner, 2026-11-07, every question as recommended), after ticket 06.
 

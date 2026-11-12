@@ -5,7 +5,7 @@ import { FREE } from './trip-fare';
 import { TripTiles } from './trip-tiles';
 
 /**
- * The Distance and Fare tiles under a trip's card, on a phone-wide sheet. A tap on the Fare tile
+ * The Distance and Fare tiles above a trip's stops, on a phone-wide sheet. A tap on the Fare tile
  * calls onTurn. The trip's card does the turning, so here the tile keeps the fare it was given.
  * Sample fares only.
  */

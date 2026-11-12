@@ -1,16 +1,10 @@
-import { useEffect, useRef, useState, type RefObject } from 'react';
+import { useEffect, useMemo, useRef, useState, type RefObject } from 'react';
 
 import { noticePhaseOf } from './notice-phase';
-import { pausedSecondsOf } from './recording-figures';
-import { currentMode } from './recording-rules';
 import type { Phase } from './recording-state';
-import { withRideTaps } from './ride-events';
-import {
-  dropRideTaps,
-  onRideTap,
-  readRideTaps,
-  tellRideNotice,
-} from '../native-bridge/ride-notice-bridge';
+import { historyOf } from './ride-history';
+import { withRideTaps } from './ride-taps';
+import { onRideTap, readRideTaps, tellRideNotice } from '../native-bridge/ride-notice-bridge';
 import type { Recording } from '../storage/recording-schema';
 
 interface RideNoticeOptions {
@@ -24,12 +18,12 @@ interface RideNoticeOptions {
 }
 
 /**
- * The app's ride notification (Android): told where the ride is as it changes, and its taps,
- * Lakad or Sakay, Pause, Resume and Finish, applied to the ride where they were made. The taps
- * made while the page slept are applied as it wakes; one made while it is awake, at once. A pause
- * already resumed is the ride's paused gap; a pause or a Finish standing is the recorder's own
- * Stop at its time. The notification is told where a ride is only once its taps have been
- * applied. Nothing on the web.
+ * The ride on the phone (Android): told where the ride is, with its history, as it changes; and read
+ * back (RidePlugin.now) for the taps on its notification, Lakad or Sakay, Pause, Resume and Finish,
+ * applied to the ride where they were made. Read as the page wakes, and at once when a tap is made
+ * while it is awake. A pause already resumed is the ride's paused gap; a pause or a Finish standing
+ * is the recorder's own Stop at its time. The phone is told where a ride is only once its taps
+ * have been applied. Nothing on the web.
  */
 export function useRideNotice({
   phase,
@@ -43,10 +37,12 @@ export function useRideNotice({
   // Null while the page loads: it tells nothing until it knows the ride the phone holds.
   const told = noticePhaseOf(phase);
   const noticePhase = told ?? 'none';
-  const mode = currentMode(recording?.modes ?? []);
   const startedAt = recording?.startedAt ?? 0;
   const stoppedAt = recording?.stoppedAt ?? null;
-  const pausedSeconds = recording ? pausedSecondsOf(recording) : 0;
+  const modes = recording?.modes;
+  const gaps = recording?.gaps;
+  // Memoized for the effect below: a fix keeps the same switches and gaps, and tells the phone nothing.
+  const history = useMemo(() => (modes && gaps ? historyOf({ modes, gaps }) : null), [modes, gaps]);
 
   // The ride whose notification taps have been applied once since the page opened. Until they
   // are, the ride the page holds may be older than the notification's: a Lakad or Sakay tapped
@@ -61,14 +57,14 @@ export function useRideNotice({
     tellRideNotice({
       recordingId,
       phase: noticePhase,
-      mode,
       startedAt,
-      pausedSeconds,
+      modes: history?.modes ?? [],
+      gaps: history?.gaps ?? [],
       stoppedAt,
     }).catch((error: unknown) => {
       console.warn('The ride notification could not be told where the ride is.', error);
     });
-  }, [isCaughtUp, told, recordingId, noticePhase, mode, startedAt, pausedSeconds, stoppedAt]);
+  }, [isCaughtUp, told, recordingId, noticePhase, startedAt, history, stoppedAt]);
 
   // The latest of each, for taps heard outside a render.
   const latest = useRef({ keep, finish, setPhase });
@@ -112,7 +108,6 @@ export function useRideNotice({
       keepRide(tapped.recording);
       if (tapped.stopAt !== null) stop(tapped.stopAt, tapped.isFinished ? 'form' : 'paused');
       else if (tapped.isFinished) show('form');
-      await dropRideTaps(taps.lastTime);
     };
     const handleVisibility = () => {
       if (document.visibilityState === 'visible') apply();

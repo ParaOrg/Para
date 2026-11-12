@@ -85,14 +85,18 @@ check(
     (await page.getByLabel('Transportation mode').isEnabled()),
 );
 const lineStatus = async () =>
-  (await page.getByTestId('line-detail').innerText()).match(/Status\s+(\w+)/)?.[1];
+  (await page.getByTestId('line-detail').innerText()).match(/Status\s+(Not saved|\w+)/)?.[1];
 check(
   '  Line detail says the published route is Published while it is as it was',
   (await lineStatus()) === 'Published',
   await lineStatus(),
 );
 await page.getByTestId('save-head').selectOption({ label: 'Stand-in Phase' });
-check('  and Draft once it changes', (await lineStatus()) === 'Draft', await lineStatus());
+check(
+  '  and Not saved once it changes, until a draft is stored',
+  (await lineStatus()) === 'Not saved',
+  await lineStatus(),
+);
 // The form asks a jeepney for no signboard: the one the route has is kept.
 const signboardBefore = tables.route.find((r) => r.id === outRoute?.id)?.signboard ?? null;
 check(
@@ -231,9 +235,13 @@ await page.waitForTimeout(300);
   await openCard(OUT[1]);
   await page.waitForTimeout(500);
   check(
-    "at 1024 px the corner trip card's ✕ is clickable, clear of the switch",
+    "at 1024 px the corner trip card's ‹ or ✕ is clickable, clear of the switch",
     await reachable(
-      page.locator('[data-testid="card"]').first().getByRole('button', { name: 'Close' }),
+      page
+        .locator('[data-testid="card"]')
+        .first()
+        .getByRole('button', { name: /^(Back|Close)$/ })
+        .first(),
     ),
   );
   const cardOpen = async () => (await page.locator('[data-testid="card"]').count()) > 0;

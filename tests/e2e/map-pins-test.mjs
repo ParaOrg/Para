@@ -308,6 +308,67 @@ async function pinToTap(page, alone) {
   await page.close();
 }
 
+// ------------------------------------------------------- the public map's footbridges
+// The footbridges (.scratch/footbridges, ticket 02): nothing asked for below street level; from
+// zoom 15 the file and the layer's chunk come once, the footbridges drawn under everything of
+// ours, with their elevators; zoomed out again, none drawn. A footbridge with an elevator from
+// the committed file.
+{
+  const file = JSON.parse(readFileSync('public/data/footbridges.v1.json', 'utf8'));
+  const withLift = file.footbridges.find((f) =>
+    (f.access ?? []).some((a) => a.kind === 'elevator'),
+  );
+  const page = await browser.newPage({ viewport: { width: 393, height: 852 } });
+  const asked = [];
+  page.on('request', (r) => {
+    if (/footbridges\.v1\.json|footbridge-layer/.test(r.url())) asked.push(r.url());
+  });
+  const errors = await open(page, '/');
+  await mapIdle(page);
+  const openingZoom = await page.evaluate(() => window.__map.getZoom());
+  check(
+    `public map: at the opening view (zoom ${openingZoom.toFixed(1)}), no footbridge file asked for`,
+    openingZoom < 15 && asked.length === 0,
+    asked.join(', '),
+  );
+  const lift = withLift.access.find((a) => a.kind === 'elevator').point;
+  await settle(page, lift, 17);
+  const shown = await until(
+    () =>
+      page.evaluate(() =>
+        window.__map.getLayer('footbridges-line')
+          ? {
+              lines: window.__map.queryRenderedFeatures({ layers: ['footbridges-line'] }).length,
+              lifts: window.__map.queryRenderedFeatures({ layers: ['footbridges-elevator'] })
+                .length,
+            }
+          : null,
+      ),
+    (v) => v && v.lines > 0 && v.lifts > 0,
+    10000,
+  );
+  const order = await page.evaluate(() => window.__map.getLayersOrder());
+  const ours = order.findIndex((id) => /^saved-/.test(id));
+  check(
+    `public map: at zoom 17 on ${withLift.id}, its footbridge and elevator are drawn, under the routes and hotspots`,
+    !!shown && shown.lines > 0 && shown.lifts > 0 && order.indexOf('footbridges-line') < ours,
+    JSON.stringify(shown),
+  );
+  check(
+    'public map: the file and the layer each asked for once',
+    asked.filter((u) => /footbridges\.v1\.json/.test(u)).length === 1 &&
+      asked.filter((u) => /footbridge-layer/.test(u)).length === 1,
+    asked.join(', '),
+  );
+  await settle(page, lift, 14);
+  const outOfZoom = await page.evaluate(
+    () => window.__map.queryRenderedFeatures({ layers: ['footbridges-line'] }).length,
+  );
+  check('public map: zoomed out to 14, no footbridge drawn', outOfZoom === 0, `${outOfZoom}`);
+  check('public map, footbridges: no page errors', errors.length === 0, errors.join('; '));
+  await page.close();
+}
+
 // ------------------------------------------------------------ the studio
 // The pin the studio taps, tapped again on the contributor page.
 let chosenPin;
@@ -342,6 +403,63 @@ let chosenPin;
     await waitForSource(page, 'saved-stops-pins', 30000);
   });
   check('studio: no page errors, no missing pin image', errors.length === 0, errors.join('; '));
+  await page.close();
+}
+
+// --------------------------------------------------------- the studio's footbridges
+// The studio's footbridges (.scratch/footbridges, ticket 03): off at first, so nothing is asked
+// for even at street level; the Map Style card's Footbridges switch draws them, and off again
+// hides them without asking for the file a second time.
+{
+  const file = JSON.parse(readFileSync('public/data/footbridges.v1.json', 'utf8'));
+  const withLift = file.footbridges.find((f) =>
+    (f.access ?? []).some((a) => a.kind === 'elevator'),
+  );
+  const lift = withLift.access.find((a) => a.kind === 'elevator').point;
+  const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
+  await signInAsEditor(page);
+  await fakeStudioDb(page, {
+    stop: index.stops.map((s) => ({
+      ...s,
+      owner_id: 'owner',
+      status: 'approved',
+      revision: 1,
+      line: s.line ?? null,
+    })),
+  });
+  const asked = [];
+  page.on('request', (r) => {
+    if (/footbridges\.v1\.json/.test(r.url())) asked.push(r.url());
+  });
+  const errors = await open(page, '/studio/?e2e=1');
+  await settle(page, lift, 17);
+  check('studio: at zoom 17 with the switch off, no footbridge file asked for', asked.length === 0);
+  const drawnNow = () =>
+    page.evaluate(() =>
+      window.__map.getLayer('footbridges-line')
+        ? window.__map.queryRenderedFeatures({ layers: ['footbridges-line'] }).length
+        : 0,
+    );
+  const flip = async () => {
+    await page.getByRole('button', { name: 'Map design' }).click();
+    await page.getByRole('switch', { name: 'Footbridges' }).click();
+    await page.keyboard.press('Escape');
+  };
+  await flip();
+  await settle(page, lift, 17);
+  const on = await until(drawnNow, (n) => n > 0, 10000);
+  check('studio: the Footbridges switch on, the footbridges drawn', on > 0, `${on}`);
+  await flip();
+  const off = await until(drawnNow, (n) => n === 0, 5000);
+  check('studio: the switch off again, none drawn', off === 0, `${off}`);
+  await flip();
+  const again = await until(drawnNow, (n) => n > 0, 5000);
+  check(
+    'studio: on once more, drawn again, the file asked for once in all',
+    again > 0 && asked.length === 1,
+    `${again} drawn; ${asked.length} asked`,
+  );
+  check('studio, footbridges: no page errors', errors.length === 0, errors.join('; '));
   await page.close();
 }
 

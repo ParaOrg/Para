@@ -1,6 +1,6 @@
 import { readFixLog } from './native-fix-log';
 import { startNativeWatch } from './native-location';
-import { readRideEvents, setRideNoticeState } from './ride-notice';
+import { readRideNow, setRideNoticeState } from './ride-notice';
 import { LIMITS } from '../map/basemap-cache';
 import { fixOfRow, rowOfFix, takeWatchedFixes } from '../recorder/recording-fixes';
 import { newRecording } from '../recorder/recording-transitions';
@@ -56,13 +56,13 @@ async function snapshot(recordingId: string): Promise<string> {
   const times = rows.map((row) => row.time);
   const sorted = times.every((time, index) => index === 0 || time > times[index - 1]);
   const log = await readFixLog();
-  // The taps on the notification as the page reads them (RidePlugin.events), for
-  // emulator-notification.sh: the page applies only the taps it can read.
-  const taps = await readRideEvents().then(
-    (events) => String(events.length),
+  // The phone's ride as the page reads it (RidePlugin.now), for emulator-notification.sh: the page
+  // applies only the history it can read.
+  const ride = await readRideNow().then(
+    ({ ride: { phase, modes, gaps } }) => `${phase}:modes=${modes.length}:gaps=${gaps.length}`,
     () => 'unreadable',
   );
-  return `rows=${rows.length} first=${times[0] ?? 0} last=${times[times.length - 1] ?? 0} sorted=${sorted} native=${log.fixes.length} taps=${taps} ${await keptBasemap()}`;
+  return `rows=${rows.length} first=${times[0] ?? 0} last=${times[times.length - 1] ?? 0} sorted=${sorted} native=${log.fixes.length} ride=${ride} ${await keptBasemap()}`;
 }
 
 /**
@@ -109,9 +109,9 @@ export async function runEmulatorRide(): Promise<void> {
   await setRideNoticeState({
     recordingId,
     phase: 'recording',
-    mode: 'walk',
     startedAt: recording.startedAt,
-    pausedSeconds: 0,
+    modes: recording.modes,
+    gaps: [],
     stoppedAt: null,
   });
   say(`${open ? 'resumed' : 'watching'} id=${recordingId}`);

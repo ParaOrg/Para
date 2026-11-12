@@ -27,8 +27,8 @@ const ICON = {
 } satisfies Record<Vehicle, ComponentType>;
 
 /**
- * A vehicle's drawing from the sprite, in currentColor: a trip's header (RouteTripDetailHeader), a
- * card's modes (RouteMode) and a train card's chip. The size and the opacity are the caller's.
+ * A vehicle's drawing from the sprite, in currentColor: a trip's header (RouteStopsCardHeader), a
+ * RouteCard's mode (RouteCardMode). The size and the opacity are the caller's.
  */
 export function VehicleIcon({ vehicle }: VehicleIconProps) {
   const Icon = ICON[vehicle];

@@ -3,7 +3,7 @@ import * as z from 'zod/mini';
 import { accountErrorOf, authError } from './account-errors';
 import { AccountError, accountProblemOf } from './account-problem';
 import { CONTRIBUTOR_AUTH_KEY, type ContributeClient } from './contribute-client';
-import { finishPendingClaim } from './earlier-identity';
+import { finishKeptClaim } from './load-earlier-identity';
 import { fetchStoredProfile } from './profile';
 import { requireClient } from './require-client';
 import { UploadError } from './upload-problem';
@@ -146,7 +146,7 @@ async function checkedAccount(
     return null;
   }
   // A claim the last sign-in could not finish is tried again at every start, without waiting for it.
-  void finishPendingClaim(client);
+  finishKeptClaim(client);
   const hasProfile = await knownProfileOf(client, signal);
   if (hasProfile === null) return { ...account, hasProfile: rememberedProfile(account.id) ?? true };
   const checked = { ...account, hasProfile };

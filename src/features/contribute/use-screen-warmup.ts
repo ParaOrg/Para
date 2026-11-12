@@ -1,6 +1,8 @@
 import { useEffect } from 'react';
 
 import { canUpload } from './api/contribute-config';
+import { loadContributionRequests } from './api/load-contribution-requests';
+import { loadEarlierRecordingsPanel } from './consent/lazy-earlier-recordings-panel';
 import {
   loadFlagStopButton,
   loadRecordingScreen,
@@ -23,8 +25,8 @@ const WARM_SCREENS_WITHIN_MS = 2000;
  *   fetched with the recording screens. A stable reference.
  */
 export function useScreenWarmup(phase: Phase, fetchStartMorph: () => Promise<void>): void {
-  // On Ready the recording screens are fetched ahead of Start, and the save screens and the upload's
-  // packing too, also when the page opens on a ride already under way, so stopping and sending one
+  // On Ready the recording screens are fetched ahead of Start, and the save screens, the upload's
+  // packing and request, and the earlier recordings' question too, also when the page opens on a ride already under way, so stopping and sending one
   // never wait on the network. A failure here is only a missed head start: the lazy screen asks
   // again when it is shown, and a send when it packs.
   useEffect(() => {
@@ -36,6 +38,8 @@ export function useScreenWarmup(phase: Phase, fetchStartMorph: () => Promise<voi
       loadFlagStopButton(),
       loadSaveForm(),
       loadPacking(),
+      loadContributionRequests(),
+      loadEarlierRecordingsPanel(),
       fetchStartMorph(),
     ]).catch((error: unknown) => {
       console.warn('The recording screens could not be fetched ahead of Start.', error);

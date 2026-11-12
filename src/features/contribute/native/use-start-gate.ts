@@ -2,9 +2,10 @@ import { useRef, useState } from 'react';
 
 import { hasAskedBatteryDialog, markBatteryDialogAsked } from './battery-dialog-flag';
 import { hasSeenKeepRecording, markKeepRecordingSeen } from './keep-recording-flag';
-import { stopsBackgroundApps } from './keep-recording-makers';
+import { brandOf, type KeepRecordingBrand } from './keep-recording-makers';
 import {
   askBatteryUnrestricted,
+  checkLocationOn,
   checkNativePermissions,
   openAppSettings,
   openAutostartSettings,
@@ -14,13 +15,13 @@ import {
   type DeviceInfo,
   type NativePermission,
 } from './native-permissions';
-import { firstMissing, neededPermissions } from './permission-steps';
+import { firstMissing, isLocationReady, neededPermissions } from './permission-steps';
 
 export type GateStep =
   | { kind: 'permission'; permission: NativePermission }
   | { kind: 'refused'; permission: NativePermission }
-  /** Once, on a phone whose maker stops background apps: Keep Para recording. */
-  | { kind: 'keep-recording' }
+  /** Once, on a phone whose maker stops background apps: Keep Para recording, in its steps. */
+  | { kind: 'keep-recording'; brand: KeepRecordingBrand }
   /** The phone's location switch is off: no ride can record until it is on. */
   | { kind: 'location-off' };
 
@@ -45,8 +46,9 @@ export interface StartGate {
  * order with a reason each (notifications, location, then "all the time"); once, Android's own
  * dialog to let Para run in the background; and, once, Keep Para recording on a phone whose maker
  * stops background apps. A refusal says what still works; the contributor may record anyway unless
- * it is location. With the phone's location switch off no ride starts: the card says so, and the
- * next Start checks again.
+ * it is location. With the phone's location switch off, Google's "Turn on location?" dialog asks
+ * first and a yes starts the ride; a no (or a phone without the dialog) shows the card that says
+ * no ride starts, and the next Start checks again.
  */
 export function useStartGate(onStart: () => void): StartGate {
   const [step, setStep] = useState<GateStep | null>(null);
@@ -69,10 +71,10 @@ export function useStartGate(onStart: () => void): StartGate {
         console.warn('Android would not ask to let Para run in the background.', error);
       });
     }
-    // Shown whether or not battery restrictions are off: the maker's Autostart is a switch of its
-    // own, which Android cannot report, and it alone stops a ride when the app is left.
-    if (stopsBackgroundApps(info.manufacturer) && !hasSeenKeepRecording()) {
-      setStep({ kind: 'keep-recording' });
+    // Even with battery restrictions off: the maker's Autostart, which Android cannot report.
+    const brand = brandOf(info.manufacturer);
+    if (brand && !hasSeenKeepRecording()) {
+      setStep({ kind: 'keep-recording', brand });
       return;
     }
     setStep(null);
@@ -85,9 +87,17 @@ export function useStartGate(onStart: () => void): StartGate {
       (permission) => !waived.current.has(permission),
     );
     const missing = firstMissing(await checkNativePermissions(), needed);
-    if (missing) setStep({ kind: 'permission', permission: missing });
-    else if (!info.isLocationOn) setStep({ kind: 'location-off' });
-    else await startOrKeepRecording(info);
+    if (missing) {
+      setStep({ kind: 'permission', permission: missing });
+      return;
+    }
+    // Location off: Google's own "Turn on location?" dialog first. "No, thanks", or a phone
+    // without Google Play services (no dialog), shows the Turn on location card instead.
+    if (!(await isLocationReady(info.isLocationOn, checkLocationOn))) {
+      setStep({ kind: 'location-off' });
+      return;
+    }
+    await startOrKeepRecording(info);
   };
 
   const handleStart = () => {
@@ -124,7 +134,7 @@ export function useStartGate(onStart: () => void): StartGate {
   };
 
   const handleOpenAutostartSettings = () => {
-    openAutostartSettings().catch(fail);
+    openAutostartSettings(step?.kind === 'keep-recording' ? step.brand : null).catch(fail);
   };
 
   const handleOpenLocationSettings = () => {

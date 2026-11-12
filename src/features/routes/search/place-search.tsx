@@ -8,6 +8,7 @@ import { RoutesNearHere } from './routes-near-here';
 import type { LoadLandmarks } from './use-landmarks';
 import { usePlaceSearch } from './use-place-search';
 import type { Hotspot } from '../model/hotspots';
+import type { HintuanNearHere } from '../model/landmark-search';
 import type { SearchPlace } from '../model/place-search';
 import type { Direction } from '../model/routes';
 import type { Landmark } from '../published/landmark-file-schema';
@@ -30,6 +31,16 @@ interface PlaceSearchProps {
    * left out, the Para routes near it are listed under the field (decision 8).
    */
   onPickLandmark?: (landmark: Landmark) => void;
+  /**
+   * The search starts over: something typed, or Escape with nothing typed. What a pick left behind
+   * goes then, as the routes near a landmark do; the studio takes its dot away.
+   */
+  onSearchRestart?: () => void;
+  /**
+   * "Go here" on a hintuan near a landmark (ticket 07): the landmark, every hintuan near it and the
+   * one chosen, for the trip there. Left out, the panel has no "Go here" (the studio's).
+   */
+  onGoHere?: (landmark: Landmark, near: readonly HintuanNearHere[], hintuan: Hotspot) => void;
   /** A word after a place's label, or null: the studio marks a new place still in a draft. */
   noteOf?: (place: SearchPlace) => string | null;
   /** Where the landmarks come from: the file unless given (stories). */
@@ -39,6 +50,8 @@ interface PlaceSearchProps {
    * (ticket 06). Gone once the search is cleared, another result picked or the panel closed.
    */
   renderLandmarkPin?: (landmark: Landmark) => ReactNode;
+  /** Rendered under the results, from what is typed. */
+  renderAfterResults?: (query: string) => ReactNode;
 }
 
 const NOWHERE = () => null;
@@ -56,9 +69,12 @@ export function PlaceSearch({
   onPick,
   onLookAt,
   onPickLandmark,
+  onSearchRestart,
+  onGoHere,
   noteOf,
   loadLandmarks,
   renderLandmarkPin,
+  renderAfterResults,
 }: PlaceSearchProps) {
   const search = usePlaceSearch({
     hotspots,
@@ -67,6 +83,8 @@ export function PlaceSearch({
     onPick,
     onLookAt,
     onPickLandmark,
+    onSearchRestart,
+    onGoHere,
     noteOf,
     loadLandmarks,
   });
@@ -107,6 +125,7 @@ export function PlaceSearch({
           near={near}
           directionsAt={directionsAt}
           onPick={search.handlePickHintuan}
+          onGoHere={search.handleGoHere}
           onClose={search.closeLandmark}
         />
       )}
@@ -115,6 +134,7 @@ export function PlaceSearch({
           {search.emptyMessage}
         </p>
       )}
+      {renderAfterResults?.(query)}
       {/*
         Mounted for as long as the search is, so a screen reader hears its text change; a live
         region inserted with its text already in is often not read at all.

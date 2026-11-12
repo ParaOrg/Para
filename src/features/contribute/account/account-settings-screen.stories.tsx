@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { expect, fn, userEvent, within } from 'storybook/test';
+import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
 import { AccountSettingsScreen } from './account-settings-screen';
 
@@ -36,7 +36,9 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(canvas.getByRole('heading', { level: 1, name: 'Account settings' })).toHaveFocus();
+    await waitFor(() =>
+      expect(canvas.getByRole('heading', { level: 1, name: 'Account settings' })).toHaveFocus(),
+    );
     await expect(canvas.queryByRole('button', { name: 'Save changes' })).toBeNull();
     await expect(canvas.getByLabelText('Phone number')).toHaveValue('9171234567');
   },
@@ -109,7 +111,7 @@ export const PasswordChanged: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const heading = canvas.getByRole('heading', { level: 1, name: 'Account settings' });
-    await expect(heading).toHaveFocus();
+    await waitFor(() => expect(heading).toHaveFocus());
     await expect(heading).toHaveAccessibleDescription('Your password is changed.');
   },
 };
@@ -144,13 +146,31 @@ export const OpensDeleteAccount: Story = {
   },
 };
 
-/** In the Android app: Keep Para recording, over Delete account, opens the maker's Autostart. */
+/**
+ * In the Android app: Keep Para recording opens the maker's Autostart, and Share ride diagnostics
+ * the share sheet, both over Delete account.
+ */
 export const InTheApp: Story = {
-  args: { onOpenKeepRecording: fn() },
+  args: { onOpenKeepRecording: fn(), onShareDiagnostics: fn() },
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
     await userEvent.click(canvas.getByRole('button', { name: 'Keep Para recording' }));
     await expect(args.onOpenKeepRecording).toHaveBeenCalledOnce();
+    await userEvent.click(canvas.getByRole('button', { name: 'Share ride diagnostics' }));
+    await expect(args.onShareDiagnostics).toHaveBeenCalledOnce();
+  },
+};
+
+/** In the app, the share sheet would not open: one line under the row says so. */
+export const InTheAppNotShared: Story = {
+  args: {
+    onOpenKeepRecording: fn(),
+    onShareDiagnostics: fn(),
+    shareDiagnosticsError: 'Para could not open sharing. Try again.',
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole('alert')).toHaveTextContent('could not open sharing');
   },
 };
 

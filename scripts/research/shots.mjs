@@ -62,9 +62,9 @@ async function shot(ctxOpts, url, name, { before, after } = {}) {
   }
 }
 
-/** Open the trip card's folded hintuans, when it has some to fold. */
+/** Open the trip's folded stops ("View more"), when they are folded. */
 const openFold = async (p) => {
-  const fold = p.locator('[data-testid="trip-fold"]');
+  const fold = p.locator('[data-testid="trip-view-more"][aria-expanded="false"]');
   if (await fold.count()) await fold.first().tap();
   await wait(1500);
 };

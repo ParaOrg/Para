@@ -1,6 +1,6 @@
 # Place search
 
-Status: tickets 01 to 06 done; 07 approved, to build after release 0.4.0. The owner said yes to this plan on 2026-11-06, with every recommended answer, and moved 06 into 0.4.0 (their Q71).
+Status: tickets 01 to 07 done (07 for 0.4.1). The owner said yes to this plan on 2026-11-06, with every recommended answer, and moved 06 into 0.4.0 (their Q71).
 
 A commuter types a place and the map takes them there. Two steps: first Para's own places (feature bank F34), then OpenStreetMap landmarks for what Para has no hotspot for (a safe slice of F33: no geocoder at runtime). Words as in `CONTEXT.md`: a **place** is every hotspot sharing one informal name; a **landmark** here is a named OpenStreetMap point that may or may not be near a place.
 
@@ -12,7 +12,7 @@ A commuter types a place and the map takes them there. Two steps: first Para's o
 - **Where** (decision 2). On a phone, at the top of the map. On a computer, at the top of the docked route list.
 - **Choosing a result** (decision 3). The camera moves to the place and its route list opens, exactly as tapping the place on the map does today. Same code path, not a copy.
 - **Not found.** "No place called '…' yet".
-- **Commuter map only** (decision 5). The studio has no search.
+- **Where search lives** (the owner's scope rule, 2026-11-08). The commuter map has search and "Go here" (ticket 07). The studio has search only (ticket 05; decision 5 first left it out). The contributor app and the contributor page have neither, ever, unless the owner says otherwise.
 - **Built** (ticket 02). `src/features/routes/model/place-search.ts` (the fold, the match, the ranking; `tests/unit/place-search-test.mjs`), `src/features/routes/search/` (the field and its results, a combobox: arrows, Enter, Escape) and `src/app/public-map/place-search-bar.tsx` (where it sits). At one match quality, a place matched by its own label comes before one matched by another name: "fairveiw" finds SM Fairview before Robinson, whose alias is "SM Fairview". The commuter's position is read as they type, never during render, since the page keeps it in a ref.
 - **For now, until the owner designs it:** on a phone the bar hides while a card is open. On a computer it stays, and the floating cards (`corner` and `dock`) start under it: BottomSheet reads `--sheet-float-top`, 0 unless set, and the public map sets it as one static class (the hub's yes to question 5). It steps down under "Update Para!" and, on a wide map, under the offline pill.
 
@@ -25,7 +25,8 @@ A commuter types a place and the map takes them there. Two steps: first Para's o
 - **Credit** (decision 10). "© OpenStreetMap contributors" beside the results whenever a landmark is listed.
 - **Built** (ticket 03). `routes/published/fetch-landmarks.ts` reads the file in a chunk of its own on the first keystroke (`routes/search/use-landmarks.ts`), and imports none of the search's rules, which would otherwise move into the shared chunk the page always loads. `routes/model/landmark-search.ts` matches and ranks landmarks as places are, folded once as the file is read and behind a letter filter (1-22 ms a query over 7,066 on a laptop); a landmark of a Para place's name within 250 m is that place. Picking a landmark flies the camera there (`routes/map/look-at.ts`) and opens "routes near here" under the field, looking from its point and, for a street, every point along it. The offline worker keeps the file (`landmarks`, stale-while-revalidate).
 - **Built** (ticket 06). `routes/map/landmark-pin.tsx`: a pin on a picked landmark's point while its routes near here are open, moved by another pick, gone once the search is typed in again or the panel closes. The public map draws it through PlaceSearch's `renderLandmarkPin` slot; the studio marks a landmark with its own dot (ticket 05).
-- **Rebuilding** (decision 11). Monthly or on demand, as a normal pull request. The script downloads one extract at build time; visitors never reach OpenStreetMap.
+- **Built** (ticket 07). "Go here" on each hintuan row of routes near here makes the landmark the goal and opens that hintuan's routes. A route picked there opens its trip with its end already picked at its hintuan nearest the landmark (`nearestStopOn`), and the trip card says the walk from there, straight-line (`walkToLandmark`). The landmark's pin stays while the goal holds; closing the cards or starting a new search lets it go. One ride, no transfers; nothing kept on a reload.
+- **Rebuilding** (decision 11). Monthly or on demand, as a normal pull request. The script downloads one extract at build time; commuters never reach OpenStreetMap.
 
 ### The data and its licence
 
@@ -45,7 +46,7 @@ The owner's yes (2026-11-06, decisions 43 to 48) and answers to questions 7 to 9
 
 - The commuter's `PlaceSearch` at the top of the workshop and the Contributors map, computer size only (`studio/maps/studio-search.tsx`): centred, never over the Contributors panel or the hotspot card. The Public map view is an iframe of the public map, whose own search serves it.
 - It searches every hotspot row (unpublished ones too) and, signed in, the drafts (`studio/data/search-hotspots.ts`): a new place still in a draft is a hotspot of its own, marked "Draft"; a draft edit's new name and aliases also find its saved hotspot. Signed out, no drafts, even cached ones.
-- A saved hotspot in the workshop opens its card. A draft, a landmark, anything on the Contributors map, and anything found while a line is drawn only moves the camera and leaves a dot for 8 s. Nothing touches the drawing or a draft; no "make a hotspot here".
+- A saved hotspot in the workshop opens its card. A draft, a landmark, anything on the Contributors map, and anything found while a line is drawn only moves the camera and leaves a dot. The dot stays until the search starts over (something typed, or Escape with nothing typed) or another result is picked, as the commuter's landmark pin does (the owner's Q72). Nothing touches the drawing or a draft; no "make a hotspot here".
 
 ## Owner to design later
 
@@ -65,7 +66,9 @@ Designed for now from existing primitives and tokens, never final. Each needs th
 11. The bar's card behind the field (white, rounded, the large shadow) and its visible "Search places" label: built so the label reads over the map.
 12. Search while a card is open: on a phone, hidden for now; on a computer, the bar stays and the cards float under it (question 5, built). How the two look together has no story yet: the owner's call whether one is wanted.
 13. A search icon in the field: none exists in the design system, so none is drawn.
-14. The studio's search bar (ticket 05): its place on the workshop and the Contributors map, the "Draft" mark, and the dot a landmark or draft pick leaves (how it looks, how long it stays: 8 s for now).
+16. "Go here" on a routes-near-here row (ticket 07): built as the design system's Secondary Small button beside the row.
+17. The walk line on the trip card (ticket 07): "About 300 m to …, in a straight line", in the line note's style, above the note. No line on the map until the owner designs one.
+14. The studio's search bar (ticket 05): its place on the workshop and the Contributors map, the "Draft" mark, and the dot a landmark or draft pick leaves (how it looks; it stays until the search starts over or another result is picked).
 
 ## Tickets
 
@@ -77,7 +80,7 @@ Designed for now from existing primitives and tokens, never final. Each needs th
 | 04 | [The monthly rebuild](issues/04-monthly-rebuild.md) | resolved (#826) |
 | 05 | [Studio place search](issues/05-studio-place-search.md) | resolved (#830) |
 | 06 | [A pin where a landmark search lands](issues/06-search-pin.md) | resolved (into 0.4.0, the owner's Q71) |
-| 07 | ["Set as destination" for a landmark](issues/07-landmark-as-destination.md) | approved; after release 0.4.0 |
+| 07 | ["Set as destination" for a landmark](issues/07-landmark-as-destination.md) | resolved (for 0.4.1) |
 
 ## Questions sent to the hub (2026-11-06)
 

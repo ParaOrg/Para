@@ -275,11 +275,9 @@ check(
 
 // ---- 2c. The map's ⓘ, as on the public map: at the map's bottom left, opening Map Data Source
 {
-  const drafts = await page.getByRole('button', { name: /^Drafts/ }).boundingBox();
   check(
-    'on a computer Drafts stands in the top bar, clear of the map and its controls',
-    !!drafts && drafts.y + drafts.height <= 48 && drafts.x + drafts.width <= 1280 - 16 + 1,
-    JSON.stringify(drafts),
+    'the top bar has no Drafts button: drafts open from the map',
+    (await page.getByRole('button', { name: /^Drafts/ }).count()) === 0,
   );
 
   const info = page.getByRole('button', { name: 'Map data sources' });
@@ -341,8 +339,8 @@ check(
       (await page.getByRole('button', { name: 'Done' }).count()) === 0,
   );
   check(
-    '  Line detail says a new route is a Draft',
-    /Status\s+Draft/.test(await page.getByTestId('line-detail').innerText()),
+    '  Line detail says a new route is Not saved',
+    /Status\s+Not saved/.test(await page.getByTestId('line-detail').innerText()),
   );
   check(
     '  Save waits for a line, and says so',
