@@ -35,6 +35,7 @@ The goals: a codebase that is easy to review, work that scales, and an app whose
 ## How work lands
 
 - Work lands in batches. Each batch is one combined branch with one preview link and one summary of what changed on screen, with screenshots.
+- **Don't sign in to the studio or the contributor page on a branch preview address** (`<branch>-para…workers.dev`). Its code hasn't been reviewed and it talks to the live database. Test signed-in work on staging or locally. The lasting fix is `.scratch/staging-backend/spec.md`.
 - The owner reviews the screens. The coordinator and an Opus review cover the code.
 - The small pull requests stay underneath, one purpose each, so the history stays readable.
 - `staging` is always kept up to date with finished work.
