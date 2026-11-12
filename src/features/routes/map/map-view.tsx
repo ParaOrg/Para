@@ -31,6 +31,7 @@ import {
 } from './framing';
 import { readLocationLabels, type LabelsPlace } from './location-labels';
 import { mapAttribution } from './map-attribution';
+import { watchMapErrors } from './map-errors';
 import { MapFailure } from './map-failure';
 import { routesDrawn } from './saved-routes-layers';
 import { noteTile } from './tiles-asked';
@@ -190,6 +191,8 @@ interface Props {
    * the map says of itself, its failure included, stays under it.
    */
   isCovered?: boolean;
+  /** The studio's: the failure box with its diagnostics (MapFailure). Elsewhere, its first line alone. */
+  showsDiagnostics?: boolean;
   /**
    * What the map is made with in place of `initialStyle`: the contributor app's, which falls back
    * to its copies of the basemaps' styles, so it loads with no signal
@@ -234,6 +237,7 @@ export function MapView({
   creditsAtBottom = false,
   areCreditsShown = true,
   isCovered = false,
+  showsDiagnostics = false,
   makeStyle = initialStyle,
   transformRequest,
 }: Props) {
@@ -421,19 +425,14 @@ export function MapView({
         makeStyle: (url) => makeStyle({ ...basemap, url }, areLabelsShown),
         isGone: () => cancelled,
       });
-      map.on('error', (e) => {
-        const message = e.error?.message ?? 'unknown map error';
-        // Once the map is up, an error is a tile, glyph or sprite that did not
-        // arrive — offline, a place never viewed before. The map is drawn and
-        // working; that is not "failed to load", so only the console hears it.
-        if (isLoaded) {
-          console.warn('[map]', message);
-          return;
-        }
-        if (fallBack(message)) return;
-        console.error('[map]', message, e);
-        setError(message);
-        void diagnose(basemap.url).then(setDiag);
+      watchMapErrors(map, {
+        isLoaded: () => isLoaded,
+        areRoutesDrawn: () => routesDrawn(made),
+        fallBack,
+        onFailure: (message) => {
+          setError(message);
+          void diagnose(basemap.url).then(setDiag);
+        },
       });
 
       // From the map's making; on the public map (`openOn`) again from its
@@ -521,6 +520,7 @@ export function MapView({
           dom={dom}
           trace={trace}
           styleUrl={basemap.url}
+          showsDiagnostics={showsDiagnostics}
         />
       )}
     </>
