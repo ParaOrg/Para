@@ -1,6 +1,6 @@
 # upload-test: "it can still be sent from History, one at a time" failed once
 
-Status: ready-for-agent
+Status: resolved
 Type: task
 Priority: low
 
@@ -54,3 +54,22 @@ The check passes no detail, so the log cannot say which of the three was false.
   an app bug (two rows), not a test bug.
 - `waitForStatus` matches any `li` containing the name; a card from the screen being left
   (History's `<Activity>`) could satisfy it before the shown one does.
+
+## Answer
+
+It failed again on #932's first head (run 43144505508, job 130939106173), this time with the
+values: `{"sent":["aaaaaaaa-0000-4000-8000-000000000014"],"earlierTwo":""}`. One row was sent, the
+right one, so the app did not send twice. The "Earlier two" status read as empty.
+
+The cause is in the test. `statusOf` read the line with `innerText`. History's cards are
+`content-visibility: auto` (`history-card.tsx`), and History sits in an `<Activity>` that is
+hidden while a ride's sheet is open. In the first moment after Close shows History again, Chrome
+hasn't yet worked out whether each card is on screen, so it skips their rendering and `innerText`
+reads `''`. `textContent` reads the words all along. A plain-page check in Chromium shows the same:
+`innerText` reads `''` just after the list is shown and the words two frames later, and
+`textContent` reads the words throughout. The failure screenshot, taken just after, shows
+"Only on this phone".
+
+The contributor never sees a blank line: the skipped rendering is decided before the frame is
+painted. The fix is test-only: `statusOf` reads `textContent`, as `waitForStatus` and
+profile-test's `statusOf` already do. There's no timing guess and no retry.

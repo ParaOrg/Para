@@ -19,6 +19,12 @@
 # devDependencies). It needs no install. When it fails, `npm audit` locally
 # names the package and the version that fixes it; Dependabot opens most of
 # these on its own.
+#
+# A second audit reads the devDependencies too: the tools that build and check
+# the app. Nothing of theirs reaches a commuter, so it blocks nothing: the job
+# may fail and the run still passes (continue-on-error). It is there so a hole
+# in a dev tool is seen in the nightly run, not found by chance. It does not run
+# on a pull request, where a red mark that means "not yours" would only confuse.
 name: Security
 
 on:
@@ -90,6 +96,22 @@ jobs:
 
       - name: npm audit
         run: npm audit --omit=dev --audit-level=high
+
+  dev-audit:
+    name: Known holes in the dev tools (report only)
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: npm audit, dev tools included
+        run: npm audit --audit-level=high
 
   # A failed nightly run opens the `alert` issue (scripts/watch/report-failed-run.mjs); the watch
   # closes it once the next run passes. Not on a pull request, whose own checks say it failed.
