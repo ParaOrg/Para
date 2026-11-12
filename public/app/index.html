@@ -263,6 +263,8 @@
       const form = document.getElementById('waitlist');
       const said = document.getElementById('waitlist-said');
       const FAILED = "That didn't go through. Try again in a bit.";
+      // True once Cloudflare's script fails to load (a blocker, or no signal).
+      let blocked = false;
       const WHY = {
         email: "That email doesn't look right. Check it and try again.",
         check: "We couldn't check that you're a person. Try again.",
@@ -272,6 +274,7 @@
         () => {
           const check = document.createElement('script');
           check.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
+          check.onerror = () => (blocked = true);
           document.head.append(check);
         },
         { once: true },
@@ -281,7 +284,9 @@
         const data = new FormData(form);
         const token = data.get('cf-turnstile-response');
         if (!token) {
-          said.textContent = "Still checking that you're a person. Try again in a moment.";
+          said.textContent = blocked
+            ? "The check that you're a person didn't load. Reload the page and try again."
+            : "Still checking that you're a person. Try again in a moment.";
           return;
         }
         const button = form.querySelector('button');
