@@ -47,11 +47,9 @@ function takeEarly(): EarlyMapFile | null {
  * load goes on as if index.html had asked nothing.
  */
 function ask(): Promise<{ res: Response; json: () => Promise<unknown> }> {
+  const at = mapFileAt(MAP_FILE_URL);
   const own = () =>
-    fetch(mapFileAt(MAP_FILE_URL), { cache: 'no-cache' }).then((res) => ({
-      res,
-      json: () => res.json(),
-    }));
+    fetch(at, { cache: 'no-cache' }).then((res) => ({ res, json: () => res.json() }));
   const early = takeEarly();
   if (!early) return own();
   return early.then(
