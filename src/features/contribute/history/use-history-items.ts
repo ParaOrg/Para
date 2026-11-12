@@ -2,8 +2,8 @@ import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-quer
 import { useMemo } from 'react';
 
 import { historyKeys } from './history-keys';
-import { mergeHistory } from './history-merge';
-import { rideFactsOf, storedFactsOf, uploadFactsOf, type RideFacts } from './ride-facts';
+import { rideFactsOf, storedFactsOf, type RideFacts } from './ride-facts';
+import { useMergedHistory } from './use-merged-history';
 import { accountKeys } from '../api/account-keys';
 import { UploadError } from '../api/upload-problem';
 import { useAccountUploadsQuery } from '../api/use-account-uploads-query';
@@ -123,8 +123,7 @@ export function useHistoryItems(
     () => new Map(saved.map((recording) => [recording.id, storedFactsOf(recording)])),
     [saved],
   );
-  const accountUploads = query.data ?? [];
-  const uploadById = new Map(accountUploads.map((upload) => [upload.id, upload]));
+  const { recordings, uploadFacts } = useMergedHistory(saved, query.data, hidden);
   const onPhoneIds = new Set(saved.map((recording) => recording.id));
 
   const isOnPhone = (recording: Recording) => onPhoneIds.has(recording.id);
@@ -136,15 +135,14 @@ export function useHistoryItems(
       : { state: 'uploaded', at: recording.startedAt, by: '' };
 
   return {
-    recordings: mergeHistory(saved, accountUploads, hidden),
+    recordings,
     uploads: { ...uploads, statusOf },
     isOnPhone,
     factsOf: (recording) => {
       if (isOnPhone(recording)) {
         return factsQuery.data?.get(recording.id) ?? storedFacts.get(recording.id) ?? null;
       }
-      const upload = uploadById.get(recording.id);
-      return upload ? uploadFactsOf(upload) : null;
+      return uploadFacts.get(recording.id) ?? null;
     },
     usedOf: (recording) => uses?.get(recording.id) ?? NONE,
     load: {
