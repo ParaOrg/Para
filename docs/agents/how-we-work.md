@@ -8,7 +8,7 @@ The goals: a codebase that is easy to review, work that scales, and an app whose
 
 - **The owner owns the design.** A session never makes up a look. When Figma doesn't cover something, the session collects its questions and sends them to the owner in one batch, not one at a time.
 - **One coordinator session** hands out the work, merges between branches, and writes the release summary.
-- **Sessions merge their own finished work** into `staging` through a pull request, once its CI is green. **Only the owner merges** into `main`.
+- **Sessions merge their own finished work** into `staging` through a pull request, once its CI is green. **Only the owner merges** into `main`. `main-protection.md` holds the rules GitHub enforces on `main`; `staging-protection.md` holds the ruleset for `staging`, for the owner to turn on.
 
 ## Which model does what
 
@@ -35,6 +35,7 @@ The goals: a codebase that is easy to review, work that scales, and an app whose
 ## How work lands
 
 - Work lands in batches. Each batch is one combined branch with one preview link and one summary of what changed on screen, with screenshots.
+- **Don't sign in to the studio or the contributor page on a branch preview address** (`<branch>-para…workers.dev`). Its code hasn't been reviewed and it talks to the live database. Test signed-in work on staging or locally. The lasting fix is `.scratch/staging-backend/spec.md`.
 - The owner reviews the screens. The coordinator and an Opus review cover the code.
 - The small pull requests stay underneath, one purpose each, so the history stays readable.
 - `staging` is always kept up to date with finished work.
