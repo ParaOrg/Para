@@ -53,8 +53,9 @@ export async function handle(
   const check = await send('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
     method: 'POST',
     body: new URLSearchParams({ secret: env.turnstileSecret, response: token }),
-  });
-  const passed = check.ok && (await check.json()).success === true;
+  }).catch(() => null);
+  // A check that cannot be reached counts as not passed, never as let through.
+  const passed = check?.ok === true && (await check.json()).success === true;
   if (!passed) return answer(403, { error: 'check' });
 
   // ignore-duplicates: an email already listed comes back as no row, and gets no second message.
@@ -67,10 +68,10 @@ export async function handle(
       Prefer: 'resolution=ignore-duplicates,return=representation',
     },
     body: JSON.stringify({ email }),
-  });
-  if (saved.status === 400) return answer(400, { error: 'email' });
-  if (!saved.ok) {
-    console.error('waitlist: saving answered', saved.status);
+  }).catch(() => null);
+  if (saved?.status === 400) return answer(400, { error: 'email' });
+  if (!saved?.ok) {
+    console.error('waitlist: saving answered', saved?.status ?? 'nothing');
     return answer(502, { error: 'later' });
   }
   const added = (await saved.json()).length > 0;

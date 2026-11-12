@@ -1,7 +1,8 @@
 // The waitlist Edge Function (supabase/functions/waitlist/handler.ts), with a fake fetch in place
 // of Cloudflare, the database and Resend: a failed bot check saves nothing and sends nothing, an
 // email already listed sends no second message and answers as a new one does, a new email is saved
-// in lower case and gets exactly one message, and a failed send still answers ok. Then it pins that
+// in lower case and gets exactly one message, a failed send still answers ok, and a bot check or a
+// database that cannot be reached is answered and never thrown. Then it pins that
 // /app/'s form posts to the project and uses the bot-check key .env.production names.
 //
 //   node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs tests/unit/waitlist-test.mjs
@@ -26,10 +27,12 @@ function fake({
   saved = [{ email: 'x' }],
   savedStatus = 201,
   mailStatus = 200,
+  unreachable = '',
 } = {}) {
   const calls = [];
   const send = async (url, init) => {
     calls.push({ url: String(url), init });
+    if (unreachable && String(url).includes(unreachable)) throw new TypeError('fetch failed');
     if (String(url).includes('turnstile')) return json({ success: human });
     if (String(url).includes('/rest/v1/waitlist')) return json(saved, savedStatus);
     return json({ id: 'sent' }, mailStatus);
@@ -103,6 +106,29 @@ test('a database that is down says try later, and a failed send still answers ok
     const unsent = fake({ mailStatus: 429 });
     const response = await handle(post({ email: 'ana@example.com', token: 't' }), env, unsent.send);
     assert.deepEqual([response.status, await response.json()], [200, { ok: true }]);
+  } finally {
+    console.error = quiet;
+  }
+});
+
+test('a bot check or a database that cannot be reached still gets a readable answer', async () => {
+  const quiet = console.error;
+  console.error = () => {};
+  try {
+    const unchecked = fake({ unreachable: 'turnstile' });
+    const refused = await handle(
+      post({ email: 'ana@example.com', token: 't' }),
+      env,
+      unchecked.send,
+    );
+    assert.deepEqual([refused.status, await refused.json()], [403, { error: 'check' }]);
+    assert.equal(unchecked.calls.length, 1);
+
+    const unsaved = fake({ unreachable: '/rest/v1/waitlist' });
+    const later = await handle(post({ email: 'ana@example.com', token: 't' }), env, unsaved.send);
+    assert.deepEqual([later.status, await later.json()], [502, { error: 'later' }]);
+    assert.equal(later.headers.get('Access-Control-Allow-Origin'), '*');
+    assert.equal(unsaved.to('api.resend.com').length, 0);
   } finally {
     console.error = quiet;
   }
