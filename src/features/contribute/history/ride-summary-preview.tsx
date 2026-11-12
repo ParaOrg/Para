@@ -10,7 +10,7 @@ import { useQuestionFocus } from '../account/use-question-focus';
 
 interface RideSummaryPreviewProps {
   summary: RideSummary;
-  /** The whole trail, drawn on the card; null when it is not on this phone. */
+  /** The whole trail, drawn on the card. It is null while read, and when the ride has none. */
   trail: RecordingTrail | null;
   startedAt: number;
   /** Close or Escape. */

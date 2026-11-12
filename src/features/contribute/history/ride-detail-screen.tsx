@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 
 import { IconButton } from '@/design-system/primitives/icon-button';
+import type { RecordingTrail } from '@/features/routes/map/recording-trail';
 import { BottomSheet } from '@/shared/ui/bottom-sheet';
 import { CloseIcon } from '@/shared/ui/route-icons';
 import { DOCK_TOP_CSS, type Snap } from '@/shared/ui/sheet-gesture';
@@ -24,6 +25,8 @@ export interface RideDetail {
   recording: Recording;
   /** Its distance and whether it was walked, as History read them; null until read. */
   facts: RideFacts | null;
+  /** Its whole trail, as the map behind draws it. It is null until read or when there is none. */
+  trail: RecordingTrail | null;
   /** Its upload's line, as its History card shows it. */
   status: CardStatus;
   /** Tap retry upload, or Tap to upload: sends it. */

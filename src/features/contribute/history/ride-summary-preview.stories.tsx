@@ -72,8 +72,8 @@ export const JeepRide: Story = {
 };
 
 /**
- * An upload from another phone: no trail here, the plain ground in its place. A UV Express, the
- * widest vehicle, squeezed into its column.
+ * A ride with no trail to draw (none kept, or still being read) shows the plain ground in its
+ * place. The vehicle is a UV Express, the widest one, squeezed into its column.
  */
 export const NoTrail: Story = {
   args: { trail: null, summary: { ...SUMMARY, mode: 'UV Express' } },

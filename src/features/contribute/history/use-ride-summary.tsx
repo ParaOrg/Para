@@ -37,7 +37,7 @@ export function useRideSummary(ride: RideDetail | null) {
     <div className="pointer-events-auto">
       <RideSummaryPreview
         summary={summary}
-        trail={ride.facts?.trail ?? null}
+        trail={ride.trail}
         startedAt={ride.recording.startedAt}
         onClose={() => setIsShowing(false)}
       />
