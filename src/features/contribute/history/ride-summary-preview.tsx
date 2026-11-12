@@ -52,8 +52,14 @@ export function RideSummaryPreview({
         if (!isCurrent) return;
         url = URL.createObjectURL(blob);
         setPng({ blob, url });
+        setError(null);
       })
-      .catch(() => isCurrent && setError('The summary could not be drawn on this phone.'));
+      .catch(() => {
+        if (!isCurrent) return;
+        // An earlier picture is not this ride's card any more, so it is not left up to be shared.
+        setPng(null);
+        setError('The summary could not be drawn on this phone.');
+      });
     return () => {
       isCurrent = false;
       if (url) URL.revokeObjectURL(url);
@@ -64,9 +70,12 @@ export function RideSummaryPreview({
     if (!png) return;
     setIsSharing(true);
     setNote(null);
-    const outcome = await shareOrSave(png.blob, summaryFileName(startedAt));
-    setIsSharing(false);
-    setNote(OUTCOME_TEXT[outcome]);
+    try {
+      setNote(OUTCOME_TEXT[await shareOrSave(png.blob, summaryFileName(startedAt))]);
+    } finally {
+      // Whatever sharing did, Close and Escape work again.
+      setIsSharing(false);
+    }
   };
 
   return (
