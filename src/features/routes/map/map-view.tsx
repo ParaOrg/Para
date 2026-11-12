@@ -16,6 +16,7 @@ import { noop } from '@/shared/utils/noop';
 import { BASEMAPS, DEFAULT_BASEMAP, initialStyle, readBasemap, type Basemap } from './basemap';
 import { BasemapControl, type MapButtonStyle } from './basemap-control';
 import { openingFallback } from './basemap-failover';
+import { followHostDrawing } from './basemap-host-drawing';
 import { BASEMAP_THUMBNAILS } from './basemap-thumbnails';
 import { diagnose, type Diagnosis } from './diagnose';
 import { exposeMap, exposeMapEarly } from './expose-map';
@@ -384,10 +385,16 @@ export function MapView({
 
       if (zoomButtons && !coarse) map.addControl(new NavigationControl(), 'top-right');
       map.addControl(new ScaleControl({ unit: 'metric' }), 'bottom-left');
-      map.addControl(
-        new AttributionControl({ compact: true, customAttribution: mapAttribution(basemapHost) }),
-        coarse && !creditsAtBottom ? 'top-right' : 'bottom-right',
-      );
+      const credits = new AttributionControl({
+        compact: true,
+        customAttribution: mapAttribution(basemapHost),
+      });
+      // The credits name the host that draws: OpenFreeMap once the opening fell back to it.
+      // Followed before the control joins the map, so the control redraws them at the same event.
+      followHostDrawing(map, basemapHost, (host) => {
+        credits.options.customAttribution = mapAttribution(host);
+      });
+      map.addControl(credits, coarse && !creditsAtBottom ? 'top-right' : 'bottom-right');
       // What MapLibre itself does to them on the first drag.
       if (foldCredits)
         map
