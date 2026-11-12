@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { expect, within } from 'storybook/test';
 
 import { MapFailure } from './map-failure';
 
@@ -34,6 +35,14 @@ export const OutsideTheStudio: Story = {
     diagnosis: { webgl: 'webgl2', renderer: 'Adreno (TM) 610', styleFetch: 'HTTP 503 after 80ms' },
     trace: ['styledata@212ms'],
   },
+  play: async ({ canvasElement }) => {
+    const box = within(canvasElement);
+    await expect(box.getByText('The map failed to load.')).toBeVisible();
+    for (const diagnostic of [/Failed to fetch/, /webgl2/, /Adreno/, /HTTP 503/, /styledata/]) {
+      await expect(box.queryByText(diagnostic)).toBeNull();
+    }
+    await expect(box.queryByText(/tiles\.openfreemap\.org/)).toBeNull();
+  },
 };
 
 /** In the studio, just failed: the message and the style's address, before the device has answered. */
@@ -50,6 +59,21 @@ export const WithItsDiagnosis: Story = {
     },
     dom: 'canvas 786×1704 (css 393×852)',
     trace: ['styledata@212ms', 'sourcedata@240ms', 'render@301ms'],
+  },
+  play: async ({ canvasElement }) => {
+    const box = within(canvasElement);
+    for (const diagnostic of [
+      'The map failed to load.',
+      'The map did not finish loading in 12 seconds.',
+      'webgl2',
+      'ANGLE (Qualcomm, Adreno (TM) 610, OpenGL ES 3.2)',
+      'HTTP 200, 58211 bytes in 412ms',
+      'canvas 786×1704 (css 393×852)',
+      'styledata@212ms → sourcedata@240ms → render@301ms',
+      'https://tiles.openfreemap.org/styles/positron',
+    ]) {
+      await expect(box.getByText(diagnostic)).toBeVisible();
+    }
   },
 };
 
