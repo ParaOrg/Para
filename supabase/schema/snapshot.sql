@@ -1416,57 +1416,6 @@ $$;
 
 
 --
--- Name: approve_draft(uuid); Type: FUNCTION; Schema: public; Owner: -
---
-
-CREATE FUNCTION public.approve_draft(p_draft uuid) RETURNS jsonb
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO ''
-    AS $$
-declare
-  d public.draft;
-begin
-  perform private.require_editor();
-  select * into d from public.draft where id = p_draft for update;
-  if not found then
-    -- Approved or discarded already: a retry after a lost answer lands here.
-    return jsonb_build_object('code', 'no_draft');
-  end if;
-  if d.status <> 'pending' then
-    return jsonb_build_object('code', 'not_pending');
-  end if;
-  return private.apply_draft(p_draft);
-exception
-  when deadlock_detected or lock_not_available then
-    return jsonb_build_object('code', 'busy');
-end;
-$$;
-
-
---
--- Name: approve_reviewed_draft(uuid, integer); Type: FUNCTION; Schema: public; Owner: -
---
-
-CREATE FUNCTION public.approve_reviewed_draft(p_draft uuid, p_revision integer) RETURNS jsonb
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO ''
-    AS $$
-declare d public.draft;
-begin
-  perform private.require_editor();
-  select * into d from public.draft where id = p_draft for update;
-  if not found then return jsonb_build_object('code', 'no_draft'); end if;
-  if p_revision is null or d.revision <> p_revision then
-    return jsonb_build_object('code', 'revision_mismatch', 'current_revision', d.revision);
-  end if;
-  -- The row lock survives through the inner RPC and its atomic apply.
-  return public.approve_draft(p_draft);
-exception when deadlock_detected or lock_not_available or query_canceled then
-  return jsonb_build_object('code', 'busy');
-end $$;
-
-
---
 -- Name: begin_claim(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -2039,37 +1988,6 @@ $$;
 
 
 --
--- Name: send_back_draft(uuid, integer, text); Type: FUNCTION; Schema: public; Owner: -
---
-
-CREATE FUNCTION public.send_back_draft(p_draft uuid, p_revision integer, p_note text) RETURNS jsonb
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO ''
-    AS $$
-declare
-  d public.draft;
-begin
-  perform private.require_editor();
-  update public.draft
-  set status = 'draft', submitted_at = null, note = p_note
-  where id = p_draft and revision = p_revision and status = 'pending'
-  returning * into d;
-  if found then
-    return jsonb_build_object('code', 'sent_back', 'draft', row_to_json(d));
-  end if;
-  select * into d from public.draft where id = p_draft;
-  if not found then
-    return jsonb_build_object('code', 'no_draft');
-  end if;
-  if d.revision <> p_revision then
-    return jsonb_build_object('code', 'revision_mismatch', 'current_revision', d.revision);
-  end if;
-  return jsonb_build_object('code', 'not_pending');
-end;
-$$;
-
-
---
 -- Name: set_profile(text, text); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -2099,37 +2017,6 @@ begin
     set name = clean, phone = set_profile.phone, profile_updated_at = now()
     where id = who;
 end $_$;
-
-
---
--- Name: submit_draft(uuid, integer); Type: FUNCTION; Schema: public; Owner: -
---
-
-CREATE FUNCTION public.submit_draft(p_draft uuid, p_revision integer) RETURNS jsonb
-    LANGUAGE plpgsql SECURITY DEFINER
-    SET search_path TO ''
-    AS $$
-declare
-  d public.draft;
-begin
-  perform private.require_editor();
-  update public.draft
-  set status = 'pending', submitted_at = now()
-  where id = p_draft and revision = p_revision and status = 'draft'
-  returning * into d;
-  if found then
-    return jsonb_build_object('code', 'submitted', 'draft', row_to_json(d));
-  end if;
-  select * into d from public.draft where id = p_draft;
-  if not found then
-    return jsonb_build_object('code', 'no_draft');
-  end if;
-  if d.revision <> p_revision then
-    return jsonb_build_object('code', 'revision_mismatch', 'current_revision', d.revision);
-  end if;
-  return jsonb_build_object('code', 'already_pending');
-end;
-$$;
 
 
 --
@@ -4830,13 +4717,6 @@ CREATE POLICY draft_select ON public.draft FOR SELECT TO authenticated USING (( 
 
 
 --
--- Name: draft draft_update; Type: POLICY; Schema: public; Owner: -
---
-
-CREATE POLICY draft_update ON public.draft FOR UPDATE TO authenticated USING ((( SELECT private.is_editor() AS is_editor) AND ((editor_id = ( SELECT auth.uid() AS uid)) OR (editor_id IS NULL)))) WITH CHECK ((( SELECT private.is_editor() AS is_editor) AND ((editor_id = ( SELECT auth.uid() AS uid)) OR (editor_id IS NULL))));
-
-
---
 -- Name: editor_name; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
@@ -5612,22 +5492,6 @@ GRANT ALL ON FUNCTION public.am_i_editor() TO authenticated;
 
 
 --
--- Name: FUNCTION approve_draft(p_draft uuid); Type: ACL; Schema: public; Owner: -
---
-
-REVOKE ALL ON FUNCTION public.approve_draft(p_draft uuid) FROM PUBLIC;
-GRANT ALL ON FUNCTION public.approve_draft(p_draft uuid) TO authenticated;
-
-
---
--- Name: FUNCTION approve_reviewed_draft(p_draft uuid, p_revision integer); Type: ACL; Schema: public; Owner: -
---
-
-REVOKE ALL ON FUNCTION public.approve_reviewed_draft(p_draft uuid, p_revision integer) FROM PUBLIC;
-GRANT ALL ON FUNCTION public.approve_reviewed_draft(p_draft uuid, p_revision integer) TO authenticated;
-
-
---
 -- Name: FUNCTION begin_claim(); Type: ACL; Schema: public; Owner: -
 --
 
@@ -5732,27 +5596,11 @@ GRANT ALL ON FUNCTION public.save_draft(p_draft uuid, p_revision integer, p_payl
 
 
 --
--- Name: FUNCTION send_back_draft(p_draft uuid, p_revision integer, p_note text); Type: ACL; Schema: public; Owner: -
---
-
-REVOKE ALL ON FUNCTION public.send_back_draft(p_draft uuid, p_revision integer, p_note text) FROM PUBLIC;
-GRANT ALL ON FUNCTION public.send_back_draft(p_draft uuid, p_revision integer, p_note text) TO authenticated;
-
-
---
 -- Name: FUNCTION set_profile(name text, phone text); Type: ACL; Schema: public; Owner: -
 --
 
 REVOKE ALL ON FUNCTION public.set_profile(name text, phone text) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.set_profile(name text, phone text) TO authenticated;
-
-
---
--- Name: FUNCTION submit_draft(p_draft uuid, p_revision integer); Type: ACL; Schema: public; Owner: -
---
-
-REVOKE ALL ON FUNCTION public.submit_draft(p_draft uuid, p_revision integer) FROM PUBLIC;
-GRANT ALL ON FUNCTION public.submit_draft(p_draft uuid, p_revision integer) TO authenticated;
 
 
 --
@@ -5861,34 +5709,6 @@ GRANT SELECT(profile_updated_at) ON TABLE public.contributor TO authenticated;
 --
 
 GRANT SELECT,INSERT,DELETE ON TABLE public.draft TO authenticated;
-
-
---
--- Name: COLUMN draft.status; Type: ACL; Schema: public; Owner: -
---
-
-GRANT UPDATE(status) ON TABLE public.draft TO authenticated;
-
-
---
--- Name: COLUMN draft.payload; Type: ACL; Schema: public; Owner: -
---
-
-GRANT UPDATE(payload) ON TABLE public.draft TO authenticated;
-
-
---
--- Name: COLUMN draft.note; Type: ACL; Schema: public; Owner: -
---
-
-GRANT UPDATE(note) ON TABLE public.draft TO authenticated;
-
-
---
--- Name: COLUMN draft.submitted_at; Type: ACL; Schema: public; Owner: -
---
-
-GRANT UPDATE(submitted_at) ON TABLE public.draft TO authenticated;
 
 
 --
