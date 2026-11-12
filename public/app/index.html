@@ -92,6 +92,12 @@
         aspect-ratio: 1200 / 630;
         object-fit: cover;
       }
+      @media (max-width: 30rem) {
+        /* A phone gets the square picture, so its box is square as well. */
+        .hero {
+          aspect-ratio: 1 / 1;
+        }
+      }
       h1 {
         margin: 0 0 0.5rem;
         font-size: 2rem;
@@ -165,15 +171,24 @@
   <body>
     <main>
       <img class="logo" src="/app/para-logo.svg" alt="Para" width="98" height="64" />
-      <img
-        class="hero"
-        src="/app/screens.webp"
-        alt="Three screens of the Para app show the map with Start tracking, a recorded jeep ride from SM Fairview to Novaliches, and the public map of routes."
-        width="1200"
-        height="630"
-        decoding="async"
-        fetchpriority="high"
-      />
+      <!-- Three screens side by side are too small to read on a phone, so a phone gets a square picture of two of them. -->
+      <picture>
+        <source
+          media="(max-width: 30rem)"
+          srcset="/app/screens-phone.webp"
+          width="1200"
+          height="1200"
+        />
+        <img
+          class="hero"
+          src="/app/screens.webp"
+          alt="Screens of the Para app show the map with Start tracking and a recorded jeep ride from SM Fairview to Novaliches."
+          width="1200"
+          height="630"
+          decoding="async"
+          fetchpriority="high"
+        />
+      </picture>
       <h1>Map the jeep you ride</h1>
       <p class="lead">
         Para is a map of Metro Manila's jeepney routes, drawn from the rides of the people who take
