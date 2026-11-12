@@ -109,6 +109,31 @@ Create each with `gh api -X POST repos/ParaOrg/Para/rulesets --input <file>.json
 
 The shapes come from GitHub's REST reference, "Create a repository ruleset": <https://docs.github.com/en/rest/repos/rules?apiVersion=2022-11-28#create-a-repository-ruleset>. For `bypass_actors` it says `actor_type` can be `DeployKey` ("If actor_type is DeployKey, this should be null" for `actor_id`) and that `pull_request` bypass mode "is not applicable for the DeployKey actor type".
 
+## Adding the secrets scan to the required checks
+
+Not done yet: the owner's step, once the nightly failures of Security open an alert (so a broken scan is seen the same day it would start blocking merges). Ruleset A is id 26126587. In its `required_status_checks`, add one line after "The editor":
+
+```json
+{ "context": "No secrets in the history", "integration_id": 15368 }
+```
+
+Read the ruleset with `gh api repos/ParaOrg/Para/rulesets/26126587`, add the line to its `rules`, and send the whole ruleset back with `gh api -X PUT repos/ParaOrg/Para/rulesets/26126587 --input <file>.json`. Don't add "No known holes in production dependencies": a new advisory for a package Para uses would block every merge the day it is published.
+
 ## Why CI skips the publish commit
 
 A deploy-key push starts other workflows, unlike `GITHUB_TOKEN`. `ci.yml` ignores a push that only touches `public/data/**` (`paths-ignore`): a full run on `main` includes the drawing suites, which go through the shared OSRM router, for a file the publish already checked with `check-map-data.mjs`; CI's own nightly run at 05:00 covers `main` right after. Pull requests are not filtered. The contributor app's release runs on `app-v*` tags only, and nothing in the publish pushes a tag.
+
+## Releases are merge commits (proposed, the owner's decision)
+
+The contributor app's release refuses a tag that is not on `main`, or whose commit CI did not pass (`scripts/publish/release-guard.mjs`, the first step of `build-release` in `contributor-app.yml`). That check means what it says only while a release reaches `main` as a merge commit: a squash or a rebase makes new commits on `main`, and `staging`'s own commits are then not on `main` at all.
+
+To make GitHub offer only "Create a merge commit" on pull requests into `main`, add one line to the `pull_request` rule's `parameters` in ruleset A (id 26126587):
+
+```json
+"allowed_merge_methods": ["merge"]
+```
+
+Read the ruleset with `gh api repos/ParaOrg/Para/rulesets/26126587`, add the line, and send the whole ruleset back with `gh api -X PUT repos/ParaOrg/Para/rulesets/26126587 --input <file>.json`. Not applied: the owner decides.
+
+A release is tagged once its CI on `main` is green. The tag may sit on `main`'s tip the day after: the nightly "Publish map" commits change only `public/data/` and run no CI, so the guard steps back over them to the release's own commit and reads its result.
+
