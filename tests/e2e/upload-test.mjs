@@ -201,7 +201,10 @@ const storedUpload = (page, id) =>
   );
 
 const row = (page, name) => page.getByRole('listitem').filter({ hasText: name });
-const statusOf = (page, name) => row(page, name).locator('[aria-live]').innerText();
+// textContent, not innerText: History's cards are content-visibility: auto, and for the frame after
+// History is shown again (ride sheet closed) a card's rendering is skipped and innerText reads ''.
+const statusOf = async (page, name) =>
+  ((await row(page, name).locator('[aria-live]').textContent()) ?? '').trim();
 /** The History screen, opened by Ready's History tab unless it is already showing. */
 const openHistory = async (page) => {
   const heading = page.getByRole('heading', { level: 1, name: 'History' });

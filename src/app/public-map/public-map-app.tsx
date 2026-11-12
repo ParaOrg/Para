@@ -17,6 +17,7 @@ import {
 import { HintuanCard } from '@/features/routes/cards/hintuan-card';
 import { RouteCardList } from '@/features/routes/cards/route-card-list';
 import { TripCard } from '@/features/routes/cards/trip-card';
+import { useBackClosesCards } from '@/features/routes/cards/use-back-closes-cards';
 import { useTripTimeline } from '@/features/routes/cards/use-trip-timeline';
 import { EndTitles } from '@/features/routes/map/end-titles';
 import { HintuanPin } from '@/features/routes/map/hintuan-pin';
@@ -173,6 +174,7 @@ export function PublicMapApp() {
   const locatorTurn = useTurn();
   // The dot's gaze is hushed by ‹ and ✕: going back picks nothing (dot-gaze.ts).
   const { hush, hushedAt } = useGazeHush();
+  useBackClosesCards(saved, hotspots, cards, backFromTrip, hush);
   const offline = useOffline();
   // The phone's status bar in the map's colour (status-bar.ts).
   useStatusBarColour(map);
@@ -213,6 +215,8 @@ export function PublicMapApp() {
         sheetTopUnderSearch(needRefresh, offline || age.stale),
       )}
     >
+      {/* The page's one h1, for a screen reader to move to by heading; nothing is drawn. */}
+      <h1 className="sr-only">Para</h1>
       {/* Out of reach under the credits, the map and every card alike. */}
       <div inert={credits.state === 'open'} className="contents">
         {/*

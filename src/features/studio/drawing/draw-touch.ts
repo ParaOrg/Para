@@ -62,7 +62,7 @@ export function touchHandlers(
   const fingersOnMap = (e: TouchEvent) => {
     const r = container.getBoundingClientRect();
     return [...e.touches]
-      .filter((f) => container.contains(f.target as Node))
+      .filter((f) => f.target instanceof Node && container.contains(f.target))
       .map((f) => ({ x: f.clientX - r.left, y: f.clientY - r.top }));
   };
 

@@ -2,7 +2,7 @@ import { useSyncExternalStore } from 'react';
 import { registerSW } from 'virtual:pwa-register';
 
 import { STYLE_URL } from '@/features/routes/map/map-view';
-import { takeTilesAsked } from '@/features/routes/map/tiles-asked';
+import { takeTilesAsked, takeTilesAskedLater } from '@/features/routes/map/tiles-asked';
 import { MAP_FILE_URL } from '@/features/routes/published/map-file';
 import { noop } from '@/shared/utils/noop';
 
@@ -84,12 +84,11 @@ async function takeOverFromOldApp(): Promise<void> {
  * caches — and an install followed by airplane mode would open to a map with
  * no routes. Once the worker controls the page, ask for those few small files
  * again: a conditional request each, answered 304, and this time the worker
- * stores them. So too the basemap tiles the map asked for until then, the
- * first screen's, which the browser's own cache answers (tiles-asked.ts):
- * since the map opens on its routes they all come before the worker takes
- * over. Glyphs, and tiles further afield, are left to normal use. From the
- * second visit on the page's own requests go through the worker, so this is
- * not run again.
+ * stores them. So too the basemap tiles the map asked for until then, which
+ * the browser's own cache answers, and those of its first screen still to
+ * come, once they have (tiles-asked.ts). Glyphs, and tiles further afield,
+ * are left to normal use. From the second visit on the page's own requests
+ * go through the worker, so this is not run again.
  */
 async function warmCaches(): Promise<void> {
   if (!navigator.serviceWorker.controller) {
@@ -98,6 +97,7 @@ async function warmCaches(): Promise<void> {
     );
   }
   const quiet = (url: string) => fetch(url).catch(() => undefined);
+  takeTilesAskedLater((tiles) => void Promise.all(tiles.map(quiet)));
   const [, style] = await Promise.all([
     quiet(MAP_FILE_URL),
     quiet(STYLE_URL),

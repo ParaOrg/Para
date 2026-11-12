@@ -21,6 +21,11 @@ the map the editor and the suites see on `staging`, and the bigger the merge at 
   summary (`.scratch/releases/`), tests `staging` as a whole (`npm run check` and every browser
   suite, as `how-we-work.md` says), and opens `staging` → `main`. The owner merges it. A contributor
   app release (`app-v*` tag) follows when the batch changed the app.
+- **Before tagging: run the Contributor app workflow from `main` with `sign_dry_run` ticked, and
+  tag only if its summary says the certificate matched.** In Actions it is "Contributor app",
+  "Run workflow" on `main`, the box "Sign a build without publishing it". It builds and signs
+  `main` and checks the key's fingerprint; it makes no Release and keeps no APK. A red dry run
+  is fixed before the tag.
 - **Nothing else goes to `main`.** A hotfix is a pull request into `staging` and an early release.
 
 ## The back-merge
