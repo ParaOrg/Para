@@ -24,6 +24,7 @@ import {
   tilesCheck,
   withRetries,
 } from './checks.mjs';
+import { FAILED_RUN_WORKFLOWS } from './failed-run.mjs';
 import { gitHub } from './github.mjs';
 
 const env = process.env;
@@ -128,7 +129,7 @@ for (const check of checks.filter((each) => !each.isSkipped)) {
 
 // A failed run's alert (scripts/watch/report-failed-run.mjs) closes once the workflow's
 // next run passes. The watch never opens one: the failed run did.
-for (const file of ['publish-map.yml', 'backup.yml', 'tiles.yml', 'landmarks.yml']) {
+for (const file of FAILED_RUN_WORKFLOWS) {
   if (lastRunSucceeded(await github.workflowRuns(file, 'completed'))) {
     results.push({ key: `run:${file}`, title: '', ok: true });
   }
