@@ -4,6 +4,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  checkDeployedMap,
   checkLastSuccess,
   checkPublishedMap,
   checkSite,
@@ -168,4 +169,59 @@ test("the watch's own last run: on time under 45 minutes, a gap over it, nothing
     now,
   );
   assert.equal(afterDryRun.ok, false);
+});
+
+// -------------------------------------------------- a publish that did not deploy
+const LIVE_INDEX = 'https://www.para-commute.org/data/index.v5.json';
+const liveAt = (publishedAt) =>
+  fakeFetch({ [LIVE_INDEX]: { body: JSON.stringify({ published_at: publishedAt }) } });
+/** GitHub as the watch asks it: main's index, and when main last took a commit to it. */
+const mainAt = (publishedAt, committedAt) => ({
+  publishedMapOnMain: async () => ({ publishedAt, committedAt }),
+});
+
+test('the live map is the one on main: deployed', async () => {
+  const { fetchImpl } = liveAt('2026-11-11T00:28:29Z');
+  const github = mainAt('2026-11-11T00:28:29Z', '2026-11-11T00:30:00Z');
+  const result = await checkDeployedMap(fetchImpl, github, '2026-11-11T12:00:00Z');
+  assert.equal(result.ok, true);
+  assert.match(result.answer, /the map on main/);
+});
+
+test('the live map behind main for under 2 hours is a deploy on its way', async () => {
+  const { fetchImpl } = liveAt('2026-11-10T00:20:00Z');
+  const github = mainAt('2026-11-11T00:28:29Z', '2026-11-11T00:30:00Z');
+  const result = await checkDeployedMap(fetchImpl, github, '2026-11-11T02:29:00Z');
+  assert.equal(result.ok, true);
+  assert.match(result.answer, /119 minutes/);
+});
+
+test('the live map behind main for over 2 hours is a publish that did not deploy', async () => {
+  const { fetchImpl } = liveAt('2026-11-10T00:20:00Z');
+  const github = mainAt('2026-11-11T00:28:29Z', '2026-11-11T00:30:00Z');
+  const result = await checkDeployedMap(fetchImpl, github, '2026-11-11T09:30:00Z');
+  assert.equal(result.ok, false);
+  assert.match(result.answer, /live map is the one published 2026-11-10T00:20:00Z/);
+  assert.match(result.answer, /main has had the one published 2026-11-11T00:28:29Z for 9\.0 hours/);
+});
+
+test('main out of reach is not a failed deploy: nothing to compare with', async () => {
+  const { fetchImpl } = liveAt('2026-11-10T00:20:00Z');
+  const unreachable = {
+    publishedMapOnMain: async () => {
+      throw new Error('GitHub GET /contents answered 503');
+    },
+  };
+  const result = await checkDeployedMap(fetchImpl, unreachable, '2026-11-11T09:30:00Z');
+  assert.equal(result.ok, true);
+  assert.match(result.answer, /main's map could not be read/);
+  assert.match(result.answer, /503/);
+});
+
+test("the live map out of reach is the published-map check's to say, not this one's", async () => {
+  const { fetchImpl } = fakeFetch({ [LIVE_INDEX]: { status: 522, body: 'down' } });
+  const github = mainAt('2026-11-11T00:28:29Z', '2026-11-11T00:30:00Z');
+  const result = await checkDeployedMap(fetchImpl, github, '2026-11-11T09:30:00Z');
+  assert.equal(result.ok, true);
+  assert.match(result.answer, /live map could not be read/);
 });

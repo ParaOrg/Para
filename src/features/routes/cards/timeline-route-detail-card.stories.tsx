@@ -229,6 +229,10 @@ const pickedOnATrain: Story['play'] = async (ctx) => {
 export const Folded: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
+    // The trip's name is its heading, hidden from the eye, over the cards' own headings.
+    await expect(
+      canvas.getByRole('heading', { level: 2, name: 'Tala → Novaliches' }),
+    ).toBeInTheDocument();
     await expect(canvas.getByTestId('trip').className).toContain('max-h-30');
     await expect(canvas.getByTestId('trip-view-more').textContent).toBe('View more');
   },
