@@ -16,6 +16,7 @@ comments where an open PR has moved the lines.
 | [`studio-app.md`](studio-app.md)           | 600   | ~45 + `workshop.tsx` ~420 | `workshop.tsx`, `trip-card-extras.tsx`, `save-toasts.tsx`, `return-trip.ts`, `hotspot-in-use.ts`, `use-delete-actions.ts` | `return-trip-test`, `hotspot-in-use-test`          |
 | [`save-panel.md`](save-panel.md)           | 403   | ~230               | `save-checks.ts`, `place-picker.tsx`, `route-fields.tsx`, `use-route-save.ts`; `places.ts` and `sheet.ts` grow           | `save-checks-test`; `places-test` extended         |
 | [`bottom-sheet.md`](bottom-sheet.md)       | 550   | ~260               | `sheet-room.ts`, `sheet-header.tsx`, `use-sheet-gestures.ts`; `sheet-gesture.ts` gains `measureSafeTop`                  | `sheet-room-test`                                  |
+| [`contribute-page.md`](contribute-page.md) | 535   | ~330               | `stale-screens.ts`, `use-close-stale-screens.ts`, `toolbar-openers.ts`, `use-other-account-watch.ts`, `kept-screen.tsx`, `flag-stop-mark.tsx`, `toolbar-slot.tsx`, `use-shown-ride.ts` | `stale-screens-test`, `toolbar-openers-test`, `other-account-watch-test` |
 
 ## Before any of them: the open PRs
 
