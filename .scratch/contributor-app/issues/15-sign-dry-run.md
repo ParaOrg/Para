@@ -1,6 +1,6 @@
 # 15: A dry run of the app's signing, with nothing published
 
-Status: needs-triage
+Status: ready-for-human (built; the owner runs it on `main` once it is there, before the app-v0.4.1 tag)
 Type: task
 Who: an agent for the workflow; the owner to press the button and, if needed, change one setting
 Blocked by: nothing. Wanted before app-v0.4.1 is tagged
@@ -54,3 +54,8 @@ off by default.
 - Changing how the key is kept or what `sign` does for a real release.
 
 ## Comments
+
+- 2026-11-12: built as asked, in `.github/workflows/contributor-app.yml` with
+  `tests/unit/app-sign-dry-run-test.mjs`. The box is "Sign a build without publishing it". A
+  workflow is dispatched from the branch it is read from, so the dry run can be run only once
+  this has reached `main`: after the next release merge, and before the tag.
