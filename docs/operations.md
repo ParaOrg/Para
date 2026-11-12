@@ -104,6 +104,18 @@ Each says what you'd see, the first check, and the fix. When the alert workflow 
 - **First check:** the failed step (landmarks.yml): the download from openstreetmap.fr or its MD5, osmium, the file's own check (`scripts/landmarks/check.mjs`), or the comparison refusing a file that lost more than 20% of its landmarks.
 - **Fix:** place search keeps the committed `public/data/landmarks.v1.json`, so there is no rush. Fix the cause, or, if a shrink is real (a tagging change on OpenStreetMap), Run workflow with "allow shrink" ticked. The run opens a pull request into staging; nothing merges by itself.
 
+### The database check failed
+
+- **You'd see:** the issue "Alert: the Database run failed", after the nightly run (19:43 UTC, which is 03:43 Manila). A pull request's own run shows on the pull request instead and opens no issue.
+- **First check:** which job failed (database.yml). "Migrations and row security on a throwaway Postgres" builds every migration on an empty database and checks who may read and write what. "Review suites on the isolated preview" drives the studio against that kind of copy. Neither reads or changes the live database.
+- **Fix:** with no change to the SQL since the last green night, it is usually a download or a container that did not start: Re-run failed jobs, once. If it fails again, the last change under `supabase/`, `src/features/studio/data/` or `src/features/contribute/api/` broke a rule. Nothing is broken live, but apply no migration until the check is green again. The issue closes itself when the next run passes.
+
+### A secret or a vulnerable package was found
+
+- **You'd see:** the issue "Alert: the Security run failed" or "Alert: the CodeQL run failed", after a nightly run.
+- **First check:** which job failed. In Security: "No secrets in the history" (a key may have been committed) or "No known holes in production dependencies" (a package Para ships has a new advisory). In CodeQL, a red run means the scan could not run; what it finds is listed under the repository's Security tab and never turns the run red.
+- **Fix:** a secret: change the key at its service first (the table under "Rotating a key"), then ask about the history; removing the file in a new commit does not take it out of the old one (security.yml's header). A package: `npm audit --omit=dev` names it and the version that fixes it; Dependabot usually opens that pull request by itself. CodeQL: Re-run failed jobs, once. Each issue closes itself when the workflow's next run passes.
+
 ### A sign-in or Turnstile error
 
 - **You'd see:** the studio's sign-in, Forgot password, or a contributor's first save fails with a bot-check error, or a reset email never arrives.

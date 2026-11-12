@@ -32,16 +32,16 @@ export interface LineSpot {
 /** The spot on the line nearest p, and how far p is from it. Null for a line with no edges. */
 export function nearestSpot(segments: Segment[], p: LngLat): (LineSpot & { off: number }) | null {
   let best: (LineSpot & { off: number }) | null = null;
-  segments.forEach((s, seg) => {
+  for (const [seg, s] of segments.entries()) {
     const c = s?.coordinates ?? [];
     for (let edge = 0; edge < c.length - 1; edge++) {
       const { point } = nearestOnSegment(p, c[edge], c[edge + 1]);
       const off = haversine(p, point);
       if (!best || off < best.off) best = { seg, edge, point, metres: 0, off };
     }
-  });
+  }
   if (!best) return null;
-  const b = best as LineSpot & { off: number };
+  const b = best;
   // Measured on the line as joinSegments makes it: a join that is not one point
   // keeps the hop between them (a freehand stretch ending on the click, the
   // road starting where the router put it), and two lengths added apart would

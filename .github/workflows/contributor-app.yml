@@ -7,22 +7,25 @@
 #     releases/download/test-latest/para-test.apk is always the newest test build. A pre-release is
 #     never the "latest" Release, so the app's update check (releases/latest/download/latest.json)
 #     never sees it.
-#   - A tag `app-v*` (app-v1.2.3) runs three jobs. `build-release` builds the RELEASE APK, signs it,
-#     and checks the signature against the key's recorded fingerprint. `publish` creates a GitHub
-#     Release with two assets, para-contributor.apk and latest.json (the app's update check reads
-#     it). The tag sets the version.
-#   - A release with no key fails; it never produces an unsigned APK. Locally, and in pull
+#   - A tag `app-v*` (app-v1.2.3) runs four jobs. `build-release` builds the RELEASE APK,
+#     unsigned. `sign` signs it and checks the signature against the key's recorded fingerprint.
+#     `release-files` lays out the two files of a release, and `publish` creates a GitHub Release
+#     with them, para-contributor.apk and latest.json (the app's update check reads it). The tag
+#     sets the version.
+#   - A release with no key fails; it never publishes an unsigned APK. Locally, and in pull
 #     requests, a release build is unsigned.
 #
 # The key: android/release-key.p12.enc, made once by "Make the app signing key"
-# (make-app-signing-key.yml), is decrypted here with the secret PARAPO_KEY_PASSPHRASE into a temp
-# file that the last step deletes. The repository is public, so the passphrase is all that protects
-# the key. Lose the key and testers must uninstall to update.
+# (make-app-signing-key.yml), is decrypted in `sign` with the secret PARAPO_KEY_PASSPHRASE into a
+# temp file that the job's last step deletes. The repository is public, so the passphrase is all
+# that protects the key. Lose the key and testers must uninstall to update.
 #
 # The secret lives in the GitHub Environment `app-release`, which the owner restricts to the tags
-# `app-v*` and the branch `main`: no pull request, branch or other tag can read it. Only
-# `build-release` (and the key-making workflow) names that environment. Only `publish` can write to
-# the repository, and it has no secret and builds nothing.
+# `app-v*` and the branch `main`: no pull request, branch or other tag can read it. Only `sign`
+# (and the key-making workflow) names that environment, and `sign` builds nothing: it checks out
+# three files, installs no packages and runs no build script, so the secret is never in a job
+# that runs the project's dependencies. Only `publish` can write to the repository, and it has no
+# secret and builds nothing.
 #
 # The runner's own Android SDK is used: android-actions/setup-android failed on it.
 name: Contributor app
@@ -297,10 +300,9 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/app-v')
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    environment: app-release
-    env:
-      # The key and its secret keep the product's old name: the key was made with them.
-      PARAPO_KEY_ALIAS: parapo
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      code: ${{ steps.version.outputs.code }}
     steps:
       - uses: actions/checkout@v7
 
@@ -315,16 +317,10 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         run: node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs scripts/publish/release-guard.mjs
 
-      # The secret is named only in the steps that use it. A release with no key stops here,
-      # before anything is built.
-      - name: Check the signing key is there
-        env:
-          PARAPO_KEY_PASSPHRASE: ${{ secrets.PARAPO_KEY_PASSPHRASE }}
+      # This job has no secret. A release with no key file stops here, before anything is built;
+      # `sign` checks the secret itself.
+      - name: Check the signing key's files are there
         run: |
-          if [[ -z "$PARAPO_KEY_PASSPHRASE" ]]; then
-            echo "::error::Not publishing an unsigned APK. The secret PARAPO_KEY_PASSPHRASE is missing from the app-release environment."
-            exit 1
-          fi
           for file in android/release-key.p12.enc android/release-key.sha256; do
             if [[ ! -f "$file" ]]; then
               echo "::error::Not publishing an unsigned APK. $file is missing: run \"Make the app signing key\" first."
@@ -339,6 +335,7 @@ jobs:
       # and the minor and patch at 999, which keeps the code under Android's limit of 2,147,483,647
       # (src/features/contribute/app-update/version-code.ts holds the same rule).
       - name: Read the version
+        id: version
         run: |
           version="${GITHUB_REF_NAME#app-v}"
           if [[ ! "$version" =~ ^([0-9]{1,4})\.([0-9]{1,3})\.([0-9]{1,3})$ ]] || (( 10#${BASH_REMATCH[1]} > 2100 )); then
@@ -347,9 +344,8 @@ jobs:
           fi
           code=$(( 10#${BASH_REMATCH[1]} * 1000000 + 10#${BASH_REMATCH[2]} * 1000 + 10#${BASH_REMATCH[3]} ))
           echo "GRADLE_VERSION=-PappVersionName=$version -PappVersionCode=$code" >> "$GITHUB_ENV"
-          echo "APK_NAME=para-contributor-$version" >> "$GITHUB_ENV"
-          echo "APP_VERSION=$version" >> "$GITHUB_ENV"
-          echo "APP_VERSION_CODE=$code" >> "$GITHUB_ENV"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "code=$code" >> "$GITHUB_OUTPUT"
           # The page reads its own version code to compare with latest.json (api/env.ts).
           echo "VITE_APP_VERSION_CODE=$code" >> "$GITHUB_ENV"
 
@@ -366,6 +362,68 @@ jobs:
       - name: Copy it into the Android project
         run: npx cap sync android
 
+      # No key is in this job's reach, so Gradle leaves the APK unsigned (android/app/build.gradle).
+      - name: Build the release APK (unsigned)
+        working-directory: android
+        run: ./gradlew assembleRelease --no-daemon $GRADLE_VERSION
+
+      - name: Check the unsigned APK is there
+        run: |
+          if [[ ! -f android/app/build/outputs/apk/release/app-release-unsigned.apk ]]; then
+            echo "::error::No unsigned release APK was built."
+            exit 1
+          fi
+
+      # For `sign` only; a day is more than it needs.
+      - uses: actions/upload-artifact@v7
+        with:
+          name: unsigned-apk
+          path: android/app/build/outputs/apk/release/app-release-unsigned.apk
+          if-no-files-found: error
+          retention-days: 1
+
+  # The only job that can read the signing secret. It builds nothing and installs nothing: three
+  # files of the repository, the APK `build-release` made, and the runner's own Android build tools.
+  sign:
+    needs: build-release
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: app-release
+    permissions:
+      contents: read
+    env:
+      # The key and its secret keep the product's old name: the key was made with them.
+      PARAPO_KEY_ALIAS: parapo
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          sparse-checkout: |
+            android/release-key.p12.enc
+            android/release-key.sha256
+            scripts/android/store-password.sh
+          sparse-checkout-cone-mode: false
+
+      # The secret is named only in the steps that use it.
+      - name: Check the signing key is there
+        env:
+          PARAPO_KEY_PASSPHRASE: ${{ secrets.PARAPO_KEY_PASSPHRASE }}
+        run: |
+          if [[ -z "$PARAPO_KEY_PASSPHRASE" ]]; then
+            echo "::error::Not publishing an unsigned APK. The secret PARAPO_KEY_PASSPHRASE is missing from the app-release environment."
+            exit 1
+          fi
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: unsigned-apk
+          path: unsigned
+
+      # The runner image carries the SDK; make sure the build tools the app is built with are there.
+      - name: Install the Android build tools
+        run: |
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "build-tools;36.0.0"
+
       # The keystore only ever exists as this temp file; the last step deletes it.
       - name: Decrypt the keystore
         env:
@@ -376,27 +434,31 @@ jobs:
             -pass env:PARAPO_KEY_PASSPHRASE -in android/release-key.p12.enc -out "$keystore"
           echo "PARAPO_KEYSTORE_PATH=$keystore" >> "$GITHUB_ENV"
 
-      # Gradle reads the keystore password from its environment; the passphrase itself is dropped
-      # before Gradle (and the build scripts and plugins it runs) starts.
-      - name: Build the release APK (signed)
-        working-directory: android
+      # apksigner reads the keystore password from its environment; the passphrase itself is
+      # dropped before it starts. zipalign first: signing must be the last change to the file.
+      - name: Sign the APK
         env:
           PARAPO_KEY_PASSPHRASE: ${{ secrets.PARAPO_KEY_PASSPHRASE }}
         run: |
-          PARAPO_KEYSTORE_PASSWORD="$(../scripts/android/store-password.sh)"
+          tools="$ANDROID_HOME/build-tools/36.0.0"
+          PARAPO_KEYSTORE_PASSWORD="$(scripts/android/store-password.sh)"
           echo "::add-mask::$PARAPO_KEYSTORE_PASSWORD"
           unset PARAPO_KEY_PASSPHRASE
           export PARAPO_KEYSTORE_PASSWORD
-          export PARAPO_KEY_PASSWORD="$PARAPO_KEYSTORE_PASSWORD"
-          ./gradlew assembleRelease --no-daemon $GRADLE_VERSION
+          mkdir -p signed
+          "$tools/zipalign" -f -p 4 unsigned/app-release-unsigned.apk "$RUNNER_TEMP/aligned.apk"
+          "$tools/apksigner" sign \
+            --ks "$PARAPO_KEYSTORE_PATH" --ks-type PKCS12 --ks-key-alias "$PARAPO_KEY_ALIAS" \
+            --ks-pass env:PARAPO_KEYSTORE_PASSWORD --key-pass env:PARAPO_KEYSTORE_PASSWORD \
+            --out signed/app-release.apk "$RUNNER_TEMP/aligned.apk"
 
-      # Gradle falls back to an unsigned APK when it cannot sign; a missing file, a failed verify
-      # or a certificate that is not the recorded key's stops the release.
+      # A missing file, a failed verify or a certificate that is not the recorded key's stops the
+      # release.
       - name: Check the APK is signed with our key
         run: |
-          apk=android/app/build/outputs/apk/release/app-release.apk
+          apk=signed/app-release.apk
           if [[ ! -f "$apk" ]]; then
-            echo "::error::No signed APK was built."
+            echo "::error::No signed APK was made."
             exit 1
           fi
           apksigner="$ANDROID_HOME/build-tools/36.0.0/apksigner"
@@ -409,11 +471,47 @@ jobs:
             exit 1
           fi
 
+      # For `release-files` only.
+      - uses: actions/upload-artifact@v7
+        with:
+          name: signed-apk
+          path: signed/app-release.apk
+          if-no-files-found: error
+          retention-days: 1
+
+      - name: Delete the keystore
+        if: always()
+        run: shred -u "$RUNNER_TEMP/para-release.p12" 2>/dev/null || rm -f "$RUNNER_TEMP/para-release.p12"
+
+  # Lays out what `publish` uploads. It has no secret: the script reads the app's own version rule
+  # and schema, so it needs the project's packages, which is why it is not a step of `sign`.
+  release-files:
+    needs: [build-release, sign]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      APP_VERSION: ${{ needs.build-release.outputs.version }}
+      APP_VERSION_CODE: ${{ needs.build-release.outputs.code }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: signed-apk
+          path: signed
+
       - name: Lay out the release files
         run: |
           node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs \
             scripts/publish/app-release.mjs \
-            --apk android/app/build/outputs/apk/release/app-release.apk \
+            --apk signed/app-release.apk \
             --version "$APP_VERSION" --code "$APP_VERSION_CODE" \
             --min "$(tr -d '[:space:]' < android/min-version.txt)" \
             --apk-url "https://github.com/$GITHUB_REPOSITORY/releases/download/$GITHUB_REF_NAME/para-contributor.apk" \
@@ -421,20 +519,16 @@ jobs:
 
       - uses: actions/upload-artifact@v7
         with:
-          name: ${{ env.APK_NAME }}
+          name: para-contributor-${{ needs.build-release.outputs.version }}
           path: app-publish
           if-no-files-found: error
           retention-days: 90
 
-      - name: Delete the keystore
-        if: always()
-        run: shred -u "$RUNNER_TEMP/para-release.p12" 2>/dev/null || rm -f "$RUNNER_TEMP/para-release.p12"
-
   # The only job that can write to the repository. It has no secret and builds nothing: it
-  # publishes what `build-release` signed. `releases/latest/download/latest.json` (what the app
+  # publishes what `sign` signed and `release-files` laid out. `releases/latest/download/latest.json` (what the app
   # reads) always names the newest Release, so any other Release must be made with --latest=false.
   publish:
-    needs: build-release
+    needs: release-files
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:

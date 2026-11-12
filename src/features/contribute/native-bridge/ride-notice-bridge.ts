@@ -1,7 +1,6 @@
-import { isEmulatorRide } from '@/shared/config/env';
-
 import { isNativeApp } from './native-app';
 import type { RideNoticeState, RideTaps } from './native-contract';
+import { isEmulatorRide } from '../api/env';
 import type { Recording } from '../storage/recording-schema';
 
 /*
