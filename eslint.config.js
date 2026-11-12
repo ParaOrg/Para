@@ -92,6 +92,7 @@ const SOURCE = [
   'capacitor.config.ts',
   'scripts/**/*.ts',
   'workers/tiles/src/**/*.ts',
+  'workers/site/src/**/*.ts',
   'supabase/functions/**/*.ts',
 ];
 
@@ -146,6 +147,16 @@ export default defineConfig([
       '@typescript-eslint/consistent-type-imports': [
         'error',
         { fixStyle: 'separate-type-imports' },
+      ],
+      // No `enum` (.claude/CLAUDE.md, "Other naming rules"): an enum is code at run time and
+      // its own kind of type, where a union of literals or an `as const` object is neither.
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: 'TSEnumDeclaration',
+          message:
+            "Don't use `enum`. Use a union type or an `as const` object (.claude/CLAUDE.md, Naming conventions).",
+        },
       ],
 
       // Imports: four groups, blank lines between, alphabetical within.
@@ -445,6 +456,7 @@ export default defineConfig([
       'eslint.config.js',
       // The Workers runtime requires a default export.
       'workers/tiles/src/index.ts',
+      'workers/site/src/index.ts',
     ],
     rules: {
       'import-x/no-default-export': 'off',

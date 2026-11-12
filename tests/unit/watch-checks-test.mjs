@@ -7,6 +7,7 @@ import {
   checkLastSuccess,
   checkPublishedMap,
   checkSite,
+  checkWatchGap,
   lastRunSucceeded,
   PUBLISH_MAX_AGE_DAYS,
   tilesCheck,
@@ -135,4 +136,36 @@ test('a check gets three tries, 20 seconds apart, and an exception counts as a f
   const failing = await withRetries(async () => ({ ok: false, answer: 'no' }), { sleep });
   assert.equal(failing.ok, false);
   assert.deepEqual(waits, [20_000, 20_000, 20_000]);
+});
+
+test("the watch's own last run: on time under 45 minutes, a gap over it, nothing to measure with none", () => {
+  const run = (started, event = 'schedule') => ({
+    conclusion: 'success',
+    event,
+    run_started_at: started,
+    html_url: 'https://github.com/ParaOrg/Para/actions/runs/1',
+  });
+  const now = '2026-11-11T12:00:00Z';
+
+  const onTime = checkWatchGap([run('2026-11-11T11:44:00Z')], now);
+  assert.equal(onTime.ok, true);
+  assert.match(onTime.answer, /16 minutes/);
+
+  // One run dropped is still within the hour's rhythm; two in a row is a gap.
+  assert.equal(checkWatchGap([run('2026-11-11T11:15:00Z')], now).ok, true);
+  const late = checkWatchGap([run('2026-11-11T01:00:00Z'), run('2026-11-10T20:00:00Z')], now);
+  assert.equal(late.ok, false);
+  assert.match(late.answer, /11\.0 hours/);
+  assert.match(late.answer, /actions\/runs\/1/);
+
+  const first = checkWatchGap([], now);
+  assert.equal(first.ok, true, 'a first run has nothing to be late after');
+  assert.match(first.answer, /No earlier run/);
+
+  // A pull request's dry run checks the change, not the site: it does not count as a run.
+  const afterDryRun = checkWatchGap(
+    [run('2026-11-11T11:50:00Z', 'pull_request'), run('2026-11-11T10:00:00Z')],
+    now,
+  );
+  assert.equal(afterDryRun.ok, false);
 });
