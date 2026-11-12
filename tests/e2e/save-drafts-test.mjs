@@ -766,9 +766,14 @@ async function editHintuan(spot, name) {
   const sidebar = page.getByTestId('sidebar');
   // No card between the tap and the sidebar: the old way showed it with its Edit and waited.
   const hadCard = (await page.getByRole('button', { name: 'Edit hintuan' }).count()) > 0;
+  // The sidebar can be a moment behind the tap on a slow runner: give it that moment before the
+  // tap is read as one that raised the chooser.
+  await sidebar.waitFor({ timeout: 3000 }).catch(() => {});
   let tookRow = false;
   if (!(await sidebar.isVisible())) {
-    const row = page.getByRole('button', { name: /Stand-in Tail/ });
+    // A row of the chooser, and nothing else by that name: once the hintuan has a draft the map
+    // carries a label with it, which goes as the sidebar opens.
+    const row = page.getByTestId('chooser').getByRole('button', { name: /Stand-in Tail/ });
     if (await row.count()) {
       tookRow = true;
       await row.first().click();
