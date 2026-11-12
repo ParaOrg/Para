@@ -1,4 +1,5 @@
-import { lazy } from 'react';
+import { retryingLazy } from '@/shared/lib/retrying-lazy';
+import { retryingImport } from '@/shared/utils/retrying-import';
 
 /**
  * The Map Style card's code, fetched apart from the code both pages open with: the card is drawn
@@ -7,6 +8,7 @@ import { lazy } from 'react';
  */
 export const loadMapStyle = () => import('./map-style');
 
-export const LazyMapStyle = lazy(() =>
-  loadMapStyle().then((module) => ({ default: module.MapStyle })),
+/** A fetch that fails draws no card, never the page's error screen, and is asked for again. */
+export const LazyMapStyle = retryingLazy(() =>
+  retryingImport(loadMapStyle)().then((module) => module.MapStyle),
 );
