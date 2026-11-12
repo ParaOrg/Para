@@ -2,9 +2,10 @@
 <!--
   The app's download page, /app/: what the QR codes on posters open, so their link never changes
   when a new version comes out. Android gets the newest APK (GitHub's releases/latest always points
-  at it), an iPhone the contributor page in the browser. Plain HTML, copied as it is from public/:
-  no bundle, so it adds nothing to the map's or the contributor page's loads. The picture, logo and
-  fonts beside it are copies of src/features/published-map/install-welcome.webp,
+  at it), an iPhone the contributor page in the browser and a waitlist for the iPhone app (the
+  script at the end of the page). Plain HTML, copied as it is from public/: no bundle, so it adds
+  nothing to the map's or the contributor page's loads. The picture, logo and fonts beside it are
+  copies of src/features/published-map/install-welcome.webp,
   src/features/contribute/account/para-logo.svg and the design system's SN Pro.
 -->
 <html lang="en">
@@ -138,7 +139,37 @@
       .button.plain:hover {
         background: #dadaff; /* parabrand-200 */
       }
-      a:focus-visible {
+      form {
+        display: grid;
+        gap: 0.75rem;
+        margin-bottom: 1.5rem;
+      }
+      label {
+        font-weight: 600;
+      }
+      input {
+        min-height: 3.25rem;
+        padding: 0.75rem 1.25rem;
+        border: 1px solid #a3a3a3; /* neutral-400 */
+        border-radius: 999px;
+        font: inherit;
+        color: inherit;
+      }
+      button.button {
+        border: 0;
+        font-family: inherit;
+        cursor: pointer;
+      }
+      button.button:disabled {
+        opacity: 0.6;
+        cursor: default;
+      }
+      form .note {
+        margin: 0;
+      }
+      a:focus-visible,
+      button:focus-visible,
+      input:focus-visible {
         outline: 3px solid var(--brand);
         outline-offset: 3px;
       }
@@ -192,7 +223,27 @@
 
       <section aria-labelledby="iphone">
         <h2 id="iphone">On iPhone</h2>
-        <p>There's no iPhone app yet. You can record a ride in your browser instead.</p>
+        <p>There's no iPhone app yet. Leave your email and we'll tell you when it's out.</p>
+        <form id="waitlist">
+          <label for="email">Your email</label>
+          <input
+            id="email"
+            name="email"
+            type="email"
+            required
+            maxlength="254"
+            autocomplete="email"
+          />
+          <!-- Cloudflare's bot check. The site key is public, the one in .env.production. -->
+          <div class="cf-turnstile" data-sitekey="0x4AAAAAAFbtZb_Xw79jsru8"></div>
+          <button class="button" type="submit">Tell me when it's out</button>
+          <p class="note" id="waitlist-said" role="status"></p>
+          <p class="note">
+            We use your email for this one message and nothing else. To be taken off the list, email
+            para.ph.info@gmail.com.
+          </p>
+        </form>
+        <p>Until then, you can record a ride in your browser.</p>
         <a class="button plain" href="/contribute/">Record in the browser</a>
       </section>
 
@@ -204,5 +255,59 @@
         </div>
       </section>
     </main>
+    <script>
+      // The iPhone waitlist. The form posts to the waitlist Edge Function
+      // (supabase/functions/waitlist), which asks Cloudflare whether the bot check passed, saves
+      // the email and sends one confirmation. Cloudflare's script loads only once someone touches
+      // the form, so opening the page from a poster loads nothing from another site.
+      const form = document.getElementById('waitlist');
+      const said = document.getElementById('waitlist-said');
+      const FAILED = "That didn't go through. Try again in a bit.";
+      const WHY = {
+        email: "That email doesn't look right. Check it and try again.",
+        check: "We couldn't check that you're a person. Try again.",
+      };
+      form.addEventListener(
+        'focusin',
+        () => {
+          const check = document.createElement('script');
+          check.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
+          document.head.append(check);
+        },
+        { once: true },
+      );
+      form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const data = new FormData(form);
+        const token = data.get('cf-turnstile-response');
+        if (!token) {
+          said.textContent = "Still checking that you're a person. Try again in a moment.";
+          return;
+        }
+        const button = form.querySelector('button');
+        button.disabled = true;
+        said.textContent = 'Sending…';
+        try {
+          const response = await fetch(
+            'https://smzwbqxttdyvohuizynl.supabase.co/functions/v1/waitlist',
+            {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ email: data.get('email'), token }),
+            },
+          );
+          const answer = await response.json().catch(() => ({}));
+          if (response.ok) {
+            form.reset();
+            said.textContent = "You're on the list. We'll email you when the iPhone app is out.";
+          } else said.textContent = WHY[answer.error] ?? FAILED;
+        } catch {
+          said.textContent = FAILED;
+        }
+        button.disabled = false;
+        // A token is good for one request.
+        window.turnstile?.reset();
+      });
+    </script>
   </body>
 </html>

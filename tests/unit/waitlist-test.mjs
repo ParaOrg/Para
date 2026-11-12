@@ -1,9 +1,11 @@
 // The waitlist Edge Function (supabase/functions/waitlist/handler.ts), with a fake fetch in place
 // of Cloudflare, the database and Resend: a failed bot check saves nothing and sends nothing, an
 // email already listed sends no second message and answers as a new one does, a new email is saved
-// in lower case and gets exactly one message, and a failed send still answers ok.
+// in lower case and gets exactly one message, and a failed send still answers ok. Then it pins that
+// /app/'s form posts to the project and uses the bot-check key .env.production names.
 //
 //   node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs tests/unit/waitlist-test.mjs
+import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
@@ -114,4 +116,12 @@ test('the browser may ask first, and only a POST is taken', async () => {
   assert.match(asked.headers.get('Access-Control-Allow-Methods'), /POST/);
   assert.equal((await handle(new Request(url), env, net.send)).status, 405);
   assert.equal(net.calls.length, 0);
+});
+
+test("/app/'s form posts to the project and uses the bot-check key .env.production names", () => {
+  const page = readFileSync(new URL('../../public/app/index.html', import.meta.url), 'utf8');
+  const production = readFileSync(new URL('../../.env.production', import.meta.url), 'utf8');
+  const named = (key) => production.match(new RegExp(`^${key}=(.+)$`, 'm'))[1].trim();
+  assert.ok(page.includes(`${named('VITE_SUPABASE_URL')}/functions/v1/waitlist`));
+  assert.ok(page.includes(`data-sitekey="${named('VITE_TURNSTILE_SITE_KEY')}"`));
 });
