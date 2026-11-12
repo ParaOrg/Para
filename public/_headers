@@ -24,6 +24,10 @@
 # on anything a policy flags (tests/e2e/lib/policy.mjs), and the build guard
 # holds each page to one policy (scripts/checks/build/content-policy.mjs).
 #
+# TODO: /app/ is sent no policy yet. Its page is gaining a form, and a policy
+# has to be written from the page as it ships: Turnstile's script and frame,
+# the database, and its inline script by hash.
+#
 # The public map. Its own files; the basemap from Para's tiles host, or from
 # OpenFreeMap, the way back (ADR 0007). The hash is the one inline script, the
 # early request for the map file (map-file-early.ts): the build guard fails,
