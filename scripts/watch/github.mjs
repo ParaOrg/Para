@@ -1,17 +1,19 @@
 // The few GitHub REST calls the watch makes, with the workflow's own GITHUB_TOKEN. It reads
-// workflow runs and reads and writes issues, nothing else.
+// workflow runs and the published map on main, and reads and writes issues, nothing else.
 
 import { ALERT_LABEL } from './alerts.mjs';
 
 const API = 'https://api.github.com';
+// A file's own bytes from the contents API, not a description of it.
+const RAW = 'application/vnd.github.raw+json';
 
 /** A client for one repository (`owner/name`). */
 export function gitHub({ repository, token }) {
-  async function call(method, path, body) {
+  async function call(method, path, body, accept = 'application/vnd.github+json') {
     const response = await fetch(`${API}/repos/${repository}${path}`, {
       method,
       headers: {
-        Accept: 'application/vnd.github+json',
+        Accept: accept,
         Authorization: `Bearer ${token}`,
         'X-GitHub-Api-Version': '2022-11-28',
         ...(body ? { 'Content-Type': 'application/json' } : {}),
@@ -35,6 +37,21 @@ export function gitHub({ repository, token }) {
         `/actions/workflows/${file}/runs?status=${status}&per_page=30`,
       );
       return answer?.workflow_runs ?? [];
+    },
+
+    /**
+     * The published map as main has it: its index's `published_at`, and when main last took a
+     * commit to that file. The file is asked for raw, so the answer is the index itself.
+     */
+    async publishedMapOnMain() {
+      const path = 'public/data/index.v5.json';
+      const index = await call('GET', `/contents/${path}?ref=main`, undefined, RAW);
+      const commits = await call('GET', `/commits?sha=main&path=${path}&per_page=1`);
+      const committedAt = commits?.[0]?.commit?.committer?.date;
+      if (typeof index?.published_at !== 'string' || typeof committedAt !== 'string') {
+        throw new Error(`main's ${path} or its last commit could not be read`);
+      }
+      return { publishedAt: index.published_at, committedAt };
     },
 
     /** The `alert` issues, open and closed, most recently updated first. */
