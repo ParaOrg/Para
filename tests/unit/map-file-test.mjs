@@ -610,9 +610,16 @@ test('the committed index parses with its schema, every line file with its own, 
   const { lineFileSchema } =
     await import('../../src/features/routes/published/line-file-schema.ts');
   const raw = read('index.v5.json');
-  const started = performance.now();
   const parsed = indexSchema.parse(raw);
-  const took = performance.now() - started;
+  // The fastest of three rounds: a busy machine (a build beside the tests) slows a round, not the
+  // parse, and failed this once at 98.8 ms where it takes well under 50 alone.
+  const took = Math.min(
+    ...[0, 1, 2].map(() => {
+      const started = performance.now();
+      indexSchema.parse(raw);
+      return performance.now() - started;
+    }),
+  );
   assert.equal(parsed.directions.length, raw.variants.length);
   assert.equal(parsed.hotspots.length, raw.stops.length);
   assert.ok(took < 50, `parsing the committed index took ${took.toFixed(1)} ms`);

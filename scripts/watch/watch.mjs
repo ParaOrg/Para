@@ -18,6 +18,7 @@ import {
   checkLastSuccess,
   checkPublishedMap,
   checkSite,
+  checkWatchGap,
   lastRunSucceeded,
   tilesCheck,
   withRetries,
@@ -93,11 +94,20 @@ const checks = [
         now,
       ),
   },
+  {
+    key: 'watch-gap',
+    title: 'Alert: the watch missed its own runs',
+    hint: 'Nothing is known to be wrong with the site. GitHub ran the watch late or skipped it, so for that long nothing was being checked. Open Actions, Watch: if the runs are back to every 15 minutes this closes itself; if the workflow says it is disabled, press Enable workflow.',
+    runbook: runbookLink('the-watch-missed-its-runs'),
+    run: async () => checkWatchGap(await github.workflowRuns('watch.yml', 'success'), now),
+    // Its answer is the same a minute later.
+    tries: 1,
+  },
 ];
 
 const results = [];
 for (const check of checks.filter((each) => !each.isSkipped)) {
-  const outcome = await withRetries(check.run);
+  const outcome = await withRetries(check.run, { tries: check.tries });
   console.info(`${outcome.ok ? 'pass' : 'FAIL'} ${check.key}: ${outcome.answer}`);
   results.push({
     key: check.key,

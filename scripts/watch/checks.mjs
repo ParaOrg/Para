@@ -13,6 +13,8 @@ export const STYLE_PATH = '/styles/positron';
 export const PUBLISH_MAX_AGE_DAYS = 1.5;
 export const BACKUP_MAX_AGE_DAYS = 8;
 export const TILES_BUILD_MAX_AGE_DAYS = 35;
+// The watch is asked for every 15 minutes: over 45 is two runs in a row late or dropped.
+export const WATCH_MAX_GAP_MINUTES = 45;
 
 const TRIES = 3;
 const TRY_GAP_MS = 20_000;
@@ -109,6 +111,23 @@ export function checkLastSuccess(runs, events, maxAgeDays, now) {
     (Date.parse(now) - Date.parse(last.run_started_at ?? last.created_at)) / 86_400_000;
   const answer = `Last success ${ageDays.toFixed(1)} days ago: ${last.html_url}`;
   return { ok: ageDays < maxAgeDays, answer };
+}
+
+/**
+ * How long ago the watch itself last ran. GitHub runs a schedule late, or drops it, and then
+ * none of the checks above is being made. `runs` are the watch's own successful runs, newest
+ * first; a pull request's dry run is not one.
+ */
+export function checkWatchGap(runs, now, maxGapMinutes = WATCH_MAX_GAP_MINUTES) {
+  const last = runs.find((run) => run.event !== 'pull_request');
+  if (!last) return { ok: true, answer: 'No earlier run of the watch to measure from' };
+  const minutes = (Date.parse(now) - Date.parse(last.run_started_at ?? last.created_at)) / 60_000;
+  const ago =
+    minutes < 120 ? `${Math.round(minutes)} minutes` : `${(minutes / 60).toFixed(1)} hours`;
+  return {
+    ok: minutes <= maxGapMinutes,
+    answer: `The watch last ran ${ago} ago: ${last.html_url}`,
+  };
 }
 
 /** True when the newest finished run not made for a pull request succeeded. */
