@@ -61,9 +61,9 @@ export async function handle(
   // ignore-duplicates: an email already listed comes back as no row, and gets no second message.
   const saved = await send(`${env.supabaseUrl}/rest/v1/waitlist?on_conflict=email`, {
     method: 'POST',
+    // The secret key goes on apikey alone. It is not a JWT, so as a Bearer token it is refused.
     headers: {
       apikey: env.secretKey,
-      Authorization: `Bearer ${env.secretKey}`,
       'Content-Type': 'application/json',
       Prefer: 'resolution=ignore-duplicates,return=representation',
     },

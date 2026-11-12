@@ -57,6 +57,7 @@ test('a new email is saved in lower case and gets one message', async () => {
   const [save] = net.to('/rest/v1/waitlist');
   assert.deepEqual(JSON.parse(save.init.body), { email: 'ana@example.com' });
   assert.equal(save.init.headers.apikey, 'secret-key');
+  assert.equal(save.init.headers.Authorization, undefined);
   assert.match(save.init.headers.Prefer, /ignore-duplicates/);
   const mails = net.to('api.resend.com');
   assert.equal(mails.length, 1);
