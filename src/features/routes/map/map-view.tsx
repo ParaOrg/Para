@@ -17,6 +17,7 @@ import { BASEMAPS, DEFAULT_BASEMAP, initialStyle, readBasemap, type Basemap } fr
 import { BasemapControl, type MapButtonStyle } from './basemap-control';
 import { BASEMAP_THUMBNAILS } from './basemap-thumbnails';
 import { diagnose, type Diagnosis } from './diagnose';
+import { exposeMap, exposeMapEarly } from './expose-map';
 import {
   OPENING_WAIT_MS,
   ROUTES_FRAMING,
@@ -28,6 +29,7 @@ import {
 } from './framing';
 import { readLocationLabels, type LabelsPlace } from './location-labels';
 import { mapAttribution } from './map-attribution';
+import { MapFailure } from './map-failure';
 import { routesDrawn } from './saved-routes-layers';
 import { noteTile } from './tiles-asked';
 
@@ -332,13 +334,8 @@ export function MapView({
       // The map for the handlers below, which cannot tell the `let` was set.
       const made = map;
 
-      // The map from its making, for the builds that hand it out (see 'load'
-      // below): the cheap-phone timer stamps its 'load' and its first frame
-      // with the routes drawn from here, before any of its events can fire.
-      // So do the suites, for the camera it was made at and the first lines
-      // it draws, before its 'load' on the public map.
-      if (import.meta.env.DEV || import.meta.env.VITE_EXPOSE_MAP === '1')
-        (window as unknown as { __mapEarly?: MapLibreMap }).__mapEarly = map;
+      // From its making, for the builds that hand it out (expose-map.ts).
+      exposeMapEarly(map);
 
       // The public map: what it opened framed on, and the commuter's gestures
       // from now on, for the routes' own fit to leave a map they have moved
@@ -402,22 +399,8 @@ export function MapView({
         isLoaded = true;
         setLoaded(true);
         setError(null);
-        // Dev builds expose the map so the headless suites (tests/e2e/) can read real
-        // screen positions from the drawn geometry instead of guessing. So does
-        // the production build scripts/research/phone-speed.mjs makes for itself
-        // with VITE_EXPOSE_MAP=1, to time a cheap phone on the code commuters get;
-        // `npm run build` never sets it, and check-build.mjs fails a build that
-        // carries the map out. With it, the GL programs compiled so far by
-        // MapLibre's own key: painter.cache is MapLibre's inside, so it is read
-        // here and nowhere else, for the timer and the suites to see what a tap
-        // compiles.
-        if (import.meta.env.DEV || import.meta.env.VITE_EXPOSE_MAP === '1') {
-          const shown = made;
-          const w = window as unknown as { __map?: MapLibreMap; __programs?: () => string[] };
-          w.__map = shown;
-          w.__programs = () =>
-            Object.keys((shown as unknown as { painter: { cache: object } }).painter.cache);
-        }
+        // At its 'load', for the builds that hand it out (expose-map.ts).
+        exposeMap(made);
         setReady(map);
         // The public map's was handed over at its style's load (above).
         if (!openOn) onReadyRef.current?.(made);
@@ -516,27 +499,13 @@ export function MapView({
       )}
 
       {error && !isCovered && (
-        <div className="absolute inset-x-0 top-0 z-30 m-4 rounded-lg bg-red-50 p-4 text-sm text-red-900 shadow ring-1 ring-red-200">
-          <p className="font-medium">The map failed to load.</p>
-          <p className="mt-1 break-words">{error}</p>
-          {diag && (
-            <dl className="mt-3 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs text-red-800">
-              <dt className="font-medium">WebGL</dt>
-              <dd>{diag.webgl}</dd>
-              <dt className="font-medium">Renderer</dt>
-              <dd className="break-words">{diag.renderer ?? '(hidden)'}</dd>
-              <dt className="font-medium">Style fetch</dt>
-              <dd className="break-words">{diag.styleFetch}</dd>
-              <dt className="font-medium">DOM</dt>
-              <dd className="break-words">{dom ?? '—'}</dd>
-              <dt className="font-medium">Events</dt>
-              <dd className="break-words">{trace.length ? trace.join(' → ') : '(none fired)'}</dd>
-            </dl>
-          )}
-          <p className="mt-2 text-red-700">
-            Tile source: <code className="break-all">{basemap.url}</code>
-          </p>
-        </div>
+        <MapFailure
+          message={error}
+          diagnosis={diag}
+          dom={dom}
+          trace={trace}
+          styleUrl={basemap.url}
+        />
       )}
     </>
   );
