@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # The waitlist migration on databases of its own. It leans on no other migration, so each starts
 # from bootstrap.sql alone, whose default privileges hand a new table to anon and authenticated as a
-# Supabase project from before 0017 did: the migration's own revoke is what closes it. On the first:
+# Supabase project from before 0017 did, plus the default the live project still has, everything on
+# a new table to service_role: the migration's own revoke is what closes both. On the first:
 # apply/…_waitlist_apply.sql twice (the second run must stop and change nothing), and the check: its
 # rolled-back behaviour part raises nothing and leaves nothing behind, and its read-only rows are all
 # true. On the second: apply, a revert refused while the list holds an email, then revert twice once
@@ -16,6 +17,7 @@ apply() { $PSQL -d "$DB" -v ON_ERROR_STOP=1 -q "$@" 2>&1 | { grep -v '^NOTICE\|^
 fresh() {
   $PSQL -d postgres -qc "set client_min_messages = warning" -c "drop database if exists $DB" -c "create database $DB"
   sed '/^create role/d;/^grant anon, authenticated/d' bootstrap.sql | apply
+  apply -c 'alter default privileges in schema public grant all on tables to service_role'
 }
 checked() {
   local out rows

@@ -36,5 +36,7 @@ create table public.waitlist (
 
 alter table public.waitlist enable row level security;
 
-revoke all on public.waitlist from public, anon, authenticated;
+-- service_role is named too: on the live project a new table in public is its to change and
+-- empty by default (0017 left that default alone), and the function only ever adds and reads.
+revoke all on public.waitlist from public, anon, authenticated, service_role;
 grant select, insert on public.waitlist to service_role;
