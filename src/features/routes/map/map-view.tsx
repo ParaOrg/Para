@@ -28,6 +28,7 @@ import {
 } from './framing';
 import { readLocationLabels, type LabelsPlace } from './location-labels';
 import { mapAttribution } from './map-attribution';
+import { MapFailure } from './map-failure';
 import { routesDrawn } from './saved-routes-layers';
 import { noteTile } from './tiles-asked';
 
@@ -516,27 +517,13 @@ export function MapView({
       )}
 
       {error && !isCovered && (
-        <div className="absolute inset-x-0 top-0 z-30 m-4 rounded-lg bg-red-50 p-4 text-sm text-red-900 shadow ring-1 ring-red-200">
-          <p className="font-medium">The map failed to load.</p>
-          <p className="mt-1 break-words">{error}</p>
-          {diag && (
-            <dl className="mt-3 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs text-red-800">
-              <dt className="font-medium">WebGL</dt>
-              <dd>{diag.webgl}</dd>
-              <dt className="font-medium">Renderer</dt>
-              <dd className="break-words">{diag.renderer ?? '(hidden)'}</dd>
-              <dt className="font-medium">Style fetch</dt>
-              <dd className="break-words">{diag.styleFetch}</dd>
-              <dt className="font-medium">DOM</dt>
-              <dd className="break-words">{dom ?? '—'}</dd>
-              <dt className="font-medium">Events</dt>
-              <dd className="break-words">{trace.length ? trace.join(' → ') : '(none fired)'}</dd>
-            </dl>
-          )}
-          <p className="mt-2 text-red-700">
-            Tile source: <code className="break-all">{basemap.url}</code>
-          </p>
-        </div>
+        <MapFailure
+          message={error}
+          diagnosis={diag}
+          dom={dom}
+          trace={trace}
+          styleUrl={basemap.url}
+        />
       )}
     </>
   );

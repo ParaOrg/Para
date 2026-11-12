@@ -126,8 +126,9 @@ const meta = {
     routeDirection: 'Novaliches',
     switchable: true,
     back: false,
-    // Papunta showing: SWITCH names the way a tap leads.
-    way: 'Pabalik',
+    // Papunta showing: PAPUNTA names it, and ⇅ the way a tap leads.
+    way: 'Papunta',
+    wayTo: 'Pabalik',
     onSwitch: fn(),
     onBackToList: fn(),
     onClose: fn(),
@@ -310,23 +311,45 @@ export const Ejeep: Story = { args: { livery: 'ejeep' } };
 /** UV Express: a light card, its words in Card/UVExpress/UVExpress-on-surface. */
 export const UvExpress: Story = { args: { livery: 'uv-express' } };
 
-/** SWITCHed: the way back, so SWITCH reads Papunta, the way a tap leads. */
+/** Turned round: the way back, so PAPUNTA reads Pabalik, and ⇅ Papunta, the way a tap leads. */
 export const TheWayBack: Story = {
   args: {
     routeOrigin: 'Novaliches',
     hintuans: [...talaToNovaliches].reverse(),
     routeDirection: 'Tala',
     back: true,
-    way: 'Papunta',
+    way: 'Pabalik',
+    wayTo: 'Papunta',
+  },
+  play: async ({ canvasElement }) => {
+    const way = within(canvasElement).getByTestId('card-switch');
+    await expect(way).toHaveAccessibleName('Pabalik');
+    await expect(way).toHaveAttribute('data-back', 'true');
   },
 };
 
-/** Opened with no list behind it — a tap on its line, a hotspot's card — and no other route sharing an end drawn its way round: nothing to go back to, so no ‹. */
-export const NothingToGoBackTo: Story = {
-  render: (args) => <TimelineRouteDetailCard {...args} onBackToList={null} />,
+/** Something behind it, the list it was picked from: ‹ stands in the bar, and no ✕. */
+export const SomethingBehind: Story = {
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.queryByRole('button', { name: 'Close' })).toBeNull();
+    await userEvent.click(canvas.getByRole('button', { name: 'Back' }));
+    await expect(args.onBackToList).toHaveBeenCalledTimes(1);
+  },
 };
 
-/** The route's other way is not drawn yet: SWITCH rests disabled. */
+/** Opened with no list behind it — a tap on its line, a hotspot's card — and no other route sharing an end drawn its way round: nothing to go back to, so ✕ stands where ‹ would. */
+export const NothingToGoBackTo: Story = {
+  render: (args) => <TimelineRouteDetailCard {...args} onBackToList={null} />,
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.queryByRole('button', { name: 'Back' })).toBeNull();
+    await userEvent.click(canvas.getByRole('button', { name: 'Close' }));
+    await expect(args.onClose).toHaveBeenCalledTimes(1);
+  },
+};
+
+/** The route's other way is not drawn yet: PAPUNTA and ⇅ rest disabled. */
 export const NothingTheOtherWay: Story = { args: { switchable: false } };
 
 /**

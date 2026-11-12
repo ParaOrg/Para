@@ -19,13 +19,13 @@ import { RouteCardList } from '@/features/routes/cards/route-card-list';
 import { TripCard } from '@/features/routes/cards/trip-card';
 import { useTripTimeline } from '@/features/routes/cards/use-trip-timeline';
 import { EndTitles } from '@/features/routes/map/end-titles';
-import { routesBounds } from '@/features/routes/map/framing';
 import { HintuanPin } from '@/features/routes/map/hintuan-pin';
 import { LandmarkPin } from '@/features/routes/map/landmark-pin';
 import { lookAt } from '@/features/routes/map/look-at';
 import { MapCreditsDock } from '@/features/routes/map/map-credits-dock';
 import { MapCreditsSheet } from '@/features/routes/map/map-credits-sheet';
 import { METRO_MANILA, MapView } from '@/features/routes/map/map-view';
+import { openOnRoutes } from '@/features/routes/map/open-on-routes';
 import { StationLabels } from '@/features/routes/map/station-labels';
 import { useCardCamera } from '@/features/routes/map/use-card-camera';
 import { useCardStack } from '@/features/routes/map/use-card-stack';
@@ -41,7 +41,6 @@ import { placeKey } from '@/features/routes/model/places';
 import {
   loadDirectionsFromFile,
   loadHotspotsFromFile,
-  openingDirections,
 } from '@/features/routes/published/fetch-index';
 import { fetchLine } from '@/features/routes/published/fetch-line';
 import { useTurn } from '@/shared/hooks/commit-turn';
@@ -62,15 +61,6 @@ const PageToasts = retryingLazy(() =>
 );
 
 /**
- * The routes' framing the map opens on: their box as the index or the copy
- * kept from an earlier visit has them (openingDirections), the box the
- * routes' own fit frames (useSavedRoutes). Module-level, as the loaders below
- * are.
- */
-const openOnRoutes = () =>
-  openingDirections().then((directions) => (directions ? routesBounds(directions) : null));
-
-/**
  * Whether the commuter map draws the hotspots' pins zoomed in (a terminal's or hintuan's flag). Off
  * for now: the boxes and their names say where each one is, and a tap there opens it as before.
  * Zoomed out each keeps its small dot, so a hotspot stays in sight. The studio keeps its pins.
@@ -78,12 +68,12 @@ const openOnRoutes = () =>
 const SHOW_HOTSPOT_PINS = false;
 
 /**
- * While a docked card stands at full height, the toast sits 12 under the card's ✕, so the ✕ stays
- * in reach: the strip of map 24 (MAX_STRIP_PX), the handle's row 18 and the ✕ 40, then 12. A card
- * floating in the corner (`@float:`) keeps the toast at the top.
+ * While a docked card stands at full height, the toast sits 12 under its ✕ (map strip 24, handle
+ * 18, ✕ 40), so the ✕ stays in reach. A trip, its ‹ or ✕ in the Controller at its foot
+ * (`data-footer`), and a card floating in the corner (`@float:`) keep the toast at the top.
  */
 const TOAST_UNDER_FULL_CARD =
-  '@max-float:group-has-[[data-testid=card][data-snap=full]:not([hidden])]/map:[--toast-top:calc(env(safe-area-inset-top)+--spacing(23.5))]';
+  '@max-float:group-has-[[data-testid=card][data-snap=full]:not([hidden]):not([data-footer])]/map:[--toast-top:calc(env(safe-area-inset-top)+--spacing(23.5))]';
 
 /** The too-new map's Reload: the newer app, through the worker (pwa.ts). */
 const handleReloadNewer = () => void reloadForNewerApp();
