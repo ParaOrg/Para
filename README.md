@@ -50,6 +50,10 @@ contribution on the phone, from Start to Save, and sends it to the studio,
 where only editors see it. It is a page of its own, so the public map carries
 none of it, and the contributor app is the same page inside an Android shell.
 
+**`/app/` is where the app is downloaded**, and what the QR codes on posters open, so their link
+holds while the app moves on. It is plain HTML in `public/app/`, outside Vite's entries: Android gets
+the newest APK from `releases/latest`, an iPhone the contributor page in the browser.
+
 Nothing from `src/app/studio/` or `src/features/studio/` reaches the public page: `npm run lint`
 checks the import boundaries (`eslint.config.js`) and `npm run build` the built page, and each
 fails if the editor or the database's address ever gets in.
