@@ -17,6 +17,7 @@ import { BASEMAPS, DEFAULT_BASEMAP, initialStyle, readBasemap, type Basemap } fr
 import { BasemapControl, type MapButtonStyle } from './basemap-control';
 import { BASEMAP_THUMBNAILS } from './basemap-thumbnails';
 import { diagnose, type Diagnosis } from './diagnose';
+import { exposeMap, exposeMapEarly } from './expose-map';
 import {
   OPENING_WAIT_MS,
   ROUTES_FRAMING,
@@ -336,13 +337,8 @@ export function MapView({
       // The map for the handlers below, which cannot tell the `let` was set.
       const made = map;
 
-      // The map from its making, for the builds that hand it out (see 'load'
-      // below): the cheap-phone timer stamps its 'load' and its first frame
-      // with the routes drawn from here, before any of its events can fire.
-      // So do the suites, for the camera it was made at and the first lines
-      // it draws, before its 'load' on the public map.
-      if (import.meta.env.DEV || import.meta.env.VITE_EXPOSE_MAP === '1')
-        (window as unknown as { __mapEarly?: MapLibreMap }).__mapEarly = map;
+      // From its making, for the builds that hand it out (expose-map.ts).
+      exposeMapEarly(map);
 
       // The public map: what it opened framed on, and the commuter's gestures
       // from now on, for the routes' own fit to leave a map they have moved
@@ -406,22 +402,8 @@ export function MapView({
         isLoaded = true;
         setLoaded(true);
         setError(null);
-        // Dev builds expose the map so the headless suites (tests/e2e/) can read real
-        // screen positions from the drawn geometry instead of guessing. So does
-        // the production build scripts/research/phone-speed.mjs makes for itself
-        // with VITE_EXPOSE_MAP=1, to time a cheap phone on the code commuters get;
-        // `npm run build` never sets it, and check-build.mjs fails a build that
-        // carries the map out. With it, the GL programs compiled so far by
-        // MapLibre's own key: painter.cache is MapLibre's inside, so it is read
-        // here and nowhere else, for the timer and the suites to see what a tap
-        // compiles.
-        if (import.meta.env.DEV || import.meta.env.VITE_EXPOSE_MAP === '1') {
-          const shown = made;
-          const w = window as unknown as { __map?: MapLibreMap; __programs?: () => string[] };
-          w.__map = shown;
-          w.__programs = () =>
-            Object.keys((shown as unknown as { painter: { cache: object } }).painter.cache);
-        }
+        // At its 'load', for the builds that hand it out (expose-map.ts).
+        exposeMap(made);
         setReady(map);
         // The public map's was handed over at its style's load (above).
         if (!openOn) onReadyRef.current?.(made);
