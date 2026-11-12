@@ -3,9 +3,9 @@
   The app's download page, /app/: what the QR codes on posters open, so their link never changes
   when a new version comes out. Android gets the newest APK (GitHub's releases/latest always points
   at it), an iPhone the contributor page in the browser. Plain HTML, copied as it is from public/:
-  no bundle, so it adds nothing to the map's or the contributor page's loads. The picture, logo and
-  fonts beside it are copies of src/features/published-map/install-welcome.webp,
-  src/features/contribute/account/para-logo.svg and the design system's SN Pro.
+  no bundle, so it adds nothing to the map's or the contributor page's loads. The logo and fonts
+  beside it are copies of src/features/contribute/account/para-logo.svg and the design system's
+  SN Pro. The picture is three of the app's own screens, from .scratch/releases/app-v0.4.0-shots.
 -->
 <html lang="en">
   <head>
@@ -17,7 +17,7 @@
       name="description"
       content="Record the jeepney routes you ride, and put them on Para's map of Metro Manila."
     />
-    <!-- What Messenger and Facebook show when the link is shared. share.jpg is welcome.webp cut to 1200 by 630. -->
+    <!-- What Messenger and Facebook show when the link is shared. share.jpg is the picture on this page, screens.webp, as a JPEG. -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://www.para-commute.org/app/" />
     <meta property="og:title" content="Get the Para app" />
@@ -89,7 +89,7 @@
         height: auto;
         margin: 1.25rem 0 1.5rem;
         border-radius: 1.5rem;
-        aspect-ratio: 768 / 403;
+        aspect-ratio: 1200 / 630;
         object-fit: cover;
       }
       h1 {
@@ -165,7 +165,15 @@
   <body>
     <main>
       <img class="logo" src="/app/para-logo.svg" alt="Para" width="98" height="64" />
-      <img class="hero" src="/app/welcome.webp" alt="" width="768" height="403" decoding="async" />
+      <img
+        class="hero"
+        src="/app/screens.webp"
+        alt="Three screens of the Para app show the map with Start tracking, a recorded jeep ride from SM Fairview to Novaliches, and the public map of routes."
+        width="1200"
+        height="630"
+        decoding="async"
+        fetchpriority="high"
+      />
       <h1>Map the jeep you ride</h1>
       <p class="lead">
         Para is a map of Metro Manila's jeepney routes, drawn from the rides of the people who take
@@ -192,8 +200,16 @@
 
       <section aria-labelledby="iphone">
         <h2 id="iphone">On iPhone</h2>
-        <p>There's no iPhone app yet. You can record a ride in your browser instead.</p>
+        <p>There's no iPhone app yet. You can record a ride in Safari instead.</p>
         <a class="button plain" href="/contribute/">Record in the browser</a>
+        <ol>
+          <li>Make an account, and allow location when Safari asks.</li>
+          <li>
+            Keep Para open with the screen on until you get off. Para can't follow the ride while
+            the phone is locked or another app is open.
+          </li>
+          <li>To find Para again, tap Share, then Add to Home Screen.</li>
+        </ol>
       </section>
 
       <section aria-labelledby="more">
