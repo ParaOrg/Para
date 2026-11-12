@@ -15,6 +15,7 @@ import {
   PUBLISH_MAX_AGE_DAYS,
   TILES,
   TILES_BUILD_MAX_AGE_DAYS,
+  checkDeployedMap,
   checkLastSuccess,
   checkPublishedMap,
   checkSite,
@@ -46,6 +47,13 @@ const checks = [
     hint: 'The site answers but its map file does not. Open https://www.para-commute.org/data/index.v5.json; if it is missing, the last deploy of the site left it out.',
     runbook: runbookLink('the-map-is-blank'),
     run: () => checkPublishedMap(fetch),
+  },
+  {
+    key: 'deployed-map',
+    title: 'Alert: a publish did not reach the live site',
+    hint: 'The map was published to main, but the site still shows the one before. Open the Cloudflare dashboard, Workers & Pages, para, Deployments: a failed build says why, and "Retry deployment" builds it again. Commuters keep the earlier map meanwhile; nothing is lost.',
+    runbook: runbookLink('a-publish-didnt-deploy'),
+    run: () => checkDeployedMap(fetch, github, now),
   },
   {
     key: 'publish-age',
