@@ -181,6 +181,9 @@ export default defineConfig([
         'error',
         { fixStyle: 'separate-type-imports' },
       ],
+      // No `as` to quiet the compiler (.claude/CLAUDE.md, "TypeScript"); `as const` is not one
+      // and passes. A warning until the tree is clean of it, folder by folder, then an error.
+      '@typescript-eslint/consistent-type-assertions': ['warn', { assertionStyle: 'never' }],
       // No `enum`, and the build's variables read only in the env modules (both above).
       'no-restricted-syntax': ['error', NO_ENUM, ...ENV_ONLY_IN_ENV_MODULES],
 
