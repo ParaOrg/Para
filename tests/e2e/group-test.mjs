@@ -15,14 +15,18 @@
 // the list does not show stay drawn as they rest. A click on the light-blue
 // way back switches the list to it, and a click on a shown line where its
 // outbound runs too keeps the shown one.
-// Reads the live tables, so it finds its own spot: a vertex of
-// one route lying on another route's line. SKIPs when no two routes share
-// a road.
+// Reads made-up tables (fixtures/shared-road-tables.mjs) from the stand-in
+// for the database, never the live ones: three routes on one road, each drawn
+// both ways with hintuans along it, so every check here has what it needs on
+// any day. It still finds its own spot, a vertex of one route lying on
+// another route's line, and a check that skips fails the run.
 import { chromium } from 'playwright';
+import { SHARED_ROAD_TABLES } from './fixtures/shared-road-tables.mjs';
+import { fakeStudioDb } from './lib/fake-studio-db.mjs';
 import { BASE, harness, waitForSource } from './lib/harness.mjs';
 import { lookReaders } from './lib/looks.mjs';
 
-const { check, skip, tally } = harness();
+const { check, skip, tally } = harness({ knownSkips: [] });
 
 const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
@@ -35,6 +39,7 @@ await page.addInitScript(() => {
   };
 });
 await page.addInitScript(lookReaders);
+await fakeStudioDb(page, SHARED_ROAD_TABLES);
 
 await page.goto(`${BASE}/studio/?e2e=1`, { waitUntil: 'load' });
 await page.waitForFunction(() => window.__map && window.__map.loaded(), null, { timeout: 30000 });
@@ -44,7 +49,7 @@ if ((await waitForSource(page, 'saved-routes')).length === 0)
 const lines = await page.evaluate(async () =>
   (await window.__src('saved-routes')).features.map((f) => ({
     id: f.properties.id,
-    route: f.properties.route_id,
+    route: f.properties.routeId,
     coords: f.geometry.coordinates,
   })),
 );
@@ -106,12 +111,12 @@ for (const a of lines) {
   }
 }
 
-if (!spot) {
-  skip(
-    'a tap where two routes share a road',
-    'no two routes share a road in the live tables today',
-  );
-} else {
+if (!spot) throw new Error('no two routes share a road in the made-up tables');
+// The map's own pixels start below the studio's bar: a tap is given in the map's and
+// lands in the page's.
+const canvas = await page.locator('canvas.maplibregl-canvas').boundingBox();
+const tap = (x, y) => page.mouse.click(canvas.x + x, canvas.y + y);
+{
   await page.evaluate((c) => window.__map.jumpTo({ center: c, zoom: 17 }), spot);
   await page.waitForTimeout(900);
   const [x, y] = await page.evaluate((c) => {
@@ -135,7 +140,7 @@ if (!spot) {
     ],
     [x, y],
   );
-  await page.mouse.click(x, y);
+  await tap(x, y);
   await page.waitForTimeout(700);
 
   const chooser = page.locator('[data-testid="chooser"]');
@@ -604,7 +609,9 @@ if (!spot) {
         `${after.pins} circle(s), ${after.rest} stretch(es) at rest, ${after.stations.filter((s) => s.paled).length} dot(s) along it, ${after.lit} lit`,
       );
     }
-    await page.locator('[data-testid="card"] button[aria-label="Close"]').first().click();
+    // A trip a list's row opened closes in two steps: ‹ back to the list, then the list's ✕.
+    await page.locator('[data-testid="card"]').getByRole('button', { name: 'Back' }).click();
+    await chooser.getByRole('button', { name: 'Close' }).click();
     await page.waitForTimeout(400);
     const endsNone = await page.evaluate(() => window.__ends().length);
     check('  closing it leaves no circles', endsNone === 0, `${endsNone} circle(s)`);
@@ -621,7 +628,7 @@ if (!spot) {
   const reopen = async (wantBack) => {
     await page.evaluate((c) => window.__map.jumpTo({ center: c, zoom: 17 }), spot);
     await page.waitForTimeout(700);
-    await page.mouse.click(x, y);
+    await tap(x, y);
     await page.waitForTimeout(700);
     if ((await showsBack()) !== wantBack) {
       await chooser.locator('[data-testid="chooser-flip"]').click();
@@ -668,7 +675,7 @@ if (!spot) {
   const clickAt = async (p) => {
     await page.evaluate((c) => window.__map.jumpTo({ center: c, zoom: 17 }), p.at);
     await page.waitForTimeout(600);
-    await page.mouse.click(p.x, p.y);
+    await tap(p.x, p.y);
     await page.waitForTimeout(700);
     const now = await read();
     const shown = now.origins.length
