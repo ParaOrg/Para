@@ -14,6 +14,12 @@
 #     sets the version.
 #   - A release with no key fails; it never publishes an unsigned APK. Locally, and in pull
 #     requests, a release build is unsigned.
+#   - "Run workflow" on `main` with "Sign a build without publishing it" ticked is a dry run of
+#     the signing: `build-release` and `sign` run as for a tag, on main's code, and nothing else
+#     does. No Release is made and the signed APK is not kept. It proves `sign` can read its
+#     key, sign and match the recorded fingerprint before a release needs it to. Ticked on any
+#     other branch it does nothing but the debug build: `sign` holds the same condition itself,
+#     and the environment below would refuse it the secret.
 #
 # The key: android/release-key.p12.enc, made once by "Make the app signing key"
 # (make-app-signing-key.yml), is decrypted in `sign` with the secret PARAPO_KEY_PASSPHRASE into a
@@ -82,6 +88,11 @@ on:
       - 'package.json'
       - 'package-lock.json'
   workflow_dispatch:
+    inputs:
+      sign_dry_run:
+        description: Sign a build without publishing it (on main only)
+        type: boolean
+        default: false
 
 # On a pull request a newer push cancels the run for the older one. On main and staging, and
 # for a release tag, a run that has started is never cancelled (as in ci.yml): the commit it
@@ -108,7 +119,7 @@ env:
 jobs:
   debug:
     name: apk
-    if: ${{ !startsWith(github.ref, 'refs/tags/app-v') }}
+    if: ${{ !startsWith(github.ref, 'refs/tags/app-v') && !(inputs.sign_dry_run && github.ref == 'refs/heads/main') }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -142,7 +153,7 @@ jobs:
   # off, the app's process killed at fifteen, and every fix up to the kill still in the ride. Its APK
   # is built with the ride's driver (VITE_EMULATOR_RIDE), so it is not the APK a tester installs.
   emulator-ride:
-    if: ${{ !startsWith(github.ref, 'refs/tags/app-v') }}
+    if: ${{ !startsWith(github.ref, 'refs/tags/app-v') && !(inputs.sign_dry_run && github.ref == 'refs/heads/main') }}
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
@@ -205,7 +216,7 @@ jobs:
   # does; and the ride's service in the foreground, or not, after each, as RideActionReceiver stops
   # and starts it (RideService.java). The emulator ride's APK, with its driver.
   emulator-notification:
-    if: ${{ !startsWith(github.ref, 'refs/tags/app-v') }}
+    if: ${{ !startsWith(github.ref, 'refs/tags/app-v') && !(inputs.sign_dry_run && github.ref == 'refs/heads/main') }}
     runs-on: ubuntu-latest
     timeout-minutes: 40
     steps:
@@ -296,8 +307,9 @@ jobs:
               --prerelease --latest=false --title "Para (test): newest from staging" --notes "$notes"
           fi
 
+  # For a release tag, or for a dry run of the signing: "Run workflow" on main with its box ticked.
   build-release:
-    if: startsWith(github.ref, 'refs/tags/app-v')
+    if: startsWith(github.ref, 'refs/tags/app-v') || (github.event_name == 'workflow_dispatch' && inputs.sign_dry_run && github.ref == 'refs/heads/main')
     runs-on: ubuntu-latest
     timeout-minutes: 30
     outputs:
@@ -312,7 +324,9 @@ jobs:
         with:
           node-version: 22
 
+      # A dry run has no tag to check, and publishes nothing.
       - name: Check the tag is a release that may go out
+        if: startsWith(github.ref, 'refs/tags/app-v')
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs scripts/publish/release-guard.mjs
@@ -334,12 +348,15 @@ jobs:
       # minor * 1,000 + patch), so a newer tag is always a higher code. The major stops at 2100
       # and the minor and patch at 999, which keeps the code under Android's limit of 2,147,483,647
       # (src/features/contribute/app-update/version-code.ts holds the same rule).
+      # A dry run has no tag: any version does, since its APK is thrown away.
       - name: Read the version
         id: version
+        env:
+          RELEASE_TAG: ${{ startsWith(github.ref, 'refs/tags/app-v') && github.ref_name || 'app-v0.0.1' }}
         run: |
-          version="${GITHUB_REF_NAME#app-v}"
+          version="${RELEASE_TAG#app-v}"
           if [[ ! "$version" =~ ^([0-9]{1,4})\.([0-9]{1,3})\.([0-9]{1,3})$ ]] || (( 10#${BASH_REMATCH[1]} > 2100 )); then
-            echo "::error::The tag $GITHUB_REF_NAME is not app-v<major up to 2100>.<minor up to 999>.<patch up to 999>."
+            echo "::error::The tag $RELEASE_TAG is not app-v<major up to 2100>.<minor up to 999>.<patch up to 999>."
             exit 1
           fi
           code=$(( 10#${BASH_REMATCH[1]} * 1000000 + 10#${BASH_REMATCH[2]} * 1000 + 10#${BASH_REMATCH[3]} ))
@@ -384,8 +401,12 @@ jobs:
 
   # The only job that can read the signing secret. It builds nothing and installs nothing: three
   # files of the repository, the APK `build-release` made, and the runner's own Android build tools.
+  #
+  # It holds `build-release`'s condition itself, not only through `needs`: a dry run signs main's
+  # code and no other branch's, whatever becomes of the job before it.
   sign:
     needs: build-release
+    if: startsWith(github.ref, 'refs/tags/app-v') || (github.event_name == 'workflow_dispatch' && inputs.sign_dry_run && github.ref == 'refs/heads/main')
     runs-on: ubuntu-latest
     timeout-minutes: 10
     environment: app-release
@@ -471,13 +492,23 @@ jobs:
             exit 1
           fi
 
-      # For `release-files` only.
+      # For `release-files` only: a dry run keeps no signed APK.
       - uses: actions/upload-artifact@v7
+        if: startsWith(github.ref, 'refs/tags/app-v')
         with:
           name: signed-apk
           path: signed/app-release.apk
           if-no-files-found: error
           retention-days: 1
+
+      - name: Say what the dry run showed
+        if: ${{ !startsWith(github.ref, 'refs/tags/app-v') }}
+        run: |
+          {
+            echo "### Dry run of the app's signing"
+            echo "The APK built from \`main\` ($GITHUB_SHA) was signed and its certificate matches \`android/release-key.sha256\`."
+            echo "Nothing was published and the signed APK was not kept."
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Delete the keystore
         if: always()
@@ -487,6 +518,7 @@ jobs:
   # and schema, so it needs the project's packages, which is why it is not a step of `sign`.
   release-files:
     needs: [build-release, sign]
+    if: startsWith(github.ref, 'refs/tags/app-v')
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
@@ -529,6 +561,7 @@ jobs:
   # reads) always names the newest Release, so any other Release must be made with --latest=false.
   publish:
     needs: release-files
+    if: startsWith(github.ref, 'refs/tags/app-v')
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:

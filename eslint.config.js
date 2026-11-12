@@ -130,6 +130,22 @@ const ENV_ONLY_IN_ENV_MODULES = [
   },
 ];
 
+// React's plain `lazy` keeps a failed fetch for good, and under only the page's error boundary one
+// missed chunk turns the whole page into the error screen. Lazy parts go through retryingLazy
+// (src/shared/lib/retrying-lazy.tsx), which draws nothing and asks again.
+const PLAIN_LAZY_MESSAGE =
+  'Use retryingLazy from @/shared/lib/retrying-lazy: a plain React.lazy stays failed after one missed fetch.';
+const NO_PLAIN_LAZY = [
+  {
+    selector: "ImportDeclaration[source.value='react'] > ImportSpecifier[imported.name='lazy']",
+    message: PLAIN_LAZY_MESSAGE,
+  },
+  {
+    selector: "MemberExpression[object.name='React'][property.name='lazy']",
+    message: PLAIN_LAZY_MESSAGE,
+  },
+];
+
 export default defineConfig([
   globalIgnores([
     'dist/',
@@ -185,8 +201,9 @@ export default defineConfig([
       // No `as` to quiet the compiler (.claude/CLAUDE.md, "TypeScript"); `as const` is not one
       // and passes. A warning until the tree is clean of it, folder by folder, then an error.
       '@typescript-eslint/consistent-type-assertions': ['warn', { assertionStyle: 'never' }],
-      // No `enum`, and the build's variables read only in the env modules (both above).
-      'no-restricted-syntax': ['error', NO_ENUM, ...ENV_ONLY_IN_ENV_MODULES],
+      // No `enum`, the build's variables read only in the env modules, and no plain `lazy`
+      // (all above).
+      'no-restricted-syntax': ['error', NO_ENUM, ...ENV_ONLY_IN_ENV_MODULES, ...NO_PLAIN_LAZY],
 
       // Imports: four groups, blank lines between, alphabetical within.
       // `tsc` already proves every import resolves, so the resolver rule is off
@@ -493,9 +510,18 @@ export default defineConfig([
   },
 
   {
-    // The env modules are where import.meta.env is read: the enum ban alone holds there.
+    // Plain `lazy` is allowed in two places. shared/lib holds retryingLazy itself. The contributor
+    // page draws its screens through React.lazy on purpose: a screen whose fetch failed shows
+    // "Try again", which makes fresh ones (features/contribute/lazy-screens.ts says why a
+    // retrying one would never stop there).
+    files: ['src/shared/lib/**', 'src/features/contribute/**'],
+    rules: { 'no-restricted-syntax': ['error', NO_ENUM, ...ENV_ONLY_IN_ENV_MODULES] },
+  },
+  {
+    // The env modules are where import.meta.env is read. After the block above, so the
+    // contributor page's two env modules get this one.
     files: ENV_MODULES,
-    rules: { 'no-restricted-syntax': ['error', NO_ENUM] },
+    rules: { 'no-restricted-syntax': ['error', NO_ENUM, ...NO_PLAIN_LAZY] },
   },
 
   {

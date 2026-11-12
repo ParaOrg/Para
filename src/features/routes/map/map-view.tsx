@@ -34,7 +34,7 @@ import { mapAttribution } from './map-attribution';
 import { watchMapErrors } from './map-errors';
 import { MapFailure } from './map-failure';
 import { routesDrawn } from './saved-routes-layers';
-import { noteTile } from './tiles-asked';
+import { noteTile, tilesFirstScreenIn } from './tiles-asked';
 
 /**
  * MapLibre 6 spawns its tile-parsing worker from a sibling file whose URL it
@@ -416,6 +416,8 @@ export function MapView({
         setReady(map);
         // The public map's was handed over at its style's load (above).
         if (!openOn) onReadyRef.current?.(made);
+        // The first screen's tiles have all been asked for: the noting ends (tiles-asked.ts).
+        if (openOn) tilesFirstScreenIn();
       });
 
       // Para's own basemap host failing to bring the style: OpenFreeMap's, once (ADR 0007).
