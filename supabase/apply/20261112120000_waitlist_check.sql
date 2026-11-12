@@ -41,6 +41,10 @@ select pg_temp.check(pg_temp.refused($q$insert into public.waitlist (email) valu
   'an email with no dot after the @ is refused');
 select pg_temp.check(pg_temp.refused($q$delete from public.waitlist$q$, '42501'),
   'the function''s role cannot empty the list');
+select pg_temp.check(pg_temp.refused($q$truncate public.waitlist$q$, '42501'),
+  'the function''s role cannot truncate the list');
+select pg_temp.check(pg_temp.refused($q$update public.waitlist set email = email$q$, '42501'),
+  'the function''s role cannot change an email');
 
 set local role anon;
 select pg_temp.check(pg_temp.refused($q$select count(*) from public.waitlist$q$, '42501'), 'anon cannot read the list');
@@ -62,10 +66,10 @@ select * from (values
   (2, 'row security is on, with no rule',
    (select relrowsecurity from pg_class where oid = 'public.waitlist'::regclass)
    and not exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'waitlist')),
-  (3, 'service_role selects and inserts, and does not update or delete',
+  (3, 'service_role selects and inserts, and does not update, delete or truncate',
    has_table_privilege('service_role', 'public.waitlist', 'select')
    and has_table_privilege('service_role', 'public.waitlist', 'insert')
-   and not has_table_privilege('service_role', 'public.waitlist', 'update, delete')),
+   and not has_table_privilege('service_role', 'public.waitlist', 'update, delete, truncate')),
   (4, 'the ledger row is there once',
    (select count(*) = 1 from supabase_migrations.schema_migrations where name = 'waitlist'))
 ) as c(n, what, ok) order by n;

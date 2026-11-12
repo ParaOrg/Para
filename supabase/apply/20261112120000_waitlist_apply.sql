@@ -80,6 +80,9 @@ begin
      or not has_table_privilege('service_role', 'public.waitlist', 'select') then
     raise exception 'waitlist: service_role cannot add to the list. Nothing was changed.';
   end if;
+  if has_table_privilege('service_role', 'public.waitlist', 'update, delete, truncate') then
+    raise exception 'waitlist: service_role can change or empty the list. Nothing was changed.';
+  end if;
 end $$;
 
 -- 3. The ledger row, once.
