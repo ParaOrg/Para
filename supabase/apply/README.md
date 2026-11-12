@@ -738,7 +738,7 @@ proves the old path still works.
 # Applying waitlist to the live project
 
 **Not applied live.** `/app/` has an Android download and nothing to install on an iPhone, so its iPhone part
-takes an email (Gab's ask, meeting 2026-11-03). Two things make it work, and both are the owner's: the table
+takes an email. Two things make it work, and both are the owner's: the table
 (the three files below) and the `waitlist` Edge Function, the project's first (`supabase/functions/waitlist`).
 Until both are in, the form on `/app/` answers "That didn't go through" and nothing else on the page changes.
 

@@ -24,10 +24,9 @@ end $$;
 -- Para — waitlist: the emails of people who asked to be told when the iPhone
 -- app is out
 --
--- Gab asked for a waitlist on the landing page (meeting, 2026-11-03). /app/ has
--- an Android download and nothing to install on an iPhone, so its iPhone part
--- takes an email. This table keeps them, one row an email, until the app is
--- out and the one message is sent.
+-- /app/ has an Android download and nothing to install on an iPhone, so its
+-- iPhone part takes an email. This table keeps them, one row an email, until
+-- the app is out and the one message is sent.
 --
 -- An email is kept trimmed and in lower case, so the same address written two
 -- ways is one row. The check below is the only rule on its shape: something,
