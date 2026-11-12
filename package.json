@@ -6,8 +6,8 @@
   "scripts": {
     "dev": "vite",
     "dev:phone": "vite --host",
-    "build": "tsc --noEmit && tsc -p workers/tiles && vite build && node --experimental-strip-types scripts/checks/check-build.mjs",
-    "typecheck": "tsc --noEmit && tsc -p workers/tiles",
+    "build": "tsc --noEmit && tsc -p workers/tiles && tsc -p workers/site && vite build && node --experimental-strip-types scripts/checks/check-build.mjs",
+    "typecheck": "tsc --noEmit && tsc -p workers/tiles && tsc -p workers/site",
     "lint": "eslint .",
     "check": "npm run format:check && npm run lint && npm run check:long-files && npm run check:glossary && npm run docs:architecture:check && npm run build && npm run test:unit",
     "test": "npm run test:unit",
@@ -44,6 +44,7 @@
     "@supabase/supabase-js": "^2.118.0",
     "@tanstack/react-query": "5.105.0",
     "maplibre-gl": "^6.7.0",
+    "postgres": "^3.4.9",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "zod": "^4.6.7"
