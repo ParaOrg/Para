@@ -80,9 +80,12 @@ on:
       - 'package-lock.json'
   workflow_dispatch:
 
+# On a pull request a newer push cancels the run for the older one. On main and staging, and
+# for a release tag, a run that has started is never cancelled (as in ci.yml): the commit it
+# checks gets its full verdict.
 concurrency:
   group: contributor-app-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
