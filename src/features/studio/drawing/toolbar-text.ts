@@ -13,9 +13,10 @@ export function formatDistance(metres: number): string {
 
 /** A key pressed while typing belongs to the field, never to the map. */
 export function isTyping(target: EventTarget | null): boolean {
-  const el = target as HTMLElement | null;
-  if (!el) return false;
-  return el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName);
+  if (!target) return false;
+  const isEditable = 'isContentEditable' in target && target.isContentEditable === true;
+  const tagName = 'tagName' in target && typeof target.tagName === 'string' ? target.tagName : '';
+  return isEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(tagName);
 }
 
 /** How many of a route's stretches go straight (Draw's, or refused by the router): the count's "N straight". */
