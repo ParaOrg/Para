@@ -28,7 +28,7 @@ const OUTCOME_TEXT: Record<ShareOutcome, string | null> = {
 /**
  * The ride's summary card, Strava's after-a-ride card in Para's colours, over the frosted page:
  * the picture as it will be shared, then Share (or Save where the phone cannot share files) and
- * Close. The picture is drawn once, when it opens.
+ * Close. The picture is drawn when it opens, and again when See-through is switched.
  */
 export function RideSummaryPreview({
   summary,
@@ -42,7 +42,7 @@ export function RideSummaryPreview({
   const seeThroughId = useId();
   // See-through: the words white on a clear ground, to lay over a photo in a story.
   const [isSeeThrough, setIsSeeThrough] = useState(false);
-  const [png, setPng] = useState<{ blob: Blob; url: string } | null>(null);
+  const [png, setPng] = useState<{ blob: Blob; url: string; isSeeThrough: boolean } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [note, setNote] = useState<string | null>(null);
   const [isSharing, setIsSharing] = useState(false);
@@ -55,7 +55,7 @@ export function RideSummaryPreview({
       .then((blob) => {
         if (!isCurrent) return;
         url = URL.createObjectURL(blob);
-        setPng({ blob, url });
+        setPng({ blob, url, isSeeThrough });
         setError(null);
       })
       .catch(() => {
@@ -130,7 +130,8 @@ export function RideSummaryPreview({
           <Button
             variant="primary"
             label={isSharing ? 'Sharing…' : 'Share'}
-            disabled={!png || isSharing}
+            // Off until the picture of the look now switched on is drawn, so the old one is not sent.
+            disabled={png?.isSeeThrough !== isSeeThrough || isSharing}
             onClick={() => void handleShare()}
           />
           <Button
