@@ -135,10 +135,11 @@ export function fetchIndex(): Promise<Index> {
           return kept('not JSON');
         }
         stale = res.headers.get(SERVED_FROM_HEADER) === 'cache';
-        // A file that reads but is not this app's (too new, another shape, a
-        // row it cannot read) is said as it is: the banner's Reload is the
-        // answer to that, never a stored copy in its place.
-        return parseIndex(raw, MAP_FILE_URL, MAP_FILE_SCHEMA);
+        // A file that reads but is not this app's (too new, another shape,
+        // no direction it can read) is said as it is: the banner's Reload is
+        // the answer to that, never a stored copy in its place. A row it
+        // cannot read is left out and the rest of the map kept.
+        return parseIndex(raw, MAP_FILE_URL, MAP_FILE_SCHEMA, 'skip');
       },
       async (e: unknown) => {
         // No network. On the web the worker has already answered with its copy of this path when

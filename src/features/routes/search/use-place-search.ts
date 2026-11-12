@@ -108,22 +108,21 @@ export function usePlaceSearch({
   };
 
   const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    const isListKey = hasList && ['ArrowDown', 'ArrowUp', 'Enter'].includes(event.key);
+    if (event.key !== 'Escape' && !isListKey) return;
+    // The field's own key: taken here, so the card behind the field does not act on it too.
+    event.preventDefault();
     if (event.key === 'Escape') {
       if (isOpen) handleQueryChange('');
       else {
         setLandmark(null);
         onSearchRestart?.();
       }
-    } else if (event.key === 'ArrowDown' && hasList) {
-      event.preventDefault();
+    } else if (event.key === 'ArrowDown') {
       moveTo(hasActive ? (activeIndex + 1) % rows.length : 0);
-    } else if (event.key === 'ArrowUp' && hasList) {
-      event.preventDefault();
+    } else if (event.key === 'ArrowUp') {
       moveTo(activeIndex <= 0 ? rows.length - 1 : activeIndex - 1);
-    } else if (event.key === 'Enter' && hasList) {
-      event.preventDefault();
-      handlePick(rows[hasActive ? activeIndex : 0]);
-    }
+    } else handlePick(rows[hasActive ? activeIndex : 0]);
   };
 
   const handlePickHintuan = (hintuan: Hotspot) => {
