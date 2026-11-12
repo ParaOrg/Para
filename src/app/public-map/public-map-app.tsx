@@ -215,6 +215,8 @@ export function PublicMapApp() {
         sheetTopUnderSearch(needRefresh, offline || age.stale),
       )}
     >
+      {/* The page's one h1, for a screen reader to move to by heading; nothing is drawn. */}
+      <h1 className="sr-only">Para</h1>
       {/* Out of reach under the credits, the map and every card alike. */}
       <div inert={credits.state === 'open'} className="contents">
         {/*
