@@ -560,7 +560,10 @@ jobs:
           if-no-files-found: ignore
 
   # The two checks a pull request shows, under the names they always had.
-  # Passed when everything under them passed or was not needed.
+  # Passed when everything under them passed or was not needed, and only then:
+  # the change detection must have succeeded, since it decides what is needed,
+  # every job under the check must have given a result, and any other word
+  # for a result fails it.
   public:
     name: Build and the public map
     needs: [changes, build, public-suite, contribute-suite, preview-suite]
@@ -572,9 +575,11 @@ jobs:
           RESULTS: ${{ needs.changes.result }} ${{ needs.build.result }} ${{ needs.public-suite.result }} ${{ needs.contribute-suite.result }} ${{ needs.preview-suite.result }}
         run: |
           echo "changes, build, public suites, contributor suites, preview suites: $RESULTS"
-          case " $RESULTS " in
-            *" failure "*|*" cancelled "*) exit 1 ;;
-          esac
+          read -ra results <<< "$RESULTS"
+          if [ "${#results[@]}" -ne 5 ] || [ "${results[0]}" != success ]; then exit 1; fi
+          for result in "${results[@]}"; do
+            case "$result" in success | skipped) ;; *) exit 1 ;; esac
+          done
 
   studio:
     name: The editor
@@ -587,6 +592,8 @@ jobs:
           RESULTS: ${{ needs.changes.result }} ${{ needs.build.result }} ${{ needs.studio-suite.result }} ${{ needs.drawing.result }}
         run: |
           echo "changes, build, studio suites, drawing suites: $RESULTS"
-          case " $RESULTS " in
-            *" failure "*|*" cancelled "*) exit 1 ;;
-          esac
+          read -ra results <<< "$RESULTS"
+          if [ "${#results[@]}" -ne 4 ] || [ "${results[0]}" != success ]; then exit 1; fi
+          for result in "${results[@]}"; do
+            case "$result" in success | skipped) ;; *) exit 1 ;; esac
+          done
