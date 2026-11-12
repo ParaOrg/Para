@@ -6,6 +6,7 @@ import { RouteListController } from './route-list-controller';
 import { TimelineRouteDetail, type TimelineRouteDetailProps } from './timeline-route-detail';
 import { TripEndsCard } from './trip-ends-card';
 import { FREE, type Fare } from './trip-fare';
+import { TripNotes } from './trip-notes';
 import { TripOtherRoutes, type OtherRoute } from './trip-other-routes';
 import { TripSignboards } from './trip-signboards';
 import { TripTiles } from './trip-tiles';
@@ -126,11 +127,12 @@ export function TimelineRouteDetailCard({
   const hasRide = picked !== null || (start !== null && endPicked !== null);
   const shown = hasRide && pickedFare ? pickedFare : fare;
   const shownMetres = hasRide && pickedMetres !== undefined ? pickedMetres : metres;
+  const name = label ?? `${routeOrigin} → ${routeDirection}`;
   return (
     <BottomSheet
       ref={dockRef}
       height={height}
-      label={label ?? `${routeOrigin} → ${routeDirection}`}
+      label={name}
       testId="card"
       onClose={onClose}
       header={null}
@@ -150,6 +152,8 @@ export function TimelineRouteDetailCard({
     >
       {/* Cards 16 apart, 12 in, clear of the Controller: 78 at a phone's foot, 64 on top floating. */}
       <div className="flex w-full flex-col gap-4 px-3 pt-3 pb-24 sheet-floating:pt-19 sheet-floating:pb-6">
+        {/* The trip's name as its heading, over the cards' own, for a screen reader; nothing is drawn. */}
+        <h2 className="sr-only">{name}</h2>
         <TripEndsCard
           routeOrigin={routeOrigin}
           routeDirection={routeDirection}
@@ -192,22 +196,7 @@ export function TimelineRouteDetailCard({
           header={header}
         />
       </div>
-      {walk && (
-        <p
-          data-testid="trip-walk"
-          className="w-full px-3 pb-4 font-sn-pro text-sm/5 text-content-tertiary"
-        >
-          {walk}
-        </p>
-      )}
-      {note && (
-        <p
-          data-testid="trip-note"
-          className="w-full px-3 pb-4 font-sn-pro text-sm/5 text-content-tertiary"
-        >
-          {note}
-        </p>
-      )}
+      <TripNotes walk={walk} note={note} />
       {otherRoutes.length > 0 && <TripOtherRoutes routes={otherRoutes} onRoute={onOtherRoute} />}
       {children}
     </BottomSheet>
