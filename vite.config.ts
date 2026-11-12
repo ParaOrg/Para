@@ -154,10 +154,10 @@ export default defineConfig({
               test: /[\\/]node_modules[\\/]@tanstack[\\/]/,
               priority: 1,
             },
-            //  - fields: the design system's input fields, which only the
-            //    studio and the contributor page draw. Both import them, so left
-            //    to `shared` they would ride along on the public page, which has
-            //    no form.
+            //  - fields: the design system's input fields. The studio and the
+            //    contributor page draw most of them; the public page draws one,
+            //    its place search (and a toast borrows a field's icon), so it
+            //    loads this chunk too.
             {
               name: 'fields',
               test: /[\\/]src[\\/]design-system[\\/]primitives[\\/](field-frame|field-error|field-icons|text-field|text-area-field|password-field|phone-field|otp-field|select-field)\.tsx$/,
