@@ -1,9 +1,9 @@
 import type { RecordingTrail } from '@/features/routes/map/recording-trail';
 
+import { LOGO, loadSummaryFonts, loadWhiteLogo } from './card-assets';
 import { drawTrail } from './draw-summary-trail';
 import type { RideSummary } from './ride-summary';
 import { wrapLines } from './wrap-lines';
-import paraLogo from '../account/para-logo.svg';
 
 /** A portrait 4:5 picture, the size feeds and stories crop least. */
 export const CARD_WIDTH = 1080;
@@ -23,8 +23,6 @@ const LOOKS = {
 type Colours = (typeof LOOKS)[CardLook];
 /** The trail's box on the card, under the brand band. */
 const TRAIL = { x: PAD, y: 180, width: CARD_WIDTH - 2 * PAD, height: 620 };
-/** Para's logo in the band, at the SVG's own 97.77 by 64 shape, centred on the band's 132. */
-const LOGO = { width: 110, height: 72, y: 30 };
 /** A figure under the names: value large, label small above, both squeezed into `width`. */
 function drawFigure(
   ctx: CanvasRenderingContext2D,
@@ -115,34 +113,6 @@ export function drawRideSummary(
   ctx.fillStyle = colours.link;
   ctx.fillText('para-commute.org/app', CARD_WIDTH - PAD, CARD_HEIGHT - 56);
   ctx.textAlign = 'left';
-}
-
-/** The weights the card draws in, loaded before drawing so the canvas does not fall back. */
-export async function loadSummaryFonts(): Promise<void> {
-  await Promise.all(
-    ['500', '700', '800'].map((weight) => document.fonts.load(`${weight} 32px 'SN Pro'`)),
-  ).catch(() => undefined);
-}
-
-/** Para's logo (its file is purple) filled white for the band, or null when it does not load. */
-async function loadWhiteLogo(): Promise<HTMLCanvasElement | null> {
-  const image = new Image();
-  image.src = paraLogo;
-  const canvas = document.createElement('canvas');
-  canvas.width = 2 * LOGO.width; // twice the drawn size, to stay sharp
-  canvas.height = 2 * LOGO.height;
-  const ctx = canvas.getContext('2d');
-  if (!ctx) return null;
-  try {
-    await image.decode();
-  } catch {
-    return null;
-  }
-  ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
-  ctx.globalCompositeOperation = 'source-in';
-  ctx.fillStyle = '#ffffff';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-  return canvas;
 }
 
 /** The card as a PNG, drawn on a canvas of its own; see-through, its ground is left clear. */
