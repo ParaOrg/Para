@@ -59,9 +59,10 @@ export function drawTrail(
 
 /** A path's first and last points, read back from the `M x y L x y` sketchLines writes. */
 export function pathEnds(d: string): { first: [number, number]; last: [number, number] } | null {
-  const points = [...d.matchAll(/[ML](-?[\d.]+) (-?[\d.]+)/g)].map(
-    (m) => [Number(m[1]), Number(m[2])] as [number, number],
-  );
+  const points = [...d.matchAll(/[ML](-?[\d.]+) (-?[\d.]+)/g)].map((m): [number, number] => [
+    Number(m[1]),
+    Number(m[2]),
+  ]);
   if (points.length === 0) return null;
   return { first: points[0], last: points[points.length - 1] };
 }
