@@ -25,3 +25,14 @@ Some jeepney routes leave from more than one terminal yet are the same route: on
 - The studio's review, draft and publish paths must carry the stretches, so a stretch is published only with its route.
 - The commuter app ([ADR 0008](0008-the-commuter-app-is-react-native-expo.md)) shares the published map's reader, so it gets the new fields from the same code.
 - Needs the owner's Figma for the Attach states and the faint look; no phase starts without the owner's Yes.
+
+## Amendment, 2026-11-11: the join is a point, not a distance
+
+Proposed with the rest of this record; it needs the owner's Yes before Phase 1 starts.
+
+The storage idea above keeps a stretch's join point "as a distance along the main line". A distance is measured from the main line's start, so it goes wrong the day an editor redraws the main line anywhere before the join: the road is the same, the number now points somewhere else, and nothing notices.
+
+- **Stored:** the join as a point (longitude and latitude), with the index of the main line's control point just before it. The point says where the stretch meets the road; the index says which pass of the line is meant where the line crosses itself or doubles back.
+- **Derived, never stored:** the distance along the main line. The publish works it out from the point on every run, so it is always measured on the line as it is that day.
+- **Checked:** the map-data check (`scripts/checks/check-map-data.mjs`) fails when a join lies farther from its main line than a set tolerance, naming the route and the stretch. A redraw that moves the road away from a join is then caught before it is published, not found by a commuter.
+- **Published:** a direction's stretches are an optional array on that direction in the published map, added to what is there today. A file without the array reads as a direction with no stretches, and an app that does not know the array leaves it unread, so phones holding older copies keep working. This narrows the open question in Consequences: the fields are optional additions, and whether the schema number also moves is still open.

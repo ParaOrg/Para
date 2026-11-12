@@ -11,15 +11,38 @@ interface MapFailureProps {
   trace: readonly string[];
   /** The style the map was asked to draw. */
   styleUrl: string;
+  /**
+   * Whether the raw error, the device's answers and the style's address are shown: an editor's,
+   * in the studio. A commuter and a contributor read the first line alone.
+   */
+  showsDiagnostics: boolean;
 }
 
 /**
  * Said over a map that did not come. A blank map with no explanation is the worst failure, so
  * this says what failed and what the device answered. Presentational: MapView decides when.
  */
-export function MapFailure({ message, diagnosis, dom, trace, styleUrl }: MapFailureProps) {
+export function MapFailure({
+  message,
+  diagnosis,
+  dom,
+  trace,
+  styleUrl,
+  showsDiagnostics,
+}: MapFailureProps) {
+  const box =
+    'absolute inset-x-0 top-0 z-30 m-4 rounded-lg bg-red-50 p-4 text-sm text-red-900 shadow ring-1 ring-red-200';
+  // TODO: say what a commuter can do (try again, check the signal) once the owner has designed
+  // the message; until then they read this one line and none of the diagnostics.
+  if (!showsDiagnostics) {
+    return (
+      <div className={box}>
+        <p className="font-medium">The map failed to load.</p>
+      </div>
+    );
+  }
   return (
-    <div className="absolute inset-x-0 top-0 z-30 m-4 rounded-lg bg-red-50 p-4 text-sm text-red-900 shadow ring-1 ring-red-200">
+    <div className={box}>
       <p className="font-medium">The map failed to load.</p>
       <p className="mt-1 break-words">{message}</p>
       {diagnosis && (

@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
 import { SaveForm } from './save-form';
+import { waitForHeadingFocus } from '../common/heading-focus-play';
 
 const meta = {
   title: 'Features/Contribute/SaveForm',
@@ -31,6 +32,7 @@ export const Empty: Story = {};
 /** Every field filled; Save recording saves what was said, the fare in pesos. */
 export const Filled: Story = {
   play: async ({ canvasElement, args }) => {
+    await waitForHeadingFocus(canvasElement);
     const canvas = within(canvasElement);
     await userEvent.type(canvas.getByLabelText('Start point name'), 'SM Fairview');
     await userEvent.type(canvas.getByLabelText('End point name'), 'Cubao');
@@ -52,6 +54,7 @@ export const Filled: Story = {
 /** A fare out of range: the field in error, what it takes under it, and nothing saved. */
 export const FareError: Story = {
   play: async ({ canvasElement, args }) => {
+    await waitForHeadingFocus(canvasElement);
     const canvas = within(canvasElement);
     await userEvent.type(canvas.getByLabelText('Fare'), '2500');
     await userEvent.click(canvas.getByRole('button', { name: 'Save recording' }));

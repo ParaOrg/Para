@@ -39,9 +39,11 @@ service with a visible "Para is recording" notification.
   release keystore from the secret `PARAPO_KEY_PASSPHRASE` and uploads it
   encrypted (AES-256-CBC, PBKDF2) with the certificate's SHA-256 fingerprint.
   Both are committed (`android/release-key.p12.enc`, `android/release-key.sha256`).
-  The release build decrypts the key with the same secret into a temp file,
-  deletes it at the end, and refuses an APK whose certificate is not the
-  recorded fingerprint. **The repository is public, so the passphrase is all
+  The release is built unsigned by a job that has no secret. A separate job,
+  `sign`, which checks out three files, installs no packages and runs no build
+  script, decrypts the key with the same secret into a temp file, signs the
+  APK, deletes the key at the end, and refuses an APK whose certificate is not
+  the recorded fingerprint. **The repository is public, so the passphrase is all
   that protects the key**: anyone can download the file and guess offline. It
   must be at least 24 characters, ideally six or more random words, kept in a
   password manager. A release run with no passphrase fails; it never publishes
