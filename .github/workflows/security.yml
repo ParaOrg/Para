@@ -36,9 +36,11 @@ on:
     # 05:30 in Manila (UTC+8), after CI's nightly run.
     - cron: '30 21 * * *'
 
+# On a pull request a newer push cancels the run for the older one. On main and staging a run
+# that has started is never cancelled (as in ci.yml): the commit it checks gets its full verdict.
 concurrency:
   group: security-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read

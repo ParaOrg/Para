@@ -3,6 +3,7 @@ import { expect, fn, userEvent, within } from 'storybook/test';
 
 import { NO_CAPTCHA } from './account-stories-args';
 import { VerifyCodeScreen } from './verify-code-screen';
+import { waitForHeadingFocus } from '../common/heading-focus-play';
 
 const meta = {
   title: 'Features/Contribute/VerifyCodeScreen',
@@ -43,6 +44,7 @@ export const Default: Story = {
 /** The sixth digit sends the code, with no button to press. */
 export const Filled: Story = {
   play: async ({ args, canvasElement }) => {
+    await waitForHeadingFocus(canvasElement);
     const canvas = within(canvasElement);
     await userEvent.type(canvas.getByLabelText('Verification code'), '48291');
     await expect(args.onSubmit).not.toHaveBeenCalled();
@@ -56,6 +58,7 @@ export const Filled: Story = {
 /** A pasted code is sent the same way. */
 export const Pasted: Story = {
   play: async ({ args, canvasElement }) => {
+    await waitForHeadingFocus(canvasElement);
     await userEvent.click(within(canvasElement).getByLabelText('Verification code'));
     await userEvent.paste('Your code: 482 913');
     await expect(args.onSubmit).toHaveBeenCalledOnce();
@@ -66,6 +69,7 @@ export const Pasted: Story = {
 /** Enter with fewer than six digits: the boxes say so, and nothing is sent. */
 export const ShortCode: Story = {
   play: async ({ args, canvasElement }) => {
+    await waitForHeadingFocus(canvasElement);
     const canvas = within(canvasElement);
     await userEvent.type(canvas.getByLabelText('Verification code'), '482{Enter}');
     await expect(canvas.getByText('Enter the 6-digit code')).toBeVisible();
@@ -76,6 +80,7 @@ export const ShortCode: Story = {
 /** After that line, typing goes on from the digits there: only a refusal starts afresh. */
 export const ShortCodeThenTyping: Story = {
   play: async ({ args, canvasElement }) => {
+    await waitForHeadingFocus(canvasElement);
     const canvas = within(canvasElement);
     const field = canvas.getByLabelText('Verification code');
     await userEvent.type(field, '482{Enter}');
@@ -90,6 +95,7 @@ export const ShortCodeThenTyping: Story = {
 export const ResendFailed: Story = {
   args: { resendError: "No signal — try again when you're online" },
   play: async ({ args, canvasElement }) => {
+    await waitForHeadingFocus(canvasElement);
     const canvas = within(canvasElement);
     const field = canvas.getByLabelText('Verification code');
     await expect(field).not.toHaveFocus();
