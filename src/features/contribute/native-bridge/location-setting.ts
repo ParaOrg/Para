@@ -1,6 +1,5 @@
-import { isEmulatorRide } from '@/shared/config/env';
-
 import { isNativeApp } from './native-app';
+import { isEmulatorRide } from '../api/env';
 
 /*
  * The phone's location setting, for the locate button in the app. As in native-fixes.ts, the
