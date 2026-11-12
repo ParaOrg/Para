@@ -1921,11 +1921,6 @@ export type Database = {
     }
     Functions: {
       am_i_editor: { Args: never; Returns: boolean }
-      approve_draft: { Args: { p_draft: string }; Returns: Json }
-      approve_reviewed_draft: {
-        Args: { p_draft: string; p_revision: number }
-        Returns: Json
-      }
       begin_claim: { Args: never; Returns: string }
       block_contributor: {
         Args: { note?: string; target: string }
@@ -2015,15 +2010,7 @@ export type Database = {
         Args: { p_draft: string; p_payload: Json; p_revision: number }
         Returns: Json
       }
-      send_back_draft: {
-        Args: { p_draft: string; p_note: string; p_revision: number }
-        Returns: Json
-      }
       set_profile: { Args: { name: string; phone: string }; Returns: undefined }
-      submit_draft: {
-        Args: { p_draft: string; p_revision: number }
-        Returns: Json
-      }
       take_down: {
         Args: { p_kind: string; p_subject_id: string }
         Returns: Json
