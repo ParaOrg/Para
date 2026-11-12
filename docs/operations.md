@@ -80,6 +80,12 @@ Each says what you'd see, the first check, and the fix. When the alert workflow 
 - **First check:** the issue's log. `PUBLISH_DEPLOY_KEY is not set`, a permission error on the push, a shrink of more than 30%, a data problem from `check-map-data.mjs`, or the database unreachable.
 - **Fix:** a missing or wrong key: `docs/agents/main-protection.md`. A shrink that is deliberate: Run workflow with Force ticked. A data problem: fix the route in the studio, then Run workflow. Supabase down: see below; the live map keeps the last published file meanwhile (ADR 0001).
 
+### A publish didn't deploy
+
+- **You'd see:** the issue "Alert: a publish did not reach the live site". The nightly publish pushed a new map to `main` over 2 hours ago, and `www.para-commute.org` still serves the one before. The Publish map run itself is green: its job ends at the push.
+- **First check:** Cloudflare → Workers & Pages → `para` → Deployments. Is the latest build for `main` failed, or missing? Compare `published_at` in `https://www.para-commute.org/data/index.v5.json` with the same file on `main` in GitHub.
+- **Fix:** a failed build: read its log, then Retry deployment. No build at all: check that Workers Builds is still connected to the repository (Settings → Builds). Commuters keep the earlier map meanwhile, so nothing is lost; the issue closes itself once the live map matches `main`.
+
 ### A backup failed
 
 - **You'd see:** a red Backup run in Actions, and GitHub's email about a failed scheduled run.
@@ -115,6 +121,12 @@ Each says what you'd see, the first check, and the fix. When the alert workflow 
 - **You'd see:** the studio can't load or save; contributors' saves wait; the publish fails.
 - **First check:** status.supabase.com, then the project's dashboard: is it paused, or read-only past 500 MB?
 - **Fix:** commuters are not affected: the public map reads only the published file (ADR 0001). A paused project: Resume (within 90 days). Read-only: free space or upgrade (ticket 01). Contributors' saved rides wait on their phones and are sent again when it answers (`features/contribute/uploads/use-uploads.ts`). If the project is lost, restore from the latest backup (below) into a new project (owner to confirm the steps then: the backup holds no `auth.users`, so accounts would be made again).
+
+### The watch missed its runs
+
+- **You'd see:** the issue "Alert: the watch missed its own runs". The watch (`.github/workflows/watch.yml`) is asked for every 15 minutes, and its last run before this one started more than 45 minutes earlier.
+- **First check:** Actions → Watch. Are the runs back to every 15 minutes, or is the workflow marked disabled (GitHub turns a schedule off after 60 days without commits)?
+- **Fix:** nothing is known to be wrong with the site: this says only that nothing was being checked for that long. GitHub runs a schedule late, or drops it, when it is busy; the issue closes itself once two runs come within 45 minutes. A disabled workflow: Enable workflow. If the issue is open most days, the checks need a timer outside GitHub, which is the owner's decision.
 
 ## The restore rehearsal
 
@@ -154,6 +166,14 @@ Where each key is made, and where its new value goes. Make the new one, put it i
 | `TILES_R2_ACCESS_KEY_ID`, `TILES_R2_SECRET_ACCESS_KEY` | Cloudflare → R2 → Manage API tokens, a new token scoped to `parapo-tiles` | The `tiles` environment's two secrets | Run **Tiles** once, then delete the old token |
 | `PARAPO_KEY_PASSPHRASE` | Not rotated: it unlocks the app signing key, and a new key means testers uninstall (make-app-signing-key.yml) | – | If it leaks, tell the hub before anything else |
 | The backup's GPG key | A new pair on your own computer (backup.yml step 3) | The public half: `.github/backup/owner-public-key.asc`, by pull request. The private half: your password manager and an offline copy | Keep the old private key: older backups only open with it |
+
+## Branch previews
+
+Every branch gets a preview address of its own, `<branch>-para…workers.dev`, built from that branch's code.
+
+**Don't sign in to the studio or the contributor page on a branch preview address.** Its code hasn't been reviewed and it talks to the live database. Test signed-in work on staging or locally.
+
+Looking at the public map on a preview is fine: it signs in to nothing. The lasting fix is a database of its own for staging and the previews ([the staging backend spec](../.scratch/staging-backend/spec.md)).
 
 ## Account safety checklist
 
