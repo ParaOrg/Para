@@ -156,6 +156,8 @@ export function RouteCardList({
           leaves; padded by the Controller's height, at the foot on a phone and the top where the
           list docks, so no card hides under it. */}
       <div className="flex min-h-full flex-col pb-20 sheet-floating:pt-16 sheet-floating:pb-0">
+        {/* The list's heading, for a screen reader to move to; nothing is drawn. */}
+        <h2 className="sr-only">Routes here</h2>
         <RouteListHotspotRows hotspots={hotspots} onHotspot={onHotspot} />
         {modeFilter && filter !== 'all' && places.length === 0 && (
           <ModeFilterEmpty filter={filter} onShowAll={() => modeFilter.onFilter('all')} />

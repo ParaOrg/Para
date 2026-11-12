@@ -127,11 +127,12 @@ export function TimelineRouteDetailCard({
   const hasRide = picked !== null || (start !== null && endPicked !== null);
   const shown = hasRide && pickedFare ? pickedFare : fare;
   const shownMetres = hasRide && pickedMetres !== undefined ? pickedMetres : metres;
+  const name = label ?? `${routeOrigin} → ${routeDirection}`;
   return (
     <BottomSheet
       ref={dockRef}
       height={height}
-      label={label ?? `${routeOrigin} → ${routeDirection}`}
+      label={name}
       testId="card"
       onClose={onClose}
       header={null}
@@ -151,6 +152,8 @@ export function TimelineRouteDetailCard({
     >
       {/* Cards 16 apart, 12 in, clear of the Controller: 78 at a phone's foot, 64 on top floating. */}
       <div className="flex w-full flex-col gap-4 px-3 pt-3 pb-24 sheet-floating:pt-19 sheet-floating:pb-6">
+        {/* The trip's name as its heading, over the cards' own, for a screen reader; nothing is drawn. */}
+        <h2 className="sr-only">{name}</h2>
         <TripEndsCard
           routeOrigin={routeOrigin}
           routeDirection={routeDirection}
