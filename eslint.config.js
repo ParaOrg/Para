@@ -92,6 +92,7 @@ const SOURCE = [
   'capacitor.config.ts',
   'scripts/**/*.ts',
   'workers/tiles/src/**/*.ts',
+  'supabase/functions/**/*.ts',
 ];
 
 export default defineConfig([

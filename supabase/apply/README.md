@@ -702,3 +702,63 @@ rules and the grant and definer tidy-ups (L1, L2, L5).
 
 - Apply failed: nothing changed. The message names what it found.
 - Applied, and it must be withdrawn: run `20261105200000_drop_dead_weight_revert.sql`.
+
+# Applying waitlist to the live project
+
+**Not applied live.** `/app/` has an Android download and nothing to install on an iPhone, so its iPhone part
+takes an email (Gab's ask, meeting 2026-11-03). Two things make it work, and both are the owner's: the table
+(the three files below) and the `waitlist` Edge Function, the project's first (`supabase/functions/waitlist`).
+Until both are in, the form on `/app/` answers "That didn't go through" and nothing else on the page changes.
+
+The form posts an email and Cloudflare's bot-check token to the function. The function asks Cloudflare
+whether the check passed, saves the email with the project's secret key, and sends one confirmation through
+Resend. An email already on the list is answered the same way and gets no second message. `anon` and
+`authenticated` hold nothing on the table, so "anon never writes" (0017) still holds.
+
+| File | What it does |
+| --- | --- |
+| `20261112120000_waitlist_apply.sql` | One transaction. Checks this is not in the ledger. Applies `migrations/20261112120000_waitlist.sql` (carried unchanged; `verify/waitlist.sh` checks the copy). Checks `anon` and `authenticated` hold nothing on the list, row security is on, and `service_role` selects and inserts. Writes the ledger row `waitlist`. Any failed check raises and nothing is changed. A second run stops at the first check and changes nothing. |
+| `20261112120000_waitlist_check.sql` | Part one adds two test emails (ending `.invalid`), proves who can and cannot read or add and what the table refuses, then rolls all of it back. Part two is read-only: 4 rows, all `ok` should be `t`. |
+| `20261112120000_waitlist_revert.sql` | One transaction: drops the table and removes the ledger row. Refuses, changing nothing, while the list holds an email. Safe to run twice. |
+
+## Steps
+
+1. Run `20261112120000_waitlist_apply.sql`. It ends with `COMMIT`; an error means nothing changed.
+2. Run `20261112120000_waitlist_check.sql`: part one ends with `ROLLBACK` and no error; part two gives 4 rows,
+   all `ok = t`.
+3. Record the ledger version
+   (`select version from supabase_migrations.schema_migrations where name = 'waitlist';`) in
+   `migrations/README.md`, add `20261112120000_waitlist` to `APPLIED` in `verify/schema-snapshot.sh`, rewrite the
+   snapshot (`--write`) and regenerate `src/shared/types/database.types.ts`. No page reads the table, so
+   nothing waits on the types.
+4. In Resend, make an API key that can only send ("Sending access"), for the domain `para-commute.org`. It is
+   a second key, apart from the one Supabase Auth's SMTP uses, so either can be replaced alone.
+5. Set the function's three secrets (Supabase → Edge Functions → Secrets, or the CLI). No value goes in the
+   repo:
+
+       supabase secrets set RESEND_API_KEY=… TURNSTILE_SECRET_KEY=… WAITLIST_FROM='Para <hello@para-commute.org>'
+
+   `TURNSTILE_SECRET_KEY` is the same secret Supabase's Auth settings hold (the widget in the old Cloudflare
+   account). `WAITLIST_FROM` may be any address on `para-commute.org`, the domain Resend has verified.
+   `SUPABASE_URL` and `SUPABASE_SECRET_KEYS` are there already: Supabase sets them.
+6. Deploy the function. It is called with no sign-in, so it must not ask for a JWT:
+
+       supabase functions deploy waitlist --no-verify-jwt --project-ref smzwbqxttdyvohuizynl
+
+7. Try it: open `https://www.para-commute.org/app/`, leave an email you own, and look for the message and
+   for the row (`select * from public.waitlist;`). The same email again says the same and sends nothing.
+
+## When the iPhone app is out
+
+Read the list in the SQL editor (`select email from public.waitlist order by created_at;`) and send the one
+message. To take someone off: `delete from public.waitlist where email = '…';`.
+
+## Recovery
+
+- Apply failed: nothing changed. The message names what it found.
+- The form says "That didn't go through": the function's logs (Supabase → Edge Functions → waitlist → Logs)
+  name the step, `waitlist: saving answered …` or `waitlist: Resend answered …`. A missing secret is named
+  there too.
+- The email is saved but no message came: Resend's dashboard. The person is on the list either way.
+- Applied, and it must be withdrawn: export or delete the rows, run `20261112120000_waitlist_revert.sql`, and
+  delete the function (`supabase functions delete waitlist`).
