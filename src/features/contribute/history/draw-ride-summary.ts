@@ -75,8 +75,10 @@ export function drawRideSummary(
   if (summary.to) {
     ctx.fillStyle = MUTED;
     ctx.font = `500 44px ${FONT}`;
-    const [to] = wrapLines(`→ ${summary.to}`, width, 1, (s) => ctx.measureText(s).width);
-    ctx.fillText(to, PAD, 955);
+    // The arrow is kept out of the wrapping, so a long one-word place is cut and not dropped.
+    const room = width - ctx.measureText('→ ').width;
+    const [to = ''] = wrapLines(summary.to, room, 1, (s) => ctx.measureText(s).width);
+    ctx.fillText(`→ ${to}`, PAD, 955);
   }
 
   const column = width / 3;

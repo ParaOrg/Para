@@ -1,7 +1,8 @@
 /**
- * Text broken into lines no wider than `width`, at most `max` of them, the last cut short with an
- * ellipsis when the words run on. `measure` is the canvas's measureText width, passed in so the
- * breaking can be tested without a canvas.
+ * Text broken into lines no wider than `width`, at most `max` of them. A line is cut short with an
+ * ellipsis when the words run on past the last one, or when it is one word wider than the card.
+ * `measure` is the canvas's measureText width, passed in so the breaking can be tested without a
+ * canvas.
  */
 export function wrapLines(
   text: string,
@@ -22,10 +23,16 @@ export function wrapLines(
     line = word;
   }
   if (line) lines.push(line);
-  if (lines.length <= max) return lines;
-  const kept = lines.slice(0, max);
-  let last = kept[max - 1];
-  while (last && measure(`${last}…`) > width) last = last.slice(0, -1).trimEnd();
-  kept[max - 1] = `${last}…`;
-  return kept;
+  return lines.slice(0, max).map((kept, index) => {
+    const runsOn = index === max - 1 && lines.length > max;
+    return runsOn || measure(kept) > width ? cut(kept, width, measure) : kept;
+  });
+}
+
+/** The line with characters taken off its end until it fits with an ellipsis after it. */
+function cut(line: string, width: number, measure: (line: string) => number): string {
+  let kept = line;
+  // Spread by code point, so an emoji is dropped whole and never left as half a pair.
+  while (kept && measure(`${kept}…`) > width) kept = [...kept].slice(0, -1).join('').trimEnd();
+  return `${kept}…`;
 }

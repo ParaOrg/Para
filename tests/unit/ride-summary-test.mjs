@@ -63,8 +63,11 @@ test('names break at words and the last line is cut with an ellipsis', () => {
   ]);
   assert.deepEqual(wrapLines('Cubao', 120, 2, measure), ['Cubao']);
   assert.deepEqual(wrapLines('   ', 120, 2, measure), []);
-  // One word longer than the line stays whole on it rather than being lost.
-  assert.deepEqual(wrapLines('Pinagdanlayan', 50, 1, measure), ['Pinagdanlayan']);
+  // One word longer than the line is cut to fit, so it never runs off the card's edge.
+  assert.deepEqual(wrapLines('Pinagdanlayan', 50, 1, measure), ['Pina…']);
+  assert.deepEqual(wrapLines('Pinagdanlayan Farmers', 100, 2, measure), ['Pinagdanl…', 'Farmers']);
+  // An emoji is two units long here and is dropped whole, never left as half a pair.
+  assert.deepEqual(wrapLines('🚌🚌🚌', 50, 1, measure), ['🚌🚌…']);
 });
 
 test('the file is dated by the ride’s day in Manila', () => {
