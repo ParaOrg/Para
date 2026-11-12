@@ -6,6 +6,7 @@ import { RouteListController } from './route-list-controller';
 import { TimelineRouteDetail, type TimelineRouteDetailProps } from './timeline-route-detail';
 import { TripEndsCard } from './trip-ends-card';
 import { FREE, type Fare } from './trip-fare';
+import { TripNotes } from './trip-notes';
 import { TripOtherRoutes, type OtherRoute } from './trip-other-routes';
 import { TripSignboards } from './trip-signboards';
 import { TripTiles } from './trip-tiles';
@@ -192,22 +193,7 @@ export function TimelineRouteDetailCard({
           header={header}
         />
       </div>
-      {walk && (
-        <p
-          data-testid="trip-walk"
-          className="w-full px-3 pb-4 font-sn-pro text-sm/5 text-content-tertiary"
-        >
-          {walk}
-        </p>
-      )}
-      {note && (
-        <p
-          data-testid="trip-note"
-          className="w-full px-3 pb-4 font-sn-pro text-sm/5 text-content-tertiary"
-        >
-          {note}
-        </p>
-      )}
+      <TripNotes walk={walk} note={note} />
       {otherRoutes.length > 0 && <TripOtherRoutes routes={otherRoutes} onRoute={onOtherRoute} />}
       {children}
     </BottomSheet>
