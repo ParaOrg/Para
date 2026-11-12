@@ -15,8 +15,11 @@ import { noop } from '@/shared/utils/noop';
 
 import { BASEMAPS, DEFAULT_BASEMAP, initialStyle, readBasemap, type Basemap } from './basemap';
 import { BasemapControl, type MapButtonStyle } from './basemap-control';
+import { openingFallback } from './basemap-failover';
+import { followHostDrawing } from './basemap-host-drawing';
 import { BASEMAP_THUMBNAILS } from './basemap-thumbnails';
 import { diagnose, type Diagnosis } from './diagnose';
+import { exposeMap, exposeMapEarly } from './expose-map';
 import {
   OPENING_WAIT_MS,
   ROUTES_FRAMING,
@@ -28,9 +31,10 @@ import {
 } from './framing';
 import { readLocationLabels, type LabelsPlace } from './location-labels';
 import { mapAttribution } from './map-attribution';
+import { watchMapErrors } from './map-errors';
 import { MapFailure } from './map-failure';
 import { routesDrawn } from './saved-routes-layers';
-import { noteTile } from './tiles-asked';
+import { noteTile, tilesFirstScreenIn } from './tiles-asked';
 
 /**
  * MapLibre 6 spawns its tile-parsing worker from a sibling file whose URL it
@@ -187,6 +191,8 @@ interface Props {
    * the map says of itself, its failure included, stays under it.
    */
   isCovered?: boolean;
+  /** The studio's: the failure box with its diagnostics (MapFailure). Elsewhere, its first line alone. */
+  showsDiagnostics?: boolean;
   /**
    * What the map is made with in place of `initialStyle`: the contributor app's, which falls back
    * to its copies of the basemaps' styles, so it loads with no signal
@@ -231,6 +237,7 @@ export function MapView({
   creditsAtBottom = false,
   areCreditsShown = true,
   isCovered = false,
+  showsDiagnostics = false,
   makeStyle = initialStyle,
   transformRequest,
 }: Props) {
@@ -333,13 +340,8 @@ export function MapView({
       // The map for the handlers below, which cannot tell the `let` was set.
       const made = map;
 
-      // The map from its making, for the builds that hand it out (see 'load'
-      // below): the cheap-phone timer stamps its 'load' and its first frame
-      // with the routes drawn from here, before any of its events can fire.
-      // So do the suites, for the camera it was made at and the first lines
-      // it draws, before its 'load' on the public map.
-      if (import.meta.env.DEV || import.meta.env.VITE_EXPOSE_MAP === '1')
-        (window as unknown as { __mapEarly?: MapLibreMap }).__mapEarly = map;
+      // From its making, for the builds that hand it out (expose-map.ts).
+      exposeMapEarly(map);
 
       // The public map: what it opened framed on, and the commuter's gestures
       // from now on, for the routes' own fit to leave a map they have moved
@@ -387,10 +389,16 @@ export function MapView({
 
       if (zoomButtons && !coarse) map.addControl(new NavigationControl(), 'top-right');
       map.addControl(new ScaleControl({ unit: 'metric' }), 'bottom-left');
-      map.addControl(
-        new AttributionControl({ compact: true, customAttribution: mapAttribution(basemapHost) }),
-        coarse && !creditsAtBottom ? 'top-right' : 'bottom-right',
-      );
+      const credits = new AttributionControl({
+        compact: true,
+        customAttribution: mapAttribution(basemapHost),
+      });
+      // The credits name the host that draws: OpenFreeMap once the opening fell back to it.
+      // Followed before the control joins the map, so the control redraws them at the same event.
+      followHostDrawing(map, basemapHost, (host) => {
+        credits.options.customAttribution = mapAttribution(host);
+      });
+      map.addControl(credits, coarse && !creditsAtBottom ? 'top-right' : 'bottom-right');
       // What MapLibre itself does to them on the first drag.
       if (foldCredits)
         map
@@ -403,39 +411,30 @@ export function MapView({
         isLoaded = true;
         setLoaded(true);
         setError(null);
-        // Dev builds expose the map so the headless suites (tests/e2e/) can read real
-        // screen positions from the drawn geometry instead of guessing. So does
-        // the production build scripts/research/phone-speed.mjs makes for itself
-        // with VITE_EXPOSE_MAP=1, to time a cheap phone on the code commuters get;
-        // `npm run build` never sets it, and check-build.mjs fails a build that
-        // carries the map out. With it, the GL programs compiled so far by
-        // MapLibre's own key: painter.cache is MapLibre's inside, so it is read
-        // here and nowhere else, for the timer and the suites to see what a tap
-        // compiles.
-        if (import.meta.env.DEV || import.meta.env.VITE_EXPOSE_MAP === '1') {
-          const shown = made;
-          const w = window as unknown as { __map?: MapLibreMap; __programs?: () => string[] };
-          w.__map = shown;
-          w.__programs = () =>
-            Object.keys((shown as unknown as { painter: { cache: object } }).painter.cache);
-        }
+        // At its 'load', for the builds that hand it out (expose-map.ts).
+        exposeMap(made);
         setReady(map);
         // The public map's was handed over at its style's load (above).
         if (!openOn) onReadyRef.current?.(made);
+        // The first screen's tiles have all been asked for: the noting ends (tiles-asked.ts).
+        if (openOn) tilesFirstScreenIn();
       });
 
-      map.on('error', (e) => {
-        const message = e.error?.message ?? 'unknown map error';
-        // Once the map is up, an error is a tile, glyph or sprite that did not
-        // arrive — offline, a place never viewed before. The map is drawn and
-        // working; that is not "failed to load", so only the console hears it.
-        if (isLoaded) {
-          console.warn('[map]', message);
-          return;
-        }
-        console.error('[map]', message, e);
-        setError(message);
-        void diagnose(basemap.url).then(setDiag);
+      // Para's own basemap host failing to bring the style: OpenFreeMap's, once (ADR 0007).
+      const fallBack = openingFallback(map, {
+        host: basemapHost,
+        styleUrl: basemap.url,
+        makeStyle: (url) => makeStyle({ ...basemap, url }, areLabelsShown),
+        isGone: () => cancelled,
+      });
+      watchMapErrors(map, {
+        isLoaded: () => isLoaded,
+        areRoutesDrawn: () => routesDrawn(made),
+        fallBack,
+        onFailure: (message) => {
+          setError(message);
+          void diagnose(basemap.url).then(setDiag);
+        },
       });
 
       // From the map's making; on the public map (`openOn`) again from its
@@ -523,6 +522,7 @@ export function MapView({
           dom={dom}
           trace={trace}
           styleUrl={basemap.url}
+          showsDiagnostics={showsDiagnostics}
         />
       )}
     </>
