@@ -93,6 +93,7 @@ const SOURCE = [
   'scripts/**/*.ts',
   'workers/tiles/src/**/*.ts',
   'workers/site/src/**/*.ts',
+  'supabase/functions/**/*.ts',
 ];
 
 // No `enum` (.claude/CLAUDE.md, "Other naming rules"): an enum is code at run time and its own

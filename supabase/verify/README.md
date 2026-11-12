@@ -349,6 +349,22 @@ keep_uploads_on_user_delete, the apply refuses and writes no ledger row. On a th
 leaves the schema as before, line for line once the dumps are sorted (the two columns come back at the end of
 `route`), and re-applying passes the check.
 
+## waitlist.sh
+
+`migrations/20261112120000_waitlist.sql` on databases of its own, run by `run.sh` or alone:
+
+    PSQL="docker exec -i pg-verify psql -U postgres" bash supabase/verify/waitlist.sh
+
+The migration leans on no other, so each database starts from `bootstrap.sql` alone, whose default privileges
+hand a new table to `anon` and `authenticated` as a project from before 0017 did: the migration's own revoke
+is what closes it. Then `../apply/20261112120000_waitlist_apply.sql` twice (the second run must stop and change
+nothing), and `…_check.sql`: its rolled-back behaviour part (`anon` and a signed-in phone can neither read nor
+add, `service_role` adds an email once and cannot delete, an email in capitals, with a space or with no dot is
+refused) must raise nothing and leave no row behind, and its 4 read-only rows must be `t`. On a second
+database the revert refuses while the list holds an email, then, once it is empty, revert twice leaves the
+schema as before and re-applying passes the check. The function itself is checked by
+`tests/unit/waitlist-test.mjs`, with a fake fetch.
+
 ## schema-snapshot.sh
 
 `../schema/snapshot.sql` is the `public` and `private` schemas as the live project has them, in one file:
