@@ -14,7 +14,9 @@
 // and the place whose card it was opened from; its top and bottom row are the
 // tip; the tiles show the whole loop and then the ride from the tip to a row;
 // a start and an end above it wrap the ride, one fold between, and either end
-// row rides on round to the tip; × Remove as start lets the ride go.
+// row rides on round to the tip; × Remove as start lets the ride go. And on a
+// wide screen, with a place's card open beside place search: Escape in the
+// field is the field's, and the card stays open.
 import { chromium } from 'playwright';
 import { readFileSync } from 'node:fs';
 import { BASE, bareStyle, harness } from './lib/harness.mjs';
@@ -598,6 +600,56 @@ const closeTrip = async (page) => {
     (await originLabel(page)).includes(ENGINEERING.name),
     await originLabel(page),
   );
+  check('no page errors', errors.length === 0, errors.join('; '));
+  await context.close();
+}
+
+// ------------------------- 4. on a wide screen: Escape in place search is the search's
+// The cards float beside the search field there, both in reach. Escape in the field clears it,
+// and must not also close the card behind it; out of the field, Escape is the card's as before.
+{
+  const context = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+  await serveFixture(context);
+  const page = await context.newPage();
+  const errors = [];
+  page.on('pageerror', (e) => errors.push(String(e)));
+  if (NO_TILES) await bareStyle(page);
+  await page.goto(`${BASE}/`, { waitUntil: 'load' });
+  await page.waitForFunction(() => window.__map?.loaded(), null, { timeout: 30000 });
+  await page.waitForFunction(
+    () =>
+      (document.querySelector('[data-directions]')?.getAttribute('data-directions') ?? '0') !== '0',
+    null,
+    { timeout: 30000 },
+  );
+  await showBlock(page);
+  await page.waitForTimeout(400);
+  const at = await screenOf(page, ENGINEERING.at);
+  await boxDrawnAt(page, at);
+  await page.mouse.click(at.x, at.y);
+  const card = page.locator('[data-testid="card"]:not([hidden])');
+  await card.first().waitFor({ timeout: 15000 });
+  await page.waitForTimeout(500);
+
+  const field = page.getByRole('combobox', { name: 'Search places' });
+  await field.click();
+  await field.pressSequentially('Palma');
+  await page.getByRole('option').first().waitFor({ timeout: 10000 });
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(300);
+  check('Escape in place search clears what was typed', (await field.inputValue()) === '');
+  check('  and the card behind the field stays open', (await card.count()) === 1);
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(300);
+  check(
+    '  a second Escape in the empty field leaves the card open too',
+    (await card.count()) === 1,
+  );
+
+  await field.evaluate((el) => el.blur());
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(500);
+  check('out of the field, Escape closes the card as before', (await card.count()) === 0);
   check('no page errors', errors.length === 0, errors.join('; '));
   await context.close();
 }
