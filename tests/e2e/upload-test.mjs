@@ -817,11 +817,14 @@ const retryButton = (page, name) =>
   await page.getByRole('button', { name: /^Tap to upload, / }).click();
   await page.getByRole('button', { name: 'Close' }).click();
   await waitForStatus(page, 'Earlier one', UPLOADED);
+  const sent = [...fake.rows.keys()];
+  const earlierTwo = await statusOf(page, 'Earlier two');
+  const isSentAlone = sent.length === 1 && sent[0] === a && earlierTwo === 'Only on this phone';
+  if (!isSentAlone) await page.screenshot({ path: 'upload-test-send-from-history.png' });
   check(
     "  it can still be sent from History, one at a time, from its ride's sheet",
-    fake.rows.size === 1 &&
-      fake.rows.has(a) &&
-      (await statusOf(page, 'Earlier two')) === 'Only on this phone',
+    isSentAlone,
+    JSON.stringify({ sent, earlierTwo }),
   );
 }
 

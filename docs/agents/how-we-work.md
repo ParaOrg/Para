@@ -8,7 +8,7 @@ The goals: a codebase that is easy to review, work that scales, and an app whose
 
 - **The owner owns the design.** A session never makes up a look. When Figma doesn't cover something, the session collects its questions and sends them to the owner in one batch, not one at a time.
 - **One coordinator session** hands out the work, merges between branches, and writes the release summary.
-- **Sessions merge their own finished work** into `staging` through a pull request, once its CI is green. **Only the owner merges** into `main`.
+- **Sessions merge their own finished work** into `staging` through a pull request, once its CI is green. **Only the owner merges** into `main`. `main-protection.md` holds the rules GitHub enforces on `main`; `staging-protection.md` holds the ruleset for `staging`, for the owner to turn on.
 
 ## Which model does what
 
