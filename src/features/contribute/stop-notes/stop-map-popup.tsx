@@ -55,6 +55,29 @@ export function StopMapPopup({
     wasUnder.current = isUnderQuestion;
   }, [isUnderQuestion]);
 
+  // Tab stays inside the card (a dialog traps focus): without it Tab reaches the page or the save
+  // form behind. Idle while the question stands over the card, where it is inert.
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog || isUnderQuestion) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Tab') return;
+      const stops = [...dialog.querySelectorAll<HTMLElement>('button')];
+      const first = stops.at(0);
+      const last = stops.at(-1);
+      const active = document.activeElement;
+      if (event.shiftKey && (active === first || active === dialog)) {
+        event.preventDefault();
+        last?.focus();
+      } else if (!event.shiftKey && active === last) {
+        event.preventDefault();
+        first?.focus();
+      }
+    };
+    dialog.addEventListener('keydown', onKeyDown);
+    return () => dialog.removeEventListener('keydown', onKeyDown);
+  }, [isUnderQuestion]);
+
   return (
     <div
       inert={isUnderQuestion}
