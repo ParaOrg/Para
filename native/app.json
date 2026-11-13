@@ -1,0 +1,34 @@
+{
+  "expo": {
+    "name": "Para",
+    "slug": "para-commuter",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "ph.para.commuter"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#E6F4FE",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false,
+      "package": "ph.para.commuter"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": ["@maplibre/maplibre-react-native"],
+    "extra": {
+      "eas": {
+        "projectId": "ef228f4e-8197-4fa4-9a99-32ea2aed4ce6"
+      }
+    },
+    "owner": "semariquit"
+  }
+}

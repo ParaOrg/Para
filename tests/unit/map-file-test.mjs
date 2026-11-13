@@ -871,3 +871,33 @@ test('with no store given there is no stored copy; a store given is read instead
     delete globalThis.caches;
   }
 });
+
+// Commuter-app ticket 03: the app has no site of its own, so it gives the site's address and
+// both readers fetch from there. Stored copies stay keyed by the path, as the web's worker keeps them.
+test('a map file origin given is where the index and lines are fetched from', async () => {
+  const at = 'https://www.para-commute.org';
+  const asked = [];
+  globalThis.fetch = async (url) => {
+    asked.push(url);
+    const body = {
+      [`${at}/data/index.v5.json`]: { ...base, variants: [direction] },
+      [`${at}/data/lines/d1.json`]: { schema: 2, id: 'd1', shape: line },
+    }[url];
+    return body ? json(body) : json({}, { status: 404 });
+  };
+  const askedStore = [];
+  try {
+    contract.setMapFileOrigin(at);
+    const { fetchIndex, fetchLine, setMapFileStore } = await fresh();
+    setMapFileStore(async (url) => {
+      askedStore.push(url);
+      return null;
+    });
+    assert.equal((await fetchIndex()).directions.length, 1);
+    assert.deepEqual(await fetchLine('d1'), line);
+    assert.deepEqual(asked, [`${at}/data/index.v5.json`, `${at}/data/lines/d1.json`]);
+    assert.deepEqual(askedStore, [], 'answered: no stored copy asked for');
+  } finally {
+    contract.setMapFileOrigin('');
+  }
+});
