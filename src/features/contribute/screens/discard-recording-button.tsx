@@ -18,7 +18,7 @@ export function DiscardRecordingButton({ onClick, buttonRef }: DiscardRecordingB
       onClick={onClick}
       className="flex items-center justify-center rounded-full px-4 py-2 text-base/6 font-medium text-content-error outline-none focus-visible:ring-2 focus-visible:ring-content-error"
     >
-      Discard recording
+      Discard recordings
     </button>
   );
 }

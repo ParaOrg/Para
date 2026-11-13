@@ -1204,11 +1204,11 @@ const buttons = (page) =>
     labels.map((l) => l.split('\n')[0]).join(' | '),
   );
   check(
-    '  Save recording and Resume, Discard recording, and "Saves by itself in" quietly',
+    '  Save recordings and Resume, Discard recordings, under Recording Information',
     (await page.getByRole('button', { name: 'Save recording' }).count()) === 1 &&
       (await page.getByRole('button', { name: 'Resume', exact: true }).count()) === 1 &&
       (await page.getByRole('button', { name: 'Discard recording' }).count()) === 1 &&
-      /Saves by itself in \d:\d\d/.test(await page.locator('form').innerText()),
+      (await page.getByRole('heading', { name: 'Recording Information' }).count()) === 1,
   );
   await shot(page, '4-form');
   await page.getByRole('button', { name: 'Save recording' }).click();
@@ -1513,10 +1513,10 @@ const buttons = (page) =>
   );
   await discardQuestion.getByRole('button', { name: 'Keep it' }).click();
   check(
-    '  Keep it is back on the form as it was, focus on Discard recording',
+    '  Keep it is back on the form as it was, focus on Discard recordings',
     (await page.getByRole('alertdialog').count()) === 0 &&
       (await page.getByLabel('Start point name').inputValue()) === 'Tala' &&
-      (await focusName()) === 'Discard recording',
+      (await focusName()) === 'Discard recordings',
   );
 
   await page.getByLabel('End point name').fill('Cubao');

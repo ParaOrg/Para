@@ -1,15 +1,15 @@
 import { useFocusHeading } from '@/shared/hooks/use-focus-heading';
 
-import { countdownText } from '../common/format';
-
 interface SaveFormHeaderProps {
   /** The form is labelled by its heading. */
   headingId: string;
-  secondsLeft: number;
 }
 
-/** Save Recording's title, focused as the form opens, and how long until it saves itself. */
-export function SaveFormHeader({ headingId, secondsLeft }: SaveFormHeaderProps) {
+/**
+ * Save Recording's title (4725:29214), focused as the form opens. The form still saves itself
+ * after two minutes left alone (useSaveCountdown); the frame no longer says so.
+ */
+export function SaveFormHeader({ headingId }: SaveFormHeaderProps) {
   const headingRef = useFocusHeading();
   return (
     <header className="shrink-0 px-5 pt-[calc(env(safe-area-inset-top)+1.25rem)] pb-3">
@@ -21,9 +21,6 @@ export function SaveFormHeader({ headingId, secondsLeft }: SaveFormHeaderProps) 
       >
         Save Recording
       </h1>
-      <p className="text-sm/5 text-content-disabled">
-        Saves by itself in {countdownText(secondsLeft)}
-      </p>
     </header>
   );
 }

@@ -35,13 +35,13 @@ interface SaveFormProps {
 }
 
 /**
- * Figma's Save Recording (4521:3679): the title, how long until it saves itself, the fields —
- * Start point name, End point name, Fare, What did you ride? (a sheet, 4525:15313) and
- * Description — and Discard recording, over a bottom bar with Save recording and Resume.
+ * Figma's Save Recording (4725:29196): the title, then Recording Information — Start point name,
+ * End point name, Fare, What did you ride? (a sheet, 4525:15313) and Description — the ride's
+ * Stops notes, and Discard recordings, over a bottom bar with Save recordings and Resume.
  *
  * Every field is optional. Left alone for two minutes it saves with what was typed, so a phone
  * put away after a ride does not keep a recording open; a fare it cannot read is left out then,
- * and Save recording asks for it to be put right first. Discard asks over the whole screen, as ✕
+ * and Save recordings asks for it to be put right first. Discard asks over the whole screen, as ✕
  * does while recording, and never throws a recording away in one tap.
  */
 export function SaveForm({
@@ -75,10 +75,7 @@ export function SaveForm({
     rideKind,
     ...(fare.farePhp === undefined ? {} : { farePhp: fare.farePhp }),
   };
-  const { secondsLeft, touch } = useSaveCountdown(
-    () => onSave(details),
-    isSheetOpen || isDiscardAsked,
-  );
+  const { touch } = useSaveCountdown(() => onSave(details), isSheetOpen || isDiscardAsked);
 
   // Focus back on the field, by hand: the form went inert as the sheet opened, so the field had
   // already lost focus and the sheet has nothing to give back.
@@ -113,9 +110,10 @@ export function SaveForm({
         }}
         className="absolute inset-0 z-20 flex flex-col bg-surface font-sn-pro text-content-primary"
       >
-        <SaveFormHeader headingId={`${ids}-heading`} secondsLeft={secondsLeft} />
-        <div className="min-h-0 flex-1 overflow-y-auto px-5 pt-5 pb-8">
+        <SaveFormHeader headingId={`${ids}-heading`} />
+        <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-8">
           <div className="flex flex-col gap-5">
+            <h2 className="text-2xl/8 font-bold">Recording Information</h2>
             {failedFixWrites > 0 && <RoomProblem id={`${ids}-room`} />}
             <TextField
               id={`${ids}-start`}
@@ -171,7 +169,7 @@ export function SaveForm({
           </div>
         </div>
         <div className="flex shrink-0 flex-col gap-1 rounded-t-4xl bg-surface px-5 pt-4 pb-[max(2rem,env(safe-area-inset-bottom))] shadow-bottom-sheet-top-shadow">
-          <Button variant="primary" type="submit" label="Save recording" />
+          <Button variant="primary" type="submit" label="Save recordings" />
           <Button variant="plain" label="Resume" onClick={onKeepRecording} />
         </div>
       </form>

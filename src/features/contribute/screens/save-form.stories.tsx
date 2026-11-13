@@ -30,7 +30,7 @@ type Story = StoryObj<typeof meta>;
 /** Figma's Save Recording (4521:3679), as it opens: every field empty, the two minutes running. */
 export const Empty: Story = {};
 
-/** Every field filled; Save recording saves what was said, the fare in pesos. */
+/** Every field filled; Save recordings saves what was said, the fare in pesos. */
 export const Filled: Story = {
   play: async ({ canvasElement, args }) => {
     await waitForHeadingFocus(canvasElement);
@@ -41,7 +41,7 @@ export const Filled: Story = {
     await userEvent.click(canvas.getByRole('button', { name: 'What did you ride?' }));
     await userEvent.click(within(document.body).getByRole('radio', { name: 'Jeep' }));
     await userEvent.type(canvas.getByLabelText('Description'), 'Fairview–Cubao via Commonwealth');
-    await userEvent.click(canvas.getByRole('button', { name: 'Save recording' }));
+    await userEvent.click(canvas.getByRole('button', { name: 'Save recordings' }));
     await expect(args.onSave).toHaveBeenCalledWith({
       startPointName: 'SM Fairview',
       endPointName: 'Cubao',
@@ -58,7 +58,7 @@ export const FareError: Story = {
     await waitForHeadingFocus(canvasElement);
     const canvas = within(canvasElement);
     await userEvent.type(canvas.getByLabelText('Fare'), '2500');
-    await userEvent.click(canvas.getByRole('button', { name: 'Save recording' }));
+    await userEvent.click(canvas.getByRole('button', { name: 'Save recordings' }));
     await expect(canvas.getByText('Enter an amount from ₱0 to ₱2,000')).toBeInTheDocument();
     await expect(canvas.getByLabelText('Fare')).toHaveFocus();
     await expect(args.onSave).not.toHaveBeenCalled();
@@ -80,11 +80,11 @@ export const PointsWarning: Story = {
   args: { failedFixWrites: 5 },
 };
 
-/** Discard recording asks first, on the Stopping screen: Keep it is back to the form. */
+/** Discard recordings asks first, on the Stopping screen: Keep it is back to the form. */
 export const DiscardAsked: Story = {
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
-    await userEvent.click(canvas.getByRole('button', { name: 'Discard recording' }));
+    await userEvent.click(canvas.getByRole('button', { name: 'Discard recordings' }));
     const question = within(document.body).getByRole('alertdialog');
     await expect(within(question).getByRole('button', { name: 'Keep it' })).toBeInTheDocument();
     await expect(args.onDiscard).not.toHaveBeenCalled();
