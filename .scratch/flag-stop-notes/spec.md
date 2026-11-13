@@ -14,14 +14,15 @@ Status: building. Approved by the owner on 2026-11-13. His Figma flow is section
 
    Recording goes on under the card.
 3. **The notes button.** Once the ride has a flag, a **Stops notes** button stands over Flag a stop (4718:3923). Its badge counts the flagged stops, with or without a note.
-4. **The Stops notes page** (4720:28437) shows the back arrow, the title and the flag count. Each stop sits on a timeline with its place, "Stop N" and its note box:
-   - **Edit** opens the box in place, with Cancel and Save.
-   - A stop with no note offers **Add note**.
-   - **Delete** first asks "Delete this stop?" (Delete / Keep, the Delete-this-record question's look). It then removes the whole flag, its note with it.
+4. **The Stops notes page** (4720:28437) shows the back arrow, the title and the flag count. Each stop sits on a timeline with its place, **Stop N ›** and its note box:
+   - A tap on the box writes or changes the note in place. Cancel and Save sit under it, both flat.
+   - A stop with no note says **Add note**.
+   - There is no Edit and no Delete on the page.
+   - **Stop N ›** opens the stop on its map (4725:29011): the ride's trail centred on the stop, drag only. The pop-up shows the flag count, the place, and **Close | Delete**. Delete asks "Delete this stop?" (Delete / Keep) first, then removes the whole flag.
 5. **Where the page opens**
    - while recording, from the notes button
    - on the save form, from a "Stops notes" entry (Figma draws none, so it is a stand-in in the form's field look)
-   - from History's ride screen, **read only**: no Edit, Delete or Add note
+   - from History's ride screen, **read only**: no note can be written, and the map's pop-up offers Close alone
 
 ## Rules
 

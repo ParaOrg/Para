@@ -1,10 +1,8 @@
-import { useId, useRef, useState, type ReactNode } from 'react';
+import { useId, useRef, useState } from 'react';
 
-import { BLOB_PLACE } from '@/features/routes/cards/livery-card';
-import blobPrimary from '@/features/routes/cards/route-card-blob-primary.svg';
 import { CloseIcon } from '@/shared/ui/route-icons';
-import { cn } from '@/shared/utils/cn';
 
+import { CardButton } from './card-button';
 import { CheckIcon, LocationIcon } from './stop-note-icons';
 import { useNoteDialog } from './use-note-dialog';
 import { NOTE_MAX_LENGTH } from '../recorder/recording-marks';
@@ -71,51 +69,16 @@ export function StopNoteCard({ note, place, onSave, onCancel }: StopNoteCardProp
           <span className="min-w-0 flex-1">{place}</span>
         </p>
         <div className="flex">
-          <CardButton icon={<CloseIcon />} label="Cancel" look="cancel" onClick={onCancel} />
-          <CardButton icon={<CheckIcon />} label="Save" look="save" type="submit" />
+          <CardButton
+            icon={<CloseIcon />}
+            label="Cancel"
+            look="plain"
+            corner="left"
+            onClick={onCancel}
+          />
+          <CardButton icon={<CheckIcon />} label="Save" look="save" corner="right" type="submit" />
         </div>
       </form>
     </div>
-  );
-}
-
-type CardButtonLook = 'cancel' | 'save';
-
-// Figma's TrackingButtonPrimary in the card's own two colours: Cancel on the white surface,
-// Save on its green.
-const LOOK = {
-  cancel: 'rounded-bl-4xl border-border-secondary bg-surface text-content-primary',
-  save: 'rounded-br-4xl border-save-border bg-save-surface text-content-inverse',
-} satisfies Record<CardButtonLook, string>;
-
-interface CardButtonProps {
-  icon: ReactNode;
-  label: string;
-  look: CardButtonLook;
-  type?: 'button' | 'submit';
-  onClick?: () => void;
-}
-
-/** One of the card's two bars, with the gloss Blob and the RouteCardPrimary press. */
-function CardButton({ icon, label, look, type = 'button', onClick }: CardButtonProps) {
-  return (
-    <button
-      type={type}
-      onClick={onClick}
-      className={cn(
-        'group relative isolate flex flex-1 items-center justify-center gap-1.5 overflow-clip border-0-6 px-3 py-2.5 text-base-lower/6 font-semibold outline-none focus-visible:outline-2 focus-visible:-outline-offset-4 focus-visible:outline-brand-surface',
-        LOOK[look],
-      )}
-    >
-      <img src={blobPrimary} alt="" aria-hidden className={BLOB_PLACE} />
-      <span aria-hidden className="size-5 shrink-0 *:size-full">
-        {icon}
-      </span>
-      {label}
-      <span
-        aria-hidden
-        className="pointer-events-none absolute inset-0 rounded-[inherit] shadow-route-card-primary group-active:shadow-route-card-primary-selected"
-      />
-    </button>
   );
 }

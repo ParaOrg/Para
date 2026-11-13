@@ -143,7 +143,7 @@ export function ContributePage({ locator }: ContributePageProps) {
   // Where Ready puts focus as it opens: back on the tab whose screen was open, on Start tracking
   // after a save, else its heading.
   const [openedTab, setOpenedTab] = useState<'history' | 'account' | 'save' | null>(null);
-  const stopNotes = useStopNotes(recording, accountGate === 'ready');
+  const stopNotes = useStopNotes(recording, track.trail, accountGate === 'ready');
   const notices = usePageNotices({
     recording,
     statusOf: uploads.statusOf,

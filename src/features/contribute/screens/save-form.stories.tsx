@@ -13,7 +13,7 @@ const meta = {
     onKeepRecording: fn(),
     onSave: fn(),
     onDiscard: fn(),
-    stopNotes: { marks: [], points: [], onNoteMark: fn(), onDeleteMark: fn() },
+    stopNotes: { marks: [], trail: null, onNoteMark: fn(), onDeleteMark: fn() },
   },
   decorators: [
     (Story) => (
@@ -99,7 +99,7 @@ export const FlaggedStops: Story = {
   args: {
     stopNotes: {
       marks: [{ time: STOP_1, note: 'Tapat ng 7-Eleven, may waiting shed' }, { time: STOP_2 }],
-      points: [null, null],
+      trail: null,
       onNoteMark: fn(),
       onDeleteMark: fn(),
     },

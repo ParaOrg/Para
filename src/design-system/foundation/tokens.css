@@ -256,6 +256,10 @@
      owner keeps off the route liveries, so it is named for what it does here. */
   --save-surface: var(--color-green-700);
   --save-border: var(--color-green-800);
+  /* Delete on a flagged stop's map (4725:29185): Figma's card-(depreciated)/red, kept off the
+     liveries as the green is, named for what it does here. */
+  --delete-surface: var(--color-red-800);
+  --delete-border: var(--color-red-900);
 
   /* One component's own colour. Figma: Components/… (the Tooltip). */
   --components-tooltip-surface: var(--color-neutral-900);
@@ -399,6 +403,8 @@
   --color-brand-ring-track: var(--brand-ring-track);
   --color-save-surface: var(--save-surface);
   --color-save-border: var(--save-border);
+  --color-delete-surface: var(--delete-surface);
+  --color-delete-border: var(--delete-border);
 
   --color-components-tooltip-surface: var(--components-tooltip-surface);
 

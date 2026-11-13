@@ -1,4 +1,4 @@
-import type { LngLat } from '@/shared/utils/geo';
+import type { RecordingTrail } from '@/features/routes/map/recording-trail';
 
 import { StopNoteCard } from './stop-note-card';
 import { StopNotesScreen } from './stop-notes-screen';
@@ -8,8 +8,10 @@ import type { MarkRow } from '../storage/recording-schema';
 /** A ride's flagged stops, where each was, and what may be done to them. */
 export interface StopNotesData {
   marks: readonly MarkRow[];
-  /** Where each flag was, in the same order; null where the ride has no position for it. */
-  points: readonly (LngLat | null)[];
+  /** The ride's trail with each flag's pin, in the marks' order; null for none. */
+  trail: RecordingTrail | null;
+  /** The trail is still being read (History's): each stop is still finding its place. */
+  isTrailReading?: boolean;
   /** Absent, the stops are read only (History). */
   onNoteMark?: (time: number, note: string) => void;
   onDeleteMark?: (time: number) => void;
@@ -32,13 +34,17 @@ interface StopNotesViewProps {
  * The recording screen loads it lazily (lazy-screens.ts); the save form and History carry it.
  */
 export function StopNotesView({ view, stopNotes, onClose, onCardSaved }: StopNotesViewProps) {
-  const { marks, points, onNoteMark, onDeleteMark } = stopNotes;
-  const places = useStopPlaces(points);
+  const { marks, trail, isTrailReading = false, onNoteMark, onDeleteMark } = stopNotes;
+  // Where each flag was: its pin on the trail, none for a ride with no position for it.
+  const points = marks.map((_, at) => trail?.marks[at]?.at ?? null);
+  const places = useStopPlaces(points, isTrailReading);
   if (view.kind === 'screen') {
     return (
       <StopNotesScreen
         marks={marks}
         places={places}
+        points={points}
+        trail={trail}
         onBack={onClose}
         onNoteMark={onNoteMark}
         onDeleteMark={onDeleteMark}

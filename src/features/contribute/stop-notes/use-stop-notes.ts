@@ -1,14 +1,12 @@
 import { useRef, useState, type RefObject } from 'react';
 import { flushSync } from 'react-dom';
 
-import { markPoints } from './mark-points';
+import type { RecordingTrail } from '@/features/routes/map/recording-trail';
+
 import type { StopNotesData, StopNotesViewKind } from './stop-notes-view';
 import type { RecordingState } from '../recorder/recording-state';
 
-type StopNotesRecording = Pick<
-  RecordingState,
-  'phase' | 'current' | 'kept' | 'noteMark' | 'deleteMark'
->;
+type StopNotesRecording = Pick<RecordingState, 'phase' | 'current' | 'noteMark' | 'deleteMark'>;
 
 export interface StopNotes {
   /**
@@ -42,8 +40,12 @@ export interface StopNotes {
  * Stops notes from its button. They belong to the recording screen, so each is dropped the moment
  * the page leaves it, as ✕'s question is (use-stop-question.ts).
  */
-export function useStopNotes(recording: StopNotesRecording, areToastsDrawn: boolean): StopNotes {
-  const { phase, current, kept } = recording;
+export function useStopNotes(
+  recording: StopNotesRecording,
+  trail: RecordingTrail,
+  areToastsDrawn: boolean,
+): StopNotes {
+  const { phase, current } = recording;
   const isOnRecordingScreen = phase === 'recording' || phase === 'paused';
   const [pill, setPill] = useState<number | null>(null);
   const [flagsShown, setFlagsShown] = useState(0);
@@ -73,7 +75,7 @@ export function useStopNotes(recording: StopNotesRecording, areToastsDrawn: bool
     view: isOnRecordingScreen ? view : null,
     data: {
       marks,
-      points: markPoints(kept, marks),
+      trail,
       onNoteMark: recording.noteMark,
       onDeleteMark: recording.deleteMark,
     },

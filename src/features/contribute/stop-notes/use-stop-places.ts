@@ -12,9 +12,13 @@ type HotspotsRead = { status: 'reading' } | { status: 'read'; hotspots: readonly
  * Each flagged stop's place, by the published hotspots. They are read once the stops are shown,
  * in an effect, as every read of the published map is on the pages that carry no query client
  * for it (.claude/CLAUDE.md, Hooks and effects). Unread (offline before the map was kept), every
- * stop says it has no nearby place.
+ * stop says it has no nearby place. While the stops' own positions are still being read
+ * (`isTrailReading`), each is still finding its place.
  */
-export function useStopPlaces(points: readonly (LngLat | null)[]): string[] {
+export function useStopPlaces(
+  points: readonly (LngLat | null)[],
+  isTrailReading = false,
+): string[] {
   const [read, setRead] = useState<HotspotsRead>({ status: 'reading' });
   useEffect(() => {
     let isLeft = false;
@@ -31,6 +35,6 @@ export function useStopPlaces(points: readonly (LngLat | null)[]): string[] {
       isLeft = true;
     };
   }, []);
-  if (read.status === 'reading') return points.map(() => FINDING_PLACE);
+  if (read.status === 'reading' || isTrailReading) return points.map(() => FINDING_PLACE);
   return points.map((at) => (at ? stopPlaceName(at, read.hotspots) : NO_NEARBY_PLACE));
 }

@@ -1,5 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
+
+import { createQueryClient } from '@/shared/lib/query-client';
 
 import type { CardStatus } from './card-status';
 import { RideDetailScreen, type RideDetail } from './ride-detail-screen';
@@ -44,12 +47,15 @@ const meta = {
   // `data-dock-host`, as the contributor page is, the map's grey in its place.
   decorators: [
     (Story) => (
-      <div
-        data-dock-host
-        className="@container relative h-[852px] w-[393px] overflow-clip bg-surface-quaternary"
-      >
-        <Story />
-      </div>
+      // Stops notes reads the ride's trail through the page's query client.
+      <QueryClientProvider client={createQueryClient()}>
+        <div
+          data-dock-host
+          className="@container relative h-[852px] w-[393px] overflow-clip bg-surface-quaternary"
+        >
+          <Story />
+        </div>
+      </QueryClientProvider>
     ),
   ],
   parameters: { layout: 'fullscreen' },

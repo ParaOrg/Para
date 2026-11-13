@@ -134,7 +134,7 @@ export function RideDetailScreen({ ride, onBack }: RideDetailScreenProps) {
         </div>
       )}
       {ride && isStopNotesOpen && (
-        <RideStopNotes recording={ride.recording} facts={ride.facts} onClose={closeStopNotes} />
+        <RideStopNotes recording={ride.recording} onClose={closeStopNotes} />
       )}
       {ride && isAsking && (
         // Deleted, the ride is gone from History and its screen leaves by itself (history-view.tsx).

@@ -1,23 +1,32 @@
-import type { RideFacts } from './ride-facts';
+import { useIsFetching } from '@tanstack/react-query';
+
+import { historyKeys } from './history-keys';
+import { useRideTrail } from '../map/use-ride-trail';
 import { StopNotesView } from '../stop-notes/stop-notes-view';
 import type { Recording } from '../storage/recording-schema';
 
 interface RideStopNotesProps {
   recording: Recording;
-  facts: RideFacts | null;
   onClose: () => void;
 }
 
 /**
- * A saved ride's Stops notes, read only: History never changes what was uploaded. Each stop's
- * place comes from the trail History drew, so a ride not on this phone names none.
+ * A saved ride's Stops notes, read only: History never changes what was uploaded. Each stop's place
+ * and map come from the ride's trail, read as the ride's own map reads it (useRideTrail): a ride not
+ * on this phone has no flags on its line, so it names no places.
  */
-export function RideStopNotes({ recording, facts, onClose }: RideStopNotesProps) {
+export function RideStopNotes({ recording, onClose }: RideStopNotesProps) {
   const marks = recording.marks ?? [];
-  const points = marks.map((_, at) => facts?.trail?.marks[at]?.at ?? null);
+  const trail = useRideTrail(recording.id, recording);
+  // Read from this phone's fixes, under the key the ride's own map reads it by.
+  const isTrailReading = useIsFetching({ queryKey: historyKeys.trail(recording.id, 'phone') }) > 0;
   return (
     <div className="pointer-events-auto">
-      <StopNotesView view={{ kind: 'screen' }} stopNotes={{ marks, points }} onClose={onClose} />
+      <StopNotesView
+        view={{ kind: 'screen' }}
+        stopNotes={{ marks, trail, isTrailReading }}
+        onClose={onClose}
+      />
     </div>
   );
 }
