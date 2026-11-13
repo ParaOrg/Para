@@ -11,7 +11,6 @@ import { useLatch } from './common/use-latch';
 import { useEarlierQuestion } from './consent/use-earlier-question';
 import {
   AccountGate,
-  FlagStopButton,
   MapDataSourceView,
   PageToasts,
   PermissionsOnboarding,
@@ -27,6 +26,7 @@ import {
   makeLazyScreens,
 } from './lazy-screens';
 import { ContributeMap, type ContributeLocatorSlot } from './map/contribute-map';
+import { FlagStopMark } from './map/flag-stop-mark';
 import { useRecordingTrack } from './map/use-recording-track';
 import { useRideTrail } from './map/use-ride-trail';
 import { useStartMorph } from './motion/use-start-morph';
@@ -35,7 +35,6 @@ import { hasSeenPermissionsScreen } from './native-bridge/permissions-screen-fla
 import { SCREENS } from './navigation/screen-routes';
 import { useRideView, useScreenView } from './navigation/use-screen-view';
 import { pageLayout, pageScreens } from './page-layout';
-import { MAX_MARKS } from './recorder/recording-marks';
 import { useRecording } from './recorder/use-recording';
 import { accountChunk, historyChunk, warmScreen } from './screen-loaders';
 import { ReadyScreen } from './screens/ready-screen';
@@ -285,27 +284,13 @@ export function ContributePage({ locator }: ContributePageProps) {
           pictureFor={phase === 'form' ? (recording.current?.id ?? null) : null}
           onPicture={keepTrailPicture}
           mark={
-            layout.isRecordingShown ? (
-              <Suspense fallback={null}>
-                <FlagStopButton
-                  isRecording={phase === 'recording'}
-                  canFlag={(recording.current?.marks?.length ?? 0) < MAX_MARKS}
-                  onFlag={notices.handleFlag}
-                />
-              </Suspense>
-            ) : tutorial.demo ? (
-              // The demo's: where a recording's stands, and it flags nothing. Inert, as the rest of
-              // the demo is: under the tutorial's overlay, never focused or pressed.
-              <div inert className="contents">
-                <Suspense fallback={null}>
-                  <FlagStopButton
-                    isRecording={tutorial.demo === 'recording'}
-                    canFlag
-                    onFlag={() => undefined}
-                  />
-                </Suspense>
-              </div>
-            ) : null
+            <FlagStopMark
+              isRecordingShown={layout.isRecordingShown}
+              phase={phase}
+              marks={recording.current?.marks}
+              demo={tutorial.demo}
+              onFlag={notices.handleFlag}
+            />
           }
         />
       </div>
