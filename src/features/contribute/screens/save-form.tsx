@@ -64,6 +64,9 @@ export function SaveForm({
   const [description, setDescription] = useState('');
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [isDiscardAsked, setIsDiscardAsked] = useState(false);
+  // A stop's map or its Delete question is open over the form: it holds the countdown, so the form
+  // never saves itself under something the contributor is answering.
+  const [isStopHeld, setIsStopHeld] = useState(false);
 
   const fare = fareFromText(fareText);
   const fareError = isFareChecked ? fare.error : undefined;
@@ -75,7 +78,10 @@ export function SaveForm({
     rideKind,
     ...(fare.farePhp === undefined ? {} : { farePhp: fare.farePhp }),
   };
-  const { touch } = useSaveCountdown(() => onSave(details), isSheetOpen || isDiscardAsked);
+  const { touch } = useSaveCountdown(
+    () => onSave(details),
+    isSheetOpen || isDiscardAsked || isStopHeld,
+  );
 
   // Focus back on the field, by hand: the form went inert as the sheet opened, so the field had
   // already lost focus and the sheet has nothing to give back.
@@ -161,7 +167,11 @@ export function SaveForm({
               value={description}
               onChange={(event) => setDescription(event.target.value)}
             />
-            <StopNotesSection stopNotes={stopNotes} />
+            <StopNotesSection
+              stopNotes={stopNotes}
+              fallbackFocusRef={discardRef}
+              onHoldChange={setIsStopHeld}
+            />
             <DiscardRecordingButton
               buttonRef={discardRef}
               onClick={() => setIsDiscardAsked(true)}

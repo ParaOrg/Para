@@ -1,4 +1,4 @@
-import { useId, useState, type RefObject } from 'react';
+import { useEffect, useId, useState, type RefObject } from 'react';
 import { flushSync } from 'react-dom';
 
 import type { RecordingTrail } from '@/features/routes/map/recording-trail';
@@ -20,6 +20,17 @@ export interface StopNotesTimelineProps {
   trail: RecordingTrail | null;
   /** Where focus goes when a stop is deleted from its map: the stops' heading. */
   headingRef: RefObject<HTMLElement | null>;
+  /**
+   * Where focus goes when the last stop is deleted and the heading above it has gone with the
+   * section (the save form's Discard recordings). Falls back to the heading when absent.
+   */
+  fallbackFocusRef?: RefObject<HTMLElement | null>;
+  /**
+   * Called with true while a stop's map, its question or a note editor is open over the list, and
+   * false when none is: the save form holds its countdown then, and Stops notes leaves Escape to
+   * the overlay.
+   */
+  onHoldChange?: (isHeld: boolean) => void;
   /** Flush with the column it stands in (the save form's), not 16 in as on Stops notes. */
   isFlush?: boolean;
   /** Absent, the stops are read only (History): notes are read, never written or deleted. */
@@ -44,6 +55,8 @@ export function StopNotesTimeline({
   points,
   trail,
   headingRef,
+  fallbackFocusRef,
+  onHoldChange,
   isFlush = false,
   onNoteMark,
   onDeleteMark,
@@ -54,15 +67,24 @@ export function StopNotesTimeline({
   const [isDeleteAsked, setIsDeleteAsked] = useState(false);
   const mapIndex = marks.findIndex((mark) => mark.time === mapTime);
   const mapButtonId = (time: number) => `${ids}-map-${time}`;
-  // The map closed, focus comes back to its "Stop N ›"; the stop deleted, to the stops' heading.
-  const closeMap = () => {
+  // A stop's map, its question or a note editor is open over the list.
+  const isHeld = mapTime !== null || editingTime !== null;
+  useEffect(() => onHoldChange?.(isHeld), [isHeld, onHoldChange]);
+  // The map closed, focus comes back to its "Stop N ›". When `focusTarget` is given (a stop
+  // deleted), focus goes there instead: the stops' heading, or the fallback when the heading has
+  // gone with its section (the last stop deleted on the save form).
+  const closeMap = (focusTarget?: HTMLElement | null) => {
     const closed = mapTime;
     flushSync(() => {
       setIsDeleteAsked(false);
       setMapTime(null);
     });
+    if (focusTarget !== undefined) {
+      focusTarget?.focus();
+      return;
+    }
     const button = closed === null ? null : document.getElementById(mapButtonId(closed));
-    (button ?? headingRef.current)?.focus();
+    (button ?? headingRef.current ?? fallbackFocusRef?.current)?.focus();
   };
 
   return (
@@ -113,8 +135,11 @@ export function StopNotesTimeline({
           cancelLabel="Keep"
           isBusy={false}
           onConfirm={() => {
+            // The last stop deleted, the heading above it goes with its section: send focus to the
+            // fallback (or the heading) at once, before it unmounts and leaves it on the page body.
+            const wasLast = marks.length === 1;
             onDeleteMark(mapTime);
-            closeMap();
+            closeMap(wasLast ? (fallbackFocusRef?.current ?? headingRef.current) : undefined);
           }}
           onCancel={() => setIsDeleteAsked(false)}
         />
