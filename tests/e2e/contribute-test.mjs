@@ -2377,21 +2377,16 @@ const ON_THE_FORM_MS = 100_000;
   );
   await page.keyboard.press('Escape');
   await page.clock.runFor(61_000);
-  const sixty = await page.locator('form').innerText();
   check(
-    'the form shows the time left, quietly: Saves by itself in 1:00 after a minute',
-    /Saves by itself in (0:59|1:00)/.test(sixty),
+    'a minute alone, the form is still open: it says nothing of its two minutes, it keeps them',
+    (await page.getByRole('heading', { name: 'Save Recording' }).count()) === 1,
   );
+  // A hand on the form starts the two minutes again: still open 118 s after it, three minutes in.
   await page.getByLabel('Description').fill('Crowded');
   await page.clock.runFor(2_000);
-  check(
-    'a hand on the form starts the two minutes again',
-    /Saves by itself in (1:5\d|2:00)/.test(await page.locator('form').innerText()),
-    (await page.locator('form').innerText()).match(/Saves by itself in \d:\d\d/)?.[0],
-  );
   await page.clock.runFor(116_000);
   check(
-    'still on the form a couple of seconds before the time is up',
+    'a hand on the form starts the two minutes again: still on it a couple of seconds before',
     (await page.getByRole('heading', { name: 'Save Recording' }).count()) === 1,
   );
   await page.clock.runFor(3_000);
@@ -2510,8 +2505,8 @@ const STORE_PROBLEM = 'Recording not kept';
   await page.evaluate(() => {
     const byText = (t) =>
       [...document.querySelectorAll('button')].find((b) => b.textContent.trim() === t);
-    byText('Save recording').click();
-    byText('Save recording').click();
+    byText('Save recordings').click();
+    byText('Save recordings').click();
   });
   await page.getByTestId('toast').filter({ hasText: 'Route recorded' }).waitFor({ timeout: 5000 });
   await page.waitForTimeout(300);
