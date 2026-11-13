@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState } from 'react';
-import { flushSync } from 'react-dom';
+import { useState } from 'react';
 
 import { IconButton } from '@/design-system/primitives/icon-button';
+import type { RecordingTrail } from '@/features/routes/map/recording-trail';
 import { BottomSheet } from '@/shared/ui/bottom-sheet';
 import { CloseIcon } from '@/shared/ui/route-icons';
 import { DOCK_TOP_CSS, type Snap } from '@/shared/ui/sheet-gesture';
@@ -11,12 +11,12 @@ import { RideDetailBody } from './ride-detail-body';
 import { rideDetailsOf } from './ride-details';
 import type { RideFacts } from './ride-facts';
 import { RideHeader } from './ride-header';
-import { RideStopNotes } from './ride-stop-notes';
 import { rideFullNameOf, rideTitleOf } from './ride-title';
+import { useRideDeleteQuestion } from './use-ride-delete-question';
+import { useRideStopNotes } from './use-ride-stop-notes';
+import { useRideSummary } from './use-ride-summary';
 import { ArrowLeftIcon } from '../account/arrow-left-icon';
-import { HandQuestion } from '../account/hand-question';
 import { SCREEN_HASH_ATTR } from '../common/data-attributes';
-import { useClosedWhenHidden } from '../common/use-closed-when-hidden';
 import { SCREENS } from '../navigation/screen-routes';
 import type { Recording } from '../storage/recording-schema';
 
@@ -25,6 +25,8 @@ export interface RideDetail {
   recording: Recording;
   /** Its distance and whether it was walked, as History read them; null until read. */
   facts: RideFacts | null;
+  /** Its whole trail, as the map behind draws it. It is null until read or when there is none. */
+  trail: RecordingTrail | null;
   /** Its upload's line, as its History card shows it. */
   status: CardStatus;
   /** Tap retry upload, or Tap to upload: sends it. */
@@ -54,32 +56,11 @@ interface RideDetailScreenProps {
 export function RideDetailScreen({ ride, onBack }: RideDetailScreenProps) {
   // Folded, as the frame draws it: the name and where it went, the map above.
   const [snap, setSnap] = useState<Snap>('low');
-  const [isAsking, setIsAsking] = useState(false);
-  useClosedWhenHidden(setIsAsking, false);
-  // Stops notes over the whole screen, read only: History never changes an upload's notes.
-  const [isStopNotesOpen, setIsStopNotesOpen] = useState(false);
-  useClosedWhenHidden(setIsStopNotesOpen, false);
-  const stopNotesRef = useRef<HTMLButtonElement>(null);
-  const isCovered = isAsking || isStopNotesOpen;
-  const deleteRef = useRef<HTMLDivElement>(null);
-  const shouldReturnFocus = useRef(false);
+  const deletion = useRideDeleteQuestion(ride);
+  const stopNotes = useRideStopNotes(ride);
+  const summary = useRideSummary(ride);
+  const isCovered = deletion.isAsking || stopNotes.isOpen || summary.isShowing;
   const isFolded = snap === 'low';
-
-  // Keep recording hands focus back to the button that asked.
-  useEffect(() => {
-    if (isAsking || !shouldReturnFocus.current) return;
-    shouldReturnFocus.current = false;
-    deleteRef.current?.querySelector('button')?.focus();
-  }, [isAsking]);
-
-  const closeStopNotes = () => {
-    flushSync(() => setIsStopNotesOpen(false));
-    stopNotesRef.current?.focus();
-  };
-  const handleKeep = () => {
-    shouldReturnFocus.current = true;
-    setIsAsking(false);
-  };
 
   return (
     <section
@@ -125,34 +106,18 @@ export function RideDetailScreen({ ride, onBack }: RideDetailScreenProps) {
               fullName={rideFullNameOf(ride.recording)}
               onRetry={ride.onRetry}
               canDelete={ride.canDelete}
-              deleteRef={deleteRef}
-              onDelete={() => setIsAsking(true)}
-              stopNotesRef={stopNotesRef}
-              onOpenStopNotes={() => setIsStopNotesOpen(true)}
+              deleteRef={deletion.deleteRef}
+              onDelete={deletion.ask}
+              stopNotesRef={stopNotes.buttonRef}
+              onOpenStopNotes={stopNotes.open}
+              onSummary={summary.open}
             />
           </BottomSheet>
         </div>
       )}
-      {ride && isStopNotesOpen && (
-        <RideStopNotes recording={ride.recording} onClose={closeStopNotes} />
-      )}
-      {ride && isAsking && (
-        // Deleted, the ride is gone from History and its screen leaves by itself (history-view.tsx).
-        <div className="pointer-events-auto">
-          <HandQuestion
-            title="You want to remove this recording?"
-            text={null}
-            error={null}
-            confirmLabel="Delete this record"
-            confirmVariant="plain-error"
-            busyLabel="Delete this record"
-            cancelLabel="Keep recording"
-            isBusy={false}
-            onConfirm={ride.onDelete}
-            onCancel={handleKeep}
-          />
-        </div>
-      )}
+      {stopNotes.page}
+      {summary.card}
+      {deletion.question}
     </section>
   );
 }

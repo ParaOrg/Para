@@ -26,12 +26,14 @@ interface RideDetailBodyProps {
   /** The way into the ride's Stops notes, read only; none for a ride with no flags. */
   onOpenStopNotes: () => void;
   stopNotesRef: RefObject<HTMLButtonElement | null>;
+  /** Opens the ride's summary card, to share. */
+  onSummary: () => void;
 }
 
 /**
  * The ride sheet's body, under its name (Figma 4569:4974): Commute Information, the upload's
  * Status its last row, the Description, read only and left out when none was written, the way into
- * the ride's Stops notes, and Delete this record.
+ * the ride's Stops notes, Share ride summary (not in the frame yet) and Delete this record.
  */
 export function RideDetailBody({
   status,
@@ -44,6 +46,7 @@ export function RideDetailBody({
   onDelete,
   onOpenStopNotes,
   stopNotesRef,
+  onSummary,
 }: RideDetailBodyProps) {
   const commuteHeadingId = useId();
   const descriptionHeadingId = useId();
@@ -88,15 +91,18 @@ export function RideDetailBody({
         </section>
       )}
       <StopNotesEntry count={marks.length} onOpen={onOpenStopNotes} buttonRef={stopNotesRef} />
-      <div ref={deleteRef} className="flex flex-col">
-        <Button
-          variant="plain"
-          tone="error"
-          label="Delete this record"
-          firstIcon={<DeleteIcon />}
-          disabled={!canDelete}
-          onClick={onDelete}
-        />
+      <div className="flex flex-col gap-3">
+        <Button variant="secondary" label="Share ride summary" onClick={onSummary} />
+        <div ref={deleteRef} className="flex flex-col">
+          <Button
+            variant="plain"
+            tone="error"
+            label="Delete this record"
+            firstIcon={<DeleteIcon />}
+            disabled={!canDelete}
+            onClick={onDelete}
+          />
+        </div>
       </div>
     </div>
   );
