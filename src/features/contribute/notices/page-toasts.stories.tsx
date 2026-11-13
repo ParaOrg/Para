@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { expect, userEvent, waitFor, within } from 'storybook/test';
+import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
 import type { MapNoteGiven } from './map-note';
 import { PageToasts } from './page-toasts';
@@ -31,6 +31,7 @@ const meta = {
     isScreenFreeToSleep: false,
     mapNote: null,
     stopsFlagged: 0,
+    onAddNote: fn(),
     routeRecorded: null,
     uploadProblem: null,
   },
@@ -138,13 +139,25 @@ export const TwoAtOnce: Story = {
   args: { problem: POSITION_UNAVAILABLE_PROBLEM, isScreenFreeToSleep: true },
 };
 
-/** A stop just flagged: "Stop flagged" with the flag, an info toast that leaves by itself. */
+/** A stop just flagged: "Stop flagged" with the flag and Add a note, gone by itself after 5 s. */
 export const StopFlagged: Story = {
   args: { stopsFlagged: 1 },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(await canvas.findByTestId('toast')).toHaveTextContent('Stop flagged');
     await expect(canvas.getByRole('status')).toHaveTextContent('Stop flagged');
+    await expect(canvas.getByRole('button', { name: 'Add a note' })).toBeVisible();
+  },
+};
+
+/** Add a note, on Stop flagged: it opens the note, and the toast goes. */
+export const AddANote: Story = {
+  args: { stopsFlagged: 1 },
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(await canvas.findByRole('button', { name: 'Add a note' }));
+    await expect(args.onAddNote).toHaveBeenCalledOnce();
+    await waitFor(() => expect(canvas.queryByTestId('toast')).toBeNull());
   },
 };
 

@@ -13,6 +13,8 @@ const meta = {
     onKeepRecording: fn(),
     onSave: fn(),
     onDiscard: fn(),
+    marks: [],
+    onNoteMark: fn(),
   },
   decorators: [
     (Story) => (
@@ -87,5 +89,27 @@ export const DiscardAsked: Story = {
     const question = within(document.body).getByRole('alertdialog');
     await expect(within(question).getByRole('button', { name: 'Keep it' })).toBeInTheDocument();
     await expect(args.onDiscard).not.toHaveBeenCalled();
+  },
+};
+
+/** A ride with flagged stops: each listed with its time and note; a tap writes or changes one. */
+export const FlaggedStops: Story = {
+  args: {
+    marks: [
+      { time: Date.UTC(2026, 10, 13, 1, 42), note: 'Tapat ng 7-Eleven, may waiting shed' },
+      { time: Date.UTC(2026, 10, 13, 1, 58) },
+    ],
+  },
+  play: async ({ canvasElement, args }) => {
+    await waitForHeadingFocus(canvasElement);
+    const canvas = within(canvasElement);
+    const second = canvas.getByRole('button', { name: /Stop 2 .* Add a note/ });
+    await userEvent.click(second);
+    const field = await canvas.findByRole('textbox', { name: 'How do you describe this stop' });
+    await expect(field).toHaveFocus();
+    await userEvent.type(field, 'Under the footbridge');
+    await userEvent.click(canvas.getByRole('button', { name: 'Save' }));
+    await expect(args.onNoteMark).toHaveBeenCalledWith(1, 'Under the footbridge');
+    await expect(second).toHaveFocus();
   },
 };

@@ -16,6 +16,7 @@ import {
   PermissionsOnboarding,
   RecordingScreen,
   SaveForm,
+  StopNoteSheet,
   StopRecordingScreen,
   TrackRoutesOffer,
   Tutorial,
@@ -39,6 +40,7 @@ import { useRecording } from './recorder/use-recording';
 import { accountChunk, historyChunk, warmScreen } from './screen-loaders';
 import { ReadyScreen } from './screens/ready-screen';
 import { ScreenUnavailable } from './screens/screen-unavailable';
+import { useStopNote } from './screens/use-stop-note';
 import { useStopQuestion } from './screens/use-stop-question';
 import { putThumbnail } from './storage/recording-store';
 import { BottomToolbar, type ToolbarTab } from './toolbar/bottom-toolbar';
@@ -140,12 +142,14 @@ export function ContributePage({ locator }: ContributePageProps) {
   // Where Ready puts focus as it opens: back on the tab whose screen was open, on Start tracking
   // after a save, else its heading.
   const [openedTab, setOpenedTab] = useState<'history' | 'account' | 'save' | null>(null);
+  const stopNote = useStopNote(recording);
   const notices = usePageNotices({
     recording,
     statusOf: uploads.statusOf,
     accountGate,
     // Record opens with focus on Start tracking, the toast read out politely.
     onRouteRecorded: () => setOpenedTab('save'),
+    onAddNote: stopNote.openLatest,
   });
   // History and Account are tabs on Ready; a build with no accounts has History alone.
   const hasAccount = canUpload();
@@ -170,7 +174,7 @@ export function ContributePage({ locator }: ContributePageProps) {
     tutorialDemo: tutorial.demo,
     isCreditsOpen: credits.isOpen,
     isCreditsLeaving: credits.isLeaving,
-    isStopShown: stopQuestion.isShown,
+    isStopShown: stopQuestion.isShown || stopNote.isShown,
   });
   // The ride whose screen shows: the map draws an overview of its whole trail and frames it, from
   // its fixes when this phone keeps it, else from the line Para keeps of the upload.
@@ -290,6 +294,7 @@ export function ContributePage({ locator }: ContributePageProps) {
               marks={recording.current?.marks}
               demo={tutorial.demo}
               onFlag={notices.handleFlag}
+              buttonRef={stopNote.flagButtonRef}
             />
           }
         />
@@ -474,11 +479,18 @@ export function ContributePage({ locator }: ContributePageProps) {
               />
             </Suspense>
           )}
+          {stopNote.isShown && (
+            <Suspense fallback={null}>
+              <StopNoteSheet note={stopNote.note} onSave={stopNote.save} onClose={stopNote.close} />
+            </Suspense>
+          )}
           {layout.isFormShown && figures && (
             <Suspense fallback={null}>
               <SaveForm
                 figures={figures}
                 failedFixWrites={recording.current?.failedFixWrites ?? 0}
+                marks={recording.current?.marks ?? []}
+                onNoteMark={recording.noteMark}
                 onDiscard={recording.cancel}
                 onKeepRecording={recording.keepRecording}
                 onSave={recording.save}

@@ -53,6 +53,7 @@ export const loadStopRecordingScreen = retryingImport(
 );
 export const loadFlagStopButton = retryingImport(() => import('./screens/flag-stop-button'));
 export const loadSaveForm = retryingImport(() => import('./screens/save-form'));
+export const loadStopNoteSheet = retryingImport(() => import('./screens/stop-note-sheet'));
 // The check before a first upload, with Cloudflare's widget: fetched only when one is asked for.
 const loadUploadCheck = retryingImport(() => import('./uploads/upload-check'));
 export const UploadCheck = lazy(() =>
@@ -67,6 +68,9 @@ export const Tutorial = lazy(() => loadTutorial().then((module) => ({ default: m
 export const SaveForm = lazy(() => loadSaveForm().then((module) => ({ default: module.SaveForm })));
 export const RecordingScreen = lazy(() =>
   loadRecordingScreen().then((module) => ({ default: module.RecordingScreen })),
+);
+export const StopNoteSheet = lazy(() =>
+  loadStopNoteSheet().then((module) => ({ default: module.StopNoteSheet })),
 );
 export const StopRecordingScreen = lazy(() =>
   loadStopRecordingScreen().then((module) => ({ default: module.StopRecordingScreen })),

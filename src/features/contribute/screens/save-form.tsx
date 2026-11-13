@@ -7,14 +7,17 @@ import { TextAreaField } from '@/design-system/primitives/text-area-field';
 import { TextField } from '@/design-system/primitives/text-field';
 
 import { fareFromText } from './fare-text';
+import { FlagNotesList } from './flag-notes-list';
 import { RideField } from './ride-field';
 import { RideSheet } from './ride-sheet';
 import { SaveFormHeader } from './save-form-header';
+import { StopNoteSheet } from './stop-note-sheet';
 import { StopRecordingScreen } from './stop-recording-screen';
+import { useFlagNoteSheet } from './use-flag-note-sheet';
 import { useSaveCountdown } from './use-save-countdown';
 import type { RecordingFigures } from '../recorder/recording-figures';
 import type { RecordingDetails } from '../recorder/recording-state';
-import type { RideKind } from '../storage/recording-schema';
+import type { MarkRow, RideKind } from '../storage/recording-schema';
 
 interface SaveFormProps {
   /** The recording's time and distance, for Discard's question. */
@@ -27,6 +30,9 @@ interface SaveFormProps {
   onSave: (details: RecordingDetails) => void;
   /** Discard's question answered Stop without saving: the recording is thrown away. */
   onDiscard: () => void;
+  /** The ride's flagged stops, each with its note: listed, and a note written or changed here. */
+  marks: readonly MarkRow[];
+  onNoteMark: (index: number, note: string) => void;
 }
 
 /**
@@ -45,6 +51,8 @@ export function SaveForm({
   onKeepRecording,
   onSave,
   onDiscard,
+  marks,
+  onNoteMark,
 }: SaveFormProps) {
   const ids = useId();
   const fareRef = useRef<HTMLInputElement>(null);
@@ -58,6 +66,7 @@ export function SaveForm({
   const [description, setDescription] = useState('');
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [isDiscardAsked, setIsDiscardAsked] = useState(false);
+  const noteSheet = useFlagNoteSheet(marks, onNoteMark);
 
   const fare = fareFromText(fareText);
   const fareError = isFareChecked ? fare.error : undefined;
@@ -71,7 +80,7 @@ export function SaveForm({
   };
   const { secondsLeft, touch } = useSaveCountdown(
     () => onSave(details),
-    isSheetOpen || isDiscardAsked,
+    isSheetOpen || isDiscardAsked || noteSheet.isOpen,
   );
 
   // Focus back on the field, by hand: the form went inert as the sheet opened, so the field had
@@ -91,7 +100,7 @@ export function SaveForm({
     <>
       <form
         aria-labelledby={`${ids}-heading`}
-        inert={isSheetOpen || isDiscardAsked}
+        inert={isSheetOpen || isDiscardAsked || noteSheet.isOpen}
         noValidate
         onPointerDownCapture={touch}
         onKeyDownCapture={touch}
@@ -164,6 +173,7 @@ export function SaveForm({
               value={description}
               onChange={(event) => setDescription(event.target.value)}
             />
+            <FlagNotesList marks={marks} listRef={noteSheet.listRef} onOpen={noteSheet.open} />
             {/* Figma's Button in its plain voice, its words in Content/error: the design system's
                 Button has no plain red, so the same box and type, in tokens. */}
             <button
@@ -190,6 +200,9 @@ export function SaveForm({
           }}
           onClose={closeSheet}
         />
+      )}
+      {noteSheet.isOpen && (
+        <StopNoteSheet note={noteSheet.note} onSave={noteSheet.save} onClose={noteSheet.close} />
       )}
       {isDiscardAsked && (
         <StopRecordingScreen

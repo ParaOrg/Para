@@ -23,6 +23,8 @@ interface PageNoticesInput {
    * this hook, as React allows while rendering.
    */
   onRouteRecorded: () => void;
+  /** Add a note, on the Stop flagged toast. */
+  onAddNote: () => void;
 }
 
 export interface PageNotices {
@@ -46,6 +48,7 @@ export function usePageNotices({
   statusOf,
   accountGate,
   onRouteRecorded,
+  onAddNote,
 }: PageNoticesInput): PageNotices {
   const isScreenFreeToSleep = recording.phase === 'recording' && recording.isWakeRefused;
   // The locator's note: what it says, and a count that grows with each tap, said again each time.
@@ -98,6 +101,7 @@ export function usePageNotices({
       isScreenFreeToSleep,
       mapNote,
       stopsFlagged,
+      onAddNote,
       routeRecorded,
       uploadProblem,
     },

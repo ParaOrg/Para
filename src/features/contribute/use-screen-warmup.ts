@@ -7,6 +7,7 @@ import {
   loadFlagStopButton,
   loadRecordingScreen,
   loadSaveForm,
+  loadStopNoteSheet,
   loadStopRecordingScreen,
   loadUnfinishedScreen,
 } from './lazy-screens';
@@ -36,6 +37,7 @@ export function useScreenWarmup(phase: Phase, fetchStartMorph: () => Promise<voi
       loadUnfinishedScreen(),
       loadStopRecordingScreen(),
       loadFlagStopButton(),
+      loadStopNoteSheet(),
       loadSaveForm(),
       loadPacking(),
       loadContributionRequests(),
