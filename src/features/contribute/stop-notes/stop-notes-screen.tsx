@@ -31,32 +31,39 @@ export function StopNotesScreen({ marks, onBack, ...timeline }: StopNotesScreenP
   return (
     <section
       aria-labelledby={headingId}
-      className="absolute inset-0 z-40 flex flex-col overflow-y-auto bg-surface pb-[max(2rem,env(safe-area-inset-bottom))] font-sn-pro text-content-primary"
+      className="absolute inset-0 z-40 flex flex-col bg-surface font-sn-pro text-content-primary"
     >
-      <div className="px-5 pt-[calc(env(safe-area-inset-top)+1.5rem)] pb-2">
-        <IconButton tooltip="bottom" label="Back" icon={<ArrowLeftIcon />} onClick={onBack} />
-      </div>
-      <div className="px-4 pt-4 pb-2">
-        <StopNotesTitle id={headingId} count={marks.length} headingRef={headingRef} />
-      </div>
-      {marks.length > 0 ? (
-        <StopNotesTimeline
-          marks={marks}
-          headingRef={headingRef}
-          onHoldChange={setIsOverlayOpen}
-          {...timeline}
-        />
-      ) : (
-        <div className="flex flex-col items-start gap-4 px-4 pt-4">
-          <div className="flex flex-col gap-1">
-            <p className="text-base/6 font-semibold">All stops are deleted</p>
-            <p className="text-sm/5 text-content-quaternary">
-              Flag a stop while recording to write a note again.
-            </p>
-          </div>
-          <Button variant="secondary" size="small" label="Go back" onClick={onBack} />
+      {/*
+        The page does not scroll; this inner column does. The section stays the overlays' containing
+        block (its only positioned ancestor), so a stop's map and its question dim the whole page
+        and stay put when the stops are scrolled, rather than scrolling away with the content.
+      */}
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto pb-[max(2rem,env(safe-area-inset-bottom))]">
+        <div className="px-5 pt-[calc(env(safe-area-inset-top)+1.5rem)] pb-2">
+          <IconButton tooltip="bottom" label="Back" icon={<ArrowLeftIcon />} onClick={onBack} />
         </div>
-      )}
+        <div className="px-4 pt-4 pb-2">
+          <StopNotesTitle id={headingId} count={marks.length} headingRef={headingRef} />
+        </div>
+        {marks.length > 0 ? (
+          <StopNotesTimeline
+            marks={marks}
+            headingRef={headingRef}
+            onHoldChange={setIsOverlayOpen}
+            {...timeline}
+          />
+        ) : (
+          <div className="flex flex-col items-start gap-4 px-4 pt-4">
+            <div className="flex flex-col gap-1">
+              <p className="text-base/6 font-semibold">All stops are deleted</p>
+              <p className="text-sm/5 text-content-quaternary">
+                Flag a stop while recording to write a note again.
+              </p>
+            </div>
+            <Button variant="secondary" size="small" label="Go back" onClick={onBack} />
+          </div>
+        )}
+      </div>
     </section>
   );
 }
