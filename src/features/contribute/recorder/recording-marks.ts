@@ -11,6 +11,37 @@ export function withMark(marks: MarkRow[], time: number): MarkRow[] {
   return marks.length >= MAX_MARKS ? marks : [...marks, { time }];
 }
 
+/** The longest note a flagged stop keeps, so a ride full of flags still fits one upload. */
+export const NOTE_MAX_LENGTH = 200;
+
+/** A note as it is kept: trimmed, and no longer than NOTE_MAX_LENGTH. */
+export const keptNote = (note: string): string => note.trim().slice(0, NOTE_MAX_LENGTH);
+
+/**
+ * The recording with the note of its mark at `index` set, or taken off when the note is empty.
+ * Marks are only ever added at the end, so a mark's index never changes. Null when there is no
+ * such mark.
+ */
+export function notedRecording(
+  recording: Recording,
+  index: number,
+  note: string,
+): Recording | null {
+  const marks = recording.marks ?? [];
+  const mark = marks.at(index);
+  if (index < 0 || mark === undefined) return null;
+  const kept = keptNote(note);
+  const noted: MarkRow = kept === '' ? { time: mark.time } : { time: mark.time, note: kept };
+  return { ...recording, marks: marks.map((each, at) => (at === index ? noted : each)) };
+}
+
+/** A mark as the upload's events carry it, its note only when it has one. */
+export function markEvent(mark: MarkRow): { time: number; kind: 'mark'; note?: string } {
+  return mark.note
+    ? { time: mark.time, kind: 'mark', note: mark.note }
+    : { time: mark.time, kind: 'mark' };
+}
+
 /** A recording with one more mark, and how many it holds now. */
 export interface MarkedRecording {
   recording: Recording;

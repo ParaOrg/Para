@@ -7,9 +7,12 @@ import assert from 'node:assert/strict';
 
 import {
   MAX_MARKS,
+  NOTE_MAX_LENGTH,
+  markEvent,
   markFixIndexes,
   markedRecording,
   marksThatFit,
+  notedRecording,
   withMark,
 } from '../../src/features/contribute/recorder/recording-marks.ts';
 import { recordingSchema } from '../../src/features/contribute/storage/recording-schema.ts';
@@ -72,4 +75,38 @@ test('a stopped recording, or one holding the most marks, takes no mark', () => 
   assert.equal(markedRecording({ ...recording, status: 'stopped' }, 9), null);
   const full = Array.from({ length: MAX_MARKS }, (_, time) => ({ time }));
   assert.equal(markedRecording({ ...recording, marks: full }, 9_999), null);
+});
+
+test('a note is kept on its flag, trimmed and cut to NOTE_MAX_LENGTH', () => {
+  const recording = { ...rideRecording('id-1', rideFixes(5)), marks: [{ time: 1 }, { time: 2 }] };
+  const noted = notedRecording(recording, 1, '  Tapat ng 7-Eleven  ');
+  assert.deepEqual(noted.marks, [{ time: 1 }, { time: 2, note: 'Tapat ng 7-Eleven' }]);
+  assert.deepEqual(
+    recording.marks,
+    [{ time: 1 }, { time: 2 }],
+    'the recording given is left as it was',
+  );
+  const long = notedRecording(recording, 0, 'x'.repeat(NOTE_MAX_LENGTH + 50));
+  assert.equal(long.marks[0].note.length, NOTE_MAX_LENGTH);
+  assert.ok(recordingSchema.safeParse(noted).success);
+});
+
+test('an empty note takes the note off; a flag that is not there takes none', () => {
+  const recording = {
+    ...rideRecording('id-1', rideFixes(5)),
+    marks: [{ time: 1, note: 'Waiting shed' }],
+  };
+  assert.deepEqual(notedRecording(recording, 0, '   ').marks, [{ time: 1 }]);
+  assert.equal(notedRecording(recording, 1, 'x'), null);
+  assert.equal(notedRecording(recording, -1, 'x'), null);
+  assert.equal(notedRecording({ ...recording, marks: undefined }, 0, 'x'), null);
+});
+
+test('a mark goes up with its note only when it has one', () => {
+  assert.deepEqual(markEvent({ time: 5 }), { time: 5, kind: 'mark' });
+  assert.deepEqual(markEvent({ time: 5, note: 'Corner' }), {
+    time: 5,
+    kind: 'mark',
+    note: 'Corner',
+  });
 });

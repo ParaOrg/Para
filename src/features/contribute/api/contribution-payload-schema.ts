@@ -62,7 +62,15 @@ export const contributionPayloadSchema = z.object({
   /** What the contributor paid for the whole recording, in pesos; absent until the app asks. */
   fare_php: z.optional(z.nullable(farePhpSchema)),
   point_count: z.number(),
-  events: z.array(z.object({ kind: z.string(), at: isoTime, to: z.optional(z.string()) })),
+  /** A mark's `note` is the contributor's words on the stop they flagged. */
+  events: z.array(
+    z.object({
+      kind: z.string(),
+      at: isoTime,
+      to: z.optional(z.string()),
+      note: z.optional(z.string()),
+    }),
+  ),
   gaps: z.array(z.object({ from: isoTime, to: isoTime, reasons: z.array(z.string()) })),
   line: z.nullable(rideLineSchema),
   west: z.nullable(z.number()),

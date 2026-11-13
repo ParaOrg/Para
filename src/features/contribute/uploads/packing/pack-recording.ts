@@ -6,7 +6,7 @@ import type { ContributionPayload, PointBatch } from '../../api/contribution-pay
 import { VEHICLE_OF } from '../../api/contribution-vehicles';
 import { uploadedFare } from '../../api/upload-fare';
 import { UPLOAD_LIMITS } from '../../recorder/recording-limits';
-import { marksThatFit } from '../../recorder/recording-marks';
+import { markEvent, marksThatFit } from '../../recorder/recording-marks';
 import { RECORDING_VERSION, type Recording } from '../../storage/recording-schema';
 
 /**
@@ -160,10 +160,7 @@ export function packRecording(
   // The mode it started on and every switch: a contribution with none is all ride.
   const modes = recording.modes.map((m) => ({ time: m.time, kind: 'mode', to: m.to }));
   // The start, stop and save always go in, so marks are what yields to the limit.
-  const marks = marksThatFit(recording.marks ?? [], modes.length + 3).map((m) => ({
-    time: m.time,
-    kind: 'mark',
-  }));
+  const marks = marksThatFit(recording.marks ?? [], modes.length + 3).map(markEvent);
   // Array.sort is stable: a mode and a mark at the same millisecond keep that order.
   const between = [...modes, ...marks]
     .sort((a, b) => a.time - b.time)

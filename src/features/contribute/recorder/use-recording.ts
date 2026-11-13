@@ -2,7 +2,6 @@ import { useCallback, useState } from 'react';
 
 import { locationProblem } from './location-problem';
 import { takeWatchedFixes } from './recording-fixes';
-import { markedRecording } from './recording-marks';
 import { MODE_LABEL, currentMode } from './recording-rules';
 import type { Phase, RecordingState } from './recording-state';
 import {
@@ -14,6 +13,7 @@ import {
 import { useGeolocationWatch } from './use-geolocation-watch';
 import { useHiddenGaps } from './use-hidden-gaps';
 import { useLiveFigures } from './use-live-figures';
+import { useMarkActions } from './use-mark-actions';
 import { useNativeFinish } from './use-native-finish';
 import { useRecorderOpening } from './use-recorder-opening';
 import { useRecorderProblems } from './use-recorder-problems';
@@ -181,15 +181,7 @@ export function useRecording(): RecordingState {
     setAnnouncement(`Switched to ${MODE_LABEL[switched.to]}`);
   }
 
-  function markPlace(): boolean {
-    const recording = currentRef.current;
-    if (!recording) return false;
-    const marked = markedRecording(recording, Date.now());
-    if (!marked) return false;
-    // Said by the page's "Stop flagged" toast, not the status line: one word for one flag.
-    keep(marked.recording);
-    return true;
-  }
+  const { markPlace, noteMark } = useMarkActions(currentRef, keep);
 
   return {
     phase,
@@ -209,6 +201,7 @@ export function useRecording(): RecordingState {
     resume,
     switchMode,
     markPlace,
+    noteMark,
     openSave,
     keepRecording,
     focusTarget,
