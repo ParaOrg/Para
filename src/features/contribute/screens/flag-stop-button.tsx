@@ -17,7 +17,7 @@ export interface FlagStopButtonProps {
 /**
  * Figma's Flag a stop (4494:2038): the Special Large IconButton with the `falgstop` icon, at the
  * top of the right-hand column over the map-style and locator buttons. A tap flags the place the
- * contributor is. The page says "Stop flagged" in a toast at the top, with Add a note (onFlag).
+ * contributor is; the page shows the Add a stop note pill over the recording card (onFlag).
  */
 export function FlagStopButton({ isRecording, canFlag, onFlag, buttonRef }: FlagStopButtonProps) {
   const limitId = useId();

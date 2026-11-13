@@ -1,12 +1,13 @@
 import { keptFixes, mergeGaps, summarize, type Fix } from '@/features/routes/model/ride-recording';
 import { overviewOf, type LngLat } from '@/shared/utils/geo';
 
+import { markEvent } from './mark-event';
 import { walkRideSplit } from './walk-ride-split';
 import type { ContributionPayload, PointBatch } from '../../api/contribution-payload-schema';
 import { VEHICLE_OF } from '../../api/contribution-vehicles';
 import { uploadedFare } from '../../api/upload-fare';
 import { UPLOAD_LIMITS } from '../../recorder/recording-limits';
-import { markEvent, marksThatFit } from '../../recorder/recording-marks';
+import { marksThatFit } from '../../recorder/recording-marks';
 import { RECORDING_VERSION, type Recording } from '../../storage/recording-schema';
 
 /**

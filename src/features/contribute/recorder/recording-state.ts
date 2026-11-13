@@ -52,8 +52,10 @@ export interface RecordingState {
   switchMode: () => void;
   /** Marks the place the ride is at: the time of the tap. False if it marked none. */
   markPlace: () => boolean;
-  /** Sets the note of the flag at `index`, or takes it off when empty. False if there is none. */
-  noteMark: (index: number, note: string) => boolean;
+  /** Sets the note of the flag at `time`, or takes it off when empty. False if there is none. */
+  noteMark: (time: number, note: string) => boolean;
+  /** Takes the flag at `time` off the ride, its note with it. False if there is none. */
+  deleteMark: (time: number) => boolean;
   /** Stops a running recording, then opens the Save form. */
   openSave: () => void;
   /** From the Save form, back to recording as Resume does: the time on the form is a gap. */

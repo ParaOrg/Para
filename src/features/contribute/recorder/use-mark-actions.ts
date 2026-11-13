@@ -1,14 +1,16 @@
 import type { RefObject } from 'react';
 
-import { markedRecording, notedRecording } from './recording-marks';
+import { markedRecording, notedRecording, unmarkedRecording } from './recording-marks';
 import type { Recording } from '../storage/recording-schema';
 
 /** What the recorder does with its flagged stops. */
 export interface MarkActions {
   /** Marks the place the ride is at: the time of the tap. False if it marked none. */
   markPlace: () => boolean;
-  /** Sets the note of the flag at `index`, or takes it off when empty. False if there is no such flag. */
-  noteMark: (index: number, note: string) => boolean;
+  /** Sets the note of the flag at `time`, or takes it off when empty. False if there is none. */
+  noteMark: (time: number, note: string) => boolean;
+  /** Takes the flag at `time` off the ride, its note with it. False if there is none. */
+  deleteMark: (time: number) => boolean;
 }
 
 /**
@@ -23,21 +25,30 @@ export function useMarkActions(
   currentRef: RefObject<Recording | null>,
   keep: (recording: Recording) => void,
   isSaving: () => boolean,
+  announce: (words: string) => void,
 ): MarkActions {
   return {
     markPlace: () => {
       const recording = currentRef.current;
       const marked = recording && markedRecording(recording, Date.now());
       if (!marked) return false;
-      // Said by the page's "Stop flagged" toast, not the status line: one word for one flag.
       keep(marked.recording);
+      // The pill that follows is seen, not heard: the page's status line says the flag.
+      announce(`Stop ${marked.count} flagged`);
       return true;
     },
-    noteMark: (index, note) => {
+    noteMark: (time, note) => {
       const recording = isSaving() ? null : currentRef.current;
-      const noted = recording && notedRecording(recording, index, note);
+      const noted = recording && notedRecording(recording, time, note);
       if (!noted) return false;
       keep(noted);
+      return true;
+    },
+    deleteMark: (time) => {
+      const recording = isSaving() ? null : currentRef.current;
+      const left = recording && unmarkedRecording(recording, time);
+      if (!left) return false;
+      keep(left);
       return true;
     },
   };

@@ -1,6 +1,6 @@
 import { Suspense, type Ref } from 'react';
 
-import { FlagStopButton } from './lazy-screens';
+import { FlagStopButton, StopNotesButton } from './lazy-screens';
 import { MAX_MARKS } from './recorder/recording-marks';
 import type { Phase } from './recorder/recording-state';
 import type { MarkRow } from './storage/recording-schema';
@@ -16,11 +16,14 @@ interface FlagStopMarkProps {
   onFlag: () => void;
   /** The recording's Flag a stop, for focus to come back to. */
   buttonRef: Ref<HTMLButtonElement>;
+  /** Stops notes, over Flag a stop once the ride has a flag. */
+  onOpenNotes: () => void;
+  notesButtonRef: Ref<HTMLButtonElement>;
 }
 
 /**
- * What the map holds in its flag button's place: the recording's Flag a stop, the tutorial demo's
- * inert twin, or nothing.
+ * What the map holds in its flag button's place: the recording's Flag a stop, with Stops notes over
+ * it once the ride has a flag, the tutorial demo's inert twin, or nothing.
  */
 export function FlagStopMark({
   isRecordingShown,
@@ -29,10 +32,15 @@ export function FlagStopMark({
   demo,
   onFlag,
   buttonRef,
+  onOpenNotes,
+  notesButtonRef,
 }: FlagStopMarkProps) {
   if (isRecordingShown) {
     return (
       <Suspense fallback={null}>
+        {marks && marks.length > 0 && (
+          <StopNotesButton count={marks.length} onOpen={onOpenNotes} buttonRef={notesButtonRef} />
+        )}
         <FlagStopButton
           isRecording={phase === 'recording'}
           canFlag={(marks?.length ?? 0) < MAX_MARKS}

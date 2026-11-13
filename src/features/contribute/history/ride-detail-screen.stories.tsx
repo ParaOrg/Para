@@ -281,7 +281,7 @@ export const Finding: Story = {
   },
 };
 
-/** Flagged stops: each with its time, and the note written on it when there is one. */
+/** Flagged stops: Stops notes opens over the ride, read only, each stop's note as written. */
 export const FlaggedStops: Story = {
   args: {
     ride: {
@@ -298,8 +298,10 @@ export const FlaggedStops: Story = {
   play: async ({ canvasElement }) => {
     await openSheet(canvasElement);
     const canvas = within(canvasElement);
-    await expect(canvas.getByRole('heading', { name: 'Flagged stops' })).toBeVisible();
+    await userEvent.click(canvas.getByRole('button', { name: /Stops notes/ }));
+    await expect(await canvas.findByRole('heading', { name: 'Stops notes' })).toBeVisible();
     await expect(canvas.getByText('Tapat ng 7-Eleven, may waiting shed')).toBeVisible();
-    await expect(canvas.getByText(/^Stop 2 · /)).toBeVisible();
+    await expect(canvas.getByText('No note')).toBeVisible();
+    await expect(canvas.queryByRole('button', { name: 'Edit' })).toBeNull();
   },
 };

@@ -2,22 +2,23 @@ import { useId, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
 
 import { Button } from '@/design-system/primitives/button';
-import { FieldError } from '@/design-system/primitives/field-error';
 import { TextAreaField } from '@/design-system/primitives/text-area-field';
 import { TextField } from '@/design-system/primitives/text-field';
 
+import { DiscardRecordingButton } from './discard-recording-button';
 import { fareFromText } from './fare-text';
-import { FlagNotesList } from './flag-notes-list';
 import { RideField } from './ride-field';
 import { RideSheet } from './ride-sheet';
+import { RoomProblem } from './room-problem';
 import { SaveFormHeader } from './save-form-header';
-import { StopNoteSheet } from './stop-note-sheet';
 import { StopRecordingScreen } from './stop-recording-screen';
-import { useFlagNoteSheet } from './use-flag-note-sheet';
 import { useSaveCountdown } from './use-save-countdown';
 import type { RecordingFigures } from '../recorder/recording-figures';
 import type { RecordingDetails } from '../recorder/recording-state';
-import type { MarkRow, RideKind } from '../storage/recording-schema';
+import { StopNotesEntry } from '../stop-notes/stop-notes-entry';
+import type { StopNotesData } from '../stop-notes/stop-notes-view';
+import { StopNotesView } from '../stop-notes/stop-notes-view';
+import type { RideKind } from '../storage/recording-schema';
 
 interface SaveFormProps {
   /** The recording's time and distance, for Discard's question. */
@@ -30,9 +31,8 @@ interface SaveFormProps {
   onSave: (details: RecordingDetails) => void;
   /** Discard's question answered Stop without saving: the recording is thrown away. */
   onDiscard: () => void;
-  /** The ride's flagged stops, each with its note: listed, and a note written or changed here. */
-  marks: readonly MarkRow[];
-  onNoteMark: (index: number, note: string) => void;
+  /** The ride's flagged stops: Stops notes opens from the form to write, change or delete them. */
+  stopNotes: StopNotesData;
 }
 
 /**
@@ -51,8 +51,7 @@ export function SaveForm({
   onKeepRecording,
   onSave,
   onDiscard,
-  marks,
-  onNoteMark,
+  stopNotes,
 }: SaveFormProps) {
   const ids = useId();
   const fareRef = useRef<HTMLInputElement>(null);
@@ -66,7 +65,8 @@ export function SaveForm({
   const [description, setDescription] = useState('');
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [isDiscardAsked, setIsDiscardAsked] = useState(false);
-  const noteSheet = useFlagNoteSheet(marks, onNoteMark);
+  const [isStopNotesOpen, setIsStopNotesOpen] = useState(false);
+  const stopNotesRef = useRef<HTMLButtonElement>(null);
 
   const fare = fareFromText(fareText);
   const fareError = isFareChecked ? fare.error : undefined;
@@ -80,7 +80,7 @@ export function SaveForm({
   };
   const { secondsLeft, touch } = useSaveCountdown(
     () => onSave(details),
-    isSheetOpen || isDiscardAsked || noteSheet.isOpen,
+    isSheetOpen || isDiscardAsked || isStopNotesOpen,
   );
 
   // Focus back on the field, by hand: the form went inert as the sheet opened, so the field had
@@ -100,7 +100,7 @@ export function SaveForm({
     <>
       <form
         aria-labelledby={`${ids}-heading`}
-        inert={isSheetOpen || isDiscardAsked || noteSheet.isOpen}
+        inert={isSheetOpen || isDiscardAsked || isStopNotesOpen}
         noValidate
         onPointerDownCapture={touch}
         onKeyDownCapture={touch}
@@ -119,14 +119,7 @@ export function SaveForm({
         <SaveFormHeader headingId={`${ids}-heading`} secondsLeft={secondsLeft} />
         <div className="min-h-0 flex-1 overflow-y-auto px-5 pt-5 pb-8">
           <div className="flex flex-col gap-5">
-            {failedFixWrites > 0 && (
-              <div role="alert">
-                <FieldError
-                  id={`${ids}-room`}
-                  message="Your phone ran out of room for part of this recording. Free up some space to keep the next one whole."
-                />
-              </div>
-            )}
+            {failedFixWrites > 0 && <RoomProblem id={`${ids}-room`} />}
             <TextField
               id={`${ids}-start`}
               label="Start point name"
@@ -173,17 +166,15 @@ export function SaveForm({
               value={description}
               onChange={(event) => setDescription(event.target.value)}
             />
-            <FlagNotesList marks={marks} listRef={noteSheet.listRef} onOpen={noteSheet.open} />
-            {/* Figma's Button in its plain voice, its words in Content/error: the design system's
-                Button has no plain red, so the same box and type, in tokens. */}
-            <button
-              ref={discardRef}
-              type="button"
+            <StopNotesEntry
+              count={stopNotes.marks.length}
+              buttonRef={stopNotesRef}
+              onOpen={() => setIsStopNotesOpen(true)}
+            />
+            <DiscardRecordingButton
+              buttonRef={discardRef}
               onClick={() => setIsDiscardAsked(true)}
-              className="flex items-center justify-center rounded-full px-4 py-2 text-base/6 font-medium text-content-error outline-none focus-visible:ring-2 focus-visible:ring-content-error"
-            >
-              Discard recording
-            </button>
+            />
           </div>
         </div>
         <div className="flex shrink-0 flex-col gap-1 rounded-t-4xl bg-surface px-5 pt-4 pb-[max(2rem,env(safe-area-inset-bottom))] shadow-bottom-sheet-top-shadow">
@@ -201,8 +192,16 @@ export function SaveForm({
           onClose={closeSheet}
         />
       )}
-      {noteSheet.isOpen && (
-        <StopNoteSheet note={noteSheet.note} onSave={noteSheet.save} onClose={noteSheet.close} />
+      {isStopNotesOpen && (
+        <StopNotesView
+          view={{ kind: 'screen' }}
+          stopNotes={stopNotes}
+          onClose={() => {
+            flushSync(() => setIsStopNotesOpen(false));
+            touch();
+            (stopNotesRef.current ?? document.getElementById(`${ids}-heading`))?.focus();
+          }}
+        />
       )}
       {isDiscardAsked && (
         <StopRecordingScreen

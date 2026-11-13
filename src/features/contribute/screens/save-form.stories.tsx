@@ -13,8 +13,7 @@ const meta = {
     onKeepRecording: fn(),
     onSave: fn(),
     onDiscard: fn(),
-    marks: [],
-    onNoteMark: fn(),
+    stopNotes: { marks: [], points: [], onNoteMark: fn(), onDeleteMark: fn() },
   },
   decorators: [
     (Story) => (
@@ -92,24 +91,32 @@ export const DiscardAsked: Story = {
   },
 };
 
-/** A ride with flagged stops: each listed with its time and note; a tap writes or changes one. */
+const STOP_1 = Date.UTC(2026, 10, 13, 1, 42);
+const STOP_2 = Date.UTC(2026, 10, 13, 1, 58);
+
+/** A ride with flagged stops: Stops notes opens from the form, where a stop's note is written. */
 export const FlaggedStops: Story = {
   args: {
-    marks: [
-      { time: Date.UTC(2026, 10, 13, 1, 42), note: 'Tapat ng 7-Eleven, may waiting shed' },
-      { time: Date.UTC(2026, 10, 13, 1, 58) },
-    ],
+    stopNotes: {
+      marks: [{ time: STOP_1, note: 'Tapat ng 7-Eleven, may waiting shed' }, { time: STOP_2 }],
+      points: [null, null],
+      onNoteMark: fn(),
+      onDeleteMark: fn(),
+    },
   },
   play: async ({ canvasElement, args }) => {
     await waitForHeadingFocus(canvasElement);
     const canvas = within(canvasElement);
-    const second = canvas.getByRole('button', { name: /Stop 2 .* Add a note/ });
-    await userEvent.click(second);
-    const field = await canvas.findByRole('textbox', { name: 'How do you describe this stop' });
-    await expect(field).toHaveFocus();
+    const entry = canvas.getByRole('button', { name: /Stops notes/ });
+    await userEvent.click(entry);
+    await expect(await canvas.findByRole('heading', { name: 'Stops notes' })).toBeVisible();
+    await userEvent.click(canvas.getByRole('button', { name: 'Add note' }));
+    // The form under the page keeps its own fields: the note's is the one asking for a note.
+    const field = await canvas.findByPlaceholderText('Add note');
     await userEvent.type(field, 'Under the footbridge');
     await userEvent.click(canvas.getByRole('button', { name: 'Save' }));
-    await expect(args.onNoteMark).toHaveBeenCalledWith(1, 'Under the footbridge');
-    await expect(second).toHaveFocus();
+    await expect(args.stopNotes.onNoteMark).toHaveBeenCalledWith(STOP_2, 'Under the footbridge');
+    await userEvent.click(canvas.getByRole('button', { name: 'Back' }));
+    await expect(entry).toHaveFocus();
   },
 };

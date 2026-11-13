@@ -18,28 +18,23 @@ export const NOTE_MAX_LENGTH = 200;
 export const keptNote = (note: string): string => note.trim().slice(0, NOTE_MAX_LENGTH);
 
 /**
- * The recording with the note of its mark at `index` set, or taken off when the note is empty.
- * Marks are only ever added at the end, so a mark's index never changes. Null when there is no
- * such mark.
+ * The recording with the note of its mark at `time` set, or taken off when the note is empty. A
+ * mark is known by its time, which two taps never share and a deleted mark never shifts. Null
+ * when there is no such mark.
  */
-export function notedRecording(
-  recording: Recording,
-  index: number,
-  note: string,
-): Recording | null {
+export function notedRecording(recording: Recording, time: number, note: string): Recording | null {
   const marks = recording.marks ?? [];
-  const mark = marks.at(index);
-  if (index < 0 || mark === undefined) return null;
+  if (!marks.some((mark) => mark.time === time)) return null;
   const kept = keptNote(note);
-  const noted: MarkRow = kept === '' ? { time: mark.time } : { time: mark.time, note: kept };
-  return { ...recording, marks: marks.map((each, at) => (at === index ? noted : each)) };
+  const noted: MarkRow = kept === '' ? { time } : { time, note: kept };
+  return { ...recording, marks: marks.map((mark) => (mark.time === time ? noted : mark)) };
 }
 
-/** A mark as the upload's events carry it, its note only when it has one. */
-export function markEvent(mark: MarkRow): { time: number; kind: 'mark'; note?: string } {
-  return mark.note
-    ? { time: mark.time, kind: 'mark', note: mark.note }
-    : { time: mark.time, kind: 'mark' };
+/** The recording without its mark at `time`, its note with it. Null when there is no such mark. */
+export function unmarkedRecording(recording: Recording, time: number): Recording | null {
+  const marks = recording.marks ?? [];
+  const left = marks.filter((mark) => mark.time !== time);
+  return left.length === marks.length ? null : { ...recording, marks: left };
 }
 
 /** A recording with one more mark, and how many it holds now. */

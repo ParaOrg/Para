@@ -1057,7 +1057,7 @@ const buttons = (page) =>
     (await tintOf(page)) === 'sakay:from-green-700/10',
   );
 
-  // Flag a stop: Figma's flagstop pin where the trail is, a "Stop flagged" toast, nothing to answer.
+  // Flag a stop: Figma's flagstop pin where the trail is, the Add a stop note pill, nothing to answer.
   const flagBox = await flagButton(page).boundingBox();
   const locatorBox = await locate(page).boundingBox();
   const styleBox = await page.getByRole('button', { name: 'Map design' }).boundingBox();
@@ -1071,23 +1071,18 @@ const buttons = (page) =>
     JSON.stringify([flagBox, styleBox, locatorBox]),
   );
   await flagButton(page).click();
-  const stopFlagged = toastSaying(page, 'Stop flagged');
-  await stopFlagged.waitFor({ timeout: 5000 });
+  const notePill = page.getByRole('button', { name: /Add a stop note/ });
+  await notePill.waitFor({ timeout: 5000 });
   check(
-    '  on Sakay a tap says "Stop flagged" in an info toast at the top, with Add a note, politely, with no dialog',
-    (await page.getByTestId('toast').count()) === 1 &&
-      (await stopFlagged.getAttribute('data-kind')) === 'info' &&
-      (await stopFlagged.getByRole('button', { name: 'Add a note' }).count()) === 1 &&
-      (await page.getByRole('status').filter({ hasText: 'Stop flagged' }).count()) === 1 &&
-      (await page
-        .getByRole('status')
-        .filter({ hasText: /Flagged, \d/ })
-        .count()) === 0 &&
+    '  on Sakay a tap shows the Add a stop note pill, says "Stop 1 flagged" politely, with no toast and no dialog',
+    (await notePill.isVisible()) &&
+      (await page.getByRole('status').filter({ hasText: 'Stop 1 flagged' }).count()) === 1 &&
+      (await page.getByTestId('toast').count()) === 0 &&
       (await page.getByRole('dialog').count()) === 0,
-    await page
-      .getByTestId('toast')
-      .allInnerTexts()
-      .then((texts) => texts.join(' | ')),
+  );
+  check(
+    '  Stops notes stands over Flag a stop once the ride has a flag, its badge counting one',
+    (await page.getByRole('button', { name: 'Stops notes' }).count()) === 1,
   );
   check(
     '  the dark "Flagged" pill beside the button is gone',
@@ -1112,17 +1107,17 @@ const buttons = (page) =>
         );
       })),
   );
-  // A second flag while it shows: the same toast, said again in place, never a second.
+  // A second flag while it shows: the pill drawn afresh for it, never a second pill.
   await flagButton(page).click();
   await page.waitForTimeout(300);
   check(
-    '  a second flag while it shows: still exactly one toast',
-    (await page.getByTestId('toast').count()) === 1 && (await stopFlagged.count()) === 1,
-    `${await page.getByTestId('toast').count()} toast(s)`,
+    '  a second flag while it shows: still exactly one pill, and the badge counts two',
+    (await notePill.count()) === 1 &&
+      (await page.getByRole('status').filter({ hasText: 'Stop 2 flagged' }).count()) === 1,
   );
   check(
-    '  "Stop flagged" leaves by itself',
-    await stopFlagged.waitFor({ state: 'detached', timeout: 8000 }).then(
+    '  the pill leaves by itself',
+    await notePill.waitFor({ state: 'detached', timeout: 8000 }).then(
       () => true,
       () => false,
     ),
@@ -1277,7 +1272,7 @@ const buttons = (page) =>
       file.savedAt !== null,
     `${file.modes.length} modes, ${file.fixes} fixes`,
   );
-  // Two: the flag, and the second while "Stop flagged" showed.
+  // Two: the flag, and the second while its pill showed.
   check(
     '  and its two marks',
     file.marks.length === 2 && file.marks.every((mark) => Number.isFinite(mark.time)),
@@ -1579,7 +1574,8 @@ const buttons = (page) =>
   await flagButton(page).click();
   check(
     'on Lakad, Flag a stop is enabled and flags the place',
-    (await toastSaying(page, 'Stop flagged')
+    (await page
+      .getByRole('button', { name: /Add a stop note/ })
       .waitFor({ timeout: 5000 })
       .then(
         () => true,

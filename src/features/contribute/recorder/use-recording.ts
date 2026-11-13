@@ -181,7 +181,12 @@ export function useRecording(): RecordingState {
     setAnnouncement(`Switched to ${MODE_LABEL[switched.to]}`);
   }
 
-  const { markPlace, noteMark } = useMarkActions(currentRef, keep, isSaving);
+  const { markPlace, noteMark, deleteMark } = useMarkActions(
+    currentRef,
+    keep,
+    isSaving,
+    setAnnouncement,
+  );
 
   return {
     phase,
@@ -202,6 +207,7 @@ export function useRecording(): RecordingState {
     switchMode,
     markPlace,
     noteMark,
+    deleteMark,
     openSave,
     keepRecording,
     focusTarget,

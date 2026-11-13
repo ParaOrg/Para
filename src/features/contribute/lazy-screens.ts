@@ -4,6 +4,8 @@ import { retryingImport } from '@/shared/utils/retrying-import';
 
 import { accountChunk, historyChunk } from './screen-loaders';
 import type { FlagStopButtonProps } from './screens/flag-stop-button';
+import type { StopNotePillProps } from './stop-notes/stop-note-pill';
+import type { StopNotesButtonProps } from './stop-notes/stop-notes-button';
 
 /*
  * The contributor page's screens that are not in its opening: each its own chunk, fetched on first
@@ -27,6 +29,17 @@ export const lazyScreens = { history: lazyHistory(), account: lazyAccount() };
 export function makeLazyScreens(): void {
   lazyScreens.history = lazyHistory();
   lazyScreens.account = lazyAccount();
+}
+
+/** A button on the map whose code could not be fetched: nothing, and the ride goes on. */
+function NoMapButton(): null {
+  return null;
+}
+// Not fetched (offline before the worker kept it): Flag a stop, Stops notes or a note's pill, the
+// ride records on without it, rather than the failed load taking the page down with it.
+function withoutMapButton(error: unknown) {
+  console.warn('A button on the map could not be fetched; the ride records without it.', error);
+  return { default: NoMapButton };
 }
 
 // The map's credits, opened from the ⓘ on Start: fetched on the tap, not with the page.
@@ -53,7 +66,11 @@ export const loadStopRecordingScreen = retryingImport(
 );
 export const loadFlagStopButton = retryingImport(() => import('./screens/flag-stop-button'));
 export const loadSaveForm = retryingImport(() => import('./screens/save-form'));
-export const loadStopNoteSheet = retryingImport(() => import('./screens/stop-note-sheet'));
+// The stops' notes, fetched ahead with the recording screens: the pill, the Stops notes button,
+// and the card and page with the published hotspots' reader.
+export const loadStopNotePill = retryingImport(() => import('./stop-notes/stop-note-pill'));
+export const loadStopNotesButton = retryingImport(() => import('./stop-notes/stop-notes-button'));
+export const loadStopNotesView = retryingImport(() => import('./stop-notes/stop-notes-view'));
 // The check before a first upload, with Cloudflare's widget: fetched only when one is asked for.
 const loadUploadCheck = retryingImport(() => import('./uploads/upload-check'));
 export const UploadCheck = lazy(() =>
@@ -69,26 +86,20 @@ export const SaveForm = lazy(() => loadSaveForm().then((module) => ({ default: m
 export const RecordingScreen = lazy(() =>
   loadRecordingScreen().then((module) => ({ default: module.RecordingScreen })),
 );
-export const StopNoteSheet = lazy(() =>
-  loadStopNoteSheet().then((module) => ({ default: module.StopNoteSheet })),
+export const StopNotePill = lazy<ComponentType<StopNotePillProps>>(() =>
+  loadStopNotePill().then((module) => ({ default: module.StopNotePill }), withoutMapButton),
+);
+export const StopNotesButton = lazy<ComponentType<StopNotesButtonProps>>(() =>
+  loadStopNotesButton().then((module) => ({ default: module.StopNotesButton }), withoutMapButton),
+);
+export const StopNotesView = lazy(() =>
+  loadStopNotesView().then((module) => ({ default: module.StopNotesView })),
 );
 export const StopRecordingScreen = lazy(() =>
   loadStopRecordingScreen().then((module) => ({ default: module.StopRecordingScreen })),
 );
-/** Flag a stop's place when its code could not be fetched: nothing, and the ride goes on. */
-function NoFlagStopButton(): null {
-  return null;
-}
-// Not fetched (offline before the worker kept it): the ride records on without the button, rather
-// than the failed load taking the page down with it.
 export const FlagStopButton = lazy<ComponentType<FlagStopButtonProps>>(() =>
-  loadFlagStopButton().then(
-    (module) => ({ default: module.FlagStopButton }),
-    (error: unknown) => {
-      console.warn('Flag a stop could not be fetched; the ride records without it.', error);
-      return { default: NoFlagStopButton };
-    },
-  ),
+  loadFlagStopButton().then((module) => ({ default: module.FlagStopButton }), withoutMapButton),
 );
 export const UnfinishedScreen = lazy(() =>
   loadUnfinishedScreen().then((module) => ({ default: module.UnfinishedScreen })),

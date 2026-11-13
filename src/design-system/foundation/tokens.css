@@ -188,6 +188,9 @@
   /* The dark on a light card (RouteCard, 4629:22776): the RouteBadge chips on UV Express, E-Jeep
      and MRT-3, and MRT-3's words on its yellow. */
   --surface-inverse: var(--color-neutral-900);
+  /* The softer dark: the Stops notes timeline's rail and dots (4720:28387). Figma:
+     Background/surface-inverse-secondary. */
+  --surface-inverse-secondary: var(--color-neutral-700);
   /* Black at 60%: what dims the page under a dialog laid over it, the install
      prompt's (3732:2512). Figma keeps the 60 as the variable's opacity
      (opacity/60); here it is in the value, since the token means the
@@ -245,6 +248,14 @@
   --brand-surface: var(--color-parabrand-900);
   --brand-surface-secondary: var(--color-parabrand-950);
   --brand-border: var(--color-parabrand-950);
+  /* The Add a stop note pill's ring (4707:9553): the time left in Brand/surface over this light
+     track. Figma draws the track in the palette's #ECECFF, with no variable of its own. */
+  --brand-ring-track: var(--color-parabrand-100);
+
+  /* Save on the Add a stop note card (4709:11002): Figma's card-(depreciated)/green, which the
+     owner keeps off the route liveries, so it is named for what it does here. */
+  --save-surface: var(--color-green-700);
+  --save-border: var(--color-green-800);
 
   /* One component's own colour. Figma: Components/… (the Tooltip). */
   --components-tooltip-surface: var(--color-neutral-900);
@@ -347,6 +358,7 @@
   --color-surface-tertiary: var(--surface-tertiary);
   --color-surface-quaternary: var(--surface-quaternary);
   --color-surface-inverse: var(--surface-inverse);
+  --color-surface-inverse-secondary: var(--surface-inverse-secondary);
   --color-surface-error: var(--surface-error);
   --color-surface-success: var(--surface-success);
   --color-surface-transparent: var(--surface-transparent);
@@ -384,6 +396,9 @@
   --color-brand-surface: var(--brand-surface);
   --color-brand-surface-secondary: var(--brand-surface-secondary);
   --color-brand-border: var(--brand-border);
+  --color-brand-ring-track: var(--brand-ring-track);
+  --color-save-surface: var(--save-surface);
+  --color-save-border: var(--save-border);
 
   --color-components-tooltip-surface: var(--components-tooltip-surface);
 
