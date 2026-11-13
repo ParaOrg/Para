@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { expect, fn, waitFor, within } from 'storybook/test';
+import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
 import type { RecordingTrail } from '@/features/routes/map/recording-trail';
 
@@ -91,5 +91,20 @@ export const LongNameWalk: Story = {
       time: '0h 14m',
     },
     trail: { ...TRAIL, lines: [{ ...TRAIL.lines[0], mode: 'walk' }] },
+  },
+};
+
+/** See-through, for a story's photo: white words on a clear ground, shown here on the dark. */
+export const SeeThrough: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const drawn = await canvas.findByRole('img', {}, { timeout: 5000 });
+    const card = drawn.getAttribute('src');
+    const toggle = canvas.getByRole('switch', { name: 'See-through, to put over a photo' });
+    await userEvent.click(toggle);
+    await expect(toggle).toBeChecked();
+    // Drawn again, see-through: a new picture in the card's place.
+    await waitFor(() => expect(canvas.getByRole('img').getAttribute('src')).not.toBe(card));
+    await expect(canvas.getByRole('button', { name: 'Share' })).toBeEnabled();
   },
 };
