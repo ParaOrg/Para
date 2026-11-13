@@ -1,16 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query';
-import {
-  Activity,
-  Suspense,
-  useEffect,
-  useRef,
-  useState,
-  type ComponentProps,
-  type ReactNode,
-} from 'react';
+import { Activity, Suspense, useEffect, useRef, useState, type ComponentProps } from 'react';
 
 import { ErrorBoundary } from '@/shared/ui/error-boundary';
-import { cn } from '@/shared/utils/cn';
 
 import { useAccountGate } from './account/use-account-gate';
 import { canUpload } from './api/contribute-config';
@@ -52,8 +43,8 @@ import { ScreenUnavailable } from './screens/screen-unavailable';
 import { useStopQuestion } from './screens/use-stop-question';
 import { putThumbnail } from './storage/recording-store';
 import { BottomToolbar, type ToolbarTab } from './toolbar/bottom-toolbar';
-import { ToolbarHoldProvider, useIsToolbarHeld } from './toolbar/toolbar-hold';
-import { TOOLBAR_PLACE } from './toolbar/toolbar-place';
+import { ToolbarHoldProvider } from './toolbar/toolbar-hold';
+import { ToolbarPlace } from './toolbar/toolbar-slot';
 import { useTutorialEntry } from './tutorial/use-tutorial-entry';
 import { useUploads } from './uploads/use-uploads';
 import { useCreditsSheet } from './use-credits-sheet';
@@ -62,25 +53,6 @@ import { useScreenWarmup } from './use-screen-warmup';
 
 type HistoryViewProps = ComponentProps<typeof lazyScreens.history>;
 type AccountViewProps = ComponentProps<typeof lazyScreens.account>;
-
-interface ToolbarPlaceProps {
-  /** Under something that holds the page (the credits): out of reach, still in sight. */
-  isOutOfReach: boolean;
-  children: ReactNode;
-}
-
-/**
- * Where the page's toolbar stands (TOOLBAR_PLACE): out of sight and out of reach while a question
- * is asked on the screen under it (toolbar-hold.tsx).
- */
-function ToolbarPlace({ isOutOfReach, children }: ToolbarPlaceProps) {
-  const isHeld = useIsToolbarHeld();
-  return (
-    <div inert={isOutOfReach || isHeld} className={cn(TOOLBAR_PLACE, isHeld && 'invisible')}>
-      {children}
-    </div>
-  );
-}
 
 /**
  * History, at once if its chunk is here, else lazily: decided once as it opens, so the chunk
