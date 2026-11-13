@@ -1,4 +1,4 @@
-import { useId, useRef } from 'react';
+import { useId, useState } from 'react';
 
 import { Button } from '@/design-system/primitives/button';
 import { IconButton } from '@/design-system/primitives/icon-button';
@@ -10,7 +10,7 @@ import { StopNotesTitle } from './stop-notes-title';
 import { ArrowLeftIcon } from '../account/arrow-left-icon';
 
 interface StopNotesScreenProps extends Omit<StopNotesTimelineProps, 'headingRef' | 'isFlush'> {
-  /** The back arrow, Go back, Escape, or Android's back: closes the page. */
+  /** The back arrow, Go back, or Escape closes the page. Android's back follows the WebView's history. */
   onBack: () => void;
 }
 
@@ -22,17 +22,14 @@ interface StopNotesScreenProps extends Omit<StopNotesTimelineProps, 'headingRef'
 export function StopNotesScreen({ marks, onBack, ...timeline }: StopNotesScreenProps) {
   const headingId = useId();
   const headingRef = useFocusHeading();
-  const sectionRef = useRef<HTMLElement>(null);
-  // Escape is a note's or a stop map's first, while one is open, then the page's.
-  useEscape(() => {
-    if (!sectionRef.current?.querySelector('textarea, [role="dialog"], [role="alertdialog"]')) {
-      onBack();
-    }
-  });
+  // A stop's map, its question or a note editor is open over the page: Escape is theirs then, the
+  // page's only when none is. The timeline says so, rather than the page reading the DOM, so a
+  // re-render mid-open (a GPS fix) can never leave the two listeners in the wrong order.
+  const [isOverlayOpen, setIsOverlayOpen] = useState(false);
+  useEscape(onBack, !isOverlayOpen);
 
   return (
     <section
-      ref={sectionRef}
       aria-labelledby={headingId}
       className="absolute inset-0 z-40 flex flex-col overflow-y-auto bg-surface pb-[max(2rem,env(safe-area-inset-bottom))] font-sn-pro text-content-primary"
     >
@@ -43,7 +40,12 @@ export function StopNotesScreen({ marks, onBack, ...timeline }: StopNotesScreenP
         <StopNotesTitle id={headingId} count={marks.length} headingRef={headingRef} />
       </div>
       {marks.length > 0 ? (
-        <StopNotesTimeline marks={marks} headingRef={headingRef} {...timeline} />
+        <StopNotesTimeline
+          marks={marks}
+          headingRef={headingRef}
+          onHoldChange={setIsOverlayOpen}
+          {...timeline}
+        />
       ) : (
         <div className="flex flex-col items-start gap-4 px-4 pt-4">
           <div className="flex flex-col gap-1">
