@@ -31,6 +31,7 @@ const RETRY: CardStatus = { tone: 'retry', words: 'Tap retry upload' };
 const ride: RideDetail = {
   recording,
   facts: { distanceM: 12_700, isWalkOnly: false, trail: null },
+  trail: null,
   status: UPLOADED,
   onRetry: fn(),
   canDelete: true,
