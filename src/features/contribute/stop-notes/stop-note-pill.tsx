@@ -81,7 +81,7 @@ export function StopNotePill({ onOpen, onGone }: StopNotePillProps) {
       <span className="flex min-w-0 flex-1 flex-col">
         <span className="text-base-lower/6 font-bold text-content-primary">Add a stop note</span>
         <span className="text-sm/5 text-content-tertiary">
-          Describe what that stop mean for you
+          Describe what that stop means for you
         </span>
       </span>
     </button>

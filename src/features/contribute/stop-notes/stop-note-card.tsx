@@ -52,7 +52,7 @@ export function StopNoteCard({ note, place, onSave, onCancel }: StopNoteCardProp
             id={`${ids}-note`}
             aria-labelledby={`${ids}-title`}
             aria-describedby={`${ids}-count`}
-            placeholder="Describe what that stop mean for you"
+            placeholder="Describe what that stop means for you"
             maxLength={NOTE_MAX_LENGTH}
             value={text}
             onChange={(event) => setText(event.target.value)}
