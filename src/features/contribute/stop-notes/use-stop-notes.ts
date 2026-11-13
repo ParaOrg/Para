@@ -22,7 +22,7 @@ export interface StopNotes {
   view: StopNotesViewKind | null;
   /** The ride's flagged stops, where each was, and how to note or delete one. */
   data: StopNotesData;
-  /** How many notes have been saved from a card: each one more says so in a toast. */
+  /** How many stops have been given a note: each one more says so in a toast. */
   notesAdded: number;
   /** Flag a stop and the Stops notes button: focus comes back to one as the card or page closes. */
   flagButtonRef: RefObject<HTMLButtonElement | null>;
@@ -80,8 +80,10 @@ export function useStopNotes(
       marks,
       trail: placedTrail(trail, recording.fixes, marks),
       onNoteMark: (time, note) => {
-        // Each note kept, from the card or written in place, says so in the toast.
-        if (recording.noteMark(time, note) && keptNote(note) !== '') countNoteAdded();
+        // Only a note made, on a stop that had none, says so in the toast: a note changed or
+        // saved as it was says nothing.
+        const hadNote = (marks.find((mark) => mark.time === time)?.note ?? '') !== '';
+        if (recording.noteMark(time, note) && !hadNote && keptNote(note) !== '') countNoteAdded();
       },
       onDeleteMark: recording.deleteMark,
     },
