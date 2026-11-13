@@ -96,6 +96,19 @@ export const MapDeleteKept: Story = {
   },
 };
 
+/** Close shuts the stop's map and gives focus back to the "Stop N ›" that opened it. */
+export const MapClosed: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const opener = canvas.getByRole('button', { name: 'Stop 2 on the map' });
+    await userEvent.click(opener);
+    const popup = canvas.getByRole('dialog', { name: 'Stop 2 on the map' });
+    await userEvent.click(within(popup).getByRole('button', { name: 'Close' }));
+    await expect(canvas.queryByRole('dialog')).toBeNull();
+    await expect(opener).toHaveFocus();
+  },
+};
+
 /** From History: read only, the notes not buttons, and the map's pop-up with Close alone. */
 export const ReadOnly: Story = {
   args: { onNoteMark: undefined, onDeleteMark: undefined },

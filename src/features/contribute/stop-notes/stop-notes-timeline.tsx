@@ -70,21 +70,24 @@ export function StopNotesTimeline({
   // A stop's map, its question or a note editor is open over the list.
   const isHeld = mapTime !== null || editingTime !== null;
   useEffect(() => onHoldChange?.(isHeld), [isHeld, onHoldChange]);
-  // The map closed, focus comes back to its "Stop N ›". When `focusTarget` is given (a stop
-  // deleted), focus goes there instead: the stops' heading, or the fallback when the heading has
-  // gone with its section (the last stop deleted on the save form).
-  const closeMap = (focusTarget?: HTMLElement | null) => {
-    const closed = mapTime;
+  const hideMap = () =>
     flushSync(() => {
       setIsDeleteAsked(false);
       setMapTime(null);
     });
-    if (focusTarget !== undefined) {
-      focusTarget?.focus();
-      return;
-    }
+  // Close or Escape: focus comes back to the stop's "Stop N ›". Takes no arguments, so a click
+  // handed straight to it can never be taken for a focus target.
+  const closeMap = () => {
+    const closed = mapTime;
+    hideMap();
     const button = closed === null ? null : document.getElementById(mapButtonId(closed));
     (button ?? headingRef.current ?? fallbackFocusRef?.current)?.focus();
+  };
+  // A stop deleted: its "Stop N ›" has gone, so focus goes to the stops' heading, or to the
+  // fallback when the last stop took the heading's section with it (the save form).
+  const closeAfterDelete = (wasLast: boolean) => {
+    hideMap();
+    (wasLast ? (fallbackFocusRef?.current ?? headingRef.current) : headingRef.current)?.focus();
   };
 
   return (
@@ -139,7 +142,7 @@ export function StopNotesTimeline({
             // fallback (or the heading) at once, before it unmounts and leaves it on the page body.
             const wasLast = marks.length === 1;
             onDeleteMark(mapTime);
-            closeMap(wasLast ? (fallbackFocusRef?.current ?? headingRef.current) : undefined);
+            closeAfterDelete(wasLast);
           }}
           onCancel={() => setIsDeleteAsked(false)}
         />
