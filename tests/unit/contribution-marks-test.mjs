@@ -32,10 +32,25 @@ test('marks are read oldest first, and other kinds and bad rows are ignored', ()
     'junk',
     null,
   ];
-  assert.deepEqual(marksOf(events), [T0 + 8_000, T0 + 20_000]);
+  assert.deepEqual(marksOf(events), [
+    { at: T0 + 8_000, note: null },
+    { at: T0 + 20_000, note: null },
+  ]);
   assert.deepEqual(marksOf([]), []);
   assert.deepEqual(marksOf(null), []);
   assert.deepEqual(marksOf({ kind: 'mark' }), []);
+});
+
+test("a mark's note is read with it; a blank note reads as none", () => {
+  const events = [
+    { kind: 'mark', at: iso(T0 + 8_000), note: '  Tapat ng 7-Eleven ' },
+    { kind: 'mark', at: iso(T0 + 9_000), note: '   ' },
+    { kind: 'mark', at: iso(T0 + 10_000), note: 42 },
+  ];
+  assert.deepEqual(marksOf(events), [
+    { at: T0 + 8_000, note: 'Tapat ng 7-Eleven' },
+    { at: T0 + 9_000, note: null },
+  ]);
 });
 
 test("a mark at a fix's exact time sits on that fix", () => {
@@ -62,7 +77,11 @@ test('a ride with no fixes places nothing', () => {
 });
 
 test('the opened upload gets one pin per mark, and none when it has none', () => {
-  const detail = { trail, hintos: [], marks: [T0 + 5_000, T0 + 20_000], parts: [] };
+  const marks = [
+    { at: T0 + 5_000, note: null },
+    { at: T0 + 20_000, note: 'Corner' },
+  ];
+  const detail = { trail, hintos: [], marks, parts: [] };
   const pins = openedData(detail).features.filter((f) => f.properties.kind === 'mark');
   assert.equal(pins.length, 2);
   assert.deepEqual(pins[1].geometry.coordinates, [121.2, 14.2]);
