@@ -35,7 +35,12 @@ export function StopNoteEditor({ note, labelledBy, onSave, onCancel }: StopNoteE
         value={text}
         onChange={(event) => setText(event.target.value)}
         onKeyDown={(event) => {
-          if (event.key === 'Escape') onCancel();
+          // Cancel the note, and mark the key handled so the Stops notes page's own Escape
+          // (isEscapeToClose skips a prevented key) does not take it and close the whole page.
+          if (event.key === 'Escape') {
+            event.preventDefault();
+            onCancel();
+          }
         }}
         className={cn(
           NOTE_BOX,
