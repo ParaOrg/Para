@@ -24,16 +24,19 @@ export interface TrailBox {
   height: number;
 }
 
-/** The ride's trail on the card, on a grey ground, with a dot where it began and one where it ended. */
+/** The ride's trail on the card, on a grey ground unless it is see-through, with a dot where it began and one where it ended. */
 export function drawTrail(
   ctx: CanvasRenderingContext2D,
   trail: RecordingTrail | null,
   box: TrailBox,
+  hasGround = true,
 ) {
-  ctx.fillStyle = GROUND;
-  ctx.beginPath();
-  ctx.roundRect(box.x, box.y, box.width, box.height, 32);
-  ctx.fill();
+  if (hasGround) {
+    ctx.fillStyle = GROUND;
+    ctx.beginPath();
+    ctx.roundRect(box.x, box.y, box.width, box.height, 32);
+    ctx.fill();
+  }
   // sketchLines keeps a margin sized for History's small picture: inset the box instead.
   const lines = trail
     ? sketchLines(trail, box.width - 2 * TRAIL_INSET, box.height - 2 * TRAIL_INSET)

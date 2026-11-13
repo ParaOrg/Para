@@ -1,9 +1,9 @@
 import type { RecordingTrail } from '@/features/routes/map/recording-trail';
 
+import { LOGO, loadSummaryFonts, loadWhiteLogo } from './card-assets';
 import { drawTrail } from './draw-summary-trail';
 import type { RideSummary } from './ride-summary';
 import { wrapLines } from './wrap-lines';
-import paraLogo from '../account/para-logo.svg';
 
 /** A portrait 4:5 picture, the size feeds and stories crop least. */
 export const CARD_WIDTH = 1080;
@@ -14,10 +14,15 @@ const FONT = "'SN Pro', system-ui, sans-serif";
 const BRAND = '#4900be'; // parabrand/800, as Map/RouteLine/surface-selected
 const INK = '#171717'; // neutral/900
 const MUTED = '#737373'; // neutral/500
+/** The card on its white ground, or see-through: its words white, for over a story's photo. */
+export type CardLook = 'card' | 'see-through';
+const LOOKS = {
+  card: { ink: INK, muted: MUTED, link: BRAND },
+  'see-through': { ink: '#ffffff', muted: '#ffffff', link: '#ffffff' },
+} satisfies Record<CardLook, { ink: string; muted: string; link: string }>;
+type Colours = (typeof LOOKS)[CardLook];
 /** The trail's box on the card, under the brand band. */
 const TRAIL = { x: PAD, y: 180, width: CARD_WIDTH - 2 * PAD, height: 620 };
-/** Para's logo in the band, at the SVG's own 97.77 by 64 shape, centred on the band's 132. */
-const LOGO = { width: 110, height: 72, y: 30 };
 /** A figure under the names: value large, label small above, both squeezed into `width`. */
 function drawFigure(
   ctx: CanvasRenderingContext2D,
@@ -25,11 +30,12 @@ function drawFigure(
   width: number,
   label: string,
   value: string,
+  colours: Colours,
 ) {
-  ctx.fillStyle = MUTED;
+  ctx.fillStyle = colours.muted;
   ctx.font = `500 32px ${FONT}`;
   ctx.fillText(label, x, 1085, width);
-  ctx.fillStyle = INK;
+  ctx.fillStyle = colours.ink;
   ctx.font = `700 64px ${FONT}`;
   ctx.fillText(value, x, 1160, width);
 }
@@ -44,13 +50,21 @@ export function drawRideSummary(
   summary: RideSummary,
   trail: RecordingTrail | null,
   logo: CanvasImageSource | null,
+  look: CardLook = 'card',
 ) {
+  const colours = LOOKS[look];
+  const isSeeThrough = look === 'see-through';
   ctx.textBaseline = 'alphabetic';
-  ctx.fillStyle = '#ffffff';
-  ctx.fillRect(0, 0, CARD_WIDTH, CARD_HEIGHT);
-
-  ctx.fillStyle = BRAND;
-  ctx.fillRect(0, 0, CARD_WIDTH, 132);
+  if (isSeeThrough) {
+    // Over whatever photo the story puts under it: a soft shadow keeps the white words readable.
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.45)';
+    ctx.shadowBlur = 12;
+  } else {
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, CARD_WIDTH, CARD_HEIGHT);
+    ctx.fillStyle = BRAND;
+    ctx.fillRect(0, 0, CARD_WIDTH, 132);
+  }
   ctx.fillStyle = '#ffffff';
   ctx.font = `800 56px ${FONT}`;
   if (logo) ctx.drawImage(logo, PAD, LOGO.y, LOGO.width, LOGO.height);
@@ -60,10 +74,10 @@ export function drawRideSummary(
   ctx.fillText('Ride summary', CARD_WIDTH - PAD, 82);
   ctx.textAlign = 'left';
 
-  drawTrail(ctx, trail, TRAIL);
+  drawTrail(ctx, trail, TRAIL, !isSeeThrough);
 
   const width = CARD_WIDTH - 2 * PAD;
-  ctx.fillStyle = INK;
+  ctx.fillStyle = colours.ink;
   ctx.font = `700 60px ${FONT}`;
   const title = wrapLines(
     summary.title,
@@ -73,7 +87,7 @@ export function drawRideSummary(
   );
   title.forEach((line, index) => ctx.fillText(line, PAD, 885 + index * 70));
   if (summary.to) {
-    ctx.fillStyle = MUTED;
+    ctx.fillStyle = colours.muted;
     ctx.font = `500 44px ${FONT}`;
     // The arrow is kept out of the wrapping, so a long one-word place is cut and not dropped.
     const room = width - ctx.measureText('→ ').width;
@@ -86,53 +100,26 @@ export function drawRideSummary(
   const figure = column - 24;
   if (summary.distance) {
     const { value, unit } = summary.distance;
-    drawFigure(ctx, PAD, figure, 'Distance', `${value} ${unit}`);
+    drawFigure(ctx, PAD, figure, 'Distance', `${value} ${unit}`, colours);
   }
-  drawFigure(ctx, PAD + column, figure, 'Time', summary.time);
-  if (summary.mode) drawFigure(ctx, PAD + 2 * column, column, 'Mode', summary.mode);
+  drawFigure(ctx, PAD + column, figure, 'Time', summary.time, colours);
+  if (summary.mode) drawFigure(ctx, PAD + 2 * column, column, 'Mode', summary.mode, colours);
 
-  ctx.fillStyle = MUTED;
+  ctx.fillStyle = colours.muted;
   ctx.font = `500 32px ${FONT}`;
   ctx.fillText(summary.date, PAD, CARD_HEIGHT - 56);
   // Where whoever sees the card gets the app: the download page the posters' QR codes open too.
   ctx.textAlign = 'right';
-  ctx.fillStyle = BRAND;
+  ctx.fillStyle = colours.link;
   ctx.fillText('para-commute.org/app', CARD_WIDTH - PAD, CARD_HEIGHT - 56);
   ctx.textAlign = 'left';
 }
 
-/** The weights the card draws in, loaded before drawing so the canvas does not fall back. */
-export async function loadSummaryFonts(): Promise<void> {
-  await Promise.all(
-    ['500', '700', '800'].map((weight) => document.fonts.load(`${weight} 32px 'SN Pro'`)),
-  ).catch(() => undefined);
-}
-
-/** Para's logo (its file is purple) filled white for the band, or null when it does not load. */
-async function loadWhiteLogo(): Promise<HTMLCanvasElement | null> {
-  const image = new Image();
-  image.src = paraLogo;
-  const canvas = document.createElement('canvas');
-  canvas.width = 2 * LOGO.width; // twice the drawn size, to stay sharp
-  canvas.height = 2 * LOGO.height;
-  const ctx = canvas.getContext('2d');
-  if (!ctx) return null;
-  try {
-    await image.decode();
-  } catch {
-    return null;
-  }
-  ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
-  ctx.globalCompositeOperation = 'source-in';
-  ctx.fillStyle = '#ffffff';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-  return canvas;
-}
-
-/** The card as a PNG, drawn on a canvas of its own. */
+/** The card as a PNG, drawn on a canvas of its own; see-through, its ground is left clear. */
 export async function rideSummaryPng(
   summary: RideSummary,
   trail: RecordingTrail | null,
+  look: CardLook = 'card',
 ): Promise<Blob> {
   const [logo] = await Promise.all([loadWhiteLogo(), loadSummaryFonts()]);
   const canvas = document.createElement('canvas');
@@ -140,7 +127,7 @@ export async function rideSummaryPng(
   canvas.height = CARD_HEIGHT;
   const ctx = canvas.getContext('2d');
   if (!ctx) throw new Error('No 2D canvas on this browser.');
-  drawRideSummary(ctx, summary, trail, logo);
+  drawRideSummary(ctx, summary, trail, logo, look);
   return new Promise((resolve, reject) =>
     canvas.toBlob(
       (blob) => (blob ? resolve(blob) : reject(new Error('The card could not be drawn.'))),
