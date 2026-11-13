@@ -17,15 +17,16 @@ import {
 import { HintuanCard } from '@/features/routes/cards/hintuan-card';
 import { RouteCardList } from '@/features/routes/cards/route-card-list';
 import { TripCard } from '@/features/routes/cards/trip-card';
+import { useBackClosesCards } from '@/features/routes/cards/use-back-closes-cards';
 import { useTripTimeline } from '@/features/routes/cards/use-trip-timeline';
 import { EndTitles } from '@/features/routes/map/end-titles';
-import { routesBounds } from '@/features/routes/map/framing';
 import { HintuanPin } from '@/features/routes/map/hintuan-pin';
 import { LandmarkPin } from '@/features/routes/map/landmark-pin';
 import { lookAt } from '@/features/routes/map/look-at';
 import { MapCreditsDock } from '@/features/routes/map/map-credits-dock';
 import { MapCreditsSheet } from '@/features/routes/map/map-credits-sheet';
 import { METRO_MANILA, MapView } from '@/features/routes/map/map-view';
+import { openOnRoutes } from '@/features/routes/map/open-on-routes';
 import { StationLabels } from '@/features/routes/map/station-labels';
 import { useCardCamera } from '@/features/routes/map/use-card-camera';
 import { useCardStack } from '@/features/routes/map/use-card-stack';
@@ -41,7 +42,6 @@ import { placeKey } from '@/features/routes/model/places';
 import {
   loadDirectionsFromFile,
   loadHotspotsFromFile,
-  openingDirections,
 } from '@/features/routes/published/fetch-index';
 import { fetchLine } from '@/features/routes/published/fetch-line';
 import { useTurn } from '@/shared/hooks/commit-turn';
@@ -60,15 +60,6 @@ import { useStatusBarColour } from './status-bar';
 const PageToasts = retryingLazy(() =>
   retryingImport(() => import('./page-toasts'))().then((module) => module.PageToasts),
 );
-
-/**
- * The routes' framing the map opens on: their box as the index or the copy
- * kept from an earlier visit has them (openingDirections), the box the
- * routes' own fit frames (useSavedRoutes). Module-level, as the loaders below
- * are.
- */
-const openOnRoutes = () =>
-  openingDirections().then((directions) => (directions ? routesBounds(directions) : null));
 
 /**
  * Whether the commuter map draws the hotspots' pins zoomed in (a terminal's or hintuan's flag). Off
@@ -183,6 +174,7 @@ export function PublicMapApp() {
   const locatorTurn = useTurn();
   // The dot's gaze is hushed by ‹ and ✕: going back picks nothing (dot-gaze.ts).
   const { hush, hushedAt } = useGazeHush();
+  useBackClosesCards(saved, hotspots, cards, backFromTrip, hush);
   const offline = useOffline();
   // The phone's status bar in the map's colour (status-bar.ts).
   useStatusBarColour(map);
@@ -223,6 +215,8 @@ export function PublicMapApp() {
         sheetTopUnderSearch(needRefresh, offline || age.stale),
       )}
     >
+      {/* The page's one h1, for a screen reader to move to by heading; nothing is drawn. */}
+      <h1 className="sr-only">Para</h1>
       {/* Out of reach under the credits, the map and every card alike. */}
       <div inert={credits.state === 'open'} className="contents">
         {/*

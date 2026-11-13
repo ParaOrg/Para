@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useDeferredValue, useMemo } from 'react';
 
 import type { LngLat } from '@/shared/utils/geo';
 
@@ -21,7 +21,9 @@ export const MAX_RESULTS = 8;
  * Place search's rows for what is typed: Para's places first, then the landmarks that are not one
  * of them, MAX_RESULTS in all (decision 9). The matching is memoised: over the landmarks it costs
  * up to about 20 ms on a laptop and more on a phone (tests/unit/landmark-search-test.mjs), and the
- * public map renders far more often than the query changes.
+ * public map renders far more often than the query changes. It is worked out for the query a
+ * moment behind the typing (useDeferredValue): a key shows in the field at once, and the rows
+ * follow when the phone has time, a later key taking the place of a match not yet finished.
  */
 export function useSearchRows(
   query: string,
@@ -33,15 +35,16 @@ export function useSearchRows(
 ): SearchRow[] {
   const places = useMemo(() => searchablePlaces(hotspots), [hotspots]);
   const landmarkList = landmarks.status === 'ready' ? landmarks.landmarks.landmarks : null;
+  const matchedQuery = useDeferredValue(query);
   const matched = useMemo(() => {
-    if (query.trim() === '') return null;
+    if (matchedQuery.trim() === '') return null;
     return combineResults(
-      searchPlaces(query, places, from),
-      landmarkList ? searchLandmarks(query, landmarkList, from) : [],
+      searchPlaces(matchedQuery, places, from),
+      landmarkList ? searchLandmarks(matchedQuery, landmarkList, from) : [],
       places,
       MAX_RESULTS,
     );
-  }, [query, places, landmarkList, from]);
+  }, [matchedQuery, places, landmarkList, from]);
   if (!matched) return [];
   return [
     ...matched.places.map((match) => ({

@@ -61,10 +61,13 @@ on:
     # 05:00 in Manila (UTC+8): after the map's nightly publish at 04:00.
     - cron: '0 21 * * *'
 
-# A newer push to the same branch cancels the run for the older one.
+# On a pull request a newer push cancels the run for the older one: only its newest commit
+# matters. On main and staging a run that has started is never cancelled, so the commit it
+# checks gets its full verdict. GitHub keeps one run going and one waiting per group: a newer
+# push takes the place of the one still waiting, and every run that starts finishes.
 concurrency:
   group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
@@ -125,7 +128,7 @@ jobs:
               docs/*|*.md) ;;
               src/app/studio/*|src/features/studio/*|tests/e2e/turnstile-test.mjs|tests/e2e/studio-scale-test.mjs|tests/e2e/studio-contributors-test.mjs|tests/e2e/studio-public-view-test.mjs|tests/e2e/studio-two-editors-test.mjs|tests/e2e/save-test.mjs|tests/e2e/save-ikot-test.mjs|tests/e2e/save-edit-test.mjs|tests/e2e/save-drafts-test.mjs|tests/e2e/group-test.mjs|tests/e2e/regression-gestures.mjs|tests/e2e/hotspot-test.mjs|tests/e2e/snap-test.mjs|tests/e2e/extend-test.mjs|tests/e2e/studio-phone-test.mjs)
                 studio=true ;;
-              src/app/public-map/*|src/features/published-map/*|public/*|tests/e2e/commuter-test.mjs|tests/e2e/phone-test.mjs|tests/e2e/where-test.mjs|tests/e2e/scale-test.mjs|tests/e2e/pwa-test.mjs|tests/e2e/own-tiles-stand-in.mjs|tests/e2e/handover-test.mjs|tests/e2e/fixtures/*|tests/e2e/gate-test.mjs|tests/e2e/loop-test.mjs|tests/e2e/map-pins-test.mjs)
+              src/app/public-map/*|src/features/published-map/*|public/*|tests/e2e/commuter-test.mjs|tests/e2e/phone-test.mjs|tests/e2e/where-test.mjs|tests/e2e/scale-test.mjs|tests/e2e/pwa-test.mjs|tests/e2e/own-tiles-stand-in.mjs|tests/e2e/handover-test.mjs|tests/e2e/fixtures/*|tests/e2e/gate-test.mjs|tests/e2e/loop-test.mjs|tests/e2e/back-test.mjs|tests/e2e/map-pins-test.mjs)
                 public=true ;;
               src/app/contribute/*|src/features/contribute/*|tests/e2e/contribute-test.mjs|tests/e2e/contribute-offline-test.mjs|tests/e2e/upload-test.mjs|tests/e2e/account-test.mjs|tests/e2e/profile-test.mjs|tests/e2e/claim-test.mjs)
                 contribute=true ;;
@@ -259,49 +262,16 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        suite: [gate-test, phone-test, where-test, scale-test, loop-test, map-pins-test]
+        suite: [gate-test, phone-test, where-test, scale-test, loop-test, back-test, map-pins-test]
         include:
           - { suite: commuter-test, part: 1 }
           - { suite: commuter-test, part: 2 }
           - { suite: commuter-test, part: 3 }
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
-        with:
-          node-version: 22
-          cache: npm
-      - run: npm ci
-      # Playwright's Chromium, at the version package-lock pins, and the .deb files of its system
-      # packages, kept between runs.
-      # The runner image is in the key too, so a new Ubuntu does not restore an old Chromium:
-      # ImageOS is set on the runner, not in the env context.
-      - id: playwright
-        run: |
-          echo "version=$(node -p "require('playwright/package.json').version")" >> "$GITHUB_OUTPUT"
-          echo "image=$ImageOS" >> "$GITHUB_OUTPUT"
-          echo "image-version=$ImageVersion" >> "$GITHUB_OUTPUT"
-      - id: chromium
-        uses: actions/cache@v6
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.image }}-${{ steps.playwright.outputs.version }}
-      - if: steps.chromium.outputs.cache-hit != 'true'
-        run: npx playwright install chromium
-      - id: debs
-        uses: actions/cache@v6
-        with:
-          path: ~/apt-debs
-          key: playwright-debs-${{ runner.os }}-${{ steps.playwright.outputs.image-version }}-${{ steps.playwright.outputs.version }}
-      - name: Install Chromium's system packages
-        # From the cached .deb files when they restore; install-deps otherwise (and when dpkg
-        # refuses them), which then leaves its downloads in ~/apt-debs for the next run to cache.
-        run: |
-          if [ "${{ steps.debs.outputs.cache-hit }}" = true ] && sudo dpkg -i ~/apt-debs/*.deb; then
-            exit 0
-          fi
-          npx playwright install-deps chromium
-          mkdir -p ~/apt-debs
-          cp /var/cache/apt/archives/*.deb ~/apt-debs/
+      # Node, npm ci, and Playwright's Chromium with its system packages, from the caches every
+      # browser suite shares (the action's own comments).
+      - uses: ./.github/actions/prepare-browser-suite
       - name: Give the dev server the public database address and key
         # Cloudflare's always-pass Turnstile key in place of the real one, which
         # answers only real browsers on Para's own hostnames.
@@ -355,42 +325,9 @@ jobs:
           ]
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
-        with:
-          node-version: 22
-          cache: npm
-      - run: npm ci
-      # Playwright's Chromium, at the version package-lock pins, and the .deb files of its system
-      # packages, kept between runs.
-      # The runner image is in the key too, so a new Ubuntu does not restore an old Chromium:
-      # ImageOS is set on the runner, not in the env context.
-      - id: playwright
-        run: |
-          echo "version=$(node -p "require('playwright/package.json').version")" >> "$GITHUB_OUTPUT"
-          echo "image=$ImageOS" >> "$GITHUB_OUTPUT"
-          echo "image-version=$ImageVersion" >> "$GITHUB_OUTPUT"
-      - id: chromium
-        uses: actions/cache@v6
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.image }}-${{ steps.playwright.outputs.version }}
-      - if: steps.chromium.outputs.cache-hit != 'true'
-        run: npx playwright install chromium
-      - id: debs
-        uses: actions/cache@v6
-        with:
-          path: ~/apt-debs
-          key: playwright-debs-${{ runner.os }}-${{ steps.playwright.outputs.image-version }}-${{ steps.playwright.outputs.version }}
-      - name: Install Chromium's system packages
-        # From the cached .deb files when they restore; install-deps otherwise (and when dpkg
-        # refuses them), which then leaves its downloads in ~/apt-debs for the next run to cache.
-        run: |
-          if [ "${{ steps.debs.outputs.cache-hit }}" = true ] && sudo dpkg -i ~/apt-debs/*.deb; then
-            exit 0
-          fi
-          npx playwright install-deps chromium
-          mkdir -p ~/apt-debs
-          cp /var/cache/apt/archives/*.deb ~/apt-debs/
+      # Node, npm ci, and Playwright's Chromium with its system packages, from the caches every
+      # browser suite shares (the action's own comments).
+      - uses: ./.github/actions/prepare-browser-suite
       - name: Give the dev server the public database address and key
         # Cloudflare's always-pass Turnstile key in place of the real one, which
         # answers only real browsers on Para's own hostnames.
@@ -446,42 +383,9 @@ jobs:
         include: ${{ fromJSON(needs.changes.outputs.preview) }}
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
-        with:
-          node-version: 22
-          cache: npm
-      - run: npm ci
-      # Playwright's Chromium, at the version package-lock pins, and the .deb files of its system
-      # packages, kept between runs.
-      # The runner image is in the key too, so a new Ubuntu does not restore an old Chromium:
-      # ImageOS is set on the runner, not in the env context.
-      - id: playwright
-        run: |
-          echo "version=$(node -p "require('playwright/package.json').version")" >> "$GITHUB_OUTPUT"
-          echo "image=$ImageOS" >> "$GITHUB_OUTPUT"
-          echo "image-version=$ImageVersion" >> "$GITHUB_OUTPUT"
-      - id: chromium
-        uses: actions/cache@v6
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.image }}-${{ steps.playwright.outputs.version }}
-      - if: steps.chromium.outputs.cache-hit != 'true'
-        run: npx playwright install chromium
-      - id: debs
-        uses: actions/cache@v6
-        with:
-          path: ~/apt-debs
-          key: playwright-debs-${{ runner.os }}-${{ steps.playwright.outputs.image-version }}-${{ steps.playwright.outputs.version }}
-      - name: Install Chromium's system packages
-        # From the cached .deb files when they restore; install-deps otherwise (and when dpkg
-        # refuses them), which then leaves its downloads in ~/apt-debs for the next run to cache.
-        run: |
-          if [ "${{ steps.debs.outputs.cache-hit }}" = true ] && sudo dpkg -i ~/apt-debs/*.deb; then
-            exit 0
-          fi
-          npx playwright install-deps chromium
-          mkdir -p ~/apt-debs
-          cp /var/cache/apt/archives/*.deb ~/apt-debs/
+      # Node, npm ci, and Playwright's Chromium with its system packages, from the caches every
+      # browser suite shares (the action's own comments).
+      - uses: ./.github/actions/prepare-browser-suite
       # The build was made in the build job; `vite preview` serves it as it is.
       - name: The preview build
         uses: actions/download-artifact@v8
@@ -531,42 +435,9 @@ jobs:
           ]
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
-        with:
-          node-version: 22
-          cache: npm
-      - run: npm ci
-      # Playwright's Chromium, at the version package-lock pins, and the .deb files of its system
-      # packages, kept between runs.
-      # The runner image is in the key too, so a new Ubuntu does not restore an old Chromium:
-      # ImageOS is set on the runner, not in the env context.
-      - id: playwright
-        run: |
-          echo "version=$(node -p "require('playwright/package.json').version")" >> "$GITHUB_OUTPUT"
-          echo "image=$ImageOS" >> "$GITHUB_OUTPUT"
-          echo "image-version=$ImageVersion" >> "$GITHUB_OUTPUT"
-      - id: chromium
-        uses: actions/cache@v6
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.image }}-${{ steps.playwright.outputs.version }}
-      - if: steps.chromium.outputs.cache-hit != 'true'
-        run: npx playwright install chromium
-      - id: debs
-        uses: actions/cache@v6
-        with:
-          path: ~/apt-debs
-          key: playwright-debs-${{ runner.os }}-${{ steps.playwright.outputs.image-version }}-${{ steps.playwright.outputs.version }}
-      - name: Install Chromium's system packages
-        # From the cached .deb files when they restore; install-deps otherwise (and when dpkg
-        # refuses them), which then leaves its downloads in ~/apt-debs for the next run to cache.
-        run: |
-          if [ "${{ steps.debs.outputs.cache-hit }}" = true ] && sudo dpkg -i ~/apt-debs/*.deb; then
-            exit 0
-          fi
-          npx playwright install-deps chromium
-          mkdir -p ~/apt-debs
-          cp /var/cache/apt/archives/*.deb ~/apt-debs/
+      # Node, npm ci, and Playwright's Chromium with its system packages, from the caches every
+      # browser suite shares (the action's own comments).
+      - uses: ./.github/actions/prepare-browser-suite
       - name: Give the dev server the public database address and key
         # Cloudflare's always-pass Turnstile key in place of the real one, which
         # answers only real browsers on Para's own hostnames.
@@ -617,38 +488,9 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
-        with:
-          node-version: 22
-          cache: npm
-      - run: npm ci
-      - id: playwright
-        run: |
-          echo "version=$(node -p "require('playwright/package.json').version")" >> "$GITHUB_OUTPUT"
-          echo "image=$ImageOS" >> "$GITHUB_OUTPUT"
-          echo "image-version=$ImageVersion" >> "$GITHUB_OUTPUT"
-      - id: chromium
-        uses: actions/cache@v6
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.image }}-${{ steps.playwright.outputs.version }}
-      - if: steps.chromium.outputs.cache-hit != 'true'
-        run: npx playwright install chromium
-      - id: debs
-        uses: actions/cache@v6
-        with:
-          path: ~/apt-debs
-          key: playwright-debs-${{ runner.os }}-${{ steps.playwright.outputs.image-version }}-${{ steps.playwright.outputs.version }}
-      - name: Install Chromium's system packages
-        # From the cached .deb files when they restore; install-deps otherwise (and when dpkg
-        # refuses them), which then leaves its downloads in ~/apt-debs for the next run to cache.
-        run: |
-          if [ "${{ steps.debs.outputs.cache-hit }}" = true ] && sudo dpkg -i ~/apt-debs/*.deb; then
-            exit 0
-          fi
-          npx playwright install-deps chromium
-          mkdir -p ~/apt-debs
-          cp /var/cache/apt/archives/*.deb ~/apt-debs/
+      # Node, npm ci, and Playwright's Chromium with its system packages, from the caches every
+      # browser suite shares (the action's own comments).
+      - uses: ./.github/actions/prepare-browser-suite
       - name: Build Storybook
         run: npm run build-storybook -- --quiet
       - name: Every story renders and plays
@@ -665,42 +507,9 @@ jobs:
     timeout-minutes: 40
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
-        with:
-          node-version: 22
-          cache: npm
-      - run: npm ci
-      # Playwright's Chromium, at the version package-lock pins, and the .deb files of its system
-      # packages, kept between runs.
-      # The runner image is in the key too, so a new Ubuntu does not restore an old Chromium:
-      # ImageOS is set on the runner, not in the env context.
-      - id: playwright
-        run: |
-          echo "version=$(node -p "require('playwright/package.json').version")" >> "$GITHUB_OUTPUT"
-          echo "image=$ImageOS" >> "$GITHUB_OUTPUT"
-          echo "image-version=$ImageVersion" >> "$GITHUB_OUTPUT"
-      - id: chromium
-        uses: actions/cache@v6
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.image }}-${{ steps.playwright.outputs.version }}
-      - if: steps.chromium.outputs.cache-hit != 'true'
-        run: npx playwright install chromium
-      - id: debs
-        uses: actions/cache@v6
-        with:
-          path: ~/apt-debs
-          key: playwright-debs-${{ runner.os }}-${{ steps.playwright.outputs.image-version }}-${{ steps.playwright.outputs.version }}
-      - name: Install Chromium's system packages
-        # From the cached .deb files when they restore; install-deps otherwise (and when dpkg
-        # refuses them), which then leaves its downloads in ~/apt-debs for the next run to cache.
-        run: |
-          if [ "${{ steps.debs.outputs.cache-hit }}" = true ] && sudo dpkg -i ~/apt-debs/*.deb; then
-            exit 0
-          fi
-          npx playwright install-deps chromium
-          mkdir -p ~/apt-debs
-          cp /var/cache/apt/archives/*.deb ~/apt-debs/
+      # Node, npm ci, and Playwright's Chromium with its system packages, from the caches every
+      # browser suite shares (the action's own comments).
+      - uses: ./.github/actions/prepare-browser-suite
       - name: Give the dev server the public database address and key
         # Cloudflare's always-pass Turnstile key in place of the real one, which
         # answers only real browsers on Para's own hostnames.
@@ -751,7 +560,10 @@ jobs:
           if-no-files-found: ignore
 
   # The two checks a pull request shows, under the names they always had.
-  # Passed when everything under them passed or was not needed.
+  # Passed when everything under them passed or was not needed, and only then:
+  # the change detection must have succeeded, since it decides what is needed,
+  # every job under the check must have given a result, and any other word
+  # for a result fails it.
   public:
     name: Build and the public map
     needs: [changes, build, public-suite, contribute-suite, preview-suite]
@@ -763,9 +575,11 @@ jobs:
           RESULTS: ${{ needs.changes.result }} ${{ needs.build.result }} ${{ needs.public-suite.result }} ${{ needs.contribute-suite.result }} ${{ needs.preview-suite.result }}
         run: |
           echo "changes, build, public suites, contributor suites, preview suites: $RESULTS"
-          case " $RESULTS " in
-            *" failure "*|*" cancelled "*) exit 1 ;;
-          esac
+          read -ra results <<< "$RESULTS"
+          if [ "${#results[@]}" -ne 5 ] || [ "${results[0]}" != success ]; then exit 1; fi
+          for result in "${results[@]}"; do
+            case "$result" in success | skipped) ;; *) exit 1 ;; esac
+          done
 
   studio:
     name: The editor
@@ -778,6 +592,8 @@ jobs:
           RESULTS: ${{ needs.changes.result }} ${{ needs.build.result }} ${{ needs.studio-suite.result }} ${{ needs.drawing.result }}
         run: |
           echo "changes, build, studio suites, drawing suites: $RESULTS"
-          case " $RESULTS " in
-            *" failure "*|*" cancelled "*) exit 1 ;;
-          esac
+          read -ra results <<< "$RESULTS"
+          if [ "${#results[@]}" -ne 4 ] || [ "${results[0]}" != success ]; then exit 1; fi
+          for result in "${results[@]}"; do
+            case "$result" in success | skipped) ;; *) exit 1 ;; esac
+          done

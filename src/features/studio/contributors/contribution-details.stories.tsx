@@ -51,7 +51,9 @@ export const Marked: Story = {
   args: { detail: STORY_DETAIL_MARKED },
   play: async ({ canvasElement }) => {
     await expect(
-      within(canvasElement).getByText(/2 marks\. Marked at 08:14, 08:31\./),
+      within(canvasElement).getByText(
+        /2 marks\. Marked at 08:14 \(“Tapat ng 7-Eleven, may waiting shed”\), 08:31\./,
+      ),
     ).toBeVisible();
   },
 };

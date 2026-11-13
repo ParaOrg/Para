@@ -49,8 +49,11 @@ export const modeSchema = z.object({
 
 export type ModeRow = z.infer<typeof modeSchema>;
 
-/** A tap on the mark button: when it was. Where it was is worked out from the fixes. */
-export const markSchema = z.object({ time: z.number() });
+/**
+ * A tap on the mark button: when it was, and the contributor's note on the stop, if they wrote one.
+ * Where it was is worked out from the fixes.
+ */
+export const markSchema = z.object({ time: z.number(), note: z.optional(z.string()) });
 
 export type MarkRow = z.infer<typeof markSchema>;
 

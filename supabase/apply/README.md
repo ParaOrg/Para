@@ -577,8 +577,7 @@ Clean-up step 3 of `.scratch/codebase-review/database.md`, first half.
   as `publish_draft` (`private.apply_draft`), and the `draft_saver` trigger names whoever changes a draft's
   payload, so the old path stamps the new columns too.
 
-Retiring the old path is `20261105170000_retire_review_steps`, applied only after `main` has the new
-studio.
+Retiring the old path is `20261110190000_retire_review_steps`, applied live on 2026-11-11.
 
 | File | What it does |
 | --- | --- |
@@ -702,3 +701,96 @@ rules and the grant and definer tidy-ups (L1, L2, L5).
 
 - Apply failed: nothing changed. The message names what it found.
 - Applied, and it must be withdrawn: run `20261105200000_drop_dead_weight_revert.sql`.
+
+# Applying retire_review_steps to the live project
+
+**Applied live 2026-11-11** (ledger `20261111173006`) from its paste file; its check passed (4 rows, all `t`). Do
+not reapply. Main and staging both ran the studio that saves with `save_draft`, publishes with `publish_draft`
+and unpublishes with `unpublish`, so nothing called what it dropped.
+
+The second half of clean-up step 3: `approve_draft`, `approve_reviewed_draft`, `submit_draft` and
+`send_back_draft` are dropped, so approval has one way in, `publish_draft`, always with the revision check
+(H3); editors lose the direct update of a draft and `draft_update` goes, so a draft's status can no longer
+be set by hand (M2). After this, `20261105160000_draft_published_check.sql` no longer passes as written: it
+proves the old path still works.
+
+| File | What it does |
+| --- | --- |
+| `20261110190000_retire_review_steps_apply.sql` | One transaction. Checks `draft_published` is in the ledger, and this is not. Applies `migrations/20261110190000_retire_review_steps.sql` (carried unchanged; `verify/retire-review-steps.sh` checks the copy). Checks the four functions are gone, no direct update of a draft is left, and the new path is whole. Writes the ledger row `retire_review_steps`. Any failed check raises and nothing is changed. A second run stops at the first check and changes nothing. |
+| `20261110190000_retire_review_steps_check.sql` | Part one adds a test editor and a hotspot's draft, proves the direct update refused and the new path working, then rolls all of it back. Part two is read-only: 4 rows, all `ok` should be `t`. |
+| `20261110190000_retire_review_steps_revert.sql` | One transaction: re-creates the four functions with their grants, gives back the direct update under `draft_update`, and removes the ledger row. Touches no data. Safe to run twice. |
+
+## Steps
+
+1. Confirm `main` has the new studio deployed.
+2. Run `20261110190000_retire_review_steps_apply.sql`. It ends with `COMMIT`; an error means nothing changed.
+3. Run `20261110190000_retire_review_steps_check.sql`: part one ends with `ROLLBACK` and no error; part two
+   gives 4 rows, all `ok = t`.
+4. Record the ledger version
+   (`select version from supabase_migrations.schema_migrations where name = 'retire_review_steps';`)
+   in `migrations/README.md`. The types change (four functions go): regenerate them.
+
+## Recovery
+
+- Apply failed: nothing changed. The message names what it found.
+- Applied too early, or it must be withdrawn: run `20261110190000_retire_review_steps_revert.sql`.
+
+# Applying waitlist to the live project
+
+**Not applied live.** `/app/` has an Android download and nothing to install on an iPhone, so its iPhone part
+takes an email. Two things make it work, and both are the owner's: the table
+(the three files below) and the `waitlist` Edge Function, the project's first (`supabase/functions/waitlist`).
+Until both are in, the form on `/app/` answers "That didn't go through" and nothing else on the page changes.
+
+The form posts an email and Cloudflare's bot-check token to the function. The function asks Cloudflare
+whether the check passed, saves the email with the project's secret key, and sends one confirmation through
+Resend. An email already on the list is answered the same way and gets no second message. `anon` and
+`authenticated` hold nothing on the table, so "anon never writes" (0017) still holds.
+
+| File | What it does |
+| --- | --- |
+| `20261112120000_waitlist_apply.sql` | One transaction. Checks this is not in the ledger. Applies `migrations/20261112120000_waitlist.sql` (carried unchanged; `verify/waitlist.sh` checks the copy). Checks `anon` and `authenticated` hold nothing on the list, row security is on, and `service_role` selects and inserts. Writes the ledger row `waitlist`. Any failed check raises and nothing is changed. A second run stops at the first check and changes nothing. |
+| `20261112120000_waitlist_check.sql` | Part one adds two test emails (ending `.invalid`), proves who can and cannot read or add and what the table refuses, then rolls all of it back. Part two is read-only: 4 rows, all `ok` should be `t`. |
+| `20261112120000_waitlist_revert.sql` | One transaction: drops the table and removes the ledger row. Refuses, changing nothing, while the list holds an email. Safe to run twice. |
+
+## Steps
+
+1. Run `20261112120000_waitlist_apply.sql`. It ends with `COMMIT`; an error means nothing changed.
+2. Run `20261112120000_waitlist_check.sql`: part one ends with `ROLLBACK` and no error; part two gives 4 rows,
+   all `ok = t`.
+3. Record the ledger version
+   (`select version from supabase_migrations.schema_migrations where name = 'waitlist';`) in
+   `migrations/README.md`, add `20261112120000_waitlist` to `APPLIED` in `verify/schema-snapshot.sh`, rewrite the
+   snapshot (`--write`) and regenerate `src/shared/types/database.types.ts`. No page reads the table, so
+   nothing waits on the types.
+4. In Resend, make an API key that can only send ("Sending access"), for the domain `para-commute.org`. It is
+   a second key, apart from the one Supabase Auth's SMTP uses, so either can be replaced alone.
+5. Set the function's three secrets (Supabase → Edge Functions → Secrets, or the CLI). No value goes in the
+   repo:
+
+       supabase secrets set RESEND_API_KEY=… TURNSTILE_SECRET_KEY=… WAITLIST_FROM='Para <hello@para-commute.org>'
+
+   `TURNSTILE_SECRET_KEY` is the same secret Supabase's Auth settings hold (the widget in the old Cloudflare
+   account). `WAITLIST_FROM` may be any address on `para-commute.org`, the domain Resend has verified.
+   `SUPABASE_URL` and `SUPABASE_SECRET_KEYS` are there already: Supabase sets them.
+6. Deploy the function. It is called with no sign-in, so it must not ask for a JWT:
+
+       supabase functions deploy waitlist --no-verify-jwt --project-ref smzwbqxttdyvohuizynl
+
+7. Try it: open `https://www.para-commute.org/app/`, leave an email you own, and look for the message and
+   for the row (`select * from public.waitlist;`). The same email again says the same and sends nothing.
+
+## When the iPhone app is out
+
+Read the list in the SQL editor (`select email from public.waitlist order by created_at;`) and send the one
+message. To take someone off: `delete from public.waitlist where email = '…';`.
+
+## Recovery
+
+- Apply failed: nothing changed. The message names what it found.
+- The form says "That didn't go through": the function's logs (Supabase → Edge Functions → waitlist → Logs)
+  name the step, `waitlist: saving answered …` or `waitlist: Resend answered …`. A missing secret is named
+  there too.
+- The email is saved but no message came: Resend's dashboard. The person is on the list either way.
+- Applied, and it must be withdrawn: export or delete the rows, run `20261112120000_waitlist_revert.sql`, and
+  delete the function (`supabase functions delete waitlist`).

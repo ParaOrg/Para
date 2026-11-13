@@ -18,7 +18,7 @@ import { hotspotLinkSchema, hotspotSchema } from '../model/hotspot-schema';
  */
 
 /** A direction as the index carries it: its overview, the line thinned at 5 m, under its own name. */
-const indexDirectionSchema = z.pipe(
+export const indexDirectionSchema = z.pipe(
   z.extend(z.omit(rawDirectionSchema, { shape: true }), {
     overview: z.optional(z.nullable(lineStringSchema)),
   }),

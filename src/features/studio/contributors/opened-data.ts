@@ -29,7 +29,7 @@ export function openedData(detail: ContributionDetail | null) {
         properties: { kind: 'hinto', minutes: Math.round(h.seconds / 60) },
         geometry: { type: 'Point' as const, coordinates: [...h.at] },
       })),
-      ...detail.marks.flatMap((time) => {
+      ...detail.marks.flatMap(({ at: time }) => {
         const at = placeMark(detail.trail, time);
         return at
           ? [

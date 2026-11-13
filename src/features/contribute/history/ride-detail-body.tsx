@@ -6,12 +6,15 @@ import type { CardStatus } from './card-status';
 import { CardStatusLine } from './card-status-line';
 import type { RideDetailRow } from './ride-details';
 import { DeleteIcon } from '../common/history-icons';
+import { StopNotesEntry } from '../stop-notes/stop-notes-entry';
+import type { Recording } from '../storage/recording-schema';
 
 interface RideDetailBodyProps {
   /** Its upload's line, as its History card shows it. */
   status: CardStatus;
   rows: readonly RideDetailRow[];
-  description: string;
+  /** Its Description and its flagged stops, as written. */
+  recording: Pick<Recording, 'description' | 'marks'>;
   /** The ride in words, so the retry button says which one it sends. */
   fullName: string;
   onRetry: () => void;
@@ -20,22 +23,30 @@ interface RideDetailBodyProps {
   /** Keep it hands focus back to the button that asked. */
   deleteRef: RefObject<HTMLDivElement | null>;
   onDelete: () => void;
+  /** The way into the ride's Stops notes, read only; none for a ride with no flags. */
+  onOpenStopNotes: () => void;
+  stopNotesRef: RefObject<HTMLButtonElement | null>;
+  /** Opens the ride's summary card, to share. */
+  onSummary: () => void;
 }
 
 /**
  * The ride sheet's body, under its name (Figma 4569:4974): Commute Information, the upload's
- * Status its last row, the Description, read only and left out when none was written, and Delete
- * this record.
+ * Status its last row, the Description, read only and left out when none was written, the way into
+ * the ride's Stops notes, Share ride summary (not in the frame yet) and Delete this record.
  */
 export function RideDetailBody({
   status,
   rows,
-  description,
+  recording: { description, marks = [] },
   fullName,
   onRetry,
   canDelete,
   deleteRef,
   onDelete,
+  onOpenStopNotes,
+  stopNotesRef,
+  onSummary,
 }: RideDetailBodyProps) {
   const commuteHeadingId = useId();
   const descriptionHeadingId = useId();
@@ -79,15 +90,19 @@ export function RideDetailBody({
           </p>
         </section>
       )}
-      <div ref={deleteRef} className="flex flex-col">
-        <Button
-          variant="plain"
-          tone="error"
-          label="Delete this record"
-          firstIcon={<DeleteIcon />}
-          disabled={!canDelete}
-          onClick={onDelete}
-        />
+      <StopNotesEntry count={marks.length} onOpen={onOpenStopNotes} buttonRef={stopNotesRef} />
+      <div className="flex flex-col gap-3">
+        <Button variant="secondary" label="Share ride summary" onClick={onSummary} />
+        <div ref={deleteRef} className="flex flex-col">
+          <Button
+            variant="plain"
+            tone="error"
+            label="Delete this record"
+            firstIcon={<DeleteIcon />}
+            disabled={!canDelete}
+            onClick={onDelete}
+          />
+        </div>
       </div>
     </div>
   );
