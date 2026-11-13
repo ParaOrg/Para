@@ -9,7 +9,7 @@ import { firstLayerOfType } from '@/features/routes/map/layers';
  * basemap's background — Gray, Colour or Dark, whichever is up — and reads
  * as part of the map. On an iPhone opened from the Home Screen the page
  * runs behind it instead (index.html, black-translucent). The manifest keeps
- * the brand maroon for the installed app's splash.
+ * the brand purple for the installed app's splash.
  */
 export function useStatusBarColour(map: MapLibreMap | null): void {
   useEffect(() => {
