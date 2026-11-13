@@ -1603,6 +1603,12 @@ const buttons = (page) =>
     JSON.stringify(discard),
   );
 
+  // The flag's note pill stands over the card for its five seconds, the column and the chevron
+  // sliding up for it: the card, open and folded, is measured without it.
+  await page
+    .getByRole('button', { name: /Add a stop note/ })
+    .waitFor({ state: 'detached', timeout: 8000 });
+  await page.waitForTimeout(800);
   const card = page.getByRole('group', { name: 'Recording so far' });
   const open = {
     fold: await foldButton(page).boundingBox(),
@@ -1635,10 +1641,6 @@ const buttons = (page) =>
       () => document.activeElement?.getAttribute('aria-label') === 'Map data sources',
     ),
   );
-  // The flag's note pill stands over the card for its five seconds: the fold is measured without it.
-  await page
-    .getByRole('button', { name: /Add a stop note/ })
-    .waitFor({ state: 'detached', timeout: 8000 });
   await foldButton(page).click();
   await card.waitFor({ state: 'hidden' });
   // The column and the chevron slide down together (duration/sheet).
