@@ -5,14 +5,13 @@ import { Button } from '@/design-system/primitives/button';
 import { FieldError } from '@/design-system/primitives/field-error';
 import { TextAreaField } from '@/design-system/primitives/text-area-field';
 import { TextField } from '@/design-system/primitives/text-field';
-import { useFocusHeading } from '@/shared/hooks/use-focus-heading';
 
 import { fareFromText } from './fare-text';
 import { RideField } from './ride-field';
 import { RideSheet } from './ride-sheet';
+import { SaveFormHeader } from './save-form-header';
 import { StopRecordingScreen } from './stop-recording-screen';
 import { useSaveCountdown } from './use-save-countdown';
-import { countdownText } from '../common/format';
 import type { RecordingFigures } from '../recorder/recording-figures';
 import type { RecordingDetails } from '../recorder/recording-state';
 import type { RideKind } from '../storage/recording-schema';
@@ -48,7 +47,6 @@ export function SaveForm({
   onDiscard,
 }: SaveFormProps) {
   const ids = useId();
-  const headingRef = useFocusHeading();
   const fareRef = useRef<HTMLInputElement>(null);
   const discardRef = useRef<HTMLButtonElement>(null);
   const rideFieldRef = useRef<HTMLButtonElement>(null);
@@ -109,19 +107,7 @@ export function SaveForm({
         }}
         className="absolute inset-0 z-20 flex flex-col bg-surface font-sn-pro text-content-primary"
       >
-        <header className="shrink-0 px-5 pt-[calc(env(safe-area-inset-top)+1.25rem)] pb-3">
-          <h1
-            id={`${ids}-heading`}
-            ref={headingRef}
-            tabIndex={-1}
-            className="text-3xl/9 font-extrabold focus:outline-none"
-          >
-            Save Recording
-          </h1>
-          <p className="text-sm/5 text-content-disabled">
-            Saves by itself in {countdownText(secondsLeft)}
-          </p>
-        </header>
+        <SaveFormHeader headingId={`${ids}-heading`} secondsLeft={secondsLeft} />
         <div className="min-h-0 flex-1 overflow-y-auto px-5 pt-5 pb-8">
           <div className="flex flex-col gap-5">
             {failedFixWrites > 0 && (
