@@ -110,7 +110,7 @@ export function RideDetailScreen({ ride, onBack }: RideDetailScreenProps) {
             <RideDetailBody
               status={ride.status}
               rows={rideDetailsOf(ride.recording, ride.facts)}
-              description={ride.recording.description}
+              recording={ride.recording}
               fullName={rideFullNameOf(ride.recording)}
               onRetry={ride.onRetry}
               canDelete={ride.canDelete}

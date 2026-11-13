@@ -280,3 +280,26 @@ export const Finding: Story = {
     await expect(canvas.queryByRole('heading')).toBeNull();
   },
 };
+
+/** Flagged stops: each with its time, and the note written on it when there is one. */
+export const FlaggedStops: Story = {
+  args: {
+    ride: {
+      ...ride,
+      recording: {
+        ...recording,
+        marks: [
+          { time: T0 + 20 * 60_000, note: 'Tapat ng 7-Eleven, may waiting shed' },
+          { time: T0 + 55 * 60_000 },
+        ],
+      },
+    },
+  },
+  play: async ({ canvasElement }) => {
+    await openSheet(canvasElement);
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole('heading', { name: 'Flagged stops' })).toBeVisible();
+    await expect(canvas.getByText('Tapat ng 7-Eleven, may waiting shed')).toBeVisible();
+    await expect(canvas.getByText(/^Stop 2 · /)).toBeVisible();
+  },
+};

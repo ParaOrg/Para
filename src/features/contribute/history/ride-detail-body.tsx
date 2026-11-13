@@ -5,13 +5,16 @@ import { Button } from '@/design-system/primitives/button';
 import type { CardStatus } from './card-status';
 import { CardStatusLine } from './card-status-line';
 import type { RideDetailRow } from './ride-details';
+import { RideFlagNotes } from './ride-flag-notes';
 import { DeleteIcon } from '../common/history-icons';
+import type { Recording } from '../storage/recording-schema';
 
 interface RideDetailBodyProps {
   /** Its upload's line, as its History card shows it. */
   status: CardStatus;
   rows: readonly RideDetailRow[];
-  description: string;
+  /** Its Description and its flagged stops, as written. */
+  recording: Pick<Recording, 'description' | 'marks'>;
   /** The ride in words, so the retry button says which one it sends. */
   fullName: string;
   onRetry: () => void;
@@ -24,13 +27,13 @@ interface RideDetailBodyProps {
 
 /**
  * The ride sheet's body, under its name (Figma 4569:4974): Commute Information, the upload's
- * Status its last row, the Description, read only and left out when none was written, and Delete
- * this record.
+ * Status its last row, the Description, read only and left out when none was written, the flagged
+ * stops with their notes, and Delete this record.
  */
 export function RideDetailBody({
   status,
   rows,
-  description,
+  recording: { description, marks = [] },
   fullName,
   onRetry,
   canDelete,
@@ -79,6 +82,7 @@ export function RideDetailBody({
           </p>
         </section>
       )}
+      <RideFlagNotes marks={marks} />
       <div ref={deleteRef} className="flex flex-col">
         <Button
           variant="plain"
