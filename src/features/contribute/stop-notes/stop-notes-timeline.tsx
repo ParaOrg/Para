@@ -75,16 +75,14 @@ export function StopNotesTimeline({
       setIsDeleteAsked(false);
       setMapTime(null);
     });
-  // Close or Escape: focus comes back to the stop's "Stop N ›". Takes no arguments, so a click
-  // handed straight to it can never be taken for a focus target.
+  // Close or Escape: focus back on its "Stop N ›". No arguments: a click passed in means nothing.
   const closeMap = () => {
     const closed = mapTime;
     hideMap();
     const button = closed === null ? null : document.getElementById(mapButtonId(closed));
     (button ?? headingRef.current ?? fallbackFocusRef?.current)?.focus();
   };
-  // A stop deleted: its "Stop N ›" has gone, so focus goes to the stops' heading, or to the
-  // fallback when the last stop took the heading's section with it (the save form).
+  // A stop deleted: to the heading, or the fallback when the last took the heading's section too.
   const closeAfterDelete = (wasLast: boolean) => {
     hideMap();
     (wasLast ? (fallbackFocusRef?.current ?? headingRef.current) : headingRef.current)?.focus();
