@@ -10,10 +10,10 @@ const END_DOT = '#171717'; // neutral/900, the card's ink
 /** Room inside the trail's box, so the line and its end dots stay clear of the box's edge. */
 const TRAIL_INSET = 48;
 
-/** Each mode's line as the map and History's sketch draw it, thickened for the card's size. */
+/** Each mode's line, thickened for the card's size. The ridden line is the brand purple. */
 const LINE_STYLE: Record<Mode, { stroke: string; dash: number[] }> = {
   walk: { stroke: MAP_COLOURS['Map/Trail/lakad'], dash: [10, 26] },
-  ride: { stroke: MAP_COLOURS['Map/Trail/sakay'], dash: [] },
+  ride: { stroke: MAP_COLOURS['Map/RouteLine/surface-selected'], dash: [] },
 };
 
 /** The trail's box on the card, in the card's pixels. */
@@ -55,7 +55,7 @@ export function drawTrail(
   ctx.setLineDash([]);
   const start = pathEnds(lines[0].d)?.first;
   const end = pathEnds(lines[lines.length - 1].d)?.last;
-  if (start) drawDot(ctx, start, MAP_COLOURS['Map/Trail/sakay']);
+  if (start) drawDot(ctx, start, LINE_STYLE.ride.stroke);
   if (end) drawDot(ctx, end, END_DOT);
   ctx.restore();
 }
