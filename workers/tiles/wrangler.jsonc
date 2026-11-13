@@ -4,8 +4,10 @@
   "name": "para-tiles",
   "main": "src/index.ts",
   "compatibility_date": "2026-09-01",
-  "workers_dev": true,
-  "preview_urls": true,
+  // Served on tiles.para-commute.org alone (README.md, Custom domain): the edge cache and the
+  // zone's rate limit work there and on no workers.dev address.
+  "workers_dev": false,
+  "preview_urls": false,
   // The bucket keeps the product's old name: an R2 bucket cannot be renamed.
   "r2_buckets": [{ "binding": "TILES", "bucket_name": "parapo-tiles" }],
   "vars": {
