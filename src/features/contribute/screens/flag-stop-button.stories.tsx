@@ -45,6 +45,7 @@ function WithPageToasts(props: FlagStopButtonProps) {
         mapNote={null}
         stopsFlagged={stopsFlagged}
         onAddNote={() => undefined}
+        canAddNote
         routeRecorded={null}
         uploadProblem={null}
       />

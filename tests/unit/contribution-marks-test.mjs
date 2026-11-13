@@ -41,7 +41,7 @@ test('marks are read oldest first, and other kinds and bad rows are ignored', ()
   assert.deepEqual(marksOf({ kind: 'mark' }), []);
 });
 
-test("a mark's note is read with it; a blank note reads as none", () => {
+test("a mark's note is read with it; a blank note, or one that is not text, reads as none", () => {
   const events = [
     { kind: 'mark', at: iso(T0 + 8_000), note: '  Tapat ng 7-Eleven ' },
     { kind: 'mark', at: iso(T0 + 9_000), note: '   ' },
@@ -50,6 +50,7 @@ test("a mark's note is read with it; a blank note reads as none", () => {
   assert.deepEqual(marksOf(events), [
     { at: T0 + 8_000, note: 'Tapat ng 7-Eleven' },
     { at: T0 + 9_000, note: null },
+    { at: T0 + 10_000, note: null },
   ]);
 });
 

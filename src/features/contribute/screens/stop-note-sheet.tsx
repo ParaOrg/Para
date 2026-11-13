@@ -32,6 +32,12 @@ export function StopNoteSheet({ note, onSave, onClose }: StopNoteSheetProps) {
   const [text, setText] = useState(note);
   useDialogFocus(sheetRef, false);
   useEscape(onClose);
+  // The page draws again every second while recording: the listener below must not start afresh
+  // each time, or a tap landing as it does is taken for the one that opened the sheet.
+  const latestClose = useRef(onClose);
+  useEffect(() => {
+    latestClose.current = onClose;
+  });
 
   // After useDialogFocus has noted where focus was: the field, at the end of what is there.
   useEffect(() => {
@@ -48,11 +54,11 @@ export function StopNoteSheet({ note, onSave, onClose }: StopNoteSheetProps) {
     const handleClick = (e: MouseEvent) => {
       if (e.timeStamp < listensFrom) return;
       if (e.target instanceof Node && sheetRef.current?.contains(e.target)) return;
-      onClose();
+      latestClose.current();
     };
     window.addEventListener('click', handleClick);
     return () => window.removeEventListener('click', handleClick);
-  }, [onClose]);
+  }, []);
 
   // Tab goes round inside the sheet.
   useEffect(() => {

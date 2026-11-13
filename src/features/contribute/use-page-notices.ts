@@ -102,6 +102,7 @@ export function usePageNotices({
       mapNote,
       stopsFlagged,
       onAddNote,
+      canAddNote: recording.phase === 'recording' || recording.phase === 'paused',
       routeRecorded,
       uploadProblem,
     },

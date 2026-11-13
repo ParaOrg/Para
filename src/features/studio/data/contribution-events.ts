@@ -8,8 +8,9 @@ const isoTime = z.pipe(
 const markSchema = z.object({
   kind: z.literal('mark'),
   at: isoTime,
-  /** The contributor's words on the stop they flagged; uploads before notes have none. */
-  note: z.optional(z.string()),
+  /** The contributor's words on the stop they flagged; uploads before notes have none. A note that
+   * is not text is dropped, never the mark with it. */
+  note: z.catch(z.optional(z.string()), undefined),
 });
 
 /** A stop the contributor flagged: when, and their note on it, or null for none. */

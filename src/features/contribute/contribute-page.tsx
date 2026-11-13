@@ -45,7 +45,7 @@ import { useStopQuestion } from './screens/use-stop-question';
 import { putThumbnail } from './storage/recording-store';
 import { BottomToolbar, type ToolbarTab } from './toolbar/bottom-toolbar';
 import { ToolbarHoldProvider } from './toolbar/toolbar-hold';
-import { ToolbarPlace } from './toolbar/toolbar-slot';
+import { ToolbarSlot } from './toolbar/toolbar-slot';
 import { useTutorialEntry } from './tutorial/use-tutorial-entry';
 import { useUploads } from './uploads/use-uploads';
 import { useCreditsSheet } from './use-credits-sheet';
@@ -421,7 +421,7 @@ export function ContributePage({ locator }: ContributePageProps) {
           {layout.toolbarTab && (
             // Drawn once and kept while Record, History or Account shows, so it stands still as
             // they slide under it; only its pill moves. Out of reach where Start is.
-            <ToolbarPlace isOutOfReach={layout.isStartOutOfReach}>
+            <ToolbarSlot isOutOfReach={layout.isStartOutOfReach}>
               <BottomToolbar
                 current={layout.toolbarTab}
                 onOpenRecord={toolbarOpeners[layout.toolbarTab].record}
@@ -431,7 +431,7 @@ export function ContributePage({ locator }: ContributePageProps) {
                 historyRef={historyTabRef}
                 accountRef={accountTabRef}
               />
-            </ToolbarPlace>
+            </ToolbarSlot>
           )}
           {phase === 'unfinished' && figures && (
             <Suspense fallback={null}>

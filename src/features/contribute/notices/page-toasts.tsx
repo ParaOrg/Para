@@ -10,7 +10,7 @@ import type { MapNoteGiven } from './map-note';
 import type { PageProblem, PageProblemIcon } from './page-problem';
 import { pointsLostWords, routeRecordedWords, type RouteRecordedGiven } from './route-recorded';
 import { SCREEN_AWAKE_PROBLEM } from './screen-awake-problem';
-import { stopFlaggedMessage } from './stop-flagged';
+import { StopFlaggedSaid } from './stop-flagged';
 import { CheckIcon } from '../common/history-icons';
 
 const ICONS = {
@@ -27,8 +27,9 @@ export interface PageToastsProps {
   mapNote: MapNoteGiven | null;
   /** How many stops have been flagged on the page: each one more says "Stop flagged". */
   stopsFlagged: number;
-  /** Add a note, on Stop flagged: opens the note of the latest flag. */
+  /** Add a note, on Stop flagged: opens the note of the latest flag, on the recording screen. */
   onAddNote: () => void;
+  canAddNote: boolean;
   /** The last route saved, in words, and how many have been: each one more says them. */
   routeRecorded: RouteRecordedGiven | null;
   /** The just-saved route's upload failing, as it stands: said until it goes, or ✕. */
@@ -61,6 +62,7 @@ export function PageToasts({
   mapNote,
   stopsFlagged,
   onAddNote,
+  canAddNote,
   routeRecorded,
   uploadProblem,
 }: PageToastsProps) {
@@ -80,10 +82,11 @@ export function PageToasts({
   return (
     <ToastHost>
       <ProblemsSaid problems={problems} />
-      <NewsSaid
-        message={stopFlaggedMessage(onAddNote)}
+      <StopFlaggedSaid
         times={stopsFlagged}
         isQuiet={problems.length > 0}
+        canAddNote={canAddNote}
+        onAddNote={onAddNote}
       />
       {routeRecorded && (
         <>

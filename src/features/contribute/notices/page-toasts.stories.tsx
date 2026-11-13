@@ -32,6 +32,7 @@ const meta = {
     mapNote: null,
     stopsFlagged: 0,
     onAddNote: fn(),
+    canAddNote: true,
     routeRecorded: null,
     uploadProblem: null,
   },
