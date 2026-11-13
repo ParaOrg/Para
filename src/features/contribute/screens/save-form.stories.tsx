@@ -27,7 +27,7 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** Figma's Save Recording (4521:3679), as it opens: every field empty, the two minutes running. */
+/** Figma's Save Recording (4521:3679), as it opens: every field empty, the ten minutes running. */
 export const Empty: Story = {};
 
 /** Every field filled; Save recordings saves what was said, the fare in pesos. */

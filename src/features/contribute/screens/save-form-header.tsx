@@ -7,7 +7,7 @@ interface SaveFormHeaderProps {
 
 /**
  * Save Recording's title (4725:29214), focused as the form opens. The form still saves itself
- * after two minutes left alone (useSaveCountdown); the frame no longer says so.
+ * after ten minutes left alone (useSaveCountdown); the frame no longer says so.
  */
 export function SaveFormHeader({ headingId }: SaveFormHeaderProps) {
   const headingRef = useFocusHeading();

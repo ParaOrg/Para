@@ -26,7 +26,7 @@ interface SaveFormProps {
   failedFixWrites: number;
   /** Resume: back to recording, for a stop that was a mistake. */
   onKeepRecording: () => void;
-  /** Save recording, and the form's two minutes running out: saves with what was said. */
+  /** Save recording, and the form's ten minutes running out: saves with what was said. */
   onSave: (details: RecordingDetails) => void;
   /** Discard's question answered Stop without saving: the recording is thrown away. */
   onDiscard: () => void;
@@ -39,7 +39,7 @@ interface SaveFormProps {
  * End point name, Fare, What did you ride? (a sheet, 4525:15313) and Description — the ride's
  * Stops notes, and Discard recordings, over a bottom bar with Save recordings and Resume.
  *
- * Every field is optional. Left alone for two minutes it saves with what was typed, so a phone
+ * Every field is optional. Left alone for ten minutes it saves with what was typed, so a phone
  * put away after a ride does not keep a recording open; a fare it cannot read is left out then,
  * and Save recordings asks for it to be put right first. Discard asks over the whole screen, as ✕
  * does while recording, and never throws a recording away in one tap.

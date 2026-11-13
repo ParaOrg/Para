@@ -9,7 +9,7 @@
 //
 // The GPS is a stand-in navigator.geolocation the suite feeds fix by fix, with
 // timestamps of its own (a second apart), so a kilometre out and back takes
-// no time. The 2-minute form timeout runs on Playwright's fake clock.
+// no time. The 10-minute form timeout runs on Playwright's fake clock.
 import { mkdirSync } from 'node:fs';
 import { chromium } from 'playwright';
 import { fakeContributions } from './lib/fake-contributions.mjs';
@@ -2117,7 +2117,7 @@ const buttons = (page) =>
 }
 
 // ------------------------------------------------------- Keep recording on the form
-// Time on the Save form, on the page's clock: under the form's own two minutes (SAVE_FORM_SECONDS,
+// Time on the Save form, on the page's clock: under the form's own ten minutes (SAVE_FORM_SECONDS,
 // use-save-countdown.ts), after which it saves the ride by itself; the page's clock jumping past
 // them saves it at the countdown's next tick, which a Resume tapped in the same moment may lose to.
 // Long enough to show in the Time figure, whole minutes from a minute on, were it counted.
@@ -2359,7 +2359,7 @@ const ON_THE_FORM_MS = 100_000;
   await page.context().close();
 }
 
-// ------------------------------------------- two minutes alone on the form
+// ------------------------------------------- ten minutes alone on the form
 {
   const { page, errors } = await phone();
   await page.getByRole('button', { name: 'Start Tracking' }).click();
@@ -2369,9 +2369,9 @@ const ON_THE_FORM_MS = 100_000;
   await page.clock.install();
   await finishRecording(page);
   await page.getByRole('heading', { name: 'Save Recording' }).waitFor();
-  // Never under something the contributor is answering: the sheet holds the two minutes.
+  // Never under something the contributor is answering: the sheet holds the ten minutes.
   await page.getByRole('button', { name: 'What did you ride?' }).click();
-  await page.clock.runFor(125_000);
+  await page.clock.runFor(605_000);
   check(
     'the form does not save itself while the ride sheet is open over it',
     (await page.getByRole('heading', { name: 'Save Recording' }).count()) === 1 &&
@@ -2380,20 +2380,20 @@ const ON_THE_FORM_MS = 100_000;
   await page.keyboard.press('Escape');
   await page.clock.runFor(61_000);
   check(
-    'a minute alone, the form is still open: it says nothing of its two minutes, it keeps them',
+    'a minute alone, the form is still open: it says nothing of its ten minutes, it keeps them',
     (await page.getByRole('heading', { name: 'Save Recording' }).count()) === 1,
   );
-  // A hand on the form starts the two minutes again: still open 118 s after it, three minutes in.
+  // A hand on the form starts the ten minutes again: still open 598 s after it.
   await page.getByLabel('Description').fill('Crowded');
   await page.clock.runFor(2_000);
-  await page.clock.runFor(116_000);
+  await page.clock.runFor(596_000);
   check(
-    'a hand on the form starts the two minutes again: still on it a couple of seconds before',
+    'a hand on the form starts the ten minutes again: still on it a couple of seconds before',
     (await page.getByRole('heading', { name: 'Save Recording' }).count()) === 1,
   );
   await page.clock.runFor(3_000);
   await page.getByTestId('toast').filter({ hasText: 'Route recorded' }).waitFor({ timeout: 5000 });
-  check('left alone for two minutes, the form closes and saves', true);
+  check('left alone for ten minutes, the form closes and saves', true);
   await page.clock.resume();
   const file = await lastSavedRide(page);
   check(
