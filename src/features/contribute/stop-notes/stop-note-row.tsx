@@ -16,6 +16,10 @@ export interface StopNoteRowProps {
   railPlace: RailPlace;
   /** "Stop N ›": the stop on its own map. */
   onOpenMap: () => void;
+  /** Its id, for focus to come back to as the map closes. */
+  mapButtonId: string;
+  /** Flush with the column it stands in (the save form's), not 16 in as on Stops notes. */
+  isFlush?: boolean;
   /** Its note is being written here: the box is a field, with Cancel and Save. */
   isEditing: boolean;
   /** Absent, the row is read only: its box is not a button, and an empty one says No note. */
@@ -25,7 +29,7 @@ export interface StopNoteRowProps {
 }
 
 /**
- * One stop on Figma's Stops notes timeline (4720:28437): the rail and its dot, the stop's place,
+ * One stop on Figma's small Stops notes timeline (4720:28437): the rail and its dot, the stop's place,
  * and "Stop N ›", which opens its map; then its note in a box. A tap on the box writes or changes
  * the note in place, with Cancel and Save under it; with no note, the box says Add note.
  */
@@ -35,6 +39,8 @@ export function StopNoteRow({
   note,
   railPlace,
   onOpenMap,
+  mapButtonId,
+  isFlush = false,
   isEditing,
   onEdit,
   onSave,
@@ -51,14 +57,15 @@ export function StopNoteRow({
   }, [isEditing]);
 
   return (
-    <li className="flex gap-2 px-4">
+    <li className={cn('flex gap-2', !isFlush && 'px-4')}>
       <StopTimelineRail place={railPlace} />
-      <div className="flex min-w-0 flex-1 flex-col gap-2 py-2.5">
+      <div className="flex min-w-0 flex-1 flex-col gap-2 py-2">
         <div className="flex items-center justify-between gap-2">
-          <h3 id={placeId} className="min-w-0 flex-1 text-base/6 font-medium">
+          <h3 id={placeId} className="min-w-0 flex-1 text-sm/5 font-medium">
             {place}
           </h3>
           <button
+            id={mapButtonId}
             type="button"
             onClick={onOpenMap}
             aria-label={`Stop ${stopNumber} on the map`}

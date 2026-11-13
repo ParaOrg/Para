@@ -498,7 +498,6 @@ export function ContributePage({ locator }: ContributePageProps) {
                 view={stopNotes.view}
                 stopNotes={stopNotes.data}
                 onClose={stopNotes.close}
-                onCardSaved={stopNotes.countNoteAdded}
               />
             </Suspense>
           )}

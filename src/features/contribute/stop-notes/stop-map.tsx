@@ -6,10 +6,8 @@ import type { RecordingTrail } from '@/features/routes/map/recording-trail';
 import { useRecordingTrail } from '@/features/routes/map/use-recording-trail';
 import type { LngLat } from '@/shared/utils/geo';
 
+import { STOP_MAP_SPAN_M, zoomForSpan } from './map-span';
 import { BASEMAP_REQUESTS, MAKE_STYLE } from '../map/basemap-options';
-
-/** How close the map stands over a stop: its street and the stretch of trail either side. */
-export const STOP_MAP_ZOOM = 16;
 
 const NO_TRAIL: RecordingTrail = { lines: [], markers: [], marks: [] };
 
@@ -22,7 +20,8 @@ interface StopMapProps {
 
 /**
  * A flagged stop on its own small map (4725:29152): the ride's trail and flags, centred on the
- * stop, and only dragged. No zoom and no turn: it shows where the stop is, it is not a second map
+ * stop about STOP_MAP_SPAN_M across, and only dragged. Its credits start folded to their ⓘ, top
+ * right on a phone, so they never cover the stop. No zoom and no turn: it shows where the stop is, it is not a second map
  * to work in. Its MapView makes the instance and takes it down as the pop-up closes.
  */
 export function StopMap({ trail, at }: StopMapProps) {
@@ -40,7 +39,10 @@ export function StopMap({ trail, at }: StopMapProps) {
     ]) {
       gesture.disable();
     }
-    if (at) made.jumpTo({ center: [...at], zoom: STOP_MAP_ZOOM });
+    if (at) {
+      const zoom = zoomForSpan(at[1], made.getContainer().clientWidth, STOP_MAP_SPAN_M);
+      made.jumpTo({ center: [...at], zoom });
+    }
     setMap(made);
   };
 
@@ -50,7 +52,7 @@ export function StopMap({ trail, at }: StopMapProps) {
       isExposed={false}
       zoomButtons={false}
       hasMapStyleButton={false}
-      creditsAtBottom
+      foldCredits
       makeStyle={MAKE_STYLE}
       transformRequest={BASEMAP_REQUESTS}
     />

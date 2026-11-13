@@ -39,7 +39,7 @@ export function StopNoteEditor({ note, labelledBy, onSave, onCancel }: StopNoteE
         }}
         className={cn(
           NOTE_BOX,
-          'h-25 resize-none text-content-primary outline-none placeholder:text-content-disabled',
+          'field-sizing-content min-h-11 resize-none text-content-primary outline-none placeholder:text-content-disabled',
         )}
       />
       <div className="flex items-center justify-end gap-2">

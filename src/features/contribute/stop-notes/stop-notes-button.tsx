@@ -4,6 +4,9 @@ import { IconButton } from '@/design-system/primitives/icon-button';
 
 import { NoteIcon } from './stop-note-icons';
 
+export /** The most the Indicator shows; more reads 99+ (a ride rarely flags past 50). */
+const MAX_SHOWN = 99;
+
 export interface StopNotesButtonProps {
   /** How many stops the ride has flagged: the badge's number. */
   count: number;
@@ -32,10 +35,12 @@ export function StopNotesButton({ count, onOpen, buttonRef }: StopNotesButtonPro
       />
       <span
         id={countId}
-        className="pointer-events-none absolute -top-1 -right-1 flex size-5 items-center justify-center rounded-full bg-surface-inverse font-sn-pro text-xs/4 font-medium text-content-inverse"
+        className="pointer-events-none absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-surface-inverse px-1 font-sn-pro text-xs/4 font-medium text-content-inverse"
       >
-        {count}
-        <span className="sr-only"> {count === 1 ? 'stop' : 'stops'} flagged</span>
+        <span aria-hidden>{count > MAX_SHOWN ? `${MAX_SHOWN}+` : count}</span>
+        <span className="sr-only">
+          {count} {count === 1 ? 'stop' : 'stops'} flagged
+        </span>
       </span>
     </div>
   );

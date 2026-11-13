@@ -10,18 +10,19 @@ Status: building. Approved by the owner on 2026-11-13. His Figma flow is section
    - the count, e.g. 0/200
    - the stop's place
    - **Cancel**, which keeps nothing
-   - **Save**, which keeps the note and shows the compact toast **Note successfully added** (4716:9216)
+   - **Save**, which keeps the note and shows the compact toast **Note successfully added** (4716:9216). Any note kept, from the card or written on the timeline, says so.
 
    Recording goes on under the card.
-3. **The notes button.** Once the ride has a flag, a **Stops notes** button stands over Flag a stop (4718:3923). Its badge counts the flagged stops, with or without a note.
-4. **The Stops notes page** (4720:28437) shows the back arrow, the title and the flag count. Each stop sits on a timeline with its place, **Stop N ›** and its note box:
+3. **The notes button.** Once the ride has a flag, a **Stops notes** button stands over Flag a stop (4718:3923). Its badge counts the flagged stops, with or without a note; past 99 it reads 99+. It goes with the last flag.
+4. **The Stops notes page** (4720:28437) shows the back arrow, the title and the flag count. Each stop sits on the **small** timeline with its place, **Stop N ›** and its note box, which is as tall as its words:
    - A tap on the box writes or changes the note in place. Cancel and Save sit under it, both flat.
    - A stop with no note says **Add note**.
    - There is no Edit and no Delete on the page.
-   - **Stop N ›** opens the stop on its map (4725:29011): the ride's trail centred on the stop, drag only. The pop-up shows the flag count, the place, and **Close | Delete**. Delete asks "Delete this stop?" (Delete / Keep) first, then removes the whole flag.
+   - **Stop N ›** opens the stop on its map (4725:29011): the ride's trail centred on the stop, about 200 m across, drag only, its credits folded to their ⓘ (top right on a phone). The pop-up shows the flag count, the place, and **Close | Delete**. Delete asks "Delete this stop?" (Delete / Keep) first, then removes the whole flag.
+   - With every stop deleted, the page says "All stops are deleted" with **Go back**. The notes button has gone, so the page can't be opened again until a new flag.
 5. **Where the page opens**
    - while recording, from the notes button
-   - on the save form, from a "Stops notes" entry (Figma draws none, so it is a stand-in in the form's field look)
+   - on the save form, inline, under Description (4725:29196): the same title, count and timeline
    - from History's ride screen, **read only**: no note can be written, and the map's pop-up offers Close alone
 
 ## Rules

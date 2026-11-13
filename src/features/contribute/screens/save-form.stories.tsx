@@ -94,7 +94,7 @@ export const DiscardAsked: Story = {
 const STOP_1 = Date.UTC(2026, 10, 13, 1, 42);
 const STOP_2 = Date.UTC(2026, 10, 13, 1, 58);
 
-/** A ride with flagged stops: Stops notes opens from the form, where a stop's note is written. */
+/** A ride with flagged stops: Stops notes on the form itself (4725:29196), a note written in place. */
 export const FlaggedStops: Story = {
   args: {
     stopNotes: {
@@ -107,16 +107,11 @@ export const FlaggedStops: Story = {
   play: async ({ canvasElement, args }) => {
     await waitForHeadingFocus(canvasElement);
     const canvas = within(canvasElement);
-    const entry = canvas.getByRole('button', { name: /Stops notes/ });
-    await userEvent.click(entry);
-    await expect(await canvas.findByRole('heading', { name: 'Stops notes' })).toBeVisible();
+    await expect(canvas.getByRole('heading', { name: 'Stops notes' })).toBeVisible();
     await userEvent.click(canvas.getByRole('button', { name: 'Add note' }));
-    // The form under the page keeps its own fields: the note's is the one asking for a note.
     const field = await canvas.findByPlaceholderText('Add note');
     await userEvent.type(field, 'Under the footbridge');
     await userEvent.click(canvas.getByRole('button', { name: 'Save' }));
     await expect(args.stopNotes.onNoteMark).toHaveBeenCalledWith(STOP_2, 'Under the footbridge');
-    await userEvent.click(canvas.getByRole('button', { name: 'Back' }));
-    await expect(entry).toHaveFocus();
   },
 };

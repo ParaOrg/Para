@@ -25,15 +25,13 @@ interface StopNotesViewProps {
   stopNotes: StopNotesData;
   /** Closed: Cancel or Save on the card, the page's back arrow. */
   onClose: () => void;
-  /** A note saved from the card: the page says so in a toast. */
-  onCardSaved?: () => void;
 }
 
 /**
  * A stop's note card or the Stops notes page, each stop named by the nearest published hotspot.
  * The recording screen loads it lazily (lazy-screens.ts); the save form and History carry it.
  */
-export function StopNotesView({ view, stopNotes, onClose, onCardSaved }: StopNotesViewProps) {
+export function StopNotesView({ view, stopNotes, onClose }: StopNotesViewProps) {
   const { marks, trail, isTrailReading = false, onNoteMark, onDeleteMark } = stopNotes;
   // Where each flag was: its pin on the trail, none for a ride with no position for it.
   const points = marks.map((_, at) => trail?.marks[at]?.at ?? null);
@@ -60,7 +58,6 @@ export function StopNotesView({ view, stopNotes, onClose, onCardSaved }: StopNot
       onCancel={onClose}
       onSave={(note) => {
         onNoteMark?.(view.time, note);
-        onCardSaved?.();
         onClose();
       }}
     />

@@ -117,5 +117,13 @@ export const OneStop: Story = {
 /** The places still being read: each stop says so. */
 export const FindingPlaces: Story = { args: { places: MARKS.map(() => 'Finding the place…') } };
 
-/** Every stop deleted while the page is open: the count at 0 and no stops. Figma draws no frame. */
-export const AllDeleted: Story = { args: { marks: [], places: [], points: [] } };
+/** Every stop deleted while the page is open: it says so, with Go back. */
+export const AllDeleted: Story = {
+  args: { marks: [], places: [], points: [] },
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByText('All stops are deleted')).toBeVisible();
+    await userEvent.click(canvas.getByRole('button', { name: 'Go back' }));
+    await expect(args.onBack).toHaveBeenCalledOnce();
+  },
+};

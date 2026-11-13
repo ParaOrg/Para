@@ -1635,6 +1635,10 @@ const buttons = (page) =>
       () => document.activeElement?.getAttribute('aria-label') === 'Map data sources',
     ),
   );
+  // The flag's note pill stands over the card for its five seconds: the fold is measured without it.
+  await page
+    .getByRole('button', { name: /Add a stop note/ })
+    .waitFor({ state: 'detached', timeout: 8000 });
   await foldButton(page).click();
   await card.waitFor({ state: 'hidden' });
   // The column and the chevron slide down together (duration/sheet).

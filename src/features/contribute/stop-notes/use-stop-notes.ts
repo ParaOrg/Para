@@ -4,9 +4,13 @@ import { flushSync } from 'react-dom';
 import type { RecordingTrail } from '@/features/routes/map/recording-trail';
 
 import type { StopNotesData, StopNotesViewKind } from './stop-notes-view';
+import { keptNote, markFixIndexes } from '../recorder/recording-marks';
 import type { RecordingState } from '../recorder/recording-state';
 
-type StopNotesRecording = Pick<RecordingState, 'phase' | 'current' | 'noteMark' | 'deleteMark'>;
+type StopNotesRecording = Pick<
+  RecordingState,
+  'phase' | 'current' | 'fixes' | 'noteMark' | 'deleteMark'
+>;
 
 export interface StopNotes {
   /**
@@ -31,8 +35,6 @@ export interface StopNotes {
   openCard: () => void;
   openScreen: () => void;
   close: () => void;
-  /** A note saved from the card. */
-  countNoteAdded: () => void;
 }
 
 /**
@@ -61,6 +63,7 @@ export function useStopNotes(
   const flagButtonRef = useRef<HTMLButtonElement>(null);
   const notesButtonRef = useRef<HTMLButtonElement>(null);
   const marks = current?.marks ?? [];
+  const countNoteAdded = () => setNotesAdded((added) => added + 1);
   const close = () => {
     const wasScreen = view?.kind === 'screen';
     flushSync(() => setView(null));
@@ -75,8 +78,11 @@ export function useStopNotes(
     view: isOnRecordingScreen ? view : null,
     data: {
       marks,
-      trail,
-      onNoteMark: recording.noteMark,
+      trail: placedTrail(trail, recording.fixes, marks),
+      onNoteMark: (time, note) => {
+        // Each note kept, from the card or written in place, says so in the toast.
+        if (recording.noteMark(time, note) && keptNote(note) !== '') countNoteAdded();
+      },
       onDeleteMark: recording.deleteMark,
     },
     notesAdded,
@@ -98,6 +104,22 @@ export function useStopNotes(
       setView({ kind: 'screen' });
     },
     close,
-    countNoteAdded: () => setNotesAdded((added) => added + 1),
+  };
+}
+
+/**
+ * The trail with a pin for every flag. Its pins sit on the fixes that count; a ride with none yet
+ * (the phone still finding itself, every fix too rough to keep) takes each flag's place from every
+ * fix it has, so its stops still have a place and a map.
+ */
+function placedTrail(
+  trail: RecordingTrail,
+  fixes: StopNotesRecording['fixes'],
+  marks: NonNullable<NonNullable<StopNotesRecording['current']>['marks']>,
+): RecordingTrail {
+  if (trail.marks.length >= marks.length || fixes.length === 0) return trail;
+  return {
+    ...trail,
+    marks: markFixIndexes(fixes, marks).map((index) => ({ at: fixes[index].at })),
   };
 }

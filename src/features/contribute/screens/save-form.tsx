@@ -15,9 +15,8 @@ import { StopRecordingScreen } from './stop-recording-screen';
 import { useSaveCountdown } from './use-save-countdown';
 import type { RecordingFigures } from '../recorder/recording-figures';
 import type { RecordingDetails } from '../recorder/recording-state';
-import { StopNotesEntry } from '../stop-notes/stop-notes-entry';
+import { StopNotesSection } from '../stop-notes/stop-notes-section';
 import type { StopNotesData } from '../stop-notes/stop-notes-view';
-import { StopNotesView } from '../stop-notes/stop-notes-view';
 import type { RideKind } from '../storage/recording-schema';
 
 interface SaveFormProps {
@@ -31,7 +30,7 @@ interface SaveFormProps {
   onSave: (details: RecordingDetails) => void;
   /** Discard's question answered Stop without saving: the recording is thrown away. */
   onDiscard: () => void;
-  /** The ride's flagged stops: Stops notes opens from the form to write, change or delete them. */
+  /** The ride's flagged stops, on the form's own timeline: notes written there, stops deleted. */
   stopNotes: StopNotesData;
 }
 
@@ -65,8 +64,6 @@ export function SaveForm({
   const [description, setDescription] = useState('');
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [isDiscardAsked, setIsDiscardAsked] = useState(false);
-  const [isStopNotesOpen, setIsStopNotesOpen] = useState(false);
-  const stopNotesRef = useRef<HTMLButtonElement>(null);
 
   const fare = fareFromText(fareText);
   const fareError = isFareChecked ? fare.error : undefined;
@@ -80,7 +77,7 @@ export function SaveForm({
   };
   const { secondsLeft, touch } = useSaveCountdown(
     () => onSave(details),
-    isSheetOpen || isDiscardAsked || isStopNotesOpen,
+    isSheetOpen || isDiscardAsked,
   );
 
   // Focus back on the field, by hand: the form went inert as the sheet opened, so the field had
@@ -100,7 +97,7 @@ export function SaveForm({
     <>
       <form
         aria-labelledby={`${ids}-heading`}
-        inert={isSheetOpen || isDiscardAsked || isStopNotesOpen}
+        inert={isSheetOpen || isDiscardAsked}
         noValidate
         onPointerDownCapture={touch}
         onKeyDownCapture={touch}
@@ -166,11 +163,7 @@ export function SaveForm({
               value={description}
               onChange={(event) => setDescription(event.target.value)}
             />
-            <StopNotesEntry
-              count={stopNotes.marks.length}
-              buttonRef={stopNotesRef}
-              onOpen={() => setIsStopNotesOpen(true)}
-            />
+            <StopNotesSection stopNotes={stopNotes} />
             <DiscardRecordingButton
               buttonRef={discardRef}
               onClick={() => setIsDiscardAsked(true)}
@@ -190,17 +183,6 @@ export function SaveForm({
             closeSheet();
           }}
           onClose={closeSheet}
-        />
-      )}
-      {isStopNotesOpen && (
-        <StopNotesView
-          view={{ kind: 'screen' }}
-          stopNotes={stopNotes}
-          onClose={() => {
-            flushSync(() => setIsStopNotesOpen(false));
-            touch();
-            (stopNotesRef.current ?? document.getElementById(`${ids}-heading`))?.focus();
-          }}
         />
       )}
       {isDiscardAsked && (

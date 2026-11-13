@@ -30,5 +30,10 @@ export const OneStop: Story = {
 /** Figma's twelve (4718:3923): two figures in the Indicator. */
 export const TwelveStops: Story = { args: { count: 12 } };
 
-/** The most a ride holds, 200: three figures in the Indicator. Figma draws two at most. */
-export const AtTheLimit: Story = { args: { count: 200 } };
+/** Past 99 the Indicator reads 99+; a screen reader still hears the count. */
+export const PastNinetyNine: Story = {
+  args: { count: 120 },
+  play: async ({ canvasElement }) => {
+    await expect(within(canvasElement).getByText('99+')).toBeVisible();
+  },
+};
