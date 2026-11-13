@@ -6,7 +6,11 @@ import type { ToastContent } from './toast';
  * What a screen asks the host to say. Asked again while it shows or waits, it is said once: `id`
  * names it, by default its kind and title.
  */
-export type ToastMessage = ToastContent & { id?: string };
+export type ToastMessage = ToastContent & {
+  id?: string;
+  /** How long an info toast stays, when not INFO_TOAST_MS. */
+  durationMs?: number;
+};
 
 export interface ToastContextValue {
   /**

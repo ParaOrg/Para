@@ -24,7 +24,7 @@ const idOf = (message: ToastMessage): string => message.id ?? `${message.kind}:$
 /**
  * Gives its children useToast and shows what they say, one toast at a time, in the order asked;
  * the same toast asked again while it shows or waits is said once, and hideToast takes one back. An info toast goes by itself
- * after INFO_TOAST_MS, its clock held while a pointer is over it or focus is in it; a problem stays
+ * after INFO_TOAST_MS (or its durationMs), its clock held while a pointer is over it or focus is in it; a problem stays
  * until ✕ or its action. Screen readers hear only the words, from two regions that are always
  * there: info politely (role=status), a problem at once (role=alert). The card, with its buttons,
  * sits outside them, so the buttons are not read out with the message.
@@ -95,6 +95,7 @@ export function ToastHost({ children }: ToastHostProps) {
   }, [currentSeq]);
 
   const isInfo = current?.message.kind === 'info';
+  const infoMs = current?.message.durationMs ?? INFO_TOAST_MS;
   const isLeaving = current?.isLeaving ?? false;
   const isHeld = isPointerOver || hasFocusWithin;
   const asked = current?.asked;
@@ -102,9 +103,9 @@ export function ToastHost({ children }: ToastHostProps) {
   // again when the same toast is asked again (`asked`).
   useEffect(() => {
     if (currentSeq === undefined || !isInfo || isHeld || isLeaving) return;
-    const timer = window.setTimeout(leave, INFO_TOAST_MS);
+    const timer = window.setTimeout(leave, infoMs);
     return () => window.clearTimeout(timer);
-  }, [currentSeq, asked, isInfo, isHeld, isLeaving, leave]);
+  }, [currentSeq, asked, isInfo, infoMs, isHeld, isLeaving, leave]);
 
   const message = current?.message;
   const words = message ? [message.title, message.body].filter(Boolean).join('. ') : '';

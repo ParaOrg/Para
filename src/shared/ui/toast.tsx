@@ -8,7 +8,7 @@ import { CloseIcon } from './route-icons';
 /** Info hides itself; a problem stays until it is closed. */
 export type ToastKind = 'info' | 'problem';
 
-/** A small button on a problem toast's right, and what it does; the toast closes after it. */
+/** A small button on a toast's right, and what it does; the toast closes after it. */
 export interface ToastAction {
   label: string;
   onAction: () => void;
@@ -27,13 +27,13 @@ interface ToastWords {
 export type ToastSize = 'regular' | 'compact';
 
 /**
- * What a toast says. Only a problem, which stays until it is closed, may carry an action: a button
- * on a toast that hides itself would be gone before some people could reach it (WCAG's timing).
+ * What a toast says. A button on a toast that hides itself is gone before some people can reach it
+ * (WCAG's timing): info carries one only when the page offers the same thing somewhere that stays.
  * Only info may be compact, and then with a title alone: no line under it, no action, no ✕.
  */
 export type ToastContent = ToastWords &
   (
-    | { kind: 'info'; size?: 'regular'; action?: never }
+    | { kind: 'info'; size?: 'regular'; action?: ToastAction }
     | { kind: 'info'; size: 'compact'; body?: never; action?: never }
     | { kind: 'problem'; size?: 'regular'; action?: ToastAction }
   );
