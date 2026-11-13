@@ -52,7 +52,7 @@
   "devDependencies": {
     "@capacitor/cli": "^8.6.0",
     "@eslint/js": "^10.0.1",
-    "@maplibre/maplibre-gl-style-spec": "^26.4.1",
+    "@maplibre/maplibre-gl-style-spec": "^26.5.1",
     "@storybook/addon-docs": "^10.6.5",
     "@storybook/react-vite": "^10.6.5",
     "@tailwindcss/vite": "^4.3.3",
