@@ -1,10 +1,10 @@
 import { Suspense, type Ref } from 'react';
 
-import { FlagStopButton } from '../lazy-screens';
-import { MAX_MARKS } from '../recorder/recording-marks';
-import type { Phase } from '../recorder/recording-state';
-import type { MarkRow } from '../storage/recording-schema';
-import type { TutorialDemo } from '../tutorial/tutorial-steps';
+import { FlagStopButton } from './lazy-screens';
+import { MAX_MARKS } from './recorder/recording-marks';
+import type { Phase } from './recorder/recording-state';
+import type { MarkRow } from './storage/recording-schema';
+import type { TutorialDemo } from './tutorial/tutorial-steps';
 
 interface FlagStopMarkProps {
   isRecordingShown: boolean;

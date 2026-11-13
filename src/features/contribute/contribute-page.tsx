@@ -9,6 +9,7 @@ import { isAccountConfirmed, useAccountQuery } from './api/use-account-query';
 import { OPENABLE_SCREENS_ATTR } from './common/data-attributes';
 import { useLatch } from './common/use-latch';
 import { useEarlierQuestion } from './consent/use-earlier-question';
+import { FlagStopMark } from './flag-stop-mark';
 import {
   AccountGate,
   MapDataSourceView,
@@ -27,7 +28,6 @@ import {
   makeLazyScreens,
 } from './lazy-screens';
 import { ContributeMap, type ContributeLocatorSlot } from './map/contribute-map';
-import { FlagStopMark } from './map/flag-stop-mark';
 import { useRecordingTrack } from './map/use-recording-track';
 import { useRideTrail } from './map/use-ride-trail';
 import { useStartMorph } from './motion/use-start-morph';
