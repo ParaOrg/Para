@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 
 /** How long the Save form waits for a hand before it saves the recording with what was typed. */
-export const SAVE_FORM_SECONDS = 120;
+export const SAVE_FORM_SECONDS = 600;
 
 interface SaveCountdown {
   secondsLeft: number;
-  /** Starts the two minutes again. */
+  /** Starts the ten minutes again. */
   touch: () => void;
 }
 

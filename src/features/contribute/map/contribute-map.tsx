@@ -4,12 +4,10 @@ import { useEffect, useRef, useState, type ComponentType, type ReactNode } from 
 import { MapView } from '@/features/routes/map/map-view';
 import type { RecordingTrail } from '@/features/routes/map/recording-trail';
 import { useRecordingTrail } from '@/features/routes/map/use-recording-trail';
-import { basemapHost } from '@/shared/config/env';
 import { prefersReducedMotion } from '@/shared/utils/motion';
 import { retryingImport } from '@/shared/utils/retrying-import';
 
-import { keepBasemapOnThePhone } from './basemap-cache';
-import { styleWithCopies } from './basemap-copies';
+import { BASEMAP_REQUESTS, MAKE_STYLE } from './basemap-options';
 import type { MapWhere } from './map-where';
 import type { PausedFrostProps } from './paused-frost';
 import { RIDE_FRAME_PADDING, trailBounds } from './trail-picture-frame';
@@ -19,12 +17,6 @@ import { usePublishedHotspots } from './use-published-hotspots';
 import { usePublishedRoutes } from './use-published-routes';
 import type { RecordingTrack } from './use-recording-track';
 import type { MapNote } from '../notices/map-note';
-
-// The app keeps the basemaps' styles for a map made with no signal; the web page has its worker.
-const MAKE_STYLE = import.meta.env.MODE === 'apk' ? styleWithCopies : undefined;
-// And the basemap's tiles, sprite and glyphs it has seen, in its Cache Storage.
-const BASEMAP_REQUESTS =
-  import.meta.env.MODE === 'apk' ? keepBasemapOnThePhone(basemapHost) : undefined;
 
 // Fetched when a recording's form opens, not with the page.
 const loadCapture = retryingImport(() => import('./capture-trail-picture'));

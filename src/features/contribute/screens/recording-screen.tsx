@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, type Ref } from 'react';
+import { useEffect, useId, useRef, type ReactNode, type Ref } from 'react';
 
 import { IconButton } from '@/design-system/primitives/icon-button';
 import { CreditsButton } from '@/features/routes/map/credits-button';
@@ -37,16 +37,17 @@ interface RecordingScreenProps {
   onOpenCredits: () => void;
   /** The ⓘ, for focus to come back to when the credits close. */
   creditsButtonRef: Ref<HTMLButtonElement>;
+  /** Over the card, folded or not: the Add a stop note pill after a flag. */
+  pill?: ReactNode;
 }
 
 const CARD_STATE = { walk: 'lakad', ride: 'sakay' } satisfies Record<Mode, RecordingCardState>;
 
 /**
- * While recording, or paused (Figma's "Recording" frames 4494:2038, 4494:2134
- * and 4494:2233): the map's edges tinted for the state, ✕ at the top left, the
- * recording card with Pause and the mode button, or Resume and Finish, 20 in
- * and 40 over the screen's foot, and the map's ⓘ under it. A chevron over the
- * card's left folds it away (4496:10784, 4496:10906): the right-hand column
+ * While recording, or paused (Figma's "Recording" frames 4494:2038, 4494:2134 and 4494:2233): the
+ * map's edges tinted for the state, ✕ at the top left, the recording card with Pause and the mode
+ * button, or Resume and Finish, 20 in and 40 over the screen's foot, and the map's ⓘ under it. A
+ * chevron over the card's left folds it away (4496:10784, 4496:10906): the right-hand column
  * slides down to where the card was, and the chevron, turned up, brings it back.
  */
 export function RecordingScreen({
@@ -64,17 +65,16 @@ export function RecordingScreen({
   onCardFoldedChange,
   onOpenCredits,
   creditsButtonRef,
+  pill,
 }: RecordingScreenProps) {
   const cardId = useId();
   const headingRef = useRef<HTMLHeadingElement>(null);
   const stackRef = useHeightVar('--stack-room');
   const pauseRef = useRef<HTMLButtonElement>(null);
-  // The heading takes focus as the screen opens, a screen reader starting at its top; back from
-  // Keep recording it is the Pause bar, where the contributor was before, unless the card is
-  // folded away with it.
+  // Focus, once, as the screen opens: the heading, a screen reader starting at its top; back from
+  // Keep recording the Pause bar, where the contributor was, unless the card is folded away.
   useEffect(() => {
     (shouldFocusPause && !isCardFolded ? pauseRef.current : headingRef.current)?.focus();
-    // Once, as the screen opens.
     // eslint-disable-next-line react-hooks/exhaustive-deps -- a change of the prop alone must not move focus
   }, []);
   const state: RecordingCardState = isPaused ? 'paused' : CARD_STATE[mode];
@@ -105,8 +105,7 @@ export function RecordingScreen({
       <section
         ref={stackRef}
         aria-labelledby="recording-heading"
-        // The stack takes no taps itself, only what it holds: its padding is the map's, and
-        // the ⓘ's under it.
+        // The stack takes no taps itself, only what it holds; its padding is the map's.
         className={cn(
           'pointer-events-none absolute inset-x-0 bottom-0 z-10 flex flex-col gap-2 px-5 *:pointer-events-auto',
           // Open, the card stands 40 over the screen's foot; folded, the column does, its 16 over
@@ -119,6 +118,7 @@ export function RecordingScreen({
         <h1 id="recording-heading" ref={headingRef} tabIndex={-1} className="sr-only">
           {isPaused ? 'Recording paused' : 'Recording a route'}
         </h1>
+        {pill}
         <div id={cardId} hidden={isCardFolded} {...{ [RECORDING_CARD_ATTR]: state }}>
           <RecordingCard
             elapsedSeconds={figures.elapsedSeconds}

@@ -179,6 +179,21 @@ test('marks go up as mark events among the modes, in time order', () => {
   assert.ok(contributionPayloadSchema.safeParse(payload).success);
 });
 
+test("a flag's note goes up on its mark event", () => {
+  const fixes = rideFixes(20);
+  const recording = {
+    ...rideRecording(ID, fixes),
+    marks: [{ time: T0 + 5_000, note: 'Under the footbridge' }, { time: T0 + 9_000 }],
+  };
+  const { payload } = packed(fixes, recording);
+  const marks = payload.events.filter((event) => event.kind === 'mark');
+  assert.deepEqual(marks, [
+    { kind: 'mark', at: new Date(T0 + 5_000).toISOString(), note: 'Under the footbridge' },
+    { kind: 'mark', at: new Date(T0 + 9_000).toISOString() },
+  ]);
+  assert.ok(contributionPayloadSchema.safeParse(payload).success);
+});
+
 test('too many marks give way to the start, stop and save, and the events stay within the limit', () => {
   const fixes = rideFixes(20);
   const modes = Array.from({ length: 100 }, (_, i) => ({

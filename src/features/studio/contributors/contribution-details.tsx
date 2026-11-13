@@ -11,6 +11,7 @@ import {
   vehicleName,
 } from './contribution-format';
 import { partLength, splitTrail, type TrailPart } from './trail-parts';
+import type { ContributionMark } from '../data/contribution-events';
 import type { Contribution, ContributionDetail } from '../data/contributions-read';
 
 interface ContributionDetailsProps {
@@ -97,12 +98,16 @@ function TrailSummary({ detail, isLoading, error }: TrailSummaryProps) {
         <>
           {' '}
           {detail.marks.length} {detail.marks.length === 1 ? 'mark' : 'marks'}. Marked at{' '}
-          {detail.marks.map(manilaClock).join(', ')}.
+          {detail.marks.map(markText).join(', ')}.
         </>
       )}
     </p>
   );
 }
+
+/** A flagged stop in words: its time, and the contributor's note on it in quotes. */
+const markText = (mark: ContributionMark): string =>
+  mark.note === null ? manilaClock(mark.at) : `${manilaClock(mark.at)} (“${mark.note}”)`;
 
 const count = (n: number, one: string, many: string): string => `${n} ${n === 1 ? one : many}`;
 
