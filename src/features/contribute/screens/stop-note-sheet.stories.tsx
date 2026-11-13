@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { expect, fn, userEvent, within } from 'storybook/test';
+import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
 import { StopNoteSheet } from './stop-note-sheet';
 
@@ -24,7 +24,8 @@ export const Empty: Story = {
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
     const field = canvas.getByRole('textbox', { name: 'How do you describe this stop' });
-    await expect(field).toHaveFocus();
+    // The play may begin before the sheet's effects have run.
+    await waitFor(() => expect(field).toHaveFocus());
     await userEvent.type(field, 'Corner of Aurora, near the church');
     await userEvent.click(canvas.getByRole('button', { name: 'Save' }));
     await expect(args.onSave).toHaveBeenCalledWith('Corner of Aurora, near the church');

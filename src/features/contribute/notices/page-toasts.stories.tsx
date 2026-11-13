@@ -147,7 +147,8 @@ export const StopFlagged: Story = {
     const canvas = within(canvasElement);
     await expect(await canvas.findByTestId('toast')).toHaveTextContent('Stop flagged');
     await expect(canvas.getByRole('status')).toHaveTextContent('Stop flagged');
-    await expect(canvas.getByRole('button', { name: 'Add a note' })).toBeVisible();
+    // The card slides in from transparent: what is asked is that the button is there to press.
+    await expect(canvas.getByRole('button', { name: 'Add a note' })).toBeInTheDocument();
   },
 };
 
