@@ -16,6 +16,17 @@ export function proveContributeWorker(build, check) {
   const csw = readFileSync(contributeSwPath, 'utf8');
   const listed = /^const PRECACHE_URLS = (\[.*\]);$/m.exec(csw)?.[1];
   const stored = listed ? JSON.parse(listed) : [];
+  // Proven against the files, not the manifest: a manifest can name a file the build never
+  // wrote (Vite 8.3 left "maplibre-gl-worker-!~{01f}~.js" in a chunk's assets), and one
+  // missing URL fails the worker's install, so the page loses offline support.
+  const notBuilt = stored.filter(
+    (u) => !existsSync(join(dist, u === '/contribute/' ? 'contribute/index.html' : u.slice(1))),
+  );
+  check(
+    "every URL the contribute worker precaches is a file in the build (no unresolved '!~{…}~' name)",
+    stored.length > 0 && notBuilt.length === 0,
+    notBuilt.join(', '),
+  );
   const withStyles = (files) => [
     ...files,
     ...files.flatMap((f) => Object.values(manifest).find((c) => c.file === f)?.css ?? []),
