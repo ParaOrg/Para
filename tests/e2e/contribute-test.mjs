@@ -2405,6 +2405,63 @@ const ON_THE_FORM_MS = 100_000;
   await page.context().close();
 }
 
+// ------------------------------- the form's ten minutes held under a stop's map and its question
+{
+  const { page, errors } = await phone();
+  await page.getByRole('button', { name: 'Start Tracking' }).click();
+  await page.getByRole('group', { name: 'Recording so far' }).waitFor();
+  await ride(page, 0, 200);
+  await flagButton(page).click();
+  // Escape while writing a stop's note on Stops notes cancels the note, not the page. A real key
+  // press: the note's field goes before the page's own Escape listener looks for it.
+  await page.getByRole('button', { name: 'Stops notes' }).click();
+  const stopsNotes = page.getByRole('heading', { name: /^Stops notes/ });
+  await stopsNotes.waitFor();
+  await page.getByRole('button', { name: 'Add note' }).click();
+  await page.getByRole('textbox').fill('Waiting shed');
+  await page.keyboard.press('Escape');
+  check(
+    "Escape in a stop's note closes the note and leaves Stops notes open",
+    (await page.getByRole('textbox').count()) === 0 && (await stopsNotes.count()) === 1,
+  );
+  await page
+    .getByRole('region', { name: /^Stops notes/ })
+    .getByRole('button', { name: 'Back' })
+    .click();
+  await stopsNotes.waitFor({ state: 'detached' });
+  await ride(page, 200, 400);
+  await page.clock.install();
+  await finishRecording(page);
+  await page.getByRole('heading', { name: 'Save Recording' }).waitFor();
+  const onTheForm = async () =>
+    (await page.getByRole('heading', { name: 'Save Recording' }).count()) === 1;
+  // A stop's map open over the form, left alone well past the form's ten minutes.
+  await page.getByRole('button', { name: 'Stop 1 on the map' }).click();
+  const map = page.getByRole('dialog', { name: 'Stop 1 on the map' });
+  await map.waitFor();
+  await page.clock.runFor(605_000);
+  check("the form does not save itself while a stop's map is open over it", await onTheForm());
+  // Its Delete question, left alone as long: the stop must still be there to delete.
+  await map.getByRole('button', { name: 'Delete' }).click();
+  const question = page.getByRole('alertdialog', { name: 'Delete this stop?' });
+  await question.waitFor();
+  await page.clock.runFor(605_000);
+  check(
+    '  nor under its Delete question, which can still be answered',
+    (await onTheForm()) && (await question.getByRole('button', { name: 'Delete' }).isEnabled()),
+  );
+  await question.getByRole('button', { name: 'Keep' }).click();
+  await map.getByRole('button', { name: 'Close' }).click();
+  await page.clock.runFor(598_000);
+  check('  the map closed, the ten minutes run again from there', await onTheForm());
+  await page.clock.runFor(5_000);
+  await page.getByTestId('toast').filter({ hasText: 'Route recorded' }).waitFor({ timeout: 5000 });
+  check('  and run out, the form saves', true);
+  await page.clock.resume();
+  check('  no page errors', errors.length === 0, errors.join('; '));
+  await page.context().close();
+}
+
 // ------------------------------------------- saved recordings, still there after a reload
 {
   const { page, errors } = await phone();
