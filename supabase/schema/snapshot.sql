@@ -1698,6 +1698,36 @@ end $$;
 
 
 --
+-- Name: get_my_uses(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.get_my_uses() RETURNS TABLE(contribution_id uuid, kind text, name text)
+    LANGUAGE sql STABLE SECURITY DEFINER
+    SET search_path TO ''
+    AS $$
+  select u.contribution_id, u.kind, v.direction_name
+  from public.contribution_use u
+  join public.contribution c on c.id = u.contribution_id
+  join public.route_variant v on v.id = u.subject_id
+  join public.route r on r.id = v.route_id
+  where u.kind = 'direction'
+    and c.contributor_id = (select auth.uid())
+    and c.hidden_at is null
+    and r.status = 'approved'
+  union
+  select u.contribution_id, u.kind, coalesce(nullif(s.informal, ''), s.name)
+  from public.contribution_use u
+  join public.contribution c on c.id = u.contribution_id
+  join public.stop s on s.id = u.subject_id
+  where u.kind = 'hintuan'
+    and c.contributor_id = (select auth.uid())
+    and c.hidden_at is null
+    and s.status = 'approved'
+  order by 1, 2, 3;
+$$;
+
+
+--
 -- Name: get_profile(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -5545,6 +5575,14 @@ GRANT ALL ON FUNCTION public.finish_claim(token uuid) TO authenticated;
 
 REVOKE ALL ON FUNCTION public.get_my_stats() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.get_my_stats() TO authenticated;
+
+
+--
+-- Name: FUNCTION get_my_uses(); Type: ACL; Schema: public; Owner: -
+--
+
+REVOKE ALL ON FUNCTION public.get_my_uses() FROM PUBLIC;
+GRANT ALL ON FUNCTION public.get_my_uses() TO authenticated;
 
 
 --
