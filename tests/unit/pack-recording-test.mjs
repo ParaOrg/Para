@@ -120,9 +120,11 @@ test('packing again packs the same contribution: a retry sends what the first tr
   assert.deepEqual({ ...first.payload, sent_at: null }, { ...again.payload, sent_at: null });
 });
 
-test('a recording longer than six hours is refused here, with the reason', () => {
+test('a recording of a whole walking day packs, and one longer than 24 hours is refused', () => {
   const fixes = rideFixes(20);
-  const long = { ...rideRecording(ID, fixes), stoppedAt: T0 + 7 * 3_600_000 };
+  const day = { ...rideRecording(ID, fixes), stoppedAt: T0 + 9 * 3_600_000 };
+  assert.equal(packRecording(day, fixes, 1, SENT).ok, true);
+  const long = { ...rideRecording(ID, fixes), stoppedAt: T0 + 25 * 3_600_000 };
   assert.deepEqual(packRecording(long, fixes, 1, SENT), { ok: false, reason: 'too-long' });
 });
 
