@@ -72,9 +72,11 @@ public class RideService extends Service {
                 RideDiagnostics.note(RideService.this, Rides.now(RideService.this).recordingId,
                     "the phone's clock moved " + (moved / 1000) + " s from the fixes' time; fixes keep their own");
             }
-            if (Rides.apply(RideService.this, ride -> RideMachine.check(ride, now)).has(RideStep.Effect.DIAGNOSE)) {
+            RideStep step = Rides.apply(RideService.this, ride -> RideMachine.check(ride, now));
+            if (step.has(RideStep.Effect.DIAGNOSE)) {
                 RidePlugin.tellFixProblem("UNAVAILABLE", "No location for two minutes.");
             }
+            if (step.has(RideStep.Effect.REQUEST_LOCATION) && !requestLocation()) return;
             handler.postDelayed(this, CHECK_EVERY_MS);
         }
     };
@@ -150,20 +152,8 @@ public class RideService extends Service {
         }
         hearLocationSwitch();
         noteLocationSwitch();
-        try {
-            // Asked again on each start: a second Start or Resume replaces the request, never adds one.
-            locations.removeLocationUpdates(callback);
-            LocationRequest request = new LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, INTERVAL_MS)
-                .setMinUpdateIntervalMillis(INTERVAL_MS)
-                .setWaitForAccurateLocation(false)
-                .build();
-            locations.requestLocationUpdates(request, callback, Looper.getMainLooper());
-        } catch (SecurityException refused) {
-            Log.w(TAG, "The location permission is missing; the ride records no more.", refused);
-            RidePlugin.tellFixProblem("DENIED", "Location permission is missing.");
-            failed("the location permission is missing");
-            return START_NOT_STICKY;
-        }
+        // Asked again on each start: a second Start or Resume replaces the request, never adds one.
+        if (!requestLocation()) return START_NOT_STICKY;
         synchronized (RideService.class) {
             isRunning = true;
         }
@@ -172,6 +162,27 @@ public class RideService extends Service {
         // In the foreground now: the card counts on (RideNotification's quiet updates).
         RideNotification.post(this);
         return START_STICKY;
+    }
+
+    /**
+     * Asks Play services for fixes, replacing any request before it. False when the permission is
+     * missing: the ride is paused and said (failed).
+     */
+    private boolean requestLocation() {
+        try {
+            locations.removeLocationUpdates(callback);
+            LocationRequest request = new LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, INTERVAL_MS)
+                .setMinUpdateIntervalMillis(INTERVAL_MS)
+                .setWaitForAccurateLocation(false)
+                .build();
+            locations.requestLocationUpdates(request, callback, Looper.getMainLooper());
+            return true;
+        } catch (SecurityException refused) {
+            Log.w(TAG, "The location permission is missing; the ride records no more.", refused);
+            RidePlugin.tellFixProblem("DENIED", "Location permission is missing.");
+            failed("the location permission is missing");
+            return false;
+        }
     }
 
     /**

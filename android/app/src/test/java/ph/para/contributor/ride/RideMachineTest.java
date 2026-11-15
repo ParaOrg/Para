@@ -134,9 +134,31 @@ public class RideMachineTest {
         assertEquals(Ride.TROUBLE_NO_FIX, lost.ride.trouble);
         assertTrue(lost.has(Effect.POST_CARD));
         assertTrue(lost.has(Effect.DIAGNOSE));
+        assertTrue(lost.has(Effect.REQUEST_LOCATION));
         RideStep found = RideMachine.fix(lost.ride, T0 + 3 * MINUTE);
         assertEquals(Ride.TROUBLE_NONE, found.ride.trouble);
         assertTrue(found.has(Effect.POST_CARD));
+    }
+
+    @Test
+    public void eachCheckWithNoFixAsksForLocationAgain() {
+        Ride lost = RideMachine.check(recording(), T0 + 3 * MINUTE).ride;
+        RideStep again = RideMachine.check(lost, T0 + 3 * MINUTE + 30 * SECOND);
+        assertSame(lost, again.ride);
+        assertTrue(again.has(Effect.REQUEST_LOCATION));
+        assertFalse(again.has(Effect.POST_CARD));
+        assertFalse(again.has(Effect.DIAGNOSE));
+    }
+
+    @Test
+    public void aRideNotRecordingNeverAsksForLocation() {
+        Ride lost = RideMachine.check(recording(), T0 + 3 * MINUTE).ride;
+        Ride paused = RideMachine.pause(lost, T0 + 4 * MINUTE).ride;
+        assertTrue(RideMachine.check(paused, T0 + 10 * MINUTE).effects.isEmpty());
+        Ride finished = RideMachine.finish(lost, T0 + 4 * MINUTE).ride;
+        assertTrue(RideMachine.check(finished, T0 + 10 * MINUTE).effects.isEmpty());
+        Ride off = RideMachine.locationOff(recording(), T0 + MINUTE).ride;
+        assertTrue(RideMachine.check(off, T0 + 10 * MINUTE).effects.isEmpty());
     }
 
     @Test
