@@ -26,7 +26,7 @@ runs:
     # writes that cache only on the default branch (main) unless told otherwise, so pull requests
     # into staging found none and downloaded Gradle every time: a services.gradle.org outage
     # (2026-11-08) turned them red. staging writes it too, and its pull requests read it.
-    - uses: gradle/actions/setup-gradle@v5
+    - uses: gradle/actions/setup-gradle@v6
       with:
         cache-read-only: ${{ github.ref != 'refs/heads/main' && github.ref != 'refs/heads/staging' }}
 
