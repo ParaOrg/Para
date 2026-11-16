@@ -3645,7 +3645,9 @@ const FIRST_IDLE = () => {
   );
 
   // A tap on a route does what a tap on empty map does: nothing opens.
-  await page.evaluate(() => window.__map.jumpTo({ center: [121.0437, 14.6577], zoom: 14 }));
+  await page.evaluate(() => {
+    window.__map.jumpTo({ center: [121.0437, 14.6577], zoom: 14 });
+  });
   await page.waitForFunction(() => !window.__map.isMoving() && window.__map.loaded());
   const onRoute = await page.evaluate(() => {
     const map = window.__map;

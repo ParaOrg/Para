@@ -84,7 +84,12 @@ async function lonePin(page) {
 
 /** The camera on `at`, at `zoom`, and the map at rest. */
 async function settle(page, at, zoom) {
-  await page.evaluate(([c, z]) => window.__map.jumpTo({ center: c, zoom: z }), [at, zoom]);
+  await page.evaluate(
+    ([c, z]) => {
+      window.__map.jumpTo({ center: c, zoom: z });
+    },
+    [at, zoom],
+  );
   await mapIdle(page);
 }
 

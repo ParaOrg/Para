@@ -171,7 +171,12 @@ const said = (ws) => ws.map((w) => `${w.method} ${w.table}${w.query.slice(0, 70)
 const approvedWrites = (ws) => ws.filter((w) => APPROVED_TABLES.includes(w.table));
 const rpcs = (ws, name) => ws.filter((w) => w.method === 'POST' && w.table === name);
 const go = async (c, zoom) => {
-  await page.evaluate(([c, z]) => window.__map.jumpTo({ center: c, zoom: z }), [c, zoom]);
+  await page.evaluate(
+    ([c, z]) => {
+      window.__map.jumpTo({ center: c, zoom: z });
+    },
+    [c, zoom],
+  );
   await page.waitForTimeout(400);
 };
 const px = async (ll) => {

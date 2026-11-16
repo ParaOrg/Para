@@ -494,7 +494,12 @@ for (const [i, p] of snapshot.polys.entries()) {
   const candidates = interiorCandidates(p.ring);
   let opened = null;
   for (const [x, y] of candidates) {
-    await page.evaluate(([cx, cy]) => window.__map.jumpTo({ center: [cx, cy], zoom: 18 }), [x, y]);
+    await page.evaluate(
+      ([cx, cy]) => {
+        window.__map.jumpTo({ center: [cx, cy], zoom: 18 });
+      },
+      [x, y],
+    );
     await mapIdle(page);
     const pt = await page.evaluate(
       ([cx, cy]) => {
@@ -861,7 +866,9 @@ if (PART !== 1) {
     'no saved-route vertex lies inside any hotspot polygon today',
   );
 } else {
-  await page.evaluate((c) => window.__map.jumpTo({ center: c, zoom: 18 }), inBox.point);
+  await page.evaluate((c) => {
+    window.__map.jumpTo({ center: c, zoom: 18 });
+  }, inBox.point);
   await mapIdle(page);
   const box = await page.locator('canvas.maplibregl-canvas').boundingBox();
   await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
@@ -898,7 +905,9 @@ if (PART !== 1) {
     'no route vertex outside the boxes has another route within 3 m today',
   );
 } else {
-  await page.evaluate((c) => window.__map.jumpTo({ center: c, zoom: 18 }), hit);
+  await page.evaluate((c) => {
+    window.__map.jumpTo({ center: c, zoom: 18 });
+  }, hit);
   await mapIdle(page);
   const box = await page.locator('canvas.maplibregl-canvas').boundingBox();
   await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
@@ -1156,7 +1165,9 @@ if (PART !== 1) {
       // Left on one kind of ride, the next list starts at All.
       await filterTo('Ferry');
       await closeCard();
-      await page.evaluate((c) => window.__map.jumpTo({ center: c, zoom: 18 }), hit);
+      await page.evaluate((c) => {
+        window.__map.jumpTo({ center: c, zoom: 18 });
+      }, hit);
       await mapIdle(page);
       await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
       await shows();
@@ -1195,7 +1206,9 @@ if (PART === 1) {
       'the map file has no such road any more: pick another two kinds of ride',
     );
   } else {
-    await page.evaluate((c) => window.__map.jumpTo({ center: c, zoom: 18 }), mixed);
+    await page.evaluate((c) => {
+      window.__map.jumpTo({ center: c, zoom: 18 });
+    }, mixed);
     await mapIdle(page);
     const box = await page.locator('canvas.maplibregl-canvas').boundingBox();
     await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
@@ -1268,7 +1281,9 @@ const firstTapPrograms = async (at) => {
     // The warm-up drawn first (it runs after the map's first idle), so the
     // baseline below holds its programs and the tap's are only the tap's.
     await programsAtRest(p);
-    await p.evaluate((c) => window.__map.jumpTo({ center: c, zoom: 17 }), at);
+    await p.evaluate((c) => {
+      window.__map.jumpTo({ center: c, zoom: 17 });
+    }, at);
     await mapIdle(p);
     // Its keys as the baseline: the warm-up has come and gone with the jump above.
     const rest = await programsAtRest(p, 0);
@@ -1336,7 +1351,9 @@ if (PART === 1) {
       'every route vertex lies inside a hotspot or on a road another route shares today',
     );
   } else {
-    await page.evaluate((c) => window.__map.jumpTo({ center: c, zoom: 17 }), clean);
+    await page.evaluate((c) => {
+      window.__map.jumpTo({ center: c, zoom: 17 });
+    }, clean);
     await mapIdle(page);
     const box = await page.locator('canvas.maplibregl-canvas').boundingBox();
     const readCamera = () =>
@@ -1460,7 +1477,9 @@ if (PART === 1) {
       // flow is counted back where the tap was, close in, as before: a
       // runner drawing without a GPU manages a few frames a second on the
       // whole route, and the flow steps on frames.
-      await page.evaluate((c) => window.__map.jumpTo({ center: c, zoom: 17 }), clean);
+      await page.evaluate((c) => {
+        window.__map.jumpTo({ center: c, zoom: 17 });
+      }, clean);
       await mapIdle(page);
       const flowA = await until(where, (w) => w !== '');
       const sets = await page.evaluate(
