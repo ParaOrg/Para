@@ -42,3 +42,19 @@ Rules for the work: no forced clicks, no longer timeouts, no retries. A covered 
 ## Open question (the owner)
 
 Should each check run at the snap a person would actually be at, raising the sheet by its handle first? The hub's recommendation is yes.
+
+## The sheet handle's by-hand gestures: Chromium's emulated touch, not the app
+
+phone-test also sends gestures on the sheet's handle "by hand": 30 in one CI run, 2 in the next, none locally. Two probe runs on the runner (draft #1012, closed) logged every pointer and touch event with its pointerId and buttons, and wrapped the app's `setPointerCapture`, `releasePointerCapture` and `preventDefault`.
+
+- A healthy tap on the handle, many times over: pointerdown, touchstart, gotpointercapture, pointerup, lostpointercapture, touchend, click, all within about 10 ms.
+- A failing tap, seconds later, on the same handle at the same snap with nothing animating: touchstart, gotpointercapture, lostpointercapture, touchend. No pointerdown, no pointerup, no click. Each failing tap has a fresh pointerId, so no pointer is stuck down.
+- In the whole logged window the app called neither `setPointerCapture` nor `releasePointerCapture`, and never prevented a touch or pointer start or end. The `gotpointercapture` is Chromium's implicit capture of a touch pointer.
+
+So Chromium, driven by the harness's emulated touch (CDP) on a slow runner, sometimes makes a touch pointer and gives the page none of its pointer events. Nothing points to real phones. The by-hand ladder in `tapHandle`, `dragHandle` and `mouseDrag` works around that, not a fault of the runner "making no pointer events" in general, as its comment says.
+
+Options, with the sheet-snap rework:
+
+- (a) Drive the handle with CDP mouse drags (`Input.dispatchMouseEvent`) where a check is not about touch itself.
+- (b) Keep touch, and on a missing pointerdown fail and name it instead of resending, to see how red it gets.
+- (c) For now: leave the ladder, and correct its comment to say what it works around, as part of this rework.
