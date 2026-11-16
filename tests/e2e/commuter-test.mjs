@@ -54,11 +54,30 @@ const { check, skip, tally } = harness({ knownSkips: [] });
 
 // COMMUTER_PART=k/n runs part k of n, so CI can run the parts side by side:
 // every part opens the map and runs sections 1, 2 and 5; section 3's
-// hotspots are dealt out by their place in the list; 4 and 4b are part 1's.
-// Unset, one part runs it all.
+// hotspots are dealt out among the parts; sections 4 to 4b, 6 and 7, run once,
+// are the last part's. Unset, one part runs it all.
 const [PART, PARTS] = (process.env.COMMUTER_PART || '1/1').split('/').map(Number);
 if (!(PARTS >= 1 && PART >= 1 && PART <= PARTS))
   throw new Error(`COMMUTER_PART is k/n with 1 ≤ k ≤ n, not "${process.env.COMMUTER_PART}"`);
+/** Whether this part runs the sections that run once (4 to 4b, 6 and 7): the last part. */
+const RUNS_ONE_OFFS = PART === PARTS;
+/**
+ * The sections that run once, in hotspots' worth of time: about 115 s against
+ * about 15 s a hotspot on a runner (CI, 2026-11-16). The last part starts with
+ * them, so it is dealt that many fewer hotspots and the parts end together.
+ */
+const ONE_OFFS_IN_HOTSPOTS = 8;
+/** Section 3's hotspot `i` (of `count`) goes to the least loaded part so far, in order. */
+const partOfHotspot = (count) => {
+  const load = Array.from({ length: PARTS }, (_, k) =>
+    k === PARTS - 1 && PARTS > 1 ? ONE_OFFS_IN_HOTSPOTS : 0,
+  );
+  return Array.from({ length: count }, () => {
+    const k = load.indexOf(Math.min(...load));
+    load[k]++;
+    return k + 1;
+  });
+};
 
 // ------------------------------------------------------------------ geometry
 // A handful of "probably inside" guesses for a ring (point-in-polygon itself
@@ -488,8 +507,9 @@ check(
 );
 
 // 3. Tap each hotspot: fly to a point inside it, click, read the card.
+const hotspotParts = partOfHotspot(snapshot.polys.length);
 for (const [i, p] of snapshot.polys.entries()) {
-  if (i % PARTS !== PART - 1) continue;
+  if (hotspotParts[i] !== PART) continue;
   const desc = `${p.kind} #${i} "${p.name}"`;
   const candidates = interiorCandidates(p.ring);
   let opened = null;
@@ -858,8 +878,8 @@ for (const [i, p] of snapshot.polys.entries()) {
 // the line through it not taken — where until then both were offered, the
 // hotspot first. SKIP if no such vertex exists.
 const inBox = findVertexInsideAnyHotspot(snapshot.routeLines, snapshot.polys);
-if (PART !== 1) {
-  // Part 1's, with 4b.
+if (!RUNS_ONE_OFFS) {
+  // The last part's, with 4b.
 } else if (!inBox) {
   skip(
     'a tap on a route line inside a hotspot opens the hotspot alone',
@@ -897,8 +917,8 @@ const loopRouteIds = new Set(
   ),
 );
 const hit = findSharedVertexOutsideHotspots(snapshot.routes, snapshot.polys, loopRouteIds);
-if (PART !== 1) {
-  // Part 1's, with 4b.
+if (!RUNS_ONE_OFFS) {
+  // The last part's, with 4b.
 } else if (!hit) {
   skip(
     'a tap where two routes share a road lists them, and nothing else',
@@ -1182,8 +1202,8 @@ if (PART !== 1) {
 
 // 4a′. The filter frames what it leaves lit (README decision 14): where a rail line runs over a
 // jeep's road, outside every box, one tap lists both kinds of ride, and narrowing the list to the
-// rail moves the camera to take it in, as ⇆ does. Part 1's, with 4a.
-if (PART === 1) {
+// rail moves the camera to take it in, as ⇆ does. The last part's, with 4a.
+if (RUNS_ONE_OFFS) {
   const modeOf = new Map(
     JSON.parse(readFileSync('public/data/index.v5.json', 'utf8')).variants.map((v) => [
       v.route_id,
@@ -1309,7 +1329,7 @@ const firstTapPrograms = async (at) => {
 // route alone under the tap opens its card directly, drawn in its trip card's colour over
 // the rest; closing the card lights nothing again. Nothing fades and nothing
 // is see-through (the owner's two looks, 2026-09-29).
-if (PART === 1) {
+if (RUNS_ONE_OFFS) {
   const looks = await paintNow(page);
   check(
     'the lines rest opaque in Map/RouteLine/surface-default, lit in …/surface-selected, none shaded',
@@ -1888,9 +1908,9 @@ check(
   `${mapFileStatuses.length} response(s): ${mapFileStatuses.join(', ') || 'none'}`,
 );
 
-// 6. The Map Style card's Location Labels switch: part 1's, on a page of its own, as its choice
+// 6. The Map Style card's Location Labels switch: the last part's, on a page of its own, as its choice
 // is kept in the storage section 5 holds empty. Only the basemap's labels go; ours stay.
-if (PART === 1) {
+if (RUNS_ONE_OFFS) {
   const p = await b.newPage({ viewport: { width: 1280, height: 800 } });
   await nodeFetch(p);
   p.on('pageerror', (e) => errors.push(String(e)));
@@ -1905,7 +1925,7 @@ if (PART === 1) {
 
 // 7. A load that fails: never a blank page, but a problem toast at the top with Try again, which
 // reads the map again; it loads, and the toast has gone.
-if (PART === 1) {
+if (RUNS_ONE_OFFS) {
   const p = await b.newPage({
     viewport: { width: 390, height: 844 },
     isMobile: true,
