@@ -265,6 +265,70 @@ await page.addInitScript(() => {
   };
 });
 await page.addInitScript(lookReaders);
+// PROBE, not for merging: a running log of every pointer and touch event, the app's pointer
+// capture calls, and preventDefault on a touchend or pointerup, from the page's start.
+await page.addInitScript(() => {
+  const log = [];
+  window.__plog = log;
+  const t = () => Math.round(performance.now());
+  const tag = (el) =>
+    el instanceof Element
+      ? (el.closest('[data-testid]')?.getAttribute('data-testid') ?? el.tagName.toLowerCase())
+      : String(el);
+  const push = (s) => {
+    log.push(`${t()} ${s}`);
+    if (log.length > 3000) log.splice(0, log.length - 3000);
+  };
+  for (const type of [
+    'pointerdown',
+    'pointerup',
+    'pointercancel',
+    'gotpointercapture',
+    'lostpointercapture',
+    'touchstart',
+    'touchend',
+    'touchcancel',
+    'contextmenu',
+    'selectstart',
+    'click',
+  ])
+    document.addEventListener(
+      type,
+      (e) => {
+        const p =
+          'pointerId' in e
+            ? ` id=${e.pointerId} ${e.pointerType} buttons=${e.buttons} primary=${e.isPrimary}`
+            : '';
+        const touches =
+          'touches' in e
+            ? ` touches=${e.touches.length} changed=${[...e.changedTouches].map((x) => x.identifier).join(',')}`
+            : '';
+        push(`${type}@${tag(e.target)}${p}${touches}${e.isTrusted ? '' : ' SYNTHETIC'}`);
+      },
+      true,
+    );
+  const setCap = Element.prototype.setPointerCapture;
+  Element.prototype.setPointerCapture = function (id) {
+    push(`APP setPointerCapture(${id})@${tag(this)}`);
+    try {
+      return setCap.call(this, id);
+    } catch (err) {
+      push(`APP setPointerCapture(${id}) threw ${err.name}`);
+      throw err;
+    }
+  };
+  const relCap = Element.prototype.releasePointerCapture;
+  Element.prototype.releasePointerCapture = function (id) {
+    push(`APP releasePointerCapture(${id})@${tag(this)}`);
+    return relCap.call(this, id);
+  };
+  const prevent = Event.prototype.preventDefault;
+  Event.prototype.preventDefault = function () {
+    if (/^(touchend|touchstart|pointerup|pointerdown|touchmove|contextmenu)$/.test(this.type))
+      push(`APP preventDefault on ${this.type}@${tag(this.target)}`);
+    return prevent.call(this);
+  };
+});
 
 /**
  * In the page, before the app starts: the map from its making (MapView
@@ -4003,34 +4067,79 @@ const probeReset = () =>
   page.evaluate(() => {
     if (!window.__probe) {
       window.__probe = [];
-      for (const t of ['touchstart', 'touchmove', 'touchend', 'touchcancel', 'pointerdown', 'pointermove', 'pointerup', 'pointercancel', 'lostpointercapture', 'gotpointercapture', 'click'])
-        document.addEventListener(t, (e) => {
-          const el = e.target instanceof Element ? e.target : null;
-          const tag = el ? (el.closest('[data-testid]')?.getAttribute('data-testid') ?? el.tagName.toLowerCase()) : String(e.target);
-          const last = window.__probe.at(-1);
-          const item = `${t}@${tag}${e.isTrusted ? '' : '(synthetic)'}`;
-          if (last && last.startsWith(item)) window.__probe[window.__probe.length - 1] = item + 'x' + ((Number(last.split('x').pop()) || 1) + 1);
-          else window.__probe.push(item);
-        }, true);
+      for (const t of [
+        'touchstart',
+        'touchmove',
+        'touchend',
+        'touchcancel',
+        'pointerdown',
+        'pointermove',
+        'pointerup',
+        'pointercancel',
+        'lostpointercapture',
+        'gotpointercapture',
+        'click',
+      ])
+        document.addEventListener(
+          t,
+          (e) => {
+            const el = e.target instanceof Element ? e.target : null;
+            const tag = el
+              ? (el.closest('[data-testid]')?.getAttribute('data-testid') ??
+                el.tagName.toLowerCase())
+              : String(e.target);
+            const last = window.__probe.at(-1);
+            const item = `${t}@${tag}${e.isTrusted ? '' : '(synthetic)'}`;
+            if (last && last.startsWith(item))
+              window.__probe[window.__probe.length - 1] =
+                item + 'x' + ((Number(last.split('x').pop()) || 1) + 1);
+            else window.__probe.push(item);
+          },
+          true,
+        );
     }
     window.__probe.length = 0;
   });
+let plogDumped = false;
 const probeHandle = async (where, x, y) => {
-  const info = await page.evaluate(([px, py]) => {
-    const top = document.elementFromPoint(px, py);
-    const h = document.querySelector('[data-testid="card"] button[data-testid="dock-handle"]');
-    const r = h?.getBoundingClientRect();
-    return {
-      under: top ? (top.closest('[data-testid]')?.getAttribute('data-testid') ?? top.tagName) : 'nothing',
-      handle: r ? [Math.round(r.x), Math.round(r.y), Math.round(r.width), Math.round(r.height)] : null,
-      viewport: [innerWidth, innerHeight],
-      anims: [...document.querySelectorAll('[data-testid="card"]')].flatMap((c) => c.getAnimations({ subtree: true }).map((a) => a.transitionProperty ?? a.animationName ?? 'anim')),
-      events: window.__probe.join(' '),
-      odd: (window.__odd ?? []).slice(-4),
-      lastDown: window.__lastDown,
-    };
-  }, [x, y]);
-  console.log(`PROBE ${where} at ${Math.round(x)},${Math.round(y)} snap=${await sheetState().catch(() => '?')} ${JSON.stringify(info)}`);
+  if (!plogDumped) {
+    plogDumped = true;
+    const lines = await page.evaluate(() => {
+      const log = window.__plog ?? [];
+      const lastDown = log.findLastIndex((l) => / pointerdown@/.test(l) && !/SYNTHETIC/.test(l));
+      return log.slice(Math.max(0, lastDown - 60));
+    });
+    console.log(`PLOG ${lines.length} lines, from 60 before the last trusted pointerdown:`);
+    for (const l of lines) console.log(`PLOG ${l}`);
+  }
+  const info = await page.evaluate(
+    ([px, py]) => {
+      const top = document.elementFromPoint(px, py);
+      const h = document.querySelector('[data-testid="card"] button[data-testid="dock-handle"]');
+      const r = h?.getBoundingClientRect();
+      return {
+        under: top
+          ? (top.closest('[data-testid]')?.getAttribute('data-testid') ?? top.tagName)
+          : 'nothing',
+        handle: r
+          ? [Math.round(r.x), Math.round(r.y), Math.round(r.width), Math.round(r.height)]
+          : null,
+        viewport: [innerWidth, innerHeight],
+        anims: [...document.querySelectorAll('[data-testid="card"]')].flatMap((c) =>
+          c
+            .getAnimations({ subtree: true })
+            .map((a) => a.transitionProperty ?? a.animationName ?? 'anim'),
+        ),
+        events: window.__probe.join(' '),
+        odd: (window.__odd ?? []).slice(-4),
+        lastDown: window.__lastDown,
+      };
+    },
+    [x, y],
+  );
+  console.log(
+    `PROBE ${where} at ${Math.round(x)},${Math.round(y)} snap=${await sheetState().catch(() => '?')} ${JSON.stringify(info)}`,
+  );
 };
 const tapHandle = async () => {
   if ((await handle().count()) === 0) return false;
