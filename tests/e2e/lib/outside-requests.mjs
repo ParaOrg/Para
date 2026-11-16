@@ -6,6 +6,8 @@
 // suite that uses the harness reports, with no change to the suite.
 import { chromium } from 'playwright';
 
+import { applyStandIns } from './stand-ins.mjs';
+
 const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1', '[::1]']);
 /** Per host: how its requests were answered. */
 const counts = new Map();
@@ -48,12 +50,14 @@ chromium.launch = async (...options) => {
   browser.newContext = async (...args) => {
     const context = await newContext(...args);
     watch(context);
+    await applyStandIns(context);
     return context;
   };
   const newPage = browser.newPage.bind(browser);
   browser.newPage = async (...args) => {
     const page = await newPage(...args);
     watch(page.context());
+    await applyStandIns(page.context());
     return page;
   };
   return browser;
