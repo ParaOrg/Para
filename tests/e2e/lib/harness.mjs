@@ -66,6 +66,22 @@ export const harness = ({ bracketed = false, knownSkips = null } = {}) => {
   return { check, skip, tally };
 };
 
+// What failed to load on page `p`, by URL, into `into`: a request the network dropped (with
+// Chromium's reason, net::ERR_…) or one answered 400 or worse. The console's own line says only
+// "Failed to load resource", so a suite prints these beside its "no page errors" check. A request
+// the page itself cancelled (net::ERR_ABORTED: MapLibre drops the tiles a move leaves behind) is
+// not a failure and is left out.
+export const recordFailedLoads = (p, into) => {
+  p.on('requestfailed', (request) => {
+    const reason = request.failure()?.errorText ?? 'failed';
+    if (reason !== 'net::ERR_ABORTED') into.push(`${request.url().slice(0, 160)} (${reason})`);
+  });
+  p.on('response', (response) => {
+    if (response.status() >= 400)
+      into.push(`${response.url().slice(0, 160)} (${response.status()})`);
+  });
+};
+
 // PARA_NODE_FETCH=1: serve every https request through Node fetch. Needed only
 // where the browser cannot reach the internet but Node can (sandboxed CI).
 // `seen`, when given, is handed each request first: hotspot-test and
