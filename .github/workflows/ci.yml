@@ -75,6 +75,13 @@ concurrency:
 permissions:
   contents: read
 
+# The suites' outside services: live on main and staging pushes, the nightly run and a run by
+# hand; on a pull request, the suites' stand-ins (recorded answers, fake services), so a PR run
+# reaches no host off the runner. Read by tests/e2e (lib/harness.mjs and the stand-ins) as set
+# or unset. A stand-in gone stale shows as a live run failing where its PR run passed.
+env:
+  PARA_LIVE_SERVICES: ${{ github.event_name != 'pull_request' && '1' || '' }}
+
 jobs:
   # What the change can reach. Outputs 'true' or 'false'.
   changes:
@@ -604,6 +611,15 @@ jobs:
               echo "::endgroup::"
               continue
             fi
+            # The one retry is for the live router, busy now and then. A PR run's router is a
+            # recording once tests/e2e/fixtures/osrm/ exists, and then a failure is the code's.
+            if [ -z "$PARA_LIVE_SERVICES" ] && [ -d tests/e2e/fixtures/osrm ]; then
+              echo "::endgroup::"
+              echo "::error::$suite failed"
+              status=1
+              continue
+            fi
+            echo "::warning::$suite needed the router retry"
             echo "$suite failed; waiting a minute for the router, then once more"
             sleep 60
             if node "tests/e2e/$suite.mjs"; then
