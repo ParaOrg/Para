@@ -125,6 +125,13 @@ jobs:
           public=false; studio=false; contribute=false; build=false; drawing=false
           while IFS= read -r f; do
             [ -z "$f" ] && continue
+            # The suites' shared helpers and fixtures (the harness, the stand-ins, the recorded
+            # answers): every suite may load them, so a change to one runs them all.
+            case "$f" in
+              tests/e2e/lib/*|tests/e2e/fixtures/*)
+                public=true; studio=true; contribute=true; drawing=true
+                continue ;;
+            esac
             # The drawing suites, for a change to the editor, the map it draws on, the routes'
             # geometry rules, the suites themselves or the helpers they load (lib/studio.mjs is
             # theirs alone): what they draw with. Shared code (src/shared, the design system, the
