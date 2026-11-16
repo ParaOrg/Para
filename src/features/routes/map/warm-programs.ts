@@ -145,6 +145,7 @@ export function warmPrograms(map: WarmMap, twins: readonly Twin[]): boolean {
   for (const twin of twins) {
     while (map.getLayer(twinId(n))) n++;
     map.addLayer(
+      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- a Twin spread is no AddLayerObject to TypeScript: .scratch/type-assertions/issues/04-maplibre-twin-specs.md
       {
         ...twin,
         id: twinId(n),

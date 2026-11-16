@@ -103,6 +103,7 @@ export function twinsOf(map: TwinMap, layers: readonly string[]): Twin[] {
     const paint = Object.fromEntries(
       Object.entries(spec.paint ?? {}).filter(([k]) => !/-layer-opacity(-transition)?$/.test(k)),
     );
+    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- a filtered paint MapLibre's types cannot check: .scratch/type-assertions/issues/04-maplibre-twin-specs.md
     return [{ type: spec.type, paint } as Twin];
   });
 }
