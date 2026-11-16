@@ -75,6 +75,13 @@ concurrency:
 permissions:
   contents: read
 
+# The suites' outside services: live on main and staging pushes, the nightly run and a run by
+# hand; on a pull request, the suites' stand-ins (recorded answers, fake services), so a PR run
+# reaches no host off the runner. Read by tests/e2e (lib/harness.mjs and the stand-ins) as set
+# or unset. A stand-in gone stale shows as a live run failing where its PR run passed.
+env:
+  PARA_LIVE_SERVICES: ${{ github.event_name != 'pull_request' && '1' || '' }}
+
 jobs:
   # What the change can reach. Outputs 'true' or 'false'.
   changes:
@@ -118,6 +125,13 @@ jobs:
           public=false; studio=false; contribute=false; build=false; drawing=false
           while IFS= read -r f; do
             [ -z "$f" ] && continue
+            # The suites' shared helpers and fixtures (the harness, the stand-ins, the recorded
+            # answers): every suite may load them, so a change to one runs them all.
+            case "$f" in
+              tests/e2e/lib/*|tests/e2e/fixtures/*)
+                public=true; studio=true; contribute=true; drawing=true
+                continue ;;
+            esac
             # The drawing suites, for a change to the editor, the map it draws on, the routes'
             # geometry rules, the suites themselves or the helpers they load (lib/studio.mjs is
             # theirs alone): what they draw with. Shared code (src/shared, the design system, the
@@ -604,6 +618,15 @@ jobs:
               echo "::endgroup::"
               continue
             fi
+            # The one retry is for the live router, busy now and then. A PR run's router is a
+            # recording once tests/e2e/fixtures/osrm/ exists, and then a failure is the code's.
+            if [ -z "$PARA_LIVE_SERVICES" ] && [ -d tests/e2e/fixtures/osrm ]; then
+              echo "::endgroup::"
+              echo "::error::$suite failed"
+              status=1
+              continue
+            fi
+            echo "::warning::$suite needed the router retry"
             echo "$suite failed; waiting a minute for the router, then once more"
             sleep 60
             if node "tests/e2e/$suite.mjs"; then
