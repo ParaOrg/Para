@@ -58,3 +58,15 @@ Options, with the sheet-snap rework:
 - (a) Drive the handle with CDP mouse drags (`Input.dispatchMouseEvent`) where a check is not about touch itself.
 - (b) Keep touch, and on a missing pointerdown fail and name it instead of resending, to see how red it gets.
 - (c) For now: leave the ladder, and correct its comment to say what it works around, as part of this rework.
+
+## phone-test runs in three parts (PHONE_PART)
+
+The rework starts from this layout: `PHONE_PART=k/3` gates the sections, split by measured time.
+
+| Part | Sections | Why together |
+| --- | --- | --- |
+| 1 | 2, 5, 6 | 5 and 6 read section 2's `routeA` |
+| 2 | 5b, 5c, 5d, 6b, 6c | 6b and 6c run on the made-up map 5d leaves the page on |
+| 3 | 1a, 1b, 3, 4, 4c, 4d | 4c and 4d read section 4's `hotspot` |
+
+Section 1, the page's setup (the data, the page helpers, the ground-scale measurement after 1b, and 1b's closing page reload) and section 7 run in every part. The hintuan pick runs where a full run runs it: on section 2's first trip with a hintuan (part 1) and again on the made-up map (5d, part 2). Unset, one part runs it all. The sheet sections, 4c and 4d, are both in part 3.

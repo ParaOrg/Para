@@ -21,8 +21,8 @@
 #      long as the slowest job, not the sum of them all. The suites under a
 #      minute or so share a job, since each job repeats its setup and waits for
 #      one of the free plan's ~20 runners; commuter-test, the slowest by far,
-#      runs as six parts (COMMUTER_PART, see its top), the drawing suites as two. What
-#      every job repeats is made once: the build job makes the preview builds
+#      runs as six parts (COMMUTER_PART, see its top), phone-test as three, the
+#      drawing suites as two. What every job repeats is made once: the build job makes the preview builds
 #      the built-app suites run, and Playwright's Chromium is kept between runs.
 #   3. The drawing suites only where they are needed. group, regression-
 #      gestures, hotspot, snap, extend and studio-phone draw through the public OSRM demo
@@ -255,19 +255,22 @@ jobs:
   # OpenFreeMap's tiles; gate-test opens /studio/'s sign-in door. A job runs its `suites` one after
   # another, so the short ones share a runner's setup and a place in the queue (the free plan runs
   # about 20 jobs at once, across every run): gate, scale, map-pins, back, where and loop take
-  # about 4 minutes together. commuter-test runs in six parts (COMMUTER_PART, see its top).
+  # about 4 minutes together. commuter-test runs in six parts (COMMUTER_PART, see its top) and
+  # phone-test in three (PHONE_PART, see its top).
   public-suite:
     name: ${{ matrix.name }}
     needs: changes
     if: needs.changes.outputs.public == 'true'
     runs-on: ubuntu-latest
-    # phone-test's suite runs about 21 minutes; 40 is its margin. A commuter part about 7.
-    timeout-minutes: ${{ matrix.name == 'phone-test' && 40 || 30 }}
+    # The longest, a commuter part or a phone-test part, runs about 9 minutes; 30 is the margin.
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
         include:
-          - { name: phone-test, slug: phone-test, suites: phone-test }
+          - { name: phone-test (1 of 3), slug: phone-1, suites: phone-test, phone: 1/3 }
+          - { name: phone-test (2 of 3), slug: phone-2, suites: phone-test, phone: 2/3 }
+          - { name: phone-test (3 of 3), slug: phone-3, suites: phone-test, phone: 3/3 }
           - name: The short public suites
             slug: short-public
             suites: gate-test scale-test map-pins-test back-test where-test loop-test
@@ -305,6 +308,7 @@ jobs:
         env:
           SUITES: ${{ matrix.suites }}
           COMMUTER_PART: ${{ matrix.part }}
+          PHONE_PART: ${{ matrix.phone }}
         run: |
           status=0
           for suite in $SUITES; do
