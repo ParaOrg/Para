@@ -32,11 +32,20 @@ let settled: { file: Index | null } | null = null;
  * Null on a page without one (the studio's, a test's).
  */
 function takeEarly(): EarlyMapFile | null {
-  const page = globalThis as { [EARLY_MAP_FILE]?: EarlyMapFile };
-  const early = page[EARLY_MAP_FILE];
+  const early: unknown = Reflect.get(globalThis, EARLY_MAP_FILE);
   if (!early) return null;
-  Reflect.deleteProperty(page, EARLY_MAP_FILE);
-  return typeof early.then === 'function' ? early : null;
+  Reflect.deleteProperty(globalThis, EARLY_MAP_FILE);
+  return isEarlyMapFile(early) ? early : null;
+}
+
+/** Whether what index.html left can be awaited: its own request, not something else by that name. */
+function isEarlyMapFile(early: unknown): early is EarlyMapFile {
+  return (
+    typeof early === 'object' &&
+    early !== null &&
+    'then' in early &&
+    typeof early.then === 'function'
+  );
 }
 
 /**
