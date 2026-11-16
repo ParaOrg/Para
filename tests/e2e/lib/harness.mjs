@@ -13,6 +13,8 @@
 // waitFor: save-studio, save, save-ikot, save-edit, save-drafts and
 // studio-contributors.
 
+import './outside-requests.mjs';
+
 /** The dev server's address: PARA_BASE, or http://localhost:5173. */
 export const BASE = (process.env.PARA_BASE ?? 'http://localhost:5173').replace(/\/$/, '');
 
