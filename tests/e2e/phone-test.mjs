@@ -2569,8 +2569,12 @@ const tripChecks = async () => {
   }
   return { picked };
 };
-/** Whether the hintuan pick has been checked: once, on the first trip with a hintuan. */
-let picksChecked = false;
+/**
+ * Whether the hintuan pick has been checked: once, on the first trip with a hintuan, which is
+ * section 2's (part 1); a part without it starts as checked, so the pick runs where a full run
+ * runs it. 5d checks it again on the made-up map, in every run that holds it.
+ */
+let picksChecked = !runsPart(1);
 /** The picked hintuan's circle, gone, and the pale rest with it — and no get-off circle, which the public map never draws. */
 const noPickLeft = async () =>
   page.evaluate(
