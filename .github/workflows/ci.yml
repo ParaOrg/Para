@@ -31,8 +31,9 @@
 #      push to main or staging (so a merge that breaks them is red on the
 #      branch within minutes), nightly on the default branch, on demand, and
 #      on a pull request that changes the editor (src/app/studio,
-#      src/features/studio), the routes' geometry rules (src/features/routes/geo)
-#      or the suites themselves, so a break is caught before it merges. A suite
+#      src/features/studio), the map it draws on (src/features/routes/map), the
+#      routes' geometry rules (src/features/routes/geo), the suites themselves or
+#      the test helpers they load, so a break is caught before it merges. A suite
 #      that fails is run once more after a minute, as tests/e2e/README.md tells
 #      a person to do; a second failure is real.
 #
@@ -117,11 +118,18 @@ jobs:
           public=false; studio=false; contribute=false; build=false; drawing=false
           while IFS= read -r f; do
             [ -z "$f" ] && continue
-            # The drawing suites, for a change to the editor, the routes' geometry rules or the
-            # suites themselves: what they draw with.
+            # The drawing suites, for a change to the editor, the map it draws on, the routes'
+            # geometry rules, the suites themselves or the helpers they load (lib/studio.mjs is
+            # theirs alone): what they draw with. Shared code (src/shared, the design system, the
+            # build's config) does not select them; a push to staging runs them, which catches it.
             case "$f" in
-              src/app/studio/*|src/features/studio/*|src/features/routes/geo/*|tests/e2e/group-test.mjs|tests/e2e/regression-gestures.mjs|tests/e2e/hotspot-test.mjs|tests/e2e/snap-test.mjs|tests/e2e/extend-test.mjs|tests/e2e/studio-phone-test.mjs)
+              src/app/studio/*|src/features/studio/*|src/features/routes/geo/*|src/features/routes/map/*|tests/e2e/group-test.mjs|tests/e2e/regression-gestures.mjs|tests/e2e/hotspot-test.mjs|tests/e2e/snap-test.mjs|tests/e2e/extend-test.mjs|tests/e2e/studio-phone-test.mjs|tests/e2e/lib/studio.mjs|tests/e2e/lib/harness.mjs|tests/e2e/lib/looks.mjs|tests/e2e/lib/fake-studio-db.mjs)
                 drawing=true ;;
+            esac
+            # The published map file: the public suites read it, and so does the studio's Public
+            # map (studio-public-view-test checks it against this file).
+            case "$f" in
+              public/data/*) studio=true ;;
             esac
             case "$f" in
               # Read by the build job alone: its architecture step, its unit checks, its guards.
