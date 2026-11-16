@@ -30,6 +30,7 @@ import {
   harness,
   mapIdle,
   nodeFetch,
+  recordFailedLoads,
   until,
   waitForSource,
 } from './lib/harness.mjs';
@@ -199,6 +200,9 @@ await page.addInitScript(() => {
   });
 });
 const errors = [];
+// Beside the errors: what failed to load, so a "Failed to load resource" names its URL.
+const failedLoads = [];
+recordFailedLoads(page, failedLoads);
 page.on('pageerror', (e) => errors.push(String(e)));
 page.on('console', (m) => {
   if (m.type() === 'error') errors.push(m.text().slice(0, 160));
@@ -1287,6 +1291,7 @@ const firstTapPrograms = async (at) => {
         return s ? await s.getData() : null;
       };
     });
+    recordFailedLoads(p, failedLoads);
     p.on('pageerror', (e) => errors.push(String(e)));
     p.on('console', (m) => {
       if (m.type() === 'error') errors.push(m.text().slice(0, 160));
@@ -1974,7 +1979,16 @@ if (RUNS_ONE_OFFS) {
   await p.close();
 }
 
-check('no page errors', errors.length === 0, errors.slice(0, 2).join(' | '));
+check(
+  'no page errors',
+  errors.length === 0,
+  // Only with an error: a tile the basemap answers 404 is no page error of its own.
+  errors.length === 0
+    ? ''
+    : [...errors.slice(0, 2), ...failedLoads.slice(0, 5).map((load) => `failed: ${load}`)].join(
+        ' | ',
+      ),
+);
 
 await b.close();
 tally();
