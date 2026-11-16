@@ -9,9 +9,9 @@ import { M_PER_DEG, type LngLat, type Segment } from '@/shared/utils/geo';
 
 import { SaveBesideFrame, SaveSheetFrame } from './save-frames';
 import { SavePanel } from './save-panel';
+import type { UseSavePanelOptions } from './use-save-panel';
 import { reviewKeys } from '../data/review-keys';
 import type { DraftRow } from '../data/review-schema';
-import type { Drawing } from '../drawing/use-drawing';
 
 /** Two terminals, one near each end of the sample line, so the pickers have something to guess. */
 function terminal(id: string, name: string, at: LngLat): HotspotRow {
@@ -52,11 +52,14 @@ const hotspots: HotspotRow[] = [
   },
 ];
 
+/** The parts of a drawing the panel reads (UseSavePanelOptions). */
+type SampleDrawing = UseSavePanelOptions['draw'];
+
 /**
  * Just the parts of a drawing the panel reads. Sample data only: a story has no
  * Supabase client, so pressing a save here shows an error and writes nothing.
  */
-function drawing(segments: Segment[]): Drawing {
+function drawing(segments: Segment[]): SampleDrawing {
   const controlPoints: LngLat[] = [
     [121.043326, 14.742006],
     [121.04184, 14.742003],
@@ -68,8 +71,9 @@ function drawing(segments: Segment[]): Drawing {
     line: controlPoints,
     segments,
     metres: 640,
-    uTurns: [],
-  } as unknown as Drawing;
+    borrow: null,
+    cancel: fn(),
+  };
 }
 
 const routed = (streets?: Segment['streets']): Segment => ({
@@ -214,13 +218,13 @@ const talaFairview: RouteRow = {
 };
 
 /** The sample line, drawn the other way: from SM Fairview back to Tala. */
-function drawingBack(): Drawing {
+function drawingBack(): SampleDrawing {
   const d = drawing([
     routed([{ name: 'Assyria Street', metres: 55 }]),
     routed([{ name: 'Sinai Street', metres: 160 }]),
   ]);
   const controlPoints = [...d.controlPoints].reverse();
-  return { ...d, controlPoints, line: controlPoints } as Drawing;
+  return { ...d, controlPoints, line: controlPoints };
 }
 
 /**
@@ -443,7 +447,7 @@ const ROUND: LngLat[] = [
   [121.0431, 14.7411],
   [121.043326, 14.742006],
 ];
-function ikotDrawing(line: LngLat[] = ROUND): Drawing {
+function ikotDrawing(line: LngLat[] = ROUND): SampleDrawing {
   const segments: Segment[] = line.slice(1).map((to, i) => ({
     snap: 'freehand',
     coordinates: [line[i], to],
@@ -453,8 +457,9 @@ function ikotDrawing(line: LngLat[] = ROUND): Drawing {
     line,
     segments,
     metres: 1200,
-    uTurns: [],
-  } as unknown as Drawing;
+    borrow: null,
+    cancel: fn(),
+  };
 }
 
 /** An ikot saved before, to be edited or to be named twice. */

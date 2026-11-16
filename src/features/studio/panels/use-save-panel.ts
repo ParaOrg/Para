@@ -17,7 +17,8 @@ import { returnTripNotices } from '../drawing/loop-closing';
 import type { Drawing } from '../drawing/use-drawing';
 
 export interface UseSavePanelOptions {
-  draw: Drawing;
+  /** The parts of the drawing the form and its save read. */
+  draw: Pick<Drawing, 'controlPoints' | 'line' | 'segments' | 'borrow' | 'metres' | 'cancel'>;
   /** The direction being edited, when this is an edit rather than a new save. */
   existing: DirectionRow | null;
   /** The parent route, when adding another direction to a route that exists. */
