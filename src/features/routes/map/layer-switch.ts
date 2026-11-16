@@ -1,8 +1,9 @@
-import type { LayerSpecification, MapLibreMap } from 'maplibre-gl';
+import type { MapLibreMap } from 'maplibre-gl';
 import { useEffect, useRef, useState } from 'react';
 
 import { noop } from '@/shared/utils/noop';
 
+import { specOf } from './twin-spec';
 import { warmSoon, type Twin } from './warm-programs';
 
 /*
@@ -41,7 +42,7 @@ import { warmSoon, type Twin } from './warm-programs';
 type SwitchMap = Pick<MapLibreMap, 'getLayer' | 'getPaintProperty' | 'setPaintProperty'>;
 
 /** A layer's property that switches it, by its type: `line-layer-opacity` or `fill-layer-opacity`. */
-const switchOf = (type: string) => `${type}-layer-opacity` as 'line-layer-opacity';
+const switchOf = (type: string) => (type === 'fill' ? 'fill-layer-opacity' : 'line-layer-opacity');
 
 /**
  * One switch over `layers`: on while anything they draw is lit (`set`), off
@@ -81,9 +82,9 @@ export class LayerSwitch {
   }
 }
 
-/** As much of a map as twinsOf reads: its layers, as MapLibre serializes them. */
+/** As much of a map as twinsOf reads: its layers, read as unknown (twin-spec.ts narrows them). */
 interface TwinMap {
-  getLayer: (id: string) => { serialize?: () => LayerSpecification } | undefined;
+  getLayer: (id: string) => unknown;
 }
 
 /**
@@ -97,10 +98,8 @@ interface TwinMap {
  */
 export function twinsOf(map: TwinMap, layers: readonly string[]): Twin[] {
   return layers.flatMap((id) => {
-    const layer = map.getLayer(id);
-    const spec = (typeof layer?.serialize === 'function' ? layer.serialize() : layer) as
-      LayerSpecification | undefined;
-    if (!spec || !('paint' in spec)) return [];
+    const spec = specOf(map.getLayer(id));
+    if (!spec) return [];
     const paint = Object.fromEntries(
       Object.entries(spec.paint ?? {}).filter(([k]) => !/-layer-opacity(-transition)?$/.test(k)),
     );
@@ -127,7 +126,7 @@ export function useLayerSwitch(
     if (!map || !added) return;
     const twins = () => {
       warmed.current = map;
-      return twinsOf(map as unknown as TwinMap, sw.layers);
+      return twinsOf(map, sw.layers);
     };
     // Once a map: the programs stay with its GL context.
     let cancel = warmed.current === map ? noop : warmSoon(map, twins);
