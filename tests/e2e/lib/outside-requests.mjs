@@ -9,6 +9,8 @@ import { chromium } from 'playwright';
 const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1', '[::1]']);
 /** Per host: how its requests were answered. */
 const counts = new Map();
+/** Whether a browser was launched: a run with none (a unit check of the harness) prints nothing. */
+let hasLaunched = false;
 
 const hostOf = (url) => {
   if (!/^https?:/.test(url)) return null;
@@ -41,6 +43,7 @@ const watch = (context) => {
 const launch = chromium.launch.bind(chromium);
 chromium.launch = async (...options) => {
   const browser = await launch(...options);
+  hasLaunched = true;
   const newContext = browser.newContext.bind(browser);
   browser.newContext = async (...args) => {
     const context = await newContext(...args);
@@ -57,6 +60,7 @@ chromium.launch = async (...options) => {
 };
 
 process.on('exit', () => {
+  if (!hasLaunched) return;
   if (counts.size === 0) {
     console.log('outside: none');
     return;
