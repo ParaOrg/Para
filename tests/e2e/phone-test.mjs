@@ -95,6 +95,15 @@ const {
  * On the made-up map (section 5d) nothing may skip, known name or not: the map
  * holds everything its checks need, so a skip there is a check that broke.
  */
+// PHONE_PART=k/3 runs part k of 3, so CI can run the parts side by side, by measured time:
+// part 1 the forgiving tap and what reads its route (sections 2, 5 and 6), part 2 the trips
+// and the made-up map with what runs on it (5b, 5c, 5d, 6b and 6c), part 3 the rest (1a, 1b,
+// 3, and 4 to 4d). Section 1, the page's setup and 7 run in every part. Unset, one part runs it all.
+const [PHONE_PART, PHONE_PARTS] = (process.env.PHONE_PART || '1/1').split('/').map(Number);
+if (!(PHONE_PARTS === 1 ? PHONE_PART === 1 : PHONE_PARTS === 3 && PHONE_PART >= 1 && PHONE_PART <= 3))
+  throw new Error(`PHONE_PART is 1/1 or k/3, not "${process.env.PHONE_PART}"`);
+/** Whether this run holds part `k`'s sections. */
+const runsPart = (k) => PHONE_PARTS === 1 || PHONE_PART === k;
 let onMadeUpMap = false;
 const skip = (name, reason) =>
   onMadeUpMap
@@ -701,7 +710,7 @@ check(
 // the map's 'load' while the basemap's tiles are on their way, or at the
 // 'load' when no route is drawn by then (the owner's answer to question A
 // of the cheap-phone report, 2026-10-06).
-{
+if (runsPart(3)) {
   const camOf = (p) =>
     p.evaluate(() => {
       const m = window.__map;
@@ -2734,7 +2743,7 @@ const litIds = (p) => p.evaluate(() => window.__lit('saved-routes'));
 // opened on with nothing tapped yet: the warm-up has drawn its twins, and a
 // finger on a route line, its card up and the map settled, adds none. Then
 // the page is loaded again, for the sections below to start as they did.
-{
+if (runsPart(3)) {
   const rest = await programsAtRest(page);
   check(
     'at rest, before any tap, the warm-up has drawn its twins (warmPrograms)',
@@ -2854,11 +2863,11 @@ const litIds = (p) => p.evaluate(() => window.__lit('saved-routes'));
         : `${queries} queries of the rendered features by the end of the click`,
     );
   }
+}
   await page.goto(`${BASE}/`, { waitUntil: 'load' });
   await page.waitForFunction(() => window.__map && window.__map.loaded(), null, { timeout: 30000 });
   await waitForSource(page, 'saved-routes');
   await mapIdle(page);
-}
 
 // How far a pixel reaches on the ground — measured off the map, not looked up.
 // MapLibre serves 512 px tiles, so its zoom 16 is the scale a 256 px table calls
@@ -2946,6 +2955,7 @@ async function openAlone(d) {
 // on a route with two ends, never a loop, and with a fare, for the trip card's
 // checks below.
 let routeA = null;
+if (runsPart(1)) {
 if (snapshot.routes.length === 0) {
   skip('a tap 14 px beside a lone route line selects it', 'no saved routes on the map today');
 } else {
@@ -3345,10 +3355,14 @@ if (routeA) {
   }
   await closeCard();
 }
+}
 
 // ------------------------------------------------------------- 3. the chooser
 // Two routes sharing a road: a vertex of one that lies within 15 m of another's
 // line, with no third route inside the tap box.
+/** Handle gestures the runner made no pointer events for, sent again by hand. */
+let handleByHand = 0;
+if (runsPart(3)) {
 let shared = null;
 for (const r of snapshot.routes) {
   if (shared) break;
@@ -3958,8 +3972,6 @@ if (snapshot.polys.length === 0) {
 // ------------------------------------- 4c. the sheet, on a hotspot's card
 // Every card is the one BottomSheet since 2026-09-30, a hotspot's and a
 // trip's alike; these gestures are checked on a hotspot's.
-/** Handle gestures the runner made no pointer events for, sent again by hand. */
-let handleByHand = 0;
 const pointerdowns = () => page.evaluate(() => window.__pointerdowns);
 /**
  * A gesture on the handle sent by hand, as pointer events: down at (x, y),
@@ -4468,11 +4480,13 @@ const overlapping = snapshot.polys.some((a) =>
 );
 if (!overlapping)
   skip('two overlapping hotspots open the list', 'no two hotspot polygons overlap today');
+}
 
 // ---------------------------------------- 5. a trip opened by a tap, framed
 // Trip links (?r=<id>) went on 2026-10-03, the owner's "remove that for
 // now": the address stays as it was, and the view a trip frames is checked
 // on a trip opened by a tap on its own line, as it was on one opened by a link.
+if (runsPart(1)) {
 if (!routeA) {
   skip('a trip opened by a tap leaves the address as it was', 'no lone route vertex to select');
 } else {
@@ -4595,6 +4609,7 @@ if (!routeA) {
   }
   await closeCard();
 }
+}
 
 // ------------------------------------------ 5b. ‹ on a trip opened on its own
 // A trip opened by a tap on its own line has no list behind it. Where other routes sharing
@@ -4603,6 +4618,7 @@ if (!routeA) {
 // card, "1 Route", Novaliches and SM Fairview (the owner's ask, 2026-09-29).
 // A drawn direction (a slot has no line to tap, and its fan would leave it
 // out), one a tap can open alone: the first of up to ten that does.
+if (runsPart(2)) {
 const fannedCandidates = fileDirections.filter(
   (d) => (d.shape?.coordinates?.length ?? 0) > 1 && fanOf(d.id).length > 1,
 );
@@ -4856,8 +4872,10 @@ await waitForSource(page, 'saved-routes');
 }
 
 onMadeUpMap = false;
+}
 
 // -------------------------------------------- 6. the desktop control, ±5 px
+if (runsPart(1)) {
 const desktop = await b.newContext({ viewport: { width: 1280, height: 800 } });
 const dpage = await desktop.newPage();
 watch(dpage);
@@ -4979,6 +4997,7 @@ if (!routeA) {
     `over "${over}", 20 px off "${off}"`,
   );
 }
+}
 
 // ------------------------------------- 6b. place search: a landmark's pin
 // A landmark picked in place search (.scratch/place-search, ticket 06) leaves a
@@ -4987,6 +5006,7 @@ if (!routeA) {
 // the only landmark of its name, a kilometre or more apart; the page is still on
 // the made-up map, whose places share no name with them, so each is listed as a
 // landmark, not as a Para place.
+if (runsPart(2)) {
 {
   const file = await (await fetch(`${BASE}/data/landmarks.v1.json`)).json();
   const named = new Map();
@@ -5143,6 +5163,7 @@ if (!routeA) {
       check('closing the cards lets the landmark go', gone === 0, `${gone} landmark pin(s)`);
     }
   }
+}
 }
 
 // --------------------------------------------------------- 7. housekeeping
