@@ -89,7 +89,9 @@ const centerOnLand = async () => {
       .reduce((a, c) => (c.length > a.length ? c : a), []),
   );
   const center = savedLine.length > 0 ? savedLine[Math.floor(savedLine.length / 2)] : CUBAO;
-  await page.evaluate((c) => window.__map.jumpTo({ center: c, zoom: 15 }), center);
+  await page.evaluate((c) => {
+    window.__map.jumpTo({ center: c, zoom: 15 });
+  }, center);
   await page.waitForTimeout(300);
 };
 

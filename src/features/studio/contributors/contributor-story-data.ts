@@ -64,10 +64,13 @@ export const STORY_DETAIL: ContributionDetail = {
   parts: [{ mode: 'ride', from: T0, to: T0 + 1_800_000 }],
 };
 
-/** The same ride with two Mark presses, 8:14 and 8:31 in Manila. */
+/** The same ride with two Mark presses, 8:14 and 8:31 in Manila, the first with a note. */
 export const STORY_DETAIL_MARKED: ContributionDetail = {
   ...STORY_DETAIL,
-  marks: [Date.UTC(2026, 9, 19, 0, 14), Date.UTC(2026, 9, 19, 0, 31)],
+  marks: [
+    { at: Date.UTC(2026, 9, 19, 0, 14), note: 'Tapat ng 7-Eleven, may waiting shed' },
+    { at: Date.UTC(2026, 9, 19, 0, 31), note: null },
+  ],
 };
 
 /** A walk to the jeep, a ride, a walk at the end: the phone said Lakad, Sakay, Lakad. */

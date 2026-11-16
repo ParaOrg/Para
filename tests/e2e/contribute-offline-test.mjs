@@ -28,6 +28,8 @@ const require = createRequire(join(root, 'package.json'));
 const { chromium } = require('playwright');
 
 const { check, tally } = harness();
+/** How long the page's worker may take to install and activate before the suite gives up. */
+const SW_READY_MS = 60_000;
 
 const workerFile = join(root, 'dist', 'contribute', 'sw.js');
 if (!existsSync(workerFile)) {
@@ -153,15 +155,29 @@ try {
   watch(first);
   await first.goto(`${base}/contribute/`, { waitUntil: 'load' });
   await first.getByRole('button', { name: 'Start Tracking' }).waitFor({ timeout: 20000 });
-  const worker = await first.evaluate(async () => {
-    const ready = await navigator.serviceWorker.ready;
+  // ready never settles when the worker's install fails (one precached URL that 404s does it),
+  // so it is bounded: a clear FAIL in a minute, not a job cancelled at its timeout.
+  const worker = await first.evaluate(async (waitMs) => {
+    const ready = await Promise.race([
+      navigator.serviceWorker.ready,
+      new Promise((settle) => setTimeout(() => settle(null), waitMs)),
+    ]);
+    if (!ready) return null;
     const all = await navigator.serviceWorker.getRegistrations();
     return {
       scope: new URL(ready.scope).pathname,
       scripts: all.map((r) => new URL(r.active?.scriptURL ?? 'none').pathname),
       hasManifestLink: !!document.querySelector('link[rel="manifest"]'),
     };
-  });
+  }, SW_READY_MS);
+  if (!worker) {
+    check(
+      `the page's worker becomes ready within ${SW_READY_MS / 1000} s`,
+      false,
+      'its install never finished: does every URL in PRECACHE_URLS exist in dist/?',
+    );
+    throw new Error('the contributor worker never became ready; the rest of the suite needs it');
+  }
   check(
     "the page's own worker registers, scoped to /contribute/, and no worker at /",
     worker.scope === '/contribute/' &&

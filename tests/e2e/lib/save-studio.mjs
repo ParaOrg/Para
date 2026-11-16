@@ -636,7 +636,12 @@ export const said = (ws) =>
   ws.map((w) => `${w.method} ${w.table}${w.query.slice(0, 70)}`).join(' · ');
 /** Put the map on a place, at a zoom, and give back where a [lng, lat] lands on the page. */
 export const go = async (c, zoom) => {
-  await page.evaluate(([c, z]) => window.__map.jumpTo({ center: c, zoom: z }), [c, zoom]);
+  await page.evaluate(
+    ([c, z]) => {
+      window.__map.jumpTo({ center: c, zoom: z });
+    },
+    [c, zoom],
+  );
   await page.waitForTimeout(400);
 };
 export const box = await page.locator('canvas.maplibregl-canvas').boundingBox();

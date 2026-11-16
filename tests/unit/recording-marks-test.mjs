@@ -7,11 +7,15 @@ import assert from 'node:assert/strict';
 
 import {
   MAX_MARKS,
+  NOTE_MAX_LENGTH,
   markFixIndexes,
   markedRecording,
   marksThatFit,
+  notedRecording,
+  unmarkedRecording,
   withMark,
 } from '../../src/features/contribute/recorder/recording-marks.ts';
+import { markEvent } from '../../src/features/contribute/uploads/packing/mark-event.ts';
 import { recordingSchema } from '../../src/features/contribute/storage/recording-schema.ts';
 import { rideRecording, rideFixes } from './fixtures/contribution-ride.mjs';
 
@@ -72,4 +76,51 @@ test('a stopped recording, or one holding the most marks, takes no mark', () => 
   assert.equal(markedRecording({ ...recording, status: 'stopped' }, 9), null);
   const full = Array.from({ length: MAX_MARKS }, (_, time) => ({ time }));
   assert.equal(markedRecording({ ...recording, marks: full }, 9_999), null);
+});
+
+test('a note is kept on its flag, found by its time, trimmed and cut to NOTE_MAX_LENGTH', () => {
+  const recording = { ...rideRecording('id-1', rideFixes(5)), marks: [{ time: 1 }, { time: 2 }] };
+  const noted = notedRecording(recording, 2, '  Tapat ng 7-Eleven  ');
+  assert.deepEqual(noted.marks, [{ time: 1 }, { time: 2, note: 'Tapat ng 7-Eleven' }]);
+  assert.deepEqual(
+    recording.marks,
+    [{ time: 1 }, { time: 2 }],
+    'the recording given is left as it was',
+  );
+  const long = notedRecording(recording, 1, 'x'.repeat(NOTE_MAX_LENGTH + 50));
+  assert.equal(long.marks[0].note.length, NOTE_MAX_LENGTH);
+  assert.ok(recordingSchema.safeParse(noted).success);
+});
+
+test('an empty note takes the note off; a flag that is not there takes none', () => {
+  const recording = {
+    ...rideRecording('id-1', rideFixes(5)),
+    marks: [{ time: 1, note: 'Waiting shed' }],
+  };
+  assert.deepEqual(notedRecording(recording, 1, '   ').marks, [{ time: 1 }]);
+  assert.equal(notedRecording(recording, 7, 'x'), null);
+  assert.equal(notedRecording({ ...recording, marks: undefined }, 1, 'x'), null);
+});
+
+test('a flag deleted goes with its note, and the others keep theirs', () => {
+  const recording = {
+    ...rideRecording('id-1', rideFixes(5)),
+    marks: [{ time: 1, note: 'A' }, { time: 2 }, { time: 3, note: 'C' }],
+  };
+  const left = unmarkedRecording(recording, 2);
+  assert.deepEqual(left.marks, [
+    { time: 1, note: 'A' },
+    { time: 3, note: 'C' },
+  ]);
+  assert.deepEqual(notedRecording(left, 3, 'C again').marks[1], { time: 3, note: 'C again' });
+  assert.equal(unmarkedRecording(recording, 9), null);
+});
+
+test('a mark goes up with its note only when it has one', () => {
+  assert.deepEqual(markEvent({ time: 5 }), { time: 5, kind: 'mark' });
+  assert.deepEqual(markEvent({ time: 5, note: 'Corner' }), {
+    time: 5,
+    kind: 'mark',
+    note: 'Corner',
+  });
 });

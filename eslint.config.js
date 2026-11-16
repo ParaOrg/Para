@@ -93,7 +93,13 @@ const SOURCE = [
   'scripts/**/*.ts',
   'workers/tiles/src/**/*.ts',
   'workers/site/src/**/*.ts',
+  'supabase/functions/**/*.ts',
 ];
+
+// The MapLibre Map methods the suites call that return the map itself (an esquery regex): see the
+// tests/e2e block below.
+const MAP_RETURNS_ITSELF =
+  '/^(jumpTo|easeTo|flyTo|panTo|panBy|zoomTo|zoomIn|zoomOut|setZoom|setCenter|setPitch|setBearing|rotateTo|resetNorth|fitBounds|fitScreenCoordinates|resize|stop|setPadding|setMaxBounds|setMinZoom|setMaxZoom|setPaintProperty|setLayoutProperty|setFilter|setStyle|addLayer|removeLayer|moveLayer|addSource|removeSource|setFeatureState|removeFeatureState|addImage|removeImage|triggerRepaint)$/';
 
 // No `enum` (.claude/CLAUDE.md, "Other naming rules"): an enum is code at run time and its own
 // kind of type, where a union of literals or an `as const` object is neither.
@@ -549,5 +555,25 @@ export default defineConfig([
       'tests/e2e/**/*.mjs',
     ],
     languageOptions: { globals: { ...readonly(NODE_GLOBALS), ...readonly(BROWSER_GLOBALS) } },
+  },
+  {
+    // A function handed to page.evaluate returns its value to Node, and these MapLibre methods
+    // return the map itself: Playwright then copies the whole map across, 1 to 4 s a call
+    // (commuter-test's hotspot loop spent about 9 minutes of a CI run on it). Call them as a
+    // statement inside braces.
+    files: ['tests/e2e/**/*.mjs'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        ...[
+          'ArrowFunctionExpression > CallExpression.body',
+          'ReturnStatement > CallExpression.argument',
+        ].map((returned) => ({
+          selector: `${returned}[callee.object.property.name='__map'][callee.property.name=${MAP_RETURNS_ITSELF}]`,
+          message:
+            'This returns the MapLibre map to Node, which Playwright copies at length. Call it inside braces so nothing is returned.',
+        })),
+      ],
+    },
   },
 ]);

@@ -52,7 +52,8 @@ none of it, and the contributor app is the same page inside an Android shell.
 
 **`/app/` is where the app is downloaded**, and what the QR codes on posters open, so their link
 holds while the app moves on. It is plain HTML in `public/app/`, outside Vite's entries: Android gets
-the newest APK from `releases/latest`, an iPhone the contributor page in the browser.
+the newest APK from `releases/latest`, an iPhone the contributor page in the browser and a form
+that takes an email for when the iPhone app is out (the `waitlist` Edge Function, below).
 
 Nothing from `src/app/studio/` or `src/features/studio/` reaches the public page: `npm run lint`
 checks the import boundaries (`eslint.config.js`) and `npm run build` the built page, and each
@@ -171,6 +172,7 @@ OFL 1.1. The map keeps "© OpenMapTiles" and "© OpenStreetMap contributors".
 | `src/design-system/` | the tokens, fonts and primitives (foundation ← primitives) |
 | `public/data/` | the published map, every version kept in history: `index.v5.json` (what the app reads), a line per direction in `lines/` (with its orange stretches, worked out as it is published), and for apps not yet updated `index.v4.json` (without loops), `index.v3.json` (without the ferry either), `index.json` and the older single file `map.json` (without any line) |
 | `supabase/migrations/` | the schema and its policies, in order |
+| `supabase/functions/` | Edge Functions, which hold the secrets a page must not: `waitlist` saves an email from `/app/` and sends its confirmation through Resend |
 | `scripts/` | tools: the build guards and the data check (`checks/`), the publish (`publish/`), Node's TypeScript hook (`node/`), the monthly map-tiles build (`tiles/`), the research screenshots and the cheap-phone timer, `phone-speed.mjs` with its parts, and the load test of the map and its tiles, `load-test.mjs`, run by hand only (`research/`), the icons' lossless PNG recompressor, `recompress-png.mjs` (`assets/`) |
 | `tests/unit/` | the unit checks, Node's own test runner (`npm run test:unit`) |
 | `tests/e2e/` | the headless suites, and their README |

@@ -575,7 +575,12 @@ await page.waitForTimeout(300);
 const guest = await open(false, '/studio/?e2e=1');
 const guestBody = async () => (await guest.locator('body').innerText()).replace(/\s+/g, ' ');
 const gbox = await guest.locator('canvas.maplibregl-canvas').boundingBox();
-await guest.evaluate(([c]) => window.__map.jumpTo({ center: c, zoom: 15 }), [at(0, 0)]);
+await guest.evaluate(
+  ([c]) => {
+    window.__map.jumpTo({ center: c, zoom: 15 });
+  },
+  [at(0, 0)],
+);
 await guest.waitForTimeout(400);
 await guest.getByRole('button', { name: 'New route, terminal or hintuan' }).click();
 await guest.getByRole('menuitem', { name: /Routes/ }).click();
@@ -721,7 +726,12 @@ check(
   !!newPlus && newPlus.y + newPlus.height <= 844 - 34,
   JSON.stringify(newPlus),
 );
-await phone.evaluate(([c]) => window.__map.jumpTo({ center: c, zoom: 15 }), [at(0, 0)]);
+await phone.evaluate(
+  ([c]) => {
+    window.__map.jumpTo({ center: c, zoom: 15 });
+  },
+  [at(0, 0)],
+);
 await phone.waitForTimeout(400);
 await phone.getByRole('button', { name: 'New route, terminal or hintuan' }).tap();
 await phone.getByRole('menuitem', { name: /Routes/ }).tap();
