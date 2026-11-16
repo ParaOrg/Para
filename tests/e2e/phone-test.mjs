@@ -3997,14 +3997,51 @@ const handGesture = (x, y, ys) =>
  * buttonTap send a dropped tap's click by hand for the same reason. How many
  * needed it is reported at the end.
  */
+
+// PROBE, not for merging: what the page saw of a handle gesture that needed sending by hand.
+const probeReset = () =>
+  page.evaluate(() => {
+    if (!window.__probe) {
+      window.__probe = [];
+      for (const t of ['touchstart', 'touchmove', 'touchend', 'touchcancel', 'pointerdown', 'pointermove', 'pointerup', 'pointercancel', 'lostpointercapture', 'gotpointercapture', 'click'])
+        document.addEventListener(t, (e) => {
+          const el = e.target instanceof Element ? e.target : null;
+          const tag = el ? (el.closest('[data-testid]')?.getAttribute('data-testid') ?? el.tagName.toLowerCase()) : String(e.target);
+          const last = window.__probe.at(-1);
+          const item = `${t}@${tag}${e.isTrusted ? '' : '(synthetic)'}`;
+          if (last && last.startsWith(item)) window.__probe[window.__probe.length - 1] = item + 'x' + ((Number(last.split('x').pop()) || 1) + 1);
+          else window.__probe.push(item);
+        }, true);
+    }
+    window.__probe.length = 0;
+  });
+const probeHandle = async (where, x, y) => {
+  const info = await page.evaluate(([px, py]) => {
+    const top = document.elementFromPoint(px, py);
+    const h = document.querySelector('[data-testid="card"] button[data-testid="dock-handle"]');
+    const r = h?.getBoundingClientRect();
+    return {
+      under: top ? (top.closest('[data-testid]')?.getAttribute('data-testid') ?? top.tagName) : 'nothing',
+      handle: r ? [Math.round(r.x), Math.round(r.y), Math.round(r.width), Math.round(r.height)] : null,
+      viewport: [innerWidth, innerHeight],
+      anims: [...document.querySelectorAll('[data-testid="card"]')].flatMap((c) => c.getAnimations({ subtree: true }).map((a) => a.transitionProperty ?? a.animationName ?? 'anim')),
+      events: window.__probe.join(' '),
+      odd: (window.__odd ?? []).slice(-4),
+      lastDown: window.__lastDown,
+    };
+  }, [x, y]);
+  console.log(`PROBE ${where} at ${Math.round(x)},${Math.round(y)} snap=${await sheetState().catch(() => '?')} ${JSON.stringify(info)}`);
+};
 const tapHandle = async () => {
   if ((await handle().count()) === 0) return false;
   const hb = await handle().first().boundingBox();
   if (!hb) return false;
   const [x, y] = [hb.x + hb.width / 2, hb.y + hb.height / 2];
   const seen = await pointerdowns();
+  await probeReset();
   await page.touchscreen.tap(x, y);
   if ((await until(pointerdowns, (n) => n !== seen, 450)) === seen) {
+    await probeHandle('tapHandle', x, y);
     handleByHand++;
     await handGesture(x, y, []);
   }
@@ -4025,6 +4062,7 @@ const dragHandle = async (dy) => {
   const y = hb.y + hb.height / 2;
   const steps = 8;
   const seen = await pointerdowns();
+  await probeReset();
   try {
     await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x, y }] });
     for (let i = 1; i <= steps; i++) {
@@ -4054,6 +4092,7 @@ const dragHandle = async (dy) => {
   await cardsSettled(page);
   // Neither made a pointer event: the runner's, as with tapHandle.
   if ((await pointerdowns()) === seen) {
+    await probeHandle(`dragHandle(${dy})`, x, y);
     handleByHand++;
     await handGesture(
       x,
@@ -4244,6 +4283,7 @@ if (!hotspot) {
     if (!hb) return false;
     const [x, y] = [hb.x + hb.width / 2, hb.y + hb.height / 2];
     const seen = await pointerdowns();
+    await probeReset();
     await page.mouse.move(x, y);
     await page.mouse.down();
     for (let i = 1; i <= 8; i++) {
@@ -4258,6 +4298,7 @@ if (!hotspot) {
     // handle it was held on, where it let go — which is the click this check
     // is for.
     if ((await pointerdowns()) === seen) {
+      await probeHandle(`mouseDrag(${dy})`, x, y);
       handleByHand++;
       await handGesture(
         x,
