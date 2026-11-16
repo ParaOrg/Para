@@ -11,10 +11,13 @@ Without it (a pull request's CI run, and a local run by default) the outside ser
 answered by stand-ins (`lib/stand-ins.mjs`):
 
 - the router (router.project-osrm.org): the live router's answers, recorded in
-  `fixtures/osrm/answers.json`.
+  `fixtures/osrm/answers.json`;
+- the basemap (tiles.openfreemap.org): OpenFreeMap's own styles, sprite and the glyph ranges the
+  suites draw with, from their source repositories, over one made-up tile (`fixtures/basemap/`,
+  its README for sources and licences).
 
-The other outside hosts come next: the basemap, the database's reads in the drawing suites and
-gate-test, Turnstile and the studio's terrain tiles. Main and staging pushes and the nightly run
+The other outside hosts come next: the database's reads in the drawing suites and gate-test,
+Turnstile and the studio's terrain tiles. Main and staging pushes and the nightly run
 set `PARA_LIVE_SERVICES=1` (`.github/workflows/ci.yml`), so every staging push still checks the
 live services. Each suite ends by listing the outside hosts it reached
 (`outside: <host> ×n (network n, stood in n, …)`, `lib/outside-requests.mjs`).
