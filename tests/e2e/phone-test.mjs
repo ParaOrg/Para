@@ -496,29 +496,59 @@ const mapTap = async (x, y) => {
   if ((await page.evaluate(() => window.__clicks)) > before + 1) lateClicks++;
 };
 /**
- * A finger on a button (a chooser row): a real touch, and, when `done()` is
- * still false 1.5 s later, a click on the button, since the runner drops a
- * touch on a button the same way (the sixth CI run). False when there is no
- * such button.
+ * Where a finger taps `locator`, as a person would: scrolled into view, held
+ * still, and the topmost thing at its middle. A row below the fold of a sheet
+ * was tapped where it would have been, off the screen (62 of a run's 76
+ * "dropped" taps), and another element over a button took its tap. Either way
+ * the reason is returned, and the caller fails on it.
+ */
+const fingerOn = async (locator) => {
+  const el = locator.first();
+  if ((await locator.count()) === 0) return { why: 'no such element' };
+  await el.scrollIntoViewIfNeeded({ timeout: 2000 }).catch(() => {});
+  // The box once two frames agree: a sheet or a list still moving has not.
+  let box = null;
+  const by = Date.now() + 3000;
+  for (;;) {
+    const before = await el.boundingBox().catch(() => null);
+    await settled();
+    box = await el.boundingBox().catch(() => null);
+    const same =
+      !!before && !!box && ['x', 'y', 'width', 'height'].every((k) => before[k] === box[k]);
+    if (same || Date.now() > by) break;
+  }
+  if (!box) return { why: 'not on the page' };
+  const at = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+  const onTop = await el.evaluate((node, { x, y }) => {
+    const top = document.elementFromPoint(x, y);
+    if (top && (top === node || node.contains(top))) return null;
+    return top
+      ? (top.closest('[data-testid]')?.getAttribute('data-testid') ?? top.tagName)
+      : 'nothing (off the screen)';
+  }, at);
+  return onTop
+    ? { why: `${onTop} at its middle (${Math.round(at.x)}, ${Math.round(at.y)})` }
+    : { at };
+};
+/** A tap that did not reach its target: a FAIL naming why. */
+const missed = (locator, why) => check(`a tap reaches ${locator}`, false, why);
+
+/**
+ * A finger on a button (a chooser row), where a person would tap it (fingerOn),
+ * and `done()` true within 1.5 s of it. False when there is no such button; a
+ * FAIL when the tap could not reach it or did nothing.
  */
 const buttonTap = async (locator, done) => {
-  const b = (await locator.count())
-    ? await locator
-        .first()
-        .boundingBox({ timeout: 2000 })
-        .catch(() => null)
-    : null;
-  if (!b) return false;
-  await page.touchscreen.tap(b.x + b.width / 2, b.y + b.height / 2);
-  await settled();
-  if (!(await until(done, Boolean, 1500))) {
-    tapsByHand++;
-    // Sent straight to the button: Playwright's own click first waits for
-    // the page to hold still, which a runner drawing a phone at three
-    // device pixels per CSS pixel may not do in time (the seventh CI run).
-    await locator.first().dispatchEvent('click');
-    await until(done, Boolean, 1500);
+  if ((await locator.count()) === 0) return false;
+  const { at, why } = await fingerOn(locator);
+  if (!at) {
+    missed(locator, why);
+    return true;
   }
+  await page.touchscreen.tap(at.x, at.y);
+  await settled();
+  if (!(await until(done, Boolean, 1500)))
+    missed(locator, 'tapped, and nothing came of it in 1.5 s');
   // Whatever the tap set going, a sheet or the camera, come to rest.
   await cardsSettled(page);
   return true;
@@ -526,38 +556,11 @@ const buttonTap = async (locator, done) => {
 
 /**
  * A finger's tap on `locator`, for a check that a click with no touch before it would pass by
- * mistake (buttonTap's fallback is one, as a keyboard's is). A touch the runner drops is sent again
- * as a finger sends it: pointerdown and pointerup, then the click, at the same spot. Whatever it
- * set going comes to rest.
+ * mistake: the same as buttonTap. Whatever it set going comes to rest.
  */
 const touchTap = async (locator, done) => {
-  const b = await locator
-    .first()
-    .boundingBox({ timeout: 2000 })
-    .catch(() => null);
-  if (!b) return false;
-  const at = { x: b.x + b.width / 2, y: b.y + b.height / 2 };
-  await page.touchscreen.tap(at.x, at.y);
-  await settled();
-  if (!(await until(done, Boolean, 1500))) {
-    tapsByHand++;
-    await locator.first().evaluate((el, { x, y }) => {
-      const finger = { bubbles: true, cancelable: true, composed: true, clientX: x, clientY: y };
-      const pointer = {
-        ...finger,
-        pointerId: 91,
-        pointerType: 'touch',
-        isPrimary: true,
-        button: 0,
-      };
-      el.dispatchEvent(new PointerEvent('pointerdown', { ...pointer, buttons: 1 }));
-      el.dispatchEvent(new PointerEvent('pointerup', { ...pointer, buttons: 0 }));
-      el.dispatchEvent(new MouseEvent('click', { ...finger, detail: 1, button: 0 }));
-    }, at);
-    await until(done, Boolean, 1500);
-  }
-  await cardsSettled(page);
-  return true;
+  if ((await locator.count()) === 0) return false;
+  return buttonTap(locator, done);
 };
 
 /** Where the camera is: its centre and zoom. */
