@@ -9,7 +9,7 @@ export const ROAD_LIVERIES = ['jeep', 'uv-express', 'ejeep', 'bus'] as const;
 export type RoadLivery = (typeof ROAD_LIVERIES)[number];
 
 export const isRoadLivery = (livery: string): livery is RoadLivery =>
-  (ROAD_LIVERIES as readonly string[]).includes(livery);
+  ROAD_LIVERIES.some((roadLivery) => roadLivery === livery);
 
 /**
  * A train route's colour is its line's (Map/Rail/LightRailWayOne, LightRailWayTwo and
