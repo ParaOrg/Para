@@ -7,10 +7,10 @@ import type { ToastMessage } from '@/shared/ui/toast-queue';
 import { useToast } from '@/shared/ui/use-toast';
 
 import type { MapNoteGiven } from './map-note';
+import { NOTE_ADDED_MESSAGE } from './note-added';
 import type { PageProblem, PageProblemIcon } from './page-problem';
 import { pointsLostWords, routeRecordedWords, type RouteRecordedGiven } from './route-recorded';
 import { SCREEN_AWAKE_PROBLEM } from './screen-awake-problem';
-import { FlagStopIcon } from '../common/flag-stop-icon';
 import { CheckIcon } from '../common/history-icons';
 
 const ICONS = {
@@ -25,8 +25,8 @@ export interface PageToastsProps {
   isScreenFreeToSleep: boolean;
   /** The map locator's note, or null: said as a problem of its own id. */
   mapNote: MapNoteGiven | null;
-  /** How many stops have been flagged on the page: each one more says "Stop flagged". */
-  stopsFlagged: number;
+  /** How many stops' notes have been saved from their card: each one more says so. */
+  notesAdded: number;
   /** The last route saved, in words, and how many have been: each one more says them. */
   routeRecorded: RouteRecordedGiven | null;
   /** The just-saved route's upload failing, as it stands: said until it goes, or ✕. */
@@ -50,14 +50,14 @@ interface ProblemsSaidProps {
 /**
  * The contributor page's problems, as toasts at the top (shared/ui's ToastHost): one at a time,
  * each until ✕ or until it is fixed. One closed with ✕ is not said again until it has cleared and
- * come back, or says something else. A flagged stop is said too, briefly. Loaded the first time
+ * come back, or says something else. A stop's note saved is said too, briefly. Loaded the first time
  * the page has one of them to say.
  */
 export function PageToasts({
   problem,
   isScreenFreeToSleep,
   mapNote,
-  stopsFlagged,
+  notesAdded,
   routeRecorded,
   uploadProblem,
 }: PageToastsProps) {
@@ -77,18 +77,8 @@ export function PageToasts({
   return (
     <ToastHost>
       <ProblemsSaid problems={problems} />
-      {/* Compact: two words, hugging them, no ✕ (the owner's "small toast"). */}
-      <NewsSaid
-        message={{
-          id: 'stop-flagged',
-          kind: 'info',
-          size: 'compact',
-          icon: <FlagStopIcon />,
-          title: 'Stop flagged',
-        }}
-        times={stopsFlagged}
-        isQuiet={problems.length > 0}
-      />
+      {/* Compact, as Figma's Note successfully added (4716:9216): its words alone, no ✕. */}
+      <NewsSaid message={NOTE_ADDED_MESSAGE} times={notesAdded} isQuiet={problems.length > 0} />
       {routeRecorded && (
         <>
           <NewsSaid
@@ -119,7 +109,7 @@ export function PageToasts({
 }
 
 /**
- * Something that just happened ("Stop flagged", "Route recorded"): an info toast that leaves by
+ * Something that just happened ("Note successfully added", "Route recorded"): an info toast that leaves by
  * itself, or a problem that stays until ✕ ("Part of the ride wasn't kept"). Under one id, so the
  * same again while it shows is said in place, an info's clock started afresh, and never stacks.
  */

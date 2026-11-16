@@ -8,7 +8,16 @@ const isoTime = z.pipe(
 const markSchema = z.object({
   kind: z.literal('mark'),
   at: isoTime,
+  /** The contributor's words on the stop they flagged; uploads before notes have none. A note that
+   * is not text is dropped, never the mark with it. */
+  note: z.catch(z.optional(z.string()), undefined),
 });
+
+/** A stop the contributor flagged: when, and their note on it, or null for none. */
+export interface ContributionMark {
+  at: number;
+  note: string | null;
+}
 
 const modeSchema = z.object({
   kind: z.literal('mode'),
@@ -27,18 +36,20 @@ export interface ContributionPart {
 }
 
 /**
- * The times the contributor pressed Mark, oldest first. The events array also
- * carries other kinds (the way switches, the modes): anything that is not a
- * mark with a readable time is left out, never an error.
+ * The stops the contributor flagged, oldest first, each with its note. The events array also
+ * carries other kinds (the way switches, the modes): anything that is not a mark with a readable
+ * time is left out, never an error. A note that is blank reads as none.
  */
-export function marksOf(events: unknown): number[] {
+export function marksOf(events: unknown): ContributionMark[] {
   if (!Array.isArray(events)) return [];
   return events
     .flatMap((event: unknown) => {
       const parsed = z.safeParse(markSchema, event);
-      return parsed.success && Number.isFinite(parsed.data.at) ? [parsed.data.at] : [];
+      if (!parsed.success || !Number.isFinite(parsed.data.at)) return [];
+      const note = parsed.data.note?.trim() ?? '';
+      return [{ at: parsed.data.at, note: note === '' ? null : note }];
     })
-    .sort((a, b) => a - b);
+    .sort((a, b) => a.at - b.at);
 }
 
 /**

@@ -410,7 +410,12 @@ const isLong = (x) => x.shape && x.shape.coordinates.length > 40;
 const v =
   variants.find((x) => jeepneyIds.has(x.id) && isLong(x)) ?? variants.find(isLong) ?? variants[0];
 const mid = v.shape.coordinates[Math.floor(v.shape.coordinates.length / 2)];
-await page.evaluate(([c]) => window.__map.jumpTo({ center: c, zoom: 14 }), [mid]);
+await page.evaluate(
+  ([c]) => {
+    window.__map.jumpTo({ center: c, zoom: 14 });
+  },
+  [mid],
+);
 await page.waitForFunction(() => window.__map.loaded(), null, { timeout: 30000 });
 await page.waitForTimeout(500);
 const at = await page.evaluate(
@@ -480,7 +485,12 @@ await mark(
   async () => ((await window.__src('saved-routes'))?.features?.length ?? 0) > 0,
   budgetMs,
 );
-await page.evaluate(([c]) => window.__map.jumpTo({ center: c, zoom: 16 }), [mid]);
+await page.evaluate(
+  ([c]) => {
+    window.__map.jumpTo({ center: c, zoom: 16 });
+  },
+  [mid],
+);
 await page.waitForFunction(() => window.__map.loaded(), null, { timeout: 30000 });
 await page.waitForTimeout(500);
 const at2 = await page.evaluate(
@@ -649,14 +659,12 @@ check(
     await cpage.waitForTimeout(500);
     const before = await cpage.evaluate(() => window.__long);
     for (let i = 0; i < 20; i++) {
-      await cpage.evaluate(
-        (k) =>
-          window.__map.jumpTo({
-            center: [121.0 + (k % 20) * 0.007, 14.55 + (k % 9) * 0.01],
-            zoom: 13 + (k % 4),
-          }),
-        i,
-      );
+      await cpage.evaluate((k) => {
+        window.__map.jumpTo({
+          center: [121.0 + (k % 20) * 0.007, 14.55 + (k % 9) * 0.01],
+          zoom: 13 + (k % 4),
+        });
+      }, i);
       await cpage.waitForTimeout(40);
     }
     await cpage.waitForTimeout(500);

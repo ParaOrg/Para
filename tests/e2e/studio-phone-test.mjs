@@ -113,7 +113,12 @@ const line = (saved ?? [])
 const centre = line.length ? line[Math.floor(line.length / 2)] : [121.0527, 14.6187];
 box = await page.locator('canvas.maplibregl-canvas').boundingBox();
 const recentre = async (zoom = 15) => {
-  await page.evaluate(([c, z]) => window.__map.jumpTo({ center: c, zoom: z }), [centre, zoom]);
+  await page.evaluate(
+    ([c, z]) => {
+      window.__map.jumpTo({ center: c, zoom: z });
+    },
+    [centre, zoom],
+  );
   await page.waitForTimeout(500);
 };
 // The saved route's vertices on screen, `gap` px apart, clear of the
@@ -395,7 +400,9 @@ check(
 // desktop's delete. Held on a point, it must not delete it: MapLibre drops a
 // contextmenu after a touch itself, and this keeps it doing so.
 c = await cp();
-await page.evaluate((p) => window.__map.jumpTo({ center: p }), c[1]);
+await page.evaluate((p) => {
+  window.__map.jumpTo({ center: p });
+}, c[1]);
 await page.waitForTimeout(300);
 const held = await proj(c[1]);
 // What Android sends: a bare contextmenu, no mousedown before it.

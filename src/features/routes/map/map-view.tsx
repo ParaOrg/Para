@@ -118,6 +118,11 @@ interface Props {
   /** Said when the map's 'load' comes, and again when a failure takes it back. */
   onLoadedChange?: (isLoaded: boolean) => void;
   /**
+   * False for a second, passing map on a page (a flagged stop's): the suites keep reading the
+   * page's own. Read once, as the map is made.
+   */
+  isExposed?: boolean;
+  /**
    * MapLibre's +, − and compass, top right, for a mouse (never a finger:
    * `coarse`). The studio keeps them; the public map has none (the owner's
    * call: they were annoying for commuters), as the wheel, a double click and
@@ -225,6 +230,7 @@ export const METRO_MANILA: [[number, number], [number, number]] = [
 export function MapView({
   onReady,
   onLoadedChange,
+  isExposed = true,
   zoomButtons = true,
   maxBounds,
   foldCredits = false,
@@ -341,7 +347,7 @@ export function MapView({
       const made = map;
 
       // From its making, for the builds that hand it out (expose-map.ts).
-      exposeMapEarly(map);
+      if (isExposed) exposeMapEarly(map);
 
       // The public map: what it opened framed on, and the commuter's gestures
       // from now on, for the routes' own fit to leave a map they have moved
@@ -412,7 +418,7 @@ export function MapView({
         setLoaded(true);
         setError(null);
         // At its 'load', for the builds that hand it out (expose-map.ts).
-        exposeMap(made);
+        if (isExposed) exposeMap(made);
         setReady(map);
         // The public map's was handed over at its style's load (above).
         if (!openOn) onReadyRef.current?.(made);
@@ -469,7 +475,7 @@ export function MapView({
       setReady(null);
       map?.remove();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- the map is made once: `basemap`, `zoomButtons`, `maxBounds`, `foldCredits`, `openOn`, `makeStyle` and `transformRequest` are read once, as it is made (each prop says so)
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- the map is made once: `basemap`, `isExposed`, `zoomButtons`, `maxBounds`, `foldCredits`, `openOn`, `makeStyle` and `transformRequest` are read once, as it is made (each prop says so)
   }, []);
 
   return (

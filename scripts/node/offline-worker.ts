@@ -7,9 +7,12 @@ import { VitePWA } from 'vite-plugin-pwa';
 import type { BasemapCacheRules } from './basemap-offline.ts';
 import { runtimeCaches } from './offline-worker-caches.ts';
 
-/** Brand colours, measured from the logo: the wordmark's maroon and a warm off-white behind the pin. */
-const THEME_COLOUR = '#8a595a';
-const BACKGROUND_COLOUR = '#f5f1ee';
+/**
+ * The brand purple, the design token --color-parabrand-900 (design-system/foundation/tokens.css)
+ * and the app icon's ground: the installed app's title bar, and the splash behind the icon.
+ */
+const THEME_COLOUR = '#3b009a';
+const BACKGROUND_COLOUR = '#3b009a';
 
 /**
  * The public map's installable app: its manifest and its offline worker

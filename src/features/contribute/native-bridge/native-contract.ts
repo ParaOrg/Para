@@ -2,7 +2,6 @@
 // other: the plugins' names, the keys and values each side writes, and the shapes they read. The
 // Java holds the same names as string literals, so tests/unit/native-contract-test.mjs reads the
 // Java sources for every one of them: a rename on either side fails there.
-//
 // It sits in native-bridge/, not native/, because the recorder on the web path names these shapes.
 // Code on the web path imports only its types, so the web build carries none of it.
 import * as z from 'zod/mini';
@@ -14,6 +13,7 @@ export const PLUGIN_NAMES = {
   ride: 'Ride',
   fixLog: 'FixLog',
   nativePermissions: 'NativePermissions',
+  shareImage: 'ShareImage',
 } as const;
 
 /**
