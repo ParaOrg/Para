@@ -208,7 +208,7 @@ export function BottomSheet({
   // place's name tapped) is new, and without this it would show at full height
   // for a moment and glide down to its height. Never changed after, so React
   // leaves the drag's and the glide's --sheet-y alone.
-  const [opensAt] = useState(() => ({ '--sheet-y': slide(snap, shape) }) as CSSProperties);
+  const [opensAt] = useState<CSSProperties>(() => ({ '--sheet-y': slide(snap, shape) }));
   useDialogFocus(own, hidden);
   // A sheet left open under an inert page (the studio's other maps) is out of reach, Escape too.
   useEscape(() => {
