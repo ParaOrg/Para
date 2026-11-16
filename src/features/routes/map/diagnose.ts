@@ -15,7 +15,8 @@ function probeWebGL(): Pick<Diagnosis, 'webgl' | 'renderer'> {
   let renderer: string | null = null;
   try {
     const ext = gl.getExtension('WEBGL_debug_renderer_info');
-    if (ext) renderer = gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) as string;
+    const named: unknown = ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : null;
+    if (typeof named === 'string') renderer = named;
   } catch {
     /* fingerprint-blocked; not fatal */
   }

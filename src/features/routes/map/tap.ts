@@ -28,7 +28,7 @@ export const HOTSPOT_TAP_LAYERS = [LAYERS.hotspotsPin, LAYERS.hotspotsDot, HOTSP
  * trackpad. Without an event, fall back to the device's primary pointer.
  */
 export function coarsePointer(event?: Event): boolean {
-  const type = (event as { pointerType?: string } | undefined)?.pointerType;
+  const type: unknown = event && 'pointerType' in event ? event.pointerType : undefined;
   if (type === 'touch' || type === 'pen') return true;
   if (type === 'mouse') return false;
   if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return false;
