@@ -1392,7 +1392,9 @@ const tripChecks = async () => {
       .catch(() => {});
     // A trip opening no longer fits its route (the owner, 2026-10-21), so the
     // pick starts from out at zoom 12, where the whole route used to leave it.
-    await page.evaluate(() => window.__map.jumpTo({ zoom: 12 }));
+    await page.evaluate(() => {
+      window.__map.jumpTo({ zoom: 12 });
+    });
     await page
       .waitForFunction(() => !window.__map.isMoving(), null, { timeout: 3000 })
       .catch(() => {});
@@ -1838,10 +1840,9 @@ const tripChecks = async () => {
       await buttonTap(pickButton, async () => !(await isPicked()));
       await settle();
       // Back where the first pick began, for the checks after.
-      await page.evaluate(
-        (cam) => window.__map.jumpTo({ center: [cam.lng, cam.lat], zoom: cam.zoom }),
-        camBeforePick,
-      );
+      await page.evaluate((cam) => {
+        window.__map.jumpTo({ center: [cam.lng, cam.lat], zoom: cam.zoom });
+      }, camBeforePick);
     }
     const letGo = await page.evaluate(async () => ({
       pins: document.querySelectorAll('[data-testid="hintuan-pin"]').length,

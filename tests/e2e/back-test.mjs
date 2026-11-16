@@ -159,7 +159,9 @@ const phone = async (loops) => {
   );
   // The map's own first framing of the routes may still be settling: wait it out.
   await page.waitForTimeout(1500);
-  await page.evaluate(() => window.__map.jumpTo({ center: [121.074, 14.653], zoom: 14.3 }));
+  await page.evaluate(() => {
+    window.__map.jumpTo({ center: [121.074, 14.653], zoom: 14.3 });
+  });
   await page.waitForFunction(() => !window.__map.isMoving(), null, { timeout: 15000 });
   await page.waitForTimeout(400);
   return { context, page, errors };

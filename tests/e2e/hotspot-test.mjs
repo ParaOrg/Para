@@ -94,7 +94,9 @@ const center = savedLine
   ? savedLine.geometry.coordinates[Math.floor(savedLine.geometry.coordinates.length / 2)]
   : FALLBACK_CENTER;
 const recentre = () =>
-  page.evaluate(([lng, lat]) => window.__map.jumpTo({ center: [lng, lat], zoom: 15 }), center);
+  page.evaluate(([lng, lat]) => {
+    window.__map.jumpTo({ center: [lng, lat], zoom: 15 });
+  }, center);
 await recentre();
 await page.waitForTimeout(300);
 

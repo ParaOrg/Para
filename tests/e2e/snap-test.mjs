@@ -224,7 +224,12 @@ const view = async (points) => {
     (Math.min(...lng) + Math.max(...lng)) / 2,
     (Math.min(...lat) + Math.max(...lat)) / 2,
   ];
-  await page.evaluate(([c, z]) => window.__map.jumpTo({ center: c, zoom: z }), [center, ZOOM]);
+  await page.evaluate(
+    ([c, z]) => {
+      window.__map.jumpTo({ center: c, zoom: z });
+    },
+    [center, ZOOM],
+  );
   await page.waitForTimeout(300);
 };
 const newRoute = async () => {
