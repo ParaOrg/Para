@@ -20,8 +20,11 @@ import { BASEMAP_COPIES } from './basemap-copies';
  * the cache at once and refreshed behind it. Everything else goes to the network untouched.
  */
 export interface BasemapCache {
-  /** For the map's `transformRequest`: the basemap host's files sent through the cache. */
-  transformRequest: RequestTransformFunction;
+  /**
+   * For the map's `transformRequest`: the basemap host's files sent through the cache. It answers
+   * at once, never with a promise, so warming tiles can read its answer directly.
+   */
+  transformRequest: (url: string) => RequestParameters | undefined;
   /** What the protocol answers MapLibre with. */
   load: AddProtocolAction;
 }

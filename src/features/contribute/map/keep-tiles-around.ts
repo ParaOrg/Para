@@ -1,4 +1,4 @@
-import type { MapLibreMap, RequestParameters } from 'maplibre-gl';
+import type { MapLibreMap } from 'maplibre-gl';
 
 import type { LngLat } from '@/shared/utils/geo';
 
@@ -17,8 +17,7 @@ const WARM_AT_ONCE = 4;
  */
 export async function warmTiles(cache: BasemapCache, urls: readonly string[]): Promise<void> {
   const asked = urls.flatMap((url) => {
-    // The cache's own transform answers at once, never with a promise.
-    const request = cache.transformRequest(url) as RequestParameters | undefined;
+    const request = cache.transformRequest(url);
     return request?.url ? [request.url] : [];
   });
   for (let i = 0; i < asked.length; i += WARM_AT_ONCE) {
@@ -26,9 +25,9 @@ export async function warmTiles(cache: BasemapCache, urls: readonly string[]): P
       asked
         .slice(i, i + WARM_AT_ONCE)
         .map((url) =>
-          Promise.resolve(
-            cache.load({ url, type: 'arrayBuffer' } as RequestParameters, new AbortController()),
-          ).catch(() => undefined),
+          Promise.resolve(cache.load({ url, type: 'arrayBuffer' }, new AbortController())).catch(
+            () => undefined,
+          ),
         ),
     );
   }
