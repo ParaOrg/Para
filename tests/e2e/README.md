@@ -4,6 +4,28 @@ Drive the dev server in headless Chromium and check that both pages behave: the
 public map at `/` and the editor at `/studio/`. Runs anywhere Playwright's
 Chromium does.
 
+## Outside services: stood in, or live
+
+A suite's browser reaches no host off the machine unless `PARA_LIVE_SERVICES=1` is set.
+Without it (a pull request's CI run, and a local run by default) the outside services are
+answered by stand-ins (`lib/stand-ins.mjs`):
+
+- the router (router.project-osrm.org): the live router's answers, recorded in
+  `fixtures/osrm/answers.json`.
+
+The other outside hosts come next: the basemap, the database's reads in the drawing suites and
+gate-test, Turnstile and the studio's terrain tiles. Main and staging pushes and the nightly run
+set `PARA_LIVE_SERVICES=1` (`.github/workflows/ci.yml`), so every staging push still checks the
+live services. Each suite ends by listing the outside hosts it reached
+(`outside: <host> ×n (network n, stood in n, …)`, `lib/outside-requests.mjs`).
+
+    PARA_LIVE_SERVICES=1 node tests/e2e/snap-test.mjs        # a suite against the live services
+    node scripts/research/record-osrm.mjs                    # re-record the router's answers
+
+**A stand-in gone stale** shows as a live run failing where its pull request's run passed, or
+as a run failing with "the router's stand-in has no answer". The first step is always to
+re-record (the script above, with the dev server up), then look again.
+
     npx playwright install chromium                          # once; Playwright itself is a devDependency
     npm run dev                                              # in another terminal, on :5173
     node tests/e2e/loop-test.mjs              # 40: a loop's trip (UP – Ikot, a made-up block served in place of the map file, no database) — no SWITCH and Ikot where Papunta stands, the tip the first place the line passes with no location, the one nearest the commuter once the LocatorButton has a fix (chosen as the trip opens and never moved under the rider, afresh on reopening), the first when the fix is vaguer than 200 m or farther than 1 km from every box, and the place whose card the trip was opened from; the top and bottom rows the tip, the tiles the whole loop and then the ride forward from the tip to a row, a start and a row above it wrapping the ride with one fold between, either end row riding on round to the tip, × Remove as start letting it go; the place's card listing the loop with Ikot and no SWITCH over loops alone (PARA_NO_TILES=1 where tiles are blocked); and on a wide screen, with a place's card open beside place search, Escape in the field clears it and leaves the card open (a second Escape too), while out of the field Escape closes the card as before
