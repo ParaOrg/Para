@@ -28,7 +28,6 @@ import { linksThrough, directionsStartingIn } from '../data/hotspots-geometry';
 import type { Drawing } from '../drawing/use-drawing';
 
 interface HotspotPanelProps {
-  /** The parts of the drawing the panel reads: the outline and its area, and its Cancel. */
   draw: Pick<Drawing, 'area' | 'controlPoints' | 'cancel'>;
   /** The hotspot being edited, or null for a new one. */
   existing: HotspotRow | null;
