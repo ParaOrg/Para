@@ -204,8 +204,9 @@ export default defineConfig([
         { fixStyle: 'separate-type-imports' },
       ],
       // No `as` to quiet the compiler (.claude/CLAUDE.md, "TypeScript"); `as const` is not one
-      // and passes. A warning until the tree is clean of it, folder by folder, then an error.
-      '@typescript-eslint/consistent-type-assertions': ['warn', { assertionStyle: 'never' }],
+      // and passes. The few kept carry a single-line disable whose reason names their ticket
+      // (.scratch/type-assertions/issues/).
+      '@typescript-eslint/consistent-type-assertions': ['error', { assertionStyle: 'never' }],
       // No `enum`, the build's variables read only in the env modules, and no plain `lazy`
       // (all above).
       'no-restricted-syntax': ['error', NO_ENUM, ...ENV_ONLY_IN_ENV_MODULES, ...NO_PLAIN_LAZY],
