@@ -2,7 +2,8 @@
 // lines and the tally at the end, the https route through Node for a
 // sandbox, the bare style that stands in for the basemap, the wait for a
 // map source's first features, and the reload the dev server may be holding
-// for the next page that connects.
+// for the next page that connects. As a suite starts, the folder and commit
+// the dev server serves, beside the run's own.
 //
 // BASE and harness: every suite but pwa-test, which starts its own server and
 // keeps its own count. nodeFetch: gate, commuter, phone, hotspot,
@@ -14,10 +15,41 @@
 // waitFor: save-studio, save, save-ikot, save-edit, save-drafts and
 // studio-contributors.
 
+import { execFileSync } from 'node:child_process';
+import { resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
 import './outside-requests.mjs';
 
 /** The dev server's address: PARA_BASE, or http://localhost:5173. */
 export const BASE = (process.env.PARA_BASE ?? 'http://localhost:5173').replace(/\/$/, '');
+
+/** The commit checked out in `folder`, or why there is none to name. */
+const commitIn = (folder) => {
+  try {
+    return execFileSync('git', ['rev-parse', 'HEAD'], { cwd: folder, encoding: 'utf8' }).trim();
+  } catch {
+    return 'not a git checkout';
+  }
+};
+
+/**
+ * Printed as a suite starts: the folder and commit the dev server at BASE serves, beside this
+ * run's own. A suite run from one worktree against another's server checks the other's code,
+ * so a mismatch is said before the first check. Quiet when the server says nothing (pwa-test's
+ * own server, a deployed address).
+ */
+const served = await fetch(`${BASE}/__para/served-source`, { signal: AbortSignal.timeout(2000) })
+  .then((response) => (response.ok ? response.json() : null))
+  .catch(() => null);
+if (served) {
+  const here = resolve(fileURLToPath(new URL('../../..', import.meta.url)));
+  const ours = commitIn(here);
+  const isSame = resolve(served.folder) === here && served.commit === ours;
+  console.log(
+    `${isSame ? '' : 'WARN  '}the dev server at ${BASE} serves ${served.folder} at ${served.commit.slice(0, 8)}; this run is ${here} at ${ours.slice(0, 8)}${isSame ? '' : ': not the code under test'}`,
+  );
+}
 
 /**
  * A suite's count. `check` prints PASS or FAIL and its detail, `skip` prints
