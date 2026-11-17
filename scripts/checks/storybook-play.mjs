@@ -117,6 +117,7 @@ function serve(root) {
 async function runStory(page, base, story) {
   const unanswered = [];
   page.__paraUnanswered = unanswered;
+  page.__paraStoryId = story.id;
   await page.goto(`${base}/iframe.html?id=${encodeURIComponent(story.id)}&viewMode=story`);
   const finished = await page
     .waitForFunction(() => globalThis.__paraPlay?.done, null, { timeout: STORY_TIMEOUT_MS })
@@ -159,6 +160,8 @@ const listed = new Map(
 );
 const failed = new Set();
 const problems = [];
+/** Every outside request refused, with the story open when it was made: one late, after its story said it finished, is failed at the end. */
+const refusedRequests = [];
 let next = 0;
 await Promise.all(
   Array.from({ length: WORKERS }, async () => {
@@ -172,6 +175,7 @@ await Promise.all(
         const answer = standInAnswer(route.request().url());
         if (answer) return route.fulfill(answer);
         page.__paraUnanswered?.push(route.request().url());
+        refusedRequests.push({ story: page.__paraStoryId, url: route.request().url() });
         return route.abort();
       },
     );
@@ -191,6 +195,13 @@ await Promise.all(
 );
 await browser.close();
 close();
+for (const { story, url } of refusedRequests) {
+  if (problems.includes(story)) continue;
+  problems.push(story);
+  console.error(
+    `FAIL  ${story}: an outside request no stand-in answers, made while it was open and not sent: ${url}`,
+  );
+}
 const ids = new Set(stories.map((story) => story.id));
 for (const id of ONLY ? [] : listed.keys()) {
   let stale = null;
