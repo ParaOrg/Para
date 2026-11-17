@@ -11,7 +11,8 @@ Without it (a pull request's CI run, and a local run by default) the outside ser
 answered by stand-ins (`lib/stand-ins.mjs`):
 
 - the router (router.project-osrm.org): the live router's answers, recorded in
-  `fixtures/osrm/answers.json`.
+  `fixtures/osrm/answers.json`, keyed with each coordinate rounded to 6 decimals (about 0.1 m),
+  since the same click comes back a few 1e-12 degrees apart from run to run.
 
 The other outside hosts come next: the basemap, the database's reads in the drawing suites and
 gate-test, Turnstile and the studio's terrain tiles. Main and staging pushes and the nightly run

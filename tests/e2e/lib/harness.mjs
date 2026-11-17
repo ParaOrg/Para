@@ -10,6 +10,7 @@
 // studio-scale and save-studio. waitForSource: commuter, phone, hotspot,
 // regression-gestures, extend, group and studio-phone. takeHeldReload: phone.
 // mapIdle, cardsSettled and until, the waits on the state a check reads: commuter.
+// waitForMapSettled, the map loaded while chevrons flow: extend and regression-gestures.
 // waitFor: save-studio, save, save-ikot, save-edit, save-drafts and
 // studio-contributors.
 
@@ -151,11 +152,12 @@ export const waitForSource = async (page, id, ms = 20000) => {
 };
 
 /**
- * The one source that never comes to rest while a route is lit: its chevrons,
- * set afresh fifteen times a second (direction-arrows.ts). The map is at rest
- * all the same.
+ * The sources that never come to rest while their chevrons flow, set afresh
+ * fifteen times a second (flowChevrons, direction-arrows.ts): a lit route's
+ * and the studio's drawn line's (draw-arrows.ts). The map is at rest all the
+ * same, though MapLibre's loaded() and 'idle' wait on them.
  */
-const FLOWING_SOURCE = 'direction-arrows';
+const FLOWING_SOURCES = ['direction-arrows', 'draw-arrows'];
 
 /**
  * Once the map is at rest: two frames gone by, so a move a handler starts in
@@ -174,7 +176,7 @@ export const mapIdle = async (page, ms = 10000) => {
       new Promise((resolve) => {
         const m = window.__map;
         const sources = Object.entries(m.getStyle()?.sources ?? {})
-          .filter(([id, source]) => source.type === 'geojson' && id !== flowing)
+          .filter(([id, source]) => source.type === 'geojson' && !flowing.includes(id))
           .map(([id]) => id);
         const notAtRest = () => [
           ...(m.isMoving() ? ['the camera moving'] : []),
@@ -202,9 +204,44 @@ export const mapIdle = async (page, ms = 10000) => {
         m.triggerRepaint();
         requestAnimationFrame(look);
       }),
-    [ms, FLOWING_SOURCE],
+    [ms, FLOWING_SOURCES],
   );
   if (unrest) throw new Error(`mapIdle: the map not at rest after ${ms} ms: ${unrest.join(', ')}`);
+};
+
+/**
+ * Once the map is there and settled: every source loaded, the basemap's
+ * included, but the flowing chevrons', and the camera still. What loaded()
+ * reads but those: while chevrons flow, loaded() is true in almost no frame.
+ * Throws when not settled within `ms`, naming what was not.
+ */
+export const waitForMapSettled = async (page, ms = 30000) => {
+  const settled = await page
+    .waitForFunction(
+      (flowing) => {
+        const m = window.__map;
+        if (!m?.getStyle() || m.isMoving()) return false;
+        return Object.keys(m.getStyle().sources)
+          .filter((id) => !flowing.includes(id))
+          .every((id) => m.isSourceLoaded(id));
+      },
+      FLOWING_SOURCES,
+      { timeout: ms },
+    )
+    .then(() => true)
+    .catch(() => false);
+  if (settled) return;
+  const left = await page.evaluate((flowing) => {
+    const m = window.__map;
+    if (!m?.getStyle()) return ['no map or style yet'];
+    return [
+      ...(m.isMoving() ? ['the camera moving'] : []),
+      ...Object.keys(m.getStyle().sources)
+        .filter((id) => !flowing.includes(id) && !m.isSourceLoaded(id))
+        .map((id) => `source ${id} loading`),
+    ];
+  }, FLOWING_SOURCES);
+  throw new Error(`waitForMapSettled: the map not settled after ${ms} ms: ${left.join(', ')}`);
 };
 
 /**
