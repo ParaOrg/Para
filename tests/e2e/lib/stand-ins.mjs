@@ -124,11 +124,24 @@ const answerBasemap = (route) => {
   return route.fulfill({ status: 404, body: '' });
 };
 
+/** Whether the basemap is stood in on a run without PARA_LIVE_SERVICES (keepBasemapUnreachable). */
+let isBasemapStoodIn = true;
+
+/**
+ * Leaves the basemap unanswered for this run's browsers: for handover-test only, whose hand-over
+ * needs the basemap's requests to fail at once. With the basemap stood in, its service worker's
+ * tile requests are answered through Playwright's routing, and Chromium then finds a new worker
+ * on every update check (.scratch/ci-flakes/issues/04). Call it before the browser launches.
+ */
+export const keepBasemapUnreachable = () => {
+  isBasemapStoodIn = false;
+};
+
 /** The stand-ins on `context`, unless the run is live. */
 export const applyStandIns = async (context) => {
   if (IS_LIVE && !IS_RECORDING_OSRM) return;
   await context.route(OSRM, answerRouter);
-  if (!IS_LIVE) await context.route(OPENFREEMAP, answerBasemap);
+  if (!IS_LIVE && isBasemapStoodIn) await context.route(OPENFREEMAP, answerBasemap);
 };
 
 process.on('exit', () => {
