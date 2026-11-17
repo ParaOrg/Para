@@ -31,6 +31,7 @@ const meta = {
     isScreenFreeToSleep: false,
     mapNote: null,
     notesAdded: 0,
+    stopNotesFailures: 0,
     routeRecorded: null,
     uploadProblem: null,
   },
@@ -130,6 +131,20 @@ export const RecorderAndLocator: Story = {
     // Long enough for a waiting toast to have come in after the closed one's exit.
     await new Promise((resolve) => setTimeout(resolve, 1000));
     await expect(canvas.queryByTestId('toast')).toBeNull();
+  },
+};
+
+/** A stop's card or Stops notes could not be fetched: it closed, and this stays until ✕. */
+export const StopNotesFailed: Story = {
+  args: { stopNotesFailures: 1 },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(await canvas.findByTestId('toast')).toHaveTextContent(
+      'Stop notes could not be opened',
+    );
+    await expect(canvas.getByRole('alert')).toHaveTextContent(
+      'Stop notes could not be opened. Check your connection, then try again.',
+    );
   },
 };
 

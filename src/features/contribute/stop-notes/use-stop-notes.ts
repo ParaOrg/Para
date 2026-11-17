@@ -4,6 +4,7 @@ import { flushSync } from 'react-dom';
 import type { RecordingTrail } from '@/features/routes/map/recording-trail';
 
 import type { StopNotesData, StopNotesViewKind } from './stop-notes-view';
+import { makeStopNotesViewAgain } from '../lazy-screens';
 import { keptNote, markFixIndexes } from '../recorder/recording-marks';
 import type { RecordingState } from '../recorder/recording-state';
 
@@ -24,6 +25,8 @@ export interface StopNotes {
   data: StopNotesData;
   /** How many stops have been given a note: each one more says so in a toast. */
   notesAdded: number;
+  /** How many times the card or Stops notes could not be fetched: each one more says so. */
+  viewFailures: number;
   /** Flag a stop and the Stops notes button: focus comes back to one as the card or page closes. */
   flagButtonRef: RefObject<HTMLButtonElement | null>;
   notesButtonRef: RefObject<HTMLButtonElement | null>;
@@ -35,6 +38,11 @@ export interface StopNotes {
   openCard: () => void;
   openScreen: () => void;
   close: () => void;
+  /**
+   * The card or Stops notes could not be fetched (the page's error boundary around it): it closes,
+   * a toast says so, Pause and Finish stay as they are, and opened again it fetches again.
+   */
+  failView: () => void;
 }
 
 /**
@@ -53,9 +61,13 @@ export function useStopNotes(
   const [flagsShown, setFlagsShown] = useState(0);
   const [view, setView] = useState<StopNotesViewKind | null>(null);
   const [notesAdded, setNotesAdded] = useState(0);
+  const [viewFailures, setViewFailures] = useState(0);
   // Back to none while the toasts are not drawn (signed out), so drawn again they never take an
-  // old note for a new one.
-  if (!areToastsDrawn && notesAdded !== 0) setNotesAdded(0);
+  // old note or failure for a new one.
+  if (!areToastsDrawn && (notesAdded !== 0 || viewFailures !== 0)) {
+    setNotesAdded(0);
+    setViewFailures(0);
+  }
   if (!isOnRecordingScreen && (pill !== null || view !== null)) {
     setPill(null);
     setView(null);
@@ -88,6 +100,7 @@ export function useStopNotes(
       onDeleteMark: recording.deleteMark,
     },
     notesAdded,
+    viewFailures,
     flagButtonRef,
     notesButtonRef,
     showPill: () => {
@@ -106,6 +119,14 @@ export function useStopNotes(
       setView({ kind: 'screen' });
     },
     close,
+    // Told as React commits the failure (ErrorBoundary): no flushSync there. Focus goes to Flag a
+    // stop, which stays as the view goes.
+    failView: () => {
+      makeStopNotesViewAgain();
+      setView(null);
+      setViewFailures((failures) => failures + 1);
+      flagButtonRef.current?.focus();
+    },
   };
 }
 

@@ -13,6 +13,8 @@
 //     with its name; offline with no account, the page shows Sign in, not a broken page
 //   - an update (a changed worker) found with a recording open waits, and the page is not
 //     reloaded; once the recording is saved it takes over and the page reloads once
+//   - the studio, which no other suite opens on a build: its sign-in, and an editor's map in
+//     Terrain and Satellite, for its content policy
 //
 // A stand-in GPS is fed with Playwright's setGeolocation, the way the browser reports it.
 // Each check prints PASS/FAIL and the script exits non-zero on any failure.
@@ -22,6 +24,10 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { fakeContributions, session } from './lib/fake-contributions.mjs';
 import { harness, until } from './lib/harness.mjs';
+import { fakeStudioDb } from './lib/fake-studio-db.mjs';
+import { checkPolicies, watchPolicies } from './lib/policy.mjs';
+import { applyStandIns } from './lib/stand-ins.mjs';
+import { signInAsEditor } from './lib/studio-session.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const require = createRequire(join(root, 'package.json'));
@@ -112,6 +118,7 @@ const phone = {
 
 try {
   const context = await browser.newContext(phone);
+  const flagged = await watchPolicies(context);
   await context.addInitScript(
     ([key, signedIn]) => {
       // Once only: the end of the suite signs the phone out, and a reload must not sign it back in.
@@ -436,7 +443,59 @@ try {
     errors.slice(0, 3).join(' | '),
   );
 
+  // ------------------------------------------------ the studio's content policy
+  // The studio's policy is the longest (the database, the bot check, the router, the satellite
+  // and terrain pictures) and no other suite on a build opens the studio. On a context of its
+  // own, watched with the rest: its sign-in, which loads the bot check's script, then as an
+  // editor its map in Terrain and in Satellite. Satellite's pictures are refused here: a policy
+  // judges a request before any answer comes.
+  const studio = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+  await watchPolicies(studio, { into: flagged });
+  await applyStandIns(studio);
+  await studio.route(/server\.arcgisonline\.com/, (route) => route.abort());
+  const signIn = await studio.newPage();
+  signIn.on('pageerror', (e) => errors.push(String(e)));
+  const studioPage = await signIn.goto(`${base}/studio/`, { waitUntil: 'load' });
+  // Sent the studio's own policy, so "nothing flagged" below is about it.
+  const studioPolicy = (await studioPage?.allHeaders())?.['content-security-policy-report-only'];
+  const hasStudioPolicy = !!studioPolicy?.includes('https://challenges.cloudflare.com');
+  const isSignInShown = await signIn
+    .getByRole('button', { name: 'Sign in' })
+    .waitFor({ timeout: 20000 })
+    .then(
+      () => true,
+      () => false,
+    );
+  await signIn.close();
+  const editor = await studio.newPage();
+  editor.on('pageerror', (e) => errors.push(String(e)));
+  await signInAsEditor(editor);
+  await fakeStudioDb(editor);
+  await editor.goto(`${base}/studio/`, { waitUntil: 'load' });
+  const basemapButton = editor.getByTestId('basemap');
+  const isMapShown = await basemapButton.waitFor({ timeout: 30000 }).then(
+    () => true,
+    () => false,
+  );
+  const picked = [];
+  // The Map Style card stays open after a pick: opened once, both picked from it.
+  if (isMapShown) await basemapButton.click();
+  for (const name of ['Terrain', 'Satellite']) {
+    if (!isMapShown) break;
+    await editor.getByRole('button', { name, exact: true }).click();
+    // A build hands out no map to read: the switch is done once its requests are.
+    await editor.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {});
+    picked.push(name);
+  }
+  check(
+    "the studio on a build, sent its own policy: its sign-in, then an editor's map in Terrain and Satellite",
+    hasStudioPolicy && isSignInShown && isMapShown && picked.join() === 'Terrain,Satellite',
+    `its policy sent ${hasStudioPolicy}; sign-in ${isSignInShown}; map ${isMapShown}; picked ${picked.join(', ') || 'none'}`,
+  );
+  await studio.close();
+
   check('no page errors', errors.length === 0, errors.slice(0, 3).join(' | '));
+  checkPolicies(check, flagged);
   await context.close();
 } finally {
   writeFileSync(workerFile, workerSource);

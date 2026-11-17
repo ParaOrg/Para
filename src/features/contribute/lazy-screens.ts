@@ -23,12 +23,25 @@ const lazyHistory = () =>
   lazy(() => historyChunk.load().then((chunk) => ({ default: chunk.HistoryView })));
 const lazyAccount = () =>
   lazy(() => accountChunk.load().then((chunk) => ({ default: chunk.AccountView })));
-/** The lazy History and Account as they stand: fresh ones after each makeLazyScreens. */
-export const lazyScreens = { history: lazyHistory(), account: lazyAccount() };
+// A stop's card and Stops notes, in one chunk. Not fetched (offline before the worker kept it, or
+// a deploy since the page opened), the view closes and says so; made afresh then, so opened again
+// it fetches again.
+const lazyStopNotesView = () =>
+  lazy(() => loadStopNotesView().then((module) => ({ default: module.StopNotesView })));
+/** The lazy History, Account and stop notes as they stand: fresh ones after each remake. */
+export const lazyScreens = {
+  history: lazyHistory(),
+  account: lazyAccount(),
+  stopNotes: lazyStopNotesView(),
+};
 /** Makes History and Account lazy afresh, so drawn again they fetch again (ScreenUnavailable). */
 export function makeLazyScreens(): void {
   lazyScreens.history = lazyHistory();
   lazyScreens.account = lazyAccount();
+}
+/** Makes the stop notes view lazy afresh, once its fetch failed and it has closed. */
+export function makeStopNotesViewAgain(): void {
+  lazyScreens.stopNotes = lazyStopNotesView();
 }
 
 /** A button on the map whose code could not be fetched: nothing, and the ride goes on. */
@@ -91,9 +104,6 @@ export const StopNotePill = lazy<ComponentType<StopNotePillProps>>(() =>
 );
 export const StopNotesButton = lazy<ComponentType<StopNotesButtonProps>>(() =>
   loadStopNotesButton().then((module) => ({ default: module.StopNotesButton }), withoutMapButton),
-);
-export const StopNotesView = lazy(() =>
-  loadStopNotesView().then((module) => ({ default: module.StopNotesView })),
 );
 export const StopRecordingScreen = lazy(() =>
   loadStopRecordingScreen().then((module) => ({ default: module.StopRecordingScreen })),
