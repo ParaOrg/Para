@@ -4,8 +4,9 @@
 // nightly run) nothing is stood in. outside-requests.mjs applies them to every context.
 //
 // The router (router.project-osrm.org): answers recorded from the live router, by the request's
-// path and query (fixtures/osrm/answers.json), trimmed to what the editor reads (snap.ts). A
-// request with no recorded answer fails the suite, naming it: re-record (record-osrm.mjs).
+// path, its coordinates rounded, and query (keyOf; fixtures/osrm/answers.json), trimmed to what
+// the editor reads (snap.ts). A request with no recorded answer fails the suite, naming it:
+// re-record (record-osrm.mjs).
 //
 // The basemap (tiles.openfreemap.org): OpenFreeMap's own styles and sprite, and the glyph ranges
 // the suites draw with, taken from their source repositories (fixtures/basemap/, its README), so
@@ -35,9 +36,16 @@ const recorded = existsSync(ANSWERS) ? JSON.parse(readFileSync(ANSWERS, 'utf8'))
 const unrecorded = new Set();
 let hasNewAnswers = false;
 
-const keyOf = (url) => {
+/**
+ * A router request's key: its path, each coordinate rounded to 6 decimals (about 0.1 m, the
+ * router's own precision), and its query. A point clicked at the same pixel comes back from
+ * map.unproject a few 1e-12 degrees apart from run to run (float noise in the camera's path), so
+ * the full digits would miss a recorded answer. A miss names this rounded key.
+ */
+export const keyOf = (url) => {
   const { pathname, search } = new URL(url);
-  return pathname + search;
+  const rounded = pathname.replace(/-?\d+\.\d+/g, (n) => Number(n).toFixed(6));
+  return rounded + search;
 };
 
 /** As much of the router's answer as snap.ts reads: a refusal's code and message, or the legs. */

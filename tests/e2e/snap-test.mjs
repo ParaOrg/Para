@@ -216,7 +216,38 @@ const clickAt = async (c) => {
   const [x, y] = await proj(c);
   await page.mouse.click(box0.x + x, box0.y + y);
 };
+// Once the camera is at rest: its centre the same over REST_FRAMES frames running. The studio's
+// wheel pan glides on in panBy steps of no duration (use-wheel-navigation.ts), which isMoving()
+// never reports, and a jump made while it glides is carried off by its last steps.
+const REST_FRAMES = 5;
+const cameraAtRest = async (ms = 10000) => {
+  const moving = await page.evaluate(
+    ([frames, ms]) =>
+      new Promise((resolve) => {
+        const m = window.__map;
+        const centres = [m.getCenter().toArray()];
+        let still = 0;
+        const deadline = setTimeout(() => resolve(centres.slice(-2)), ms);
+        const look = () => {
+          const [lng, lat] = m.getCenter().toArray();
+          const [lastLng, lastLat] = centres[centres.length - 1];
+          still = lng === lastLng && lat === lastLat && !m.isMoving() ? still + 1 : 0;
+          centres.push([lng, lat]);
+          if (still < frames) return requestAnimationFrame(look);
+          clearTimeout(deadline);
+          resolve(null);
+        };
+        requestAnimationFrame(look);
+      }),
+    [REST_FRAMES, ms],
+  );
+  if (moving) {
+    throw new Error(`view: the camera still moving after ${ms} ms: ${JSON.stringify(moving)}`);
+  }
+};
 // Centre the map on a scenario's points at street level; each scenario spans well under the viewport.
+// The clicks that follow are where these points fall on the screen, so the camera must be exactly
+// here: a drift would ask the router for other points than those recorded.
 const view = async (points) => {
   const lng = points.map((p) => p[0]),
     lat = points.map((p) => p[1]);
@@ -224,6 +255,7 @@ const view = async (points) => {
     (Math.min(...lng) + Math.max(...lng)) / 2,
     (Math.min(...lat) + Math.max(...lat)) / 2,
   ];
+  await cameraAtRest();
   await page.evaluate(
     ([c, z]) => {
       window.__map.jumpTo({ center: c, zoom: z });
@@ -231,6 +263,17 @@ const view = async (points) => {
     [center, ZOOM],
   );
   await page.waitForTimeout(300);
+  const at = await page.evaluate(() => ({
+    center: window.__map.getCenter().toArray(),
+    zoom: window.__map.getZoom(),
+  }));
+  const isThere =
+    Math.abs(at.center[0] - center[0]) < 1e-9 &&
+    Math.abs(at.center[1] - center[1]) < 1e-9 &&
+    Math.abs(at.zoom - ZOOM) < 1e-9;
+  if (!isThere) {
+    throw new Error(`view: the camera at ${JSON.stringify(at)}, not ${center} at zoom ${ZOOM}`);
+  }
 };
 const newRoute = async () => {
   await page.getByRole('button', { name: 'New route, terminal or hintuan' }).click();

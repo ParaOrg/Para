@@ -11,7 +11,8 @@ Without it (a pull request's CI run, and a local run by default) the outside ser
 answered by stand-ins (`lib/stand-ins.mjs`):
 
 - the router (router.project-osrm.org): the live router's answers, recorded in
-  `fixtures/osrm/answers.json`;
+  `fixtures/osrm/answers.json`, keyed with each coordinate rounded to 6 decimals (about 0.1 m),
+  since the same click comes back a few 1e-12 degrees apart from run to run;
 - the basemap (tiles.openfreemap.org): OpenFreeMap's own styles, sprite and the glyph ranges the
   suites draw with, from their source repositories, over one made-up tile (`fixtures/basemap/`,
   its README for sources and licences).
