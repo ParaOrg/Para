@@ -24,10 +24,16 @@
 // fake-turnstile.mjs, so a page that shows the check (the studio's sign-in, say) gets a token a
 // moment later and draws no Cloudflare frame. Any other request there fails the suite, naming it.
 // A suite with its own fakeTurnstile, or its own route, keeps it.
+//
+// The elevation tiles (elevation-tiles-prod.s3.amazonaws.com, the studio's Terrain basemap):
+// every Terrarium tile up to the source's z15 is one made-up flat tile at 0 m
+// (flat-terrain-tile.mjs). Flat by design: a check that reads heights or shading needs real tiles,
+// recorded. Any other path there fails the suite, naming it.
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 import { TURNSTILE, turnstileScript } from './fake-turnstile.mjs';
+import { flatTerrainTile } from './flat-terrain-tile.mjs';
 import { answerRouteTables, databaseUrl } from './route-tables-stand-in.mjs';
 
 export const IS_LIVE = Boolean(process.env.PARA_LIVE_SERVICES);
@@ -149,6 +155,27 @@ const answerTurnstile = (route) => {
   return route.fulfill({ status: 404, body: '' });
 };
 
+const ELEVATION = /^https:\/\/elevation-tiles-prod\.s3\.amazonaws\.com\//;
+/** The studio's elevation source's maxzoom (studio-basemaps.ts): no tile past it is asked for. */
+const ELEVATION_MAXZOOM = 15;
+const FLAT_TILE = flatTerrainTile();
+
+/** A Terrarium tile up to z15, flat at 0 m; nothing else there is known. */
+const answerElevation = (route) => {
+  const request = route.request();
+  const tile = /^\/terrarium\/(\d+)\/(\d+)\/(\d+)\.png$/.exec(new URL(request.url()).pathname);
+  const zoom = tile && Number(tile[1]);
+  const isTile =
+    tile !== null &&
+    request.method() === 'GET' &&
+    zoom <= ELEVATION_MAXZOOM &&
+    Number(tile[2]) < 2 ** zoom &&
+    Number(tile[3]) < 2 ** zoom;
+  if (isTile) return route.fulfill({ contentType: 'image/png', body: FLAT_TILE });
+  unrecorded.add(request.url());
+  return route.fulfill({ status: 404, body: '' });
+};
+
 /** Whether the basemap is stood in on a run without PARA_LIVE_SERVICES (keepBasemapUnreachable). */
 let isBasemapStoodIn = true;
 
@@ -168,6 +195,7 @@ export const applyStandIns = async (context) => {
   await context.route(OSRM, answerRouter);
   if (!IS_LIVE && isBasemapStoodIn) await context.route(OPENFREEMAP, answerBasemap);
   if (!IS_LIVE) await context.route(TURNSTILE, answerTurnstile);
+  if (!IS_LIVE) await context.route(ELEVATION, answerElevation);
   const database = databaseUrl();
   // Recording too: the router's answers are recorded for the lines the stood-in tables draw.
   if ((!IS_LIVE || IS_RECORDING_OSRM) && database) {
@@ -189,7 +217,7 @@ process.on('exit', () => {
   console.log(`FAIL  the stand-ins have no answer for ${unrecorded.size} request(s):`);
   for (const key of unrecorded) console.log(`  ${key}`);
   console.log(
-    '  A router request: re-record (tests/e2e/README.md), scripts/research/record-osrm.mjs. A database or Turnstile one names what its stand-in does not know.',
+    '  A router request: re-record (tests/e2e/README.md), scripts/research/record-osrm.mjs. A database, Turnstile or elevation one names what its stand-in does not know.',
   );
   process.exitCode = 1;
 });
