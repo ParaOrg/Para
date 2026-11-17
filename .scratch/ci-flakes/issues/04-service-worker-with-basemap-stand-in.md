@@ -1,6 +1,6 @@
 # A service worker under the basemap stand-in finds a new worker on every update check
 
-Status: needs-triage
+Status: resolved
 Type: task
 Priority: low
 
@@ -66,3 +66,28 @@ of the basemap stand-in, with that run as evidence.
 
 A suite that runs a service worker and also has an outside host stood in may see extra worker
 updates. Check its `updatefound` count before trusting an update flow under a stand-in.
+
+## Comments
+
+### The routes were the cause; pwa-test now gets a real server
+
+The basemap stand-in can also be served by a real HTTPS server on a loopback port
+(`serveBasemapOverHttps` in `tests/e2e/lib/stand-ins.mjs`). It gives the same answers, with a
+certificate made for the run, and the browsers resolve tiles.openfreemap.org to it
+(`--host-resolver-rules`, the context trusting that certificate). Nothing is routed, so the
+service worker's requests leave Playwright alone. The audit counts a loopback server's answers as
+stood in, so the tripwire still fails any real network answer.
+
+pwa-test, stood in, same build, worker updates found by the update check:
+
+| Basemap stand-in      | Runs | New workers found | Result |
+| --------------------- | ---- | ----------------- | ------ |
+| Routes (before)       | 5    | 2 each            | 5 pass |
+| Loopback server (now) | 3    | 1 each            | 3 pass |
+
+1 is what a live run finds. So Playwright answering the worker's own requests was what made
+Chromium find the extra worker. Why it does is still not pinned down inside Playwright and
+Chromium, and does not need to be.
+
+handover-test keeps `keepBasemapUnreachable()`: its hand-over is built on the basemap failing at
+once. contribute-offline-test finds 1 either way and stays on routes.
