@@ -11,11 +11,14 @@
 // join at its first point. The draft is the same one a reload restores.
 import { chromium } from 'playwright';
 import { BASE, harness, waitForMapSettled, waitForSource } from './lib/harness.mjs';
+import { SUBJECT_LINES } from './fixtures/route-tables.mjs';
+import { assertNoOverview, subjectLine, watchOverviews } from './lib/subject-line.mjs';
 
 const { check, tally } = harness();
 
 const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
+const overviews = watchOverviews(page);
 const errors = [];
 page.on('pageerror', (e) => errors.push(String(e)));
 await page.addInitScript(() => {
@@ -29,11 +32,12 @@ await page.goto(`${BASE}/studio/?e2e=1`, { waitUntil: 'load' });
 await page.waitForFunction(() => window.__map && window.__map.loaded(), null, { timeout: 30000 });
 if ((await waitForSource(page, 'saved-routes')).length === 0)
   throw new Error('no saved routes arrived in 20 s');
-const line = await page.evaluate(async () => {
-  const fs = (await window.__src('saved-routes')).features;
-  return fs.sort((a, b) => b.geometry.coordinates.length - a.geometry.coordinates.length)[0]
-    .geometry.coordinates;
-});
+// The pinned subject line (lib/subject-line.mjs): the same roads every run.
+const subject = subjectLine(
+  await page.evaluate(async () => (await window.__src('saved-routes')).features),
+);
+const line = subject.geometry.coordinates;
+assertNoOverview(overviews, subject.properties.id, 'extending its road vertices');
 check('a saved line to extend', line.length > 60, `${line.length} vertices`);
 
 const mid = Math.floor(line.length / 2);
@@ -182,24 +186,48 @@ check(
 // ------------------------------------------------ follow a saved line, mid-drawing
 // A right-click on a saved line while drawing joins it there and copies the
 // rest of it: for a return trip that meets another route's line and rides it
-// home. Which line is followed depends on the data, so the check is that the
-// drawing now ends where *a* saved line ends, and borrows from that one.
+// home. The points are put down on the pinned followed line (lib/subject-line.mjs),
+// and the check is that the drawing now ends where the line it borrowed from ends.
 await page.evaluate(() => localStorage.removeItem('para.draft.v1'));
 await page.reload({ waitUntil: 'load' });
 await page.waitForFunction(() => window.__map && window.__map.loaded(), null, { timeout: 30000 });
 if ((await waitForSource(page, 'saved-routes')).length === 0)
   throw new Error('no saved routes arrived in 20 s');
-const saved = await page.evaluate(async () =>
-  (await window.__src('saved-routes')).features.map((f) => ({
-    id: f.properties.id,
-    coords: f.geometry.coordinates,
-  })),
+const savedFeatures = await page.evaluate(
+  async () => (await window.__src('saved-routes')).features,
 );
+const saved = savedFeatures.map((f) => ({ id: f.properties.id, coords: f.geometry.coordinates }));
+const followedLine = subjectLine(savedFeatures, SUBJECT_LINES.followed);
+const toFollow = followedLine.geometry.coordinates;
+assertNoOverview(overviews, followedLine.properties.id, "extend's point-for-point follow check");
 await page.getByRole('button', { name: 'New route, terminal or hintuan' }).click();
 await page.getByRole('menuitem', { name: /Routes/ }).click();
 await page.waitForTimeout(300);
-const A = line[Math.floor(line.length * 0.1)];
-const B = line[Math.floor(line.length * 0.3)];
+// B, the right-click, falls on a stretch of the followed line that no other saved line comes
+// within ALONE_M of, so the click can only take that line (a shared road would let the
+// studio follow whichever line it found first there). A, the first point, is before it.
+const ALONE_M = 40;
+const M_PER_DEG = 111_320;
+const metresTo = ([lng, lat], [aLng, aLat], [bLng, bLat]) => {
+  const k = Math.cos((lat * Math.PI) / 180);
+  const [ax, ay, bx, by] = [(aLng - lng) * k, aLat - lat, (bLng - lng) * k, bLat - lat];
+  const [dx, dy] = [bx - ax, by - ay];
+  const t = Math.max(0, Math.min(1, -(ax * dx + ay * dy) / (dx * dx + dy * dy || 1)));
+  return Math.hypot(ax + t * dx, ay + t * dy) * M_PER_DEG;
+};
+const others = saved.filter((s) => s.id !== followedLine.properties.id);
+const isAlone = (p) =>
+  others.every((o) =>
+    o.coords.every((c, i) => i === 0 || metresTo(p, o.coords[i - 1], c) > ALONE_M),
+  );
+const firstB = Math.floor(toFollow.length * 0.3);
+const iB = toFollow.findIndex((p, i) => i >= firstB && i < toFollow.length * 0.9 && isAlone(p));
+if (iB < 0)
+  throw new Error(
+    `no stretch of ${followedLine.properties.id} is ${ALONE_M} m from every other line`,
+  );
+const A = toFollow[Math.max(0, iB - Math.floor(toFollow.length * 0.2))];
+const B = toFollow[iB];
 await frame([A, B], 200);
 await page.waitForTimeout(800);
 const [Ax, Ay] = await px(A);
@@ -262,7 +290,9 @@ check(
 // line's points unless it fell on one, then runs on the line's own points to
 // its end. Compared whole, joined as the studio joins it: its last segment
 // may hold fewer than 20 points, whose first then came twice in a flat list
-// (on 2026-09-29, a6dc5193's last segment has 19, 2eed1668's 12).
+// (on 2026-09-29, a6dc5193's last segment has 19, 2eed1668's 12). It assumes the
+// saved-routes geometry is the line's drawing, true only for a line with no
+// overview: hence the followed line is pinned to one (fixtures/route-tables.mjs).
 const followedPart = joined(d.segments.slice(1)).slice(1);
 check(
   'the followed part is that line, point for point',

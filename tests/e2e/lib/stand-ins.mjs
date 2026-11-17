@@ -14,8 +14,15 @@
 // tile (fixtures/basemap/stand-in.pbf: water and a road, from make-stand-in-tile.mjs), so the map
 // draws as it does live without OpenFreeMap's data; the shaded relief is one transparent pixel.
 // A path the stand-in does not know (a glyph range not kept, say) fails the suite, naming it.
+//
+// The database (the address the dev server's build is configured with): the studio's reads of its
+// route tables, answered from the published map (route-tables-stand-in.mjs). Anything else sent
+// to /rest/v1/, a write included, fails the suite, naming it. A suite with its own page.route for
+// the database (fake-studio-db, save-studio) keeps it: a page's route is asked first.
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+
+import { answerRouteTables, databaseUrl } from './route-tables-stand-in.mjs';
 
 export const IS_LIVE = Boolean(process.env.PARA_LIVE_SERVICES);
 /** Recording: live, and each router answer written down (scripts/research/record-osrm.mjs). */
@@ -142,6 +149,14 @@ export const applyStandIns = async (context) => {
   if (IS_LIVE && !IS_RECORDING_OSRM) return;
   await context.route(OSRM, answerRouter);
   if (!IS_LIVE && isBasemapStoodIn) await context.route(OPENFREEMAP, answerBasemap);
+  const database = databaseUrl();
+  // Recording too: the router's answers are recorded for the lines the stood-in tables draw.
+  if ((!IS_LIVE || IS_RECORDING_OSRM) && database) {
+    await context.route(
+      (url) => url.href.startsWith(`${database}/rest/v1/`),
+      answerRouteTables(unrecorded),
+    );
+  }
 };
 
 process.on('exit', () => {
@@ -154,6 +169,8 @@ process.on('exit', () => {
   if (unrecorded.size === 0) return;
   console.log(`FAIL  the stand-ins have no answer for ${unrecorded.size} request(s):`);
   for (const key of unrecorded) console.log(`  ${key}`);
-  console.log('  Re-record (tests/e2e/README.md): the router, scripts/research/record-osrm.mjs.');
+  console.log(
+    '  A router request: re-record (tests/e2e/README.md), scripts/research/record-osrm.mjs. A database one names what its stand-in does not know.',
+  );
   process.exitCode = 1;
 });

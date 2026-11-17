@@ -15,10 +15,15 @@ answered by stand-ins (`lib/stand-ins.mjs`):
   since the same click comes back a few 1e-12 degrees apart from run to run;
 - the basemap (tiles.openfreemap.org): OpenFreeMap's own styles, sprite and the glyph ranges the
   suites draw with, from their source repositories, over one made-up tile (`fixtures/basemap/`,
-  its README for sources and licences).
+  its README for sources and licences);
+- the database (the address in `.env.local`): the studio's reads of its route tables, built at
+  run time from the published map in `public/data/` (`fixtures/route-tables.mjs`, its header for
+  what is copied and what is made up) and answered strictly (`lib/route-tables-stand-in.mjs`):
+  anything else sent there fails the suite, naming it. Since the drawing suites click the
+  published lines, a publish that changes them may leave the router's recorded answers short:
+  a miss names its request, and re-recording fixes it.
 
-The other outside hosts come next: the database's reads in the drawing suites and gate-test,
-Turnstile and the studio's terrain tiles. Main and staging pushes and the nightly run
+The other outside hosts come next: Turnstile and the studio's terrain tiles. Main and staging pushes and the nightly run
 set `PARA_LIVE_SERVICES=1` (`.github/workflows/ci.yml`), so every staging push still checks the
 live services. Each suite ends by listing the outside hosts it reached
 (`outside: <host> ×n (network n, stood in n, …)`, `lib/outside-requests.mjs`).
