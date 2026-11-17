@@ -2,15 +2,23 @@
 // as the suite ends: `outside: <host> ×n (network n, stood in n, failed n, cancelled n)`. "Network"
 // answers came from the host itself; "stood in" ones a page.route answered (bareStyle, nodeFetch, a
 // recording); "failed" never got an answer; "cancelled" the page dropped itself (net::ERR_ABORTED:
-// MapLibre's tiles a move leaves behind). It prints only: no check reads it. harness.mjs imports it, so every
-// suite that uses the harness reports, with no change to the suite.
+// MapLibre's tiles a move leaves behind). harness.mjs imports it, so every suite that uses the
+// harness reports, with no change to the suite.
+//
+// On a run without PARA_LIVE_SERVICES (a pull request's, and a local one by default) every outside
+// host is stood in (stand-ins.mjs), so a "network" answer is a new outside call: it fails the
+// suite, naming the host and the first addresses asked. Stand it in, or give the suite its own
+// route. A live run only prints.
 import { chromium } from 'playwright';
 
-import { applyStandIns } from './stand-ins.mjs';
+import { applyStandIns, IS_LIVE } from './stand-ins.mjs';
 
 const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1', '[::1]']);
 /** Per host: how its requests were answered. */
 const counts = new Map();
+/** Per host: the first addresses its network answers came from, for the failure to name. */
+const reached = new Map();
+const NAMED_PER_HOST = 5;
 /** Whether a browser was launched: a run with none (a unit check of the harness) prints nothing. */
 let hasLaunched = false;
 
@@ -33,6 +41,12 @@ const watch = (context) => {
     // A routed answer has no server address: it never left the machine.
     const server = await response.serverAddr().catch(() => null);
     tally(response.url(), server ? 'network' : 'stood in');
+    const host = server && hostOf(response.url());
+    if (host) {
+      const urls = reached.get(host) ?? [];
+      if (urls.length < NAMED_PER_HOST) urls.push(response.url());
+      reached.set(host, urls);
+    }
   });
   context.on('requestfailed', (request) =>
     tally(
@@ -74,5 +88,13 @@ process.on('exit', () => {
     console.log(
       `outside: ${host} ×${total} (network ${row.network}, stood in ${row['stood in']}, failed ${row.failed}, cancelled ${row.cancelled})`,
     );
+  }
+  if (IS_LIVE) return;
+  for (const [host, urls] of reached) {
+    console.log(
+      `FAIL  outside: ${host} answered ${counts.get(host)?.network} request(s) over the network on a stood-in run; stand it in (tests/e2e/lib/stand-ins.mjs) or route it in the suite:`,
+    );
+    for (const url of urls) console.log(`  ${url}`);
+    process.exitCode = 1;
   }
 });

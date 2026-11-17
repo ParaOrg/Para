@@ -35,7 +35,10 @@ not one of the suites: `.scratch/e2e-stand-ins/issues/01-turnstile-fail-expire-c
 Main and staging pushes and the nightly run
 set `PARA_LIVE_SERVICES=1` (`.github/workflows/ci.yml`), so every staging push still checks the
 live services. Each suite ends by listing the outside hosts it reached
-(`outside: <host> ×n (network n, stood in n, …)`, `lib/outside-requests.mjs`).
+(`outside: <host> ×n (network n, stood in n, …)`, `lib/outside-requests.mjs`). Without
+`PARA_LIVE_SERVICES`, a host answered over the network fails the suite, naming it and the first
+addresses asked: a new outside call is stood in (`lib/stand-ins.mjs`) or routed by the suite before
+it merges.
 
     PARA_LIVE_SERVICES=1 node tests/e2e/snap-test.mjs        # a suite against the live services
     node scripts/research/record-osrm.mjs                    # re-record the router's answers
