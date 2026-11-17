@@ -1,9 +1,9 @@
 // Every request a suite's browser sends to a host off this machine, counted by host and printed
 // as the suite ends: `outside: <host> ×n (network n, stood in n, failed n, cancelled n)`. "Network"
 // answers came from the host itself; "stood in" ones a page.route answered (bareStyle, nodeFetch, a
-// recording); "failed" never got an answer; "cancelled" the page dropped itself (net::ERR_ABORTED:
-// MapLibre's tiles a move leaves behind). harness.mjs imports it, so every suite that uses the
-// harness reports, with no change to the suite.
+// recording) or a stand-in server on this machine did; "failed" never got an answer; "cancelled"
+// the page dropped itself (net::ERR_ABORTED: MapLibre's tiles a move leaves behind). harness.mjs
+// imports it, so every suite that uses the harness reports, with no change to the suite.
 //
 // On a run without PARA_LIVE_SERVICES (a pull request's, and a local one by default) every outside
 // host is stood in (stand-ins.mjs), so a "network" answer is a new outside call: it fails the
@@ -11,7 +11,7 @@
 // route. A live run only prints.
 import { chromium } from 'playwright';
 
-import { applyStandIns, IS_LIVE } from './stand-ins.mjs';
+import { applyStandIns, IS_LIVE, withStandInLaunch } from './stand-ins.mjs';
 
 const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1', '[::1]']);
 /** Per host: how its requests were answered. */
@@ -21,6 +21,8 @@ const reached = new Map();
 const NAMED_PER_HOST = 5;
 /** Whether a browser was launched: a run with none (a unit check of the harness) prints nothing. */
 let hasLaunched = false;
+
+const isLoopback = (ipAddress) => /^(127\.|::1$|\[::1\]$)/.test(ipAddress);
 
 const hostOf = (url) => {
   if (!/^https?:/.test(url)) return null;
@@ -38,8 +40,10 @@ const tally = (url, how) => {
 
 const watch = (context) => {
   context.on('response', async (response) => {
-    // A routed answer has no server address: it never left the machine.
-    const server = await response.serverAddr().catch(() => null);
+    // A routed answer has no server address, and a stand-in server's is on this machine: neither
+    // left it.
+    const address = await response.serverAddr().catch(() => null);
+    const server = address && !isLoopback(address.ipAddress) ? address : null;
     tally(response.url(), server ? 'network' : 'stood in');
     const host = server && hostOf(response.url());
     if (host) {
@@ -57,8 +61,8 @@ const watch = (context) => {
 };
 
 const launch = chromium.launch.bind(chromium);
-chromium.launch = async (...options) => {
-  const browser = await launch(...options);
+chromium.launch = async (options, ...rest) => {
+  const browser = await launch(withStandInLaunch(options), ...rest);
   hasLaunched = true;
   const newContext = browser.newContext.bind(browser);
   browser.newContext = async (...args) => {
