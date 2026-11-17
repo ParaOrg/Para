@@ -23,6 +23,12 @@ interface PageNoticesInput {
    * this hook, as React allows while rendering.
    */
   onRouteRecorded: () => void;
+  /** A stop just flagged: its note's pill shows. */
+  onFlagged: () => void;
+  /** How many stops' notes have been saved from their card: each one more says so in a toast. */
+  notesAdded: number;
+  /** How many times a stop's card or Stops notes could not be fetched: each one more says so. */
+  stopNotesFailures: number;
 }
 
 export interface PageNotices {
@@ -32,13 +38,13 @@ export interface PageNotices {
   hasHadToasts: boolean;
   /** The locator's note, or null when it is taken back. */
   handleMapNote: (note: MapNote | null) => void;
-  /** Flag a stop: marks the place, and a toast says so. */
+  /** Flag a stop: marks the place, and its note's pill shows. */
   handleFlag: () => void;
 }
 
 /**
  * Said in toasts at the top: what went wrong, until closed or fixed (the recorder's problem, a
- * recording running with the screen free to sleep), a stop just flagged and a route just saved.
+ * recording running with the screen free to sleep), a stop's note saved and a route just saved.
  * Their code is fetched the first time there is one, then kept, to take them away once fixed.
  */
 export function usePageNotices({
@@ -46,21 +52,20 @@ export function usePageNotices({
   statusOf,
   accountGate,
   onRouteRecorded,
+  onFlagged,
+  notesAdded,
+  stopNotesFailures,
 }: PageNoticesInput): PageNotices {
   const isScreenFreeToSleep = recording.phase === 'recording' && recording.isWakeRefused;
   // The locator's note: what it says, and a count that grows with each tap, said again each time.
   const [mapNote, setMapNote] = useState<MapNoteGiven | null>(null);
   const handleMapNote = (note: MapNote | null) =>
     setMapNote((given) => (note ? { note, timesGiven: (given?.timesGiven ?? 0) + 1 } : null));
-  // The stops flagged while the toasts are drawn: one more says "Stop flagged". Back to none while
-  // they are not (signed out), so drawn again they never take an old flag for a new one.
-  const [stopsFlagged, setStopsFlagged] = useState(0);
-  if (accountGate !== 'ready' && stopsFlagged !== 0) setStopsFlagged(0);
   const handleFlag = () => {
-    if (recording.markPlace()) setStopsFlagged((flagged) => flagged + 1);
+    if (recording.markPlace()) onFlagged();
   };
   // Each route saved: back on Record, a toast says so and where it goes next, in words fixed at
-  // the save. Back to none while the toasts are not drawn, as the flags are.
+  // the save. Back to none while the toasts are not drawn.
   const [routeRecorded, setRouteRecorded] = useState<RouteRecordedGiven | null>(null);
   const [toldOfSave, setToldOfSave] = useState(recording.lastSaved);
   if (recording.lastSaved !== toldOfSave) {
@@ -88,7 +93,8 @@ export function usePageNotices({
     recording.problem !== null ||
       isScreenFreeToSleep ||
       mapNote !== null ||
-      stopsFlagged !== 0 ||
+      notesAdded !== 0 ||
+      stopNotesFailures !== 0 ||
       routeRecorded !== null ||
       uploadProblem !== null,
   );
@@ -97,7 +103,8 @@ export function usePageNotices({
       problem: recording.problem,
       isScreenFreeToSleep,
       mapNote,
-      stopsFlagged,
+      notesAdded,
+      stopNotesFailures,
       routeRecorded,
       uploadProblem,
     },

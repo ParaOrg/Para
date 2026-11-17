@@ -1,4 +1,4 @@
-import { useId, type CSSProperties } from 'react';
+import { useId } from 'react';
 
 import './locator.css';
 import { eyesDeg, gazeOffset } from './dot-gaze';
@@ -113,11 +113,7 @@ export function LocatorIndicatorOverlay({
           data-face={face}
           data-gaze={gazeDeg ?? undefined}
           data-look={lookDeg ?? undefined}
-          style={
-            look
-              ? ({ '--gaze-x': `${look.x}px`, '--gaze-y': `${look.y}px` } as CSSProperties)
-              : undefined
-          }
+          style={look ? { '--gaze-x': `${look.x}px`, '--gaze-y': `${look.y}px` } : undefined}
           className={
             'locator-dot absolute top-1/2 left-1/2 -translate-1/2 rounded-full bg-surface p-1 shadow-locator-dot-shadow' +
             (pokeable

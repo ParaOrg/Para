@@ -279,6 +279,7 @@ export function Workshop({ session, recovery }: WorkshopProps) {
                 basemaps={STUDIO_BASEMAPS}
                 basemapThumbnails={STUDIO_BASEMAP_THUMBNAILS}
                 hasMapStyleButton={false}
+                showsDiagnostics
                 labelsPlace="studio"
                 areCreditsShown={credits.isSheetMissing}
               />

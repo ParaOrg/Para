@@ -22,9 +22,11 @@ on:
     # Monday 06:00 in Manila (UTC+8), for advisories added during the week.
     - cron: '0 22 * * 0'
 
+# On a pull request a newer push cancels the run for the older one. On main and staging a run
+# that has started is never cancelled (as in ci.yml): the commit it checks gets its full verdict.
 concurrency:
   group: codeql-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
@@ -55,3 +57,29 @@ jobs:
       - uses: github/codeql-action/analyze@v4
         with:
           category: /language:${{ matrix.language }}
+
+  # A failed nightly run opens the `alert` issue (scripts/watch/report-failed-run.mjs); the watch
+  # closes it once the next run passes. Not on a pull request, whose own checks say it failed.
+  alert:
+    needs: analyze
+    if: failure() && github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+          sparse-checkout: scripts/watch
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - name: Open or update the alert issue
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          WORKFLOW_NAME: ${{ github.workflow }}
+          WORKFLOW_FILE: codeql.yml
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: node scripts/watch/report-failed-run.mjs

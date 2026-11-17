@@ -12,6 +12,7 @@ import {
   hotspotRefusal,
   knownInformalNames,
   tickedDirections,
+  ticksAtOpening,
 } from '../../src/features/studio/panels/hotspot-checks.ts';
 
 let n = 0;
@@ -85,6 +86,17 @@ test("a terminal's ticks: the pre-ticks, with the owner's ticks and unticks over
     ].sort(),
     ['a', 'c'],
   );
+});
+
+test('the ticks a panel opens with: pre-ticked for a new terminal and for a saved one that links nothing', () => {
+  // null is "pre-tick the directions that start in the outline, once the lines are read".
+  const tala = box('Tala', 121.0, 'terminal');
+  assert.equal(ticksAtOpening('terminal', null, []), null);
+  assert.equal(ticksAtOpening('terminal', tala, []), null);
+  assert.deepEqual([...(ticksAtOpening('terminal', tala, ['a', 'b']) ?? [])], ['a', 'b']);
+  // A saved hintuan links by its outline, never by a tick: it opens as it was saved.
+  const ilalim = box('Tala Ilalim', 121.1);
+  assert.deepEqual([...(ticksAtOpening('hintuan', ilalim, []) ?? ['pre-ticked'])], []);
 });
 
 test('an outline whose sides cross is refused, whatever its kind', () => {

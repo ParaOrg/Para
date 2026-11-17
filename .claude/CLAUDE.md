@@ -243,7 +243,7 @@ export function useRoutesQuery(filters: RouteFilters) {
 Validate data at every boundary where it enters the app:
 
 - Supabase and API responses, parsed in the fetcher.
-- Environment variables, parsed once per page with Zod: `shared/config/env.ts` for the flags any page may read, and the Supabase and Turnstile values in the feature that uses them (`features/studio/data/env.ts`, `features/contribute/api/env.ts`), so the database's address never enters a module the public page loads. Nothing else reads `import.meta.env`.
+- Environment variables, parsed once per page with Zod: `shared/config/env.ts` for the flags any page may read, and the Supabase and Turnstile values in the feature that uses them (`features/studio/data/env.ts`, `features/contribute/api/env.ts`), so the database's address never enters a module the public page loads. Nothing else reads `import.meta.env`. `MODE`, `DEV` and `PROD` may be read anywhere, for a branch the build works out.
 - Form input, URL and search params, and anything read from `localStorage` or IndexedDB.
 
 ```ts

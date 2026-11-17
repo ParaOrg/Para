@@ -14,6 +14,7 @@ import { chunkModules } from './scripts/node/vite-plugins/chunk-modules.ts';
 import { mapFileEarly } from './scripts/node/vite-plugins/map-file-early.ts';
 import { maplibreWorkerWithThePage } from './scripts/node/vite-plugins/maplibre-worker.ts';
 import { onlyTheMapHasAManifest } from './scripts/node/vite-plugins/only-the-map-has-a-manifest.ts';
+import { previewPolicies } from './scripts/node/vite-plugins/preview-policies.ts';
 import { stylesheetsFirst } from './scripts/node/vite-plugins/stylesheets-first.ts';
 import { parseBasemapHost } from './src/shared/config/basemap-host.ts';
 
@@ -46,6 +47,8 @@ export default defineConfig({
     stylesheetsFirst(),
     // The contributor page's own worker, apart from the one above: dist/contribute/sw.js.
     contributeWorker(),
+    // `vite preview` only: the content policies of the build's _headers, as Cloudflare sends them.
+    previewPolicies(),
   ],
   resolve: {
     // `@/x` is src/x, for any import that leaves its own folder. tsconfig.json
@@ -151,10 +154,10 @@ export default defineConfig({
               test: /[\\/]node_modules[\\/]@tanstack[\\/]/,
               priority: 1,
             },
-            //  - fields: the design system's input fields, which only the
-            //    studio and the contributor page draw. Both import them, so left
-            //    to `shared` they would ride along on the public page, which has
-            //    no form.
+            //  - fields: the design system's input fields. The studio and the
+            //    contributor page draw most of them; the public page draws one,
+            //    its place search (and a toast borrows a field's icon), so it
+            //    loads this chunk too.
             {
               name: 'fields',
               test: /[\\/]src[\\/]design-system[\\/]primitives[\\/](field-frame|field-error|field-icons|text-field|text-area-field|password-field|phone-field|otp-field|select-field)\.tsx$/,

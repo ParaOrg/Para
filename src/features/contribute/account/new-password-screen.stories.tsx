@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
 import { NewPasswordScreen } from './new-password-screen';
+import { waitForHeadingFocus } from '../common/heading-focus-play';
 
 const meta = {
   title: 'Features/Contribute/NewPasswordScreen',
@@ -45,6 +46,7 @@ export const NotMatching: Story = {
 /** The same twice: Save sends it. */
 export const Matching: Story = {
   play: async ({ args, canvasElement }) => {
+    await waitForHeadingFocus(canvasElement);
     const canvas = within(canvasElement);
     await userEvent.type(canvas.getByLabelText('New password'), TYPED);
     await userEvent.type(canvas.getByLabelText('Confirm password'), TYPED);

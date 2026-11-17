@@ -83,7 +83,7 @@ test('the public map notes its tiles, the studio none, and the worker asks for t
     new URL('../../src/features/routes/map/map-view.tsx', import.meta.url),
     'utf8',
   );
-  assert.match(view, /import \{ noteTile \} from '\.\/tiles-asked'/);
+  assert.match(view, /import \{ noteTile, tilesFirstScreenIn \} from '\.\/tiles-asked'/);
   // Only with `openOn`, which only the public map passes; otherwise the page's own transform, which
   // only the contributor app passes (its basemap cache), and the studio none.
   assert.match(view, /transformRequest: openOn \? noteTile : transformRequest,/);
@@ -106,5 +106,104 @@ test('the public map notes its tiles, the studio none, and the worker asks for t
     control > 0 && take > control,
     'the tiles are taken once the worker controls the page, with the map file and the style',
   );
-  assert.match(pwa, /import \{ takeTilesAsked \} from '@\/features\/routes\/map\/tiles-asked'/);
+  assert.match(
+    pwa,
+    /import \{ takeTilesAsked, takeTilesAskedLater \} from '@\/features\/routes\/map\/tiles-asked'/,
+  );
+});
+
+// ------------------------------------------------- the worker in control before the first tile
+// On a fast connection the worker claims the page before the map has asked for a tile. MapLibre
+// asks for tiles from its own worker, started as the page is read (map-view.tsx, prewarm); when
+// that one is still loading its script as the service worker claims the page, it is left outside
+// for good and its tiles go out direct. Those asked after the take were then never kept: pwa-test
+// has found "basemap-tiles holds tiles (0)  the first visit's tile requests: 200 direct ×4", with
+// the map file and the style kept in the same run.
+
+test('the worker in control before the first tile: the tiles the map then asks for are handed over once its first screen is in', () => {
+  const n = tileNotes();
+  const later = [];
+  // warmCaches, as the worker takes control: nothing asked yet.
+  n.later((tiles) => later.push(tiles));
+  assert.deepEqual(n.take(), []);
+  // The map asks for its first screen.
+  n.note(tile(11, 1711, 940), 'Tile');
+  n.note(tile(11, 1711, 939), 'Tile');
+  n.note(tile(11, 1711, 940), 'Tile');
+  assert.deepEqual(later, [], 'not before they have been answered: the first screen is not in');
+  n.firstScreenIn();
+  assert.deepEqual(later, [[tile(11, 1711, 940), tile(11, 1711, 939)]]);
+  // Once, and the noting is over.
+  n.note(tile(11, 1712, 940), 'Tile');
+  n.firstScreenIn();
+  assert.deepEqual(later, [[tile(11, 1711, 940), tile(11, 1711, 939)]]);
+  assert.deepEqual(n.take(), []);
+});
+
+test('the worker in control partway through the first screen: the tiles before it are taken, the rest handed over after', () => {
+  const n = tileNotes();
+  const later = [];
+  n.note(tile(11, 1, 1), 'Tile');
+  n.later((tiles) => later.push(tiles));
+  assert.deepEqual(n.take(), [tile(11, 1, 1)]);
+  n.note(tile(11, 1, 1), 'Tile');
+  n.note(tile(11, 1, 2), 'Tile');
+  n.firstScreenIn();
+  assert.deepEqual(later, [[tile(11, 1, 2)]], 'a tile already taken is not asked for a third time');
+});
+
+test('the first screen in before the worker takes control, as on a slow connection: all are taken, as before, and none after', () => {
+  const n = tileNotes();
+  const later = [];
+  n.note(tile(11, 1, 1), 'Tile');
+  n.firstScreenIn();
+  // A pan before the worker takes control is still noted.
+  n.note(tile(11, 1, 2), 'Tile');
+  n.later((tiles) => later.push(tiles));
+  assert.deepEqual(n.take(), [tile(11, 1, 1), tile(11, 1, 2)]);
+  n.note(tile(11, 1, 3), 'Tile');
+  assert.deepEqual(n.take(), []);
+  assert.deepEqual(later, []);
+});
+
+test('no tile asked after the worker took control: nothing is handed over, and never more than the tiles kept', () => {
+  const none = tileNotes();
+  const later = [];
+  none.later((tiles) => later.push(tiles));
+  none.take();
+  none.firstScreenIn();
+  assert.deepEqual(later, [], 'an empty hand-over asks for nothing');
+
+  const few = tileNotes(3);
+  few.note(tile(14, 0, 0), 'Tile');
+  few.later((tiles) => later.push(tiles));
+  assert.deepEqual(few.take(), [tile(14, 0, 0)]);
+  for (let i = 1; i < 6; i++) few.note(tile(14, i, 0), 'Tile');
+  few.firstScreenIn();
+  assert.deepEqual(later, [[tile(14, 1, 0), tile(14, 2, 0)]], 'three in all, before and after');
+});
+
+test('the page wires it: the map says when its first screen is in, and warmCaches sets its taker before it takes', () => {
+  const view = readFileSync(
+    new URL('../../src/features/routes/map/map-view.tsx', import.meta.url),
+    'utf8',
+  );
+  // At the public map's 'load', when every tile of the first screen has been answered.
+  const load = view.slice(view.indexOf("map.on('load'"));
+  assert.match(load.slice(0, load.indexOf('});')), /if \(openOn\) tilesFirstScreenIn\(\);/);
+
+  const pwa = readFileSync(
+    new URL('../../src/features/published-map/pwa.ts', import.meta.url),
+    'utf8',
+  );
+  const warm = pwa.slice(pwa.indexOf('async function warmCaches'));
+  const control = warm.indexOf("addEventListener('controllerchange'");
+  const later = warm.indexOf('takeTilesAskedLater(');
+  const take = warm.indexOf('...takeTilesAsked().map(quiet)');
+  assert.ok(
+    control > 0 && later > control && take > later,
+    'once the worker controls the page, the taker for later tiles is set, then the tiles so far are taken',
+  );
+  // In the same turn: no `await` between the two, so no tile falls between them.
+  assert.doesNotMatch(warm.slice(later, take), /\bawait\b[^;]*;\s*\n/);
 });

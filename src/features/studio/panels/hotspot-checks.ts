@@ -57,6 +57,21 @@ export function knownInformalNames(
 }
 
 /**
+ * The ticks a hotspot's panel opens with, or null to pre-tick the directions that start inside
+ * the outline once their lines are read: a new hotspot, and a saved terminal that links nothing,
+ * which a terminal drawn before its routes is. A saved terminal with links keeps exactly those.
+ */
+export function ticksAtOpening(
+  kind: HotspotKind,
+  saved: HotspotRow | null,
+  savedLinks: readonly string[],
+): Set<string> | null {
+  if (!saved) return null;
+  if (kind === 'terminal' && savedLinks.length === 0) return null;
+  return new Set(savedLinks);
+}
+
+/**
  * A terminal's checklist: pre-ticked from `startTicks` (null: not yet
  * known), with the owner's own ticks and unticks in `chosen` over it.
  */

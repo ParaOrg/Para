@@ -1,15 +1,145 @@
 # Release app-v0.4.0
 
-Everything merged into `staging` since the last release (#778, app-v0.3.0, which took staging as it was at #682) goes to `main`: 156 pull requests, #684 to #846. The owner's test of the contributor app (APK run 42485212627) passed all six checks, swipe-away included.
+The tag `app-v0.4.0` was never pushed, so this release is still 0.4.0: the tag sets the version, and the contributor APK is published from it. It goes to `main` in two parts:
+- **#849 is already on `main`.** It took `staging` as it was at #848.
+- **This PR, `release/app-v0.4.0-b`,** takes everything merged into `staging` since then, #852 to #915, as `staging` stood at #908 (`540f6a88`). It leaves out #850, which was not merged to `staging`, and #912, the reports Worker, which is held. #851 was the back-merge of `main` after #849.
 
-Tested at staging's head, `beb25dfb` (#844):
+How the branch is built:
+- It is `staging` at #908 (`540f6a88`), plus a merge of `main` (`c577dec2`, Publish map 2026-11-11 00:28 UTC).
+- That map publish was already on `staging`, so the merge changes no file.
+- `main` is an ancestor of the branch, so the PR merges cleanly.
+- `npm run check` passes on the branch: 1,712 unit checks, 0 failing.
 
-- **CI on that commit:** all 33 jobs passed on their first attempt, so no known flake needed a re-run. That covers every browser suite: the drawing suites, the editor, commuter-test in three parts, phone-test, where-test, loop-test, pwa-test with both basemaps, the contributor suites (contribute, upload, offline, handover, profile, claim, account, forgot-password), the studio suites, scale-test and turnstile-test. CodeQL and Security passed too.
-- **`npm run check` locally:** passes. That is formatting, lint, the build with its guards, and 1,705 unit checks with 0 failing.
+## Since #849
 
-## What changed on screen
+### On screen
 
-### Commuter map
+#### Commuter map
+
+- **The trip** (#899, #905, #906, #908) follows the owner's Figma RouteTripDetail:
+  - **The ends card:** Start and End, with ⇅ to turn the trip round.
+  - **Distance and fare:** white tiles. The fare tile keeps "Discounted fare".
+  - **Signboards:** on their own card.
+  - **The stops:** on RouteStopsCard, in the trip's colour.
+    - It opens folded at 120, with View more and View less.
+    - The rows outside a picked ride are bare dots off the rail.
+    - S and E sit at the right of their rows.
+    - A train shows station codes.
+  - **Other routes:** under the stops.
+- **The Controller, one bar for the route list and the trip** (#906):
+  - **On a phone:** it floats at the sheet's foot, over a fade: ‹ or ✕, PAPUNTA, then the filter.
+  - **On a wide screen:** it is the sheet's 64-tall top bar.
+    - The list's bar is in Card/Jeep blue; a trip's is in its own colour.
+    - ⇆ PAPUNTA and the filter sit at the left, ‹ or ✕ at the right.
+  - **PAPUNTA** names the way that is showing (Papunta, Pabalik, or a train's bound), in capitals. A screen reader also hears where a tap leads ("turns to Pabalik").
+  - ‹ stands when something is behind the trip, ✕ when nothing is.
+  - The docked list is 384 wide.
+- **Route cards** (#867, #892) follow the owner's new RouteCard component.
+- **Place search:**
+  - "Go here" makes a landmark the trip's end (#855).
+  - The results' scroll box clips its rows (#853).
+- **Footbridges** on the map (#891, #894): a monthly file, built with the landmarks.
+
+#### Studio
+
+- **The review workspace is gone** (#878). Drafts are handled from the sidebar:
+  - Approve and Discard a stored draft there (#865).
+  - A route or hotspot that is only a draft opens in its sidebar (#866).
+  - Approve another editor's draft from the card's lock notice (#869).
+- **No P2P for a new route** (#904).
+- **PhoneBlock:**
+  - It keeps the phone it read when a second read fails (#907).
+  - Try again greys out and reads "Trying…" while it reads (#911).
+- **Footbridges** in the studio, behind a switch (#895).
+- **Place search:** the landmark dot stays until the search starts over (#852).
+
+#### Contributor app
+
+- **The ride** runs on one pure state machine on the phone and in the native service (#856, #857, #859):
+  - It says when location is off, and when a restart or update cut it off (#858).
+  - A clock set back mid-ride no longer drops fixes (#870).
+  - A fix the native log cannot write is said, not lost silently (#871).
+- **Starting with location off** asks Google's Turn on location dialog (#863).
+- **Keep Para recording** shows each phone maker's own steps (#864).
+- **Share ride diagnostics** in Account settings (#860).
+- **No signal at the start:** the map around a ride's start is kept for a dropped signal (#873).
+- **Walking:** a walk's distance is counted, not read as standing (#876).
+- **Uploads:**
+  - A ride over six hours never uploads (#901).
+  - There is no nudge to Sakay (#901).
+- **The page's budget:** 1 kB of headroom under its 31 kB opening budget (#913).
+- **The newest test build** from staging is at one address, test-latest (#862).
+
+### Behind the scenes
+
+- **CI** (#879–#882, #884–#886, #888, #910, #915):
+  - A download outage can't turn the checks red.
+  - A red staging opens a triage issue.
+  - The drawing suites run on drawing PRs.
+  - New checks:
+    - an areas file;
+    - no new source file over 150 lines;
+    - the glossary's banned words;
+    - every story renders and plays, against a shrink-only baseline.
+  - The disposable database is waited for over TCP.
+- **Flakes:**
+  - The two known flakes are fixed at their causes (#880).
+  - The landmark search is timed by its fastest of three rounds (#875).
+- **Story plays:**
+  - The routes and studio plays pass again (#889, #890, #897).
+  - The password-looking story literal is gone (#900).
+- **Secrets:** the backup and publish secrets live in main-only Environments (#902).
+- **Code:** earlier map files are read through a store the page gives (#874).
+- **Docs and plans:** #854, #861, #868, #872, #883, #887, #893, #896.
+
+### Database
+
+No migration was added since #849 (`supabase/migrations` is unchanged), so there is nothing to apply.
+
+### Size
+
+`npm run build`, then `npm run health`, on `main` (#849) and on this branch:
+
+| | main (#849) | this release | budget |
+| --- | --- | --- | --- |
+| MapLibre, React and the shared code together | 407.0 kB | **408.4 kB** | 413 kB |
+| maplibre chunk | 137.3 kB | 137.3 kB | 160 kB |
+| maplibre-gl-shared chunk | 134.8 kB | 134.8 kB | 160 kB |
+| react chunk | 57.6 kB | 57.6 kB | 70 kB |
+| shared chunk | 67.1 kB | 68.7 kB | 80 kB |
+| zod chunk | 10.2 kB | 10.1 kB | 11 kB |
+| MapLibre's worker | 5.8 kB | 5.8 kB | 20 kB |
+| fonts (not gzipped) | 106.7 kB | 106.7 kB | 135 kB |
+| The contributor page's own code | 31.0 kB | **30.0 kB** | under 31 kB |
+
+The contributor page has 1 kB of headroom again (#913).
+
+### Known issues
+
+- **Story plays:** every story plays: 1,289 of 1,289, and CI now runs them (#888). #849's 59 failing plays are fixed, and the baseline is empty.
+- **Not in this release:**
+  - #912, the reports Worker, is held.
+  - The report flag waits in the Controller's empty slot (decision 144).
+- **Map data:** `main`'s last map publish (2026-11-11 00:28) was already on `staging`, so the branch keeps it as it is.
+- **For the owner's test:** the contributor app's ride changes (#856–#859, #863, #864, #870, #871, #873, #876, #901) are a new APK. Test it on a phone before or after the tag, as for #849.
+
+## The owner's merge steps
+
+1. Check this PR's CI is green.
+2. Merge it with a **merge commit**, not a squash or a rebase, so `main` and `staging` keep sharing history.
+3. Tag `main`'s merge commit `app-v0.4.0` and push the tag. The tag publishes the contributor APK.
+4. Check the public site after Cloudflare's deploy from `main`. Make sure:
+   - the map loads;
+   - a route opens on its trip with the new bar;
+   - PAPUNTA turns it round;
+   - place search answers.
+5. Merge `main` back into `staging` afterwards (#887's back-merge), so the two keep sharing history.
+
+## What #849 took (already on `main`)
+
+### What changed on screen
+
+#### Commuter map
 
 The route cards are the owner's new design: route card redesign steps 1–11, and the README in `.scratch/route-card-redesign/` has the decisions.
 
@@ -37,7 +167,7 @@ The route cards are the owner's new design: route card redesign steps 1–11, an
   - At full sheet height, the location problem message sits under the card's ✕, so the ✕ stays in reach (#835).
   - Render errors are caught, so one failure doesn't blank the page (#693).
 
-### Studio
+#### Studio
 
 - **Signing in** (#714, #716, #760):
   - The sign-in card is the owner's Figma design.
@@ -62,7 +192,7 @@ The route cards are the owner's new design: route card redesign steps 1–11, an
   - The map's ⓘ at the lower left (#731).
   - Drafts in the top bar (#757).
 
-### Contributor app
+#### Contributor app
 
 - **Recording:**
   - Keeps recording after the app is swiped away from Recents (#793, #798, #841).
@@ -85,11 +215,11 @@ The route cards are the owner's new design: route card redesign steps 1–11, an
 - **History** says what each ride became (#810). Stop on a ride left open wears Finish's flag (#843).
 - **Deleting an account** never deletes the uploads (#692, #747).
 
-## Screenshots
+### Screenshots
 
 Taken on this release's code with the dev server. The studio ran against the test suites' in-memory stand-in, so no live data was involved. Phone shots are 393 wide; computer shots are 1440.
 
-### Commuter map
+#### Commuter map
 
 | | |
 | --- | --- |
@@ -104,7 +234,7 @@ Taken on this release's code with the dev server. The studio ran against the tes
 
 On a computer the route list is docked on the left, with the Controller beside it.
 
-### Studio
+#### Studio
 
 ![The sign-in card](app-v0.4.0-shots/studio-signin.jpg)
 
@@ -122,14 +252,14 @@ A route open for editing: its sidebar on the left and the Move · Snap · Draw t
 
 A hotspot open in the sidebar, with Exit and Unpublish.
 
-### Contributor app
+#### Contributor app
 
 | | | |
 | --- | --- | --- |
 | ![Start](app-v0.4.0-shots/contributor-start.jpg) | ![History](app-v0.4.0-shots/contributor-history.jpg) | ![A ride's detail](app-v0.4.0-shots/contributor-ride-detail.jpg) |
 | The first screen: the map, then Start tracking | History: what each ride became | A ride's detail: its trail on the map |
 
-## Database
+### Database
 
 Every migration in this release was applied live by the owner before its PR merged. None needs applying on release, and no workflow applies migrations when `main` changes. The table in `supabase/migrations/README.md` records each one:
 
@@ -142,7 +272,7 @@ Every migration in this release was applied live by the owner before its PR merg
 
 #770's and #772's titles still say "not applied", but both were applied live on 2026-11-06 before they merged.
 
-## Size
+### Size
 
 `npm run build`, then `scripts/checks/health.mjs`, on `main` (app-v0.3.0) and on this release:
 
@@ -160,7 +290,7 @@ Every migration in this release was applied live by the owner before its PR merg
 
 The route icons moved into a sprite the page fetches (#791), which freed room for the redesign.
 
-## Known issues
+### Known issues
 
 - **Story plays:** 59 Storybook plays of 1,307 fail at staging's head (re-run for this release; 1,248 pass), the same 59 as on the build from before the route card redesign. CI doesn't run plays, so they don't show as red there. They are:
   - the contributor screens' focus plays (26);
@@ -172,14 +302,6 @@ The route icons moved into a sprite the page fetches (#791), which freed room fo
 - **Contributor page budget:** its own code is 31.0 kB against "under 31 kB": it passes, at the line. The next contributor feature needs room made first.
 - **Place search, to check:** in headless Chromium a flat grey block showed on the map under the search results, as wide as the search card (the screenshot above is cropped above it). It is drawn in the map's canvas and came back every time. It is not yet known whether a real phone shows it, so it is one for the place search session to look at.
 - **Map data:** the release branch takes `main`'s newer published map (2026-11-06 23:57, one more hotspot and link). Staging had 2026-11-06 00:45 and keeps its new landmark file for place search.
-
-## The owner's merge steps
-
-1. Open the release PR, `release/app-v0.4.0` → `main`, "Release app 0.4.0". Check its CI is green.
-2. Merge it with a **merge commit**, not a squash or a rebase, so `main` and `staging` keep sharing history.
-3. Tag `main`'s merge commit `app-v0.4.0` and push the tag. The tag publishes the new contributor APK, as `app-v0.3.0` did.
-4. Check the public site after Cloudflare's deploy from `main`: the map loads, a route opens, and place search answers.
-5. Optionally, merge `main` back into `staging` afterwards, so tonight's map publish lands on both.
 
 ## Every PR in this release
 
@@ -341,3 +463,61 @@ The route icons moved into a sprite the page fetches (#791), which freed room fo
 | #844 | 2026-11-08 | Contributor app: Android's battery dialog at the first Start; Keep Para recording names No restrictions |
 | #845 | 2026-11-08 | Contributor app: the loading page no longer ends a live ride; a ride over leaves no notification |
 | #846 | 2026-11-08 | Recorder lifecycle (Q80): a brief for the session that takes the audit |
+| #852 | 2026-11-10 | Studio search: the landmark dot stays until the search starts over |
+| #853 | 2026-11-10 | Place search: the results scroll box clips its rows (no grey block in headless captures) |
+| #854 | 2026-11-10 | Docs: the contributor ride's state machine audit (Q80) |
+| #855 | 2026-11-10 | Place search: "Go here" makes a landmark the trip's end (ticket 07) |
+| #856 | 2026-11-10 | Contributor app: the ride's rules as one pure machine (RideMachine), with JUnit |
+| #857 | 2026-11-10 | Contributor app: the native ride runs on RideMachine; the card goes by itself |
+| #858 | 2026-11-10 | Contributor app: a ride says when location is off, and when a restart or update cut it off |
+| #859 | 2026-11-10 | Contributor app: the page reads the ride's history from the phone, not a queue of taps |
+| #860 | 2026-11-10 | Contributor app: Share ride diagnostics in Account settings (Q97) |
+| #861 | 2026-11-10 | Footbridges: the plan and five tickets (docs only) |
+| #862 | 2026-11-10 | Contributor app: the newest test build from staging at one address (test-latest) |
+| #863 | 2026-11-10 | Contributor app: Start with location off asks Google's Turn on location dialog (Q91) |
+| #864 | 2026-11-11 | Contributor app: Keep Para recording in each maker's own steps (Q78) |
+| #865 | 2026-11-10 | Approve and Discard a stored draft from the studio's sidebar |
+| #866 | 2026-11-10 | Open a route or hotspot that is a draft only in its sidebar |
+| #867 | 2026-11-11 | RouteCard follows the owner's new Figma component (4629:22776) |
+| #868 | 2026-11-10 | Docs: the ride's state machine after the Ride module; tickets 01 to 04 resolved |
+| #869 | 2026-11-10 | Approve another editor's draft from the card's lock notice |
+| #870 | 2026-11-10 | Contributor app: a clock set back mid-ride no longer drops fixes (ticket 05) |
+| #871 | 2026-11-10 | Contributor app: a fix the native log cannot write is said, not lost silently (ticket 06) |
+| #872 | 2026-11-10 | Emulator check: the Sakay tap is read back, and made once more if it missed |
+| #873 | 2026-11-11 | Contributor app: keep the map around a ride's start for a dropped signal |
+| #874 | 2026-11-11 | Routes: read earlier map files through a store the page gives |
+| #875 | 2026-11-11 | test: time the landmark search by its fastest of three rounds |
+| #876 | 2026-11-12 | Contributor app: count a walk's distance instead of reading it as standing |
+| #878 | 2026-11-11 | Remove the studio review workspace |
+| #879 | 2026-11-11 | CI: a download outage can no longer turn the checks red |
+| #880 | 2026-11-11 | e2e: the two known flakes, by their causes (studio-two-editors, pwa-test) |
+| #881 | 2026-11-11 | CI: a red staging opens a triage issue, and its next green run closes it |
+| #882 | 2026-11-11 | CI: the drawing suites run on pull requests that change the editor's drawing |
+| #883 | 2026-11-11 | Ticket: count the native fix log's failed writes in the ride (left out of 06) |
+| #884 | 2026-11-11 | CI: an areas file, and a warning when a pull request spans several areas (Q30) |
+| #885 | 2026-11-11 | CI: no new source file over 150 lines, and the code-health page on every run (Q31) |
+| #886 | 2026-11-11 | CI: the glossary's banned words kept out of the code and the docs (Q33) |
+| #887 | 2026-11-11 | The release rhythm and the main-to-staging back-merge (Q32) |
+| #888 | 2026-11-11 | CI: every story renders and plays (Storybook plays), against a shrink-only baseline |
+| #889 | 2026-11-11 | Routes map stories: their play functions pass again |
+| #890 | 2026-11-11 | Storybook: the studio's nine failing plays fixed; the studio leaves the baseline |
+| #891 | 2026-11-11 | Footbridges: the footbridge file, built monthly with the landmarks (ticket 01) |
+| #892 | 2026-11-11 | Delete the card code the new RouteCard replaced |
+| #893 | 2026-11-11 | Ticket: the studio's toast says a success as a success, not as an error |
+| #894 | 2026-11-11 | Footbridges on the commuter map (ticket 02) |
+| #895 | 2026-11-11 | Footbridges in the studio, behind a switch (ticket 03) |
+| #896 | 2026-11-11 | Go here: the spec and nine tickets (docs only) |
+| #897 | 2026-11-11 | FootbridgeLayer story: tell MapLibre where its worker is |
+| #899 | 2026-11-11 | Trip stops sit in Figma's RouteStopsCard |
+| #900 | 2026-11-11 | NewPasswordScreen stories: made-up typed words in place of a password-looking literal |
+| #901 | 2026-11-11 | Tickets: a ride over six hours never uploads (UX-04), and no nudge to Sakay (UX-07) |
+| #902 | 2026-11-11 | SEC-01: the backup and publish secrets live in main-only Environments |
+| #904 | 2026-11-11 | Studio: no P2P for a new route (Q159) |
+| #905 | 2026-11-11 | Trip detail: RouteTripDetail on a phone, its ends card and the new stops timeline |
+| #906 | 2026-11-12 | Trip controller: one bar for the list and the trip, PAPUNTA, on a phone and on wide screens |
+| #907 | 2026-11-11 | Studio: PhoneBlock keeps the phone it read when a read again fails (Q141) |
+| #908 | 2026-11-12 | Trip cleanup: delete RouteCardHeader, which the Controller replaced |
+| #910 | 2026-11-11 | CI: the disposable database counts as started only when it answers over TCP |
+| #911 | 2026-11-11 | Studio: PhoneBlock's Try again greys out and reads "Trying…" while it reads (Q193) |
+| #913 | 2026-11-11 | Contributor page: 1 kB of headroom under its 31 kB opening budget |
+| #915 | 2026-11-12 | CI: the review suites install Chromium from ci.yml's caches |

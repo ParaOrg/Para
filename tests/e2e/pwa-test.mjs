@@ -24,6 +24,7 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { until } from './lib/harness.mjs';
+import { checkPolicies, watchPolicies } from './lib/policy.mjs';
 import { OPENFREEMAP_HOST, builtBasemapHost, startOwnTilesStandIn } from './own-tiles-stand-in.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
@@ -34,6 +35,14 @@ let failed = 0;
 const check = (name, ok, detail = '') => {
   if (!ok) failed++;
   console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}${detail ? '  ' + detail : ''}`);
+};
+/** A tile, by its z/x/y address: glyphs are .pbf files and the sprite a .png too. */
+const isTile = (url) => /\/\d+\/\d+\/\d+\.(pbf|png)(\?.*)?$/.test(url);
+/** How many of each outcome, as "200 direct ×4, net::ERR_FAILED ×2". */
+const tally = (outcomes) => {
+  const counts = new Map();
+  for (const o of outcomes) counts.set(o, (counts.get(o) ?? 0) + 1);
+  return [...counts].map(([o, n]) => `${o} ×${n}`).join(', ') || 'none asked';
 };
 
 if (!existsSync(join(root, 'dist', 'sw.js'))) {
@@ -169,6 +178,12 @@ async function openSomeTrip(page) {
 }
 
 const stopStandIn = isOwnTiles ? await startOwnTilesStandIn(basemapHost) : null;
+// What the pages' content policies flag, both contexts' together. The stand-in's loopback address
+// is a test build's alone: the policies name the hosts the site is deployed with.
+const policyWatch = {
+  into: [],
+  allow: (blocked) => isOwnTiles && blocked.startsWith(basemapHost),
+};
 const browser = await chromium.launch();
 const phone = {
   viewport: { width: 390, height: 844 },
@@ -209,6 +224,7 @@ try {
   // ------------------------------------------------- the studio: no worker
   {
     const ctx = await browser.newContext();
+    await watchPolicies(ctx, policyWatch);
     const page = await ctx.newPage();
     await page.goto(`${base}/studio/`, { waitUntil: 'load' });
     // The positive control: the two negatives below mean nothing on a blank page.
@@ -232,13 +248,44 @@ try {
 
   // ---------------------------------------------- the map: online, then off
   const ctx = await browser.newContext(phone);
+  await watchPolicies(ctx, policyWatch);
+  // How many new workers the browser found, for the update check's detail only: with the basemap
+  // stood in, Chromium finds an extra one after the tap (.scratch/ci-flakes/issues/04).
+  let workersFound = 0;
+  await ctx.addInitScript(() => {
+    const watch = async () => {
+      const registration = await navigator.serviceWorker?.getRegistration();
+      if (!registration || registration.onupdatefound) return;
+      registration.onupdatefound = () => console.log('pwa-test: updatefound');
+    };
+    navigator.serviceWorker?.addEventListener('controllerchange', () => void watch());
+    addEventListener('load', () => void watch());
+  });
   const page = await ctx.newPage();
+  page.on('console', (m) => {
+    if (m.text() === 'pwa-test: updatefound') workersFound++;
+  });
   const errors = [];
   page.on('pageerror', (e) => errors.push(String(e)));
   let supabase = 0;
   page.on('request', (r) => {
     if (/\.supabase\.co/.test(r.url())) supabase++;
   });
+  // What the first visit's tile requests did, and whether the worker answered them, for the day
+  // no tile reaches the cache: the check below then says so. A tile that fails is not asked again
+  // until the map moves, so no wait brings it.
+  const firstVisitTiles = [];
+  const noteTileResponse = (res) => {
+    if (isTile(res.url()))
+      firstVisitTiles.push(
+        `${res.status()} ${res.fromServiceWorker() ? 'through the worker' : 'direct'}`,
+      );
+  };
+  const noteTileFailure = (req) => {
+    if (isTile(req.url())) firstVisitTiles.push(req.failure()?.errorText ?? 'failed');
+  };
+  page.on('response', noteTileResponse);
+  page.on('requestfailed', noteTileFailure);
 
   await page.goto(`${base}/`, { waitUntil: 'load' });
   check(
@@ -319,6 +366,8 @@ try {
       Object.entries(now).some(([n, urls]) => n.includes('basemap-tiles') && urls.length > 0),
     60000,
   );
+  page.off('response', noteTileResponse);
+  page.off('requestfailed', noteTileFailure);
   check('online: no offline notice', (await page.locator('[data-testid="offline"]').count()) === 0);
 
   const names = Object.keys(caches);
@@ -347,9 +396,11 @@ try {
         isOwnTiles ? u.startsWith(`${basemapHost}/assets/`) : u.endsWith('/planet'),
       ),
   );
+  const tilesKept = tiles ? caches[tiles].length : 0;
   check(
-    `basemap-tiles holds tiles (${tiles ? caches[tiles].length : 0})`,
-    !!tiles && caches[tiles].length > 0,
+    `basemap-tiles holds tiles (${tilesKept})`,
+    tilesKept > 0,
+    tilesKept > 0 ? '' : `the first visit's tile requests: ${tally(firstVisitTiles)}`,
   );
   check(
     'precache holds no studio chunk',
@@ -390,10 +441,8 @@ try {
   // Now with no network at all: the phone keeps everything it needs.
   await ctx.setOffline(true);
   let tilesFromWorker = 0;
-  // Tiles only, by their z/x/y address: glyphs are .pbf files and the sprite a .png too.
   const countTiles = (res) => {
-    if (/\/\d+\/\d+\/\d+\.(pbf|png)(\?.*)?$/.test(res.url()) && res.fromServiceWorker())
-      tilesFromWorker++;
+    if (isTile(res.url()) && res.fromServiceWorker()) tilesFromWorker++;
   };
   page.on('response', countTiles);
   await page.reload({ waitUntil: 'load' }).catch(() => {});
@@ -607,7 +656,7 @@ try {
       check(
         'tapping Reload brings the new worker in and the button goes',
         !after.waiting && after.controlled && !after.button,
-        JSON.stringify(after),
+        `${JSON.stringify(after)}, ${workersFound} new worker(s) found`,
       );
     }
   } finally {
@@ -617,6 +666,7 @@ try {
   // --------------------------------------------------------- housekeeping
   check('no page errors', errors.length === 0, errors.join(' | '));
   check('no request to the database', supabase === 0);
+  checkPolicies(check, policyWatch.into);
   await ctx.close();
 } finally {
   await browser.close();

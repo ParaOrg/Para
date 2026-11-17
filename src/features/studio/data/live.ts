@@ -213,16 +213,16 @@ export function drawingOf(
   v: DirectionRow,
   raw: { control_points: unknown; segments: unknown; shape: unknown },
 ): DirectionDrawing {
-  // Read as unknown: the drawing columns are stored as given and no schema
-  // for a segment exists yet, so the generated Json type proves nothing here.
   const controlPoints: unknown = raw.control_points;
   const segments: unknown = raw.segments;
   return {
     ...v,
     shape: parsed(lineShapeSchema, [{ shape: raw.shape }], 'direction line')[0]?.shape ?? null,
     controlPoints: Array.isArray(controlPoints)
-      ? (controlPoints as DirectionDrawing['controlPoints'])
+      ? // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- the drawing columns are stored as given, with no schema yet: .scratch/type-assertions/issues/02-validate-drawing-columns.md
+        (controlPoints as DirectionDrawing['controlPoints'])
       : [],
+    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- as above: .scratch/type-assertions/issues/02-validate-drawing-columns.md
     segments: Array.isArray(segments) ? (segments as DirectionDrawing['segments']) : [],
   };
 }

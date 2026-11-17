@@ -1,3 +1,4 @@
+// eslint-disable-next-line no-restricted-syntax -- this sheet has its own answer to a failed fetch (CreditsUnavailable below), which retryingLazy would replace with nothing
 import { lazy, Suspense, useEffect, type ComponentType } from 'react';
 
 import { useEscape } from '@/shared/hooks/use-escape';

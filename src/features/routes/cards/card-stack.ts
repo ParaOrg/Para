@@ -52,6 +52,30 @@ export function tripBehindHolds(tripOpen: boolean, placeOpen: boolean): boolean 
   return placeOpen && !tripOpen;
 }
 
+/** The cards that are up: a trip, a place's card, the route list, and a trip stepped behind a place's card. */
+export interface CardsUp {
+  trip: boolean;
+  place: boolean;
+  list: boolean;
+  tripBehind: boolean;
+}
+
+/** What the browser's Back does to the cards that are up. */
+export type BackMove = 'trip-to-behind' | 'place-to-trip' | 'close-place' | 'close-all';
+
+/**
+ * What the browser's Back does: the ‹ of the card on show where a card is kept behind it, its ✕
+ * where none is. A trip steps back to the place's card or the list behind it; a place's card, to
+ * the trip it stood in front of. Never the trip's ‹ that lists its route with those sharing an
+ * end: Back takes a card away and opens none, so enough Backs always leave the page. Null with no
+ * card up: Back is the browser's own.
+ */
+export function backMove(up: CardsUp): BackMove | null {
+  if (up.trip) return up.place || up.list ? 'trip-to-behind' : 'close-all';
+  if (up.place) return up.tripBehind ? 'place-to-trip' : 'close-place';
+  return up.list ? 'close-all' : null;
+}
+
 /**
  * A HintuanCard's Selected row let go: it stays let go only while that box is
  * still the one the card is on.

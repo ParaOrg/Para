@@ -202,8 +202,9 @@ jobs:
           # are copied whole from main's tree; only the files this publish
           # removed are removed. A push of public/data/ alone skips CI
           # (paths-ignore) and deploys staging as any other push does.
-          # Staging has no ruleset; if it ever gets one, the deploy key must
-          # be a bypass actor there too.
+          # Staging's ruleset (docs/agents/staging-protection.md), once on,
+          # must list the deploy key as a bypass actor, as main's does, or
+          # this push is refused.
           published="$(git rev-parse HEAD)"
           removed="$(git diff --name-only --diff-filter=D HEAD~1 HEAD -- public/data 2>/dev/null || true)"
           [ "$is_changed" = true ] || removed=""

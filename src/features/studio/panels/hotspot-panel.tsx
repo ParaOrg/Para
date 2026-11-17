@@ -7,7 +7,12 @@ import { isLoop, type DirectionRow } from '@/features/routes/model/routes';
 
 import { DraftAlert } from './draft-alert';
 import { DraftBadge } from './draft-badge';
-import { groupBySignboard, knownInformalNames, tickedDirections } from './hotspot-checks';
+import {
+  groupBySignboard,
+  knownInformalNames,
+  tickedDirections,
+  ticksAtOpening,
+} from './hotspot-checks';
 import { LineDetail } from './line-detail';
 import { PassesThrough } from './passes-through';
 import { SaveFooter } from './save-footer';
@@ -23,7 +28,7 @@ import { linksThrough, directionsStartingIn } from '../data/hotspots-geometry';
 import type { Drawing } from '../drawing/use-drawing';
 
 interface HotspotPanelProps {
-  draw: Drawing;
+  draw: Pick<Drawing, 'area' | 'controlPoints' | 'cancel'>;
   /** The hotspot being edited, or null for a new one. */
   existing: HotspotRow | null;
   /** For an existing terminal: the directions currently linked to it. */
@@ -111,9 +116,7 @@ export function HotspotPanel({
   // A terminal's checklist is pre-ticked from the full lines, once they are
   // in; a box the owner ticks or unticks before then keeps the owner's
   // choice over the pre-tick. Set during render, once, as the lines arrive.
-  const [startTicks, setStartTicks] = useState<Set<string> | null>(() =>
-    existing ? new Set(existingLinks) : null,
-  );
+  const [startTicks, setStartTicks] = useState(() => ticksAtOpening(kind, existing, existingLinks));
   if (lined && startTicks === null)
     setStartTicks(
       new Set(

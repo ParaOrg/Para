@@ -75,6 +75,7 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { ShapeError, buildFiles, indexRowsOf } from './shapes.mjs';
 import { boardsRefusal } from './board-guard.mjs';
+import { indexWeightWarning } from './index-weight.mjs';
 import { shrinkRefusals, takenDownSets } from './shrink-guard.mjs';
 import { AssembleError, assembleMap, publishedAtOf, sourceRevisionsOf } from './assemble.mjs';
 import { databaseConfig, databaseReader } from './read-database.mjs';
@@ -239,6 +240,8 @@ console.log(
     `${stops.length} hotspot(s), ${links.length} link(s); ${files.v5.length} bytes, ${gz(files.v5)} gzipped; ` +
     `lines/: ${lines.files} file(s), ${lines.written} written, ${lines.removed} removed`,
 );
+const indexWarning = indexWeightWarning(gz(files.v5));
+if (indexWarning) console.log(indexWarning);
 console.log(
   `signboards/: ${boards.files} file(s), ${boards.written} written, ${boards.removed} removed` +
     (boardsMissing ? `; ${boardsMissing} named but gone from the bucket or refused, left out` : ''),

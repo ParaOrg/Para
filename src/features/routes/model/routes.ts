@@ -38,7 +38,7 @@ const RAIL_MODES: readonly TransportMode[] = ['lrt', 'mrt'];
 export const RAIL_LINES = ['LRT-1', 'LRT-2', 'MRT-3'] as const;
 export type RailLine = (typeof RAIL_LINES)[number];
 export const isRailLine = (code: string | null | undefined): code is RailLine =>
-  (RAIL_LINES as readonly string[]).includes(code ?? '');
+  RAIL_LINES.some((line) => line === code);
 
 /** The train line a direction's route runs on, by its routeCode; null for every other route. */
 export const railLineOf = (v: Pick<Direction, 'route'>): RailLine | null => {

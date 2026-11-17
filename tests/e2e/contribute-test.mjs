@@ -9,7 +9,7 @@
 //
 // The GPS is a stand-in navigator.geolocation the suite feeds fix by fix, with
 // timestamps of its own (a second apart), so a kilometre out and back takes
-// no time. The 2-minute form timeout runs on Playwright's fake clock.
+// no time. The 10-minute form timeout runs on Playwright's fake clock.
 import { mkdirSync } from 'node:fs';
 import { chromium } from 'playwright';
 import { fakeContributions } from './lib/fake-contributions.mjs';
@@ -79,9 +79,15 @@ const browser = await chromium.launch();
 /**
  * A phone-sized page with the stand-in GPS. `earlierConsent` stores the first consent screen's
  * agreement, as a phone from before kept it. `granted` is a browser that already lets the page
- * read the location.
+ * read the location. `search` is added to the page's address (`?e2e=1`). `beforeOpen` runs on the
+ * page before it opens, for routes the page's first requests must already meet.
  */
-async function phone({ earlierConsent = false, granted = false } = {}) {
+async function phone({
+  earlierConsent = false,
+  granted = false,
+  search = '',
+  beforeOpen = null,
+} = {}) {
   const context = await browser.newContext({
     viewport: { width: 393, height: 852 },
     deviceScaleFactor: 2,
@@ -111,7 +117,8 @@ async function phone({ earlierConsent = false, granted = false } = {}) {
   }
   const errors = [];
   page.on('pageerror', (e) => errors.push(String(e)));
-  await page.goto(`${BASE}/contribute/`, { waitUntil: 'load' });
+  if (beforeOpen) await beforeOpen(page);
+  await page.goto(`${BASE}/contribute/${search}`, { waitUntil: 'load' });
   return { page, context, errors };
 }
 
@@ -1057,7 +1064,7 @@ const buttons = (page) =>
     (await tintOf(page)) === 'sakay:from-green-700/10',
   );
 
-  // Flag a stop: Figma's flagstop pin where the trail is, a "Stop flagged" toast, nothing to answer.
+  // Flag a stop: Figma's flagstop pin where the trail is, the Add a stop note pill, nothing to answer.
   const flagBox = await flagButton(page).boundingBox();
   const locatorBox = await locate(page).boundingBox();
   const styleBox = await page.getByRole('button', { name: 'Map design' }).boundingBox();
@@ -1071,24 +1078,18 @@ const buttons = (page) =>
     JSON.stringify([flagBox, styleBox, locatorBox]),
   );
   await flagButton(page).click();
-  const stopFlagged = toastSaying(page, 'Stop flagged');
-  await stopFlagged.waitFor({ timeout: 5000 });
+  const notePill = page.getByRole('button', { name: /Add a stop note/ });
+  await notePill.waitFor({ timeout: 5000 });
   check(
-    '  on Sakay a tap says "Stop flagged" in a compact info toast at the top (no ✕), politely, with no dialog',
-    (await page.getByTestId('toast').count()) === 1 &&
-      (await stopFlagged.getAttribute('data-kind')) === 'info' &&
-      (await stopFlagged.getAttribute('data-size')) === 'compact' &&
-      (await stopFlagged.getByRole('button', { name: 'Close' }).count()) === 0 &&
-      (await page.getByRole('status').filter({ hasText: 'Stop flagged' }).count()) === 1 &&
-      (await page
-        .getByRole('status')
-        .filter({ hasText: /Flagged, \d/ })
-        .count()) === 0 &&
+    '  on Sakay a tap shows the Add a stop note pill, says "Stop 1 flagged" politely, with no toast and no dialog',
+    (await notePill.isVisible()) &&
+      (await page.getByRole('status').filter({ hasText: 'Stop 1 flagged' }).count()) === 1 &&
+      (await page.getByTestId('toast').count()) === 0 &&
       (await page.getByRole('dialog').count()) === 0,
-    await page
-      .getByTestId('toast')
-      .allInnerTexts()
-      .then((texts) => texts.join(' | ')),
+  );
+  check(
+    '  Stops notes stands over Flag a stop once the ride has a flag, its badge counting one',
+    (await page.getByRole('button', { name: 'Stops notes' }).count()) === 1,
   );
   check(
     '  the dark "Flagged" pill beside the button is gone',
@@ -1113,17 +1114,17 @@ const buttons = (page) =>
         );
       })),
   );
-  // A second flag while it shows: the same toast, said again in place, never a second.
+  // A second flag while it shows: the pill drawn afresh for it, never a second pill.
   await flagButton(page).click();
   await page.waitForTimeout(300);
   check(
-    '  a second flag while it shows: still exactly one toast',
-    (await page.getByTestId('toast').count()) === 1 && (await stopFlagged.count()) === 1,
-    `${await page.getByTestId('toast').count()} toast(s)`,
+    '  a second flag while it shows: still exactly one pill, and the badge counts two',
+    (await notePill.count()) === 1 &&
+      (await page.getByRole('status').filter({ hasText: 'Stop 2 flagged' }).count()) === 1,
   );
   check(
-    '  "Stop flagged" leaves by itself',
-    await stopFlagged.waitFor({ state: 'detached', timeout: 8000 }).then(
+    '  the pill leaves by itself',
+    await notePill.waitFor({ state: 'detached', timeout: 8000 }).then(
       () => true,
       () => false,
     ),
@@ -1210,11 +1211,11 @@ const buttons = (page) =>
     labels.map((l) => l.split('\n')[0]).join(' | '),
   );
   check(
-    '  Save recording and Resume, Discard recording, and "Saves by itself in" quietly',
+    '  Save recordings and Resume, Discard recordings, under Recording Information',
     (await page.getByRole('button', { name: 'Save recording' }).count()) === 1 &&
       (await page.getByRole('button', { name: 'Resume', exact: true }).count()) === 1 &&
       (await page.getByRole('button', { name: 'Discard recording' }).count()) === 1 &&
-      /Saves by itself in \d:\d\d/.test(await page.locator('form').innerText()),
+      (await page.getByRole('heading', { name: 'Recording Information' }).count()) === 1,
   );
   await shot(page, '4-form');
   await page.getByRole('button', { name: 'Save recording' }).click();
@@ -1278,7 +1279,7 @@ const buttons = (page) =>
       file.savedAt !== null,
     `${file.modes.length} modes, ${file.fixes} fixes`,
   );
-  // Two: the flag, and the second while "Stop flagged" showed.
+  // Two: the flag, and the second while its pill showed.
   check(
     '  and its two marks',
     file.marks.length === 2 && file.marks.every((mark) => Number.isFinite(mark.time)),
@@ -1519,10 +1520,10 @@ const buttons = (page) =>
   );
   await discardQuestion.getByRole('button', { name: 'Keep it' }).click();
   check(
-    '  Keep it is back on the form as it was, focus on Discard recording',
+    '  Keep it is back on the form as it was, focus on Discard recordings',
     (await page.getByRole('alertdialog').count()) === 0 &&
       (await page.getByLabel('Start point name').inputValue()) === 'Tala' &&
-      (await focusName()) === 'Discard recording',
+      (await focusName()) === 'Discard recordings',
   );
 
   await page.getByLabel('End point name').fill('Cubao');
@@ -1580,7 +1581,8 @@ const buttons = (page) =>
   await flagButton(page).click();
   check(
     'on Lakad, Flag a stop is enabled and flags the place',
-    (await toastSaying(page, 'Stop flagged')
+    (await page
+      .getByRole('button', { name: /Add a stop note/ })
       .waitFor({ timeout: 5000 })
       .then(
         () => true,
@@ -1608,6 +1610,12 @@ const buttons = (page) =>
     JSON.stringify(discard),
   );
 
+  // The flag's note pill stands over the card for its five seconds, the column and the chevron
+  // sliding up for it: the card, open and folded, is measured without it.
+  await page
+    .getByRole('button', { name: /Add a stop note/ })
+    .waitFor({ state: 'detached', timeout: 8000 });
+  await page.waitForTimeout(800);
   const card = page.getByRole('group', { name: 'Recording so far' });
   const open = {
     fold: await foldButton(page).boundingBox(),
@@ -2116,7 +2124,7 @@ const buttons = (page) =>
 }
 
 // ------------------------------------------------------- Keep recording on the form
-// Time on the Save form, on the page's clock: under the form's own two minutes (SAVE_FORM_SECONDS,
+// Time on the Save form, on the page's clock: under the form's own ten minutes (SAVE_FORM_SECONDS,
 // use-save-countdown.ts), after which it saves the ride by itself; the page's clock jumping past
 // them saves it at the countdown's next tick, which a Resume tapped in the same moment may lose to.
 // Long enough to show in the Time figure, whole minutes from a minute on, were it counted.
@@ -2358,7 +2366,7 @@ const ON_THE_FORM_MS = 100_000;
   await page.context().close();
 }
 
-// ------------------------------------------- two minutes alone on the form
+// ------------------------------------------- ten minutes alone on the form
 {
   const { page, errors } = await phone();
   await page.getByRole('button', { name: 'Start Tracking' }).click();
@@ -2368,9 +2376,9 @@ const ON_THE_FORM_MS = 100_000;
   await page.clock.install();
   await finishRecording(page);
   await page.getByRole('heading', { name: 'Save Recording' }).waitFor();
-  // Never under something the contributor is answering: the sheet holds the two minutes.
+  // Never under something the contributor is answering: the sheet holds the ten minutes.
   await page.getByRole('button', { name: 'What did you ride?' }).click();
-  await page.clock.runFor(125_000);
+  await page.clock.runFor(605_000);
   check(
     'the form does not save itself while the ride sheet is open over it',
     (await page.getByRole('heading', { name: 'Save Recording' }).count()) === 1 &&
@@ -2378,26 +2386,21 @@ const ON_THE_FORM_MS = 100_000;
   );
   await page.keyboard.press('Escape');
   await page.clock.runFor(61_000);
-  const sixty = await page.locator('form').innerText();
   check(
-    'the form shows the time left, quietly: Saves by itself in 1:00 after a minute',
-    /Saves by itself in (0:59|1:00)/.test(sixty),
+    'a minute alone, the form is still open: it says nothing of its ten minutes, it keeps them',
+    (await page.getByRole('heading', { name: 'Save Recording' }).count()) === 1,
   );
+  // A hand on the form starts the ten minutes again: still open 598 s after it.
   await page.getByLabel('Description').fill('Crowded');
   await page.clock.runFor(2_000);
+  await page.clock.runFor(596_000);
   check(
-    'a hand on the form starts the two minutes again',
-    /Saves by itself in (1:5\d|2:00)/.test(await page.locator('form').innerText()),
-    (await page.locator('form').innerText()).match(/Saves by itself in \d:\d\d/)?.[0],
-  );
-  await page.clock.runFor(116_000);
-  check(
-    'still on the form a couple of seconds before the time is up',
+    'a hand on the form starts the ten minutes again: still on it a couple of seconds before',
     (await page.getByRole('heading', { name: 'Save Recording' }).count()) === 1,
   );
   await page.clock.runFor(3_000);
   await page.getByTestId('toast').filter({ hasText: 'Route recorded' }).waitFor({ timeout: 5000 });
-  check('left alone for two minutes, the form closes and saves', true);
+  check('left alone for ten minutes, the form closes and saves', true);
   await page.clock.resume();
   const file = await lastSavedRide(page);
   check(
@@ -2406,6 +2409,70 @@ const ON_THE_FORM_MS = 100_000;
     file.description,
   );
   check('no page errors', errors.length === 0, errors.join('; '));
+  await page.context().close();
+}
+
+// ------------------------------- the form's ten minutes held under a stop's map and its question
+{
+  const { page, errors } = await phone();
+  await page.getByRole('button', { name: 'Start Tracking' }).click();
+  await page.getByRole('group', { name: 'Recording so far' }).waitFor();
+  await ride(page, 0, 200);
+  await flagButton(page).click();
+  // Escape while writing a stop's note on Stops notes is the note's, never the page's. A real key
+  // press: the note's field goes before the page's own Escape listener looks for it.
+  await page.getByRole('button', { name: 'Stops notes' }).click();
+  const stopsNotes = page.getByRole('heading', { name: /^Stops notes/ });
+  await stopsNotes.waitFor();
+  await page.getByRole('button', { name: 'Add note' }).click();
+  await page.getByRole('textbox').fill('Waiting shed');
+  await page.keyboard.press('Escape');
+  check(
+    "Escape in a stop's note typed into keeps the note, its text, and Stops notes open",
+    (await page.getByRole('textbox').inputValue()) === 'Waiting shed' &&
+      (await stopsNotes.count()) === 1,
+  );
+  await page.getByRole('textbox').fill('');
+  await page.keyboard.press('Escape');
+  check(
+    "Escape in a stop's note left empty closes the note and leaves Stops notes open",
+    (await page.getByRole('textbox').count()) === 0 && (await stopsNotes.count()) === 1,
+  );
+  await page
+    .getByRole('region', { name: /^Stops notes/ })
+    .getByRole('button', { name: 'Back' })
+    .click();
+  await stopsNotes.waitFor({ state: 'detached' });
+  await ride(page, 200, 400);
+  await page.clock.install();
+  await finishRecording(page);
+  await page.getByRole('heading', { name: 'Save Recording' }).waitFor();
+  const onTheForm = async () =>
+    (await page.getByRole('heading', { name: 'Save Recording' }).count()) === 1;
+  // A stop's map open over the form, left alone well past the form's ten minutes.
+  await page.getByRole('button', { name: 'Stop 1 on the map' }).click();
+  const map = page.getByRole('dialog', { name: 'Stop 1 on the map' });
+  await map.waitFor();
+  await page.clock.runFor(605_000);
+  check("the form does not save itself while a stop's map is open over it", await onTheForm());
+  // Its Delete question, left alone as long: the stop must still be there to delete.
+  await map.getByRole('button', { name: 'Delete' }).click();
+  const question = page.getByRole('alertdialog', { name: 'Delete this stop?' });
+  await question.waitFor();
+  await page.clock.runFor(605_000);
+  check(
+    '  nor under its Delete question, which can still be answered',
+    (await onTheForm()) && (await question.getByRole('button', { name: 'Delete' }).isEnabled()),
+  );
+  await question.getByRole('button', { name: 'Keep' }).click();
+  await map.getByRole('button', { name: 'Close' }).click();
+  await page.clock.runFor(598_000);
+  check('  the map closed, the ten minutes run again from there', await onTheForm());
+  await page.clock.runFor(5_000);
+  await page.getByTestId('toast').filter({ hasText: 'Route recorded' }).waitFor({ timeout: 5000 });
+  check('  and run out, the form saves', true);
+  await page.clock.resume();
+  check('  no page errors', errors.length === 0, errors.join('; '));
   await page.context().close();
 }
 
@@ -2511,8 +2578,8 @@ const STORE_PROBLEM = 'Recording not kept';
   await page.evaluate(() => {
     const byText = (t) =>
       [...document.querySelectorAll('button')].find((b) => b.textContent.trim() === t);
-    byText('Save recording').click();
-    byText('Save recording').click();
+    byText('Save recordings').click();
+    byText('Save recordings').click();
   });
   await page.getByTestId('toast').filter({ hasText: 'Route recorded' }).waitFor({ timeout: 5000 });
   await page.waitForTimeout(300);
@@ -3592,7 +3659,9 @@ const FIRST_IDLE = () => {
   );
 
   // A tap on a route does what a tap on empty map does: nothing opens.
-  await page.evaluate(() => window.__map.jumpTo({ center: [121.0437, 14.6577], zoom: 14 }));
+  await page.evaluate(() => {
+    window.__map.jumpTo({ center: [121.0437, 14.6577], zoom: 14 });
+  });
   await page.waitForFunction(() => !window.__map.isMoving() && window.__map.loaded());
   const onRoute = await page.evaluate(() => {
     const map = window.__map;
@@ -3819,6 +3888,255 @@ const FIRST_IDLE = () => {
     `${before} then ${tilesAsked}`,
   );
   check('  no page errors', errors.length === 0, errors.join('; '));
+  await page.context().close();
+}
+
+// Stops notes whose code never comes: offline before the worker kept it, or a deploy since the
+// page opened, its host answering the old chunk's address with a page. Blocked from the start,
+// so Ready's fetch ahead misses it too. Stops notes closes and a toast says so, Pause and Finish
+// stay, and once the code can come, opening it again works.
+const STOP_NOTES_CODE = /stop-notes-view/;
+for (const [how, answer] of [
+  ['offline', (route) => route.abort('internetdisconnected')],
+  [
+    'a deploy since the page opened',
+    (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'text/html',
+        body: '<!doctype html><title>Para</title>',
+      }),
+  ],
+]) {
+  const { page, errors } = await phone({
+    beforeOpen: (opening) => opening.route(STOP_NOTES_CODE, answer),
+  });
+  await page.getByRole('button', { name: 'Start Tracking' }).click();
+  await page.getByRole('group', { name: 'Recording so far' }).waitFor();
+  await ride(page, 0, 200);
+  await flagButton(page).click();
+  await page.getByRole('button', { name: 'Stops notes' }).click();
+  const toast = page.getByTestId('toast').filter({ hasText: 'Stop notes could not be opened' });
+  const stopsNotes = page.getByRole('heading', { name: /^Stops notes/ });
+  const isSaid = await toast.waitFor({ timeout: 10000 }).then(
+    () => true,
+    () => false,
+  );
+  check(
+    `Stops notes' code not fetched (${how}): a toast says so, and Stops notes is closed`,
+    isSaid && (await stopsNotes.count()) === 0,
+    `${await toast.count()} toast(s); ${await stopsNotes.count()} Stops notes`,
+  );
+  const pause = page.getByRole('button', { name: 'Pause', exact: true });
+  const isRecording =
+    (await pause.isVisible()) &&
+    (await page.getByRole('group', { name: 'Recording so far' }).isVisible());
+  // Finish shows once the ride is paused: paused, then going on again.
+  await pause.click();
+  const finish = page.getByRole('button', { name: 'Finish', exact: true });
+  const hasFinish = await finish.waitFor({ timeout: 5000 }).then(
+    () => true,
+    () => false,
+  );
+  await page.getByRole('button', { name: 'Resume', exact: true }).click();
+  check(
+    '  the ride records on: Pause there, and paused, Finish',
+    isRecording &&
+      hasFinish &&
+      (await pause.waitFor({ timeout: 5000 }).then(
+        () => true,
+        () => false,
+      )),
+  );
+  await page.unroute(STOP_NOTES_CODE);
+  await page.getByRole('button', { name: 'Stops notes' }).click();
+  const opened = await stopsNotes.waitFor({ timeout: 10000 }).then(
+    () => true,
+    () => false,
+  );
+  check('  once its code can come, Stops notes opens again', opened);
+  check('  no page errors', errors.length === 0, errors.join('; '));
+  await page.context().close();
+}
+
+// ------------------------------------------- the phone's Back (the Android app)
+// Android's Back, as BackPlugin.java hands it to the page (navigation/use-android-back.ts): a
+// development build with `?e2e` gives the handler to the suite as window.__paraBack and counts
+// each time it would leave the app as window.__paraLeaves. Each Back closes what shows on top, as
+// its own control does; with nothing over Record, at rest or mid-ride, it leaves the app and the
+// ride goes on. The native side is the emulator ride's (scripts/apk/emulator-ride.sh).
+{
+  const { page, errors } = await phone({ earlierConsent: true, search: '?e2e=1' });
+  await page.getByRole('button', { name: 'Start Tracking' }).waitFor({ timeout: 20000 });
+  await page.waitForFunction(() => typeof window.__paraBack === 'function', null, {
+    timeout: 10000,
+  });
+  /** Back, as Android sends it; then the page's next frame. */
+  const back = async () => {
+    await page.evaluate(() => window.__paraBack());
+    await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => setTimeout(r, 0))));
+  };
+  const leaves = () => page.evaluate(() => window.__paraLeaves);
+  const gone = (locator) =>
+    locator
+      .waitFor({ state: 'detached', timeout: 5000 })
+      .then(() => true)
+      .catch(() => false);
+
+  // Record at rest: nothing over it, so Back leaves the app.
+  await back();
+  check(
+    'on Record at rest, Back leaves the app, and Record stays as it was',
+    (await leaves()) === 1 &&
+      (await page.getByRole('button', { name: 'Start Tracking' }).count()) === 1,
+    `${await leaves()} leave(s)`,
+  );
+
+  // The ?'s card: Back closes it, as Later does.
+  const help = page.getByRole('button', { name: 'How to record' });
+  const offer = page.getByRole('region', { name: 'Track your routes' });
+  await help.click();
+  await offer.waitFor({ timeout: 5000 });
+  await back();
+  check(
+    "the ?'s Track your routes card: Back closes it, and does not leave",
+    (await gone(offer)) && (await leaves()) === 1,
+  );
+
+  // The tutorial: Back ends it, as Skip does.
+  await help.click();
+  await offer.getByRole('button', { name: 'Start Tutorial' }).click();
+  const tutorial = page.getByRole('dialog');
+  await tutorial.waitFor({ timeout: 5000 });
+  await back();
+  check(
+    'the tutorial: Back ends it, and does not leave',
+    (await gone(tutorial)) && (await leaves()) === 1,
+  );
+
+  // The map's credits: Back closes the sheet, as ✕ does.
+  await page.getByRole('button', { name: 'Map data sources' }).click();
+  const credits = page.getByRole('dialog');
+  await credits.waitFor({ timeout: 5000 });
+  await back();
+  check(
+    "the map's credits: Back closes the sheet, and does not leave",
+    (await gone(credits)) && (await leaves()) === 1,
+  );
+
+  // History: Back returns to Record.
+  await page
+    .getByRole('navigation', { name: 'Screens' })
+    .getByRole('button', { name: 'History' })
+    .click();
+  const historyHeading = page.getByRole('heading', { level: 1, name: 'History' });
+  await historyHeading.waitFor({ timeout: 10000 });
+  await back();
+  check(
+    'History: Back returns to Record, and does not leave',
+    (await gone(historyHeading)) &&
+      (await page.getByRole('button', { name: 'Start Tracking' }).isVisible()) &&
+      (await leaves()) === 1,
+  );
+
+  // A ride: ✕'s question takes Back as Keep recording, the safe answer.
+  await page.getByRole('button', { name: 'Start Tracking' }).click();
+  const recordingCard = page.getByRole('group', { name: 'Recording so far' });
+  await recordingCard.waitFor({ timeout: 10000 });
+  await ride(page, 0, 60);
+  await page.getByRole('button', { name: 'Discard recording' }).click();
+  const keep = page.getByRole('button', { name: 'Keep recording' });
+  await keep.waitFor({ timeout: 5000 });
+  await back();
+  check(
+    "✕'s question: Back is Keep recording, the ride going on, not discarded, focus back on ✕",
+    (await gone(keep)) &&
+      (await page.getByRole('button', { name: 'Pause', exact: true }).count()) === 1 &&
+      (await recordingCard.isVisible()) &&
+      (await page.evaluate(() => window.__watchers())) === 1 &&
+      (await page.evaluate(
+        () => document.activeElement?.getAttribute('aria-label') === 'Discard recording',
+      )) &&
+      (await leaves()) === 1,
+  );
+
+  // A flagged stop's note card: Back cancels a note left as it was; a note typed into stays open.
+  await page.getByRole('button', { name: 'Flag a stop' }).click();
+  const pill = page.getByRole('button', { name: /Add a stop note/ });
+  await pill.waitFor({ timeout: 5000 });
+  await pill.click();
+  const noteCard = page.getByRole('dialog', { name: 'Add a stop note' });
+  await noteCard.waitFor({ timeout: 5000 });
+  await back();
+  check('a stop note card with nothing typed: Back cancels it', await gone(noteCard));
+
+  await page.getByRole('button', { name: 'Stops notes' }).click();
+  const notesHeading = page.getByRole('heading', { name: /^Stops notes/ });
+  await notesHeading.waitFor({ timeout: 5000 });
+  await back();
+  check(
+    'the Stops notes page: Back closes it, as its back arrow does, and does not leave',
+    (await gone(notesHeading)) && (await leaves()) === 1,
+  );
+
+  // A stop's note written in place on Stops notes: Back cancels it left empty, keeps it typed into.
+  await page.getByRole('button', { name: 'Stops notes' }).click();
+  await notesHeading.waitFor({ timeout: 5000 });
+  const field = page.getByRole('textbox');
+  await page.getByRole('button', { name: 'Add note' }).click();
+  await field.waitFor({ timeout: 5000 });
+  await back();
+  check(
+    "a stop's note opened in place, nothing typed: Back cancels it, Stops notes still open",
+    (await gone(field)) && (await notesHeading.isVisible()),
+  );
+  await page.getByRole('button', { name: 'Add note' }).click();
+  await field.fill('Under the footbridge');
+  await back();
+  check(
+    "a stop's note typed into in place: Back keeps it, the text as typed, for Save or Cancel",
+    (await field.isVisible()) && (await field.inputValue()) === 'Under the footbridge',
+  );
+  await page.getByRole('button', { name: 'Cancel' }).click();
+  await gone(field);
+  await back();
+  await gone(notesHeading);
+
+  // The note card from the pill, typed into: Back keeps it too.
+  await page.getByRole('button', { name: 'Flag a stop' }).click();
+  await pill.waitFor({ timeout: 5000 });
+  await pill.click();
+  await noteCard.waitFor({ timeout: 5000 });
+  await noteCard.getByRole('textbox').fill('Waiting shed');
+  await back();
+  check(
+    'a stop note card typed into: Back keeps it, card open, the text as typed, for Save or Cancel',
+    (await noteCard.isVisible()) &&
+      (await noteCard.getByRole('textbox').inputValue()) === 'Waiting shed',
+  );
+  await page.keyboard.press('Escape');
+  check(
+    'a stop note card typed into: Escape keeps it too, the text as typed',
+    (await noteCard.isVisible()) &&
+      (await noteCard.getByRole('textbox').inputValue()) === 'Waiting shed',
+  );
+  await noteCard.getByRole('button', { name: 'Cancel' }).click();
+  await gone(noteCard);
+
+  // Mid-ride with nothing over Record: Back leaves the app, and the ride goes on recording.
+  await back();
+  await emit(page, 70);
+  check(
+    'mid-ride, nothing over Record: Back leaves the app, the ride still recording',
+    (await leaves()) === 2 && (await recordingCard.isVisible()),
+    `${await leaves()} leave(s)`,
+  );
+
+  check(
+    "  Back's checks raised no page errors",
+    errors.length === 0,
+    errors.slice(0, 2).join(' | '),
+  );
   await page.context().close();
 }
 

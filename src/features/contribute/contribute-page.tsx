@@ -1,16 +1,8 @@
 import { useQueryClient } from '@tanstack/react-query';
-import {
-  Activity,
-  Suspense,
-  useEffect,
-  useRef,
-  useState,
-  type ComponentProps,
-  type ReactNode,
-} from 'react';
+import { Activity, Suspense, useEffect, useRef, useState, type ComponentProps } from 'react';
 
+import { useBackLayer } from '@/shared/hooks/use-back-layer';
 import { ErrorBoundary } from '@/shared/ui/error-boundary';
-import { cn } from '@/shared/utils/cn';
 
 import { useAccountGate } from './account/use-account-gate';
 import { canUpload } from './api/contribute-config';
@@ -18,14 +10,15 @@ import { isAccountConfirmed, useAccountQuery } from './api/use-account-query';
 import { OPENABLE_SCREENS_ATTR } from './common/data-attributes';
 import { useLatch } from './common/use-latch';
 import { useEarlierQuestion } from './consent/use-earlier-question';
+import { FlagStopMark } from './flag-stop-mark';
 import {
   AccountGate,
-  FlagStopButton,
   MapDataSourceView,
   PageToasts,
   PermissionsOnboarding,
   RecordingScreen,
   SaveForm,
+  StopNotePill,
   StopRecordingScreen,
   TrackRoutesOffer,
   Tutorial,
@@ -42,18 +35,19 @@ import { useStartMorph } from './motion/use-start-morph';
 import { isNativeApp } from './native-bridge/native-app';
 import { hasSeenPermissionsScreen } from './native-bridge/permissions-screen-flag';
 import { SCREENS } from './navigation/screen-routes';
+import { useAndroidBack } from './navigation/use-android-back';
 import { useRideView, useScreenView } from './navigation/use-screen-view';
 import { pageLayout, pageScreens } from './page-layout';
-import { MAX_MARKS } from './recorder/recording-marks';
 import { useRecording } from './recorder/use-recording';
 import { accountChunk, historyChunk, warmScreen } from './screen-loaders';
 import { ReadyScreen } from './screens/ready-screen';
 import { ScreenUnavailable } from './screens/screen-unavailable';
 import { useStopQuestion } from './screens/use-stop-question';
+import { useStopNotes } from './stop-notes/use-stop-notes';
 import { putThumbnail } from './storage/recording-store';
 import { BottomToolbar, type ToolbarTab } from './toolbar/bottom-toolbar';
-import { ToolbarHoldProvider, useIsToolbarHeld } from './toolbar/toolbar-hold';
-import { TOOLBAR_PLACE } from './toolbar/toolbar-place';
+import { ToolbarHoldProvider } from './toolbar/toolbar-hold';
+import { ToolbarSlot } from './toolbar/toolbar-slot';
 import { useTutorialEntry } from './tutorial/use-tutorial-entry';
 import { useUploads } from './uploads/use-uploads';
 import { useCreditsSheet } from './use-credits-sheet';
@@ -62,25 +56,6 @@ import { useScreenWarmup } from './use-screen-warmup';
 
 type HistoryViewProps = ComponentProps<typeof lazyScreens.history>;
 type AccountViewProps = ComponentProps<typeof lazyScreens.account>;
-
-interface ToolbarPlaceProps {
-  /** Under something that holds the page (the credits): out of reach, still in sight. */
-  isOutOfReach: boolean;
-  children: ReactNode;
-}
-
-/**
- * Where the page's toolbar stands (TOOLBAR_PLACE): out of sight and out of reach while a question
- * is asked on the screen under it (toolbar-hold.tsx).
- */
-function ToolbarPlace({ isOutOfReach, children }: ToolbarPlaceProps) {
-  const isHeld = useIsToolbarHeld();
-  return (
-    <div inert={isOutOfReach || isHeld} className={cn(TOOLBAR_PLACE, isHeld && 'invisible')}>
-      {children}
-    </div>
-  );
-}
 
 /**
  * History, at once if its chunk is here, else lazily: decided once as it opens, so the chunk
@@ -169,12 +144,16 @@ export function ContributePage({ locator }: ContributePageProps) {
   // Where Ready puts focus as it opens: back on the tab whose screen was open, on Start tracking
   // after a save, else its heading.
   const [openedTab, setOpenedTab] = useState<'history' | 'account' | 'save' | null>(null);
+  const stopNotes = useStopNotes(recording, track.trail, accountGate === 'ready');
   const notices = usePageNotices({
     recording,
     statusOf: uploads.statusOf,
     accountGate,
     // Record opens with focus on Start tracking, the toast read out politely.
     onRouteRecorded: () => setOpenedTab('save'),
+    onFlagged: stopNotes.showPill,
+    notesAdded: stopNotes.notesAdded,
+    stopNotesFailures: stopNotes.viewFailures,
   });
   // History and Account are tabs on Ready; a build with no accounts has History alone.
   const hasAccount = canUpload();
@@ -199,7 +178,7 @@ export function ContributePage({ locator }: ContributePageProps) {
     tutorialDemo: tutorial.demo,
     isCreditsOpen: credits.isOpen,
     isCreditsLeaving: credits.isLeaving,
-    isStopShown: stopQuestion.isShown,
+    isStopShown: stopQuestion.isShown || stopNotes.view !== null,
   });
   // The ride whose screen shows: the map draws an overview of its whole trail and frames it, from
   // its fixes when this phone keeps it, else from the line Para keeps of the upload.
@@ -262,6 +241,17 @@ export function ContributePage({ locator }: ContributePageProps) {
   // Record, from History, goes to Start wherever History was opened from.
   const openRecordFromHistory = () => history.replaceWith(SCREENS.record.hash);
 
+  // The phone's Back closes what shows on top, as its own control does (use-back-layer.ts): ✕'s
+  // question with Keep recording, the tutorial with its close, a ride back to History, History
+  // and Account back to Record. With nothing over Record, it leaves the app.
+  useAndroidBack();
+  useBackLayer(stopQuestion.isShown, stopQuestion.keep);
+  useBackLayer(tutorial.isOfferShown, tutorial.closeOffer);
+  useBackLayer(tutorial.isShown, tutorial.close);
+  useBackLayer(ride.rideId !== null, () => ride.closeTo(SCREENS.history.hash));
+  useBackLayer(history.isOpen, openRecordFromHistory);
+  useBackLayer(profile.isOpen, profile.close);
+
   const historyTabRef = useRef<HTMLButtonElement>(null);
   const accountTabRef = useRef<HTMLButtonElement>(null);
   const toolbarOpeners: Record<ToolbarTab, Partial<Record<ToolbarTab, () => void>>> = {
@@ -313,27 +303,16 @@ export function ContributePage({ locator }: ContributePageProps) {
           pictureFor={phase === 'form' ? (recording.current?.id ?? null) : null}
           onPicture={keepTrailPicture}
           mark={
-            layout.isRecordingShown ? (
-              <Suspense fallback={null}>
-                <FlagStopButton
-                  isRecording={phase === 'recording'}
-                  canFlag={(recording.current?.marks?.length ?? 0) < MAX_MARKS}
-                  onFlag={notices.handleFlag}
-                />
-              </Suspense>
-            ) : tutorial.demo ? (
-              // The demo's: where a recording's stands, and it flags nothing. Inert, as the rest of
-              // the demo is: under the tutorial's overlay, never focused or pressed.
-              <div inert className="contents">
-                <Suspense fallback={null}>
-                  <FlagStopButton
-                    isRecording={tutorial.demo === 'recording'}
-                    canFlag
-                    onFlag={() => undefined}
-                  />
-                </Suspense>
-              </div>
-            ) : null
+            <FlagStopMark
+              isRecordingShown={layout.isRecordingShown}
+              phase={phase}
+              marks={recording.current?.marks}
+              demo={tutorial.demo}
+              onFlag={notices.handleFlag}
+              buttonRef={stopNotes.flagButtonRef}
+              onOpenNotes={stopNotes.openScreen}
+              notesButtonRef={stopNotes.notesButtonRef}
+            />
           }
         />
       </div>
@@ -459,7 +438,7 @@ export function ContributePage({ locator }: ContributePageProps) {
           {layout.toolbarTab && (
             // Drawn once and kept while Record, History or Account shows, so it stands still as
             // they slide under it; only its pill moves. Out of reach where Start is.
-            <ToolbarPlace isOutOfReach={layout.isStartOutOfReach}>
+            <ToolbarSlot isOutOfReach={layout.isStartOutOfReach}>
               <BottomToolbar
                 current={layout.toolbarTab}
                 onOpenRecord={toolbarOpeners[layout.toolbarTab].record}
@@ -469,7 +448,7 @@ export function ContributePage({ locator }: ContributePageProps) {
                 historyRef={historyTabRef}
                 accountRef={accountTabRef}
               />
-            </ToolbarPlace>
+            </ToolbarSlot>
           )}
           {phase === 'unfinished' && figures && (
             <Suspense fallback={null}>
@@ -504,6 +483,15 @@ export function ContributePage({ locator }: ContributePageProps) {
                   }
                   onOpenCredits={credits.open}
                   creditsButtonRef={credits.buttonRef}
+                  pill={
+                    stopNotes.pill !== null && (
+                      <StopNotePill
+                        key={stopNotes.pill}
+                        onOpen={stopNotes.openCard}
+                        onGone={stopNotes.dropPill}
+                      />
+                    )
+                  }
                 />
               </div>
             </Suspense>
@@ -517,11 +505,23 @@ export function ContributePage({ locator }: ContributePageProps) {
               />
             </Suspense>
           )}
+          {stopNotes.view && (
+            <ErrorBoundary fallback={null} onCatch={stopNotes.failView}>
+              <Suspense fallback={null}>
+                <lazyScreens.stopNotes
+                  view={stopNotes.view}
+                  stopNotes={stopNotes.data}
+                  onClose={stopNotes.close}
+                />
+              </Suspense>
+            </ErrorBoundary>
+          )}
           {layout.isFormShown && figures && (
             <Suspense fallback={null}>
               <SaveForm
                 figures={figures}
                 failedFixWrites={recording.current?.failedFixWrites ?? 0}
+                stopNotes={stopNotes.data}
                 onDiscard={recording.cancel}
                 onKeepRecording={recording.keepRecording}
                 onSave={recording.save}

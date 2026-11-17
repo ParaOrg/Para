@@ -13,6 +13,8 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(NativePermissionsPlugin.class);
         registerPlugin(FixLogPlugin.class);
         registerPlugin(RidePlugin.class);
+        registerPlugin(ShareImagePlugin.class);
+        registerPlugin(BackPlugin.class);
         super.onCreate(savedInstanceState);
         // Para is light only: the WebView never darkens the page on its own (Android 13+, where it
         // could). The page also says so itself (contribute/index.html, color-scheme).

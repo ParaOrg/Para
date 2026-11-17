@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
 import { AccountSettingsScreen } from './account-settings-screen';
+import { waitForHeadingFocus } from '../common/heading-focus-play';
 
 const meta = {
   title: 'Features/Contribute/AccountSettingsScreen',
@@ -47,6 +48,7 @@ export const Default: Story = {
 /** Figma's second frame: a change raises Save changes and Cancel; Cancel puts it back. */
 export const Edited: Story = {
   play: async ({ canvasElement, args }) => {
+    await waitForHeadingFocus(canvasElement);
     const canvas = within(canvasElement);
     await userEvent.type(canvas.getByLabelText('Name'), ' Jr.');
     await expect(canvas.getByRole('button', { name: 'Save changes' })).toBeEnabled();
@@ -99,6 +101,7 @@ export const Saving: Story = {
 export const NotSaved: Story = {
   args: { saveError: "No signal — try again when you're online" },
   play: async ({ canvasElement }) => {
+    await waitForHeadingFocus(canvasElement);
     const canvas = within(canvasElement);
     await userEvent.type(canvas.getByLabelText('Name'), ' Jr.');
     await expect(canvas.getByRole('alert')).toHaveTextContent(/No signal/);

@@ -33,7 +33,7 @@ runs:
 
     - name: Restore the emulator and the system image
       id: cache
-      uses: actions/cache/restore@v4
+      uses: actions/cache/restore@v6
       with:
         path: |
           ${{ steps.versions.outputs.sdk }}/emulator
@@ -50,7 +50,7 @@ runs:
     # Saved now, not at the job's end, so a failed test still leaves them cached.
     - name: Cache the emulator and the system image
       if: steps.cache.outputs.cache-hit != 'true'
-      uses: actions/cache/save@v4
+      uses: actions/cache/save@v6
       with:
         path: |
           ${{ steps.versions.outputs.sdk }}/emulator

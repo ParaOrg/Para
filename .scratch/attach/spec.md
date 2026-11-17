@@ -24,7 +24,9 @@ Each attached stretch belongs to a direction and holds:
 - its side (start or end),
 - its own line,
 - its terminal hotspot,
-- its join point, as a distance along the main line.
+- its join point, as a point with the index of the main line's control point just before it. The distance along the main line is not stored: the publish works it out on every run, and the map-data check fails when the join lies farther from the main line than a set tolerance (ADR 0009's amendment of 2026-11-11; a stored distance would drift whenever the main line is redrawn before the join).
+
+In the published map a direction's stretches are an optional array on that direction, added to what is there today, so an older copy of the file and an older app both keep working.
 
 ## Phases
 

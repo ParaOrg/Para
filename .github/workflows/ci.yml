@@ -17,10 +17,12 @@
 #      (Turnstile and the locator among it), the build, the lockfile, this
 #      file — runs both. A push to main
 #      or staging, the nightly run and "Run workflow" run everything.
-#   2. Every suite at once. Each suite is its own job, so the run takes as
-#      long as the slowest suite, not the sum of them all. commuter-test, the
-#      slowest by far, runs as three parts (COMMUTER_PART, see its top). What
-#      every job repeats is made once: the build job makes the preview builds
+#   2. Every suite at once, in jobs sized by measured time, so the run takes as
+#      long as the slowest job, not the sum of them all. The suites under a
+#      minute or so share a job, since each job repeats its setup and waits for
+#      one of the free plan's ~20 runners; commuter-test, the slowest by far,
+#      runs as six parts (COMMUTER_PART, see its top), phone-test as three, the
+#      drawing suites as two. What every job repeats is made once: the build job makes the preview builds
 #      the built-app suites run, and Playwright's Chromium is kept between runs.
 #   3. The drawing suites only where they are needed. group, regression-
 #      gestures, hotspot, snap, extend and studio-phone draw through the public OSRM demo
@@ -29,8 +31,9 @@
 #      push to main or staging (so a merge that breaks them is red on the
 #      branch within minutes), nightly on the default branch, on demand, and
 #      on a pull request that changes the editor (src/app/studio,
-#      src/features/studio), the routes' geometry rules (src/features/routes/geo)
-#      or the suites themselves, so a break is caught before it merges. A suite
+#      src/features/studio), the map it draws on (src/features/routes/map), the
+#      routes' geometry rules (src/features/routes/geo), the suites themselves or
+#      the test helpers they load, so a break is caught before it merges. A suite
 #      that fails is run once more after a minute, as tests/e2e/README.md tells
 #      a person to do; a second failure is real.
 #
@@ -61,13 +64,23 @@ on:
     # 05:00 in Manila (UTC+8): after the map's nightly publish at 04:00.
     - cron: '0 21 * * *'
 
-# A newer push to the same branch cancels the run for the older one.
+# On a pull request a newer push cancels the run for the older one: only its newest commit
+# matters. On main and staging a run that has started is never cancelled, so the commit it
+# checks gets its full verdict. GitHub keeps one run going and one waiting per group: a newer
+# push takes the place of the one still waiting, and every run that starts finishes.
 concurrency:
   group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
+
+# The suites' outside services: live on main and staging pushes, the nightly run and a run by
+# hand; on a pull request, the suites' stand-ins (recorded answers, fake services), so a PR run
+# reaches no host off the runner. Read by tests/e2e (lib/harness.mjs and the stand-ins) as set
+# or unset. A stand-in gone stale shows as a live run failing where its PR run passed.
+env:
+  PARA_LIVE_SERVICES: ${{ github.event_name != 'pull_request' && '1' || '' }}
 
 jobs:
   # What the change can reach. Outputs 'true' or 'false'.
@@ -112,11 +125,25 @@ jobs:
           public=false; studio=false; contribute=false; build=false; drawing=false
           while IFS= read -r f; do
             [ -z "$f" ] && continue
-            # The drawing suites, for a change to the editor, the routes' geometry rules or the
-            # suites themselves: what they draw with.
+            # The suites' shared helpers and fixtures (the harness, the stand-ins, the recorded
+            # answers): every suite may load them, so a change to one runs them all.
             case "$f" in
-              src/app/studio/*|src/features/studio/*|src/features/routes/geo/*|tests/e2e/group-test.mjs|tests/e2e/regression-gestures.mjs|tests/e2e/hotspot-test.mjs|tests/e2e/snap-test.mjs|tests/e2e/extend-test.mjs|tests/e2e/studio-phone-test.mjs)
+              tests/e2e/lib/*|tests/e2e/fixtures/*)
+                public=true; studio=true; contribute=true; drawing=true
+                continue ;;
+            esac
+            # The drawing suites, for a change to the editor, the map it draws on, the routes'
+            # geometry rules, the suites themselves or the helpers they load (lib/studio.mjs is
+            # theirs alone): what they draw with. Shared code (src/shared, the design system, the
+            # build's config) does not select them; a push to staging runs them, which catches it.
+            case "$f" in
+              src/app/studio/*|src/features/studio/*|src/features/routes/geo/*|src/features/routes/map/*|tests/e2e/group-test.mjs|tests/e2e/regression-gestures.mjs|tests/e2e/hotspot-test.mjs|tests/e2e/snap-test.mjs|tests/e2e/extend-test.mjs|tests/e2e/studio-phone-test.mjs|tests/e2e/lib/studio.mjs|tests/e2e/lib/harness.mjs|tests/e2e/lib/looks.mjs|tests/e2e/lib/fake-studio-db.mjs)
                 drawing=true ;;
+            esac
+            # The published map file: the public suites read it, and so does the studio's Public
+            # map (studio-public-view-test checks it against this file).
+            case "$f" in
+              public/data/*) studio=true ;;
             esac
             case "$f" in
               # Read by the build job alone: its architecture step, its unit checks, its guards.
@@ -125,7 +152,7 @@ jobs:
               docs/*|*.md) ;;
               src/app/studio/*|src/features/studio/*|tests/e2e/turnstile-test.mjs|tests/e2e/studio-scale-test.mjs|tests/e2e/studio-contributors-test.mjs|tests/e2e/studio-public-view-test.mjs|tests/e2e/studio-two-editors-test.mjs|tests/e2e/save-test.mjs|tests/e2e/save-ikot-test.mjs|tests/e2e/save-edit-test.mjs|tests/e2e/save-drafts-test.mjs|tests/e2e/group-test.mjs|tests/e2e/regression-gestures.mjs|tests/e2e/hotspot-test.mjs|tests/e2e/snap-test.mjs|tests/e2e/extend-test.mjs|tests/e2e/studio-phone-test.mjs)
                 studio=true ;;
-              src/app/public-map/*|src/features/published-map/*|public/*|tests/e2e/commuter-test.mjs|tests/e2e/phone-test.mjs|tests/e2e/where-test.mjs|tests/e2e/scale-test.mjs|tests/e2e/pwa-test.mjs|tests/e2e/own-tiles-stand-in.mjs|tests/e2e/handover-test.mjs|tests/e2e/fixtures/*|tests/e2e/gate-test.mjs|tests/e2e/loop-test.mjs|tests/e2e/map-pins-test.mjs)
+              src/app/public-map/*|src/features/published-map/*|public/*|tests/e2e/commuter-test.mjs|tests/e2e/phone-test.mjs|tests/e2e/where-test.mjs|tests/e2e/scale-test.mjs|tests/e2e/pwa-test.mjs|tests/e2e/own-tiles-stand-in.mjs|tests/e2e/handover-test.mjs|tests/e2e/fixtures/*|tests/e2e/gate-test.mjs|tests/e2e/loop-test.mjs|tests/e2e/back-test.mjs|tests/e2e/map-pins-test.mjs)
                 public=true ;;
               src/app/contribute/*|src/features/contribute/*|tests/e2e/contribute-test.mjs|tests/e2e/contribute-offline-test.mjs|tests/e2e/upload-test.mjs|tests/e2e/account-test.mjs|tests/e2e/profile-test.mjs|tests/e2e/claim-test.mjs)
                 contribute=true ;;
@@ -246,62 +273,40 @@ jobs:
           include-hidden-files: true
           retention-days: 1
 
-  # The public map's pages, one job a suite, against the dev server. Each needs only the published
-  # map file and OpenFreeMap's tiles; gate-test opens /studio/'s sign-in door.
+  # The public map's pages against the dev server. Each needs only the published map file and
+  # OpenFreeMap's tiles; gate-test opens /studio/'s sign-in door. A job runs its `suites` one after
+  # another, so the short ones share a runner's setup and a place in the queue (the free plan runs
+  # about 20 jobs at once, across every run): gate, scale, map-pins, back, where and loop take
+  # about 4 minutes together. commuter-test runs in six parts (COMMUTER_PART, see its top) and
+  # phone-test in three (PHONE_PART, see its top).
   public-suite:
-    name: ${{ matrix.suite }}${{ matrix.part && format(' ({0} of 3)', matrix.part) || '' }}
+    name: ${{ matrix.name }}
     needs: changes
     if: needs.changes.outputs.public == 'true'
     runs-on: ubuntu-latest
-    # commuter-test's first part takes close to 20 minutes, and grows with the
-    # map; 30 leaves it room. phone-test's suite runs about 15 minutes; 40 is its margin.
-    timeout-minutes: ${{ matrix.suite == 'phone-test' && 40 || 30 }}
+    # The longest, a commuter part or a phone-test part, runs about 9 minutes; 30 is the margin.
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
-        suite: [gate-test, phone-test, where-test, scale-test, loop-test, map-pins-test]
         include:
-          - { suite: commuter-test, part: 1 }
-          - { suite: commuter-test, part: 2 }
-          - { suite: commuter-test, part: 3 }
+          - { name: phone-test (1 of 3), slug: phone-1, suites: phone-test, phone: 1/3 }
+          - { name: phone-test (2 of 3), slug: phone-2, suites: phone-test, phone: 2/3 }
+          - { name: phone-test (3 of 3), slug: phone-3, suites: phone-test, phone: 3/3 }
+          - name: The short public suites
+            slug: short-public
+            suites: gate-test scale-test map-pins-test back-test where-test loop-test
+          - { name: commuter-test (1 of 6), slug: commuter-1, suites: commuter-test, part: 1/6 }
+          - { name: commuter-test (2 of 6), slug: commuter-2, suites: commuter-test, part: 2/6 }
+          - { name: commuter-test (3 of 6), slug: commuter-3, suites: commuter-test, part: 3/6 }
+          - { name: commuter-test (4 of 6), slug: commuter-4, suites: commuter-test, part: 4/6 }
+          - { name: commuter-test (5 of 6), slug: commuter-5, suites: commuter-test, part: 5/6 }
+          - { name: commuter-test (6 of 6), slug: commuter-6, suites: commuter-test, part: 6/6 }
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
-        with:
-          node-version: 22
-          cache: npm
-      - run: npm ci
-      # Playwright's Chromium, at the version package-lock pins, and the .deb files of its system
-      # packages, kept between runs.
-      # The runner image is in the key too, so a new Ubuntu does not restore an old Chromium:
-      # ImageOS is set on the runner, not in the env context.
-      - id: playwright
-        run: |
-          echo "version=$(node -p "require('playwright/package.json').version")" >> "$GITHUB_OUTPUT"
-          echo "image=$ImageOS" >> "$GITHUB_OUTPUT"
-          echo "image-version=$ImageVersion" >> "$GITHUB_OUTPUT"
-      - id: chromium
-        uses: actions/cache@v6
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.image }}-${{ steps.playwright.outputs.version }}
-      - if: steps.chromium.outputs.cache-hit != 'true'
-        run: npx playwright install chromium
-      - id: debs
-        uses: actions/cache@v6
-        with:
-          path: ~/apt-debs
-          key: playwright-debs-${{ runner.os }}-${{ steps.playwright.outputs.image-version }}-${{ steps.playwright.outputs.version }}
-      - name: Install Chromium's system packages
-        # From the cached .deb files when they restore; install-deps otherwise (and when dpkg
-        # refuses them), which then leaves its downloads in ~/apt-debs for the next run to cache.
-        run: |
-          if [ "${{ steps.debs.outputs.cache-hit }}" = true ] && sudo dpkg -i ~/apt-debs/*.deb; then
-            exit 0
-          fi
-          npx playwright install-deps chromium
-          mkdir -p ~/apt-debs
-          cp /var/cache/apt/archives/*.deb ~/apt-debs/
+      # Node, npm ci, and Playwright's Chromium with its system packages, from the caches every
+      # browser suite shares (the action's own comments).
+      - uses: ./.github/actions/prepare-browser-suite
       - name: Give the dev server the public database address and key
         # Cloudflare's always-pass Turnstile key in place of the real one, which
         # answers only real browsers on Para's own hostnames.
@@ -320,77 +325,55 @@ jobs:
             sleep 1
           done
           echo "The dev server did not answer in 60 s"; cat vite.log; exit 1
-      - name: ${{ matrix.suite }}
-        run: node tests/e2e/${{ matrix.suite }}.mjs
+      # Every suite of the job runs, and each one that fails is named; the job fails if any did.
+      - name: ${{ matrix.suites }}
         env:
-          COMMUTER_PART: ${{ matrix.part && format('{0}/3', matrix.part) || '' }}
+          SUITES: ${{ matrix.suites }}
+          COMMUTER_PART: ${{ matrix.part }}
+          PHONE_PART: ${{ matrix.phone }}
+        run: |
+          status=0
+          for suite in $SUITES; do
+            echo "::group::$suite"
+            node "tests/e2e/$suite.mjs" || { echo "::error::$suite failed"; status=1; }
+            echo "::endgroup::"
+          done
+          exit $status
       - name: Keep the screenshots and the dev server log
         if: failure()
         uses: actions/upload-artifact@v7
         with:
-          name: ${{ matrix.suite }}${{ matrix.part && format('-{0}', matrix.part) || '' }}-screenshots
+          name: ${{ matrix.slug }}-screenshots
           path: |
             *.png
             vite.log
           if-no-files-found: ignore
 
-  # The contributor page, one job a suite, against the dev server.
+  # The contributor page, against the dev server.
   contribute-suite:
-    name: ${{ matrix.suite }}
+    name: ${{ matrix.name }}
     needs: changes
     if: needs.changes.outputs.contribute == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     strategy:
       fail-fast: false
+      # A job runs its `suites` one after another, as public-suite's do: the three under a minute
+      # share a runner. All but contribute-test run with uploads on.
       matrix:
-        suite:
-          [
-            contribute-test,
-            upload-test,
-            account-test,
-            forgot-password-test,
-            claim-test,
-            profile-test,
-          ]
+        include:
+          - { name: contribute-test, slug: contribute-test, suites: contribute-test }
+          - { name: upload-test, slug: upload-test, suites: upload-test, uploads: true }
+          - { name: profile-test, slug: profile-test, suites: profile-test, uploads: true }
+          - name: account-test, forgot-password-test, claim-test
+            slug: account-flows
+            suites: account-test forgot-password-test claim-test
+            uploads: true
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
-        with:
-          node-version: 22
-          cache: npm
-      - run: npm ci
-      # Playwright's Chromium, at the version package-lock pins, and the .deb files of its system
-      # packages, kept between runs.
-      # The runner image is in the key too, so a new Ubuntu does not restore an old Chromium:
-      # ImageOS is set on the runner, not in the env context.
-      - id: playwright
-        run: |
-          echo "version=$(node -p "require('playwright/package.json').version")" >> "$GITHUB_OUTPUT"
-          echo "image=$ImageOS" >> "$GITHUB_OUTPUT"
-          echo "image-version=$ImageVersion" >> "$GITHUB_OUTPUT"
-      - id: chromium
-        uses: actions/cache@v6
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.image }}-${{ steps.playwright.outputs.version }}
-      - if: steps.chromium.outputs.cache-hit != 'true'
-        run: npx playwright install chromium
-      - id: debs
-        uses: actions/cache@v6
-        with:
-          path: ~/apt-debs
-          key: playwright-debs-${{ runner.os }}-${{ steps.playwright.outputs.image-version }}-${{ steps.playwright.outputs.version }}
-      - name: Install Chromium's system packages
-        # From the cached .deb files when they restore; install-deps otherwise (and when dpkg
-        # refuses them), which then leaves its downloads in ~/apt-debs for the next run to cache.
-        run: |
-          if [ "${{ steps.debs.outputs.cache-hit }}" = true ] && sudo dpkg -i ~/apt-debs/*.deb; then
-            exit 0
-          fi
-          npx playwright install-deps chromium
-          mkdir -p ~/apt-debs
-          cp /var/cache/apt/archives/*.deb ~/apt-debs/
+      # Node, npm ci, and Playwright's Chromium with its system packages, from the caches every
+      # browser suite shares (the action's own comments).
+      - uses: ./.github/actions/prepare-browser-suite
       - name: Give the dev server the public database address and key
         # Cloudflare's always-pass Turnstile key in place of the real one, which
         # answers only real browsers on Para's own hostnames.
@@ -404,7 +387,7 @@ jobs:
       # upload-test, account-test, forgot-password-test, claim-test and profile-test turn uploads back on for their own dev server, against a
       # stand-in for Supabase.
       - name: Turn uploads on, for upload-test, account-test, forgot-password-test, claim-test and profile-test
-        if: matrix.suite != 'contribute-test'
+        if: matrix.uploads
         run: |
           echo VITE_CONTRIBUTIONS=1 >> .env.local
           echo VITE_TURNSTILE_SITE_KEY=1x00000000000000000000AA >> .env.local
@@ -416,15 +399,24 @@ jobs:
             sleep 1
           done
           echo "The dev server did not answer in 60 s"; cat vite.log; exit 1
-      - name: ${{ matrix.suite }}
-        run: node tests/e2e/${{ matrix.suite }}.mjs
+      # Every suite of the job runs, and each one that fails is named; the job fails if any did.
+      - name: ${{ matrix.suites }}
         env:
-          PARA_TURNSTILE: ${{ matrix.suite != 'contribute-test' && '1' || '' }}
+          SUITES: ${{ matrix.suites }}
+          PARA_TURNSTILE: ${{ matrix.uploads && '1' || '' }}
+        run: |
+          status=0
+          for suite in $SUITES; do
+            echo "::group::$suite"
+            node "tests/e2e/$suite.mjs" || { echo "::error::$suite failed"; status=1; }
+            echo "::endgroup::"
+          done
+          exit $status
       - name: Keep the screenshots and the dev server log
         if: failure()
         uses: actions/upload-artifact@v7
         with:
-          name: ${{ matrix.suite }}-screenshots
+          name: ${{ matrix.slug }}-screenshots
           path: |
             *.png
             vite.log
@@ -446,42 +438,9 @@ jobs:
         include: ${{ fromJSON(needs.changes.outputs.preview) }}
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
-        with:
-          node-version: 22
-          cache: npm
-      - run: npm ci
-      # Playwright's Chromium, at the version package-lock pins, and the .deb files of its system
-      # packages, kept between runs.
-      # The runner image is in the key too, so a new Ubuntu does not restore an old Chromium:
-      # ImageOS is set on the runner, not in the env context.
-      - id: playwright
-        run: |
-          echo "version=$(node -p "require('playwright/package.json').version")" >> "$GITHUB_OUTPUT"
-          echo "image=$ImageOS" >> "$GITHUB_OUTPUT"
-          echo "image-version=$ImageVersion" >> "$GITHUB_OUTPUT"
-      - id: chromium
-        uses: actions/cache@v6
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.image }}-${{ steps.playwright.outputs.version }}
-      - if: steps.chromium.outputs.cache-hit != 'true'
-        run: npx playwright install chromium
-      - id: debs
-        uses: actions/cache@v6
-        with:
-          path: ~/apt-debs
-          key: playwright-debs-${{ runner.os }}-${{ steps.playwright.outputs.image-version }}-${{ steps.playwright.outputs.version }}
-      - name: Install Chromium's system packages
-        # From the cached .deb files when they restore; install-deps otherwise (and when dpkg
-        # refuses them), which then leaves its downloads in ~/apt-debs for the next run to cache.
-        run: |
-          if [ "${{ steps.debs.outputs.cache-hit }}" = true ] && sudo dpkg -i ~/apt-debs/*.deb; then
-            exit 0
-          fi
-          npx playwright install-deps chromium
-          mkdir -p ~/apt-debs
-          cp /var/cache/apt/archives/*.deb ~/apt-debs/
+      # Node, npm ci, and Playwright's Chromium with its system packages, from the caches every
+      # browser suite shares (the action's own comments).
+      - uses: ./.github/actions/prepare-browser-suite
       # The build was made in the build job; `vite preview` serves it as it is.
       - name: The preview build
         uses: actions/download-artifact@v8
@@ -506,7 +465,7 @@ jobs:
   # (save-drafts, studio-two-editors, studio-public-view, on lib/fake-studio-db.mjs)
   # and studio-contributors (the Contributors map's actions). No retry needed.
   studio-suite:
-    name: ${{ matrix.suite }}
+    name: ${{ matrix.name }}
     needs: changes
     if: needs.changes.outputs.studio == 'true'
     runs-on: ubuntu-latest
@@ -516,57 +475,26 @@ jobs:
     timeout-minutes: 40
     strategy:
       fail-fast: false
+      # A job runs its `suites` one after another, as public-suite's do: the ones under a minute
+      # share a runner, grouped by the uploads setting their dev server needs.
       matrix:
-        suite:
-          [
-            studio-scale-test,
-            studio-contributors-test,
-            save-test,
-            save-ikot-test,
-            save-edit-test,
-            turnstile-test,
-            studio-public-view-test,
-            studio-two-editors-test,
-            save-drafts-test,
-          ]
+        include:
+          - name: studio-scale-test, studio-contributors-test
+            slug: studio-uploads
+            suites: studio-scale-test studio-contributors-test
+            uploads: true
+          - name: turnstile-test, studio-public-view-test, studio-two-editors-test
+            slug: studio-review
+            suites: turnstile-test studio-public-view-test studio-two-editors-test
+          - { name: save-test, slug: save-test, suites: save-test }
+          - { name: save-ikot-test, slug: save-ikot-test, suites: save-ikot-test }
+          - { name: save-edit-test, slug: save-edit-test, suites: save-edit-test }
+          - { name: save-drafts-test, slug: save-drafts-test, suites: save-drafts-test }
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
-        with:
-          node-version: 22
-          cache: npm
-      - run: npm ci
-      # Playwright's Chromium, at the version package-lock pins, and the .deb files of its system
-      # packages, kept between runs.
-      # The runner image is in the key too, so a new Ubuntu does not restore an old Chromium:
-      # ImageOS is set on the runner, not in the env context.
-      - id: playwright
-        run: |
-          echo "version=$(node -p "require('playwright/package.json').version")" >> "$GITHUB_OUTPUT"
-          echo "image=$ImageOS" >> "$GITHUB_OUTPUT"
-          echo "image-version=$ImageVersion" >> "$GITHUB_OUTPUT"
-      - id: chromium
-        uses: actions/cache@v6
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.image }}-${{ steps.playwright.outputs.version }}
-      - if: steps.chromium.outputs.cache-hit != 'true'
-        run: npx playwright install chromium
-      - id: debs
-        uses: actions/cache@v6
-        with:
-          path: ~/apt-debs
-          key: playwright-debs-${{ runner.os }}-${{ steps.playwright.outputs.image-version }}-${{ steps.playwright.outputs.version }}
-      - name: Install Chromium's system packages
-        # From the cached .deb files when they restore; install-deps otherwise (and when dpkg
-        # refuses them), which then leaves its downloads in ~/apt-debs for the next run to cache.
-        run: |
-          if [ "${{ steps.debs.outputs.cache-hit }}" = true ] && sudo dpkg -i ~/apt-debs/*.deb; then
-            exit 0
-          fi
-          npx playwright install-deps chromium
-          mkdir -p ~/apt-debs
-          cp /var/cache/apt/archives/*.deb ~/apt-debs/
+      # Node, npm ci, and Playwright's Chromium with its system packages, from the caches every
+      # browser suite shares (the action's own comments).
+      - uses: ./.github/actions/prepare-browser-suite
       - name: Give the dev server the public database address and key
         # Cloudflare's always-pass Turnstile key in place of the real one, which
         # answers only real browsers on Para's own hostnames.
@@ -580,11 +508,11 @@ jobs:
       # The two suites that open the Contributors map read uploads from their
       # own stand-in, so they run with uploads on.
       - name: Turn uploads on, for the Contributors map's suites
-        if: matrix.suite == 'studio-scale-test' || matrix.suite == 'studio-contributors-test'
+        if: matrix.uploads
         run: echo VITE_CONTRIBUTIONS=1 >> .env.local
       # Cloudflare's always-pass test key: turnstile-test stands in for its script.
       - name: Give turnstile-test a Turnstile site key
-        if: matrix.suite == 'turnstile-test'
+        if: contains(matrix.suites, 'turnstile-test')
         run: echo VITE_TURNSTILE_SITE_KEY=1x00000000000000000000AA >> .env.local
       - name: Start the dev server
         run: |
@@ -594,13 +522,23 @@ jobs:
             sleep 1
           done
           echo "The dev server did not answer in 60 s"; cat vite.log; exit 1
-      - name: ${{ matrix.suite }}
-        run: node tests/e2e/${{ matrix.suite }}.mjs
+      # Every suite of the job runs, and each one that fails is named; the job fails if any did.
+      - name: ${{ matrix.suites }}
+        env:
+          SUITES: ${{ matrix.suites }}
+        run: |
+          status=0
+          for suite in $SUITES; do
+            echo "::group::$suite"
+            node "tests/e2e/$suite.mjs" || { echo "::error::$suite failed"; status=1; }
+            echo "::endgroup::"
+          done
+          exit $status
       - name: Keep the screenshots and the dev server log
         if: failure()
         uses: actions/upload-artifact@v7
         with:
-          name: ${{ matrix.suite }}-screenshots
+          name: ${{ matrix.slug }}-screenshots
           path: |
             *.png
             vite.log
@@ -617,90 +555,39 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
-        with:
-          node-version: 22
-          cache: npm
-      - run: npm ci
-      - id: playwright
-        run: |
-          echo "version=$(node -p "require('playwright/package.json').version")" >> "$GITHUB_OUTPUT"
-          echo "image=$ImageOS" >> "$GITHUB_OUTPUT"
-          echo "image-version=$ImageVersion" >> "$GITHUB_OUTPUT"
-      - id: chromium
-        uses: actions/cache@v6
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.image }}-${{ steps.playwright.outputs.version }}
-      - if: steps.chromium.outputs.cache-hit != 'true'
-        run: npx playwright install chromium
-      - id: debs
-        uses: actions/cache@v6
-        with:
-          path: ~/apt-debs
-          key: playwright-debs-${{ runner.os }}-${{ steps.playwright.outputs.image-version }}-${{ steps.playwright.outputs.version }}
-      - name: Install Chromium's system packages
-        # From the cached .deb files when they restore; install-deps otherwise (and when dpkg
-        # refuses them), which then leaves its downloads in ~/apt-debs for the next run to cache.
-        run: |
-          if [ "${{ steps.debs.outputs.cache-hit }}" = true ] && sudo dpkg -i ~/apt-debs/*.deb; then
-            exit 0
-          fi
-          npx playwright install-deps chromium
-          mkdir -p ~/apt-debs
-          cp /var/cache/apt/archives/*.deb ~/apt-debs/
+      # Node, npm ci, and Playwright's Chromium with its system packages, from the caches every
+      # browser suite shares (the action's own comments).
+      - uses: ./.github/actions/prepare-browser-suite
       - name: Build Storybook
         run: npm run build-storybook -- --quiet
       - name: Every story renders and plays
         run: node scripts/checks/storybook-play.mjs storybook-static
 
   # The drawing suites, against /studio/?e2e=1, the public router and the live
-  # tables. On a pull request only for the editor's own code (see the top of this file). One at a time —
-  # the router is shared — and once more after a minute if it was busy.
+  # tables. On a pull request only for the editor's own code (see the top of this file). In two
+  # jobs of about 5 minutes each, by measured time (studio-phone-test alone takes about as long as
+  # the other five); within a job one at a time, and once more after a minute if the router was busy.
   drawing:
-    name: The drawing suites
+    name: The drawing suites (${{ matrix.part }})
     needs: changes
     if: needs.changes.outputs.drawing == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {
+              part: 1 of 2,
+              slug: 1,
+              suites: group-test regression-gestures hotspot-test snap-test extend-test,
+            }
+          - { part: 2 of 2, slug: 2, suites: studio-phone-test }
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
-        with:
-          node-version: 22
-          cache: npm
-      - run: npm ci
-      # Playwright's Chromium, at the version package-lock pins, and the .deb files of its system
-      # packages, kept between runs.
-      # The runner image is in the key too, so a new Ubuntu does not restore an old Chromium:
-      # ImageOS is set on the runner, not in the env context.
-      - id: playwright
-        run: |
-          echo "version=$(node -p "require('playwright/package.json').version")" >> "$GITHUB_OUTPUT"
-          echo "image=$ImageOS" >> "$GITHUB_OUTPUT"
-          echo "image-version=$ImageVersion" >> "$GITHUB_OUTPUT"
-      - id: chromium
-        uses: actions/cache@v6
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.image }}-${{ steps.playwright.outputs.version }}
-      - if: steps.chromium.outputs.cache-hit != 'true'
-        run: npx playwright install chromium
-      - id: debs
-        uses: actions/cache@v6
-        with:
-          path: ~/apt-debs
-          key: playwright-debs-${{ runner.os }}-${{ steps.playwright.outputs.image-version }}-${{ steps.playwright.outputs.version }}
-      - name: Install Chromium's system packages
-        # From the cached .deb files when they restore; install-deps otherwise (and when dpkg
-        # refuses them), which then leaves its downloads in ~/apt-debs for the next run to cache.
-        run: |
-          if [ "${{ steps.debs.outputs.cache-hit }}" = true ] && sudo dpkg -i ~/apt-debs/*.deb; then
-            exit 0
-          fi
-          npx playwright install-deps chromium
-          mkdir -p ~/apt-debs
-          cp /var/cache/apt/archives/*.deb ~/apt-debs/
+      # Node, npm ci, and Playwright's Chromium with its system packages, from the caches every
+      # browser suite shares (the action's own comments).
+      - uses: ./.github/actions/prepare-browser-suite
       - name: Give the dev server the public database address and key
         # Cloudflare's always-pass Turnstile key in place of the real one, which
         # answers only real browsers on Para's own hostnames.
@@ -720,15 +607,26 @@ jobs:
           done
           echo "The dev server did not answer in 60 s"; cat vite.log; exit 1
       - name: The drawing suites
+        env:
+          SUITES: ${{ matrix.suites }}
         run: |
           set +e
           status=0
-          for suite in group-test regression-gestures hotspot-test snap-test extend-test studio-phone-test; do
+          for suite in $SUITES; do
             echo "::group::$suite"
             if node "tests/e2e/$suite.mjs"; then
               echo "::endgroup::"
               continue
             fi
+            # The one retry is for the live router, busy now and then. A PR run's router is a
+            # recording once tests/e2e/fixtures/osrm/ exists, and then a failure is the code's.
+            if [ -z "$PARA_LIVE_SERVICES" ] && [ -d tests/e2e/fixtures/osrm ]; then
+              echo "::endgroup::"
+              echo "::error::$suite failed"
+              status=1
+              continue
+            fi
+            echo "::warning::$suite needed the router retry"
             echo "$suite failed; waiting a minute for the router, then once more"
             sleep 60
             if node "tests/e2e/$suite.mjs"; then
@@ -744,14 +642,17 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v7
         with:
-          name: drawing-screenshots
+          name: drawing-${{ matrix.slug }}-screenshots
           path: |
             *.png
             vite.log
           if-no-files-found: ignore
 
   # The two checks a pull request shows, under the names they always had.
-  # Passed when everything under them passed or was not needed.
+  # Passed when everything under them passed or was not needed, and only then:
+  # the change detection must have succeeded, since it decides what is needed,
+  # every job under the check must have given a result, and any other word
+  # for a result fails it.
   public:
     name: Build and the public map
     needs: [changes, build, public-suite, contribute-suite, preview-suite]
@@ -763,9 +664,11 @@ jobs:
           RESULTS: ${{ needs.changes.result }} ${{ needs.build.result }} ${{ needs.public-suite.result }} ${{ needs.contribute-suite.result }} ${{ needs.preview-suite.result }}
         run: |
           echo "changes, build, public suites, contributor suites, preview suites: $RESULTS"
-          case " $RESULTS " in
-            *" failure "*|*" cancelled "*) exit 1 ;;
-          esac
+          read -ra results <<< "$RESULTS"
+          if [ "${#results[@]}" -ne 5 ] || [ "${results[0]}" != success ]; then exit 1; fi
+          for result in "${results[@]}"; do
+            case "$result" in success | skipped) ;; *) exit 1 ;; esac
+          done
 
   studio:
     name: The editor
@@ -778,6 +681,8 @@ jobs:
           RESULTS: ${{ needs.changes.result }} ${{ needs.build.result }} ${{ needs.studio-suite.result }} ${{ needs.drawing.result }}
         run: |
           echo "changes, build, studio suites, drawing suites: $RESULTS"
-          case " $RESULTS " in
-            *" failure "*|*" cancelled "*) exit 1 ;;
-          esac
+          read -ra results <<< "$RESULTS"
+          if [ "${#results[@]}" -ne 4 ] || [ "${results[0]}" != success ]; then exit 1; fi
+          for result in "${results[@]}"; do
+            case "$result" in success | skipped) ;; *) exit 1 ;; esac
+          done

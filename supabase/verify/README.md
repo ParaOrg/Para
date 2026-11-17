@@ -6,8 +6,9 @@ applies 0018 over them twice through `../apply/0018_apply.sql` (the file the
 owner pastes), then checks it, and undoes it on a second database:
 
 - `bootstrap.sql`: stand-ins for what the migrations expect of Supabase
-  (`anon`, `authenticated`, `auth.users`, `auth.uid()`, `storage`). Only for a
-  throwaway server.
+  (`anon`, `authenticated`, `auth.users`, `auth.uid()`, `storage`), and the
+  default grants a project gives the API roles on new tables, sequences and
+  functions in `public`. Only for a throwaway server.
 - `before-0018.sql`: rows that exist before the migration.
 - `after-0018.sql`: reads as `anon`, a signed-in non-editor and an editor;
   uniqueness on approved rows (routes, loops, terminals); the two guards; the
@@ -349,6 +350,22 @@ keep_uploads_on_user_delete, the apply refuses and writes no ledger row. On a th
 leaves the schema as before, line for line once the dumps are sorted (the two columns come back at the end of
 `route`), and re-applying passes the check.
 
+## waitlist.sh
+
+`migrations/20261112120000_waitlist.sql` on databases of its own, run by `run.sh` or alone:
+
+    PSQL="docker exec -i pg-verify psql -U postgres" bash supabase/verify/waitlist.sh
+
+The migration leans on no other, so each database starts from `bootstrap.sql` alone, whose default privileges
+hand a new table to `anon` and `authenticated` as a project from before 0017 did: the migration's own revoke
+is what closes it. Then `../apply/20261112120000_waitlist_apply.sql` twice (the second run must stop and change
+nothing), and `…_check.sql`: its rolled-back behaviour part (`anon` and a signed-in phone can neither read nor
+add, `service_role` adds an email once and cannot delete, an email in capitals, with a space or with no dot is
+refused) must raise nothing and leave no row behind, and its 4 read-only rows must be `t`. On a second
+database the revert refuses while the list holds an email, then, once it is empty, revert twice leaves the
+schema as before and re-applying passes the check. The function itself is checked by
+`tests/unit/waitlist-test.mjs`, with a fake fetch.
+
 ## schema-snapshot.sh
 
 `../schema/snapshot.sql` is the `public` and `private` schemas as the live project has them, in one file:
@@ -366,7 +383,14 @@ recorded as applied, add it to `APPLIED` in the script and rewrite the snapshot 
 migration not yet applied stays out until it is.
 
 It is rebuilt here, not read from the live project, so it has what the migrations made. It does not have
-what Supabase adds around them, such as `service_role`'s grants and Supabase's own schemas.
+what Supabase adds around them, such as Supabase's own schemas.
+
+Before it compares, the script runs `anon-functions.sql` on the same database: the functions in `public`
+and `private` that `anon` may run, trigger functions aside. It should list none, and the script fails on
+any row. A project gives each new function in `public` to `anon` by default, and `bootstrap.sql` does the
+same, so a migration that makes a function takes it back from `anon` by name (taking it back from `PUBLIC`
+alone leaves `anon` with it). A function `anon` is meant to run is listed in `anon-functions.sql` with the
+reason.
 
 ## retire-review-steps.sh
 

@@ -7,6 +7,16 @@
 //      .supabase.co              the database's address: commuters read the
 //                                published map and never call it
 
+import { readFileSync } from 'node:fs';
+import { loadEnv } from 'vite';
+
+/** Cloudflare's script, at the address src/shared/ui/turnstile.tsx loads it from. */
+const TURNSTILE_SCRIPT = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+/** The suites' Turnstile stand-in's own mark and words (tests/e2e/lib/fake-turnstile.mjs). */
+const TURNSTILE_STAND_IN = ['para-e2e-turnstile-stand-in', 'Turnstile stand-in'];
+/** Cloudflare's test site keys, which pass or fail every check whoever answers it. */
+const TEST_SITE_KEY = /[123]x0{20}[A-F]{2}/;
+
 const EDITOR_ONLY = [
   'router.project-osrm.org',
   'para.draft',
@@ -18,7 +28,8 @@ const EDITOR_ONLY = [
 ];
 
 export function proveStrings(build, check) {
-  const { commuterFiles, contributeFiles, text, commuter, studio, contribute } = build;
+  const { root, dist, walk, commuterFiles, contributeFiles, text, commuter, studio, contribute } =
+    build;
 
   const leaked = EDITOR_ONLY.filter((s) => commuter.includes(s));
   check('public page contains no editor-only string', leaked.length === 0, leaked.join(', '));
@@ -55,6 +66,35 @@ export function proveStrings(build, check) {
   check(
     'public page loads no Turnstile; the studio and the contributor page carry it — the string search works',
     !commuter.includes(TURNSTILE) && studio.includes(TURNSTILE) && contribute.includes(TURNSTILE),
+  );
+
+  // The check is Cloudflare's own: the script at its own address, none of the suites' stand-in
+  // built in, and the site key the build was given. Every build checked here is production-mode
+  // (vite build), the deploy's and the preview builds the suites run alike, so a Cloudflare test
+  // key, in the build or in the key it was given, fails: there is no exemption.
+  check(
+    "the studio and the contributor page load Cloudflare's own Turnstile script, at its address",
+    studio.includes(TURNSTILE_SCRIPT) && contribute.includes(TURNSTILE_SCRIPT),
+  );
+  const built = [...walk(dist)]
+    .filter((path) => /\.(js|html|json|webmanifest)$/.test(path))
+    .map((path) => readFileSync(path, 'utf8'))
+    .join('\n');
+  const standIn = TURNSTILE_STAND_IN.filter((s) => built.includes(s));
+  check(
+    'no file of the build carries the Turnstile stand-in',
+    standIn.length === 0,
+    standIn.join(', '),
+  );
+  const siteKey = loadEnv('production', root, 'VITE_').VITE_TURNSTILE_SITE_KEY ?? '';
+  const testKey = TEST_SITE_KEY.exec(siteKey)?.[0] ?? TEST_SITE_KEY.exec(built)?.[0];
+  check(
+    'no Turnstile test key in the build or the key it was given, and the studio and contributor page carry that key',
+    testKey === undefined &&
+      siteKey !== '' &&
+      studio.includes(siteKey) &&
+      contribute.includes(siteKey),
+    testKey ?? '',
   );
 
   const missing = EDITOR_ONLY.filter((s) => !studio.includes(s));

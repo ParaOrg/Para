@@ -5,6 +5,7 @@ const envSchema = z.object({
   VITE_SUPABASE_PUBLISHABLE_KEY: z.optional(z.string().check(z.minLength(1))),
   VITE_TURNSTILE_SITE_KEY: z.optional(z.string().check(z.minLength(1))),
   VITE_CONTRIBUTIONS: z.optional(z.enum(['0', '1'])),
+  VITE_EMULATOR_RIDE: z.optional(z.enum(['0', '1'])),
 });
 
 const env = envSchema.safeParse(import.meta.env);
@@ -26,3 +27,9 @@ export const contributeConfig: { url: string; key: string } | null =
 /** The Turnstile widget's public site key; without one, the first upload signs in with no bot check. */
 export const turnstileSiteKey: string | null =
   (env.success && env.data.VITE_TURNSTILE_SITE_KEY) || null;
+
+/**
+ * Whether this is the CI emulator ride's build (`VITE_EMULATOR_RIDE=1`, contributor-app.yml), whose
+ * driver holds the ride's notification itself.
+ */
+export const isEmulatorRide: boolean = env.success && env.data.VITE_EMULATOR_RIDE === '1';

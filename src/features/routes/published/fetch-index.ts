@@ -32,11 +32,20 @@ let settled: { file: Index | null } | null = null;
  * Null on a page without one (the studio's, a test's).
  */
 function takeEarly(): EarlyMapFile | null {
-  const page = globalThis as { [EARLY_MAP_FILE]?: EarlyMapFile };
-  const early = page[EARLY_MAP_FILE];
+  const early: unknown = Reflect.get(globalThis, EARLY_MAP_FILE);
   if (!early) return null;
-  Reflect.deleteProperty(page, EARLY_MAP_FILE);
-  return typeof early.then === 'function' ? early : null;
+  Reflect.deleteProperty(globalThis, EARLY_MAP_FILE);
+  return isEarlyMapFile(early) ? early : null;
+}
+
+/** Whether what index.html left can be awaited: its own request, not something else by that name. */
+function isEarlyMapFile(early: unknown): early is EarlyMapFile {
+  return (
+    typeof early === 'object' &&
+    early !== null &&
+    'then' in early &&
+    typeof early.then === 'function'
+  );
 }
 
 /**
@@ -135,10 +144,11 @@ export function fetchIndex(): Promise<Index> {
           return kept('not JSON');
         }
         stale = res.headers.get(SERVED_FROM_HEADER) === 'cache';
-        // A file that reads but is not this app's (too new, another shape, a
-        // row it cannot read) is said as it is: the banner's Reload is the
-        // answer to that, never a stored copy in its place.
-        return parseIndex(raw, MAP_FILE_URL, MAP_FILE_SCHEMA);
+        // A file that reads but is not this app's (too new, another shape,
+        // no direction it can read) is said as it is: the banner's Reload is
+        // the answer to that, never a stored copy in its place. A row it
+        // cannot read is left out and the rest of the map kept.
+        return parseIndex(raw, MAP_FILE_URL, MAP_FILE_SCHEMA, 'skip');
       },
       async (e: unknown) => {
         // No network. On the web the worker has already answered with its copy of this path when

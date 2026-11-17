@@ -2,6 +2,7 @@ import type { MapLibreMap } from 'maplibre-gl';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { ROUTES_FRAMING, framesRoutes, routesBounds } from './framing';
+import { requestLine } from './line-requests';
 import { loadOnce } from './load-once';
 import { perFrame, type PerFrame } from './per-frame';
 import { RESTING_LAYERS, ROUTES_LINE } from './rail-rest-layers';
@@ -303,16 +304,14 @@ export function useSavedRoutes<T extends Direction>(
   const request = useCallback(
     (id: string) => {
       if (!loadLine || requestedRef.current.has(id) || !drawn.has(id)) return;
-      requestedRef.current.add(id);
-      failedRef.current.delete(id);
-      loadLine(id).then(
-        (line) => {
-          if (line) arrivals.current?.add(id, line);
-        },
-        () => {
-          requestedRef.current.delete(id);
-          failedRef.current.add(id);
-        },
+      // Kept only if the routes have not been loaded again by the time it comes (line-requests.ts).
+      const askedUnder = latestLoad.current;
+      requestLine(
+        id,
+        loadLine,
+        { requested: requestedRef.current, failed: failedRef.current },
+        () => askedUnder === latestLoad.current,
+        (line) => arrivals.current?.add(id, line),
       );
     },
     [loadLine, drawn],

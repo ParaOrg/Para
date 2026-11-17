@@ -9,6 +9,7 @@ import { spawnSync } from 'node:child_process';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { withoutComments } from '../docs/source-scan.mjs';
+import { INDEX_SOFT_MAX_GZ_KB, indexWeight } from '../publish/index-weight.mjs';
 import {
   FONTS_MAX_KB,
   GROUPS,
@@ -142,6 +143,19 @@ function buildSize() {
   return lines;
 }
 
+/** The published index as committed: what every phone downloads again after a changed publish. */
+function publishedIndex() {
+  const path = 'public/data/index.v5.json';
+  if (!existsSync(join(root, path))) return [`- **Published index:** \`${path}\` is missing`];
+  const weight = indexWeight(read(path));
+  const share = (part) => `${(part * 100).toFixed(0)}%`;
+  return [
+    `- **Published index (\`${path}\`):** ${kb(weight.gzippedBytes)} gzipped of a soft maximum of ${INDEX_SOFT_MAX_GZ_KB} kB, ${kb(weight.rawBytes)} raw`,
+    `  - ${weight.directions} directions: ${kb(weight.gzippedBytesPerDirection)} gzipped each`,
+    `  - of the raw bytes: directions ${share(weight.shares.variants)}, hotspots ${share(weight.shares.stops)}, links ${share(weight.shares.links)}`,
+  ];
+}
+
 function testCounts() {
   const unit = [...filesUnder(join(root, 'tests', 'unit'), (n) => n.endsWith('-test.mjs'))]
     .map((path) => ({ path, tests: (read(path).match(/(?:^|[^\w.])test\(/g) ?? []).length }))
@@ -179,6 +193,7 @@ function main() {
     ...commentShare(files),
     ...eslintReport(),
     ...buildSize(),
+    ...publishedIndex(),
     ...testCounts(),
     ...componentsWithoutStory(files),
     '',

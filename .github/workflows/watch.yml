@@ -13,7 +13,9 @@
 #     moves only when the map changes, so it says nothing about the publish), the last
 #     Backup under 8 days and the last Tiles build under 35;
 #   - a failed run's alert (opened by the last job of publish-map.yml, backup.yml and
-#     tiles.yml) closes once that workflow's next run passes.
+#     tiles.yml) closes once that workflow's next run passes;
+#   - its own last run started under 45 minutes ago: GitHub runs a schedule late, or drops
+#     it, and then nothing above is being checked.
 #
 # It reads the live site and the repository's runs, and writes only issues.
 #

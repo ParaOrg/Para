@@ -1,0 +1,52 @@
+name: Prepare a browser suite
+description: Node, npm ci, and Playwright's Chromium with its system packages, both kept between runs. Run after checkout.
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v7
+      with:
+        node-version: 22
+        cache: npm
+
+    - shell: bash
+      run: npm ci
+
+    # Playwright's Chromium, at the version package-lock pins, and the .deb files of its system
+    # packages, kept between runs. Every job that calls this action shares the two caches: the
+    # keys below are the ones the jobs used when each held these steps itself.
+    # The runner image is in the key too, so a new Ubuntu does not restore an old Chromium:
+    # ImageOS is set on the runner, not in the env context.
+    - id: playwright
+      shell: bash
+      run: |
+        echo "version=$(node -p "require('playwright/package.json').version")" >> "$GITHUB_OUTPUT"
+        echo "image=$ImageOS" >> "$GITHUB_OUTPUT"
+        echo "image-version=$ImageVersion" >> "$GITHUB_OUTPUT"
+
+    - id: chromium
+      uses: actions/cache@v6
+      with:
+        path: ~/.cache/ms-playwright
+        key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.image }}-${{ steps.playwright.outputs.version }}
+
+    - if: steps.chromium.outputs.cache-hit != 'true'
+      shell: bash
+      run: npx playwright install chromium
+
+    - id: debs
+      uses: actions/cache@v6
+      with:
+        path: ~/apt-debs
+        key: playwright-debs-${{ runner.os }}-${{ steps.playwright.outputs.image-version }}-${{ steps.playwright.outputs.version }}
+
+    # From the cached .deb files when they restore; install-deps otherwise (and when dpkg
+    # refuses them), which then leaves its downloads in ~/apt-debs for the next run to cache.
+    - name: Install Chromium's system packages
+      shell: bash
+      run: |
+        if [ "${{ steps.debs.outputs.cache-hit }}" = true ] && sudo dpkg -i ~/apt-debs/*.deb; then
+          exit 0
+        fi
+        npx playwright install-deps chromium
+        mkdir -p ~/apt-debs
+        cp /var/cache/apt/archives/*.deb ~/apt-debs/

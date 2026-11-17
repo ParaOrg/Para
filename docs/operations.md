@@ -10,10 +10,10 @@ Written 2026-10-28 from the repo and from what the hub checked live that day. An
 | --- | --- | --- | --- |
 | **GitHub**, organisation `ParaOrg`, repository `Para` (public) | The code; the published map in `public/data/`, committed by the nightly publish when the map changes; the workflows; the contributor app's releases (`para-contributor.apk` and `latest.json` on GitHub Releases, ADR 0006); the backup's public key (`.github/backup/owner-public-key.asc`); the encrypted app signing key (`android/release-key.p12.enc`) | The owner (admin) (owner to confirm: any other member) | Environment `publish`, `main` only: `PUBLISH_DEPLOY_KEY` (publish-map.yml). Environment `backup`, `main` only: `BACKUP_DATABASE_URL`, `R2_ENDPOINT`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET` (backup.yml). Until the change that names these environments reaches `main`, the same values are also repository secrets; they are deleted after it (`docs/agents/main-protection.md`). Environment `tiles`: `TILES_R2_ENDPOINT`, `TILES_R2_ACCESS_KEY_ID`, `TILES_R2_SECRET_ACCESS_KEY`, `TILES_R2_BUCKET` (tiles.yml). Environment `app-release`: `PARAPO_KEY_PASSPHRASE` (contributor-app.yml, make-app-signing-key.yml). The deploy key "Nightly publish" (Settings → Deploy keys, `docs/agents/main-protection.md`) |
 | **Cloudflare, the Para account** | The zone `para-commute.org` (Free plan). The `para` Worker: the site from `dist/` (`wrangler.jsonc`), built by Workers Builds from GitHub, production branch `main`, a preview per branch. The `para-tiles` Worker (`workers/tiles/wrangler.jsonc`). The R2 bucket `parapo-tiles` (the tiles, styles, sprite and glyphs). The backup's R2 bucket (its name is the secret `R2_BUCKET`) | The owner | R2 API tokens, one per bucket (backup.yml and tiles.yml headers); their values are only in the GitHub secrets above. Workers Builds reaches GitHub through Cloudflare's GitHub App |
-| **Cloudflare, the old Villaralvorovic2 account** | The Turnstile widget (its site key is in `.env.production` and `.env.apk`), and the old `parapo` Worker | The owner | Turnstile's secret key is in Supabase's Auth settings, never in the repo |
+| **Cloudflare, the old Villaralvorovic2 account** | The Turnstile widget (its site key is in `.env.production` and `.env.apk`), and the old `parapo` Worker | The owner | Turnstile's secret key is in Supabase's Auth settings and, for the waitlist form on `/app/`, the Edge Function secret `TURNSTILE_SECRET_KEY`; never in the repo |
 | **Supabase**, project in Singapore (named in the consent wording, `src/features/contribute/consent/consent-panel.tsx`; the screen is off while the owner redesigns it, ADR 0004) | The database: the route tables, drafts and review, the contributors and their rides; Auth (editors, contributors, anonymous phones); the public Storage bucket `signboards` (`features/studio/data/signboards.ts`) | The owner (owner to confirm: any other dashboard member) | The project URL and publishable key are public (`.env.production`). The `backup_reader` role's password is only inside the secret `BACKUP_DATABASE_URL`. The service and database passwords: the owner's password manager (owner to confirm) |
 | **Namecheap** | The registration of `para-commute.org`. Nameservers point at Cloudflare | The owner | The owner's password manager (owner to confirm) |
-| **Resend** | Sends the password-reset email, as Supabase Auth's SMTP. Its DKIM record (`resend._domainkey`) and the `send` MX and TXT records are in Cloudflare DNS | The owner | Its API key is in Supabase's SMTP settings (owner to confirm) |
+| **Resend** | Sends the password-reset email, as Supabase Auth's SMTP, and the waitlist's one confirmation, from the `waitlist` Edge Function over Resend's API (once the owner deploys it, `supabase/apply/README.md`). Its DKIM record (`resend._domainkey`) and the `send` MX and TXT records are in Cloudflare DNS | The owner | Its API key is in Supabase's SMTP settings (owner to confirm). The waitlist's own sending-only key is the Edge Function secret `RESEND_API_KEY` |
 | **The owner's own computer and password manager** | The backup's private GPG key (never on GitHub, R2 or Supabase); the app key passphrase; recovery codes | The owner | Password manager and an offline copy (backup.yml step 3) |
 | **Facebook** | The page the consent wording links as the way to reach the owner (`src/features/contribute/consent/consent-panel.tsx`; the screen is off while the owner redesigns it, ADR 0004) | The owner | (owner to confirm) |
 | **The privacy policy** | Para's privacy policy, a document the owner holds; not in the repo | The owner | – |
@@ -37,7 +37,7 @@ The addresses (checked live 2026-10-28):
 | Supabase | Free (backup.yml and publish-map.yml call it "Free Supabase"; owner to confirm in ticket ready-for-100k 01) | 500 MB database (then read-only: writes fail), 50,000 monthly active users, 5 GB egress, 1 GB Storage. A Free project with too little activity in 7 days is paused; the nightly publish counts as activity. No downloadable backups, hence the R2 backup | supabase.com/docs, "About billing on Supabase", "Database size" and "Project pausing", read 2026-10-28 |
 | GitHub | Free organisation, public repository (owner to confirm) | Actions minutes on standard runners are free for a public repository (owner to confirm). Scheduled workflows stop after 60 days without activity in a public repository; GitHub emails first and one click turns them back on (publish-map.yml header) | GitHub's docs, from the workflow header; (owner to confirm the plan) |
 | Namecheap | `para-commute.org`, auto-renew on | Renewal price (owner to confirm) | The owner's screenshot, `.scratch/custom-domain/issues/01` |
-| Resend | (owner to confirm the plan) | (owner to confirm the free allowance; at its limit password-reset email stops sending) | – |
+| Resend | (owner to confirm the plan) | (owner to confirm the free allowance; at its limit password-reset email stops sending, and the waitlist's confirmations count against the same allowance: each new email on the list is one message, sent only after the bot check passes) | – |
 
 ## Renewals and dates
 
@@ -80,6 +80,12 @@ Each says what you'd see, the first check, and the fix. When the alert workflow 
 - **First check:** the issue's log. `PUBLISH_DEPLOY_KEY is not set`, a permission error on the push, a shrink of more than 30%, a data problem from `check-map-data.mjs`, or the database unreachable.
 - **Fix:** a missing or wrong key: `docs/agents/main-protection.md`. A shrink that is deliberate: Run workflow with Force ticked. A data problem: fix the route in the studio, then Run workflow. Supabase down: see below; the live map keeps the last published file meanwhile (ADR 0001).
 
+### A publish didn't deploy
+
+- **You'd see:** the issue "Alert: a publish did not reach the live site". The nightly publish pushed a new map to `main` over 2 hours ago, and `www.para-commute.org` still serves the one before. The Publish map run itself is green: its job ends at the push.
+- **First check:** Cloudflare → Workers & Pages → `para` → Deployments. Is the latest build for `main` failed, or missing? Compare `published_at` in `https://www.para-commute.org/data/index.v5.json` with the same file on `main` in GitHub.
+- **Fix:** a failed build: read its log, then Retry deployment. No build at all: check that Workers Builds is still connected to the repository (Settings → Builds). Commuters keep the earlier map meanwhile, so nothing is lost; the issue closes itself once the live map matches `main`.
+
 ### A backup failed
 
 - **You'd see:** a red Backup run in Actions, and GitHub's email about a failed scheduled run.
@@ -98,6 +104,18 @@ Each says what you'd see, the first check, and the fix. When the alert workflow 
 - **First check:** the failed step (landmarks.yml): the download from openstreetmap.fr or its MD5, osmium, the file's own check (`scripts/landmarks/check.mjs`), or the comparison refusing a file that lost more than 20% of its landmarks.
 - **Fix:** place search keeps the committed `public/data/landmarks.v1.json`, so there is no rush. Fix the cause, or, if a shrink is real (a tagging change on OpenStreetMap), Run workflow with "allow shrink" ticked. The run opens a pull request into staging; nothing merges by itself.
 
+### The database check failed
+
+- **You'd see:** the issue "Alert: the Database run failed", after the nightly run (19:43 UTC, which is 03:43 Manila). A pull request's own run shows on the pull request instead and opens no issue.
+- **First check:** which job failed (database.yml). "Migrations and row security on a throwaway Postgres" builds every migration on an empty database and checks who may read and write what. "Review suites on the isolated preview" drives the studio against that kind of copy. Neither reads or changes the live database.
+- **Fix:** with no change to the SQL since the last green night, it is usually a download or a container that did not start: Re-run failed jobs, once. If it fails again, the last change under `supabase/`, `src/features/studio/data/` or `src/features/contribute/api/` broke a rule. Nothing is broken live, but apply no migration until the check is green again. The issue closes itself when the next run passes.
+
+### A secret or a vulnerable package was found
+
+- **You'd see:** the issue "Alert: the Security run failed" or "Alert: the CodeQL run failed", after a nightly run.
+- **First check:** which job failed. In Security: "No secrets in the history" (a key may have been committed) or "No known holes in production dependencies" (a package Para ships has a new advisory). In CodeQL, a red run means the scan could not run; what it finds is listed under the repository's Security tab and never turns the run red.
+- **Fix:** a secret: change the key at its service first (the table under "Rotating a key"), then ask about the history; removing the file in a new commit does not take it out of the old one (security.yml's header). A package: `npm audit --omit=dev` names it and the version that fixes it; Dependabot usually opens that pull request by itself. CodeQL: Re-run failed jobs, once. Each issue closes itself when the workflow's next run passes.
+
 ### A sign-in or Turnstile error
 
 - **You'd see:** the studio's sign-in, Forgot password, or a contributor's first save fails with a bot-check error, or a reset email never arrives.
@@ -115,6 +133,12 @@ Each says what you'd see, the first check, and the fix. When the alert workflow 
 - **You'd see:** the studio can't load or save; contributors' saves wait; the publish fails.
 - **First check:** status.supabase.com, then the project's dashboard: is it paused, or read-only past 500 MB?
 - **Fix:** commuters are not affected: the public map reads only the published file (ADR 0001). A paused project: Resume (within 90 days). Read-only: free space or upgrade (ticket 01). Contributors' saved rides wait on their phones and are sent again when it answers (`features/contribute/uploads/use-uploads.ts`). If the project is lost, restore from the latest backup (below) into a new project (owner to confirm the steps then: the backup holds no `auth.users`, so accounts would be made again).
+
+### The watch missed its runs
+
+- **You'd see:** the issue "Alert: the watch missed its own runs". The watch (`.github/workflows/watch.yml`) is asked for every 15 minutes, and its last run before this one started more than 45 minutes earlier.
+- **First check:** Actions → Watch. Are the runs back to every 15 minutes, or is the workflow marked disabled (GitHub turns a schedule off after 60 days without commits)?
+- **Fix:** nothing is known to be wrong with the site: this says only that nothing was being checked for that long. GitHub runs a schedule late, or drops it, when it is busy; the issue closes itself once two runs come within 45 minutes. A disabled workflow: Enable workflow. If the issue is open most days, the checks need a timer outside GitHub, which is the owner's decision.
 
 ## The restore rehearsal
 
@@ -154,6 +178,14 @@ Where each key is made, and where its new value goes. Make the new one, put it i
 | `TILES_R2_ACCESS_KEY_ID`, `TILES_R2_SECRET_ACCESS_KEY` | Cloudflare → R2 → Manage API tokens, a new token scoped to `parapo-tiles` | The `tiles` environment's two secrets | Run **Tiles** once, then delete the old token |
 | `PARAPO_KEY_PASSPHRASE` | Not rotated: it unlocks the app signing key, and a new key means testers uninstall (make-app-signing-key.yml) | – | If it leaks, tell the hub before anything else |
 | The backup's GPG key | A new pair on your own computer (backup.yml step 3) | The public half: `.github/backup/owner-public-key.asc`, by pull request. The private half: your password manager and an offline copy | Keep the old private key: older backups only open with it |
+
+## Branch previews
+
+Every branch gets a preview address of its own, `<branch>-para…workers.dev`, built from that branch's code.
+
+**Don't sign in to the studio or the contributor page on a branch preview address.** Its code hasn't been reviewed and it talks to the live database. Test signed-in work on staging or locally.
+
+Looking at the public map on a preview is fine: it signs in to nothing. The lasting fix is a database of its own for staging and the previews ([the staging backend spec](../.scratch/staging-backend/spec.md)).
 
 ## Account safety checklist
 

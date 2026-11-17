@@ -105,7 +105,8 @@ export function useGapResolver(
       await Promise.all(
         runs.map(async ([a, b]) => {
           const request: Request = {
-            standIns: standIns.slice(a, b + 1) as Segment[],
+            // A run holds routed gaps only, and each of those has its stand-in.
+            standIns: standIns.slice(a, b + 1).filter((standIn) => standIn !== null),
             controller: new AbortController(),
           };
           requestsRef.current.add(request);

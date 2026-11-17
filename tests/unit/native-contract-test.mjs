@@ -44,6 +44,7 @@ test('each plugin is registered under the name the page asks for', () => {
     [PLUGIN_NAMES.ride]: java('RidePlugin'),
     [PLUGIN_NAMES.fixLog]: java('FixLogPlugin'),
     [PLUGIN_NAMES.nativePermissions]: java('NativePermissionsPlugin'),
+    [PLUGIN_NAMES.shareImage]: java('ShareImagePlugin'),
   };
   assert.deepEqual(Object.keys(declared).sort(), Object.values(PLUGIN_NAMES).sort());
   for (const [name, source] of Object.entries(declared)) {

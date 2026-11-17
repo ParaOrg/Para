@@ -12,13 +12,35 @@
 //     /.assetsignore stay unserved;
 //   - /index.html and /studio redirect to / and /studio/ (html_handling's
 //     default, auto-trailing-slash).
+//
+// /api/* alone runs the script (workers/site/src/index.ts), which answers a
+// commuter's route report at /api/report (ADR 0010). Every other address is
+// served from dist/ as above, without the script. The report's two secrets,
+// REPORT_DATABASE_URL and TURNSTILE_SECRET_KEY, are set by the owner in the
+// dashboard (Workers & Pages → para → Settings → Variables and Secrets), never
+// here.
 {
   "name": "para",
+  "main": "workers/site/src/index.ts",
   "compatibility_date": "2026-09-01",
+  // The postgres driver the report uses needs Node's streams and sockets.
+  "compatibility_flags": ["nodejs_compat"],
   "assets": {
     "directory": "./dist",
+    "binding": "ASSETS",
     "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*"],
   },
+  // Five reports a minute from one sender. The limiter is keyed by the
+  // sender's address in Cloudflare's memory; the address is never stored or
+  // logged (ADR 0010).
+  "ratelimits": [
+    {
+      "name": "REPORT_LIMIT",
+      "namespace_id": "1001",
+      "simple": { "limit": 5, "period": 60 },
+    },
+  ],
   "workers_dev": true,
   "preview_urls": true,
   // Branch builds run `wrangler preview`, which refuses to run without this

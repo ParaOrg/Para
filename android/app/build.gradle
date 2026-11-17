@@ -1,8 +1,9 @@
 apply plugin: 'com.android.application'
 
 // The release key comes from the environment, never from the repo. Without all four the release
-// build is unsigned, which is what a local or pull request build wants; the release workflow
-// refuses to publish one.
+// build is unsigned, which is what a local or pull request build wants, and what the release
+// workflow builds: its own `sign` job signs the APK afterwards, and it refuses to publish one
+// that is not signed.
 def keystorePath = System.getenv('PARAPO_KEYSTORE_PATH')
 def hasReleaseKey = ['PARAPO_KEYSTORE_PATH', 'PARAPO_KEYSTORE_PASSWORD', 'PARAPO_KEY_ALIAS', 'PARAPO_KEY_PASSWORD']
     .every { !(System.getenv(it) ?: '').isEmpty() }

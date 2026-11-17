@@ -49,7 +49,7 @@ export function useSaveFacts({
   isLoop,
   signboard,
 }: {
-  draw: Drawing;
+  draw: Pick<Drawing, 'borrow' | 'controlPoints' | 'segments'>;
   existing: DirectionRow | null;
   parent: RouteRow | null;
   slotReversed: boolean | null;
