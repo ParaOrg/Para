@@ -4,8 +4,8 @@
 -- checks the project first, applies supabase/migrations/20261112100000_drop_inert_write_policies.sql
 -- (copied below unchanged), checks the result, and writes the ledger row. If any check fails it
 -- raises, and nothing at all is changed, ledger included. A second run stops at step 1 and changes
--- nothing. Afterwards: 20261112100000_drop_inert_write_policies_check.sql (it adds a test editor, a
--- test account, two places and a route, and rolls them back).
+-- nothing. Afterwards: 20261112100000_drop_inert_write_policies_check_readonly.sql, which writes
+-- nothing (the full check, _check_full.sql, is for the throwaway database only).
 -- Undo: 20261112100000_drop_inert_write_policies_revert.sql.
 --
 -- Safe to apply at any time after lock_map_tables: it changes what no role can do.

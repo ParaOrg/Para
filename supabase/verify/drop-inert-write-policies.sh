@@ -32,13 +32,17 @@ locked() {
   apply < ../apply/20261105190000_lock_map_tables_apply.sql
   apply < ../apply/20261110190000_retire_review_steps_apply.sql
 }
+# The full check (the behaviour, rolled back, then the read-only rows) and the read-only check the
+# owner runs live: each must give its 5 rows, every one t.
 checked() {
-  local out rows
-  out=$($PSQL -d "$DB" -v ON_ERROR_STOP=1 -qAt -F ' | ' < ../apply/${NAME}_check.sql 2>&1) \
-    || { echo "FAILED: ${NAME}_check.sql: $(echo "$out" | grep -E 'ERROR|FAILED' | head -3)"; exit 1; }
-  rows=$(echo "$out" | grep -E '^[0-9]+ \| ')
-  [ "$(echo "$rows" | wc -l)" = 5 ] || { echo "FAILED: ${NAME}_check.sql gave $(echo "$rows" | wc -l) rows"; exit 1; }
-  ! echo "$rows" | grep -v ' | t$' || { echo "FAILED: ${NAME}_check.sql"; exit 1; }
+  local file out rows
+  for file in ${NAME}_check_full.sql ${NAME}_check_readonly.sql; do
+    out=$($PSQL -d "$DB" -v ON_ERROR_STOP=1 -qAt -F ' | ' < ../apply/$file 2>&1) \
+      || { echo "FAILED: $file: $(echo "$out" | grep -E 'ERROR|FAILED' | head -3)"; exit 1; }
+    rows=$(echo "$out" | grep -E '^[0-9]+ \| ')
+    [ "$(echo "$rows" | wc -l)" = 5 ] || { echo "FAILED: $file gave $(echo "$rows" | wc -l) rows"; exit 1; }
+    ! echo "$rows" | grep -v ' | t$' || { echo "FAILED: $file"; exit 1; }
+  done
 }
 ledger() { $PSQL -d "$DB" -qAt -c "select count(*) from supabase_migrations.schema_migrations where name = 'drop_inert_write_policies'"; }
 counts() { $PSQL -d "$DB" -qAt -c "select (select count(*) from public.draft) || '/' || (select count(*) from public.stop) || '/' || (select count(*) from public.route) || '/' || (select count(*) from auth.users)"; }

@@ -749,15 +749,15 @@ run), and so do `takedown`'s, which the nightly publish reads through.
 | File | What it does |
 | --- | --- |
 | `20261112100000_drop_inert_write_policies_apply.sql` | One transaction. Checks `lock_map_tables` is in the ledger, this is not, and no app role holds a write grant on the four tables. Applies `migrations/20261112100000_drop_inert_write_policies.sql` (carried unchanged; `verify/drop-inert-write-policies.sh` checks the copy). Checks the twelve are gone, the ten read policies are there and row level security is on, and writes the ledger row. A second run stops and changes nothing. |
-| `20261112100000_drop_inert_write_policies_check.sql` | Part one adds a test editor, a test account, two places and a route, proves every direct write refused for anon, the account and the editor, the reads unchanged and the draft functions working, then rolls all of it back. Part two is read-only: 5 rows, all `ok` should be `t`. |
+| `20261112100000_drop_inert_write_policies_check_readonly.sql` | **The one to run on the live project.** Read-only: it reads the catalog and the ledger and writes nothing. 5 rows, all `ok` should be `t`. |
+| `20261112100000_drop_inert_write_policies_check_full.sql` | **Never on the live project**: for `verify/drop-inert-write-policies.sh`'s throwaway database only. It adds a test editor, a test account, two places and a route, proves every direct write refused for anon, the account and the editor, the reads unchanged and the draft functions working, rolls all of it back, then gives the same 5 rows. |
 | `20261112100000_drop_inert_write_policies_revert.sql` | One transaction: re-creates the twelve policies as 0005 and 0015 wrote them and removes the ledger row. Touches no data. Safe to run twice. |
 
 ## Steps
 
 1. Run `20261112100000_drop_inert_write_policies_apply.sql`. It ends with `COMMIT`; an error means nothing
    changed.
-2. Run `20261112100000_drop_inert_write_policies_check.sql`: part one ends with `ROLLBACK` and no error; part
-   two gives 5 rows, all `ok = t`.
+2. Run `20261112100000_drop_inert_write_policies_check_readonly.sql`: 5 rows, all `ok = t`.
 3. Record the ledger version
    (`select version from supabase_migrations.schema_migrations where name = 'drop_inert_write_policies';`)
    in `migrations/README.md`, add `20261112100000_drop_inert_write_policies` to `APPLIED` in

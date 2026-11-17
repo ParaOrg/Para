@@ -1,4 +1,6 @@
--- ParaPo — checks after applying the drop_inert_write_policies migration.
+-- ParaPo — the full check after applying the drop_inert_write_policies migration, for the throwaway
+-- database of verify/drop-inert-write-policies.sh only, never the live project: its first part
+-- writes test rows, if only to roll them back. On the live project, run _check_readonly.sql.
 --
 -- Two parts. The first adds a test editor, a test account that is no editor, two places and a
 -- route, proves the behaviour, and rolls every one of them back: it raises "FAILED: ..." on the
