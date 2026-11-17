@@ -27,6 +27,8 @@ interface PageNoticesInput {
   onFlagged: () => void;
   /** How many stops' notes have been saved from their card: each one more says so in a toast. */
   notesAdded: number;
+  /** How many times a stop's card or Stops notes could not be fetched: each one more says so. */
+  stopNotesFailures: number;
 }
 
 export interface PageNotices {
@@ -52,6 +54,7 @@ export function usePageNotices({
   onRouteRecorded,
   onFlagged,
   notesAdded,
+  stopNotesFailures,
 }: PageNoticesInput): PageNotices {
   const isScreenFreeToSleep = recording.phase === 'recording' && recording.isWakeRefused;
   // The locator's note: what it says, and a count that grows with each tap, said again each time.
@@ -91,6 +94,7 @@ export function usePageNotices({
       isScreenFreeToSleep ||
       mapNote !== null ||
       notesAdded !== 0 ||
+      stopNotesFailures !== 0 ||
       routeRecorded !== null ||
       uploadProblem !== null,
   );
@@ -100,6 +104,7 @@ export function usePageNotices({
       isScreenFreeToSleep,
       mapNote,
       notesAdded,
+      stopNotesFailures,
       routeRecorded,
       uploadProblem,
     },

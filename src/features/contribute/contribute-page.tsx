@@ -18,7 +18,6 @@ import {
   RecordingScreen,
   SaveForm,
   StopNotePill,
-  StopNotesView,
   StopRecordingScreen,
   TrackRoutesOffer,
   Tutorial,
@@ -27,6 +26,7 @@ import {
   lazyScreens,
   loadForgetOtherAccounts,
   makeLazyScreens,
+  makeStopNotesViewAgain,
 } from './lazy-screens';
 import { ContributeMap, type ContributeLocatorSlot } from './map/contribute-map';
 import { useRecordingTrack } from './map/use-recording-track';
@@ -152,6 +152,7 @@ export function ContributePage({ locator }: ContributePageProps) {
     onRouteRecorded: () => setOpenedTab('save'),
     onFlagged: stopNotes.showPill,
     notesAdded: stopNotes.notesAdded,
+    stopNotesFailures: stopNotes.viewFailures,
   });
   // History and Account are tabs on Ready; a build with no accounts has History alone.
   const hasAccount = canUpload();
@@ -262,6 +263,10 @@ export function ContributePage({ locator }: ContributePageProps) {
   const tryScreenAgain = () => {
     makeLazyScreens();
     setScreenTries((n) => n + 1);
+  };
+  const failStopNotes = () => {
+    makeStopNotesViewAgain();
+    stopNotes.failView();
   };
 
   return (
@@ -493,13 +498,16 @@ export function ContributePage({ locator }: ContributePageProps) {
             </Suspense>
           )}
           {stopNotes.view && (
-            <Suspense fallback={null}>
-              <StopNotesView
-                view={stopNotes.view}
-                stopNotes={stopNotes.data}
-                onClose={stopNotes.close}
-              />
-            </Suspense>
+            // Its code not fetched, it closes and a toast says so; Pause and Finish stay as they are.
+            <ErrorBoundary fallback={null} onCatch={failStopNotes}>
+              <Suspense fallback={null}>
+                <lazyScreens.stopNotes
+                  view={stopNotes.view}
+                  stopNotes={stopNotes.data}
+                  onClose={stopNotes.close}
+                />
+              </Suspense>
+            </ErrorBoundary>
           )}
           {layout.isFormShown && figures && (
             <Suspense fallback={null}>
