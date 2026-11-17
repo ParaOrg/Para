@@ -29,6 +29,9 @@ import { checkPolicies, watchPolicies } from './lib/policy.mjs';
 import { applyStandIns } from './lib/stand-ins.mjs';
 import { signInAsEditor } from './lib/studio-session.mjs';
 
+/** Cloudflare's always-pass Turnstile site key, for testing on any domain. */
+const TURNSTILE_TEST_KEY = '1x00000000000000000000AA';
+
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const require = createRequire(join(root, 'package.json'));
 const { chromium } = require('playwright');
@@ -494,10 +497,32 @@ try {
   );
 
   // The app's page, on the same watched context: the waitlist's form focused, which loads
-  // Turnstile's script (stood in), then sent to a stand-in for the database's waitlist function,
-  // so each source its policy names is reached.
+  // Turnstile's script (stood in, or Cloudflare's own on a live run), then sent to a stand-in for
+  // the database's waitlist function, so each source its policy names is reached.
   const app = await studio.newPage();
   app.on('pageerror', (e) => errors.push(String(e)));
+  // The page carries the production site key, which Cloudflare refuses off Para's domain: no
+  // token, and its challenge frame flags its own policy. Served instead with Cloudflare's
+  // always-pass test key, the one the other builds get in CI; the page's hashes don't cover it.
+  let hasTestKey = false;
+  await app.route(/\/app\/$/, async (route) => {
+    const response = await route.fetch();
+    const page = await response.text();
+    const testKeyPage = page.replace(
+      /data-sitekey="[^"]+"/,
+      `data-sitekey="${TURNSTILE_TEST_KEY}"`,
+    );
+    hasTestKey = testKeyPage !== page;
+    return route.fulfill({ response, body: testKeyPage });
+  });
+  // No request from this page reaches the database, live run or not: no test address may land
+  // in the real waitlist. Anything else for its host is cut off and counted; the waitlist's post,
+  // routed after it, is asked first and stood in.
+  let databaseCutOff = 0;
+  await app.route(/^https:\/\/[a-z0-9]+\.supabase\.co\//, (route) => {
+    databaseCutOff += 1;
+    return route.abort();
+  });
   let waitlistPosts = 0;
   await app.route(/\/functions\/v1\/waitlist$/, (route) => {
     waitlistPosts += 1;
@@ -508,10 +533,17 @@ try {
   const hasAppPolicy = !!appPolicy?.includes('https://challenges.cloudflare.com');
   const email = app.getByRole('textbox', { name: /email/i });
   await email.fill('tester@example.com');
-  await app
-    .locator('input[name="cf-turnstile-response"]')
-    .waitFor({ state: 'attached', timeout: 15000 })
-    .catch(() => {});
+  // Sent once Turnstile has passed: its hidden input holds a token.
+  const hasToken = await app
+    .waitForFunction(
+      () => document.querySelector('input[name="cf-turnstile-response"]')?.value,
+      undefined,
+      { timeout: 15000 },
+    )
+    .then(
+      () => true,
+      () => false,
+    );
   await app
     .getByRole('button', { name: /notify|tell|join|sign/i })
     .first()
@@ -523,10 +555,16 @@ try {
       () => true,
       () => false,
     );
+  const said = await app.locator('#waitlist-said').textContent();
   check(
     "/app/ on a build, sent its own policy: the waitlist's form, Turnstile's check and the post",
-    hasAppPolicy && isOnList && waitlistPosts === 1,
-    `its policy sent ${hasAppPolicy}; on the list ${isOnList}; ${waitlistPosts} post(s)`,
+    hasAppPolicy &&
+      hasTestKey &&
+      hasToken &&
+      isOnList &&
+      waitlistPosts === 1 &&
+      databaseCutOff === 0,
+    `its policy sent ${hasAppPolicy}; test key ${hasTestKey}; token ${hasToken}; on the list ${isOnList} ("${said}"); ${waitlistPosts} post(s) stood in; ${databaseCutOff} other database request(s) cut off`,
   );
   await studio.close();
 
