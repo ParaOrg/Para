@@ -157,8 +157,16 @@ await nodeFetch(page);
 const isRouter = (u) => /routing\.openstreetmap\.de|route\/v1\/driving/.test(u);
 let routerCalls = 0,
   routerRefused = 0;
+/** Each router request's points, [lng, lat], in the order asked. */
+const routerAsked = [];
+/** The requests from index `from` on that end more than 5 m from every one of `targets`. */
+const askedElsewhere = (from, targets) =>
+  routerAsked.slice(from).filter((points) => targets.every((t) => metres(points.at(-1), t) > 5));
 page.on('request', (r) => {
-  if (isRouter(r.url())) routerCalls++;
+  if (!isRouter(r.url())) return;
+  routerCalls++;
+  const points = new URL(r.url()).pathname.split('/').at(-1) ?? '';
+  routerAsked.push(points.split(';').map((p) => p.split(',').map(Number)));
 });
 page.on('response', (r) => {
   if (isRouter(r.url()) && (r.status() === 429 || r.status() >= 500)) routerRefused++;
@@ -564,9 +572,11 @@ const preview = async () =>
   ((await page.evaluate(() => window.__src('draw-preview')))?.features ?? []).flatMap(
     (f) => f.geometry?.coordinates ?? [],
   );
+// One step: a stepped move rests, on a slow frame, at a point on the way, and the preview then
+// asks the router for a route to that point (askedElsewhere).
 const restAt = async (c) => {
   const [x, y] = await proj(c);
-  await page.mouse.move(box0.x + x, box0.y + y, { steps: 4 });
+  await page.mouse.move(box0.x + x, box0.y + y);
 };
 /** The road offered once the cursor rests, and how long after the rest it came. */
 const roadOffered = async () => {
@@ -578,6 +588,7 @@ const roadOffered = async () => {
   }
   return { line, ms: Date.now() - restedAt };
 };
+const askedBeforePreview = routerAsked.length;
 await drawRoute([A, B]);
 await restAt(D);
 const guide = await preview();
@@ -629,6 +640,12 @@ const drawOnD = await pressed('Draw');
 await page.keyboard.press('s');
 const snapOnS = await pressed('Snap');
 check('keys: D picks Draw, S picks Snap', drawOnD === 'true' && snapOnS === 'true');
+const offPreview = askedElsewhere(askedBeforePreview, [B, D, E]);
+check(
+  'preview: the router is asked for routes to B, D and E only, where the clicks and rests were',
+  offPreview.length === 0,
+  `${routerAsked.length - askedBeforePreview} asked, ${offPreview.length} elsewhere: ${JSON.stringify(offPreview)}`,
+);
 await page.getByTestId('snap-draw').getByRole('button', { name: 'Draw' }).click();
 await restAt(D);
 await page.waitForTimeout(2500);
@@ -929,6 +946,7 @@ await page.mouse.click(box0.x + sx1, box0.y + sy1);
 await page.waitForTimeout(250);
 // A routed stretch is not held: a drag on it leaves the line as it was.
 const handlesInDraw = await handleCount();
+const askedBeforeSnap = routerAsked.length;
 await page.getByTestId('snap-draw').getByRole('button', { name: 'Snap' }).click();
 await page.waitForTimeout(150);
 check(
@@ -936,11 +954,19 @@ check(
   handlesInDraw > 0 && (await handleCount()) === 0,
   `${handlesInDraw} in Draw, ${await handleCount()} in Snap`,
 );
+// One step, from the Snap button straight to D: a stepped move rests, on a slow frame, at a point
+// on the way, and Snap's preview then asks the router for a route to that point.
 const [dx0, dy0] = await proj(D);
-await page.mouse.move(box0.x + dx0, box0.y + dy0, { steps: 3 });
+await page.mouse.move(box0.x + dx0, box0.y + dy0);
 check('cursor line: none in Snap', (await cursorLine()).length === 0);
 await clickAt(D);
 await settle();
+const offD = askedElsewhere(askedBeforeSnap, [D]);
+check(
+  'snap: the router is asked for routes to D only, where the cursor went',
+  offD.length === 0,
+  `${routerAsked.length - askedBeforeSnap} asked, ${offD.length} elsewhere: ${JSON.stringify(offD)}`,
+);
 // The router's answer in, so nothing but the drag could change the line.
 for (let i = 0; i < 30 && !(await drafted()).at(-1)?.streets; i++) await page.waitForTimeout(300);
 const routedLine = (await drafted()).at(-1);
