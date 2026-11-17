@@ -45,6 +45,14 @@ updates:
       # the numbers and the steps; take this entry out with that work.
       - dependency-name: 'maplibre-gl'
         update-types: ['version-update:semver-minor', 'version-update:semver-major']
+      # On 19.2 (owner, 2026-11-17): the bundle budget. Revisit when it allows or a fix is needed.
+      - dependency-name: 'react'
+        versions: ['19.3.x']
+      - dependency-name: 'react-dom'
+        versions: ['19.3.x']
+      # On 8.2 (owner, 2026-11-17), with React. Revisit when the budget allows or a fix is needed.
+      - dependency-name: 'vite'
+        versions: ['8.3.x']
     groups:
       runtime:
         patterns: ['react', 'react-dom', 'zod', '@supabase/*', '@tanstack/*']
@@ -69,6 +77,10 @@ updates:
     open-pull-requests-limit: 1
     cooldown:
       default-days: 7
+    ignore:
+      # On v5 (owner, 2026-11-17): v6's caching has commercial terms. Revisit if those change.
+      - dependency-name: 'gradle/actions'
+        update-types: ['version-update:semver-major']
     groups:
       actions:
         patterns: ['*']
