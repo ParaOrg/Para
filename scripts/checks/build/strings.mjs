@@ -8,6 +8,7 @@
 //                                published map and never call it
 
 import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { loadEnv } from 'vite';
 
 /** Cloudflare's script, at the address src/shared/ui/turnstile.tsx loads it from. */
@@ -95,6 +96,16 @@ export function proveStrings(build, check) {
       studio.includes(siteKey) &&
       contribute.includes(siteKey),
     testKey ?? '',
+  );
+  // /app/ is a static page with its key written in (public/app/index.html); the suites serve it
+  // with a test key at visit time only (contribute-offline-test).
+  const appKeys = [
+    ...readFileSync(join(dist, 'app', 'index.html'), 'utf8').matchAll(/data-sitekey="([^"]*)"/g),
+  ].map((m) => m[1]);
+  check(
+    '/app/ ships one Turnstile site key, and not a test key',
+    appKeys.length === 1 && appKeys[0] !== '' && !TEST_SITE_KEY.test(appKeys[0]),
+    appKeys.join(', '),
   );
 
   const missing = EDITOR_ONLY.filter((s) => !studio.includes(s));

@@ -515,6 +515,14 @@ try {
     hasTestKey = testKeyPage !== page;
     return route.fulfill({ response, body: testKeyPage });
   });
+  // No request from this page reaches the database, live run or not: no test address may land
+  // in the real waitlist. Anything else for its host is cut off and counted; the waitlist's post,
+  // routed after it, is asked first and stood in.
+  let databaseCutOff = 0;
+  await app.route(/^https:\/\/[a-z0-9]+\.supabase\.co\//, (route) => {
+    databaseCutOff += 1;
+    return route.abort();
+  });
   let waitlistPosts = 0;
   await app.route(/\/functions\/v1\/waitlist$/, (route) => {
     waitlistPosts += 1;
@@ -542,8 +550,8 @@ try {
     );
   check(
     "/app/ on a build, sent its own policy: the waitlist's form, Turnstile's check and the post",
-    hasAppPolicy && hasTestKey && isOnList && waitlistPosts === 1,
-    `its policy sent ${hasAppPolicy}; test key ${hasTestKey}; on the list ${isOnList}; ${waitlistPosts} post(s)`,
+    hasAppPolicy && hasTestKey && isOnList && waitlistPosts === 1 && databaseCutOff === 0,
+    `its policy sent ${hasAppPolicy}; test key ${hasTestKey}; on the list ${isOnList}; ${waitlistPosts} post(s) stood in; ${databaseCutOff} other database request(s) cut off`,
   );
   await studio.close();
 
