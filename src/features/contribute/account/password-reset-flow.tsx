@@ -1,5 +1,7 @@
 import { useState } from 'react';
 
+import { useBackLayer } from '@/shared/hooks/use-back-layer';
+
 import { messageOf } from './account-message';
 import { ForgotPasswordScreen } from './forgot-password-screen';
 import { NewPasswordScreen } from './new-password-screen';
@@ -49,6 +51,12 @@ export function PasswordResetFlow({
   const verifyCode = useVerifyPasswordCodeMutation();
   const setNewPassword = useSetNewPasswordMutation();
   const writeSession = useSessionWriter();
+  // The phone's Back on the code's step returns to the email's, as its back arrow does.
+  useBackLayer(step === 'code', () => {
+    verifyCode.reset();
+    requestCode.reset();
+    setStep('email');
+  });
 
   const sendCode = (to: string, onSent?: () => void) =>
     requestCode.mutate({ email: to, captchaToken: captcha.takeToken() }, { onSuccess: onSent });

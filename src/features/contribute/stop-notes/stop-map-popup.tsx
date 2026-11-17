@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef } from 'react';
 
 import type { RecordingTrail } from '@/features/routes/map/recording-trail';
+import { useBackLayer } from '@/shared/hooks/use-back-layer';
 import { useDialogFocus } from '@/shared/hooks/use-dialog-focus';
 import { useEscape } from '@/shared/hooks/use-escape';
 import { CloseIcon } from '@/shared/ui/route-icons';
@@ -48,6 +49,8 @@ export function StopMapPopup({
   const titleId = useId();
   useDialogFocus(dialogRef, false);
   useEscape(onClose, !isUnderQuestion);
+  // The phone's Back closes it, as Close does; under Delete's question, the question first.
+  useBackLayer(true, onClose);
   // Delete's question answered Keep: focus comes back into the card it was asked from.
   const wasUnder = useRef(isUnderQuestion);
   useEffect(() => {
