@@ -206,8 +206,8 @@ export function decodeTrail(batches: readonly Batch[]): TrailPoint[] {
 export interface ContributionDetail {
   trail: TrailPoint[];
   hintos: ContributionHinto[];
-  /** The times the contributor pressed Mark, oldest first; each is placed on the trail by its time. */
-  marks: number[];
+  /** The stops flagged, oldest first, with their notes; each is placed on the trail by its time. */
+  marks: ReturnType<typeof marksOf>;
   /** Its walk and ride parts, in time order; an upload sent before Lakad and Sakay is one ride. */
   parts: ContributionPart[];
 }

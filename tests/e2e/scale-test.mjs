@@ -201,7 +201,9 @@ const longest = big.variants
   .filter((v) => v.overview)
   .reduce((a, v) => (v.overview.coordinates.length > a.overview.coordinates.length ? v : a));
 const at = longest.overview.coordinates[Math.floor(longest.overview.coordinates.length / 2)];
-await page.evaluate((c) => window.__map.jumpTo({ center: c, zoom: 15 }), at);
+await page.evaluate((c) => {
+  window.__map.jumpTo({ center: c, zoom: 15 });
+}, at);
 await page.waitForTimeout(500);
 const p = await page.evaluate((c) => {
   const q = window.__map.project(c);

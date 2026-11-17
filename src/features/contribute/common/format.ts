@@ -84,3 +84,11 @@ export function tripTimeText(seconds: number): string {
   const last = parts.pop();
   return parts.length === 0 ? `${last}` : `${parts.join(' ')} and ${last}`;
 }
+
+/** A time of day as the ride's flags say it: `10:42 AM`, Manila's, whatever the phone's zone. */
+export const clockText = (time: number): string =>
+  new Date(time).toLocaleTimeString('en-US', {
+    timeZone: 'Asia/Manila',
+    hour: 'numeric',
+    minute: '2-digit',
+  });

@@ -249,7 +249,22 @@ try {
   // ---------------------------------------------- the map: online, then off
   const ctx = await browser.newContext(phone);
   await watchPolicies(ctx, policyWatch);
+  // How many new workers the browser found, for the update check's detail only: with the basemap
+  // stood in, Chromium finds an extra one after the tap (.scratch/ci-flakes/issues/04).
+  let workersFound = 0;
+  await ctx.addInitScript(() => {
+    const watch = async () => {
+      const registration = await navigator.serviceWorker?.getRegistration();
+      if (!registration || registration.onupdatefound) return;
+      registration.onupdatefound = () => console.log('pwa-test: updatefound');
+    };
+    navigator.serviceWorker?.addEventListener('controllerchange', () => void watch());
+    addEventListener('load', () => void watch());
+  });
   const page = await ctx.newPage();
+  page.on('console', (m) => {
+    if (m.text() === 'pwa-test: updatefound') workersFound++;
+  });
   const errors = [];
   page.on('pageerror', (e) => errors.push(String(e)));
   let supabase = 0;
@@ -641,7 +656,7 @@ try {
       check(
         'tapping Reload brings the new worker in and the button goes',
         !after.waiting && after.controlled && !after.button,
-        JSON.stringify(after),
+        `${JSON.stringify(after)}, ${workersFound} new worker(s) found`,
       );
     }
   } finally {

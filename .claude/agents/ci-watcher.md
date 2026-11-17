@@ -29,6 +29,13 @@ your report and stop.
    `gh api repos/ParaOrg/Para/actions/jobs/<job>/logs | grep -E "FAIL|Error|not ok|✗" | head -15`.
    The jobs named "The editor" and "Build and the public map" only sum up
    other jobs; skip their logs.
+5. Always, pass or fail, read the browser suites' outside-request lines from
+   every job's log. Each log line starts with a timestamp, so match the text
+   anywhere in the line, never at its start:
+   `gh api repos/ParaOrg/Para/actions/jobs/<job>/logs | awk '/##\[group\]/{g=$0} /outside: |stand-ins have no answer/{print g" | "$0}' | sed -E 's/[0-9T:.-]+Z //g'`.
+   A line reads `outside: <host> ×n (network n, stood in n, failed n, cancelled n)`.
+   On a pull request's run every `network` count should be 0; on a push to
+   `staging` or `main` (live services) a non-zero `network` is expected.
 
 ## Report
 
@@ -40,5 +47,11 @@ At most 20 lines:
   `save-ikot-test`'s ikot-delete check, and `scale-test`'s timing checks
   ("within 5 s", "within 7 s", "main thread busy").
 - If the run did not finish within 60 minutes, say so and give its status.
+- The outside lines: on a pull request's run, either "every outside line has
+  network 0" with the number of lines read, or each line with a non-zero
+  `network` (its job, its suite and the line, quoted exactly). On a push run,
+  the lines with a non-zero `network`, each with its suite. Also every
+  "stand-ins have no answer" line, quoted. These lines do not count toward
+  the 20-line limit.
 
 Report what you read. Never guess why a test failed.

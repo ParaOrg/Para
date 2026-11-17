@@ -22,6 +22,7 @@ import { fileURLToPath } from 'node:url';
 
 import { until } from './lib/harness.mjs';
 import { checkPolicies, watchPolicies } from './lib/policy.mjs';
+import { keepBasemapUnreachable } from './lib/stand-ins.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const require = createRequire(join(root, 'package.json'));
@@ -79,7 +80,10 @@ const state = (page) =>
 // Nothing but the preview is reachable, so the basemap's requests fail at once.
 // The browser lets the new worker activate only when the old one has no request
 // in flight; with no route to the tile host those requests would hang for
-// minutes and the hand-over would wait for them.
+// minutes and the hand-over would wait for them. So the basemap is not stood in
+// either: with it stood in, Chromium finds a new worker on every update check,
+// and "Update Para!" comes back after the reload (.scratch/ci-flakes/issues/04).
+keepBasemapUnreachable();
 const browser = await chromium.launch({
   args: ['--host-resolver-rules=MAP * ~NOTFOUND, EXCLUDE localhost'],
 });

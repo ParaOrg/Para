@@ -26,6 +26,13 @@ export function provePublicWorker(build, check) {
     missingPrecache.length === 0,
     missingPrecache.length ? 'missing: ' + missingPrecache.join(', ') : '',
   );
+  // One URL the build never wrote fails the worker's install (see contribute-worker.mjs).
+  const notBuilt = precached.filter((u) => !existsSync(join(dist, u)));
+  check(
+    "every URL the installable app's worker precaches is a file in the build",
+    precached.length > 0 && notBuilt.length === 0,
+    notBuilt.join(', '),
+  );
   check(
     'precache holds the MapLibre worker',
     precached.some((u) => /^assets\/maplibre-gl-worker-.*\.js$/.test(u)),
