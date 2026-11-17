@@ -3974,9 +3974,14 @@ const FIRST_IDLE = () => {
   await keep.waitFor({ timeout: 5000 });
   await back();
   check(
-    "✕'s question: Back is Keep recording, the ride going on, not discarded",
+    "✕'s question: Back is Keep recording, the ride going on, not discarded, focus back on ✕",
     (await gone(keep)) &&
       (await page.getByRole('button', { name: 'Pause', exact: true }).count()) === 1 &&
+      (await recordingCard.isVisible()) &&
+      (await page.evaluate(() => window.__watchers())) === 1 &&
+      (await page.evaluate(
+        () => document.activeElement?.getAttribute('aria-label') === 'Discard recording',
+      )) &&
       (await leaves()) === 1,
   );
 
