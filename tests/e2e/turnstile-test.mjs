@@ -12,6 +12,7 @@
 //   PARA_BASE=http://localhost:5176 node tests/e2e/turnstile-test.mjs
 import { chromium } from 'playwright';
 
+import { TURNSTILE, turnstileScript } from './lib/fake-turnstile.mjs';
 import { BASE, harness } from './lib/harness.mjs';
 
 const { check, tally } = harness();
@@ -353,6 +354,80 @@ check(
   'Forgot password sent its reset with a token',
   recover.length === 1 && recover[0].token?.startsWith('token-w'),
   JSON.stringify(recover),
+);
+
+// ------------------------------------- the check failing, expiring, and not loading
+// The shared stand-in in each of its modes (lib/fake-turnstile.mjs). Each state says its own line,
+// keeps Sign in from sending, and a fresh widget recovers.
+const FAILED = 'The check that you are a person did not finish. Reload the page and try again.';
+const CANNOT_LOAD =
+  'The check that you are a person could not load. Check your connection and reload.';
+let checkMode = 'fails';
+let stateScriptLoads = 0;
+await page.unroute(/^https:\/\/challenges\.cloudflare\.com\//);
+await page.route(TURNSTILE, (route) => {
+  stateScriptLoads += 1;
+  return checkMode === 'cannotLoad'
+    ? route.fulfill({ status: 503, contentType: 'text/plain', body: '' })
+    : route.fulfill({
+        status: 200,
+        contentType: 'text/javascript',
+        body: turnstileScript(checkMode),
+      });
+});
+const grants = () => auth.filter((a) => a.path.includes('grant_type=password')).length;
+/** Signed out, on Sign in, with the email and password typed, and the check in `mode`. */
+const openSignIn = async (mode) => {
+  checkMode = mode;
+  await page.evaluate(() => localStorage.clear());
+  await page.reload({ waitUntil: 'load' });
+  await page.getByText('Studio sign in').waitFor({ timeout: 30000 });
+  await page.getByRole('textbox', { name: 'Email', exact: true }).fill(EMAIL);
+  await page.getByLabel('Password', { exact: true }).fill('right');
+};
+/** Enter in the password field, as a person would to send: whether anything was sent. */
+const triesToSend = async () => {
+  const before = grants();
+  await page.getByLabel('Password', { exact: true }).press('Enter');
+  await page.waitForTimeout(400);
+  return grants() !== before;
+};
+const isSignInOff = () => page.locator('button[type="submit"]').isDisabled();
+
+await openSignIn('fails');
+await page.getByText(FAILED).waitFor({ timeout: 5000 });
+check(
+  'a check that fails says so, and Sign in stays off and sends nothing',
+  (await isSignInOff()) && !(await triesToSend()),
+);
+await openSignIn('passes');
+await page.waitForFunction(() => !document.querySelector('button[type="submit"]')?.disabled);
+check(
+  '  reloaded, a fresh check passes, the failure line gone',
+  (await page.getByText(FAILED).count()) === 0,
+);
+
+await openSignIn('expires');
+await page.waitForFunction(() => !document.querySelector('button[type="submit"]')?.disabled);
+await page.waitForFunction(() => document.querySelector('button[type="submit"]')?.disabled);
+check(
+  'a check that expires takes Sign in back off, says it is checking again, and sends nothing',
+  (await page.getByText('Checking that you are a person…').count()) === 1 && !(await triesToSend()),
+);
+
+const loadsBefore = stateScriptLoads;
+await openSignIn('cannotLoad');
+await page.getByText(CANNOT_LOAD).waitFor({ timeout: 5000 });
+check(
+  'a check whose script cannot load says so, and Sign in stays off and sends nothing',
+  (await isSignInOff()) && !(await triesToSend()),
+);
+await openSignIn('passes');
+await page.waitForFunction(() => !document.querySelector('button[type="submit"]')?.disabled);
+check(
+  '  reloaded, the script is asked for again and its check passes',
+  stateScriptLoads === loadsBefore + 2 && (await page.getByText(CANNOT_LOAD).count()) === 0,
+  `${stateScriptLoads - loadsBefore} script request(s)`,
 );
 
 check('no page errors', errors.length === 0, errors.join(' | '));
