@@ -1,7 +1,6 @@
 # phone-test taps rows a person could not reach at the sheet's Low
 
-Status: open. Planned as its own piece of the CI-speed work, after the owner answers which snap these checks run at.
-Starting point: branch `claude/phone-taps-in-view`, no PR. `fingerOn` and a `buttonTap`/`touchTap` that fail instead of clicking by hand.
+Status: done in the change that tapped where a person would (branch `claude/phone-test-sheet-snaps`). One question remains for the owner, at the end.
 
 ## What was found (2026-11-16)
 
@@ -70,3 +69,40 @@ The rework starts from this layout: `PHONE_PART=k/3` gates the sections, split b
 | 3 | 1a, 1b, 3, 4, 4c, 4d | 4c and 4d read section 4's `hotspot` |
 
 Section 1, the page's setup (the data, the page helpers, the ground-scale measurement after 1b, and 1b's closing page reload) and section 7 run in every part. The hintuan pick runs where a full run runs it: on section 2's first trip with a hintuan (part 1) and again on the made-up map (5d, part 2). Unset, one part runs it all. The sheet sections, 4c and 4d, are both in part 3.
+
+## What was done (2026-11-17)
+
+A logging copy of staging's phone-test, run in all three parts, counted 75 taps sent by hand: 36, 34
+and 5. Each was logged with its section, its target, the point tapped, what was under it, and the
+sheets' heights. Every one was the test's doing:
+
+- 62 rows below the screen: View more, hintuan picks, Set/Remove as start and the destination row,
+  in the trip card at Low and raised a third, and 1 in a trip opened from the list. Now the sheet
+  is pulled to full by its handle first, when a stop the test taps is below the screen.
+- 9 handle taps on a sheet still sliding. Now `fingerOn` waits for a box that holds still over two
+  frames. `handleTo` also waits for the sheet's top to move, not only its data-snap: a step from
+  one height between to another keeps `free`, and read as nothing happening.
+- The list's handle, a 1×1 button at the screen's edge, twice. The route list draws no notch
+  (route-card-list's `handle="hidden"`, kept for the keyboard). A person raises it by its header,
+  and the test now drags the header.
+- A map tap where the list covered the map. The point is now brought into the map above the list
+  first.
+- A box row tapped with the card at Low. At Low a tap on the top of the body raises the sheet and
+  picks nothing (use-sheet-gestures.ts), and its click is swallowed (sheet-gesture.ts). The
+  by-hand click got through only because the swallow skips a click with no pointer behind it. Now
+  the card is raised a third by its handle first.
+
+Six checks about a pick at Low or at the raised third now run at full height, renamed for what
+they now prove, and one repeat was retired (the change's pull request lists them). A tap still
+sent by hand is the one case in `.scratch/ci-speed/issues/01-chromium-touch-drop.md`.
+
+## The owner's decision: the trip card's stops at the raised third (2026-11-17)
+
+Raised a third, the trip card's top is near y 430 of an 844-high screen. Its stops sit at y
+847–1,027, all below the screen, and at Low (the top at 711, 133 px shown) further still. The
+sheet is translated, not scrolled: below full height its body does not scroll
+(`touch-none overflow-hidden`).
+
+The owner's decision (2026-11-17): keep it as it is. Pulling the sheet to full is the intended
+way to reach the trip card's lower rows. phone-test's raise to full before those rows matches the
+design. No app change.
