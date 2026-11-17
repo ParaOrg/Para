@@ -27,7 +27,6 @@ import {
   lazyScreens,
   loadForgetOtherAccounts,
   makeLazyScreens,
-  makeStopNotesViewAgain,
 } from './lazy-screens';
 import { ContributeMap, type ContributeLocatorSlot } from './map/contribute-map';
 import { useRecordingTrack } from './map/use-recording-track';
@@ -277,10 +276,6 @@ export function ContributePage({ locator }: ContributePageProps) {
     makeLazyScreens();
     setScreenTries((n) => n + 1);
   };
-  const failStopNotes = () => {
-    makeStopNotesViewAgain();
-    stopNotes.failView();
-  };
 
   return (
     // The page never scrolls, not even from code (contribute.css, .contribute-page).
@@ -511,8 +506,7 @@ export function ContributePage({ locator }: ContributePageProps) {
             </Suspense>
           )}
           {stopNotes.view && (
-            // Its code not fetched, it closes and a toast says so; Pause and Finish stay as they are.
-            <ErrorBoundary fallback={null} onCatch={failStopNotes}>
+            <ErrorBoundary fallback={null} onCatch={stopNotes.failView}>
               <Suspense fallback={null}>
                 <lazyScreens.stopNotes
                   view={stopNotes.view}

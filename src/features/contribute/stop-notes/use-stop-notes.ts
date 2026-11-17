@@ -4,6 +4,7 @@ import { flushSync } from 'react-dom';
 import type { RecordingTrail } from '@/features/routes/map/recording-trail';
 
 import type { StopNotesData, StopNotesViewKind } from './stop-notes-view';
+import { makeStopNotesViewAgain } from '../lazy-screens';
 import { keptNote, markFixIndexes } from '../recorder/recording-marks';
 import type { RecordingState } from '../recorder/recording-state';
 
@@ -37,7 +38,10 @@ export interface StopNotes {
   openCard: () => void;
   openScreen: () => void;
   close: () => void;
-  /** The card or Stops notes could not be fetched: it closes, a toast says so, the ride goes on. */
+  /**
+   * The card or Stops notes could not be fetched (the page's error boundary around it): it closes,
+   * a toast says so, Pause and Finish stay as they are, and opened again it fetches again.
+   */
   failView: () => void;
 }
 
@@ -118,6 +122,7 @@ export function useStopNotes(
     // Told as React commits the failure (ErrorBoundary): no flushSync there. Focus goes to Flag a
     // stop, which stays as the view goes.
     failView: () => {
+      makeStopNotesViewAgain();
       setView(null);
       setViewFailures((failures) => failures + 1);
       flagButtonRef.current?.focus();
