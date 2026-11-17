@@ -1,5 +1,7 @@
 import { useRef } from 'react';
 
+import { useBackLayer } from '@/shared/hooks/use-back-layer';
+
 import { messageOf } from './account-message';
 import { DeleteAccountScreen } from './delete-account-screen';
 import { useDeleteAccountMutation } from '../api/use-delete-account-mutation';
@@ -14,6 +16,8 @@ interface DeleteAccountViewProps {
  */
 export function DeleteAccountView({ onBack }: DeleteAccountViewProps) {
   const deletion = useDeleteAccountMutation();
+  // The phone's Back is the screen's back arrow; a question over it closes first.
+  useBackLayer(true, onBack);
   // Two taps in one moment start one delete: isPending is only seen on the next render.
   const isSending = useRef(false);
   const handleDelete = () => {

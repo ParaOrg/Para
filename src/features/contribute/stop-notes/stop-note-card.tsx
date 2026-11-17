@@ -1,8 +1,10 @@
 import { useId, useRef, useState } from 'react';
 
+import { useBackLayer } from '@/shared/hooks/use-back-layer';
 import { CloseIcon } from '@/shared/ui/route-icons';
 
 import { CardButton } from './card-button';
+import { backCancelsNote } from './note-back';
 import { CheckIcon, LocationIcon } from './stop-note-icons';
 import { useNoteDialog } from './use-note-dialog';
 import { NOTE_MAX_LENGTH } from '../recorder/recording-marks';
@@ -28,6 +30,10 @@ export function StopNoteCard({ note, place, onSave, onCancel }: StopNoteCardProp
   const ids = useId();
   const [text, setText] = useState(note);
   useNoteDialog(dialogRef, onCancel);
+  // The phone's Back cancels a note left as it was; one typed into stays open (note-back.ts).
+  useBackLayer(true, () => {
+    if (backCancelsNote(text, note)) onCancel();
+  });
 
   return (
     <div className="absolute inset-0 z-50 flex items-center bg-surface-transparent px-4 font-sn-pro">

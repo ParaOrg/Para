@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
 
 import { IconButton } from '@/design-system/primitives/icon-button';
+import { useBackLayer } from '@/shared/hooks/use-back-layer';
 import { useDialogFocus } from '@/shared/hooks/use-dialog-focus';
 import { useEscape } from '@/shared/hooks/use-escape';
 import { CloseIcon } from '@/shared/ui/route-icons';
@@ -87,6 +88,8 @@ export function MapDataSourceSheet({ credits, onClose, onClosed }: MapDataSource
     sink.finished.then(gone, gone);
   }, [isClosing, onClose, onClosed]);
   useEscape(close, !isClosing);
+  // The contributor app's Back closes it as ✕ does, sliding down.
+  useBackLayer(!isClosing, close);
 
   // A tap anywhere but the sheet, on the dimmed map, closes it: on the tap's click, so the
   // same tap ends on the scrim and presses nothing under it. Not the click that opened it,
