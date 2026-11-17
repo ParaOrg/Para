@@ -4,6 +4,7 @@ import { IconButton } from '@/design-system/primitives/icon-button';
 import { useBackLayer } from '@/shared/hooks/use-back-layer';
 import { useDialogFocus } from '@/shared/hooks/use-dialog-focus';
 import { useEscape } from '@/shared/hooks/use-escape';
+import { useTabLoop } from '@/shared/hooks/use-tab-loop';
 import { CloseIcon } from '@/shared/ui/route-icons';
 import { motionOf, prefersReducedMotion, SINK } from '@/shared/utils/motion';
 
@@ -106,25 +107,7 @@ export function MapDataSourceSheet({ credits, onClose, onClosed }: MapDataSource
   }, [close]);
 
   // Tab goes round inside the sheet, from its last link to ✕ and back.
-  useEffect(() => {
-    const sheet = sheetRef.current;
-    if (!sheet) return;
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key !== 'Tab') return;
-      const stops = [...sheet.querySelectorAll<HTMLElement>('a, button')];
-      const first = stops.at(0);
-      const last = stops.at(-1);
-      if (e.shiftKey && (document.activeElement === first || document.activeElement === sheet)) {
-        e.preventDefault();
-        last?.focus();
-      } else if (!e.shiftKey && document.activeElement === last) {
-        e.preventDefault();
-        first?.focus();
-      }
-    };
-    sheet.addEventListener('keydown', handleKeyDown);
-    return () => sheet.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  useTabLoop(sheetRef, 'a, button');
 
   return (
     <>
