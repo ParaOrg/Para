@@ -79,9 +79,15 @@ const browser = await chromium.launch();
 /**
  * A phone-sized page with the stand-in GPS. `earlierConsent` stores the first consent screen's
  * agreement, as a phone from before kept it. `granted` is a browser that already lets the page
- * read the location.
+ * read the location. `search` is added to the page's address (`?e2e=1`). `beforeOpen` runs on the
+ * page before it opens, for routes the page's first requests must already meet.
  */
-async function phone({ earlierConsent = false, granted = false, search = '' } = {}) {
+async function phone({
+  earlierConsent = false,
+  granted = false,
+  search = '',
+  beforeOpen = null,
+} = {}) {
   const context = await browser.newContext({
     viewport: { width: 393, height: 852 },
     deviceScaleFactor: 2,
@@ -111,6 +117,7 @@ async function phone({ earlierConsent = false, granted = false, search = '' } = 
   }
   const errors = [];
   page.on('pageerror', (e) => errors.push(String(e)));
+  if (beforeOpen) await beforeOpen(page);
   await page.goto(`${BASE}/contribute/${search}`, { waitUntil: 'load' });
   return { page, context, errors };
 }
@@ -3880,6 +3887,74 @@ const FIRST_IDLE = () => {
     tilesAsked > before,
     `${before} then ${tilesAsked}`,
   );
+  check('  no page errors', errors.length === 0, errors.join('; '));
+  await page.context().close();
+}
+
+// Stops notes whose code never comes: offline before the worker kept it, or a deploy since the
+// page opened, its host answering the old chunk's address with a page. Blocked from the start,
+// so Ready's fetch ahead misses it too. Stops notes closes and a toast says so, Pause and Finish
+// stay, and once the code can come, opening it again works.
+const STOP_NOTES_CODE = /stop-notes-view/;
+for (const [how, answer] of [
+  ['offline', (route) => route.abort('internetdisconnected')],
+  [
+    'a deploy since the page opened',
+    (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'text/html',
+        body: '<!doctype html><title>Para</title>',
+      }),
+  ],
+]) {
+  const { page, errors } = await phone({
+    beforeOpen: (opening) => opening.route(STOP_NOTES_CODE, answer),
+  });
+  await page.getByRole('button', { name: 'Start Tracking' }).click();
+  await page.getByRole('group', { name: 'Recording so far' }).waitFor();
+  await ride(page, 0, 200);
+  await flagButton(page).click();
+  await page.getByRole('button', { name: 'Stops notes' }).click();
+  const toast = page.getByTestId('toast').filter({ hasText: 'Stop notes could not be opened' });
+  const stopsNotes = page.getByRole('heading', { name: /^Stops notes/ });
+  const isSaid = await toast.waitFor({ timeout: 10000 }).then(
+    () => true,
+    () => false,
+  );
+  check(
+    `Stops notes' code not fetched (${how}): a toast says so, and Stops notes is closed`,
+    isSaid && (await stopsNotes.count()) === 0,
+    `${await toast.count()} toast(s); ${await stopsNotes.count()} Stops notes`,
+  );
+  const pause = page.getByRole('button', { name: 'Pause', exact: true });
+  const isRecording =
+    (await pause.isVisible()) &&
+    (await page.getByRole('group', { name: 'Recording so far' }).isVisible());
+  // Finish shows once the ride is paused: paused, then going on again.
+  await pause.click();
+  const finish = page.getByRole('button', { name: 'Finish', exact: true });
+  const hasFinish = await finish.waitFor({ timeout: 5000 }).then(
+    () => true,
+    () => false,
+  );
+  await page.getByRole('button', { name: 'Resume', exact: true }).click();
+  check(
+    '  the ride records on: Pause there, and paused, Finish',
+    isRecording &&
+      hasFinish &&
+      (await pause.waitFor({ timeout: 5000 }).then(
+        () => true,
+        () => false,
+      )),
+  );
+  await page.unroute(STOP_NOTES_CODE);
+  await page.getByRole('button', { name: 'Stops notes' }).click();
+  const opened = await stopsNotes.waitFor({ timeout: 10000 }).then(
+    () => true,
+    () => false,
+  );
+  check('  once its code can come, Stops notes opens again', opened);
   check('  no page errors', errors.length === 0, errors.join('; '));
   await page.context().close();
 }

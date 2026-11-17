@@ -19,7 +19,6 @@ import {
   RecordingScreen,
   SaveForm,
   StopNotePill,
-  StopNotesView,
   StopRecordingScreen,
   TrackRoutesOffer,
   Tutorial,
@@ -154,6 +153,7 @@ export function ContributePage({ locator }: ContributePageProps) {
     onRouteRecorded: () => setOpenedTab('save'),
     onFlagged: stopNotes.showPill,
     notesAdded: stopNotes.notesAdded,
+    stopNotesFailures: stopNotes.viewFailures,
   });
   // History and Account are tabs on Ready; a build with no accounts has History alone.
   const hasAccount = canUpload();
@@ -506,13 +506,15 @@ export function ContributePage({ locator }: ContributePageProps) {
             </Suspense>
           )}
           {stopNotes.view && (
-            <Suspense fallback={null}>
-              <StopNotesView
-                view={stopNotes.view}
-                stopNotes={stopNotes.data}
-                onClose={stopNotes.close}
-              />
-            </Suspense>
+            <ErrorBoundary fallback={null} onCatch={stopNotes.failView}>
+              <Suspense fallback={null}>
+                <lazyScreens.stopNotes
+                  view={stopNotes.view}
+                  stopNotes={stopNotes.data}
+                  onClose={stopNotes.close}
+                />
+              </Suspense>
+            </ErrorBoundary>
           )}
           {layout.isFormShown && figures && (
             <Suspense fallback={null}>
