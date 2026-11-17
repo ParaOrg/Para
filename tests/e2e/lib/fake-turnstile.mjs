@@ -1,5 +1,6 @@
 // Cloudflare's Turnstile script, standing in: every widget passes a moment
-// after it is drawn, with a token of its own. For the suites that sign in or
+// after it is drawn, with a token of its own, whether drawn by render() or, as
+// a .cf-turnstile element, by the script itself on load. For the suites that sign in or
 // upload with a site key in the build (CI gives them Cloudflare's always-pass
 // test key), so none waits on Cloudflare's servers. With `interactive`, a widget
 // instead asks for a tap, as Cloudflare does when it is unsure: it calls
@@ -41,7 +42,17 @@ export const turnstileScript = (isInteractive) => `
       return id;
     },
     remove() {},
+    reset() {},
   };
+  // As the real script does on load: each .cf-turnstile element on the page drawn by itself, with
+  // the hidden cf-turnstile-response input its form sends.
+  for (const el of document.querySelectorAll('.cf-turnstile')) {
+    window.turnstile.render(el, { callback: (token) => (input.value = token) });
+    const input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = 'cf-turnstile-response';
+    el.append(input);
+  }
 `;
 
 /** Routes `page`'s request for Cloudflare's Turnstile script to the stand-in. */

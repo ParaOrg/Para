@@ -14,7 +14,7 @@
 //   - an update (a changed worker) found with a recording open waits, and the page is not
 //     reloaded; once the recording is saved it takes over and the page reloads once
 //   - the studio, which no other suite opens on a build: its sign-in, and an editor's map in
-//     Terrain and Satellite, for its content policy
+//     Terrain and Satellite; and /app/'s waitlist form, sent: each for its content policy
 //
 // A stand-in GPS is fed with Playwright's setGeolocation, the way the browser reports it.
 // Each check prints PASS/FAIL and the script exits non-zero on any failure.
@@ -491,6 +491,42 @@ try {
     "the studio on a build, sent its own policy: its sign-in, then an editor's map in Terrain and Satellite",
     hasStudioPolicy && isSignInShown && isMapShown && picked.join() === 'Terrain,Satellite',
     `its policy sent ${hasStudioPolicy}; sign-in ${isSignInShown}; map ${isMapShown}; picked ${picked.join(', ') || 'none'}`,
+  );
+
+  // The app's page, on the same watched context: the waitlist's form focused, which loads
+  // Turnstile's script (stood in), then sent to a stand-in for the database's waitlist function,
+  // so each source its policy names is reached.
+  const app = await studio.newPage();
+  app.on('pageerror', (e) => errors.push(String(e)));
+  let waitlistPosts = 0;
+  await app.route(/\/functions\/v1\/waitlist$/, (route) => {
+    waitlistPosts += 1;
+    return route.fulfill({ status: 200, contentType: 'application/json', body: '{}' });
+  });
+  const appPage = await app.goto(`${base}/app/`, { waitUntil: 'load' });
+  const appPolicy = (await appPage?.allHeaders())?.['content-security-policy-report-only'];
+  const hasAppPolicy = !!appPolicy?.includes('https://challenges.cloudflare.com');
+  const email = app.getByRole('textbox', { name: /email/i });
+  await email.fill('tester@example.com');
+  await app
+    .locator('input[name="cf-turnstile-response"]')
+    .waitFor({ state: 'attached', timeout: 15000 })
+    .catch(() => {});
+  await app
+    .getByRole('button', { name: /notify|tell|join|sign/i })
+    .first()
+    .click();
+  const isOnList = await app
+    .getByText("You're on the list.", { exact: false })
+    .waitFor({ timeout: 10000 })
+    .then(
+      () => true,
+      () => false,
+    );
+  check(
+    "/app/ on a build, sent its own policy: the waitlist's form, Turnstile's check and the post",
+    hasAppPolicy && isOnList && waitlistPosts === 1,
+    `its policy sent ${hasAppPolicy}; on the list ${isOnList}; ${waitlistPosts} post(s)`,
   );
   await studio.close();
 
