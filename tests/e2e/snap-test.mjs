@@ -159,6 +159,9 @@ let routerCalls = 0,
   routerRefused = 0;
 /** Each router request's points, [lng, lat], in the order asked. */
 const routerAsked = [];
+/** The requests from index `from` on that end more than 5 m from every one of `targets`. */
+const askedElsewhere = (from, targets) =>
+  routerAsked.slice(from).filter((points) => targets.every((t) => metres(points.at(-1), t) > 5));
 page.on('request', (r) => {
   if (!isRouter(r.url())) return;
   routerCalls++;
@@ -569,9 +572,11 @@ const preview = async () =>
   ((await page.evaluate(() => window.__src('draw-preview')))?.features ?? []).flatMap(
     (f) => f.geometry?.coordinates ?? [],
   );
+// One step: a stepped move rests, on a slow frame, at a point on the way, and the preview then
+// asks the router for a route to that point (askedElsewhere).
 const restAt = async (c) => {
   const [x, y] = await proj(c);
-  await page.mouse.move(box0.x + x, box0.y + y, { steps: 4 });
+  await page.mouse.move(box0.x + x, box0.y + y);
 };
 /** The road offered once the cursor rests, and how long after the rest it came. */
 const roadOffered = async () => {
@@ -583,6 +588,7 @@ const roadOffered = async () => {
   }
   return { line, ms: Date.now() - restedAt };
 };
+const askedBeforePreview = routerAsked.length;
 await drawRoute([A, B]);
 await restAt(D);
 const guide = await preview();
@@ -634,6 +640,12 @@ const drawOnD = await pressed('Draw');
 await page.keyboard.press('s');
 const snapOnS = await pressed('Snap');
 check('keys: D picks Draw, S picks Snap', drawOnD === 'true' && snapOnS === 'true');
+const offPreview = askedElsewhere(askedBeforePreview, [B, D, E]);
+check(
+  'preview: the router is asked for routes to B, D and E only, where the clicks and rests were',
+  offPreview.length === 0,
+  `${routerAsked.length - askedBeforePreview} asked, ${offPreview.length} elsewhere: ${JSON.stringify(offPreview)}`,
+);
 await page.getByTestId('snap-draw').getByRole('button', { name: 'Draw' }).click();
 await restAt(D);
 await page.waitForTimeout(2500);
@@ -949,7 +961,7 @@ await page.mouse.move(box0.x + dx0, box0.y + dy0);
 check('cursor line: none in Snap', (await cursorLine()).length === 0);
 await clickAt(D);
 await settle();
-const offD = routerAsked.slice(askedBeforeSnap).filter((points) => metres(points.at(-1), D) > 5);
+const offD = askedElsewhere(askedBeforeSnap, [D]);
 check(
   'snap: the router is asked for routes to D only, where the cursor went',
   offD.length === 0,

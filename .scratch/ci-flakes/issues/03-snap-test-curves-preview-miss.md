@@ -74,3 +74,9 @@ Fixed by the pull request from `claude/e2e-snap-preview-one-step`:
 - A new check says the router is asked for routes to D only, from the Snap click on, and names
   any other point.
 
+
+The same race showed in "Live preview" on that pull request's own first CI run (44006754014):
+`121.041833,14.742006;121.041565,14.741985`. `drawRoute([A, B])` leaves the cursor on B at
+(642.7, 400.2), and `restAt(D)` moved to D at (541.1, 408.3) in 4 steps. The first step is
+(617.3, 402.2), the missed point. `restAt` moves in one step now, and a check says the preview
+section asks for routes to B, D and E only.
