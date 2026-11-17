@@ -36,6 +36,7 @@
 // the pointer a hand over a line); a first tap at the opening view
 // compiling no GL program, and asking the map what it landed on once
 // (2026-10-04); and housekeeping.
+import './lib/probe-protocol.mjs';
 import { chromium } from 'playwright';
 import {
   BASE,
@@ -419,6 +420,9 @@ const probeWhere = () =>
     .join('<');
 const cdpSend = cdp.send.bind(cdp);
 cdp.send = async (method, params = {}) => {
+  console.log(
+    `PROTO ${Date.now()} (the suite's own session) ${method} ${JSON.stringify(params).slice(0, 200)} @${probeWhere()}`,
+  );
   if (method === 'Input.dispatchTouchEvent' || method === 'Input.dispatchMouseEvent') {
     const where = probeWhere();
     probeNote(`cdp ${params.type} points=${params.touchPoints?.length ?? '-'} @${where}`);
@@ -457,12 +461,14 @@ await page.addInitScript(() => {
     'pointerdown',
     'pointerup',
     'pointercancel',
+    'gotpointercapture',
+    'lostpointercapture',
     'touchstart',
     'touchend',
     'touchcancel',
     'click',
   ]) {
-    document.addEventListener(
+    window.addEventListener(
       t,
       (e) => {
         const el = e.target instanceof Element ? e.target : null;
@@ -483,8 +489,14 @@ const probeDump = async (label) => {
   const events = await page
     .evaluate(() => (window.__probeEvents ?? []).join(' | '))
     .catch(() => '?');
+  const env = await page
+    .evaluate(
+      () =>
+        `maxTouchPoints=${navigator.maxTouchPoints} coarse=${matchMedia('(pointer: coarse)').matches} anyCoarse=${matchMedia('(any-pointer: coarse)').matches} hover=${matchMedia('(hover: hover)').matches}`,
+    )
+    .catch(() => '?');
   console.log(
-    `PROBE ${label}\n  open: touch=${probeOpen.touch ?? 'none'}; mouse=${probeOpen.mouse ?? 'none'}\n  inputs: ${probeLog.slice(-12).join(' | ')}\n  page: ${events}`,
+    `PROBE ${Date.now()} ${label}\n  env: ${env}\n  open: touch=${probeOpen.touch ?? 'none'}; mouse=${probeOpen.mouse ?? 'none'}\n  inputs: ${probeLog.slice(-12).join(' | ')}\n  page: ${events}`,
   );
 };
 const coarse = () => page.evaluate(() => window.matchMedia('(pointer: coarse)').matches);
