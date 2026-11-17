@@ -32,6 +32,7 @@
 // (flat-terrain-tile.mjs). Flat by design: a check that reads heights or shading needs real tiles,
 // recorded. Any other path there fails the suite, naming it.
 import { execFileSync } from 'node:child_process';
+import { createHash, createPublicKey } from 'node:crypto';
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { createServer } from 'node:https';
 import { tmpdir } from 'node:os';
@@ -206,6 +207,8 @@ export const keepBasemapUnreachable = () => {
 
 /** The port of the basemap stand-in served over HTTPS (serveBasemapOverHttps), once it runs. */
 let basemapPort = null;
+/** Its certificate's public key, hashed as Chromium names a key to trust (SPKI, SHA-256, base64). */
+let basemapKeyHash = null;
 
 /**
  * Serves the basemap stand-in from a real server on a loopback port, over HTTPS with a certificate
@@ -244,9 +247,14 @@ export const serveBasemapOverHttps = async () => {
   // The suite's end is the server's: it keeps no run alive.
   server.unref();
   basemapPort = server.address().port;
+  const publicKey = createPublicKey(cert).export({ type: 'spki', format: 'der' });
+  basemapKeyHash = createHash('sha256').update(publicKey).digest('base64');
 };
 
-/** A browser's launch options, with the basemap's host resolved to its HTTPS stand-in while it runs. */
+/**
+ * A browser's launch options, while the HTTPS stand-in runs: the basemap's host resolved to it, and
+ * its certificate, and no other, trusted.
+ */
 export const withStandInLaunch = (options = {}) =>
   basemapPort === null
     ? options
@@ -255,12 +263,9 @@ export const withStandInLaunch = (options = {}) =>
         args: [
           ...(options.args ?? []),
           `--host-resolver-rules=MAP tiles.openfreemap.org 127.0.0.1:${basemapPort}`,
+          `--ignore-certificate-errors-spki-list=${basemapKeyHash}`,
         ],
       };
-
-/** A context's options, trusting the HTTPS stand-in's certificate made for this run. */
-export const withStandInContext = (options = {}) =>
-  basemapPort === null ? options : { ...options, ignoreHTTPSErrors: true };
 
 /** The stand-ins on `context`, unless the run is live. */
 export const applyStandIns = async (context) => {

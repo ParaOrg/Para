@@ -74,9 +74,10 @@ updates. Check its `updatefound` count before trusting an update flow under a st
 The basemap stand-in can also be served by a real HTTPS server on a loopback port
 (`serveBasemapOverHttps` in `tests/e2e/lib/stand-ins.mjs`). It gives the same answers, with a
 certificate made for the run, and the browsers resolve tiles.openfreemap.org to it
-(`--host-resolver-rules`, the context trusting that certificate). Nothing is routed, so the
-service worker's requests leave Playwright alone. The audit counts a loopback server's answers as
-stood in, so the tripwire still fails any real network answer.
+(`--host-resolver-rules`), trusting that certificate alone (`--ignore-certificate-errors-spki-list`,
+by its key's hash). Nothing is routed, so the service worker's requests leave Playwright alone.
+The audit counts a loopback server's answers as stood in, so the tripwire still fails any real
+network answer.
 
 pwa-test, stood in, same build, worker updates found by the update check:
 

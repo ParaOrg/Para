@@ -1,9 +1,9 @@
 // Every request a suite's browser sends to a host off this machine, counted by host and printed
 // as the suite ends: `outside: <host> ×n (network n, stood in n, failed n, cancelled n)`. "Network"
 // answers came from the host itself; "stood in" ones a page.route answered (bareStyle, nodeFetch, a
-// recording) or a stand-in server on this machine did; "failed" never got an answer; "cancelled" the page dropped itself (net::ERR_ABORTED:
-// MapLibre's tiles a move leaves behind). harness.mjs imports it, so every suite that uses the
-// harness reports, with no change to the suite.
+// recording) or a stand-in server on this machine did; "failed" never got an answer; "cancelled"
+// the page dropped itself (net::ERR_ABORTED: MapLibre's tiles a move leaves behind). harness.mjs
+// imports it, so every suite that uses the harness reports, with no change to the suite.
 //
 // On a run without PARA_LIVE_SERVICES (a pull request's, and a local one by default) every outside
 // host is stood in (stand-ins.mjs), so a "network" answer is a new outside call: it fails the
@@ -11,7 +11,7 @@
 // route. A live run only prints.
 import { chromium } from 'playwright';
 
-import { applyStandIns, IS_LIVE, withStandInContext, withStandInLaunch } from './stand-ins.mjs';
+import { applyStandIns, IS_LIVE, withStandInLaunch } from './stand-ins.mjs';
 
 const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1', '[::1]']);
 /** Per host: how its requests were answered. */
@@ -65,15 +65,15 @@ chromium.launch = async (options, ...rest) => {
   const browser = await launch(withStandInLaunch(options), ...rest);
   hasLaunched = true;
   const newContext = browser.newContext.bind(browser);
-  browser.newContext = async (options, ...rest) => {
-    const context = await newContext(withStandInContext(options), ...rest);
+  browser.newContext = async (...args) => {
+    const context = await newContext(...args);
     watch(context);
     await applyStandIns(context);
     return context;
   };
   const newPage = browser.newPage.bind(browser);
-  browser.newPage = async (options, ...rest) => {
-    const page = await newPage(withStandInContext(options), ...rest);
+  browser.newPage = async (...args) => {
+    const page = await newPage(...args);
     watch(page.context());
     await applyStandIns(page.context());
     return page;
