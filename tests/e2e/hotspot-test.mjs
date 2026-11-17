@@ -8,16 +8,18 @@
 // to 2 corners, checks the draft survives a reload, then traces a 2-point
 // route and checks it snaps to roads via the public OSRM router. To stay
 // independent of whatever is saved today, the map is recentred on the middle
-// vertex of the saved route with the most coordinates (or a fixed Metro Manila
+// vertex of the pinned subject line, lib/subject-line.mjs (or a fixed Metro Manila
 // fallback when there are none) before drawing, so clicks land on real streets instead of
 // wherever the saved-routes bounding box happens to fit right now.
 import { chromium } from 'playwright';
 import { BASE, harness, nodeFetch, waitForSource } from './lib/harness.mjs';
+import { assertNoOverview, subjectLine, watchOverviews } from './lib/subject-line.mjs';
 
 const { check, tally } = harness();
 
 const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
+const overviews = watchOverviews(page);
 // Headless Chromium cannot use this container's TLS relay, but Node can reach
 // the internet directly: serve every https request through Node fetch.
 let routerCalls = 0;
@@ -77,19 +79,16 @@ if (savedCount > 0) {
 // Known risk: the map's opening view fits the saved-routes bounds, which
 // drifts as routes are added and can leave the centre over water or inside a
 // block, where the public OSRM router can't snap. Recentre on solid ground
-// before drawing: the middle vertex of the saved route with the most
-// coordinates, or a fixed Metro Manila fallback (Cubao) when the database has
+// before drawing: the middle vertex of the pinned subject line
+// (lib/subject-line.mjs), or a fixed Metro Manila fallback (Cubao) when the database has
 // none yet. Not the first saved route: they come most recently updated first,
 // so the first changes whenever the owner edits one. The route clicks below
 // reuse this same line. Recentre both now and again after the reload below,
 // since a reload resets the camera.
 const FALLBACK_CENTER = [121.0527, 14.6187]; // Cubao, Metro Manila
-const savedLine = savedRoutes
-  .filter((f) => f.geometry?.type === 'LineString' && (f.geometry.coordinates?.length ?? 0) > 1)
-  .reduce(
-    (a, f) => (!a || f.geometry.coordinates.length > a.geometry.coordinates.length ? f : a),
-    null,
-  );
+// The pinned subject line (lib/subject-line.mjs): the same roads every run.
+const savedLine = savedCount > 0 ? subjectLine(savedRoutes) : null;
+if (savedLine) assertNoOverview(overviews, savedLine.properties.id, 'clicking its road vertices');
 const center = savedLine
   ? savedLine.geometry.coordinates[Math.floor(savedLine.geometry.coordinates.length / 2)]
   : FALLBACK_CENTER;

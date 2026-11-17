@@ -6,8 +6,8 @@
 // Opens /studio/?e2e=1, which in development skips the sign-in door so
 // drawing can be exercised while signed out (Done still asks to sign in
 // before saving). Before each drawing section the map is jumped to a
-// street-level view centred on the middle vertex of the saved route with the
-// most coordinates, or a fixed Metro Manila point when the database has none.
+// street-level view centred on the middle vertex of the pinned subject line
+// (lib/subject-line.mjs), or a fixed Metro Manila point when the database has none.
 // Route clicks and drags land on that saved route's own vertices, or along a segment's own
 // road: the router refuses a click more than 25 m from a road, and a refused
 // gap is drawn freehand, which would let the freehand checks below pass for
@@ -16,10 +16,12 @@
 import { chromium } from 'playwright';
 import { BASE, harness, nodeFetch, waitForMapSettled, waitForSource } from './lib/harness.mjs';
 import { drawing } from './lib/studio.mjs';
+import { assertNoOverview, subjectLine, watchOverviews } from './lib/subject-line.mjs';
 
 const { check, tally } = harness({ bracketed: true });
 const b = await chromium.launch();
 const page = await b.newPage({ viewport: { width: 1280, height: 800 } });
+const overviews = watchOverviews(page);
 let routerCalls = 0;
 // With PARA_NODE_FETCH=1 every https request goes through Node's fetch, and
 // the router's are counted as they are served.
@@ -75,19 +77,19 @@ const routed = async () =>
 // routes happen to be saved, which drifts as routes are added and can fall on
 // water or a block the public OSRM router can't snap to. Recentre on real
 // ground before drawing instead.
-// The saved route with the most coordinates, not features[0]: saved routes come
-// most recently updated first, so the first one changes whenever the owner edits
-// a route. centerOnLand keeps its coordinates in savedLine for roadPixels, so the
+// The pinned subject line, not features[0]: saved routes come most recently
+// updated first, so the first one changes whenever the owner edits a route. centerOnLand keeps its coordinates in savedLine for roadPixels, so the
 // clicks come from the same route the view is centred on.
 const CUBAO = [121.0527, 14.6187]; // Metro Manila land fallback, used when there are no saved routes yet
 let savedLine = [];
 const centerOnLand = async () => {
   await waitForSource(page, 'saved-routes', 6000);
-  savedLine = await page.evaluate(async () =>
-    ((await window.__src('saved-routes'))?.features ?? [])
-      .map((f) => f.geometry?.coordinates ?? [])
-      .reduce((a, c) => (c.length > a.length ? c : a), []),
+  // The pinned subject line (lib/subject-line.mjs): the same roads every run.
+  const subject = subjectLine(
+    await page.evaluate(async () => (await window.__src('saved-routes'))?.features ?? []),
   );
+  savedLine = subject?.geometry.coordinates ?? [];
+  if (subject) assertNoOverview(overviews, subject.properties.id, 'clicking its road vertices');
   const center = savedLine.length > 0 ? savedLine[Math.floor(savedLine.length / 2)] : CUBAO;
   await page.evaluate((c) => {
     window.__map.jumpTo({ center: c, zoom: 15 });

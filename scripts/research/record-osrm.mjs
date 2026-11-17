@@ -7,8 +7,10 @@
 //   npm run dev          (in another terminal)
 //   node scripts/research/record-osrm.mjs
 //
-// Each suite runs live, its router answers written down (merged into what is there), trimmed to
-// what the editor reads. A suite that fails is reported and its answers kept; run it again.
+// Each suite runs against the live router, its answers written down (merged into what is there),
+// trimmed to what the editor reads. The database stays stood in (the route tables built from the
+// published map), so the answers are for the lines a pull request's run draws; nothing is read
+// from the database. A suite that fails is reported and its answers kept; run it again.
 import { spawnSync } from 'node:child_process';
 
 const SUITES = [
