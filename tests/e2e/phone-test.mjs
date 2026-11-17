@@ -417,37 +417,97 @@ check(
     : 'matchMedia("(pointer: coarse)") is false — every check below is meaningless',
 );
 
-/** Whether the phone is touched by finger alone: no mouse, no keys (newPhone). */
-let isTouchOnly = false;
 /**
- * A new phone, its map loaded as the first one's is, in place of the one before. Chromium at
- * times stops making pointer events from emulated touches for good once another kind of input
- * (a key, a mouse drag) has come after them (.scratch/ci-speed/issues/01-chromium-touch-drop.md).
- * A person rarely switches mid-task, so the checks of each kind of input run on a phone of
- * their own.
+ * Locator calls that send a mouse or keys; a finger's are tap(), buttonTap and mapTap. fill() stays:
+ * it enters text as a phone's own keyboard does, sending no key presses.
  */
-const newPhone = async () => {
-  await context.close();
-  context = await b.newContext({
+const MOUSE_OR_KEYS = [
+  'click',
+  'dblclick',
+  'hover',
+  'press',
+  'pressSequentially',
+  'type',
+  'dragTo',
+];
+const touchOnlyPages = new WeakSet();
+let isLocatorGuarded = false;
+const notByFinger = (call) =>
+  new Error(
+    `${call} on a phone touched by finger alone: tap it (buttonTap, mapTap, a CDP touch drag), or move the check to a phone of its own (newPhone)`,
+  );
+/**
+ * Makes `p` a phone touched by finger alone: page.mouse, page.keyboard and every locator call that
+ * sends a mouse or keys throw at the line that makes them. Chromium at times stops making pointer
+ * events from emulated touches for good once another kind of input has come after them
+ * (.scratch/ci-speed/issues/01-chromium-touch-drop.md), so on this phone none may.
+ */
+const guardTouchOnly = (p) => {
+  touchOnlyPages.add(p);
+  for (const name of ['mouse', 'keyboard'])
+    Object.defineProperty(p, name, {
+      configurable: true,
+      get() {
+        throw notByFinger(`page.${name}`);
+      },
+    });
+  for (const name of ['click', 'dblclick', 'hover', 'press', 'type'])
+    Object.defineProperty(p, name, {
+      configurable: true,
+      value: () => {
+        throw notByFinger(`page.${name}()`);
+      },
+    });
+  if (isLocatorGuarded) return;
+  isLocatorGuarded = true;
+  const locatorProto = Object.getPrototypeOf(p.locator('body'));
+  for (const name of MOUSE_OR_KEYS) {
+    const sent = locatorProto[name];
+    locatorProto[name] = function (...args) {
+      if (touchOnlyPages.has(this.page())) throw notByFinger(`locator.${name}()`);
+      return sent.apply(this, args);
+    };
+  }
+};
+guardTouchOnly(page);
+/** Whether the phone in use is touched by finger alone (guardTouchOnly): the shared one is. */
+let isTouchOnly = true;
+/** A new phone, its map loaded as the first one's is, beside the one in use. */
+const openPhone = async () => {
+  const phoneContext = await b.newContext({
     viewport: { width: 390, height: 844 },
     deviceScaleFactor: 3,
     isMobile: true,
     hasTouch: true,
   });
-  page = await context.newPage();
-  watch(page);
-  await nodeFetch(page);
-  await page.addInitScript(pointerRecorder);
-  await page.addInitScript(lookReaders);
-  cdp = await context.newCDPSession(page);
+  const phonePage = await phoneContext.newPage();
+  watch(phonePage);
+  await nodeFetch(phonePage);
+  await phonePage.addInitScript(pointerRecorder);
+  await phonePage.addInitScript(lookReaders);
+  const phoneCdp = await phoneContext.newCDPSession(phonePage);
   if (coarseVia !== 'Playwright emulation')
-    await cdp
+    await phoneCdp
       .send('Emulation.setEmulatedMedia', { features: [{ name: 'pointer', value: 'coarse' }] })
       .catch(() => {});
-  await page.goto(`${BASE}/`, { waitUntil: 'load' });
-  await page.waitForFunction(() => window.__map && window.__map.loaded(), null, { timeout: 30000 });
-  await waitForSource(page, 'saved-routes');
-  await mapIdle(page);
+  await phonePage.goto(`${BASE}/`, { waitUntil: 'load' });
+  await phonePage.waitForFunction(() => window.__map && window.__map.loaded(), null, {
+    timeout: 30000,
+  });
+  await waitForSource(phonePage, 'saved-routes');
+  await mapIdle(phonePage);
+  return { context: phoneContext, page: phonePage, cdp: phoneCdp };
+};
+/**
+ * A new phone in place of the one in use: touched by finger alone, or with `isTouchOnly` false,
+ * for checks of the mouse or keys. A person rarely switches between finger, mouse and keys mid-task,
+ * so each kind of input runs on a phone of its own.
+ */
+const newPhone = async ({ isTouchOnly: touchOnly = true } = {}) => {
+  await context.close();
+  ({ context, page, cdp } = await openPhone());
+  isTouchOnly = touchOnly;
+  if (touchOnly) guardTouchOnly(page);
 };
 
 // What the dev server holds for the next page to connect, taken first. A
@@ -690,10 +750,13 @@ check(
 );
 // The map's credits: its own ⓘ at the bottom left (Figma 4494:2048, as on the contributor page's
 // Start), MapLibre's corner credits stepped aside; the ⓘ opens them as the Map Data Source sheet
-// (4494:10177), so the licences' credit is always a tap away.
+// (4494:10177), so the licences' credit is always a tap away. Checked by mouse and keys (Escape, Enter) on a
+// phone of its own: the shared one is touched by finger alone (guardTouchOnly).
 {
-  const info = page.getByRole('button', { name: 'Map data sources' });
-  const sheet = page.getByRole('dialog', { name: 'Map Data Source' });
+  const keysPhone = await openPhone();
+  const keysPage = keysPhone.page;
+  const info = keysPage.getByRole('button', { name: 'Map data sources' });
+  const sheet = keysPage.getByRole('dialog', { name: 'Map Data Source' });
   const infoBox = await info.boundingBox();
   check(
     "the map's ⓘ sits at the bottom left, 12 in, 32 across, and MapLibre's corner credits are gone",
@@ -701,11 +764,11 @@ check(
       Math.abs(infoBox.x - 12) < 1 &&
       Math.abs(infoBox.width - 32) < 1 &&
       Math.abs(844 - (infoBox.y + infoBox.height) - 12) < 1 &&
-      !(await page.locator('.maplibregl-ctrl-attrib').isVisible()),
+      !(await keysPage.locator('.maplibregl-ctrl-attrib').isVisible()),
     JSON.stringify(infoBox),
   );
   const isFocusOnInfo = () =>
-    page
+    keysPage
       .waitForFunction(
         () => document.activeElement?.getAttribute('aria-label') === 'Map data sources',
         null,
@@ -714,12 +777,14 @@ check(
       .then(() => true)
       .catch(() => false);
   const isMapInert = () =>
-    page.evaluate(() => !!document.querySelector('[data-testid="map-view"]')?.closest('[inert]'));
+    keysPage.evaluate(
+      () => !!document.querySelector('[data-testid="map-view"]')?.closest('[inert]'),
+    );
   await info.click();
   await sheet.waitFor();
   // Half way through its rise (map-data-source-sheet.css), held there: the sheet part way up from
   // below the screen.
-  const midRise = await page.evaluate(() => {
+  const midRise = await keysPage.evaluate(() => {
     const dialog = document.querySelector('[role="dialog"].map-data-source-sheet');
     const [rise] = dialog?.getAnimations() ?? [];
     const duration = rise?.effect?.getTiming().duration;
@@ -747,7 +812,7 @@ check(
     ) &&
       links.some((l) => l.text?.startsWith('© Para contributors')) &&
       (await isMapInert()) &&
-      (await page.evaluate(() => !!document.activeElement?.closest('[role="dialog"]'))),
+      (await keysPage.evaluate(() => !!document.activeElement?.closest('[role="dialog"]'))),
     JSON.stringify(links),
   );
   await sheet.getByRole('button', { name: 'Close' }).click();
@@ -758,36 +823,36 @@ check(
   );
   await info.click();
   await sheet.waitFor();
-  await page.keyboard.press('Escape');
+  await keysPage.keyboard.press('Escape');
   await sheet.waitFor({ state: 'detached' });
   check('  Escape closes it too, focus back on the ⓘ', await isFocusOnInfo());
 
   // Closed mid-rise, it goes down from where it is; opened again by keyboard while it slides
   // down, the new sheet stays open: the old one's slide is not the new one's close.
   await info.click();
-  await page.keyboard.press('Escape');
+  await keysPage.keyboard.press('Escape');
   await sheet.waitFor({ state: 'detached' });
   const isBackAfterMidRise = await isFocusOnInfo();
   await info.focus();
-  await page.keyboard.press('Enter');
+  await keysPage.keyboard.press('Enter');
   await sheet.waitFor();
-  await page.keyboard.press('Escape');
-  await page.keyboard.press('Enter');
-  await page.waitForTimeout(1200);
+  await keysPage.keyboard.press('Escape');
+  await keysPage.keyboard.press('Enter');
+  await keysPage.waitForTimeout(1200);
   check(
     '  closed mid-rise it goes, focus on the ⓘ; reopened by keyboard while it slides down, the new sheet stays, focus in it',
     isBackAfterMidRise &&
       (await sheet.count()) === 1 &&
-      (await page.evaluate(() => !!document.activeElement?.closest('[role="dialog"]'))),
+      (await keysPage.evaluate(() => !!document.activeElement?.closest('[role="dialog"]'))),
   );
-  await page.keyboard.press('Escape');
+  await keysPage.keyboard.press('Escape');
   await sheet.waitFor({ state: 'detached' });
 
   // Less motion asked for: no slide either way, shown and gone at once.
-  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await keysPage.emulateMedia({ reducedMotion: 'reduce' });
   await info.click();
   await sheet.waitFor();
-  const isStill = await page.evaluate(
+  const isStill = await keysPage.evaluate(
     () =>
       document
         .querySelector('[role="dialog"].map-data-source-sheet')
@@ -800,7 +865,8 @@ check(
     '  with less motion asked for, the sheet neither rises nor sinks: shown and gone at once',
     isStill && isGoneAtOnce && (await isFocusOnInfo()),
   );
-  await page.emulateMedia({ reducedMotion: null });
+  await keysPage.emulateMedia({ reducedMotion: null });
+  await keysPhone.context.close();
 }
 const noHScroll = (p) =>
   p.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth);
@@ -2748,10 +2814,22 @@ const toRaised = async () => {
 const closeCard = async () => {
   const closed = async () => (await card().count()) === 0;
   if (isTouchOnly) {
-    // A phone touched by finger alone: ✕ by finger, never a mouse's click or Escape.
-    const close = card().getByRole('button', { name: 'Close' }).first();
-    if (!(await closed())) await buttonTap(close, closed);
-    await cardsSettled(page);
+    // A phone touched by finger alone: by finger, never a mouse's click or Escape. Cards stack (a
+    // trip over the place it was opened from, which shows ‹ in place of ✕): each shown one is left
+    // by its ✕ or its ‹ in turn, as a person does, until none is open.
+    const leave = page.getByRole('button', { name: /^(Close|Back)$/ }).first();
+    const atTop = () =>
+      page.evaluate(
+        () =>
+          [...document.querySelectorAll('[data-testid="card"]:not([hidden])')]
+            .map((c) => c.innerText.slice(0, 80))
+            .join('|') || null,
+      );
+    for (let i = 0; i < 4 && !(await closed()); i++) {
+      const before = await atTop();
+      if (!(await buttonTap(leave, async () => (await atTop()) !== before))) break;
+      await cardsSettled(page);
+    }
     return;
   }
   await page
@@ -3357,7 +3435,13 @@ if (runsPart(1)) {
     } else {
       const end = tappable[0];
       await jumpAboveSheet(page, end.at);
-      await endButton(end.name).locator('[data-part="name"]').click();
+      await buttonTap(endButton(end.name).locator('[data-part="name"]'), () =>
+        page.evaluate(() =>
+          [...document.querySelectorAll('[data-testid="card"]')].some(
+            (c) => !c.hidden && c.querySelector('[data-testid="card-place"]'),
+          ),
+        ),
+      );
       await cardsSettled(page);
       const opened = await page.evaluate(() => {
         const shown = [...document.querySelectorAll('[data-testid="card"]')].filter(
@@ -3434,13 +3518,18 @@ if (runsPart(1)) {
       const grip = await handle().first().boundingBox();
       let midway = null;
       if (grip) {
-        await page.mouse.move(grip.x + grip.width / 2, grip.y + grip.height / 2);
-        await page.mouse.down();
-        await page.mouse.move(grip.x + grip.width / 2, grip.y + grip.height / 2 - 150, {
-          steps: 10,
-        });
+        // Held part way up by a finger on the handle, read while it is still held.
+        const [x, y] = [grip.x + grip.width / 2, grip.y + grip.height / 2];
+        await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x, y }] });
+        for (let i = 1; i <= 10; i++) {
+          await cdp.send('Input.dispatchTouchEvent', {
+            type: 'touchMove',
+            touchPoints: [{ x, y: y - 15 * i }],
+          });
+          await page.waitForTimeout(16);
+        }
         midway = await infoReachable();
-        await page.mouse.up();
+        await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
         await cardsSettled(page);
       }
       check(
@@ -3842,7 +3931,13 @@ if (runsPart(3)) {
           const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
           return !!hit && el.contains(hit);
         });
-        if (reachable) await namePill.click();
+        const isTripShown = () =>
+          page.evaluate(
+            () =>
+              document.querySelectorAll('[data-testid="card"]:not([hidden]) [data-testid="trip"]')
+                .length === 1,
+          );
+        if (reachable) await buttonTap(namePill, isTripShown);
         await page
           .waitForFunction(
             () =>
@@ -3962,7 +4057,6 @@ if (runsPart(3)) {
   // 4 to 4d on a new phone touched by finger alone; 4e's mouse and 4f's keys each on one of
   // their own (newPhone).
   await newPhone();
-  isTouchOnly = true;
 
   // -------------------------------------------------- 4. hotspots, forgivingly
   // A route drawn right under the tapped pixel wins (the hit line is 18 px wide,
@@ -4614,8 +4708,7 @@ if (runsPart(3)) {
   // ----------------------------------------------- 4e. the handle, by a mouse
   // On a phone of its own, not touched by finger alone (newPhone).
   if (hotspot) {
-    await newPhone();
-    isTouchOnly = false;
+    await newPhone({ isTouchOnly: false });
     // A mouse's drag, on a narrow window: the browser then clicks the handle it
     // was held on, and that click toggled the sheet straight back — pulled up,
     // it fell to peek, as it was then (the reviewer's note, fixed on the owner's word,
@@ -4689,8 +4782,7 @@ if (runsPart(3)) {
   // goes back to what had it as the card opened (useDialogFocus): the map, which the tap that
   // opened it focused. The card is opened by one tap, the phone's first input, before any key.
   if (hotspot) {
-    await newPhone();
-    isTouchOnly = false;
+    await newPhone({ isTouchOnly: false });
     await openSheet();
     const isOpen = (await card().count()) > 0;
     await page.keyboard.press('Escape');
@@ -4711,6 +4803,9 @@ if (runsPart(3)) {
       `opened ${isOpen}; closed ${isClosed}; focus on ${focus.now}`,
     );
   }
+
+  // Run whole, the sections after this one go on a phone touched by finger alone again.
+  if (PHONE_PARTS === 1) await newPhone();
 
   // Overlapping hotspots share the list; today's data has none.
   const overlapping = snapshot.polys.some((a) =>
@@ -5277,7 +5372,10 @@ if (runsPart(2)) {
         .filter({ hasText: 'Landmark' })
         .first();
       await row.waitFor({ timeout: 10000 });
-      await row.click();
+      await buttonTap(
+        row,
+        async () => (await page.getByRole('region', { name: landmark.name }).count()) > 0,
+      );
       await mapIdle(page);
     };
     // How far the pin's circle is from the landmark's point on screen, in px.
@@ -5322,10 +5420,10 @@ if (runsPart(2)) {
         (await pins.count()) === 1 && secondOff < 2,
         `${second.name}: ${await pins.count()} pin(s), ${secondOff.toFixed(1)} px off`,
       );
-      await page
-        .getByRole('region', { name: second.name })
-        .getByRole('button', { name: 'Close' })
-        .click();
+      await buttonTap(
+        page.getByRole('region', { name: second.name }).getByRole('button', { name: 'Close' }),
+        async () => (await pins.count()) === 0,
+      );
       const left = await until(
         () => pins.count(),
         (n) => n === 0,
@@ -5371,16 +5469,21 @@ if (runsPart(2)) {
         .filter({ hasText: 'Landmark' })
         .first();
       await row.waitFor({ timeout: 10000 });
-      await row.click();
+      await buttonTap(
+        row,
+        async () => (await page.getByRole('region', { name: nearest.name }).count()) > 0,
+      );
       await mapIdle(page);
-      await page
-        .getByRole('region', { name: nearest.name })
-        .getByRole('button', { name: /^Go here:/ })
-        .first()
-        .click();
       const placeRoute = page
         .locator('[data-testid="card"]:not([hidden]) button[data-testid="card-item"]:enabled')
         .first();
+      await buttonTap(
+        page
+          .getByRole('region', { name: nearest.name })
+          .getByRole('button', { name: /^Go here:/ })
+          .first(),
+        async () => (await placeRoute.count()) > 0,
+      );
       const listed = await placeRoute
         .waitFor({ timeout: 10000 })
         .then(() => true)
