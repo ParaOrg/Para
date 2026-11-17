@@ -21,9 +21,12 @@ answered by stand-ins (`lib/stand-ins.mjs`):
   what is copied and what is made up) and answered strictly (`lib/route-tables-stand-in.mjs`):
   anything else sent there fails the suite, naming it. Since the drawing suites click the
   published lines, a publish that changes them may leave the router's recorded answers short:
-  a miss names its request, and re-recording fixes it.
+  a miss names its request, and re-recording fixes it;
+- Turnstile (challenges.cloudflare.com): Cloudflare's script, as the always-passing stand-in of
+  `lib/fake-turnstile.mjs`, so a page showing the check (the studio's sign-in) gets its token
+  without Cloudflare; a suite that tests the check keeps its own (`fakeTurnstile`).
 
-The other outside hosts come next: Turnstile and the studio's terrain tiles. Main and staging pushes and the nightly run
+The studio's terrain tiles come next. Main and staging pushes and the nightly run
 set `PARA_LIVE_SERVICES=1` (`.github/workflows/ci.yml`), so every staging push still checks the
 live services. Each suite ends by listing the outside hosts it reached
 (`outside: <host> ×n (network n, stood in n, …)`, `lib/outside-requests.mjs`).

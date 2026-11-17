@@ -19,9 +19,15 @@
 // route tables, answered from the published map (route-tables-stand-in.mjs). Anything else sent
 // to /rest/v1/, a write included, fails the suite, naming it. A suite with its own page.route for
 // the database (fake-studio-db, save-studio) keeps it: a page's route is asked first.
+//
+// Turnstile (challenges.cloudflare.com): Cloudflare's script, the always-passing stand-in of
+// fake-turnstile.mjs, so a page that shows the check (the studio's sign-in, say) gets a token a
+// moment later and draws no Cloudflare frame. Any other request there fails the suite, naming it.
+// A suite with its own fakeTurnstile, or its own route, keeps it.
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
+import { TURNSTILE, turnstileScript } from './fake-turnstile.mjs';
 import { answerRouteTables, databaseUrl } from './route-tables-stand-in.mjs';
 
 export const IS_LIVE = Boolean(process.env.PARA_LIVE_SERVICES);
@@ -131,6 +137,18 @@ const answerBasemap = (route) => {
   return route.fulfill({ status: 404, body: '' });
 };
 
+/** The path of Cloudflare's script the page loads (turnstile.tsx's SCRIPT_URL). */
+const TURNSTILE_SCRIPT = '/turnstile/v0/api.js';
+
+/** Cloudflare's script, as the always-passing stand-in; nothing else there is known. */
+const answerTurnstile = (route) => {
+  if (new URL(route.request().url()).pathname === TURNSTILE_SCRIPT) {
+    return route.fulfill({ contentType: 'text/javascript', body: turnstileScript(false) });
+  }
+  unrecorded.add(route.request().url());
+  return route.fulfill({ status: 404, body: '' });
+};
+
 /** Whether the basemap is stood in on a run without PARA_LIVE_SERVICES (keepBasemapUnreachable). */
 let isBasemapStoodIn = true;
 
@@ -149,6 +167,7 @@ export const applyStandIns = async (context) => {
   if (IS_LIVE && !IS_RECORDING_OSRM) return;
   await context.route(OSRM, answerRouter);
   if (!IS_LIVE && isBasemapStoodIn) await context.route(OPENFREEMAP, answerBasemap);
+  if (!IS_LIVE) await context.route(TURNSTILE, answerTurnstile);
   const database = databaseUrl();
   // Recording too: the router's answers are recorded for the lines the stood-in tables draw.
   if ((!IS_LIVE || IS_RECORDING_OSRM) && database) {
@@ -170,7 +189,7 @@ process.on('exit', () => {
   console.log(`FAIL  the stand-ins have no answer for ${unrecorded.size} request(s):`);
   for (const key of unrecorded) console.log(`  ${key}`);
   console.log(
-    '  A router request: re-record (tests/e2e/README.md), scripts/research/record-osrm.mjs. A database one names what its stand-in does not know.',
+    '  A router request: re-record (tests/e2e/README.md), scripts/research/record-osrm.mjs. A database or Turnstile one names what its stand-in does not know.',
   );
   process.exitCode = 1;
 });
