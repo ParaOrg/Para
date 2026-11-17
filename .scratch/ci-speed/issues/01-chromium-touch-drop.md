@@ -63,7 +63,9 @@ chance. Why Chromium then drops the touches is below what CDP shows.
 
 Sections 4 to 4d run on a new phone touched by finger alone (`newPhone`, `isTouchOnly`). There,
 closeCard taps ✕ by finger, never a mouse click or Escape, and dragHandle has no mouse fallback.
-4c's two mouse-drag checks moved to 4e, on another new phone of their own. A person rarely
+4c's two mouse-drag checks moved to 4e, on another new phone of their own. 4f, on a third, checks
+the keyboard's close of a hotspot's card: Escape takes it away and focus goes back where it was
+(before, Escape there was only closeCard's silent fallback, never checked). A person rarely
 switches between finger, mouse and keys mid-task, so each phone tests one honest way of using
 the map. The keyboard checks elsewhere stay as they are. The ceiling stays at 1 a part. If the
 touch-only phone still drops touches on CI, that is a new finding: report it, don't raise the

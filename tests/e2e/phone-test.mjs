@@ -3959,7 +3959,8 @@ if (runsPart(3)) {
     await closeCard();
   }
 
-  // 4 to 4d on a new phone touched by finger alone; 4e's mouse on one of its own (newPhone).
+  // 4 to 4d on a new phone touched by finger alone; 4e's mouse and 4f's keys each on one of
+  // their own (newPhone).
   await newPhone();
   isTouchOnly = true;
 
@@ -4681,6 +4682,34 @@ if (runsPart(3)) {
       `data-snap=${await sheetState()}`,
     );
     await closeCard();
+  }
+
+  // ---------------------------------------------- 4f. a hotspot's card, by keys
+  // On a phone of its own (newPhone): Escape, the keyboard's close, takes the card away, and focus
+  // goes back to what had it as the card opened (useDialogFocus): the map, which the tap that
+  // opened it focused. The card is opened by one tap, the phone's first input, before any key.
+  if (hotspot) {
+    await newPhone();
+    isTouchOnly = false;
+    await openSheet();
+    const isOpen = (await card().count()) > 0;
+    await page.keyboard.press('Escape');
+    const isClosed = await card()
+      .first()
+      .waitFor({ state: 'detached', timeout: 5000 })
+      .then(
+        () => true,
+        () => false,
+      );
+    const focus = await page.evaluate(() => ({
+      isOnMap: document.activeElement === window.__map?.getCanvas(),
+      now: document.activeElement?.tagName ?? 'none',
+    }));
+    check(
+      "Escape closes a hotspot's card, focus back on the map the tap opened it from",
+      isOpen && isClosed && focus.isOnMap,
+      `opened ${isOpen}; closed ${isClosed}; focus on ${focus.now}`,
+    );
   }
 
   // Overlapping hotspots share the list; today's data has none.
