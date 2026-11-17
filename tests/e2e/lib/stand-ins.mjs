@@ -220,6 +220,18 @@ let basemapKeyHash = null;
  */
 export const serveBasemapOverHttps = async () => {
   if (IS_LIVE) return;
+  // Behind a proxy the browser reaches the real host, not the stand-in: the proxy carries HTTPS
+  // before --host-resolver-rules applies, and --proxy-bypass-list did not change that. So a
+  // proxied machine cannot run this suite stood in at all.
+  const proxy = ['HTTPS_PROXY', 'https_proxy', 'HTTP_PROXY', 'http_proxy'].find(
+    (name) => process.env[name],
+  );
+  if (proxy) {
+    throw new Error(
+      `${proxy} is set: behind a proxy the browser reaches the real basemap host instead of its ` +
+        'stand-in, so this suite cannot run stood in here. Run it where no proxy is set, as CI does.',
+    );
+  }
   const folder = mkdtempSync(join(tmpdir(), 'para-basemap-'));
   const keyFile = join(folder, 'key.pem');
   const certificateFile = join(folder, 'certificate.pem');
@@ -250,6 +262,15 @@ export const serveBasemapOverHttps = async () => {
   const publicKey = createPublicKey(cert).export({ type: 'spki', format: 'der' });
   basemapKeyHash = createHash('sha256').update(publicKey).digest('base64');
 };
+
+/**
+ * Whether a response's server address is the HTTPS stand-in's own: loopback, on its port. Only
+ * that counts as stood in; any other loopback address may be a proxy to the network.
+ */
+export const isStandInServer = (address) =>
+  basemapPort !== null &&
+  address?.port === basemapPort &&
+  /^(127\.|::1$|\[::1\]$)/.test(address.ipAddress);
 
 /**
  * A browser's launch options, while the HTTPS stand-in runs: the basemap's host resolved to it, and
