@@ -416,6 +416,21 @@ check(
   cameraAfter.zoom > cameraBefore.zoom + 0.1,
   JSON.stringify([cameraBefore, cameraAfter]),
 );
+// A camera move made while the pan still glides lands where it was sent: the glide stops.
+await page.mouse.wheel(0, 300);
+const sentTo = { lng: cameraAfter.lng + 0.01, lat: cameraAfter.lat + 0.01, zoom: cameraAfter.zoom };
+await page.evaluate((c) => {
+  window.__map.jumpTo({ center: [c.lng, c.lat], zoom: c.zoom });
+}, sentTo);
+await page.waitForTimeout(1000);
+const landed = await camera();
+check(
+  'wheel: a jump while the pan glides lands where it was sent',
+  Math.abs(landed.lng - sentTo.lng) < 1e-9 &&
+    Math.abs(landed.lat - sentTo.lat) < 1e-9 &&
+    Math.abs(landed.zoom - sentTo.zoom) < 1e-9,
+  JSON.stringify([sentTo, landed]),
+);
 
 console.log('== Far click (Quirino Highway, La Mesa watershed)');
 await view([Q1, Q2, W]);
