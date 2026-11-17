@@ -10,7 +10,7 @@
 // state it leaves: a draft holding the saved line's second half, with the
 // join at its first point. The draft is the same one a reload restores.
 import { chromium } from 'playwright';
-import { BASE, harness, waitForSource } from './lib/harness.mjs';
+import { BASE, harness, waitForMapSettled, waitForSource } from './lib/harness.mjs';
 
 const { check, tally } = harness();
 
@@ -49,7 +49,7 @@ const draft = {
 };
 await page.evaluate((d) => localStorage.setItem('para.draft.v1', JSON.stringify(d)), draft);
 await page.reload({ waitUntil: 'load' });
-await page.waitForFunction(() => window.__map && window.__map.loaded(), null, { timeout: 30000 });
+await waitForMapSettled(page);
 const readDraft = () =>
   page.evaluate(() => JSON.parse(localStorage.getItem('para.draft.v1') ?? 'null'));
 const same = (a, b) => Math.abs(a[0] - b[0]) < 1e-9 && Math.abs(a[1] - b[1]) < 1e-9;

@@ -14,7 +14,7 @@
 // the wrong reason. Point counts asserted throughout come from this script's
 // own clicks, not from saved data.
 import { chromium } from 'playwright';
-import { BASE, harness, nodeFetch, waitForSource } from './lib/harness.mjs';
+import { BASE, harness, nodeFetch, waitForMapSettled, waitForSource } from './lib/harness.mjs';
 import { drawing } from './lib/studio.mjs';
 
 const { check, tally } = harness({ bracketed: true });
@@ -289,7 +289,7 @@ check(
 await page.getByRole('button', { name: 'Cancel' }).click();
 await page.waitForTimeout(100);
 await page.reload({ waitUntil: 'load' });
-await page.waitForFunction(() => window.__map && window.__map.loaded(), null, { timeout: 30000 });
+await waitForMapSettled(page);
 await page.waitForTimeout(800);
 check(
   'reloading the page restores the route draft',
