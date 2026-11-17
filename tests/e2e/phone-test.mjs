@@ -106,6 +106,11 @@ if (
   throw new Error(`PHONE_PART is 1/1 or k/3, not "${process.env.PHONE_PART}"`);
 /** Whether this run holds part `k`'s sections. */
 const runsPart = (k) => PHONE_PARTS === 1 || PHONE_PART === k;
+// PROBE (draft, never merged): part 3 only.
+if (PHONE_PARTS === 3 && PHONE_PART !== 3) {
+  console.log('PROBE: part 3 only');
+  process.exit(0);
+}
 let onMadeUpMap = false;
 const skip = (name, reason) =>
   onMadeUpMap
@@ -397,6 +402,91 @@ page.on('framenavigated', (f) => {
 // not, CDP's emulated media does it, and it has to be sent before the first
 // navigation (an addInitScript cannot change what matchMedia reports).
 const cdp = await context.newCDPSession(page);
+// PROBE: every input sequence this file opens, and whether one is left open.
+const probeOpen = { touch: null, mouse: null };
+const probeLog = [];
+const probeNote = (line) => {
+  probeLog.push(`${Math.round(performance.now())} ${line}`);
+  if (probeLog.length > 30) probeLog.shift();
+};
+const probeWhere = () =>
+  (new Error().stack ?? '')
+    .split('\n')
+    .slice(2)
+    .filter((l) => l.includes('phone-test.mjs'))
+    .slice(0, 2)
+    .map((l) => (/:(\d+):\d+/.exec(l) ?? [])[1])
+    .join('<');
+const cdpSend = cdp.send.bind(cdp);
+cdp.send = async (method, params = {}) => {
+  if (method === 'Input.dispatchTouchEvent' || method === 'Input.dispatchMouseEvent') {
+    const where = probeWhere();
+    probeNote(`cdp ${params.type} points=${params.touchPoints?.length ?? '-'} @${where}`);
+    if (params.type === 'touchStart') probeOpen.touch = `cdp touchStart @${where}`;
+    if (params.type === 'touchEnd' || params.type === 'touchCancel') probeOpen.touch = null;
+    if (params.type === 'mousePressed') probeOpen.mouse = `cdp mousePressed @${where}`;
+    if (params.type === 'mouseReleased') probeOpen.mouse = null;
+  }
+  try {
+    return await cdpSend(method, params);
+  } catch (e) {
+    probeNote(`cdp ${method} ${params.type} THREW ${String(e).slice(0, 80)}`);
+    throw e;
+  }
+};
+for (const k of ['down', 'up', 'move']) {
+  const orig = page.mouse[k].bind(page.mouse);
+  page.mouse[k] = async (...a) => {
+    const where = probeWhere();
+    if (k !== 'move') probeNote(`pw mouse.${k} @${where}`);
+    if (k === 'down') probeOpen.mouse = `pw mouse.down @${where}`;
+    if (k === 'up') probeOpen.mouse = null;
+    return orig(...a);
+  };
+}
+{
+  const orig = page.touchscreen.tap.bind(page.touchscreen);
+  page.touchscreen.tap = async (...a) => {
+    probeNote(`pw tap (${a.map(Math.round).join(',')}) @${probeWhere()}`);
+    return orig(...a);
+  };
+}
+await page.addInitScript(() => {
+  window.__probeEvents = [];
+  for (const t of [
+    'pointerdown',
+    'pointerup',
+    'pointercancel',
+    'touchstart',
+    'touchend',
+    'touchcancel',
+    'click',
+  ]) {
+    document.addEventListener(
+      t,
+      (e) => {
+        const el = e.target instanceof Element ? e.target : null;
+        const tag = el
+          ? (el.closest('[data-testid]')?.getAttribute('data-testid') ?? el.tagName)
+          : '?';
+        const id = 'pointerId' in e ? `#${e.pointerId}` : '';
+        window.__probeEvents.push(
+          `${Math.round(performance.now())} ${t}${id}@${tag}${e.isTrusted ? '' : '(js)'}`,
+        );
+        if (window.__probeEvents.length > 16) window.__probeEvents.shift();
+      },
+      true,
+    );
+  }
+});
+const probeDump = async (label) => {
+  const events = await page
+    .evaluate(() => (window.__probeEvents ?? []).join(' | '))
+    .catch(() => '?');
+  console.log(
+    `PROBE ${label}\n  open: touch=${probeOpen.touch ?? 'none'}; mouse=${probeOpen.mouse ?? 'none'}\n  inputs: ${probeLog.slice(-12).join(' | ')}\n  page: ${events}`,
+  );
+};
 const coarse = () => page.evaluate(() => window.matchMedia('(pointer: coarse)').matches);
 let isCoarse = await coarse();
 let coarseVia = 'Playwright emulation';
@@ -460,7 +550,8 @@ const settled = () =>
 /** Pointer presses the page has seen (the init script's count, trusted or sent by hand). */
 const pointerPresses = () => page.evaluate(() => window.__pointerdowns);
 /** A tap Chromium dropped, sent again by hand: counted and named. */
-const handSent = (what) => {
+const handSent = async (what) => {
+  await probeDump(`by-hand tap on ${what}`);
   chromiumDrops++;
   console.log(`      by hand: Chromium made no pointer events from the touch on ${what}`);
 };
@@ -527,7 +618,7 @@ const mapTap = async (x, y) => {
     );
     return;
   }
-  handSent(`the map at (${Math.round(x)}, ${Math.round(y)})`);
+  await handSent(`the map at (${Math.round(x)}, ${Math.round(y)})`);
   await page.evaluate(
     ([px, py]) => {
       window.__map.getCanvasContainer().dispatchEvent(
@@ -610,7 +701,7 @@ const buttonTap = async (locator, done) => {
         : ', nor 3.5 s later';
       await missed(locator, `tapped, and nothing came of it in 1.5 s${late}`);
     } else {
-      handSent(locator);
+      await handSent(locator);
       await locator.first().evaluate((node, { x, y }) => {
         const finger = { bubbles: true, cancelable: true, composed: true, clientX: x, clientY: y };
         const pointer = {
@@ -3896,6 +3987,7 @@ if (runsPart(3)) {
           await page.waitForTimeout(150);
           await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
           await cardsSettled(page);
+          await probeDump('checkpoint after the list header drag');
         }
       }
       const listAtFull = (await listSnap()) === 'full';
@@ -4001,6 +4093,7 @@ if (runsPart(3)) {
         ).match(/\d+/)?.[0] ?? 0,
       );
     const boxCount = await countOf();
+    await probeDump('checkpoint before the box rows (section 4)');
     // At Low a tap on the top of the body raises the sheet and picks nothing (the app's rule,
     // use-sheet-gestures.ts), its click swallowed: a person raises the card first, a third by its
     // handle, then taps the row.
@@ -4167,6 +4260,7 @@ if (runsPart(3)) {
     await page.touchscreen.tap(x, y);
     if ((await until(pointerdowns, (n) => n !== seen, 450)) === seen) {
       handleByHand++;
+      await probeDump('handle ladder');
       await handGesture(x, y, []);
     }
     await cardsSettled(page);
@@ -4216,6 +4310,7 @@ if (runsPart(3)) {
     // Neither made a pointer event: the runner's, as with tapHandle.
     if ((await pointerdowns()) === seen) {
       handleByHand++;
+      await probeDump('handle ladder');
       await handGesture(
         x,
         y,
@@ -4423,6 +4518,8 @@ if (runsPart(3)) {
       // is for.
       if ((await pointerdowns()) === seen) {
         handleByHand++;
+        await probeDump('handle ladder');
+        await probeDump('handle ladder');
         await handGesture(
           x,
           y,
@@ -4483,6 +4580,8 @@ if (runsPart(3)) {
       // handGesture's, since the sheet may capture it.
       if ((await card().count()) > 0 && (await pointerdowns()) === seen) {
         handleByHand++;
+        await probeDump('handle ladder');
+        await probeDump('handle ladder');
         await page.evaluate(
           ([x, y]) => {
             const el = document.elementFromPoint(x, y);
