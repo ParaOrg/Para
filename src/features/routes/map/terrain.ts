@@ -1,8 +1,13 @@
-import type { LayerSpecification, SourceSpecification, StyleSpecification } from 'maplibre-gl';
+import type {
+  LayerSpecification,
+  MapLibreMap,
+  SourceSpecification,
+  StyleSpecification,
+} from 'maplibre-gl';
 
 import { MAP_PAINT } from '@/design-system/foundation/map-colours';
 
-import type { Elevation } from './basemap';
+import type { Basemap, Elevation } from './basemap';
 
 /*
  * Terrain: a style with the ground's shape on it — its slopes shaded, and the
@@ -60,4 +65,14 @@ export function terrainStyle(style: StyleSpecification, elevation: Elevation): S
     layers: [...style.layers.slice(0, cut), HILLSHADE, ...style.layers.slice(cut)],
     terrain: { source: 'terrain-relief', exaggeration: EXAGGERATION },
   };
+}
+
+/**
+ * Drops the terrain before a switch to a basemap without one. MapLibre (6.7) takes the terrain's
+ * listener off the style that replaces this one, not off this one, so a late event here (its
+ * sprite arriving) reads the terrain after it is gone and throws. Dropped first, while this style
+ * is the map's, the listener goes with it. Terrain to Terrain keeps it: the new style sets it.
+ */
+export function leaveTerrain(map: MapLibreMap, next: Basemap): void {
+  if (map.getTerrain() && !next.elevation) map.setTerrain(null);
 }
