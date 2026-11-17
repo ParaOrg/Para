@@ -14,7 +14,7 @@ import { daylightStyle } from './daylight';
 import { withLocationLabels } from './location-labels';
 import { monochromeStyle } from './monochrome';
 import { maskedStyle } from './station-mask';
-import { terrainStyle } from './terrain';
+import { leaveTerrain, terrainStyle } from './terrain';
 
 /**
  * The basemap designs a commuter can choose between: Monochrome, Coloured and
@@ -272,12 +272,12 @@ function styleTransform(b: Basemap, map: MapLibreMap, areLabelsShown: boolean) {
 }
 
 /**
- * Swap the basemap under everything drawn on it, its labels shown or hidden;
- * the same design again only shows or hides them, as setStyle's diff changes
- * no more than that. The new style is not checked against the spec as a
- * whole: setStyle takes the map's `validateStyle: false` (map-view.tsx) as
- * its default, so no option is passed here.
+ * Swap the basemap under everything drawn on it, its labels shown or hidden; the same design
+ * again only shows or hides them, as setStyle's diff changes no more than that. The new style is
+ * not checked against the spec as a whole: setStyle takes the map's `validateStyle: false`
+ * (map-view.tsx) as its default, so no option is passed here.
  */
 export function applyBasemap(map: MapLibreMap, b: Basemap, areLabelsShown: boolean): void {
+  leaveTerrain(map, b);
   map.setStyle(b.url, { transformStyle: styleTransform(b, map, areLabelsShown) });
 }
