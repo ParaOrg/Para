@@ -12,10 +12,13 @@ answered by stand-ins (`lib/stand-ins.mjs`):
 
 - the router (router.project-osrm.org): the live router's answers, recorded in
   `fixtures/osrm/answers.json`, keyed with each coordinate rounded to 6 decimals (about 0.1 m),
-  since the same click comes back a few 1e-12 degrees apart from run to run.
+  since the same click comes back a few 1e-12 degrees apart from run to run;
+- the basemap (tiles.openfreemap.org): OpenFreeMap's own styles, sprite and the glyph ranges the
+  suites draw with, from their source repositories, over one made-up tile (`fixtures/basemap/`,
+  its README for sources and licences).
 
-The other outside hosts come next: the basemap, the database's reads in the drawing suites and
-gate-test, Turnstile and the studio's terrain tiles. Main and staging pushes and the nightly run
+The other outside hosts come next: the database's reads in the drawing suites and gate-test,
+Turnstile and the studio's terrain tiles. Main and staging pushes and the nightly run
 set `PARA_LIVE_SERVICES=1` (`.github/workflows/ci.yml`), so every staging push still checks the
 live services. Each suite ends by listing the outside hosts it reached
 (`outside: <host> ×n (network n, stood in n, …)`, `lib/outside-requests.mjs`).
