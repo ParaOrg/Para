@@ -439,16 +439,16 @@ check(
 );
 
 /**
- * A finger on the map at page point (x, y). A real touch first; when the map
- * has seen no click from it within 1.5 s, a click the browser would have
- * made, sent by hand with `pointerType: 'touch'`, so the app still reads a
- * finger. On a GitHub runner the page draws so slowly at three device pixels
- * per CSS pixel that the touch's end came half a second and more after its
- * start, which Chromium takes for a long press and turns into no click at
- * all (the fourth CI run, 2026-09-25). How many taps needed the fallback is
- * reported at the end.
+ * A tap that reached its target and made no pointer events at all: Chromium's emulated touch on a
+ * slow runner sometimes gives the page only touchstart and touchend (two probe runs on the runner,
+ * draft #1012; .scratch/ci-speed/phone-test-sheet-snap.md). Such a tap, and only such a tap, is
+ * sent again by hand, named in the log, at most once a part (CHROMIUM_DROPS_ALLOWED): more than
+ * that is something else going on. A tap that could not reach its target (off the screen, under
+ * another element, on something still moving) is never sent again: it fails. Re-checked on each
+ * Chromium or Playwright update (.scratch/ci-speed/issues/01-chromium-touch-drop.md).
  */
-let tapsByHand = 0;
+let chromiumDrops = 0;
+const CHROMIUM_DROPS_ALLOWED = 1;
 await page.evaluate(() => {
   window.__clicks = 0;
   window.__map.on('click', () => window.__clicks++);
@@ -457,10 +457,41 @@ let lateClicks = 0;
 /** A frame drawn after the input queue drained: the click a touch makes, if any, has been dispatched by now. */
 const settled = () =>
   page.evaluate(() => new Promise((r) => requestAnimationFrame(() => setTimeout(r, 0))));
+/** Pointer presses the page has seen (the init script's count, trusted or sent by hand). */
+const pointerPresses = () => page.evaluate(() => window.__pointerdowns);
+/** A tap Chromium dropped, sent again by hand: counted and named. */
+const handSent = (what) => {
+  chromiumDrops++;
+  console.log(`      by hand: Chromium made no pointer events from the touch on ${what}`);
+};
+
+/** The sheets' heights, for a failure to name. */
+const snapsNow = () =>
+  page.evaluate(
+    () =>
+      ['card', 'chooser']
+        .map((id) => {
+          const el = document.querySelector(`[data-testid="${id}"]:not([hidden])`);
+          return el
+            ? `${id} ${el.getAttribute('data-snap')} at ${Math.round(el.getBoundingClientRect().top)}`
+            : null;
+        })
+        .filter(Boolean)
+        .join(', ') || 'no sheet',
+  );
+/** A tap that did not reach its target, or did nothing: a FAIL naming why, and the sheets' heights. */
+const missed = async (what, why) =>
+  check(`a tap reaches ${what}`, false, `${why}; ${await snapsNow()}`);
+
+/**
+ * A finger on the map at page point (x, y), where the map itself is the topmost thing: a person's
+ * tap on a marker or a card there would go to that instead, so a tap that would is a FAIL naming
+ * it. The map's own click is waited for; a tap Chromium dropped (no pointer press at all) is sent
+ * again by hand as the click the browser would have made, with `pointerType: 'touch'`.
+ */
 const mapTap = async (x, y) => {
   // Counted afresh on a page loaded since (openAlone): without it the count
-  // never moved, and every tap was sent a second time by hand, onto whatever
-  // the first had brought under that point (the review of 2026-10-03).
+  // never moved (the review of 2026-10-03).
   const before = await page.evaluate(() => {
     if (window.__clicks === undefined) {
       window.__clicks = 0;
@@ -468,19 +499,38 @@ const mapTap = async (x, y) => {
     }
     return window.__clicks;
   });
+  const onTop = await page.evaluate(
+    ([px, py]) => {
+      const top = document.elementFromPoint(px, py);
+      if (top && window.__map.getCanvasContainer().contains(top)) return null;
+      return top
+        ? (top.closest('[data-testid]')?.getAttribute('data-testid') ?? top.tagName)
+        : 'nothing (off the screen)';
+    },
+    [x, y],
+  );
+  if (onTop) {
+    await missed(`the map at (${Math.round(x)}, ${Math.round(y)})`, `${onTop} is over it there`);
+    return;
+  }
+  const presses = await pointerPresses();
   await page.touchscreen.tap(x, y);
   // The page may be busy drawing for a while after the touch; only then does
-  // the wait for its click start, or the click comes late, after the one
-  // sent by hand, and two taps land where one was meant (a local run,
-  // 2026-09-25: the second tap replaced the chooser the first had opened).
+  // the wait for its click start (a local run, 2026-09-25).
   await settled();
   const clicks = () => page.evaluate(() => window.__clicks);
   if ((await until(clicks, (n) => n !== before, 1500)) !== before) return;
-  tapsByHand++;
+  if ((await pointerPresses()) !== presses) {
+    await missed(
+      `the map at (${Math.round(x)}, ${Math.round(y)})`,
+      'pressed, and no click in 1.5 s',
+    );
+    return;
+  }
+  handSent(`the map at (${Math.round(x)}, ${Math.round(y)})`);
   await page.evaluate(
     ([px, py]) => {
-      const el = window.__map.getCanvasContainer();
-      el.dispatchEvent(
+      window.__map.getCanvasContainer().dispatchEvent(
         new PointerEvent('click', {
           pointerType: 'touch',
           clientX: px,
@@ -496,28 +546,28 @@ const mapTap = async (x, y) => {
   if ((await page.evaluate(() => window.__clicks)) > before + 1) lateClicks++;
 };
 /**
- * Where a finger taps `locator`, as a person would: scrolled into view, held
- * still, and the topmost thing at its middle. A row below the fold of a sheet
- * was tapped where it would have been, off the screen (62 of a run's 76
- * "dropped" taps), and another element over a button took its tap. Either way
- * the reason is returned, and the caller fails on it.
+ * Where a finger taps `locator`, as a person would: scrolled into view, held still (its box the
+ * same over two frames: a sheet or a list still moving has not), and the topmost thing at its
+ * middle. A row below the screen (a sheet is translated, not scrolled, so scrolling brings none
+ * up), a button under another element, or one still sliding returns the reason instead.
  */
 const fingerOn = async (locator) => {
   const el = locator.first();
   if ((await locator.count()) === 0) return { why: 'no such element' };
   await el.scrollIntoViewIfNeeded({ timeout: 2000 }).catch(() => {});
-  // The box once two frames agree: a sheet or a list still moving has not.
   let box = null;
+  let isStill;
   const by = Date.now() + 3000;
   for (;;) {
     const before = await el.boundingBox().catch(() => null);
     await settled();
     box = await el.boundingBox().catch(() => null);
-    const same =
-      !!before && !!box && ['x', 'y', 'width', 'height'].every((k) => before[k] === box[k]);
-    if (same || Date.now() > by) break;
+    isStill = !!before && !!box && ['x', 'y', 'width', 'height'].every((k) => before[k] === box[k]);
+    if (isStill || Date.now() > by) break;
   }
   if (!box) return { why: 'not on the page' };
+  const size = `${Math.round(box.width)}×${Math.round(box.height)}`;
+  if (!isStill) return { why: `still moving after 3 s (${size})` };
   const at = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
   const onTop = await el.evaluate((node, { x, y }) => {
     const top = document.elementFromPoint(x, y);
@@ -527,41 +577,64 @@ const fingerOn = async (locator) => {
       : 'nothing (off the screen)';
   }, at);
   return onTop
-    ? { why: `${onTop} at its middle (${Math.round(at.x)}, ${Math.round(at.y)})` }
+    ? { why: `${onTop} at its middle (${Math.round(at.x)}, ${Math.round(at.y)}), ${size}` }
     : { at };
 };
-/** A tap that did not reach its target: a FAIL naming why. */
-const missed = (locator, why) => check(`a tap reaches ${locator}`, false, why);
 
 /**
- * A finger on a button (a chooser row), where a person would tap it (fingerOn),
- * and `done()` true within 1.5 s of it. False when there is no such button; a
- * FAIL when the tap could not reach it or did nothing.
+ * A finger on `locator` where a person would tap it (fingerOn), and `done()` true within 1.5 s.
+ * False when there is no such element; a FAIL when the tap could not reach it or did nothing. A
+ * tap Chromium dropped on a target fingerOn verified (no pointer press, the target still topmost
+ * there) is sent again by hand as a finger sends it: pointerdown, pointerup, the click.
  */
 const buttonTap = async (locator, done) => {
   if ((await locator.count()) === 0) return false;
   const { at, why } = await fingerOn(locator);
   if (!at) {
-    missed(locator, why);
+    await missed(locator, why);
     return true;
   }
+  const presses = await pointerPresses();
   await page.touchscreen.tap(at.x, at.y);
   await settled();
-  if (!(await until(done, Boolean, 1500)))
-    missed(locator, 'tapped, and nothing came of it in 1.5 s');
+  if (!(await until(done, Boolean, 1500))) {
+    const isStillOnTop = await locator.first().evaluate((node, { x, y }) => {
+      const top = document.elementFromPoint(x, y);
+      return !!top && (top === node || node.contains(top));
+    }, at);
+    if ((await pointerPresses()) !== presses || !isStillOnTop) {
+      // Named, not waited for: whether it came at all, and how late.
+      const t0 = Date.now();
+      const late = (await until(done, Boolean, 3500))
+        ? `, it came ${Date.now() - t0 + 1500} ms after the tap`
+        : ', nor 3.5 s later';
+      await missed(locator, `tapped, and nothing came of it in 1.5 s${late}`);
+    } else {
+      handSent(locator);
+      await locator.first().evaluate((node, { x, y }) => {
+        const finger = { bubbles: true, cancelable: true, composed: true, clientX: x, clientY: y };
+        const pointer = {
+          ...finger,
+          pointerId: 91,
+          pointerType: 'touch',
+          isPrimary: true,
+          button: 0,
+        };
+        node.dispatchEvent(new PointerEvent('pointerdown', { ...pointer, buttons: 1 }));
+        node.dispatchEvent(new PointerEvent('pointerup', { ...pointer, buttons: 0 }));
+        node.dispatchEvent(new MouseEvent('click', { ...finger, detail: 1, button: 0 }));
+      }, at);
+      if (!(await until(done, Boolean, 1500)))
+        await missed(locator, 'sent again by hand, and nothing came of it in 1.5 s');
+    }
+  }
   // Whatever the tap set going, a sheet or the camera, come to rest.
   await cardsSettled(page);
   return true;
 };
 
-/**
- * A finger's tap on `locator`, for a check that a click with no touch before it would pass by
- * mistake: the same as buttonTap. Whatever it set going comes to rest.
- */
-const touchTap = async (locator, done) => {
-  if ((await locator.count()) === 0) return false;
-  return buttonTap(locator, done);
-};
+/** A finger's tap on `locator`, for a check that a click with no touch before it would pass by mistake: buttonTap's. */
+const touchTap = (locator, done) => buttonTap(locator, done);
 
 /** Where the camera is: its centre and zoom. */
 const camNow = () =>
@@ -1302,6 +1375,28 @@ const tripChecks = async () => {
       `"${km}" / "${fare}", the sums "${want.km}" / "${want.fare}"`,
     );
 
+  // The stops are reached at full height, as a person reaches them: at Low the sheet shows its
+  // top 133 px, and raised a third (its top near 430 of 844) its stops sit at y 847–1,027, below
+  // the screen. The sheet is translated, not scrolled, so nothing but its handle brings them up.
+  // Pulled to full by the handle when a stop is below the screen (a trip opened from the list at
+  // 95% shows them all already), then let down again as it opened when the trip is done with.
+  const openedAt = await sheetState();
+  const isAStopBelowTheScreen = () =>
+    card()
+      .first()
+      .evaluate((c) =>
+        [...c.querySelectorAll('[data-testid="trip-view-more"], [data-testid="trip-hintuan"]')]
+          // A folded stop is out of reach anyway (inert under View more): not one a person taps.
+          .filter((e) => !e.closest('[inert]'))
+          .some((e) => e.getBoundingClientRect().bottom > innerHeight),
+      );
+  if ((await isAStopBelowTheScreen()) && !(await handleTo('full')))
+    check(
+      '  the card rises to full by its handle, to reach its stops',
+      false,
+      `data-snap=${await sheetState()}`,
+    );
+
   // The stops open folded (the owner's RouteStopsCard, 4681:29138): every stop drawn, the card
   // cut at 120 with "View more" on its foot, the stops under the cut out of a keyboard's reach;
   // "View more" shows them all, "View less" folds them again. A route with no hintuans never folds.
@@ -1359,8 +1454,10 @@ const tripChecks = async () => {
   // SWITCH, ✕ or ‹ to let go.
   let picked = false;
   const rows = card().locator('[data-testid="trip-hintuan"]');
+  let didPicks = false;
   if (!picksChecked && (await rows.count()) > 0) {
     picksChecked = true;
+    didPicks = true;
     if ((await fold.count()) > 0) {
       await buttonTap(
         fold,
@@ -1740,16 +1837,19 @@ const tripChecks = async () => {
           left: c.left,
           right: c.right,
           top: c.top,
-          cardTop: d.top,
+          // The camera frames a sheet raised past 55% of the map as if it stood at 55% (framedAt).
+          floor: Math.max(d.top, c.bottom - Math.round(c.height * 0.55)),
         };
       }, pickWant.at);
+      const snapAtPick = await sheetState();
       check(
-        '  the camera glides it into the map above the card',
-        where.y > where.top + 16 &&
-          where.y < where.cardTop - 16 &&
+        '  picked at full height, the card stays there, the camera gliding it into the map above the framed height',
+        snapAtPick === 'full' &&
+          where.y > where.top + 16 &&
+          where.y < where.floor - 16 &&
           where.x > where.left + 16 &&
           where.x < where.right - 16,
-        `at ${Math.round(where.x)},${Math.round(where.y)}; the map ${Math.round(where.top)}–${Math.round(where.cardTop)} above the card`,
+        `data-snap=${snapAtPick}; at ${Math.round(where.x)},${Math.round(where.y)}; the map ${Math.round(where.top)}–${Math.round(where.floor)} above the framed height`,
       );
     }
     check('  and leaves no padding on the map for later moves', drawn.padding);
@@ -1799,7 +1899,9 @@ const tripChecks = async () => {
             m.jumpTo({ center: at, zoom: zoomForScale(150, at[1]) });
             const c = m.getCanvas().getBoundingClientRect();
             const d = document.querySelector('[data-testid="card"]').getBoundingClientRect();
-            const wantY = (Math.min(d.top, c.bottom) - c.top) / 2;
+            // Halfway up the map above the framed height (framedAt): the card is at full.
+            const floor = Math.max(d.top, c.bottom - Math.round(c.height * 0.55));
+            const wantY = (Math.min(floor, c.bottom) - c.top) / 2;
             m.panBy(offScreen ? [1.5 * c.width, 0] : [0, m.project(at).y - wantY], {
               duration: 0,
             });
@@ -1814,7 +1916,7 @@ const tripChecks = async () => {
       await settle();
       const stayed = await camNow();
       check(
-        '  closer in than 300 m on the scale bar, a hintuan in view above the card: the camera stays where it was',
+        '  closer in than 300 m on the scale bar, a hintuan in view above the framed height: the camera stays where it was',
         (await isPicked()) &&
           Math.abs(stayed.zoom - inView.zoom) < 0.01 &&
           Math.abs(stayed.lng - inView.lng) < 1e-6 &&
@@ -1838,18 +1940,18 @@ const tripChecks = async () => {
           left: c.left,
           right: c.right,
           top: c.top,
-          cardTop: d.top,
+          floor: Math.max(d.top, c.bottom - Math.round(c.height * 0.55)),
         };
       }, pickWant.at);
       check(
-        '  and off the screen, it slides into view above the card at the same zoom',
+        '  and off the screen, it slides into view above the framed height at the same zoom',
         (await isPicked()) &&
           Math.abs(slid.zoom - away.zoom) < 0.01 &&
           slid.y > slid.top + 16 &&
-          slid.y < slid.cardTop - 16 &&
+          slid.y < slid.floor - 16 &&
           slid.x > slid.left + 16 &&
           slid.x < slid.right - 16,
-        `zoom ${slid.zoom.toFixed(2)}, was ${away.zoom.toFixed(2)}; at ${Math.round(slid.x)},${Math.round(slid.y)}, the map ${Math.round(slid.top)}–${Math.round(slid.cardTop)} above the card`,
+        `zoom ${slid.zoom.toFixed(2)}, was ${away.zoom.toFixed(2)}; at ${Math.round(slid.x)},${Math.round(slid.y)}, the map ${Math.round(slid.top)}–${Math.round(slid.floor)} above the framed height`,
       );
       await buttonTap(pickButton, async () => !(await isPicked()));
       await settle();
@@ -1988,10 +2090,9 @@ const tripChecks = async () => {
             alone.fades.every((o) => o === '0.6'),
           `${alone.rest} pale stretch(es); ${alone.stationsPaled} of ${alone.stations} dot(s) paled, ${alone.endsPaled} of ${alone.endCount} end(s); names at ${alone.fades.join(', ') || 'none shown'}`,
         );
-        // Then the end with the sheet raised: it stays where it is, as nothing
-        // moves the sheet for the commuter (README decision 17), and the camera
-        // takes in the ride from the start to the end above it.
-        const wasRaised = await toRaised();
+        // Then the end, at full height where the stops are in reach: the sheet stays there, as
+        // nothing moves the sheet for the commuter (README decision 17), and the camera takes in
+        // the ride from the start to the end above the framed height (framedAt).
         const endPick = endRow.locator('button[data-testid="trip-hintuan-pick"]');
         await endPick.scrollIntoViewIfNeeded();
         await buttonTap(endPick, () => isSelected(endRow));
@@ -2002,29 +2103,22 @@ const tripChecks = async () => {
           const sheetTop = document
             .querySelector('[data-testid="card"]')
             .getBoundingClientRect().top;
+          const floor = Math.max(sheetTop, c.bottom - Math.round(c.height * 0.55));
           const pins = [...document.querySelectorAll('[data-testid="hintuan-pin"]')].map((p) =>
             p.getBoundingClientRect(),
           );
           return {
             pins: pins.length,
             clear: pins.every(
-              (r) =>
-                r.top >= c.top && r.bottom <= sheetTop && r.left >= c.left && r.right <= c.right,
+              (r) => r.top >= c.top && r.bottom <= floor && r.left >= c.left && r.right <= c.right,
             ),
           };
         });
-        if (!wasRaised)
-          check(
-            '  the end picked after a start: the sheet stays where it is, the ride taken in above it',
-            false,
-            `the card would not rise a third: data-snap=${settled}`,
-          );
-        else
-          check(
-            '  the end picked after a start: the sheet stays where it is, the ride taken in above it',
-            settled === 'free' && inView.pins === 2 && inView.clear,
-            `data-snap=${settled}; ${inView.pins} circle(s), ${inView.clear ? 'both' : 'not both'} clear of the sheet`,
-          );
+        check(
+          '  the end picked after a start at full height: the sheet stays at full, the ride taken in above the framed height',
+          settled === 'full' && inView.pins === 2 && inView.clear,
+          `data-snap=${settled}; ${inView.pins} circle(s), ${inView.clear ? 'both' : 'not both'} clear of the framed height`,
+        );
         const rideKm = await tile('trip-km');
         const rideFareShown = await tile('trip-fare');
         const marks = await card().evaluate((c) => ({
@@ -2102,14 +2196,15 @@ const tripChecks = async () => {
             (endPesos === null ? rideWant?.fare == null : endPesos === rideFareShown),
           `start's ${startPesos ?? 'none'}; end's ${endPesos ?? 'none'}; the fare tile ${rideFareShown}`,
         );
-        // Another end picked with the sheet still raised: it stays, and the
-        // camera takes in the new ride, though the map was moved away.
-        // Then the first end again, for what follows.
+        // Another end picked, the sheet still at full: it stays, and the camera takes in the new
+        // ride, though the map was moved away. Then the first end again, for what follows.
+        const ANOTHER_END =
+          '  another end picked at full height, the map moved away: the sheet stays, the new ride taken in above the framed height';
         const nextIndex = endIndex - 1 > startIndex ? endIndex - 1 : endIndex + 1;
-        if (nextIndex >= count || (await sheetState()) !== 'free') {
+        if (nextIndex >= count || (await sheetState()) !== 'full') {
           skip(
-            '  another end picked with the sheet raised: it stays, the new ride taken in above it',
-            `no other row after the start, or the sheet not raised: data-snap=${await sheetState()}`,
+            ANOTHER_END,
+            `no other row after the start, or the sheet not at full: data-snap=${await sheetState()}`,
           );
         } else {
           const nextRow = rows.nth(nextIndex);
@@ -2126,6 +2221,7 @@ const tripChecks = async () => {
             const sheetTop = document
               .querySelector('[data-testid="card"]')
               .getBoundingClientRect().top;
+            const floor = Math.max(sheetTop, c.bottom - Math.round(c.height * 0.55));
             const pins = [...document.querySelectorAll('[data-testid="hintuan-pin"]')].map((p) =>
               p.getBoundingClientRect(),
             );
@@ -2133,15 +2229,15 @@ const tripChecks = async () => {
               pins: pins.length,
               clear: pins.every(
                 (r) =>
-                  r.top >= c.top && r.bottom <= sheetTop && r.left >= c.left && r.right <= c.right,
+                  r.top >= c.top && r.bottom <= floor && r.left >= c.left && r.right <= c.right,
               ),
             };
           });
           const stayed = await sheetState();
           check(
-            '  another end picked with the sheet raised: it stays, the new ride taken in above it',
-            stayed === 'free' && again.pins === 2 && again.clear,
-            `data-snap=${stayed}; ${again.pins} circle(s), ${again.clear ? 'both' : 'not both'} clear of the sheet`,
+            ANOTHER_END,
+            stayed === 'full' && again.pins === 2 && again.clear,
+            `data-snap=${stayed}; ${again.pins} circle(s), ${again.clear ? 'both' : 'not both'} clear of the framed height`,
           );
           await endPick.scrollIntoViewIfNeeded();
           await buttonTap(endPick, () => isSelected(endRow));
@@ -2327,47 +2423,7 @@ const tripChecks = async () => {
         }
       }
     }
-    // At full height the card stays there (the owner's rule: nothing moves the
-    // sheet for the commuter), the hintuan landing above the framed height
-    // (55%), there to see when the card comes down. Let go again after, for
-    // the ends below.
-    if (!(await handleTo('full'))) {
-      check(
-        '  picked at full height, the card stays there, the hintuan above the framed height',
-        false,
-        `the card would not rise to full: data-snap=${await sheetState()}`,
-      );
-    } else {
-      await pickButton.scrollIntoViewIfNeeded();
-      await buttonTap(pickButton, isPicked);
-      await cardsSettled(page);
-      const stayed = await sheetState();
-      const spot = pickWant
-        ? await page.evaluate((at) => {
-            const m = window.__map;
-            const c = m.getCanvas().getBoundingClientRect();
-            const q = m.project(at);
-            return { y: c.top + q.y, top: c.top, cardTop: c.bottom - Math.round(c.height * 0.55) };
-          }, pickWant.at)
-        : null;
-      check(
-        '  picked at full height, the card stays there, the hintuan above the framed height',
-        (await isPicked()) &&
-          stayed === 'full' &&
-          (!spot || (spot.y > spot.top + 16 && spot.y < spot.cardTop - 16)),
-        `data-snap=${stayed}; ${spot ? `the hintuan at ${Math.round(spot.y)}, the map ${Math.round(spot.top)}–${Math.round(spot.cardTop)} above the framed height` : 'not measured'}`,
-      );
-      await pickButton.scrollIntoViewIfNeeded();
-      await buttonTap(pickButton, async () => !(await isPicked()));
-      // The card stays at full now: raised a third from Low by its handle,
-      // for the ends below to glide into the map above it.
-      if (!(await toRaised()))
-        check(
-          '  raised a third by its handle, for the ends',
-          false,
-          `the card would not come to a raised height: data-snap=${await sheetState()}`,
-        );
-    }
+    // The ends are picked at full height too, where they are in reach.
     // The ends are buttons too (the owner's asks, 2026-09-29): with a
     // hintuan picked, a tap on where the trip goes, then on where it leaves
     // from, picks that end in its place, its dot the Selected one — the hintuan's
@@ -2438,7 +2494,7 @@ const tripChecks = async () => {
         };
       }, ends?.[end] ?? null);
       check(
-        `  ${end === 'to' ? 'where the trip goes' : 'where it leaves from'}, tapped, is picked in the hintuan's place, its circle gone, the map gliding there above the card`,
+        `  ${end === 'to' ? 'where the trip goes' : 'where it leaves from'}, tapped at full height, is picked in the hintuan's place, its circle gone, the map gliding there above the framed height`,
         wasPicked &&
           destinationBefore === 'rest' &&
           !(await isPicked()) &&
@@ -2570,6 +2626,22 @@ const tripChecks = async () => {
       picked = await on();
     }
   }
+  // Let down by its handle as a person does when done with the stops: where the trip opened, or,
+  // after the picks, raised a third, as the checks after a trip have always read it.
+  if (didPicks) {
+    if (!(await toRaised()))
+      check(
+        '  let down by its handle to a third, after the picks',
+        false,
+        `data-snap=${await sheetState()}`,
+      );
+  } else if (openedAt && (await sheetState()) !== openedAt && !(await handleTo(openedAt))) {
+    check(
+      `  let down by its handle to ${openedAt}, as it opened`,
+      false,
+      `data-snap=${await sheetState()}`,
+    );
+  }
   return { picked };
 };
 /**
@@ -2591,11 +2663,16 @@ const cardText = async () => ((await card().count()) ? await card().first().inne
 /** The card's height: 'low', 'full', or 'free' between (BottomSheet's data-snap). */
 const sheetState = async () =>
   (await card().count()) ? await card().first().getAttribute('data-snap') : null;
+/** The card's top on the screen: a step between two heights both called `free` moves it. */
+const sheetTop = () =>
+  card()
+    .first()
+    .evaluate((el) => Math.round(el.getBoundingClientRect().top))
+    .catch(() => null);
 /**
- * Taps the handle until the sheet rests at `target`, Low or full (a third a
- * tap, up from Low to full and down again), giving each tap up to 5 s to take hold: a runner drawing a
- * phone slowly takes seconds over one, and a tap it seemed to drop can land
- * late and carry the sheet on past, round again to `target`. Whether it got
+ * Taps the handle until the sheet rests at `target`, Low or full (a third a tap, up from Low to
+ * full and down again), each tap as a person's (buttonTap): it reaches the handle at rest, and
+ * moves the sheet, its data-snap or, between two heights both `free`, its top. Whether it got
  * there within `ms`: a sheet that never does is a failure, not a skip.
  */
 const handleTo = async (target, ms = 30000) => {
@@ -2604,14 +2681,11 @@ const handleTo = async (target, ms = 30000) => {
     const was = await sheetState();
     if (was === target) return true;
     if (was === null || Date.now() > by) return false;
-    await buttonTap(handle(), async () => (await sheetState()) !== was);
-    await page
-      .waitForFunction(
-        (w) => document.querySelector('[data-testid="card"]')?.getAttribute('data-snap') !== w,
-        was,
-        { timeout: 5000 },
-      )
-      .catch(() => {});
+    const wasTop = await sheetTop();
+    await buttonTap(
+      handle(),
+      async () => (await sheetState()) !== was || (await sheetTop()) !== wasTop,
+    );
   }
 };
 /**
@@ -3762,7 +3836,21 @@ if (runsPart(3)) {
       // nothing Selected, every route it lists lit.
       await buttonTap(wantedName, isPicked);
       const repicked = await isPicked();
+      // Where the list opened, brought into the map above the list, where a finger can reach it:
+      // centred on the screen it sits under the list.
       await jumpTo(page, shared.point);
+      await page.evaluate(async (at) => {
+        const m = window.__map;
+        const c = m.getCanvas().getBoundingClientRect();
+        const list = document.querySelector('[data-testid="chooser"]:not([hidden])');
+        const listTop = list ? list.getBoundingClientRect().top : c.bottom;
+        const idle = new Promise((r) => {
+          m.once('idle', r);
+          setTimeout(r, 10000);
+        });
+        m.panBy([0, m.project(at).y - (listTop - c.top) / 2], { duration: 0 });
+        await idle;
+      }, shared.point);
       const anchor2 = await project(page, shared.point);
       const box2 = await canvasBox();
       await mapTap(box2.x + anchor2[0], box2.y + anchor2[1]);
@@ -3780,10 +3868,35 @@ if (runsPart(3)) {
       // through a pick and ‹.
       const listSnap = async () =>
         (await listShown()) ? await chooser.first().getAttribute('data-snap') : null;
-      const listHandle = chooser.first().locator('button[data-testid="dock-handle"]');
-      for (let i = 0; i < 4 && (await listSnap()) !== 'full'; i++) {
-        const was = await listSnap();
-        await buttonTap(listHandle, async () => (await listSnap()) !== was);
+      // The list draws no handle (route-card-list's handle="hidden", kept for the keyboard): a
+      // finger raises it by its header, dragged up to the top, as a person does.
+      const listBox = await chooser.first().boundingBox();
+      if (listBox) {
+        const [x, y] = [listBox.x + listBox.width / 2, listBox.y + 24];
+        const isOnList = await chooser
+          .first()
+          .evaluate((node, [px, py]) => node.contains(document.elementFromPoint(px, py)), [x, y]);
+        if (!isOnList) await missed("the list's header", `not the topmost thing at (${x}, ${y})`);
+        else {
+          // To the top of the screen: the list's full height is all of the map (SheetShape).
+          const steps = 8;
+          const dy = -listBox.y - 8;
+          await cdp.send('Input.dispatchTouchEvent', {
+            type: 'touchStart',
+            touchPoints: [{ x, y }],
+          });
+          for (let i = 1; i <= steps; i++) {
+            await cdp.send('Input.dispatchTouchEvent', {
+              type: 'touchMove',
+              touchPoints: [{ x, y: y + (dy * i) / steps }],
+            });
+            await page.waitForTimeout(16);
+          }
+          // Held still before letting go: a placement, not a flick (BottomSheet's snapFor).
+          await page.waitForTimeout(150);
+          await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+          await cardsSettled(page);
+        }
       }
       const listAtFull = (await listSnap()) === 'full';
       await buttonTap(wanted, async () => (await trip().count()) > 0);
@@ -3888,6 +4001,11 @@ if (runsPart(3)) {
         ).match(/\d+/)?.[0] ?? 0,
       );
     const boxCount = await countOf();
+    // At Low a tap on the top of the body raises the sheet and picks nothing (the app's rule,
+    // use-sheet-gestures.ts), its click swallowed: a person raises the card first, a third by its
+    // handle, then taps the row.
+    if ((await sheetState()) === 'low')
+      await buttonTap(handle(), async () => (await sheetState()) !== 'low');
     await buttonTap(ownRow, async () => (await pressedBox()) === null);
     const letGo = {
       pressed: await pressedBox(),
@@ -4031,13 +4149,14 @@ if (runsPart(3)) {
     );
   /**
    * A finger's tap on the handle; when the page saw no pointer press from it,
-   * the same tap as pointer events sent by hand. On some GitHub runs Chromium
-   * stopped making pointer events from touches, and from the mouse, partway
-   * through the suite: the page heard only touchstart and touchend, so the
-   * sheet, which listens for pointers, heard nothing (the Philcoa card's
-   * handle, 2026-09-29, pinned by the events sheetDiag lists). mapTap and
-   * buttonTap send a dropped tap's click by hand for the same reason. How many
-   * needed it is reported at the end.
+   * the same tap as pointer events sent by hand. What this works around is
+   * Chromium's emulated touch (CDP) on a slow runner, not the app: a failing
+   * tap gave the page touchstart, gotpointercapture, lostpointercapture and
+   * touchend, and no pointerdown, pointerup or click, each with a fresh
+   * pointerId, while the app captured and prevented nothing (two probe runs on
+   * the runner, draft #1012; .scratch/ci-speed/phone-test-sheet-snap.md). How
+   * many needed it is reported at the end. buttonTap and mapTap send a tap
+   * again only for that same drop on a target they verified, at most once a part.
    */
   const tapHandle = async () => {
     if ((await handle().count()) === 0) return false;
@@ -4363,7 +4482,7 @@ if (runsPart(3)) {
       // checked is still the watch, not a bare click. The mouse's pointer, as
       // handGesture's, since the sheet may capture it.
       if ((await card().count()) > 0 && (await pointerdowns()) === seen) {
-        tapsByHand++;
+        handleByHand++;
         await page.evaluate(
           ([x, y]) => {
             const el = document.elementFromPoint(x, y);
@@ -4775,6 +4894,10 @@ if (runsPart(2)) {
     );
     const to = others[0];
     const toName = (to.name ?? '').split(' → ')[1] ?? '';
+    // At full height: another route leaves the sheet there (the owner's rule: nothing moves it for
+    // the commuter). Raised first, as a person does to reach View more: at Low it sits below the
+    // screen.
+    const atFull = await handleTo('full');
     // Opened first: another route leaves the hintuans as they were, not folded
     // (the owner, 2026-10-01: "don't shrink it").
     const tripFold = card().locator('[data-testid="trip-view-more"]');
@@ -4784,9 +4907,6 @@ if (runsPart(2)) {
         tripFold,
         async () => (await tripFold.first().getAttribute('aria-expanded')) === 'true',
       ));
-    // At full height: another route leaves the sheet there (the owner's rule: nothing moves it for
-    // the commuter).
-    const atFull = await handleTo('full');
     await rows.first().scrollIntoViewIfNeeded();
     await buttonTap(
       card().locator(`[data-testid="trip-other-route"][data-direction="${to.id}"]`),
@@ -5212,10 +5332,14 @@ if (runsPart(2)) {
 }
 
 // --------------------------------------------------------- 7. housekeeping
-if (tapsByHand)
-  console.log(
-    `\n(${tapsByHand} tap(s) needed the click sent by hand: the runner dropped the touch${lateClicks ? `; ${lateClicks} of those got the touch's own click afterwards too` : ''})\n`,
-  );
+console.log(
+  `\n(${chromiumDrops} tap(s) sent again by hand: Chromium made no pointer events from the touch${lateClicks ? `; ${lateClicks} of those got the touch's own click afterwards too` : ''})\n`,
+);
+check(
+  `at most ${CHROMIUM_DROPS_ALLOWED} tap a part sent again by hand for a touch Chromium dropped`,
+  chromiumDrops <= CHROMIUM_DROPS_ALLOWED,
+  `${chromiumDrops}`,
+);
 const odd = await page.evaluate(() => window.__odd ?? []).catch(() => []);
 if (odd.length)
   console.log(`
