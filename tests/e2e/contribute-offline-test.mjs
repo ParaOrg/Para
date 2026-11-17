@@ -533,10 +533,17 @@ try {
   const hasAppPolicy = !!appPolicy?.includes('https://challenges.cloudflare.com');
   const email = app.getByRole('textbox', { name: /email/i });
   await email.fill('tester@example.com');
-  await app
-    .locator('input[name="cf-turnstile-response"]')
-    .waitFor({ state: 'attached', timeout: 15000 })
-    .catch(() => {});
+  // Sent once Turnstile has passed: its hidden input holds a token.
+  const hasToken = await app
+    .waitForFunction(
+      () => document.querySelector('input[name="cf-turnstile-response"]')?.value,
+      undefined,
+      { timeout: 15000 },
+    )
+    .then(
+      () => true,
+      () => false,
+    );
   await app
     .getByRole('button', { name: /notify|tell|join|sign/i })
     .first()
@@ -548,10 +555,16 @@ try {
       () => true,
       () => false,
     );
+  const said = await app.locator('#waitlist-said').textContent();
   check(
     "/app/ on a build, sent its own policy: the waitlist's form, Turnstile's check and the post",
-    hasAppPolicy && hasTestKey && isOnList && waitlistPosts === 1 && databaseCutOff === 0,
-    `its policy sent ${hasAppPolicy}; test key ${hasTestKey}; on the list ${isOnList}; ${waitlistPosts} post(s) stood in; ${databaseCutOff} other database request(s) cut off`,
+    hasAppPolicy &&
+      hasTestKey &&
+      hasToken &&
+      isOnList &&
+      waitlistPosts === 1 &&
+      databaseCutOff === 0,
+    `its policy sent ${hasAppPolicy}; test key ${hasTestKey}; token ${hasToken}; on the list ${isOnList} ("${said}"); ${waitlistPosts} post(s) stood in; ${databaseCutOff} other database request(s) cut off`,
   );
   await studio.close();
 
