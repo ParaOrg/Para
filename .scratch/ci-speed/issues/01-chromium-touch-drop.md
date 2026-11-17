@@ -37,6 +37,38 @@ is counted apart (`handleByHand`).
 - If CI shows the same, the next step is to run the mouse-drag checks on a page of their own, so
   the touches after them start clean. It is not to raise the ceiling.
 
+## The trigger, on CI (2026-11-17)
+
+Playwright 1.65.0, Chromium 153.0.8010.12, on GitHub's runner. Two probe runs of part 3 on draft
+#1051, which logged every CDP command the suite and Playwright sent:
+
+- Probe 2 (closeCard's Escape sent as a key, as the suite did then): 5 map taps and 31 handle
+  gestures sent by hand. The first drop was the first touch after the first key press to come
+  after touches: 25 good touches, Escape, then a touch the page never saw, not even a touchstart.
+  Nothing else was sent between them: no Emulation, Page, Target or Overlay command. The touch
+  environment (maxTouchPoints 1, coarse, no hover) was the same before and after. No touch or
+  mouse sequence was left open.
+- Probe B (the same Escape dispatched on the page's document, so no key reached the browser): 2
+  map taps and 3 handle gestures by hand. The first drop moved about three minutes later. It came
+  right after the second of 4c's mouse drags on the handle (Playwright's drag interception on),
+  with no key at all.
+- Neither kind of input stops touches every time. The page's six key presses and four clicks
+  before any touch, the first mouse click in section 3 and 4c's first mouse drag were each
+  followed by good touches. Once touches were dropped, most later ones were too.
+
+So the trigger is another kind of input after touches, a key or a mouse drag, each raising the
+chance. Why Chromium then drops the touches is below what CDP shows.
+
+## What the suite does about it
+
+Sections 4 to 4d run on a new phone touched by finger alone (`newPhone`, `isTouchOnly`). There,
+closeCard taps ✕ by finger, never a mouse click or Escape, and dragHandle has no mouse fallback.
+4c's two mouse-drag checks moved to 4e, on another new phone of their own. A person rarely
+switches between finger, mouse and keys mid-task, so each phone tests one honest way of using
+the map. The keyboard checks elsewhere stay as they are. The ceiling stays at 1 a part. If the
+touch-only phone still drops touches on CI, that is a new finding: report it, don't raise the
+ceiling.
+
 ## What to do
 
 On each update of Chromium or Playwright (package.json's `playwright`, the runner image):
@@ -46,3 +78,5 @@ On each update of Chromium or Playwright (package.json's `playwright`, the runne
 2. If they stay at 0, remove the by-hand branch from `buttonTap` and `mapTap`, along with
    `CHROMIUM_DROPS_ALLOWED` and its check, so a dropped touch fails like any other miss.
 3. If they do not, note the count and the Chromium version here.
+4. Re-check the trigger on the new versions with a probe like #1051's (every CDP command logged)
+   before taking the phones apart again.

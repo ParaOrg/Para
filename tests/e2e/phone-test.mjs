@@ -224,17 +224,18 @@ const watch = (p) => {
   });
 };
 
-const context = await b.newContext({
+let context = await b.newContext({
   viewport: { width: 390, height: 844 },
   deviceScaleFactor: 3,
   isMobile: true,
   hasTouch: true,
 });
-const page = await context.newPage();
+let page = await context.newPage();
 watch(page);
 
 await nodeFetch(page);
-await page.addInitScript(() => {
+/** In the page, before the app starts: the pointer presses it sees, and what might stop them. */
+function pointerRecorder() {
   // Pointer presses the page has seen: on some GitHub runs Chromium stopped
   // making them from touches, and from the mouse, partway through the suite
   // (2026-09-29; see tapHandle).
@@ -274,7 +275,8 @@ await page.addInitScript(() => {
     const s = window.__map?.getSource(id);
     return s ? await s.getData() : null;
   };
-});
+}
+await page.addInitScript(pointerRecorder);
 await page.addInitScript(lookReaders);
 
 /**
@@ -396,7 +398,7 @@ page.on('framenavigated', (f) => {
 // mobile emulation usually reports `pointer: coarse` on its own; where it does
 // not, CDP's emulated media does it, and it has to be sent before the first
 // navigation (an addInitScript cannot change what matchMedia reports).
-const cdp = await context.newCDPSession(page);
+let cdp = await context.newCDPSession(page);
 const coarse = () => page.evaluate(() => window.matchMedia('(pointer: coarse)').matches);
 let isCoarse = await coarse();
 let coarseVia = 'Playwright emulation';
@@ -414,6 +416,39 @@ check(
     ? `via ${coarseVia}`
     : 'matchMedia("(pointer: coarse)") is false — every check below is meaningless',
 );
+
+/** Whether the phone is touched by finger alone: no mouse, no keys (newPhone). */
+let isTouchOnly = false;
+/**
+ * A new phone, its map loaded as the first one's is, in place of the one before. Chromium at
+ * times stops making pointer events from emulated touches for good once another kind of input
+ * (a key, a mouse drag) has come after them (.scratch/ci-speed/issues/01-chromium-touch-drop.md).
+ * A person rarely switches mid-task, so the checks of each kind of input run on a phone of
+ * their own.
+ */
+const newPhone = async () => {
+  await context.close();
+  context = await b.newContext({
+    viewport: { width: 390, height: 844 },
+    deviceScaleFactor: 3,
+    isMobile: true,
+    hasTouch: true,
+  });
+  page = await context.newPage();
+  watch(page);
+  await nodeFetch(page);
+  await page.addInitScript(pointerRecorder);
+  await page.addInitScript(lookReaders);
+  cdp = await context.newCDPSession(page);
+  if (coarseVia !== 'Playwright emulation')
+    await cdp
+      .send('Emulation.setEmulatedMedia', { features: [{ name: 'pointer', value: 'coarse' }] })
+      .catch(() => {});
+  await page.goto(`${BASE}/`, { waitUntil: 'load' });
+  await page.waitForFunction(() => window.__map && window.__map.loaded(), null, { timeout: 30000 });
+  await waitForSource(page, 'saved-routes');
+  await mapIdle(page);
+};
 
 // What the dev server holds for the next page to connect, taken first. A
 // reload Tailwind's plugin sent for an edit made before this run began (to
@@ -2711,13 +2746,20 @@ const toRaised = async () => {
   return (await until(sheetState, (state) => state === 'free', 5000)) === 'free';
 };
 const closeCard = async () => {
+  const closed = async () => (await card().count()) === 0;
+  if (isTouchOnly) {
+    // A phone touched by finger alone: ✕ by finger, never a mouse's click or Escape.
+    const close = card().getByRole('button', { name: 'Close' }).first();
+    if (!(await closed())) await buttonTap(close, closed);
+    await cardsSettled(page);
+    return;
+  }
   await page
     .getByRole('button', { name: 'Close' })
     .first()
     .click({ timeout: 1500 })
     .catch(() => {});
   // The ✕ can be missed while the page is busy drawing; Escape closes a sheet too.
-  const closed = async () => (await card().count()) === 0;
   if (!(await until(closed, Boolean, 500))) {
     await page.keyboard.press('Escape');
     await until(closed, Boolean, 1500);
@@ -3917,6 +3959,10 @@ if (runsPart(3)) {
     await closeCard();
   }
 
+  // 4 to 4d on a new phone touched by finger alone; 4e's mouse on one of its own (newPhone).
+  await newPhone();
+  isTouchOnly = true;
+
   // -------------------------------------------------- 4. hotspots, forgivingly
   // A route drawn right under the tapped pixel wins (the hit line is 18 px wide,
   // so "under" reaches 9 px); a route merely inside the ±20 px box shares the
@@ -4203,16 +4249,19 @@ if (runsPart(3)) {
     await cardsSettled(page);
     if ((await sheetState()) !== before || (await card().count()) === 0)
       return { ok: true, how: 'touch' };
-    // The sheet ignored the synthetic touch; try the same gesture with a mouse.
-    await page.mouse.move(x, y);
-    await page.mouse.down();
-    for (let i = 1; i <= steps; i++) {
-      await page.mouse.move(x, y + (dy * i) / steps);
-      await page.waitForTimeout(16);
+    // The sheet ignored the synthetic touch; try the same gesture with a mouse, on a phone not
+    // touched by finger alone.
+    if (!isTouchOnly) {
+      await page.mouse.move(x, y);
+      await page.mouse.down();
+      for (let i = 1; i <= steps; i++) {
+        await page.mouse.move(x, y + (dy * i) / steps);
+        await page.waitForTimeout(16);
+      }
+      await page.waitForTimeout(150);
+      await page.mouse.up();
+      await cardsSettled(page);
     }
-    await page.waitForTimeout(150);
-    await page.mouse.up();
-    await cardsSettled(page);
     // Neither made a pointer event: the runner's, as with tapHandle.
     if ((await pointerdowns()) === seen) {
       handleByHand++;
@@ -4227,7 +4276,9 @@ if (runsPart(3)) {
         how: 'by hand (the runner made no pointer events from the touch or the mouse)',
       };
     }
-    return { ok: true, how: 'mouse (the sheet did not answer a synthetic touch drag)' };
+    return isTouchOnly
+      ? { ok: true, how: 'touch (the sheet did not move)' }
+      : { ok: true, how: 'mouse (the sheet did not answer a synthetic touch drag)' };
   };
 
   /** Open that hotspot's card again, with the tap 15 px outside its ring that 4b checks. */
@@ -4399,73 +4450,6 @@ if (runsPart(3)) {
       `${readyLow ? '' : 'could not get to Low first; '}${down2.how}; [data-testid="card"] count ${await card().count()}`,
     );
     await closeCard();
-    // A mouse's drag, on a narrow window: the browser then clicks the handle it
-    // was held on, and that click toggled the sheet straight back — pulled up,
-    // it fell to peek, as it was then (the reviewer's note, fixed on the owner's word,
-    // 2026-09-29). The drags above go by touch whenever the page answers it.
-    const mouseDrag = async (dy) => {
-      const hb = await handle().first().boundingBox();
-      if (!hb) return false;
-      const [x, y] = [hb.x + hb.width / 2, hb.y + hb.height / 2];
-      const seen = await pointerdowns();
-      await page.mouse.move(x, y);
-      await page.mouse.down();
-      for (let i = 1; i <= 8; i++) {
-        await page.mouse.move(x, y + (dy * i) / 8);
-        await page.waitForTimeout(16);
-      }
-      await page.waitForTimeout(150);
-      await page.mouse.up();
-      await cardsSettled(page);
-      // The mouse made no pointer event: the runner's, as with tapHandle. The
-      // same drag by hand, then the click a mouse sends after one — on the
-      // handle it was held on, where it let go — which is the click this check
-      // is for.
-      if ((await pointerdowns()) === seen) {
-        handleByHand++;
-        await handGesture(
-          x,
-          y,
-          Array.from({ length: 8 }, (_, i) => y + (dy * (i + 1)) / 8),
-        );
-        await page.evaluate(
-          ([x, y]) => {
-            const h = document.querySelector(
-              '[data-testid="card"] button[data-testid="dock-handle"]',
-            );
-            h?.dispatchEvent(
-              new MouseEvent('click', {
-                clientX: x,
-                clientY: y,
-                bubbles: true,
-                cancelable: true,
-                detail: 1,
-              }),
-            );
-          },
-          [x, y + dy],
-        );
-        await cardsSettled(page);
-      }
-      return true;
-    };
-    const readyMouseUp = await restore('low');
-    const mouseUp = await mouseDrag(await dragTo('low', 'half'));
-    const mouseOpened = readyMouseUp && mouseUp && (await sheetState()) === 'free';
-    check(
-      'a mouse dragging the handle up from Low leaves the sheet where it let go',
-      mouseOpened,
-      `data-snap=${await sheetState()}${mouseOpened ? '' : `; ${await sheetDiag()}`}`,
-    );
-    const readyMouseDown = await restore('half');
-    const mouseDown = await mouseDrag(await dragTo('half', 'low'));
-    check(
-      '  and dragging it down leaves it at Low',
-      readyMouseDown && mouseDown && (await sheetState()) === 'low',
-      `data-snap=${await sheetState()}`,
-    );
-    await closeCard();
-
     // The watch for the click the browser sends after a handle tap must end
     // with the next tap, or the ✕ pressed right after would be lost too.
     const readyClose = await restore('low');
@@ -4622,6 +4606,79 @@ if (runsPart(3)) {
       '  and steps it on again, the click reaching nothing',
       lateUp === '' && (await shownNow()) !== shownAfterLate && (await trip().count()) === 0,
       `${lateUp === null ? 'no handle' : lateUp ? `the click reached ${lateUp}` : 'swallowed'}; data-snap=${await sheetState()}, trip ${await trip().count()}`,
+    );
+    await closeCard();
+  }
+
+  // ----------------------------------------------- 4e. the handle, by a mouse
+  // On a phone of its own, not touched by finger alone (newPhone).
+  if (hotspot) {
+    await newPhone();
+    isTouchOnly = false;
+    // A mouse's drag, on a narrow window: the browser then clicks the handle it
+    // was held on, and that click toggled the sheet straight back — pulled up,
+    // it fell to peek, as it was then (the reviewer's note, fixed on the owner's word,
+    // 2026-09-29). The drags above go by touch whenever the page answers it.
+    const mouseDrag = async (dy) => {
+      const hb = await handle().first().boundingBox();
+      if (!hb) return false;
+      const [x, y] = [hb.x + hb.width / 2, hb.y + hb.height / 2];
+      const seen = await pointerdowns();
+      await page.mouse.move(x, y);
+      await page.mouse.down();
+      for (let i = 1; i <= 8; i++) {
+        await page.mouse.move(x, y + (dy * i) / 8);
+        await page.waitForTimeout(16);
+      }
+      await page.waitForTimeout(150);
+      await page.mouse.up();
+      await cardsSettled(page);
+      // The mouse made no pointer event: the runner's, as with tapHandle. The
+      // same drag by hand, then the click a mouse sends after one — on the
+      // handle it was held on, where it let go — which is the click this check
+      // is for.
+      if ((await pointerdowns()) === seen) {
+        handleByHand++;
+        await handGesture(
+          x,
+          y,
+          Array.from({ length: 8 }, (_, i) => y + (dy * (i + 1)) / 8),
+        );
+        await page.evaluate(
+          ([x, y]) => {
+            const h = document.querySelector(
+              '[data-testid="card"] button[data-testid="dock-handle"]',
+            );
+            h?.dispatchEvent(
+              new MouseEvent('click', {
+                clientX: x,
+                clientY: y,
+                bubbles: true,
+                cancelable: true,
+                detail: 1,
+              }),
+            );
+          },
+          [x, y + dy],
+        );
+        await cardsSettled(page);
+      }
+      return true;
+    };
+    const readyMouseUp = await restore('low');
+    const mouseUp = await mouseDrag(await dragTo('low', 'half'));
+    const mouseOpened = readyMouseUp && mouseUp && (await sheetState()) === 'free';
+    check(
+      'a mouse dragging the handle up from Low leaves the sheet where it let go',
+      mouseOpened,
+      `data-snap=${await sheetState()}${mouseOpened ? '' : `; ${await sheetDiag()}`}`,
+    );
+    const readyMouseDown = await restore('half');
+    const mouseDown = await mouseDrag(await dragTo('half', 'low'));
+    check(
+      '  and dragging it down leaves it at Low',
+      readyMouseDown && mouseDown && (await sheetState()) === 'low',
+      `data-snap=${await sheetState()}`,
     );
     await closeCard();
   }
