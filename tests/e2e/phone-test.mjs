@@ -2822,7 +2822,12 @@ const closeCard = async () => {
   // The ✕ can be missed while the page is busy drawing; Escape closes a sheet too.
   const closed = async () => (await card().count()) === 0;
   if (!(await until(closed, Boolean, 500))) {
-    await page.keyboard.press('Escape');
+    // PROBE B: the Escape as a DOM keydown on document (useEscape's listener), not a CDP key
+    // event, to test whether a browser key event after touches is what stops emulated touches.
+    probeNote('closeCard: Escape as a DOM keydown, no CDP key event');
+    await page.evaluate(() =>
+      document.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true })),
+    );
     await until(closed, Boolean, 1500);
   }
   await cardsSettled(page);
