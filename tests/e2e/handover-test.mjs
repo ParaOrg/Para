@@ -21,6 +21,7 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { until } from './lib/harness.mjs';
+import { checkPolicies, watchPolicies } from './lib/policy.mjs';
 import { keepBasemapUnreachable } from './lib/stand-ins.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
@@ -92,6 +93,7 @@ try {
     isMobile: true,
     hasTouch: true,
   });
+  const flagged = await watchPolicies(ctx);
   const errors = [];
   const page = await ctx.newPage();
   page.on('pageerror', (e) => errors.push(e.message));
@@ -178,6 +180,7 @@ try {
   }
 
   check('no page errors', errors.length === 0, errors.join(' | '));
+  checkPolicies(check, flagged);
   await ctx.close();
 } finally {
   writeFileSync(swFile, ourWorker);
