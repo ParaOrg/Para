@@ -24,9 +24,15 @@ answered by stand-ins (`lib/stand-ins.mjs`):
   a miss names its request, and re-recording fixes it;
 - Turnstile (challenges.cloudflare.com): Cloudflare's script, as the always-passing stand-in of
   `lib/fake-turnstile.mjs`, so a page showing the check (the studio's sign-in) gets its token
-  without Cloudflare; a suite that tests the check keeps its own (`fakeTurnstile`).
+  without Cloudflare; a suite that tests the check keeps its own (`fakeTurnstile`);
+- the elevation tiles (elevation-tiles-prod.s3.amazonaws.com, the studio's Terrain basemap): one
+  made-up tile at 0 m for every Terrarium tile up to z15 (`lib/flat-terrain-tile.mjs`). The
+  stand-in terrain is **flat by design**: no suite reads heights or shading today. A check that
+  comes to read them needs real tiles, recorded, and must not pass on the flat ones.
 
-The studio's terrain tiles come next. Main and staging pushes and the nightly run
+Every outside host a suite reaches on a pull request's run is now stood in (the Storybook job is
+not one of the suites: `.scratch/e2e-stand-ins/issues/01-turnstile-fail-expire-cannot-load.md`).
+Main and staging pushes and the nightly run
 set `PARA_LIVE_SERVICES=1` (`.github/workflows/ci.yml`), so every staging push still checks the
 live services. Each suite ends by listing the outside hosts it reached
 (`outside: <host> ×n (network n, stood in n, …)`, `lib/outside-requests.mjs`).
