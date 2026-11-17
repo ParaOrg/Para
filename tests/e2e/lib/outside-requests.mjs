@@ -1,9 +1,11 @@
 // Every request a suite's browser sends to a host off this machine, counted by host and printed
-// as the suite ends: `outside: <host> ×n (network n, stood in n, failed n, cancelled n)`. "Network"
-// answers came from the host itself; "stood in" ones a page.route answered (bareStyle, nodeFetch, a
-// recording) or a stand-in server on this machine did; "failed" never got an answer; "cancelled"
-// the page dropped itself (net::ERR_ABORTED: MapLibre's tiles a move leaves behind). harness.mjs
-// imports it, so every suite that uses the harness reports, with no change to the suite.
+// as the suite ends: `outside: <host> ×n (network n, stood in n, failed n, cancelled n, from the
+// worker n)`. "Network" answers came from the host itself; "stood in" ones a page.route answered
+// (bareStyle, nodeFetch, a recording) or a stand-in server on this machine did; "failed" never got
+// an answer; "cancelled" the page dropped itself (net::ERR_ABORTED: MapLibre's tiles a move leaves
+// behind); "from the worker" the page's own service worker answered, from its cache or its own
+// request, which is counted apart under the host it reached. harness.mjs imports it, so every
+// suite that uses the harness reports, with no change to the suite.
 //
 // On a run without PARA_LIVE_SERVICES (a pull request's, and a local one by default) every outside
 // host is stood in (stand-ins.mjs), so a "network" answer is a new outside call: it fails the
@@ -33,13 +35,25 @@ const hostOf = (url) => {
 const tally = (url, how) => {
   const host = hostOf(url);
   if (!host) return;
-  const row = counts.get(host) ?? { network: 0, 'stood in': 0, failed: 0, cancelled: 0 };
+  const row = counts.get(host) ?? {
+    network: 0,
+    'stood in': 0,
+    failed: 0,
+    cancelled: 0,
+    'from the worker': 0,
+  };
   row[how] += 1;
   counts.set(host, row);
 };
 
 const watch = (context) => {
   context.on('response', async (response) => {
+    // The page's own worker answered: from its cache, or from its own request, which is a response
+    // of its own here and counted as any other.
+    if (response.fromServiceWorker()) {
+      tally(response.url(), 'from the worker');
+      return;
+    }
     // A routed answer has no server address, and a stand-in server's is on this machine: neither
     // left it.
     const address = await response.serverAddr().catch(() => null);
@@ -88,9 +102,10 @@ process.on('exit', () => {
     return;
   }
   for (const [host, row] of [...counts].sort(([a], [b]) => a.localeCompare(b))) {
-    const total = row.network + row['stood in'] + row.failed + row.cancelled;
+    const total =
+      row.network + row['stood in'] + row.failed + row.cancelled + row['from the worker'];
     console.log(
-      `outside: ${host} ×${total} (network ${row.network}, stood in ${row['stood in']}, failed ${row.failed}, cancelled ${row.cancelled})`,
+      `outside: ${host} ×${total} (network ${row.network}, stood in ${row['stood in']}, failed ${row.failed}, cancelled ${row.cancelled}, from the worker ${row['from the worker']})`,
     );
   }
   if (IS_LIVE) return;
