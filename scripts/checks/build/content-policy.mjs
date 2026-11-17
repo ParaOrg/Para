@@ -1,9 +1,10 @@
 // 9. Each page's content policy (public/_headers, report-only for now): the
 //    built site sends every page exactly one, from one rule, since two would be
 //    joined into one header and read as neither; every inline script a page
-//    carries is allowed by its hash, so a changed script fails here with the
-//    hash to paste rather than in a commuter's browser; and each policy lets
-//    the page reach the basemap host this build was made for.
+//    carries is allowed by its hash, and so is every inline stylesheet, so a
+//    changed one fails here with the hash to paste rather than in a person's
+//    browser; and each policy of a page with a map lets it reach the basemap
+//    host this build was made for.
 import { createHash } from 'node:crypto';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -12,10 +13,17 @@ import { headersFor, parseHeadersFile, ruleMatches } from '../../node/headers-fi
 
 const REPORT_ONLY = 'content-security-policy-report-only';
 const PAGES = [
-  { path: '/', file: 'index.html' },
-  { path: '/studio/', file: 'studio/index.html' },
-  { path: '/contribute/', file: 'contribute/index.html' },
+  { path: '/', file: 'index.html', hasMap: true },
+  { path: '/studio/', file: 'studio/index.html', hasMap: true },
+  { path: '/contribute/', file: 'contribute/index.html', hasMap: true },
+  { path: '/app/', file: 'app/index.html', hasMap: false },
 ];
+
+/** Each inline block of `tag` in a page's HTML, by the hash a policy names it with. */
+const inlineHashes = (text, tag) =>
+  [...text.matchAll(new RegExp(`<${tag}(?![^>]*\\bsrc=)[^>]*>([\\s\\S]*?)</${tag}>`, 'g'))].map(
+    (m) => `'sha256-${createHash('sha256').update(m[1]).digest('base64')}'`,
+  );
 
 /** A policy's directives by name: `script-src` → its sources. */
 const directivesOf = (policy) =>
@@ -45,22 +53,23 @@ export function proveContentPolicy(build, check) {
     if (!isOne) continue;
     const directives = directivesOf(headersFor(rules, page.path)[REPORT_ONLY]);
 
-    const scripts = [
-      ...html(page.file).matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/g),
-    ];
-    const hashes = scripts.map(
-      (m) => `'sha256-${createHash('sha256').update(m[1]).digest('base64')}'`,
-    );
-    const allowed = directives.get('script-src') ?? [];
-    const missing = hashes.filter((h) => !allowed.includes(h));
-    check(
-      `${page.path}: its policy allows each of the page's ${scripts.length} inline script(s) by hash, and no other inline script`,
-      missing.length === 0 && !allowed.includes("'unsafe-inline'"),
-      missing.length > 0 ? `add to script-src in public/_headers: ${missing.join(' ')}` : '',
-    );
+    for (const [tag, directive] of [
+      ['script', 'script-src'],
+      ['style', 'style-src'],
+    ]) {
+      const hashes = inlineHashes(html(page.file), tag);
+      const allowed = directives.get(directive) ?? [];
+      const missing = hashes.filter((h) => !allowed.includes(h));
+      check(
+        `${page.path}: its policy allows each of the page's ${hashes.length} inline ${tag}(s) by hash, and no other`,
+        missing.length === 0 && !allowed.includes("'unsafe-inline'"),
+        missing.length > 0 ? `add to ${directive} in public/_headers: ${missing.join(' ')}` : '',
+      );
+    }
 
     // A build for a stand-in on a loopback address is a suite's own (pwa-test's own-tiles
     // run): the policies name the hosts the site is deployed with, never that one.
+    if (!page.hasMap) continue;
     const isStandIn = /^http:\/\/(127\.0\.0\.1|localhost)(:\d+)?$/.test(basemapHost);
     const reach = directives.get('connect-src') ?? [];
     check(
