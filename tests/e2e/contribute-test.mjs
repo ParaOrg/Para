@@ -81,7 +81,7 @@ const browser = await chromium.launch();
  * agreement, as a phone from before kept it. `granted` is a browser that already lets the page
  * read the location.
  */
-async function phone({ earlierConsent = false, granted = false } = {}) {
+async function phone({ earlierConsent = false, granted = false, search = '' } = {}) {
   const context = await browser.newContext({
     viewport: { width: 393, height: 852 },
     deviceScaleFactor: 2,
@@ -111,7 +111,7 @@ async function phone({ earlierConsent = false, granted = false } = {}) {
   }
   const errors = [];
   page.on('pageerror', (e) => errors.push(String(e)));
-  await page.goto(`${BASE}/contribute/`, { waitUntil: 'load' });
+  await page.goto(`${BASE}/contribute/${search}`, { waitUntil: 'load' });
   return { page, context, errors };
 }
 
@@ -2412,7 +2412,7 @@ const ON_THE_FORM_MS = 100_000;
   await page.getByRole('group', { name: 'Recording so far' }).waitFor();
   await ride(page, 0, 200);
   await flagButton(page).click();
-  // Escape while writing a stop's note on Stops notes cancels the note, not the page. A real key
+  // Escape while writing a stop's note on Stops notes is the note's, never the page's. A real key
   // press: the note's field goes before the page's own Escape listener looks for it.
   await page.getByRole('button', { name: 'Stops notes' }).click();
   const stopsNotes = page.getByRole('heading', { name: /^Stops notes/ });
@@ -2421,7 +2421,14 @@ const ON_THE_FORM_MS = 100_000;
   await page.getByRole('textbox').fill('Waiting shed');
   await page.keyboard.press('Escape');
   check(
-    "Escape in a stop's note closes the note and leaves Stops notes open",
+    "Escape in a stop's note typed into keeps the note, its text, and Stops notes open",
+    (await page.getByRole('textbox').inputValue()) === 'Waiting shed' &&
+      (await stopsNotes.count()) === 1,
+  );
+  await page.getByRole('textbox').fill('');
+  await page.keyboard.press('Escape');
+  check(
+    "Escape in a stop's note left empty closes the note and leaves Stops notes open",
     (await page.getByRole('textbox').count()) === 0 && (await stopsNotes.count()) === 1,
   );
   await page
@@ -3874,6 +3881,187 @@ const FIRST_IDLE = () => {
     `${before} then ${tilesAsked}`,
   );
   check('  no page errors', errors.length === 0, errors.join('; '));
+  await page.context().close();
+}
+
+// ------------------------------------------- the phone's Back (the Android app)
+// Android's Back, as BackPlugin.java hands it to the page (navigation/use-android-back.ts): a
+// development build with `?e2e` gives the handler to the suite as window.__paraBack and counts
+// each time it would leave the app as window.__paraLeaves. Each Back closes what shows on top, as
+// its own control does; with nothing over Record, at rest or mid-ride, it leaves the app and the
+// ride goes on. The native side is the emulator ride's (scripts/apk/emulator-ride.sh).
+{
+  const { page, errors } = await phone({ earlierConsent: true, search: '?e2e=1' });
+  await page.getByRole('button', { name: 'Start Tracking' }).waitFor({ timeout: 20000 });
+  await page.waitForFunction(() => typeof window.__paraBack === 'function', null, {
+    timeout: 10000,
+  });
+  /** Back, as Android sends it; then the page's next frame. */
+  const back = async () => {
+    await page.evaluate(() => window.__paraBack());
+    await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => setTimeout(r, 0))));
+  };
+  const leaves = () => page.evaluate(() => window.__paraLeaves);
+  const gone = (locator) =>
+    locator
+      .waitFor({ state: 'detached', timeout: 5000 })
+      .then(() => true)
+      .catch(() => false);
+
+  // Record at rest: nothing over it, so Back leaves the app.
+  await back();
+  check(
+    'on Record at rest, Back leaves the app, and Record stays as it was',
+    (await leaves()) === 1 &&
+      (await page.getByRole('button', { name: 'Start Tracking' }).count()) === 1,
+    `${await leaves()} leave(s)`,
+  );
+
+  // The ?'s card: Back closes it, as Later does.
+  const help = page.getByRole('button', { name: 'How to record' });
+  const offer = page.getByRole('region', { name: 'Track your routes' });
+  await help.click();
+  await offer.waitFor({ timeout: 5000 });
+  await back();
+  check(
+    "the ?'s Track your routes card: Back closes it, and does not leave",
+    (await gone(offer)) && (await leaves()) === 1,
+  );
+
+  // The tutorial: Back ends it, as Skip does.
+  await help.click();
+  await offer.getByRole('button', { name: 'Start Tutorial' }).click();
+  const tutorial = page.getByRole('dialog');
+  await tutorial.waitFor({ timeout: 5000 });
+  await back();
+  check(
+    'the tutorial: Back ends it, and does not leave',
+    (await gone(tutorial)) && (await leaves()) === 1,
+  );
+
+  // The map's credits: Back closes the sheet, as ✕ does.
+  await page.getByRole('button', { name: 'Map data sources' }).click();
+  const credits = page.getByRole('dialog');
+  await credits.waitFor({ timeout: 5000 });
+  await back();
+  check(
+    "the map's credits: Back closes the sheet, and does not leave",
+    (await gone(credits)) && (await leaves()) === 1,
+  );
+
+  // History: Back returns to Record.
+  await page
+    .getByRole('navigation', { name: 'Screens' })
+    .getByRole('button', { name: 'History' })
+    .click();
+  const historyHeading = page.getByRole('heading', { level: 1, name: 'History' });
+  await historyHeading.waitFor({ timeout: 10000 });
+  await back();
+  check(
+    'History: Back returns to Record, and does not leave',
+    (await gone(historyHeading)) &&
+      (await page.getByRole('button', { name: 'Start Tracking' }).isVisible()) &&
+      (await leaves()) === 1,
+  );
+
+  // A ride: ✕'s question takes Back as Keep recording, the safe answer.
+  await page.getByRole('button', { name: 'Start Tracking' }).click();
+  const recordingCard = page.getByRole('group', { name: 'Recording so far' });
+  await recordingCard.waitFor({ timeout: 10000 });
+  await ride(page, 0, 60);
+  await page.getByRole('button', { name: 'Discard recording' }).click();
+  const keep = page.getByRole('button', { name: 'Keep recording' });
+  await keep.waitFor({ timeout: 5000 });
+  await back();
+  check(
+    "✕'s question: Back is Keep recording, the ride going on, not discarded, focus back on ✕",
+    (await gone(keep)) &&
+      (await page.getByRole('button', { name: 'Pause', exact: true }).count()) === 1 &&
+      (await recordingCard.isVisible()) &&
+      (await page.evaluate(() => window.__watchers())) === 1 &&
+      (await page.evaluate(
+        () => document.activeElement?.getAttribute('aria-label') === 'Discard recording',
+      )) &&
+      (await leaves()) === 1,
+  );
+
+  // A flagged stop's note card: Back cancels a note left as it was; a note typed into stays open.
+  await page.getByRole('button', { name: 'Flag a stop' }).click();
+  const pill = page.getByRole('button', { name: /Add a stop note/ });
+  await pill.waitFor({ timeout: 5000 });
+  await pill.click();
+  const noteCard = page.getByRole('dialog', { name: 'Add a stop note' });
+  await noteCard.waitFor({ timeout: 5000 });
+  await back();
+  check('a stop note card with nothing typed: Back cancels it', await gone(noteCard));
+
+  await page.getByRole('button', { name: 'Stops notes' }).click();
+  const notesHeading = page.getByRole('heading', { name: /^Stops notes/ });
+  await notesHeading.waitFor({ timeout: 5000 });
+  await back();
+  check(
+    'the Stops notes page: Back closes it, as its back arrow does, and does not leave',
+    (await gone(notesHeading)) && (await leaves()) === 1,
+  );
+
+  // A stop's note written in place on Stops notes: Back cancels it left empty, keeps it typed into.
+  await page.getByRole('button', { name: 'Stops notes' }).click();
+  await notesHeading.waitFor({ timeout: 5000 });
+  const field = page.getByRole('textbox');
+  await page.getByRole('button', { name: 'Add note' }).click();
+  await field.waitFor({ timeout: 5000 });
+  await back();
+  check(
+    "a stop's note opened in place, nothing typed: Back cancels it, Stops notes still open",
+    (await gone(field)) && (await notesHeading.isVisible()),
+  );
+  await page.getByRole('button', { name: 'Add note' }).click();
+  await field.fill('Under the footbridge');
+  await back();
+  check(
+    "a stop's note typed into in place: Back keeps it, the text as typed, for Save or Cancel",
+    (await field.isVisible()) && (await field.inputValue()) === 'Under the footbridge',
+  );
+  await page.getByRole('button', { name: 'Cancel' }).click();
+  await gone(field);
+  await back();
+  await gone(notesHeading);
+
+  // The note card from the pill, typed into: Back keeps it too.
+  await page.getByRole('button', { name: 'Flag a stop' }).click();
+  await pill.waitFor({ timeout: 5000 });
+  await pill.click();
+  await noteCard.waitFor({ timeout: 5000 });
+  await noteCard.getByRole('textbox').fill('Waiting shed');
+  await back();
+  check(
+    'a stop note card typed into: Back keeps it, card open, the text as typed, for Save or Cancel',
+    (await noteCard.isVisible()) &&
+      (await noteCard.getByRole('textbox').inputValue()) === 'Waiting shed',
+  );
+  await page.keyboard.press('Escape');
+  check(
+    'a stop note card typed into: Escape keeps it too, the text as typed',
+    (await noteCard.isVisible()) &&
+      (await noteCard.getByRole('textbox').inputValue()) === 'Waiting shed',
+  );
+  await noteCard.getByRole('button', { name: 'Cancel' }).click();
+  await gone(noteCard);
+
+  // Mid-ride with nothing over Record: Back leaves the app, and the ride goes on recording.
+  await back();
+  await emit(page, 70);
+  check(
+    'mid-ride, nothing over Record: Back leaves the app, the ride still recording',
+    (await leaves()) === 2 && (await recordingCard.isVisible()),
+    `${await leaves()} leave(s)`,
+  );
+
+  check(
+    "  Back's checks raised no page errors",
+    errors.length === 0,
+    errors.slice(0, 2).join(' | '),
+  );
   await page.context().close();
 }
 

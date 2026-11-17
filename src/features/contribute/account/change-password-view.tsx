@@ -1,5 +1,7 @@
 import { useState } from 'react';
 
+import { useBackLayer } from '@/shared/hooks/use-back-layer';
+
 import { messageOf } from './account-message';
 import { ChangePasswordScreen } from './change-password-screen';
 import { PasswordResetFlow } from './password-reset-flow';
@@ -24,6 +26,9 @@ export function ChangePasswordView({ onBack, onDone }: ChangePasswordViewProps) 
   const captcha = useCaptcha();
   const [isResetting, setIsResetting] = useState(false);
   const email = account.data?.email ?? '';
+  // The phone's Back is the screen's back arrow; from the reset, back to Change password.
+  useBackLayer(true, onBack);
+  useBackLayer(isResetting, () => setIsResetting(false));
 
   if (isResetting) {
     return (

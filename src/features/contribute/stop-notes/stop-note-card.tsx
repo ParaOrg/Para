@@ -1,8 +1,10 @@
 import { useId, useRef, useState } from 'react';
 
+import { useBackLayer } from '@/shared/hooks/use-back-layer';
 import { CloseIcon } from '@/shared/ui/route-icons';
 
 import { CardButton } from './card-button';
+import { backCancelsNote } from './note-back';
 import { CheckIcon, LocationIcon } from './stop-note-icons';
 import { useNoteDialog } from './use-note-dialog';
 import { NOTE_MAX_LENGTH } from '../recorder/recording-marks';
@@ -14,7 +16,7 @@ export interface StopNoteCardProps {
   place: string;
   /** Save: the note as typed. */
   onSave: (note: string) => void;
-  /** Cancel or Escape: nothing kept. */
+  /** Cancel, or Escape or Back on a note left as it was: nothing kept. */
   onCancel: () => void;
 }
 
@@ -27,7 +29,12 @@ export function StopNoteCard({ note, place, onSave, onCancel }: StopNoteCardProp
   const dialogRef = useRef<HTMLFormElement>(null);
   const ids = useId();
   const [text, setText] = useState(note);
-  useNoteDialog(dialogRef, onCancel);
+  // Back and Escape cancel a note left as it was; one typed into stays open (note-back.ts).
+  const cancelIfUnchanged = () => {
+    if (backCancelsNote(text, note)) onCancel();
+  };
+  useNoteDialog(dialogRef, cancelIfUnchanged);
+  useBackLayer(true, cancelIfUnchanged);
 
   return (
     <div className="absolute inset-0 z-50 flex items-center bg-surface-transparent px-4 font-sn-pro">

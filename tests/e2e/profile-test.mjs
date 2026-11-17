@@ -72,7 +72,7 @@ database.users.set(EDITOR_ID, {
  * A phone signed in to the account, on the shared database; `signedIn: false` has no session,
  * and `userId` signs in as another user (the editor).
  */
-async function phone({ signedIn = true, userId = ACCOUNT_ID } = {}) {
+async function phone({ signedIn = true, userId = ACCOUNT_ID, search = '' } = {}) {
   const context = await browser.newContext({
     viewport: { width: 393, height: 852 },
     deviceScaleFactor: 2,
@@ -99,7 +99,7 @@ async function phone({ signedIn = true, userId = ACCOUNT_ID } = {}) {
   );
   const errors = [];
   page.on('pageerror', (e) => errors.push(String(e)));
-  await page.goto(`${BASE}/contribute/`, { waitUntil: 'load' });
+  await page.goto(`${BASE}/contribute/${search}`, { waitUntil: 'load' });
   return { page, fake, errors };
 }
 
@@ -2889,6 +2889,87 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
     );
     check('  no page errors', errors.length === 0, errors.join(' | '));
   }
+}
+
+// --------------------------- the phone's Back on Account's questions (the Android app)
+// Back on a question before something that cannot be undone is its safe answer: nothing done,
+// and focus back where it was. Back as BackPlugin.java hands it to the page, through a
+// development build's `?e2e` hook (navigation/use-android-back.ts).
+{
+  const BACK_ID = 'ffffffff-0000-4000-8000-000000000004';
+  database.users.set(BACK_ID, {
+    email: 'back@example.com',
+    password: 'hunter2hunter2',
+    isAccount: true,
+    profile: { name: 'Back', phone: '+639170000004' },
+  });
+  const { page, fake, errors } = await phone({ userId: BACK_ID, search: '?e2e=1' });
+  await start(page).waitFor({ timeout: 30000 });
+  await page.waitForFunction(() => typeof window.__paraBack === 'function', null, {
+    timeout: 10000,
+  });
+  /** Back, as Android sends it; then the page's next frame. */
+  const back = async () => {
+    await page.evaluate(() => window.__paraBack());
+    await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => setTimeout(r, 0))));
+  };
+  const focused = () => page.evaluate(() => document.activeElement?.textContent);
+  const isSignedIn = () => page.evaluate((key) => localStorage.getItem(key) !== null, AUTH_KEY);
+  const gone = (locator) =>
+    locator.waitFor({ state: 'detached', timeout: 5000 }).then(
+      () => true,
+      () => false,
+    );
+
+  await accountTab(page).click();
+  await button(page, 'Logout').click();
+  const logoutSheet = logoutQuestion(page);
+  await logoutSheet.waitFor();
+  await back();
+  check(
+    "the phone's Back on Logout's question is Cancel: still signed in, focus back on Logout",
+    (await gone(logoutSheet)) &&
+      fake.logouts.length === 0 &&
+      (await isSignedIn()) &&
+      (await focused()) === 'Logout' &&
+      (await page.evaluate(() => window.__paraLeaves)) === 0,
+    `${fake.logouts.length} logout(s); focus on ${await focused()}`,
+  );
+
+  await button(page, 'Account settings').click();
+  await page.getByRole('heading', { level: 1, name: 'Account settings' }).waitFor();
+  // The countdown runs on the suite's clock, not the runner's speed.
+  await page.clock.install();
+  await button(page, 'Delete account').click();
+  const deleteScreen = page.getByRole('heading', { level: 1, name: 'Delete account' });
+  await deleteScreen.waitFor();
+  await page.clock.fastForward(5000);
+  await button(page, 'Delete account').waitFor({ timeout: 8000 });
+  await button(page, 'Delete account').click();
+  const deleteSheet = page.getByRole('alertdialog', {
+    name: 'Do you want to delete your account?',
+  });
+  await deleteSheet.waitFor();
+  await back();
+  check(
+    "the phone's Back on Delete account's question is No, I change my mind: nothing deleted, the account there, focus back on Delete account",
+    (await gone(deleteSheet)) &&
+      fake.deleteAccountRequests === 0 &&
+      database.users.has(BACK_ID) &&
+      (await isSignedIn()) &&
+      (await deleteScreen.count()) === 1 &&
+      (await focused()) === 'Delete account',
+    `${fake.deleteAccountRequests} request(s); focus on ${await focused()}`,
+  );
+  await back();
+  check(
+    "  the next Back is the screen's back arrow, to Account settings, still signed in",
+    (await gone(deleteScreen)) &&
+      (await page.getByRole('heading', { level: 1, name: 'Account settings' }).count()) === 1 &&
+      (await isSignedIn()),
+  );
+  check('  no page errors', errors.length === 0, errors.join(' | '));
+  await page.context().close();
 }
 
 await browser.close();

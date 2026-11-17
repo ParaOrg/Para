@@ -1,5 +1,7 @@
 import { useState } from 'react';
 
+import { useBackLayer } from '@/shared/hooks/use-back-layer';
+
 import { messageOf } from './account-message';
 import { CreateAccountScreen } from './create-account-screen';
 import { PasswordResetFlow } from './password-reset-flow';
@@ -41,6 +43,9 @@ export function AccountGate({ needsProfile }: AccountGateProps) {
     signUp.reset();
     setMode(next);
   };
+  // The phone's Back from Create an account or Forgot password returns to Sign in, as their back
+  // arrows do; on Sign in it leaves the app.
+  useBackLayer(mode !== 'sign-in' && !madeAccount && !needsProfile, () => switchTo('sign-in'));
 
   if (madeAccount) {
     return <ThankYouScreen onContinue={() => writeSession(madeAccount)} />;
