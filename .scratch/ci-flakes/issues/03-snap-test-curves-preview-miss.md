@@ -1,6 +1,6 @@
 # snap-test: a rare live-preview request in "Curves in Draw" that the router stand-in has no answer for
 
-Status: needs-triage
+Status: resolved
 Type: task
 Priority: low
 
@@ -52,3 +52,25 @@ camera), name the cursor's resting spot, then:
   answer is recorded.
 - If it is over UI (the toolbar or a panel above the canvas): whether a cursor resting over UI
   should preview a route to the map point under it is the owner's call.
+
+## Answer
+
+It came up again on CI, on #1041's run 44002880529, with the same request. So the target is a
+fixed point, and measured locally in the same state it has a name:
+
+- At the scenario's view, the missed point is page pixel (597.0, 638.0). `elementFromPoint`
+  there is the map's canvas, so it is not UI.
+- The test clicks the Snap button, whose centre is (625.5, 754), so the mouse rests there. It
+  then moves to D at (541, 408) with `{ steps: 3 }`.
+- The first of those steps is (625.5 + (541 − 625.5) / 3, 754 + (408 − 754) / 3) =
+  (597.3, 638.7): the missed point.
+- On a slow frame, Snap's preview rest timer fires between step 1 and step 2, and routes from E
+  to that point on the way.
+
+Fixed by the pull request from `claude/e2e-snap-preview-one-step`:
+
+- The move to D is one step, so the only place the cursor rests on the map is D. E→D is
+  recorded.
+- A new check says the router is asked for routes to D only, from the Snap click on, and names
+  any other point.
+

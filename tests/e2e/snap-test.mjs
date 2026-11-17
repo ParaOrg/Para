@@ -157,8 +157,13 @@ await nodeFetch(page);
 const isRouter = (u) => /routing\.openstreetmap\.de|route\/v1\/driving/.test(u);
 let routerCalls = 0,
   routerRefused = 0;
+/** Each router request's points, [lng, lat], in the order asked. */
+const routerAsked = [];
 page.on('request', (r) => {
-  if (isRouter(r.url())) routerCalls++;
+  if (!isRouter(r.url())) return;
+  routerCalls++;
+  const points = new URL(r.url()).pathname.split('/').at(-1) ?? '';
+  routerAsked.push(points.split(';').map((p) => p.split(',').map(Number)));
 });
 page.on('response', (r) => {
   if (isRouter(r.url()) && (r.status() === 429 || r.status() >= 500)) routerRefused++;
@@ -929,6 +934,7 @@ await page.mouse.click(box0.x + sx1, box0.y + sy1);
 await page.waitForTimeout(250);
 // A routed stretch is not held: a drag on it leaves the line as it was.
 const handlesInDraw = await handleCount();
+const askedBeforeSnap = routerAsked.length;
 await page.getByTestId('snap-draw').getByRole('button', { name: 'Snap' }).click();
 await page.waitForTimeout(150);
 check(
@@ -936,11 +942,19 @@ check(
   handlesInDraw > 0 && (await handleCount()) === 0,
   `${handlesInDraw} in Draw, ${await handleCount()} in Snap`,
 );
+// One step, from the Snap button straight to D: a stepped move rests, on a slow frame, at a point
+// on the way, and Snap's preview then asks the router for a route to that point.
 const [dx0, dy0] = await proj(D);
-await page.mouse.move(box0.x + dx0, box0.y + dy0, { steps: 3 });
+await page.mouse.move(box0.x + dx0, box0.y + dy0);
 check('cursor line: none in Snap', (await cursorLine()).length === 0);
 await clickAt(D);
 await settle();
+const offD = routerAsked.slice(askedBeforeSnap).filter((points) => metres(points.at(-1), D) > 5);
+check(
+  'snap: the router is asked for routes to D only, where the cursor went',
+  offD.length === 0,
+  `${routerAsked.length - askedBeforeSnap} asked, ${offD.length} elsewhere: ${JSON.stringify(offD)}`,
+);
 // The router's answer in, so nothing but the drag could change the line.
 for (let i = 0; i < 30 && !(await drafted()).at(-1)?.streets; i++) await page.waitForTimeout(300);
 const routedLine = (await drafted()).at(-1);
