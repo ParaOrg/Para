@@ -19,7 +19,8 @@ export const STAND_IN_MARK = 'para-e2e-turnstile-stand-in';
  * - `interactive`: a "Verify you are human" button first, as Cloudflare does when it is unsure;
  * - `fails`: error-callback, no token;
  * - `expires`: a token, then expired-callback a moment later;
- * - `byKey`: as Cloudflare's own test keys do — 1x…AA passes, 2x…AB fails, 3x…FF asks for a tap.
+ * - `byKey`: as Cloudflare's own test keys do — 1x…AA passes, 2x…AB fails, 3x…FF asks for a tap;
+ *   any other key, a real one included, is refused and noted in `window.__paraTurnstileRefused`.
  * `cannotLoad` is no script at all: fakeTurnstile answers the script with an error.
  */
 export const TURNSTILE_MODES = ['passes', 'interactive', 'fails', 'expires', 'byKey', 'cannotLoad'];
@@ -52,7 +53,11 @@ export const turnstileScript = (modeOrInteractive) => {
       el.dataset.appearance = o.appearance ?? 'always';
       el.dataset.standIn = '${STAND_IN_MARK}';
       const mode = '${mode}' === 'byKey' ? TEST_KEY_MODES[o.sitekey] : '${mode}';
-      if (!mode) throw new Error('Turnstile stand-in: no test key ' + o.sitekey);
+      // A real site key is never answered: it is kept for the runner to fail on, by name.
+      if (!mode) {
+        (window.__paraTurnstileRefused ??= []).push(String(o.sitekey));
+        throw new Error('Turnstile stand-in: not one of the Cloudflare test keys: ' + o.sitekey);
+      }
       if (mode === 'interactive') {
         const button = document.createElement('button');
         button.type = 'button';

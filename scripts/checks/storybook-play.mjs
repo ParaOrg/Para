@@ -15,12 +15,20 @@
 // storyErrored ({ title, description }), storyThrewException, playFunctionThrewException and
 // unhandledErrorsWhilePlaying. A major Storybook update can rename them: then every story times out
 // here, and this comment says what to check.
+//
+// Cloudflare's Turnstile is stood in here only (tests/e2e/lib/fake-turnstile.mjs, `byKey`): its
+// script acts as Cloudflare's own test keys do, so the stories reach no outside host. A real site
+// key, or any other request to Cloudflare, fails the story by name. Storybook opened by a person
+// still loads Cloudflare's own script, and the e2e suites' live runs (pushes and nightly) keep
+// reaching it.
 import { createServer } from 'node:http';
 import { readFileSync, existsSync } from 'node:fs';
 import { dirname, extname, join, normalize, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { chromium } from 'playwright';
+
+import { TURNSTILE, turnstileScript } from '../../tests/e2e/lib/fake-turnstile.mjs';
 
 const ROOT = resolve(process.argv[2] ?? 'storybook-static');
 const ONLY = process.env.STORYBOOK_PLAY_ONLY ?? '';
@@ -85,6 +93,8 @@ function serve(root) {
 
 /** Opens one story and answers what became of it: null when it passed, else why it failed. */
 async function runStory(page, base, story) {
+  const cloudflare = [];
+  page.__paraCloudflare = cloudflare;
   await page.goto(`${base}/iframe.html?id=${encodeURIComponent(story.id)}&viewMode=story`);
   const finished = await page
     .waitForFunction(() => globalThis.__paraPlay?.done, null, { timeout: STORY_TIMEOUT_MS })
@@ -93,6 +103,11 @@ async function runStory(page, base, story) {
       () => false,
     );
   const said = await page.evaluate(() => globalThis.__paraPlay);
+  const refused = await page.evaluate(() => globalThis.__paraTurnstileRefused ?? []);
+  if (refused.length)
+    return `Turnstile stand-in refused a key that is not a test key: ${refused.join(', ')}`;
+  if (cloudflare.length)
+    return `a request to Cloudflare the stand-in does not answer: ${cloudflare.join(', ')}`;
   if (!finished)
     return `did not finish in ${STORY_TIMEOUT_MS / 1000} s${said.errors.length ? `: ${said.errors.join('\n')}` : ''}`;
   if (said.status === 'success' && said.errors.length === 0) return null;
@@ -124,6 +139,15 @@ await Promise.all(
   Array.from({ length: WORKERS }, async () => {
     const page = await browser.newPage({ viewport: { width: 1024, height: 768 } });
     await page.addInitScript(hookChannel);
+    // Cloudflare's script, stood in; anything else asked of Cloudflare is noted for the story.
+    await page.route(TURNSTILE, (route) => {
+      const url = new URL(route.request().url());
+      if (url.pathname === '/turnstile/v0/api.js') {
+        return route.fulfill({ contentType: 'text/javascript', body: turnstileScript('byKey') });
+      }
+      page.__paraCloudflare?.push(url.href);
+      return route.fulfill({ status: 404, body: '' });
+    });
     while (next < stories.length) {
       const story = stories[next++];
       const why = await runStory(page, base, story).catch((error) => String(error));
