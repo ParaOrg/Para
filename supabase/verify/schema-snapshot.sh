@@ -42,6 +42,10 @@ for name in "${APPLIED[@]}"; do
   else apply < ../migrations/${name}.sql; fi
 done
 
+# With every applied migration in, no function is left for anon to run (anon-functions.sql).
+open=$($PSQL -d "$DB" -qAt < anon-functions.sql)
+[ -z "$open" ] || { echo "FAILED: anon may run: $open. Revoke it from anon by name in its migration, or list it in anon-functions.sql with the reason."; exit 1; }
+
 rebuilt=$(mktemp)
 trap 'rm -f "$rebuilt"' EXIT
 {
@@ -60,4 +64,4 @@ if [ "${1:-}" = --write ]; then
 fi
 diff -q "$rebuilt" "$SNAPSHOT" >/dev/null \
   || { echo 'FAILED: supabase/schema/snapshot.sql is out of date: run schema-snapshot.sh --write'; diff "$SNAPSHOT" "$rebuilt" | head -20; exit 1; }
-echo 'schema snapshot: matches every applied migration, in ledger order'
+echo 'schema snapshot: matches every applied migration, in ledger order; anon may run no function'
