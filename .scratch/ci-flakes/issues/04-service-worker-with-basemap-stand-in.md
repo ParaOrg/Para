@@ -40,6 +40,28 @@ so its basemap is unreachable as the test was built to have it (`--host-resolver
 requests failing at once). The audit then shows its basemap requests as failed, not stood in.
 No other suite uses the option.
 
+## The other suites with a service worker
+
+The same build was run 3 times per suite and mode, counting `updatefound` per run. "Without" means
+no routes at all and an unreachable basemap.
+
+| Suite                   | With the basemap stood in | Without | Result     |
+| ----------------------- | ------------------------- | ------- | ---------- |
+| contribute-offline-test | 1                         | 1       | 6 of 6 pass |
+| pwa-test                | 2                         | 1       | 6 of 6 pass |
+
+pwa-test's extra worker is found right after "Update Para!" is tapped, the same moment as
+handover's. Unlike handover's, no further worker is found after the reload, so pwa-test has
+passed every run (5 of 5 locally, and both of #1041's CI runs). It stays on the stand-in: it needs
+the basemap for its caching checks.
+
+The check exposed is "tapping Reload brings the new worker in and the button goes" (pwa-test.mjs,
+the update section). It would fail the way handover's did: a reload that finds yet another worker,
+leaving one waiting and the button back. That check's detail now says how many new workers were
+found (`…, 2 new worker(s) found` on a passing run), so a red there points here. If it does fail
+on CI, the choice is between making the check allow for an extra worker and opting pwa-test out
+of the basemap stand-in, with that run as evidence.
+
 ## For the next suite
 
 A suite that runs a service worker and also has an outside host stood in may see extra worker
