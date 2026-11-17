@@ -17,7 +17,7 @@ import { isMapExposed } from '@/shared/config/env';
  * was made at and the first lines it draws, before its 'load' on the public map.
  */
 export function exposeMapEarly(map: MapLibreMap): void {
-  if (isMapExposed) (window as unknown as { __mapEarly?: MapLibreMap }).__mapEarly = map;
+  if (isMapExposed) Reflect.set(window, '__mapEarly', map);
 }
 
 /**
@@ -27,9 +27,15 @@ export function exposeMapEarly(map: MapLibreMap): void {
  */
 export function exposeMap(shown: MapLibreMap): void {
   if (isMapExposed) {
-    const w = window as unknown as { __map?: MapLibreMap; __programs?: () => string[] };
-    w.__map = shown;
-    w.__programs = () =>
-      Object.keys((shown as unknown as { painter: { cache: object } }).painter.cache);
+    Reflect.set(window, '__map', shown);
+    Reflect.set(window, '__programs', () => programKeys(shown));
   }
+}
+
+/** The keys of MapLibre's compiled-program cache, read off its painter as unknown. */
+function programKeys(map: MapLibreMap): string[] {
+  const painter: unknown = Reflect.get(map, 'painter');
+  if (typeof painter !== 'object' || painter === null) return [];
+  const cache: unknown = Reflect.get(painter, 'cache');
+  return typeof cache === 'object' && cache !== null ? Object.keys(cache) : [];
 }

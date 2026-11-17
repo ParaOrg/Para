@@ -12,6 +12,11 @@
 # Nothing is proposed until it has been out for 7 days (cooldown): a bad
 # release is usually pulled or fixed within that.
 #
+# Each of these pull requests runs CI's whole suite, and the free plan runs
+# about 20 jobs at once across every run. So few are open at a time: npm three
+# (a group each; a major waits for one to merge or close) and the actions one,
+# and the actions come on Thursday, apart from Monday's npm.
+#
 # Security fixes are separate from these weekly bumps: GitHub opens them as
 # soon as an advisory lands, once the owner turns on Dependabot security
 # updates in the repository's settings.
@@ -25,7 +30,7 @@ updates:
       day: monday
       time: '06:00'
       timezone: Asia/Manila
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 3
     cooldown:
       default-days: 7
     ignore:
@@ -40,6 +45,14 @@ updates:
       # the numbers and the steps; take this entry out with that work.
       - dependency-name: 'maplibre-gl'
         update-types: ['version-update:semver-minor', 'version-update:semver-major']
+      # Held on 19.2: the bundle budget. Revisit when it allows or a fix is needed.
+      - dependency-name: 'react'
+        versions: ['19.3.x']
+      - dependency-name: 'react-dom'
+        versions: ['19.3.x']
+      # Held on 8.2, with React. Revisit when the budget allows or a fix is needed.
+      - dependency-name: 'vite'
+        versions: ['8.3.x']
     groups:
       runtime:
         patterns: ['react', 'react-dom', 'zod', '@supabase/*', '@tanstack/*']
@@ -58,11 +71,16 @@ updates:
     target-branch: staging
     schedule:
       interval: weekly
-      day: monday
+      day: thursday
       time: '06:00'
       timezone: Asia/Manila
+    open-pull-requests-limit: 1
     cooldown:
       default-days: 7
+    ignore:
+      # Held on v5: v6's caching has commercial terms. Revisit if those change.
+      - dependency-name: 'gradle/actions'
+        update-types: ['version-update:semver-major']
     groups:
       actions:
         patterns: ['*']

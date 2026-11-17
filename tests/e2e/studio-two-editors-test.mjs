@@ -156,7 +156,12 @@ async function editor(id, email, shared) {
 
 /** Taps the map at a [lng, lat], once the camera is on it. */
 async function tapAt(page, ll, zoom) {
-  await page.evaluate(([c, z]) => window.__map.jumpTo({ center: c, zoom: z }), [ll, zoom]);
+  await page.evaluate(
+    ([c, z]) => {
+      window.__map.jumpTo({ center: c, zoom: z });
+    },
+    [ll, zoom],
+  );
   await page.waitForFunction(
     (z) => window.__map.getZoom() === z && !window.__map.isMoving() && window.__map.loaded(),
     zoom,
@@ -177,7 +182,12 @@ async function tapAt(page, ll, zoom) {
  * (seen once on a slow runner).
  */
 async function openRoute(page) {
-  await page.evaluate(([c]) => window.__map.jumpTo({ center: c, zoom: 15 }), [MIDDLE]);
+  await page.evaluate(
+    ([c]) => {
+      window.__map.jumpTo({ center: c, zoom: 15 });
+    },
+    [MIDDLE],
+  );
   await page.waitForFunction(
     (c) => window.__map.queryRenderedFeatures(window.__map.project(c)).length > 0,
     MIDDLE,

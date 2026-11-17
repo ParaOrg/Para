@@ -6,13 +6,14 @@
 //
 // Taps go through Playwright's touchscreen; drags, long-presses and pinches
 // are real touch events sent through the DevTools protocol, so MapLibre sees
-// what a phone sends it. Points are put down on the saved route with the most
-// coordinates, on its own vertices, so the router has a road to snap to. The
+// what a phone sends it. Points are put down on the pinned subject line
+// (lib/subject-line.mjs), on its own vertices, so the router has a road to snap to. The
 // router's requests are counted as the browser sends them (or as Node serves
 // them, with PARA_NODE_FETCH=1).
 import { chromium } from 'playwright';
 import { BASE, harness, nodeFetch, waitForSource } from './lib/harness.mjs';
 import { drawing } from './lib/studio.mjs';
+import { assertNoOverview, subjectLine, watchOverviews } from './lib/subject-line.mjs';
 
 const W = 390,
   H = 844;
@@ -25,6 +26,7 @@ const ctx = await b.newContext({
   deviceScaleFactor: 3,
 });
 const page = await ctx.newPage();
+const overviews = watchOverviews(page);
 let routerCalls = 0;
 const isRouter = (url) => /routing\.openstreetmap\.de|route\/v1\/driving/.test(url);
 if (process.env.PARA_NODE_FETCH)
@@ -107,13 +109,21 @@ const discard = async () => {
 await page.goto(`${BASE}/studio/?e2e=1`, { waitUntil: 'load' });
 await page.waitForFunction(() => window.__map?.loaded(), null, { timeout: 30000 });
 const saved = await waitForSource(page, 'saved-routes', 20000);
-const line = (saved ?? [])
-  .map((f) => f.geometry?.coordinates ?? [])
-  .reduce((a, c) => (c.length > a.length ? c : a), []);
+// The pinned subject line (lib/subject-line.mjs): the same roads every run.
+const subject = saved?.length ? subjectLine(saved) : null;
+const line = subject?.geometry.coordinates ?? [];
+if (subject) {
+  assertNoOverview(overviews, subject.properties.id, 'putting points on its road vertices');
+}
 const centre = line.length ? line[Math.floor(line.length / 2)] : [121.0527, 14.6187];
 box = await page.locator('canvas.maplibregl-canvas').boundingBox();
 const recentre = async (zoom = 15) => {
-  await page.evaluate(([c, z]) => window.__map.jumpTo({ center: c, zoom: z }), [centre, zoom]);
+  await page.evaluate(
+    ([c, z]) => {
+      window.__map.jumpTo({ center: c, zoom: z });
+    },
+    [centre, zoom],
+  );
   await page.waitForTimeout(500);
 };
 // The saved route's vertices on screen, `gap` px apart, clear of the
@@ -395,7 +405,9 @@ check(
 // desktop's delete. Held on a point, it must not delete it: MapLibre drops a
 // contextmenu after a touch itself, and this keeps it doing so.
 c = await cp();
-await page.evaluate((p) => window.__map.jumpTo({ center: p }), c[1]);
+await page.evaluate((p) => {
+  window.__map.jumpTo({ center: p });
+}, c[1]);
 await page.waitForTimeout(300);
 const held = await proj(c[1]);
 // What Android sends: a bare contextmenu, no mousedown before it.

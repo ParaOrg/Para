@@ -386,7 +386,9 @@ check(
 );
 // Google Maps' way (the owner's screenshots, 2026-10-01): the circle is the
 // fix's metres, so zoomed out it shrinks under the dot and is gone.
-await page.evaluate(() => window.__map.jumpTo({ zoom: 12 }));
+await page.evaluate(() => {
+  window.__map.jumpTo({ zoom: 12 });
+});
 await until(async () => (await attr(page, 'data-halo-px')) === '0', 3000);
 check(
   '  zoomed out till the dot covers its circle, the circle is gone',
@@ -400,7 +402,9 @@ check(
   `scale ${await attr(page, 'data-scale')}`,
 );
 // A fix indoors, 1 km out: the circle claims 80 m at most (the owner's call, 2026-10-01).
-await page.evaluate(() => window.__map.jumpTo({ zoom: 16 }));
+await page.evaluate(() => {
+  window.__map.jumpTo({ zoom: 16 });
+});
 await ctx.setGeolocation({ ...p, accuracy: 1000 });
 await until(async () => (await attr(page, 'data-accuracy-m')) === '1000');
 await mapIdle(page);
@@ -530,10 +534,9 @@ check(
 // The app moves the camera for the commuter (a hintuan picked, an end tapped:
 // features/routes/map/map-view.tsx APP_MOVE). That lets go too, or the next fix undoes it.
 const away = north(p, 400);
-await page.evaluate(
-  (c) => window.__map.easeTo({ center: [c.longitude, c.latitude], duration: 0 }, { appMove: true }),
-  away,
-);
+await page.evaluate((c) => {
+  window.__map.easeTo({ center: [c.longitude, c.latitude], duration: 0 }, { appMove: true });
+}, away);
 await until(async () => (await mode()) === 'TrackOwnLocation', 3000);
 check(
   'an app camera move lets go: TrackOwnLocation',

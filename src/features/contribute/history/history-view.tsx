@@ -6,6 +6,7 @@ import { RideDetailScreen, type RideDetail } from './ride-detail-screen';
 import { useHistoryItems } from './use-history-items';
 import { useIsOnline } from './use-is-online';
 import { useTrailPicturesQuery } from './use-trail-pictures-query';
+import { useRideTrail } from '../map/use-ride-trail';
 import { hideRide, readHiddenRides } from '../storage/hidden-rides';
 import type { Recording } from '../storage/recording-schema';
 import type { Uploads } from '../uploads/use-uploads';
@@ -51,12 +52,17 @@ export function HistoryView({
     rideId === null
       ? null
       : (items.recordings.find((candidate) => candidate.id === rideId) ?? null);
+  // The trail the page's map draws behind the ride's screen (contribute-page.tsx), for its summary
+  // card. It is the same read under the same key, so nothing is read a second time.
+  const savedRide = rideId === null ? null : recordings.find((saved) => saved.id === rideId);
+  const trail = useRideTrail(rideId, savedRide ?? null);
   const isOnline = useIsOnline();
   const rideStatus = ride && items.uploads.statusOf(ride);
   const detail: RideDetail | null = ride &&
     rideStatus && {
       recording: ride,
       facts: items.factsOf(ride),
+      trail,
       status: rideStatusOf(rideStatus, isOnline),
       onRetry: () => uploads.upload(ride),
       canDelete: !isMidUpload(rideStatus),

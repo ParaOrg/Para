@@ -39,7 +39,7 @@ export async function applyOpeningTaps(recording: Recording | null): Promise<Ope
 
 /** Whether the phone's service records `recordingId` now: not cut off, and running. */
 function isRecordedNow({ ride, isServiceRunning }: RideNow, recordingId: string): boolean {
-  const isCutOff = (RIDE_CUT_OFF_TROUBLES as readonly string[]).includes(ride.trouble);
+  const isCutOff = RIDE_CUT_OFF_TROUBLES.some((trouble) => trouble === ride.trouble);
   return (
     isServiceRunning && ride.phase === 'recording' && !isCutOff && ride.recordingId === recordingId
   );

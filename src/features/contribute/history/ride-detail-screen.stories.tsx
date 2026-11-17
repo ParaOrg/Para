@@ -1,5 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
+
+import { createQueryClient } from '@/shared/lib/query-client';
 
 import type { CardStatus } from './card-status';
 import { RideDetailScreen, type RideDetail } from './ride-detail-screen';
@@ -31,6 +34,7 @@ const RETRY: CardStatus = { tone: 'retry', words: 'Tap retry upload' };
 const ride: RideDetail = {
   recording,
   facts: { distanceM: 12_700, isWalkOnly: false, trail: null },
+  trail: null,
   status: UPLOADED,
   onRetry: fn(),
   canDelete: true,
@@ -44,12 +48,15 @@ const meta = {
   // `data-dock-host`, as the contributor page is, the map's grey in its place.
   decorators: [
     (Story) => (
-      <div
-        data-dock-host
-        className="@container relative h-[852px] w-[393px] overflow-clip bg-surface-quaternary"
-      >
-        <Story />
-      </div>
+      // Stops notes reads the ride's trail through the page's query client.
+      <QueryClientProvider client={createQueryClient()}>
+        <div
+          data-dock-host
+          className="@container relative h-[852px] w-[393px] overflow-clip bg-surface-quaternary"
+        >
+          <Story />
+        </div>
+      </QueryClientProvider>
     ),
   ],
   parameters: { layout: 'fullscreen' },
@@ -278,5 +285,30 @@ export const Finding: Story = {
     const canvas = within(canvasElement);
     await expect(canvas.getByRole('button', { name: 'Back' })).toBeInTheDocument();
     await expect(canvas.queryByRole('heading')).toBeNull();
+  },
+};
+
+/** Flagged stops: Stops notes opens over the ride, read only, each stop's note as written. */
+export const FlaggedStops: Story = {
+  args: {
+    ride: {
+      ...ride,
+      recording: {
+        ...recording,
+        marks: [
+          { time: T0 + 20 * 60_000, note: 'Tapat ng 7-Eleven, may waiting shed' },
+          { time: T0 + 55 * 60_000 },
+        ],
+      },
+    },
+  },
+  play: async ({ canvasElement }) => {
+    await openSheet(canvasElement);
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole('button', { name: /Stops notes/ }));
+    await expect(await canvas.findByRole('heading', { name: 'Stops notes' })).toBeVisible();
+    await expect(canvas.getByText('Tapat ng 7-Eleven, may waiting shed')).toBeVisible();
+    await expect(canvas.getByText('No note')).toBeVisible();
+    await expect(canvas.queryByRole('button', { name: 'Edit' })).toBeNull();
   },
 };

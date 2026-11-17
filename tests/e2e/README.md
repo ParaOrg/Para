@@ -4,6 +4,49 @@ Drive the dev server in headless Chromium and check that both pages behave: the
 public map at `/` and the editor at `/studio/`. Runs anywhere Playwright's
 Chromium does.
 
+## Outside services: stood in, or live
+
+A suite's browser reaches no host off the machine unless `PARA_LIVE_SERVICES=1` is set.
+Without it (a pull request's CI run, and a local run by default) the outside services are
+answered by stand-ins (`lib/stand-ins.mjs`):
+
+- the router (router.project-osrm.org): the live router's answers, recorded in
+  `fixtures/osrm/answers.json`, keyed with each coordinate rounded to 6 decimals (about 0.1 m),
+  since the same click comes back a few 1e-12 degrees apart from run to run;
+- the basemap (tiles.openfreemap.org): OpenFreeMap's own styles, sprite and the glyph ranges the
+  suites draw with, from their source repositories, over one made-up tile (`fixtures/basemap/`,
+  its README for sources and licences);
+- the database (the address in `.env.local`): the studio's reads of its route tables, built at
+  run time from the published map in `public/data/` (`fixtures/route-tables.mjs`, its header for
+  what is copied and what is made up) and answered strictly (`lib/route-tables-stand-in.mjs`):
+  anything else sent there fails the suite, naming it. Since the drawing suites click the
+  published lines, a publish that changes them may leave the router's recorded answers short:
+  a miss names its request, and re-recording fixes it;
+- Turnstile (challenges.cloudflare.com): Cloudflare's script, as the always-passing stand-in of
+  `lib/fake-turnstile.mjs`, so a page showing the check (the studio's sign-in) gets its token
+  without Cloudflare; a suite that tests the check keeps its own (`fakeTurnstile`);
+- the elevation tiles (elevation-tiles-prod.s3.amazonaws.com, the studio's Terrain basemap): one
+  made-up tile at 0 m for every Terrarium tile up to z15 (`lib/flat-terrain-tile.mjs`). The
+  stand-in terrain is **flat by design**: no suite reads heights or shading today. A check that
+  comes to read them needs real tiles, recorded, and must not pass on the flat ones.
+
+Every outside host a suite reaches on a pull request's run is now stood in (the Storybook job is
+not one of the suites: `.scratch/e2e-stand-ins/issues/01-turnstile-fail-expire-cannot-load.md`).
+Main and staging pushes and the nightly run
+set `PARA_LIVE_SERVICES=1` (`.github/workflows/ci.yml`), so every staging push still checks the
+live services. Each suite ends by listing the outside hosts it reached
+(`outside: <host> ×n (network n, stood in n, …)`, `lib/outside-requests.mjs`). Without
+`PARA_LIVE_SERVICES`, a host answered over the network fails the suite, naming it and the first
+addresses asked: a new outside call is stood in (`lib/stand-ins.mjs`) or routed by the suite before
+it merges.
+
+    PARA_LIVE_SERVICES=1 node tests/e2e/snap-test.mjs        # a suite against the live services
+    node scripts/research/record-osrm.mjs                    # re-record the router's answers
+
+**A stand-in gone stale** shows as a live run failing where its pull request's run passed, or
+as a run failing with "the router's stand-in has no answer". The first step is always to
+re-record (the script above, with the dev server up), then look again.
+
     npx playwright install chromium                          # once; Playwright itself is a devDependency
     npm run dev                                              # in another terminal, on :5173
     node tests/e2e/loop-test.mjs              # 40: a loop's trip (UP – Ikot, a made-up block served in place of the map file, no database) — no SWITCH and Ikot where Papunta stands, the tip the first place the line passes with no location, the one nearest the commuter once the LocatorButton has a fix (chosen as the trip opens and never moved under the rider, afresh on reopening), the first when the fix is vaguer than 200 m or farther than 1 km from every box, and the place whose card the trip was opened from; the top and bottom rows the tip, the tiles the whole loop and then the ride forward from the tip to a row, a start and a row above it wrapping the ride with one fold between, either end row riding on round to the tip, × Remove as start letting it go; the place's card listing the loop with Ikot and no SWITCH over loops alone (PARA_NO_TILES=1 where tiles are blocked); and on a wide screen, with a place's card open beside place search, Escape in the field clears it and leaves the card open (a second Escape too), while out of the field Escape closes the card as before

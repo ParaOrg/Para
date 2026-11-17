@@ -30,7 +30,7 @@ const meta = {
     problem: null,
     isScreenFreeToSleep: false,
     mapNote: null,
-    stopsFlagged: 0,
+    notesAdded: 0,
     routeRecorded: null,
     uploadProblem: null,
   },
@@ -138,13 +138,13 @@ export const TwoAtOnce: Story = {
   args: { problem: POSITION_UNAVAILABLE_PROBLEM, isScreenFreeToSleep: true },
 };
 
-/** A stop just flagged: "Stop flagged" with the flag, an info toast that leaves by itself. */
-export const StopFlagged: Story = {
-  args: { stopsFlagged: 1 },
+/** A stop's note saved from its card: "Note successfully added", the compact info toast. */
+export const NoteAdded: Story = {
+  args: { notesAdded: 1 },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(await canvas.findByTestId('toast')).toHaveTextContent('Stop flagged');
-    await expect(canvas.getByRole('status')).toHaveTextContent('Stop flagged');
+    await expect(await canvas.findByTestId('toast')).toHaveTextContent('Note successfully added');
+    await expect(canvas.getByRole('status')).toHaveTextContent('Note successfully added');
   },
 };
 

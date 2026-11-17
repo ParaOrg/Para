@@ -154,9 +154,9 @@ export function servedRouteOf(
   input?: Pick<SaveInput, 'mode' | 'isLoop' | 'writeRoute'>,
 ): ServedRoute {
   const fresh = state.directions.length === 0 && input;
-  // The mode the payload stores: a new route's, or the one Edit route writes.
   const mode = input && (fresh || input.writeRoute) ? input.mode : state.route.mode;
   return {
+    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- the payload's mode (a new route's, or the one Edit route writes) is a plain string: .scratch/type-assertions/issues/03-draft-mode-schema.md
     mode: mode as ServedRoute['mode'],
     routeCode: state.routeCode,
     isLoop: fresh ? input.isLoop : state.route.is_loop,

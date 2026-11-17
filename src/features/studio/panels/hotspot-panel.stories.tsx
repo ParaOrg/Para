@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { QueryClientProvider } from '@tanstack/react-query';
+import type { ComponentProps } from 'react';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
 import type { HotspotRow } from '@/features/routes/model/hotspots';
@@ -8,7 +9,6 @@ import type { LngLat } from '@/shared/utils/geo';
 
 import { HotspotPanel } from './hotspot-panel';
 import { SaveBesideFrame, SaveSheetFrame } from './save-frames';
-import type { Drawing } from '../drawing/use-drawing';
 
 /** Sample data only, shaped like saved rows. Not read from Supabase. */
 function hotspot(
@@ -42,7 +42,10 @@ const hotspots: HotspotRow[] = [
  * kind it is. Sample data only: a story has no Supabase client, so pressing
  * Save here shows an error and writes nothing.
  */
-function outline(kind: 'terminal' | 'hintuan', hotspotId: string | null = null): Drawing {
+function outline(
+  kind: 'terminal' | 'hintuan',
+  hotspotId: string | null = null,
+): ComponentProps<typeof HotspotPanel>['draw'] {
   const [x, y] = [121.0424, 14.741507];
   const d = 0.0003;
   const controlPoints: LngLat[] = [
@@ -51,12 +54,7 @@ function outline(kind: 'terminal' | 'hintuan', hotspotId: string | null = null):
     [x + d, y + d],
     [x - d, y + d],
   ];
-  return {
-    controlPoints,
-    segments: [],
-    area: { kind, hotspotId },
-    uTurns: [],
-  } as unknown as Drawing;
+  return { controlPoints, area: { kind, hotspotId }, cancel: fn() };
 }
 
 const meta = {
