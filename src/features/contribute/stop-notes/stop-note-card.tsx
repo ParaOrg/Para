@@ -16,7 +16,7 @@ export interface StopNoteCardProps {
   place: string;
   /** Save: the note as typed. */
   onSave: (note: string) => void;
-  /** Cancel or Escape: nothing kept. */
+  /** Cancel, or Escape or Back on a note left as it was: nothing kept. */
   onCancel: () => void;
 }
 
@@ -29,11 +29,12 @@ export function StopNoteCard({ note, place, onSave, onCancel }: StopNoteCardProp
   const dialogRef = useRef<HTMLFormElement>(null);
   const ids = useId();
   const [text, setText] = useState(note);
-  useNoteDialog(dialogRef, onCancel);
-  // The phone's Back cancels a note left as it was; one typed into stays open (note-back.ts).
-  useBackLayer(true, () => {
+  // Back and Escape cancel a note left as it was; one typed into stays open (note-back.ts).
+  const cancelIfUnchanged = () => {
     if (backCancelsNote(text, note)) onCancel();
-  });
+  };
+  useNoteDialog(dialogRef, cancelIfUnchanged);
+  useBackLayer(true, cancelIfUnchanged);
 
   return (
     <div className="absolute inset-0 z-50 flex items-center bg-surface-transparent px-4 font-sn-pro">

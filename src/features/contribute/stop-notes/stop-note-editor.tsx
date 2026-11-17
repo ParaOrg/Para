@@ -20,10 +20,11 @@ interface StopNoteEditorProps {
 export function StopNoteEditor({ note, labelledBy, onSave, onCancel }: StopNoteEditorProps) {
   const [text, setText] = useState(note);
   const fieldRef = useRef<HTMLTextAreaElement>(null);
-  // The phone's Back cancels a note left as it was; one typed into stays open (note-back.ts).
-  useBackLayer(true, () => {
+  // Back and Escape cancel a note left as it was; one typed into stays open (note-back.ts).
+  const cancelIfUnchanged = () => {
     if (backCancelsNote(text, note)) onCancel();
-  });
+  };
+  useBackLayer(true, cancelIfUnchanged);
   // The field takes focus as editing starts, the keyboard with it, at the end of what is there.
   useEffect(() => {
     const field = fieldRef.current;
@@ -41,11 +42,11 @@ export function StopNoteEditor({ note, labelledBy, onSave, onCancel }: StopNoteE
         value={text}
         onChange={(event) => setText(event.target.value)}
         onKeyDown={(event) => {
-          // Cancel the note, and mark the key handled so the Stops notes page's own Escape
+          // The note's Escape, marked handled so the Stops notes page's own Escape
           // (isEscapeToClose skips a prevented key) does not take it and close the whole page.
           if (event.key === 'Escape') {
             event.preventDefault();
-            onCancel();
+            cancelIfUnchanged();
           }
         }}
         className={cn(

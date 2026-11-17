@@ -5,12 +5,12 @@ import { useEscape } from '@/shared/hooks/use-escape';
 
 /**
  * A note's dialog holding the keyboard: its field has focus as it opens, so the phone's keyboard
- * comes up with the end of what is written; Tab goes round its field and buttons; Escape is
- * Cancel; and focus goes back where it was as it closes (useDialogFocus).
+ * comes up with the end of what is written; Tab goes round its field and buttons; Escape calls
+ * `onEscape`; and focus goes back where it was as it closes (useDialogFocus).
  */
-export function useNoteDialog(dialogRef: RefObject<HTMLElement | null>, onCancel: () => void) {
+export function useNoteDialog(dialogRef: RefObject<HTMLElement | null>, onEscape: () => void) {
   useDialogFocus(dialogRef, false);
-  useEscape(onCancel);
+  useEscape(onEscape);
 
   // After useDialogFocus has noted where focus was.
   useEffect(() => {

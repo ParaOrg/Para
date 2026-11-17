@@ -2412,7 +2412,7 @@ const ON_THE_FORM_MS = 100_000;
   await page.getByRole('group', { name: 'Recording so far' }).waitFor();
   await ride(page, 0, 200);
   await flagButton(page).click();
-  // Escape while writing a stop's note on Stops notes cancels the note, not the page. A real key
+  // Escape while writing a stop's note on Stops notes is the note's, never the page's. A real key
   // press: the note's field goes before the page's own Escape listener looks for it.
   await page.getByRole('button', { name: 'Stops notes' }).click();
   const stopsNotes = page.getByRole('heading', { name: /^Stops notes/ });
@@ -2421,7 +2421,14 @@ const ON_THE_FORM_MS = 100_000;
   await page.getByRole('textbox').fill('Waiting shed');
   await page.keyboard.press('Escape');
   check(
-    "Escape in a stop's note closes the note and leaves Stops notes open",
+    "Escape in a stop's note typed into keeps the note, its text, and Stops notes open",
+    (await page.getByRole('textbox').inputValue()) === 'Waiting shed' &&
+      (await stopsNotes.count()) === 1,
+  );
+  await page.getByRole('textbox').fill('');
+  await page.keyboard.press('Escape');
+  check(
+    "Escape in a stop's note left empty closes the note and leaves Stops notes open",
     (await page.getByRole('textbox').count()) === 0 && (await stopsNotes.count()) === 1,
   );
   await page
@@ -4024,6 +4031,12 @@ const FIRST_IDLE = () => {
   await back();
   check(
     'a stop note card typed into: Back keeps it, card open, the text as typed, for Save or Cancel',
+    (await noteCard.isVisible()) &&
+      (await noteCard.getByRole('textbox').inputValue()) === 'Waiting shed',
+  );
+  await page.keyboard.press('Escape');
+  check(
+    'a stop note card typed into: Escape keeps it too, the text as typed',
     (await noteCard.isVisible()) &&
       (await noteCard.getByRole('textbox').inputValue()) === 'Waiting shed',
   );
