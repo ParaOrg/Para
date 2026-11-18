@@ -61,7 +61,9 @@ export function StopMapPopup({
 
   // Tab stays inside the card (a dialog traps focus): without it Tab reaches the page or the save
   // form behind. Idle while the question stands over the card, where it is inert.
-  useTabLoop(dialogRef, 'button', !isUnderQuestion);
+  // Its stops: the map's credits (their ⓘ and links) and the card's buttons. The map itself takes
+  // no keys (stop-map.tsx), so its canvas is no stop.
+  useTabLoop(dialogRef, 'button, summary, a[href]', !isUnderQuestion);
 
   return (
     <div
