@@ -7,7 +7,12 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { hostLines, hostsInCapture, whyIncomplete } from '../../scripts/apk/hosts-in-capture.mjs';
+import {
+  hostLines,
+  hostsInCapture,
+  spanOf,
+  whyIncomplete,
+} from '../../scripts/apk/hosts-in-capture.mjs';
 
 const u16 = (n) => [(n >> 8) & 0xff, n & 0xff];
 
@@ -99,8 +104,9 @@ const capture = (frames) => {
   header.writeUInt16LE(4, 6);
   header.writeUInt32LE(65535, 16);
   header.writeUInt32LE(1, 20);
-  const records = frames.map((f) => {
+  const records = frames.map((f, i) => {
     const record = Buffer.alloc(16);
+    record.writeUInt32LE(1_800_000_000 + i * 60, 0);
     record.writeUInt32LE(f.length, 8);
     record.writeUInt32LE(f.length, 12);
     return Buffer.concat([record, f]);
@@ -183,4 +189,10 @@ test('a capture without the control lookup, or without the tile host the app dre
     whyIncomplete(hosts, { controlName: control, tiles: 0, tileHost: 'tiles.example.net' }),
     null,
   );
+});
+
+test('a capture says when its packets begin and end', () => {
+  const hosts = hostsInCapture(capture([frame(6, tcp(443, 0x02)), frame(6, tcp(443, 0x02))]));
+  assert.equal(spanOf(hosts), ', packets from 08:00:00 to 08:01:00 UTC');
+  assert.equal(spanOf(hostsInCapture(capture([]))), '');
 });
