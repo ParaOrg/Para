@@ -1,10 +1,16 @@
 // The hosts an emulator job reached, from the emulator's own packet capture (`-tcpdump`,
 // contributor-app.yml): the names it looked up (DNS queries), the names it opened TLS to (the
 // ClientHello's server name), the hosts it asked over plain HTTP (the Host header), and every TCP
-// connection it opened, by address and port. Only these are printed, with their counts; nothing
-// else in the capture is read or kept (.scratch/e2e-stand-ins/issues/03).
+// connection it opened, by address and port, seen from either end (the phone's SYN or the server's
+// SYN-ACK). Only these are printed, with their counts; nothing else in the capture is read or kept
+// (.scratch/e2e-stand-ins/issues/03).
 //
-//   node scripts/apk/hosts-in-capture.mjs <capture.pcap> [label]
+//   node scripts/apk/hosts-in-capture.mjs <capture.pcap> <label> [--control <name>]
+//     [--tiles <count> --tile-host <host>]
+//
+// Two checks decide whether the capture can be trusted, and an untrusted one prints no list, only
+// why: the control name (a lookup the job makes on purpose) must be among the names looked up, and
+// when the app drew `count` tiles, the tile host must be among the names.
 //
 // The capture is the whole emulator's, Android's own traffic with the app's: a host here was
 // reached by the phone, not necessarily by the app.
@@ -18,6 +24,7 @@ const LINK = { ethernet: 1, raw: 101, rawOld: 12, cooked: 113, ipv4: 228, ipv6: 
  * The hosts in a classic pcap capture, as counts by kind. Throws on a file that is not one.
  * @param {Buffer} capture
  * @returns {{ names: Map<string, { dns: number, tls: number, http: number }>, connections: Map<string, number> }}
+ *   `connections` counts each server address and port by the phone's ports that opened it.
  */
 export function hostsInCapture(capture) {
   if (capture.length < 24) throw new Error('not a pcap capture: shorter than its header');
@@ -37,6 +44,8 @@ export function hostsInCapture(capture) {
     names.set(key, counts);
   };
 
+  /** By server address and port, the phone's ports that connected to it. */
+  const opened = new Map();
   for (let at = 24; at + 16 <= capture.length;) {
     const length = u32(at + 8);
     const packet = capture.subarray(at + 16, at + 16 + length);
@@ -44,8 +53,9 @@ export function hostsInCapture(capture) {
     const ip = ipOf(packet, linkType);
     if (!ip) continue;
     if (ip.protocol === 17) readUdp(ip, count);
-    if (ip.protocol === 6) readTcp(ip, count, connections);
+    if (ip.protocol === 6) readTcp(ip, count, opened);
   }
+  for (const [server, ports] of opened) connections.set(server, ports.size);
   return { names, connections };
 }
 
@@ -72,14 +82,23 @@ function ipOf(frame, linkType) {
     const headerLength = (ip[0] & 0x0f) * 4;
     return {
       protocol: ip[9],
+      source: [...ip.subarray(12, 16)].join('.'),
       destination: [...ip.subarray(16, 20)].join('.'),
       payload: ip.subarray(headerLength, ip.readUInt16BE(2)),
     };
   }
   if (version === 6 && ip.length >= 40) {
-    const groups = [];
-    for (let i = 24; i < 40; i += 2) groups.push(ip.readUInt16BE(i).toString(16));
-    return { protocol: ip[6], destination: `[${groups.join(':')}]`, payload: ip.subarray(40) };
+    const address = (from) => {
+      const groups = [];
+      for (let i = from; i < from + 16; i += 2) groups.push(ip.readUInt16BE(i).toString(16));
+      return `[${groups.join(':')}]`;
+    };
+    return {
+      protocol: ip[6],
+      source: address(8),
+      destination: address(24),
+      payload: ip.subarray(40),
+    };
   }
   return null;
 }
@@ -98,14 +117,20 @@ function readUdp({ payload }, count) {
   if (labels.length) count(labels.join('.'), 'dns');
 }
 
-/** A new connection (SYN), a TLS ClientHello's server name, or an HTTP request's Host. */
-function readTcp({ destination, payload }, count, connections) {
+/** A new connection (SYN or SYN-ACK), a TLS ClientHello's server name, or an HTTP request's Host. */
+function readTcp({ source, destination, payload }, count, opened) {
   if (payload.length < 20) return;
+  const sourcePort = payload.readUInt16BE(0);
   const port = payload.readUInt16BE(2);
   const flags = payload[13];
-  if (flags & 0x02 && !(flags & 0x10)) {
-    const key = `${destination}:${port}`;
-    connections.set(key, (connections.get(key) ?? 0) + 1);
+  if (flags & 0x02) {
+    // The SYN names the server as its destination; the SYN-ACK, as its source.
+    const isSynAck = Boolean(flags & 0x10);
+    const server = isSynAck ? `${source}:${sourcePort}` : `${destination}:${port}`;
+    const phonePort = isSynAck ? port : sourcePort;
+    const ports = opened.get(server) ?? new Set();
+    ports.add(phonePort);
+    opened.set(server, ports);
   }
   const data = payload.subarray((payload[12] >> 4) * 4);
   const serverName = serverNameOf(data);
@@ -153,8 +178,38 @@ export function hostLines({ names, connections }, label) {
   return [...lines, ...opened];
 }
 
+/**
+ * Why the capture can't be trusted, or null when it can: the control lookup is missing, or the app
+ * drew tiles and the tile host is nowhere among the names.
+ */
+export function whyIncomplete({ names }, { controlName, tiles = 0, tileHost }) {
+  if (controlName && !names.has(controlName.toLowerCase())) {
+    return `the control lookup of ${controlName} was not seen`;
+  }
+  if (tiles > 0 && tileHost && !names.has(tileHost.toLowerCase())) {
+    return `the app drew ${tiles} tiles but no tile host was seen`;
+  }
+  return null;
+}
+
+/** The value after `--name` among the arguments, if there is one. */
+const option = (args, name) => {
+  const at = args.indexOf(`--${name}`);
+  return at >= 0 ? args[at + 1] : undefined;
+};
+
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  const [file, label = 'emulator'] = process.argv.slice(2);
-  if (!file) throw new Error('usage: hosts-in-capture.mjs <capture.pcap> [label]');
-  for (const line of hostLines(hostsInCapture(readFileSync(file)), label)) console.log(line);
+  const args = process.argv.slice(2);
+  const [file, label] = args;
+  if (!file || !label) throw new Error('usage: hosts-in-capture.mjs <capture.pcap> <label> [...]');
+  const hosts = hostsInCapture(readFileSync(file));
+  const why = whyIncomplete(hosts, {
+    controlName: option(args, 'control'),
+    tiles: Number(option(args, 'tiles') ?? 0),
+    tileHost: option(args, 'tile-host'),
+  });
+  // An untrusted capture names nothing, but says how much it held, to tell an empty one apart.
+  const held = `(it held ${hosts.names.size} names and ${hosts.connections.size} connections)`;
+  const lines = why ? [`${label}: capture incomplete: ${why} ${held}`] : hostLines(hosts, label);
+  for (const line of lines) console.log(line);
 }

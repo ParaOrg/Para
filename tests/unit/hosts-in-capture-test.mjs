@@ -1,19 +1,24 @@
 // The emulator jobs' host list (scripts/apk/hosts-in-capture.mjs): read from a made-up capture of
 // one DNS query, one TCP connection, one TLS ClientHello and one plain HTTP request, it names each
-// host once under its kind and nothing else.
+// host once under its kind and nothing else; a connection seen from both ends counts once; and a
+// capture missing the control lookup, or the tile host while the app drew tiles, is untrusted.
 //
 //   node --test tests/unit/hosts-in-capture-test.mjs
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { hostLines, hostsInCapture } from '../../scripts/apk/hosts-in-capture.mjs';
+import { hostLines, hostsInCapture, whyIncomplete } from '../../scripts/apk/hosts-in-capture.mjs';
 
 const u16 = (n) => [(n >> 8) & 0xff, n & 0xff];
 
-/** An Ethernet frame holding an IPv4 packet of `protocol` to 192.0.2.7 with `payload`. */
-const frame = (protocol, payload) => {
+const PHONE = [10, 0, 2, 15];
+const SERVER = [192, 0, 2, 7];
+
+/** An Ethernet frame holding an IPv4 packet of `protocol` from the phone to the server, or back. */
+const frame = (protocol, payload, isFromServer = false) => {
   const total = 20 + payload.length;
-  const ip = [0x45, 0, ...u16(total), 0, 0, 0, 0, 64, protocol, 0, 0, 10, 0, 2, 15, 192, 0, 2, 7];
+  const [from, to] = isFromServer ? [SERVER, PHONE] : [PHONE, SERVER];
+  const ip = [0x45, 0, ...u16(total), 0, 0, 0, 0, 64, protocol, 0, 0, ...from, ...to];
   return Buffer.from([...Array(12).fill(0), 0x08, 0x00, ...ip, ...payload]);
 };
 const udp = (port, data) => [...u16(40000), ...u16(port), ...u16(8 + data.length), 0, 0, ...data];
@@ -130,4 +135,52 @@ test('an empty capture says so', () => {
 
 test('a file that is not a pcap is refused', () => {
   assert.throws(() => hostsInCapture(Buffer.alloc(24)), /not a pcap/);
+});
+
+/** The server's answer to the phone's port 40001, from `port`: a SYN-ACK by default. */
+const tcpBack = (port, flags = 0x12) => [
+  ...u16(port),
+  ...u16(40001),
+  ...Array(8).fill(0),
+  0x50,
+  flags,
+  0xff,
+  0xff,
+  0,
+  0,
+  0,
+  0,
+];
+
+test('a connection counts once, from either end', () => {
+  const both = hostsInCapture(capture([frame(6, tcp(443, 0x02)), frame(6, tcpBack(443), true)]));
+  assert.deepEqual(hostLines(both, 'ride'), ['ride connection: 192.0.2.7:443 ×1']);
+  const answerOnly = hostsInCapture(capture([frame(6, tcpBack(443), true)]));
+  assert.deepEqual(hostLines(answerOnly, 'ride'), ['ride connection: 192.0.2.7:443 ×1']);
+});
+
+test('a capture without the control lookup, or without the tile host the app drew from, is untrusted', () => {
+  const hosts = hostsInCapture(
+    capture([
+      frame(17, udp(53, dnsQuery('capture-check.example.com'))),
+      frame(17, udp(53, dnsQuery('tiles.example.org'))),
+    ]),
+  );
+  const control = 'capture-check.example.com';
+  assert.equal(
+    whyIncomplete(hosts, { controlName: control, tiles: 12, tileHost: 'tiles.example.org' }),
+    null,
+  );
+  assert.equal(
+    whyIncomplete(hosts, { controlName: 'other-check.invalid' }),
+    'the control lookup of other-check.invalid was not seen',
+  );
+  assert.equal(
+    whyIncomplete(hosts, { controlName: control, tiles: 12, tileHost: 'tiles.example.net' }),
+    'the app drew 12 tiles but no tile host was seen',
+  );
+  assert.equal(
+    whyIncomplete(hosts, { controlName: control, tiles: 0, tileHost: 'tiles.example.net' }),
+    null,
+  );
 });

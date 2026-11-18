@@ -70,3 +70,25 @@ The owner decides between 2, 3 and 4 once the measurement in 1 is in. The emulat
 stay as they are until the owner says otherwise.
 
 ## Comments
+
+**First lists, from the measurement's pull request run (not trusted).** Both jobs showed only
+Android's connectivity check (connectivitycheck.gstatic.com, www.google.com) and two connections
+to the emulator's resolver on port 853. No tile host appeared, though the ride's map kept tiles.
+Port 853 is DNS over TLS: Android's Private DNS hides every later lookup. One TLS server name also
+had no matching SYN. So the capture was incomplete, and "not measured yet" still stands.
+
+**The follow-up.**
+- Both scripts turn Private DNS off before the app starts, and look up `capture-check.example.com`
+  once on purpose.
+- Connections are counted from either end (SYN or SYN-ACK).
+- The list is printed only when the capture holds that control lookup and, in the ride, the
+  basemap's host while the map kept tiles. Otherwise the step prints `capture incomplete: …`.
+- If names are still missing, the next suspect is the WebView's own DNS over HTTPS. The TLS
+  server names on the tile connections are the fallback evidence.
+
+**The follow-up's first run.** Both jobs said `capture incomplete: the control lookup … was not
+seen`, while the ride's map kept tiles (`tiles=2 meta=3`). The control was `capture-check.invalid`,
+and a resolver answers `.invalid` itself without sending a query (RFC 6761). So that control could
+never pass. The control is now `capture-check.example.com`. The log prints Private DNS's setting
+and the lookup's first line. An incomplete capture says how many names and connections it held,
+without naming them.
