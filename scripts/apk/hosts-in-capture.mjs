@@ -208,6 +208,8 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     tiles: Number(option(args, 'tiles') ?? 0),
     tileHost: option(args, 'tile-host'),
   });
-  const lines = why ? [`${label}: capture incomplete: ${why}`] : hostLines(hosts, label);
+  // An untrusted capture names nothing, but says how much it held, to tell an empty one apart.
+  const held = `(it held ${hosts.names.size} names and ${hosts.connections.size} connections)`;
+  const lines = why ? [`${label}: capture incomplete: ${why} ${held}`] : hostLines(hosts, label);
   for (const line of lines) console.log(line);
 }

@@ -216,7 +216,7 @@ jobs:
           basemap=$(sed -n 's/^VITE_BASEMAP_HOST=//p' .env.apk)
           tile_host=$(node -e 'console.log(new URL(process.argv[1]).hostname)' "${basemap:-https://tiles.openfreemap.org}")
           if [ -f "$capture" ]; then
-            node scripts/apk/hosts-in-capture.mjs "$capture" ride --control capture-check.invalid \
+            node scripts/apk/hosts-in-capture.mjs "$capture" ride --control capture-check.example.com \
               --tiles "${tiles:-0}" --tile-host "$tile_host" | tee -a "$GITHUB_STEP_SUMMARY" \
               || echo "::warning title=Host list::The emulator's capture could not be read."
           else
@@ -296,7 +296,7 @@ jobs:
           capture="$RUNNER_TEMP/notification.pcap"
           if [ -f "$capture" ]; then
             node scripts/apk/hosts-in-capture.mjs "$capture" notification \
-              --control capture-check.invalid | tee -a "$GITHUB_STEP_SUMMARY" \
+              --control capture-check.example.com | tee -a "$GITHUB_STEP_SUMMARY" \
               || echo "::warning title=Host list::The emulator's capture could not be read."
           else
             echo "No capture: the emulator never wrote one."

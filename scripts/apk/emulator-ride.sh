@@ -85,10 +85,12 @@ done
 adb shell dumpsys battery unplug || true   # on the battery, as a phone on a ride is
 
 # For the host list (contributor-app.yml, scripts/apk/hosts-in-capture.mjs): plain DNS, so the
-# names the phone looks up can be read in the capture, then one lookup of a name nobody answers,
-# which the list must show or call the capture incomplete.
+# names the phone looks up can be read in the capture, then one lookup the list must show or call
+# the capture incomplete. Under example.com (reserved for examples), not .invalid: a resolver
+# answers .invalid itself and sends nothing (RFC 6761). Both are printed, so the log shows them.
 adb shell settings put global private_dns_mode off || echo "could not turn Private DNS off"
-adb shell ping -c 1 -W 2 capture-check.invalid > /dev/null 2>&1 || true
+echo "Private DNS: $(adb shell settings get global private_dns_mode | tr -d '\r')"
+echo "control lookup: $(adb shell ping -c 1 -W 2 capture-check.example.com 2>&1 | head -1 | tr -d '\r')"
 
 adb logcat -c
 adb logcat -v time > "$OUT/logcat.txt" &

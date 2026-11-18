@@ -162,11 +162,11 @@ test('a connection counts once, from either end', () => {
 test('a capture without the control lookup, or without the tile host the app drew from, is untrusted', () => {
   const hosts = hostsInCapture(
     capture([
-      frame(17, udp(53, dnsQuery('capture-check.invalid'))),
+      frame(17, udp(53, dnsQuery('capture-check.example.com'))),
       frame(17, udp(53, dnsQuery('tiles.example.org'))),
     ]),
   );
-  const control = 'capture-check.invalid';
+  const control = 'capture-check.example.com';
   assert.equal(
     whyIncomplete(hosts, { controlName: control, tiles: 12, tileHost: 'tiles.example.org' }),
     null,
