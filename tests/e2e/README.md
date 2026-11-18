@@ -43,6 +43,19 @@ it merges.
     PARA_LIVE_SERVICES=1 node tests/e2e/snap-test.mjs        # a suite against the live services
     node scripts/research/record-osrm.mjs                    # re-record the router's answers
 
+**A local script that opens a browser** (a one-off harness, a measurement, a screenshot run)
+gets the same rule from its first run: it routes every request that is not to its own local
+server to abort, and prints the hosts it refused when it ends. A story or page that draws a map
+otherwise fetches OpenFreeMap's styles and tiles through whatever network the machine has, and
+Para fetches nothing from OpenFreeMap automatically.
+
+    await page.route('**/*', (route) => {
+      const url = route.request().url();
+      if (url.startsWith(base)) return route.continue();   // base: the script's own server
+      refused.add(new URL(url).host);                        // printed when the script ends
+      return route.abort();
+    });
+
 ### Outside hosts by job
 
 What each CI job that runs a browser or reaches off the runner touches, on a pull request's run
