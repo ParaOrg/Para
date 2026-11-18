@@ -205,13 +205,19 @@ jobs:
 
       # The hosts the emulator reached (.scratch/e2e-stand-ins/issues/03): the capture is read here,
       # only the names and connections are printed with their counts, and it is deleted. It is
-      # never uploaded. A capture that can't be read warns and fails nothing.
+      # never uploaded. A capture that can't be read warns and fails nothing. The list is printed
+      # only when the capture holds the ride script's control lookup and, if the map kept tiles
+      # (the summary's tiles=N), the basemap's host; otherwise it says why it is incomplete.
       - name: The hosts the emulator reached
         if: always()
         run: |
           capture="$RUNNER_TEMP/ride.pcap"
+          tiles=$(grep -o 'tiles=[0-9]*' emulator-out/summary.txt 2> /dev/null | tail -1 | cut -d= -f2 || true)
+          basemap=$(sed -n 's/^VITE_BASEMAP_HOST=//p' .env.apk)
+          tile_host=$(node -e 'console.log(new URL(process.argv[1]).hostname)' "${basemap:-https://tiles.openfreemap.org}")
           if [ -f "$capture" ]; then
-            node scripts/apk/hosts-in-capture.mjs "$capture" ride | tee -a "$GITHUB_STEP_SUMMARY" \
+            node scripts/apk/hosts-in-capture.mjs "$capture" ride --control capture-check.invalid \
+              --tiles "${tiles:-0}" --tile-host "$tile_host" | tee -a "$GITHUB_STEP_SUMMARY" \
               || echo "::warning title=Host list::The emulator's capture could not be read."
           else
             echo "No capture: the emulator never wrote one."
@@ -281,13 +287,16 @@ jobs:
 
       # The hosts the emulator reached (.scratch/e2e-stand-ins/issues/03): the capture is read here,
       # only the names and connections are printed with their counts, and it is deleted. It is
-      # never uploaded. A capture that can't be read warns and fails nothing.
+      # never uploaded. A capture that can't be read warns and fails nothing. The list is printed
+      # only when the capture holds the script's control lookup; otherwise it says why it is
+      # incomplete.
       - name: The hosts the emulator reached
         if: always()
         run: |
           capture="$RUNNER_TEMP/notification.pcap"
           if [ -f "$capture" ]; then
-            node scripts/apk/hosts-in-capture.mjs "$capture" notification | tee -a "$GITHUB_STEP_SUMMARY" \
+            node scripts/apk/hosts-in-capture.mjs "$capture" notification \
+              --control capture-check.invalid | tee -a "$GITHUB_STEP_SUMMARY" \
               || echo "::warning title=Host list::The emulator's capture could not be read."
           else
             echo "No capture: the emulator never wrote one."

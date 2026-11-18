@@ -84,6 +84,12 @@ for permission in ACCESS_FINE_LOCATION ACCESS_COARSE_LOCATION ACCESS_BACKGROUND_
 done
 adb shell dumpsys battery unplug || true   # on the battery, as a phone on a ride is
 
+# For the host list (contributor-app.yml, scripts/apk/hosts-in-capture.mjs): plain DNS, so the
+# names the phone looks up can be read in the capture, then one lookup of a name nobody answers,
+# which the list must show or call the capture incomplete.
+adb shell settings put global private_dns_mode off || echo "could not turn Private DNS off"
+adb shell ping -c 1 -W 2 capture-check.invalid > /dev/null 2>&1 || true
+
 adb logcat -c
 adb logcat -v time > "$OUT/logcat.txt" &
 LOGCAT_PID=$!

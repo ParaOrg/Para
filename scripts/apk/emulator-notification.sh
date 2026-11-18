@@ -95,6 +95,12 @@ adb root > /dev/null 2>&1; adb wait-for-device
 # The taps reach the receiver, which is not exported, only as root: without it every tap is lost.
 [ "$(adb shell id -u | tr -d '\r')" = 0 ] || { echo "FAIL: adb is not root" | tee "$OUT/summary.txt"; exit 1; }
 adb install -r "$APK" || { echo "FAIL: install failed" | tee "$OUT/summary.txt"; exit 1; }
+
+# For the host list (contributor-app.yml, scripts/apk/hosts-in-capture.mjs): plain DNS, so the
+# names the phone looks up can be read in the capture, then one lookup of a name nobody answers,
+# which the list must show or call the capture incomplete.
+adb shell settings put global private_dns_mode off || echo "could not turn Private DNS off"
+adb shell ping -c 1 -W 2 capture-check.invalid > /dev/null 2>&1 || true
 for permission in ACCESS_FINE_LOCATION ACCESS_COARSE_LOCATION ACCESS_BACKGROUND_LOCATION POST_NOTIFICATIONS; do
   adb shell pm grant "$PKG" "android.permission.$permission" || echo "could not grant $permission"
 done
