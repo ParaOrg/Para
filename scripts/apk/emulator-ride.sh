@@ -89,6 +89,12 @@ adb shell dumpsys battery unplug || true   # on the battery, as a phone on a rid
 # the capture incomplete. Under example.com (reserved for examples), not .invalid: a resolver
 # answers .invalid itself and sends nothing (RFC 6761). Both are printed, so the log shows them.
 adb shell settings put global private_dns_mode off || echo "could not turn Private DNS off"
+# Wi-Fi off too: with it up the phone sends its traffic that way, around the NIC the capture
+# records, so the capture holds only what went before Wi-Fi came up. The next line names the
+# network the phone is left with.
+adb shell svc wifi disable || echo "could not turn Wi-Fi off"
+sleep 5
+echo "active network: $(adb shell dumpsys connectivity | tr -d '\r' | grep -m1 -E 'Active default network|NetworkAgentInfo' | cut -c1-160)"
 echo "Private DNS: $(adb shell settings get global private_dns_mode | tr -d '\r')"
 echo "control lookup: $(adb shell ping -c 1 -W 2 capture-check.example.com 2>&1 | head -1 | tr -d '\r')"
 
