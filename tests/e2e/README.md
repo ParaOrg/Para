@@ -30,8 +30,8 @@ answered by stand-ins (`lib/stand-ins.mjs`):
   stand-in terrain is **flat by design**: no suite reads heights or shading today. A check that
   comes to read them needs real tiles, recorded, and must not pass on the flat ones.
 
-Every outside host a suite reaches on a pull request's run is now stood in (the Storybook job is
-not one of the suites: `.scratch/e2e-stand-ins/issues/01-turnstile-fail-expire-cannot-load.md`).
+Every outside host a suite reaches on a pull request's run is now stood in, and so is every host
+the Storybook play check reaches (`scripts/checks/storybook-play.mjs`, on every run).
 Main and staging pushes and the nightly run
 set `PARA_LIVE_SERVICES=1` (`.github/workflows/ci.yml`), so every staging push still checks the
 live services. Each suite ends by listing the outside hosts it reached
@@ -42,6 +42,24 @@ it merges.
 
     PARA_LIVE_SERVICES=1 node tests/e2e/snap-test.mjs        # a suite against the live services
     node scripts/research/record-osrm.mjs                    # re-record the router's answers
+
+### Outside hosts by job
+
+What each CI job that runs a browser or reaches off the runner touches, on a pull request's run
+(setup traffic — npm, apt, actions, Playwright's browser, GitHub's own API — left out):
+
+| Job                                                         | Outside hosts                                                                       | On a pull request                                                          |
+| ----------------------------------------------------------- | ----------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| The e2e suites (ci.yml), review-test (database.yml)         | OpenFreeMap, Turnstile, the database, the router, elevation tiles                   | Stood in; any network answer fails the suite (`lib/outside-requests.mjs`)   |
+| Storybook plays (ci.yml)                                    | Turnstile, the basemaps' styles (OpenFreeMap, tiles.para-commute.org)               | Stood in; any other request fails its story; no outside host resolves       |
+| pwa-test (own tiles) (ci.yml)                               | tiles.openfreemap.org, from Node, to fill its loopback server                       | Live: not yet stood in (next change)                                         |
+| The contributor app's emulator jobs (contributor-app.yml)   | OpenFreeMap tiles in the app's WebView; the APK build's style fetch                | Live: a ticket, the owner to decide                                          |
+| The APK build (contributor-app.yml)                         | OpenFreeMap's styles, baked into the app (`vite.apk.config.ts`)                     | Live: a ticket                                                              |
+| Tiles (tiles.yml), landmarks (landmarks.yml)                | Geofabrik, Planetiler's sources, OpenFreeMap's assets; openstreetmap.fr             | Live by design: the sanctioned copies (`docs/operations.md`)                 |
+| Watch (watch.yml)                                           | Para's own site and tiles host                                                      | Live by design: a dry run, no issue written                                 |
+| Publish map, backup                                         | The database, R2                                                                    | Never on a pull request: production jobs                                     |
+
+On staging and main pushes and the nightly run the e2e suites run live (`PARA_LIVE_SERVICES=1`).
 
 **A stand-in gone stale** shows as a live run failing where its pull request's run passed, or
 as a run failing with "the router's stand-in has no answer". The first step is always to

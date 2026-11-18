@@ -114,7 +114,7 @@ const answerRouter = async (route) => {
 
 /** OpenFreeMap's styles, its tiles' TileJSON, its sprite, and empty tiles, glyphs and relief. */
 /** The basemap stand-in's answer for one address: its status, type and body. */
-const basemapAnswer = (url) => {
+export const basemapAnswer = (url) => {
   const { pathname } = new URL(url);
   const style = /^\/styles\/(positron|liberty|fiord)$/.exec(pathname);
   if (style) {

@@ -16,11 +16,12 @@
 // unhandledErrorsWhilePlaying. A major Storybook update can rename them: then every story times out
 // here, and this comment says what to check.
 //
-// Cloudflare's Turnstile is stood in here only (tests/e2e/lib/fake-turnstile.mjs, `byKey`): its
-// script acts as Cloudflare's own test keys do, so the stories reach no outside host. A real site
-// key, or any other request to Cloudflare, fails the story by name. Storybook opened by a person
-// still loads Cloudflare's own script, and the e2e suites' live runs (pushes and nightly) keep
-// reaching it.
+// Every outside host is stood in here only, so the stories reach none: Cloudflare's Turnstile
+// (tests/e2e/lib/fake-turnstile.mjs, `byKey`: its script acts as Cloudflare's own test keys do)
+// and the basemaps' styles (tests/e2e/lib/stand-ins.mjs's basemap stand-in, for OpenFreeMap and
+// for Para's own tiles host alike). A real site key, or any other request off this machine, fails
+// the story by name and is never sent. Storybook opened by a person still reaches the real
+// hosts, and the e2e suites' live runs (pushes and nightly) keep reaching Cloudflare.
 import { createServer } from 'node:http';
 import { readFileSync, existsSync } from 'node:fs';
 import { dirname, extname, join, normalize, resolve } from 'node:path';
@@ -28,7 +29,8 @@ import { fileURLToPath } from 'node:url';
 
 import { chromium } from 'playwright';
 
-import { TURNSTILE, turnstileScript } from '../../tests/e2e/lib/fake-turnstile.mjs';
+import { turnstileScript } from '../../tests/e2e/lib/fake-turnstile.mjs';
+import { basemapAnswer } from '../../tests/e2e/lib/stand-ins.mjs';
 
 const ROOT = resolve(process.argv[2] ?? 'storybook-static');
 const ONLY = process.env.STORYBOOK_PLAY_ONLY ?? '';
@@ -45,6 +47,26 @@ const TYPES = {
   '.png': 'image/png',
   '.woff2': 'font/woff2',
 };
+
+const LOCAL_HOSTS = new Set(['127.0.0.1', 'localhost', '[::1]']);
+/** The basemaps' styles the stories ask for, by host: OpenFreeMap's, and Para's own tiles host's. */
+const STYLE = /^\/styles\/(positron|liberty|fiord)$/;
+
+/** A stand-in's answer for an outside request, or null when none answers it. */
+function standInAnswer(href) {
+  const url = new URL(href);
+  if (url.hostname === 'challenges.cloudflare.com' && url.pathname === '/turnstile/v0/api.js') {
+    return { contentType: 'text/javascript', body: turnstileScript('byKey') };
+  }
+  // Para's own tiles host serves OpenFreeMap's styles under the same paths; the stand-in's style
+  // then asks OpenFreeMap's stand-in for everything else.
+  const isStyleOfOwnHost = url.hostname === 'tiles.para-commute.org' && STYLE.test(url.pathname);
+  if (url.hostname === 'tiles.openfreemap.org' || isStyleOfOwnHost) {
+    const answer = basemapAnswer(`https://tiles.openfreemap.org${url.pathname}`);
+    return answer.status === 404 ? null : answer;
+  }
+  return null;
+}
 
 /** Hooks the preview's channel as the page makes it, and keeps what it says of the story. */
 function hookChannel() {
@@ -93,8 +115,9 @@ function serve(root) {
 
 /** Opens one story and answers what became of it: null when it passed, else why it failed. */
 async function runStory(page, base, story) {
-  const cloudflare = [];
-  page.__paraCloudflare = cloudflare;
+  const unanswered = [];
+  page.__paraUnanswered = unanswered;
+  page.__paraStoryId = story.id;
   await page.goto(`${base}/iframe.html?id=${encodeURIComponent(story.id)}&viewMode=story`);
   const finished = await page
     .waitForFunction(() => globalThis.__paraPlay?.done, null, { timeout: STORY_TIMEOUT_MS })
@@ -106,8 +129,8 @@ async function runStory(page, base, story) {
   const refused = await page.evaluate(() => globalThis.__paraTurnstileRefused ?? []);
   if (refused.length)
     return `Turnstile stand-in refused a key that is not a test key: ${refused.join(', ')}`;
-  if (cloudflare.length)
-    return `a request to Cloudflare the stand-in does not answer: ${cloudflare.join(', ')}`;
+  if (unanswered.length)
+    return `outside requests no stand-in answers, not sent: ${unanswered.join(', ')}`;
   if (!finished)
     return `did not finish in ${STORY_TIMEOUT_MS / 1000} s${said.errors.length ? `: ${said.errors.join('\n')}` : ''}`;
   if (said.status === 'success' && said.errors.length === 0) return null;
@@ -123,9 +146,12 @@ const stories = Object.values(JSON.parse(readFileSync(join(ROOT, 'index.json'), 
   // STORYBOOK_PLAY_ONLY=<text>: only the stories whose id holds it, every failure said, while fixing.
   .filter((entry) => !ONLY || entry.id.includes(ONLY));
 const { base, close } = await serve(ROOT);
-const browser = await chromium.launch(
-  process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {},
-);
+const browser = await chromium.launch({
+  ...(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {}),
+  // No outside host resolves: what the stand-ins do not answer, a preconnect included, cannot
+  // leave the machine either.
+  args: ['--host-resolver-rules=MAP * ~NOTFOUND, EXCLUDE localhost, EXCLUDE 127.0.0.1'],
+});
 // The stories listed as failing, by id, whatever their area.
 const listed = new Map(
   Object.values(JSON.parse(readFileSync(BASELINE, 'utf8')).areas).flatMap((stories) =>
@@ -134,20 +160,25 @@ const listed = new Map(
 );
 const failed = new Set();
 const problems = [];
+/** Every outside request refused, with the story open when it was made: one late, after its story said it finished, is failed at the end. */
+const refusedRequests = [];
 let next = 0;
 await Promise.all(
   Array.from({ length: WORKERS }, async () => {
     const page = await browser.newPage({ viewport: { width: 1024, height: 768 } });
     await page.addInitScript(hookChannel);
-    // Cloudflare's script, stood in; anything else asked of Cloudflare is noted for the story.
-    await page.route(TURNSTILE, (route) => {
-      const url = new URL(route.request().url());
-      if (url.pathname === '/turnstile/v0/api.js') {
-        return route.fulfill({ contentType: 'text/javascript', body: turnstileScript('byKey') });
-      }
-      page.__paraCloudflare?.push(url.href);
-      return route.fulfill({ status: 404, body: '' });
-    });
+    // Every request off this machine: a stand-in answers it, or it is refused and noted for the
+    // story. Nothing is sent.
+    await page.route(
+      (url) => /^https?:$/.test(url.protocol) && !LOCAL_HOSTS.has(url.hostname),
+      (route) => {
+        const answer = standInAnswer(route.request().url());
+        if (answer) return route.fulfill(answer);
+        page.__paraUnanswered?.push(route.request().url());
+        refusedRequests.push({ story: page.__paraStoryId, url: route.request().url() });
+        return route.abort();
+      },
+    );
     while (next < stories.length) {
       const story = stories[next++];
       const why = await runStory(page, base, story).catch((error) => String(error));
@@ -164,6 +195,13 @@ await Promise.all(
 );
 await browser.close();
 close();
+for (const { story, url } of refusedRequests) {
+  if (problems.includes(story)) continue;
+  problems.push(story);
+  console.error(
+    `FAIL  ${story}: an outside request no stand-in answers, made while it was open and not sent: ${url}`,
+  );
+}
 const ids = new Set(stories.map((story) => story.id));
 for (const id of ONLY ? [] : listed.keys()) {
   let stale = null;
