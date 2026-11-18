@@ -23,8 +23,9 @@ const LINK = { ethernet: 1, raw: 101, rawOld: 12, cooked: 113, ipv4: 228, ipv6: 
 /**
  * The hosts in a classic pcap capture, as counts by kind. Throws on a file that is not one.
  * @param {Buffer} capture
- * @returns {{ names: Map<string, { dns: number, tls: number, http: number }>, connections: Map<string, number> }}
- *   `connections` counts each server address and port by the phone's ports that opened it.
+ * @returns {{ names: Map<string, { dns: number, tls: number, http: number }>, connections: Map<string, number>, firstSecond: number | null, lastSecond: number | null }}
+ *   `connections` counts each server address and port by the phone's ports that opened it;
+ *   `firstSecond` and `lastSecond` are its first and last packets' times, in Unix seconds.
  */
 export function hostsInCapture(capture) {
   if (capture.length < 24) throw new Error('not a pcap capture: shorter than its header');
@@ -46,7 +47,12 @@ export function hostsInCapture(capture) {
 
   /** By server address and port, the phone's ports that connected to it. */
   const opened = new Map();
+  let firstSecond = null;
+  let lastSecond = null;
   for (let at = 24; at + 16 <= capture.length;) {
+    const second = u32(at);
+    firstSecond ??= second;
+    lastSecond = second;
     const length = u32(at + 8);
     const packet = capture.subarray(at + 16, at + 16 + length);
     at += 16 + length;
@@ -56,7 +62,7 @@ export function hostsInCapture(capture) {
     if (ip.protocol === 6) readTcp(ip, count, opened);
   }
   for (const [server, ports] of opened) connections.set(server, ports.size);
-  return { names, connections };
+  return { names, connections, firstSecond, lastSecond };
 }
 
 /** The IP packet inside a frame of `linkType`: its protocol, addresses and payload. */
@@ -192,6 +198,13 @@ export function whyIncomplete({ names }, { controlName, tiles = 0, tileHost }) {
   return null;
 }
 
+/** When the capture's packets begin and end, in UTC, or nothing for an empty one. */
+export function spanOf({ firstSecond, lastSecond }) {
+  if (firstSecond === null || lastSecond === null) return '';
+  const time = (second) => new Date(second * 1000).toISOString().slice(11, 19);
+  return `, packets from ${time(firstSecond)} to ${time(lastSecond)} UTC`;
+}
+
 /** The value after `--name` among the arguments, if there is one. */
 const option = (args, name) => {
   const at = args.indexOf(`--${name}`);
@@ -208,8 +221,9 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     tiles: Number(option(args, 'tiles') ?? 0),
     tileHost: option(args, 'tile-host'),
   });
-  // An untrusted capture names nothing, but says how much it held, to tell an empty one apart.
-  const held = `(it held ${hosts.names.size} names and ${hosts.connections.size} connections)`;
+  // An untrusted capture names nothing, but says how much it held and over what span, to tell an
+  // empty capture from one that stopped early.
+  const held = `(it held ${hosts.names.size} names and ${hosts.connections.size} connections${spanOf(hosts)})`;
   const lines = why ? [`${label}: capture incomplete: ${why} ${held}`] : hostLines(hosts, label);
   for (const line of lines) console.log(line);
 }

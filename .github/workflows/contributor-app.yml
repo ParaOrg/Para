@@ -212,6 +212,10 @@ jobs:
         if: always()
         run: |
           capture="$RUNNER_TEMP/ride.pcap"
+          # The runner stops the emulator as this step begins: read the capture once the emulator has
+          # exited and written all of it, and say its size, so one cut short shows.
+          for _ in $(seq 60); do pgrep -f qemu-system > /dev/null || break; sleep 1; done
+          if [ -f "$capture" ]; then echo "capture: $(stat -c %s "$capture") bytes"; fi
           tiles=$(grep -o 'tiles=[0-9]*' emulator-out/summary.txt 2> /dev/null | tail -1 | cut -d= -f2 || true)
           basemap=$(sed -n 's/^VITE_BASEMAP_HOST=//p' .env.apk)
           tile_host=$(node -e 'console.log(new URL(process.argv[1]).hostname)' "${basemap:-https://tiles.openfreemap.org}")
@@ -294,6 +298,10 @@ jobs:
         if: always()
         run: |
           capture="$RUNNER_TEMP/notification.pcap"
+          # The runner stops the emulator as this step begins: read the capture once the emulator has
+          # exited and written all of it, and say its size, so one cut short shows.
+          for _ in $(seq 60); do pgrep -f qemu-system > /dev/null || break; sleep 1; done
+          if [ -f "$capture" ]; then echo "capture: $(stat -c %s "$capture") bytes"; fi
           if [ -f "$capture" ]; then
             node scripts/apk/hosts-in-capture.mjs "$capture" notification \
               --control capture-check.example.com | tee -a "$GITHUB_STEP_SUMMARY" \

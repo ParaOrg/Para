@@ -92,3 +92,11 @@ and a resolver answers `.invalid` itself without sending a query (RFC 6761). So 
 never pass. The control is now `capture-check.example.com`. The log prints Private DNS's setting
 and the lookup's first line. An incomplete capture says how many names and connections it held,
 without naming them.
+
+**With the control fixed** (#1072's second run). The notification job's capture held the control
+lookup, so its list is trusted. The ride's held 2 names and 3 connections, while its map kept
+tiles (`tiles=2 meta=3`). So its capture is incomplete, cause not yet known. In both jobs the host
+step began 4–6 s after the runner's `emu kill`, which gives the emulator 20 s to shut down. Next:
+the step waits for the emulator to exit before reading, prints the capture's size, and an
+incomplete capture says when its first and last packets were. That shows whether the capture
+stopped early or was read before it was written.
