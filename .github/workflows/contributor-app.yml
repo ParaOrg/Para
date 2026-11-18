@@ -190,7 +190,7 @@ jobs:
           target: ${{ env.EMULATOR_TARGET }}
           arch: ${{ env.EMULATOR_ARCH }}
           disable-animations: true
-          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -tcpdump ${{ runner.temp }}/ride.pcap
           script: bash scripts/apk/emulator-ride.sh android/app/build/outputs/apk/debug/app-debug.apk emulator-out
 
       - name: Show the result
@@ -202,6 +202,21 @@ jobs:
           fi
           cat emulator-out/summary.txt | tee -a "$GITHUB_STEP_SUMMARY" || true
           grep -a "PARA_RIDE" emulator-out/logcat.txt | tail -40 || true
+
+      # The hosts the emulator reached (.scratch/e2e-stand-ins/issues/03): the capture is read here,
+      # only the names and connections are printed with their counts, and it is deleted. It is
+      # never uploaded. A capture that can't be read warns and fails nothing.
+      - name: The hosts the emulator reached
+        if: always()
+        run: |
+          capture="$RUNNER_TEMP/ride.pcap"
+          if [ -f "$capture" ]; then
+            node scripts/apk/hosts-in-capture.mjs "$capture" ride | tee -a "$GITHUB_STEP_SUMMARY" \
+              || echo "::warning title=Host list::The emulator's capture could not be read."
+          else
+            echo "No capture: the emulator never wrote one."
+          fi
+          rm -f "$capture"
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         if: always()
@@ -252,7 +267,7 @@ jobs:
           target: ${{ env.EMULATOR_TARGET }}
           arch: ${{ env.EMULATOR_ARCH }}
           disable-animations: true
-          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -tcpdump ${{ runner.temp }}/notification.pcap
           script: bash scripts/apk/emulator-notification.sh android/app/build/outputs/apk/debug/app-debug.apk notification-out
 
       - name: Show the result
@@ -263,6 +278,21 @@ jobs:
             echo "::error title=Emulator setup failed::Emulator setup failed, no test ran: the emulator never came up. See the steps above."
           fi
           cat notification-out/summary.txt | tee -a "$GITHUB_STEP_SUMMARY" || true
+
+      # The hosts the emulator reached (.scratch/e2e-stand-ins/issues/03): the capture is read here,
+      # only the names and connections are printed with their counts, and it is deleted. It is
+      # never uploaded. A capture that can't be read warns and fails nothing.
+      - name: The hosts the emulator reached
+        if: always()
+        run: |
+          capture="$RUNNER_TEMP/notification.pcap"
+          if [ -f "$capture" ]; then
+            node scripts/apk/hosts-in-capture.mjs "$capture" notification | tee -a "$GITHUB_STEP_SUMMARY" \
+              || echo "::warning title=Host list::The emulator's capture could not be read."
+          else
+            echo "No capture: the emulator never wrote one."
+          fi
+          rm -f "$capture"
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         if: always()
