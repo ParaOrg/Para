@@ -100,3 +100,11 @@ step began 4–6 s after the runner's `emu kill`, which gives the emulator 20 s 
 the step waits for the emulator to exit before reading, prints the capture's size, and an
 incomplete capture says when its first and last packets were. That shows whether the capture
 stopped early or was read before it was written.
+
+**Read after exit, still incomplete** (#1073). Both captures were written in full, ~30 KB each,
+with packets from boot to the last minute. Yet both held only the boot-time check (2 names, 3
+connections) and not the control lookup. So the phone's traffic leaves by an interface the
+capture does not record: the emulator's Wi-Fi, once it is up. The one whole list would be a run
+where it never came up. Next: Wi-Fi off before the app starts, and the active network printed.
+If the cellular NIC carries nothing, the ride's kept-tiles check fails. That is a finding, and the
+check stays as it is.
