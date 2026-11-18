@@ -3,6 +3,7 @@ import { useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode 
 import { IconButton } from '@/design-system/primitives/icon-button';
 import { useDialogFocus } from '@/shared/hooks/use-dialog-focus';
 import { useEscape } from '@/shared/hooks/use-escape';
+import { useTabLoop } from '@/shared/hooks/use-tab-loop';
 import {
   BusIcon,
   CloseIcon,
@@ -68,27 +69,9 @@ export function RideSheet({ rideKind, onPick, onClose }: RideSheetProps) {
     return () => window.removeEventListener('click', handleClick);
   }, [onClose]);
 
-  // Tab goes round inside the sheet: ✕, then the rows' one stop, and back to ✕ from any row.
-  useEffect(() => {
-    const sheet = sheetRef.current;
-    if (!sheet) return;
-    const handleKeyDown = (e: globalThis.KeyboardEvent) => {
-      if (e.key !== 'Tab') return;
-      const stops = [...sheet.querySelectorAll<HTMLElement>('button:not([tabindex="-1"])')];
-      const first = stops.at(0);
-      const last = stops.at(-1);
-      const isOnRow = document.activeElement?.getAttribute('role') === 'radio';
-      if (e.shiftKey && (document.activeElement === first || document.activeElement === sheet)) {
-        e.preventDefault();
-        last?.focus();
-      } else if (!e.shiftKey && (isOnRow || document.activeElement === last)) {
-        e.preventDefault();
-        first?.focus();
-      }
-    };
-    sheet.addEventListener('keydown', handleKeyDown);
-    return () => sheet.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  // Tab goes round inside the sheet: ✕, then the rows' one stop, and back to ✕. The row with focus
+  // is always that stop (tabRow, below), so Tab from any row comes back to ✕.
+  useTabLoop(sheetRef, 'button:not([tabindex="-1"])');
 
   // The arrow keys move along the rows, round from the last to the first, as a radio group's do.
   const handleRowKeyDown = (e: KeyboardEvent<HTMLButtonElement>, at: number) => {
