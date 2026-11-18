@@ -43,3 +43,18 @@ The owner (Q182, 2026-11-11): option 1, a suggestion that is never an automatic 
 Ready for an agent: the detection only. It is a pure function in `recorder/` over the recent accepted fixes and the current mode. It says when a suggestion is due, with unit tests from recorded fixes: a jeepney on EDSA, walking, and a slow jeepney in traffic. Its numbers (speed and how long) are constants beside it, starting from about 15 km/h for a minute.
 
 **Waiting for the owner's design, and not to be invented:** the prompt itself, its place, words and buttons, and whether the app's ride card offers it. Until the frames come, nothing is shown: the detection is wired to nothing that draws. It is on the design-later list in `.scratch/contribute-apk/README.md`.
+
+## Comments
+
+**The detection is built** (`src/features/contribute/recorder/sakay-hint.ts`, `isSakayHintDue`,
+with `tests/unit/sakay-hint-test.mjs`). It is due on Lakad once the last minute since the switch
+to Lakad averaged 15 km/h or more (`SAKAY_HINT`). It measures the straight line from the minute's
+first fix to its last, so a walker's wandering fixes don't add up into speed. Fixes more than 20 s
+apart are no stretch to judge by. Once offered, it waits for a slower minute and a new fast one.
+The tracks are made up along EDSA, as no recorded ride may be used:
+- a jeepney at 30 km/h: due at 60 s;
+- walkers at 5 and 7 km/h: never;
+- a crawl in traffic: not until it speeds up;
+- a jeepney stopping for passengers: due.
+
+It is wired to nothing that draws, until the owner's frames come.
