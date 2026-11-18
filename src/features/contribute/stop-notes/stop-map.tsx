@@ -39,6 +39,8 @@ export function StopMap({ trail, at }: StopMapProps) {
     ]) {
       gesture.disable();
     }
+    // With its keys off, the canvas would be a Tab stop that does nothing.
+    made.getCanvas().tabIndex = -1;
     if (at) {
       const zoom = zoomForSpan(at[1], made.getContainer().clientWidth, STOP_MAP_SPAN_M);
       made.jumpTo({ center: [...at], zoom });

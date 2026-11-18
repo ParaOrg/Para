@@ -1,6 +1,6 @@
 # The stop-map popup's Tab loop counts only its buttons
 
-Status: ready-for-agent
+Status: resolved
 Type: task
 
 ## What happens
@@ -49,3 +49,11 @@ what a screen-reader user hears.
 - Escape and focus return as before.
 
 ## Comments
+
+**Resolved with option 2, the credits kept.** The canvas leaves the Tab order (`stop-map.tsx` sets
+its `tabIndex` to -1 beside the gestures it turns off). The loop's stops are
+`button, summary, a[href]`: the credits' ⓘ, their links while open, and the card's buttons. A play
+check on Default and ReadOnly proves Tab and Shift+Tab go round them both ways and never land on
+the canvas. Against the code before, the same check fails on both stories. The place the map
+shows is in the card as text already (`{place}` under the map, and the `sr-only` heading names the
+stop).
