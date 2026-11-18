@@ -38,7 +38,7 @@ your report and stop.
    every job's log. Each log line starts with a timestamp, so match the text
    anywhere in the line, never at its start:
    `gh api repos/ParaOrg/Para/actions/jobs/<job>/logs | awk '/##\[group\]/{g=$0} /outside: |stand-ins have no answer/{print g" | "$0}' | sed -E 's/[0-9T:.-]+Z //g'`.
-   A line reads `outside: <host> ×n (network n, stood in n, failed n, cancelled n)`.
+   A line reads `outside: <host> ×n (network n, stood in n, failed n, cancelled n, from the worker n)`; the last column is what a page's own service worker answered.
    On a pull request's run every `network` count should be 0; on a push to
    `staging` or `main` (live services) a non-zero `network` is expected.
 

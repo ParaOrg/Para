@@ -92,3 +92,23 @@ Chromium, and does not need to be.
 
 handover-test keeps `keepBasemapUnreachable()`: its hand-over is built on the basemap failing at
 once. contribute-offline-test finds 1 either way and stays on routes.
+
+### Behind a proxy, the loopback server was not what answered
+
+On 2026-11-17 the local runs of pwa-test for the loopback server above (about 19 runs) were made
+on a machine whose outbound HTTPS goes through a proxy on 127.0.0.1. A proxy carries HTTPS before
+Chromium applies `--host-resolver-rules`, so those runs reached the real tile host,
+tiles.openfreemap.org: about 1,000 tile requests in all. `--proxy-bypass-list` did not change
+that. CI has no proxy, and there the server answers.
+
+The audit missed it because it counted any answer from a loopback address as stood in, and the
+proxy's address is loopback too.
+
+Two fixes, in the pull request that adds the "from the worker" column (e2e-stand-ins 02):
+
+- The audit counts as stood in only an answer from the stand-in server's own loopback port
+  (`isStandInServer`). Any other address is the network's, a local proxy's included. A page
+  whose worker forwards a request to an outside host, on a stood-in run behind the proxy, was
+  `stood in 1` and exited 0 before; it is `network 1` and fails the run now.
+- `serveBasemapOverHttps` refuses to start when `HTTPS_PROXY`, `HTTP_PROXY` or their lower-case
+  forms are set, naming the reason: such a machine cannot run pwa-test stood in.
