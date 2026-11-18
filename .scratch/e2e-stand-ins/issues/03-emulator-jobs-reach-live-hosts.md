@@ -1,6 +1,6 @@
 # The contributor app's emulator jobs reach live hosts on a pull request
 
-Status: needs-info
+Status: ready-for-human
 Type: task
 Priority: medium
 
@@ -19,14 +19,28 @@ What the APK carries, from `.env.apk` (all public by design, shipped inside the 
 - the update check's address. A debug build has no `VITE_APP_VERSION_CODE`, so it never checks;
 - the basemap host: unset, so OpenFreeMap (`src/shared/config/env.ts`).
 
-What the jobs are known to reach, and what is not yet known:
+What the jobs reach, measured (#1074's pull request run, both jobs, with the capture's checks
+passing; the lists are under Comments):
 
-| Host | Known? | From where |
-| --- | --- | --- |
-| OpenFreeMap: styles, tiles, sprite, glyphs | Yes | The app's WebView draws the ride page's map |
-| OpenFreeMap: the three styles, at build time | Yes | `vite.apk.config.ts` (`basemapStylesInTheApp`) fetches them from Node and fails the build without them |
-| The database | Not measured | The driver signs nobody in and saves nothing (`src/features/contribute/native/emulator-ride.ts`). Whether the page's client makes any request at start is not measured |
-| Turnstile | Not measured | The challenge loads only on a contributor's first save; the driver never saves. Not measured either |
+| Host | From where |
+| --- | --- |
+| tiles.openfreemap.org | The ride page's map, in the WebView: styles, tiles, sprite, glyphs |
+| www.para-commute.org | The published map's index and lines, read through the phone's own HTTP client (`src/features/contribute/map/published-source.ts`). By design |
+| challenges.cloudflare.com, brunhild.challenges.cloudflare.com, stun.cloudflare.com | Turnstile, at page load. A phone with no account opens on Sign in (`useAccountGate`, `account-gate.tsx`), and Sign in, Create an account and Forgot password each carry the check (`use-captcha.ts`). The emulator has no account |
+| The database | Not seen in either job: no lookup and no TLS name for it. That covers these runs only, not every run |
+| Android, Play Services and Chrome (connectivitycheck, *.googleapis.com, www.google.com, www.gstatic.com, mtalk, dl.google.com, STUN and others) | The phone itself, not the app |
+
+Also: tiles.openfreemap.org's three styles are fetched from Node at build time
+(`vite.apk.config.ts`, `basemapStylesInTheApp`), outside the capture.
+
+fonts.gstatic.com appeared once, in #1072's run, and in neither job of #1074's. The app's fonts are
+self-hosted (`src/design-system/foundation/fonts.css`), and nothing in `src/`, `contribute/` or
+`android/app/src` names a Google font host. So it is the phone's, not the app's.
+
+The contributor-page docs say Turnstile runs on a contributor's first save. It also runs on the
+contributor's own Sign in, Create an account and Forgot password, as it does on the studio's
+sign-in. That is intended; only the documentation leaves it out (CLAUDE.md's stack table, the
+owner's to change).
 
 Nothing is written anywhere live as far as the code shows: the driver records into the phone's
 own storage and the native log only.
@@ -40,34 +54,52 @@ makes.
 
 ## Options
 
-1. **Measure first (under way).** Both jobs start the emulator with its own capture
-   (`-tcpdump`). A step in the job reads the capture with `scripts/apk/hosts-in-capture.mjs` and
-   prints only the names looked up (DNS), the names TLS was opened to (the server name), the hosts
-   asked over plain HTTP, and the TCP connections opened, each with its count. Then it deletes the
-   capture, which is never uploaded. The capture is the whole phone's, so Android's own hosts show
-   beside the app's. After one pull request run and one push run, the host list goes under
-   Comments.
-2. **Cut the emulator's network.** Turn off Wi-Fi and data before the app starts
-   (`adb shell svc wifi disable`, `svc data disable`). The ride under test is GPS-only. The map
-   would draw from the copies baked into the app (`basemap-copies.ts`), which is itself a case
-   worth covering. Needs a check that `keptBasemap()` in the driver's report still means what the
-   checker expects.
-3. **Stand in through a proxy.** Start the emulator with `-http-proxy` pointed at a local server
-   that answers the basemap from `tests/e2e/fixtures/basemap/`, refuses everything else, and
-   prints an audit line as the browser suites do. This needs the most new code, and gives the
-   closest match to the browser suites.
-4. **Build the emulator APK with stand-in values.** A Turnstile test key, and a database address
-   no request can reach, for the emulator build only (never the release build, which
-   `contributor-app.yml` already checks for the driver). This combines with 2 or 3.
+Sizes: S is an hour or two and one small pull request; M is a day; L is several days.
 
-The build-time style fetch is its own, lower-priority change: `basemapStylesInTheApp` could read
-`tests/e2e/fixtures/basemap/` for a debug build. It can't do the same for the release build,
-which must carry the real styles.
+1. **Measure (done).** Both jobs capture the emulator's traffic (`-tcpdump`). With Private DNS and
+   Wi-Fi off, a control lookup and, in the ride, the tile host must be in the capture, or the job
+   says the capture is incomplete and names nothing. Only names and counts are printed, and the
+   capture is deleted in the job.
+2. **Cut the emulator's network (M).** Turn data off as well, once the app is installed. The ride
+   is GPS-only, and the map would draw from the style copies baked into the app
+   (`basemap-copies.ts`) with no tiles. The ride's kept-tiles check (`tiles>0`) would then fail by
+   design, so it would have to change into a check of the no-signal map. That is a change to what
+   the job proves, so it is the owner's call.
+3. **Stand in through a local proxy (L).** The emulator's `-http-proxy` points at a local server
+   that answers the basemap and the published map from fixtures, refuses everything else, and
+   prints an audit line as the browser suites do. This is the full offline step. It needs the
+   most new code: the native HTTP client's reads of the published map have to honour the proxy
+   too.
+4. **Stand-in values in the emulator build (S).** In the two emulator jobs' build step only, add
+   Turnstile's always-pass test key and a database address no request can reach (a loopback
+   port). The release build and `.env.apk` are unchanged. The jobs then carry no live key and no
+   live database address. Turnstile's script still loads from challenges.cloudflare.com, since
+   test keys are served from the same host. A variant: `VITE_CONTRIBUTIONS=0` for the emulator
+   build, which removes the database client and the Sign in gate altogether, and so Turnstile too.
+   But the job would then test a page with no account step, a change to what it proves.
+5. **Para's own tile host in the emulator build (S).** Set `VITE_BASEMAP_HOST` to
+   https://tiles.para-commute.org in the same build step. The ride's tiles, and the three styles
+   fetched at build time, then come from Para's own server, not OpenFreeMap. The kept-tiles check
+   stays as it is: the cache rules already match the own host's addresses
+   (`src/shared/config/basemap-cache-rules.ts`, `/{z}/{x}/{y}.pbf` and `/styles|assets/`). Two
+   things to know:
+   - The emulator would then test a different basemap host from the APK testers install, which
+     reads OpenFreeMap (`.env.apk` sets none). The website already uses the own host
+     (`.env.production`), so the own host's path is tested elsewhere. The APK's own path
+     (OpenFreeMap) would lose its emulator coverage until `.env.apk` follows.
+   - The runs still reach the network, now Para's own Worker instead of OpenFreeMap.
+
+**4 and 5 together** are one small pull request: three variables in the two emulator jobs' build
+step (`env:` beside `VITE_EMULATOR_RIDE`). It touches `.github` only, so it merges alone. The
+host list then shows what changed.
 
 ## Decision
 
-The owner decides between 2, 3 and 4 once the measurement in 1 is in. The emulator trigger's paths
-stay as they are until the owner says otherwise.
+The owner decides. The hub recommends 4+5 now and 3 later as the full offline step. Before 4+5 is
+built, the owner answers a product question: should the shipped APK (`.env.apk`) also move to
+Para's own tile host, as the website has? If yes, 4+5 tests the shipped path again. If no, the
+emulator tests the own host while the shipped APK reads OpenFreeMap, a gap this ticket records
+and accepts. The emulator trigger's paths stay as they are until the owner says otherwise.
 
 ## Comments
 
@@ -108,3 +140,14 @@ capture does not record: the emulator's Wi-Fi, once it is up. The one whole list
 where it never came up. Next: Wi-Fi off before the app starts, and the active network printed.
 If the cellular NIC carries nothing, the ride's kept-tiles check fails. That is a finding, and the
 check stays as it is.
+
+**Trusted lists** (#1074: Wi-Fi off, the active network printed). Both captures were full (22 MB
+and 11 MB, from ~30 KB), each held the control lookup, and the ride's tile check passed. Hosts
+(dns/tls/http counts) from the ride: tiles.openfreemap.org 4/2/0, www.para-commute.org 4/2/0,
+challenges.cloudflare.com 6/3/0, brunhild.challenges.cloudflare.com 5/0/0, stun.cloudflare.com
+3/0/0, and Android's own: android.googleapis.com, connectivitycheck.gstatic.com,
+content-autofill.googleapis.com, dl.google.com, edgedl.me.gvt1.com, geller-pa.googleapis.com,
+mtalk.google.com, play.googleapis.com, stun.l.google.com, stun1.l.google.com,
+update.googleapis.com, voilatile-pa.googleapis.com, www.google.com, www.googleapis.com,
+www.gstatic.com. The notification job: the same, plus infinitedata-pa.googleapis.com and
+youtubei.googleapis.com. No database host in either.
