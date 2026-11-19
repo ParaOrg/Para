@@ -162,8 +162,8 @@ export function TimelineRouteDetailCard({
             onSwitch={onSwitch}
           />
         }
-        routes={otherRoutes}
-        onRoute={onOtherRoute}
+        routes={onOtherRoute ? otherRoutes : []}
+        onRoute={(id) => onOtherRoute?.(id)}
       >
         {/* Cards 16 apart, 12 in, clear of the Controller: 78 at a phone's foot, 6 floating. */}
         <div className="flex w-full flex-col gap-4 px-3 pt-3 pb-24 sheet-floating:pb-6">

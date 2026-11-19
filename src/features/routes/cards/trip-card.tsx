@@ -120,7 +120,7 @@ export function TripCard({
   dockRef: Ref<HTMLDivElement>;
   /** Its sheet's height, shared with the list or card behind it (BottomSheet). */
   height: SheetHeight;
-  /** A row of "Other routes" tapped: that direction's trip in this one's place. Without it, no rows. */
+  /** A row behind "View N more routes" tapped: that direction's trip in this one's place. Without it, no rows. */
   onOtherRoute?: (direction: Direction) => void;
   /** Where a signboard's file is read: beside the published map, or the studio's bucket. */
   signboardUrl?: (name: string) => string;

@@ -21,7 +21,7 @@ interface TripMoreRoutesProps {
   /** The other routes out of where the trip starts. None: no tab and no list. */
   routes: readonly OtherRoute[];
   /** A row tapped: that route's trip in this one's place. */
-  onRoute?: (id: string) => void;
+  onRoute: (id: string) => void;
   /** The rest of the trip, on the panel under the band and the list. */
   children: ReactNode;
 }
@@ -41,6 +41,7 @@ const TAB = {
 export function TripMoreRoutes({ ends, routes, onRoute, children }: TripMoreRoutesProps) {
   const [isOpen, setIsOpen] = useState(false);
   const listId = useId();
+  const headingId = useId();
   const count = routes.length;
   const more = `${count} more ${count === 1 ? 'route' : 'routes'}`;
   return (
@@ -53,10 +54,13 @@ export function TripMoreRoutes({ ends, routes, onRoute, children }: TripMoreRout
           id={listId}
           hidden={!isOpen}
           data-testid="trip-other-routes"
-          aria-label={more}
+          aria-labelledby={headingId}
           className="w-full px-1 font-sn-pro"
         >
-          <p className="px-3 pt-8 pb-2 text-sm/5 font-medium text-text-tertiary uppercase">
+          <p
+            id={headingId}
+            className="px-3 pt-8 pb-2 text-sm/5 font-medium text-text-tertiary uppercase"
+          >
             {more}
           </p>
           <ul>
@@ -69,7 +73,7 @@ export function TripMoreRoutes({ ends, routes, onRoute, children }: TripMoreRout
                   on="surface"
                   data-testid="trip-other-route"
                   data-direction={route.id}
-                  onClick={() => onRoute?.(route.id)}
+                  onClick={() => onRoute(route.id)}
                 />
               </li>
             ))}

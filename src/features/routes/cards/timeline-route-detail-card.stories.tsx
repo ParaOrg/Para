@@ -906,7 +906,7 @@ export const SignboardsAndOtherRoutes: Story = {
     onOtherRoute: fn(),
   },
   play: async ({ canvasElement }) => {
-    // The other routes now come first, at the top, under the trip's ends.
+    // The other routes come first, at the top, under the trip's ends.
     const boards = within(canvasElement).getByTestId('trip-signboards');
     const others = within(canvasElement).getByTestId('trip-other-routes');
     await expect(
