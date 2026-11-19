@@ -171,6 +171,7 @@ export function TimelineRouteDetailCard({
         {/* Cards 16 apart, 12 in, clear of the Controller: 78 at a phone's foot, 6 floating. */}
         <div className="flex w-full flex-col gap-4 px-3 pt-3 pb-24 sheet-floating:pb-6">
           {ridePills}
+          <TripSignboards signboards={signboards} />
           <TripTiles
             shown={shown}
             shownMetres={shownMetres}
@@ -181,7 +182,6 @@ export function TimelineRouteDetailCard({
               setTurns((t) => t + 1);
             }}
           />
-          {signboards.length > 0 && <TripSignboards signboards={signboards} />}
           <TimelineRouteDetail
             livery={livery}
             routeOrigin={routeOrigin}

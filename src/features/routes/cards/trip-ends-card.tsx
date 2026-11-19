@@ -85,7 +85,7 @@ const SIGN_COLOUR = {
  */
 function EndCard({ sign, label, place, via, isClearOfSwitch = false }: EndCardProps) {
   return (
-    <div className="flex w-full flex-col gap-1 rounded-2xl bg-bg-fill px-2.5 pt-2.5 pb-2 shadow-trip-end-card">
+    <div className="flex w-full flex-col gap-1 rounded-2xl bg-bg-fill px-2.5 pt-2.5 pb-2 shadow-trip-card">
       <p className="flex items-center gap-1.5 text-xs/4 font-medium text-text-secondary">
         <span aria-hidden className={cn('flex size-4 shrink-0 *:size-full', SIGN_COLOUR[label])}>
           {sign}

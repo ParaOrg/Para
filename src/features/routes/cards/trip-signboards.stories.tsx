@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { expect, waitFor, within } from 'storybook/test';
 
 import { TripSignboards } from './trip-signboards';
 
@@ -15,13 +16,13 @@ const board = (label: string, width = 120) =>
       '</svg>',
   );
 
-/** The signboards' card between a trip's tiles and its stops, on a phone-wide sheet. */
+/** The signboards' card above a trip's tiles, on a phone-wide sheet (BottomContent, 4796:30124). */
 const meta = {
   title: 'Features/Routes/TripSignboards',
   component: TripSignboards,
   decorators: [
     (Story) => (
-      <div className="w-[393px] bg-surface pb-4">
+      <div className="w-98.25 bg-bg-surface p-4">
         <Story />
       </div>
     ),
@@ -32,8 +33,23 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** One signboard. Its alt text reads "Signboard". */
-export const OneSignboard: Story = {};
+/** One signboard, 32 tall, under the "Signboard" heading. Its alt text reads "Signboard". */
+export const OneSignboard: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole('heading', { name: 'Signboard' })).toBeVisible();
+    const board = canvas.getByRole('img', { name: 'Signboard' });
+    await waitFor(() => expect(board.getBoundingClientRect().height).toBe(32));
+  },
+};
+
+/** None uploaded: no card at all. */
+export const NoSignboards: Story = {
+  args: { signboards: [] },
+  play: async ({ canvasElement }) => {
+    await expect(within(canvasElement).queryByTestId('trip-signboards')).toBeNull();
+  },
+};
 
 /** Three signboards. Their alt text reads "Signboard 1 of 3" and so on. */
 export const SeveralSignboards: Story = {
