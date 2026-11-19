@@ -4620,6 +4620,58 @@ if (runsPart(3)) {
       `${readyFull ? '' : 'could not get to half first; '}${upFull.how}; data-snap=${await sheetState()}`,
     );
 
+    // Momentum (glideTo): thrown, the sheet coasts on from where the finger lifts, slowing
+    // evenly, further the faster, and rests between Low and full. The same release point, a slow
+    // throw and a fast one, each let go while moving: no hold before the lift.
+    /**
+     * The handle thrown by `dy` px over `steps` moves `gap` ms apart, let go at once; then shown.
+     * Each touch carries its own time, so the speed the sheet reads is the throw's, however long a
+     * busy runner takes to deliver it.
+     */
+    const throwHandle = async (dy, steps, gap) => {
+      const hb = await handle().first().boundingBox();
+      if (!hb) return null;
+      const [x, y] = [hb.x + hb.width / 2, hb.y + hb.height / 2];
+      const startedAt = Date.now() / 1000;
+      const touch = (type, at, touchPoints) =>
+        cdp.send('Input.dispatchTouchEvent', {
+          type,
+          touchPoints,
+          timestamp: startedAt + at / 1000,
+        });
+      await touch('touchStart', 0, [{ x, y }]);
+      for (let i = 1; i <= steps; i++) {
+        await touch('touchMove', i * gap, [{ x, y: y + (dy * i) / steps }]);
+      }
+      await touch('touchEnd', steps * gap + 8, []);
+      await cardsSettled(page);
+      return (await card().count()) > 0 ? shownNow() : null;
+    };
+    const fullShown = () =>
+      card()
+        .first()
+        .evaluate((el) => el.offsetHeight - 24);
+    const readySlow = await restore('low');
+    const slowRest = readySlow ? await throwHandle(-200, 12, 30) : null;
+    const readyFast = await restore('low');
+    const fastRest = readyFast ? await throwHandle(-200, 4, 16) : null;
+    const top = await fullShown();
+    check(
+      'thrown up from Low, a fast throw rests higher than a slow one, both between Low and full',
+      slowRest !== null &&
+        fastRest !== null &&
+        fastRest > slowRest + 40 &&
+        [slowRest, fastRest].every((r) => r >= 133 - 2 && r <= top + 2),
+      `slow ${slowRest} px, fast ${fastRest} px shown (Low 133, full ${top})`,
+    );
+    const readyFlick = await restore('half');
+    await throwHandle(300, 3, 16);
+    check(
+      '  a fast flick down still takes it to Low',
+      readyFlick && (await sheetState()) === 'low',
+      `data-snap=${await sheetState()}`,
+    );
+
     const readyLow = await restore('low');
     const down2 = await dragHandle(120);
     check(

@@ -55,12 +55,8 @@ export type SnapName = 'low' | 'full' | 'free';
 /** The name a snap goes by, for `data-snap`. */
 export const snapName = (snap: Snap): SnapName => (typeof snap === 'number' ? 'free' : snap);
 
-/**
- * A flick faster than this, in pixels a millisecond: down, it takes the sheet to Low from
- * anywhere; up, it is no jump, and the sheet rests where the motion ends. The speed is read over
- * the last moves only.
- */
-const FLICK = 1.25;
+/** A flick down faster than this, in px/ms, takes the sheet to Low from anywhere (snapFor). */
+export const FLICK = 1.25;
 
 /** How far back the speed at release is read: only the finger's last moves count. */
 const RECENT_MS = 100;
@@ -217,6 +213,11 @@ export function follow(
   let last = t;
   const moves: { at: number; t: number }[] = [{ at: startY, t }];
   const shown = (at: number) => Math.max(0, Math.min(heights.full, from + startY - at));
+  const speed = (now: number) => {
+    const first = moves.find((m) => last - m.t <= RECENT_MS) ?? moves[moves.length - 1];
+    const dt = last - first.t;
+    return now - last > 80 || dt <= 0 ? 0 : (first.at - y) / dt;
+  };
   return {
     move(at: number, now: number): number {
       y = at;
@@ -226,12 +227,9 @@ export function follow(
       return shown(at);
     },
     /** Where it rests let go at `at` (the last move's, when the release has no position). */
-    release(now: number, at = y): Snap | 'close' {
-      const first = moves.find((m) => last - m.t <= RECENT_MS) ?? moves[moves.length - 1];
-      const dt = last - first.t;
-      const v = now - last > 80 || dt <= 0 ? 0 : (first.at - y) / dt;
-      return snapFor(shown(at), v, heights, h);
-    },
+    release: (now: number, at = y): Snap | 'close' => snapFor(shown(at), speed(now), heights, h),
+    /** Let go: how much shows, and the finger's speed upwards (px/ms), for its momentum (glideTo). */
+    lift: (now: number, at = y) => ({ shown: shown(at), velocity: speed(now) }),
   };
 }
 
