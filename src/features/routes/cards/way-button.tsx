@@ -23,7 +23,7 @@ interface WayButtonProps extends Omit<
 
 /**
  * PAPUNTA (Controller, 4679:23737 and 4683:32635): the Button's Special, its word the way that is
- * showing, in capitals, SN Pro Bold 17/24; a tap turns the trip, or every route listed, the other
+ * showing, in capitals, Livvic Bold 17/24; a tap turns the trip, or every route listed, the other
  * way round. The capitals are the type's, so a screen reader hears the word as written, Papunta. On
  * the wide bar ⇆ stands before the word, and both are Brand/surface. A screen reader hears where a
  * tap leads after its name, as the ⇅ on a trip's ends card is named.

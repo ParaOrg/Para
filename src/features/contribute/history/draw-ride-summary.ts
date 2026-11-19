@@ -10,7 +10,7 @@ export const CARD_WIDTH = 1080;
 export const CARD_HEIGHT = 1350;
 
 const PAD = 72;
-const FONT = "'SN Pro', system-ui, sans-serif";
+const FONT = "'Livvic', system-ui, sans-serif";
 const BRAND = '#4900be'; // parabrand/800, as Map/RouteLine/surface-selected
 const INK = '#171717'; // neutral/900
 const MUTED = '#737373'; // neutral/500
@@ -66,7 +66,7 @@ export function drawRideSummary(
     ctx.fillRect(0, 0, CARD_WIDTH, 132);
   }
   ctx.fillStyle = '#ffffff';
-  ctx.font = `800 56px ${FONT}`;
+  ctx.font = `700 56px ${FONT}`;
   if (logo) ctx.drawImage(logo, PAD, LOGO.y, LOGO.width, LOGO.height);
   else ctx.fillText('Para', PAD, 86);
   ctx.font = `500 32px ${FONT}`;

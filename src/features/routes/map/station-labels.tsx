@@ -41,7 +41,7 @@ function namesShow(map: MapLibreMap): boolean {
  * picked circle pops (rowStops; the owner's call), so a pick replaces the dot
  * in its spot. Each is Figma's HintuanLabel, Hintuan (4068:4791): the
  * timeline's own TimelineDot at rest and beside it the name, the Label's
- * Default, in the line's colour, SN Pro 14/20, drawn flat. The dot is ringed
+ * Default, in the line's colour, Livvic 14/20, drawn flat. The dot is ringed
  * in the lit line's colour, the card's surface, so the dot and its name are
  * one colour. Past a picked hintuan the line is drawn in the card's
  * surface-pale (useRideRest), and the dots along that rest ring in the same

@@ -60,7 +60,7 @@ export function HistoryScreen({ items, pictures, onOpenRecord, onOpenRide }: His
           id={HISTORY_HEADING_ID}
           ref={headingRef}
           tabIndex={-1}
-          className="text-3xl/9 font-extrabold focus:outline-none"
+          className="text-3xl/9 font-bold focus:outline-none"
         >
           History
         </h1>

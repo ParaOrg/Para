@@ -27,12 +27,12 @@ interface RouteLineEndingsLabelProps {
  * (3848:12135): a pill 28 tall, and under it Figma's `knobb`, the pointer at
  * the circle. Head Route is Start's green and Tail Route End's red, whatever
  * the line (green, blue and red are reserved for meanings): a white Badge
- * reads "Start" or "End" before the name, the name SN Pro Medium 16/24 in
+ * reads "Start" or "End" before the name, the name Livvic Medium 16/24 in
  * white. At a train station (Railway) the code's Badge has a pill of its own,
  * 4 to the left: the pointer stays under the name, so the name's pill is the
  * one centred on the circle.
  *
- * Default is the name alone, SN Pro Medium 14/20, in the line's colour, which Figma's set does
+ * Default is the name alone, Livvic Medium 14/20, in the line's colour, which Figma's set does
  * not draw. Unselected is Default at 60%, the Label's Unselected (4200:13645):
  * an end outside the ride. The map draws every unmarked end outside the ride,
  * so it wears Unselected; Default stays for an unmarked end inside one.
