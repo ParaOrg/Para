@@ -24,7 +24,7 @@ import {
   directionLine,
   type Direction,
 } from '../model/routes';
-import { directionRowName } from '../model/row-name';
+import { directionRowParts } from '../model/row-name';
 import type { Timeline } from '../model/timeline';
 import { vehicleOf } from '../model/vehicles';
 
@@ -199,10 +199,7 @@ export function TripCard({
       signboards={(direction.signboards ?? []).map(signboardUrl)}
       note={LINE_NOTES[direction.route?.routeCode ?? '']}
       walk={walk}
-      otherRoutes={others.map((v) => ({
-        id: v.id,
-        to: directionRowName(v),
-      }))}
+      otherRoutes={others.map((v) => ({ id: v.id, ...directionRowParts(v), livery: liveryOf(v) }))}
       onOtherRoute={(id) => {
         const v = others.find((o) => o.id === id);
         if (v) onOtherRoute?.(v);

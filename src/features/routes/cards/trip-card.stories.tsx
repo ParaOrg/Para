@@ -219,7 +219,7 @@ export const PickedHintuan: Story = {
 /** The far end's row picked: the whole ride, that end on the map. */
 export const EndPicked: Story = { args: { endPicked: 'to' } };
 
-/** Another route leaves from the same place: "Other routes" lists it, and a tap opens it in this one's place. */
+/** Another route leaves from the same place: "View 1 more route" opens it, and a tap opens its trip in this one's place. */
 export const OtherRoutes: Story = {
   args: {
     directions: [talaToNovaliches, novalichesToTala, talaToFairview],
@@ -227,6 +227,7 @@ export const OtherRoutes: Story = {
     height: { snap: 'full', onSnap: fn() },
   },
   play: async ({ args, canvasElement }) => {
+    await userEvent.click(within(canvasElement).getByTestId('trip-more-routes'));
     const other = within(canvasElement).getByTestId('trip-other-route');
     await userEvent.click(other);
     other.blur();
