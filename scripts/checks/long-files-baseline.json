@@ -39,7 +39,6 @@
   "src/features/routes/cards/hintuan-card.tsx": 182,
   "src/features/routes/cards/livery-card.ts": 197,
   "src/features/routes/cards/route-card-list.tsx": 197,
-  "src/features/routes/cards/route-card.tsx": 158,
   "src/features/routes/cards/timeline-route-detail-card.tsx": 215,
   "src/features/routes/cards/timeline-route-detail.tsx": 198,
   "src/features/routes/cards/trip-card.tsx": 261,

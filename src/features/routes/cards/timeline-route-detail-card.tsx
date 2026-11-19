@@ -5,9 +5,9 @@ import { BottomSheet, type SheetHeight } from '@/shared/ui/bottom-sheet';
 import { RouteListController } from './route-list-controller';
 import { TimelineRouteDetail, type TimelineRouteDetailProps } from './timeline-route-detail';
 import { TripEndsCard } from './trip-ends-card';
-import { FREE, type Fare } from './trip-fare';
+import { farePesos, type Fare } from './trip-fare';
+import { TripMoreRoutes, type OtherRoute } from './trip-more-routes';
 import { TripNotes } from './trip-notes';
-import { TripOtherRoutes, type OtherRoute } from './trip-other-routes';
 import { TripSignboards } from './trip-signboards';
 import { TripTiles } from './trip-tiles';
 
@@ -41,10 +41,12 @@ type Props = Omit<TimelineRouteDetailProps, 'pickedPesos'> & {
   dockRef?: Ref<HTMLDivElement>;
   /** Its height, shared with the list or card it was opened from (BottomSheet). */
   height?: SheetHeight;
-  /** "Other routes" under the stops, out of where this trip starts. Empty or omitted, none. */
+  /** The other routes out of where this trip starts, behind "View N more routes" at the top. Empty or omitted, none. */
   otherRoutes?: readonly OtherRoute[];
   /** A row tapped: that route's trip in this one's place. */
   onOtherRoute?: (id: string) => void;
+  /** What the trip rides (TripRidePills), at the top of its panel. None, no pill. */
+  ridePills?: ReactNode;
   /** The direction's signboards (4680:25123): SVG files the studio uploaded, in order. None, no card. */
   signboards?: readonly string[];
   /** Under the stops, a line's own fixed words (LINE_NOTES): the ferry's days and where to check for a suspension. */
@@ -74,8 +76,8 @@ type Props = Omit<TimelineRouteDetailProps, 'pickedPesos'> & {
  * start alone is no ride yet. A route no fare rule prices has no Expected fare tile, and Distance
  * takes the row (Figma draws nothing for it; the owner keeps this default).
  *
- * Under the stops, "Other routes": the other routes out of where the trip starts (TripOtherRoutes);
- * a tap opens that one's trip in this one's place. With none, no heading either.
+ * At the top, under its ends, "View N more routes" (TripMoreRoutes) opens the other routes out of
+ * where the trip starts; a tap opens that one's trip in this one's place. With none, no tab.
  */
 export function TimelineRouteDetailCard({
   livery,
@@ -113,6 +115,7 @@ export function TimelineRouteDetailCard({
   height,
   otherRoutes = [],
   onOtherRoute,
+  ridePills,
   signboards = [],
   note,
   walk,
@@ -150,54 +153,58 @@ export function TimelineRouteDetailCard({
         />
       }
     >
-      {/* Cards 16 apart, 12 in, clear of the Controller: 78 at a phone's foot, 64 on top floating. */}
-      <div className="flex w-full flex-col gap-4 px-3 pt-3 pb-24 sheet-floating:pt-19 sheet-floating:pb-6">
-        {/* The trip's name as its heading, over the cards' own, for a screen reader; nothing is drawn. */}
-        <h2 className="sr-only">{name}</h2>
-        <TripEndsCard
-          routeOrigin={routeOrigin}
-          routeDirection={routeDirection}
-          way={wayTo}
-          isSwitchable={switchable}
-          onSwitch={onSwitch}
-        />
-        <TripTiles
-          shown={shown}
-          shownMetres={shownMetres}
-          isDiscounted={discounted}
-          turns={turns}
-          onTurn={() => {
-            setDiscounted(!discounted);
-            setTurns((t) => t + 1);
-          }}
-        />
-        {signboards.length > 0 && <TripSignboards signboards={signboards} />}
-        <TimelineRouteDetail
-          livery={livery}
-          routeOrigin={routeOrigin}
-          hintuans={hintuans}
-          picked={picked}
-          start={start}
-          startCode={startCode}
-          onSetStart={onSetStart}
-          onRemoveStart={onRemoveStart}
-          onPick={onPick}
-          pickedPesos={
-            pickedFare &&
-            (pickedFare === FREE ? 'Free' : discounted ? pickedFare.discounted : pickedFare.regular)
-          }
-          pickedCode={pickedCode}
-          onEnd={onEnd}
-          endPicked={endPicked}
-          routeDirection={routeDirection}
-          originCode={originCode}
-          destinationCode={destinationCode}
-          isLoop={isLoop}
-          header={header}
-        />
-      </div>
-      <TripNotes walk={walk} note={note} />
-      {otherRoutes.length > 0 && <TripOtherRoutes routes={otherRoutes} onRoute={onOtherRoute} />}
+      {/* The trip's name as its heading, over the cards' own, for a screen reader; nothing is drawn. */}
+      <h2 className="sr-only">{name}</h2>
+      <TripMoreRoutes
+        ends={
+          <TripEndsCard
+            routeOrigin={routeOrigin}
+            routeDirection={routeDirection}
+            way={wayTo}
+            isSwitchable={switchable}
+            onSwitch={onSwitch}
+          />
+        }
+        routes={onOtherRoute ? otherRoutes : []}
+        onRoute={(id) => onOtherRoute?.(id)}
+      >
+        {/* Cards 16 apart, 12 in, clear of the Controller: 78 at a phone's foot, 6 floating. */}
+        <div className="flex w-full flex-col gap-4 px-3 pt-3 pb-24 sheet-floating:pb-6">
+          {ridePills}
+          <TripTiles
+            shown={shown}
+            shownMetres={shownMetres}
+            isDiscounted={discounted}
+            turns={turns}
+            onTurn={() => {
+              setDiscounted(!discounted);
+              setTurns((t) => t + 1);
+            }}
+          />
+          {signboards.length > 0 && <TripSignboards signboards={signboards} />}
+          <TimelineRouteDetail
+            livery={livery}
+            routeOrigin={routeOrigin}
+            hintuans={hintuans}
+            picked={picked}
+            start={start}
+            startCode={startCode}
+            onSetStart={onSetStart}
+            onRemoveStart={onRemoveStart}
+            onPick={onPick}
+            pickedPesos={pickedFare && farePesos(pickedFare, discounted)}
+            pickedCode={pickedCode}
+            onEnd={onEnd}
+            endPicked={endPicked}
+            routeDirection={routeDirection}
+            originCode={originCode}
+            destinationCode={destinationCode}
+            isLoop={isLoop}
+            header={header}
+          />
+        </div>
+        <TripNotes walk={walk} note={note} />
+      </TripMoreRoutes>
       {children}
     </BottomSheet>
   );

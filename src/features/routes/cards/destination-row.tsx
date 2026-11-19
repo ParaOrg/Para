@@ -4,6 +4,7 @@ import { CircleArrowRightIcon } from '@/shared/ui/route-icons';
 import { cn } from '@/shared/utils/cn';
 
 import { ROW_PRESSED } from './livery-card';
+import { CARD_INK, SURFACE_ARROW } from './route-card-look';
 import type { Livery } from '../model/liveries';
 
 /** Where the row sits: on a RouteCard in its livery, or on the sheet's own surface. */
@@ -23,39 +24,6 @@ interface DestinationRowProps extends Omit<
   livery: Livery;
   on: DestinationRowGround;
 }
-
-/**
- * The words and arrow on a RouteCard (4633:19780): white on the darker cards, Text/primary on the
- * light ones (UV Express, E-jeep, MRT-3), as Figma draws each card.
- */
-const CARD_INK = {
-  jeep: 'text-text-on-fill',
-  'uv-express': 'text-text-primary',
-  ejeep: 'text-text-primary',
-  bus: 'text-text-on-fill',
-  'light-rail-way-one': 'text-text-on-fill',
-  'light-rail-way-two': 'text-text-on-fill',
-  'metro-rail-way-three': 'text-text-primary',
-  ferry: 'text-text-on-fill',
-} satisfies Record<Livery, string>;
-
-/**
- * On the surface the arrow wears its mode's card fill (MiddleContent, 4795:20406) where that fill
- * stands out from the surface at 3:1, the least a non-text mark needs. Where it does not (UV
- * Express's grey, MRT-3's yellow), and for E-jeep, which has no card fill among the new semantics,
- * the arrow takes the words' Text/primary. tests/unit/destination-row-contrast-test.mjs checks
- * both against the tokens.
- */
-const SURFACE_ARROW = {
-  jeep: 'text-card-jeep-fill',
-  'uv-express': 'text-text-primary',
-  ejeep: 'text-text-primary',
-  bus: 'text-card-bus-fill',
-  'light-rail-way-one': 'text-card-lrt-one-fill',
-  'light-rail-way-two': 'text-card-lrt-two-fill',
-  'metro-rail-way-three': 'text-text-primary',
-  ferry: 'text-card-ferry-fill',
-} satisfies Record<Livery, string>;
 
 // Figma draws no pressed or hover state; these keep today's: a card row presses to its card's
 // timeline colour (ROW_PRESSED), a surface row to the grey pill the fare tile uses.

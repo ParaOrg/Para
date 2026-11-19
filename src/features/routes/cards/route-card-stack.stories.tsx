@@ -192,8 +192,11 @@ export const StackedList: Story = {
     ],
   },
   play: async ({ canvasElement }) => {
-    const modes = within(canvasElement).getAllByText(/^(Jeep|UV Express|E-Jeep|Bus)$/);
-    await expect(modes.map((m) => m.textContent)).toEqual([
+    // A road card names its mode in words on its list of rows, not on a badge.
+    const modes = within(canvasElement).getAllByRole('list', {
+      name: /^(Jeep|UV Express|E-Jeep|Bus)$/,
+    });
+    await expect(modes.map((m) => m.getAttribute('aria-label'))).toEqual([
       'Jeep',
       'Jeep',
       'Jeep',
@@ -206,8 +209,8 @@ export const StackedList: Story = {
 };
 
 /**
- * A P2P card draws no mode (Figma has no badge for it) though it wears UV Express's colours; the
- * UV Express card after it names its own.
+ * A P2P card names no mode (Figma has no word for it) though it wears UV Express's colours; the
+ * UV Express card after it names its own, on its list of rows.
  */
 export const P2pBesideUvExpress: Story = {
   args: {
@@ -220,14 +223,14 @@ export const P2pBesideUvExpress: Story = {
   play: async ({ canvasElement }) => {
     const cards = within(canvasElement).getAllByTestId('card-origin');
     await expect(cards.map((c) => c.dataset.livery)).toEqual(['uv-express', 'uv-express']);
-    await expect(within(cards[0]).queryByText('UV Express')).toBeNull();
-    await expect(within(cards[1]).getByText('UV Express')).toBeVisible();
+    await expect(within(cards[0]).queryByRole('list', { name: 'UV Express' })).toBeNull();
+    await expect(within(cards[1]).getByRole('list', { name: 'UV Express' })).toBeVisible();
   },
 };
 
 /**
  * One place, several road modes: each mode stands apart on a card of its own, in its own colour and
- * under its own badge — Tala's jeeps, its UV Express, its P2P (UV Express's colours, no badge), its
+ * under its own mode — Tala's jeeps, its UV Express, its P2P (UV Express's colours, no mode), its
  * e-jeep and its bus — and each is selected on its own.
  */
 export const OnePlaceManyModes: Story = {

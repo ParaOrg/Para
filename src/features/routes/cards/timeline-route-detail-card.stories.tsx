@@ -770,17 +770,17 @@ export const SheetLow: Story = {
 };
 
 /**
- * An origin too long for one line on a phone at 17/24 (LongNames' fits on one).
+ * An origin too long for one line on a phone at 18/26 (LongNames' fits on one).
  */
 const longOrigin = 'Novaliches (Bayan) via Zabarte and Quirino Highway';
 
-/** Low with a long origin: one line of it, 24 tall, cut short (3814:3976). */
+/** Low with a long origin: one line of it, 26 tall, cut short (3814:3976). */
 export const SheetLowLongName: Story = {
   args: { height: undefined, ...LongNames.args, routeOrigin: longOrigin },
   play: async (ctx) => {
     const ends = within(within(ctx.canvasElement).getByTestId('trip-ends'));
     const origin = ends.getByText(longOrigin);
-    await waitFor(() => expect(origin.getBoundingClientRect().height).toBe(24));
+    await waitFor(() => expect(origin.getBoundingClientRect().height).toBe(26));
   },
 };
 
@@ -790,27 +790,34 @@ export const SheetRaisedLongName: Story = {
   play: async (ctx) => {
     await tapHandle(ctx.canvasElement);
     const ends = within(within(ctx.canvasElement).getByTestId('trip-ends'));
-    await expect(ends.getByText(longOrigin).getBoundingClientRect().height).toBeGreaterThan(24);
+    await expect(ends.getByText(longOrigin).getBoundingClientRect().height).toBeGreaterThan(26);
   },
 };
 
 /**
- * "Other routes" under the stops: the other routes out of where the trip starts,
- * each by where it goes; a tap opens that route's trip in this one's place. With none, as in every
- * story above, the section is not there.
+ * "View 2 more routes" under the trip's ends: the other routes out of where the trip starts, each
+ * by where it goes; a tap opens that route's trip in this one's place. With none, as in every
+ * story above, the tab is not there.
  */
 export const OtherRoutes: Story = {
   args: {
     otherRoutes: [
-      { id: 'tala-sm', to: 'SM Fairview' },
-      { id: 'tala-bs', to: 'Bagong Silang Kanan 5 Phase 3 Package 2 Terminal' },
+      { id: 'tala-sm', to: 'SM Fairview', via: 'Maligaya', livery: 'jeep' },
+      {
+        id: 'tala-bs',
+        to: 'Bagong Silang Kanan 5 Phase 3 Package 2 Terminal',
+        via: null,
+        livery: 'jeep',
+      },
     ],
     onOtherRoute: fn(),
   },
   play: async ({ canvasElement, args }) => {
-    // SM Fairview is a hintuan too: the one under Other routes.
-    const others = within(await within(canvasElement).findByTestId('trip-other-routes'));
-    await userEvent.click(others.getByRole('button', { name: 'SM Fairview' }));
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole('button', { name: 'View 2 more routes' }));
+    // SM Fairview is a hintuan too: the one in the list.
+    const others = within(canvas.getByTestId('trip-other-routes'));
+    await userEvent.click(others.getByRole('button', { name: /^SM Fairview/ }));
     await expect(args.onOtherRoute).toHaveBeenCalledWith('tala-sm');
   },
 };
@@ -888,21 +895,22 @@ export const ManySignboards: Story = {
   },
 };
 
-/** The signboards between the tiles and the stops, and Other routes under the stops. */
+/** The signboards between the tiles and the stops, and the other routes above them, at the top. */
 export const SignboardsAndOtherRoutes: Story = {
   args: {
     signboards: [board('BAYAN', 'SIMBAHAN'), board('SM', 'FAIRVIEW')],
     otherRoutes: [
-      { id: 'tala-sm', to: 'SM Fairview' },
-      { id: 'tala-nova', to: 'Novaliches' },
+      { id: 'tala-sm', to: 'SM Fairview', via: null, livery: 'jeep' },
+      { id: 'tala-nova', to: 'Novaliches', via: null, livery: 'jeep' },
     ],
     onOtherRoute: fn(),
   },
   play: async ({ canvasElement }) => {
+    // The other routes come first, at the top, under the trip's ends.
     const boards = within(canvasElement).getByTestId('trip-signboards');
     const others = within(canvasElement).getByTestId('trip-other-routes');
     await expect(
-      boards.compareDocumentPosition(others) & Node.DOCUMENT_POSITION_FOLLOWING,
+      boards.compareDocumentPosition(others) & Node.DOCUMENT_POSITION_PRECEDING,
     ).toBeTruthy();
   },
 };

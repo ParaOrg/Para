@@ -6,6 +6,7 @@ import { lineLength } from '@/shared/utils/geo';
 import { RouteStopsCardHeader } from './route-stops-card-header';
 import { TimelineRouteDetailCard } from './timeline-route-detail-card';
 import { FREE, type Fare, type Fares } from './trip-fare';
+import { TripRidePills } from './trip-ride-pills';
 import { useFareKind } from './use-fare-kind';
 import { otherDirection, otherRoutesFrom, switchWord, wayWord } from '../model/departures';
 import { manilaDate, rideFare } from '../model/fares';
@@ -24,7 +25,7 @@ import {
   directionLine,
   type Direction,
 } from '../model/routes';
-import { directionRowName } from '../model/row-name';
+import { directionRowParts } from '../model/row-name';
 import type { Timeline } from '../model/timeline';
 import { vehicleOf } from '../model/vehicles';
 
@@ -120,7 +121,7 @@ export function TripCard({
   dockRef: Ref<HTMLDivElement>;
   /** Its sheet's height, shared with the list or card behind it (BottomSheet). */
   height: SheetHeight;
-  /** A row of "Other routes" tapped: that direction's trip in this one's place. Without it, no rows. */
+  /** A row behind "View N more routes" tapped: that direction's trip in this one's place. Without it, no rows. */
   onOtherRoute?: (direction: Direction) => void;
   /** Where a signboard's file is read: beside the published map, or the studio's bucket. */
   signboardUrl?: (name: string) => string;
@@ -139,6 +140,7 @@ export function TripCard({
       : directionEnds(direction);
   const line = railLineOf(direction);
   const vehicle = vehicleOf(direction);
+  const bound = line ? railBound(direction) : null;
   const sibling = otherDirection(directions, direction);
   // A loop has no way back, so no PAPUNTA at all.
   const switchable = !loop && !!sibling && isDrawn(sibling);
@@ -180,7 +182,7 @@ export function TripCard({
         vehicle && (
           <RouteStopsCardHeader
             vehicle={vehicle}
-            bound={line ? railBound(direction) : null}
+            bound={bound}
             livery={livery}
             name={loop ? (direction.name ?? LOOP_WORD) : undefined}
           />
@@ -196,13 +198,11 @@ export function TripCard({
       }}
       onBackToList={onBackToList}
       onClose={onClose}
+      ridePills={vehicle && <TripRidePills vehicle={vehicle} bound={bound} livery={livery} />}
       signboards={(direction.signboards ?? []).map(signboardUrl)}
       note={LINE_NOTES[direction.route?.routeCode ?? '']}
       walk={walk}
-      otherRoutes={others.map((v) => ({
-        id: v.id,
-        to: directionRowName(v),
-      }))}
+      otherRoutes={others.map((v) => ({ id: v.id, ...directionRowParts(v), livery: liveryOf(v) }))}
       onOtherRoute={(id) => {
         const v = others.find((o) => o.id === id);
         if (v) onOtherRoute?.(v);

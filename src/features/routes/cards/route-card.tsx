@@ -1,19 +1,21 @@
 import { cn } from '@/shared/utils/cn';
 
-import { CARD_BLOB, CARD_SHADOW, CARD_SHADOW_SELECTED } from './livery-card';
+import { DestinationRow } from './destination-row';
+import { CARD_BLOB, CARD_SHADOW_SELECTED } from './livery-card';
 import { RouteBadge } from './route-badge';
-import { ROUTE_CARD_BLOB_PLACE, ROUTE_CARD_SURFACE, ROUTE_CARD_TEXT } from './route-card-look';
+import {
+  CARD_INK,
+  ROUTE_CARD_BLOB_PLACE,
+  ROUTE_CARD_FILL,
+  ROUTE_CARD_REST_SHADOW,
+} from './route-card-look';
 import { RouteCardMode } from './route-card-mode';
-import { RouteEndPointBar } from './route-end-point-bar';
 import { MODE_LABEL } from './route-modes';
 import { RAILWAY_LIVERY, type RoadLivery } from '../model/liveries';
 import type { Bound } from '../model/rail-codes';
 import type { RailwayVehicle, RoadVehicle } from '../model/vehicles';
 
-/**
- * What a card's routes ride, which sets its colours and its badges: a road mode's card, in the
- * livery its routes wear, or a train line's or the ferry's, in the line's own.
- */
+/** What a card's routes ride, which sets its colours and badges: a road mode's or a train line's. */
 export type RouteCardRide =
   | {
       kind: 'road';
@@ -33,8 +35,10 @@ export type RouteCardRide =
 export interface RouteCardEndPoint {
   /** Which direction the row opens. */
   id: string;
-  /** Figma's routeDirection: the place this direction goes to. */
-  routeDirection: string;
+  /** Figma's Destination: the place this direction goes to. */
+  destination: string;
+  /** Its route's via, under the place; null with none. */
+  via: string | null;
   /** The station's code, `PL27`, at the row's end; null on a road card, the ferry, or an unknown station. */
   stationCode: string | null;
 }
@@ -51,22 +55,15 @@ interface RouteCardProps {
   onSelect: () => void;
   /** A row was tapped: open that direction. */
   onPick: (id: string) => void;
-  /**
-   * What the suites call the card and its parts — `<testId>-origin`, its name `<testId>-select`,
-   * its rows `<testId>-item` — `chooser` in the route list, `card` in a hotspot's card.
-   */
+  /** The suites' name for it — `<testId>-origin`, `-select`, `-item` — in the list or a hotspot's card. */
   testId: 'chooser' | 'card';
 }
 
 /**
- * A place and the routes that leave it on one ride, in that ride's colours (RouteCard, 4629:22776):
- * what they ride at the top (RouteCardMode: the vehicle and its badge, and a train's bound), the
- * place in Bold 24/32, and a row for each place it goes to (RouteEndPointBar), joined to it by a
- * tree line. A train card has the station codes beside the origin and at each row's end. A place
- * with several rides has a card for each (routeCards).
- *
- * A row opens its trip straight away; a tap anywhere else on the card selects it, or lets it go.
- * Which card is Selected, one at a time, is the caller's to keep.
+ * A place and the routes that leave it on one ride, in its colours (RouteCard, 4629:22776): what
+ * they ride (RouteCardMode), the place in Bold 28/32, and a DestinationRow per place it goes to. A
+ * train card has station codes by the origin and each row. A row opens its trip; a tap elsewhere
+ * selects the card, or lets it go. Figma draws no Selected card here: it wears CARD_SHADOW_SELECTED.
  */
 export function RouteCard({
   ride,
@@ -88,9 +85,9 @@ export function RouteCard({
       data-livery={livery}
       data-state={state}
       className={cn(
-        'relative isolate flex w-full flex-col items-start gap-0.5 overflow-clip border-y-0-6 pt-3 pb-2 font-sn-pro',
-        ROUTE_CARD_SURFACE[livery],
-        ROUTE_CARD_TEXT[livery],
+        'relative isolate flex w-full flex-col items-start gap-2 overflow-clip pt-3 pb-2 font-sn-pro',
+        ROUTE_CARD_FILL[livery],
+        CARD_INK[livery],
       )}
     >
       <img
@@ -114,29 +111,22 @@ export function RouteCard({
             data-testid={`${testId}-select`}
             aria-pressed={isSelected}
             onClick={onSelect}
-            className="min-w-0 flex-1 text-left text-2xl/8 font-bold after:absolute after:inset-0 sheet-low:line-clamp-1"
+            className="min-w-0 flex-1 text-left text-3xl/8 font-bold after:absolute after:inset-0 sheet-low:line-clamp-1"
           >
             {routeOrigin}
           </button>
           {isRail && ride.originCode && <RouteBadge label={ride.originCode} livery={livery} />}
         </div>
         <ul aria-label={vehicle ? MODE_LABEL[vehicle] : undefined} className="flex w-full flex-col">
-          {endPoints.map((e, index) => (
+          {endPoints.map((e) => (
             <li key={e.id}>
               {/* `relative`: positioned after the name's stretched target, so drawn over it. */}
-              <RouteEndPointBar
-                routeDirection={e.routeDirection}
-                on={livery}
-                size="medium"
-                position={index === endPoints.length - 1 ? 'bottom' : 'top'}
-                slot={
-                  e.stationCode && (
-                    <>
-                      <span className="sr-only">, </span>
-                      <RouteBadge label={e.stationCode} livery={livery} />
-                    </>
-                  )
-                }
+              <DestinationRow
+                destination={e.destination}
+                additionalNotes={e.via && `Via ${e.via}`}
+                livery={livery}
+                on="card"
+                slot={e.stationCode && <RouteBadge label={e.stationCode} livery={livery} />}
                 data-testid={`${testId}-item`}
                 data-direction={e.id}
                 onClick={() => onPick(e.id)}
@@ -150,7 +140,7 @@ export function RouteCard({
         aria-hidden
         className={cn(
           'pointer-events-none absolute inset-0',
-          isSelected ? CARD_SHADOW_SELECTED[livery] : CARD_SHADOW[livery],
+          isSelected ? CARD_SHADOW_SELECTED[livery] : ROUTE_CARD_REST_SHADOW[livery],
         )}
       />
     </div>
