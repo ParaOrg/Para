@@ -1,7 +1,8 @@
 import { ReloadIcon } from '@/shared/ui/route-icons';
+import { cn } from '@/shared/utils/cn';
 import { kmLabel } from '@/shared/utils/geo';
 
-import { FREE, type Fare } from './trip-fare';
+import { FREE, farePesos, type Fare } from './trip-fare';
 
 interface TripTilesProps {
   /** The fare the tile shows, or FREE; undefined when unpriced, and the tile with it. */
@@ -15,60 +16,63 @@ interface TripTilesProps {
   onTurn: () => void;
 }
 
-/** The ride's two tiles, side by side and 12 apart (RouteTripDetail, 4680:25114). */
+/**
+ * The ride's two tiles, side by side and 12 apart (BottomContent, 4796:29410): the fare on the
+ * left, the distance on the right. Unpriced, the distance takes the row alone.
+ */
 export function TripTiles({ shown, shownMetres, isDiscounted, turns, onTurn }: TripTilesProps) {
   return (
     <div data-testid="trip-tiles" className="flex w-full gap-3 text-center font-sn-pro">
-      <div className={TILE}>
-        <span data-testid="trip-km" className={FIGURE}>
-          {kmLabel(shownMetres)}
-        </span>
-        <span className={NAME}>Distance</span>
-      </div>
-      {shown === FREE ? (
+      {shown === FREE && (
         <div className={TILE}>
           <span data-testid="trip-fare" className={FIGURE}>
             Free
           </span>
           <span className={NAME}>Fare</span>
         </div>
-      ) : (
-        shown && (
-          <button
-            type="button"
-            data-testid="trip-fare-turn"
-            aria-label={`${isDiscounted ? 'Discounted' : 'Regular'} fare ${isDiscounted ? shown.discounted : shown.regular}. Show the ${isDiscounted ? 'regular' : 'discounted'} fare`}
-            onClick={onTurn}
-            className={
-              TILE +
-              ' transition-colors duration-quick ease-move hover:bg-surface-secondary active:bg-surface-tertiary'
-            }
-          >
-            <span data-testid="trip-fare" className={FIGURE}>
-              {isDiscounted ? shown.discounted : shown.regular}
-            </span>
-            <span className={NAME + ' flex items-center gap-1.5'}>
-              <span
-                aria-hidden
-                style={{ rotate: `${turns * 360}deg` }}
-                className="size-4 shrink-0 text-content-quaternary transition-[rotate] duration-turn ease-move *:size-full motion-reduce:transition-none"
-              >
-                <ReloadIcon />
-              </span>
-              {isDiscounted ? 'Discounted fare' : 'Regular fare'}
-            </span>
-          </button>
-        )
       )}
+      {shown !== undefined && shown !== FREE && (
+        <button
+          type="button"
+          data-testid="trip-fare-turn"
+          aria-label={`${isDiscounted ? 'Discounted' : 'Regular'} fare ${farePesos(shown, isDiscounted)}. Show the ${isDiscounted ? 'regular' : 'discounted'} fare`}
+          onClick={onTurn}
+          className={cn(TILE, PRESSABLE)}
+        >
+          <span data-testid="trip-fare" className={FIGURE}>
+            {farePesos(shown, isDiscounted)}
+          </span>
+          <span className={cn(NAME, 'flex items-center gap-2')}>
+            {isDiscounted ? 'Discounted fare' : 'Regular fare'}
+            <span
+              aria-hidden
+              style={{ rotate: `${turns * 360}deg` }}
+              className="size-4 shrink-0 transition-[rotate] duration-turn ease-move *:size-full motion-reduce:transition-none"
+            >
+              <ReloadIcon />
+            </span>
+          </span>
+        </button>
+      )}
+      <div className={TILE}>
+        <span data-testid="trip-km" className={FIGURE}>
+          {kmLabel(shownMetres)}
+        </span>
+        <span className={NAME}>Distance</span>
+      </div>
     </div>
   );
 }
 
 /**
- * One tile (4680:25115): its figure, Bold 24/32, over its name, Regular 14/20, on a white card
- * rounded 24 under shadow-large. The fare's, a button, darkens a step under the finger.
+ * One tile (4796:29411): its figure, Bold 24/32, over its name, Medium 14/20, on bg-fill rounded
+ * 24, 14 in, under shadow-sm.
  */
 const TILE =
-  'flex min-w-0 flex-1 basis-0 flex-col items-center justify-center gap-2 overflow-clip rounded-3xl bg-surface p-4 shadow-large';
-const FIGURE = 'block text-2xl/8 font-bold text-content-primary';
-const NAME = 'block text-sm/5 font-normal text-content-tertiary';
+  'flex min-w-0 flex-1 basis-0 flex-col items-center justify-center gap-1 overflow-clip rounded-3xl bg-bg-fill p-3.5 shadow-sm';
+const FIGURE = 'block text-2xl/8 font-bold text-text-primary';
+const NAME = 'block text-sm/5 font-medium text-text-tertiary';
+// Figma draws no hover or pressed state; the fare's, a button, keeps today's step darker under
+// the finger, on the nearest new token.
+const PRESSABLE =
+  'transition-colors duration-quick ease-move hover:bg-bg-fill-secondary active:bg-bg-fill-secondary';
