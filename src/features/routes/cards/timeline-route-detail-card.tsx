@@ -47,7 +47,7 @@ type Props = Omit<TimelineRouteDetailProps, 'pickedPesos'> & {
   onOtherRoute?: (id: string) => void;
   /** What the trip rides (TripRidePills), at the top of its panel. None, no pill. */
   ridePills?: ReactNode;
-  /** The direction's signboards (4680:25123): SVG files the studio uploaded, in order. None, no card. */
+  /** The direction's signboards (BottomContent, 4796:30124): SVG files the studio uploaded, in order. None, no card. */
   signboards?: readonly string[];
   /** Under the stops, a line's own fixed words (LINE_NOTES): the ferry's days and where to check for a suspension. */
   note?: string;
@@ -61,9 +61,9 @@ type Props = Omit<TimelineRouteDetailProps, 'pickedPesos'> & {
 };
 
 /**
- * One direction as a trip (RouteTripDetail, 4681:32026), with the Controller's bar: its ends
- * (TripEndsCard), the ride's Distance and fare tiles, its signboards, then its stops in the trip's
- * colour (useTripLivery) on RouteStopsCard.
+ * One direction as a trip (RouteDetail, 4796:30411), with the Controller's bar: its ends
+ * (TripEndsCard), what it rides, its signboards, the ride's Distance and fare tiles, then its stops
+ * in the trip's colour (useTripLivery) on RouteStopsCard.
  *
  * The fare tile is a button: the pesos, and under them ↻ and which fare they are, Regular or
  * Discounted; a tap turns it to the other. With a hintuan picked it prices the ride from where the
@@ -171,6 +171,7 @@ export function TimelineRouteDetailCard({
         {/* Cards 16 apart, 12 in, clear of the Controller: 78 at a phone's foot, 6 floating. */}
         <div className="flex w-full flex-col gap-4 px-3 pt-3 pb-24 sheet-floating:pb-6">
           {ridePills}
+          <TripSignboards signboards={signboards} />
           <TripTiles
             shown={shown}
             shownMetres={shownMetres}
@@ -181,7 +182,6 @@ export function TimelineRouteDetailCard({
               setTurns((t) => t + 1);
             }}
           />
-          {signboards.length > 0 && <TripSignboards signboards={signboards} />}
           <TimelineRouteDetail
             livery={livery}
             routeOrigin={routeOrigin}

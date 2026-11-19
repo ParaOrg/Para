@@ -832,8 +832,8 @@ const board = (top: string, under: string) =>
   );
 
 /**
- * The direction's boards on their own card, "Signboard" over them (4680:25123), 40 tall, 8 apart,
- * between the tiles and the stops, 16 from each.
+ * The direction's boards on their own card, "Signboard" over them (4796:30124), 32 tall, 8 apart,
+ * above the tiles, 16 from them.
  */
 export const Signboards: Story = {
   args: { signboards: [board('BAYAN', 'SIMBAHAN'), board('SM', 'FAIRVIEW')] },
@@ -841,14 +841,12 @@ export const Signboards: Story = {
     const canvas = within(canvasElement);
     const boards = canvas.getAllByTestId('trip-signboard');
     await expect(boards).toHaveLength(2);
-    await waitFor(() => expect(boards[0].getBoundingClientRect().height).toBe(40));
-    // On their own card, "Signboard" over them, between the tiles and the stops, 16 from each.
+    await waitFor(() => expect(boards[0].getBoundingClientRect().height).toBe(32));
+    // On their own card, "Signboard" over them, above the tiles, 16 from them.
     const section = canvas.getByRole('region', { name: 'Signboard' });
-    const card = canvas.getByTestId('trip');
     const tiles = canvas.getByTestId('trip-tiles');
     const box = (el: Element) => el.getBoundingClientRect();
-    await expect(box(section).top - box(tiles).bottom).toBe(16);
-    await expect(box(card).top - box(section).bottom).toBe(16);
+    await expect(box(tiles).top - box(section).bottom).toBe(16);
   },
 };
 
@@ -895,7 +893,7 @@ export const ManySignboards: Story = {
   },
 };
 
-/** The signboards between the tiles and the stops, and the other routes above them, at the top. */
+/** The signboards above the tiles, and the other routes above them, at the top. */
 export const SignboardsAndOtherRoutes: Story = {
   args: {
     signboards: [board('BAYAN', 'SIMBAHAN'), board('SM', 'FAIRVIEW')],
