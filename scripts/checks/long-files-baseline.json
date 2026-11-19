@@ -125,7 +125,7 @@
   "src/features/studio/panels/use-save-panel.ts": 177,
   "src/features/studio/review/review-story-data.tsx": 164,
   "src/shared/ui/bottom-sheet.tsx": 396,
-  "src/shared/ui/route-icons.tsx": 175,
+  "src/shared/ui/route-icons.tsx": 150,
   "src/shared/ui/sheet-gesture.ts": 269,
   "src/shared/ui/sheet-room.ts": 215,
   "src/shared/ui/toast.tsx": 166,
