@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 
 import { IconButton } from '@/design-system/primitives/icon-button';
 import { ArrowUpDownIcon, EndIcon, StartIcon } from '@/shared/ui/route-icons';
+import { cn } from '@/shared/utils/cn';
 
 interface TripEndsCardProps {
   /** Figma's Route Origin: where the trip leaves from, on the Start card. */
@@ -86,16 +87,14 @@ function EndCard({ sign, label, place, via, isClearOfSwitch = false }: EndCardPr
   return (
     <div className="flex w-full flex-col gap-1 rounded-2xl bg-bg-fill px-2.5 pt-2.5 pb-2 shadow-trip-end-card">
       <p className="flex items-center gap-1.5 text-xs/4 font-medium text-text-secondary">
-        <span aria-hidden className={'flex size-4 shrink-0 *:size-full ' + SIGN_COLOUR[label]}>
+        <span aria-hidden className={cn('flex size-4 shrink-0 *:size-full', SIGN_COLOUR[label])}>
           {sign}
         </span>
         {label}
       </p>
       <div className="flex flex-col break-words text-text-primary">
         <p
-          className={
-            'text-lg/6.5 font-bold sheet-low:line-clamp-1' + (isClearOfSwitch ? ' pr-12' : '')
-          }
+          className={cn('text-lg/6.5 font-bold sheet-low:line-clamp-1', isClearOfSwitch && 'pr-12')}
         >
           {place}
         </p>

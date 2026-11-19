@@ -106,7 +106,7 @@ export const OnPhoneAtLow: Story = {
   args: LongNames.args,
   decorators: [
     (Story) => (
-      <div className="@container w-98.25" data-floats="card" data-snap="low">
+      <div className="@container w-full" data-floats="card" data-snap="low">
         <Story />
       </div>
     ),
