@@ -45,8 +45,8 @@ export function TripMoreRoutes({ ends, routes, onRoute, children }: TripMoreRout
   const count = routes.length;
   const more = `${count} more ${count === 1 ? 'route' : 'routes'}`;
   return (
-    <div className="flex w-full flex-col items-center">
-      <div className="relative z-20 w-full bg-bg-surface px-3 pt-3 pb-4 shadow-trip-band sheet-floating:pt-19">
+    <div className="isolate flex w-full flex-col items-center">
+      <div className="relative z-2 w-full bg-bg-surface px-3 pt-3 pb-4 shadow-trip-band sheet-floating:pt-19">
         {ends}
       </div>
       {count > 0 && (
@@ -88,7 +88,7 @@ export function TripMoreRoutes({ ends, routes, onRoute, children }: TripMoreRout
           data-testid="trip-more-routes"
           onClick={() => setIsOpen(!isOpen)}
           className={cn(
-            'relative z-10 flex items-center gap-1 bg-bg-surface py-1.5 pr-2.5 pl-3 font-sn-pro text-sm/5 font-medium text-text-secondary',
+            'relative z-1 flex items-center gap-1 bg-bg-surface py-1.5 pr-2.5 pl-3 font-sn-pro text-sm/5 font-medium text-text-secondary',
             isOpen ? cn(TAB.open, '-mb-0.5') : cn(TAB.closed, '-mt-0.5'),
           )}
         >
