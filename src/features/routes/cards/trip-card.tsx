@@ -3,6 +3,7 @@ import { useState, type ReactNode, type Ref } from 'react';
 import type { SheetHeight } from '@/shared/ui/bottom-sheet';
 import { lineLength } from '@/shared/utils/geo';
 
+import { ridePillOf } from './ride-pill-of';
 import { RouteStopsCardHeader } from './route-stops-card-header';
 import { TimelineRouteDetailCard } from './timeline-route-detail-card';
 import { FREE, type Fare, type Fares } from './trip-fare';
@@ -27,7 +28,6 @@ import {
 } from '../model/routes';
 import { directionRowParts } from '../model/row-name';
 import type { Timeline } from '../model/timeline';
-import { vehicleOf } from '../model/vehicles';
 
 /**
  * The trip's colour, one owner for it: decided as the trip opens — the RouteCard's it was picked
@@ -139,8 +139,7 @@ export function TripCard({
       ? { from: timeline.from.label, to: (timeline.to ?? timeline.from).label }
       : directionEnds(direction);
   const line = railLineOf(direction);
-  const vehicle = vehicleOf(direction);
-  const bound = line ? railBound(direction) : null;
+  const ride = ridePillOf(direction);
   const sibling = otherDirection(directions, direction);
   // A loop has no way back, so no PAPUNTA at all.
   const switchable = !loop && !!sibling && isDrawn(sibling);
@@ -179,10 +178,10 @@ export function TripCard({
       isLoop={loop}
       label={loop ? `${direction.name ?? from} (${LOOP_WORD})` : undefined}
       header={
-        vehicle && (
+        ride && (
           <RouteStopsCardHeader
-            vehicle={vehicle}
-            bound={bound}
+            vehicle={ride.vehicle}
+            bound={line ? railBound(direction) : null}
             livery={livery}
             name={loop ? (direction.name ?? LOOP_WORD) : undefined}
           />
@@ -198,7 +197,7 @@ export function TripCard({
       }}
       onBackToList={onBackToList}
       onClose={onClose}
-      ridePills={vehicle && <TripRidePills vehicle={vehicle} bound={bound} livery={livery} />}
+      ridePills={ride && <TripRidePills {...ride} livery={livery} />}
       signboards={(direction.signboards ?? []).map(signboardUrl)}
       note={LINE_NOTES[direction.route?.routeCode ?? '']}
       walk={walk}
