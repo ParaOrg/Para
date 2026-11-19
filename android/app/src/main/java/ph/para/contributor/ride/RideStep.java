@@ -22,6 +22,8 @@ public final class RideStep {
         public static final String SEAL_LOG = "seal-log";
         /** Post the card again: what it shows changed. */
         public static final String POST_CARD = "post-card";
+        /** Ask for location again: the service's request is replaced, never added to. */
+        public static final String REQUEST_LOCATION = "request-location";
         /** Write `note` to the phone's own diagnostics log. */
         public static final String DIAGNOSE = "diagnose";
 

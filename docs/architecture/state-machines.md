@@ -99,7 +99,7 @@ write) are open. The rows marked ❌ for those four now read as below.
 | MIUI-style kill, no restart | the card goes by itself 2.5 min after its last post; the page opens the ride cut off, with Resume or Stop at its last fix |
 | Phone reboot, app update | the card says "Your ride stopped when the phone restarted. Open Para to carry on or save it."; nothing records by itself |
 | Location switched off | the card says "Location is off: not recording", and the page hears it; on again, Recording |
-| No fix for 2 minutes, location on | the card says "No location: not recording" |
+| No fix for 2 minutes, location on | the card says "No location: not recording", and each 30 s check asks Play services for location again until a fix comes |
 | A process starts with a ride cut off | no card says Recording: only a running service shows it |
 
 ### Invariants for the Ride module

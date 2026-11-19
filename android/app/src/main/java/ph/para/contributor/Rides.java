@@ -83,6 +83,9 @@ final class Rides {
                 case Effect.DIAGNOSE:
                     RideDiagnostics.note(app, ride.recordingId, effect.note);
                     break;
+                case Effect.REQUEST_LOCATION:
+                    // The service asks, from the check that gave this step (RideService.check).
+                    break;
                 default:
                     Log.w(TAG, "An effect with no runner: " + effect);
             }
