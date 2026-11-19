@@ -6,12 +6,8 @@ import type { Snap } from '@/shared/ui/sheet-gesture';
 import { clearOfSheet } from '@/shared/ui/sheet-room';
 import type { LngLat } from '@/shared/utils/geo';
 
-import {
-  useCameraBefore,
-  useHeightOverview,
-  useRideOverview,
-  useSwitchOverview,
-} from './use-overviews';
+import { useOverview } from './use-overview';
+import { useCameraBefore, useRideOverview, useSwitchOverview } from './use-overviews';
 import { useRideTo } from './use-ride-to';
 import type { Highlight } from './use-saved-routes';
 import { framedBy, type Framed } from '../cards/card-stack';
@@ -70,11 +66,12 @@ interface Cards {
 /**
  * The camera with the cards, for both apps: a hintuan picked on a trip, the
  * map gliding there; the overviews of use-overviews.ts — SWITCH, an end
- * picked, the sheet settled at another height — and the camera from before a
+ * picked — and the Overview button's (useOverview); the camera from before a
  * RouteCard was picked on a hotspot's card, back as it is let go; and the card
- * buttons that move it. Opening a trip, picking a RouteCard and opening the
- * route list leave the camera where the commuter had it. `root` goes on the page,
- * `tripDock` on the trip card, `hotspotDock` on a hotspot's.
+ * buttons that move it. Opening a trip, picking a RouteCard, opening the route
+ * list and the sheet changing height leave the camera where the commuter had
+ * it. `root` goes on the page, `tripDock` on the trip card, `hotspotDock` on a
+ * hotspot's.
  *
  * `camera: false` turns those off: the overviews and the camera kept from
  * before get no map and do nothing, while a picked hintuan still glides. It
@@ -145,8 +142,8 @@ export function useCardCamera<V extends Direction, S extends Hotspot>(
   const switched = () => setSwitches((n) => n + 1);
   useSwitchOverview(cam, saved.litDirections, switches, openSheet, cards.snap);
   // A ride from a start to an end (the owner's call): what the camera takes
-  // in once the end is picked (pickOnTrip, endOnTrip), and what the trip
-  // frames as the sheet settles, in place of its whole route.
+  // in once the end is picked (pickOnTrip, endOnTrip), and what the trip's
+  // Overview frames, in place of its whole route.
   const rideLine = ride.startId !== null ? (ride.ridden?.line ?? null) : null;
   const [endPicks, setEndPicks] = useState(0);
   useRideOverview(cam, rideLine && [rideLine], endPicks, openSheet, cards.snap);
@@ -155,10 +152,7 @@ export function useCardCamera<V extends Direction, S extends Hotspot>(
    * owner's rule: once raised, the commuter moves it).
    */
   const takeInTheRide = () => setEndPicks((n) => n + 1);
-  // The sheet settled at another height: what the card on show frames, again,
-  // in the map it leaves — a trip's route, or its ride from a start to an
-  // end; a picked card's routes or what the list lights, a hotspot's place
-  // (framedBy).
+  // What the Overview button frames: a trip's route or ride, a picked card's routes (framedBy).
   const framed = (): Framed => {
     const ids = saved.highlight && new Set(saved.highlight.ids);
     const picked = ids && saved.directions.filter((v) => ids.has(v.id));
@@ -171,7 +165,12 @@ export function useCardCamera<V extends Direction, S extends Hotspot>(
       saved.litDirections,
     );
   };
-  useHeightOverview(cam, cards.snap, framed, openSheet);
+  // The button is for a trip, and for a picked RouteCard, whose pick moved nothing; the name
+  // changes with what it would frame, so a new trip or pick starts away from it.
+  const framing = saved.selected
+    ? `trip:${saved.selected.id}:${ride.startId ?? ''}:${ride.endPicked ?? ''}`
+    : saved.highlight && `cards:${saved.highlight.ids.join(',')}`;
+  const overviewButton = useOverview(cam, framing || null, framed(), openSheet, cards.snap);
 
   return {
     root,
@@ -180,6 +179,7 @@ export function useCardCamera<V extends Direction, S extends Hotspot>(
     ride,
     openSheet,
     switched,
+    overviewButton,
 
     /** Where the commuter's own position sits as the camera follows it: clear of the card on show. */
     clearOfOpen: (): [number, number] =>

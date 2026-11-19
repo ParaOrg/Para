@@ -1,5 +1,5 @@
 {
-  "src/app/public-map/public-map-app.tsx": 480,
+  "src/app/public-map/public-map-app.tsx": 477,
   "src/app/studio/playground-cards.tsx": 174,
   "src/app/studio/workshop.tsx": 386,
   "src/design-system/primitives/otp-field.tsx": 185,
@@ -65,7 +65,6 @@
   "src/features/routes/map/tap.ts": 208,
   "src/features/routes/map/use-card-camera.ts": 326,
   "src/features/routes/map/use-card-stack.ts": 191,
-  "src/features/routes/map/use-overviews.ts": 211,
   "src/features/routes/map/use-ride-to.ts": 360,
   "src/features/routes/map/use-saved-hotspots.ts": 196,
   "src/features/routes/map/use-saved-routes.ts": 400,

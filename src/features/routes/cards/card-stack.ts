@@ -88,8 +88,8 @@ export function letGoHolds(letGoId: string | null, selectedId: string | null): b
 export type Framed = { lines: readonly (readonly LngLat[])[] } | { at: LngLat } | null;
 
 /**
- * What the card on show frames as the sheet settles at another height
- * (useHeightOverview): an open trip, its route, or the ride picked on it from
+ * What the card on show frames when the Overview button is pressed
+ * (useOverview): an open trip, its route, or the ride picked on it from
  * a start to an end (`ride`), so the overview takes in the new start and end;
  * a place's card, the routes of the RouteCard picked on it, else the place;
  * the route list, the picked card's routes, else what it lights (`lit`);
