@@ -9,7 +9,10 @@ export interface RidePill {
   detail: string | null;
 }
 
-/** A direction's ride pill: what it rides and the word after the mode; null for a mode the design draws no vehicle for. */
+/**
+ * A direction's ride pill: what it rides and the word after the mode; null for a mode the design
+ * draws no vehicle for.
+ */
 export function ridePillOf(direction: Direction): RidePill | null {
   const vehicle = vehicleOf(direction);
   if (!vehicle) return null;
