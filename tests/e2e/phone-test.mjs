@@ -4923,16 +4923,38 @@ if (runsPart(1)) {
         sameCamera(camBeforeOpen, camAfterOpen),
         JSON.stringify({ camBeforeOpen, camAfterOpen }),
       );
-      // At full height, scrolled to its end, the trip's last row clears the Controller drawn
-      // over the sheet's foot: a finger reaches it.
-      const tripEnd = (await handleTo('full'))
-        ? await endClearsFooter('[data-testid="card"]')
-        : { ok: false, why: `the trip would not go to full: data-snap=${await sheetState()}` };
+      // A guard on the trip as it is drawn: at full height, its stops opened (View more) so that
+      // it runs past the screen, scrolled to its end, its last row clears the Controller drawn
+      // over the sheet's foot. BottomSheet's stories (FooterLastRowClear) prove the padding itself.
+      // Folded again after, as the checks below find it.
+      const viewMore = card().locator('[data-testid="trip-view-more"]');
+      const isFull = await handleTo('full');
+      const isOpened =
+        isFull &&
+        (await viewMore.count()) > 0 &&
+        (await buttonTap(
+          viewMore.first(),
+          async () => (await viewMore.first().getAttribute('aria-expanded')) === 'true',
+        ));
+      await cardsSettled(page);
+      const tripEnd = !isFull
+        ? { ok: false, why: `the trip would not go to full: data-snap=${await sheetState()}` }
+        : !isOpened
+          ? { ok: false, why: 'its stops would not open: no View more, or a tap that missed it' }
+          : await endClearsFooter('[data-testid="card"]');
       check(
-        "  on a small phone at full height, scrolled to the end: the trip's last row clears the footer",
+        "  on a small phone at full height, with the stops opened: the trip's last row clears the footer",
         tripEnd.ok,
         JSON.stringify(tripEnd),
       );
+      if (isOpened) {
+        await viewMore.first().evaluate((el) => el.scrollIntoView({ block: 'center' }));
+        await buttonTap(
+          viewMore.first(),
+          async () => (await viewMore.first().getAttribute('aria-expanded')) === 'false',
+        );
+        await cardsSettled(page);
+      }
 
       // The sheet at another height: the camera takes the route in again, in the
       // map it leaves (the owner's ask, 2026-10-01) — at full height, the whole
