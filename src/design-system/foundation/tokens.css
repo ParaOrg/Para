@@ -630,6 +630,10 @@
     inset -2px -2px 4px 0 rgb(18 18 18 / 0.16), inset 3px 3px 8px 0 rgb(12 12 12 / 0.56);
   --shadow-route-card-inverse-selected:
     inset 2.5px 2.5px 8px 0 rgb(47 47 47 / 0.72), inset -1px -1px 2px 0 rgb(0 0 0 / 0.32);
+
+  /* A trip's Start and End cards, lifted a little off the detail (TopContent, 4796:33201). Figma
+   * draws it as an unnamed drop shadow, so the name is ours. */
+  --shadow-trip-end-card: 0 3px 6px 0 rgb(43 43 43 / 0.12);
 }
 
 /*
