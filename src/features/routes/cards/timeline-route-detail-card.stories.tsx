@@ -25,18 +25,6 @@ const talaToNovaliches = hintuans(
 const talaToFairview = talaToNovaliches.slice(0, 6);
 const aLongWay = hintuans(...Array.from({ length: 30 }, (_, i) => `Hintuan ${i + 1}`));
 
-/**
- * Opens the stops with View more, as a rider's tap would — and lets go of it, since a tap draws no
- * focus ring. A pick opens them by itself.
- */
-const viewMore: Story['play'] = async ({ canvasElement }) => {
-  const button = within(canvasElement).getByTestId('trip-view-more');
-  await expect(button).toHaveAttribute('aria-expanded', 'false');
-  await userEvent.click(button);
-  button.blur();
-  await expect(button).toHaveAttribute('aria-expanded', 'true');
-};
-
 /** A hintuan's row, by its id. */
 const hintuanRow = (canvasElement: HTMLElement, id: string) =>
   canvasElement.querySelector<HTMLElement>(`[data-testid="trip-hintuan"][data-hintuan="${id}"]`);
@@ -145,12 +133,12 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** The colour a token class paints, read off a probe wearing it. */
-const wornBy = (className: string) => {
+/** The colour a token class paints, read off a probe wearing it: `property` is the computed style to read. */
+const wornBy = (className: string, property: 'backgroundColor' | 'color') => {
   const probe = document.createElement('i');
   probe.className = className;
   document.body.append(probe);
-  const colour = getComputedStyle(probe).backgroundColor;
+  const colour = getComputedStyle(probe)[property];
   probe.remove();
   return colour;
 };
@@ -158,11 +146,6 @@ const wornBy = (className: string) => {
 /** The picked row, its pill and the pesos in it, and the fare and Distance tiles following the pick. */
 const pickedPesos = async (ctx: Parameters<NonNullable<Story['play']>>[0]) => {
   const { canvasElement, args } = ctx;
-  // A pick opens the stops by itself.
-  await expect(within(canvasElement).getByTestId('trip-view-more')).toHaveAttribute(
-    'aria-expanded',
-    'true',
-  );
   const rows = canvasElement.querySelectorAll<HTMLElement>(
     '[data-testid="trip-hintuan"][data-state="selected"]',
   );
@@ -179,62 +162,37 @@ const pickedPesos = async (ctx: Parameters<NonNullable<Story['play']>>[0]) => {
   await expect(within(canvasElement).getByTestId('trip-km').textContent).toBe(
     kmLabel(args.pickedMetres ?? args.metres),
   );
-  // The white is the halves', not the Two's wrapper: the card shows between them.
-  const fill = pill?.querySelector<HTMLElement>('[data-part="pesos"]') ?? pill;
-  return { card: within(canvasElement).getByTestId('trip'), row: rows[0], pill: fill };
+  // The fill is the halves', not the Two's wrapper: the surface shows between them.
+  return pill?.querySelector<HTMLElement>('[data-part="pesos"]') ?? pill;
 };
 
 /**
- * Opened to the picked row, which checks it as Figma's State=Selected draws
- * it: the one row, its pill of pesos in the card's own colours swapped, and
- * the fare tile pricing the ride to there, the same pesos.
+ * The picked row, as the stops on the sheet's surface draw it: the one row, its pill of pesos (a
+ * train's code before them) on the secondary surface in Text/primary (STOP_PILL), whatever the
+ * livery, and the fare tile pricing the ride to there, the same pesos.
  */
 const pickedAsDrawn: Story['play'] = async (ctx) => {
-  const { card, pill } = await pickedPesos(ctx);
+  const pill = await pickedPesos(ctx);
+  await expect(pill).toBeTruthy();
   if (pill) {
-    // Figma's Timeline State=Selected (3769:2847): on Jeep and Bus the pill is Content/inverse;
-    // on the light UV Express and E-Jeep cards the other way round, the card's words behind the
-    // pesos (TIMELINE_PILL). Its pesos in the card's own colour either way.
-    const isLight = ['uv-express', 'ejeep'].includes(card.dataset.livery ?? '');
     await expect(getComputedStyle(pill).backgroundColor).toBe(
-      isLight ? getComputedStyle(card).color : wornBy('bg-content-inverse'),
+      wornBy('bg-bg-surface-secondary', 'backgroundColor'),
     );
-    await expect(getComputedStyle(pill).color).toBe(getComputedStyle(card).backgroundColor);
-  }
-};
-
-/**
- * A train's pick, as Figma's train frames draw it: the pill white on every line, MRT-3's
- * dark-worded card too, and its pesos in the line's Timeline/surface, the rail's colour, not the
- * card's.
- */
-const pickedOnATrain: Story['play'] = async (ctx) => {
-  const { row, pill } = await pickedPesos(ctx);
-  // The rail's own fill (the picked dot's ring), not the row's active: one.
-  const rail = [...row.querySelectorAll<HTMLElement>('[class*="timeline-surface"]')].find((el) =>
-    [...el.classList].some((c) => c.startsWith('bg-') && c.endsWith('-timeline-surface')),
-  );
-  await expect(rail).toBeDefined();
-  if (pill && rail) {
-    await expect(getComputedStyle(pill).backgroundColor).toBe(wornBy('bg-content-inverse'));
-    await expect(getComputedStyle(pill).color).toBe(getComputedStyle(rail).backgroundColor);
+    await expect(getComputedStyle(pill).color).toBe(wornBy('text-text-primary', 'color'));
   }
 };
 
 /**
  * On a phone, Figma's frame (3778:3183, Variant2): Tala → Novaliches, its Distance and Expected
- * fare, its stops folded (RouteStopsCard Behavior=Shrink): the card cut at 120, View more on its
- * foot.
+ * fare, then every stop.
  */
-export const Folded: Story = {
+export const Default: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     // The trip's name is its heading, hidden from the eye, over the cards' own headings.
     await expect(
       canvas.getByRole('heading', { level: 2, name: 'Tala → Novaliches' }),
     ).toBeInTheDocument();
-    await expect(canvas.getByTestId('trip').className).toContain('max-h-30');
-    await expect(canvas.getByTestId('trip-view-more').textContent).toBe('View more');
   },
 };
 
@@ -275,16 +233,12 @@ export const FerryPicked: Story = {
   play: pickedAsDrawn,
 };
 
-/** Opened: every hintuan alike — SM Fairview among them — then View less. */
-export const Opened: Story = { play: viewMore };
-
-/** Figma's other frame: Tala → SM Fairview, six hintuans, opened. */
+/** Figma's other frame: Tala → SM Fairview, six hintuans. */
 export const ToSMFairview: Story = {
   args: { hintuans: talaToFairview, routeDirection: 'SM Fairview' },
-  play: viewMore,
 };
 
-/** One hintuan on the way: folded as any trip with a hintuan, the destination under the cut. */
+/** One hintuan on the way. */
 export const OneHintuan: Story = {
   args: {
     routeOrigin: 'Fatima',
@@ -306,13 +260,13 @@ export const NoHintuan: Story = {
   },
 };
 
-/** Bus (Figma draws the Timeline set in red), with Content/inverse words. */
+/** Bus: its rail in the bus's red. */
 export const Bus: Story = { args: { livery: 'bus' } };
 
-/** E-Jeep: a light card, its words in Card/Ejeep/Ejeep-on-surface. */
+/** E-Jeep: its rail in Text/primary (TIMELINE_RAIL). */
 export const Ejeep: Story = { args: { livery: 'ejeep' } };
 
-/** UV Express: a light card, its words in Card/UVExpress/UVExpress-on-surface. */
+/** UV Express: its rail in Text/primary, as E-Jeep's. */
 export const UvExpress: Story = { args: { livery: 'uv-express' } };
 
 /** Turned round: the way back, so PAPUNTA reads Pabalik, and ⇅ Papunta, the way a tap leads. */
@@ -379,8 +333,8 @@ export const FareTurns: Story = {
   },
 };
 
-/** Thirty hintuans, opened: taller than the room, the rail scrolls under the header. */
-export const ALongWay: Story = { args: { hintuans: aLongWay }, play: viewMore };
+/** Thirty hintuans: taller than the room, the rail scrolls under the header. */
+export const ALongWay: Story = { args: { hintuans: aLongWay } };
 
 /** Place names too long for one line wrap; they are never cut. How a wrapped row sits on the rail is not drawn yet. */
 export const LongNames: Story = {
@@ -396,80 +350,73 @@ export const LongNames: Story = {
     ),
     routeDirection: 'Fairview Teraccess Transport Terminal',
   },
-  play: viewMore,
 };
 
 /** From 1024 wide, in the top-left corner where the list sits. */
 export const Floating: Story = { parameters: { frame: 'wide' } };
 
-/** In the corner and opened: Tala → Novaliches is taller than 640, so the rail scrolls. */
-export const FloatingOpened: Story = { parameters: { frame: 'wide' }, play: viewMore };
-
 /** Figma's 640 frame: still docked, as wide as the screen. */
 export const Tablet: Story = { parameters: { frame: 'tablet' } };
 
 /**
- * A hintuan picked, bus — the Timeline set's Selected row, drawn on Figma's red card (3769:2895, 3778:3183):
- * Amparo's dot a white ring round the rail's bus, End's E in its slot, and a white pill with the
- * pesos from Tala to there in the card's bus. The pick opens the stops.
+ * A hintuan picked, bus: Amparo's dot a white ring round the rail's red, End in its slot, and the
+ * pill with the pesos from Tala to there.
  */
 export const PickedBus: Story = {
   args: { livery: 'bus', picked: 'h3' },
   play: pickedAsDrawn,
 };
 
-/** E-Jeep: the light card's pill the other way round, on-surface under the card's colour. */
+/** Picked, E-Jeep: the same pill on every livery. */
 export const PickedEjeep: Story = {
   args: { livery: 'ejeep', picked: 'h3' },
   play: pickedAsDrawn,
 };
 
-/** UV Express, as E-Jeep. */
+/** Picked, UV Express, as E-Jeep. */
 export const PickedUvExpress: Story = {
   args: { livery: 'uv-express', picked: 'h3' },
   play: pickedAsDrawn,
 };
 
-/** Jeep, as Bus: the pill white, its pesos in the card's blue. */
+/** Picked, Jeep, as Bus. */
 export const PickedJeep: Story = {
   args: { livery: 'jeep', picked: 'h3' },
   play: pickedAsDrawn,
 };
 
-/** LRT-1, a train's trip (4074:7402): its line's colours, Content/inverse words. */
+/** LRT-1, a train's trip (4074:7402): its rail in the line's colour. */
 export const LightRailWayOne: Story = { args: { livery: 'light-rail-way-one' } };
 
-/** Picked, LRT-1: the pill white, the station's code and its pesos in the line's Timeline/surface. */
+/** Picked, LRT-1: the station's code and its pesos, the pill's two halves. */
 export const PickedLightRailWayOne: Story = {
   args: { livery: 'light-rail-way-one', picked: 'h3', pickedCode: 'GL04' },
-  play: pickedOnATrain,
+  play: pickedAsDrawn,
 };
 
-/** LRT-2, a train's trip (4080:4124): its line's colours, Content/inverse words. */
+/** LRT-2, a train's trip (4080:4124): its rail in the line's colour. */
 export const LightRailWayTwo: Story = { args: { livery: 'light-rail-way-two' } };
 
-/** Picked, LRT-2: the pill white, the station's code and its pesos in the line's Timeline/surface. */
+/** Picked, LRT-2: the station's code and its pesos, the pill's two halves. */
 export const PickedLightRailWayTwo: Story = {
   args: { livery: 'light-rail-way-two', picked: 'h3', pickedCode: 'PL04' },
-  play: pickedOnATrain,
+  play: pickedAsDrawn,
 };
 
-/** MRT-3, a train's trip (4080:4241): its line's colours, Content/primary, dark, words. */
+/** MRT-3, a train's trip (4080:4241): its rail in Text/primary (TIMELINE_RAIL). */
 export const MetroRailWayThree: Story = { args: { livery: 'metro-rail-way-three' } };
 
-/** Picked, MRT-3: the pill's two white halves, YL06 and ₱20–22, in the line's Timeline/surface. */
+/** Picked, MRT-3: the pill's two halves, YL06 and ₱20–22. */
 export const PickedMetroRailWayThree: Story = {
   args: { livery: 'metro-rail-way-three', picked: 'h3', pickedCode: 'YL06' },
-  play: pickedOnATrain,
+  play: pickedAsDrawn,
 };
 
 /** Tapped through: Amparo's row picks it, pill and all; the tile turned to Discounted, the pill with it; a second tap lets it go. */
 export const PickAndLetGo: Story = {
   play: async (ctx) => {
-    await viewMore(ctx);
     const { canvasElement, args } = ctx;
     const canvas = within(canvasElement);
-    // The opened rows come into sight a frame or two after the tap.
     await userEvent.click(await canvas.findByRole('button', { name: /Amparo/, pressed: false }));
     await expect(args.onPick).toHaveBeenCalledWith('h3');
     await expect(canvas.getByTestId('trip-hintuan-fare').textContent).toBe('₱20–22');
@@ -513,8 +460,6 @@ export const EndsShowTheWhole: Story = {
     await expect(destination()).toBe('rest');
     await userEvent.click(canvas.getByRole('button', { name: TALA, pressed: true }));
     await expect(origin()).toBe('rest');
-    // Nothing picked now, the stops stay open as the picks left them: Amparo is in reach.
-    await expect(canvas.getByTestId('trip-view-more')).toHaveAttribute('aria-expanded', 'true');
     await userEvent.click(canvas.getByRole('button', { name: /Amparo/, pressed: false }));
     await expect(selected()).toBe(1);
     await userEvent.click(canvas.getByRole('button', { name: NOVALICHES, pressed: false }));
@@ -544,32 +489,6 @@ export const OriginPicked: Story = { args: { livery: 'bus', endPicked: 'from' } 
 export const DestinationPicked: Story = { args: { livery: 'bus', endPicked: 'to' } };
 
 /**
- * A pick opens the stops, and View less folds them again: the card cut at 120, Amparo kept picked
- * under the cut, out of a keyboard's reach. View more again, every stop is back, the pick still
- * there, pill and all.
- */
-export const PickThenViewLess: Story = {
-  play: async (ctx) => {
-    await viewMore(ctx);
-    const { canvasElement } = ctx;
-    const canvas = within(canvasElement);
-    await userEvent.click(await canvas.findByRole('button', { name: /Amparo/, pressed: false }));
-    const button = canvas.getByTestId('trip-view-more');
-    await userEvent.click(button);
-    await expect(button).toHaveAttribute('aria-expanded', 'false');
-    await expect(canvas.getByTestId('trip').className).toContain('max-h-30');
-    const amparo = hintuanRow(canvasElement, 'h3');
-    await expect(amparo?.dataset.state).toBe('selected');
-    await expect(amparo?.inert).toBe(true);
-    await userEvent.click(button);
-    await expect(amparo?.inert).toBe(false);
-    await expect(await canvas.findByRole('button', { name: /Bestlink/ })).toBeVisible();
-    await expect(canvas.getByTestId('trip-hintuan-fare').textContent).toBe('₱20–22');
-    await expect(canvas.getByTestId('trip-fare').textContent).toBe('₱20–22');
-  },
-};
-
-/**
  * Set as start: Amparo picked, then made the start, S before it and × Remove as start under it, the
  * tiles still the whole trip's — a start alone is no ride yet (Figma Variant3); Bistek tapped is
  * the end, and the tiles read the ride between them. × Remove as start lets the start go, the
@@ -581,7 +500,6 @@ export const StartAndEnd: Story = {
     pickedFare: { regular: '₱14', discounted: '₱11–12' },
   },
   play: async (ctx) => {
-    await viewMore(ctx);
     const { canvasElement } = ctx;
     const canvas = within(canvasElement);
     const wholeKm = canvas.getByTestId('trip-km').textContent;
@@ -605,8 +523,8 @@ export const StartAndEnd: Story = {
 
 /**
  * A ride from Amparo to Bistek, and Bistek tapped again: the end let go, Amparo a start alone, so
- * every row stands alone, off the rail, until an end is picked. The stops stay open and the
- * keyboard's focus stays on Bistek's row.
+ * every row stands alone, off the rail, until an end is picked. The keyboard's focus stays on
+ * Bistek's row.
  */
 export const LetTheEndGo: Story = {
   args: {
@@ -629,7 +547,6 @@ export const LetTheEndGo: Story = {
       el.getAttribute('data-rail'),
     );
     await expect(rails.every((rail) => rail === 'disconnected')).toBe(true);
-    await expect(canvas.getByTestId('trip-view-more')).toHaveAttribute('aria-expanded', 'true');
     await expect(document.activeElement).toBe(
       bistek?.querySelector('[data-testid="trip-hintuan-pick"]'),
     );
@@ -690,7 +607,7 @@ export const EndAboveStart: Story = {
   },
 };
 
-/** The lone hintuan picked: the stops opened by the pick. */
+/** The lone hintuan picked. */
 export const OneHintuanPicked: Story = {
   args: {
     ...OneHintuan.args,
@@ -721,8 +638,7 @@ export const FloatingPicked: Story = {
 
 /**
  * A name too long for one line, picked: it wraps beside the pill, which
- * keeps its line. Sample pesos. The pick opens the stops; Bistek, after it,
- * stands alone.
+ * keeps its line. Sample pesos. Bistek, after it, stands alone.
  */
 export const LongNamesPicked: Story = {
   args: {
@@ -753,7 +669,6 @@ export const SheetFull: Story = {
   args: { height: undefined, hintuans: aLongWay },
   play: async (ctx) => {
     await tapHandle(ctx.canvasElement, 'full');
-    await viewMore(ctx);
     await expect(within(ctx.canvasElement).getByTestId('card')).toHaveAttribute(
       'data-snap',
       'full',
