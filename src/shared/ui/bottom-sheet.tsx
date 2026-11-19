@@ -10,6 +10,7 @@ import {
 
 import { useDialogFocus } from '@/shared/hooks/use-dialog-focus';
 import { useEscape } from '@/shared/hooks/use-escape';
+import { useHeightOf } from '@/shared/hooks/use-height-of';
 import { cn } from '@/shared/utils/cn';
 
 import {
@@ -167,6 +168,7 @@ export function BottomSheet({
   const headRef = useRef<HTMLDivElement>(null);
   const bodyRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
+  const [footerRef, footerPx] = useHeightOf();
   const [ownSnap, setOwnSnap] = useState<Snap>('low');
   const setSnap = height?.onSnap ?? setOwnSnap;
   // A fitted sheet's measure: the map's height, and its handle, header and content's together.
@@ -315,11 +317,8 @@ export function BottomSheet({
         FLOATS_AT[floats]
       }
     >
-      {/*
-        HandleNotch (3813:2963), 22 tall as drawn. It is not the only place to
-        take hold: the header under it drags the sheet too, some 80 together.
-        `touch-none`, or the browser takes the pull for a scroll.
-      */}
+      {/* HandleNotch (3813:2963), 22 tall; the header drags the sheet too, some 80 together.
+          `touch-none`, or the browser takes the pull for a scroll. */}
       <button
         ref={handleRef}
         type="button"
@@ -337,6 +336,7 @@ export function BottomSheet({
       </div>
       {footer && (
         <div
+          ref={footerRef}
           data-testid="sheet-footer"
           data-sheet-footer
           className={
@@ -355,9 +355,7 @@ export function BottomSheet({
           'min-h-0 flex-1 scrollbar-none sheet-floating:touch-auto sheet-floating:overflow-y-auto [&::-webkit-scrollbar]:hidden ' +
           (snap === 'full' ? 'overflow-y-auto' : 'touch-none overflow-hidden')
         }
-        // At full height the sheet stands a gap down the map (sheetGesture), as much
-        // of it under the screen's bottom: padded by that, its list scrolls to the end.
-        style={snap === 'full' ? fullBodyStyle(shape) : undefined}
+        style={snap === 'full' ? fullBodyStyle(shape, footerPx) : undefined}
       >
         {fits ? <div ref={contentRef}>{children}</div> : children}
       </div>
@@ -374,14 +372,14 @@ const HANDLE = {
 } satisfies Record<NonNullable<Props['handle']>, string>;
 
 /**
- * The body at full height. A sheet leaving a strip of map stands that gap down the map, as much of
- * it under the screen's bottom: padded by that, its list scrolls to the end. A sheet filling the
- * screen runs behind the status bar instead: padded by it at the top, its first card clears it.
+ * The body at full height, where it scrolls. A sheet leaving a strip of map stands that gap down the
+ * map, as much of it under the screen's bottom; a sheet filling the screen runs behind the status
+ * bar. Padded by those, and by the footer drawn over its foot (`footerPx`), its end scrolls clear.
  */
-function fullBodyStyle(shape: SheetShape): CSSProperties {
+function fullBodyStyle(shape: SheetShape, footerPx: number): CSSProperties {
   return shape.isMaxFull
-    ? { paddingTop: 'var(--map-safe-top)' }
-    : { paddingBottom: 'calc(var(--map-safe-top) + ' + MAX_STRIP_PX + 'px)' };
+    ? { paddingTop: 'var(--map-safe-top)', paddingBottom: footerPx + 'px' }
+    : { paddingBottom: 'calc(var(--map-safe-top) + ' + (MAX_STRIP_PX + footerPx) + 'px)' };
 }
 
 /**
