@@ -92,8 +92,12 @@ test("its gray is MapView's: bg-surface-secondary, Tailwind's neutral-100, over 
   assert.equal(last(screen, 'place-items'), 'center');
 });
 
-/** The app's sans: the design system's own (fonts.css) where it sets one, else Tailwind's. */
-const appSans = () => /\s--font-sans:\s*([^;]+);/.exec(fonts)?.[1] ?? theme('--font-sans');
+/** The app's sans: the design system's own, which fonts.css sets over Tailwind's. */
+const appSans = () => {
+  const m = /\s--font-sans:\s*([^;]+);/.exec(fonts);
+  assert.ok(m, '--font-sans in src/design-system/foundation/fonts.css');
+  return m[1];
+};
 
 test("its text is MapView's: text-sm, text-neutral-500, in the app's sans", () => {
   assert.match(
