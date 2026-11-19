@@ -295,6 +295,13 @@ const closeTrip = async (page) => {
     "a loop's trip has no SWITCH",
     (await page.locator('[data-testid="card-switch"]').count()) === 0,
   );
+  // The ride pill names the loop as a line's names its bound: "Jeep · UP – Ikot".
+  const pill = (await card.locator('[data-testid="trip-mode"]').innerText()).trim();
+  check(
+    '  and its ride pill names the loop after its mode, with no Papunta or Pabalik',
+    pill.endsWith(' · UP – Ikot') && !/Papunta|Pabalik/.test(pill),
+    pill,
+  );
   check(
     '  nothing in the card says Papunta or Pabalik',
     !/Papunta|Pabalik/.test(await card.innerText()),

@@ -40,7 +40,7 @@
   "src/features/routes/cards/livery-card.ts": 165,
   "src/features/routes/cards/route-card-list.tsx": 197,
   "src/features/routes/cards/timeline-route-detail.tsx": 166,
-  "src/features/routes/cards/trip-card.tsx": 250,
+  "src/features/routes/cards/trip-card.tsx": 249,
   "src/features/routes/geo/pass.ts": 168,
   "src/features/routes/map/basemap.ts": 283,
   "src/features/routes/map/chevrons.ts": 220,

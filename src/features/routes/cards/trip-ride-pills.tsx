@@ -9,20 +9,20 @@ import type { Vehicle } from '../model/vehicles';
 interface TripRidePillsProps {
   /** What the trip rides. */
   vehicle: Vehicle;
-  /** A train's bound, "Northbound"; null for any other vehicle. */
-  bound: string | null;
+  /** After the mode, a train's bound, "Northbound", or a loop's name, "UP – Ikot"; or null. */
+  detail: string | null;
   /** The trip's livery: the vehicle's colour, where it stands out from the surface. */
   livery: Livery;
 }
 
 /**
  * What a trip rides, at the top of its panel (BottomContent, 4796:30124): a white pill with the
- * vehicle, 20, in its mode's colour, and its word, "Jeep", or a train's line and bound, "LRT 1 ·
- * Northbound", in SemiBold 16/24. A label, not a control. Until the time pill joins it, it takes
- * the whole row.
+ * vehicle, 20, in its mode's colour, and its word, "Jeep", in SemiBold 16/24; a train's line and
+ * bound, "LRT 1 · Northbound", or a loop's mode and name, "Jeep · UP – Ikot". A label, not a
+ * control. Until the time pill joins it, it takes the whole row; a long name wraps inside it.
  */
-export function TripRidePills({ vehicle, bound, livery }: TripRidePillsProps) {
-  const label = bound ? `${MODE_BADGE_LABEL[vehicle]} · ${bound}` : MODE_BADGE_LABEL[vehicle];
+export function TripRidePills({ vehicle, detail, livery }: TripRidePillsProps) {
+  const label = detail ? `${MODE_BADGE_LABEL[vehicle]} · ${detail}` : MODE_BADGE_LABEL[vehicle];
   return (
     <div className="flex w-full gap-3 font-sn-pro">
       <p
