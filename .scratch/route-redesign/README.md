@@ -43,8 +43,8 @@ The hub's survey below maps the frames onto today's code. It was read from Figma
    - The new primitives and semantics are added beside the old (`/sync-tokens`).
    - New and restyled components use only the new semantics. Old code keeps the old.
    - Colours are Figma's, including the darker card fills and End's red-700.
-2. **The font.** Figma's family is Livvic, the owner's design call. Whether it covers the whole app or only the redesign is still being confirmed, so no font change yet.
-3. **Hidden for now:** the time pill ("30–60 min") and "Night only". The approach to time estimates is still under discussion. "via" shows now.
+2. **The font.** Livvic replaces SN Pro everywhere, as its own small pull request after the tokens (issue 13). Its woff2 files are self-hosted in `design-system/foundation` like SN Pro today, with no Google Fonts link, so the CSP stays as it is. Its licence file sits beside the fonts.
+3. **The travel time** is Para's own estimate (issue 14): the route's length over a typical speed range for its mode, plus a small dwell per stop. It is shown as "~30–60 min" and labelled an estimate. Google is not used. Real times from contributor rides come later (issue 17). "Night only" stays hidden. "via" shows now.
 4. **Controls.** Today's Controller, back and ✕ stay. The owner designs new ones later.
 5. **The timeline.** Tapping a stop still picks it. Folding goes.
 6. **Rail, ferry and loop.**
@@ -63,7 +63,16 @@ The hub's survey below maps the frames onto today's code. It was read from Figma
    - With no fare, distance takes the full row. The ferry shows Free.
    - The desktop dock is full height.
    - Old parts are deleted in the pull request that replaces them.
-9. **Not to build yet:** a route card list that always shows, with nearby routes within a radius. That is a new list mechanic, still under discussion.
+9. **The nearby list** (issue 15, the last issue, after the restyle). The route card list always shows, for places near the commuter, nearest first:
+   - It starts within 1 km. With fewer than about 5 cards, it widens step by step up to 3 km. It is never empty: past 3 km, it shows the nearest few.
+   - It looks from the commuter's place after they tap "locate me", or from a place or route they tap on the map. Both work on phone and desktop. With no location, it looks from the map's centre. It does not refresh on its own while the commuter moves.
+   - While a trip is open, the trip replaces the list, as today. Closing the trip brings the list back. There is no strip underneath for now.
+   - No distance label on the cards for now. The owner will design it as a later feature.
+10. **The deprecated semantics** are deleted only after every screen uses the new ones, in one clean-up pull request with the owner's OK (issue 16).
+11. **Two building sessions** share the work, each owning its own files and asking the hub before each merge:
+    - One builds 02 to 05, 11 and 12: the icons, the model, the destination row, the RouteCard, the timeline, and the detail's shell and wiring.
+    - The other builds 06 to 10, then 13 and 14: the detail parts, the font, and the travel time.
+    - `TripEndsCard` keeps its file and name (issue 06). The shell passes it `via` from `timeline-route-detail-card.tsx` once issue 03 has landed.
 
 ## Rules for every pull request here
 
@@ -92,3 +101,8 @@ The hub's survey below maps the frames onto today's code. It was read from Figma
 | 10 | [Tiles: fare and distance](issues/10-tiles.md) |
 | 11 | [The timeline](issues/11-timeline.md) |
 | 12 | [The shell: docking, wiring, e2e and stories](issues/12-shell.md) |
+| 13 | [Livvic everywhere](issues/13-livvic.md) |
+| 14 | [The travel-time estimate](issues/14-travel-time.md) |
+| 15 | [The nearby list](issues/15-nearby-list.md) |
+| 16 | [Delete the deprecated semantics](issues/16-deprecated-tokens.md) |
+| 17 | [Travel times from contributor rides (later)](issues/17-ride-times.md) |

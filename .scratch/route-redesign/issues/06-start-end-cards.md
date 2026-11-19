@@ -2,14 +2,13 @@
 
 Status: ready-for-agent
 Type: task
-Blocked by: 01, 03
+Blocked by: 01
 
 ## What to build
 
-- **Two cards.** `TripEndsCard` becomes a Start card and an End card.
+- **Two cards.** `TripEndsCard` keeps its file and name, and draws a Start card and an End card. It takes an optional `via`, which the shell passes once issue 03 lands.
 - **The swap** sits between them, and the via line under End.
 - **A loop** shows one card, with no swap.
-- **The old part goes.** `trip-ends-card.tsx` is deleted in the pull request that replaces it.
 
 ## Done when
 
