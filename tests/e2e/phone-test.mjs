@@ -766,6 +766,35 @@ const fingerPan = async (x, y, dx, dy) => {
     .waitForFunction(() => !window.__map.isMoving(), null, { timeout: 5000 })
     .catch(() => {});
 };
+/**
+ * A finger thrown from (x, y) by `dy` px over `steps` moves `gap` ms apart and lifted at once, as a
+ * sheet is thrown. Each touch carries its own time, so the speed the sheet reads is the throw's,
+ * however long a busy runner takes to deliver it.
+ */
+const throwFrom = async (x, y, dy, steps, gap) => {
+  const startedAt = Date.now() / 1000;
+  const touch = (type, at, touchPoints) =>
+    cdp.send('Input.dispatchTouchEvent', {
+      type,
+      touchPoints,
+      timestamp: startedAt + at / 1000,
+    });
+  await touch('touchStart', 0, [{ x, y }]);
+  for (let i = 1; i <= steps; i++) {
+    await touch('touchMove', i * gap, [{ x, y: y + (dy * i) / steps }]);
+  }
+  await touch('touchEnd', steps * gap + 8, []);
+  await cardsSettled(page);
+};
+/**
+ * How much of a sheet shows, in px: its height less how far it is slid down, read against where it
+ * stands unslid (its offset parent's top plus its own offset).
+ */
+const shownOf = (sheet) =>
+  sheet.first().evaluate((el) => {
+    const unslid = (el.offsetParent?.getBoundingClientRect().top ?? 0) + el.offsetTop;
+    return Math.round(el.offsetHeight - (el.getBoundingClientRect().top - unslid));
+  });
 /** Whether two readings of camNow are one camera. */
 const sameCamera = (a, b) =>
   Math.abs(a.zoom - b.zoom) < 0.01 &&
@@ -3639,6 +3668,36 @@ if (runsPart(3)) {
       has && (await card().count()) === 0,
       has ? '' : `[data-testid="chooser"] count 0; card count ${await card().count()}`,
     );
+    // The list's sheet coasts as a card's does: thrown up from its Low from the top of the list
+    // (its handle is drawn as none), a hard throw rests higher than a gentle one, both between Low
+    // and full; a fast flick down takes it back to Low after each.
+    const listTop = async () => {
+      const r = await chooser.first().boundingBox();
+      return r ? [r.x + r.width / 2, r.y + 24] : null;
+    };
+    const listRest = () => chooser.first().getAttribute('data-snap');
+    const listThrown = async (steps, gap) => {
+      const from = await listTop();
+      if (!from || (await listRest()) !== 'low') return null;
+      await throwFrom(from[0], from[1], -200, steps, gap);
+      const rest = await shownOf(chooser);
+      const back = await listTop();
+      // A short fast flick: let go above Low, so it lands on Low rather than past it, closed.
+      if (back) await throwFrom(back[0], back[1], 150, 3, 16);
+      return rest;
+    };
+    const listLow = has ? await shownOf(chooser) : 0;
+    const gentle = has ? await listThrown(12, 30) : null;
+    const hard = has ? await listThrown(4, 16) : null;
+    const listFull = has ? await chooser.first().evaluate((el) => el.offsetHeight) : 0;
+    check(
+      '  thrown up from Low, the list coasts: a hard throw rests higher than a gentle one, both between Low and full',
+      gentle !== null &&
+        hard !== null &&
+        hard > gentle + 40 &&
+        [gentle, hard].every((r) => r >= listLow - 2 && r <= listFull + 2),
+      `gentle ${gentle} px, hard ${hard} px shown (Low ${listLow}, full ${listFull}); now data-snap=${await listRest()}`,
+    );
     const chooserText = has ? await chooser.first().innerText() : '';
     // The routes' rows, inside their cards: a hotspot under the tap would be a
     // row of the list too, above them.
@@ -4475,17 +4534,8 @@ if (runsPart(3)) {
     for (let i = 0; i < 6 && (await sheetState()) !== want; i++) await tapHandle();
     return (await sheetState()) === want;
   };
-  /**
-   * How much of the card shows, in px: its height less how far it is slid down, read against where
-   * it stands unslid (its offset parent's top plus its own offset).
-   */
-  const shownNow = () =>
-    card()
-      .first()
-      .evaluate((el) => {
-        const unslid = (el.offsetParent?.getBoundingClientRect().top ?? 0) + el.offsetTop;
-        return Math.round(el.offsetHeight - (el.getBoundingClientRect().top - unslid));
-      });
+  /** How much of the card shows, in px (shownOf). */
+  const shownNow = () => shownOf(card());
   /** Where the card should rest at 55% of the map, in px shown. */
   const halfShown = () =>
     card()
@@ -4624,28 +4674,11 @@ if (runsPart(3)) {
     // Momentum (glideTo): thrown, the sheet coasts on from where the finger lifts, slowing
     // evenly, further the faster, and rests between Low and full. The same release point, a slow
     // throw and a fast one, each let go while moving: no hold before the lift.
-    /**
-     * The handle thrown by `dy` px over `steps` moves `gap` ms apart, let go at once; then shown.
-     * Each touch carries its own time, so the speed the sheet reads is the throw's, however long a
-     * busy runner takes to deliver it.
-     */
+    /** The handle thrown by `dy` px over `steps` moves `gap` ms apart (throwFrom); then shown. */
     const throwHandle = async (dy, steps, gap) => {
       const hb = await handle().first().boundingBox();
       if (!hb) return null;
-      const [x, y] = [hb.x + hb.width / 2, hb.y + hb.height / 2];
-      const startedAt = Date.now() / 1000;
-      const touch = (type, at, touchPoints) =>
-        cdp.send('Input.dispatchTouchEvent', {
-          type,
-          touchPoints,
-          timestamp: startedAt + at / 1000,
-        });
-      await touch('touchStart', 0, [{ x, y }]);
-      for (let i = 1; i <= steps; i++) {
-        await touch('touchMove', i * gap, [{ x, y: y + (dy * i) / steps }]);
-      }
-      await touch('touchEnd', steps * gap + 8, []);
-      await cardsSettled(page);
+      await throwFrom(hb.x + hb.width / 2, hb.y + hb.height / 2, dy, steps, gap);
       return (await card().count()) > 0 ? shownNow() : null;
     };
     const fullShown = () =>
