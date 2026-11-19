@@ -5,6 +5,7 @@ import { routeCards, type Listing } from '../model/departures';
 import { isRoadLivery, type Livery } from '../model/liveries';
 import { stationCode } from '../model/rail-codes';
 import { directionEnds, railLineOf, type Direction } from '../model/routes';
+import { rowName } from '../model/row-name';
 import { isRailwayVehicle } from '../model/vehicles';
 
 /** A card picked: which card it is, the place it stands for, the directions its rows list, and its colour, for the map to light them in. */
@@ -115,7 +116,7 @@ export function RouteCardStack({
           routeOrigin={p.from}
           endPoints={p.directions.map((d) => ({
             id: d.v.id,
-            routeDirection: d.to,
+            routeDirection: rowName(d),
             stationCode: endCodeOf(d.v),
           }))}
           onSelect={() => pick(p)}

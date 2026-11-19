@@ -3,13 +3,13 @@ import { otherBound, railBound, type Bound } from './rail-codes';
 import {
   directionEndHotspots,
   directionEnds,
-  directionRowName,
   isDrawn,
   isLoop,
   LOOP_WORD,
   type RouteSummary,
   type Direction,
 } from './routes';
+import { directionRowParts } from './row-name';
 import { railwayOf, vehicleOf, type RailwayVehicle, type Vehicle } from './vehicles';
 
 /*
@@ -39,8 +39,8 @@ function groupByRoute<V extends Direction>(directions: readonly V[]): RouteGroup
 /** One place in the chooser, and the directions shown leaving it. */
 export interface Departures<V extends Direction> {
   from: string;
-  /** `to` is the row's words: the place it goes to, with its route's via (directionRowName). */
-  directions: { v: V; to: string; drawn: boolean }[];
+  /** Each row: the place it goes to and its route's via apart (directionRowParts; rowName joins). */
+  directions: { v: V; to: string; via: string | null; drawn: boolean }[];
 }
 
 /**
@@ -106,11 +106,11 @@ function byPlace<V extends Direction>(chosen: readonly V[]): Departures<V>[] {
   const places = new Map<string, Departures<V>>();
   for (const v of chosen) {
     const { from } = directionEnds(v);
-    const to = directionRowName(v);
+    const { to, via } = directionRowParts(v);
     // A loop is its own place, never the one a route of the same name leaves from.
     const key = (isLoop(v) ? 'loop:' : '') + from.toLowerCase();
     const place = places.get(key) ?? { from, directions: [] };
-    place.directions.push({ v, to, drawn: isDrawn(v) });
+    place.directions.push({ v, to, via, drawn: isDrawn(v) });
     places.set(key, place);
   }
   return [...places.values()];

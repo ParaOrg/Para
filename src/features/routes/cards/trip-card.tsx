@@ -14,7 +14,6 @@ import { railBound, stationCode } from '../model/rail-codes';
 import { railFares } from '../model/rail-fares';
 import {
   directionEnds,
-  directionRowName,
   isDrawn,
   isFerry,
   isLoop,
@@ -25,6 +24,7 @@ import {
   directionLine,
   type Direction,
 } from '../model/routes';
+import { directionRowName } from '../model/row-name';
 import type { Timeline } from '../model/timeline';
 import { vehicleOf } from '../model/vehicles';
 
