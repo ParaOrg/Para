@@ -22,6 +22,19 @@ export const MAP_FILE_URL = '/data/index.v5.json';
 /** A direction's full line: `${LINES_URL}${id}.json`. The worker keeps every one seen. */
 export const LINES_URL = '/data/lines/';
 
+let origin = '';
+
+/**
+ * Where the map files are fetched from: the page's own site on the web (left empty), the site's
+ * address in the commuter app, which has no site of its own (ADR 0008). Given once as it starts.
+ */
+export function setMapFileOrigin(at: string): void {
+  origin = at;
+}
+
+/** A map file's path as fetched (setMapFileOrigin). Stored copies stay keyed by the path. */
+export const mapFileAt = (path: string): string => `${origin}${path}`;
+
 /**
  * The shape of the map file this app reads: the numbers a reader must know
  * to make sense of the file. An installed app keeps running for months with
