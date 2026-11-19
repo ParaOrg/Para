@@ -21,6 +21,7 @@ interface TripTilesProps {
  * left, the distance on the right. Unpriced, the distance takes the row alone.
  */
 export function TripTiles({ shown, shownMetres, isDiscounted, turns, onTurn }: TripTilesProps) {
+  const kind = isDiscounted ? 'Discounted fare' : 'Regular fare';
   return (
     <div data-testid="trip-tiles" className="flex w-full gap-3 text-center font-sn-pro">
       {shown === FREE && (
@@ -35,7 +36,8 @@ export function TripTiles({ shown, shownMetres, isDiscounted, turns, onTurn }: T
         <button
           type="button"
           data-testid="trip-fare-turn"
-          aria-label={`${isDiscounted ? 'Discounted' : 'Regular'} fare ${farePesos(shown, isDiscounted)}. Show the ${isDiscounted ? 'regular' : 'discounted'} fare`}
+          // The words on the tile first, as they read, so saying them reaches the button.
+          aria-label={`${farePesos(shown, isDiscounted)} ${kind}. Show the ${isDiscounted ? 'regular' : 'discounted'} fare`}
           onClick={onTurn}
           className={cn(TILE, PRESSABLE)}
         >
@@ -43,7 +45,7 @@ export function TripTiles({ shown, shownMetres, isDiscounted, turns, onTurn }: T
             {farePesos(shown, isDiscounted)}
           </span>
           <span className={cn(NAME, 'flex items-center gap-2')}>
-            {isDiscounted ? 'Discounted fare' : 'Regular fare'}
+            {kind}
             <span
               aria-hidden
               style={{ rotate: `${turns * 360}deg` }}
@@ -70,9 +72,9 @@ export function TripTiles({ shown, shownMetres, isDiscounted, turns, onTurn }: T
  */
 const TILE =
   'flex min-w-0 flex-1 basis-0 flex-col items-center justify-center gap-1 overflow-clip rounded-3xl bg-bg-fill p-3.5 shadow-sm';
-const FIGURE = 'block text-2xl/8 font-bold text-text-primary';
-const NAME = 'block text-sm/5 font-medium text-text-tertiary';
-// Figma draws no hover or pressed state; the fare's, a button, keeps today's step darker under
-// the finger, on the nearest new token.
+const FIGURE = 'text-2xl/8 font-bold text-text-primary';
+const NAME = 'text-sm/5 font-medium text-text-tertiary';
+// Figma draws no hover or pressed state for the fare's button; bg-fill-secondary stands in until
+// the owner draws one.
 const PRESSABLE =
   'transition-colors duration-quick ease-move hover:bg-bg-fill-secondary active:bg-bg-fill-secondary';
