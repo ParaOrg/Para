@@ -568,6 +568,11 @@
     inset 0 -2px 4px 0 rgb(0 0 0 / 0.24), inset 0 2px 4px 0 rgb(255 255 255 / 0.24);
   --shadow-route-card-inverse:
     inset 0 -4px 8px 0 rgb(0 0 0 / 0.08), inset 0 3px 8px 0 rgb(255 255 255 / 0.64);
+  /* The redesign's darker RouteCards at rest: Figma's Route/RouteCardPrimary as it now stands
+   * (RouteCard, 4629:22776), softer than --shadow-route-card-primary, which keeps the style's
+   * earlier values for the boxes and buttons that share it until they are restyled. */
+  --shadow-route-card-fill:
+    inset 0 -2px 4px 0 rgb(0 0 0 / 0.12), inset 0 1px 4px 0 rgb(255 255 255 / 0.12);
 
   /* A bottom sheet, lifted off the map (BottomSheet/TopShadow, 3817:6007; its Figma
    * effect style is named BottomToolbar/TopShadow). */
