@@ -3,7 +3,6 @@ import { useState, type ReactNode, type Ref } from 'react';
 import type { SheetHeight } from '@/shared/ui/bottom-sheet';
 import { lineLength } from '@/shared/utils/geo';
 
-import { RouteStopsCardHeader } from './route-stops-card-header';
 import { TimelineRouteDetailCard } from './timeline-route-detail-card';
 import { FREE, type Fare, type Fares } from './trip-fare';
 import { TripRidePills } from './trip-ride-pills';
@@ -178,16 +177,6 @@ export function TripCard({
       destinationCode={line && stationCode(line, to)}
       isLoop={loop}
       label={loop ? `${direction.name ?? from} (${LOOP_WORD})` : undefined}
-      header={
-        vehicle && (
-          <RouteStopsCardHeader
-            vehicle={vehicle}
-            bound={bound}
-            livery={livery}
-            name={loop ? (direction.name ?? LOOP_WORD) : undefined}
-          />
-        )
-      }
       switchable={switchable || canDrawOtherWay}
       back={direction.reversed}
       way={loop ? null : wayWord(direction.reversed, [direction])}

@@ -201,12 +201,11 @@ export const NoList: Story = {
   render: (args) => <Keeping {...args} onBackToList={null} />,
 };
 
-/** A hintuan picked: the pick opens the stops, and its pill prices the ride from Tala to there. */
+/** A hintuan picked: its pill prices the ride from Tala to there. */
 export const PickedHintuan: Story = {
   args: { picked: 'amparo', pickedMetres: 7_300, height: { snap: 'full', onSnap: fn() } },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(canvas.getByTestId('trip-view-more')).toHaveAttribute('aria-expanded', 'true');
     const amparo = canvasElement.querySelector(
       '[data-testid="trip-hintuan"][data-hintuan="amparo"]',
     );
@@ -235,7 +234,7 @@ export const OtherRoutes: Story = {
   },
 };
 
-/** A train: priced by its stations, not its metres, in its line's colours; its line and bound at the top (LRT-1 Southbound); the picked station's code in its pill. */
+/** A train: priced by its stations, not its metres, in its line's colours; its line and bound in the ride pill (LRT 1 · Southbound); the picked station's code in its pill. */
 export const Train: Story = {
   args: {
     direction: direction('lrt1', 'Fernando Poe Jr.', 'Baclaran', {
@@ -254,11 +253,14 @@ export const Train: Story = {
     pickedCode: 'CAR',
     height: { snap: 'full', onSnap: fn() },
   },
-  // Carriedo picked: the stations before it on the ride, EDSA the one after
-  // it, shown as it is, so nothing folds.
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByTestId('trip-mode')).toHaveTextContent('LRT 1 · Southbound');
+    await expect(canvas.getByTestId('trip-hintuan-fare')).toHaveTextContent('CAR');
+  },
 };
 
-/** MRT-3 Northbound: its header's words black on the white halves, not its yellow. */
+/** MRT-3 Northbound: the line and its bound in the ride pill. */
 export const TrainMrt3: Story = {
   args: {
     direction: direction('mrt3', 'Taft Avenue', 'North Avenue', {
@@ -269,10 +271,15 @@ export const TrainMrt3: Story = {
     timeline: timelineOf('Taft Avenue', 'North Avenue', ['Magallanes', 'Ayala', 'Cubao']),
     livery: 'metro-rail-way-three',
   },
+  play: async ({ canvasElement }) => {
+    await expect(within(canvasElement).getByTestId('trip-mode')).toHaveTextContent(
+      'MRT 3 · Northbound',
+    );
+  },
 };
 
 /**
- * A train whose end the line's table does not know: no bound, so the header shows the line alone,
+ * A train whose end the line's table does not know: no bound, so the ride pill shows the line alone,
  * and PAPUNTA falls back to Pabalik and Papunta, as over a mixed list (wayWord). TODO: what
  * PAPUNTA should say for a train with no known bound is not designed yet.
  */
@@ -285,6 +292,9 @@ export const TrainNoBound: Story = {
     directions: [],
     timeline: timelineOf('Fernando Poe Jr.', 'Nowhere', ['Balintawak', 'Monumento']),
     livery: 'light-rail-way-one',
+  },
+  play: async ({ canvasElement }) => {
+    await expect(within(canvasElement).getByTestId('trip-mode').textContent).toBe('LRT 1');
   },
 };
 
@@ -389,23 +399,27 @@ const ikotTimeline: Timeline = {
 };
 
 /**
- * A loop's trip (UP – Ikot): its name a badge after the mode's, the tip at the top
- * and again at the bottom, the tiles the whole loop's, and no PAPUNTA.
+ * A loop's trip (UP – Ikot): the tip at the top and again at the bottom, the tiles the whole
+ * loop's, and no PAPUNTA. Its name is the sheet's, for a screen reader.
  */
 export const Loop: Story = {
   args: { direction: ikot, directions: [ikot], timeline: ikotTimeline, livery: 'bus' },
   play: async ({ canvasElement }) => {
     const card = within(canvasElement);
     await expect(card.queryByTestId('card-switch')).toBeNull();
-    await expect(card.getByText('UP – Ikot')).toBeVisible();
+    await expect(
+      card.getByRole('heading', { level: 2, name: 'UP – Ikot (Ikot)' }),
+    ).toBeInTheDocument();
   },
 };
 
-/** A loop with no name of its own: its badge says Ikot. */
+/** A loop with no name of its own: the sheet is named by its tip, Oblation (Ikot). */
 export const LoopNoName: Story = {
   args: { ...Loop.args, direction: { ...ikot, name: null } },
   play: async ({ canvasElement }) => {
-    await expect(within(canvasElement).getByText('Ikot')).toBeVisible();
+    await expect(
+      within(canvasElement).getByRole('heading', { level: 2, name: 'Oblation (Ikot)' }),
+    ).toBeInTheDocument();
   },
 };
 

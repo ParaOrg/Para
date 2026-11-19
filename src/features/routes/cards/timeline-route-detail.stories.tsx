@@ -5,8 +5,8 @@ import { TimelineRouteDetail } from './timeline-route-detail';
 import { LIVERIES } from '../model/liveries';
 
 /**
- * A trip's stops on their own, as TimelineRouteDetailCard insets them: one story a state, and the
- * pick in each livery. Long names and the taps, Set as start's among them, are
+ * A trip's stops on their own, on the sheet's surface as TripDetail lays them: one story a state,
+ * and the pick in each livery. Every stop always shows: nothing folds. Long names and the taps, Set as start's among them, are
  * TimelineRouteDetailCard's stories. Sample data only: the places of Figma's frames (3762:3546),
  * not the real map.
  */
@@ -25,22 +25,6 @@ const talaToNovaliches = hintuans(
 );
 
 type PlayContext = Parameters<NonNullable<Story['play']>>[0];
-
-/** Taps the card's foot, View more or View less, and lets go of it: a tap draws no focus ring. */
-const tapViewMore = async (canvasElement: HTMLElement) => {
-  const button = within(canvasElement).getByTestId('trip-view-more');
-  await userEvent.click(button);
-  button.blur();
-};
-
-/** Opens the stops with View more, as a rider's tap would. */
-const viewMore: Story['play'] = async ({ canvasElement }) => {
-  await tapViewMore(canvasElement);
-  await expect(within(canvasElement).getByTestId('trip-view-more')).toHaveAttribute(
-    'aria-expanded',
-    'true',
-  );
-};
 
 /** Every row, the origin first and the destination last. */
 const rowsOf = (canvasElement: HTMLElement) => [
@@ -78,19 +62,9 @@ const atRest = (n: number) => ({
   signs: ['start', ...times(n, null), 'end'],
 });
 
-/** The stops opened, as any pick opens them: no clip, nothing out of reach, View less. */
-const expectOpened = async ({ canvasElement }: PlayContext) => {
-  const canvas = within(canvasElement);
-  await expect(canvas.getByTestId('trip').className).not.toContain('max-h-30');
-  await expect(canvas.getByTestId('trip-view-more')).toHaveAttribute('aria-expanded', 'true');
-  await expect(canvas.getByTestId('trip-view-more').textContent).toBe('View less');
-  await expect(rowsOf(canvasElement).filter((row) => row.inert)).toHaveLength(0);
-};
-
-/** Opened by the pick, with the rows it draws. */
+/** A pick's rows: the rails and the signs it draws. */
 const pickedRows =
   (rails: readonly string[], signs: readonly (string | null)[]) => async (ctx: PlayContext) => {
-    await expectOpened(ctx);
     await expectRows(ctx, rails, signs);
   };
 
@@ -105,7 +79,7 @@ const meta = {
   component: TimelineRouteDetail,
   decorators: [
     (Story) => (
-      <div className="w-[393px] bg-surface px-3 pt-3 pb-6">
+      <div className="w-[393px] bg-bg-surface pb-6">
         <Story />
       </div>
     ),
@@ -126,66 +100,19 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/**
- * Folded, as it opens (RouteStopsCard Behavior=Shrink, 4681:29137): every stop drawn, the card cut
- * at 120, Tala and the top of Barracks in sight, View more on its foot. The rows under the cut,
- * every hintuan after the first and the destination, are out of a keyboard's reach.
- */
-export const Folded: Story = {
+/** One hintuan on the way: the origin, Lagro and the destination, all on the rail. */
+export const OneHintuan: Story = {
+  args: { routeOrigin: 'Fatima', hintuans: hintuans('Lagro'), routeDirection: 'SM Fairview' },
   play: async (ctx) => {
-    const { canvasElement } = ctx;
-    const canvas = within(canvasElement);
-    await expect(canvas.getByTestId('trip').className).toContain('max-h-30');
-    const button = canvas.getByTestId('trip-view-more');
-    await expect(button).toHaveAttribute('aria-expanded', 'false');
-    await expect(button.textContent).toBe('View more');
-    await expect(rowsOf(canvasElement).map((row) => row.inert)).toEqual([
-      false,
-      false,
-      ...times(talaToNovaliches.length, true),
-    ]);
-    const { rails, signs } = atRest(talaToNovaliches.length);
+    const { rails, signs } = atRest(1);
     await expectRows(ctx, rails, signs);
   },
 };
 
-/** Opened by View more (Behavior=Expand): every stop, then View less on the card's foot. */
-export const Opened: Story = {
-  play: async (ctx) => {
-    await viewMore(ctx);
-    await expectOpened(ctx);
-  },
-};
-
-/** Opened, then View less: folded again, the card cut at 120 as it opened. */
-export const FoldedAgain: Story = {
-  play: async (ctx) => {
-    const { canvasElement } = ctx;
-    await tapViewMore(canvasElement);
-    await tapViewMore(canvasElement);
-    const canvas = within(canvasElement);
-    await expect(canvas.getByTestId('trip').className).toContain('max-h-30');
-    await expect(canvas.getByTestId('trip-view-more')).toHaveAttribute('aria-expanded', 'false');
-    await expect(rowsOf(canvasElement).at(-1)?.inert).toBe(true);
-  },
-};
-
-/** One hintuan on the way: still folded, the destination under the cut until View more. */
-export const OneHintuan: Story = {
-  args: { routeOrigin: 'Fatima', hintuans: hintuans('Lagro'), routeDirection: 'SM Fairview' },
-  play: async ({ canvasElement }) => {
-    await expect(within(canvasElement).getByTestId('trip-view-more')).toBeTruthy();
-    await expect(rowsOf(canvasElement).map((row) => row.inert)).toEqual([false, false, true]);
-  },
-};
-
-/** None on the way yet: the rail runs straight from the origin to the end, and nothing folds. */
+/** None on the way yet: the rail runs straight from the origin to the end. */
 export const NoHintuan: Story = {
   args: { routeOrigin: 'Lagro', hintuans: [], routeDirection: 'SM Fairview' },
   play: async (ctx) => {
-    const canvas = within(ctx.canvasElement);
-    await expect(canvas.queryByTestId('trip-view-more')).toBeNull();
-    await expect(canvas.getByTestId('trip').className).not.toContain('max-h-30');
     await expectRows(ctx, ['below', 'above'], ['start', 'end']);
   },
 };
@@ -193,35 +120,19 @@ export const NoHintuan: Story = {
 /** Bus (Figma draws the Timeline set in red). */
 export const Bus: Story = { args: { livery: 'bus' } };
 
-/** E-Jeep: a light card, dark words. */
+/** E-Jeep: its rail in Text/primary, as its mode's colour does not stand out from the surface. */
 export const Ejeep: Story = { args: { livery: 'ejeep' } };
 
-/** UV Express: a light card, dark words. */
+/** UV Express: its rail in Text/primary, as E-Jeep's. */
 export const UvExpress: Story = { args: { livery: 'uv-express' } };
 
 /**
- * A hintuan picked, which opens the stops: its dot the Selected one, End's E in its slot with its
+ * A hintuan picked: its dot the Selected one, End's E in its slot with its
  * pill of the pesos to there, Set as start under it when there is a button for it. The ride runs
  * on the rail from the origin, its S, down to it; the rows after it stand alone (Unselected), the
  * destination without its E.
  */
 export const HintuanPicked: Story = { args: { picked: 'h3' }, play: amparoPicked };
-
-/**
- * A hintuan picked, then View less: the stops folded again by the rider, the pick kept. Amparo is
- * under the cut now, out of a keyboard's reach until View more.
- */
-export const HintuanPickedFoldedAgain: Story = {
-  args: { picked: 'h3' },
-  play: async ({ canvasElement }) => {
-    await tapViewMore(canvasElement);
-    const canvas = within(canvasElement);
-    await expect(canvas.getByTestId('trip').className).toContain('max-h-30');
-    const amparo = canvasElement.querySelector<HTMLElement>('[data-hintuan="h3"]');
-    await expect(amparo?.dataset.state).toBe('selected');
-    await expect(amparo?.inert).toBe(true);
-  },
-};
 
 /** The last hintuan picked: the rail runs to it, and only the destination stands alone. */
 export const LastHintuanPicked: Story = {
@@ -232,31 +143,31 @@ export const LastHintuanPicked: Story = {
   ),
 };
 
-/** Picked, bus: the pill in the card's own colours, swapped. */
+/** Picked, bus. */
 export const HintuanPickedBus: Story = {
   args: { livery: 'bus', picked: 'h3' },
   play: amparoPicked,
 };
 
-/** Picked, E-Jeep: the light card's pill, on-surface under the card's colour. */
+/** Picked, E-Jeep. */
 export const HintuanPickedEjeep: Story = {
   args: { livery: 'ejeep', picked: 'h3' },
   play: amparoPicked,
 };
 
-/** Picked, UV Express: as E-Jeep's. */
+/** Picked, UV Express. */
 export const HintuanPickedUvExpress: Story = {
   args: { livery: 'uv-express', picked: 'h3' },
   play: amparoPicked,
 };
 
-/** Picked, Jeep: the pill white, as Bus's. */
+/** Picked, Jeep. */
 export const HintuanPickedJeep: Story = {
   args: { livery: 'jeep', picked: 'h3' },
   play: amparoPicked,
 };
 
-/** Picked, ferry: the card's own colours carry over. */
+/** Picked, ferry. */
 export const HintuanPickedFerry: Story = {
   args: { livery: 'ferry', picked: 'h3' },
   play: amparoPicked,
@@ -280,7 +191,7 @@ export const LightRailWayOne: Story = {
   play: expectEndCodes('GL02', 'GL13'),
 };
 
-/** Picked, LRT-1: the pill white, the station's code and pesos in the line's Timeline/surface, as Figma's frame draws it. */
+/** Picked, LRT-1: the station's code and the pesos, the pill's two halves. */
 export const HintuanPickedLightRailWayOne: Story = {
   args: { ...LightRailWayOne.args, picked: 'h3', pickedCode: 'GL04' },
   play: amparoPicked,
@@ -292,7 +203,7 @@ export const LightRailWayTwo: Story = {
   play: expectEndCodes('PL01', 'PL12'),
 };
 
-/** Picked, LRT-2: the pill white, the station's code and pesos in the line's Timeline/surface, as Figma's frame draws it. */
+/** Picked, LRT-2: the station's code and the pesos, the pill's two halves. */
 export const HintuanPickedLightRailWayTwo: Story = {
   args: { ...LightRailWayTwo.args, picked: 'h3', pickedCode: 'PL04' },
   play: amparoPicked,
@@ -304,16 +215,16 @@ export const MetroRailWayThree: Story = {
   play: expectEndCodes('YL01', 'YL12'),
 };
 
-/** Ferry: the rail in Map/Ferry/Timeline/surface. Figma draws no ferry trip yet; the card's own colours carry over. */
+/** Ferry: the rail in its mode's colour. Figma draws no ferry trip yet. */
 export const Ferry: Story = { args: { livery: 'ferry' } };
 
-/** Picked, MRT-3: the pill white, the station's code and pesos in the line's Timeline/surface, as Figma's frame draws it. */
+/** Picked, MRT-3: the station's code and the pesos, the pill's two halves. */
 export const HintuanPickedMetroRailWayThree: Story = {
   args: { ...MetroRailWayThree.args, picked: 'h3', pickedCode: 'YL06' },
   play: amparoPicked,
 };
 
-/** One hintuan on the way, picked: the stops opened, the ride from Fatima to it. */
+/** One hintuan on the way, picked: the ride from Fatima to it. */
 export const OneHintuanPicked: Story = {
   args: {
     routeOrigin: 'Fatima',
@@ -338,7 +249,6 @@ export const HintuanPickedUnpriced: Story = {
 export const OriginPicked: Story = {
   args: { endPicked: 'from' },
   play: async (ctx) => {
-    await expectOpened(ctx);
     await expect(within(ctx.canvasElement).getByTestId('trip-origin').dataset.state).toBe(
       'selected',
     );
@@ -349,7 +259,6 @@ export const OriginPicked: Story = {
 export const DestinationPicked: Story = {
   args: { endPicked: 'to' },
   play: async (ctx) => {
-    await expectOpened(ctx);
     await expect(within(ctx.canvasElement).getByTestId('trip-destination').dataset.state).toBe(
       'selected',
     );
@@ -360,7 +269,7 @@ export const DestinationPicked: Story = {
  * Every row's State=Pressed (Timeline, 3716:1894): press and hold a row — where it leaves from, a
  * hintuan (Pangarap is picked, so a Selected one too), where it goes — and it wears the rail's
  * colour while the finger or the mouse is down. A browser state, `:active`, so there is nothing to
- * set: hold it to see it, in each livery. The pick opens the stops, so every row is there to hold.
+ * set: hold it to see it, in each livery.
  */
 export const RowPressed: Story = {
   args: { picked: 'h2', pickedPesos: '₱14' },
@@ -405,20 +314,11 @@ const onMrt3 = {
 /** Rows of MRT-3's eleven stations standing alone. */
 const alone = (n: number) => times(n, 'disconnected');
 
-/** Variant6 (4157:7737): folded, S and YL01 at North Avenue, E and YL13 at Taft Avenue. */
-export const RideFolded: Story = {
-  args: onMrt3,
-  play: async (ctx) => {
-    await expectEndCodes('YL01', 'YL13')(ctx);
-    await expect(signsOf(ctx.canvasElement)).toEqual(atRest(mrt3.length).signs);
-  },
-};
-
-/** Rest (4137:9884): opened, nothing picked; the rail end to end. */
+/** Rest (4137:9884): nothing picked; the rail end to end, S and YL01 at North Avenue, E and YL13 at Taft Avenue. */
 export const RideRest: Story = {
   args: onMrt3,
   play: async (ctx) => {
-    await viewMore(ctx);
+    await expectEndCodes('YL01', 'YL13')(ctx);
     const { rails, signs } = atRest(mrt3.length);
     await expectRows(ctx, rails, signs);
   },
@@ -625,7 +525,6 @@ const onLoop = {
 export const LoopRest: Story = {
   args: onLoop,
   play: async (ctx) => {
-    await viewMore(ctx);
     const { rails, signs } = atRest(loopRows.length);
     await expectRows(ctx, rails, signs);
   },
@@ -660,4 +559,215 @@ export const LoopEndPickedWithStart: Story = {
     [...alone(3), 'below', 'through', 'through', 'above'],
     [null, null, null, 'start', null, null, 'end'],
   ),
+};
+
+/** The colour a token class paints, read off a probe wearing it: `property` is the computed style to read. */
+const wornBy = (className: string, property: 'backgroundColor' | 'color') => {
+  const probe = document.createElement('i');
+  probe.className = className;
+  document.body.append(probe);
+  const colour = getComputedStyle(probe)[property];
+  probe.remove();
+  return colour;
+};
+
+/** The dot on a row's rail: its outer round, ringed or not. */
+const dotOf = (row: Element | null | undefined) =>
+  row?.querySelector<HTMLElement>('[data-rail] .rounded-full') ?? null;
+
+/** A short sample trip: the origin, one hintuan, the destination. */
+const shortTrip = {
+  routeOrigin: 'Bagong Silang',
+  hintuans: hintuans('Zabarte'),
+  routeDirection: 'Novaliches Bayan',
+} as const;
+
+/** A short trip: the origin, one hintuan and the destination, every row on the rail. */
+export const ShortTrip: Story = {
+  args: shortTrip,
+  play: async (ctx) => {
+    const names = rowsOf(ctx.canvasElement).map((row) => row.textContent);
+    await expect(names[0]).toContain('Bagong Silang');
+    await expect(names[1]).toContain('Zabarte');
+    await expect(names[2]).toContain('Novaliches Bayan');
+    const { rails, signs } = atRest(1);
+    await expectRows(ctx, rails, signs);
+  },
+};
+
+const longTrip = hintuans(
+  'Kaybiga',
+  'Deparo',
+  'Camarin',
+  'Llano',
+  'Bagbaguin',
+  'Tullahan',
+  'Sta. Quiteria',
+  'Gulod',
+  'Nagkaisang Nayon',
+  'San Bartolome',
+  'Sauyo',
+  'Talipapa',
+  'Baesa',
+  'Bahay Toro',
+);
+
+/** Fourteen hintuans: every stop shown, one under the other, none hidden or cut. */
+export const LongTrip: Story = {
+  args: { routeOrigin: 'Bagumbong', hintuans: longTrip, routeDirection: 'Munoz' },
+  play: async (ctx) => {
+    const canvas = within(ctx.canvasElement);
+    await expect(rowsOf(ctx.canvasElement)).toHaveLength(longTrip.length + 2);
+    for (const { label } of longTrip) {
+      await expect(canvas.getByText(label)).toBeVisible();
+    }
+    const { rails, signs } = atRest(longTrip.length);
+    await expectRows(ctx, rails, signs);
+  },
+};
+
+/**
+ * Not drawn in Figma; built as today's behaviour, owner to confirm: a hintuan picked as the ride's
+ * end. Its row wears the ringed dot where the rail stops, the End pill, and the pesos in their pill
+ * on the surface (STOP_PILL).
+ */
+export const PickedStop: Story = {
+  args: { picked: 'h3', onSetStart: fn() },
+  play: async (ctx) => {
+    const { canvasElement } = ctx;
+    const amparo = canvasElement.querySelector<HTMLElement>('[data-hintuan="h3"]');
+    await expect(amparo?.dataset.state).toBe('selected');
+    await expect(amparo?.querySelector('[data-rail]')?.getAttribute('data-rail')).toBe('above');
+    // Ringed: a white round inside the rail's colour.
+    await expect(dotOf(amparo)?.querySelector('.bg-text-on-fill.size-5')).toBeTruthy();
+    await expect(amparo?.querySelector('[data-part="end"]')?.parentElement?.textContent).toBe(
+      'End',
+    );
+    const pill = within(canvasElement).getByTestId('trip-hintuan-fare');
+    await expect(pill.textContent).toBe('₱20–22');
+    await expect(getComputedStyle(pill).backgroundColor).toBe(
+      wornBy('bg-bg-surface-secondary', 'backgroundColor'),
+    );
+    await expect(getComputedStyle(pill).color).toBe(wornBy('text-text-primary', 'color'));
+    await expect(amparo?.textContent).toContain('Set as start');
+    await amparoPicked(ctx);
+  },
+};
+
+/**
+ * Not drawn in Figma; built as today's behaviour, owner to confirm: a start set at Pangarap and an
+ * end picked at Lagro. The Start pill moves from the origin to Pangarap's row, × Remove as start
+ * under it; End and the pesos on Lagro's.
+ */
+export const PickedStart: Story = {
+  args: { start: 'h2', picked: 'h5', pickedPesos: '₱14', onSetStart: fn(), onRemoveStart: fn() },
+  play: async (ctx) => {
+    const { canvasElement, args } = ctx;
+    const canvas = within(canvasElement);
+    const pangarap = canvasElement.querySelector<HTMLElement>('[data-hintuan="h2"]');
+    const lagro = canvasElement.querySelector<HTMLElement>('[data-hintuan="h5"]');
+    await expect(canvas.getByTestId('trip-origin').querySelector('[data-part="start"]')).toBeNull();
+    await expect(pangarap?.querySelector('[data-part="start"]')).toBeTruthy();
+    await expect(lagro?.querySelector('[data-part="end"]')).toBeTruthy();
+    await expect(within(lagro ?? canvasElement).getByTestId('trip-hintuan-fare').textContent).toBe(
+      '₱14',
+    );
+    const remove = within(pangarap ?? canvasElement).getByRole('button', {
+      name: 'Remove as start',
+    });
+    await userEvent.click(remove);
+    await expect(args.onRemoveStart).toHaveBeenCalledTimes(1);
+  },
+};
+
+/**
+ * Not drawn in Figma; built as today's behaviour, owner to confirm: a ride picked mid-route, Amparo
+ * to Bistek. The rows before the start and after the end are outside it: each keeps its dot, off
+ * the rail, and its name stays Text/primary.
+ */
+export const OutsideTheRide: Story = {
+  args: { start: 'h3', picked: 'h7', pickedPesos: '₱14', onSetStart: fn(), onRemoveStart: fn() },
+  play: async (ctx) => {
+    const { canvasElement } = ctx;
+    await expectRows(
+      ctx,
+      [
+        ...times(4, 'disconnected'),
+        'below',
+        ...times(3, 'through'),
+        'above',
+        ...times(3, 'disconnected'),
+      ],
+      [...times(4, null), 'start', null, null, null, 'end', null, null, null],
+    );
+    const primary = wornBy('text-text-primary', 'color');
+    const outside = rowsOf(canvasElement).filter(
+      (row) => row.querySelector('[data-rail]')?.getAttribute('data-rail') === 'disconnected',
+    );
+    await expect(outside).toHaveLength(7);
+    for (const row of outside) {
+      await expect(dotOf(row)).toBeTruthy();
+      const name = row.querySelector<HTMLElement>('[data-part="name"]') ?? row;
+      await expect(getComputedStyle(name).color).toBe(primary);
+    }
+  },
+};
+
+const LIGHT_LIVERIES = ['uv-express', 'metro-rail-way-three', 'ejeep'] as const;
+
+/**
+ * Not drawn in Figma; built as today's behaviour, owner to confirm: the short trip on the liveries
+ * whose own colour does not stand out from the surface, UV Express, MRT-3 and E-Jeep. Their rail
+ * and dots take Text/primary (TIMELINE_RAIL).
+ */
+export const LightLiveries: Story = {
+  args: shortTrip,
+  render: (args) => (
+    <div className="flex flex-col gap-8">
+      {LIGHT_LIVERIES.map((livery) => (
+        <TimelineRouteDetail key={livery} {...args} livery={livery} />
+      ))}
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const trips = [...canvasElement.querySelectorAll<HTMLElement>('[data-testid="trip"]')];
+    await expect(trips.map((trip) => trip.dataset.livery)).toEqual([...LIGHT_LIVERIES]);
+    const primary = wornBy('bg-text-primary', 'backgroundColor');
+    for (const trip of trips) {
+      const dot = dotOf(trip.querySelector('ol > li'));
+      await expect(dot && getComputedStyle(dot).backgroundColor).toBe(primary);
+    }
+  },
+};
+
+/**
+ * Not drawn in Figma; built as today's behaviour, owner to confirm: a train with its station codes.
+ * GL01 and GL09 at its ends, the start's pill its code alone, GL03, and the end's its code and the
+ * pesos in two halves, GL06 and ₱20. Sample stations and codes.
+ */
+export const RailWithCodes: Story = {
+  args: {
+    livery: 'light-rail-way-one',
+    routeOrigin: 'Mabini',
+    hintuans: hintuans('Rizal', 'Bonifacio', 'Luna', 'Del Pilar', 'Jacinto', 'Silang', 'Aguinaldo'),
+    routeDirection: 'Malvar',
+    originCode: 'GL01',
+    destinationCode: 'GL09',
+    start: 'h1',
+    startCode: 'GL03',
+    picked: 'h4',
+    pickedCode: 'GL06',
+    pickedPesos: '₱20',
+    onSetStart: fn(),
+    onRemoveStart: fn(),
+  },
+  play: async (ctx) => {
+    await expectEndCodes('GL01', 'GL09')(ctx);
+    const { canvasElement } = ctx;
+    const pillOf = (id: string) =>
+      canvasElement.querySelector(`[data-hintuan="${id}"] [data-testid="trip-hintuan-fare"]`);
+    await expect(pillOf('h1')?.textContent).toBe('GL03');
+    await expect(pillOf('h4')?.querySelector('[data-part="code"]')?.textContent).toBe('GL06');
+    await expect(pillOf('h4')?.querySelector('[data-part="pesos"]')?.textContent).toBe('₱20');
+  },
 };
