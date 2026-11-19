@@ -1,5 +1,5 @@
 import type { MapLibreMap } from 'maplibre-gl';
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type RefObject } from 'react';
 
 import type { Snap } from '@/shared/ui/sheet-gesture';
 import type { LngLat } from '@/shared/utils/geo';
@@ -17,6 +17,20 @@ const isOverviewMove = (e: object): boolean => 'overview' in e && e.overview ===
 const linesOf = (framed: Framed): readonly (readonly LngLat[])[] =>
   framed && 'lines' in framed ? framed.lines.filter((line) => line.length >= 2) : [];
 
+interface Framing {
+  framing: string | null;
+  lines: readonly (readonly LngLat[])[];
+  dock: () => HTMLElement | null;
+  snap: Snap;
+}
+
+/** The camera takes in what is framed, as the button's own fit, so it reads as at the overview. */
+function fitFramed(map: MapLibreMap, at: Framing, fitting: RefObject<string | null>): void {
+  if (at.framing === null || at.lines.length === 0) return;
+  fitting.current = at.framing;
+  overview(map, at.lines, at.dock(), at.snap, OVERVIEW_MOVE);
+}
+
 interface Overview {
   /** Whether the Overview button shows: there are routes to take in, and the camera is not on them. */
   isShown: boolean;
@@ -31,6 +45,10 @@ interface Overview {
  * `framing` names what is framed (a trip, the picked cards), null when nothing is; a new name
  * starts away from its overview. It shows only where a press would move the camera: a map, and
  * routes to take in.
+ *
+ * `opened` names a trip as it opens (its id; null with none): the camera takes in its whole route
+ * once, as a press would, so the button starts hidden. A trip whose line has not loaded yet is
+ * taken in as it lands. Only a new trip fits again; dragging the sheet never does.
  */
 export function useOverview(
   map: MapLibreMap | null,
@@ -38,12 +56,13 @@ export function useOverview(
   framed: Framed,
   dock: () => HTMLElement | null,
   snap: Snap,
+  opened: string | null = null,
 ): Overview {
   const [settledOn, setSettledOn] = useState<string | null>(null);
   // The framing the button's fit is on its way to; null once any other move starts.
   const fitting = useRef<string | null>(null);
   const lines = linesOf(framed);
-  const now = useRef({ framing, lines, dock, snap });
+  const now = useRef<Framing>({ framing, lines, dock, snap });
   // Kept current as each render commits, for a press to read.
   useLayoutEffect(() => {
     now.current = { framing, lines, dock, snap };
@@ -71,11 +90,19 @@ export function useOverview(
     };
   }, [map]);
 
+  // The trip the camera last took in as it opened; let go as it closes, so the same trip opened
+  // again fits again.
+  const fittedOpen = useRef<string | null>(null);
+  const hasLines = lines.length > 0;
+  useEffect(() => {
+    if (opened === null) fittedOpen.current = null;
+    if (!map || opened === null || !hasLines || fittedOpen.current === opened) return;
+    fittedOpen.current = opened;
+    fitFramed(map, now.current, fitting);
+  }, [map, opened, hasLines]);
+
   const go = () => {
-    const { framing: name, lines: toFit, dock: sheetOf, snap: snapNow } = now.current;
-    if (!map || name === null || toFit.length === 0) return;
-    fitting.current = name;
-    overview(map, toFit, sheetOf(), snapNow, OVERVIEW_MOVE);
+    if (map) fitFramed(map, now.current, fitting);
   };
 
   return {

@@ -47,3 +47,55 @@ export const routesFraming = (page) =>
     container.remove();
     return camera;
   });
+
+/**
+ * Whether the camera has taken a route in whole, as a trip opening does: once the map is at rest,
+ * every point of `coords` ([lng, lat]) is on the map and none is under the card, and the route
+ * fills at least half the room the card leaves across or down, unless the fit's zoom cap (16)
+ * stopped it short. The room is the map above the card on a phone, beside the panel on a desktop.
+ * Used by phone-test, commuter-test and save-test.
+ */
+export const routeFitted = async (page, coords, card = '[data-testid="card"]') => {
+  await page
+    .waitForFunction(() => !window.__map.isMoving(), null, { timeout: 5000 })
+    .catch(() => {});
+  return page.evaluate(
+    ({ line, cardSelector }) => {
+      const map = window.__map;
+      const box = map.getContainer().getBoundingClientRect();
+      const sheet = document.querySelector(cardSelector)?.getBoundingClientRect();
+      if (!sheet) return { ok: false, why: 'no card on show' };
+      const isAcross = sheet.width >= box.width * 0.9;
+      const room = isAcross
+        ? {
+            left: box.left,
+            right: box.right,
+            top: box.top,
+            bottom: Math.min(box.bottom, sheet.top),
+          }
+        : {
+            left: Math.max(box.left, sheet.right),
+            right: box.right,
+            top: box.top,
+            bottom: box.bottom,
+          };
+      const points = line.map((c) => {
+        const q = map.project(c);
+        return [box.left + q.x, box.top + q.y];
+      });
+      const xs = points.map((p) => p[0]);
+      const ys = points.map((p) => p[1]);
+      const [x0, x1, y0, y1] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
+      const inRoom =
+        x0 >= room.left - 2 && x1 <= room.right + 2 && y0 >= room.top - 2 && y1 <= room.bottom + 2;
+      const fill = Math.max(
+        (x1 - x0) / (room.right - room.left),
+        (y1 - y0) / (room.bottom - room.top),
+      );
+      const zoom = map.getZoom();
+      const why = `route x ${Math.round(x0)}–${Math.round(x1)}, y ${Math.round(y0)}–${Math.round(y1)}; room x ${Math.round(room.left)}–${Math.round(room.right)}, y ${Math.round(room.top)}–${Math.round(room.bottom)}; fills ${Math.round(fill * 100)}%, zoom ${zoom.toFixed(2)}`;
+      return { ok: inRoom && (fill >= 0.5 || zoom >= 15.99), why };
+    },
+    { line: coords, cardSelector: card },
+  );
+};

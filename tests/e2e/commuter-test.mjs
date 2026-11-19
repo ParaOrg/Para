@@ -34,7 +34,7 @@ import {
   until,
   waitForSource,
 } from './lib/harness.mjs';
-import { routesFraming } from './lib/framing.mjs';
+import { routeFitted, routesFraming } from './lib/framing.mjs';
 import { checkLocationLabels } from './lib/location-labels.mjs';
 import { centroidOf, pointInPolygon } from './lib/geo.mjs';
 import {
@@ -732,13 +732,12 @@ for (const [i, p] of snapshot.polys.entries()) {
         sameView(camBack, camHome),
         JSON.stringify({ camHome, camBack }),
       );
-      // A row tapped with no card picked, the owner's own way in: the trip
-      // opens without moving the camera (the owner, 2026-10-21), and its ‹
-      // leaves it where the row was tapped.
+      // A row tapped with no card picked, the owner's own way in: the trip opens taking in its
+      // whole route, and its ‹ brings the camera back to where the row was tapped.
       const camRow = await view();
       await rows.first().click();
       await shows(TRIP_UP);
-      // Moved, it would be by now: the card and the camera both at rest.
+      // The card and the camera both at rest.
       await cardsSettled(page);
       const opened2 = (await cardKind()).kind === 'route';
       const moved = !sameView(await view(), camRow);
@@ -749,8 +748,8 @@ for (const [i, p] of snapshot.polys.entries()) {
       await cardsSettled(page);
       const camRowBack = await view();
       check(
-        `  a row tapped at rest: the trip opens with the camera where it was, and its ‹ leaves it there`,
-        opened2 && !moved && sameView(camRowBack, camRow),
+        `  a row tapped at rest: the trip opens taking in its route, and its ‹ brings the camera back`,
+        opened2 && moved && sameView(camRowBack, camRow),
         JSON.stringify({ opened: opened2, moved, camRow, camRowBack }),
       );
       // Picked, a second tap lets it go — and the camera, after the pick's
@@ -1421,17 +1420,21 @@ if (RUNS_ONE_OFFS) {
       );
       const litIds = (await page.evaluate(() => window.__lit('saved-routes'))) ?? [];
       check('  exactly one direction is lit', litIds.length === 1, JSON.stringify(litIds));
-      // On a desktop too, the trip opens with the camera where it was: nothing
-      // fits the route (the owner, 2026-10-21). Fitted, it would be by the
-      // time the card and the camera are at rest.
+      // On a desktop too, the trip opens with the camera taking in its whole route once, beside
+      // the docked panel, read once the card and the camera are at rest.
       await cardsSettled(page);
       const camAfterTap = await readCamera();
+      const litLine = await page.evaluate(
+        async (ids) =>
+          (await window.__src('saved-routes'))?.features.find((f) => ids.includes(f.properties.id))
+            ?.geometry.coordinates ?? [],
+        litIds,
+      );
+      const openFit = await routeFitted(page, litLine);
       check(
-        '  the camera stays where it was: the route is not fitted',
-        Math.abs(camAfterTap.zoom - camBeforeTap.zoom) < 0.01 &&
-          Math.abs(camAfterTap.lng - camBeforeTap.lng) < 1e-6 &&
-          Math.abs(camAfterTap.lat - camBeforeTap.lat) < 1e-6,
-        JSON.stringify({ camBeforeTap, camAfterTap }),
+        '  the camera takes in the whole route, beside the panel',
+        Math.abs(camAfterTap.zoom - camBeforeTap.zoom) >= 0.01 && openFit.ok,
+        `${openFit.why}; zoom ${camBeforeTap.zoom.toFixed(2)} → ${camAfterTap.zoom.toFixed(2)}`,
       );
       // The chevrons: flowing along the lit direction, each cut to exactly
       // the lit line's width. Measured on screen, across the chevron's own

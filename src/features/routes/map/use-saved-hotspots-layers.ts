@@ -18,8 +18,23 @@ import {
 } from './saved-hotspots-layers';
 import { maskStations } from './station-mask';
 import { useHotspotPins } from './use-hotspot-pins';
+import { warmSoon, type Twin } from './warm-programs';
 import { ringToPolygon, type Ring } from '../geo/ring';
 import type { Hotspot } from '../model/hotspots';
+
+/**
+ * The boxes' outline's twin (warm-programs.ts). The outline first draws where the boxes come into
+ * view, past the opening view's zoom: a trip's opening fit, or a hand zooming in, would compile its
+ * program then, as the card comes up. Its colour stays by the box's kind, as the outline's is, so
+ * the twin compiles the outline's own program; clear for either kind, so the speck shows nothing.
+ */
+const OUTLINE_TWIN: Twin = {
+  type: 'line',
+  paint: {
+    'line-color': ['match', ['get', 'kind'], 'terminal', 'transparent', 'transparent'],
+    'line-width': 0.6,
+  },
+};
 
 /**
  * The saved hotspots' sources and layers on `map`: laid out from `hotspots`, the
@@ -88,6 +103,22 @@ export function useSavedHotspotsLayers(
       states.some((s) => s.lit),
     );
   }, [map, marks, siblingSwitch, hatchSwitch]);
+
+  // OUTLINE_TWIN's program compiled while idle, and after a lost GL context, as layer-switch.ts's.
+  useEffect(() => {
+    if (!map) return;
+    const twins = () => [OUTLINE_TWIN];
+    let cancel = warmSoon(map, twins);
+    const restored = () => {
+      cancel();
+      cancel = warmSoon(map, twins);
+    };
+    map.on('webglcontextrestored', restored);
+    return () => {
+      cancel();
+      map.off('webglcontextrestored', restored);
+    };
+  }, [map]);
 
   // The place highlight's wash: a hull over the chosen box and its siblings.
   useEffect(() => {

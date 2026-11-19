@@ -10,9 +10,9 @@ import { directionLine, type Direction } from '../model/routes';
 
 /*
  * The camera taking in routes whole — SWITCH pressed, an end picked, the
- * Overview button — zooming in or out, clear of the card's sheet. Opening a
- * trip, picking a RouteCard, opening the route list and the sheet changing
- * height move nothing: the camera is the commuter's until they ask.
+ * Overview button, a trip opening (useOverview) — zooming in or out, clear of
+ * the card's sheet. Picking a RouteCard, opening the route list and the sheet
+ * changing height move nothing: the camera is the commuter's until they ask.
  */
 
 type MoveData = Readonly<Record<string, unknown>>;
