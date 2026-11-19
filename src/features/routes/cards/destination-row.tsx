@@ -4,6 +4,7 @@ import { CircleArrowRightIcon } from '@/shared/ui/route-icons';
 import { cn } from '@/shared/utils/cn';
 
 import { ROW_PRESSED } from './livery-card';
+import { CARD_INK } from './route-card-look';
 import type { Livery } from '../model/liveries';
 
 /** Where the row sits: on a RouteCard in its livery, or on the sheet's own surface. */
@@ -23,21 +24,6 @@ interface DestinationRowProps extends Omit<
   livery: Livery;
   on: DestinationRowGround;
 }
-
-/**
- * The words and arrow on a RouteCard (4633:19780): white on the darker cards, Text/primary on the
- * light ones (UV Express, E-jeep, MRT-3), as Figma draws each card.
- */
-const CARD_INK = {
-  jeep: 'text-text-on-fill',
-  'uv-express': 'text-text-primary',
-  ejeep: 'text-text-primary',
-  bus: 'text-text-on-fill',
-  'light-rail-way-one': 'text-text-on-fill',
-  'light-rail-way-two': 'text-text-on-fill',
-  'metro-rail-way-three': 'text-text-primary',
-  ferry: 'text-text-on-fill',
-} satisfies Record<Livery, string>;
 
 /**
  * On the surface the arrow wears its mode's card fill (MiddleContent, 4795:20406) where that fill
