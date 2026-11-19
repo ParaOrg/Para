@@ -3733,12 +3733,42 @@ if (runsPart(3)) {
     const listAt = async () => chooser.first().getAttribute('data-snap');
     const raisedFirst = (await listAt()) === 'low';
     if (raisedFirst) {
-      // A finger's tap: buttonTap's fallback, a click sent straight to the button, comes with no
-      // touch before it, as a keyboard's does, and a keyboard's click picks at Low by design.
-      await touchTap(wantedName, async () => (await listAt()) !== 'low');
+      // A finger's tap on the list's first card, the one Low shows: a card further down may sit
+      // under the list's foot there. buttonTap's fallback, a click sent straight to the button,
+      // comes with no touch before it, as a keyboard's does, and a keyboard's click picks at Low
+      // by design.
+      const topCard = chooser.first().locator('[data-testid="chooser-origin"]').first();
+      // What Low shows of it, above the list's foot: its header, its place and its first row,
+      // each what a finger at its centre touches.
+      const lowShows = await topCard.evaluate((card) => {
+        // `within`: what a finger touches there is `el`, or, for the header, which the place's
+        // stretched target covers, at least this card and not the list's foot.
+        const reaches = (el, within = el) => {
+          if (!el) return false;
+          const r = el.getBoundingClientRect();
+          const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+          return !!hit && (within.contains(hit) || hit.contains(el));
+        };
+        return {
+          header: reaches(card.querySelector(':scope > div.px-3'), card),
+          place: reaches(card.querySelector('[data-testid="chooser-select"]')),
+          firstRow: reaches(card.querySelector('[data-testid="chooser-item"]')),
+        };
+      });
+      check(
+        "  at Low, the first card's header, place and first row show above the list's foot",
+        lowShows.header && lowShows.place && lowShows.firstRow,
+        JSON.stringify(lowShows),
+      );
+      await touchTap(
+        topCard.locator('[data-testid="chooser-select"]'),
+        async () => (await listAt()) !== 'low',
+      );
       check(
         '  at Low, a tap on a card raises the list a third and picks nothing',
-        (await listAt()) === 'free' && !(await isPicked()),
+        (await listAt()) === 'free' &&
+          !(await isPicked()) &&
+          (await topCard.getAttribute('data-state')) !== 'selected',
         `data-snap=${await listAt()}; picked ${await isPicked()}`,
       );
     }
