@@ -1,7 +1,6 @@
 import { cn } from '@/shared/utils/cn';
 
 import type { RouteStopSignKind } from './route-stop-sign';
-import { RouteStopSignWords } from './route-stop-sign-words';
 import { RouteStopSlot } from './route-stop-slot';
 import type { TimelineRowState } from './route-stops-timeline-row';
 import { RouteStopsTimelineRow } from './route-stops-timeline-row';
@@ -11,7 +10,7 @@ import type { Livery } from '../model/liveries';
 interface TimelineTopProps {
   livery: Livery;
   rail: string;
-  /** ROW_PRESSED's classes for the card's livery. */
+  /** A row's pressed look (STOP_PRESSED). */
   pressed: string;
   routeOrigin: string;
   /** Start's S or End's E in its slot, or neither (originMark). */
@@ -54,12 +53,7 @@ export function TimelineTop({
           variant="top"
           state={state}
           rail={rail}
-          label={
-            <>
-              <span data-part="name">{routeOrigin}</span>
-              <RouteStopSignWords sign={mark} />
-            </>
-          }
+          label={<span data-part="name">{routeOrigin}</span>}
           slot={<RouteStopSlot livery={livery} sign={mark} pill={pill} code={code} />}
         />
       </button>

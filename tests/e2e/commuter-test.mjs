@@ -1568,15 +1568,6 @@ if (RUNS_ONE_OFFS) {
           'no hintuan on this direction yet',
         );
       } else {
-        const fold = cardEl.locator('button[data-testid="trip-view-more"]');
-        if ((await fold.count()) > 0) {
-          await fold.first().click();
-          await until(
-            () => fold.first().getAttribute('aria-expanded'),
-            (open) => open === 'true',
-          );
-          await cardsSettled(page);
-        }
         const pickedIndex = Math.floor(((await rows.count()) - 1) / 2);
         const row = rows.nth(pickedIndex);
         const rowId = await row.getAttribute('data-hintuan');
@@ -1644,6 +1635,12 @@ if (RUNS_ONE_OFFS) {
               : 'var(--map-route-line-surface-default)';
           document.body.append(probe);
           const cardPale = getComputedStyle(probe).backgroundColor;
+          // The line's colour is a card's surface in the trip's livery (livery-line.ts): read off
+          // CARD_SURFACE's classes, the colour the map draws the trip's line in.
+          const { CARD_SURFACE } = await import('/src/features/routes/cards/livery-card.ts');
+          probe.style.backgroundColor = '';
+          probe.className = CARD_SURFACE[livery] ?? '';
+          const lineColour = getComputedStyle(probe).backgroundColor;
           probe.remove();
           return {
             lit: (await window.__lit('saved-routes')) ?? [],
@@ -1665,8 +1662,7 @@ if (RUNS_ONE_OFFS) {
                 ? getComputedStyle(e.querySelector('[data-part="label"]')).opacity
                 : null,
             })),
-            // The line's colour is the card's surface (livery-line.ts): the card's own background.
-            line: trip ? getComputedStyle(trip).backgroundColor : null,
+            line: lineColour,
             pale: cardPale,
             order: m.getLayersOrder(),
             livery: trip?.dataset.livery ?? null,

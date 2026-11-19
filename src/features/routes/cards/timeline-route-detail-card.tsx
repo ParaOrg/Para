@@ -1,31 +1,13 @@
-import { useState, type ReactNode, type Ref } from 'react';
+import type { ReactNode, Ref } from 'react';
 
 import { BottomSheet, type SheetHeight } from '@/shared/ui/bottom-sheet';
 
 import { RouteListController } from './route-list-controller';
-import { TimelineRouteDetail, type TimelineRouteDetailProps } from './timeline-route-detail';
+import { TripDetail, type TripDetailProps } from './trip-detail';
 import { TripEndsCard } from './trip-ends-card';
-import { farePesos, type Fare } from './trip-fare';
 import { TripMoreRoutes, type OtherRoute } from './trip-more-routes';
-import { TripNotes } from './trip-notes';
-import { TripSignboards } from './trip-signboards';
-import { TripTiles } from './trip-tiles';
 
-type Props = Omit<TimelineRouteDetailProps, 'pickedPesos'> & {
-  /** Figma's Distance tile: the whole ride's length, in metres; written `12.8km`. */
-  metres: number;
-  /** …and the ride between the picks, which the tile shows once an end is picked, as the fare tile does. */
-  pickedMetres?: number;
-  /** The fare tile's pesos for the whole ride, or FREE. Omitted when unpriced, and the tile with it. */
-  fare?: Fare;
-  /** …and for the ride between the picks, which the tile shows once an end is picked. */
-  pickedFare?: Fare;
-  /**
-   * Whether the tile shows the Discounted fare, and where a tap says so: the app keeps one for every
-   * trip (useFareKind). Without them, the card keeps its own, opening on Regular, as a story does.
-   */
-  discounted?: boolean;
-  onDiscounted?: (discounted: boolean) => void;
+type Props = TripDetailProps & {
   onSwitch: () => void; // PAPUNTA and ⇅: the same route the other way, unless not `switchable`.
   switchable: boolean;
   back: boolean; // The way back, for the suites (PAPUNTA's `data-back`).
@@ -45,64 +27,16 @@ type Props = Omit<TimelineRouteDetailProps, 'pickedPesos'> & {
   otherRoutes?: readonly OtherRoute[];
   /** A row tapped: that route's trip in this one's place. */
   onOtherRoute?: (id: string) => void;
-  /** What the trip rides (TripRidePills), at the top of its panel. None, no pill. */
-  ridePills?: ReactNode;
-  /** The direction's signboards (BottomContent, 4796:30124): SVG files the studio uploaded, in order. None, no card. */
-  signboards?: readonly string[];
-  /** Under the stops, a line's own fixed words (LINE_NOTES): the ferry's days and where to check for a suspension. */
-  note?: string;
-  /**
-   * Under the stops, first: the walk from the ride's end to a landmark the commuter is going to
-   * (ticket 07), "About 300 m to SM North EDSA, in a straight line".
-   */
-  walk?: string | null;
   /** Last: what only the studio shows — its facts and its Edit, Extend and Delete. */
   children?: ReactNode;
 };
 
 /**
- * One direction as a trip (RouteDetail, 4796:30411), with the Controller's bar: its ends
- * (TripEndsCard), what it rides, its signboards, the ride's Distance and fare tiles, then its stops
- * in the trip's colour (useTripLivery) on RouteStopsCard.
- *
- * The fare tile is a button: the pesos, and under them ↻ and which fare they are, Regular or
- * Discounted; a tap turns it to the other. With a hintuan picked it prices the ride from where the
- * trip leaves to there — the pick's pill the same pesos — and let go, the whole ride again. The
- * fare picked is kept for every trip after, and the next visit (useFareKind), so a rider does not
- * have to keep tapping. A first visit opens on Regular. The second fare reads "Discounted fare" on
- * purpose, though Figma's Default variant has a layer named "Student fare" (3807:5510). The
- * Distance tile follows the pick the same way, from where the trip leaves to there. Since a start
- * can be picked too, both tiles read the ride from the start to the end, once the end is picked: a
- * start alone is no ride yet. A route no fare rule prices has no Expected fare tile, and Distance
- * takes the row (Figma draws nothing for it; the owner keeps this default).
- *
- * At the top, under its ends, "View N more routes" (TripMoreRoutes) opens the other routes out of
- * where the trip starts; a tap opens that one's trip in this one's place. With none, no tab.
+ * One direction as a trip (RouteDetail, 4796:30411) on its sheet, with the Controller's bar: its
+ * ends (TripEndsCard), "View N more routes" under them (TripMoreRoutes) when other routes leave
+ * from where it starts, then its body (TripDetail): what it rides, its tiles, its stops.
  */
 export function TimelineRouteDetailCard({
-  livery,
-  metres,
-  pickedMetres,
-  fare,
-  routeOrigin,
-  hintuans,
-  picked,
-  start = null,
-  startCode,
-  onSetStart,
-  onRemoveStart,
-  onPick,
-  pickedFare,
-  pickedCode,
-  onEnd,
-  endPicked,
-  routeDirection,
-  originCode,
-  destinationCode,
-  isLoop,
-  header,
-  discounted: kept,
-  onDiscounted,
   onSwitch,
   switchable,
   back,
@@ -115,21 +49,10 @@ export function TimelineRouteDetailCard({
   height,
   otherRoutes = [],
   onOtherRoute,
-  ridePills,
-  signboards = [],
-  note,
-  walk,
   children,
+  ...detail
 }: Props) {
-  const [own, setOwn] = useState(false);
-  const discounted = kept ?? own;
-  const setDiscounted = (d: boolean) => (onDiscounted ? onDiscounted(d) : setOwn(d));
-  // Each tap turns ↻ round once more, counted, so the next tap turns it on rather than back.
-  const [turns, setTurns] = useState(0);
-  // An end picked: the tiles read the ride from the start to it. A start alone is no ride yet.
-  const hasRide = picked !== null || (start !== null && endPicked !== null);
-  const shown = hasRide && pickedFare ? pickedFare : fare;
-  const shownMetres = hasRide && pickedMetres !== undefined ? pickedMetres : metres;
+  const { livery, routeOrigin, routeDirection } = detail;
   const name = label ?? `${routeOrigin} → ${routeDirection}`;
   return (
     <BottomSheet
@@ -168,42 +91,7 @@ export function TimelineRouteDetailCard({
         routes={onOtherRoute ? otherRoutes : []}
         onRoute={(id) => onOtherRoute?.(id)}
       >
-        {/* Cards 16 apart, 12 in, clear of the Controller: 78 at a phone's foot, 6 floating. */}
-        <div className="flex w-full flex-col gap-4 px-3 pt-3 pb-24 sheet-floating:pb-6">
-          {ridePills}
-          <TripSignboards signboards={signboards} />
-          <TripTiles
-            shown={shown}
-            shownMetres={shownMetres}
-            isDiscounted={discounted}
-            turns={turns}
-            onTurn={() => {
-              setDiscounted(!discounted);
-              setTurns((t) => t + 1);
-            }}
-          />
-          <TimelineRouteDetail
-            livery={livery}
-            routeOrigin={routeOrigin}
-            hintuans={hintuans}
-            picked={picked}
-            start={start}
-            startCode={startCode}
-            onSetStart={onSetStart}
-            onRemoveStart={onRemoveStart}
-            onPick={onPick}
-            pickedPesos={pickedFare && farePesos(pickedFare, discounted)}
-            pickedCode={pickedCode}
-            onEnd={onEnd}
-            endPicked={endPicked}
-            routeDirection={routeDirection}
-            originCode={originCode}
-            destinationCode={destinationCode}
-            isLoop={isLoop}
-            header={header}
-          />
-        </div>
-        <TripNotes walk={walk} note={note} />
+        <TripDetail {...detail} />
       </TripMoreRoutes>
       {children}
     </BottomSheet>
