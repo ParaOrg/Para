@@ -1,6 +1,6 @@
 // On the sheet's surface a destination row's arrow wears its mode's card fill only where that fill
 // stands out from the surface at 3:1, the WCAG minimum for a non-text mark; elsewhere it takes
-// Text/primary (SURFACE_ARROW, src/features/routes/cards/destination-row.tsx). The colours are read
+// Text/primary (SURFACE_ARROW, src/features/routes/cards/route-card-look.ts). The colours are read
 // from tokens.css and Tailwind's theme, so a changed token re-decides it here.
 //
 //   node --test tests/unit/destination-row-contrast-test.mjs
@@ -11,7 +11,7 @@ import { readFileSync } from 'node:fs';
 const read = (path) => readFileSync(new URL(path, import.meta.url), 'utf8');
 const tokens = read('../../src/design-system/foundation/tokens.css');
 const tailwind = read('../../node_modules/tailwindcss/theme.css');
-const row = read('../../src/features/routes/cards/destination-row.tsx');
+const row = read('../../src/features/routes/cards/route-card-look.ts');
 
 const find = (css, name) => css.match(new RegExp(`--${name}:\\s*([^;]+);`))?.[1].trim();
 
