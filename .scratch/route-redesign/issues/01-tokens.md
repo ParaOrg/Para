@@ -9,7 +9,7 @@ Blocked by: none
 - **New tokens.** Figma's new primitives (a 15-step scale) and new semantic variables go into `src/design-system/foundation/tokens.css` beside the current ones, by the `/sync-tokens` skill.
 - **Nothing is deleted or renamed.** The current semantics are deprecated but stay, so today's code keeps drawing as it does.
 - **The colours are Figma's,** including the darker card fills and End's red-700.
-- **The font is untouched.** Livvic waits for the owner's word on its scope (README, decision 2).
+- **The font is untouched here.** Livvic has its own pull request (issue 13).
 
 ## Done when
 

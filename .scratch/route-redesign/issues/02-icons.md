@@ -6,7 +6,7 @@ Blocked by: 01
 
 ## What to build
 
-- **The icons.** circle-arrow-right (the destination row's) and hourglass (the time pill's, for later) go into the shared icon sprite, drawn from Figma's vectors.
+- **The icons.** circle-arrow-right (the destination row's) and hourglass (the time pill's, issue 08) go into the shared icon sprite, drawn from Figma's vectors.
 - **This pull request adds the icons only.** Nothing uses them yet.
 - **Stories** show both at their sizes.
 
