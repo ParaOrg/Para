@@ -5,7 +5,7 @@ import { BottomSheet, type SheetHeight } from '@/shared/ui/bottom-sheet';
 import { RouteListController } from './route-list-controller';
 import { TimelineRouteDetail, type TimelineRouteDetailProps } from './timeline-route-detail';
 import { TripEndsCard } from './trip-ends-card';
-import { FREE, type Fare } from './trip-fare';
+import { farePesos, type Fare } from './trip-fare';
 import { TripMoreRoutes, type OtherRoute } from './trip-more-routes';
 import { TripNotes } from './trip-notes';
 import { TripSignboards } from './trip-signboards';
@@ -45,6 +45,8 @@ type Props = Omit<TimelineRouteDetailProps, 'pickedPesos'> & {
   otherRoutes?: readonly OtherRoute[];
   /** A row tapped: that route's trip in this one's place. */
   onOtherRoute?: (id: string) => void;
+  /** What the trip rides (TripRidePills), at the top of its panel. None, no pill. */
+  ridePills?: ReactNode;
   /** The direction's signboards (4680:25123): SVG files the studio uploaded, in order. None, no card. */
   signboards?: readonly string[];
   /** Under the stops, a line's own fixed words (LINE_NOTES): the ferry's days and where to check for a suspension. */
@@ -113,6 +115,7 @@ export function TimelineRouteDetailCard({
   height,
   otherRoutes = [],
   onOtherRoute,
+  ridePills,
   signboards = [],
   note,
   walk,
@@ -167,6 +170,7 @@ export function TimelineRouteDetailCard({
       >
         {/* Cards 16 apart, 12 in, clear of the Controller: 78 at a phone's foot, 6 floating. */}
         <div className="flex w-full flex-col gap-4 px-3 pt-3 pb-24 sheet-floating:pb-6">
+          {ridePills}
           <TripTiles
             shown={shown}
             shownMetres={shownMetres}
@@ -188,14 +192,7 @@ export function TimelineRouteDetailCard({
             onSetStart={onSetStart}
             onRemoveStart={onRemoveStart}
             onPick={onPick}
-            pickedPesos={
-              pickedFare &&
-              (pickedFare === FREE
-                ? 'Free'
-                : discounted
-                  ? pickedFare.discounted
-                  : pickedFare.regular)
-            }
+            pickedPesos={pickedFare && farePesos(pickedFare, discounted)}
             pickedCode={pickedCode}
             onEnd={onEnd}
             endPicked={endPicked}
