@@ -4,7 +4,6 @@ import type { SheetHeight } from '@/shared/ui/bottom-sheet';
 import { lineLength } from '@/shared/utils/geo';
 
 import { ridePillOf } from './ride-pill-of';
-import { RouteStopsCardHeader } from './route-stops-card-header';
 import { TimelineRouteDetailCard } from './timeline-route-detail-card';
 import { FREE, type Fare, type Fares } from './trip-fare';
 import { TripRidePills } from './trip-ride-pills';
@@ -12,7 +11,7 @@ import { useFareKind } from './use-fare-kind';
 import { otherDirection, otherRoutesFrom, switchWord, wayWord } from '../model/departures';
 import { manilaDate, rideFare } from '../model/fares';
 import { liveryOf, type Livery } from '../model/liveries';
-import { railBound, stationCode } from '../model/rail-codes';
+import { stationCode } from '../model/rail-codes';
 import { railFares } from '../model/rail-fares';
 import {
   directionEnds,
@@ -177,16 +176,6 @@ export function TripCard({
       destinationCode={line && stationCode(line, to)}
       isLoop={loop}
       label={loop ? `${direction.name ?? from} (${LOOP_WORD})` : undefined}
-      header={
-        ride && (
-          <RouteStopsCardHeader
-            vehicle={ride.vehicle}
-            bound={line ? railBound(direction) : null}
-            livery={livery}
-            name={loop ? (direction.name ?? LOOP_WORD) : undefined}
-          />
-        )
-      }
       switchable={switchable || canDrawOtherWay}
       back={direction.reversed}
       way={loop ? null : wayWord(direction.reversed, [direction])}

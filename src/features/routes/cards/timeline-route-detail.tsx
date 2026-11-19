@@ -1,9 +1,6 @@
-import { useState, type ReactNode } from 'react';
-
-import { ROW_PRESSED, TIMELINE_SURFACE } from './livery-card';
-import { RouteStopsCard } from './route-stops-card';
 import { TimelineBottomEndRoute } from './timeline-bottom-end-route';
 import { TimelineHintuan } from './timeline-hintuan';
+import { STOP_PRESSED, TIMELINE_RAIL } from './timeline-look';
 import { endRowPill, originMark, rowRole, type EndRow } from './timeline-row-role';
 import { timelineRowStates } from './timeline-row-states';
 import { TimelineTop } from './timeline-top';
@@ -64,21 +61,13 @@ export interface TimelineRouteDetailProps {
    * rail breaks twice) and either end row is the same end.
    */
   isLoop?: boolean;
-  /**
-   * Above the first row, on the card's colour: what the trip rides (RouteStopsCardHeader).
-   */
-  header?: ReactNode;
 }
 
 /**
- * A trip's stops on RouteStopsCard, in the trip's livery (RouteStopsCard, 4681:29138): every stop
- * from the origin (TimelineTop) to the place it goes to (TimelineBottomEndRoute), each a
- * RouteStopsTimeline row (4611:10957), Start's S and End's E in their slots.
- *
- * It opens folded, the card cut at 120: the first stop and the top of the next, "View more" on its
- * foot; open, every stop, "View less". A route with no hintuans never folds (T3). A pick
- * opens it, so the picked stop is in sight; folding again is the rider's (T2). Folded, the stops
- * under the cut are out of a keyboard's reach too.
+ * A trip's stops on the sheet's surface (RouteHintuans, 4796:29755): every stop from the origin
+ * (TimelineTop) to the place it goes to (TimelineBottomEndRoute), each a RouteStopsTimeline row on
+ * a rail in the trip's colour (TIMELINE_RAIL), Start and End in their slots. Every stop shows:
+ * nothing folds.
  *
  * A stop's row picks it as where the ride ends, and the origin's and the destination's rows show
  * that end, or with a start picked make it the ride's end; a second tap lets it go. Picked, the
@@ -105,34 +94,16 @@ export function TimelineRouteDetail({
   endPicked,
   routeDirection,
   isLoop = false,
-  header,
 }: TimelineRouteDetailProps) {
-  const canFold = hintuans.length > 0;
-  // Every pick opens the stops, so the picked one is in sight (T2): one made as the trip opens,
-  // from a pin on the map, one made after, and one in another's place.
-  const hasPick = start !== null || picked !== null || endPicked !== null;
-  const picks = `${start}|${picked}|${endPicked}`;
-  const [isMaximized, setIsMaximized] = useState(hasPick);
-  const [lastPicks, setLastPicks] = useState(picks);
-  if (lastPicks !== picks) {
-    setLastPicks(picks);
-    if (hasPick) setIsMaximized(true);
-  }
-  const isFolded = canFold && !isMaximized;
-  const rail = TIMELINE_SURFACE[livery];
-  const pressed = ROW_PRESSED[livery];
+  const rail = TIMELINE_RAIL[livery];
+  const pressed = STOP_PRESSED;
   const isStartAlone = start !== null && picked === null && endPicked === null;
   const ride = rideRows(hintuans, start, picked, endPicked, isLoop);
   const states = timelineRowStates(hintuans.length, ride, isStartAlone);
   const endPill = endRowPill(start, pickedCode, pickedPesos);
 
   return (
-    <RouteStopsCard
-      livery={livery}
-      header={header}
-      isMaximized={!isFolded}
-      onToggleStops={canFold ? () => setIsMaximized((m) => !m) : undefined}
-    >
+    <div data-testid="trip" data-livery={livery} className="flex w-full flex-col font-sn-pro">
       <ol className="flex w-full flex-col">
         <TimelineTop
           livery={livery}
@@ -173,8 +144,6 @@ export function TimelineRouteDetail({
               livery={livery}
               state={states[i + 1] ?? 'rest'}
               action={action}
-              isFolded={isFolded && i > 0}
-              isActionFolded={isFolded}
               onPick={onPick}
             />
           );
@@ -188,11 +157,10 @@ export function TimelineRouteDetail({
           pill={endPicked === 'to' ? endPill : null}
           code={endPicked === 'to' && endPill ? null : destinationCode}
           state={states[hintuans.length + 1] ?? 'rest'}
-          isFolded={isFolded}
           selected={endPicked === 'to'}
           onTap={() => onEnd('to')}
         />
       </ol>
-    </RouteStopsCard>
+    </div>
   );
 }

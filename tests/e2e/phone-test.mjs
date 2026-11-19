@@ -22,7 +22,7 @@
 // that comes first (the owner's answer to question A, 2026-10-06); the
 // forgiving ±20 px tap, with a negative control well outside the box; the
 // trip card a lone route opens (the owner's TimelineRouteDetailCard, 2026-09-29) —
-// its ends, its fold (its rows drawn only once it is opened, 2026-10-04),
+// its ends and every stop,
 // SWITCH keeping its
 // colour, ‹ only where another route sharing an end runs its way; the route list
 // where two routes share a road ("N Routes", a card per place), the trip a
@@ -646,10 +646,11 @@ const mapTap = async (x, y) => {
  * middle. A row below the screen (a sheet is translated, not scrolled, so scrolling brings none
  * up), a button under another element, or one still sliding returns the reason instead.
  */
-const fingerOn = async (locator) => {
+const fingerOn = async (locator, isCentred = false) => {
   const el = locator.first();
   if ((await locator.count()) === 0) return { why: 'no such element' };
-  await el.scrollIntoViewIfNeeded({ timeout: 2000 }).catch(() => {});
+  if (isCentred) await el.evaluate((node) => node.scrollIntoView({ block: 'center' }));
+  else await el.scrollIntoViewIfNeeded({ timeout: 2000 }).catch(() => {});
   let box = null;
   let isStill;
   const by = Date.now() + 3000;
@@ -671,9 +672,17 @@ const fingerOn = async (locator) => {
       ? (top.closest('[data-testid]')?.getAttribute('data-testid') ?? top.tagName)
       : 'nothing (off the screen)';
   }, at);
-  return onTop
-    ? { why: `${onTop} at its middle (${Math.round(at.x)}, ${Math.round(at.y)}), ${size}` }
-    : { at };
+  if (!onTop) return { at };
+  // In view but under something drawn over the sheet's foot (the Controller): a person scrolls
+  // it clear, to the middle of what scrolls, and looks again.
+  const isInScroller = await el.evaluate((node) => {
+    for (let p = node.parentElement; p; p = p.parentElement)
+      if (/auto|scroll/.test(getComputedStyle(p).overflowY) && p.scrollHeight > p.clientHeight)
+        return true;
+    return false;
+  });
+  if (!isCentred && isInScroller) return fingerOn(locator, true);
+  return { why: `${onTop} at its middle (${Math.round(at.x)}, ${Math.round(at.y)}), ${size}` };
 };
 
 /**
@@ -1505,10 +1514,9 @@ const tripChecks = async () => {
     card()
       .first()
       .evaluate((c) =>
-        [...c.querySelectorAll('[data-testid="trip-view-more"], [data-testid="trip-hintuan"]')]
-          // A folded stop is out of reach anyway (inert under View more): not one a person taps.
-          .filter((e) => !e.closest('[inert]'))
-          .some((e) => e.getBoundingClientRect().bottom > innerHeight),
+        [...c.querySelectorAll('[data-testid="trip-hintuan"]')].some(
+          (e) => e.getBoundingClientRect().bottom > innerHeight,
+        ),
       );
   if ((await isAStopBelowTheScreen()) && !(await handleTo('full')))
     check(
@@ -1517,44 +1525,20 @@ const tripChecks = async () => {
       `data-snap=${await sheetState()}`,
     );
 
-  // The stops open folded (the owner's RouteStopsCard, 4681:29138): every stop drawn, the card
-  // cut at 120 with "View more" on its foot, the stops under the cut out of a keyboard's reach;
-  // "View more" shows them all, "View less" folds them again. A route with no hintuans never folds.
-  const viewMore = card().locator('[data-testid="trip-view-more"]');
-  // Opened before a pick further down, so its row is in reach (a pick opens it too).
-  const fold = viewMore;
-  const stopsCard = card().locator('[data-testid="trip"]');
-  const stopsHeight = async () => (await stopsCard.boundingBox())?.height ?? 0;
-  if ((await viewMore.count()) === 0) {
-    skip('  its stops open folded, and open', 'no hintuan on this direction: nothing to fold');
-  } else {
-    const foldedHeight = await stopsHeight();
-    const inertFolded = await card().locator('[data-testid="trip"] ol > li[inert]').count();
-    await buttonTap(
-      viewMore,
-      async () => (await viewMore.getAttribute('aria-expanded')) === 'true',
-    );
-    await cardsSettled(page);
-    const openHeight = await stopsHeight();
-    const inertOpen = await card().locator('[data-testid="trip"] ol > li[inert]').count();
+  // Every stop shows, and nothing folds: every hintuan's row is drawn and
+  // in a keyboard's reach, and there is no View more.
+  {
+    const stops = await card()
+      .first()
+      .evaluate((c) => ({
+        rows: c.querySelectorAll('[data-testid="trip-hintuan"]').length,
+        inert: c.querySelectorAll('[data-testid="trip"] [inert]').length,
+        fold: c.querySelectorAll('[data-testid="trip-view-more"]').length,
+      }));
     check(
-      '  its stops open folded, cut at 120 under View more, and View more shows them all',
-      foldedHeight <= 120 &&
-        inertFolded > 0 &&
-        openHeight > foldedHeight &&
-        inertOpen === 0 &&
-        (await viewMore.innerText()).includes('View less'),
-      `${foldedHeight} px folded, ${inertFolded} stop(s) out of reach; ${openHeight} px open, ${inertOpen}`,
-    );
-    await buttonTap(
-      viewMore,
-      async () => (await viewMore.getAttribute('aria-expanded')) === 'false',
-    );
-    await cardsSettled(page);
-    check(
-      '  "View less" folds them again',
-      (await stopsHeight()) <= 120 && (await viewMore.innerText()).includes('View more'),
-      `${await stopsHeight()} px, "${await viewMore.innerText()}"`,
+      '  every stop shows, in reach, and nothing folds',
+      stops.inert === 0 && stops.fold === 0,
+      JSON.stringify(stops),
     );
   }
 
@@ -1562,7 +1546,7 @@ const tripChecks = async () => {
   // 2026-09-29): that one row Selected, its name ExtraBold (Black until
   // 2026-10-13), a pill with the pesos
   // from where the trip leaves to there — the app's own sums over rideCut's
-  // metres on the published line — in the card's own colours swapped; the
+  // metres on the published line — on the surface's secondary fill; the
   // tiles keep the whole ride; the route left whole on the map, and a circle
   // popping up at the hintuan (the owner's ask of 2026-09-30: "now I don't
   // want to cut the route") ringed in the line's colour, the card's surface
@@ -1578,13 +1562,6 @@ const tripChecks = async () => {
   if (!picksChecked && (await rows.count()) > 0) {
     picksChecked = true;
     didPicks = true;
-    if ((await fold.count()) > 0) {
-      await buttonTap(
-        fold,
-        async () => (await fold.first().getAttribute('aria-expanded')) === 'true',
-      );
-      await cardsSettled(page);
-    }
     const pickedIndex = Math.floor(((await rows.count()) - 1) / 2);
     const row = rows.nth(pickedIndex);
     const rowId = await row.getAttribute('data-hintuan');
@@ -1692,47 +1669,31 @@ const tripChecks = async () => {
         `pill "${pillText}"; tile "${pickedTile}", the sums "${pickWant.fare}"`,
       );
     const colours = await page.evaluate(() => {
-      // A train's pill is two halves (RouteTripLineDetailPill's Two, 2026-10-15),
-      // the card showing between them: the colours are the pesos' half's.
+      // A train's pill is two halves (RouteTripLineDetailPill's Two), the surface between them:
+      // the colours are the pesos' half's. On the sheet's surface, every livery's pill is the
+      // secondary surface with Text/primary words (STOP_PILL).
       const fare = document.querySelector('[data-testid="trip-hintuan-fare"]');
       const pill = fare?.querySelector('[data-part="pesos"]') ?? fare;
-      const trip = document.querySelector('[data-testid="trip"]');
-      if (!pill || !trip) return null;
-      const [p, t] = [getComputedStyle(pill), getComputedStyle(trip)];
-      // A train's pill is white with its words in the line's Timeline/surface,
-      // as the owner's train frames draw it (2026-10-13), not the card's swapped;
-      // the ferry's in Map/Ferry/Timeline/surface, as a train's.
-      const line = trip.dataset.livery;
-      if (/rail-way/.test(line) || line === 'ferry') {
-        const probe = document.createElement('i');
-        probe.style.backgroundColor = 'var(--content-inverse)';
-        probe.style.color =
-          line === 'ferry'
-            ? 'var(--map-ferry-timeline-surface)'
-            : `var(--map-rail-${line}-timeline-surface)`;
-        document.body.append(probe);
-        const want = getComputedStyle(probe);
-        const seen = {
-          swapped: p.backgroundColor === want.backgroundColor && p.color === want.color,
-          detail: `${p.color} on ${p.backgroundColor}; the train's ${want.color} on ${want.backgroundColor}`,
-        };
-        probe.remove();
-        return seen;
-      }
-      return {
-        swapped: p.backgroundColor === t.color && p.color === t.backgroundColor,
-        detail: `${p.color} on ${p.backgroundColor}; the card ${t.color} on ${t.backgroundColor}`,
+      if (!pill) return null;
+      const p = getComputedStyle(pill);
+      const probe = document.createElement('i');
+      probe.style.backgroundColor = 'var(--bg-surface-secondary)';
+      probe.style.color = 'var(--text-primary)';
+      document.body.append(probe);
+      const want = getComputedStyle(probe);
+      const seen = {
+        isWorn: p.backgroundColor === want.backgroundColor && p.color === want.color,
+        detail: `${p.color} on ${p.backgroundColor}; asked ${want.color} on ${want.backgroundColor}`,
       };
+      probe.remove();
+      return seen;
     });
     if (pickWant && pickWant.fare == null)
-      skip(
-        "  in the card's own colours, swapped (a train's: white, in its line's rail colour)",
-        'an unpriced route shows no pill',
-      );
+      skip("  on the surface's secondary fill, in Text/primary", 'an unpriced route shows no pill');
     else
       check(
-        "  in the card's own colours, swapped (a train's: white, in its line's rail colour)",
-        !!colours?.swapped,
+        "  on the surface's secondary fill, in Text/primary",
+        !!colours?.isWorn,
         colours?.detail ?? 'no pill',
       );
     // The Distance tile follows the pick too (the owner, 2026-09-30).
@@ -1774,6 +1735,13 @@ const tripChecks = async () => {
           : 'var(--map-route-line-surface-default)';
       document.body.append(probe);
       const cardPale = getComputedStyle(probe).backgroundColor;
+      // The line's colour is a card's surface in the trip's livery (livery-line.ts): read off
+      // CARD_SURFACE's classes: the colour the map draws the trip's line in.
+      const { CARD_SURFACE } = await import('/src/features/routes/cards/livery-card.ts');
+      probe.style.backgroundColor = '';
+      probe.className = CARD_SURFACE[livery] ?? '';
+      const lineColour = getComputedStyle(probe).backgroundColor;
+      probe.className = '';
       // The picked end's circle is End's red, whatever the line.
       probe.style.backgroundColor = 'var(--card-red-surface)';
       const endRed = getComputedStyle(probe).backgroundColor;
@@ -1804,8 +1772,7 @@ const tripChecks = async () => {
               )
             : null,
         ring: ring ? getComputedStyle(ring).backgroundColor : null,
-        // The line's colour is the card's surface (livery-line.ts): the card's own background.
-        line: trip ? getComputedStyle(trip).backgroundColor : null,
+        line: lineColour,
         pale: cardPale,
         endRed,
         livery: pin?.dataset.livery ?? null,
@@ -2732,13 +2699,6 @@ const tripChecks = async () => {
   // A hintuan picked on the trip as it is left, for the caller's ✕ or ‹ to
   // let go: SWITCH may have let the checked one go.
   if (!picked && (await rows.count()) > 0) {
-    if ((await fold.count()) > 0 && (await fold.first().getAttribute('aria-expanded')) !== 'true') {
-      await buttonTap(
-        fold,
-        async () => (await fold.first().getAttribute('aria-expanded')) === 'true',
-      );
-      await cardsSettled(page);
-    }
     const any = card().locator('button[data-testid="trip-hintuan-pick"]:visible').first();
     if ((await any.count()) > 0) {
       const on = async () => (await any.getAttribute('aria-pressed')) === 'true';
@@ -5030,38 +4990,17 @@ if (runsPart(1)) {
         sameCamera(camBeforeOpen, camAfterOpen),
         JSON.stringify({ camBeforeOpen, camAfterOpen }),
       );
-      // A guard on the trip as it is drawn: at full height, its stops opened (View more) so that
-      // it runs past the screen, scrolled to its end, its last row clears the Controller drawn
-      // over the sheet's foot. BottomSheet's stories (FooterLastRowClear) prove the padding itself.
-      // Folded again after, as the checks below find it.
-      const viewMore = card().locator('[data-testid="trip-view-more"]');
-      const isFull = await handleTo('full');
-      const isOpened =
-        isFull &&
-        (await viewMore.count()) > 0 &&
-        (await buttonTap(
-          viewMore.first(),
-          async () => (await viewMore.first().getAttribute('aria-expanded')) === 'true',
-        ));
-      await cardsSettled(page);
-      const tripEnd = !isFull
-        ? { ok: false, why: `the trip would not go to full: data-snap=${await sheetState()}` }
-        : !isOpened
-          ? { ok: false, why: 'its stops would not open: no View more, or a tap that missed it' }
-          : await endClearsFooter('[data-testid="card"]');
+      // A guard on the trip as it is drawn: at full height, every stop shown, so that it runs past
+      // the screen, scrolled to its end, its last row clears the Controller drawn over the sheet's
+      // foot. BottomSheet's stories (FooterLastRowClear) prove the padding itself.
+      const tripEnd = (await handleTo('full'))
+        ? await endClearsFooter('[data-testid="card"]')
+        : { ok: false, why: `the trip would not go to full: data-snap=${await sheetState()}` };
       check(
-        "  on a small phone at full height, with the stops opened: the trip's last row clears the footer",
+        "  on a small phone at full height: the trip's last row clears the footer",
         tripEnd.ok,
         JSON.stringify(tripEnd),
       );
-      if (isOpened) {
-        await viewMore.first().evaluate((el) => el.scrollIntoView({ block: 'center' }));
-        await buttonTap(
-          viewMore.first(),
-          async () => (await viewMore.first().getAttribute('aria-expanded')) === 'false',
-        );
-        await cardsSettled(page);
-      }
 
       // The sheet at another height leaves the camera where it is: the camera is the
       // commuter's until they ask, by the Overview button.
@@ -5254,18 +5193,8 @@ if (runsPart(2)) {
     const to = others[0];
     const toName = (to.name ?? '').split(' → ')[1] ?? '';
     // At full height: another route leaves the sheet there (the owner's rule: nothing moves it for
-    // the commuter). Raised first, as a person does to reach View more: at Low it sits below the
-    // screen.
+    // the commuter).
     const atFull = await handleTo('full');
-    // Opened first: another route leaves the hintuans as they were, not folded
-    // (the owner, 2026-10-01: "don't shrink it").
-    const tripFold = card().locator('[data-testid="trip-view-more"]');
-    const openedFold =
-      (await tripFold.count()) > 0 &&
-      (await buttonTap(
-        tripFold,
-        async () => (await tripFold.first().getAttribute('aria-expanded')) === 'true',
-      ));
     // The rows sit behind "View N more routes" at the top of the trip: opened first, its
     // aria-expanded turning true.
     const moreRoutes = card().locator('[data-testid="trip-more-routes"]');
@@ -5304,20 +5233,6 @@ if (runsPart(2)) {
         (await sheetState()) === 'full',
         `data-snap=${await sheetState()}`,
       );
-    if (!openedFold || (await tripFold.count()) === 0) {
-      skip(
-        '  its hintuans left open, as they were',
-        openedFold
-          ? 'the other route has no hintuans to fold'
-          : 'this trip has no hintuans to fold',
-      );
-    } else {
-      check(
-        '  its hintuans left open, as they were',
-        (await tripFold.first().getAttribute('aria-expanded')) === 'true',
-        `aria-expanded ${await tripFold.first().getAttribute('aria-expanded')}`,
-      );
-    }
     await closeCard();
   }
 

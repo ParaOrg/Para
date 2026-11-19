@@ -17,15 +17,16 @@ interface RouteStopSlotProps {
 }
 
 /**
- * What a stop's slot holds (RouteStopsCard, 4681:29138; owner, T1 and Q168): the ride's S or E,
- * then a picked stop's pill, or a train's station code at the timeline's ends.
+ * What a stop's slot holds, under its name (RouteHintuans' Content Slot, 4796:29755; owner, T1 and
+ * Q168): the ride's Start or End pill, then a picked stop's pill, or a train's station code at the
+ * timeline's ends.
  */
 export function RouteStopSlot({ livery, sign, pill, code = null }: RouteStopSlotProps) {
   if (!sign && !pill && !code) return null;
   return (
     <>
-      {sign && <RouteStopSign kind={sign} livery={livery} />}
-      {pill && <RouteTripLineDetailPill livery={livery} {...pill} />}
+      {sign && <RouteStopSign kind={sign} />}
+      {pill && <RouteTripLineDetailPill {...pill} />}
       {!pill && code && <RouteBadge label={code} livery={livery} />}
     </>
   );
