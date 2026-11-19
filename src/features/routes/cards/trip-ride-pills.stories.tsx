@@ -1,16 +1,26 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, within } from 'storybook/test';
 
+import { cn } from '@/shared/utils/cn';
+
 import { TripRidePills } from './trip-ride-pills';
+
+const PHONE = { figma: 'w-98.25', small: 'w-93.75' } satisfies Record<'figma' | 'small', string>;
 
 /** What a trip rides, at the top of its panel, on a phone-wide sheet (BottomContent, 4796:30124). */
 const meta = {
   title: 'Features/Routes/TripRidePills',
   component: TripRidePills,
   parameters: { layout: 'fullscreen' },
+  // The phone the sheet is on: 393 wide, as Figma draws it, or a story's own `phone`.
   decorators: [
-    (Story) => (
-      <div className="w-98.25 bg-bg-surface p-4">
+    (Story, ctx) => (
+      <div
+        className={cn(
+          'bg-bg-surface p-4',
+          PHONE[ctx.parameters.phone === 'small' ? 'small' : 'figma'],
+        )}
+      >
         <Story />
       </div>
     ),
@@ -71,11 +81,5 @@ export const Loop: Story = {
 /** A long loop name on a 375-wide phone: the pill's words wrap inside it, centred. */
 export const LongLoopOnSmallPhone: Story = {
   args: { detail: 'UP – Ikot via Katipunan, C.P. Garcia and Commonwealth' },
-  decorators: [
-    (Story) => (
-      <div className="w-93.75">
-        <Story />
-      </div>
-    ),
-  ],
+  parameters: { phone: 'small' },
 };

@@ -18,8 +18,8 @@ interface TripRidePillsProps {
 /**
  * What a trip rides, at the top of its panel (BottomContent, 4796:30124): a white pill with the
  * vehicle, 20, in its mode's colour, and its word, "Jeep", in SemiBold 16/24; a train's line and
- * bound, "LRT 1 · Northbound", or a loop's mode and name, "Jeep · UP – Ikot", the owner's rule. A label, not a control. Until the time pill joins it, it takes
- * the whole row.
+ * bound, "LRT 1 · Northbound", or a loop's mode and name, "Jeep · UP – Ikot". A label, not a
+ * control. Until the time pill joins it, it takes the whole row; a long name wraps inside it.
  */
 export function TripRidePills({ vehicle, detail, livery }: TripRidePillsProps) {
   const label = detail ? `${MODE_BADGE_LABEL[vehicle]} · ${detail}` : MODE_BADGE_LABEL[vehicle];

@@ -3,7 +3,7 @@ import { useState, type ReactNode, type Ref } from 'react';
 import type { SheetHeight } from '@/shared/ui/bottom-sheet';
 import { lineLength } from '@/shared/utils/geo';
 
-import { rideOf } from './ride-of';
+import { ridePillOf } from './ride-pill-of';
 import { RouteStopsCardHeader } from './route-stops-card-header';
 import { TimelineRouteDetailCard } from './timeline-route-detail-card';
 import { FREE, type Fare, type Fares } from './trip-fare';
@@ -139,7 +139,7 @@ export function TripCard({
       ? { from: timeline.from.label, to: (timeline.to ?? timeline.from).label }
       : directionEnds(direction);
   const line = railLineOf(direction);
-  const ride = rideOf(direction);
+  const ride = ridePillOf(direction);
   const sibling = otherDirection(directions, direction);
   // A loop has no way back, so no PAPUNTA at all.
   const switchable = !loop && !!sibling && isDrawn(sibling);
