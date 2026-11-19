@@ -5118,6 +5118,16 @@ if (runsPart(2)) {
         tripFold,
         async () => (await tripFold.first().getAttribute('aria-expanded')) === 'true',
       ));
+    // The rows sit behind "View N more routes" at the top of the trip: opened first, its
+    // aria-expanded turning true.
+    const moreRoutes = card().locator('[data-testid="trip-more-routes"]');
+    await moreRoutes.scrollIntoViewIfNeeded();
+    await buttonTap(
+      moreRoutes,
+      async () => (await moreRoutes.getAttribute('aria-expanded')) === 'true',
+    );
+    const expanded = await moreRoutes.getAttribute('aria-expanded');
+    check('  "View N more routes" opens the list', expanded === 'true', String(expanded));
     // Scrolled to the sheet's middle, as a person brings a row up to tap it: "if needed" counts a
     // row under the Controller, which floats over the sheet's foot, as already in view.
     await card()
