@@ -74,7 +74,7 @@ export function ConsentPanel({ onAgree, onDecline }: ConsentPanelProps) {
         id="consent-heading"
         ref={headingRef}
         tabIndex={-1}
-        className="text-xl/7 font-extrabold focus:outline-none"
+        className="text-xl/7 font-bold focus:outline-none"
       >
         Before you record
       </h1>

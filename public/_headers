@@ -31,7 +31,7 @@
 # are allowed for the "Loading map…" text in index.html, styled before any
 # stylesheet has arrived; no inline stylesheet is.
 /
-  Content-Security-Policy-Report-Only: default-src 'self'; script-src 'self' 'sha256-AkH2fhxZlq/UdT9BZ6A4gX0vUKVNV2+nlTnthO1omhY='; connect-src 'self' https://tiles.para-commute.org https://tiles.openfreemap.org; worker-src 'self' blob:; img-src 'self' data: blob:; style-src-attr 'unsafe-inline'
+  Content-Security-Policy-Report-Only: default-src 'self'; script-src 'self' 'sha256-AkH2fhxZlq/UdT9BZ6A4gX0vUKVNV2+nlTnthO1omhY='; connect-src 'self' https://tiles.para-commute.org https://tiles.openfreemap.org; worker-src 'self' blob:; img-src 'self' data: blob:; style-src 'self' 'sha256-ANNu7jT+hHUw5gevamVsm1/5m0Qtr7LGlvUgJC0sHUc='; style-src-attr 'unsafe-inline'
 
 # The editor is for one person. Keep it out of search results, and out of
 # other sites' frames, where a page could dress it up and steer its clicks.
@@ -57,7 +57,7 @@
 # changes), Turnstile's script and frame for the waitlist's form, and the
 # database's waitlist function the form posts to.
 /app/*
-  Content-Security-Policy-Report-Only: default-src 'self'; script-src 'self' 'sha256-j6jKmBhdyOgJtzDxuGWX0pCuTvV8y4GLszjkfYrQyUc=' https://challenges.cloudflare.com; style-src 'self' 'sha256-3QD2zonp1BhWLVCqUP5g0FoNTM4jdc5qHRFvpCxYzE0='; frame-src https://challenges.cloudflare.com; connect-src 'self' https://smzwbqxttdyvohuizynl.supabase.co
+  Content-Security-Policy-Report-Only: default-src 'self'; script-src 'self' 'sha256-j6jKmBhdyOgJtzDxuGWX0pCuTvV8y4GLszjkfYrQyUc=' https://challenges.cloudflare.com; style-src 'self' 'sha256-p+sqNhNUTxaGjpp1R9TNk6Q3eB71bqFLZZ9B7VhPjU4='; frame-src https://challenges.cloudflare.com; connect-src 'self' https://smzwbqxttdyvohuizynl.supabase.co
 
 # Signboards (0010): SVGs uploaded in the studio, cleaned twice
 # (signboardSvg.ts). Shown as pictures they run nothing; opened on their own

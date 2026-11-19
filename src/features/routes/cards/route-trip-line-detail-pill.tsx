@@ -16,7 +16,7 @@ export type RouteTripLineDetailPillContent =
 
 type RouteTripLineDetailPillProps = RouteTripLineDetailPillContent;
 
-/** One half: Figma's padding 2 × 6, text-sm/medium in SN Pro, in STOP_PILL's fill and words. */
+/** One half: Figma's padding 2 × 6, text-sm/medium in Livvic, in STOP_PILL's fill and words. */
 const HALF = 'px-1.5 py-0.5 font-sn-pro text-sm/5 font-medium whitespace-nowrap';
 
 /**

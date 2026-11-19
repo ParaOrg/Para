@@ -1165,8 +1165,12 @@ if (runsPart(3)) {
   // script at all, against the app's own while the map waits for its style;
   // then the app's, gone as the routes are drawn, the basemap's tiles held.
   /** "Loading map…" on page `p`: how many, and the first's text and the gray under it, as drawn. */
+  // Measured once Livvic Regular, the face it is drawn in, has loaded on both sides: a width read
+  // while the fallback still shows would compare two faces, not the page and the app.
   const loadingLook = (p) =>
-    p.evaluate(() => {
+    p.evaluate(async () => {
+      await document.fonts.load("400 0.875rem 'Livvic'");
+      await document.fonts.ready;
       const ps = [...document.querySelectorAll('p')].filter(
         (e) => e.textContent === 'Loading map…',
       );
@@ -1572,8 +1576,7 @@ const tripChecks = async () => {
   }
 
   // A hintuan's row picks it (the owner's Timeline State=Selected,
-  // 2026-09-29): that one row Selected, its name ExtraBold (Black until
-  // 2026-10-13), a pill with the pesos
+  // 2026-09-29): that one row Selected, its name set heavier, a pill with the pesos
   // from where the trip leaves to there — the app's own sums over rideCut's
   // metres on the published line — on the surface's secondary fill; the
   // tiles keep the whole ride; the route left whole on the map, and a circle
@@ -1869,7 +1872,7 @@ const tripChecks = async () => {
     check('  no get-off circles on the public map', drawn.dots === 0, `${drawn.dots}`);
     // Beside the circle, the hintuan's name on End's red, a white End pill
     // before it (HintuanLabel's HintuanEnd, Figma 4068:4791): 8px right of it
-    // and centred on it, in SN Pro.
+    // and centred on it, in Livvic.
     const rowName = (
       await pickButton.evaluate((b) => b.querySelector('[data-part="name"]').textContent)
     ).trim();
@@ -1893,7 +1896,7 @@ const tripChecks = async () => {
         // The name alone: a screen reader's "End, " sits before it, unseen.
         text: t.querySelector('[data-part="words"]')?.textContent.trim(),
         colours: ts.backgroundColor === want.backgroundColor && ts.color === want.color,
-        font: ts.fontFamily.startsWith('"SN Pro"') || ts.fontFamily.startsWith('SN Pro'),
+        font: ts.fontFamily.startsWith('"Livvic"') || ts.fontFamily.startsWith('Livvic'),
         detail: `${ts.color} on ${ts.backgroundColor}; End's red ${want.color} on ${want.backgroundColor}; ${ts.fontFamily}`,
         icon:
           !!name.querySelector('[data-part="end"]') && !name.querySelector('[data-part="start"]'),
@@ -1905,7 +1908,7 @@ const tripChecks = async () => {
       return seen;
     });
     check(
-      "  its name beside the circle, on End's red in SN Pro, End's pill before it",
+      "  its name beside the circle, on End's red in Livvic, End's pill before it",
       !!title &&
         title.text === rowName &&
         title.colours &&
@@ -3427,7 +3430,7 @@ if (runsPart(1)) {
               ? pill.dataset.end === 'head' && icon === 'Start'
               : pill.dataset.end === 'tail' && icon === 'End',
           colour: same(getComputedStyle(namePill).backgroundColor, wants),
-          font: /^"?SN Pro/.test(getComputedStyle(namePill).fontFamily),
+          font: /^"?Livvic/.test(getComputedStyle(namePill).fontFamily),
           // Its pointer the same: the pill's last svg.
           pointer: same(getComputedStyle([...namePill.querySelectorAll('svg')].at(-1)).fill, wants),
           across: box.left + box.width / 2 - (c.left + q.x),
@@ -3440,7 +3443,7 @@ if (runsPart(1)) {
       return { named: named.length, pills: pills.length, circles: all.length, rows };
     });
     check(
-      "  each end named once, in SN Pro, in a pill over its circle, Start's green, End's red or the line's colour, its pointer the same, Start's pill before where the ride starts and End's before where it goes; the circle the hintuan's dot, 24 across, on the point",
+      "  each end named once, in Livvic, in a pill over its circle, Start's green, End's red or the line's colour, its pointer the same, Start's pill before where the ride starts and End's before where it goes; the circle the hintuan's dot, 24 across, on the point",
       ends.named > 0 &&
         ends.pills === ends.named &&
         ends.circles >= ends.named &&

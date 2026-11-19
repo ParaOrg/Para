@@ -60,13 +60,13 @@ const knobbFill = (pill: HTMLElement) => {
 };
 
 /**
- * SN Pro Medium, 28 tall, never MapLibre's Helvetica Neue: a signed pill's name
+ * Livvic Medium, 28 tall, never MapLibre's Helvetica Neue: a signed pill's name
  * Figma's text-base/Lower/medium, 16, an unsigned one's text-sm/medium, 14.
  */
 const expectFigmaType = async (pill: HTMLElement) => {
   const style = getComputedStyle(pill);
   const isSigned = !!pill.querySelector('[data-part="start"], [data-part="end"]');
-  await expect(style.fontFamily).toMatch(/^"?SN Pro/);
+  await expect(style.fontFamily).toMatch(/^"?Livvic/);
   await expect(style.fontSize).toBe(isSigned ? '16px' : '14px');
   await expect(style.fontWeight).toBe('500');
   await expect(pill.getBoundingClientRect().height).toBe(28);

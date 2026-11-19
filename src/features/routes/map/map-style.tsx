@@ -104,7 +104,7 @@ export function MapStyle({
       <div className="flex items-center">
         <h2
           id={titleId}
-          className="min-w-0 flex-1 text-lg leading-7 font-extrabold text-content-primary"
+          className="min-w-0 flex-1 text-lg leading-7 font-bold text-content-primary"
         >
           Map Style
         </h2>
