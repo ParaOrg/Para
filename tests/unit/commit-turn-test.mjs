@@ -195,8 +195,8 @@ function standInGps() {
 }
 
 /**
- * The page and its cards' camera — the sheet's height moving it to the
- * card's overview, as useHeightOverview does, with APP_MOVE — and the
+ * The page and its cards' camera — an overview of the page's, with APP_MOVE,
+ * started in the same commit as the sheet's height changes — and the
  * locator: `layout` 'page', its hook among the page's after the cards'
  * (PublicMapApp before 2026-10-05); 'child', in a child given the page's turn
  * (CommuterLocation); 'child-unturned', in a child without it.

@@ -747,6 +747,25 @@ const camNow = () =>
     const c = m.getCenter();
     return { lng: c.lng, lat: c.lat, zoom: m.getZoom() };
   });
+/**
+ * A finger dragging the map from (x, y) by (dx, dy), held still before letting go so it does not
+ * fling: a pan with an `originalEvent`, as a commuter's is.
+ */
+const fingerPan = async (x, y, dx, dy) => {
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x, y }] });
+  for (let i = 1; i <= 8; i++) {
+    await cdp.send('Input.dispatchTouchEvent', {
+      type: 'touchMove',
+      touchPoints: [{ x: x + (dx * i) / 8, y: y + (dy * i) / 8 }],
+    });
+    await page.waitForTimeout(16);
+  }
+  await page.waitForTimeout(250);
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+  await page
+    .waitForFunction(() => !window.__map.isMoving(), null, { timeout: 5000 })
+    .catch(() => {});
+};
 /** Whether two readings of camNow are one camera. */
 const sameCamera = (a, b) =>
   Math.abs(a.zoom - b.zoom) < 0.01 &&
@@ -3728,7 +3747,7 @@ if (runsPart(3)) {
     const wantedName = wantedCard.locator('[data-testid="chooser-select"]');
     // At Low a tap on the list raises it a third and reaches nothing under it (the owner's rule):
     // picking a card there takes a tap to raise, then a tap to pick. The camera is read once the
-    // raise has settled, as a new height frames the routes again.
+    // raise has settled.
     const listAt = async () => chooser.first().getAttribute('data-snap');
     const raisedFirst = (await listAt()) === 'low';
     if (raisedFirst) {
@@ -3789,6 +3808,31 @@ if (runsPart(3)) {
       '  and the camera stays where it was: its routes are not fitted',
       sameCamera(camBeforeCardPick, camAfterCardPick),
       JSON.stringify({ camBeforeCardPick, camAfterCardPick }),
+    );
+    // Picked and not fitted, so the Overview button shows; pressed, it takes the card's routes
+    // in above the list, and hides once there.
+    const overview = page.getByRole('button', { name: 'Overview' });
+    check('  a card picked: Overview shows', (await isPicked()) && (await overview.isVisible()));
+    const pickedBoxes = pickedIds
+      .map((id) => snapshot.routes.find((o) => o.id === id)?.bbox)
+      .filter(Boolean);
+    const pickedBbox = pickedBoxes.length
+      ? [
+          Math.min(...pickedBoxes.map((b) => b[0])),
+          Math.min(...pickedBoxes.map((b) => b[1])),
+          Math.max(...pickedBoxes.map((b) => b[2])),
+          Math.max(...pickedBoxes.map((b) => b[3])),
+        ]
+      : null;
+    const overviewPressed = await buttonTap(overview, async () => !(await overview.isVisible()));
+    await page
+      .waitForFunction(() => !window.__map.isMoving(), null, { timeout: 5000 })
+      .catch(() => {});
+    const cardFitted = pickedBbox && (await framedAboveCard(pickedBbox, 'chooser'));
+    check(
+      "  Overview pressed: the card's routes above the list, and the button gone",
+      overviewPressed && cardFitted?.inside === true && !(await overview.isVisible()),
+      JSON.stringify({ pickedIds: pickedIds.length, cardFitted }),
     );
     const seenPicked = await rideLook(page);
     const endsPicked = await endsWear(cardColour);
@@ -4540,6 +4584,7 @@ if (runsPart(3)) {
     // does not report the next three as broken too. A start that cannot be
     // reached is itself a failure: the drag after it would prove nothing.
     const readyUp = await restore('low');
+    const camBeforeDrag = await camNow();
     const up = await dragHandle(await dragTo('low', 'half'));
     const leftAt = await shownNow();
     const want = await halfShown();
@@ -4548,6 +4593,16 @@ if (runsPart(3)) {
       'dragging the handle up from Low leaves it where it was let go',
       upRests,
       `${readyUp ? '' : 'could not get to Low first; '}${up.how}; data-snap=${await sheetState()}, ${leftAt} px shown for ${want}${upRests ? '' : `; ${await sheetDiag()}`}`,
+    );
+    // A drag of the sheet moves the sheet alone: the camera stays where the commuter left it.
+    await page
+      .waitForFunction(() => !window.__map.isMoving(), null, { timeout: 3000 })
+      .catch(() => {});
+    const camAfterDrag = await camNow();
+    check(
+      '  and the camera stays where it was',
+      upRests && sameCamera(camBeforeDrag, camAfterDrag),
+      JSON.stringify({ camBeforeDrag, camAfterDrag }),
     );
 
     const readyDown = await restore('half');
@@ -4895,80 +4950,50 @@ if (runsPart(1)) {
         JSON.stringify(tripEnd),
       );
 
-      // The sheet at another height: the camera takes the route in again, in the
-      // map it leaves (the owner's ask, 2026-10-01) — at full height, the whole
-      // screen on a phone, as at the framed height; in closer above Low; and back to the overview
-      // after the commuter has moved the map. Going up, no further out than
-      // 5 km on the scale bar (100 px; MapLibre's 512 px tiles), the owner's
-      // "for scrolling up only": a long route is cut, not shrunk.
-      const capZoom = Math.log2(
-        (78271.51696 * Math.cos((((r.bbox[1] + r.bbox[3]) / 2) * Math.PI) / 180) * 100) / 5000,
-      );
+      // The sheet at another height leaves the camera where it is: the camera is the
+      // commuter's until they ask, by the Overview button.
       const toFull = await handleTo('full');
-      const atFull = await framedAboveCard(r.bbox);
+      const camAtFull = await camNow();
       const toLow = toFull && (await handleTo('low'));
-      const atLow = await framedAboveCard(r.bbox);
-      if (!toLow)
-        check(
-          '  the sheet at full height, then Low: the route taken in again in the map it leaves',
-          false,
-          `the handle would not step there: data-snap=${await sheetState()}`,
-        );
-      else {
-        check(
-          '  the sheet up to full height: the route taken in, no further out than 5 km on the scale bar',
-          atFull.zoom >= capZoom - 0.05,
-          `zoom ${atFull.zoom}, 5 km at ${capZoom.toFixed(2)}; ${JSON.stringify(atFull)}`,
-        );
-        check(
-          '  at Low: in closer, the whole route above the sheet',
-          atLow.inside && atLow.zoom >= atFull.zoom - 0.05,
-          JSON.stringify(atLow),
-        );
-      }
-      // Raised a third from Low: with the sheet never brought down, no height
-      // change moves the camera (a runner that dropped the handle's taps).
-      if (!toLow)
-        check(
-          '  moved away, then raised a third: the overview again',
-          false,
-          `the sheet never came down to Low: data-snap=${await sheetState()}`,
-        );
-      else {
-        // Moved, and idle again before the handle is tapped: a cold zoom-16
-        // view kept a slow machine's page drawing past the handle's 2 s for
-        // its box, and the sheet never went up (a local run under load,
-        // 2026-10-16).
-        await page.evaluate(
-          () =>
-            new Promise((r) => {
-              const m = window.__map;
-              const c = m.getCenter();
-              m.once('idle', r);
-              setTimeout(r, 10000);
-              m.jumpTo({ center: [c.lng + 0.02, c.lat + 0.02], zoom: 16 });
-            }),
-        );
-        const raised = await toRaised();
-        // The overview starts a beat after the sheet settles — most of a second
-        // from a cold zoom-16 view, with the main thread busy over it (measured
-        // on the refactor's base too, 2026-10-12): let it start, then end, as
-        // the pick's glide is waited for.
-        await page
-          .waitForFunction(() => window.__map.isMoving() || window.__map.getZoom() < 15.9, null, {
-            timeout: 4000,
-          })
-          .catch(() => {});
-        await page
-          .waitForFunction(() => !window.__map.isMoving(), null, { timeout: 3000 })
-          .catch(() => {});
-        const back = await framedAboveCard(r.bbox);
-        check(
-          '  moved away, then raised a third: the overview again, 5 km on the bar at the farthest',
-          raised && back.zoom >= capZoom - 0.05 && (back.inside || back.zoom <= capZoom + 0.05),
-          `${raised ? '' : `the sheet would not rise a third: data-snap=${await sheetState()}; `}${JSON.stringify(back)}`,
-        );
-      }
+      const camAtLow = await camNow();
+      check(
+        '  the sheet up to full height, then Low: the camera stays where it was',
+        toLow && sameCamera(camAfterOpen, camAtFull) && sameCamera(camAfterOpen, camAtLow),
+        toLow
+          ? JSON.stringify({ camAfterOpen, camAtFull, camAtLow })
+          : `the handle would not step there: data-snap=${await sheetState()}`,
+      );
+      // Off the route's overview, so the Overview button shows; pressed, it takes the whole
+      // route in above the sheet, and hides once there.
+      const overview = page.getByRole('button', { name: 'Overview' });
+      check('  on a trip the camera has not framed, Overview shows', await overview.isVisible());
+      const pressed = await buttonTap(overview, async () => !(await overview.isVisible()));
+      await page
+        .waitForFunction(() => !window.__map.isMoving(), null, { timeout: 5000 })
+        .catch(() => {});
+      const fitted = await framedAboveCard(r.bbox);
+      check(
+        '  Overview pressed: the whole route above the sheet, and the button gone',
+        pressed && fitted.inside && !(await overview.isVisible()),
+        JSON.stringify(fitted),
+      );
+      // A finger's pan takes the camera off the overview: the button again.
+      await fingerPan(195, 300, -90, -60);
+      check(
+        '  the map panned by a finger: Overview shows again',
+        (await until(() => overview.isVisible(), Boolean, 3000)) === true,
+      );
+      // Pressed while it has focus, it hides: focus goes on to the map, not to the page's body.
+      await overview.focus();
+      await buttonTap(overview, async () => !(await overview.isVisible()));
+      const focusOn = await page.evaluate(
+        () => document.activeElement?.classList.contains('maplibregl-canvas') ?? false,
+      );
+      check(
+        '  Overview pressed with focus on it: it hides, and focus goes to the map, not lost',
+        !(await overview.isVisible()) && focusOn,
+        `focus on the map: ${focusOn}`,
+      );
 
       // Opened on its own, no list is behind the trip: ‹ only where another
       // route sharing an end is drawn its way round (the owner's ask, 2026-09-29).

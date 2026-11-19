@@ -27,6 +27,7 @@ import { MapCreditsDock } from '@/features/routes/map/map-credits-dock';
 import { MapCreditsSheet } from '@/features/routes/map/map-credits-sheet';
 import { METRO_MANILA, MapView } from '@/features/routes/map/map-view';
 import { openOnRoutes } from '@/features/routes/map/open-on-routes';
+import { OverviewButton } from '@/features/routes/map/overview-button';
 import { StationLabels } from '@/features/routes/map/station-labels';
 import { useCardCamera } from '@/features/routes/map/use-card-camera';
 import { useCardStack } from '@/features/routes/map/use-card-stack';
@@ -161,6 +162,7 @@ export function PublicMapApp() {
     backFromTrip,
     pickOnTrip,
     endOnTrip,
+    overviewButton,
   } = useCardCamera(map, saved, hotspots, cards, { tipId });
   // What the lit routes wear on the map, their ends named (useLitRides): a
   // picked hintuan's ride flowing only as far as there.
@@ -245,6 +247,7 @@ export function PublicMapApp() {
             buttonRef={credits.buttonRef}
           />
         )}
+        <OverviewButton {...overviewButton} isBesideCredits={!credits.isSheetMissing} map={map} />
         {/*
         The commuter's own position, and the camera with them, kept clear of
         the card on show; the dot gazes at what was just picked.

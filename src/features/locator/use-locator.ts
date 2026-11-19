@@ -209,9 +209,9 @@ export function useLocator(
         offset: offsetRef.current(),
       });
     };
-    // The card's height changed: the cards' overview starts in this same
-    // commit (useHeightOverview), and the camera following the commuter
-    // takes over from it.
+    // The card's height changed: the camera following the commuter keeps
+    // them clear of it, taking over from any overview the page starts in this
+    // same commit.
     // The turn of the render this effect is from: a new one comes with each
     // render of the page, and is no reason to move the camera.
     if (cameraTurn) cameraTurn(follow);

@@ -300,6 +300,7 @@ export function Workshop({ session, recovery }: WorkshopProps) {
                 camera={camera}
                 cameraTurn={locatorTurn}
                 hushedAt={hushedAt}
+                hasCredits={!credits.isSheetMissing}
               />
             </div>
 
