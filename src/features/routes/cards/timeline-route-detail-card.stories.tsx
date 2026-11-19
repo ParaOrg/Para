@@ -770,17 +770,17 @@ export const SheetLow: Story = {
 };
 
 /**
- * An origin too long for one line on a phone at 17/24 (LongNames' fits on one).
+ * An origin too long for one line on a phone at 18/26 (LongNames' fits on one).
  */
 const longOrigin = 'Novaliches (Bayan) via Zabarte and Quirino Highway';
 
-/** Low with a long origin: one line of it, 24 tall, cut short (3814:3976). */
+/** Low with a long origin: one line of it, 26 tall, cut short (3814:3976). */
 export const SheetLowLongName: Story = {
   args: { height: undefined, ...LongNames.args, routeOrigin: longOrigin },
   play: async (ctx) => {
     const ends = within(within(ctx.canvasElement).getByTestId('trip-ends'));
     const origin = ends.getByText(longOrigin);
-    await waitFor(() => expect(origin.getBoundingClientRect().height).toBe(24));
+    await waitFor(() => expect(origin.getBoundingClientRect().height).toBe(26));
   },
 };
 
@@ -790,7 +790,7 @@ export const SheetRaisedLongName: Story = {
   play: async (ctx) => {
     await tapHandle(ctx.canvasElement);
     const ends = within(within(ctx.canvasElement).getByTestId('trip-ends'));
-    await expect(ends.getByText(longOrigin).getBoundingClientRect().height).toBeGreaterThan(24);
+    await expect(ends.getByText(longOrigin).getBoundingClientRect().height).toBeGreaterThan(26);
   },
 };
 

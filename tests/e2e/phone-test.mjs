@@ -5118,7 +5118,11 @@ if (runsPart(2)) {
         tripFold,
         async () => (await tripFold.first().getAttribute('aria-expanded')) === 'true',
       ));
-    await rows.first().scrollIntoViewIfNeeded();
+    // Scrolled to the sheet's middle, as a person brings a row up to tap it: "if needed" counts a
+    // row under the Controller, which floats over the sheet's foot, as already in view.
+    await card()
+      .locator(`[data-testid="trip-other-route"][data-direction="${to.id}"]`)
+      .evaluate((row) => row.scrollIntoView({ block: 'center' }));
     await buttonTap(
       card().locator(`[data-testid="trip-other-route"][data-direction="${to.id}"]`),
       async () => ((await litIds(page)) ?? []).join() === to.id,

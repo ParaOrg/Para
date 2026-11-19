@@ -70,9 +70,10 @@ The hub's survey below maps the frames onto today's code. It was read from Figma
    - No distance label on the cards for now. The owner will design it as a later feature.
 10. **The deprecated semantics** are deleted only after every screen uses the new ones, in one clean-up pull request with the owner's OK (issue 16).
 11. **Two building sessions** share the work, each owning its own files and asking the hub before each merge:
-    - One builds 02 to 05, 11 and 12: the icons, the model, the destination row, the RouteCard, the timeline, and the detail's shell and wiring.
+    - One builds 02 to 05, 18, 11 and 12: the icons, the model, the destination row, the RouteCard, the Overview button and still camera, the timeline, and the detail's shell and wiring.
     - The other builds 06 to 10, then 13 and 14: the detail parts, the font, and the travel time.
     - `TripEndsCard` keeps its file and name (issue 06). The shell passes it `via` from `timeline-route-detail-card.tsx` once issue 03 has landed.
+12. **A still camera, and an Overview button** (the owner, 2026-11-19; issue 18, after 05 and before the shell). Opening a trip fits its route once, as today; after that the camera moves only when the commuter moves it. An "Overview" button brings back the fit.
 
 ## Rules for every pull request here
 
@@ -106,3 +107,4 @@ The hub's survey below maps the frames onto today's code. It was read from Figma
 | 15 | [The nearby list](issues/15-nearby-list.md) |
 | 16 | [Delete the deprecated semantics](issues/16-deprecated-tokens.md) |
 | 17 | [Travel times from contributor rides (later)](issues/17-ride-times.md) |
+| 18 | [An Overview button, and a still camera](issues/18-overview-button.md) |
