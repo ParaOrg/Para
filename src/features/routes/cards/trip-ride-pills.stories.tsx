@@ -15,7 +15,7 @@ const meta = {
       </div>
     ),
   ],
-  args: { vehicle: 'Jeepney', bound: null, livery: 'jeep' },
+  args: { vehicle: 'Jeepney', detail: null, livery: 'jeep' },
 } satisfies Meta<typeof TripRidePills>;
 
 export default meta;
@@ -42,7 +42,7 @@ export const Ferry: Story = { args: { vehicle: 'Ferry', livery: 'ferry' } };
 
 /** A train: its line and its bound, "LRT 1 · Northbound". */
 export const Lrt1: Story = {
-  args: { vehicle: 'LRT-1', bound: 'Northbound', livery: 'light-rail-way-one' },
+  args: { vehicle: 'LRT-1', detail: 'Northbound', livery: 'light-rail-way-one' },
   play: async ({ canvasElement }) => {
     await expect(within(canvasElement).getByTestId('trip-mode')).toHaveTextContent(
       'LRT 1 · Northbound',
@@ -51,9 +51,31 @@ export const Lrt1: Story = {
 };
 
 export const Lrt2: Story = {
-  args: { vehicle: 'LRT-2', bound: 'Eastbound', livery: 'light-rail-way-two' },
+  args: { vehicle: 'LRT-2', detail: 'Eastbound', livery: 'light-rail-way-two' },
 };
 
 export const Mrt3: Story = {
-  args: { vehicle: 'MRT-3', bound: 'Southbound', livery: 'metro-rail-way-three' },
+  args: { vehicle: 'MRT-3', detail: 'Southbound', livery: 'metro-rail-way-three' },
+};
+
+/** A loop: its mode and its name, "Jeep · UP – Ikot", as a line names its bound. */
+export const Loop: Story = {
+  args: { detail: 'UP – Ikot' },
+  play: async ({ canvasElement }) => {
+    const pill = within(canvasElement).getByTestId('trip-mode');
+    await expect(pill).toHaveTextContent('Jeep · UP – Ikot');
+    await expect(pill).not.toHaveTextContent(/Papunta|Pabalik/);
+  },
+};
+
+/** A long loop name on a 375-wide phone: the pill's words wrap inside it, centred. */
+export const LongLoopOnSmallPhone: Story = {
+  args: { detail: 'UP – Ikot via Katipunan, C.P. Garcia and Commonwealth' },
+  decorators: [
+    (Story) => (
+      <div className="w-93.75">
+        <Story />
+      </div>
+    ),
+  ],
 };
