@@ -31,7 +31,7 @@
 # are allowed for the "Loading map…" text in index.html, styled before any
 # stylesheet has arrived; no inline stylesheet is.
 /
-  Content-Security-Policy-Report-Only: default-src 'self'; script-src 'self' 'sha256-AkH2fhxZlq/UdT9BZ6A4gX0vUKVNV2+nlTnthO1omhY='; connect-src 'self' https://tiles.para-commute.org https://tiles.openfreemap.org; worker-src 'self' blob:; img-src 'self' data: blob:; style-src-attr 'unsafe-inline'
+  Content-Security-Policy-Report-Only: default-src 'self'; script-src 'self' 'sha256-AkH2fhxZlq/UdT9BZ6A4gX0vUKVNV2+nlTnthO1omhY='; connect-src 'self' https://tiles.para-commute.org https://tiles.openfreemap.org; worker-src 'self' blob:; img-src 'self' data: blob:; style-src 'self' 'sha256-ANNu7jT+hHUw5gevamVsm1/5m0Qtr7LGlvUgJC0sHUc='; style-src-attr 'unsafe-inline'
 
 # The editor is for one person. Keep it out of search results, and out of
 # other sites' frames, where a page could dress it up and steer its clicks.

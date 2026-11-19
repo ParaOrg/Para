@@ -1136,8 +1136,12 @@ if (runsPart(3)) {
   // script at all, against the app's own while the map waits for its style;
   // then the app's, gone as the routes are drawn, the basemap's tiles held.
   /** "Loading map…" on page `p`: how many, and the first's text and the gray under it, as drawn. */
+  // Measured once Livvic Regular, the face it is drawn in, has loaded on both sides: a width read
+  // while the fallback still shows would compare two faces, not the page and the app.
   const loadingLook = (p) =>
-    p.evaluate(() => {
+    p.evaluate(async () => {
+      await document.fonts.load("400 0.875rem 'Livvic'");
+      await document.fonts.ready;
       const ps = [...document.querySelectorAll('p')].filter(
         (e) => e.textContent === 'Loading map…',
       );

@@ -22,6 +22,28 @@
     <!-- Opened from an iPhone's Home Screen, the map runs behind the status bar (status-bar.ts). -->
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <!--
+      Livvic Regular, the face "Loading map…" below is drawn in, declared here as fonts.css declares
+      it, the same file and the same settings, so the page's own text is the app's from the first
+      paint (in development the app's stylesheet comes with its script). The build rewrites both
+      URLs to the one hashed file fonts.css uses: one download.
+    -->
+    <link
+      rel="preload"
+      href="/src/design-system/foundation/fonts/Livvic/Livvic-Regular.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <style>
+      @font-face {
+        font-family: 'Livvic';
+        src: url('/src/design-system/foundation/fonts/Livvic/Livvic-Regular.woff2') format('woff2');
+        font-weight: 400;
+        font-style: normal;
+        font-display: swap;
+      }
+    </style>
   </head>
   <body>
     <!--
