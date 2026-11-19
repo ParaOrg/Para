@@ -1840,7 +1840,7 @@ const tripChecks = async () => {
     check('  no get-off circles on the public map', drawn.dots === 0, `${drawn.dots}`);
     // Beside the circle, the hintuan's name on End's red, a white End pill
     // before it (HintuanLabel's HintuanEnd, Figma 4068:4791): 8px right of it
-    // and centred on it, in SN Pro.
+    // and centred on it, in Livvic.
     const rowName = (
       await pickButton.evaluate((b) => b.querySelector('[data-part="name"]').textContent)
     ).trim();
@@ -1864,7 +1864,7 @@ const tripChecks = async () => {
         // The name alone: a screen reader's "End, " sits before it, unseen.
         text: t.querySelector('[data-part="words"]')?.textContent.trim(),
         colours: ts.backgroundColor === want.backgroundColor && ts.color === want.color,
-        font: ts.fontFamily.startsWith('"SN Pro"') || ts.fontFamily.startsWith('SN Pro'),
+        font: ts.fontFamily.startsWith('"Livvic"') || ts.fontFamily.startsWith('Livvic'),
         detail: `${ts.color} on ${ts.backgroundColor}; End's red ${want.color} on ${want.backgroundColor}; ${ts.fontFamily}`,
         icon:
           !!name.querySelector('[data-part="end"]') && !name.querySelector('[data-part="start"]'),
@@ -1876,7 +1876,7 @@ const tripChecks = async () => {
       return seen;
     });
     check(
-      "  its name beside the circle, on End's red in SN Pro, End's pill before it",
+      "  its name beside the circle, on End's red in Livvic, End's pill before it",
       !!title &&
         title.text === rowName &&
         title.colours &&
@@ -3398,7 +3398,7 @@ if (runsPart(1)) {
               ? pill.dataset.end === 'head' && icon === 'Start'
               : pill.dataset.end === 'tail' && icon === 'End',
           colour: same(getComputedStyle(namePill).backgroundColor, wants),
-          font: /^"?SN Pro/.test(getComputedStyle(namePill).fontFamily),
+          font: /^"?Livvic/.test(getComputedStyle(namePill).fontFamily),
           // Its pointer the same: the pill's last svg.
           pointer: same(getComputedStyle([...namePill.querySelectorAll('svg')].at(-1)).fill, wants),
           across: box.left + box.width / 2 - (c.left + q.x),
@@ -3411,7 +3411,7 @@ if (runsPart(1)) {
       return { named: named.length, pills: pills.length, circles: all.length, rows };
     });
     check(
-      "  each end named once, in SN Pro, in a pill over its circle, Start's green, End's red or the line's colour, its pointer the same, Start's pill before where the ride starts and End's before where it goes; the circle the hintuan's dot, 24 across, on the point",
+      "  each end named once, in Livvic, in a pill over its circle, Start's green, End's red or the line's colour, its pointer the same, Start's pill before where the ride starts and End's before where it goes; the circle the hintuan's dot, 24 across, on the point",
       ends.named > 0 &&
         ends.pills === ends.named &&
         ends.circles >= ends.named &&

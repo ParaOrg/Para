@@ -4,13 +4,13 @@ import { ICON, buttonClasses, type VariantAndSize } from './button-look';
 
 /**
  * PalimosPoDesignSystem's Button, from the Figma set (node 3668:2812): a pill
- * in four voices. Special is the jeepney one — SN Pro Bold on the quiet
+ * in four voices. Special is the jeepney one — Livvic Bold on the quiet
  * surface with an edge and a soft shadow (the set uses Cubao Free, all
- * capitals; SN Pro here, so a word reads as written, as in "Papunta at
- * Pabalik"); Secondary is Special's surface and shadows in SN Pro Medium, the
+ * capitals; Livvic here, so a word reads as written, as in "Papunta at
+ * Pabalik"); Secondary is Special's surface and shadows in Livvic Medium, the
  * quiet one of a pair (the install prompt's "I'll do it later", 3732:2512);
  * Primary speaks brand blue (or, on a card, the card's colours: its `fill`)
- * and Error the destructive red, both in SN Pro Medium.
+ * and Error the destructive red, both in Livvic Medium.
  * Each state wears the set's effect style of the same name (tokens.css):
  * Rest, Hover, Pressed (which also darkens the fill, and Special loses its
  * edge). Error borrows Primary's shadows, as the set does. Hover and press are `enabled:` only,

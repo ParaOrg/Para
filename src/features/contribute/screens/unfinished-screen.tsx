@@ -52,7 +52,7 @@ export function UnfinishedScreen({
             id="unfinished-heading"
             ref={headingRef}
             tabIndex={-1}
-            className="text-xl/7 font-extrabold focus:outline-none"
+            className="text-xl/7 font-bold focus:outline-none"
           >
             A recording was left open
           </h1>

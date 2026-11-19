@@ -36,7 +36,7 @@ const KIND = {
  * 3846:11748, the RouteLineLabel): Default beside a hintuan's dot along a
  * trip, End beside the picked one, where the ride now ends, and CodeSignEnd
  * for a picked train station. Default wears the line's colour with white words
- * in SN Pro Medium 14/20, 28 tall, drawn flat — near-black on MRT-3's yellow
+ * in Livvic Medium 14/20, 28 tall, drawn flat — near-black on MRT-3's yellow
  * (LINE_WORDS). End is red and Start green, whatever the line: a white Badge
  * reads the word before the name, the name 16/24. CodeSignEnd is two pills, 6
  * apart: the code's Badge in one, the word's Badge and the name in the other.

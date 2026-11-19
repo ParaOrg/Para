@@ -26,7 +26,7 @@ export function LocationOffPanel({ onOpenSettings, onClose }: LocationOffPanelPr
         id="location-off-heading"
         ref={headingRef}
         tabIndex={-1}
-        className="text-xl/7 font-extrabold focus:outline-none"
+        className="text-xl/7 font-bold focus:outline-none"
       >
         Turn on location
       </h1>

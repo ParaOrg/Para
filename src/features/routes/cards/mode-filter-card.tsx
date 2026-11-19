@@ -59,7 +59,7 @@ export function ModeFilterCard({ id, ref, filter, onFilter }: ModeFilterCardProp
       className="m-auto w-72 rounded-2xl bg-surface p-4 font-sn-pro text-content-primary shadow-sm backdrop:bg-surface-transparent"
     >
       <fieldset className="flex flex-col gap-1">
-        <legend className="mb-2 text-lg/7 font-extrabold">Show routes</legend>
+        <legend className="mb-2 text-lg/7 font-bold">Show routes</legend>
         {MODE_FILTERS.map((option) => (
           <label
             key={option}
