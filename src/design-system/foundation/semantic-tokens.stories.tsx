@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import type { ReactNode } from 'react';
 
 /**
  * The redesign's tokens (the second half of tokens.css): the Figma file's new Semantics collection
@@ -7,29 +8,32 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
  * (tokens.stories.tsx). This page's own chrome uses only the new semantics.
  */
 
-function Swatch({
-  figma,
-  kind,
-  cls,
-}: {
+interface SwatchProps {
+  /** The variable's name in Figma, spelled as Figma spells it. */
   figma: string;
   kind: 'text' | 'bg' | 'border';
+  /** The utility class the code uses for it. */
   cls: string;
-}) {
+}
+
+function Swatch({ figma, kind, cls }: SwatchProps) {
   return (
     <div className="w-40">
       {kind === 'text' && <p className={'text-lg font-semibold ' + cls}>Aa Cubao</p>}
-      {kind === 'bg' && <div className={'h-14 rounded-lg border border-border-border ' + cls} />}
-      {kind === 'border' && (
-        <div className={'h-14 rounded-lg border-4 bg-bg-surface-surface ' + cls} />
-      )}
+      {kind === 'bg' && <div className={'h-14 rounded-lg border border-stroke-default ' + cls} />}
+      {kind === 'border' && <div className={'h-14 rounded-lg border-4 bg-bg-surface ' + cls} />}
       <p className="mt-1.5 text-xs font-medium break-all text-text-primary">{figma}</p>
       <p className="font-mono text-xs break-all text-text-tertiary">{cls}</p>
     </div>
   );
 }
 
-function Group({ title, children }: { title: string; children: React.ReactNode }) {
+interface GroupProps {
+  title: string;
+  children: ReactNode;
+}
+
+function Group({ title, children }: GroupProps) {
   return (
     <section className="mb-10">
       <h2 className="mb-3 text-sm font-semibold text-text-primary">{title}</h2>
@@ -39,7 +43,14 @@ function Group({ title, children }: { title: string; children: React.ReactNode }
 }
 
 /** One family's 15 steps. The classes are written out: Tailwind cannot see built names. */
-function Ramp({ name, boxes }: { name: string; boxes: string[] }) {
+interface RampProps {
+  /** The family's name in Figma. */
+  name: string;
+  /** Its steps' classes, 1 to 15, written out so Tailwind sees them. */
+  boxes: readonly string[];
+}
+
+function Ramp({ name, boxes }: RampProps) {
   return (
     <div>
       <p className="mb-1.5 text-xs font-medium text-text-primary">{name}</p>
@@ -63,39 +74,27 @@ type Story = StoryObj<typeof meta>;
 /** The new Semantics collection, as Figma groups it. */
 export const Semantics: Story = {
   render: () => (
-    <div className="bg-bg-surface-surface p-6">
+    <div className="bg-bg-surface p-6">
       <Group title="Text">
         <Swatch figma="text/primary" kind="text" cls="text-text-primary" />
         <Swatch figma="text/secondary" kind="text" cls="text-text-secondary" />
         <Swatch figma="text/tertiary" kind="text" cls="text-text-tertiary" />
-        <Swatch figma="text/quarternnary" kind="text" cls="text-text-quarternnary" />
-        <Swatch figma="text/on-text" kind="text" cls="text-text-on-text" />
+        <Swatch figma="text/quarternnary" kind="text" cls="text-text-quaternary" />
+        <Swatch figma="text/on-text" kind="text" cls="text-text-on-fill" />
       </Group>
       <Group title="Background">
-        <Swatch figma="bg/surface/surface" kind="bg" cls="bg-bg-surface-surface" />
-        <Swatch
-          figma="bg/surface/surface-secondary"
-          kind="bg"
-          cls="bg-bg-surface-surface-secondary"
-        />
-        <Swatch figma="bg/fill/fill" kind="bg" cls="bg-bg-fill-fill" />
-        <Swatch figma="bg/fill/fill-secondary" kind="bg" cls="bg-bg-fill-fill-secondary" />
+        <Swatch figma="bg/surface/surface" kind="bg" cls="bg-bg-surface" />
+        <Swatch figma="bg/surface/surface-secondary" kind="bg" cls="bg-bg-surface-secondary" />
+        <Swatch figma="bg/fill/fill" kind="bg" cls="bg-bg-fill" />
+        <Swatch figma="bg/fill/fill-secondary" kind="bg" cls="bg-bg-fill-secondary" />
       </Group>
       <Group title="Border">
-        <Swatch figma="border/border-light" kind="border" cls="border-border-border-light" />
-        <Swatch figma="border/border" kind="border" cls="border-border-border" />
-        <Swatch
-          figma="border/border-secondary"
-          kind="border"
-          cls="border-border-border-secondary"
-        />
-        <Swatch figma="border/border-tertiary" kind="border" cls="border-border-border-tertiary" />
-        <Swatch
-          figma="border/border-quarternary"
-          kind="border"
-          cls="border-border-border-quarternary"
-        />
-        <Swatch figma="border/border-dark" kind="border" cls="border-border-border-dark" />
+        <Swatch figma="border/border-light" kind="border" cls="border-stroke-light" />
+        <Swatch figma="border/border" kind="border" cls="border-stroke-default" />
+        <Swatch figma="border/border-secondary" kind="border" cls="border-stroke-secondary" />
+        <Swatch figma="border/border-tertiary" kind="border" cls="border-stroke-tertiary" />
+        <Swatch figma="border/border-quarternary" kind="border" cls="border-stroke-quaternary" />
+        <Swatch figma="border/border-dark" kind="border" cls="border-stroke-dark" />
       </Group>
       <Group title="Direction">
         <Swatch figma="direction/start/fill" kind="bg" cls="bg-direction-start-fill" />
@@ -105,12 +104,12 @@ export const Semantics: Story = {
       </Group>
       <Group title="Card">
         <Swatch figma="card/jeep/fill" kind="bg" cls="bg-card-jeep-fill" />
-        <Swatch figma="card/UVExpress/fill" kind="bg" cls="bg-card-uvexpress-fill" />
+        <Swatch figma="card/UVExpress/fill" kind="bg" cls="bg-card-uv-express-fill" />
         <Swatch figma="card/Bus/fill" kind="bg" cls="bg-card-bus-fill" />
         <Swatch figma="card/ferry/fill" kind="bg" cls="bg-card-ferry-fill" />
-        <Swatch figma="card/LRTOne/fill" kind="bg" cls="bg-card-lrtone-fill" />
-        <Swatch figma="card/LRTTwo/fill" kind="bg" cls="bg-card-lrttwo-fill" />
-        <Swatch figma="card/MRTThree/fill" kind="bg" cls="bg-card-mrtthree-fill" />
+        <Swatch figma="card/LRTOne/fill" kind="bg" cls="bg-card-lrt-one-fill" />
+        <Swatch figma="card/LRTTwo/fill" kind="bg" cls="bg-card-lrt-two-fill" />
+        <Swatch figma="card/MRTThree/fill" kind="bg" cls="bg-card-mrt-three-fill" />
       </Group>
       <Group title="Special">
         <Swatch figma="special/fill" kind="bg" cls="bg-special-fill" />
@@ -126,7 +125,7 @@ export const Semantics: Story = {
 /** The 15-step primitives the new semantics alias. */
 export const Primitives: Story = {
   render: () => (
-    <div className="flex flex-col gap-6 bg-bg-surface-surface p-6">
+    <div className="flex flex-col gap-6 bg-bg-surface p-6">
       <Ramp
         name="color/neutral"
         boxes={[

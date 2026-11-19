@@ -640,6 +640,29 @@
  * steps are numbered 1 to 15, as in Figma, so they never meet Tailwind's
  * 50 to 950 under the same name. Only the families these semantics use are
  * here; the rest wait until a semantic needs them.
+ *
+ * Some Figma names are misspelt, mix their case or repeat a word, and two
+ * (Border/secondary, Border/tertiary) are taken by the deprecated set. The
+ * code uses the names Figma will take once it is renamed; until then,
+ * /sync-tokens maps:
+ *   Figma                          code
+ *   text/quarternnary              --text-quaternary
+ *   text/on-text                   --text-on-fill
+ *   bg/surface/surface             --bg-surface
+ *   bg/surface/surface-secondary   --bg-surface-secondary
+ *   bg/fill/fill                   --bg-fill
+ *   bg/fill/fill-secondary         --bg-fill-secondary
+ *   border/border                  --stroke-default
+ *   border/border-light            --stroke-light
+ *   border/border-secondary        --stroke-secondary
+ *   border/border-tertiary         --stroke-tertiary
+ *   border/border-quarternary      --stroke-quaternary
+ *   border/border-dark             --stroke-dark
+ *   card/UVExpress/fill            --card-uv-express-fill
+ *   card/Bus/fill                  --card-bus-fill
+ *   card/LRTOne/fill               --card-lrt-one-fill
+ *   card/LRTTwo/fill               --card-lrt-two-fill
+ *   card/MRTThree/fill             --card-mrt-three-fill
  */
 @theme {
   --color-neutral-1: #fcfcfc;
@@ -791,29 +814,29 @@
   --text-primary: var(--color-neutral-13);
   --text-secondary: var(--color-neutral-10);
   --text-tertiary: var(--color-neutral-9);
-  --text-quarternnary: var(--color-neutral-7);
-  --text-on-text: var(--color-white);
-  --bg-surface-surface: var(--color-white);
-  --bg-surface-surface-secondary: var(--color-neutral-4);
-  --bg-fill-fill: var(--bg-surface-surface);
-  --bg-fill-fill-secondary: var(--color-neutral-4);
-  --border-border-light: var(--color-white);
-  --border-border: var(--color-neutral-3);
-  --border-border-secondary: var(--color-neutral-4);
-  --border-border-tertiary: var(--color-neutral-6);
-  --border-border-quarternary: var(--color-neutral-7);
-  --border-border-dark: var(--color-neutral-13);
+  --text-quaternary: var(--color-neutral-7);
+  --text-on-fill: var(--color-white);
+  --bg-surface: var(--color-white);
+  --bg-surface-secondary: var(--color-neutral-4);
+  --bg-fill: var(--bg-surface);
+  --bg-fill-secondary: var(--color-neutral-4);
+  --stroke-light: var(--color-white);
+  --stroke-default: var(--color-neutral-3);
+  --stroke-secondary: var(--color-neutral-4);
+  --stroke-tertiary: var(--color-neutral-6);
+  --stroke-quaternary: var(--color-neutral-7);
+  --stroke-dark: var(--color-neutral-13);
   --direction-start-fill: var(--color-green-10);
   --direction-start-surface: var(--color-green-3);
   --direction-end-fill: var(--color-red-10);
   --direction-end-surface: var(--color-red-3);
   --card-jeep-fill: var(--color-blue-11);
-  --card-uvexpress-fill: var(--color-neutral-5);
+  --card-uv-express-fill: var(--color-neutral-5);
   --card-bus-fill: var(--color-orange-11);
   --card-ferry-fill: var(--color-ferry-9);
-  --card-lrtone-fill: var(--color-light-rail-way-one-9);
-  --card-lrttwo-fill: var(--color-light-rail-way-two-9);
-  --card-mrtthree-fill: var(--color-metro-rail-way-three-9);
+  --card-lrt-one-fill: var(--color-light-rail-way-one-9);
+  --card-lrt-two-fill: var(--color-light-rail-way-two-9);
+  --card-mrt-three-fill: var(--color-metro-rail-way-three-9);
   --special-fill: var(--color-white);
   --special-green-fill: var(--color-green-11);
   --special-green-surface: var(--color-green-3);
@@ -825,29 +848,29 @@
   --color-text-primary: var(--text-primary);
   --color-text-secondary: var(--text-secondary);
   --color-text-tertiary: var(--text-tertiary);
-  --color-text-quarternnary: var(--text-quarternnary);
-  --color-text-on-text: var(--text-on-text);
-  --color-bg-surface-surface: var(--bg-surface-surface);
-  --color-bg-surface-surface-secondary: var(--bg-surface-surface-secondary);
-  --color-bg-fill-fill: var(--bg-fill-fill);
-  --color-bg-fill-fill-secondary: var(--bg-fill-fill-secondary);
-  --color-border-border-light: var(--border-border-light);
-  --color-border-border: var(--border-border);
-  --color-border-border-secondary: var(--border-border-secondary);
-  --color-border-border-tertiary: var(--border-border-tertiary);
-  --color-border-border-quarternary: var(--border-border-quarternary);
-  --color-border-border-dark: var(--border-border-dark);
+  --color-text-quaternary: var(--text-quaternary);
+  --color-text-on-fill: var(--text-on-fill);
+  --color-bg-surface: var(--bg-surface);
+  --color-bg-surface-secondary: var(--bg-surface-secondary);
+  --color-bg-fill: var(--bg-fill);
+  --color-bg-fill-secondary: var(--bg-fill-secondary);
+  --color-stroke-light: var(--stroke-light);
+  --color-stroke-default: var(--stroke-default);
+  --color-stroke-secondary: var(--stroke-secondary);
+  --color-stroke-tertiary: var(--stroke-tertiary);
+  --color-stroke-quaternary: var(--stroke-quaternary);
+  --color-stroke-dark: var(--stroke-dark);
   --color-direction-start-fill: var(--direction-start-fill);
   --color-direction-start-surface: var(--direction-start-surface);
   --color-direction-end-fill: var(--direction-end-fill);
   --color-direction-end-surface: var(--direction-end-surface);
   --color-card-jeep-fill: var(--card-jeep-fill);
-  --color-card-uvexpress-fill: var(--card-uvexpress-fill);
+  --color-card-uv-express-fill: var(--card-uv-express-fill);
   --color-card-bus-fill: var(--card-bus-fill);
   --color-card-ferry-fill: var(--card-ferry-fill);
-  --color-card-lrtone-fill: var(--card-lrtone-fill);
-  --color-card-lrttwo-fill: var(--card-lrttwo-fill);
-  --color-card-mrtthree-fill: var(--card-mrtthree-fill);
+  --color-card-lrt-one-fill: var(--card-lrt-one-fill);
+  --color-card-lrt-two-fill: var(--card-lrt-two-fill);
+  --color-card-mrt-three-fill: var(--card-mrt-three-fill);
   --color-special-fill: var(--special-fill);
   --color-special-green-fill: var(--special-green-fill);
   --color-special-green-surface: var(--special-green-surface);
