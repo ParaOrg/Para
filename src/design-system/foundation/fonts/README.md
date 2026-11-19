@@ -13,6 +13,6 @@ to run it again. The build copies them and runs no Python, and holds them
 under check-build's font budget. The contributor app's download page
 (`public/app/`) keeps its own copies of Regular and SemiBold.
 
-**Unwired:** Cubao Free's three .otf sources in `Cubao/`, dropped from the
-app on 2026-10-16, until a design uses one. Wiring a face is one @font-face
+**Unwired:** Cubao Free's three .otf sources in `Cubao/`, until a design
+uses one. Wiring a face is one @font-face
 block and, if new to the scale, one token.

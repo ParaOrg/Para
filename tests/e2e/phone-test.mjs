@@ -1543,8 +1543,7 @@ const tripChecks = async () => {
   }
 
   // A hintuan's row picks it (the owner's Timeline State=Selected,
-  // 2026-09-29): that one row Selected, its name ExtraBold (Black until
-  // 2026-10-13), a pill with the pesos
+  // 2026-09-29): that one row Selected, its name set heavier, a pill with the pesos
   // from where the trip leaves to there — the app's own sums over rideCut's
   // metres on the published line — on the surface's secondary fill; the
   // tiles keep the whole ride; the route left whole on the map, and a circle
