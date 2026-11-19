@@ -1,6 +1,7 @@
 /**
- * The limits the database holds every upload to (migration 20261019125900_contributions).
- * tests/unit/recording-limits-test.mjs reads that migration and fails when a number here
+ * The limits the database holds every upload to (migration 20261019125900_contributions, and
+ * 20261115150000_longer_contributions for the length).
+ * tests/unit/recording-limits-test.mjs reads those migrations and fails when a number here
  * differs from it, so change both together.
  */
 export const UPLOAD_LIMITS = {
@@ -8,7 +9,7 @@ export const UPLOAD_LIMITS = {
   pointsPerBatch: 600,
   hintos: 2_000,
   listEntries: 500,
-  hours: 6,
+  hours: 24,
   nameLength: 80,
   descriptionLength: 1_000,
   lineBytes: 200_000,
