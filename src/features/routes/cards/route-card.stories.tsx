@@ -5,11 +5,11 @@ import { RouteCard, type RouteCardEndPoint, type RouteCardRide } from './route-c
 
 /** Rows to the given places, with no station codes. */
 const roadRows = (places: readonly string[]): RouteCardEndPoint[] =>
-  places.map((place, i) => ({ id: String(i), routeDirection: place, stationCode: null }));
+  places.map((place, i) => ({ id: String(i), destination: place, via: null, stationCode: null }));
 
 /** One train row, to a station and its code. */
 const trainRow = (place: string, code: string | null): RouteCardEndPoint[] => [
-  { id: 'a', routeDirection: place, stationCode: code },
+  { id: 'a', destination: place, via: null, stationCode: code },
 ];
 
 const meta = {
@@ -40,24 +40,46 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /**
- * Property 1=Default, Jeep: Card/Jeep under Route/RouteCardPrimary and the Primary Blob; its badge
- * Card/Jeep/surface on Card/Bus/on-surface. The place in SN Pro Bold 24/32, the rows Medium 17/24.
+ * Variatns=Jeep: Card/jeep/fill, white words, the jeep alone at the top; the place in Bold 28/32,
+ * each row Figma's Destinationn, 38 tall. The list keeps the mode's name in words.
  */
 export const Jeep: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const place = getComputedStyle(canvas.getByTestId('chooser-select'));
-    await expect(place.fontSize).toBe('24px');
+    await expect(place.fontSize).toBe('28px');
     await expect(place.lineHeight).toBe('32px');
     await expect(place.fontWeight).toBe('700');
-    await expect(canvas.getByText('Jeep')).toBeVisible();
-    // Each row is 32 tall (Figma's RouteEndPointBar inside RouteCard).
+    await expect(canvas.queryByText('Jeep')).toBeNull();
+    await expect(canvas.getByRole('list', { name: 'Jeep' })).toBeVisible();
     const [row] = canvas.getAllByTestId('chooser-item');
-    await expect(row?.getBoundingClientRect().height).toBe(32);
+    await expect(row?.getBoundingClientRect().height).toBe(38);
   },
 };
 
-/** Property 1=Variant2, UV Express: a light card, dark words, under Route/RouteCardInverse; a dark badge. */
+/**
+ * Bagong Silang Phase 5's card in Figma's RouteCardStackedList (4633:19780): two routes to each
+ * place told apart by their vias, each under its place.
+ */
+export const WithVias: Story = {
+  args: {
+    routeOrigin: 'Bagong Silang Phase 5',
+    endPoints: [
+      { id: 'a', destination: 'SM Fairview', via: 'Maligaya', stationCode: null },
+      { id: 'b', destination: 'SM Fairview', via: 'Almar', stationCode: null },
+      { id: 'c', destination: 'Philcoa', via: 'Maligaya', stationCode: null },
+      { id: 'd', destination: 'Philcoa', via: 'Almar', stationCode: null },
+      { id: 'e', destination: 'Novaliches (Bayan)', via: null, stationCode: null },
+    ],
+  },
+  play: async ({ canvasElement }) => {
+    const rows = within(canvasElement).getAllByTestId('chooser-item');
+    await expect(rows[0]?.textContent).toBe('SM Fairview, Via Maligaya');
+    await expect(rows[0]?.getBoundingClientRect().height).toBe(58);
+  },
+};
+
+/** Variatns=UV Express: a light card, Text/primary words, under the inverse card's inner shadow. */
 export const UvExpress: Story = {
   args: {
     ride: { kind: 'road', livery: 'uv-express', vehicle: 'UV Express' },
@@ -66,7 +88,7 @@ export const UvExpress: Story = {
   },
 };
 
-/** Property 1=Variant3, E-Jeep: as UV Express, in Card/Ejeep. */
+/** Variatns=E Jeep: as UV Express, on E-jeep's own surface (no new fill yet). */
 export const Ejeep: Story = {
   args: {
     ride: { kind: 'road', livery: 'ejeep', vehicle: 'E-Jeep' },
@@ -75,7 +97,7 @@ export const Ejeep: Story = {
   },
 };
 
-/** Property 1=Bus: Card/Bus under Route/RouteCardPrimary. */
+/** Variatns=Bus: Card/bus/fill, white words. */
 export const Bus: Story = {
   args: {
     ride: { kind: 'road', livery: 'bus', vehicle: 'Bus' },

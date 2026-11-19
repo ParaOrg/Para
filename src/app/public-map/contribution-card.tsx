@@ -1,14 +1,10 @@
-import {
-  BLOB_PLACE,
-  CARD_BLOB,
-  CARD_SHADOW,
-  CARD_SURFACE,
-} from '@/features/routes/cards/livery-card';
+import { BLOB_PLACE, CARD_BLOB } from '@/features/routes/cards/livery-card';
+import { ROUTE_CARD_FILL, ROUTE_CARD_REST_SHADOW } from '@/features/routes/cards/route-card-look';
 import type { Livery } from '@/features/routes/model/liveries';
 import { cn } from '@/shared/utils/cn';
 
 interface ContributionCardProps {
-  /** The livery of the route card above it: this card wears the same surface and glow. */
+  /** The livery of the route card above it: this card wears the same fill, shadow and glow. */
   livery: Livery;
 }
 
@@ -24,7 +20,7 @@ export function ContributionCard({ livery }: ContributionCardProps) {
       aria-hidden
       data-testid="contribution-card"
       data-livery={livery}
-      className={cn('relative isolate min-h-31 w-full grow overflow-clip', CARD_SURFACE[livery])}
+      className={cn('relative isolate min-h-31 w-full grow overflow-clip', ROUTE_CARD_FILL[livery])}
     >
       <img
         src={CARD_BLOB[livery].src}
@@ -34,7 +30,7 @@ export function ContributionCard({ livery }: ContributionCardProps) {
       />
       <span
         aria-hidden
-        className={cn('pointer-events-none absolute inset-0', CARD_SHADOW[livery])}
+        className={cn('pointer-events-none absolute inset-0', ROUTE_CARD_REST_SHADOW[livery])}
       />
     </div>
   );

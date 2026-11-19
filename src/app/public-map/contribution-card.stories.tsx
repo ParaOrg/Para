@@ -37,7 +37,8 @@ function AfterRouteCard({ livery, origin }: { livery: Livery; origin: string }) 
         endPoints={[
           {
             id: 'a',
-            routeDirection: 'Tala',
+            destination: 'Tala',
+            via: null,
             stationCode: null,
           },
         ]}
