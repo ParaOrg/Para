@@ -80,7 +80,7 @@
   "src/features/routes/model/rail-fares.ts": 316,
   "src/features/routes/model/ride-recording.ts": 472,
   "src/features/routes/model/ride.ts": 358,
-  "src/features/routes/model/routes.ts": 270,
+  "src/features/routes/model/routes.ts": 259,
   "src/features/routes/model/signboard-svg.ts": 204,
   "src/features/routes/model/timeline.ts": 253,
   "src/features/routes/published/fetch-index.ts": 225,
