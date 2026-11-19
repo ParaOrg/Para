@@ -1,43 +1,8 @@
 /** The route cards' icons, Figma's paths in route-icons.svg and vehicle-icons.svg: files the page
  * fetches, not paths in its JS (the public page's budget). Each fills with currentColor. */
 
-import routeSprite from './route-icons.svg?url&no-inline';
+import { RouteSpriteIcon } from './route-sprite-icon';
 import vehicleSprite from './vehicle-icons.svg?url&no-inline';
-
-/** Each drawing in route-icons.svg, by its symbol's id, with the symbol's own box. */
-const ROUTE_SPRITE_VIEW_BOX = {
-  jeep: '0 0 24 24',
-  close: '0 0 24 24',
-  'chevron-left': '0 0 24 24',
-  'chevron-left-large': '0 0 24 24',
-  'chevron-down': '0 0 20 20',
-  reload: '0 0 16 16',
-  terminal: '0 0 20 20',
-  hintuan: '0 0 20 20',
-  information: '0 0 24 24',
-  start: '0 0 24 24',
-  end: '0 0 24 24',
-  'close-large': '0 0 28 28',
-  'arrow-left-right-large': '0 0 28 28',
-  'filter-large': '0 0 28 28',
-  'arrow-up-down': '0 0 20 20',
-} as const;
-
-type RouteSpriteId = keyof typeof ROUTE_SPRITE_VIEW_BOX;
-
-interface RouteSpriteIconProps {
-  /** The drawing's id in route-icons.svg. */
-  id: RouteSpriteId;
-}
-
-/** A drawing from route-icons.svg, in currentColor, filling the icon's size. */
-function RouteSpriteIcon({ id }: RouteSpriteIconProps) {
-  return (
-    <svg viewBox={ROUTE_SPRITE_VIEW_BOX[id]} fill="currentColor" aria-hidden>
-      <use href={`${routeSprite}#${id}`} />
-    </svg>
-  );
-}
 
 /** The side-on jeep, beside a hintuan card's count. */
 export function JeepIcon() {
@@ -172,4 +137,14 @@ export function ArrowUpDownIcon() {
 /** Figma's filter-large (4633:22015), 28 across: the Controller's sliders, opening the route list's filter. */
 export function FilterIcon() {
   return <RouteSpriteIcon id="filter-large" />;
+}
+
+/** Figma's circle-arrow-right (3632:1755), drawn at 20: the destination row's arrow. */
+export function CircleArrowRightIcon() {
+  return <RouteSpriteIcon id="circle-arrow-right" />;
+}
+
+/** Figma's EstimatedTime (4796:30793), an hourglass drawn at 20: the time pill's. */
+export function HourglassIcon() {
+  return <RouteSpriteIcon id="hourglass" />;
 }
