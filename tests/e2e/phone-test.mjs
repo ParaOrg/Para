@@ -2771,6 +2771,45 @@ const sheetTop = () =>
     .evaluate((el) => Math.round(el.getBoundingClientRect().top))
     .catch(() => null);
 /**
+ * Whether the sheet `sel`, at full height and scrolled to its end, shows its last row clear of the
+ * footer drawn over its foot: a finger at the row's middle reaches the row. Checked on a small
+ * phone (375×667), where the body runs longer than the screen, and only where it does: a body with
+ * nothing to scroll would pass whatever the sheet pads it by. Back on this phone's screen after.
+ */
+const endClearsFooter = async (sel) => {
+  await page.setViewportSize({ width: 375, height: 667 });
+  await cardsSettled(page);
+  const result = await page.evaluate((sheetSel) => {
+    const sheet = document.querySelector(`${sheetSel}:not([hidden])`);
+    // The body is the sheet's own child that scrolls; the footer, drawn before it, may hold a
+    // scrolling part of its own.
+    const body =
+      sheet && [...sheet.children].find((el) => getComputedStyle(el).overflowY === 'auto');
+    if (!body) return { ok: false, why: 'no scrolling body: is the sheet at full height?' };
+    const footer = [...sheet.children].find((el) => el.hasAttribute('data-sheet-footer'));
+    const overflow = body.scrollHeight - body.clientHeight;
+    body.scrollTop = body.scrollHeight;
+    const reach = [...body.querySelectorAll('button, a[href], [tabindex="0"]')].filter(
+      (el) => el.getClientRects().length > 0 && !el.closest('[inert]'),
+    );
+    const last = reach.at(-1);
+    if (!last) return { ok: false, why: 'nothing in the body to reach' };
+    const r = last.getBoundingClientRect();
+    const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+    return {
+      ok: overflow > 0 && !!hit && (hit === last || last.contains(hit)),
+      last: (last.textContent ?? '').trim().slice(0, 40),
+      at: [Math.round(r.top), Math.round(r.bottom)],
+      footerTop: footer ? Math.round(footer.getBoundingClientRect().top) : null,
+      overflow,
+      hit: hit?.closest('[data-testid]')?.getAttribute('data-testid') ?? hit?.tagName ?? null,
+    };
+  }, sel);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await cardsSettled(page);
+  return result;
+};
+/**
  * Taps the handle until the sheet rests at `target`, Low or full (a third a tap, up from Low to
  * full and down again), each tap as a person's (buttonTap): it reaches the handle at rest, and
  * moves the sheet, its data-snap or, between two heights both `free`, its top. Whether it got
@@ -4884,6 +4923,38 @@ if (runsPart(1)) {
         sameCamera(camBeforeOpen, camAfterOpen),
         JSON.stringify({ camBeforeOpen, camAfterOpen }),
       );
+      // A guard on the trip as it is drawn: at full height, its stops opened (View more) so that
+      // it runs past the screen, scrolled to its end, its last row clears the Controller drawn
+      // over the sheet's foot. BottomSheet's stories (FooterLastRowClear) prove the padding itself.
+      // Folded again after, as the checks below find it.
+      const viewMore = card().locator('[data-testid="trip-view-more"]');
+      const isFull = await handleTo('full');
+      const isOpened =
+        isFull &&
+        (await viewMore.count()) > 0 &&
+        (await buttonTap(
+          viewMore.first(),
+          async () => (await viewMore.first().getAttribute('aria-expanded')) === 'true',
+        ));
+      await cardsSettled(page);
+      const tripEnd = !isFull
+        ? { ok: false, why: `the trip would not go to full: data-snap=${await sheetState()}` }
+        : !isOpened
+          ? { ok: false, why: 'its stops would not open: no View more, or a tap that missed it' }
+          : await endClearsFooter('[data-testid="card"]');
+      check(
+        "  on a small phone at full height, with the stops opened: the trip's last row clears the footer",
+        tripEnd.ok,
+        JSON.stringify(tripEnd),
+      );
+      if (isOpened) {
+        await viewMore.first().evaluate((el) => el.scrollIntoView({ block: 'center' }));
+        await buttonTap(
+          viewMore.first(),
+          async () => (await viewMore.first().getAttribute('aria-expanded')) === 'false',
+        );
+        await cardsSettled(page);
+      }
 
       // The sheet at another height: the camera takes the route in again, in the
       // map it leaves (the owner's ask, 2026-10-01) — at full height, the whole
