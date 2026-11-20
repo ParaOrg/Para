@@ -14,6 +14,8 @@ type Props = TripDetailProps & {
   /** PAPUNTA's word (wayWord), the way showing, and ⇅'s name (switchWord), the way a tap leads to. Null on a loop. */
   way: string | null;
   wayTo: string | null;
+  /** The route's via, under End's place (TripEndsCard); absent with none. */
+  via?: string;
   /** The sheet's name for a screen reader, where `origin → destination` does not say it (a loop's). */
   label?: string;
   /** ‹: back to what the trip was picked from — the list, a hotspot's card — or to its route with those sharing an end; null when there is none, and ✕ stands there. */
@@ -42,6 +44,7 @@ export function TimelineRouteDetailCard({
   back,
   way,
   wayTo,
+  via,
   label,
   onBackToList,
   onClose,
@@ -61,6 +64,10 @@ export function TimelineRouteDetailCard({
       label={name}
       testId="card"
       onClose={onClose}
+      // Docked the map's whole height on the left on a wide screen, as the list is (Figma 4796:33161).
+      floats="dock"
+      // Figma draws no notch on the trip's sheet; kept as its one drag cue, the owner to confirm.
+      handle="shown"
       header={null}
       footer={
         <RouteListController
@@ -83,6 +90,7 @@ export function TimelineRouteDetailCard({
           <TripEndsCard
             routeOrigin={routeOrigin}
             routeDirection={routeDirection}
+            via={via}
             way={wayTo}
             isSwitchable={switchable}
             onSwitch={onSwitch}
