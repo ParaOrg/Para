@@ -66,12 +66,12 @@ interface Cards {
 /**
  * The camera with the cards, for both apps: a hintuan picked on a trip, the
  * map gliding there; the overviews of use-overviews.ts — SWITCH, an end
- * picked — and the Overview button's (useOverview); the camera from before a
- * RouteCard was picked on a hotspot's card, back as it is let go; and the card
- * buttons that move it. Opening a trip, picking a RouteCard, opening the route
- * list and the sheet changing height leave the camera where the commuter had
- * it. `root` goes on the page, `tripDock` on the trip card, `hotspotDock` on a
- * hotspot's.
+ * picked — and the Overview button's (useOverview), which also takes in a
+ * trip's whole route once as it opens; the camera from before a RouteCard was
+ * picked on a hotspot's card, back as it is let go; and the card buttons that
+ * move it. Picking a RouteCard, opening the route list and the sheet changing
+ * height leave the camera where the commuter had it. `root` goes on the page,
+ * `tripDock` on the trip card, `hotspotDock` on a hotspot's.
  *
  * `camera: false` turns those off: the overviews and the camera kept from
  * before get no map and do nothing, while a picked hintuan still glides. It
@@ -165,12 +165,12 @@ export function useCardCamera<V extends Direction, S extends Hotspot>(
       saved.litDirections,
     );
   };
-  // The button is for a trip, and for a picked RouteCard, whose pick moved nothing; the name
-  // changes with what it would frame, so a new trip or pick starts away from it.
+  // The button is for a trip and a picked RouteCard; the name changes with what it would frame.
   const framing = saved.selected
     ? `trip:${saved.selected.id}:${ride.startId ?? ''}:${ride.endPicked ?? ''}`
     : saved.highlight && `cards:${saved.highlight.ids.join(',')}`;
-  const overviewButton = useOverview(cam, framing || null, framed(), openSheet, cards.snap);
+  const opened = saved.selected?.id ?? null;
+  const overviewButton = useOverview(cam, framing || null, framed(), openSheet, cards.snap, opened);
 
   return {
     root,

@@ -30,6 +30,7 @@
 // (3), a refused step of it said (16); no React warnings.
 import { readFileSync } from 'node:fs';
 
+import { routeFitted } from './lib/framing.mjs';
 import { waitFor } from './lib/harness.mjs';
 import {
   approveAll,
@@ -616,21 +617,21 @@ check(
   'a tap on the line opens its card, with Edit route',
   (await page.getByRole('button', { name: 'Edit route' }).count()) === 1,
 );
-// The camera with the cards, as on the public map (the owner, 2026-10-21):
-// a trip opened by a tap leaves the camera where it was; the route is not
-// fitted to the room the card leaves.
-await page.waitForFunction(() => !window.__map.isMoving(), null, { timeout: 3000 }).catch(() => {});
+// The camera with the cards, as on the public map: a trip opened by a tap takes in its whole
+// route once, in the room the card leaves.
+const openFit = await routeFitted(page, outLine);
 const cameraAfterOpen = await page.evaluate(() => {
   const m = window.__map;
   const c = m.getCenter();
   return { lng: c.lng, lat: c.lat, zoom: m.getZoom() };
 });
 check(
-  '  the camera stays where it was: the route is not fitted',
-  Math.abs(cameraAfterOpen.zoom - cameraBeforeOpen.zoom) < 0.01 &&
-    Math.abs(cameraAfterOpen.lng - cameraBeforeOpen.lng) < 1e-6 &&
-    Math.abs(cameraAfterOpen.lat - cameraBeforeOpen.lat) < 1e-6,
-  JSON.stringify({ cameraBeforeOpen, cameraAfterOpen }),
+  '  the camera takes in the whole route, in the room the card leaves',
+  (Math.abs(cameraAfterOpen.lng - cameraBeforeOpen.lng) >= 1e-6 ||
+    Math.abs(cameraAfterOpen.lat - cameraBeforeOpen.lat) >= 1e-6 ||
+    Math.abs(cameraAfterOpen.zoom - cameraBeforeOpen.zoom) >= 0.01) &&
+    openFit.ok,
+  openFit.why,
 );
 await page.getByRole('button', { name: 'Edit route' }).click();
 await waitFor(async () => (await pointsShown()) === OUT.length);

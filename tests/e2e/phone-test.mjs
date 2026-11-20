@@ -3301,12 +3301,18 @@ if (runsPart(1)) {
       !!from && !!to && origin === from && end === to,
       `"${label}": top "${origin}", bottom "${end}"`,
     );
-    // Opened, the camera stays where it was: nothing fits the route (the owner, 2026-10-21).
+    // Opened, the camera takes in the whole route once, above the sheet at its opening height, as
+    // the Overview button's fit does; at that overview, the button stays hidden.
+    await page
+      .waitForFunction(() => !window.__map.isMoving(), null, { timeout: 5000 })
+      .catch(() => {});
     const camAfterLineTap = await camNow();
+    const openFit = await framedAboveCard(r.bbox);
+    const overviewShown = await page.getByRole('button', { name: 'Overview' }).isVisible();
     check(
-      '  the camera stays where it was: the route is not fitted',
-      sameCamera(camBeforeLineTap, camAfterLineTap),
-      JSON.stringify({ camBeforeLineTap, camAfterLineTap }),
+      '  the camera takes in the whole route, above the sheet, and Overview stays hidden',
+      !sameCamera(camBeforeLineTap, camAfterLineTap) && openFit.inside && !overviewShown,
+      JSON.stringify({ openFit, overviewShown }),
     );
     const routeEnds = r.signboard.split(' – ').map((e) => e.replace(/ via .*$/, ''));
     check(
@@ -5018,13 +5024,17 @@ if (runsPart(1)) {
         `no direction named "${await tripLabel()}" on the map`,
       );
     else {
-      // Opened, the camera stays where it was (the owner, 2026-10-21); the
-      // sheet's height is what takes the route in.
+      // Opened, the camera takes in the whole route once, above the sheet.
+      await page
+        .waitForFunction(() => !window.__map.isMoving(), null, { timeout: 5000 })
+        .catch(() => {});
       const camAfterOpen = await camNow();
+      const openFit = await framedAboveCard(r.bbox);
+      const overviewAtOpen = await page.getByRole('button', { name: 'Overview' }).isVisible();
       check(
-        '  the camera stays where it was: the route is not fitted',
-        sameCamera(camBeforeOpen, camAfterOpen),
-        JSON.stringify({ camBeforeOpen, camAfterOpen }),
+        '  the camera takes in the whole route, above the sheet, and Overview stays hidden',
+        !sameCamera(camBeforeOpen, camAfterOpen) && openFit.inside && !overviewAtOpen,
+        JSON.stringify({ camBeforeOpen, camAfterOpen, openFit, overviewAtOpen }),
       );
       // A guard on the trip as it is drawn: at full height, every stop shown, so that it runs past
       // the screen, scrolled to its end, its last row clears the Controller drawn over the sheet's
@@ -5051,10 +5061,14 @@ if (runsPart(1)) {
           ? JSON.stringify({ camAfterOpen, camAtFull, camAtLow })
           : `the handle would not step there: data-snap=${await sheetState()}`,
       );
-      // Off the route's overview, so the Overview button shows; pressed, it takes the whole
-      // route in above the sheet, and hides once there.
+      // The screen changed size since the opening fit (the small phone above, and back), which can
+      // leave the route cut off, so the Overview button shows; pressed, it takes the whole route in
+      // above the sheet again, and hides once there.
       const overview = page.getByRole('button', { name: 'Overview' });
-      check('  on a trip the camera has not framed, Overview shows', await overview.isVisible());
+      check(
+        '  the screen resized since the opening fit: Overview shows',
+        await overview.isVisible(),
+      );
       const pressed = await buttonTap(overview, async () => !(await overview.isVisible()));
       await page
         .waitForFunction(() => !window.__map.isMoving(), null, { timeout: 5000 })
