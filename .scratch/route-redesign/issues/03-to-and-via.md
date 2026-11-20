@@ -1,6 +1,7 @@
 # 03: The model: `to` and `via` apart
 
-Status: ready-for-agent
+Status: resolved
+Resolved by: [#1086](https://github.com/ParaOrg/Para/pull/1086)
 Type: task
 Blocked by: none
 

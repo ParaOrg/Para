@@ -1,6 +1,7 @@
 # 12: The shell: docking, wiring, e2e and stories
 
-Status: ready-for-agent
+Status: claimed
+Claimed by: [#1104](https://github.com/ParaOrg/Para/pull/1104)
 Type: task
 Blocked by: 04–11
 

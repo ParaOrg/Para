@@ -1,6 +1,7 @@
 # 11: The timeline
 
-Status: ready-for-agent
+Status: resolved
+Resolved by: [#1098](https://github.com/ParaOrg/Para/pull/1098)
 Type: task
 Blocked by: 01
 

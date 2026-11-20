@@ -1,6 +1,7 @@
 # 08: Ride pills
 
-Status: ready-for-agent
+Status: resolved
+Resolved by: [#1093](https://github.com/ParaOrg/Para/pull/1093), [#1096](https://github.com/ParaOrg/Para/pull/1096)
 Type: task
 Blocked by: 01
 

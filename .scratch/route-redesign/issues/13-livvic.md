@@ -1,6 +1,7 @@
 # 13: Livvic everywhere
 
-Status: ready-for-agent
+Status: resolved
+Resolved by: [#1099](https://github.com/ParaOrg/Para/pull/1099)
 Type: task
 Blocked by: 01
 

@@ -1,6 +1,7 @@
 # 07: "View N more routes"
 
-Status: ready-for-agent
+Status: resolved
+Resolved by: [#1091](https://github.com/ParaOrg/Para/pull/1091)
 Type: task
 Blocked by: 01, 04
 

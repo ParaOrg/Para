@@ -1,6 +1,7 @@
 # 05: RouteCard restyled
 
-Status: ready-for-agent
+Status: resolved
+Resolved by: [#1089](https://github.com/ParaOrg/Para/pull/1089)
 Type: task
 Blocked by: 04
 
