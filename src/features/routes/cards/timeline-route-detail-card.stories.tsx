@@ -352,8 +352,36 @@ export const LongNames: Story = {
   },
 };
 
-/** From 1024 wide, in the top-left corner where the list sits. */
+/**
+ * From 1024 wide, docked the map's whole height on the left where the list docks, 384 wide as the
+ * list is (Figma 4796:33161 draws 393: the owner to confirm), the Controller its top bar.
+ */
 export const Floating: Story = { parameters: { frame: 'wide' } };
+
+/** Docked, thirty hintuans: the body scrolls under the top bar, no scrollbar drawn, as the list's. */
+export const FloatingALongWay: Story = {
+  args: { hintuans: aLongWay },
+  parameters: { frame: 'wide' },
+};
+
+/**
+ * Docked under the public map's place search, as the list is: the page sets `--sheet-float-top`
+ * (place-search-bar.tsx's 7.375rem). Figma's panel starts at the screen's top, with no search
+ * drawn: the owner to confirm.
+ */
+export const FloatingUnderTheSearch: Story = {
+  parameters: { frame: 'wide' },
+  decorators: [
+    (Story) => (
+      <div className="contents [--sheet-float-top:7.375rem]">
+        <Story />
+      </div>
+    ),
+  ],
+};
+
+/** The route's via under End's place, "via Maligaya", as Figma's End card has it. */
+export const WithVia: Story = { args: { via: 'Maligaya' } };
 
 /** Figma's 640 frame: still docked, as wide as the screen. */
 export const Tablet: Story = { parameters: { frame: 'tablet' } };
