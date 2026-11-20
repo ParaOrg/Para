@@ -1,6 +1,7 @@
 # 18: An Overview button, and a still camera
 
-Status: ready-for-agent
+Status: resolved
+Resolved by: [#1095](https://github.com/ParaOrg/Para/pull/1095), [#1102](https://github.com/ParaOrg/Para/pull/1102)
 Type: task
 Blocked by: 05
 

@@ -1,6 +1,7 @@
 # 04: The destination row
 
-Status: ready-for-agent
+Status: resolved
+Resolved by: [#1087](https://github.com/ParaOrg/Para/pull/1087)
 Type: task
 Blocked by: 01, 02, 03
 

@@ -1,6 +1,7 @@
 # 14: The travel-time estimate
 
-Status: ready-for-agent
+Status: resolved
+Resolved by: [#1103](https://github.com/ParaOrg/Para/pull/1103)
 Type: task
 Blocked by: 08
 

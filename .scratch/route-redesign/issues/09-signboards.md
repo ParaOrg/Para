@@ -1,6 +1,7 @@
 # 09: Signboards
 
-Status: ready-for-agent
+Status: resolved
+Resolved by: [#1094](https://github.com/ParaOrg/Para/pull/1094)
 Type: task
 Blocked by: 01
 

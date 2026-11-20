@@ -75,6 +75,17 @@ The hub's survey below maps the frames onto today's code. It was read from Figma
     - `TripEndsCard` keeps its file and name (issue 06). The shell passes it `via` from `timeline-route-detail-card.tsx` once issue 03 has landed.
 12. **A still camera, and an Overview button** (the owner, 2026-11-19; issue 18, after 05 and before the shell). Opening a trip fits its route once, as today; after that the camera moves only when the commuter moves it. An "Overview" button brings back the fit.
 
+## Owner to confirm
+
+Calls the builders made where Figma draws nothing, or where a number is Para's own. Each is in its pull request's description.
+
+- **The timeline:** the points listed under "Not drawn in Figma; built as today's behaviour, owner to confirm". There are six numbered points, then the pressed row and the notes text. [#1098](https://github.com/ParaOrg/Para/pull/1098)
+- **The tiles:** hover and pressed on the fare's button, which Figma doesn't draw. [#1097](https://github.com/ParaOrg/Para/pull/1097)
+- **ExtraBold to Bold:** Livvic has no ExtraBold, so each `font-extrabold` became `font-bold`. The full list is under "No ExtraBold in Livvic". [#1099](https://github.com/ParaOrg/Para/pull/1099)
+- **The travel-time speeds:** the speed range and stop dwell per mode, under "How it's worked out". [#1103](https://github.com/ParaOrg/Para/pull/1103)
+- **The loop pill:** long loop names wrap inside the pill. [#1096](https://github.com/ParaOrg/Para/pull/1096)
+- **The shell:** the dock's width (384, where Figma draws 393) and the mobile notch, kept as the drag cue. Both are under "Not drawn in Figma; built as today's behaviour, owner to confirm". [#1104](https://github.com/ParaOrg/Para/pull/1104), still open.
+
 ## Rules for every pull request here
 
 - **Test ids stay:** `chooser-*`, `card-*`, `trip-*` and `data-direction`. The suites rely on them.

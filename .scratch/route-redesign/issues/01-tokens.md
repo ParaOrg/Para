@@ -1,6 +1,7 @@
 # 01: Tokens: the new primitives and semantics, beside the old
 
-Status: ready-for-agent
+Status: resolved
+Resolved by: [#1083](https://github.com/ParaOrg/Para/pull/1083)
 Type: task
 Blocked by: none
 

@@ -1,6 +1,7 @@
 # 02: Two icons: circle-arrow-right and hourglass
 
-Status: ready-for-agent
+Status: resolved
+Resolved by: [#1084](https://github.com/ParaOrg/Para/pull/1084)
 Type: task
 Blocked by: 01
 

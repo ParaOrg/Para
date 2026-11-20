@@ -1,6 +1,7 @@
 # 06: Start and End cards, with the swap
 
-Status: ready-for-agent
+Status: resolved
+Resolved by: [#1090](https://github.com/ParaOrg/Para/pull/1090)
 Type: task
 Blocked by: 01
 

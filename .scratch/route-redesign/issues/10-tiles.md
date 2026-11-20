@@ -1,6 +1,7 @@
 # 10: Tiles: fare and distance
 
-Status: ready-for-agent
+Status: resolved
+Resolved by: [#1097](https://github.com/ParaOrg/Para/pull/1097)
 Type: task
 Blocked by: 01
 
