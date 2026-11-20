@@ -89,7 +89,7 @@ export function TripCard({
 }) {
   const trip = tripFacts(direction, directions, timeline);
   const { isLoop: loop, from, to, line, sibling, metres } = trip;
-  const ride = ridePillOf(direction);
+  const ride = ridePillOf(direction, metres, timeline.between.length);
   const canDrawOtherWay = trip.isOtherWayUndrawn && !!onDrawOtherWay;
   const [fareKind, setFareKind] = useFareKind();
   const others = onOtherRoute ? otherRoutesFrom(directions, direction) : [];
