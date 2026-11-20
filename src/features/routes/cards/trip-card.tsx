@@ -138,7 +138,6 @@ export function TripCard({
       ? { from: timeline.from.label, to: (timeline.to ?? timeline.from).label }
       : directionEnds(direction);
   const line = railLineOf(direction);
-  const ride = ridePillOf(direction);
   const sibling = otherDirection(directions, direction);
   // A loop has no way back, so no PAPUNTA at all.
   const switchable = !loop && !!sibling && isDrawn(sibling);
@@ -147,6 +146,7 @@ export function TripCard({
   // an overview drawn while the line is read never prices it: its Distance
   // and its Expected fare.
   const metres = direction.metres ?? lineLength(directionLine(direction));
+  const ride = ridePillOf(direction, metres, timeline.between.length);
   const [fareKind, setFareKind] = useFareKind();
   const others = onOtherRoute ? otherRoutesFrom(directions, direction) : [];
   return (

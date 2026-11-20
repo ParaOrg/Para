@@ -25,13 +25,16 @@ const meta = {
       </div>
     ),
   ],
-  args: { vehicle: 'Jeepney', detail: null, livery: 'jeep' },
+  args: { vehicle: 'Jeepney', detail: null, livery: 'jeep', estimate: { low: 30, high: 65 } },
 } satisfies Meta<typeof TripRidePills>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** As Figma draws it: the jeep in its blue, and "Jeep". A label: no button, no tab stop. */
+/**
+ * As Figma draws it: the jeep in its blue, and "Jeep"; beside it the hourglass and "~30–65 min",
+ * which a screen reader hears as an estimate. Labels: no button, no tab stop.
+ */
 export const Jeep: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -39,6 +42,9 @@ export const Jeep: Story = {
     await expect(pill).toHaveTextContent('Jeep');
     await expect(canvas.queryByRole('button')).toBeNull();
     await expect(pill.tabIndex).toBe(-1);
+    const time = canvas.getByTestId('trip-time');
+    await expect(time).toHaveTextContent('~30–65 min');
+    await expect(canvas.getByText('About 30 to 65 minutes, an estimate')).toBeInTheDocument();
   },
 };
 
@@ -81,5 +87,24 @@ export const Loop: Story = {
 /** A long loop name on a 375-wide phone: the pill's words wrap inside it, centred. */
 export const LongLoopOnSmallPhone: Story = {
   args: { detail: 'UP – Ikot via Katipunan, C.P. Garcia and Commonwealth' },
+  parameters: { phone: 'small' },
+};
+
+/** No estimate given: the mode pill takes the whole row alone. */
+export const WithoutTime: Story = {
+  args: { estimate: undefined },
+  play: async ({ canvasElement }) => {
+    await expect(within(canvasElement).queryByTestId('trip-time')).toBeNull();
+  },
+};
+
+/** A long ride's wide range and a train's line side by side, on a 375-wide phone. */
+export const LongRangeOnSmallPhone: Story = {
+  args: {
+    vehicle: 'LRT-1',
+    detail: 'Northbound',
+    livery: 'light-rail-way-one',
+    estimate: { low: 80, high: 145 },
+  },
   parameters: { phone: 'small' },
 };
