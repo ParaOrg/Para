@@ -21,8 +21,9 @@ export const WORKER_MAX_GZ_KB = 20;
 // its download no heavier. The Map Style card's Location Labels switch (the
 // design system's Switch) is not: it comes with the card, which is fetched on
 // first use (vite.config.ts, the shared group's exclusions).
-// Room for the error screen the public map and the studio now show when a screen fails.
-export const SHARED_MAX_GZ_KB = 413;
+// Room for the error screen the public map and the studio now show when a screen fails, and for
+// the travel-time estimate, ~0.3 kB gz.
+export const SHARED_MAX_GZ_KB = 414;
 export const MAPLIBRE_FILE = (name) => new RegExp(`/node_modules/maplibre-gl/dist/${name}\\.mjs$`);
 export const GROUPS = [
   {
