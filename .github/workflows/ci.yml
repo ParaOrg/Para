@@ -6,8 +6,8 @@
 #   1. Only what a change can reach. `changes` reads the files a pull request
 #      touches: docs and Markdown alone run nothing. Files only the build job
 #      reads run the build job alone, no suite: docs/architecture.md (its
-#      architecture step), tests/unit/ (its unit checks) and the scripts it
-#      alone runs (scripts/checks/check-build.mjs, build-weight.mjs and build/,
+#      architecture step), tests/unit/ (the unit job's checks) and the scripts it
+#      or the unit job alone runs (scripts/checks/check-build.mjs, build-weight.mjs and build/,
 #      scripts/docs/, scripts/node/ts-resolve*.mjs). src/app/studio/,
 #      src/features/studio/ and the studio's suites alone skip the public
 #      suites; src/app/public-map/, src/features/published-map/, public/ and
@@ -17,7 +17,7 @@
 #      (Turnstile and the locator among it), the build, the lockfile, this
 #      file — runs both. A push to main
 #      or staging, a merge queue's run, the nightly run and "Run workflow" run everything.
-#      A pull request into a branch that has a merge queue runs the build job alone: the
+#      A pull request into a branch that has a merge queue runs the build and unit jobs alone: the
 #      queue runs every suite on the commit the merge would make, before the branch moves.
 #   2. Every suite at once, in jobs sized by measured time, so the run takes as
 #      long as the slowest job, not the sum of them all. The suites under a
@@ -161,7 +161,7 @@ jobs:
               public/data/*) studio=true ;;
             esac
             case "$f" in
-              # Read by the build job alone: its architecture step, its unit checks, its guards.
+              # Read by the build and unit jobs alone: the architecture step, the unit checks, the guards.
               docs/architecture.md|tests/unit/*|scripts/checks/check-build.mjs|scripts/checks/build-weight.mjs|scripts/checks/build/*|scripts/docs/*|scripts/node/ts-resolve.mjs|scripts/node/ts-resolve-hook.mjs)
                 build=true ;;
               docs/*|*.md) ;;
@@ -184,7 +184,7 @@ jobs:
           storybook=$build
           # A pull request into a branch with a merge queue (docs/agents/staging-protection.md):
           # the queue runs every suite on the commit the merge would make, before the branch
-          # moves, so the pull request itself runs the build job's checks alone and answers in
+          # moves, so the pull request itself runs the build and unit jobs alone and answers in
           # about a minute. Whether the branch has a queue is read from GitHub's own rules for
           # it, so nothing here has to be switched when a queue is turned on or off. If the rules
           # cannot be read, this run knows of no queue, and every suite selected above runs here.
@@ -223,7 +223,7 @@ jobs:
         run: node scripts/checks/glossary.mjs
 
   build:
-    name: Build and unit checks
+    name: Build, lint and formatting
     needs: changes
     if: needs.changes.outputs.build == 'true'
     runs-on: ubuntu-latest
@@ -261,9 +261,10 @@ jobs:
           if [ -n "$BASE" ] && git fetch --quiet --no-tags --depth=1 origin "$BASE"; then
             git show "$BASE:scripts/checks/long-files-baseline.json" > "$RUNNER_TEMP/long-files-base.json" 2> /dev/null || true
           fi
-      # The job's six checks, started together and each run to its end, so the step takes as long
-      # as the slowest and one failure never hides another: every check's output is printed under
-      # its verdict, and every failure is named (scripts/checks/side-by-side.mjs).
+      # The job's five checks, started together and each run to its end, so one failure never
+      # hides another: every check's output is printed under its verdict, and every failure is
+      # named (scripts/checks/side-by-side.mjs). Lint and formatting each keep to one core, so
+      # they do not slow each other; the unit checks, which fill every core, have their own job.
       #   Formatting: Prettier, as .prettierrc asks; a file left unformatted fails.
       #   Lint: ESLint, the rules the standards name as errors (eslint.config.js). Its usual
       #     report, and the run's counts kept in ESLINT_JSON for Code health below
@@ -273,8 +274,7 @@ jobs:
       #   Architecture page: docs/architecture.md is generated from src/; a change to the
       #     structure that did not regenerate it fails (`npm run docs:architecture`).
       #   Build: import boundaries, no editor code on /, the installable app's files.
-      #   The unit checks: Node's own test runner, no browser, every tests/unit/*-test.mjs.
-      - name: Formatting, lint, long files, the architecture page, the build and the unit checks
+      - name: Formatting, lint, long files, the architecture page and the build
         env:
           ESLINT_JSON: ${{ runner.temp }}/eslint.json
         run: |
@@ -283,8 +283,7 @@ jobs:
             "Lint::npm run lint -- --format ./scripts/checks/eslint-formatter.mjs" \
             "Long files::node scripts/checks/long-files.mjs --base \"$RUNNER_TEMP/long-files-base.json\"" \
             "Architecture page::npm run docs:architecture:check" \
-            "Build, with the boundary and build checks::npm run build" \
-            "The unit checks::npm run test:unit"
+            "Build, with the boundary and build checks::npm run build"
       # The code-health page: `npm run health` (long files, comments, stories, the build's
       # weights) on the run's summary, so every run shows it. It measures and never fails. Its
       # ESLint lines come from the Lint check's run above; where it did not run, from one of its own.
@@ -332,6 +331,38 @@ jobs:
           path: preview-own-tiles
           include-hidden-files: true
           retention-days: 1
+
+  # The unit checks, on a runner of their own: Node's test runner, no browser, every
+  # tests/unit/*-test.mjs. The runner spreads the files over every core, and so does the type
+  # check in the build job, so side by side on one runner's four cores each took more than twice
+  # what it takes alone (pull request 1116's numbers). Apart, the two jobs run at once and each
+  # check takes what it takes alone. node_modules comes from the same cache as the build job's.
+  unit:
+    name: The unit checks
+    needs: changes
+    if: needs.changes.outputs.build == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - id: node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 22
+      - id: modules
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        with:
+          path: node_modules
+          key: node-modules-${{ runner.os }}-${{ runner.arch }}-${{ steps.node.outputs.node-version }}-${{ hashFiles('package-lock.json') }}
+      - if: steps.modules.outputs.cache-hit != 'true'
+        run: npm ci
+      - if: steps.modules.outputs.cache-hit != 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        with:
+          path: node_modules
+          key: ${{ steps.modules.outputs.cache-primary-key }}
+      - name: The unit checks
+        run: npm run test:unit
 
   # The public map's pages against the dev server. Each needs only the published map file and
   # OpenFreeMap's tiles; gate-test opens /studio/'s sign-in door. A job runs its `suites` one after
@@ -716,34 +747,34 @@ jobs:
   # for a result fails it.
   public:
     name: Build and the public map
-    needs: [changes, build, public-suite, contribute-suite, preview-suite, storybook]
+    needs: [changes, build, unit, public-suite, contribute-suite, preview-suite, storybook]
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
       - env:
-          RESULTS: ${{ needs.changes.result }} ${{ needs.build.result }} ${{ needs.public-suite.result }} ${{ needs.contribute-suite.result }} ${{ needs.preview-suite.result }} ${{ needs.storybook.result }}
+          RESULTS: ${{ needs.changes.result }} ${{ needs.build.result }} ${{ needs.unit.result }} ${{ needs.public-suite.result }} ${{ needs.contribute-suite.result }} ${{ needs.preview-suite.result }} ${{ needs.storybook.result }}
         run: |
-          echo "changes, build, public suites, contributor suites, preview suites, Storybook plays: $RESULTS"
+          echo "changes, build, unit checks, public suites, contributor suites, preview suites, Storybook plays: $RESULTS"
           read -ra results <<< "$RESULTS"
-          if [ "${#results[@]}" -ne 6 ] || [ "${results[0]}" != success ]; then exit 1; fi
+          if [ "${#results[@]}" -ne 7 ] || [ "${results[0]}" != success ]; then exit 1; fi
           for result in "${results[@]}"; do
             case "$result" in success | skipped) ;; *) exit 1 ;; esac
           done
 
   studio:
     name: The editor
-    needs: [changes, build, studio-suite, drawing]
+    needs: [changes, build, unit, studio-suite, drawing]
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
       - env:
-          RESULTS: ${{ needs.changes.result }} ${{ needs.build.result }} ${{ needs.studio-suite.result }} ${{ needs.drawing.result }}
+          RESULTS: ${{ needs.changes.result }} ${{ needs.build.result }} ${{ needs.unit.result }} ${{ needs.studio-suite.result }} ${{ needs.drawing.result }}
         run: |
-          echo "changes, build, studio suites, drawing suites: $RESULTS"
+          echo "changes, build, unit checks, studio suites, drawing suites: $RESULTS"
           read -ra results <<< "$RESULTS"
-          if [ "${#results[@]}" -ne 4 ] || [ "${results[0]}" != success ]; then exit 1; fi
+          if [ "${#results[@]}" -ne 5 ] || [ "${results[0]}" != success ]; then exit 1; fi
           for result in "${results[@]}"; do
             case "$result" in success | skipped) ;; *) exit 1 ;; esac
           done

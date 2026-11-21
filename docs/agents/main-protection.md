@@ -48,7 +48,7 @@ The backup's secrets move the same way, into the `backup` environment (`main` on
 
 ## The hub's step afterwards
 
-Two rulesets, not one: an admin bypass covers every rule in its ruleset, so putting the admin role in the ruleset with the CI rule would let admins merge with CI red. `5` is the built-in **admin** repository role. `15368` is the GitHub Actions app, the source of the CI checks. A `DeployKey` actor takes `actor_id: null`, and `pull_request` bypass mode does not apply to it, so it uses `always`. "Build and unit checks" is not listed: the two summary checks depend on it.
+Two rulesets, not one: an admin bypass covers every rule in its ruleset, so putting the admin role in the ruleset with the CI rule would let admins merge with CI red. `5` is the built-in **admin** repository role. `15368` is the GitHub Actions app, the source of the CI checks. A `DeployKey` actor takes `actor_id: null`, and `pull_request` bypass mode does not apply to it, so it uses `always`. "Build, lint and formatting" and "The unit checks" are not listed: the two summary checks depend on them.
 
 A ruleset "main: no deleting, no force-push" (id 25882502) already exists. Ruleset A replaces it: create A, check it is active, then delete 25882502.
 
