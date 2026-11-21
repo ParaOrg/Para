@@ -13,18 +13,12 @@ export function TripNotes({ walk, note }: TripNotesProps) {
   return (
     <>
       {walk && (
-        <p
-          data-testid="trip-walk"
-          className="w-full px-3 pb-4 font-sn-pro text-sm/5 text-content-tertiary"
-        >
+        <p data-testid="trip-walk" className="w-full px-4 font-sn-pro text-sm/5 text-text-tertiary">
           {walk}
         </p>
       )}
       {note && (
-        <p
-          data-testid="trip-note"
-          className="w-full px-3 pb-4 font-sn-pro text-sm/5 text-content-tertiary"
-        >
+        <p data-testid="trip-note" className="w-full px-4 font-sn-pro text-sm/5 text-text-tertiary">
           {note}
         </p>
       )}

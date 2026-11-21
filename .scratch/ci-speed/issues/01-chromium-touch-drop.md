@@ -71,6 +71,22 @@ the map. The keyboard checks elsewhere stay as they are. The ceiling stays at 1 
 touch-only phone still drops touches on CI, that is a new finding: report it, don't raise the
 ceiling.
 
+## The shared phone, touched by finger alone (2026-11-17)
+
+Staging's push run after #1053 failed part 1 the same way: 4 taps sent by hand, then two handle
+steps that never came. Just before the first drop, section 2 had held the sheet part way up with
+Playwright's mouse, and closeCard had clicked ✕ with the mouse. #1049's split had covered 4 to
+4d only. Now the shared phone is touched by finger alone from the start:
+
+- guardTouchOnly makes page.mouse, page.keyboard and every locator call that sends a mouse or
+  keys (click, hover, press, type…) throw on it, naming the call, so none can creep back.
+  fill() stays: it enters text as a phone's own keyboard does.
+- closeCard leaves each shown card by finger, by its ✕ or, for a trip opened from a place, its ‹,
+  until none is open. The mouse's click had been missing that trip's ✕ unseen, and Escape had
+  closed the stack in its place. The end-name and name-pill taps and place search's rows go
+  through buttonTap; the part-way hold is a CDP touch drag.
+- Section 1's ⓘ checks by mouse and keys run on a phone of their own (openPhone), as 4e and 4f do.
+
 ## What to do
 
 On each update of Chromium or Playwright (package.json's `playwright`, the runner image):

@@ -25,6 +25,7 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { until } from './lib/harness.mjs';
 import { checkPolicies, watchPolicies } from './lib/policy.mjs';
+import { serveBasemapOverHttps } from './lib/stand-ins.mjs';
 import { OPENFREEMAP_HOST, builtBasemapHost, startOwnTilesStandIn } from './own-tiles-stand-in.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
@@ -184,6 +185,9 @@ const policyWatch = {
   into: [],
   allow: (blocked) => isOwnTiles && blocked.startsWith(basemapHost),
 };
+// Its worker caches the basemap, so the stand-in is a real server rather than routes
+// (.scratch/ci-flakes/issues/04).
+await serveBasemapOverHttps();
 const browser = await chromium.launch();
 const phone = {
   viewport: { width: 390, height: 844 },

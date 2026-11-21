@@ -30,6 +30,7 @@ The goals: a codebase that is easy to review, work that scales, and an app whose
 - The folders make five areas (`areas.json`): commuter, studio, contributor, contributor APK and shared. A pull request stays in one area where it can; CI warns when one spans several.
 - Work that touches files most open pull requests touch (a rename, a pass over comments, file splits) waits until those pull requests land.
 - One browser suite at a time in a container.
+- Local e2e batches: one dev server per worktree, on its own port, with `PARA_BASE` set. A suite prints, as it starts, the folder and commit the server serves beside its own, and warns when they differ.
 - Testing follows the size of the change. A simple change (copy, a token, a class, a one-line fix) is pushed without running the checks; CI still runs on its pull request. A medium or hard change, or any change the owner asks to be tested, runs `npm run check` and the browser suites it reaches before pushing.
 
 ## How work lands

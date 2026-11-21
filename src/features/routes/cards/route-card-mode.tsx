@@ -1,5 +1,3 @@
-import { cn } from '@/shared/utils/cn';
-
 import { RouteBadge } from './route-badge';
 import { MODE_BADGE_LABEL } from './route-modes';
 import { VehicleIcon } from './vehicle-icon';
@@ -16,14 +14,21 @@ interface RouteCardModeProps {
 }
 
 /**
- * What a RouteCard's routes ride, at its top (RouteCard, 4629:22776): the vehicle, 24, in the
- * card's words' colour, then its RouteBadge, and on a train the bound's badge after it. The words
- * are the card's; the drawing is decoration. Figma spaces a train's or the ferry's 6 apart, a road
- * mode's 8.
+ * What a RouteCard's routes ride, at its top (RouteCard, 4629:22776), in the card's words' colour.
+ * A road mode's card shows its vehicle alone, 28 across: the card's list of rows names the mode in
+ * words. A train's or the ferry's shows its vehicle, 24, then its line's RouteBadge and, on a
+ * train, the bound's, 6 apart. The drawing is decoration.
  */
 export function RouteCardMode({ vehicle, bound, livery }: RouteCardModeProps) {
+  if (!isRailwayVehicle(vehicle)) {
+    return (
+      <span aria-hidden className="block size-7 shrink-0 *:size-full">
+        <VehicleIcon vehicle={vehicle} />
+      </span>
+    );
+  }
   return (
-    <span className={cn('flex items-center', isRailwayVehicle(vehicle) ? 'gap-1.5' : 'gap-2')}>
+    <span className="flex items-center gap-1.5">
       <span aria-hidden className="block size-6 shrink-0 *:size-full">
         <VehicleIcon vehicle={vehicle} />
       </span>

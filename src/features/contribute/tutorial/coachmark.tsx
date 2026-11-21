@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef } from 'react';
 
 import { Button } from '@/design-system/primitives/button';
+import { useTabLoop } from '@/shared/hooks/use-tab-loop';
 import { cn } from '@/shared/utils/cn';
 
 /** The target's box on the page, in the overlay's own coordinates. */
@@ -63,25 +64,9 @@ export function Coachmark({
 
   // Each step's card is new (keyed by its step): focus goes to its Next, so the step is read out.
   useEffect(() => {
-    const card = cardRef.current;
-    if (!card) return;
-    [...card.querySelectorAll('button')].at(-1)?.focus();
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key !== 'Tab') return;
-      const buttons = [...card.querySelectorAll('button')];
-      const first = buttons.at(0);
-      const last = buttons.at(-1);
-      if (e.shiftKey && document.activeElement === first) {
-        e.preventDefault();
-        last?.focus();
-      } else if (!e.shiftKey && document.activeElement === last) {
-        e.preventDefault();
-        first?.focus();
-      }
-    };
-    card.addEventListener('keydown', handleKeyDown);
-    return () => card.removeEventListener('keydown', handleKeyDown);
+    [...(cardRef.current?.querySelectorAll('button') ?? [])].at(-1)?.focus();
   }, []);
+  useTabLoop(cardRef, 'button');
 
   const spot = {
     left: target.left - SPOTLIGHT_PAD,

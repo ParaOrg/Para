@@ -7,7 +7,7 @@ interface StartBarProps {
 
 /**
  * Figma's "Start tracking" on Record (4520:3489): a Primary Button the frame's width less 32 each
- * side, its play icon and words in SN Pro Medium, over the tabs. The frame draws it 48 tall, 12
+ * side, its play icon and words in Livvic Medium, over the tabs. The frame draws it 48 tall, 12
  * over and under, where the Button set's Base is 40: so the look is Button's Primary (its fill,
  * shadows and states, button-look.ts) in tokens, at the frame's height. The 32 each side is its
  * own, so what the app's gates put in its place (start-gate.tsx) keeps the full width.

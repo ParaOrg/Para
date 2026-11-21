@@ -1429,9 +1429,17 @@ async function seed(page, id, name, upload) {
       (event) => {
         if (event.target.closest('[data-tab]')?.dataset.tab !== 'record') return;
         const pill = toolbar.querySelector(':scope > span[aria-hidden]');
+        const history = toolbar.querySelector('[data-tab="history"]');
+        const xOf = (keyframe) => Number(/translateX\(([-\d.]+)px\)/.exec(keyframe.transform)?.[1]);
+        // How far the glide to History has gone, by its own clock: the check's premise.
+        const toHistory = pill
+          .getAnimations()
+          .find((glide) => xOf(glide.effect.getKeyframes().at(-1)) === history.offsetLeft);
+        const timing = toHistory?.effect.getComputedTiming();
         window.pillAtRecordTap = {
           x: pill.getBoundingClientRect().left - toolbar.getBoundingClientRect().left,
           isGliding: pill.getAnimations().some((glide) => glide.playState === 'running'),
+          progress: timing ? Number(timing.localTime) / Number(timing.duration) : null,
         };
       },
       true,
@@ -1444,7 +1452,9 @@ async function seed(page, id, name, upload) {
       touchPoints: [{ x: at.x, y: at.y, id: 1 }],
     });
     await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
-    if (name === 'history') await page.waitForTimeout(120);
+    // A quarter of the way, and well short of History: a slow runner's delay still leaves it
+    // mid-glide. (At 120 ms the pill is already 87% there on --ease-pill, and arrives ~40 ms later.)
+    if (name === 'history') await page.waitForTimeout(30);
   }
   const turn = await page
     .waitForFunction(
@@ -1473,9 +1483,15 @@ async function seed(page, id, name, upload) {
     .catch(() => null);
   const atTap = await page.evaluate(() => window.pillAtRecordTap ?? null);
   await start(page).waitFor();
+  // The premise: Record is tapped while the glide to History is well short of it. Past 60% the
+  // spring is near History and soon over it; a tap that late says nothing of a turn mid-glide, so
+  // it fails as itself, never as the turn.
+  const PREMISE_PROGRESS = 0.6;
+  const isPremiseMet = typeof atTap?.progress === 'number' && atTap.progress <= PREMISE_PROGRESS;
   check(
     '  a burst, History then Record mid-glide: the pill turns to Record from where it is, the glide to History let go',
-    !!atTap &&
+    isPremiseMet &&
+      !!atTap &&
       atTap.isGliding &&
       !!turn &&
       // From where it was, give or take the frame before the screen is drawn; never from History,
@@ -1483,7 +1499,9 @@ async function seed(page, id, name, upload) {
       Math.abs(turn.from - atTap.x) <= 6 &&
       turn.from < turn.history &&
       turn.others === 0,
-    JSON.stringify({ atTap, turn }),
+    isPremiseMet
+      ? JSON.stringify({ atTap, turn })
+      : `premise not met: Record tapped at ${atTap?.progress == null ? 'no' : Math.round(atTap.progress * 100) + '%'} of the glide to History  ${JSON.stringify({ atTap, turn })}`,
   );
   check('  no page errors', errors.length === 0, errors.join(' | '));
   await page.context().close();

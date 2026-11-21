@@ -1,6 +1,5 @@
 import { cn } from '@/shared/utils/cn';
 
-import { RouteStopSignWords } from './route-stop-sign-words';
 import { RouteStopSlot } from './route-stop-slot';
 import type { TimelineRowState } from './route-stops-timeline-row';
 import { RouteStopsTimelineRow } from './route-stops-timeline-row';
@@ -10,7 +9,7 @@ import type { Livery } from '../model/liveries';
 interface TimelineBottomEndRouteProps {
   livery: Livery;
   rail: string;
-  /** ROW_PRESSED's classes for the card's livery. */
+  /** A row's pressed look (STOP_PRESSED). */
   pressed: string;
   routeDirection: string;
   /** Whether the ride ends here: End's E in its slot. */
@@ -21,8 +20,6 @@ interface TimelineBottomEndRouteProps {
   code?: string | null;
   /** Its row's state (timelineRowStates). */
   state: TimelineRowState;
-  /** Under the card's clip, the stops folded: out of reach of a keyboard too. */
-  isFolded: boolean;
   selected: boolean;
   onTap: () => void;
 }
@@ -40,13 +37,12 @@ export function TimelineBottomEndRoute({
   pill,
   code = null,
   state,
-  isFolded,
   selected,
   onTap,
 }: TimelineBottomEndRouteProps) {
   const sign = isEnd ? 'end' : null;
   return (
-    <li data-testid="trip-destination" data-state={selected ? 'selected' : 'rest'} inert={isFolded}>
+    <li data-testid="trip-destination" data-state={selected ? 'selected' : 'rest'}>
       <button
         type="button"
         aria-pressed={selected}
@@ -57,12 +53,7 @@ export function TimelineBottomEndRoute({
           variant="bottom"
           state={state}
           rail={rail}
-          label={
-            <>
-              <span data-part="name">{routeDirection}</span>
-              <RouteStopSignWords sign={sign} />
-            </>
-          }
+          label={<span data-part="name">{routeDirection}</span>}
           slot={<RouteStopSlot livery={livery} sign={sign} pill={pill} code={code} />}
         />
       </button>

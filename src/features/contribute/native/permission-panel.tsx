@@ -24,7 +24,7 @@ export function PermissionPanel({ permission, onContinue, onCancel }: Permission
         id="permission-heading"
         ref={headingRef}
         tabIndex={-1}
-        className="text-xl/7 font-extrabold focus:outline-none"
+        className="text-xl/7 font-bold focus:outline-none"
       >
         {title}
       </h1>

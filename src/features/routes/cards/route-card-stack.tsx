@@ -115,7 +115,8 @@ export function RouteCardStack({
           routeOrigin={p.from}
           endPoints={p.directions.map((d) => ({
             id: d.v.id,
-            routeDirection: d.to,
+            destination: d.to,
+            via: d.via,
             stationCode: endCodeOf(d.v),
           }))}
           onSelect={() => pick(p)}

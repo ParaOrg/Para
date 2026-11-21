@@ -14,6 +14,8 @@
 // tile (fixtures/basemap/stand-in.pbf: water and a road, from make-stand-in-tile.mjs), so the map
 // draws as it does live without OpenFreeMap's data; the shaded relief is one transparent pixel.
 // A path the stand-in does not know (a glyph range not kept, say) fails the suite, naming it.
+// A suite whose service worker caches the basemap has it served by a real server on a loopback
+// port instead (serveBasemapOverHttps), with the same answers.
 //
 // The database (the address the dev server's build is configured with): the studio's reads of its
 // route tables, answered from the published map (route-tables-stand-in.mjs). Anything else sent
@@ -29,7 +31,12 @@
 // every Terrarium tile up to the source's z15 is one made-up flat tile at 0 m
 // (flat-terrain-tile.mjs). Flat by design: a check that reads heights or shading needs real tiles,
 // recorded. Any other path there fails the suite, naming it.
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { createHash, createPublicKey } from 'node:crypto';
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { createServer } from 'node:https';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { TURNSTILE, turnstileScript } from './fake-turnstile.mjs';
@@ -106,42 +113,51 @@ const answerRouter = async (route) => {
 };
 
 /** OpenFreeMap's styles, its tiles' TileJSON, its sprite, and empty tiles, glyphs and relief. */
-const answerBasemap = (route) => {
-  const { pathname } = new URL(route.request().url());
+/** The basemap stand-in's answer for one address: its status, type and body. */
+export const basemapAnswer = (url) => {
+  const { pathname } = new URL(url);
   const style = /^\/styles\/(positron|liberty|fiord)$/.exec(pathname);
   if (style) {
     const text = readFileSync(`${BASEMAP}${style[1]}.json`, 'utf8');
-    return route.fulfill({
+    return {
       contentType: 'application/json',
       body: text.replaceAll('__TILEJSON_DOMAIN__', 'tiles.openfreemap.org'),
-    });
+    };
   }
   if (pathname === '/planet') {
-    return route.fulfill({
-      json: {
+    return {
+      contentType: 'application/json',
+      body: JSON.stringify({
         tilejson: '3.0.0',
         tiles: ['https://tiles.openfreemap.org/planet/stand-in/{z}/{x}/{y}.pbf'],
         minzoom: 0,
         maxzoom: 14,
-      },
-    });
+      }),
+    };
   }
-  const sprite = /^\/sprites\/ofm_f384\/(ofm(?:@2x)?\.(?:json|png))$/.exec(pathname);
-  if (sprite) return route.fulfill({ path: `${BASEMAP}sprites/ofm_f384/${sprite[1]}` });
+  const sprite = /^\/sprites\/ofm_f384\/(ofm(?:@2x)?\.(json|png))$/.exec(pathname);
+  if (sprite) {
+    return {
+      contentType: sprite[2] === 'json' ? 'application/json' : 'image/png',
+      body: readFileSync(`${BASEMAP}sprites/ofm_f384/${sprite[1]}`),
+    };
+  }
   if (/^\/planet\/.+\.pbf$/.test(pathname)) {
-    return route.fulfill({ contentType: 'application/x-protobuf', path: `${BASEMAP}stand-in.pbf` });
+    return { contentType: 'application/x-protobuf', body: readFileSync(`${BASEMAP}stand-in.pbf`) };
   }
   const glyphs = /^\/fonts\/([^/]+)\/(\d+-\d+)\.pbf$/.exec(pathname);
   const glyphFile = glyphs && `${BASEMAP}fonts/${decodeURIComponent(glyphs[1])}/${glyphs[2]}.pbf`;
   if (glyphFile && existsSync(glyphFile)) {
-    return route.fulfill({ contentType: 'application/x-protobuf', path: glyphFile });
+    return { contentType: 'application/x-protobuf', body: readFileSync(glyphFile) };
   }
   if (/^\/natural_earth\/.+\.png$/.test(pathname)) {
-    return route.fulfill({ contentType: 'image/png', body: EMPTY_PNG });
+    return { contentType: 'image/png', body: EMPTY_PNG };
   }
-  unrecorded.add(route.request().url());
-  return route.fulfill({ status: 404, body: '' });
+  unrecorded.add(url);
+  return { status: 404, contentType: 'text/plain', body: '' };
 };
+
+const answerBasemap = (route) => route.fulfill(basemapAnswer(route.request().url()));
 
 /** The path of Cloudflare's script the page loads (turnstile.tsx's SCRIPT_URL). */
 const TURNSTILE_SCRIPT = '/turnstile/v0/api.js';
@@ -189,11 +205,96 @@ export const keepBasemapUnreachable = () => {
   isBasemapStoodIn = false;
 };
 
+/** The port of the basemap stand-in served over HTTPS (serveBasemapOverHttps), once it runs. */
+let basemapPort = null;
+/** Its certificate's public key, hashed as Chromium names a key to trust (SPKI, SHA-256, base64). */
+let basemapKeyHash = null;
+
+/**
+ * Serves the basemap stand-in from a real server on a loopback port, over HTTPS with a certificate
+ * made for this run, and has the run's browsers resolve tiles.openfreemap.org to it instead of
+ * routing it: for the suites with a service worker. Playwright answering the worker's own
+ * requests makes Chromium find a new worker on every update check, though /sw.js is unchanged
+ * (.scratch/ci-flakes/issues/04). Call it before the browser launches. A live run reaches the
+ * real host, as before.
+ */
+export const serveBasemapOverHttps = async () => {
+  if (IS_LIVE) return;
+  // Behind a proxy the browser reaches the real host, not the stand-in: the proxy carries HTTPS
+  // before --host-resolver-rules applies, and --proxy-bypass-list did not change that. So a
+  // proxied machine cannot run this suite stood in at all.
+  const proxy = ['HTTPS_PROXY', 'https_proxy', 'HTTP_PROXY', 'http_proxy'].find(
+    (name) => process.env[name],
+  );
+  if (proxy) {
+    throw new Error(
+      `${proxy} is set: behind a proxy the browser reaches the real basemap host instead of its ` +
+        'stand-in, so this suite cannot run stood in here. Run it where no proxy is set, as CI does.',
+    );
+  }
+  const folder = mkdtempSync(join(tmpdir(), 'para-basemap-'));
+  const keyFile = join(folder, 'key.pem');
+  const certificateFile = join(folder, 'certificate.pem');
+  execFileSync(
+    'openssl',
+    [
+      ...['req', '-x509', '-newkey', 'ec', '-pkeyopt', 'ec_paramgen_curve:prime256v1', '-nodes'],
+      ...['-keyout', keyFile, '-out', certificateFile, '-days', '1'],
+      ...['-subj', '/CN=tiles.openfreemap.org'],
+    ],
+    { stdio: 'ignore' },
+  );
+  const key = readFileSync(keyFile);
+  const cert = readFileSync(certificateFile);
+  rmSync(folder, { recursive: true });
+  const server = createServer({ key, cert }, (request, response) => {
+    const answer = basemapAnswer(`https://tiles.openfreemap.org${request.url}`);
+    response.writeHead(answer.status ?? 200, {
+      'content-type': answer.contentType,
+      'access-control-allow-origin': '*',
+    });
+    response.end(answer.body);
+  });
+  await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+  // The suite's end is the server's: it keeps no run alive.
+  server.unref();
+  basemapPort = server.address().port;
+  const publicKey = createPublicKey(cert).export({ type: 'spki', format: 'der' });
+  basemapKeyHash = createHash('sha256').update(publicKey).digest('base64');
+};
+
+/**
+ * Whether a response's server address is the HTTPS stand-in's own: loopback, on its port. Only
+ * that counts as stood in; any other loopback address may be a proxy to the network.
+ */
+export const isStandInServer = (address) =>
+  basemapPort !== null &&
+  address?.port === basemapPort &&
+  /^(127\.|::1$|\[::1\]$)/.test(address.ipAddress);
+
+/**
+ * A browser's launch options, while the HTTPS stand-in runs: the basemap's host resolved to it, and
+ * its certificate, and no other, trusted.
+ */
+export const withStandInLaunch = (options = {}) =>
+  basemapPort === null
+    ? options
+    : {
+        ...options,
+        args: [
+          ...(options.args ?? []),
+          `--host-resolver-rules=MAP tiles.openfreemap.org 127.0.0.1:${basemapPort}`,
+          `--ignore-certificate-errors-spki-list=${basemapKeyHash}`,
+        ],
+      };
+
 /** The stand-ins on `context`, unless the run is live. */
 export const applyStandIns = async (context) => {
   if (IS_LIVE && !IS_RECORDING_OSRM) return;
   await context.route(OSRM, answerRouter);
-  if (!IS_LIVE && isBasemapStoodIn) await context.route(OPENFREEMAP, answerBasemap);
+  if (!IS_LIVE && isBasemapStoodIn && basemapPort === null) {
+    await context.route(OPENFREEMAP, answerBasemap);
+  }
   if (!IS_LIVE) await context.route(TURNSTILE, answerTurnstile);
   if (!IS_LIVE) await context.route(ELEVATION, answerElevation);
   const database = databaseUrl();

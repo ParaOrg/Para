@@ -14,7 +14,7 @@
 //   - an update (a changed worker) found with a recording open waits, and the page is not
 //     reloaded; once the recording is saved it takes over and the page reloads once
 //   - the studio, which no other suite opens on a build: its sign-in, and an editor's map in
-//     Terrain and Satellite, for its content policy
+//     Terrain and Satellite; and /app/'s waitlist form, sent: each for its content policy
 //
 // A stand-in GPS is fed with Playwright's setGeolocation, the way the browser reports it.
 // Each check prints PASS/FAIL and the script exits non-zero on any failure.
@@ -28,6 +28,9 @@ import { fakeStudioDb } from './lib/fake-studio-db.mjs';
 import { checkPolicies, watchPolicies } from './lib/policy.mjs';
 import { applyStandIns } from './lib/stand-ins.mjs';
 import { signInAsEditor } from './lib/studio-session.mjs';
+
+/** Cloudflare's always-pass Turnstile site key, for testing on any domain. */
+const TURNSTILE_TEST_KEY = '1x00000000000000000000AA';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const require = createRequire(join(root, 'package.json'));
@@ -491,6 +494,77 @@ try {
     "the studio on a build, sent its own policy: its sign-in, then an editor's map in Terrain and Satellite",
     hasStudioPolicy && isSignInShown && isMapShown && picked.join() === 'Terrain,Satellite',
     `its policy sent ${hasStudioPolicy}; sign-in ${isSignInShown}; map ${isMapShown}; picked ${picked.join(', ') || 'none'}`,
+  );
+
+  // The app's page, on the same watched context: the waitlist's form focused, which loads
+  // Turnstile's script (stood in, or Cloudflare's own on a live run), then sent to a stand-in for
+  // the database's waitlist function, so each source its policy names is reached.
+  const app = await studio.newPage();
+  app.on('pageerror', (e) => errors.push(String(e)));
+  // The page carries the production site key, which Cloudflare refuses off Para's domain: no
+  // token, and its challenge frame flags its own policy. Served instead with Cloudflare's
+  // always-pass test key, the one the other builds get in CI; the page's hashes don't cover it.
+  let hasTestKey = false;
+  await app.route(/\/app\/$/, async (route) => {
+    const response = await route.fetch();
+    const page = await response.text();
+    const testKeyPage = page.replace(
+      /data-sitekey="[^"]+"/,
+      `data-sitekey="${TURNSTILE_TEST_KEY}"`,
+    );
+    hasTestKey = testKeyPage !== page;
+    return route.fulfill({ response, body: testKeyPage });
+  });
+  // No request from this page reaches the database, live run or not: no test address may land
+  // in the real waitlist. Anything else for its host is cut off and counted; the waitlist's post,
+  // routed after it, is asked first and stood in.
+  let databaseCutOff = 0;
+  await app.route(/^https:\/\/[a-z0-9]+\.supabase\.co\//, (route) => {
+    databaseCutOff += 1;
+    return route.abort();
+  });
+  let waitlistPosts = 0;
+  await app.route(/\/functions\/v1\/waitlist$/, (route) => {
+    waitlistPosts += 1;
+    return route.fulfill({ status: 200, contentType: 'application/json', body: '{}' });
+  });
+  const appPage = await app.goto(`${base}/app/`, { waitUntil: 'load' });
+  const appPolicy = (await appPage?.allHeaders())?.['content-security-policy-report-only'];
+  const hasAppPolicy = !!appPolicy?.includes('https://challenges.cloudflare.com');
+  const email = app.getByRole('textbox', { name: /email/i });
+  await email.fill('tester@example.com');
+  // Sent once Turnstile has passed: its hidden input holds a token.
+  const hasToken = await app
+    .waitForFunction(
+      () => document.querySelector('input[name="cf-turnstile-response"]')?.value,
+      undefined,
+      { timeout: 15000 },
+    )
+    .then(
+      () => true,
+      () => false,
+    );
+  await app
+    .getByRole('button', { name: /notify|tell|join|sign/i })
+    .first()
+    .click();
+  const isOnList = await app
+    .getByText("You're on the list.", { exact: false })
+    .waitFor({ timeout: 10000 })
+    .then(
+      () => true,
+      () => false,
+    );
+  const said = await app.locator('#waitlist-said').textContent();
+  check(
+    "/app/ on a build, sent its own policy: the waitlist's form, Turnstile's check and the post",
+    hasAppPolicy &&
+      hasTestKey &&
+      hasToken &&
+      isOnList &&
+      waitlistPosts === 1 &&
+      databaseCutOff === 0,
+    `its policy sent ${hasAppPolicy}; test key ${hasTestKey}; token ${hasToken}; on the list ${isOnList} ("${said}"); ${waitlistPosts} post(s) stood in; ${databaseCutOff} other database request(s) cut off`,
   );
   await studio.close();
 

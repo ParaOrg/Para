@@ -15,6 +15,7 @@ const studio = read('../../studio/index.html');
 const mapView = read('../../src/features/routes/map/map-view.tsx');
 const tokens = read('../../src/design-system/foundation/tokens.css');
 const tailwind = read('../../node_modules/tailwindcss/theme.css');
+const fonts = read('../../src/design-system/foundation/fonts.css');
 
 /** A Tailwind theme value as its theme.css writes it, spaces folded. */
 const theme = (name) => {
@@ -91,7 +92,14 @@ test("its gray is MapView's: bg-surface-secondary, Tailwind's neutral-100, over 
   assert.equal(last(screen, 'place-items'), 'center');
 });
 
-test("its text is MapView's: text-sm, text-neutral-500, in Tailwind's sans", () => {
+/** The app's sans: the design system's own, which fonts.css sets over Tailwind's. */
+const appSans = () => {
+  const m = /\s--font-sans:\s*([^;]+);/.exec(fonts);
+  assert.ok(m, '--font-sans in src/design-system/foundation/fonts.css');
+  return m[1];
+};
+
+test("its text is MapView's: text-sm, text-neutral-500, in the app's sans", () => {
   assert.match(
     mapView,
     /<div className="pointer-events-none absolute inset-0 grid place-items-center">\s*<p className="text-sm text-neutral-500">Loading map…<\/p>/,
@@ -101,9 +109,6 @@ test("its text is MapView's: text-sm, text-neutral-500, in Tailwind's sans", () 
   assert.equal(text.find(([p]) => p === 'color')[1], '#737373', 'the same gray in hex first');
   assert.equal(last(text, 'font-size'), theme('--text-sm'));
   assert.equal(last(text, 'line-height'), theme('--text-sm--line-height'));
-  assert.equal(
-    last(text, 'font-family').replace(/'/g, '"'),
-    theme('--font-sans').replace(/'/g, '"'),
-  );
+  assert.equal(last(text, 'font-family').replace(/'/g, '"'), appSans().replace(/'/g, '"'));
   assert.equal(last(text, 'margin'), '0');
 });

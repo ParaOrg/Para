@@ -1,6 +1,6 @@
 /**
  * PalimosPoDesignSystem's Tooltip, from the Figma set (node 3745:1213): a dark
- * pill of SN Pro Regular 14/20 in Content/inverse on Components/Tooltip/surface,
+ * pill of Livvic Regular 14/20 in Content/inverse on Components/Tooltip/surface,
  * with an arrow. Figma's Position names the side the arrow is on — Bottom
  * points down at a control below, so the bubble sits above it.
  *

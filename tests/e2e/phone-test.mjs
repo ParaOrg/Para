@@ -22,7 +22,7 @@
 // that comes first (the owner's answer to question A, 2026-10-06); the
 // forgiving ±20 px tap, with a negative control well outside the box; the
 // trip card a lone route opens (the owner's TimelineRouteDetailCard, 2026-09-29) —
-// its ends, its fold (its rows drawn only once it is opened, 2026-10-04),
+// its ends and every stop,
 // SWITCH keeping its
 // colour, ‹ only where another route sharing an end runs its way; the route list
 // where two routes share a road ("N Routes", a card per place), the trip a
@@ -417,37 +417,97 @@ check(
     : 'matchMedia("(pointer: coarse)") is false — every check below is meaningless',
 );
 
-/** Whether the phone is touched by finger alone: no mouse, no keys (newPhone). */
-let isTouchOnly = false;
 /**
- * A new phone, its map loaded as the first one's is, in place of the one before. Chromium at
- * times stops making pointer events from emulated touches for good once another kind of input
- * (a key, a mouse drag) has come after them (.scratch/ci-speed/issues/01-chromium-touch-drop.md).
- * A person rarely switches mid-task, so the checks of each kind of input run on a phone of
- * their own.
+ * Locator calls that send a mouse or keys; a finger's are tap(), buttonTap and mapTap. fill() stays:
+ * it enters text as a phone's own keyboard does, sending no key presses.
  */
-const newPhone = async () => {
-  await context.close();
-  context = await b.newContext({
+const MOUSE_OR_KEYS = [
+  'click',
+  'dblclick',
+  'hover',
+  'press',
+  'pressSequentially',
+  'type',
+  'dragTo',
+];
+const touchOnlyPages = new WeakSet();
+let isLocatorGuarded = false;
+const notByFinger = (call) =>
+  new Error(
+    `${call} on a phone touched by finger alone: tap it (buttonTap, mapTap, a CDP touch drag), or move the check to a phone of its own (newPhone)`,
+  );
+/**
+ * Makes `p` a phone touched by finger alone: page.mouse, page.keyboard and every locator call that
+ * sends a mouse or keys throw at the line that makes them. Chromium at times stops making pointer
+ * events from emulated touches for good once another kind of input has come after them
+ * (.scratch/ci-speed/issues/01-chromium-touch-drop.md), so on this phone none may.
+ */
+const guardTouchOnly = (p) => {
+  touchOnlyPages.add(p);
+  for (const name of ['mouse', 'keyboard'])
+    Object.defineProperty(p, name, {
+      configurable: true,
+      get() {
+        throw notByFinger(`page.${name}`);
+      },
+    });
+  for (const name of ['click', 'dblclick', 'hover', 'press', 'type'])
+    Object.defineProperty(p, name, {
+      configurable: true,
+      value: () => {
+        throw notByFinger(`page.${name}()`);
+      },
+    });
+  if (isLocatorGuarded) return;
+  isLocatorGuarded = true;
+  const locatorProto = Object.getPrototypeOf(p.locator('body'));
+  for (const name of MOUSE_OR_KEYS) {
+    const sent = locatorProto[name];
+    locatorProto[name] = function (...args) {
+      if (touchOnlyPages.has(this.page())) throw notByFinger(`locator.${name}()`);
+      return sent.apply(this, args);
+    };
+  }
+};
+guardTouchOnly(page);
+/** Whether the phone in use is touched by finger alone (guardTouchOnly): the shared one is. */
+let isTouchOnly = true;
+/** A new phone, its map loaded as the first one's is, beside the one in use. */
+const openPhone = async () => {
+  const phoneContext = await b.newContext({
     viewport: { width: 390, height: 844 },
     deviceScaleFactor: 3,
     isMobile: true,
     hasTouch: true,
   });
-  page = await context.newPage();
-  watch(page);
-  await nodeFetch(page);
-  await page.addInitScript(pointerRecorder);
-  await page.addInitScript(lookReaders);
-  cdp = await context.newCDPSession(page);
+  const phonePage = await phoneContext.newPage();
+  watch(phonePage);
+  await nodeFetch(phonePage);
+  await phonePage.addInitScript(pointerRecorder);
+  await phonePage.addInitScript(lookReaders);
+  const phoneCdp = await phoneContext.newCDPSession(phonePage);
   if (coarseVia !== 'Playwright emulation')
-    await cdp
+    await phoneCdp
       .send('Emulation.setEmulatedMedia', { features: [{ name: 'pointer', value: 'coarse' }] })
       .catch(() => {});
-  await page.goto(`${BASE}/`, { waitUntil: 'load' });
-  await page.waitForFunction(() => window.__map && window.__map.loaded(), null, { timeout: 30000 });
-  await waitForSource(page, 'saved-routes');
-  await mapIdle(page);
+  await phonePage.goto(`${BASE}/`, { waitUntil: 'load' });
+  await phonePage.waitForFunction(() => window.__map && window.__map.loaded(), null, {
+    timeout: 30000,
+  });
+  await waitForSource(phonePage, 'saved-routes');
+  await mapIdle(phonePage);
+  return { context: phoneContext, page: phonePage, cdp: phoneCdp };
+};
+/**
+ * A new phone in place of the one in use: touched by finger alone, or with `isTouchOnly` false,
+ * for checks of the mouse or keys. A person rarely switches between finger, mouse and keys mid-task,
+ * so each kind of input runs on a phone of its own.
+ */
+const newPhone = async ({ isTouchOnly: touchOnly = true } = {}) => {
+  await context.close();
+  ({ context, page, cdp } = await openPhone());
+  isTouchOnly = touchOnly;
+  if (touchOnly) guardTouchOnly(page);
 };
 
 // What the dev server holds for the next page to connect, taken first. A
@@ -586,10 +646,11 @@ const mapTap = async (x, y) => {
  * middle. A row below the screen (a sheet is translated, not scrolled, so scrolling brings none
  * up), a button under another element, or one still sliding returns the reason instead.
  */
-const fingerOn = async (locator) => {
+const fingerOn = async (locator, isCentred = false) => {
   const el = locator.first();
   if ((await locator.count()) === 0) return { why: 'no such element' };
-  await el.scrollIntoViewIfNeeded({ timeout: 2000 }).catch(() => {});
+  if (isCentred) await el.evaluate((node) => node.scrollIntoView({ block: 'center' }));
+  else await el.scrollIntoViewIfNeeded({ timeout: 2000 }).catch(() => {});
   let box = null;
   let isStill;
   const by = Date.now() + 3000;
@@ -611,9 +672,17 @@ const fingerOn = async (locator) => {
       ? (top.closest('[data-testid]')?.getAttribute('data-testid') ?? top.tagName)
       : 'nothing (off the screen)';
   }, at);
-  return onTop
-    ? { why: `${onTop} at its middle (${Math.round(at.x)}, ${Math.round(at.y)}), ${size}` }
-    : { at };
+  if (!onTop) return { at };
+  // In view but under something drawn over the sheet's foot (the Controller): a person scrolls
+  // it clear, to the middle of what scrolls, and looks again.
+  const isInScroller = await el.evaluate((node) => {
+    for (let p = node.parentElement; p; p = p.parentElement)
+      if (/auto|scroll/.test(getComputedStyle(p).overflowY) && p.scrollHeight > p.clientHeight)
+        return true;
+    return false;
+  });
+  if (!isCentred && isInScroller) return fingerOn(locator, true);
+  return { why: `${onTop} at its middle (${Math.round(at.x)}, ${Math.round(at.y)}), ${size}` };
 };
 
 /**
@@ -678,6 +747,54 @@ const camNow = () =>
     const c = m.getCenter();
     return { lng: c.lng, lat: c.lat, zoom: m.getZoom() };
   });
+/**
+ * A finger dragging the map from (x, y) by (dx, dy), held still before letting go so it does not
+ * fling: a pan with an `originalEvent`, as a commuter's is.
+ */
+const fingerPan = async (x, y, dx, dy) => {
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x, y }] });
+  for (let i = 1; i <= 8; i++) {
+    await cdp.send('Input.dispatchTouchEvent', {
+      type: 'touchMove',
+      touchPoints: [{ x: x + (dx * i) / 8, y: y + (dy * i) / 8 }],
+    });
+    await page.waitForTimeout(16);
+  }
+  await page.waitForTimeout(250);
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+  await page
+    .waitForFunction(() => !window.__map.isMoving(), null, { timeout: 5000 })
+    .catch(() => {});
+};
+/**
+ * A finger thrown from (x, y) by `dy` px over `steps` moves `gap` ms apart and lifted at once, as a
+ * sheet is thrown. Each touch carries its own time, so the speed the sheet reads is the throw's,
+ * however long a busy runner takes to deliver it.
+ */
+const throwFrom = async (x, y, dy, steps, gap) => {
+  const startedAt = Date.now() / 1000;
+  const touch = (type, at, touchPoints) =>
+    cdp.send('Input.dispatchTouchEvent', {
+      type,
+      touchPoints,
+      timestamp: startedAt + at / 1000,
+    });
+  await touch('touchStart', 0, [{ x, y }]);
+  for (let i = 1; i <= steps; i++) {
+    await touch('touchMove', i * gap, [{ x, y: y + (dy * i) / steps }]);
+  }
+  await touch('touchEnd', steps * gap + 8, []);
+  await cardsSettled(page);
+};
+/**
+ * How much of a sheet shows, in px: its height less how far it is slid down, read against where it
+ * stands unslid (its offset parent's top plus its own offset).
+ */
+const shownOf = (sheet) =>
+  sheet.first().evaluate((el) => {
+    const unslid = (el.offsetParent?.getBoundingClientRect().top ?? 0) + el.offsetTop;
+    return Math.round(el.offsetHeight - (el.getBoundingClientRect().top - unslid));
+  });
 /** Whether two readings of camNow are one camera. */
 const sameCamera = (a, b) =>
   Math.abs(a.zoom - b.zoom) < 0.01 &&
@@ -690,10 +807,13 @@ check(
 );
 // The map's credits: its own ⓘ at the bottom left (Figma 4494:2048, as on the contributor page's
 // Start), MapLibre's corner credits stepped aside; the ⓘ opens them as the Map Data Source sheet
-// (4494:10177), so the licences' credit is always a tap away.
+// (4494:10177), so the licences' credit is always a tap away. Checked by mouse and keys (Escape, Enter) on a
+// phone of its own: the shared one is touched by finger alone (guardTouchOnly).
 {
-  const info = page.getByRole('button', { name: 'Map data sources' });
-  const sheet = page.getByRole('dialog', { name: 'Map Data Source' });
+  const keysPhone = await openPhone();
+  const keysPage = keysPhone.page;
+  const info = keysPage.getByRole('button', { name: 'Map data sources' });
+  const sheet = keysPage.getByRole('dialog', { name: 'Map Data Source' });
   const infoBox = await info.boundingBox();
   check(
     "the map's ⓘ sits at the bottom left, 12 in, 32 across, and MapLibre's corner credits are gone",
@@ -701,11 +821,11 @@ check(
       Math.abs(infoBox.x - 12) < 1 &&
       Math.abs(infoBox.width - 32) < 1 &&
       Math.abs(844 - (infoBox.y + infoBox.height) - 12) < 1 &&
-      !(await page.locator('.maplibregl-ctrl-attrib').isVisible()),
+      !(await keysPage.locator('.maplibregl-ctrl-attrib').isVisible()),
     JSON.stringify(infoBox),
   );
   const isFocusOnInfo = () =>
-    page
+    keysPage
       .waitForFunction(
         () => document.activeElement?.getAttribute('aria-label') === 'Map data sources',
         null,
@@ -714,12 +834,14 @@ check(
       .then(() => true)
       .catch(() => false);
   const isMapInert = () =>
-    page.evaluate(() => !!document.querySelector('[data-testid="map-view"]')?.closest('[inert]'));
+    keysPage.evaluate(
+      () => !!document.querySelector('[data-testid="map-view"]')?.closest('[inert]'),
+    );
   await info.click();
   await sheet.waitFor();
   // Half way through its rise (map-data-source-sheet.css), held there: the sheet part way up from
   // below the screen.
-  const midRise = await page.evaluate(() => {
+  const midRise = await keysPage.evaluate(() => {
     const dialog = document.querySelector('[role="dialog"].map-data-source-sheet');
     const [rise] = dialog?.getAnimations() ?? [];
     const duration = rise?.effect?.getTiming().duration;
@@ -747,7 +869,7 @@ check(
     ) &&
       links.some((l) => l.text?.startsWith('© Para contributors')) &&
       (await isMapInert()) &&
-      (await page.evaluate(() => !!document.activeElement?.closest('[role="dialog"]'))),
+      (await keysPage.evaluate(() => !!document.activeElement?.closest('[role="dialog"]'))),
     JSON.stringify(links),
   );
   await sheet.getByRole('button', { name: 'Close' }).click();
@@ -758,36 +880,36 @@ check(
   );
   await info.click();
   await sheet.waitFor();
-  await page.keyboard.press('Escape');
+  await keysPage.keyboard.press('Escape');
   await sheet.waitFor({ state: 'detached' });
   check('  Escape closes it too, focus back on the ⓘ', await isFocusOnInfo());
 
   // Closed mid-rise, it goes down from where it is; opened again by keyboard while it slides
   // down, the new sheet stays open: the old one's slide is not the new one's close.
   await info.click();
-  await page.keyboard.press('Escape');
+  await keysPage.keyboard.press('Escape');
   await sheet.waitFor({ state: 'detached' });
   const isBackAfterMidRise = await isFocusOnInfo();
   await info.focus();
-  await page.keyboard.press('Enter');
+  await keysPage.keyboard.press('Enter');
   await sheet.waitFor();
-  await page.keyboard.press('Escape');
-  await page.keyboard.press('Enter');
-  await page.waitForTimeout(1200);
+  await keysPage.keyboard.press('Escape');
+  await keysPage.keyboard.press('Enter');
+  await keysPage.waitForTimeout(1200);
   check(
     '  closed mid-rise it goes, focus on the ⓘ; reopened by keyboard while it slides down, the new sheet stays, focus in it',
     isBackAfterMidRise &&
       (await sheet.count()) === 1 &&
-      (await page.evaluate(() => !!document.activeElement?.closest('[role="dialog"]'))),
+      (await keysPage.evaluate(() => !!document.activeElement?.closest('[role="dialog"]'))),
   );
-  await page.keyboard.press('Escape');
+  await keysPage.keyboard.press('Escape');
   await sheet.waitFor({ state: 'detached' });
 
   // Less motion asked for: no slide either way, shown and gone at once.
-  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await keysPage.emulateMedia({ reducedMotion: 'reduce' });
   await info.click();
   await sheet.waitFor();
-  const isStill = await page.evaluate(
+  const isStill = await keysPage.evaluate(
     () =>
       document
         .querySelector('[role="dialog"].map-data-source-sheet')
@@ -800,7 +922,8 @@ check(
     '  with less motion asked for, the sheet neither rises nor sinks: shown and gone at once',
     isStill && isGoneAtOnce && (await isFocusOnInfo()),
   );
-  await page.emulateMedia({ reducedMotion: null });
+  await keysPage.emulateMedia({ reducedMotion: null });
+  await keysPhone.context.close();
 }
 const noHScroll = (p) =>
   p.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth);
@@ -1042,8 +1165,12 @@ if (runsPart(3)) {
   // script at all, against the app's own while the map waits for its style;
   // then the app's, gone as the routes are drawn, the basemap's tiles held.
   /** "Loading map…" on page `p`: how many, and the first's text and the gray under it, as drawn. */
+  // Measured once Livvic Regular, the face it is drawn in, has loaded on both sides: a width read
+  // while the fallback still shows would compare two faces, not the page and the app.
   const loadingLook = (p) =>
-    p.evaluate(() => {
+    p.evaluate(async () => {
+      await document.fonts.load("400 0.875rem 'Livvic'");
+      await document.fonts.ready;
       const ps = [...document.querySelectorAll('p')].filter(
         (e) => e.textContent === 'Loading map…',
       );
@@ -1420,10 +1547,9 @@ const tripChecks = async () => {
     card()
       .first()
       .evaluate((c) =>
-        [...c.querySelectorAll('[data-testid="trip-view-more"], [data-testid="trip-hintuan"]')]
-          // A folded stop is out of reach anyway (inert under View more): not one a person taps.
-          .filter((e) => !e.closest('[inert]'))
-          .some((e) => e.getBoundingClientRect().bottom > innerHeight),
+        [...c.querySelectorAll('[data-testid="trip-hintuan"]')].some(
+          (e) => e.getBoundingClientRect().bottom > innerHeight,
+        ),
       );
   if ((await isAStopBelowTheScreen()) && !(await handleTo('full')))
     check(
@@ -1432,52 +1558,27 @@ const tripChecks = async () => {
       `data-snap=${await sheetState()}`,
     );
 
-  // The stops open folded (the owner's RouteStopsCard, 4681:29138): every stop drawn, the card
-  // cut at 120 with "View more" on its foot, the stops under the cut out of a keyboard's reach;
-  // "View more" shows them all, "View less" folds them again. A route with no hintuans never folds.
-  const viewMore = card().locator('[data-testid="trip-view-more"]');
-  // Opened before a pick further down, so its row is in reach (a pick opens it too).
-  const fold = viewMore;
-  const stopsCard = card().locator('[data-testid="trip"]');
-  const stopsHeight = async () => (await stopsCard.boundingBox())?.height ?? 0;
-  if ((await viewMore.count()) === 0) {
-    skip('  its stops open folded, and open', 'no hintuan on this direction: nothing to fold');
-  } else {
-    const foldedHeight = await stopsHeight();
-    const inertFolded = await card().locator('[data-testid="trip"] ol > li[inert]').count();
-    await buttonTap(
-      viewMore,
-      async () => (await viewMore.getAttribute('aria-expanded')) === 'true',
-    );
-    await cardsSettled(page);
-    const openHeight = await stopsHeight();
-    const inertOpen = await card().locator('[data-testid="trip"] ol > li[inert]').count();
+  // Every stop shows, and nothing folds: every hintuan's row is drawn and
+  // in a keyboard's reach, and there is no View more.
+  {
+    const stops = await card()
+      .first()
+      .evaluate((c) => ({
+        rows: c.querySelectorAll('[data-testid="trip-hintuan"]').length,
+        inert: c.querySelectorAll('[data-testid="trip"] [inert]').length,
+        fold: c.querySelectorAll('[data-testid="trip-view-more"]').length,
+      }));
     check(
-      '  its stops open folded, cut at 120 under View more, and View more shows them all',
-      foldedHeight <= 120 &&
-        inertFolded > 0 &&
-        openHeight > foldedHeight &&
-        inertOpen === 0 &&
-        (await viewMore.innerText()).includes('View less'),
-      `${foldedHeight} px folded, ${inertFolded} stop(s) out of reach; ${openHeight} px open, ${inertOpen}`,
-    );
-    await buttonTap(
-      viewMore,
-      async () => (await viewMore.getAttribute('aria-expanded')) === 'false',
-    );
-    await cardsSettled(page);
-    check(
-      '  "View less" folds them again',
-      (await stopsHeight()) <= 120 && (await viewMore.innerText()).includes('View more'),
-      `${await stopsHeight()} px, "${await viewMore.innerText()}"`,
+      '  every stop shows, in reach, and nothing folds',
+      stops.inert === 0 && stops.fold === 0,
+      JSON.stringify(stops),
     );
   }
 
   // A hintuan's row picks it (the owner's Timeline State=Selected,
-  // 2026-09-29): that one row Selected, its name ExtraBold (Black until
-  // 2026-10-13), a pill with the pesos
+  // 2026-09-29): that one row Selected, its name set heavier, a pill with the pesos
   // from where the trip leaves to there — the app's own sums over rideCut's
-  // metres on the published line — in the card's own colours swapped; the
+  // metres on the published line — on the surface's secondary fill; the
   // tiles keep the whole ride; the route left whole on the map, and a circle
   // popping up at the hintuan (the owner's ask of 2026-09-30: "now I don't
   // want to cut the route") ringed in the line's colour, the card's surface
@@ -1493,13 +1594,6 @@ const tripChecks = async () => {
   if (!picksChecked && (await rows.count()) > 0) {
     picksChecked = true;
     didPicks = true;
-    if ((await fold.count()) > 0) {
-      await buttonTap(
-        fold,
-        async () => (await fold.first().getAttribute('aria-expanded')) === 'true',
-      );
-      await cardsSettled(page);
-    }
     const pickedIndex = Math.floor(((await rows.count()) - 1) / 2);
     const row = rows.nth(pickedIndex);
     const rowId = await row.getAttribute('data-hintuan');
@@ -1607,47 +1701,31 @@ const tripChecks = async () => {
         `pill "${pillText}"; tile "${pickedTile}", the sums "${pickWant.fare}"`,
       );
     const colours = await page.evaluate(() => {
-      // A train's pill is two halves (RouteTripLineDetailPill's Two, 2026-10-15),
-      // the card showing between them: the colours are the pesos' half's.
+      // A train's pill is two halves (RouteTripLineDetailPill's Two), the surface between them:
+      // the colours are the pesos' half's. On the sheet's surface, every livery's pill is the
+      // secondary surface with Text/primary words (STOP_PILL).
       const fare = document.querySelector('[data-testid="trip-hintuan-fare"]');
       const pill = fare?.querySelector('[data-part="pesos"]') ?? fare;
-      const trip = document.querySelector('[data-testid="trip"]');
-      if (!pill || !trip) return null;
-      const [p, t] = [getComputedStyle(pill), getComputedStyle(trip)];
-      // A train's pill is white with its words in the line's Timeline/surface,
-      // as the owner's train frames draw it (2026-10-13), not the card's swapped;
-      // the ferry's in Map/Ferry/Timeline/surface, as a train's.
-      const line = trip.dataset.livery;
-      if (/rail-way/.test(line) || line === 'ferry') {
-        const probe = document.createElement('i');
-        probe.style.backgroundColor = 'var(--content-inverse)';
-        probe.style.color =
-          line === 'ferry'
-            ? 'var(--map-ferry-timeline-surface)'
-            : `var(--map-rail-${line}-timeline-surface)`;
-        document.body.append(probe);
-        const want = getComputedStyle(probe);
-        const seen = {
-          swapped: p.backgroundColor === want.backgroundColor && p.color === want.color,
-          detail: `${p.color} on ${p.backgroundColor}; the train's ${want.color} on ${want.backgroundColor}`,
-        };
-        probe.remove();
-        return seen;
-      }
-      return {
-        swapped: p.backgroundColor === t.color && p.color === t.backgroundColor,
-        detail: `${p.color} on ${p.backgroundColor}; the card ${t.color} on ${t.backgroundColor}`,
+      if (!pill) return null;
+      const p = getComputedStyle(pill);
+      const probe = document.createElement('i');
+      probe.style.backgroundColor = 'var(--bg-surface-secondary)';
+      probe.style.color = 'var(--text-primary)';
+      document.body.append(probe);
+      const want = getComputedStyle(probe);
+      const seen = {
+        isWorn: p.backgroundColor === want.backgroundColor && p.color === want.color,
+        detail: `${p.color} on ${p.backgroundColor}; asked ${want.color} on ${want.backgroundColor}`,
       };
+      probe.remove();
+      return seen;
     });
     if (pickWant && pickWant.fare == null)
-      skip(
-        "  in the card's own colours, swapped (a train's: white, in its line's rail colour)",
-        'an unpriced route shows no pill',
-      );
+      skip("  on the surface's secondary fill, in Text/primary", 'an unpriced route shows no pill');
     else
       check(
-        "  in the card's own colours, swapped (a train's: white, in its line's rail colour)",
-        !!colours?.swapped,
+        "  on the surface's secondary fill, in Text/primary",
+        !!colours?.isWorn,
         colours?.detail ?? 'no pill',
       );
     // The Distance tile follows the pick too (the owner, 2026-09-30).
@@ -1689,6 +1767,13 @@ const tripChecks = async () => {
           : 'var(--map-route-line-surface-default)';
       document.body.append(probe);
       const cardPale = getComputedStyle(probe).backgroundColor;
+      // The line's colour is a card's surface in the trip's livery (livery-line.ts): read off
+      // CARD_SURFACE's classes: the colour the map draws the trip's line in.
+      const { CARD_SURFACE } = await import('/src/features/routes/cards/livery-card.ts');
+      probe.style.backgroundColor = '';
+      probe.className = CARD_SURFACE[livery] ?? '';
+      const lineColour = getComputedStyle(probe).backgroundColor;
+      probe.className = '';
       // The picked end's circle is End's red, whatever the line.
       probe.style.backgroundColor = 'var(--card-red-surface)';
       const endRed = getComputedStyle(probe).backgroundColor;
@@ -1719,8 +1804,7 @@ const tripChecks = async () => {
               )
             : null,
         ring: ring ? getComputedStyle(ring).backgroundColor : null,
-        // The line's colour is the card's surface (livery-line.ts): the card's own background.
-        line: trip ? getComputedStyle(trip).backgroundColor : null,
+        line: lineColour,
         pale: cardPale,
         endRed,
         livery: pin?.dataset.livery ?? null,
@@ -1788,7 +1872,7 @@ const tripChecks = async () => {
     check('  no get-off circles on the public map', drawn.dots === 0, `${drawn.dots}`);
     // Beside the circle, the hintuan's name on End's red, a white End pill
     // before it (HintuanLabel's HintuanEnd, Figma 4068:4791): 8px right of it
-    // and centred on it, in SN Pro.
+    // and centred on it, in Livvic.
     const rowName = (
       await pickButton.evaluate((b) => b.querySelector('[data-part="name"]').textContent)
     ).trim();
@@ -1812,7 +1896,7 @@ const tripChecks = async () => {
         // The name alone: a screen reader's "End, " sits before it, unseen.
         text: t.querySelector('[data-part="words"]')?.textContent.trim(),
         colours: ts.backgroundColor === want.backgroundColor && ts.color === want.color,
-        font: ts.fontFamily.startsWith('"SN Pro"') || ts.fontFamily.startsWith('SN Pro'),
+        font: ts.fontFamily.startsWith('"Livvic"') || ts.fontFamily.startsWith('Livvic'),
         detail: `${ts.color} on ${ts.backgroundColor}; End's red ${want.color} on ${want.backgroundColor}; ${ts.fontFamily}`,
         icon:
           !!name.querySelector('[data-part="end"]') && !name.querySelector('[data-part="start"]'),
@@ -1824,7 +1908,7 @@ const tripChecks = async () => {
       return seen;
     });
     check(
-      "  its name beside the circle, on End's red in SN Pro, End's pill before it",
+      "  its name beside the circle, on End's red in Livvic, End's pill before it",
       !!title &&
         title.text === rowName &&
         title.colours &&
@@ -2647,13 +2731,6 @@ const tripChecks = async () => {
   // A hintuan picked on the trip as it is left, for the caller's ✕ or ‹ to
   // let go: SWITCH may have let the checked one go.
   if (!picked && (await rows.count()) > 0) {
-    if ((await fold.count()) > 0 && (await fold.first().getAttribute('aria-expanded')) !== 'true') {
-      await buttonTap(
-        fold,
-        async () => (await fold.first().getAttribute('aria-expanded')) === 'true',
-      );
-      await cardsSettled(page);
-    }
     const any = card().locator('button[data-testid="trip-hintuan-pick"]:visible').first();
     if ((await any.count()) > 0) {
       const on = async () => (await any.getAttribute('aria-pressed')) === 'true';
@@ -2705,6 +2782,45 @@ const sheetTop = () =>
     .evaluate((el) => Math.round(el.getBoundingClientRect().top))
     .catch(() => null);
 /**
+ * Whether the sheet `sel`, at full height and scrolled to its end, shows its last row clear of the
+ * footer drawn over its foot: a finger at the row's middle reaches the row. Checked on a small
+ * phone (375×667), where the body runs longer than the screen, and only where it does: a body with
+ * nothing to scroll would pass whatever the sheet pads it by. Back on this phone's screen after.
+ */
+const endClearsFooter = async (sel) => {
+  await page.setViewportSize({ width: 375, height: 667 });
+  await cardsSettled(page);
+  const result = await page.evaluate((sheetSel) => {
+    const sheet = document.querySelector(`${sheetSel}:not([hidden])`);
+    // The body is the sheet's own child that scrolls; the footer, drawn before it, may hold a
+    // scrolling part of its own.
+    const body =
+      sheet && [...sheet.children].find((el) => getComputedStyle(el).overflowY === 'auto');
+    if (!body) return { ok: false, why: 'no scrolling body: is the sheet at full height?' };
+    const footer = [...sheet.children].find((el) => el.hasAttribute('data-sheet-footer'));
+    const overflow = body.scrollHeight - body.clientHeight;
+    body.scrollTop = body.scrollHeight;
+    const reach = [...body.querySelectorAll('button, a[href], [tabindex="0"]')].filter(
+      (el) => el.getClientRects().length > 0 && !el.closest('[inert]'),
+    );
+    const last = reach.at(-1);
+    if (!last) return { ok: false, why: 'nothing in the body to reach' };
+    const r = last.getBoundingClientRect();
+    const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+    return {
+      ok: overflow > 0 && !!hit && (hit === last || last.contains(hit)),
+      last: (last.textContent ?? '').trim().slice(0, 40),
+      at: [Math.round(r.top), Math.round(r.bottom)],
+      footerTop: footer ? Math.round(footer.getBoundingClientRect().top) : null,
+      overflow,
+      hit: hit?.closest('[data-testid]')?.getAttribute('data-testid') ?? hit?.tagName ?? null,
+    };
+  }, sel);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await cardsSettled(page);
+  return result;
+};
+/**
  * Taps the handle until the sheet rests at `target`, Low or full (a third a tap, up from Low to
  * full and down again), each tap as a person's (buttonTap): it reaches the handle at rest, and
  * moves the sheet, its data-snap or, between two heights both `free`, its top. Whether it got
@@ -2748,10 +2864,22 @@ const toRaised = async () => {
 const closeCard = async () => {
   const closed = async () => (await card().count()) === 0;
   if (isTouchOnly) {
-    // A phone touched by finger alone: ✕ by finger, never a mouse's click or Escape.
-    const close = card().getByRole('button', { name: 'Close' }).first();
-    if (!(await closed())) await buttonTap(close, closed);
-    await cardsSettled(page);
+    // A phone touched by finger alone: by finger, never a mouse's click or Escape. Cards stack (a
+    // trip over the place it was opened from, which shows ‹ in place of ✕): each shown one is left
+    // by its ✕ or its ‹ in turn, as a person does, until none is open.
+    const leave = page.getByRole('button', { name: /^(Close|Back)$/ }).first();
+    const atTop = () =>
+      page.evaluate(
+        () =>
+          [...document.querySelectorAll('[data-testid="card"]:not([hidden])')]
+            .map((c) => c.innerText.slice(0, 80))
+            .join('|') || null,
+      );
+    for (let i = 0; i < 4 && !(await closed()); i++) {
+      const before = await atTop();
+      if (!(await buttonTap(leave, async () => (await atTop()) !== before))) break;
+      await cardsSettled(page);
+    }
     return;
   }
   await page
@@ -3173,12 +3301,18 @@ if (runsPart(1)) {
       !!from && !!to && origin === from && end === to,
       `"${label}": top "${origin}", bottom "${end}"`,
     );
-    // Opened, the camera stays where it was: nothing fits the route (the owner, 2026-10-21).
+    // Opened, the camera takes in the whole route once, above the sheet at its opening height, as
+    // the Overview button's fit does; at that overview, the button stays hidden.
+    await page
+      .waitForFunction(() => !window.__map.isMoving(), null, { timeout: 5000 })
+      .catch(() => {});
     const camAfterLineTap = await camNow();
+    const openFit = await framedAboveCard(r.bbox);
+    const overviewShown = await page.getByRole('button', { name: 'Overview' }).isVisible();
     check(
-      '  the camera stays where it was: the route is not fitted',
-      sameCamera(camBeforeLineTap, camAfterLineTap),
-      JSON.stringify({ camBeforeLineTap, camAfterLineTap }),
+      '  the camera takes in the whole route, above the sheet, and Overview stays hidden',
+      !sameCamera(camBeforeLineTap, camAfterLineTap) && openFit.inside && !overviewShown,
+      JSON.stringify({ openFit, overviewShown }),
     );
     const routeEnds = r.signboard.split(' – ').map((e) => e.replace(/ via .*$/, ''));
     check(
@@ -3302,7 +3436,7 @@ if (runsPart(1)) {
               ? pill.dataset.end === 'head' && icon === 'Start'
               : pill.dataset.end === 'tail' && icon === 'End',
           colour: same(getComputedStyle(namePill).backgroundColor, wants),
-          font: /^"?SN Pro/.test(getComputedStyle(namePill).fontFamily),
+          font: /^"?Livvic/.test(getComputedStyle(namePill).fontFamily),
           // Its pointer the same: the pill's last svg.
           pointer: same(getComputedStyle([...namePill.querySelectorAll('svg')].at(-1)).fill, wants),
           across: box.left + box.width / 2 - (c.left + q.x),
@@ -3315,7 +3449,7 @@ if (runsPart(1)) {
       return { named: named.length, pills: pills.length, circles: all.length, rows };
     });
     check(
-      "  each end named once, in SN Pro, in a pill over its circle, Start's green, End's red or the line's colour, its pointer the same, Start's pill before where the ride starts and End's before where it goes; the circle the hintuan's dot, 24 across, on the point",
+      "  each end named once, in Livvic, in a pill over its circle, Start's green, End's red or the line's colour, its pointer the same, Start's pill before where the ride starts and End's before where it goes; the circle the hintuan's dot, 24 across, on the point",
       ends.named > 0 &&
         ends.pills === ends.named &&
         ends.circles >= ends.named &&
@@ -3357,7 +3491,13 @@ if (runsPart(1)) {
     } else {
       const end = tappable[0];
       await jumpAboveSheet(page, end.at);
-      await endButton(end.name).locator('[data-part="name"]').click();
+      await buttonTap(endButton(end.name).locator('[data-part="name"]'), () =>
+        page.evaluate(() =>
+          [...document.querySelectorAll('[data-testid="card"]')].some(
+            (c) => !c.hidden && c.querySelector('[data-testid="card-place"]'),
+          ),
+        ),
+      );
       await cardsSettled(page);
       const opened = await page.evaluate(() => {
         const shown = [...document.querySelectorAll('[data-testid="card"]')].filter(
@@ -3434,13 +3574,18 @@ if (runsPart(1)) {
       const grip = await handle().first().boundingBox();
       let midway = null;
       if (grip) {
-        await page.mouse.move(grip.x + grip.width / 2, grip.y + grip.height / 2);
-        await page.mouse.down();
-        await page.mouse.move(grip.x + grip.width / 2, grip.y + grip.height / 2 - 150, {
-          steps: 10,
-        });
+        // Held part way up by a finger on the handle, read while it is still held.
+        const [x, y] = [grip.x + grip.width / 2, grip.y + grip.height / 2];
+        await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x, y }] });
+        for (let i = 1; i <= 10; i++) {
+          await cdp.send('Input.dispatchTouchEvent', {
+            type: 'touchMove',
+            touchPoints: [{ x, y: y - 15 * i }],
+          });
+          await page.waitForTimeout(16);
+        }
         midway = await infoReachable();
-        await page.mouse.up();
+        await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
         await cardsSettled(page);
       }
       check(
@@ -3531,6 +3676,36 @@ if (runsPart(3)) {
       'a tap where two routes share a road opens the chooser',
       has && (await card().count()) === 0,
       has ? '' : `[data-testid="chooser"] count 0; card count ${await card().count()}`,
+    );
+    // The list's sheet coasts as a card's does: thrown up from its Low from the top of the list
+    // (its handle is drawn as none), a hard throw rests higher than a gentle one, both between Low
+    // and full; a fast flick down takes it back to Low after each.
+    const listTop = async () => {
+      const r = await chooser.first().boundingBox();
+      return r ? [r.x + r.width / 2, r.y + 24] : null;
+    };
+    const listRest = () => chooser.first().getAttribute('data-snap');
+    const listThrown = async (steps, gap) => {
+      const from = await listTop();
+      if (!from || (await listRest()) !== 'low') return null;
+      await throwFrom(from[0], from[1], -200, steps, gap);
+      const rest = await shownOf(chooser);
+      const back = await listTop();
+      // A short fast flick: let go above Low, so it lands on Low rather than past it, closed.
+      if (back) await throwFrom(back[0], back[1], 150, 3, 16);
+      return rest;
+    };
+    const listLow = has ? await shownOf(chooser) : 0;
+    const gentle = has ? await listThrown(12, 30) : null;
+    const hard = has ? await listThrown(4, 16) : null;
+    const listFull = has ? await chooser.first().evaluate((el) => el.offsetHeight) : 0;
+    check(
+      '  thrown up from Low, the list coasts: a hard throw rests higher than a gentle one, both between Low and full',
+      gentle !== null &&
+        hard !== null &&
+        hard > gentle + 40 &&
+        [gentle, hard].every((r) => r >= listLow - 2 && r <= listFull + 2),
+      `gentle ${gentle} px, hard ${hard} px shown (Low ${listLow}, full ${listFull}); now data-snap=${await listRest()}`,
     );
     const chooserText = has ? await chooser.first().innerText() : '';
     // The routes' rows, inside their cards: a hotspot under the tap would be a
@@ -3640,16 +3815,46 @@ if (runsPart(3)) {
     const wantedName = wantedCard.locator('[data-testid="chooser-select"]');
     // At Low a tap on the list raises it a third and reaches nothing under it (the owner's rule):
     // picking a card there takes a tap to raise, then a tap to pick. The camera is read once the
-    // raise has settled, as a new height frames the routes again.
+    // raise has settled.
     const listAt = async () => chooser.first().getAttribute('data-snap');
     const raisedFirst = (await listAt()) === 'low';
     if (raisedFirst) {
-      // A finger's tap: buttonTap's fallback, a click sent straight to the button, comes with no
-      // touch before it, as a keyboard's does, and a keyboard's click picks at Low by design.
-      await touchTap(wantedName, async () => (await listAt()) !== 'low');
+      // A finger's tap on the list's first card, the one Low shows: a card further down may sit
+      // under the list's foot there. buttonTap's fallback, a click sent straight to the button,
+      // comes with no touch before it, as a keyboard's does, and a keyboard's click picks at Low
+      // by design.
+      const topCard = chooser.first().locator('[data-testid="chooser-origin"]').first();
+      // What Low shows of it, above the list's foot: its header, its place and its first row,
+      // each what a finger at its centre touches.
+      const lowShows = await topCard.evaluate((card) => {
+        // `within`: what a finger touches there is `el`, or, for the header, which the place's
+        // stretched target covers, at least this card and not the list's foot.
+        const reaches = (el, within = el) => {
+          if (!el) return false;
+          const r = el.getBoundingClientRect();
+          const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+          return !!hit && (within.contains(hit) || hit.contains(el));
+        };
+        return {
+          header: reaches(card.querySelector(':scope > div.px-3'), card),
+          place: reaches(card.querySelector('[data-testid="chooser-select"]')),
+          firstRow: reaches(card.querySelector('[data-testid="chooser-item"]')),
+        };
+      });
+      check(
+        "  at Low, the first card's header, place and first row show above the list's foot",
+        lowShows.header && lowShows.place && lowShows.firstRow,
+        JSON.stringify(lowShows),
+      );
+      await touchTap(
+        topCard.locator('[data-testid="chooser-select"]'),
+        async () => (await listAt()) !== 'low',
+      );
       check(
         '  at Low, a tap on a card raises the list a third and picks nothing',
-        (await listAt()) === 'free' && !(await isPicked()),
+        (await listAt()) === 'free' &&
+          !(await isPicked()) &&
+          (await topCard.getAttribute('data-state')) !== 'selected',
         `data-snap=${await listAt()}; picked ${await isPicked()}`,
       );
     }
@@ -3671,6 +3876,31 @@ if (runsPart(3)) {
       '  and the camera stays where it was: its routes are not fitted',
       sameCamera(camBeforeCardPick, camAfterCardPick),
       JSON.stringify({ camBeforeCardPick, camAfterCardPick }),
+    );
+    // Picked and not fitted, so the Overview button shows; pressed, it takes the card's routes
+    // in above the list, and hides once there.
+    const overview = page.getByRole('button', { name: 'Overview' });
+    check('  a card picked: Overview shows', (await isPicked()) && (await overview.isVisible()));
+    const pickedBoxes = pickedIds
+      .map((id) => snapshot.routes.find((o) => o.id === id)?.bbox)
+      .filter(Boolean);
+    const pickedBbox = pickedBoxes.length
+      ? [
+          Math.min(...pickedBoxes.map((b) => b[0])),
+          Math.min(...pickedBoxes.map((b) => b[1])),
+          Math.max(...pickedBoxes.map((b) => b[2])),
+          Math.max(...pickedBoxes.map((b) => b[3])),
+        ]
+      : null;
+    const overviewPressed = await buttonTap(overview, async () => !(await overview.isVisible()));
+    await page
+      .waitForFunction(() => !window.__map.isMoving(), null, { timeout: 5000 })
+      .catch(() => {});
+    const cardFitted = pickedBbox && (await framedAboveCard(pickedBbox, 'chooser'));
+    check(
+      "  Overview pressed: the card's routes above the list, and the button gone",
+      overviewPressed && cardFitted?.inside === true && !(await overview.isVisible()),
+      JSON.stringify({ pickedIds: pickedIds.length, cardFitted }),
     );
     const seenPicked = await rideLook(page);
     const endsPicked = await endsWear(cardColour);
@@ -3842,7 +4072,13 @@ if (runsPart(3)) {
           const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
           return !!hit && el.contains(hit);
         });
-        if (reachable) await namePill.click();
+        const isTripShown = () =>
+          page.evaluate(
+            () =>
+              document.querySelectorAll('[data-testid="card"]:not([hidden]) [data-testid="trip"]')
+                .length === 1,
+          );
+        if (reachable) await buttonTap(namePill, isTripShown);
         await page
           .waitForFunction(
             () =>
@@ -3962,7 +4198,6 @@ if (runsPart(3)) {
   // 4 to 4d on a new phone touched by finger alone; 4e's mouse and 4f's keys each on one of
   // their own (newPhone).
   await newPhone();
-  isTouchOnly = true;
 
   // -------------------------------------------------- 4. hotspots, forgivingly
   // A route drawn right under the tapped pixel wins (the hit line is 18 px wide,
@@ -4308,17 +4543,8 @@ if (runsPart(3)) {
     for (let i = 0; i < 6 && (await sheetState()) !== want; i++) await tapHandle();
     return (await sheetState()) === want;
   };
-  /**
-   * How much of the card shows, in px: its height less how far it is slid down, read against where
-   * it stands unslid (its offset parent's top plus its own offset).
-   */
-  const shownNow = () =>
-    card()
-      .first()
-      .evaluate((el) => {
-        const unslid = (el.offsetParent?.getBoundingClientRect().top ?? 0) + el.offsetTop;
-        return Math.round(el.offsetHeight - (el.getBoundingClientRect().top - unslid));
-      });
+  /** How much of the card shows, in px (shownOf). */
+  const shownNow = () => shownOf(card());
   /** Where the card should rest at 55% of the map, in px shown. */
   const halfShown = () =>
     card()
@@ -4417,6 +4643,7 @@ if (runsPart(3)) {
     // does not report the next three as broken too. A start that cannot be
     // reached is itself a failure: the drag after it would prove nothing.
     const readyUp = await restore('low');
+    const camBeforeDrag = await camNow();
     const up = await dragHandle(await dragTo('low', 'half'));
     const leftAt = await shownNow();
     const want = await halfShown();
@@ -4425,6 +4652,16 @@ if (runsPart(3)) {
       'dragging the handle up from Low leaves it where it was let go',
       upRests,
       `${readyUp ? '' : 'could not get to Low first; '}${up.how}; data-snap=${await sheetState()}, ${leftAt} px shown for ${want}${upRests ? '' : `; ${await sheetDiag()}`}`,
+    );
+    // A drag of the sheet moves the sheet alone: the camera stays where the commuter left it.
+    await page
+      .waitForFunction(() => !window.__map.isMoving(), null, { timeout: 3000 })
+      .catch(() => {});
+    const camAfterDrag = await camNow();
+    check(
+      '  and the camera stays where it was',
+      upRests && sameCamera(camBeforeDrag, camAfterDrag),
+      JSON.stringify({ camBeforeDrag, camAfterDrag }),
     );
 
     const readyDown = await restore('half');
@@ -4441,6 +4678,41 @@ if (runsPart(3)) {
       'dragging it up to the top rests at full height',
       readyFull && (await sheetState()) === 'full',
       `${readyFull ? '' : 'could not get to half first; '}${upFull.how}; data-snap=${await sheetState()}`,
+    );
+
+    // Momentum (glideTo): thrown, the sheet coasts on from where the finger lifts, slowing
+    // evenly, further the faster, and rests between Low and full. The same release point, a slow
+    // throw and a fast one, each let go while moving: no hold before the lift.
+    /** The handle thrown by `dy` px over `steps` moves `gap` ms apart (throwFrom); then shown. */
+    const throwHandle = async (dy, steps, gap) => {
+      const hb = await handle().first().boundingBox();
+      if (!hb) return null;
+      await throwFrom(hb.x + hb.width / 2, hb.y + hb.height / 2, dy, steps, gap);
+      return (await card().count()) > 0 ? shownNow() : null;
+    };
+    const fullShown = () =>
+      card()
+        .first()
+        .evaluate((el) => el.offsetHeight - 24);
+    const readySlow = await restore('low');
+    const slowRest = readySlow ? await throwHandle(-200, 12, 30) : null;
+    const readyFast = await restore('low');
+    const fastRest = readyFast ? await throwHandle(-200, 4, 16) : null;
+    const top = await fullShown();
+    check(
+      'thrown up from Low, a fast throw rests higher than a slow one, both between Low and full',
+      slowRest !== null &&
+        fastRest !== null &&
+        fastRest > slowRest + 40 &&
+        [slowRest, fastRest].every((r) => r >= 133 - 2 && r <= top + 2),
+      `slow ${slowRest} px, fast ${fastRest} px shown (Low 133, full ${top})`,
+    );
+    const readyFlick = await restore('half');
+    await throwHandle(300, 3, 16);
+    check(
+      '  a fast flick down still takes it to Low',
+      readyFlick && (await sheetState()) === 'low',
+      `data-snap=${await sheetState()}`,
     );
 
     const readyLow = await restore('low');
@@ -4614,8 +4886,7 @@ if (runsPart(3)) {
   // ----------------------------------------------- 4e. the handle, by a mouse
   // On a phone of its own, not touched by finger alone (newPhone).
   if (hotspot) {
-    await newPhone();
-    isTouchOnly = false;
+    await newPhone({ isTouchOnly: false });
     // A mouse's drag, on a narrow window: the browser then clicks the handle it
     // was held on, and that click toggled the sheet straight back — pulled up,
     // it fell to peek, as it was then (the reviewer's note, fixed on the owner's word,
@@ -4689,8 +4960,7 @@ if (runsPart(3)) {
   // goes back to what had it as the card opened (useDialogFocus): the map, which the tap that
   // opened it focused. The card is opened by one tap, the phone's first input, before any key.
   if (hotspot) {
-    await newPhone();
-    isTouchOnly = false;
+    await newPhone({ isTouchOnly: false });
     await openSheet();
     const isOpen = (await card().count()) > 0;
     await page.keyboard.press('Escape');
@@ -4711,6 +4981,9 @@ if (runsPart(3)) {
       `opened ${isOpen}; closed ${isClosed}; focus on ${focus.now}`,
     );
   }
+
+  // Run whole, the sections after this one go on a phone touched by finger alone again.
+  if (PHONE_PARTS === 1) await newPhone();
 
   // Overlapping hotspots share the list; today's data has none.
   const overlapping = snapshot.polys.some((a) =>
@@ -4751,89 +5024,78 @@ if (runsPart(1)) {
         `no direction named "${await tripLabel()}" on the map`,
       );
     else {
-      // Opened, the camera stays where it was (the owner, 2026-10-21); the
-      // sheet's height is what takes the route in.
+      // Opened, the camera takes in the whole route once, above the sheet.
+      await page
+        .waitForFunction(() => !window.__map.isMoving(), null, { timeout: 5000 })
+        .catch(() => {});
       const camAfterOpen = await camNow();
+      const openFit = await framedAboveCard(r.bbox);
+      const overviewAtOpen = await page.getByRole('button', { name: 'Overview' }).isVisible();
       check(
-        '  the camera stays where it was: the route is not fitted',
-        sameCamera(camBeforeOpen, camAfterOpen),
-        JSON.stringify({ camBeforeOpen, camAfterOpen }),
+        '  the camera takes in the whole route, above the sheet, and Overview stays hidden',
+        !sameCamera(camBeforeOpen, camAfterOpen) && openFit.inside && !overviewAtOpen,
+        JSON.stringify({ camBeforeOpen, camAfterOpen, openFit, overviewAtOpen }),
+      );
+      // A guard on the trip as it is drawn: at full height, every stop shown, so that it runs past
+      // the screen, scrolled to its end, its last row clears the Controller drawn over the sheet's
+      // foot. BottomSheet's stories (FooterLastRowClear) prove the padding itself.
+      const tripEnd = (await handleTo('full'))
+        ? await endClearsFooter('[data-testid="card"]')
+        : { ok: false, why: `the trip would not go to full: data-snap=${await sheetState()}` };
+      check(
+        "  on a small phone at full height: the trip's last row clears the footer",
+        tripEnd.ok,
+        JSON.stringify(tripEnd),
       );
 
-      // The sheet at another height: the camera takes the route in again, in the
-      // map it leaves (the owner's ask, 2026-10-01) — at full height, the whole
-      // screen on a phone, as at the framed height; in closer above Low; and back to the overview
-      // after the commuter has moved the map. Going up, no further out than
-      // 5 km on the scale bar (100 px; MapLibre's 512 px tiles), the owner's
-      // "for scrolling up only": a long route is cut, not shrunk.
-      const capZoom = Math.log2(
-        (78271.51696 * Math.cos((((r.bbox[1] + r.bbox[3]) / 2) * Math.PI) / 180) * 100) / 5000,
-      );
+      // The sheet at another height leaves the camera where it is: the camera is the
+      // commuter's until they ask, by the Overview button.
       const toFull = await handleTo('full');
-      const atFull = await framedAboveCard(r.bbox);
+      const camAtFull = await camNow();
       const toLow = toFull && (await handleTo('low'));
-      const atLow = await framedAboveCard(r.bbox);
-      if (!toLow)
-        check(
-          '  the sheet at full height, then Low: the route taken in again in the map it leaves',
-          false,
-          `the handle would not step there: data-snap=${await sheetState()}`,
-        );
-      else {
-        check(
-          '  the sheet up to full height: the route taken in, no further out than 5 km on the scale bar',
-          atFull.zoom >= capZoom - 0.05,
-          `zoom ${atFull.zoom}, 5 km at ${capZoom.toFixed(2)}; ${JSON.stringify(atFull)}`,
-        );
-        check(
-          '  at Low: in closer, the whole route above the sheet',
-          atLow.inside && atLow.zoom >= atFull.zoom - 0.05,
-          JSON.stringify(atLow),
-        );
-      }
-      // Raised a third from Low: with the sheet never brought down, no height
-      // change moves the camera (a runner that dropped the handle's taps).
-      if (!toLow)
-        check(
-          '  moved away, then raised a third: the overview again',
-          false,
-          `the sheet never came down to Low: data-snap=${await sheetState()}`,
-        );
-      else {
-        // Moved, and idle again before the handle is tapped: a cold zoom-16
-        // view kept a slow machine's page drawing past the handle's 2 s for
-        // its box, and the sheet never went up (a local run under load,
-        // 2026-10-16).
-        await page.evaluate(
-          () =>
-            new Promise((r) => {
-              const m = window.__map;
-              const c = m.getCenter();
-              m.once('idle', r);
-              setTimeout(r, 10000);
-              m.jumpTo({ center: [c.lng + 0.02, c.lat + 0.02], zoom: 16 });
-            }),
-        );
-        const raised = await toRaised();
-        // The overview starts a beat after the sheet settles — most of a second
-        // from a cold zoom-16 view, with the main thread busy over it (measured
-        // on the refactor's base too, 2026-10-12): let it start, then end, as
-        // the pick's glide is waited for.
-        await page
-          .waitForFunction(() => window.__map.isMoving() || window.__map.getZoom() < 15.9, null, {
-            timeout: 4000,
-          })
-          .catch(() => {});
-        await page
-          .waitForFunction(() => !window.__map.isMoving(), null, { timeout: 3000 })
-          .catch(() => {});
-        const back = await framedAboveCard(r.bbox);
-        check(
-          '  moved away, then raised a third: the overview again, 5 km on the bar at the farthest',
-          raised && back.zoom >= capZoom - 0.05 && (back.inside || back.zoom <= capZoom + 0.05),
-          `${raised ? '' : `the sheet would not rise a third: data-snap=${await sheetState()}; `}${JSON.stringify(back)}`,
-        );
-      }
+      const camAtLow = await camNow();
+      check(
+        '  the sheet up to full height, then Low: the camera stays where it was',
+        toLow && sameCamera(camAfterOpen, camAtFull) && sameCamera(camAfterOpen, camAtLow),
+        toLow
+          ? JSON.stringify({ camAfterOpen, camAtFull, camAtLow })
+          : `the handle would not step there: data-snap=${await sheetState()}`,
+      );
+      // The screen changed size since the opening fit (the small phone above, and back), which can
+      // leave the route cut off, so the Overview button shows; pressed, it takes the whole route in
+      // above the sheet again, and hides once there.
+      const overview = page.getByRole('button', { name: 'Overview' });
+      check(
+        '  the screen resized since the opening fit: Overview shows',
+        await overview.isVisible(),
+      );
+      const pressed = await buttonTap(overview, async () => !(await overview.isVisible()));
+      await page
+        .waitForFunction(() => !window.__map.isMoving(), null, { timeout: 5000 })
+        .catch(() => {});
+      const fitted = await framedAboveCard(r.bbox);
+      check(
+        '  Overview pressed: the whole route above the sheet, and the button gone',
+        pressed && fitted.inside && !(await overview.isVisible()),
+        JSON.stringify(fitted),
+      );
+      // A finger's pan takes the camera off the overview: the button again.
+      await fingerPan(195, 300, -90, -60);
+      check(
+        '  the map panned by a finger: Overview shows again',
+        (await until(() => overview.isVisible(), Boolean, 3000)) === true,
+      );
+      // Pressed while it has focus, it hides: focus goes on to the map, not to the page's body.
+      await overview.focus();
+      await buttonTap(overview, async () => !(await overview.isVisible()));
+      const focusOn = await page.evaluate(
+        () => document.activeElement?.classList.contains('maplibregl-canvas') ?? false,
+      );
+      check(
+        '  Overview pressed with focus on it: it hides, and focus goes to the map, not lost',
+        !(await overview.isVisible()) && focusOn,
+        `focus on the map: ${focusOn}`,
+      );
 
       // Opened on its own, no list is behind the trip: ‹ only where another
       // route sharing an end is drawn its way round (the owner's ask, 2026-09-29).
@@ -4981,19 +5243,23 @@ if (runsPart(2)) {
     const to = others[0];
     const toName = (to.name ?? '').split(' → ')[1] ?? '';
     // At full height: another route leaves the sheet there (the owner's rule: nothing moves it for
-    // the commuter). Raised first, as a person does to reach View more: at Low it sits below the
-    // screen.
+    // the commuter).
     const atFull = await handleTo('full');
-    // Opened first: another route leaves the hintuans as they were, not folded
-    // (the owner, 2026-10-01: "don't shrink it").
-    const tripFold = card().locator('[data-testid="trip-view-more"]');
-    const openedFold =
-      (await tripFold.count()) > 0 &&
-      (await buttonTap(
-        tripFold,
-        async () => (await tripFold.first().getAttribute('aria-expanded')) === 'true',
-      ));
-    await rows.first().scrollIntoViewIfNeeded();
+    // The rows sit behind "View N more routes" at the top of the trip: opened first, its
+    // aria-expanded turning true.
+    const moreRoutes = card().locator('[data-testid="trip-more-routes"]');
+    await moreRoutes.scrollIntoViewIfNeeded();
+    await buttonTap(
+      moreRoutes,
+      async () => (await moreRoutes.getAttribute('aria-expanded')) === 'true',
+    );
+    const expanded = await moreRoutes.getAttribute('aria-expanded');
+    check('  "View N more routes" opens the list', expanded === 'true', String(expanded));
+    // Scrolled to the sheet's middle, as a person brings a row up to tap it: "if needed" counts a
+    // row under the Controller, which floats over the sheet's foot, as already in view.
+    await card()
+      .locator(`[data-testid="trip-other-route"][data-direction="${to.id}"]`)
+      .evaluate((row) => row.scrollIntoView({ block: 'center' }));
     await buttonTap(
       card().locator(`[data-testid="trip-other-route"][data-direction="${to.id}"]`),
       async () => ((await litIds(page)) ?? []).join() === to.id,
@@ -5017,20 +5283,6 @@ if (runsPart(2)) {
         (await sheetState()) === 'full',
         `data-snap=${await sheetState()}`,
       );
-    if (!openedFold || (await tripFold.count()) === 0) {
-      skip(
-        '  its hintuans left open, as they were',
-        openedFold
-          ? 'the other route has no hintuans to fold'
-          : 'this trip has no hintuans to fold',
-      );
-    } else {
-      check(
-        '  its hintuans left open, as they were',
-        (await tripFold.first().getAttribute('aria-expanded')) === 'true',
-        `aria-expanded ${await tripFold.first().getAttribute('aria-expanded')}`,
-      );
-    }
     await closeCard();
   }
 
@@ -5277,7 +5529,10 @@ if (runsPart(2)) {
         .filter({ hasText: 'Landmark' })
         .first();
       await row.waitFor({ timeout: 10000 });
-      await row.click();
+      await buttonTap(
+        row,
+        async () => (await page.getByRole('region', { name: landmark.name }).count()) > 0,
+      );
       await mapIdle(page);
     };
     // How far the pin's circle is from the landmark's point on screen, in px.
@@ -5322,10 +5577,10 @@ if (runsPart(2)) {
         (await pins.count()) === 1 && secondOff < 2,
         `${second.name}: ${await pins.count()} pin(s), ${secondOff.toFixed(1)} px off`,
       );
-      await page
-        .getByRole('region', { name: second.name })
-        .getByRole('button', { name: 'Close' })
-        .click();
+      await buttonTap(
+        page.getByRole('region', { name: second.name }).getByRole('button', { name: 'Close' }),
+        async () => (await pins.count()) === 0,
+      );
       const left = await until(
         () => pins.count(),
         (n) => n === 0,
@@ -5371,16 +5626,21 @@ if (runsPart(2)) {
         .filter({ hasText: 'Landmark' })
         .first();
       await row.waitFor({ timeout: 10000 });
-      await row.click();
+      await buttonTap(
+        row,
+        async () => (await page.getByRole('region', { name: nearest.name }).count()) > 0,
+      );
       await mapIdle(page);
-      await page
-        .getByRole('region', { name: nearest.name })
-        .getByRole('button', { name: /^Go here:/ })
-        .first()
-        .click();
       const placeRoute = page
         .locator('[data-testid="card"]:not([hidden]) button[data-testid="card-item"]:enabled')
         .first();
+      await buttonTap(
+        page
+          .getByRole('region', { name: nearest.name })
+          .getByRole('button', { name: /^Go here:/ })
+          .first(),
+        async () => (await placeRoute.count()) > 0,
+      );
       const listed = await placeRoute
         .waitFor({ timeout: 10000 })
         .then(() => true)

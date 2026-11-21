@@ -10,7 +10,7 @@ import { useLitLineColour } from './lighting';
 import { LIT_LINE, LIVERY_LINE, type LineLook } from './livery-line';
 import type { Highlight } from './use-saved-routes';
 import { isChoosing, sharedSnap, tripBack, tripBehindHolds } from '../cards/card-stack';
-import { useTripLivery } from '../cards/trip-card';
+import { useTripLivery } from '../cards/use-trip-livery';
 import { routeCards, sharingAnEnd, type Listing } from '../model/departures';
 import type { Livery } from '../model/liveries';
 import type { Direction } from '../model/routes';

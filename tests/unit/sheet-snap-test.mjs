@@ -81,7 +81,7 @@ test('lifted while moving fast down it is a flick: to Low, and down from Low it 
   assert.equal(down.release(64 + 16), 'close');
 });
 
-test('lifted while moving fast up, it rests where the finger lifted', () => {
+test('without momentum (reduced motion), lifted while moving fast up it rests where it lifted', () => {
   const up = follow(400, 0, 464, H);
   for (let i = 1; i <= 4; i++) up.move(400 - i * 50, i * 16);
   assert.equal(up.release(64 + 16), 664 / H);

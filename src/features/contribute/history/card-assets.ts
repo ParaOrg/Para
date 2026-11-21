@@ -6,7 +6,7 @@ export const LOGO = { width: 110, height: 72, y: 30 };
 /** The weights the card draws in, loaded before drawing so the canvas does not fall back. */
 export async function loadSummaryFonts(): Promise<void> {
   await Promise.all(
-    ['500', '700', '800'].map((weight) => document.fonts.load(`${weight} 32px 'SN Pro'`)),
+    ['500', '700'].map((weight) => document.fonts.load(`${weight} 32px 'Livvic'`)),
   ).catch(() => undefined);
 }
 

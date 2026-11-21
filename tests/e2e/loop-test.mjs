@@ -257,12 +257,6 @@ const toFull = async (page) => {
     await page.waitForTimeout(400);
   }
 };
-const openFold = async (page) => {
-  await toFull(page);
-  const fold = page.locator('[data-testid="trip-view-more"][aria-expanded="false"]');
-  if ((await fold.count()) > 0) await fold.first().click();
-  await page.waitForTimeout(300);
-};
 const pickRow = (page, name) =>
   page.locator('[data-testid="trip-hintuan-pick"]', { hasText: name }).first().tap();
 /** What a ride of `metres` reads as on the tile, one decimal of a kilometre. */
@@ -301,11 +295,12 @@ const closeTrip = async (page) => {
     "a loop's trip has no SWITCH",
     (await page.locator('[data-testid="card-switch"]').count()) === 0,
   );
-  const header = await page.locator('[data-testid="trip-detail-header"]').innerText();
+  // The ride pill names the loop as a line's names its bound: "Jeep · UP – Ikot".
+  const pill = (await card.locator('[data-testid="trip-mode"]').innerText()).trim();
   check(
-    '  and names the loop as a badge, with no Papunta or Pabalik',
-    /Ikot/.test(header) && !/Papunta|Pabalik/.test(header) && header.includes('UP – Ikot'),
-    header.replace(/\n/g, ' | '),
+    '  and its ride pill names the loop after its mode, with no Papunta or Pabalik',
+    pill.endsWith(' · UP – Ikot') && !/Papunta|Pabalik/.test(pill),
+    pill,
   );
   check(
     '  nothing in the card says Papunta or Pabalik',
@@ -317,7 +312,7 @@ const closeTrip = async (page) => {
       (await destinationLabel(page)).includes(PALMA.name),
     `${await originLabel(page)} / ${await destinationLabel(page)}`,
   );
-  await openFold(page);
+  await toFull(page);
   const rows = await rowNames(page);
   check(
     '  the rows between follow going round: Quezon Hall, Sunken Garden, Engineering, Math Building',
@@ -440,7 +435,7 @@ const closeTrip = async (page) => {
     (await originLabel(page)).includes(SUNKEN.name),
     await originLabel(page),
   );
-  await openFold(page);
+  await toFull(page);
   const rows = await rowNames(page);
   check(
     '  and the rows wrap: Engineering, Math Building, Palma Hall, Quezon Hall',

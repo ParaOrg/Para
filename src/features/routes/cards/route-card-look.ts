@@ -55,3 +55,67 @@ export const ROUTE_BADGE = {
  */
 export const ROUTE_CARD_BLOB_PLACE =
   'pointer-events-none absolute -top-[161px] left-1/2 -z-10 h-[525.538px] w-[795.076px] max-w-none -translate-x-1/2';
+
+/**
+ * The redesign's RouteCard fill (RouteCard, 4629:22776), Card/<mode>/fill. E-jeep has no fill
+ * among the new semantics yet, so its card wears Card/Ejeep/Ejeep-surface.
+ */
+export const ROUTE_CARD_FILL = {
+  jeep: 'bg-card-jeep-fill',
+  'uv-express': 'bg-card-uv-express-fill',
+  ejeep: 'bg-card-ejeep-surface',
+  bus: 'bg-card-bus-fill',
+  'light-rail-way-one': 'bg-card-lrt-one-fill',
+  'light-rail-way-two': 'bg-card-lrt-two-fill',
+  'metro-rail-way-three': 'bg-card-mrt-three-fill',
+  ferry: 'bg-card-ferry-fill',
+} satisfies Record<Livery, string>;
+
+/**
+ * The words and drawings on a redesigned card (RouteCardStackedList, 4633:19780): white on the
+ * darker cards, Text/primary on the light ones (UV Express, E-jeep, MRT-3), as Figma draws each.
+ */
+export const CARD_INK = {
+  jeep: 'text-text-on-fill',
+  'uv-express': 'text-text-primary',
+  ejeep: 'text-text-primary',
+  bus: 'text-text-on-fill',
+  'light-rail-way-one': 'text-text-on-fill',
+  'light-rail-way-two': 'text-text-on-fill',
+  'metro-rail-way-three': 'text-text-primary',
+  ferry: 'text-text-on-fill',
+} satisfies Record<Livery, string>;
+
+/**
+ * The redesigned card at rest (RouteCard, 4629:22776): UV Express and E-jeep wear
+ * Route/RouteCardInverse; every other card, MRT-3 included, Route/RouteCardPrimary as it now
+ * stands (--shadow-route-card-fill).
+ */
+export const ROUTE_CARD_REST_SHADOW = {
+  jeep: 'shadow-route-card-fill',
+  'uv-express': 'shadow-route-card-inverse',
+  ejeep: 'shadow-route-card-inverse',
+  bus: 'shadow-route-card-fill',
+  'light-rail-way-one': 'shadow-route-card-fill',
+  'light-rail-way-two': 'shadow-route-card-fill',
+  'metro-rail-way-three': 'shadow-route-card-fill',
+  ferry: 'shadow-route-card-fill',
+} satisfies Record<Livery, string>;
+
+/**
+ * A mode's mark on the sheet's surface, a destination row's arrow and a ride pill's vehicle: its
+ * mode's card fill (MiddleContent, 4795:20406) where that fill stands out from the surface at 3:1,
+ * the least a non-text mark needs. Where it does not (UV Express's grey, MRT-3's yellow), and for
+ * E-jeep, which has no card fill among the new semantics, the words' Text/primary.
+ * tests/unit/destination-row-contrast-test.mjs checks both against the tokens.
+ */
+export const SURFACE_ARROW = {
+  jeep: 'text-card-jeep-fill',
+  'uv-express': 'text-text-primary',
+  ejeep: 'text-text-primary',
+  bus: 'text-card-bus-fill',
+  'light-rail-way-one': 'text-card-lrt-one-fill',
+  'light-rail-way-two': 'text-card-lrt-two-fill',
+  'metro-rail-way-three': 'text-text-primary',
+  ferry: 'text-card-ferry-fill',
+} satisfies Record<Livery, string>;
