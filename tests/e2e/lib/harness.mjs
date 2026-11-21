@@ -432,8 +432,8 @@ export const takeHeldReload = async (base = BASE, ms = 3000) => {
  * opened from, and closes the route list (the owner, 2026-11-21). Null when no such point is in
  * sight.
  */
-export const emptyMapPoint = (page) =>
-  page.evaluate(() => {
+export const emptyMapPoint = async (page) => {
+  const { point, why } = await page.evaluate(() => {
     const m = window.__map;
     const container = m.getCanvasContainer();
     const box = container.getBoundingClientRect();
@@ -450,9 +450,19 @@ export const emptyMapPoint = (page) =>
     const reach = window.matchMedia('(any-pointer: coarse)').matches ? 22 : 8;
     const layers = ['saved-routes-hit', 'saved-stops-pin', 'saved-stops-dot', 'saved-stops-fill'];
     const drawn = layers.filter((id) => m.getLayer(id));
+    const covers = {};
+    let crowded = 0;
     for (let y = box.top + 40; y < bottom; y += 12) {
       for (let x = left; x < box.right - 16; x += 12) {
-        if (document.elementFromPoint(x, y) !== m.getCanvas()) continue;
+        const top = document.elementFromPoint(x, y);
+        if (top !== m.getCanvas()) {
+          // What stands over the map where it does, for the reason when no point is found.
+          const name = top
+            ? `${top.tagName.toLowerCase()}${top.dataset?.testid ? `[${top.dataset.testid}]` : ''}.${String(top.className).slice(0, 40)}`
+            : 'nothing';
+          covers[name] = (covers[name] ?? 0) + 1;
+          continue;
+        }
         const px = x - box.left;
         const py = y - box.top;
         const near = m.queryRenderedFeatures(
@@ -462,8 +472,13 @@ export const emptyMapPoint = (page) =>
           ],
           { layers: drawn },
         );
-        if (near.length === 0) return { x, y };
+        if (near.length === 0) return { point: { x, y }, why: null };
+        crowded += 1;
       }
     }
-    return null;
+    const span = { box: [box.left, box.top, box.right, box.bottom].map(Math.round), left, bottom };
+    return { point: null, why: { reach, drawn, crowded, covers, ...span } };
   });
+  if (!point) console.log('emptyMapPoint: none,', JSON.stringify(why));
+  return point;
+};
