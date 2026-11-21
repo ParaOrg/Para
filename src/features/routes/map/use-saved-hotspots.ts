@@ -9,7 +9,7 @@ import { APP_MOVE } from './map-view';
 import { useHotspotTaps } from './use-hotspot-taps';
 import { useSavedHotspotsLayers } from './use-saved-hotspots-layers';
 import { letGoHolds } from '../cards/card-stack';
-import type { HotspotLink, Hotspot } from '../model/hotspots';
+import type { HotspotLink, Hotspot, HotspotKind } from '../model/hotspots';
 import { orderLinked } from '../model/timeline';
 
 /**
@@ -32,19 +32,20 @@ export function useSavedHotspots<S extends Hotspot>(
     drawing?: boolean;
     hiddenHotspotId?: string | null;
     muted?: boolean;
-    /** Whether the hotspots' pins are drawn zoomed in; their dots, boxes and names are either way. */
+    /** Whether the hotspots' pins are drawn zoomed in; their boxes and names are either way. */
     shouldShowPins?: boolean;
+    /** Whose dots are drawn zoomed out: these kinds' alone, or every hotspot's when not given. */
+    dotKinds?: readonly HotspotKind[];
   } = {},
 ) {
-  const muted = opts.muted ?? false;
+  const { muted = false, hiddenHotspotId, shouldShowPins, dotKinds } = opts;
   const [hotspots, setHotspots] = useState<S[]>([]);
   const [links, setLinks] = useState<HotspotLink[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   /**
-   * The hotspots under a tap that landed on several things (hotspots, routes
-   * or both), for a chooser. Empty otherwise. The routes hook keeps the route
-   * half of the same tap.
+   * The hotspots under a tap that landed on several things (hotspots, routes or both), for a
+   * chooser. Empty otherwise. The routes hook keeps the route half of the same tap.
    */
   const [candidates, setCandidates] = useState<S[]>([]);
   /**
@@ -54,9 +55,8 @@ export function useSavedHotspots<S extends Hotspot>(
   const [letGoId, setLetGoId] = useState<string | null>(null);
 
   /**
-   * Choosing one hotspot answers the question the chooser was asking — unless
-   * `keepList`: a place opened over a trip keeps the list behind the trip,
-   * for its ‹ to find whole.
+   * Choosing one hotspot answers the question the chooser was asking — unless `keepList`: a place
+   * opened over a trip keeps the list behind the trip, for its ‹ to find whole.
    */
   const select = useCallback((id: string | null, opts: { keepList?: boolean } = {}) => {
     setSelectedId(id);
@@ -116,7 +116,7 @@ export function useSavedHotspots<S extends Hotspot>(
 
   // ----------------------------------------------------------------- layers
 
-  useSavedHotspotsLayers(map, hotspots, opts.hiddenHotspotId, marks, hull, opts.shouldShowPins);
+  useSavedHotspotsLayers(map, hotspots, hiddenHotspotId, marks, hull, shouldShowPins, dotKinds);
 
   // ----------------------------------------------------------------- events
 

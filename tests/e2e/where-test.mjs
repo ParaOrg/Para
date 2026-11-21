@@ -775,7 +775,9 @@ check(
       await cardsSettled(page2);
     }
   }
-  const way = card.getByRole('button', { name: /^(Back|Close)$/ }).first();
+  // The trip has no ‹ or ✕ (the owner, 2026-11-21): its first control below the handle, ⇅ on the
+  // ends card where it has one, is what the toast must stay clear of.
+  const way = card.locator('button:not([data-testid="dock-handle"])').first();
   const placed = (await trip.count())
     ? {
         snap: await card.getAttribute('data-snap'),
@@ -785,7 +787,7 @@ check(
       }
     : null;
   check(
-    "  over a trip's card at full height it stays 12 from the top, clear of the trip's ‹ or ✕",
+    "  over a trip's card at full height it stays 12 from the top, clear of the trip's first control",
     placed?.snap === 'full' &&
       Math.abs(placed.toastTop - 12) <= 1 &&
       placed.toastBottom < placed.wayTop,

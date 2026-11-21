@@ -20,7 +20,7 @@ import { maskStations } from './station-mask';
 import { useHotspotPins } from './use-hotspot-pins';
 import { warmSoon, type Twin } from './warm-programs';
 import { ringToPolygon, type Ring } from '../geo/ring';
-import type { Hotspot } from '../model/hotspots';
+import type { Hotspot, HotspotKind } from '../model/hotspots';
 
 /**
  * The boxes' outline's twin (warm-programs.ts). The outline first draws where the boxes come into
@@ -37,9 +37,9 @@ const OUTLINE_TWIN: Twin = {
 };
 
 /**
- * The saved hotspots' sources and layers on `map`: laid out from `hotspots`, the
- * one being edited hidden, each box marked as `marks` says (hotspots-shown.ts),
- * and the place wash over `hull`.
+ * The saved hotspots' sources and layers on `map`: laid out from `hotspots`, the one being edited
+ * hidden, each box marked as `marks` says (hotspots-shown.ts), the place wash over `hull`, and
+ * the dots of `dotKinds` alone when given (dotsOf).
  */
 export function useSavedHotspotsLayers(
   map: MapLibreMap | null,
@@ -48,6 +48,7 @@ export function useSavedHotspotsLayers(
   marks: ReadonlyMap<string, BoxMark>,
   hull: Ring,
   shouldShowPins = true,
+  dotKinds?: readonly HotspotKind[],
 ) {
   // The hotspots the source was last laid out from: added with them when they are already in,
   // laid out in the one worker round trip that adds the source rather
@@ -56,10 +57,10 @@ export function useSavedHotspotsLayers(
   const laidOut = useRef<readonly Hotspot[] | null>(null);
   useEffect(() => {
     if (!map || map.getSource(SRC)) return;
-    addSavedHotspots(map, hotspots);
+    addSavedHotspots(map, hotspots, {}, dotKinds);
     maskStations(map, hotspots);
     laidOut.current = hotspots;
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- lays out the hotspots the source is made with; later ones are the next effect's
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- lays out the hotspots (and dot kinds) the source is made with; later ones are the next effect's
   }, [map]);
 
   useEffect(() => {
@@ -133,18 +134,17 @@ export function useSavedHotspotsLayers(
     });
   }, [map, hull]);
 
-  // The hotspot being edited is drawn by the editor; hide the saved copy.
-  // Set only once there is one, and once more to show it again
-  // (applyHidden): the public map never hides one, and sets no filter. The
-  // pins' layer, added once its chunk is here, takes what is hidden then.
+  // The hotspot being edited is drawn by the editor; hide the saved copy. Set only once there is
+  // one, and once more to show it again (applyHidden): the public map never hides one, and sets no
+  // filter. The pins' layer, added once its chunk is here, takes what is hidden then.
   const hiddenNow = useRef<string | null>(null);
   useEffect(() => {
     if (!map || !map.getLayer(FILL)) return;
     applyHidden(hiddenNow, hiddenHotspotId, (hidden) => {
-      for (const [id, filter] of hiddenHotspotFilters(hidden)) {
+      for (const [id, filter] of hiddenHotspotFilters(hidden, dotKinds)) {
         if (map.getLayer(id)) map.setFilter(id, filter);
       }
     });
-  }, [map, hiddenHotspotId]);
+  }, [map, hiddenHotspotId, dotKinds]);
   useHotspotPins(map, hiddenNow, shouldShowPins);
 }

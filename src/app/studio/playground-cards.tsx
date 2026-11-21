@@ -147,12 +147,12 @@ export function PlaygroundCards({
       )}
 
       {/*
-        Several saved things under one click: the same list the public map
-        has, kept hidden behind the trip picked from it. It lists only what is
-        drawn, and the owner keeps it so.
+        Several saved things under one click: the public map's list, with its Controller, kept
+        hidden behind the trip picked from it. It lists only what is drawn, the owner's way.
       */}
       {!draw.drawing && choosing && (
         <RouteCardList
+          hasController
           key={choice.map((c) => c.id).join()}
           hidden={!!saved.selected}
           height={height}
