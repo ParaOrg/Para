@@ -74,12 +74,12 @@ test('run as CI runs it: one failure fails the step, and all passing passes it',
   assert.match(passed.stdout, /All 2 checks passed\./);
 });
 
-test('the build job’s step runs the six checks the job ran one by one before', () => {
+test('the build job’s step runs five of the six checks the job ran one by one before', () => {
   const workflow = readFileSync(new URL('../../.github/workflows/ci.yml', import.meta.url), 'utf8');
   const step = workflow.slice(workflow.indexOf('node scripts/checks/side-by-side.mjs'));
   const commands = step
     .split('\n')
-    .slice(1, 7)
+    .slice(1, 6)
     .map((line) => parseCheck(line.trim().replace(/ \\$/, '').slice(1, -1)).command);
   assert.deepEqual(commands, [
     'npm run format:check',
@@ -87,6 +87,22 @@ test('the build job’s step runs the six checks the job ran one by one before',
     'node scripts/checks/long-files.mjs --base \\"$RUNNER_TEMP/long-files-base.json\\"',
     'npm run docs:architecture:check',
     'npm run build',
-    'npm run test:unit',
   ]);
+});
+
+test('the sixth, the unit checks, runs in a job of its own, under both summary checks', () => {
+  const workflow = readFileSync(new URL('../../.github/workflows/ci.yml', import.meta.url), 'utf8');
+  const job = workflow.slice(workflow.indexOf('\n  unit:\n')).split(/\n\n/)[0];
+  assert.ok(
+    job.includes("\n    if: needs.changes.outputs.build == 'true'\n"),
+    'on with the build job',
+  );
+  assert.ok(job.endsWith('\n        run: npm run test:unit'), 'its last step is the unit checks');
+  assert.equal(workflow.match(/npm run test:unit/g).length, 1, 'and they run nowhere else');
+  for (const summary of ['Build and the public map', 'The editor']) {
+    const from = workflow.indexOf(`    name: ${summary}\n    needs: [`);
+    assert.ok(from > 0, `"${summary}" is a job with needs`);
+    const needs = workflow.slice(workflow.indexOf('[', from) + 1, workflow.indexOf(']', from));
+    assert.ok(needs.split(', ').includes('unit'), `"${summary}" needs it`);
+  }
 });

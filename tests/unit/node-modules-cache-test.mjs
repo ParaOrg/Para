@@ -1,5 +1,5 @@
-// CI keeps node_modules between runs (.github/workflows/ci.yml's build job and the browser
-// suites' shared setup, .github/actions/prepare-browser-suite). What makes that safe is checked
+// CI keeps node_modules between runs (.github/workflows/ci.yml's build and unit jobs and the
+// browser suites' shared setup, .github/actions/prepare-browser-suite). What makes that safe is checked
 // here: the key names everything the folder depends on, nothing but an exact match is restored,
 // a miss installs with `npm ci`, and the folder is saved before any tool writes into it.
 //
@@ -9,8 +9,16 @@ import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 
 const read = (path) => readFileSync(new URL(`../../${path}`, import.meta.url), 'utf8');
+/** One job of the workflow, from its id to the blank line that ends it. */
+const job = (id) => {
+  const workflow = read('.github/workflows/ci.yml');
+  const from = workflow.indexOf(`\n  ${id}:\n`);
+  assert.ok(from > 0, `ci.yml has a job "${id}"`);
+  return workflow.slice(from).split(/\n\n/)[0];
+};
 const PLACES = {
-  'the build job': read('.github/workflows/ci.yml'),
+  'the build job': job('build'),
+  'the unit checks’ job': job('unit'),
   'the browser suites’ setup': read('.github/actions/prepare-browser-suite/action.yml'),
 };
 const KEY =
