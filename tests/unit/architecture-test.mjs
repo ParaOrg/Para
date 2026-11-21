@@ -34,7 +34,7 @@ test('a path maps to the unit of its folder', () => {
     'features/studio/index.ts': 'features/studio',
     'features/studio/panels/save-panel.tsx': 'features/studio/panels',
     'shared/ui/bottom-sheet.tsx': 'shared/ui',
-    'design-system/foundation/fonts/Livvic/a.woff2': 'design-system/foundation',
+    'design-system/foundation/fonts/livvic/a.woff2': 'design-system/foundation',
     'styles/global.css': 'styles',
   };
   for (const [path, unit] of Object.entries(cases)) {
