@@ -131,7 +131,9 @@ run the build job alone, no suite; `src/app/studio/` or `src/features/studio/`
 alone skips the public suites, the public map's own folders (`src/app/public-map/`,
 `src/features/locator/`, `src/features/published-map/`) and `public/` alone skip the
 studio's, `src/app/contribute/` or `src/features/contribute/` alone runs the build and the
-contributor page's suites only, anything shared runs both. pwa-test, handover-test and
+contributor page's suites only, anything shared runs both. A pull request into a branch that
+has a merge queue (`docs/agents/staging-protection.md`) runs the build job alone, whatever its
+files: the queue runs every suite on the commit the merge would make. pwa-test, handover-test and
 contribute-offline-test run on preview builds the build job makes once. The drawing suites
 (group, regression-gestures, hotspot, snap, extend, studio-phone) are not run on pull requests.
 They run on every push to `main` or `staging`, nightly and on "Run workflow", one at a time

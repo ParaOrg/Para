@@ -17,6 +17,8 @@
 #      (Turnstile and the locator among it), the build, the lockfile, this
 #      file — runs both. A push to main
 #      or staging, a merge queue's run, the nightly run and "Run workflow" run everything.
+#      A pull request into a branch that has a merge queue runs the build job alone: the
+#      queue runs every suite on the commit the merge would make, before the branch moves.
 #   2. Every suite at once, in jobs sized by measured time, so the run takes as
 #      long as the slowest job, not the sum of them all. The suites under a
 #      minute or so share a job, since each job repeats its setup and waits for
@@ -102,6 +104,8 @@ jobs:
       build: ${{ steps.scope.outputs.build }}
       drawing: ${{ steps.scope.outputs.drawing }}
       preview: ${{ steps.scope.outputs.preview }}
+      # Storybook plays: on with the build job, except where a merge queue runs it instead.
+      storybook: ${{ steps.scope.outputs.storybook }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -112,6 +116,10 @@ jobs:
           EVENT: ${{ github.event_name }}
           BASE: ${{ github.event.pull_request.base.sha }}
           HEAD: ${{ github.event.pull_request.head.sha }}
+          # The branch the pull request would merge into, and what reads GitHub's rules for it.
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+          REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           # The suites that run on a build (preview-suite): every one for the public map, the
           # contributor page's own alone for the contributor page.
@@ -124,6 +132,7 @@ jobs:
             echo "build=true" >> "$GITHUB_OUTPUT"
             echo "drawing=true" >> "$GITHUB_OUTPUT"
             echo "preview=$ALL_PREVIEWS" >> "$GITHUB_OUTPUT"
+            echo "storybook=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
           files=$(git diff --name-only "$BASE...$HEAD")
@@ -172,13 +181,31 @@ jobs:
           preview='[]'
           [ "$contribute" = true ] && preview=$CONTRIBUTE_PREVIEWS
           [ "$public" = true ] && preview=$ALL_PREVIEWS
+          storybook=$build
+          # A pull request into a branch with a merge queue (docs/agents/staging-protection.md):
+          # the queue runs every suite on the commit the merge would make, before the branch
+          # moves, so the pull request itself runs the build job's checks alone and answers in
+          # about a minute. Whether the branch has a queue is read from GitHub's own rules for
+          # it, so nothing here has to be switched when a queue is turned on or off. If the rules
+          # cannot be read, this run knows of no queue, and every suite selected above runs here.
+          queue=false
+          if gh api "repos/$REPO/rules/branches/$BASE_REF" --jq '.[].type' 2> /dev/null | grep -qx merge_queue; then
+            queue=true
+          fi
+          if [ "$queue" = true ]; then
+            echo "$BASE_REF has a merge queue: the browser suites and Storybook run there, not here"
+            public=false; studio=false; contribute=false; drawing=false; storybook=false; preview='[]'
+          else
+            echo "$BASE_REF has no merge queue: every suite this change selects runs here"
+          fi
           echo "public=$public" >> "$GITHUB_OUTPUT"
           echo "studio=$studio" >> "$GITHUB_OUTPUT"
           echo "contribute=$contribute" >> "$GITHUB_OUTPUT"
           echo "build=$build" >> "$GITHUB_OUTPUT"
           echo "drawing=$drawing" >> "$GITHUB_OUTPUT"
           echo "preview=$preview" >> "$GITHUB_OUTPUT"
-          echo "public=$public studio=$studio contribute=$contribute build=$build drawing=$drawing"
+          echo "storybook=$storybook" >> "$GITHUB_OUTPUT"
+          echo "public=$public studio=$studio contribute=$contribute build=$build drawing=$drawing storybook=$storybook"
 
       # Which areas of Para the pull request touches (areas.json): a warning, never a failure,
       # when it spans more than one.
@@ -584,7 +611,7 @@ jobs:
   storybook:
     name: Storybook plays
     needs: changes
-    if: needs.changes.outputs.build == 'true'
+    if: needs.changes.outputs.storybook == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:

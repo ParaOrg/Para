@@ -23,7 +23,7 @@ test('CI runs on a merge queue’s commit, beside pushes and pull requests', () 
 test('only a pull request narrows what runs: a merge queue’s run selects every suite', () => {
   const everything = /if \[ "\$EVENT" != "pull_request" \]; then\n([\s\S]*?)exit 0/.exec(CODE);
   assert.ok(everything, 'the changes job runs everything for any event but a pull request');
-  for (const output of ['public', 'studio', 'contribute', 'build', 'drawing']) {
+  for (const output of ['public', 'studio', 'contribute', 'build', 'drawing', 'storybook']) {
     assert.ok(everything[1].includes(`echo "${output}=true"`), `${output} is on`);
   }
   assert.ok(everything[1].includes('preview=$ALL_PREVIEWS'), 'every built-app suite is on');
