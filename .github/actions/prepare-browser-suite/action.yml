@@ -1,15 +1,34 @@
 name: Prepare a browser suite
-description: Node, npm ci, and Playwright's Chromium with its system packages, both kept between runs. Run after checkout.
+description: Node, the packages (node_modules, kept between runs; npm ci when the lockfile or Node changed), and Playwright's Chromium with its system packages, both kept between runs. Run after checkout.
 runs:
   using: composite
   steps:
-    - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+    - id: node
+      uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
       with:
         node-version: 22
-        cache: npm
 
-    - shell: bash
+    # node_modules itself, kept between runs. `npm ci` unpacks about 690 packages every time, even
+    # from npm's download cache: 38 s at the median, in every job. The key is the lockfile, the
+    # Node that ran any install script, and the runner's system and chip, so a change to any of
+    # them installs afresh; there is no fallback key, so what is restored is never another
+    # lockfile's packages. It is saved straight after `npm ci`, before anything else writes
+    # into node_modules (Vite's and Storybook's own caches), so every job restores the same files.
+    - id: modules
+      uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+      with:
+        path: node_modules
+        key: node-modules-${{ runner.os }}-${{ runner.arch }}-${{ steps.node.outputs.node-version }}-${{ hashFiles('package-lock.json') }}
+
+    - if: steps.modules.outputs.cache-hit != 'true'
+      shell: bash
       run: npm ci
+
+    - if: steps.modules.outputs.cache-hit != 'true'
+      uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+      with:
+        path: node_modules
+        key: ${{ steps.modules.outputs.cache-primary-key }}
 
     # Playwright's Chromium, at the version package-lock pins, and the .deb files of its system
     # packages, kept between runs. Every job that calls this action shares the two caches: the
