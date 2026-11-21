@@ -18,7 +18,7 @@ const ALSO_FAILS = `also fails::${node('process.exit(1)')}`;
 
 test('an argument is name::command; anything else is refused', () => {
   assert.deepEqual(parseCheck('Lint::npm run lint -- --format x'), {
-    name: 'Lint',
+    name: 'Not lint: this test pull request is red on purpose',
     command: 'npm run lint -- --format x',
   });
   for (const bad of ['npm run lint', '::npm run lint', 'Lint::', 'Lint:npm run lint']) {
