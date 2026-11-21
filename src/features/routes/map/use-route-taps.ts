@@ -2,6 +2,7 @@ import type { MapLibreMap, MapMouseEvent } from 'maplibre-gl';
 import { useEffect, type RefObject } from 'react';
 
 import { ROUTES_HIT_LAYER, bindHover, resolveTap, tapTargets } from './tap';
+import { isEmptyTapAnswered } from './use-empty-map-tap';
 import type { Highlight } from './use-saved-routes';
 import { directionToOpen, type Listing } from '../model/departures';
 import { isLoop, type Direction } from '../model/routes';
@@ -49,7 +50,8 @@ export function useRouteTaps<T extends Direction>(
     const canvas = map.getCanvas();
 
     // One handler, one box. A finger is wider than a pixel, so we ask what is
-    // near the tap: nothing deselects, one route opens its card, several
+    // near the tap: nothing deselects (unless the page answers it,
+    // isEmptyTapAnswered), one route opens its card, several
     // sharing a road go to the list, lit the way round it shows them. Inside
     // a hotspot's box the tap is the hotspot's alone (tapTargets). The candidates are whole routes, slots
     // included, so the studio's rows can say "return not mapped yet".
@@ -97,7 +99,7 @@ export function useRouteTaps<T extends Direction>(
           const shownHit = shownHits.find((v) => v.reversed === back.current) ?? shownHits[0];
           setBack(shownHit ? shownHit.reversed : hit.every((v) => v.reversed));
         }
-      } else {
+      } else if (!isEmptyTapAnswered(map)) {
         setSelectedId(null);
         setCandidates([]);
       }
