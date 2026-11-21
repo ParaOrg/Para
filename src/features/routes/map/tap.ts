@@ -1,5 +1,6 @@
 import type { MapLibreMap, MapMouseEvent } from 'maplibre-gl';
 
+import { areHotspotsTappable } from './hotspot-tappable';
 import { LAYERS } from './layers';
 
 /**
@@ -163,10 +164,9 @@ function queryTargets(
     const drawn = layers.filter((layer) => map.getLayer(layer));
     return drawn.length > 0 ? map.queryRenderedFeatures(where, { layers: drawn }) : [];
   };
-  // A pin, a dot or a box under the tap, topmost first, each one the box's: one query for all
-  // three, as a tap asks the map once (phone-test counts them).
+  // A pin, a dot or a box under the tap, topmost first, one query for all three (phone-test).
   const hotspots = (where: typeof box | [number, number] = box) =>
-    idsInOrder(features(HOTSPOT_TAP_LAYERS, where));
+    areHotspotsTappable(map) ? idsInOrder(features(HOTSPOT_TAP_LAYERS, where)) : [];
   const inside = hotspots([point.x, point.y]);
   if (inside.length > 0) return { routeIds: [], routeKeys: [], hotspotIds: inside };
   const routes = features([ROUTES_HIT_LAYER]);

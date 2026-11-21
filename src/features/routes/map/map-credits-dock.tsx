@@ -39,7 +39,9 @@ export function MapCreditsDock({ isDocked, onOpen, buttonRef }: MapCreditsDockPr
       <div
         className={
           'pointer-events-auto absolute bottom-full left-[calc(0.75rem+env(safe-area-inset-left))] flex @float:bottom-[max(0.75rem,env(safe-area-inset-bottom))] @float:mb-0 ' +
-          (isDocked ? 'mb-3' : 'mb-[max(0.75rem,env(safe-area-inset-bottom))]')
+          (isDocked
+            ? 'mb-[var(--credits-gap,0.75rem)]'
+            : 'mb-[max(0.75rem,env(safe-area-inset-bottom))]')
         }
       >
         <CreditsButton ref={buttonRef} onClick={onOpen} />
