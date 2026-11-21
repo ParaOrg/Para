@@ -424,3 +424,48 @@ export const takeHeldReload = async (base = BASE, ms = 3000) => {
     };
   });
 };
+
+/**
+ * A page point on the map where a tap lands on nothing: no line, no hotspot (the hit layers a tap
+ * asks, tap.ts, within the finger's 20 px), no marker or control over it, and above every sheet on
+ * show. The public map's open trip has no ‹ or ✕: the empty map tapped takes it back to what it was
+ * opened from, and closes the route list (the owner, 2026-11-21). Null when no such point is in
+ * sight.
+ */
+export const emptyMapPoint = (page) =>
+  page.evaluate(() => {
+    const m = window.__map;
+    const container = m.getCanvasContainer();
+    const box = container.getBoundingClientRect();
+    const sheetTops = [
+      ...document.querySelectorAll('[data-testid="card"], [data-testid="chooser"]'),
+    ]
+      .filter((el) => !el.hidden && el.getClientRects().length > 0)
+      .map((el) => el.getBoundingClientRect().top);
+    // A sheet floating on the left of a wide map leaves the map to its right.
+    const floats = [...document.querySelectorAll('[data-testid="card"], [data-testid="chooser"]')]
+      .filter((el) => !el.hidden && el.getClientRects().length > 0)
+      .map((el) => el.getBoundingClientRect())
+      .filter((r) => r.top <= box.top + 1 && r.bottom >= box.bottom - 1);
+    const left = Math.max(box.left, ...floats.map((r) => r.right)) + 30;
+    const bottom = Math.min(box.bottom, ...sheetTops.filter((t) => t > box.top + 1)) - 80;
+    const layers = ['saved-routes-hit', 'saved-stops-pin', 'saved-stops-dot', 'saved-stops-fill'];
+    const drawn = layers.filter((id) => m.getLayer(id));
+    for (let y = box.top + 110; y < bottom; y += 23) {
+      for (let x = left; x < box.right - 70; x += 23) {
+        const top = document.elementFromPoint(x, y);
+        if (top !== m.getCanvas()) continue;
+        const px = x - box.left;
+        const py = y - box.top;
+        const near = m.queryRenderedFeatures(
+          [
+            [px - 24, py - 24],
+            [px + 24, py + 24],
+          ],
+          { layers: drawn },
+        );
+        if (near.length === 0) return { x, y };
+      }
+    }
+    return null;
+  });

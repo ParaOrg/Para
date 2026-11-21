@@ -20,7 +20,7 @@
 // field is the field's, and the card stays open.
 import { chromium } from 'playwright';
 import { readFileSync } from 'node:fs';
-import { BASE, bareStyle, harness } from './lib/harness.mjs';
+import { BASE, bareStyle, emptyMapPoint, harness } from './lib/harness.mjs';
 
 const NO_TILES = !!process.env.PARA_NO_TILES;
 const { check, tally } = harness();
@@ -277,14 +277,18 @@ const bareCircles = (page) =>
 const near = (value, metres) => Math.abs(value - metres / 1000) <= 0.16;
 /** A click on a row the sheet has scrolled out of the screen: the button's own handler, as a tap would reach it. */
 const press = (locator) => locator.evaluate((el) => el.click());
-// The trip card's own ✕: a toast on the page (the locator's note, say) has a Close of its own.
+// The trip closed as a commuter closes it: it has no ✕ (the owner, 2026-11-21), so a finger on the
+// empty map, until nothing it was opened over (a list of the routes sharing its end) is left.
 const closeTrip = async (page) => {
-  await page
-    .locator('[data-testid="card"]', { has: page.locator('[data-testid="trip"]') })
-    .getByRole('button', { name: 'Close' })
-    .first()
-    .tap();
-  await page.waitForTimeout(400);
+  const open = page.locator(
+    '[data-testid="card"]:not([hidden]), [data-testid="chooser"]:not([hidden])',
+  );
+  for (let i = 0; i < 3 && (await open.count()) > 0; i++) {
+    const at = await emptyMapPoint(page);
+    if (!at) throw new Error('closeTrip: no empty map in sight to tap');
+    await page.touchscreen.tap(at.x, at.y);
+    await page.waitForTimeout(400);
+  }
 };
 
 // ---------------------------------------------------- 1. no location: the first place
@@ -293,8 +297,9 @@ const closeTrip = async (page) => {
   await openTrip(page);
   const card = page.locator('[data-testid="card"]').first();
   check(
-    "a loop's trip has no SWITCH",
-    (await page.locator('[data-testid="card-switch"]').count()) === 0,
+    "a loop's trip has no ⇅ to turn it round",
+    (await page.locator('[data-testid="trip-ends-switch"]').count()) === 0 &&
+      (await page.locator('[data-testid="trip-ends"]').count()) === 1,
   );
   // The Transport mode tile says what the loop rides, as any trip's does: its name is the ends card's.
   const mode = (await card.locator('[data-testid="trip-mode"]').innerText()).trim();
