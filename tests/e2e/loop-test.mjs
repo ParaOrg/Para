@@ -17,7 +17,9 @@
 // row rides on round to the tip; × Remove as start lets the ride go (the picks
 // only in a build with ride picking, VITE_RIDE_PICKS; skipped without). And on a
 // wide screen, with a place's card open beside place search: Escape in the
-// field is the field's, and the card stays open.
+// field is the field's, and the card stays open. A place's card is opened by a
+// tap on its box only in a build with VITE_HOTSPOT_TAPS; without, that tap opens
+// the loop's line under it, and what needs the card skips.
 import { chromium } from 'playwright';
 import { readFileSync } from 'node:fs';
 import { BASE, bareStyle, emptyMapPoint, harness } from './lib/harness.mjs';
@@ -596,29 +598,51 @@ const closeTrip = async (page) => {
   const { context, page, errors } = await phone();
   await showBlock(page);
   await page.waitForTimeout(400);
+  // A build without hotspot taps (VITE_HOTSPOT_TAPS) takes none on a box: the loop's line under
+  // Engineering's is what the tap opens, and no place's card leads to a trip.
+  const isHotspotTapOn = (await page.locator('[data-hotspot-taps="on"]').count()) > 0;
   // A tap inside Engineering's box opens its card.
   const at = await screenOf(page, ENGINEERING.at);
   await boxDrawnAt(page, at);
   await page.touchscreen.tap(at.x, at.y);
-  await page.locator('[data-testid="card"]').first().waitFor({ timeout: 15000 });
-  await page.waitForTimeout(500);
-  const row = (await page.locator('[data-testid="card-item"]').first().innerText()).trim();
-  check("the place's card lists the loop with Ikot where its way goes", row === 'Ikot', row);
-  check(
-    '  and has no SWITCH over loops alone',
-    (await page.locator('[data-testid="card-flip"]').count()) === 0,
-  );
-  // The card opens at Low, where a tap on a row only raises it: the handle raises it first.
-  await page.locator('[data-testid="card"]').first().getByTestId('dock-handle').click();
-  await page.waitForTimeout(400);
-  await page.locator('[data-testid="card-item"]').first().tap();
-  await page.locator('[data-testid="trip"]').waitFor({ timeout: 15000 });
-  await page.waitForTimeout(400);
-  check(
-    "a trip opened from box 4's card starts at 4",
-    (await originLabel(page)).includes(ENGINEERING.name),
-    await originLabel(page),
-  );
+  if (!isHotspotTapOn) {
+    console.log(
+      "SKIP  a trip opened from a hintuan's card: hotspot taps are off in this build (VITE_HOTSPOT_TAPS)",
+    );
+    // The loop's trip, or the list where another route shares its road there.
+    const isRoute = await page
+      .locator('[data-testid="trip"], [data-testid="chooser"]')
+      .first()
+      .waitFor({ timeout: 15000 })
+      .then(
+        () => true,
+        () => false,
+      );
+    check(
+      "hotspot taps off: a tap inside Engineering's box opens the loop's line under it, no place's card",
+      isRoute && (await page.locator('[data-testid="card-place"]').count()) === 0,
+    );
+  } else {
+    await page.locator('[data-testid="card"]').first().waitFor({ timeout: 15000 });
+    await page.waitForTimeout(500);
+    const row = (await page.locator('[data-testid="card-item"]').first().innerText()).trim();
+    check("the place's card lists the loop with Ikot where its way goes", row === 'Ikot', row);
+    check(
+      '  and has no SWITCH over loops alone',
+      (await page.locator('[data-testid="card-flip"]').count()) === 0,
+    );
+    // The card opens at Low, where a tap on a row only raises it: the handle raises it first.
+    await page.locator('[data-testid="card"]').first().getByTestId('dock-handle').click();
+    await page.waitForTimeout(400);
+    await page.locator('[data-testid="card-item"]').first().tap();
+    await page.locator('[data-testid="trip"]').waitFor({ timeout: 15000 });
+    await page.waitForTimeout(400);
+    check(
+      "a trip opened from box 4's card starts at 4",
+      (await originLabel(page)).includes(ENGINEERING.name),
+      await originLabel(page),
+    );
+  }
   check('no page errors', errors.length === 0, errors.join('; '));
   await context.close();
 }
@@ -643,18 +667,26 @@ const closeTrip = async (page) => {
   );
   await showBlock(page);
   await page.waitForTimeout(400);
-  const at = await screenOf(page, ENGINEERING.at);
-  await boxDrawnAt(page, at);
-  await page.mouse.click(at.x, at.y);
-  const card = page.locator('[data-testid="card"]:not([hidden])');
-  await card.first().waitFor({ timeout: 15000 });
-  await page.waitForTimeout(500);
 
   const field = page.getByRole('combobox', { name: 'Search places' });
+  const card = page.locator('[data-testid="card"]:not([hidden])');
+  // The place's card is opened by a tap on its box, which a build without hotspot taps
+  // (VITE_HOTSPOT_TAPS) does not take.
+  const isHotspotTapOn = (await page.locator('[data-hotspot-taps="on"]').count()) > 0;
   // A build without place search (VITE_PLACE_SEARCH) has no field: nothing here to check.
   if ((await field.count()) === 0) {
     console.log('SKIP  Escape in place search: hidden in this build (VITE_PLACE_SEARCH)');
+  } else if (!isHotspotTapOn) {
+    console.log(
+      "SKIP  Escape in place search over a place's card: hotspot taps are off in this build (VITE_HOTSPOT_TAPS)",
+    );
   } else {
+    const at = await screenOf(page, ENGINEERING.at);
+    await boxDrawnAt(page, at);
+    await page.mouse.click(at.x, at.y);
+    await card.first().waitFor({ timeout: 15000 });
+    await page.waitForTimeout(500);
+
     await field.click();
     await field.pressSequentially('Palma');
     await page.getByRole('option').first().waitFor({ timeout: 10000 });

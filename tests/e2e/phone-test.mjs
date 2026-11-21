@@ -28,7 +28,8 @@
 // route list where two routes share a road ("N Routes", a card per place), the trip a
 // row opens in its card's colour and the empty map tapped back to the list, every card at rest; a tap
 // just outside a hotspot, and the bottom sheet on a hotspot's card — tap and
-// drag the handle, Middle → Max → Low → Middle → Low → gone; a trip opened
+// drag the handle, Middle → Max → Low → Middle → Low → gone (in a build with
+// VITE_HOTSPOT_TAPS; without, a tap there opens no place's card); a trip opened
 // by a tap on its own line (no ?r= link since the owner took trip links out,
 // 2026-10-03), the view it frames, and leaving it listing the routes sharing an
 // end with its own; the fine-pointer desktop control (±5 px, no zoom
@@ -528,6 +529,10 @@ await page.goto(`${BASE}/`, { waitUntil: 'load' });
 await page.waitForFunction(() => window.__map && window.__map.loaded(), null, { timeout: 30000 });
 await waitForSource(page, 'saved-routes');
 await mapIdle(page);
+// A build without hotspot taps (VITE_HOTSPOT_TAPS) reads a tap on a box as the route's under it or
+// the empty map's, so no place's card opens from the map; the page's root says which. One build
+// serves every phone this suite opens.
+const isHotspotTapOn = (await page.locator('[data-hotspot-taps="on"]').count()) > 0;
 
 check(
   'no Contributor button is on the public map',
@@ -3571,7 +3576,7 @@ if (runsPart(1)) {
     }
 
     const trip2 = await tripChecks();
-    // The ⓘ rides 12 over the card's sheet, as the LocatorButton does on the right.
+    // The ⓘ rides 16 over the card's sheet, as the LocatorButton does on the right.
     if (['free', 'low'].includes(await sheetState())) {
       await cardsSettled(page);
       const above = await page.evaluate(() => {
@@ -3584,8 +3589,8 @@ if (runsPart(1)) {
         return info && top !== undefined ? top - info.bottom : null;
       });
       check(
-        "  with a card open the map's ⓘ stands 12 over its sheet",
-        above !== null && Math.abs(above - 12) < 2,
+        "  with a card open the map's ⓘ stands 16 over its sheet",
+        above !== null && Math.abs(above - 16) < 2,
         String(above),
       );
 
@@ -4246,7 +4251,9 @@ if (runsPart(3)) {
   // so "under" reaches 9 px); a route merely inside the ±20 px box shares the
   // route list with the hotspot; no route near, and the hotspot opens on its own.
   // Hotspots are a few tens of metres across, so this section zooms to 18, where
-  // a person tapping a terminal would be, and scales its metres per pixel to match.
+  // a person tapping a terminal would be, and scales its metres per pixel to match. A build without
+  // hotspot taps (VITE_HOTSPOT_TAPS) takes none on a box: 4a and 4b check that no place's card
+  // opens, and 4c to 4f, which need one opened from the map, skip.
   const Z_HOT = 18;
   const M_HOT = M_PER_PX / 2 ** (Z_HOT - ZOOM);
   const UNDER_M = 9 * M_HOT + 3 * M_HOT;
@@ -4295,6 +4302,28 @@ if (runsPart(3)) {
         ? `no point inside a hotspot today is ${Math.round(UNDER_M)} m clear of every route line`
         : 'no hotspots on the map today',
     );
+  } else if (!isHotspotTapOn) {
+    // The box takes no tap: a route in the finger's reach is what opens, and with none, nothing.
+    console.log(
+      'SKIP  a tap inside a hotspot opens its card alone, its rows let go and picked: hotspot taps are off in this build (VITE_HOTSPOT_TAPS)',
+    );
+    const { poly, point, routesInBox } = inside;
+    await jumpTo(page, point, Z_HOT);
+    const anchor = await project(page, point);
+    const box = await canvasBox();
+    await mapTap(box.x + anchor[0], box.y + anchor[1]);
+    await cardsSettled(page);
+    const seen = {
+      places: await page.locator('[data-testid="card-place"]').count(),
+      cards: await card().count(),
+      lists: await page.locator('[data-testid="chooser"]').count(),
+    };
+    check(
+      `hotspot taps off: a tap inside "${poly.name}" opens no place's card${routesInBox.length ? '' : ', nor anything, no route in reach'}`,
+      seen.places === 0 && (routesInBox.length > 0 || seen.cards + seen.lists === 0),
+      `${JSON.stringify(seen)}; ${routesInBox.length} route(s) in reach`,
+    );
+    await closeCard();
   } else {
     const { poly, point, routesInBox } = inside;
     await jumpTo(page, point, Z_HOT);
@@ -4428,16 +4457,26 @@ if (runsPart(3)) {
     await cardsSettled(page);
 
     const text = await cardText();
-    check(
-      `a tap 15 px outside "${poly.name}" still opens it`,
-      text.includes(poly.name),
-      `${text.split('\n')[0] || '(no card)'}; the box drawn at its centre: ${drawn === 1 ? 'yes' : drawn}`,
-    );
-    check(
-      `  the card has its row Selected`,
-      (await pressedBox()) === poly.id,
-      `${await pressedBox()}`,
-    );
+    if (!isHotspotTapOn) {
+      // The box takes no tap, and no route is in the tap's reach: it is the empty map's.
+      const lists = await page.locator('[data-testid="chooser"]').count();
+      check(
+        `hotspot taps off: a tap 15 px outside "${poly.name}" opens nothing`,
+        (await card().count()) === 0 && lists === 0,
+        `${text.split('\n')[0] || '(no card)'}; ${lists} list(s); the box drawn at its centre: ${drawn === 1 ? 'yes' : drawn}`,
+      );
+    } else {
+      check(
+        `a tap 15 px outside "${poly.name}" still opens it`,
+        text.includes(poly.name),
+        `${text.split('\n')[0] || '(no card)'}; the box drawn at its centre: ${drawn === 1 ? 'yes' : drawn}`,
+      );
+      check(
+        `  the card has its row Selected`,
+        (await pressedBox()) === poly.id,
+        `${await pressedBox()}`,
+      );
+    }
     await closeCard();
   }
 
@@ -4621,6 +4660,11 @@ if (runsPart(3)) {
     skip(
       "the sheet handle opens and closes a hotspot's card",
       'no hotspot clear of every route to open a card on (see 4b)',
+    );
+  } else if (!isHotspotTapOn) {
+    // 4c, 4e and 4f open their card by a tap on the map, beside the box (openSheet).
+    console.log(
+      "SKIP  the sheet's handle, drags and throws, a mouse's drag and Escape, on a hotspot's card: hotspot taps are off in this build (VITE_HOTSPOT_TAPS)",
     );
   } else {
     await page.evaluate(() => {
@@ -4829,6 +4873,10 @@ if (runsPart(3)) {
         ? 'no hotspot has a drawn route linked today'
         : 'the published map could not be read',
     );
+  } else if (!isHotspotTapOn) {
+    console.log(
+      'SKIP  a tap on the handle of a hotspot card with routes raises it, opening none, its late click reaching nothing: hotspot taps are off in this build (VITE_HOTSPOT_TAPS)',
+    );
   } else {
     const c = centroidOf(withRoutes.ring);
     await jumpTo(page, c, Z_HOT);
@@ -4927,7 +4975,7 @@ if (runsPart(3)) {
 
   // ----------------------------------------------- 4e. the handle, by a mouse
   // On a phone of its own, not touched by finger alone (newPhone).
-  if (hotspot) {
+  if (hotspot && isHotspotTapOn) {
     await newPhone({ isTouchOnly: false });
     // A mouse's drag, on a narrow window: the browser then clicks the handle it
     // was held on, and that click toggled the sheet straight back — pulled up,
@@ -5001,7 +5049,7 @@ if (runsPart(3)) {
   // On a phone of its own (newPhone): Escape, the keyboard's close, takes the card away, and focus
   // goes back to what had it as the card opened (useDialogFocus): the map, which the tap that
   // opened it focused. The card is opened by one tap, the phone's first input, before any key.
-  if (hotspot) {
+  if (hotspot && isHotspotTapOn) {
     await newPhone({ isTouchOnly: false });
     await openSheet();
     const isOpen = (await card().count()) > 0;
@@ -5381,37 +5429,43 @@ if (runsPart(2)) {
     // A terminal with no link: its card lists no route, though the route starts
     // there. Today's behaviour, an open question for the owner (public-map-01):
     // when the card comes to count a route's head and tail, this check changes
-    // with it.
-    const [tx, ty] = WEST_TERMINAL.point.coordinates;
-    // Inside its box, on the side away from the two lines that leave it.
-    const inBox = [tx - 0.0003, ty];
-    await jumpTo(page, inBox);
-    const [px, py] = await project(page, inBox);
-    const frame = await canvasBox();
-    await mapTap(frame.x + px, frame.y + py);
-    await page
-      .waitForFunction(() => !!document.querySelector('[data-testid="card-place"]'), null, {
-        timeout: 10000,
-      })
-      .catch(() => {});
-    const terminal = await page.evaluate(() => {
-      const shown = [...document.querySelectorAll('[data-testid="card"]')].find((c) => !c.hidden);
-      return {
-        place: shown?.querySelector('[data-testid="card-place"]')?.innerText.trim() ?? null,
-        boxes: shown?.querySelectorAll('[data-testid="card-box"]').length ?? 0,
-        routes: shown?.querySelectorAll('[data-testid="card-origin"]').length ?? 0,
-        counter: shown?.querySelectorAll('[data-testid="card-count"]').length ?? 0,
-      };
-    });
-    check(
-      "a terminal with no link opens its card with no route and no counter (today's behaviour, public-map-01)",
-      !!terminal.place?.includes(WEST_TERMINAL.name) &&
-        terminal.boxes === 1 &&
-        terminal.routes === 0 &&
-        terminal.counter === 0,
-      JSON.stringify(terminal),
-    );
-    await closeCard();
+    // with it. Opened by a tap on its box, which a build without hotspot taps does not take.
+    if (!isHotspotTapOn) {
+      console.log(
+        'SKIP  a terminal with no link opens its card with no route and no counter: hotspot taps are off in this build (VITE_HOTSPOT_TAPS)',
+      );
+    } else {
+      const [tx, ty] = WEST_TERMINAL.point.coordinates;
+      // Inside its box, on the side away from the two lines that leave it.
+      const inBox = [tx - 0.0003, ty];
+      await jumpTo(page, inBox);
+      const [px, py] = await project(page, inBox);
+      const frame = await canvasBox();
+      await mapTap(frame.x + px, frame.y + py);
+      await page
+        .waitForFunction(() => !!document.querySelector('[data-testid="card-place"]'), null, {
+          timeout: 10000,
+        })
+        .catch(() => {});
+      const terminal = await page.evaluate(() => {
+        const shown = [...document.querySelectorAll('[data-testid="card"]')].find((c) => !c.hidden);
+        return {
+          place: shown?.querySelector('[data-testid="card-place"]')?.innerText.trim() ?? null,
+          boxes: shown?.querySelectorAll('[data-testid="card-box"]').length ?? 0,
+          routes: shown?.querySelectorAll('[data-testid="card-origin"]').length ?? 0,
+          counter: shown?.querySelectorAll('[data-testid="card-count"]').length ?? 0,
+        };
+      });
+      check(
+        "a terminal with no link opens its card with no route and no counter (today's behaviour, public-map-01)",
+        !!terminal.place?.includes(WEST_TERMINAL.name) &&
+          terminal.boxes === 1 &&
+          terminal.routes === 0 &&
+          terminal.counter === 0,
+        JSON.stringify(terminal),
+      );
+      await closeCard();
+    }
   }
 
   onMadeUpMap = false;
