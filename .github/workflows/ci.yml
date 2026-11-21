@@ -579,7 +579,8 @@ jobs:
 
   # Every story renders and its play passes (scripts/checks/storybook-play.mjs), against the
   # built Storybook; the stories that failed when the check came in are listed, by area, in
-  # storybook-play-baseline.json, which may only shrink.
+  # storybook-play-baseline.json, which may only shrink. Under "Build and the public map": a
+  # story that stops rendering fails that check, so it holds a merge as a failed suite does.
   storybook:
     name: Storybook plays
     needs: changes
@@ -688,17 +689,17 @@ jobs:
   # for a result fails it.
   public:
     name: Build and the public map
-    needs: [changes, build, public-suite, contribute-suite, preview-suite]
+    needs: [changes, build, public-suite, contribute-suite, preview-suite, storybook]
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
       - env:
-          RESULTS: ${{ needs.changes.result }} ${{ needs.build.result }} ${{ needs.public-suite.result }} ${{ needs.contribute-suite.result }} ${{ needs.preview-suite.result }}
+          RESULTS: ${{ needs.changes.result }} ${{ needs.build.result }} ${{ needs.public-suite.result }} ${{ needs.contribute-suite.result }} ${{ needs.preview-suite.result }} ${{ needs.storybook.result }}
         run: |
-          echo "changes, build, public suites, contributor suites, preview suites: $RESULTS"
+          echo "changes, build, public suites, contributor suites, preview suites, Storybook plays: $RESULTS"
           read -ra results <<< "$RESULTS"
-          if [ "${#results[@]}" -ne 5 ] || [ "${results[0]}" != success ]; then exit 1; fi
+          if [ "${#results[@]}" -ne 6 ] || [ "${results[0]}" != success ]; then exit 1; fi
           for result in "${results[@]}"; do
             case "$result" in success | skipped) ;; *) exit 1 ;; esac
           done
