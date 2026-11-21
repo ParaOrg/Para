@@ -3,10 +3,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import type { LngLat } from '@/shared/utils/geo';
 
-import { useHotspotTaps } from './hotspot-taps';
 import { boxMarks, placeHull } from './hotspots-shown';
 import { loadOnce } from './load-once';
 import { APP_MOVE } from './map-view';
+import { useHotspotTaps } from './use-hotspot-taps';
 import { useSavedHotspotsLayers } from './use-saved-hotspots-layers';
 import { letGoHolds } from '../cards/card-stack';
 import type { HotspotLink, Hotspot } from '../model/hotspots';

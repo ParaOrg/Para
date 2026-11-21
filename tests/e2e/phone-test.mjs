@@ -3161,7 +3161,7 @@ const openedDirection = async () => {
  * from every other line and every box, more than a tap reaches (the box's
  * corner, 20√2 px, and half the hit line's width, at the suite's zoom). Its
  * own way back may share the road where `d` is the way out: a tap there opens
- * the way out (route-taps.ts, the outbound rule). The trip links that opened a
+ * the way out (use-route-taps.ts, the outbound rule). The trip links that opened a
  * given trip went on 2026-10-03; false when no vertex has the room, or the
  * card opened is another.
  */
