@@ -110,6 +110,7 @@ What each value is for:
 Once it is on:
 
 - A session merges with `gh pr merge <number>`, which now adds the pull request to the queue. It lands when the queue's run is green, about 13 minutes later, and is put out of the queue with its checks red if not.
+- A pull request into `staging` runs the build job's checks alone and answers in about a minute; the browser suites and Storybook run in the queue. CI reads the branch's rules itself to know a queue is there (`ci.yml`, the `changes` job), so nothing is switched by hand: take the queue rule away, and pull requests run their suites again from their next push.
 - The nightly **Publish map** still pushes `public/data/` straight to `staging` with the deploy key, which bypasses the ruleset. The queue rebuilds on the new tip.
 
 **How to prove it,** the same day:

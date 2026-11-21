@@ -40,6 +40,7 @@ The goals: a codebase that is easy to review, work that scales, and an app whose
 - The owner reviews the screens. The coordinator and an Opus review cover the code.
 - The small pull requests stay underneath, one purpose each, so the history stays readable.
 - `staging` is always kept up to date with finished work.
+- **Where `staging` has a merge queue** (`staging-protection.md`), a pull request runs the build job's checks alone: formatting, lint, the build and its guards, and the unit checks. `gh pr merge <number>` puts it in the queue, which runs every browser suite and Storybook on the commit the merge would make, and lands it only if they pass. To have the suites' answer before queueing, run the ones the change reaches locally (`tests/e2e/README.md`), or CI's "Run workflow" on the branch.
 - Before `staging` is merged into `main`, `staging` itself is tested as a whole: `npm run check` and every browser suite.
 - **A change to `.github/`** (a workflow, an action, `dependabot.yml`) merges alone, because a broken workflow stops CI for everyone. Before it merges, the coordinator gets what changed in which jobs, and the job count, and gives the go-ahead. Nothing else merges after it until staging's push run on its merge commit is green with the job count checked. The checks branch protection requires ("What changed", "Build and the public map", "The editor") keep their names, and their `needs` still cover what they covered.
 
