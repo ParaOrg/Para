@@ -67,10 +67,10 @@ work waits on `staging` first, and `staging` has its own preview link.
 
 CI is `.github/workflows/ci.yml`. For a pull request:
 
-- **Build, lint and formatting**, and **The unit checks** beside it: formatting,
-  lint, the architecture page and the build in one job, `npm run test:unit` in the
-  other. Together they are `npm run check`, so if it passes on your computer it
-  passes there.
+- **Build and lint**, and **Formatting and the unit checks** beside it: lint,
+  the architecture page and the build in one job, formatting and
+  `npm run test:unit` in the other. Together they are `npm run check`, so if it
+  passes on your computer it passes there.
 - **Headless browser suites** (Playwright, in `tests/e2e/`): they open the
   app in a hidden browser and click through it. Only the suites your files can
   reach run. A change to docs alone runs none. You do not have to run them
