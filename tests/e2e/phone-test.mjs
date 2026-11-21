@@ -2811,9 +2811,11 @@ const endClearsFooter = async (sel) => {
     const footer = [...sheet.children].find((el) => el.hasAttribute('data-sheet-footer'));
     const overflow = body.scrollHeight - body.clientHeight;
     body.scrollTop = body.scrollHeight;
-    const reach = [...body.querySelectorAll('button, a[href], [tabindex="0"]')].filter(
-      (el) => el.getClientRects().length > 0 && !el.closest('[inert]'),
-    );
+    // What a finger reaches at the end, and a trip's last stop: with picking off (VITE_RIDE_PICKS)
+    // its rows are no controls, yet the last of them must still clear the footer.
+    const reach = [
+      ...body.querySelectorAll('button, a[href], [tabindex="0"], [data-testid="trip-destination"]'),
+    ].filter((el) => el.getClientRects().length > 0 && !el.closest('[inert]'));
     const last = reach.at(-1);
     if (!last) return { ok: false, why: 'nothing in the body to reach' };
     const r = last.getBoundingClientRect();
