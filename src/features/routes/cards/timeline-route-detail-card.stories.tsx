@@ -197,8 +197,10 @@ export const Default: Story = {
     await expect(canvas.queryByTestId('card-controller')).toBeNull();
     await expect(canvas.queryByRole('button', { name: 'Back' })).toBeNull();
     await expect(canvas.queryByRole('button', { name: 'Close' })).toBeNull();
+    // Escape, from inside the sheet as a keyboard user's would be, does what ✕ did.
+    canvas.getByTestId('trip-ends-switch').focus();
     await userEvent.keyboard('{Escape}');
-    await expect(args.onClose).toHaveBeenCalledTimes(1);
+    await waitFor(() => expect(args.onClose).toHaveBeenCalledTimes(1));
   },
 };
 

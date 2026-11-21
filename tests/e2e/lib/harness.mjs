@@ -437,30 +437,28 @@ export const emptyMapPoint = (page) =>
     const m = window.__map;
     const container = m.getCanvasContainer();
     const box = container.getBoundingClientRect();
-    const sheetTops = [
-      ...document.querySelectorAll('[data-testid="card"], [data-testid="chooser"]'),
-    ]
+    const sheets = [...document.querySelectorAll('[data-testid="card"], [data-testid="chooser"]')]
       .filter((el) => !el.hidden && el.getClientRects().length > 0)
-      .map((el) => el.getBoundingClientRect().top);
+      .map((el) => el.getBoundingClientRect());
     // A sheet floating on the left of a wide map leaves the map to its right.
-    const floats = [...document.querySelectorAll('[data-testid="card"], [data-testid="chooser"]')]
-      .filter((el) => !el.hidden && el.getClientRects().length > 0)
-      .map((el) => el.getBoundingClientRect())
-      .filter((r) => r.top <= box.top + 1 && r.bottom >= box.bottom - 1);
-    const left = Math.max(box.left, ...floats.map((r) => r.right)) + 30;
-    const bottom = Math.min(box.bottom, ...sheetTops.filter((t) => t > box.top + 1)) - 80;
+    const floats = sheets.filter((r) => r.top <= box.top + 1 && r.bottom >= box.bottom - 1);
+    const left = Math.max(box.left, ...floats.map((r) => r.right)) + 16;
+    const tops = sheets.map((r) => r.top).filter((t) => t > box.top + 1);
+    const bottom = Math.min(box.bottom, ...tops) - 24;
+    // Clear by a little more than the app's own reach for a tap (tap.ts's TAP_HALF_PX: 20 for a
+    // finger, 5 for a mouse), so the tap is the page's empty map, not a line's or a box's.
+    const reach = window.matchMedia('(any-pointer: coarse)').matches ? 22 : 8;
     const layers = ['saved-routes-hit', 'saved-stops-pin', 'saved-stops-dot', 'saved-stops-fill'];
     const drawn = layers.filter((id) => m.getLayer(id));
-    for (let y = box.top + 110; y < bottom; y += 23) {
-      for (let x = left; x < box.right - 70; x += 23) {
-        const top = document.elementFromPoint(x, y);
-        if (top !== m.getCanvas()) continue;
+    for (let y = box.top + 40; y < bottom; y += 12) {
+      for (let x = left; x < box.right - 16; x += 12) {
+        if (document.elementFromPoint(x, y) !== m.getCanvas()) continue;
         const px = x - box.left;
         const py = y - box.top;
         const near = m.queryRenderedFeatures(
           [
-            [px - 24, py - 24],
-            [px + 24, py + 24],
+            [px - reach, py - reach],
+            [px + reach, py + reach],
           ],
           { layers: drawn },
         );

@@ -277,7 +277,7 @@ async function pinToTap(page, alone) {
     await page.screenshot({ path: `${SHOTS}/public-zoomed-out.png` });
   }
   // Zoomed out round each, where a dot would be drawn: no dot of any kind on the screen, and the
-  // box still drawn (at the opening view's zoom, 9, a box is too small to show at all).
+  // box still drawn where the dot gave way to it (below that, a terminal's box is too small).
   for (const [kind, near, boxId] of [
     ['terminal', at, id],
     ['hintuan', hintuanAt, hintuanId],
@@ -292,9 +292,9 @@ async function pinToTap(page, alone) {
         LAYER.dot,
       );
       check(
-        `public map: round a ${kind}, at zoom ${zoom}, no dot${zoom < 11 ? '' : '; its box still drawn'}`,
+        `public map: round a ${kind}, at zoom ${zoom}, no dot${zoom < ZOOMED_OUT ? '' : '; its box still drawn'}`,
         dots === 0 &&
-          (zoom < 11 ||
+          (zoom < ZOOMED_OUT ||
             (await until(
               () => drawn(page, LAYER.fill, boxId),
               (v) => v,
