@@ -629,24 +629,29 @@ const closeTrip = async (page) => {
   await page.waitForTimeout(500);
 
   const field = page.getByRole('combobox', { name: 'Search places' });
-  await field.click();
-  await field.pressSequentially('Palma');
-  await page.getByRole('option').first().waitFor({ timeout: 10000 });
-  await page.keyboard.press('Escape');
-  await page.waitForTimeout(300);
-  check('Escape in place search clears what was typed', (await field.inputValue()) === '');
-  check('  and the card behind the field stays open', (await card.count()) === 1);
-  await page.keyboard.press('Escape');
-  await page.waitForTimeout(300);
-  check(
-    '  a second Escape in the empty field leaves the card open too',
-    (await card.count()) === 1,
-  );
+  // A build without place search (VITE_PLACE_SEARCH) has no field: nothing here to check.
+  if ((await field.count()) === 0) {
+    console.log('SKIP  Escape in place search: hidden in this build (VITE_PLACE_SEARCH)');
+  } else {
+    await field.click();
+    await field.pressSequentially('Palma');
+    await page.getByRole('option').first().waitFor({ timeout: 10000 });
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(300);
+    check('Escape in place search clears what was typed', (await field.inputValue()) === '');
+    check('  and the card behind the field stays open', (await card.count()) === 1);
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(300);
+    check(
+      '  a second Escape in the empty field leaves the card open too',
+      (await card.count()) === 1,
+    );
 
-  await field.evaluate((el) => el.blur());
-  await page.keyboard.press('Escape');
-  await page.waitForTimeout(500);
-  check('out of the field, Escape closes the card as before', (await card.count()) === 0);
+    await field.evaluate((el) => el.blur());
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(500);
+    check('out of the field, Escape closes the card as before', (await card.count()) === 0);
+  }
   check('no page errors', errors.length === 0, errors.join('; '));
   await context.close();
 }

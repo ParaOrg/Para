@@ -45,6 +45,7 @@ import {
   loadHotspotsFromFile,
 } from '@/features/routes/published/fetch-index';
 import { fetchLine } from '@/features/routes/published/fetch-line';
+import { isPlaceSearchShown } from '@/shared/config/env';
 import { useTurn } from '@/shared/hooks/commit-turn';
 import { retryingLazy } from '@/shared/lib/retrying-lazy';
 import { cn } from '@/shared/utils/cn';
@@ -340,19 +341,21 @@ export function PublicMapApp() {
           <LandmarkPin key={goalLandmark.id} map={map} at={goalLandmark.point} />
         )}
         {/* Place search: a place opens as its name tapped does; wide, the cards float under it. */}
-        <PlaceSearchBar
-          map={map}
-          hotspots={hotspots.hotspots}
-          directionsAt={directionsAt}
-          whereNow={() => where.current?.at ?? null}
-          onPick={(hotspot) => openPlace(hotspot.id)}
-          onLookAt={(point) => lookAt(map, point)}
-          onGoHere={(landmark, near, hintuan) => goHere(landmark, near, hintuan.id)}
-          onSearchRestart={letGoalGo}
-          isUnderUpdate={needRefresh}
-          isUnderOfflinePill={offline || age.stale}
-          isCardOpen={cards.open}
-        />
+        {isPlaceSearchShown && (
+          <PlaceSearchBar
+            map={map}
+            hotspots={hotspots.hotspots}
+            directionsAt={directionsAt}
+            whereNow={() => where.current?.at ?? null}
+            onPick={(hotspot) => openPlace(hotspot.id)}
+            onLookAt={(point) => lookAt(map, point)}
+            onGoHere={(landmark, near, hintuan) => goHere(landmark, near, hintuan.id)}
+            onSearchRestart={letGoalGo}
+            isUnderUpdate={needRefresh}
+            isUnderOfflinePill={offline || age.stale}
+            isCardOpen={cards.open}
+          />
+        )}
         {/* How old the map is, and a new version waiting. */}
         <Notices offline={offline} age={age} needRefresh={needRefresh} onUpdate={reloadToUpdate} />
         {/* What went wrong, at the top: the locator's note and a failed load. */}

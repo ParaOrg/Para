@@ -15,6 +15,12 @@ export const basemapHost: string = parseBasemapHost(import.meta.env.VITE_BASEMAP
  */
 export const isMapExposed: boolean = import.meta.env.DEV || import.meta.env.VITE_EXPOSE_MAP === '1';
 
+/**
+ * Whether the public map shows place search: only in a build made with `VITE_PLACE_SEARCH=1`. A
+ * plain comparison, as `isMapExposed`'s, so a build without it drops the search's code.
+ */
+export const isPlaceSearchShown: boolean = import.meta.env.VITE_PLACE_SEARCH === '1';
+
 // TODO: nothing reads this yet; the notice that tells an editor so waits for the owner's design.
 /**
  * Whether a page at `hostname` is a preview that works on the live data: staging's and every

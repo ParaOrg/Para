@@ -5508,8 +5508,13 @@ if (runsPart(1)) {
 // closing the panel takes it away. Two malls from today's landmark file, each
 // the only landmark of its name, a kilometre or more apart; the page is still on
 // the made-up map, whose places share no name with them, so each is listed as a
-// landmark, not as a Para place.
-if (runsPart(2)) {
+// landmark, not as a Para place. A build without place search (VITE_PLACE_SEARCH) skips it.
+const isPlaceSearchShown =
+  (await page.getByRole('combobox', { name: 'Search places' }).count()) > 0;
+if (runsPart(2) && !isPlaceSearchShown) {
+  console.log('SKIP  place search: hidden in this build (VITE_PLACE_SEARCH)');
+}
+if (runsPart(2) && isPlaceSearchShown) {
   {
     const file = await (await fetch(`${BASE}/data/landmarks.v1.json`)).json();
     const named = new Map();
