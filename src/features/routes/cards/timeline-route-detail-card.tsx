@@ -8,7 +8,7 @@ import { TripEndsCard } from './trip-ends-card';
 import { TripMoreRoutes, type OtherRoute } from './trip-more-routes';
 
 type Props = TripDetailProps & {
-  onSwitch: () => void; // PAPUNTA: the same route the other way, unless not `switchable`.
+  onSwitch: () => void; // ⇅ on the ends card, and PAPUNTA: the same route the other way, unless not `switchable`.
   switchable: boolean;
   back: boolean; // The way back, for the suites (PAPUNTA's `data-back`).
   /** PAPUNTA's word (wayWord), the way showing, and where its tap leads (switchWord), which it says after its name. Null on a loop. */
@@ -95,6 +95,9 @@ export function TimelineRouteDetailCard({
             routeDirection={routeDirection}
             via={via}
             loopName={loopName}
+            way={wayTo}
+            isSwitchable={switchable}
+            onSwitch={onSwitch}
           />
         }
         from={routeOrigin}

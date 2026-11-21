@@ -32,7 +32,16 @@ const meta = {
     ),
   ],
   args: {
-    ends: <TripEndsCard routeOrigin={ORIGIN} routeDirection="SM Fairview" via="Maligaya" />,
+    ends: (
+      <TripEndsCard
+        routeOrigin={ORIGIN}
+        routeDirection="SM Fairview"
+        via="Maligaya"
+        way="Pabalik"
+        isSwitchable
+        onSwitch={fn()}
+      />
+    ),
     from: ORIGIN,
     routes: ROUTES,
     onRoute: fn(),

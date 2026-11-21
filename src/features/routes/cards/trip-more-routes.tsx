@@ -36,7 +36,7 @@ const TAB = {
  * The top of a trip's detail (RouteDetail, 4796:30411): the band holding its ends, and under it a
  * tab, "View 6 more destinations", that opens the other routes out of where the trip starts
  * (DestinationGroup), their tree line hanging from the ends card. Open, the list sits between the
- * band and the panel below, and the tab, "View less", on the panel's top edge. The list stays in
+ * band and the panel below, and the tab, "View less", tucked under the panel's top edge. The list stays in
  * the page when closed, hidden, after the band and before the tab, so the tab is one button that
  * keeps its focus as it toggles.
  */
@@ -102,7 +102,10 @@ export function TripMoreRoutes({ ends, from, routes, onRoute, children }: TripMo
           </span>
         </button>
       )}
-      <div className={cn('w-full bg-bg-surface', isOpen && 'shadow-trip-band-inverse')}>
+      {/* Over the tab, so open, the panel's top edge covers the tab's foot (4821:40539). */}
+      <div
+        className={cn('relative z-2 w-full bg-bg-surface', isOpen && 'shadow-trip-band-inverse')}
+      >
         {children}
       </div>
     </div>

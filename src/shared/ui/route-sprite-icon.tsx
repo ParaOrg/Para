@@ -16,6 +16,7 @@ const ROUTE_SPRITE_VIEW_BOX = {
   start: '0 0 24 24',
   end: '0 0 24 24',
   ikot: '0 0 16 16',
+  'switch-vertical': '0 0 24 24',
   'close-large': '0 0 28 28',
   'arrow-left-right-large': '0 0 28 28',
   'filter-large': '0 0 28 28',
