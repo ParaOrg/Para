@@ -1,17 +1,17 @@
 // The hotspots' pins (src/features/routes/map/hotspot-pins.ts) in the studio and on the
 // contributor page, from the same hotspots in the studio's stand-in database and the committed map
 // file: a pin at each box's middle from the zoom where the scale bar first reads 500 m, a dot below
-// it, and the names from where the bar first reads 300 m. The public map draws no pins for now
-// and no hintuan's dot (HOTSPOT_MARKS in public-map-app.tsx), only a terminal's dot zoomed out: its
-// boxes and names stay, and a tap on a box or a terminal's dot opens it.
+// it, and the names from where the bar first reads 300 m. The public map draws no pins and no dots
+// for now (HOTSPOT_MARKS in public-map-app.tsx): its boxes and names stay, and a tap on a box
+// opens it.
 //
 //   npm run dev                          (in another terminal)
 //   node tests/e2e/map-pins-test.mjs
 //   PARA_SHOTS=dir node tests/e2e/map-pins-test.mjs   keeps each page at both zooms
 //
-// What it proves: on the public map, no pin is drawn and its chunk is not fetched, a terminal's dot
-// shows zoomed out and no hintuan's at any zoom, and the boxes, their names, the terminals' dots
-// and their taps work without the pins. In the studio, the pins and dots stand over the boxes
+// What it proves: on the public map, no pin is drawn and its chunk is not fetched, no dot shows at
+// any zoom, a terminal's or a hintuan's, and the boxes, their names and their taps work without
+// either. In the studio, the pins and dots stand over the boxes
 // and the route lines and under the hotspots' names, and tapping a pin's head (off its box) or a
 // dot opens that box's card, as tapping the box does; on the contributor page the hotspots come
 // in after the map settles, in a chunk of their own, and a pin there is display-only: a tap on it
@@ -252,7 +252,7 @@ async function pinToTap(page, alone) {
   });
   const errors = await open(page, '/');
   const { alone } = await lonePin(page);
-  // A lone terminal, which keeps its dot zoomed out, and a lone hintuan, which has none.
+  // A lone terminal and a lone hintuan, neither with a dot.
   const lone = (kind) => alone.find((p) => p.properties.kind === kind);
   const terminal = lone('terminal');
   const hintuan = lone('hintuan');
@@ -272,34 +272,37 @@ async function pinToTap(page, alone) {
       )),
   );
   if (SHOTS) await page.screenshot({ path: `${SHOTS}/public-zoomed-in.png` });
-  await settle(page, at, ZOOMED_OUT);
-  check(
-    `public map: zoomed out (${ZOOMED_OUT}), a terminal's dot, so it stays in sight`,
-    await comesIn(page, LAYER.dot, id),
-  );
-  if (SHOTS) await page.screenshot({ path: `${SHOTS}/public-zoomed-out.png` });
-  // Zoomed out round the hintuan, where a dot would be drawn: no hintuan's dot on the screen, and
-  // its box still drawn (at the opening view's zoom, 9, a box is too small to show at all).
-  for (const zoom of [9, 11, ZOOMED_OUT]) {
-    await settle(page, hintuanAt, zoom);
-    const hintuanDots = await page.evaluate(
-      (dot) =>
-        window.__map
-          .queryRenderedFeatures({ layers: [dot] })
-          .filter((f) => f.properties.kind === 'hintuan').length,
-      LAYER.dot,
-    );
-    check(
-      `public map: at zoom ${zoom}, no hintuan's dot${zoom < 11 ? '' : '; its box still drawn'}`,
-      hintuanDots === 0 &&
-        (zoom < 11 ||
-          (await until(
-            () => drawn(page, LAYER.fill, hintuanId),
-            (v) => v,
-            3000,
-          ))),
-      `${hintuanDots} hintuan dots`,
-    );
+  if (SHOTS) {
+    await settle(page, at, ZOOMED_OUT);
+    await page.screenshot({ path: `${SHOTS}/public-zoomed-out.png` });
+  }
+  // Zoomed out round each, where a dot would be drawn: no dot of any kind on the screen, and the
+  // box still drawn (at the opening view's zoom, 9, a box is too small to show at all).
+  for (const [kind, near, boxId] of [
+    ['terminal', at, id],
+    ['hintuan', hintuanAt, hintuanId],
+  ]) {
+    for (const zoom of [9, 11, ZOOMED_OUT]) {
+      await settle(page, near, zoom);
+      const dots = await page.evaluate(
+        (dot) =>
+          window.__map.getLayer(dot)
+            ? window.__map.queryRenderedFeatures({ layers: [dot] }).length
+            : 0,
+        LAYER.dot,
+      );
+      check(
+        `public map: round a ${kind}, at zoom ${zoom}, no dot${zoom < 11 ? '' : '; its box still drawn'}`,
+        dots === 0 &&
+          (zoom < 11 ||
+            (await until(
+              () => drawn(page, LAYER.fill, boxId),
+              (v) => v,
+              3000,
+            ))),
+        `${dots} dots`,
+      );
+    }
   }
   await settle(page, at, NAMES_IN);
   const names = await until(
@@ -323,11 +326,11 @@ async function pinToTap(page, alone) {
   await page.reload({ waitUntil: 'load' });
   await page.waitForFunction(() => window.__map && window.__map.loaded(), null, { timeout: 30000 });
   await waitForSource(page, 'saved-stops-pins', 30000);
-  await settle(page, at, ZOOMED_OUT);
-  const dot = await screenPoint(page, at);
-  await page.mouse.click(dot.x, dot.y);
+  await settle(page, at, ZOOMED_IN);
+  const box = await screenPoint(page, at);
+  await page.mouse.click(box.x, box.y);
   check(
-    "public map: a tap on a terminal's dot opens its card",
+    "public map: a tap on a terminal's box opens its card, with no pin or dot there",
     await until(
       () => isChosen(page, id),
       (v) => v,

@@ -64,11 +64,11 @@ const PageToasts = retryingLazy(() =>
 );
 
 /**
- * The hotspots' marks the commuter map draws. No pins zoomed in (a terminal's or hintuan's flag):
- * the boxes and their names say where each one is, and a tap there opens it as before. Zoomed out,
- * a terminal's dot alone, no hintuan's (the owner's call). The studio keeps its pins and dots.
+ * The hotspots' marks the commuter map draws: no pins zoomed in and no dots zoomed out, a
+ * terminal's or a hintuan's (the owner's call); the boxes and their names say where each one is,
+ * and a tap there opens it as before. The studio keeps its pins and dots.
  */
-const HOTSPOT_MARKS = { shouldShowPins: false, dotKinds: ['terminal'] } as const;
+const HOTSPOT_MARKS = { shouldShowPins: false, dotKinds: [] } as const;
 
 /**
  * While a docked card stands at full height, the toast sits 12 under its ✕ (map strip 24, handle
