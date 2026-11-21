@@ -61,3 +61,15 @@ for (const name of ['Build and the public map', 'The editor']) {
     }
   });
 }
+
+test('every job that checks something sits under one of the two summary checks', () => {
+  const under = new Set(
+    ['Build and the public map', 'The editor'].flatMap((name) => summaryJob(name).needs),
+  );
+  const jobs = [...WORKFLOW.matchAll(/^ {2}([a-z][a-z-]*):\n/gm)]
+    .map((match) => match[1])
+    .filter((id) => WORKFLOW.includes(`\n  ${id}:\n    name: `));
+  const loose = jobs.filter((id) => !under.has(id) && !['public', 'studio'].includes(id));
+  assert.deepEqual(loose, [], 'a job no summary check needs can fail without holding a merge');
+  assert.ok(under.has('storybook'), 'Storybook plays is under a summary check');
+});
