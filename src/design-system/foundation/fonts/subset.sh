@@ -1,6 +1,6 @@
 #!/bin/sh
 # Livvic's five wired faces, subset to Latin from the sources beside them:
-# google/fonts, ofl/livvic, the family's official release (Livvic/OFL.txt).
+# google/fonts, ofl/livvic, the family's official release (livvic/OFL.txt).
 # Run by hand when a source or the character list changes, and commit what it
 # writes; the build only copies the results (no Python in the build).
 # Made with fonttools (pip install fonttools brotli), in a virtual environment
@@ -17,6 +17,6 @@
 set -e
 cd "$(dirname "$0")"
 U="U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0303,U+2000-206F,U+20B1,U+2190-2199,U+21C4,U+2212,U+2248,U+2713,U+2715,U+FEFF,U+FFFD"
-for f in Regular Medium SemiBold Bold Black; do
-  pyftsubset "Livvic/Livvic-$f.ttf" --unicodes="$U" --layout-features+=tnum,case --flavor=woff2 --output-file="Livvic/Livvic-$f.woff2"
+for f in regular medium semi-bold bold black; do
+  pyftsubset "livvic/livvic-$f.ttf" --unicodes="$U" --layout-features+=tnum,case --flavor=woff2 --output-file="livvic/livvic-$f.woff2"
 done
