@@ -5011,20 +5011,6 @@ ALTER TABLE public.point_batch_default ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.route ENABLE ROW LEVEL SECURITY;
 
 --
--- Name: route route_delete; Type: POLICY; Schema: public; Owner: -
---
-
-CREATE POLICY route_delete ON public.route FOR DELETE TO authenticated USING (( SELECT private.is_editor() AS is_editor));
-
-
---
--- Name: route route_insert; Type: POLICY; Schema: public; Owner: -
---
-
-CREATE POLICY route_insert ON public.route FOR INSERT TO authenticated WITH CHECK (((( SELECT auth.uid() AS uid) = owner_id) AND ( SELECT private.is_editor() AS is_editor)));
-
-
---
 -- Name: route route_read_approved; Type: POLICY; Schema: public; Owner: -
 --
 
@@ -5043,20 +5029,6 @@ CREATE POLICY route_read_editor ON public.route FOR SELECT TO authenticated USIN
 --
 
 ALTER TABLE public.route_stop ENABLE ROW LEVEL SECURITY;
-
---
--- Name: route_stop route_stop_delete; Type: POLICY; Schema: public; Owner: -
---
-
-CREATE POLICY route_stop_delete ON public.route_stop FOR DELETE TO authenticated USING (( SELECT private.is_editor() AS is_editor));
-
-
---
--- Name: route_stop route_stop_insert; Type: POLICY; Schema: public; Owner: -
---
-
-CREATE POLICY route_stop_insert ON public.route_stop FOR INSERT TO authenticated WITH CHECK (( SELECT private.is_editor() AS is_editor));
-
 
 --
 -- Name: route_stop route_stop_read_approved; Type: POLICY; Schema: public; Owner: -
@@ -5078,38 +5050,10 @@ CREATE POLICY route_stop_read_editor ON public.route_stop FOR SELECT TO authenti
 
 
 --
--- Name: route_stop route_stop_update; Type: POLICY; Schema: public; Owner: -
---
-
-CREATE POLICY route_stop_update ON public.route_stop FOR UPDATE TO authenticated USING (( SELECT private.is_editor() AS is_editor)) WITH CHECK (( SELECT private.is_editor() AS is_editor));
-
-
---
--- Name: route route_update; Type: POLICY; Schema: public; Owner: -
---
-
-CREATE POLICY route_update ON public.route FOR UPDATE TO authenticated USING (( SELECT private.is_editor() AS is_editor)) WITH CHECK (( SELECT private.is_editor() AS is_editor));
-
-
---
 -- Name: route_variant; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
 ALTER TABLE public.route_variant ENABLE ROW LEVEL SECURITY;
-
---
--- Name: route_variant route_variant_delete; Type: POLICY; Schema: public; Owner: -
---
-
-CREATE POLICY route_variant_delete ON public.route_variant FOR DELETE TO authenticated USING (( SELECT private.is_editor() AS is_editor));
-
-
---
--- Name: route_variant route_variant_insert; Type: POLICY; Schema: public; Owner: -
---
-
-CREATE POLICY route_variant_insert ON public.route_variant FOR INSERT TO authenticated WITH CHECK (((( SELECT auth.uid() AS uid) = owner_id) AND ( SELECT private.is_editor() AS is_editor)));
-
 
 --
 -- Name: route_variant route_variant_read_approved; Type: POLICY; Schema: public; Owner: -
@@ -5128,31 +5072,10 @@ CREATE POLICY route_variant_read_editor ON public.route_variant FOR SELECT TO au
 
 
 --
--- Name: route_variant route_variant_update; Type: POLICY; Schema: public; Owner: -
---
-
-CREATE POLICY route_variant_update ON public.route_variant FOR UPDATE TO authenticated USING (( SELECT private.is_editor() AS is_editor)) WITH CHECK (( SELECT private.is_editor() AS is_editor));
-
-
---
 -- Name: stop; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
 ALTER TABLE public.stop ENABLE ROW LEVEL SECURITY;
-
---
--- Name: stop stop_delete; Type: POLICY; Schema: public; Owner: -
---
-
-CREATE POLICY stop_delete ON public.stop FOR DELETE TO authenticated USING (( SELECT private.is_editor() AS is_editor));
-
-
---
--- Name: stop stop_insert; Type: POLICY; Schema: public; Owner: -
---
-
-CREATE POLICY stop_insert ON public.stop FOR INSERT TO authenticated WITH CHECK (((( SELECT auth.uid() AS uid) = owner_id) AND ( SELECT private.is_editor() AS is_editor)));
-
 
 --
 -- Name: stop stop_read_approved; Type: POLICY; Schema: public; Owner: -
@@ -5166,13 +5089,6 @@ CREATE POLICY stop_read_approved ON public.stop FOR SELECT TO anon, authenticate
 --
 
 CREATE POLICY stop_read_editor ON public.stop FOR SELECT TO authenticated USING (( SELECT private.is_editor() AS is_editor));
-
-
---
--- Name: stop stop_update; Type: POLICY; Schema: public; Owner: -
---
-
-CREATE POLICY stop_update ON public.stop FOR UPDATE TO authenticated USING (( SELECT private.is_editor() AS is_editor)) WITH CHECK (( SELECT private.is_editor() AS is_editor));
 
 
 --

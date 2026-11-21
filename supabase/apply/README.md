@@ -737,7 +737,7 @@ proves the old path still works.
 
 # Applying drop_inert_write_policies to the live project
 
-**Not applied live.** It can be applied at any time after `lock_map_tables`: it changes what no role can do.
+**Applied live 2026-11-21** (ledger `20261121051731`) from its paste file. Do not reapply.
 
 `route`, `route_variant`, `stop` and `route_stop` each carry an insert, an update and a delete policy for
 editors, from 0005 and 0015. Since `lock_map_tables` no app role holds the grants those policies would apply
