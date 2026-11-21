@@ -74,15 +74,20 @@ test('run as CI runs it: one failure fails the step, and all passing passes it',
   assert.match(passed.stdout, /All 2 checks passed\./);
 });
 
-test('the build job’s step runs five of the six checks the job ran one by one before', () => {
-  const workflow = readFileSync(new URL('../../.github/workflows/ci.yml', import.meta.url), 'utf8');
-  const step = workflow.slice(workflow.indexOf('node scripts/checks/side-by-side.mjs'));
-  const commands = step
-    .split('\n')
-    .slice(1, 6)
+const WORKFLOW = readFileSync(new URL('../../.github/workflows/ci.yml', import.meta.url), 'utf8');
+/** One job of the workflow, from its id to the blank line that ends it. */
+const jobOf = (id) => WORKFLOW.slice(WORKFLOW.indexOf(`\n  ${id}:\n`)).split(/\n\n/)[0];
+/** The commands a job's side-by-side step runs, in the order given. */
+const sideBySide = (job) => {
+  const lines = job.slice(job.indexOf('node scripts/checks/side-by-side.mjs')).split('\n');
+  const last = lines.findIndex((line, i) => i > 0 && !line.endsWith('\\'));
+  return lines
+    .slice(1, last + 1)
     .map((line) => parseCheck(line.trim().replace(/ \\$/, '').slice(1, -1)).command);
-  assert.deepEqual(commands, [
-    'npm run format:check',
+};
+
+test('the build job’s step runs four of the six checks the job ran one by one before', () => {
+  assert.deepEqual(sideBySide(jobOf('build')), [
     'npm run lint -- --format ./scripts/checks/eslint-formatter.mjs',
     'node scripts/checks/long-files.mjs --base \\"$RUNNER_TEMP/long-files-base.json\\"',
     'npm run docs:architecture:check',
@@ -90,15 +95,17 @@ test('the build job’s step runs five of the six checks the job ran one by one 
   ]);
 });
 
-test('the sixth, the unit checks, runs in a job of its own, under both summary checks', () => {
-  const workflow = readFileSync(new URL('../../.github/workflows/ci.yml', import.meta.url), 'utf8');
-  const job = workflow.slice(workflow.indexOf('\n  unit:\n')).split(/\n\n/)[0];
+test('the other two, formatting and the unit checks, run in a job apart, under both summary checks', () => {
+  const workflow = WORKFLOW;
+  const job = jobOf('unit');
   assert.ok(
     job.includes("\n    if: needs.changes.outputs.build == 'true'\n"),
     'on with the build job',
   );
-  assert.ok(job.endsWith('\n        run: npm run test:unit'), 'its last step is the unit checks');
-  assert.equal(workflow.match(/npm run test:unit/g).length, 1, 'and they run nowhere else');
+  assert.deepEqual(sideBySide(job), ['npm run format:check', 'npm run test:unit']);
+  for (const command of ['npm run format:check', 'npm run test:unit']) {
+    assert.equal(workflow.split(command).length - 1, 1, `"${command}" runs nowhere else`);
+  }
   for (const summary of ['Build and the public map', 'The editor']) {
     const from = workflow.indexOf(`    name: ${summary}\n    needs: [`);
     assert.ok(from > 0, `"${summary}" is a job with needs`);
