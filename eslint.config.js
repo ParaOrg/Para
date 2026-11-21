@@ -161,6 +161,8 @@ export default defineConfig([
     'public/',
     '.vite/',
     '.scratch/',
+    // Other sessions' worktrees on a person's machine: each is linted from its own root.
+    '.claude/worktrees/',
     // Generated; see the header of the file.
     'src/shared/types/database.types.ts',
   ]),
