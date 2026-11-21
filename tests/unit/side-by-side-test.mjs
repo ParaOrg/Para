@@ -1,0 +1,92 @@
+// CI's build job runs its checks at once (scripts/checks/side-by-side.mjs): every check runs to
+// its end whatever the others do, each one's output is printed under its verdict, every failure
+// is named, and one failure fails the step.
+//
+//   node --test tests/unit/side-by-side-test.mjs
+import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
+import { test } from 'node:test';
+import { fileURLToPath } from 'node:url';
+import { parseCheck, report, runAll } from '../../scripts/checks/side-by-side.mjs';
+
+const SCRIPT = fileURLToPath(new URL('../../scripts/checks/side-by-side.mjs', import.meta.url));
+const node = (code) => `node -e "${code}"`;
+const PASSES = `passes::${node("console.log('fine')")}`;
+const FAILS = `fails::${node("console.error('broken'); process.exit(3)")}`;
+const ALSO_FAILS = `also fails::${node('process.exit(1)')}`;
+
+test('an argument is name::command; anything else is refused', () => {
+  assert.deepEqual(parseCheck('Lint::npm run lint -- --format x'), {
+    name: 'Lint',
+    command: 'npm run lint -- --format x',
+  });
+  for (const bad of ['npm run lint', '::npm run lint', 'Lint::', 'Lint:npm run lint']) {
+    assert.throws(() => parseCheck(bad), /not name::command/);
+  }
+});
+
+test('every check runs to its end, and the results come back in the order given', async () => {
+  const results = await runAll([FAILS, PASSES, ALSO_FAILS].map(parseCheck));
+  assert.deepEqual(
+    results.map(({ name, code }) => [name, code]),
+    [
+      ['fails', 3],
+      ['passes', 0],
+      ['also fails', 1],
+    ],
+  );
+  assert.match(results[0].output, /broken/);
+  assert.match(results[1].output, /fine/);
+});
+
+test('the checks run at once: two that each wait take about as long as one', async () => {
+  const wait = node('setTimeout(() => {}, 1500)');
+  const started = Date.now();
+  await runAll([parseCheck(`a::${wait}`), parseCheck(`b::${wait}`)]);
+  assert.ok(Date.now() - started < 2800, 'two 1.5 s checks took under 2.8 s together');
+});
+
+test('the report prints each check’s output under its verdict and names every failure', async () => {
+  const results = await runAll([FAILS, PASSES, ALSO_FAILS].map(parseCheck));
+  const text = report(results, false);
+  assert.match(text, /=== FAIL {2}fails {2}\(\d+\.\d s\)\n\$ node -e .*\nbroken/);
+  assert.match(text, /=== PASS {2}passes {2}\(\d+\.\d s\)\n\$ node -e .*\nfine/);
+  assert.match(text, /FAILED {2}fails \(exit 3\)\nFAILED {2}also fails \(exit 1\)/);
+  assert.match(text, /2 of 3 checks failed: fails, also fails\.$/);
+  const onARunner = report(results, true);
+  assert.match(onARunner, /::group::FAIL {2}fails/);
+  assert.match(
+    onARunner,
+    /::error::fails failed \(exit 3\)\n::error::also fails failed \(exit 1\)/,
+  );
+});
+
+test('run as CI runs it: one failure fails the step, and all passing passes it', () => {
+  const failed = spawnSync('node', [SCRIPT, PASSES, FAILS], { encoding: 'utf8' });
+  assert.equal(failed.status, 1);
+  assert.match(failed.stdout, /fine/);
+  assert.match(failed.stdout, /1 of 2 checks failed: fails\./);
+  const passed = spawnSync('node', [SCRIPT, PASSES, PASSES.replace('passes', 'passes too')], {
+    encoding: 'utf8',
+  });
+  assert.equal(passed.status, 0);
+  assert.match(passed.stdout, /All 2 checks passed\./);
+});
+
+test('the build job’s step runs the six checks the job ran one by one before', () => {
+  const workflow = readFileSync(new URL('../../.github/workflows/ci.yml', import.meta.url), 'utf8');
+  const step = workflow.slice(workflow.indexOf('node scripts/checks/side-by-side.mjs'));
+  const commands = step
+    .split('\n')
+    .slice(1, 7)
+    .map((line) => parseCheck(line.trim().replace(/ \\$/, '').slice(1, -1)).command);
+  assert.deepEqual(commands, [
+    'npm run format:check',
+    'npm run lint -- --format ./scripts/checks/eslint-formatter.mjs',
+    'node scripts/checks/long-files.mjs --base \\"$RUNNER_TEMP/long-files-base.json\\"',
+    'npm run docs:architecture:check',
+    'npm run build',
+    'npm run test:unit',
+  ]);
+});
