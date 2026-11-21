@@ -9,6 +9,7 @@ import {
   resolveTap,
   tapTargets,
 } from './tap';
+import { isEmptyTapAnswered } from './use-empty-map-tap';
 import type { Hotspot } from '../model/hotspots';
 
 /*
@@ -41,8 +42,8 @@ export function useHotspotTaps<S extends Hotspot>(
       map.getLayer(ROUTES_HIT) &&
       map.queryRenderedFeatures(e.point, { layers: [ROUTES_HIT] }).length > 0;
 
-    // One handler, one box, sized for the finger: nothing deselects, one
-    // hotspot opens its card, several side by side go to the sheet. A tap
+    // One handler, one box, sized for the finger: nothing deselects (unless the page answers it,
+    // isEmptyTapAnswered), one hotspot opens its card, several side by side go to the sheet. A tap
     // inside a box is the hotspot's alone, a route through it or not
     // (tapTargets); the routes hook reads the same tap and keeps its half.
     const onMapClick = (e: MapMouseEvent) => {
@@ -54,7 +55,7 @@ export function useHotspotTaps<S extends Hotspot>(
       } else if (out.kind === 'several') {
         setSelectedId(null);
         setCandidates(out.hotspotIds.map((id) => byId.current.get(id)).filter((s) => !!s));
-      } else {
+      } else if (!isEmptyTapAnswered(map)) {
         setSelectedId(null);
         setCandidates([]);
       }

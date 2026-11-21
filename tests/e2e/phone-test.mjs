@@ -23,14 +23,14 @@
 // forgiving ±20 px tap, with a negative control well outside the box; the
 // trip card a lone route opens (the owner's TimelineRouteDetailCard, 2026-09-29) —
 // its ends and every stop,
-// SWITCH keeping its
-// colour, ‹ only where another route sharing an end runs its way; the route list
-// where two routes share a road ("N Routes", a card per place), the trip a
-// row opens in its card's colour and ‹ back to the list, every card at rest; a tap
+// ⇅ turning it round keeping its
+// colour, leaving it listing the routes sharing an end only where another runs its way; the
+// route list where two routes share a road ("N Routes", a card per place), the trip a
+// row opens in its card's colour and the empty map tapped back to the list, every card at rest; a tap
 // just outside a hotspot, and the bottom sheet on a hotspot's card — tap and
 // drag the handle, Middle → Max → Low → Middle → Low → gone; a trip opened
 // by a tap on its own line (no ?r= link since the owner took trip links out,
-// 2026-10-03), the view it frames, and its ‹ listing the routes sharing an
+// 2026-10-03), the view it frames, and leaving it listing the routes sharing an
 // end with its own; the fine-pointer desktop control (±5 px, no zoom
 // buttons for a mouse either since 2026-09-29, attribution bottom right,
 // the pointer a hand over a line); a first tap at the opening view
@@ -40,6 +40,7 @@ import { chromium } from 'playwright';
 import {
   BASE,
   cardsSettled,
+  emptyMapPoint,
   harness,
   mapIdle,
   nodeFetch,
@@ -79,7 +80,7 @@ const {
 } = harness({
   knownSkips: [
     // The trip a tap opens has no other way drawn.
-    '  SWITCH turns the trip round',
+    '  ⇅ turns the trip round',
     // The picked card holds every route the list shows.
     '  and lights just its routes',
     // A trip with no hintuans, here and under "Other routes".
@@ -1493,7 +1494,7 @@ const tripRow = async (id) => {
  * A trip card's own parts, on whichever trip is open: its Distance and
  * Expected fare tiles (the owner's 3778:3183), its hintuans folding into one
  * row that opens and folds again (a lone hintuan is shown as it is), and
- * SWITCH turning it round. Run where a trip opens — a lone route's tap, a row
+ * ⇅ on its ends card turning it round. Run where a trip opens — a lone route's tap, a row
  * of the route list — as today's data allows.
  */
 const tripChecks = async () => {
@@ -1587,7 +1588,7 @@ const tripChecks = async () => {
   // the camera gliding the hintuan clear of the card, and no padding left
   // on the map; a second tap lets it go, circle and all. Checked
   // once, on the first trip with a hintuan; it is picked again after, for
-  // SWITCH, ✕ or ‹ to let go.
+  // ⇅, or leaving the trip, to let go.
   let picked = false;
   const rows = card().locator('[data-testid="trip-hintuan"]');
   // A build without ride picking (VITE_RIDE_PICKS) lists the stops as plain rows, with no button
@@ -2662,20 +2663,19 @@ const tripChecks = async () => {
         Math.abs(camAfterEnd.lat - camBeforeEnds.lat) < 1e-6,
       JSON.stringify({ camBeforeEnds, camAfterEnd }),
     );
-    // Picked again, for SWITCH — or ✕ and ‹ — to let go.
+    // Picked again, for ⇅ — or leaving the trip — to let go.
     await pickButton.scrollIntoViewIfNeeded();
     await buttonTap(pickButton, isPicked);
     picked = await isPicked();
   }
 
-  // SWITCH turns the trip round: the same route, the other way.
-  const sw = card().locator('button[data-testid="card-switch"]');
+  // ⇅ on the ends card turns the trip round: the same route, the other way (the Controller's
+  // PAPUNTA gone, the owner, 2026-11-21).
+  const sw = card().locator('button[data-testid="trip-ends-switch"]');
   if ((await sw.count()) === 0 || (await sw.first().isDisabled())) {
     skip(
-      '  SWITCH turns the trip round',
-      (await sw.count()) === 0
-        ? 'no SWITCH on the card'
-        : "this route's other way is not drawn yet",
+      '  ⇅ turns the trip round',
+      (await sw.count()) === 0 ? 'no ⇅ on the card' : "this route's other way is not drawn yet",
     );
   } else {
     const before = await tripLabel();
@@ -2690,7 +2690,7 @@ const tripChecks = async () => {
     const after = await tripLabel();
     const same = (s) => s.split(' → ').sort().join(' | ');
     check(
-      '  SWITCH turns the trip round',
+      '  ⇅ turns the trip round',
       after !== before && same(after) === same(before),
       `"${before}" → "${after}"`,
     );
@@ -2739,8 +2739,8 @@ const tripChecks = async () => {
       picked = selected.length > 0;
     }
   }
-  // A hintuan picked on the trip as it is left, for the caller's ✕ or ‹ to
-  // let go: SWITCH may have let the checked one go.
+  // A hintuan picked on the trip as it is left, for the caller's leaving to
+  // let go: ⇅ may have let the checked one go.
   if (!picked && (await rows.count()) > 0) {
     const any = card().locator('button[data-testid="trip-hintuan-pick"]:visible').first();
     if ((await any.count()) > 0) {
@@ -2874,37 +2874,69 @@ const toRaised = async () => {
   await buttonTap(handle(), async () => (await sheetState()) !== 'low');
   return (await until(sheetState, (state) => state === 'free', 5000)) === 'free';
 };
+/**
+ * A trip, or the route list, left as a commuter leaves it, with no ‹ or ✕ (the owner, 2026-11-21):
+ * a finger on the empty map above its sheet; at full height, where no map shows, the phone's Back.
+ * Whether `done()` came true within 3 s.
+ */
+const leaveTrip = async (done) => {
+  await cardsSettled(page);
+  const at = await emptyMapPoint(page);
+  if (at) await mapTap(at.x, at.y);
+  else await page.goBack();
+  return (await until(done, Boolean, 3000)) === true;
+};
 const closeCard = async () => {
   const closed = async () => (await card().count()) === 0;
   if (isTouchOnly) {
     // A phone touched by finger alone: by finger, never a mouse's click or Escape. Cards stack (a
-    // trip over the place it was opened from, which shows ‹ in place of ✕): each shown one is left
-    // by its ✕ or its ‹ in turn, as a person does, until none is open.
-    const leave = page.getByRole('button', { name: /^(Close|Back)$/ }).first();
+    // trip over the place it was opened from, which shows ‹ in place of ✕): a place's card is left
+    // by its ✕ or its ‹, a trip and the route list, which have neither (the owner, 2026-11-21), by
+    // the empty map (leaveTrip), in turn, as a person does, until none is open.
+    const leave = page
+      .locator('[data-testid="card"]:not([hidden])')
+      .getByRole('button', { name: /^(Close|Back)$/ })
+      .first();
     const atTop = () =>
       page.evaluate(
         () =>
-          [...document.querySelectorAll('[data-testid="card"]:not([hidden])')]
+          [
+            ...document.querySelectorAll(
+              '[data-testid="card"]:not([hidden]), [data-testid="chooser"]:not([hidden])',
+            ),
+          ]
             .map((c) => c.innerText.slice(0, 80))
             .join('|') || null,
       );
-    for (let i = 0; i < 4 && !(await closed()); i++) {
+    const isListOpen = async () =>
+      (await page.locator('[data-testid="chooser"]:not([hidden])').count()) > 0;
+    for (let i = 0; i < 5 && !((await closed()) && !(await isListOpen())); i++) {
       const before = await atTop();
-      if (!(await buttonTap(leave, async () => (await atTop()) !== before))) break;
+      const moved = async () => (await atTop()) !== before;
+      if ((await leave.count()) > 0) {
+        if (!(await buttonTap(leave, moved))) break;
+      } else if (!(await leaveTrip(moved))) break;
       await cardsSettled(page);
     }
     return;
   }
-  await page
-    .getByRole('button', { name: 'Close' })
-    .first()
-    .click({ timeout: 1500 })
-    .catch(() => {});
-  // The ✕ can be missed while the page is busy drawing; Escape closes a sheet too.
-  if (!(await until(closed, Boolean, 500))) {
-    await page.keyboard.press('Escape');
-    await until(closed, Boolean, 1500);
+  // A place's card by its ✕; a trip and the route list, which have none, by Escape, a trip back to
+  // what it was opened from: one sheet at a time, until none is open.
+  const allClosed = async () =>
+    (await closed()) && (await page.locator('[data-testid="chooser"]:not([hidden])').count()) === 0;
+  for (let i = 0; i < 5 && !(await allClosed()); i++) {
+    const close = page
+      .locator('[data-testid="card"]:not([hidden])')
+      .getByRole('button', { name: 'Close' });
+    if ((await close.count()) > 0)
+      await close
+        .first()
+        .click({ timeout: 1500 })
+        .catch(() => {});
+    else await page.keyboard.press('Escape');
+    await page.waitForTimeout(300);
   }
+  await until(allClosed, Boolean, 1500);
   await cardsSettled(page);
 };
 /**
@@ -3360,17 +3392,9 @@ if (runsPart(1)) {
       lit.length === 1 && sameRoute.includes(lit[0]),
       JSON.stringify(lit),
     );
-    // No list is behind it: ‹ only where another route sharing an end is drawn
-    // its way round, to list them (the owner's ask, 2026-09-29).
+    // No list is behind it: leaving it lists the routes sharing an end only where another is
+    // drawn its way round (the owner's ask, 2026-09-29); checked as it is left, below.
     const fanned = fanOf(lit[0]).length > 1;
-    const backShown = (await card().getByRole('button', { name: 'Back' }).count()) > 0;
-    check(
-      fanned
-        ? '  another route sharing an end runs its way, so it has ‹'
-        : '  no other route sharing an end runs its way, so no ‹',
-      backShown === fanned,
-      `‹ ${backShown ? 'shown' : 'not shown'}`,
-    );
     const looks = await paintNow(page);
     const openColour = (await trip().count())
       ? await trip().first().getAttribute('data-livery')
@@ -3609,11 +3633,23 @@ if (runsPart(1)) {
       if (before) await handleTo(before);
     }
 
+    // Left by the empty map, as it has no ‹ or ✕ (the owner, 2026-11-21): where another route
+    // sharing an end runs its way, to their list; else it closes.
+    const isListUp = async () =>
+      (await page.locator('[data-testid="chooser"]:not([hidden])').count()) > 0;
+    const left = await leaveTrip(async () => (await trip().count()) === 0);
+    check(
+      fanned
+        ? '  another route sharing an end runs its way, so leaving it lists them'
+        : '  no other route sharing an end runs its way, so leaving it closes it',
+      left && (await isListUp()) === fanned,
+      `left ${left}; list ${await isListUp()}`,
+    );
     // Negative control: 40 px out is twice as far as the box reaches — but only
     // where the line does not curve back and no hotspot sits on that side, so
     // both sides of the line are measured and the clearer one is tapped.
     await closeCard();
-    if (trip2.picked) check('  ✕ lets the picked hintuan go', await noPickLeft());
+    if (trip2.picked) check('  leaving it lets the picked hintuan go', await noPickLeft());
     // A pick glides the camera: back where the tap was measured.
     await jumpTo(page, routeA.point);
     let far = null;
@@ -3971,19 +4007,12 @@ if (runsPart(3)) {
       `${tripColour}: ${JSON.stringify(seenTrip)}; ${endsTrip.detail}`,
     );
     const trip3 = await tripChecks();
-    const back = card().getByRole('button', { name: 'Back' });
-    if ((await back.count()) === 0) {
-      check(
-        '  ‹ on the trip goes back to the list, as it was',
-        false,
-        'no ‹ on a trip picked from the list',
-      );
-    } else {
-      await buttonTap(back, listShown);
+    {
+      await leaveTrip(listShown);
       const again = (await listShown()) ? await chooser.first().innerText() : '';
       const litBack = (await litIds(page)) ?? [];
       check(
-        '  ‹ on the trip, from a picked card, goes back to the list at rest: no card picked, every route it lists lit',
+        '  the empty map tapped on the trip, from a picked card, goes back to the list at rest: no card picked, every route it lists lit',
         again === chooserText &&
           (await card().count()) === 0 &&
           pickedForTrip &&
@@ -4118,8 +4147,8 @@ if (runsPart(3)) {
             lit: litTrip,
           }),
         );
-        await buttonTap(card().getByRole('button', { name: 'Back' }), listShown);
-        check('  and its ‹ goes back to the list', await listShown());
+        await leaveTrip(listShown);
+        check('  and the empty map tapped goes back to the list', await listShown());
       }
       // Back at rest, nothing picked, for what follows.
       if (await isPicked()) await buttonTap(wantedName, async () => !(await isPicked()));
@@ -4197,10 +4226,10 @@ if (runsPart(3)) {
         listAtFull && tripSnap === 'full',
         `list at full ${listAtFull}; trip ${tripSnap}`,
       );
-      const backAgain = card().getByRole('button', { name: 'Back' });
-      if (await backAgain.count()) await buttonTap(backAgain, listShown);
+      // At full height no map shows to tap: the phone's Back leaves it (leaveTrip).
+      await leaveTrip(listShown);
       check(
-        '  and ‹ brings the list back at full height',
+        '  and leaving it brings the list back at full height',
         (await listSnap()) === 'full',
         `list ${await listSnap()}`,
       );
@@ -5050,8 +5079,8 @@ if (runsPart(1)) {
         JSON.stringify({ camBeforeOpen, camAfterOpen, openFit, overviewAtOpen }),
       );
       // A guard on the trip as it is drawn: at full height, every stop shown, so that it runs past
-      // the screen, scrolled to its end, its last row clears the Controller drawn over the sheet's
-      // foot. BottomSheet's stories (FooterLastRowClear) prove the padding itself.
+      // the screen, scrolled to its end, its last row is in reach, as when a Controller stood over
+      // the sheet's foot. BottomSheet's stories (FooterLastRowClear) prove a footer's padding.
       const tripEnd = (await handleTo('full'))
         ? await endClearsFooter('[data-testid="card"]')
         : { ok: false, why: `the trip would not go to full: data-snap=${await sheetState()}` };
@@ -5110,16 +5139,17 @@ if (runsPart(1)) {
         `focus on the map: ${focusOn}`,
       );
 
-      // Opened on its own, no list is behind the trip: ‹ only where another
-      // route sharing an end is drawn its way round (the owner's ask, 2026-09-29).
+      // Opened on its own, no list is behind the trip: leaving it lists the routes sharing an end
+      // only where another is drawn its way round (the owner's ask, 2026-09-29).
       const fannedR = fanOf(r.id).length > 1;
+      const leftR = await leaveTrip(async () => (await trip().count()) === 0);
+      const listedR = (await page.locator('[data-testid="chooser"]:not([hidden])').count()) > 0;
       check(
         fannedR
-          ? '  opened on its own, the trip has ‹: another route sharing an end runs its way'
-          : '  opened on its own, the trip has no ‹: no other route sharing an end runs its way',
-        (await trip().count()) > 0 &&
-          (await card().getByRole('button', { name: 'Back' }).count()) > 0 === fannedR,
-        `trip ${await trip().count()}`,
+          ? '  opened on its own, leaving the trip lists the routes sharing an end'
+          : '  opened on its own, leaving the trip closes it: no other route sharing an end runs its way',
+        leftR && listedR === fannedR,
+        `left ${leftR}; list ${listedR}`,
       );
     }
     await closeCard();
@@ -5145,7 +5175,7 @@ if (runsPart(2)) {
     }
   if (!fannedOne) {
     skip(
-      'a trip opened on its own lists, behind its ‹, the routes sharing an end',
+      'a trip opened on its own, left by the empty map, lists the routes sharing an end',
       !published
         ? 'the published map could not be read'
         : fannedCandidates.length
@@ -5154,9 +5184,8 @@ if (runsPart(2)) {
     );
   } else {
     const fan = fanOf(fannedOne.id);
-    const back = card().getByRole('button', { name: 'Back' });
     // The trip opens once its line is read: on a slow runner, after the map.
-    await back
+    await trip()
       .first()
       .waitFor({ state: 'visible', timeout: 10000 })
       .catch(() => {});
@@ -5167,11 +5196,11 @@ if (runsPart(2)) {
     const chooser = page.locator('[data-testid="chooser"]');
     const listShown = async () =>
       (await chooser.count()) > 0 && (await chooser.first().isVisible());
-    const tapped = (await back.count()) > 0 && (await buttonTap(back, listShown));
+    const tapped = await leaveTrip(listShown);
     check(
-      `a trip opened on its own, "${opened}", lists behind its ‹ the routes sharing an end`,
+      `a trip opened on its own, "${opened}", left by the empty map, lists the routes sharing an end`,
       tapped && (await listShown()) && (await trip().count()) === 0,
-      tapped ? `list shown ${await listShown()}, trip ${await trip().count()}` : 'no ‹ on the trip',
+      `list shown ${await listShown()}, trip ${await trip().count()}`,
     );
     if (await listShown()) {
       // A card per place they leave from, the way the trip went; a row for each.
@@ -5462,13 +5491,9 @@ if (runsPart(1)) {
       (await dCard.count()) > 0,
       `card count ${await dCard.count()}`,
     );
-    // Its ✕, sent straight to the button: a pointer click waits for nothing
-    // to lie over it, and the trip's framing can bring an end's name there.
-    await dCard
-      .getByRole('button', { name: 'Close', exact: true })
-      .first()
-      .dispatchEvent('click')
-      .catch(() => {});
+    // Left by Escape, as a trip has no ✕ (the owner, 2026-11-21): a click on the empty map could
+    // land on an end's name the trip's framing brought there.
+    await dpage.keyboard.press('Escape');
     const closed = await dpage
       .waitForFunction(() => document.querySelectorAll('[data-testid="card"]').length === 0, null, {
         timeout: 3000,

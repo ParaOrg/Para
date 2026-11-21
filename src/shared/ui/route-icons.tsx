@@ -68,6 +68,11 @@ export function EndIcon() {
   return <RouteSpriteIcon id="end" />;
 }
 
+/** Figma's switch-vertical (4831:51875), 24 across: the ⇅ on a trip's ends card, turning it round. */
+export function SwitchVerticalIcon() {
+  return <RouteSpriteIcon id="switch-vertical" />;
+}
+
 /** Figma's Ikot (4825:49054), 16 across: the disc before a loop's Ikot over its name. */
 export function IkotIcon() {
   return <RouteSpriteIcon id="ikot" />;
@@ -134,7 +139,7 @@ export function ArrowLeftRightIcon() {
 }
 
 /** Figma's filter-large (4633:22015), 28 across: the Controller's sliders, opening the route list's filter. */
-export function FilterIcon() {
+export function FilterLargeIcon() {
   return <RouteSpriteIcon id="filter-large" />;
 }
 

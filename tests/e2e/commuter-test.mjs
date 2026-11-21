@@ -27,6 +27,7 @@ import { chromium } from 'playwright';
 import {
   BASE,
   cardsSettled,
+  emptyMapPoint,
   harness,
   mapIdle,
   nodeFetch,
@@ -221,12 +222,32 @@ page.on('response', (res) => {
     mapFileStatuses.push(res.status());
 });
 
-const closeCard = () =>
-  page
-    .getByRole('button', { name: 'Close' })
-    .first()
-    .click()
-    .catch(() => {});
+// Every card closed: a place's card by its ✕, a trip and the route list, which have none (the
+// owner, 2026-11-21), by Escape, a trip back to what it was opened from and the list closed.
+const closeCard = async () => {
+  for (let i = 0; i < 4; i++) {
+    const open = page.locator(
+      '[data-testid="card"]:not([hidden]), [data-testid="chooser"]:not([hidden])',
+    );
+    if ((await open.count()) === 0) return;
+    const close = page
+      .locator('[data-testid="card"]:not([hidden])')
+      .getByRole('button', { name: 'Close' });
+    if ((await close.count()) > 0)
+      await close
+        .first()
+        .click()
+        .catch(() => {});
+    else await page.keyboard.press('Escape');
+    await page.waitForTimeout(350);
+  }
+};
+// A trip left as the commuter leaves it: the empty map tapped, back to what it was opened from.
+const tapEmptyMap = async () => {
+  const at = await emptyMapPoint(page);
+  if (!at) throw new Error('no empty map in sight to tap, to leave the trip');
+  await page.mouse.click(at.x, at.y);
+};
 const cardKind = async () => {
   const el = page.locator('[data-testid="card"]');
   if ((await el.count()) === 0) return { kind: 'none', text: '' };
@@ -703,15 +724,12 @@ for (const [i, p] of snapshot.polys.entries()) {
         !litUnder.includes(p.id),
         JSON.stringify(litUnder),
       );
-      const back = page.locator('[data-testid="card"]').getByRole('button', { name: 'Back' });
-      if ((await back.count()) > 0) {
-        await back.first().click();
-        await shows(PLACE_UP);
-      }
+      await tapEmptyMap();
+      await shows(PLACE_UP);
       const again = await cardKind();
       const litAgain = await until(hotspotsLit, (lit) => lit.includes(p.id));
       check(
-        `  ‹ on the trip goes back to the hotspot's card, lit again`,
+        `  the empty map tapped on the trip goes back to the hotspot's card, lit again`,
         again.kind === 'hotspot' && again.text === opened && litAgain.includes(p.id),
         `card ${again.kind}; lit ${JSON.stringify(litAgain)}`,
       );
@@ -741,14 +759,12 @@ for (const [i, p] of snapshot.polys.entries()) {
       await cardsSettled(page);
       const opened2 = (await cardKind()).kind === 'route';
       const moved = !sameView(await view(), camRow);
-      if ((await back.count()) > 0) {
-        await back.first().click();
-        await shows(PLACE_UP);
-      }
+      await tapEmptyMap();
+      await shows(PLACE_UP);
       await cardsSettled(page);
       const camRowBack = await view();
       check(
-        `  a row tapped at rest: the trip opens taking in its route, and its ‹ brings the camera back`,
+        `  a row tapped at rest: the trip opens taking in its route, and leaving it brings the camera back`,
         opened2 && moved && sameView(camRowBack, camRow),
         JSON.stringify({ opened: opened2, moved, camRow, camRowBack }),
       );
@@ -1040,24 +1056,23 @@ if (!RUNS_ONE_OFFS) {
         wears(seenTrip, LOOKS?.byLivery[tripColour]) && endsTrip.ok,
         `${tripColour}: ${JSON.stringify(seenTrip)}; ${endsTrip.detail}`,
       );
-      // The list stays behind the trip, hidden, for its ‹.
-      const back = page.locator('[data-testid="card"]').getByRole('button', { name: 'Back' });
-      if ((await back.count()) > 0) {
-        await back.first().click();
-        await hides('[data-testid="card"]');
-        await page
-          .waitForFunction(
-            () => !document.querySelector('[data-testid="chooser"]')?.closest('[hidden]'),
-            null,
-            { timeout: 3000 },
-          )
-          .catch(() => {
-            throw new Error('‹ on the trip: the route list not back within 3000 ms');
-          });
-      }
+      // The list stays behind the trip, hidden, for the trip to go back to: the empty map tapped.
+      await tapEmptyMap();
+      await hides('[data-testid="card"]');
+      await page
+        .waitForFunction(
+          () => !document.querySelector('[data-testid="chooser"]')?.closest('[hidden]'),
+          null,
+          { timeout: 3000 },
+        )
+        .catch(() => {
+          throw new Error(
+            'the empty map tapped on the trip: the route list not back within 3000 ms',
+          );
+        });
       const again = (await chooser.first().isVisible()) ? await chooser.first().innerText() : '';
       check(
-        '  ‹ on the trip goes back to the list, as it was',
+        '  the empty map tapped on the trip goes back to the list, as it was',
         again === text && (await cardKind()).kind === 'none',
         again ? `card ${(await cardKind()).kind}` : 'the list did not come back',
       );
@@ -1095,7 +1110,8 @@ if (!RUNS_ONE_OFFS) {
       );
       // SWITCH lets a picked card go and lights all of the other way round;
       // there, where each place is a card of its own, a pick narrows it.
-      const flip = chooser.locator('[data-testid="chooser-flip"]');
+      // Vice Versa, floating on the map over the list (the owner, 2026-11-21).
+      const flip = page.locator('[data-testid="chooser-flip"]');
       if (!(await flip.isEnabled())) {
         skip(
           '  SWITCH lets a picked card go: nothing Selected, the other way round lit',
@@ -1137,7 +1153,7 @@ if (!RUNS_ONE_OFFS) {
       // The filter: the map lights what the cards list under each kind of ride, a Selected card
       // let go as ⇆ lets it go, and All lighting the whole list again (README decision 14). The
       // camera's framing is 4a′'s, where a tap lists more than one kind of ride.
-      const filterButton = chooser.locator('[data-testid="chooser-filter"]');
+      const filterButton = page.locator('[data-testid="chooser-filter"]');
       const filterTo = async (label) => {
         await filterButton.click();
         await page.getByRole('radio', { name: label, exact: true }).click();
@@ -1194,7 +1210,7 @@ if (!RUNS_ONE_OFFS) {
       await mapIdle(page);
       await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
       await shows();
-      const nextLabel = await chooser
+      const nextLabel = await page
         .locator('[data-testid="chooser-filter"]')
         .getAttribute('aria-label');
       check('  a new list starts at All', nextLabel === 'Filter', String(nextLabel));
@@ -1240,7 +1256,7 @@ if (RUNS_ONE_OFFS) {
     const liveries = await chooser
       .locator('[data-testid="chooser-origin"]')
       .evaluateAll((els) => els.map((e) => e.dataset.livery));
-    const filterButton = chooser.locator('[data-testid="chooser-filter"]');
+    const filterButton = page.locator('[data-testid="chooser-filter"]');
     const camera = () =>
       page.evaluate(() => {
         const { lng, lat } = window.__map.getCenter();

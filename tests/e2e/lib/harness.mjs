@@ -424,3 +424,61 @@ export const takeHeldReload = async (base = BASE, ms = 3000) => {
     };
   });
 };
+
+/**
+ * A page point on the map where a tap lands on nothing: no line, no hotspot (the hit layers a tap
+ * asks, tap.ts, within the finger's 20 px), no marker or control over it, and above every sheet on
+ * show. The public map's open trip has no ‹ or ✕: the empty map tapped takes it back to what it was
+ * opened from, and closes the route list (the owner, 2026-11-21). Null when no such point is in
+ * sight.
+ */
+export const emptyMapPoint = async (page) => {
+  const { point, why } = await page.evaluate(() => {
+    const m = window.__map;
+    // The canvas's own box: MapLibre's canvas container is 0 tall, the canvas placed inside it.
+    const box = m.getCanvas().getBoundingClientRect();
+    const sheets = [...document.querySelectorAll('[data-testid="card"], [data-testid="chooser"]')]
+      .filter((el) => !el.hidden && el.getClientRects().length > 0)
+      .map((el) => el.getBoundingClientRect());
+    // A sheet floating on the left of a wide map leaves the map to its right.
+    const floats = sheets.filter((r) => r.top <= box.top + 1 && r.bottom >= box.bottom - 1);
+    const left = Math.max(box.left, ...floats.map((r) => r.right)) + 16;
+    const tops = sheets.map((r) => r.top).filter((t) => t > box.top + 1);
+    const bottom = Math.min(box.bottom, ...tops) - 24;
+    // Clear by a little more than the app's own reach for a tap (tap.ts's TAP_HALF_PX: 20 for a
+    // finger, 5 for a mouse), so the tap is the page's empty map, not a line's or a box's.
+    const reach = window.matchMedia('(any-pointer: coarse)').matches ? 22 : 8;
+    const layers = ['saved-routes-hit', 'saved-stops-pin', 'saved-stops-dot', 'saved-stops-fill'];
+    const drawn = layers.filter((id) => m.getLayer(id));
+    const covers = {};
+    let crowded = 0;
+    for (let y = box.top + 40; y < bottom; y += 12) {
+      for (let x = left; x < box.right - 16; x += 12) {
+        const top = document.elementFromPoint(x, y);
+        if (top !== m.getCanvas()) {
+          // What stands over the map where it does, for the reason when no point is found.
+          const name = top
+            ? `${top.tagName.toLowerCase()}${top.dataset?.testid ? `[${top.dataset.testid}]` : ''}.${String(top.className).slice(0, 40)}`
+            : 'nothing';
+          covers[name] = (covers[name] ?? 0) + 1;
+          continue;
+        }
+        const px = x - box.left;
+        const py = y - box.top;
+        const near = m.queryRenderedFeatures(
+          [
+            [px - reach, py - reach],
+            [px + reach, py + reach],
+          ],
+          { layers: drawn },
+        );
+        if (near.length === 0) return { point: { x, y }, why: null };
+        crowded += 1;
+      }
+    }
+    const span = { box: [box.left, box.top, box.right, box.bottom].map(Math.round), left, bottom };
+    return { point: null, why: { reach, drawn, crowded, covers, ...span } };
+  });
+  if (!point) console.log('emptyMapPoint: none,', JSON.stringify(why));
+  return point;
+};

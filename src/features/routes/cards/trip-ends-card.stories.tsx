@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { expect, waitFor, within } from 'storybook/test';
+import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
 import { TripEndsCard } from './trip-ends-card';
 
@@ -19,6 +19,9 @@ const meta = {
     routeOrigin: 'B.Silang Kanan Ph 5',
     routeDirection: 'SM Fairview',
     via: 'Maligaya',
+    way: 'Pabalik',
+    isSwitchable: true,
+    onSwitch: fn(),
   },
 } satisfies Meta<typeof TripEndsCard>;
 
@@ -38,8 +41,27 @@ export const Default: Story = {
     await expect(place.fontSize).toBe('20px');
     await expect(place.lineHeight).toBe('28px');
     await expect(place.fontWeight).toBe('600');
-    // No switch on the card: the bar's PAPUNTA turns the trip round.
-    await expect(canvas.queryByRole('button')).toBeNull();
+    // ⇅ on the hairline, named for the way a tap leads.
+    await expect(canvas.getByTestId('trip-ends-switch')).toHaveAccessibleName('Pabalik');
+    await expect(canvas.getByTestId('trip-ends-switch')).toHaveAccessibleDescription(
+      'turns to Pabalik',
+    );
+  },
+};
+
+/** ⇅ pressed: the trip turns round. */
+export const SwitchPressed: Story = {
+  play: async ({ args, canvasElement }) => {
+    await userEvent.click(within(canvasElement).getByRole('button', { name: 'Pabalik' }));
+    await expect(args.onSwitch).toHaveBeenCalledTimes(1);
+  },
+};
+
+/** The other way round has nothing drawn: ⇅ rests disabled. */
+export const NotSwitchable: Story = {
+  args: { isSwitchable: false },
+  play: async ({ canvasElement }) => {
+    await expect(within(canvasElement).getByRole('button', { name: 'Pabalik' })).toBeDisabled();
   },
 };
 
@@ -58,6 +80,7 @@ export const Ikot: Story = {
     routeDirection: 'Palma Hall',
     via: undefined,
     loopName: 'UP Ikot',
+    way: null,
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -65,6 +88,7 @@ export const Ikot: Story = {
     await expect(canvas.getByText('UP Ikot')).toBeVisible();
     await expect(canvas.queryByText('Start')).toBeNull();
     await expect(canvas.queryByText('End')).toBeNull();
+    await expect(canvas.queryByTestId('trip-ends-switch')).toBeNull();
   },
 };
 
@@ -74,6 +98,7 @@ export const Train: Story = {
     routeOrigin: 'Fernando Poe Jr.',
     routeDirection: 'Dr. Santos',
     via: undefined,
+    way: 'Northbound',
   },
 };
 
@@ -87,7 +112,14 @@ export const LongNames: Story = {
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(canvas.getByText(longOrigin).getBoundingClientRect().height).toBeGreaterThan(28);
+    const place = canvas.getByText(longOrigin);
+    await expect(place.getBoundingClientRect().height).toBeGreaterThan(28);
+    // Start's words, not their padded box, stop clear of ⇅, which straddles the hairline under them.
+    const words = document.createRange();
+    words.selectNodeContents(place);
+    await expect(words.getBoundingClientRect().right).toBeLessThan(
+      canvas.getByTestId('trip-ends-switch').getBoundingClientRect().left,
+    );
   },
 };
 

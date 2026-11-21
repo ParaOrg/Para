@@ -137,8 +137,8 @@ const frameOf = (p: { frame?: Frame }) => FRAME[p.frame ?? 'phone'];
 
 /**
  * Keeps the Selected card and the way round as the apps do, and the filter where a story gives
- * one, so a story can be tapped through; PAPUNTA lets the card go. Without a filter, as the public map
- * and the studio pass none yet, the Controller has no sliders.
+ * one, so a story can be tapped through; PAPUNTA lets the card go. The studio's Controller
+ * (`hasController`) has sliders only where a filter is kept.
  */
 function Picking(props: ComponentProps<typeof RouteCardList>) {
   const [selected, setSelected] = useState(props.selected);
@@ -177,7 +177,7 @@ const meta = {
   render: (args) => <Picking {...args} />,
   // A map-sized box, marked @container as the apps' roots are: the list docks
   // along its bottom, and from 1024 wide (`@float:`) the map's whole height on
-  // the left, the Controller beside it — Figma's frames at 393, 768 and 1024.
+  // the left — Figma's frames at 393, 768 and 1024.
   // Never taller than the canvas, so the story itself does not scroll.
   decorators: [
     (Story, ctx) => (
@@ -208,16 +208,24 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /**
- * On a phone, the way there: a card per place, docked along the bottom. Each card wears its mode's
- * colour. No filter kept, as on the live maps until they pass one: ✕ and PAPUNTA alone.
+ * On a phone, the way there, as the public map shows it (Figma 4796:34329): a card per place,
+ * docked along the bottom, each in its mode's colour, and no Controller — Vice Versa and the
+ * sliders float on the map (MapControlsDock).
  */
 export const Phone: Story = {};
 
-/** With a filter kept by the caller: the sliders beside PAPUNTA. */
-export const WithAFilter: Story = { args: { modeFilter: { filter: 'all', onFilter: fn() } } };
+/** The studio's: the Controller at the sheet's foot, ✕ and PAPUNTA. */
+export const WithTheController: Story = { args: { hasController: true } };
+
+/** With a filter kept by the caller: on the studio's Controller, the sliders beside PAPUNTA. */
+export const WithAFilter: Story = {
+  args: { hasController: true, modeFilter: { filter: 'all', onFilter: fn() } },
+};
 
 /** A filter on, Jeep: the dot on the sliders, and only the jeeps' cards. */
-export const FilteredToJeep: Story = { args: { modeFilter: { filter: 'jeep', onFilter: fn() } } };
+export const FilteredToJeep: Story = {
+  args: { hasController: true, modeFilter: { filter: 'jeep', onFilter: fn() } },
+};
 
 /** Turned round with PAPUNTA: out of Tala both ways, one card — "1 Route". */
 export const Switched: Story = { args: { back: true } };
@@ -225,11 +233,14 @@ export const Switched: Story = { args: { back: true } };
 /** Tala's card picked: pressed in, its routes alone lit on the map. */
 export const ACardSelected: Story = { args: { back: true, selected: 'Tala|jeep' } };
 
-/**
- * From 1024 wide (Figma 4633:22034): docked the map's whole height on the left, 368 wide, the
- * Controller a column beside it over the map.
- */
+/** From 1024 wide (Figma 4831:53545): docked the map's whole height on the left, 384 wide. */
 export const Floating: Story = { parameters: { frame: 'wide' } };
+
+/** The studio's from 1024 wide (Figma 4633:22034): its Controller the docked list's top bar. */
+export const FloatingWithTheController: Story = {
+  args: { hasController: true },
+  parameters: { frame: 'wide' },
+};
 
 /**
  * Figma's 640 frame: still docked, as wide as the screen — the glow runs edge
@@ -237,11 +248,11 @@ export const Floating: Story = { parameters: { frame: 'wide' } };
  */
 export const Tablet: Story = { parameters: { frame: 'tablet' } };
 
-/** Taller than the room: the cards scroll under the Controller. */
+/** Taller than the room: the cards scroll. */
 export const ManyPlaces: Story = { args: { routes: many } };
 
-/** The other way round is not drawn yet: PAPUNTA rests disabled. */
-export const NothingTheOtherWay: Story = { args: { routes: oneWay } };
+/** The other way round is not drawn yet: the studio's PAPUNTA rests disabled. */
+export const NothingTheOtherWay: Story = { args: { routes: oneWay, hasController: true } };
 
 /**
  * SM Fairview → Cubao runs on Novaliches → Tala, whose Tala → Novaliches is
@@ -293,10 +304,12 @@ export const WithAHotspotFloating: Story = {
 };
 
 /**
- * Two boxes and no line: "2 Hotspots", with no route to count, and nothing for
- * PAPUNTA to turn.
+ * Two boxes and no line: "2 Hotspots", with no route to count, and nothing for the studio's
+ * PAPUNTA to turn: it rests disabled.
  */
-export const TwoHotspots: Story = { args: { routes: [], hotspots: twoBoxes } };
+export const TwoHotspots: Story = {
+  args: { routes: [], hotspots: twoBoxes, hasController: true },
+};
 
 /**
  * Both boxes of one hintuan and no line: a row each, and "1 Hotspot", as a
@@ -341,7 +354,11 @@ export const SheetLow: Story = {
 /** A filter with nothing to show under this tap: it says so, with a way back to All. */
 export const FilterWithNoMatch: Story = {
   // Raised: at Low a tap on the body raises the sheet, and Show all routes is in the body.
-  args: { modeFilter: { filter: 'all', onFilter: fn() }, height: { snap: 0.55, onSnap: fn() } },
+  args: {
+    hasController: true,
+    modeFilter: { filter: 'all', onFilter: fn() },
+    height: { snap: 0.55, onSnap: fn() },
+  },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.click(canvas.getByRole('button', { name: 'Filter' }));
@@ -351,6 +368,22 @@ export const FilterWithNoMatch: Story = {
     await expect(canvas.getByRole('dialog', { name: '0 Routes' })).toBeInTheDocument();
     await userEvent.click(canvas.getByRole('button', { name: 'Show all routes' }));
     await expect(canvas.queryByText('No Ferry routes here')).toBeNull();
+  },
+};
+
+/**
+ * The public map's list filtered to a kind of ride nothing here is, its sliders on the map: the
+ * list says so, with a way back to All.
+ */
+export const FilteredToNothing: Story = {
+  args: {
+    modeFilter: { filter: 'ferry', onFilter: fn() },
+    height: { snap: 0.55, onSnap: fn() },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByText('No Ferry routes here')).toBeVisible();
+    await expect(canvas.queryByTestId('chooser-controller')).toBeNull();
   },
 };
 
@@ -390,8 +423,8 @@ const ikotLoop: Direction = {
 /** A loop in the list, beside Tala's routes: its row says Ikot, and it is there whichever way round the list is. */
 export const WithALoop: Story = { args: { routes: [...talaRoutes, ikotLoop] } };
 
-/** Only a loop: no way back to turn to, so no PAPUNTA. */
-export const OnlyALoop: Story = { args: { routes: [ikotLoop] } };
+/** Only a loop: no way back to turn to, so the studio's Controller has no PAPUNTA. */
+export const OnlyALoop: Story = { args: { routes: [ikotLoop], hasController: true } };
 
 /**
  * The `end` slot, handed the last card's livery: drawn after it. A stand-in
