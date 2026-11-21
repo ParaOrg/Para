@@ -68,7 +68,7 @@ export function useHotspotTaps<S extends Hotspot>(
 
     map.on('click', onMapClick);
     // The hand over a box, its pin or its dot only where a pointer can hover,
-    // and from when one can, as over a line (route-taps.ts; bindHover).
+    // and from when one can, as over a line (use-route-taps.ts; bindHover).
     const unhovers = HOTSPOT_TAP_LAYERS.map((layer) => bindHover(map, layer, enter, leave));
     return () => {
       map.off('click', onMapClick);
