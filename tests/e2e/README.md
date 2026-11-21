@@ -7,7 +7,7 @@ Chromium does.
 ## Outside services: stood in, or live
 
 A suite's browser reaches no host off the machine unless `PARA_LIVE_SERVICES=1` is set.
-Without it (a pull request's CI run, and a local run by default) the outside services are
+Without it (a pull request's CI run, a merge queue's, and a local run by default) the outside services are
 answered by stand-ins (`lib/stand-ins.mjs`):
 
 - the router (router.project-osrm.org): the live router's answers, recorded in

@@ -16,7 +16,7 @@
 #      build and the contributor page's suites only. Anything else — shared code
 #      (Turnstile and the locator among it), the build, the lockfile, this
 #      file — runs both. A push to main
-#      or staging, the nightly run and "Run workflow" run everything.
+#      or staging, a merge queue's run, the nightly run and "Run workflow" run everything.
 #   2. Every suite at once, in jobs sized by measured time, so the run takes as
 #      long as the slowest job, not the sum of them all. The suites under a
 #      minute or so share a job, since each job repeats its setup and waits for
@@ -59,6 +59,10 @@ on:
     paths-ignore:
       - 'public/data/**'
   pull_request:
+  # A pull request in staging's or main's merge queue: GitHub runs this on the commit the merge
+  # would make, and the three summary checks below must report on it, or the queue waits for
+  # them until it gives up. Every suite runs (the `changes` job selects only on a pull request).
+  merge_group:
   workflow_dispatch:
   schedule:
     # 05:00 in Manila (UTC+8): after the map's nightly publish at 04:00.
@@ -76,11 +80,13 @@ permissions:
   contents: read
 
 # The suites' outside services: live on main and staging pushes, the nightly run and a run by
-# hand; on a pull request, the suites' stand-ins (recorded answers, fake services), so a PR run
-# reaches no host off the runner. Read by tests/e2e (lib/harness.mjs and the stand-ins) as set
-# or unset. A stand-in gone stale shows as a live run failing where its PR run passed.
+# hand; on a pull request and in a merge queue, the suites' stand-ins (recorded answers, fake
+# services), so neither reaches a host off the runner: what decides whether a change may land
+# does not hang on the shared router's mood. Read by tests/e2e (lib/harness.mjs and the
+# stand-ins) as set or unset. A stand-in gone stale shows as a live run failing where its PR
+# run passed.
 env:
-  PARA_LIVE_SERVICES: ${{ github.event_name != 'pull_request' && '1' || '' }}
+  PARA_LIVE_SERVICES: ${{ github.event_name != 'pull_request' && github.event_name != 'merge_group' && '1' || '' }}
 
 jobs:
   # What the change can reach. Outputs 'true' or 'false'.
@@ -212,10 +218,11 @@ jobs:
           ESLINT_JSON: ${{ runner.temp }}/eslint.json
         run: npm run lint -- --format ./scripts/checks/eslint-formatter.mjs
       # No new source file over 150 lines; the long ones already there are held to their length,
-      # and on a pull request the list of them may only shrink (scripts/checks/long-files.mjs).
+      # and on a pull request, and in a merge queue, the list of them may only shrink
+      # (scripts/checks/long-files.mjs).
       - name: Long files
         env:
-          BASE: ${{ github.event.pull_request.base.sha }}
+          BASE: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha }}
         run: |
           if [ -n "$BASE" ] && git fetch --quiet --no-tags --depth=1 origin "$BASE"; then
             git show "$BASE:scripts/checks/long-files-baseline.json" > "$RUNNER_TEMP/long-files-base.json" 2> /dev/null || true
