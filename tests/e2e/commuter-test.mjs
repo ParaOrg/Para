@@ -1565,10 +1565,19 @@ if (RUNS_ONE_OFFS) {
       // tap lets it go, circle, pale rest and all, and ✕ lets a pick go.
       const cardEl = page.locator('[data-testid="card"]').first();
       const rows = cardEl.locator('[data-testid="trip-hintuan"]');
+      // A build without ride picking (VITE_RIDE_PICKS) lists the stops as plain rows, with no
+      // button to pick one.
+      const isPickingOff =
+        (await rows.count()) > 0 &&
+        (await cardEl.locator('[data-testid="trip-hintuan-pick"]').count()) === 0;
       if ((await rows.count()) === 0) {
         skip(
           '  a hintuan row picks it, priced from the start, a circle at it on the map',
           'no hintuan on this direction yet',
+        );
+      } else if (isPickingOff) {
+        console.log(
+          'SKIP  a hintuan row picks it, the ends picked in its place: picking is off in this build (VITE_RIDE_PICKS)',
         );
       } else {
         const pickedIndex = Math.floor(((await rows.count()) - 1) / 2);
@@ -1887,15 +1896,22 @@ if (RUNS_ONE_OFFS) {
       await hides('[data-testid="card"]');
       const after = await until(litNow, (lit) => lit.length === 0, 2000);
       check('  closing the card lights nothing again', after.length === 0, JSON.stringify(after));
-      const pickAfter = await page.evaluate(async () => ({
-        pins: document.querySelectorAll('[data-testid="hintuan-pin"]').length,
-        rest: ((await window.__src('ride-rest'))?.features ?? []).length,
-      }));
-      check(
-        '  and lets a picked hintuan go, its circle and the pale rest too',
-        pickAfter.pins === 0 && pickAfter.rest === 0,
-        `${pickAfter.pins} circle(s), ${pickAfter.rest} stretch(es) at rest`,
-      );
+      // With picking off nothing was picked, so there is nothing to let go.
+      if (isPickingOff) {
+        console.log(
+          'SKIP  closing the card lets a picked hintuan go: picking is off in this build (VITE_RIDE_PICKS)',
+        );
+      } else {
+        const pickAfter = await page.evaluate(async () => ({
+          pins: document.querySelectorAll('[data-testid="hintuan-pin"]').length,
+          rest: ((await window.__src('ride-rest'))?.features ?? []).length,
+        }));
+        check(
+          '  and lets a picked hintuan go, its circle and the pale rest too',
+          pickAfter.pins === 0 && pickAfter.rest === 0,
+          `${pickAfter.pins} circle(s), ${pickAfter.rest} stretch(es) at rest`,
+        );
+      }
     }
   }
 }

@@ -36,8 +36,8 @@ test('each mode gives a range, low under high, both whole steps', () => {
   }
 });
 
-test('the figure the owner drew: an 11.3 km jeep ride with 11 stops is ~30–65 min', () => {
-  assert.equal(travelLabel(estimateTravel('Jeepney', 11_300, 11)), '~30–65 min');
+test('the figure the owner drew: an 11.3 km jeep ride with 11 stops is 30 - 65mins', () => {
+  assert.equal(travelLabel(estimateTravel('Jeepney', 11_300, 11)), '30 - 65mins');
 });
 
 test('a short ride is never under one step, nor a single number', () => {
@@ -73,7 +73,7 @@ test('a train runs faster than a jeep over the same ride', () => {
   assert.ok(train.high < jeep.high);
 });
 
-test('the pill writes "~30–60 min", and a screen reader hears it is an estimate', () => {
-  assert.equal(travelLabel({ low: 30, high: 60 }), '~30–60 min');
+test('the tile writes "30 - 60mins", and a screen reader hears it is an estimate', () => {
+  assert.equal(travelLabel({ low: 30, high: 60 }), '30 - 60mins');
   assert.equal(travelSpoken({ low: 30, high: 60 }), 'About 30 to 60 minutes, an estimate');
 });

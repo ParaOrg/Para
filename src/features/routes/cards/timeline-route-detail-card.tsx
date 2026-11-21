@@ -8,16 +8,18 @@ import { TripEndsCard } from './trip-ends-card';
 import { TripMoreRoutes, type OtherRoute } from './trip-more-routes';
 
 type Props = TripDetailProps & {
-  onSwitch: () => void; // PAPUNTA and ⇅: the same route the other way, unless not `switchable`.
+  onSwitch: () => void; // PAPUNTA: the same route the other way, unless not `switchable`.
   switchable: boolean;
   back: boolean; // The way back, for the suites (PAPUNTA's `data-back`).
-  /** PAPUNTA's word (wayWord), the way showing, and ⇅'s name (switchWord), the way a tap leads to. Null on a loop. */
+  /** PAPUNTA's word (wayWord), the way showing, and where its tap leads (switchWord), which it says after its name. Null on a loop. */
   way: string | null;
   wayTo: string | null;
   /** The route's via, under End's place (TripEndsCard); absent with none. */
   via?: string;
   /** The sheet's name for a screen reader, where `origin → destination` does not say it (a loop's). */
   label?: string;
+  /** A loop's name, for its ends card (TripEndsCard); absent on any other trip. */
+  loopName?: string;
   /** ‹: back to what the trip was picked from — the list, a hotspot's card — or to its route with those sharing an end; null when there is none, and ✕ stands there. */
   onBackToList: (() => void) | null;
   onClose: () => void;
@@ -25,7 +27,7 @@ type Props = TripDetailProps & {
   dockRef?: Ref<HTMLDivElement>;
   /** Its height, shared with the list or card it was opened from (BottomSheet). */
   height?: SheetHeight;
-  /** The other routes out of where this trip starts, behind "View N more routes" at the top. Empty or omitted, none. */
+  /** The other routes out of where this trip starts, behind "View N more destinations" at the top. Empty or omitted, none. */
   otherRoutes?: readonly OtherRoute[];
   /** A row tapped: that route's trip in this one's place. */
   onOtherRoute?: (id: string) => void;
@@ -35,7 +37,7 @@ type Props = TripDetailProps & {
 
 /**
  * One direction as a trip (RouteDetail, 4796:30411) on its sheet, with the Controller's bar: its
- * ends (TripEndsCard), "View N more routes" under them (TripMoreRoutes) when other routes leave
+ * ends (TripEndsCard), "View N more destinations" under them (TripMoreRoutes) when other routes leave
  * from where it starts, then its body (TripDetail): what it rides, its tiles, its stops.
  */
 export function TimelineRouteDetailCard({
@@ -46,6 +48,7 @@ export function TimelineRouteDetailCard({
   wayTo,
   via,
   label,
+  loopName,
   onBackToList,
   onClose,
   dockRef,
@@ -91,15 +94,14 @@ export function TimelineRouteDetailCard({
             routeOrigin={routeOrigin}
             routeDirection={routeDirection}
             via={via}
-            way={wayTo}
-            isSwitchable={switchable}
-            onSwitch={onSwitch}
+            loopName={loopName}
           />
         }
+        from={routeOrigin}
         routes={onOtherRoute ? otherRoutes : []}
         onRoute={(id) => onOtherRoute?.(id)}
       >
-        <TripDetail {...detail} />
+        <TripDetail {...detail} via={via} />
       </TripMoreRoutes>
       {children}
     </BottomSheet>

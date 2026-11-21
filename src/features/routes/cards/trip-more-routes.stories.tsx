@@ -4,13 +4,16 @@ import { expect, fn, userEvent, within } from 'storybook/test';
 import { TripEndsCard } from './trip-ends-card';
 import { TripMoreRoutes, type OtherRoute } from './trip-more-routes';
 
+/** Where the trip starts: on its ends card and in the open list's heading, as the app passes both. */
+const ORIGIN = 'B. Silang Phase 5';
+
 const ROUTES: readonly OtherRoute[] = [
-  { id: 'mrt', to: 'MRT MCDO (Quezon Avenue Station)', via: null, livery: 'jeep' },
-  { id: 'bayan', to: 'Novaliches (Bayan)', via: null, livery: 'jeep' },
-  { id: 'philcoa-almar', to: 'Philcoa', via: 'Almar', livery: 'jeep' },
-  { id: 'philcoa-maligaya', to: 'Philcoa', via: 'Maligaya', livery: 'jeep' },
-  { id: 'quiapo', to: 'Quiapo', via: null, livery: 'bus' },
-  { id: 'sm', to: 'SM Fairview', via: 'Almar', livery: 'uv-express' },
+  { id: 'mrt', to: 'MRT MCDO (Quezon Avenue Station)', via: null },
+  { id: 'bayan', to: 'Novaliches (Bayan)', via: null },
+  { id: 'philcoa-almar', to: 'Philcoa', via: 'Almar' },
+  { id: 'philcoa-maligaya', to: 'Philcoa', via: 'Maligaya' },
+  { id: 'quiapo', to: 'Quiapo', via: null },
+  { id: 'sm', to: 'SM Fairview', via: 'Almar' },
 ];
 
 /**
@@ -29,16 +32,8 @@ const meta = {
     ),
   ],
   args: {
-    ends: (
-      <TripEndsCard
-        routeOrigin="B. Silang Kanan Ph 5"
-        routeDirection="SM Fairview"
-        via="Maligaya"
-        way="Pabalik"
-        isSwitchable
-        onSwitch={fn()}
-      />
-    ),
+    ends: <TripEndsCard routeOrigin={ORIGIN} routeDirection="SM Fairview" via="Maligaya" />,
+    from: ORIGIN,
     routes: ROUTES,
     onRoute: fn(),
     children: <p className="px-4 py-6 text-sm/5 text-text-tertiary">The rest of the trip</p>,
@@ -48,11 +43,11 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** Closed, as Figma's Variant2 draws it: "View 6 more routes" hanging under the band. */
+/** Closed, as Figma's Variant2 draws it: "View 6 more destinations" hanging under the ends card. */
 export const Closed: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const tab = canvas.getByRole('button', { name: 'View 6 more routes' });
+    const tab = canvas.getByRole('button', { name: 'View 6 more destinations' });
     await expect(tab).toHaveAttribute('aria-expanded', 'false');
     await expect(canvas.getByTestId('trip-other-routes')).not.toBeVisible();
   },
@@ -70,7 +65,7 @@ export const Open: Story = {
     const list = canvas.getByTestId('trip-other-routes');
     await expect(list).toBeVisible();
     await expect(tab.getAttribute('aria-controls')).toBe(list.id);
-    await expect(within(list).getByText('6 more routes')).toBeVisible();
+    await expect(within(list).getByText(`6 more destinations from ${ORIGIN}`)).toBeVisible();
     await expect(within(list).getByText('via Maligaya')).toBeVisible();
     await userEvent.click(within(list).getByRole('button', { name: /^Quiapo/ }));
     await expect(args.onRoute).toHaveBeenCalledWith('quiapo');
@@ -91,13 +86,13 @@ export const Keyboard: Story = {
   },
 };
 
-/** One other route: "View 1 more route". */
+/** One other route: "View 1 more destination", its row the End one. */
 export const One: Story = {
   args: { routes: ROUTES.slice(0, 1) },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await userEvent.click(canvas.getByRole('button', { name: 'View 1 more route' }));
-    await expect(canvas.getByText('1 more route')).toBeVisible();
+    await userEvent.click(canvas.getByRole('button', { name: 'View 1 more destination' }));
+    await expect(canvas.getByText(`1 more destination from ${ORIGIN}`)).toBeVisible();
   },
 };
 
@@ -119,7 +114,6 @@ export const LongNames: Story = {
         id: 'long',
         to: 'Bagong Silang Kanan 5 Phase 3 Package 2 Terminal',
         via: 'Zabarte and Quirino Highway',
-        livery: 'jeep',
       },
     ],
   },

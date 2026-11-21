@@ -26,7 +26,7 @@ interface WayButtonProps extends Omit<
  * showing, in capitals, Livvic Bold 17/24; a tap turns the trip, or every route listed, the other
  * way round. The capitals are the type's, so a screen reader hears the word as written, Papunta. On
  * the wide bar ⇆ stands before the word, and both are Brand/surface. A screen reader hears where a
- * tap leads after its name, as the ⇅ on a trip's ends card is named.
+ * tap leads after its name (switchWord).
  */
 export function WayButton({ way, wayTo, ...rest }: WayButtonProps) {
   const hintId = useId();

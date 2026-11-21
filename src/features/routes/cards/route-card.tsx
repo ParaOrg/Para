@@ -125,7 +125,6 @@ export function RouteCard({
                 destination={e.destination}
                 additionalNotes={e.via && `Via ${e.via}`}
                 livery={livery}
-                on="card"
                 slot={e.stationCode && <RouteBadge label={e.stationCode} livery={livery} />}
                 data-testid={`${testId}-item`}
                 data-direction={e.id}

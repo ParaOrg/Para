@@ -50,7 +50,7 @@ function behindDot(above: boolean, below: boolean, rail: string): string | false
 
 /**
  * One stop on a trip's timeline (RouteStopsTimeline in RouteHintuans, 4796:29755): its dot on the
- * rail, its name, Bold 18/26, and under it the slot, then a hairline. Every dot sits 10 down, by
+ * rail, its name, SemiBold 16/24, and under it the slot, then a hairline. Every dot sits 10 down, by
  * the name's first line. The rail is as wide as the dot, so where it stops at a dot it ends in the
  * dot's own round: at the timeline's ends, and at a picked ride's. Those dots are ringed.
  */
@@ -79,7 +79,7 @@ export function RouteStopsTimelineRow({
         <span className={cn('min-h-2.5 w-full flex-1', below && rail)} />
       </span>
       {/* The name and the slot under it, over the row's hairline (RouteStopsTimeline, 4611:10868). */}
-      <span className="flex min-w-0 flex-1 flex-col gap-2 border-b-0-6 border-stroke-secondary pt-2.5 pb-5 text-lg/6.5 font-bold text-text-primary">
+      <span className="flex min-w-0 flex-1 flex-col gap-1 border-b-0-6 border-stroke-secondary pt-2.5 pb-5 text-base-lower/6 font-semibold text-text-primary">
         <span className="min-w-0">{label}</span>
         {slot && <span className="flex flex-wrap items-center gap-2">{slot}</span>}
       </span>

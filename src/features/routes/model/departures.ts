@@ -255,8 +255,8 @@ export function otherRoutesFrom<V extends Direction>(all: readonly V[], of: V): 
 
 /**
  * The word for the way that is showing — Papunta, there; Pabalik, the way
- * back — PAPUNTA's on the Controller, a list's and a trip's. The ⇅ on a
- * trip's ends card says the other way's word (switchWord).
+ * back — PAPUNTA's on the Controller, a list's and a trip's. Where a tap on
+ * it leads is the other way's word (switchWord).
  *
  * On a train it is the bound the riders and the operators say, Northbound or
  * Southbound, Eastbound or Westbound on LRT-2 (railBound; the owner's call).
@@ -274,8 +274,8 @@ export function wayWord(back: boolean, showing: readonly Direction[]): string {
 }
 
 /**
- * The way a tap leads to, not the way showing: the name of the ⇅ on a trip's
- * ends card, and the hintuan card's SWITCH. On a Papunta trip it is Pabalik,
+ * The way a tap leads to, not the way showing: what PAPUNTA says after its
+ * name, and the hintuan card's SWITCH. On a Papunta trip it is Pabalik,
  * on a Pabalik one Papunta. The showing way's word is PAPUNTA's (wayWord).
  * On a train it is the other bound, Southbound on a
  * Northbound card, by the same one-word-fits-all rule as wayWord's.

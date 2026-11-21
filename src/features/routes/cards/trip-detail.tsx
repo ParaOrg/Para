@@ -1,5 +1,4 @@
-import type { ReactNode } from 'react';
-
+import type { RideFacts } from './ride-facts-of';
 import { TimelineRouteDetail, type TimelineRouteDetailProps } from './timeline-route-detail';
 import { farePesos, type Fare } from './trip-fare';
 import { TripNotes } from './trip-notes';
@@ -22,10 +21,12 @@ export type TripDetailProps = Omit<TimelineRouteDetailProps, 'pickedPesos'> & {
    */
   discounted?: boolean;
   onDiscounted?: (discounted: boolean) => void;
-  /** What the trip rides (TripRidePills), at the top of its panel. None, no pill. */
-  ridePills?: ReactNode;
-  /** The direction's signboards (BottomContent, 4796:30124): SVG files the studio uploaded, in order. None, no card. */
+  /** What the trip rides, how long it takes and a train's bound, for the tiles (rideFactsOf); null, no such tiles. */
+  ride?: RideFacts | null;
+  /** The direction's signboards (Signboard, 4822:43834): SVG files the studio uploaded, in order. None, no card. */
   signboards?: readonly string[];
+  /** The route's via, for the signboard's "Going to … via …"; absent with none. */
+  via?: string;
   /** Under the stops, a line's own fixed words (LINE_NOTES): the ferry's days and where to check for a suspension. */
   note?: string;
   /**
@@ -36,10 +37,9 @@ export type TripDetailProps = Omit<TimelineRouteDetailProps, 'pickedPesos'> & {
 };
 
 /**
- * A trip's body, under its ends (BottomContent, 4796:30124): what it rides, its signboards, its
- * Distance and fare tiles (useTripTiles), 16 apart and 12 in; then its stops on the sheet's
- * surface (TimelineRouteDetail), their rows 16 in as Figma lays them, and the notes under them. A
- * route no fare rule prices has no fare tile, and Distance takes the row.
+ * A trip's body, under its ends (BottomContent, 4821:40538), 16 in and 20 down: its signboards,
+ * then its tiles (TripTiles, useTripTiles); then its stops on the sheet's surface
+ * (TimelineRouteDetail), their rows 16 in as Figma lays them, and the notes under them.
  */
 export function TripDetail({
   metres,
@@ -48,8 +48,9 @@ export function TripDetail({
   pickedFare,
   discounted,
   onDiscounted,
-  ridePills,
+  ride = null,
   signboards = [],
+  via,
   note,
   walk,
   ...stops
@@ -68,15 +69,21 @@ export function TripDetail({
   });
   return (
     <>
-      <div className="flex w-full flex-col gap-4 px-3 pt-3 pb-4">
-        {ridePills}
-        <TripSignboards signboards={signboards} />
+      <div className="flex w-full flex-col px-4 py-5">
+        <TripSignboards
+          signboards={signboards}
+          routeDirection={stops.isLoop ? undefined : stops.routeDirection}
+          via={via}
+        />
         <TripTiles
           shown={tiles.shown}
           shownMetres={tiles.shownMetres}
           isDiscounted={tiles.isDiscounted}
           turns={tiles.turns}
           onTurn={tiles.onTurn}
+          estimate={ride?.estimate}
+          transportMode={ride?.transportMode}
+          bound={ride?.bound}
         />
       </div>
       {/* 24 at the foot: the sheet itself pads for the Controller drawn over it (BottomSheet). */}

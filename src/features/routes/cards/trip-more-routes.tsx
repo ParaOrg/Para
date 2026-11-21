@@ -3,8 +3,8 @@ import { useId, useState, type ReactNode } from 'react';
 import { ChevronDownIcon } from '@/shared/ui/route-icons';
 import { cn } from '@/shared/utils/cn';
 
-import { DestinationRow } from './destination-row';
-import type { Livery } from '../model/liveries';
+import { DestinationBar } from './destination-bar';
+import { RouteEndPointLines } from './route-end-point-lines';
 
 export interface OtherRoute {
   id: string;
@@ -12,12 +12,13 @@ export interface OtherRoute {
   to: string;
   /** Its route's via, or null with none. */
   via: string | null;
-  livery: Livery;
 }
 
 interface TripMoreRoutesProps {
   /** The trip's ends (TripEndsCard), on the band at the top. */
   ends: ReactNode;
+  /** Where the trip starts, which the other routes leave from too: the open list's heading names it. */
+  from: string;
   /** The other routes out of where the trip starts. None: no tab and no list. */
   routes: readonly OtherRoute[];
   /** A row tapped: that route's trip in this one's place. */
@@ -27,50 +28,53 @@ interface TripMoreRoutesProps {
 }
 
 const TAB = {
-  closed: 'rounded-b-2xl shadow-tab',
-  open: 'rounded-t-2xl shadow-tab-inverse',
+  closed: 'rounded-b-2xl pt-2 pb-1.5 shadow-sm',
+  open: 'rounded-t-2xl pt-1.5 pb-2 shadow-tab-inverse',
 } satisfies Record<'closed' | 'open', string>;
 
 /**
  * The top of a trip's detail (RouteDetail, 4796:30411): the band holding its ends, and under it a
- * tab, "View 6 more routes", that opens the other routes out of where the trip starts. Open, the
- * list sits between the band and the panel below, and the tab, "View less", on the panel's top
- * edge. The list stays in the page when closed, hidden, after the band and before the tab, so the
- * tab is one button that keeps its focus as it toggles.
+ * tab, "View 6 more destinations", that opens the other routes out of where the trip starts
+ * (DestinationGroup), their tree line hanging from the ends card. Open, the list sits between the
+ * band and the panel below, and the tab, "View less", on the panel's top edge. The list stays in
+ * the page when closed, hidden, after the band and before the tab, so the tab is one button that
+ * keeps its focus as it toggles.
  */
-export function TripMoreRoutes({ ends, routes, onRoute, children }: TripMoreRoutesProps) {
+export function TripMoreRoutes({ ends, from, routes, onRoute, children }: TripMoreRoutesProps) {
   const [isOpen, setIsOpen] = useState(false);
   const listId = useId();
   const headingId = useId();
   const count = routes.length;
-  const more = `${count} more ${count === 1 ? 'route' : 'routes'}`;
+  const more = `${count} more ${count === 1 ? 'destination' : 'destinations'}`;
   return (
     <div className="isolate flex w-full flex-col items-center">
-      <div className="relative z-2 w-full bg-bg-surface px-3 pt-3 pb-4 shadow-trip-band sheet-floating:pt-19">
-        {ends}
-      </div>
+      <div className="relative z-2 w-full bg-bg-surface px-3 pt-3 sheet-floating:pt-19">{ends}</div>
       {count > 0 && (
         <section
           id={listId}
           hidden={!isOpen}
           data-testid="trip-other-routes"
           aria-labelledby={headingId}
-          className="w-full px-1 font-sn-pro"
+          className="w-full bg-bg-surface px-3 font-sn-pro"
         >
-          <p
-            id={headingId}
-            className="px-3 pt-8 pb-2 text-sm/5 font-medium text-text-tertiary uppercase"
-          >
-            {more}
-          </p>
+          <div className="flex w-full gap-2 pl-3">
+            <span className="flex self-stretch text-text-quaternary">
+              <RouteEndPointLines position="through" isFaint={false} />
+            </span>
+            <p
+              id={headingId}
+              className="min-w-0 flex-1 pt-2.5 pb-1 text-xs/4 font-medium text-text-secondary"
+            >
+              {more} from {from}
+            </p>
+          </div>
           <ul>
-            {routes.map((route) => (
+            {routes.map((route, i) => (
               <li key={route.id}>
-                <DestinationRow
+                <DestinationBar
                   destination={route.to}
                   additionalNotes={route.via && `via ${route.via}`}
-                  livery={route.livery}
-                  on="surface"
+                  variant={i === count - 1 ? 'end' : 'top'}
                   data-testid="trip-other-route"
                   data-direction={route.id}
                   onClick={() => onRoute(route.id)}
@@ -88,7 +92,7 @@ export function TripMoreRoutes({ ends, routes, onRoute, children }: TripMoreRout
           data-testid="trip-more-routes"
           onClick={() => setIsOpen(!isOpen)}
           className={cn(
-            'relative z-1 flex items-center gap-1 bg-bg-surface py-1.5 pr-2.5 pl-3 font-sn-pro text-sm/5 font-medium text-text-secondary',
+            'relative z-1 flex items-center gap-1 bg-bg-surface pr-2.5 pl-3 font-sn-pro text-sm/5 font-medium text-text-secondary',
             isOpen ? cn(TAB.open, '-mb-0.5') : cn(TAB.closed, '-mt-0.5'),
           )}
         >

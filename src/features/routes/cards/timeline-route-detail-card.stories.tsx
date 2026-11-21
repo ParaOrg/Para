@@ -49,7 +49,7 @@ function Picking(props: ComponentProps<typeof TimelineRouteDetailCard>) {
       start={start}
       endPicked={atEnd}
       onPick={(id) => {
-        props.onPick(id);
+        props.onPick?.(id);
         if (id === start) return setStart(null);
         setAtEnd(null);
         setPicked((cur) => (cur === id ? null : id));
@@ -64,7 +64,7 @@ function Picking(props: ComponentProps<typeof TimelineRouteDetailCard>) {
         setStart(null);
       }}
       onEnd={(end) => {
-        props.onEnd(end);
+        props.onEnd?.(end);
         setPicked(null);
         setAtEnd((cur) => (cur === end ? null : end));
       }}
@@ -114,7 +114,7 @@ const meta = {
     routeDirection: 'Novaliches',
     switchable: true,
     back: false,
-    // Papunta showing: PAPUNTA names it, and ⇅ the way a tap leads.
+    // Papunta showing: PAPUNTA names it, and says Pabalik, the way a tap leads.
     way: 'Papunta',
     wayTo: 'Pabalik',
     onSwitch: fn(),
@@ -269,7 +269,7 @@ export const Ejeep: Story = { args: { livery: 'ejeep' } };
 /** UV Express: its rail in Text/primary, as E-Jeep's. */
 export const UvExpress: Story = { args: { livery: 'uv-express' } };
 
-/** Turned round: the way back, so PAPUNTA reads Pabalik, and ⇅ Papunta, the way a tap leads. */
+/** Turned round: the way back, so PAPUNTA reads Pabalik, and a tap leads to Papunta. */
 export const TheWayBack: Story = {
   args: {
     routeOrigin: 'Novaliches',
@@ -307,12 +307,12 @@ export const NothingToGoBackTo: Story = {
   },
 };
 
-/** The route's other way is not drawn yet: PAPUNTA and ⇅ rest disabled. */
+/** The route's other way is not drawn yet: PAPUNTA rests disabled. */
 export const NothingTheOtherWay: Story = { args: { switchable: false } };
 
 /**
- * A mode with no fare rule: no Expected fare tile, and Distance takes the row (Figma draws nothing
- * for it; the owner keeps this default).
+ * A mode with no fare rule: no fare tile, and the Estimated Time Arrival takes the top row (the
+ * owner's call, Figma draws nothing for it).
  */
 export const Unpriced: Story = { args: { fare: undefined } };
 
@@ -431,7 +431,7 @@ export const PickedLightRailWayTwo: Story = {
   play: pickedAsDrawn,
 };
 
-/** MRT-3, a train's trip (4080:4241): its rail in Text/primary (TIMELINE_RAIL). */
+/** MRT-3, a train's trip (4080:4241): its rail in its yellow, card/MRTThree/fill (TIMELINE_RAIL). */
 export const MetroRailWayThree: Story = { args: { livery: 'metro-rail-way-three' } };
 
 /** Picked, MRT-3: the pill's two halves, YL06 and ₱20–22. */
@@ -713,17 +713,17 @@ export const SheetLow: Story = {
 };
 
 /**
- * An origin too long for one line on a phone at 18/26 (LongNames' fits on one).
+ * An origin too long for one line on a phone at 20/28 (LongNames' fits on one).
  */
 const longOrigin = 'Novaliches (Bayan) via Zabarte and Quirino Highway';
 
-/** Low with a long origin: one line of it, 26 tall, cut short (3814:3976). */
+/** Low with a long origin: one line of it, 28 tall, cut short (3814:3976). */
 export const SheetLowLongName: Story = {
   args: { height: undefined, ...LongNames.args, routeOrigin: longOrigin },
   play: async (ctx) => {
     const ends = within(within(ctx.canvasElement).getByTestId('trip-ends'));
     const origin = ends.getByText(longOrigin);
-    await waitFor(() => expect(origin.getBoundingClientRect().height).toBe(26));
+    await waitFor(() => expect(origin.getBoundingClientRect().height).toBe(28));
   },
 };
 
@@ -733,31 +733,30 @@ export const SheetRaisedLongName: Story = {
   play: async (ctx) => {
     await tapHandle(ctx.canvasElement);
     const ends = within(within(ctx.canvasElement).getByTestId('trip-ends'));
-    await expect(ends.getByText(longOrigin).getBoundingClientRect().height).toBeGreaterThan(26);
+    await expect(ends.getByText(longOrigin).getBoundingClientRect().height).toBeGreaterThan(28);
   },
 };
 
 /**
- * "View 2 more routes" under the trip's ends: the other routes out of where the trip starts, each
+ * "View 2 more destinations" under the trip's ends: the other routes out of where the trip starts, each
  * by where it goes; a tap opens that route's trip in this one's place. With none, as in every
  * story above, the tab is not there.
  */
 export const OtherRoutes: Story = {
   args: {
     otherRoutes: [
-      { id: 'tala-sm', to: 'SM Fairview', via: 'Maligaya', livery: 'jeep' },
+      { id: 'tala-sm', to: 'SM Fairview', via: 'Maligaya' },
       {
         id: 'tala-bs',
         to: 'Bagong Silang Kanan 5 Phase 3 Package 2 Terminal',
         via: null,
-        livery: 'jeep',
       },
     ],
     onOtherRoute: fn(),
   },
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
-    await userEvent.click(canvas.getByRole('button', { name: 'View 2 more routes' }));
+    await userEvent.click(canvas.getByRole('button', { name: 'View 2 more destinations' }));
     // SM Fairview is a hintuan too: the one in the list.
     const others = within(canvas.getByTestId('trip-other-routes'));
     await userEvent.click(others.getByRole('button', { name: /^SM Fairview/ }));
@@ -775,8 +774,8 @@ const board = (top: string, under: string) =>
   );
 
 /**
- * The direction's boards on their own card, "Signboard" over them (4796:30124), 32 tall, 8 apart,
- * above the tiles, 16 from them.
+ * The direction's boards on their own card, "Signboard" over them (4822:43834), 32 tall, 8 apart,
+ * right above the tiles, whose first row pads itself 20 (BottomContent, 4821:40538).
  */
 export const Signboards: Story = {
   args: { signboards: [board('BAYAN', 'SIMBAHAN'), board('SM', 'FAIRVIEW')] },
@@ -785,15 +784,15 @@ export const Signboards: Story = {
     const boards = canvas.getAllByTestId('trip-signboard');
     await expect(boards).toHaveLength(2);
     await waitFor(() => expect(boards[0].getBoundingClientRect().height).toBe(32));
-    // On their own card, "Signboard" over them, above the tiles, 16 from them.
+    // On their own card, "Signboard" over them, right above the tiles.
     const section = canvas.getByRole('region', { name: 'Signboard' });
     const tiles = canvas.getByTestId('trip-tiles');
     const box = (el: Element) => el.getBoundingClientRect();
-    await expect(box(tiles).top - box(section).bottom).toBe(16);
+    await expect(box(tiles).top - box(section).bottom).toBe(0);
   },
 };
 
-/** None uploaded: no card, the stops 16 under the tiles. */
+/** None uploaded: no card, the stops 20 under the tiles, the panel's own padding. */
 export const NoSignboards: Story = {
   args: { signboards: [] },
   play: async ({ canvasElement }) => {
@@ -802,7 +801,7 @@ export const NoSignboards: Story = {
     const tiles = canvas.getByTestId('trip-tiles');
     await expect(
       canvas.getByTestId('trip').getBoundingClientRect().top - tiles.getBoundingClientRect().bottom,
-    ).toBe(16);
+    ).toBe(20);
   },
 };
 
@@ -841,8 +840,8 @@ export const SignboardsAndOtherRoutes: Story = {
   args: {
     signboards: [board('BAYAN', 'SIMBAHAN'), board('SM', 'FAIRVIEW')],
     otherRoutes: [
-      { id: 'tala-sm', to: 'SM Fairview', via: null, livery: 'jeep' },
-      { id: 'tala-nova', to: 'Novaliches', via: null, livery: 'jeep' },
+      { id: 'tala-sm', to: 'SM Fairview', via: null },
+      { id: 'tala-nova', to: 'Novaliches', via: null },
     ],
     onOtherRoute: fn(),
   },

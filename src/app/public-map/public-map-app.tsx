@@ -45,6 +45,7 @@ import {
   loadHotspotsFromFile,
 } from '@/features/routes/published/fetch-index';
 import { fetchLine } from '@/features/routes/published/fetch-line';
+import { isPlaceSearchShown, isRidePickingOn } from '@/shared/config/env';
 import { useTurn } from '@/shared/hooks/commit-turn';
 import { retryingLazy } from '@/shared/lib/retrying-lazy';
 import { cn } from '@/shared/utils/cn';
@@ -192,9 +193,6 @@ export function PublicMapApp() {
   // The open trip's hintuans, worked out once per trip (useTripTimeline).
   const timeline = useTripTimeline(saved.selected, hotspots, tipId);
 
-  // Place search: what stops at a hotspot, by the published directions (.scratch/place-search).
-  const directionsAt = directionsAtHotspots(saved.directions, hotspots.linkedDirectionIds);
-
   // The map's credits, the Map Data Source sheet, opened by the ⓘ: the map and the cards under it
   // are out of reach while it is open.
   const credits = useMapCredits(root);
@@ -287,9 +285,9 @@ export function PublicMapApp() {
         )}
         {/*
         The open trip's hintuans along its line, a train's stations and a
-        jeepney's hintuans alike, each named (RouteLineLabel). A tap picks one
-        as its row on the trip card does, the map gliding in to it, as the
-        studio's do.
+        jeepney's hintuans alike, each named (RouteLineLabel). Where picking is
+        on (isRidePickingOn), a tap picks one as its row on the trip card does,
+        the map gliding in to it, as the studio's do.
       */}
         {map && saved.selected && tripLivery && timeline && (
           <StationLabels
@@ -302,7 +300,7 @@ export function PublicMapApp() {
             startId={ride.startId}
             endPicked={ride.endPicked}
             hasRide={ride.ridden !== null}
-            onPick={pickOnTrip}
+            onPick={isRidePickingOn ? pickOnTrip : undefined}
           />
         )}
         {/*
@@ -318,7 +316,7 @@ export function PublicMapApp() {
             label={ride.pickedLabel}
             code={ride.pickedCode}
             livery={tripLivery}
-            onPick={() => ride.pick(ride.pickedId)}
+            onPick={isRidePickingOn ? () => ride.pick(ride.pickedId) : undefined}
           />
         )}
         {/* The ride's start, picked by Set as start: its own circle, Start's pill beside it. */}
@@ -340,19 +338,21 @@ export function PublicMapApp() {
           <LandmarkPin key={goalLandmark.id} map={map} at={goalLandmark.point} />
         )}
         {/* Place search: a place opens as its name tapped does; wide, the cards float under it. */}
-        <PlaceSearchBar
-          map={map}
-          hotspots={hotspots.hotspots}
-          directionsAt={directionsAt}
-          whereNow={() => where.current?.at ?? null}
-          onPick={(hotspot) => openPlace(hotspot.id)}
-          onLookAt={(point) => lookAt(map, point)}
-          onGoHere={(landmark, near, hintuan) => goHere(landmark, near, hintuan.id)}
-          onSearchRestart={letGoalGo}
-          isUnderUpdate={needRefresh}
-          isUnderOfflinePill={offline || age.stale}
-          isCardOpen={cards.open}
-        />
+        {isPlaceSearchShown && (
+          <PlaceSearchBar
+            map={map}
+            hotspots={hotspots.hotspots}
+            directionsAt={directionsAtHotspots(saved.directions, hotspots.linkedDirectionIds)}
+            whereNow={() => where.current?.at ?? null}
+            onPick={(hotspot) => openPlace(hotspot.id)}
+            onLookAt={(point) => lookAt(map, point)}
+            onGoHere={(landmark, near, hintuan) => goHere(landmark, near, hintuan.id)}
+            onSearchRestart={letGoalGo}
+            isUnderUpdate={needRefresh}
+            isUnderOfflinePill={offline || age.stale}
+            isCardOpen={cards.open}
+          />
+        )}
         {/* How old the map is, and a new version waiting. */}
         <Notices offline={offline} age={age} needRefresh={needRefresh} onUpdate={reloadToUpdate} />
         {/* What went wrong, at the top: the locator's note and a failed load. */}
@@ -386,11 +386,11 @@ export function PublicMapApp() {
             pickedCode={ride.pickedCode}
             start={ride.startId}
             startCode={ride.startCode}
-            onSetStart={ride.setStart}
-            onRemoveStart={ride.removeStart}
+            onSetStart={isRidePickingOn ? ride.setStart : undefined}
+            onRemoveStart={isRidePickingOn ? ride.removeStart : undefined}
             walk={walk}
-            onPick={pickOnTrip}
-            onEnd={endOnTrip}
+            onPick={isRidePickingOn ? pickOnTrip : undefined}
+            onEnd={isRidePickingOn ? endOnTrip : undefined}
             endPicked={ride.endPicked}
             dockRef={tripDock}
             height={height}

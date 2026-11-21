@@ -14,7 +14,8 @@
 // and the place whose card it was opened from; its top and bottom row are the
 // tip; the tiles show the whole loop and then the ride from the tip to a row;
 // a start and an end above it wrap the ride, one fold between, and either end
-// row rides on round to the tip; × Remove as start lets the ride go. And on a
+// row rides on round to the tip; × Remove as start lets the ride go (the picks
+// only in a build with ride picking, VITE_RIDE_PICKS; skipped without). And on a
 // wide screen, with a place's card open beside place search: Escape in the
 // field is the field's, and the card stays open.
 import { chromium } from 'playwright';
@@ -295,12 +296,19 @@ const closeTrip = async (page) => {
     "a loop's trip has no SWITCH",
     (await page.locator('[data-testid="card-switch"]').count()) === 0,
   );
-  // The ride pill names the loop as a line's names its bound: "Jeep · UP – Ikot".
-  const pill = (await card.locator('[data-testid="trip-mode"]').innerText()).trim();
+  // The Transport mode tile says what the loop rides, as any trip's does: its name is the ends card's.
+  const mode = (await card.locator('[data-testid="trip-mode"]').innerText()).trim();
   check(
-    '  and its ride pill names the loop after its mode, with no Papunta or Pabalik',
-    pill.endsWith(' · UP – Ikot') && !/Papunta|Pabalik/.test(pill),
-    pill,
+    '  and its Transport mode tile says what it rides, no Papunta or Pabalik',
+    mode === 'Jeep',
+    mode,
+  );
+  // Its ends card is Figma's Ikot variant: the loop's name alone, under the Ikot pill.
+  const ends = (await card.locator('[data-testid="trip-ends"]').innerText()).trim();
+  check(
+    '  and its ends card names the loop under Ikot, with no Start or End',
+    ends.startsWith('Ikot') && ends.includes('UP – Ikot') && !/\b(Start|End)\b/.test(ends),
+    ends,
   );
   check(
     '  nothing in the card says Papunta or Pabalik',
@@ -331,85 +339,93 @@ const closeTrip = async (page) => {
     JSON.stringify(await endLabels(page)),
   );
 
-  // A row tapped: the ride goes from the tip forward to it.
-  await pickRow(page, ENGINEERING.name);
-  await page.waitForTimeout(400);
-  const toEngineering = (ENGINEERING.metres - PALMA.metres + LOOP_METRES) % LOOP_METRES;
-  check(
-    'a row tapped: the Distance is the ride forward from the tip to it',
-    near(await km(page), toEngineering),
-    `${await km(page)} km, expected ${asTile(toEngineering)} km`,
-  );
-  await pickRow(page, ENGINEERING.name);
+  // A build without ride picking (VITE_RIDE_PICKS) lists the stops as plain rows, with no button
+  // to pick one: the rides below need a pick, and are skipped.
+  if ((await page.locator('[data-testid="trip-hintuan-pick"]').count()) === 0) {
+    console.log(
+      'SKIP  a row, a start and the end rows picked on the loop: picking is off in this build (VITE_RIDE_PICKS)',
+    );
+  } else {
+    // A row tapped: the ride goes from the tip forward to it.
+    await pickRow(page, ENGINEERING.name);
+    await page.waitForTimeout(400);
+    const toEngineering = (ENGINEERING.metres - PALMA.metres + LOOP_METRES) % LOOP_METRES;
+    check(
+      'a row tapped: the Distance is the ride forward from the tip to it',
+      near(await km(page), toEngineering),
+      `${await km(page)} km, expected ${asTile(toEngineering)} km`,
+    );
+    await pickRow(page, ENGINEERING.name);
 
-  // Set as start on Math Building, then a row above it: the ride wraps.
-  await pickRow(page, MATH.name);
-  await press(page.getByRole('button', { name: 'Set as start' }));
-  await page.waitForTimeout(300);
-  await pickRow(page, QUEZON.name);
-  await page.waitForTimeout(500);
-  const wrapped = (QUEZON.metres - MATH.metres + LOOP_METRES) % LOOP_METRES;
-  check(
-    'a start, then a row above it: the ride wraps across the seam, round to that row',
-    near(await km(page), wrapped),
-    `${await km(page)} km, expected ${asTile(wrapped)} km`,
-  );
-  check(
-    '  the tip is passed through: a bare circle on the map, no Start over it',
-    !(await endLabels(page)).some((l) => l.includes(PALMA.name)) &&
-      (await bareCircles(page)).includes(PALMA.name),
-    `${JSON.stringify(await endLabels(page))} / ${JSON.stringify(await bareCircles(page))}`,
-  );
-  // The rows between the end and the start stand alone, outside the ride (the owner, T4).
-  const between = await page
-    .locator('[data-testid="trip-hintuan"] [data-rail]')
-    .evaluateAll((els) => els.map((e) => e.getAttribute('data-rail')));
-  check(
-    '  the rows between the end and the start stand alone, off the rail',
-    between.includes('disconnected'),
-    between.join(),
-  );
+    // Set as start on Math Building, then a row above it: the ride wraps.
+    await pickRow(page, MATH.name);
+    await press(page.getByRole('button', { name: 'Set as start' }));
+    await page.waitForTimeout(300);
+    await pickRow(page, QUEZON.name);
+    await page.waitForTimeout(500);
+    const wrapped = (QUEZON.metres - MATH.metres + LOOP_METRES) % LOOP_METRES;
+    check(
+      'a start, then a row above it: the ride wraps across the seam, round to that row',
+      near(await km(page), wrapped),
+      `${await km(page)} km, expected ${asTile(wrapped)} km`,
+    );
+    check(
+      '  the tip is passed through: a bare circle on the map, no Start over it',
+      !(await endLabels(page)).some((l) => l.includes(PALMA.name)) &&
+        (await bareCircles(page)).includes(PALMA.name),
+      `${JSON.stringify(await endLabels(page))} / ${JSON.stringify(await bareCircles(page))}`,
+    );
+    // The rows between the end and the start stand alone, outside the ride (the owner, T4).
+    const between = await page
+      .locator('[data-testid="trip-hintuan"] [data-rail]')
+      .evaluateAll((els) => els.map((e) => e.getAttribute('data-rail')));
+    check(
+      '  the rows between the end and the start stand alone, off the rail',
+      between.includes('disconnected'),
+      between.join(),
+    );
 
-  // An end row with the start kept: either end is the tip, the ride goes on round to it.
-  await press(page.locator('[data-testid="trip-destination"] button').first());
-  await page.waitForTimeout(500);
-  check(
-    'the ride ending at the tip: the map marks it End, not Start',
-    (await endLabels(page)).some((l) => l === `End, ${PALMA.name}`) &&
-      !(await endLabels(page)).some((l) => l === `Start, ${PALMA.name}`),
-    JSON.stringify(await endLabels(page)),
-  );
-  const toTip = (PALMA.metres - MATH.metres + LOOP_METRES) % LOOP_METRES;
-  check(
-    'the bottom row with a start: the ride runs from the start round to the tip',
-    near(await km(page), toTip),
-    `${await km(page)} km, expected ${asTile(toTip)} km`,
-  );
-  // The two rows are the one end: the top row, tapped with the bottom's ride picked, lets it go...
-  await press(page.locator('[data-testid="trip-origin"] button').first());
-  await page.waitForTimeout(500);
-  check(
-    '  the top row is the same end: tapped after the bottom row, it lets the ride go',
-    near(await km(page), LOOP_METRES),
-    `${await km(page)} km`,
-  );
-  // ...and tapped alone, it rides on round to the tip too.
-  await press(page.locator('[data-testid="trip-origin"] button').first());
-  await page.waitForTimeout(500);
-  check(
-    '  tapped again, it rides from the start round to the tip',
-    near(await km(page), toTip),
-    `${await km(page)} km, expected ${asTile(toTip)} km`,
-  );
+    // An end row with the start kept: either end is the tip, the ride goes on round to it.
+    await press(page.locator('[data-testid="trip-destination"] button').first());
+    await page.waitForTimeout(500);
+    check(
+      'the ride ending at the tip: the map marks it End, not Start',
+      (await endLabels(page)).some((l) => l === `End, ${PALMA.name}`) &&
+        !(await endLabels(page)).some((l) => l === `Start, ${PALMA.name}`),
+      JSON.stringify(await endLabels(page)),
+    );
+    const toTip = (PALMA.metres - MATH.metres + LOOP_METRES) % LOOP_METRES;
+    check(
+      'the bottom row with a start: the ride runs from the start round to the tip',
+      near(await km(page), toTip),
+      `${await km(page)} km, expected ${asTile(toTip)} km`,
+    );
+    // The two rows are the one end: the top row, tapped with the bottom's ride picked, lets it go...
+    await press(page.locator('[data-testid="trip-origin"] button').first());
+    await page.waitForTimeout(500);
+    check(
+      '  the top row is the same end: tapped after the bottom row, it lets the ride go',
+      near(await km(page), LOOP_METRES),
+      `${await km(page)} km`,
+    );
+    // ...and tapped alone, it rides on round to the tip too.
+    await press(page.locator('[data-testid="trip-origin"] button').first());
+    await page.waitForTimeout(500);
+    check(
+      '  tapped again, it rides from the start round to the tip',
+      near(await km(page), toTip),
+      `${await km(page)} km, expected ${asTile(toTip)} km`,
+    );
 
-  // × Remove as start: the ride lets go, the whole loop's again.
-  await press(page.getByRole('button', { name: 'Remove as start' }));
-  await page.waitForTimeout(500);
-  check(
-    '× Remove as start: the tiles are the whole loop again',
-    near(await km(page), LOOP_METRES),
-    `${await km(page)} km`,
-  );
+    // × Remove as start: the ride lets go, the whole loop's again.
+    await press(page.getByRole('button', { name: 'Remove as start' }));
+    await page.waitForTimeout(500);
+    check(
+      '× Remove as start: the tiles are the whole loop again',
+      near(await km(page), LOOP_METRES),
+      `${await km(page)} km`,
+    );
+  }
   check('no page errors', errors.length === 0, errors.join('; '));
   await context.close();
 }
@@ -629,24 +645,29 @@ const closeTrip = async (page) => {
   await page.waitForTimeout(500);
 
   const field = page.getByRole('combobox', { name: 'Search places' });
-  await field.click();
-  await field.pressSequentially('Palma');
-  await page.getByRole('option').first().waitFor({ timeout: 10000 });
-  await page.keyboard.press('Escape');
-  await page.waitForTimeout(300);
-  check('Escape in place search clears what was typed', (await field.inputValue()) === '');
-  check('  and the card behind the field stays open', (await card.count()) === 1);
-  await page.keyboard.press('Escape');
-  await page.waitForTimeout(300);
-  check(
-    '  a second Escape in the empty field leaves the card open too',
-    (await card.count()) === 1,
-  );
+  // A build without place search (VITE_PLACE_SEARCH) has no field: nothing here to check.
+  if ((await field.count()) === 0) {
+    console.log('SKIP  Escape in place search: hidden in this build (VITE_PLACE_SEARCH)');
+  } else {
+    await field.click();
+    await field.pressSequentially('Palma');
+    await page.getByRole('option').first().waitFor({ timeout: 10000 });
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(300);
+    check('Escape in place search clears what was typed', (await field.inputValue()) === '');
+    check('  and the card behind the field stays open', (await card.count()) === 1);
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(300);
+    check(
+      '  a second Escape in the empty field leaves the card open too',
+      (await card.count()) === 1,
+    );
 
-  await field.evaluate((el) => el.blur());
-  await page.keyboard.press('Escape');
-  await page.waitForTimeout(500);
-  check('out of the field, Escape closes the card as before', (await card.count()) === 0);
+    await field.evaluate((el) => el.blur());
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(500);
+    check('out of the field, Escape closes the card as before', (await card.count()) === 0);
+  }
   check('no page errors', errors.length === 0, errors.join('; '));
   await context.close();
 }

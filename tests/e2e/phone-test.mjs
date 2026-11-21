@@ -1590,8 +1590,19 @@ const tripChecks = async () => {
   // SWITCH, ✕ or ‹ to let go.
   let picked = false;
   const rows = card().locator('[data-testid="trip-hintuan"]');
+  // A build without ride picking (VITE_RIDE_PICKS) lists the stops as plain rows, with no button
+  // to pick one: nothing here to check.
+  const isRidePicking = (await card().locator('[data-testid="trip-hintuan-pick"]').count()) > 0;
   let didPicks = false;
-  if (!picksChecked && (await rows.count()) > 0) {
+  if (!picksChecked && (await rows.count()) > 0 && !isRidePicking) {
+    picksChecked = true;
+    // Let down after as if the picks ran, so the checks after this trip read the sheet where
+    // they always have.
+    didPicks = true;
+    console.log(
+      'SKIP  a hintuan row picks it, Set as start and an end, the ends picked: picking is off in this build (VITE_RIDE_PICKS)',
+    );
+  } else if (!picksChecked && (await rows.count()) > 0) {
     picksChecked = true;
     didPicks = true;
     const pickedIndex = Math.floor(((await rows.count()) - 1) / 2);
@@ -2800,9 +2811,11 @@ const endClearsFooter = async (sel) => {
     const footer = [...sheet.children].find((el) => el.hasAttribute('data-sheet-footer'));
     const overflow = body.scrollHeight - body.clientHeight;
     body.scrollTop = body.scrollHeight;
-    const reach = [...body.querySelectorAll('button, a[href], [tabindex="0"]')].filter(
-      (el) => el.getClientRects().length > 0 && !el.closest('[inert]'),
-    );
+    // What a finger reaches at the end, and a trip's last stop: with picking off (VITE_RIDE_PICKS)
+    // its rows are no controls, yet the last of them must still clear the footer.
+    const reach = [
+      ...body.querySelectorAll('button, a[href], [tabindex="0"], [data-testid="trip-destination"]'),
+    ].filter((el) => el.getClientRects().length > 0 && !el.closest('[inert]'));
     const last = reach.at(-1);
     if (!last) return { ok: false, why: 'nothing in the body to reach' };
     const r = last.getBoundingClientRect();
@@ -5245,7 +5258,7 @@ if (runsPart(2)) {
     // At full height: another route leaves the sheet there (the owner's rule: nothing moves it for
     // the commuter).
     const atFull = await handleTo('full');
-    // The rows sit behind "View N more routes" at the top of the trip: opened first, its
+    // The rows sit behind "View N more destinations" at the top of the trip: opened first, its
     // aria-expanded turning true.
     const moreRoutes = card().locator('[data-testid="trip-more-routes"]');
     await moreRoutes.scrollIntoViewIfNeeded();
@@ -5254,7 +5267,7 @@ if (runsPart(2)) {
       async () => (await moreRoutes.getAttribute('aria-expanded')) === 'true',
     );
     const expanded = await moreRoutes.getAttribute('aria-expanded');
-    check('  "View N more routes" opens the list', expanded === 'true', String(expanded));
+    check('  "View N more destinations" opens the list', expanded === 'true', String(expanded));
     // Scrolled to the sheet's middle, as a person brings a row up to tap it: "if needed" counts a
     // row under the Controller, which floats over the sheet's foot, as already in view.
     await card()
@@ -5508,8 +5521,13 @@ if (runsPart(1)) {
 // closing the panel takes it away. Two malls from today's landmark file, each
 // the only landmark of its name, a kilometre or more apart; the page is still on
 // the made-up map, whose places share no name with them, so each is listed as a
-// landmark, not as a Para place.
-if (runsPart(2)) {
+// landmark, not as a Para place. A build without place search (VITE_PLACE_SEARCH) skips it.
+const isPlaceSearchShown =
+  (await page.getByRole('combobox', { name: 'Search places' }).count()) > 0;
+if (runsPart(2) && !isPlaceSearchShown) {
+  console.log('SKIP  place search: hidden in this build (VITE_PLACE_SEARCH)');
+}
+if (runsPart(2) && isPlaceSearchShown) {
   {
     const file = await (await fetch(`${BASE}/data/landmarks.v1.json`)).json();
     const named = new Map();
