@@ -114,7 +114,7 @@ const meta = {
     routeDirection: 'Novaliches',
     switchable: true,
     back: false,
-    // Papunta showing: PAPUNTA names it, and ⇅ the way a tap leads.
+    // Papunta showing: PAPUNTA names it, and says Pabalik, the way a tap leads.
     way: 'Papunta',
     wayTo: 'Pabalik',
     onSwitch: fn(),
@@ -269,7 +269,7 @@ export const Ejeep: Story = { args: { livery: 'ejeep' } };
 /** UV Express: its rail in Text/primary, as E-Jeep's. */
 export const UvExpress: Story = { args: { livery: 'uv-express' } };
 
-/** Turned round: the way back, so PAPUNTA reads Pabalik, and ⇅ Papunta, the way a tap leads. */
+/** Turned round: the way back, so PAPUNTA reads Pabalik, and a tap leads to Papunta. */
 export const TheWayBack: Story = {
   args: {
     routeOrigin: 'Novaliches',
@@ -307,7 +307,7 @@ export const NothingToGoBackTo: Story = {
   },
 };
 
-/** The route's other way is not drawn yet: PAPUNTA and ⇅ rest disabled. */
+/** The route's other way is not drawn yet: PAPUNTA rests disabled. */
 export const NothingTheOtherWay: Story = { args: { switchable: false } };
 
 /**
@@ -713,17 +713,17 @@ export const SheetLow: Story = {
 };
 
 /**
- * An origin too long for one line on a phone at 18/26 (LongNames' fits on one).
+ * An origin too long for one line on a phone at 20/28 (LongNames' fits on one).
  */
 const longOrigin = 'Novaliches (Bayan) via Zabarte and Quirino Highway';
 
-/** Low with a long origin: one line of it, 26 tall, cut short (3814:3976). */
+/** Low with a long origin: one line of it, 28 tall, cut short (3814:3976). */
 export const SheetLowLongName: Story = {
   args: { height: undefined, ...LongNames.args, routeOrigin: longOrigin },
   play: async (ctx) => {
     const ends = within(within(ctx.canvasElement).getByTestId('trip-ends'));
     const origin = ends.getByText(longOrigin);
-    await waitFor(() => expect(origin.getBoundingClientRect().height).toBe(26));
+    await waitFor(() => expect(origin.getBoundingClientRect().height).toBe(28));
   },
 };
 
@@ -733,31 +733,30 @@ export const SheetRaisedLongName: Story = {
   play: async (ctx) => {
     await tapHandle(ctx.canvasElement);
     const ends = within(within(ctx.canvasElement).getByTestId('trip-ends'));
-    await expect(ends.getByText(longOrigin).getBoundingClientRect().height).toBeGreaterThan(26);
+    await expect(ends.getByText(longOrigin).getBoundingClientRect().height).toBeGreaterThan(28);
   },
 };
 
 /**
- * "View 2 more routes" under the trip's ends: the other routes out of where the trip starts, each
+ * "View 2 more destinations" under the trip's ends: the other routes out of where the trip starts, each
  * by where it goes; a tap opens that route's trip in this one's place. With none, as in every
  * story above, the tab is not there.
  */
 export const OtherRoutes: Story = {
   args: {
     otherRoutes: [
-      { id: 'tala-sm', to: 'SM Fairview', via: 'Maligaya', livery: 'jeep' },
+      { id: 'tala-sm', to: 'SM Fairview', via: 'Maligaya' },
       {
         id: 'tala-bs',
         to: 'Bagong Silang Kanan 5 Phase 3 Package 2 Terminal',
         via: null,
-        livery: 'jeep',
       },
     ],
     onOtherRoute: fn(),
   },
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
-    await userEvent.click(canvas.getByRole('button', { name: 'View 2 more routes' }));
+    await userEvent.click(canvas.getByRole('button', { name: 'View 2 more destinations' }));
     // SM Fairview is a hintuan too: the one in the list.
     const others = within(canvas.getByTestId('trip-other-routes'));
     await userEvent.click(others.getByRole('button', { name: /^SM Fairview/ }));
@@ -841,8 +840,8 @@ export const SignboardsAndOtherRoutes: Story = {
   args: {
     signboards: [board('BAYAN', 'SIMBAHAN'), board('SM', 'FAIRVIEW')],
     otherRoutes: [
-      { id: 'tala-sm', to: 'SM Fairview', via: null, livery: 'jeep' },
-      { id: 'tala-nova', to: 'Novaliches', via: null, livery: 'jeep' },
+      { id: 'tala-sm', to: 'SM Fairview', via: null },
+      { id: 'tala-nova', to: 'Novaliches', via: null },
     ],
     onOtherRoute: fn(),
   },

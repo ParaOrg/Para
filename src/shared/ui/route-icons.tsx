@@ -129,11 +129,6 @@ export function ArrowLeftRightIcon() {
   return <RouteSpriteIcon id="arrow-left-right-large" />;
 }
 
-/** Figma's arrow-up-down, 20 across: the ⇅ on a trip's ends card, turning the trip round. */
-export function ArrowUpDownIcon() {
-  return <RouteSpriteIcon id="arrow-up-down" />;
-}
-
 /** Figma's filter-large (4633:22015), 28 across: the Controller's sliders, opening the route list's filter. */
 export function FilterIcon() {
   return <RouteSpriteIcon id="filter-large" />;

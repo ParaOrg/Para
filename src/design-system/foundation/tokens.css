@@ -641,15 +641,13 @@
    * drop shadow, so the name is ours. */
   --shadow-trip-card: 0 3px 6px 0 rgb(43 43 43 / 0.12);
 
-  /* A tab hanging off a panel's edge, below it or, inverse, above it: a trip's "View more" and
-   * "View less" (Figma's effect styles Experiment and ExperimentInverse, 4795:20391). */
-  --shadow-tab: 0 4px 8px 0 rgb(43 43 43 / 0.16);
-  --shadow-tab-inverse: 0 -4px 8px 0 rgb(43 43 43 / 0.16);
+  /* A tab on a panel's top edge: a trip's "View less" (Figma's effect style ExperimentInverse,
+   * 4796:30411). Its "View more", under the ends card, wears shadow-sm. */
+  --shadow-tab-inverse: 0 -2px 8px 0 rgb(43 43 43 / 0.1);
 
-  /* The band holding a trip's ends, lifted over what follows; inverse, the panel under its open
-   * list, lifted over the list (TopContent and BottomContent, 4796:30410). Figma's are unnamed. */
-  --shadow-trip-band: 0 4px 4px 0 rgb(43 43 43 / 0.16);
-  --shadow-trip-band-inverse: 0 -4px 4px 0 rgb(43 43 43 / 0.16);
+  /* The panel under a trip's open list of other routes, lifted over the list (BottomContent,
+   * 4796:30411). Figma's is unnamed. */
+  --shadow-trip-band-inverse: 0 -2px 4px 0 rgb(43 43 43 / 0.1);
 }
 
 /*

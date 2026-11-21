@@ -8,7 +8,7 @@ import { fareFor, pickedFareFor, publishedSignboard, tripFacts } from './trip-fa
 import { TripRidePills } from './trip-ride-pills';
 import { useFareKind } from './use-fare-kind';
 import { otherRoutesFrom, switchWord, wayWord } from '../model/departures';
-import { liveryOf, type Livery } from '../model/liveries';
+import type { Livery } from '../model/liveries';
 import { stationCode } from '../model/rail-codes';
 import { LINE_NOTES, LOOP_WORD, type Direction } from '../model/routes';
 import { directionRowParts } from '../model/row-name';
@@ -76,7 +76,7 @@ export function TripCard({
   dockRef: Ref<HTMLDivElement>;
   /** Its sheet's height, shared with the list or card behind it (BottomSheet). */
   height: SheetHeight;
-  /** A row behind "View N more routes" tapped: that direction's trip in this one's place. Without it, no rows. */
+  /** A row behind "View N more destinations" tapped: that direction's trip in this one's place. Without it, no rows. */
   onOtherRoute?: (direction: Direction) => void;
   /** Where a signboard's file is read: beside the published map, or the studio's bucket. */
   signboardUrl?: (name: string) => string;
@@ -135,7 +135,7 @@ export function TripCard({
       signboards={(direction.signboards ?? []).map(signboardUrl)}
       note={LINE_NOTES[direction.route?.routeCode ?? '']}
       walk={walk}
-      otherRoutes={others.map((v) => ({ id: v.id, ...directionRowParts(v), livery: liveryOf(v) }))}
+      otherRoutes={others.map((v) => ({ id: v.id, ...directionRowParts(v) }))}
       onOtherRoute={(id) => {
         const v = others.find((o) => o.id === id);
         if (v) onOtherRoute?.(v);

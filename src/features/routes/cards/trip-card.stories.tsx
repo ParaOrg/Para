@@ -218,7 +218,7 @@ export const PickedHintuan: Story = {
 /** The far end's row picked: the whole ride, that end on the map. */
 export const EndPicked: Story = { args: { endPicked: 'to' } };
 
-/** Another route leaves from the same place: "View 1 more route" opens it, and a tap opens its trip in this one's place. */
+/** Another route leaves from the same place: "View 1 more destination" opens it, and a tap opens its trip in this one's place. */
 export const OtherRoutes: Story = {
   args: {
     directions: [talaToNovaliches, novalichesToTala, talaToFairview],

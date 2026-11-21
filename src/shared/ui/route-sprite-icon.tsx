@@ -18,7 +18,6 @@ const ROUTE_SPRITE_VIEW_BOX = {
   'close-large': '0 0 28 28',
   'arrow-left-right-large': '0 0 28 28',
   'filter-large': '0 0 28 28',
-  'arrow-up-down': '0 0 20 20',
   'circle-arrow-right': '0 0 24 24',
   hourglass: '0 0 24 24',
 } as const;
