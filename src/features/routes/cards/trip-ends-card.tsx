@@ -1,4 +1,4 @@
-import { RouteStopSign } from './route-stop-sign';
+import { RouteStopSign, type RouteStopSignKind } from './route-stop-sign';
 
 interface TripEndsCardProps {
   /** Figma's Route Origin: where the trip leaves from, under Start. */
@@ -7,40 +7,37 @@ interface TripEndsCardProps {
   routeDirection: string;
   /** The place the trip passes on its way, shown as "via …" under End's place. Absent: no line. */
   via?: string;
-  /** A loop's origin and destination are one place, so it shows Start alone. */
-  isLoop?: boolean;
+  /** A loop's name, "UP – Ikot": its one place on the card, under the Ikot pill. Absent: not a loop. */
+  loopName?: string;
 }
 
 /**
  * A trip's two ends at the top of its detail (TopContent, 4796:30411): one card, white and rounded
  * 24 under shadow-large, Start's place over a hairline (stroke-tertiary) and End's under it. A loop
- * shows Start alone. The bar's PAPUNTA turns the trip round; the card has no switch of its own. On
+ * (Variants=Ikot) shows its name alone, under its Ikot pill. The bar's PAPUNTA turns the trip round; the card has no switch of its own. On
  * a sheet at Low each place keeps to one line.
  */
-export function TripEndsCard({
-  routeOrigin,
-  routeDirection,
-  via,
-  isLoop = false,
-}: TripEndsCardProps) {
+export function TripEndsCard({ routeOrigin, routeDirection, via, loopName }: TripEndsCardProps) {
+  if (loopName !== undefined) {
+    return (
+      <div data-testid="trip-ends" className={CARD}>
+        <EndPart kind="ikot" place={loopName} />
+      </div>
+    );
+  }
   return (
-    <div
-      data-testid="trip-ends"
-      className="flex w-full flex-col overflow-clip rounded-3xl font-sn-pro shadow-large"
-    >
+    <div data-testid="trip-ends" className={CARD}>
       <EndPart kind="start" place={routeOrigin} />
-      {!isLoop && (
-        <>
-          <hr className="border-t-0-6 border-stroke-tertiary" />
-          <EndPart kind="end" place={routeDirection} via={via} />
-        </>
-      )}
+      <hr className="border-t-0-6 border-stroke-tertiary" />
+      <EndPart kind="end" place={routeDirection} via={via} />
     </div>
   );
 }
 
+const CARD = 'flex w-full flex-col overflow-clip rounded-3xl font-sn-pro shadow-large';
+
 interface EndPartProps {
-  kind: 'start' | 'end';
+  kind: RouteStopSignKind;
   place: string;
   via?: string;
 }

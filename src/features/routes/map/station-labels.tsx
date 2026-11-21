@@ -64,7 +64,8 @@ function namesShow(map: MapLibreMap): boolean {
  * a few hundred metres apart, so at the bar's 2 km their names overlap — kept
  * at 3 km until the owner says otherwise. Given `onPick`, the dot and its name
  * are one button that hands it the row's id, as the row's tap on the card does
- * (useRideTo's pick): the public map and the studio both pick it. A long
+ * (useRideTo's pick): the studio always picks it, the public map only where picking is on
+ * (isRidePickingOn). Without `onPick` the dot and its name are plain, no control. A long
  * jeepney trip is thirty or forty of these markers, each a button MapLibre
  * re-projects at every move — the one place a trip puts dozens of DOM markers
  * on the map, as many as the end titles at their most. TODO: count them in

@@ -55,7 +55,7 @@ export function DestinationBar({
           variant === 'top' && 'border-b-0-6 border-stroke-secondary',
         )}
       >
-        <span className="text-base/6 font-semibold">{destination}</span>
+        <span className="text-base-lower/6 font-semibold">{destination}</span>
         {additionalNotes && (
           <span className="text-sm/5">
             {/* The comma is for a screen reader: "Philcoa, via Almar" reads as two things. */}

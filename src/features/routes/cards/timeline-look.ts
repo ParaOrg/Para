@@ -3,10 +3,9 @@ import type { Livery } from '../model/liveries';
 /* How a trip's timeline is painted on the sheet's own surface (RouteHintuans, 4796:29755). */
 
 /**
- * The rail, and the dots' colour on it: its mode's card fill, chosen as SURFACE_ARROW chooses the
- * arrow's (route-card-look.ts), so it stands out from the surface at 3:1. UV Express's grey and
- * MRT-3's yellow do not, and E-jeep has no card fill among the new semantics: Text/primary for
- * those. tests/unit/destination-row-contrast-test.mjs checks the same tokens.
+ * The rail, and the dots' colour on it: its mode's card fill, MRT-3's yellow as Figma's Railway
+ * draws it (4825:47950). UV Express's grey does not stand out from the surface, and E-jeep has no
+ * card fill among the new semantics: Text/primary for those.
  */
 export const TIMELINE_RAIL = {
   jeep: 'bg-card-jeep-fill',
@@ -15,7 +14,7 @@ export const TIMELINE_RAIL = {
   bus: 'bg-card-bus-fill',
   'light-rail-way-one': 'bg-card-lrt-one-fill',
   'light-rail-way-two': 'bg-card-lrt-two-fill',
-  'metro-rail-way-three': 'bg-text-primary',
+  'metro-rail-way-three': 'bg-card-mrt-three-fill',
   ferry: 'bg-card-ferry-fill',
 } satisfies Record<Livery, string>;
 

@@ -1590,8 +1590,19 @@ const tripChecks = async () => {
   // SWITCH, ✕ or ‹ to let go.
   let picked = false;
   const rows = card().locator('[data-testid="trip-hintuan"]');
+  // A build without ride picking (VITE_RIDE_PICKS) lists the stops as plain rows, with no button
+  // to pick one: nothing here to check.
+  const isRidePicking = (await card().locator('[data-testid="trip-hintuan-pick"]').count()) > 0;
   let didPicks = false;
-  if (!picksChecked && (await rows.count()) > 0) {
+  if (!picksChecked && (await rows.count()) > 0 && !isRidePicking) {
+    picksChecked = true;
+    // Let down after as if the picks ran, so the checks after this trip read the sheet where
+    // they always have.
+    didPicks = true;
+    console.log(
+      'SKIP  a hintuan row picks it, Set as start and an end, the ends picked: picking is off in this build (VITE_RIDE_PICKS)',
+    );
+  } else if (!picksChecked && (await rows.count()) > 0) {
     picksChecked = true;
     didPicks = true;
     const pickedIndex = Math.floor(((await rows.count()) - 1) / 2);

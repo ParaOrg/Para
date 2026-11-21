@@ -101,21 +101,3 @@ export const ROUTE_CARD_REST_SHADOW = {
   'metro-rail-way-three': 'shadow-route-card-fill',
   ferry: 'shadow-route-card-fill',
 } satisfies Record<Livery, string>;
-
-/**
- * A mode's mark on the sheet's surface, a destination row's arrow and a ride pill's vehicle: its
- * mode's card fill (MiddleContent, 4795:20406) where that fill stands out from the surface at 3:1,
- * the least a non-text mark needs. Where it does not (UV Express's grey, MRT-3's yellow), and for
- * E-jeep, which has no card fill among the new semantics, the words' Text/primary.
- * tests/unit/destination-row-contrast-test.mjs checks both against the tokens.
- */
-export const SURFACE_ARROW = {
-  jeep: 'text-card-jeep-fill',
-  'uv-express': 'text-text-primary',
-  ejeep: 'text-text-primary',
-  bus: 'text-card-bus-fill',
-  'light-rail-way-one': 'text-card-lrt-one-fill',
-  'light-rail-way-two': 'text-card-lrt-two-fill',
-  'metro-rail-way-three': 'text-text-primary',
-  ferry: 'text-card-ferry-fill',
-} satisfies Record<Livery, string>;

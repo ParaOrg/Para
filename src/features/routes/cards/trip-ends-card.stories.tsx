@@ -51,11 +51,20 @@ export const WithoutVia: Story = {
   },
 };
 
-/** A loop: its origin is its destination, so Start alone. */
-export const Loop: Story = {
-  args: { routeOrigin: 'UP Diliman', routeDirection: 'UP Diliman', via: undefined, isLoop: true },
+/** Variants=Ikot (4825:48754): a loop's name alone, under its grey Ikot pill. */
+export const Ikot: Story = {
+  args: {
+    routeOrigin: 'Palma Hall',
+    routeDirection: 'Palma Hall',
+    via: undefined,
+    loopName: 'UP Ikot',
+  },
   play: async ({ canvasElement }) => {
-    await expect(within(canvasElement).queryByText('End')).toBeNull();
+    const canvas = within(canvasElement);
+    await expect(canvas.getByText('Ikot')).toBeVisible();
+    await expect(canvas.getByText('UP Ikot')).toBeVisible();
+    await expect(canvas.queryByText('Start')).toBeNull();
+    await expect(canvas.queryByText('End')).toBeNull();
   },
 };
 

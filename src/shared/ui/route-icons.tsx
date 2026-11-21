@@ -68,9 +68,13 @@ export function EndIcon() {
   return <RouteSpriteIcon id="end" />;
 }
 
+/** Figma's Ikot (4825:49054), 16 across: the disc before a loop's Ikot over its name. */
+export function IkotIcon() {
+  return <RouteSpriteIcon id="ikot" />;
+}
+
 /**
- * The vehicles in a trip's ride pill (TripRidePills) and a card's mode
- * (RouteCardMode), Figma's own drawings at 32 across: Train (4170:7029), Jeep (4188:11144, here
+ * The vehicles in a card's mode (RouteCardMode), Figma's own drawings at 32 across: Train (4170:7029), Jeep (4188:11144, here
  * JeepneyIcon, not the side-on Jeep above), EJeep (4188:11168), Bus (4188:11156), Ferry
  * (4189:11183) and UV Express (4236:17067, drawn at 24). One sprite the page fetches (inline, they
  * took the public page over its 400 kB), so the paths keep full precision; hashed and precached.
@@ -137,9 +141,4 @@ export function FilterIcon() {
 /** Figma's circle-arrow-right (3632:1755), drawn at 20: the destination row's arrow. */
 export function CircleArrowRightIcon() {
   return <RouteSpriteIcon id="circle-arrow-right" />;
-}
-
-/** Figma's EstimatedTime (4796:30793), an hourglass drawn at 20: the time pill's. */
-export function HourglassIcon() {
-  return <RouteSpriteIcon id="hourglass" />;
 }

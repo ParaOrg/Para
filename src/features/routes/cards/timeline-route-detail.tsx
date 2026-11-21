@@ -1,3 +1,5 @@
+import { useId } from 'react';
+
 import { TimelineBottomEndRoute } from './timeline-bottom-end-route';
 import { TimelineHintuan } from './timeline-hintuan';
 import { STOP_PRESSED, TIMELINE_RAIL } from './timeline-look';
@@ -6,6 +8,18 @@ import { timelineRowStates } from './timeline-row-states';
 import { TimelineTop } from './timeline-top';
 import type { Livery } from '../model/liveries';
 import { rideRows } from '../model/ride-rows';
+
+/** The stops' heading: a train's are its stations (RouteHintuans, Railway, 4825:47950). */
+const HEADING = {
+  jeep: 'Route Stops',
+  'uv-express': 'Route Stops',
+  ejeep: 'Route Stops',
+  bus: 'Route Stops',
+  ferry: 'Route Stops',
+  'light-rail-way-one': 'Trains Stations',
+  'light-rail-way-two': 'Trains Stations',
+  'metro-rail-way-three': 'Trains Stations',
+} satisfies Record<Livery, string>;
 
 export interface TimelineRouteDetailProps {
   livery: Livery;
@@ -29,8 +43,12 @@ export interface TimelineRouteDetailProps {
   onSetStart?: () => void;
   /** × Remove as start, under the start's row. Without it, no button. */
   onRemoveStart?: () => void;
-  /** A hintuan's row was tapped: pick it, or, picked, let it go. */
-  onPick: (id: string) => void;
+  /**
+   * A hintuan's row was tapped: pick it, or, picked, let it go. Given or omitted together with
+   * `onEnd`: omitted, no row is a control (picking is off); one without the other would leave the
+   * end rows and the middle ones behaving apart.
+   */
+  onPick?: (id: string) => void;
   /**
    * The pesos of the ride between the picks, for the end's pill (the start's
    * says its code alone, though Variant4 draws the pesos on both): the fare
@@ -45,7 +63,7 @@ export interface TimelineRouteDetailProps {
    */
   pickedCode?: string | null;
   /** The origin's row (`from`) or the destination's (`to`) was tapped: that end shown, the whole ride again, or with a start the ride's end. */
-  onEnd: (end: EndRow) => void;
+  onEnd?: (end: EndRow) => void;
   /**
    * The origin (`from`) or the destination (`to`), picked from its row: its
    * dot the Selected one, as a picked hintuan's; or null. One pick at a
@@ -64,12 +82,13 @@ export interface TimelineRouteDetailProps {
 }
 
 /**
- * A trip's stops on the sheet's surface (RouteHintuans, 4796:29755): every stop from the origin
+ * A trip's stops on the sheet's surface (RouteHintuans, 4796:29755), under "Route Stops", a
+ * train's "Trains Stations", Bold 20/28, 16 in: every stop from the origin
  * (TimelineTop) to the place it goes to (TimelineBottomEndRoute), each a RouteStopsTimeline row on
  * a rail in the trip's colour (TIMELINE_RAIL), Start and End in their slots. Every stop shows:
  * nothing folds.
  *
- * A stop's row picks it as where the ride ends, and the origin's and the destination's rows show
+ * Where picking is on (TimelineRowTap), a stop's row picks it as where the ride ends, and the origin's and the destination's rows show
  * that end, or with a start picked make it the ride's end; a second tap lets it go. Picked, the
  * rows outside the ride stand alone, Unselected; its ends are Selected, the rows between on the
  * rail (T4). A start alone is no ride yet: every row stands alone until an end is picked. A picked
@@ -101,10 +120,14 @@ export function TimelineRouteDetail({
   const ride = rideRows(hintuans, start, picked, endPicked, isLoop);
   const states = timelineRowStates(hintuans.length, ride, isStartAlone);
   const endPill = endRowPill(start, pickedCode, pickedPesos);
+  const heading = useId();
 
   return (
     <div data-testid="trip" data-livery={livery} className="flex w-full flex-col font-sn-pro">
-      <ol className="flex w-full flex-col">
+      <h3 id={heading} className="px-4 text-xl/7 font-bold text-text-primary">
+        {HEADING[livery]}
+      </h3>
+      <ol aria-labelledby={heading} className="flex w-full flex-col">
         <TimelineTop
           livery={livery}
           rail={rail}
@@ -116,7 +139,7 @@ export function TimelineRouteDetail({
           state={states[0] ?? 'rest'}
           selected={endPicked === 'from'}
           // A loop's two ends are the tip: with a start picked, either is the ride's end.
-          onTap={() => onEnd(isLoop && start !== null ? 'to' : 'from')}
+          onTap={onEnd && (() => onEnd(isLoop && start !== null ? 'to' : 'from'))}
         />
         {hintuans.map((h, i) => {
           const isStart = h.id === start;
@@ -158,7 +181,7 @@ export function TimelineRouteDetail({
           code={endPicked === 'to' && endPill ? null : destinationCode}
           state={states[hintuans.length + 1] ?? 'rest'}
           selected={endPicked === 'to'}
-          onTap={() => onEnd('to')}
+          onTap={onEnd && (() => onEnd('to'))}
         />
       </ol>
     </div>

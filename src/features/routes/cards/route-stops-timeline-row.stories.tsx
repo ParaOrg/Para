@@ -58,26 +58,25 @@ function Column({ livery }: { livery: Livery }) {
 }
 
 /**
- * The set on a jeep's rail (RouteHintuans, 4796:29755): a middle stop 56.6 tall, 10 over its name,
+ * The set on a jeep's rail (RouteHintuans, 4796:29755): a middle stop 54.6 tall, 10 over its name,
  * 20 under it and the hairline; the timeline's ends ringed at rest.
  */
 export const Set: Story = {
   render: () => <Column livery="jeep" />,
   play: async ({ canvasElement }) => {
     const row = within(canvasElement).getByTestId('row-middle-rest');
-    await expect(row.getBoundingClientRect().height).toBeCloseTo(56.6, 0);
+    await expect(row.getBoundingClientRect().height).toBeCloseTo(54.6, 0);
   },
 };
 
 /**
- * Not drawn in Figma: the light liveries. UV Express's grey and MRT-3's yellow do not stand out
- * from the surface, and E-jeep has no card fill: their rail takes Text/primary, as their destination
- * rows' arrows do (TIMELINE_RAIL).
+ * Not drawn in Figma: the light liveries. UV Express's grey does not stand out from the surface,
+ * and E-jeep has no card fill: their rail takes Text/primary (TIMELINE_RAIL).
  */
 export const LightLiveries: Story = {
   render: () => (
     <div className="flex flex-col gap-4">
-      {(['uv-express', 'metro-rail-way-three', 'ejeep'] as const).map((livery) => (
+      {(['uv-express', 'ejeep'] as const).map((livery) => (
         <Column key={livery} livery={livery} />
       ))}
     </div>

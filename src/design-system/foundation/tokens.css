@@ -636,11 +636,6 @@
   --shadow-route-card-inverse-selected:
     inset 2.5px 2.5px 8px 0 rgb(47 47 47 / 0.72), inset -1px -1px 2px 0 rgb(0 0 0 / 0.32);
 
-  /* A card on a trip's detail, lifted a little off it: its Start and End cards (TopContent,
-   * 4796:33201) and its signboards' card (BottomContent, 4796:30124). Figma draws it as an unnamed
-   * drop shadow, so the name is ours. */
-  --shadow-trip-card: 0 3px 6px 0 rgb(43 43 43 / 0.12);
-
   /* A tab on a panel's top edge: a trip's "View less" (Figma's effect style ExperimentInverse,
    * 4796:30411). Its "View more", under the ends card, wears shadow-sm. */
   --shadow-tab-inverse: 0 -2px 8px 0 rgb(43 43 43 / 0.1);
@@ -648,6 +643,11 @@
   /* The panel under a trip's open list of other routes, lifted over the list (BottomContent,
    * 4796:30411). Figma's is unnamed. */
   --shadow-trip-band-inverse: 0 -2px 4px 0 rgb(43 43 43 / 0.1);
+
+  /* A trip's signboards, sunk into the sheet (Figma's effect style Signboard, 4822:43834). */
+  --shadow-signboard:
+    inset 3px 3px 4px 0 rgb(0 0 0 / 0.32), inset 4px 4px 32px 0 rgb(140 140 140 / 0.32),
+    inset -12px -12px 8px 0 rgb(255 255 255 / 0.8);
 }
 
 /*

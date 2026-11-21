@@ -45,7 +45,7 @@ import {
   loadHotspotsFromFile,
 } from '@/features/routes/published/fetch-index';
 import { fetchLine } from '@/features/routes/published/fetch-line';
-import { isPlaceSearchShown } from '@/shared/config/env';
+import { isPlaceSearchShown, isRidePickingOn } from '@/shared/config/env';
 import { useTurn } from '@/shared/hooks/commit-turn';
 import { retryingLazy } from '@/shared/lib/retrying-lazy';
 import { cn } from '@/shared/utils/cn';
@@ -288,9 +288,9 @@ export function PublicMapApp() {
         )}
         {/*
         The open trip's hintuans along its line, a train's stations and a
-        jeepney's hintuans alike, each named (RouteLineLabel). A tap picks one
-        as its row on the trip card does, the map gliding in to it, as the
-        studio's do.
+        jeepney's hintuans alike, each named (RouteLineLabel). Where picking is
+        on (isRidePickingOn), a tap picks one as its row on the trip card does,
+        the map gliding in to it, as the studio's do.
       */}
         {map && saved.selected && tripLivery && timeline && (
           <StationLabels
@@ -303,7 +303,7 @@ export function PublicMapApp() {
             startId={ride.startId}
             endPicked={ride.endPicked}
             hasRide={ride.ridden !== null}
-            onPick={pickOnTrip}
+            onPick={isRidePickingOn ? pickOnTrip : undefined}
           />
         )}
         {/*
@@ -319,7 +319,7 @@ export function PublicMapApp() {
             label={ride.pickedLabel}
             code={ride.pickedCode}
             livery={tripLivery}
-            onPick={() => ride.pick(ride.pickedId)}
+            onPick={isRidePickingOn ? () => ride.pick(ride.pickedId) : undefined}
           />
         )}
         {/* The ride's start, picked by Set as start: its own circle, Start's pill beside it. */}
@@ -389,11 +389,11 @@ export function PublicMapApp() {
             pickedCode={ride.pickedCode}
             start={ride.startId}
             startCode={ride.startCode}
-            onSetStart={ride.setStart}
-            onRemoveStart={ride.removeStart}
+            onSetStart={isRidePickingOn ? ride.setStart : undefined}
+            onRemoveStart={isRidePickingOn ? ride.removeStart : undefined}
             walk={walk}
-            onPick={pickOnTrip}
-            onEnd={endOnTrip}
+            onPick={isRidePickingOn ? pickOnTrip : undefined}
+            onEnd={isRidePickingOn ? endOnTrip : undefined}
             endPicked={ride.endPicked}
             dockRef={tripDock}
             height={height}

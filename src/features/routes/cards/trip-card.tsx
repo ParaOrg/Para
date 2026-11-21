@@ -2,10 +2,9 @@ import type { ReactNode, Ref } from 'react';
 
 import type { SheetHeight } from '@/shared/ui/bottom-sheet';
 
-import { ridePillOf } from './ride-pill-of';
+import { rideFactsOf } from './ride-facts-of';
 import { TimelineRouteDetailCard } from './timeline-route-detail-card';
 import { fareFor, pickedFareFor, publishedSignboard, tripFacts } from './trip-facts';
-import { TripRidePills } from './trip-ride-pills';
 import { useFareKind } from './use-fare-kind';
 import { otherRoutesFrom, switchWord, wayWord } from '../model/departures';
 import type { Livery } from '../model/liveries';
@@ -68,9 +67,13 @@ export function TripCard({
   onSetStart?: () => void;
   /** × Remove as start, under the start's row (useRideTo's `removeStart`). */
   onRemoveStart?: () => void;
-  onPick: (id: string) => void;
+  /**
+   * A stop's row tapped (useRideTo). Given or omitted together with `onEnd`: omitted, no row is a
+   * control (picking is off).
+   */
+  onPick?: (id: string) => void;
   /** The origin's or the destination's row: that end on the map, the whole ride, or with a start the ride's end. */
-  onEnd: (end: 'from' | 'to') => void;
+  onEnd?: (end: 'from' | 'to') => void;
   /** The end picked from its row (useRideTo's `endPicked`), or null. */
   endPicked: 'from' | 'to' | null;
   dockRef: Ref<HTMLDivElement>;
@@ -89,7 +92,7 @@ export function TripCard({
 }) {
   const trip = tripFacts(direction, directions, timeline);
   const { isLoop: loop, from, to, line, sibling, metres } = trip;
-  const ride = ridePillOf(direction, metres, timeline.between.length);
+  const ride = rideFactsOf(direction, metres, timeline.between.length);
   const canDrawOtherWay = trip.isOtherWayUndrawn && !!onDrawOtherWay;
   const [fareKind, setFareKind] = useFareKind();
   const others = onOtherRoute ? otherRoutesFrom(directions, direction) : [];
@@ -121,6 +124,7 @@ export function TripCard({
       destinationCode={line && stationCode(line, to)}
       isLoop={loop}
       label={loop ? `${direction.name ?? from} (${LOOP_WORD})` : undefined}
+      loopName={loop ? (direction.name ?? from) : undefined}
       switchable={trip.isSwitchable || canDrawOtherWay}
       back={direction.reversed}
       way={loop ? null : wayWord(direction.reversed, [direction])}
@@ -131,7 +135,7 @@ export function TripCard({
       }}
       onBackToList={onBackToList}
       onClose={onClose}
-      ridePills={ride && <TripRidePills {...ride} livery={livery} />}
+      ride={ride}
       signboards={(direction.signboards ?? []).map(signboardUrl)}
       note={LINE_NOTES[direction.route?.routeCode ?? '']}
       walk={walk}

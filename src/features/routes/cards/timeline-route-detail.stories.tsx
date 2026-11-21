@@ -100,6 +100,24 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+/**
+ * Picking off, as the public map has it: no row is a control, Start on the origin and End on the
+ * destination, under "Route Stops".
+ */
+export const PickingOff: Story = {
+  args: { onPick: undefined, onEnd: undefined },
+  play: async (ctx) => {
+    const canvas = within(ctx.canvasElement);
+    await expect(canvas.getByRole('heading', { name: 'Route Stops' })).toBeVisible();
+    await expect(canvas.queryAllByRole('button')).toHaveLength(0);
+    await expectRows(
+      ctx,
+      atRest(talaToNovaliches.length).rails,
+      atRest(talaToNovaliches.length).signs,
+    );
+  },
+};
+
 /** One hintuan on the way: the origin, Lagro and the destination, all on the rail. */
 export const OneHintuan: Story = {
   args: { routeOrigin: 'Fatima', hintuans: hintuans('Lagro'), routeDirection: 'SM Fairview' },
@@ -209,10 +227,19 @@ export const HintuanPickedLightRailWayTwo: Story = {
   play: amparoPicked,
 };
 
-/** MRT-3: the rail in Map/Rail/MetroRailWayThree/Timeline/surface, Content/primary, dark, words (4080:4241). */
+/** MRT-3: the rail in card/MRTThree/fill, under "Trains Stations" (RouteHintuans, Railway, 4825:47950). */
 export const MetroRailWayThree: Story = {
   args: { livery: 'metro-rail-way-three', originCode: 'YL01', destinationCode: 'YL12' },
-  play: expectEndCodes('YL01', 'YL12'),
+  play: async (ctx) => {
+    await expect(
+      within(ctx.canvasElement).getByRole('heading', { name: 'Trains Stations' }),
+    ).toBeVisible();
+    const dot = dotOf(ctx.canvasElement.querySelector('[data-testid="trip"] ol > li'));
+    await expect(dot && getComputedStyle(dot).backgroundColor).toBe(
+      wornBy('bg-card-mrt-three-fill', 'backgroundColor'),
+    );
+    await expectEndCodes('YL01', 'YL12')(ctx);
+  },
 };
 
 /** Ferry: the rail in its mode's colour. Figma draws no ferry trip yet. */
@@ -713,12 +740,12 @@ export const OutsideTheRide: Story = {
   },
 };
 
-const LIGHT_LIVERIES = ['uv-express', 'metro-rail-way-three', 'ejeep'] as const;
+const LIGHT_LIVERIES = ['uv-express', 'ejeep'] as const;
 
 /**
  * Not drawn in Figma; built as today's behaviour, owner to confirm: the short trip on the liveries
- * whose own colour does not stand out from the surface, UV Express, MRT-3 and E-Jeep. Their rail
- * and dots take Text/primary (TIMELINE_RAIL).
+ * whose own colour does not stand out from the surface, UV Express and E-Jeep. Their rail and dots
+ * take Text/primary (TIMELINE_RAIL); MRT-3's is its yellow (MetroRailWayThree).
  */
 export const LightLiveries: Story = {
   args: shortTrip,

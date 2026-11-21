@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Map as MapLibreMap } from 'maplibre-gl';
 import type { ComponentProps } from 'react';
 import { useEffect, useRef, useState } from 'react';
-import { expect, fn, userEvent, waitFor } from 'storybook/test';
+import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
 import type { LngLat } from '@/shared/utils/geo';
 
@@ -186,12 +186,24 @@ export const AtRest: Story = {
         wornBy(CARD_SURFACE['uv-express']),
       );
     }
-    // Both apps give `onPick`: each dot and its name are one button, named for the row.
+    // Given `onPick`, as the studio does: each dot and its name are one button, named for the row.
     for (const [i, station] of stations.entries()) {
       const buttons = station.querySelectorAll('button');
       await expect(buttons).toHaveLength(1);
       await expect(buttons[0]).toHaveAttribute('aria-label', rows[i].label);
     }
+  },
+};
+
+/** Picking off, the public map's default: each dot and its name are plain, no button among them. */
+export const PickingOff: Story = {
+  args: { onPick: undefined },
+  play: async ({ canvasElement }) => {
+    const stations = await stationsOf(canvasElement, 5);
+    await expect(stations.map((s) => s.querySelector('[data-part="words"]')?.textContent)).toEqual(
+      rows.map((r) => r.label),
+    );
+    await expect(within(canvasElement).queryAllByRole('button')).toHaveLength(0);
   },
 };
 

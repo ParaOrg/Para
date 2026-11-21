@@ -234,7 +234,7 @@ export const OtherRoutes: Story = {
   },
 };
 
-/** A train: priced by its stations, not its metres, in its line's colours; its line and bound in the ride pill (LRT 1 · Southbound); the picked station's code in its pill. */
+/** A train: priced by its stations, not its metres, in its line's colours; its line in the Transport mode tile (LRT Line 1) and its bound in the Direction row (Southbound); the picked station's code in its pill. */
 export const Train: Story = {
   args: {
     direction: direction('lrt1', 'Fernando Poe Jr.', 'Baclaran', {
@@ -255,12 +255,13 @@ export const Train: Story = {
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(canvas.getByTestId('trip-mode')).toHaveTextContent('LRT 1 · Southbound');
+    await expect(canvas.getByTestId('trip-mode')).toHaveTextContent('LRT Line 1');
+    await expect(canvas.getByTestId('trip-bound')).toHaveTextContent('Southbound');
     await expect(canvas.getByTestId('trip-hintuan-fare')).toHaveTextContent('CAR');
   },
 };
 
-/** MRT-3 Northbound: the line and its bound in the ride pill. */
+/** MRT-3 Northbound: the line in the Transport mode tile, its bound in the Direction row. */
 export const TrainMrt3: Story = {
   args: {
     direction: direction('mrt3', 'Taft Avenue', 'North Avenue', {
@@ -272,14 +273,14 @@ export const TrainMrt3: Story = {
     livery: 'metro-rail-way-three',
   },
   play: async ({ canvasElement }) => {
-    await expect(within(canvasElement).getByTestId('trip-mode')).toHaveTextContent(
-      'MRT 3 · Northbound',
-    );
+    const canvas = within(canvasElement);
+    await expect(canvas.getByTestId('trip-mode')).toHaveTextContent('MRT Line 3');
+    await expect(canvas.getByTestId('trip-bound')).toHaveTextContent('Northbound');
   },
 };
 
 /**
- * A train whose end the line's table does not know: no bound, so the ride pill shows the line alone,
+ * A train whose end the line's table does not know: no bound, so no Direction row,
  * and PAPUNTA falls back to Pabalik and Papunta, as over a mixed list (wayWord). TODO: what
  * PAPUNTA should say for a train with no known bound is not designed yet.
  */
@@ -294,7 +295,9 @@ export const TrainNoBound: Story = {
     livery: 'light-rail-way-one',
   },
   play: async ({ canvasElement }) => {
-    await expect(within(canvasElement).getByTestId('trip-mode').textContent).toBe('LRT 1');
+    const canvas = within(canvasElement);
+    await expect(canvas.getByTestId('trip-mode').textContent).toBe('LRT Line 1');
+    await expect(canvas.queryByTestId('trip-bound')).toBeNull();
   },
 };
 

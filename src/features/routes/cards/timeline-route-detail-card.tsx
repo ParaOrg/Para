@@ -18,6 +18,8 @@ type Props = TripDetailProps & {
   via?: string;
   /** The sheet's name for a screen reader, where `origin → destination` does not say it (a loop's). */
   label?: string;
+  /** A loop's name, for its ends card (TripEndsCard); absent on any other trip. */
+  loopName?: string;
   /** ‹: back to what the trip was picked from — the list, a hotspot's card — or to its route with those sharing an end; null when there is none, and ✕ stands there. */
   onBackToList: (() => void) | null;
   onClose: () => void;
@@ -46,6 +48,7 @@ export function TimelineRouteDetailCard({
   wayTo,
   via,
   label,
+  loopName,
   onBackToList,
   onClose,
   dockRef,
@@ -91,14 +94,14 @@ export function TimelineRouteDetailCard({
             routeOrigin={routeOrigin}
             routeDirection={routeDirection}
             via={via}
-            isLoop={detail.isLoop}
+            loopName={loopName}
           />
         }
         from={routeOrigin}
         routes={onOtherRoute ? otherRoutes : []}
         onRoute={(id) => onOtherRoute?.(id)}
       >
-        <TripDetail {...detail} />
+        <TripDetail {...detail} via={via} />
       </TripMoreRoutes>
       {children}
     </BottomSheet>
