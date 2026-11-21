@@ -435,8 +435,8 @@ export const takeHeldReload = async (base = BASE, ms = 3000) => {
 export const emptyMapPoint = async (page) => {
   const { point, why } = await page.evaluate(() => {
     const m = window.__map;
-    const container = m.getCanvasContainer();
-    const box = container.getBoundingClientRect();
+    // The canvas's own box: MapLibre's canvas container is 0 tall, the canvas placed inside it.
+    const box = m.getCanvas().getBoundingClientRect();
     const sheets = [...document.querySelectorAll('[data-testid="card"], [data-testid="chooser"]')]
       .filter((el) => !el.hidden && el.getClientRects().length > 0)
       .map((el) => el.getBoundingClientRect());
