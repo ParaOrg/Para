@@ -64,11 +64,11 @@ const PageToasts = retryingLazy(() =>
 );
 
 /**
- * Whether the commuter map draws the hotspots' pins zoomed in (a terminal's or hintuan's flag). Off
- * for now: the boxes and their names say where each one is, and a tap there opens it as before.
- * Zoomed out each keeps its small dot, so a hotspot stays in sight. The studio keeps its pins.
+ * The hotspots' marks the commuter map draws. No pins zoomed in (a terminal's or hintuan's flag):
+ * the boxes and their names say where each one is, and a tap there opens it as before. Zoomed out,
+ * a terminal's dot alone, no hintuan's (the owner's call). The studio keeps its pins and dots.
  */
-const SHOW_HOTSPOT_PINS = false;
+const HOTSPOT_MARKS = { shouldShowPins: false, dotKinds: ['terminal'] } as const;
 
 /**
  * While a docked card stands at full height, the toast sits 12 under its ✕ (map strip 24, handle
@@ -101,7 +101,7 @@ export function PublicMapApp() {
   // While a trip is open, the map lights only the trip.
   const hotspots = useSavedHotspots(map, loadHotspotsFromFile, {
     muted: !!saved.selected,
-    shouldShowPins: SHOW_HOTSPOT_PINS,
+    ...HOTSPOT_MARKS,
   });
   // A load problem, and a published map too new for this app (loadProblems).
   const problems = loadProblems([saved, hotspots]);
