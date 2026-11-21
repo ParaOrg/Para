@@ -32,3 +32,15 @@ export const STOP_PRESSED =
  * the secondary surface, so the 2 between them still divides them.
  */
 export const STOP_PILL = 'bg-bg-surface-secondary text-text-primary';
+
+/** The stops' heading: a train's are its stations (RouteHintuans, Railway, 4825:47950). */
+export const TIMELINE_HEADING = {
+  jeep: 'Route Stops',
+  'uv-express': 'Route Stops',
+  ejeep: 'Route Stops',
+  bus: 'Route Stops',
+  ferry: 'Route Stops',
+  'light-rail-way-one': 'Trains Stations',
+  'light-rail-way-two': 'Trains Stations',
+  'metro-rail-way-three': 'Trains Stations',
+} satisfies Record<Livery, string>;
