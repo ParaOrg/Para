@@ -62,10 +62,9 @@ function namesShow(map: MapLibreMap): boolean {
  * Once the scale bar reads 3 km only the dots show, smaller. That 3 km is the
  * owner's call for stations a kilometre or two apart; a jeepney's hintuans sit
  * a few hundred metres apart, so at the bar's 2 km their names overlap — kept
- * at 3 km until the owner says otherwise. Given `onPick`, the dot and its name
- * are one button that hands it the row's id, as the row's tap on the card does
- * (useRideTo's pick): the studio always picks it, the public map only where picking is on
- * (isRidePickingOn). Without `onPick` the dot and its name are plain, no control. A long
+ * at 3 km until the owner says otherwise. Given `onPick` (the studio always, the public map where
+ * picking is on), the dot and its name are one button that hands it the row's id, as the row's
+ * tap on the card does (useRideTo's pick); without it, plain, no control. A long
  * jeepney trip is thirty or forty of these markers, each a button MapLibre
  * re-projects at every move — the one place a trip puts dozens of DOM markers
  * on the map, as many as the end titles at their most. TODO: count them in

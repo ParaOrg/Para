@@ -67,10 +67,7 @@ export function TripCard({
   onSetStart?: () => void;
   /** × Remove as start, under the start's row (useRideTo's `removeStart`). */
   onRemoveStart?: () => void;
-  /**
-   * A stop's row tapped (useRideTo). Given or omitted together with `onEnd`: omitted, no row is a
-   * control (picking is off).
-   */
+  /** A stop's row tapped (useRideTo). Given or omitted with `onEnd`: omitted, picking is off. */
   onPick?: (id: string) => void;
   /** The origin's or the destination's row: that end on the map, the whole ride, or with a start the ride's end. */
   onEnd?: (end: 'from' | 'to') => void;

@@ -193,9 +193,6 @@ export function PublicMapApp() {
   // The open trip's hintuans, worked out once per trip (useTripTimeline).
   const timeline = useTripTimeline(saved.selected, hotspots, tipId);
 
-  // Place search: what stops at a hotspot, by the published directions (.scratch/place-search).
-  const directionsAt = directionsAtHotspots(saved.directions, hotspots.linkedDirectionIds);
-
   // The map's credits, the Map Data Source sheet, opened by the ⓘ: the map and the cards under it
   // are out of reach while it is open.
   const credits = useMapCredits(root);
@@ -345,7 +342,7 @@ export function PublicMapApp() {
           <PlaceSearchBar
             map={map}
             hotspots={hotspots.hotspots}
-            directionsAt={directionsAt}
+            directionsAt={directionsAtHotspots(saved.directions, hotspots.linkedDirectionIds)}
             whereNow={() => where.current?.at ?? null}
             onPick={(hotspot) => openPlace(hotspot.id)}
             onLookAt={(point) => lookAt(map, point)}

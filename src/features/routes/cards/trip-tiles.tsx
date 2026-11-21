@@ -1,10 +1,12 @@
 import type { ReactNode } from 'react';
 
-import { ReloadIcon } from '@/shared/ui/route-icons';
 import { cn } from '@/shared/utils/cn';
 import { kmLabel } from '@/shared/utils/geo';
 
-import { FREE, farePesos, type Fare } from './trip-fare';
+import type { Fare } from './trip-fare';
+import { FareTile } from './trip-fare-tile';
+import { Tile } from './trip-tile';
+import { FIGURE, NAME } from './trip-tile-look';
 import { travelLabel, travelSpoken, type TravelEstimate } from '../model/travel-time';
 
 interface TripTilesProps {
@@ -108,72 +110,3 @@ function TileRow({ isFirst = false, children }: TileRowProps) {
     </div>
   );
 }
-
-interface TileProps {
-  name: string;
-  children: ReactNode;
-}
-
-/** One tile (4821:38784): its figure, SemiBold 18/26, over its name, Regular 12/16. */
-function Tile({ name, children }: TileProps) {
-  return (
-    <div className={TILE}>
-      <span className={FIGURE}>{children}</span>
-      <span className={NAME}>{name}</span>
-    </div>
-  );
-}
-
-interface FareTileProps {
-  shown: Fare;
-  kind: string;
-  isDiscounted: boolean;
-  turns: number;
-  onTurn: () => void;
-}
-
-/** The fare: Free on its own, or the pesos, a button that turns them Regular ↔ Discounted. */
-function FareTile({ shown, kind, isDiscounted, turns, onTurn }: FareTileProps) {
-  if (shown === FREE) {
-    return (
-      <div className={TILE}>
-        <span data-testid="trip-fare" className={FIGURE}>
-          Free
-        </span>
-        <span className={NAME}>Fare</span>
-      </div>
-    );
-  }
-  return (
-    <button
-      type="button"
-      data-testid="trip-fare-turn"
-      // The words on the tile first, as they read, so saying them reaches the button.
-      aria-label={`${farePesos(shown, isDiscounted)} ${kind}. Show the ${isDiscounted ? 'regular' : 'discounted'} fare`}
-      onClick={onTurn}
-      className={cn(TILE, PRESSABLE)}
-    >
-      <span data-testid="trip-fare" className={FIGURE}>
-        {farePesos(shown, isDiscounted)}
-      </span>
-      <span className={cn(NAME, 'flex items-center gap-2')}>
-        {kind}
-        <span
-          aria-hidden
-          style={{ rotate: `${turns * 360}deg` }}
-          className="size-4 shrink-0 transition-[rotate] duration-turn ease-move *:size-full motion-reduce:transition-none"
-        >
-          <ReloadIcon />
-        </span>
-      </span>
-    </button>
-  );
-}
-
-const TILE = 'flex min-w-0 flex-1 basis-0 flex-col items-center gap-0.5 overflow-clip';
-const FIGURE = 'w-full text-lg/6.5 font-semibold text-text-primary';
-const NAME = 'text-xs/4 text-text-tertiary';
-// Figma draws no hover or pressed state for the fare's button; bg/fill/fill-secondary stands in
-// until the owner draws one.
-const PRESSABLE =
-  'transition-colors duration-quick ease-move hover:bg-bg-fill-secondary active:bg-bg-fill-secondary';
