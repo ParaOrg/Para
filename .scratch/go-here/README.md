@@ -36,8 +36,7 @@ From a searched place (a Para place or a landmark), "Go here" lists every one-ri
   - A loop counts its order round from its tip.
 - **Ranked by total walk** (to board + from your stop), straight-line, then by ride length.
 - **Each row** shows the route (its mode and the direction's name), its signboard, the walk to board, the walk from your stop, and the fare.
-  - The fare is the direction's rule over the ride's length along its line.
-  - The length comes from the overview line first, and from the full line once fetched for the rows on show.
+  - The fare is the direction's rule over the ride's length along its line, from the full line fetched for the rows on show (02).
 - **A row picked** opens its trip with the start and the end already picked, as ticket 07 picks the end, and the walk shown (116).
 - **None:** "No one-ride way there yet", with the nearest places Para has, so the commuter is never left with nothing.
 
@@ -95,7 +94,7 @@ Each is designed twice before it is built (two designs side by side, their costs
 
 | # | Ticket | Phase | Status |
 | --- | --- | --- | --- |
-| 01 | [One-ride options: finding and ranking](issues/01-one-ride-options.md) | 1 (113) | ready-for-agent: logic only |
+| 01 | [One-ride options: finding and ranking](issues/01-one-ride-options.md) | 1 (113) | built: logic only |
 | 02 | [The options list](issues/02-options-list.md) | 1 (113) | waits for the owner's design |
 | 03 | [Other routes for this ride](issues/03-other-routes-for-this-ride.md) | 1 (114) | ready-for-agent after 01; coordinate with the route card session |
 | 04 | [Re-plan from here](issues/04-replan-from-here.md) | 1 (115) | after 02; its button waits for the owner's design |
