@@ -284,9 +284,10 @@ const closeTrip = async (page) => {
     '[data-testid="card"]:not([hidden]), [data-testid="chooser"]:not([hidden])',
   );
   for (let i = 0; i < 3 && (await open.count()) > 0; i++) {
+    // At full height no map shows to tap: Escape then, which leaves a trip as the empty map does.
     const at = await emptyMapPoint(page);
-    if (!at) throw new Error('closeTrip: no empty map in sight to tap');
-    await page.touchscreen.tap(at.x, at.y);
+    if (at) await page.touchscreen.tap(at.x, at.y);
+    else await page.keyboard.press('Escape');
     await page.waitForTimeout(400);
   }
 };
