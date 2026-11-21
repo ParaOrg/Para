@@ -12,9 +12,10 @@ interface ModeFilterCardProps {
 }
 
 /**
- * The route list's filter, opened by the Controller's sliders. Designed by the builder for now,
- * from the house's own parts, until the owner draws it: a card in the middle of the screen with the
- * Map Style card's surface and shadow, and one choice of All, Jeep, E-Jeep, Bus, LRT, MRT or Ferry.
+ * The route list's filter, opened by the sliders (ModeFilterButton): the studio's Controller's, the
+ * public map's floating ones. Designed by the builder for now, from the house's own parts, until the
+ * owner draws it: a card in the middle of the screen with the Map Style card's surface and shadow,
+ * and one choice of All, Jeep, E-Jeep, Bus, LRT, MRT or Ferry.
  * Radio buttons, so the arrow keys move through them and a screen reader says how many there are.
  * A choice applies at once. A tap, Enter or Space on one closes the card; the arrow keys only move,
  * so a keyboard can reach Ferry without the card closing on the way. Escape or a tap outside

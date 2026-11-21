@@ -139,7 +139,7 @@ export function ArrowLeftRightIcon() {
 }
 
 /** Figma's filter-large (4633:22015), 28 across: the Controller's sliders, opening the route list's filter. */
-export function FilterIcon() {
+export function FilterLargeIcon() {
   return <RouteSpriteIcon id="filter-large" />;
 }
 
