@@ -24,8 +24,10 @@
   Content-Security-Policy: frame-ancestors 'none'
 
 # The contributor page has a sign-in, a password, the consent and delete
-# buttons: keep it out of other sites' frames for the same reason.
+# buttons: keep it out of search results and other sites' frames for the
+# same reason.
 /contribute/*
+  X-Robots-Tag: noindex
   X-Frame-Options: DENY
   Content-Security-Policy: frame-ancestors 'none'
 
@@ -37,3 +39,8 @@
 /data/signboards/*
   Content-Security-Policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; sandbox
   Cache-Control: public, max-age=31536000, immutable
+
+# Coming soon, which the production site answers / and its other pages with
+# (workers/site/src/coming-soon.ts): out of search results until Para is out.
+/coming-soon/*
+  X-Robots-Tag: noindex
