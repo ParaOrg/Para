@@ -1,3 +1,5 @@
+import { useId } from 'react';
+
 import { IconButton } from '@/design-system/primitives/icon-button';
 import { SwitchVerticalIcon } from '@/shared/ui/route-icons';
 import { cn } from '@/shared/utils/cn';
@@ -37,6 +39,7 @@ export function TripEndsCard({
   isSwitchable,
   onSwitch,
 }: TripEndsCardProps) {
+  const hintId = useId();
   if (loopName !== undefined) {
     return (
       <div data-testid="trip-ends" className={CARD}>
@@ -57,9 +60,14 @@ export function TripEndsCard({
               label={way}
               tooltip="right"
               data-testid="trip-ends-switch"
+              aria-describedby={hintId}
               disabled={!isSwitchable}
               onClick={onSwitch}
             />
+            {/* PAPUNTA's hint's words: the name says where a tap leads, this that it turns there. */}
+            <span id={hintId} className="sr-only">
+              turns to {way}
+            </span>
           </span>
         )}
       </div>

@@ -43,6 +43,9 @@ export const Default: Story = {
     await expect(place.fontWeight).toBe('600');
     // ⇅ on the hairline, named for the way a tap leads.
     await expect(canvas.getByTestId('trip-ends-switch')).toHaveAccessibleName('Pabalik');
+    await expect(canvas.getByTestId('trip-ends-switch')).toHaveAccessibleDescription(
+      'turns to Pabalik',
+    );
   },
 };
 
@@ -95,6 +98,7 @@ export const Train: Story = {
     routeOrigin: 'Fernando Poe Jr.',
     routeDirection: 'Dr. Santos',
     via: undefined,
+    way: 'Northbound',
   },
 };
 
@@ -108,7 +112,14 @@ export const LongNames: Story = {
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(canvas.getByText(longOrigin).getBoundingClientRect().height).toBeGreaterThan(28);
+    const place = canvas.getByText(longOrigin);
+    await expect(place.getBoundingClientRect().height).toBeGreaterThan(28);
+    // Start's words, not their padded box, stop clear of ⇅, which straddles the hairline under them.
+    const words = document.createRange();
+    words.selectNodeContents(place);
+    await expect(words.getBoundingClientRect().right).toBeLessThan(
+      canvas.getByTestId('trip-ends-switch').getBoundingClientRect().left,
+    );
   },
 };
 

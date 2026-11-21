@@ -102,9 +102,10 @@ export function TripMoreRoutes({ ends, from, routes, onRoute, children }: TripMo
           </span>
         </button>
       )}
-      {/* Over the tab, so open, the panel's top edge covers the tab's foot (4821:40539). */}
+      {/* Open, over the tab, its top edge covering the tab's foot (4821:40539); closed, under the
+          tab, so the tab's shadow falls on it. */}
       <div
-        className={cn('relative z-2 w-full bg-bg-surface', isOpen && 'shadow-trip-band-inverse')}
+        className={cn('w-full bg-bg-surface', isOpen && 'relative z-2 shadow-trip-band-inverse')}
       >
         {children}
       </div>

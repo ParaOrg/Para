@@ -283,6 +283,10 @@ export const TheWayBack: Story = {
     const way = within(canvasElement).getByTestId('card-switch');
     await expect(way).toHaveAccessibleName('Pabalik');
     await expect(way).toHaveAttribute('data-back', 'true');
+    // ⇅ on the ends card is named for where a tap leads, as PAPUNTA's hint is.
+    await expect(within(canvasElement).getByTestId('trip-ends-switch')).toHaveAccessibleName(
+      'Papunta',
+    );
   },
 };
 
