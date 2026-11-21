@@ -14,20 +14,17 @@ import { directionRowParts } from '../model/row-name';
 import type { Timeline } from '../model/timeline';
 
 /**
- * The chosen direction as Figma's trip card (TimelineRouteDetailCard), from what the map file knows
- * (tripFacts): its ends and via, the whole ride's length and pesos, the hintuans on the way, and the
- * colour it opened in (useTripLivery), kept through PAPUNTA. A picked hintuan's pill prices the ride
- * from the start to there, as the fare tile then does. The studio shows what an editor needs at the
- * foot (`extras`). No link to a trip: the address does not follow the card.
+ * The chosen direction as Figma's trip card (TimelineRouteDetailCard), from the map file (tripFacts):
+ * its ends and via, the ride's length and pesos, the hintuans on the way, and the colour it opened
+ * in (useTripLivery), kept as it turns round. A picked hintuan's pill prices the ride to there. The
+ * studio's editor facts sit at the foot (`extras`). The address does not follow the card.
  */
 export function TripCard({
   direction,
   directions,
   timeline,
   livery,
-  onBackToList,
   onSwitch,
-  onClose,
   picked,
   pickedMetres,
   pickedCode,
@@ -45,14 +42,17 @@ export function TripCard({
   extras,
   walk = null,
   onDrawOtherWay,
+  ...controller
 }: {
   direction: Direction;
   directions: readonly Direction[];
   timeline: Timeline;
   /** The colour it opened in, kept through PAPUNTA; its line wears it too. */
   livery: Livery;
-  onBackToList: (() => void) | null;
   onSwitch: (sibling: Direction) => void;
+  /** The studio's Controller bar, its ‹ and its ✕, and Escape's move (TimelineRouteDetailCard's). */
+  hasController?: boolean;
+  onBackToList?: (() => void) | null;
   onClose: () => void;
   /** The hintuan picked on the timeline (useRideTo), the ride's end, and how far the ride between the picks runs, when the line reaches them. */
   picked: string | null;
@@ -133,8 +133,7 @@ export function TripCard({
         if (sibling && trip.isSwitchable) onSwitch(sibling);
         else if (canDrawOtherWay) onDrawOtherWay?.();
       }}
-      onBackToList={onBackToList}
-      onClose={onClose}
+      {...controller}
       ride={ride}
       signboards={(direction.signboards ?? []).map(signboardUrl)}
       note={LINE_NOTES[direction.route?.routeCode ?? '']}

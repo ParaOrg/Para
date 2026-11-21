@@ -27,10 +27,10 @@ import { MapCreditsDock } from '@/features/routes/map/map-credits-dock';
 import { MapCreditsSheet } from '@/features/routes/map/map-credits-sheet';
 import { METRO_MANILA, MapView } from '@/features/routes/map/map-view';
 import { openOnRoutes } from '@/features/routes/map/open-on-routes';
-import { OverviewButton } from '@/features/routes/map/overview-button';
 import { StationLabels } from '@/features/routes/map/station-labels';
 import { useCardCamera } from '@/features/routes/map/use-card-camera';
 import { useCardStack } from '@/features/routes/map/use-card-stack';
+import { useEmptyMapTap } from '@/features/routes/map/use-empty-map-tap';
 import { useFootbridges } from '@/features/routes/map/use-footbridges';
 import { useLitRides } from '@/features/routes/map/use-lit-rides';
 import { useLoopTip } from '@/features/routes/map/use-loop-tip';
@@ -52,6 +52,7 @@ import { cn } from '@/shared/utils/cn';
 import { retryingImport } from '@/shared/utils/retrying-import';
 
 import { ContributionCard } from './contribution-card';
+import { MapSheetControls } from './map-sheet-controls';
 import type { SaidNote } from './page-toasts';
 import { PlaceSearchBar, sheetTopUnderSearch } from './place-search-bar';
 import { useStatusBarColour } from './status-bar';
@@ -71,12 +72,11 @@ const PageToasts = retryingLazy(() =>
 const SHOW_HOTSPOT_PINS = false;
 
 /**
- * While a docked card stands at full height, the toast sits 12 under its ✕ (map strip 24, handle
- * 18, ✕ 40), so the ✕ stays in reach. A trip, its ‹ or ✕ in the Controller at its foot
- * (`data-footer`), and a card floating in the corner (`@float:`) keep the toast at the top.
+ * While a place's card stands docked at full height, the toast sits 12 under its ✕ (map strip 24,
+ * handle 18, ✕ 40), so the ✕ stays in reach; a trip has no ✕, and a floating card none there.
  */
 const TOAST_UNDER_FULL_CARD =
-  '@max-float:group-has-[[data-testid=card][data-snap=full]:not([hidden]):not([data-footer])]/map:[--toast-top:calc(env(safe-area-inset-top)+--spacing(23.5))]';
+  '@max-float:group-has-[[data-testid=card][data-snap=full]:not([hidden]):not(:has([data-testid=trip]))]/map:[--toast-top:calc(env(safe-area-inset-top)+--spacing(23.5))]';
 
 /** The too-new map's Reload: the newer app, through the worker (pwa.ts). */
 const handleReloadNewer = () => void reloadForNewerApp();
@@ -175,9 +175,12 @@ export function PublicMapApp() {
   // cards' camera above, which a sheet set to another height moves in the
   // same commit (commit-turn.ts).
   const locatorTurn = useTurn();
-  // The dot's gaze is hushed by ‹ and ✕: going back picks nothing (dot-gaze.ts).
+  // The dot's gaze is hushed by going back: it picks nothing (dot-gaze.ts).
   const { hush, hushedAt } = useGazeHush();
   useBackClosesCards(saved, hotspots, cards, backFromTrip, hush);
+  // The empty map tapped, Escape or a pull down: the trip's ‹, which it no longer draws.
+  const leaveTrip = hush(backFromTrip) ?? cards.closeAll;
+  useEmptyMapTap(map, saved.selected ? leaveTrip : null);
   const offline = useOffline();
   // The phone's status bar in the map's colour (status-bar.ts).
   useStatusBarColour(map);
@@ -248,7 +251,14 @@ export function PublicMapApp() {
             buttonRef={credits.buttonRef}
           />
         )}
-        <OverviewButton {...overviewButton} isBesideCredits={!credits.isSheetMissing} map={map} />
+        <MapSheetControls
+          map={map}
+          overview={overviewButton}
+          isBesideCredits={!credits.isSheetMissing}
+          list={cards.choosing && !saved.selected && !cards.tripBehind ? saved : null}
+          onFlip={flipList}
+          onFilter={filterList}
+        />
         {/*
         The commuter's own position, and the camera with them, kept clear of
         the card on show; the dot gazes at what was just picked.
@@ -371,20 +381,15 @@ export function PublicMapApp() {
           <InstallPrompt onInstall={install.install} onLater={install.postpone} />
         )}
         {saved.selected && tripLivery && timeline && (
-          // One card for as long as a trip is open: SWITCH, and another
-          // route from its "Other routes", leave the hintuans open or folded
-          // as they were. A trip opened afresh opens folded.
           <TripCard
             direction={saved.selected}
             directions={saved.directions}
             timeline={timeline}
             livery={tripLivery}
-            onBackToList={hush(backFromTrip)}
             onSwitch={switchTrip}
-            onClose={cards.closeAll}
+            onClose={leaveTrip}
             picked={ride.pickedId}
-            // The pesos to a picked hintuan are the full line's: none while
-            // only its overview is here.
+            // The pesos to a picked hintuan: the full line's, none while only its overview is here.
             pickedMetres={saved.fullIds.has(saved.selected.id) ? ride.rideTo?.metres : undefined}
             pickedCode={ride.pickedCode}
             start={ride.startId}
@@ -397,19 +402,15 @@ export function PublicMapApp() {
             endPicked={ride.endPicked}
             dockRef={tripDock}
             height={height}
-            // "Other routes": that route's trip in this one's place, ‹ still to
-            // what this one was picked from; the camera takes it in as it opens.
-            // The sheet stays where it is; the hintuans stay open or folded.
+            // "Other routes": that route's trip in this one's place, leaving to what this one was
+            // picked from; the camera takes it in, the sheet stays where it is.
             onOtherRoute={otherRoute}
           />
         )}
-
         {/*
-        A hotspot's card: HintuanCard (Figma 3854:12690), its place and every
-        box of it, the routes stopping at the Selected one as RouteCards; it
-        stays behind the trip picked from them, hidden, for the trip's ‹. It is
-        `card` to the suites too, and comes after the trip here on purpose:
-        their first `card` is then the trip while this one hides behind it.
+        A hotspot's card: HintuanCard (Figma 3854:12690), its boxes, the Selected one's routes as
+        RouteCards; hidden behind a trip picked from them, for the trip to go back to. `card` to
+        the suites too, after the trip on purpose: their first `card` is then the trip.
       */}
         {hotspots.selected && (
           // Keyed by the place: another of its boxes — a row, or SWITCH moving
@@ -437,8 +438,7 @@ export function PublicMapApp() {
               saved.highlightCard(null);
               hotspots.letGo();
             }}
-            // Another box: the map goes there, the box clear of the card,
-            // which stays at its height.
+            // Another box: the map goes there, the box clear of the card, which keeps its height.
             onPickBox={(id) => {
               saved.highlightCard(null);
               hotspots.show(id, cards.clearOf(hotspotDock));
@@ -447,12 +447,9 @@ export function PublicMapApp() {
             onClose={hush(cards.closeHotspot)}
           />
         )}
-
         {/*
-        Several things under the tap: the route list, kept hidden behind the
-        trip picked from it. Picking a route leaves the hotspots under the tap
-        listed, so ‹ finds the list whole; a hotspot's row opens its card in
-        the list's place.
+        Several things under the tap: the route list, kept hidden behind the trip picked from it,
+        whole, for the trip to go back to; a hotspot's row opens its card in the list's place.
       */}
         {cards.choosing && (
           <RouteCardList

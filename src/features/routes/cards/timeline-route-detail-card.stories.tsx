@@ -184,15 +184,21 @@ const pickedAsDrawn: Story['play'] = async (ctx) => {
 
 /**
  * On a phone, Figma's frame (3778:3183, Variant2): Tala → Novaliches, its Distance and Expected
- * fare, then every stop.
+ * fare, then every stop. The public map's: no Controller, no ‹ and no ✕ (4831:51289); Escape, as a
+ * tap on the empty map does there, takes it away (`onClose`).
  */
 export const Default: Story = {
-  play: async ({ canvasElement }) => {
+  play: async ({ args, canvasElement }) => {
     const canvas = within(canvasElement);
     // The trip's name is its heading, hidden from the eye, over the cards' own headings.
     await expect(
       canvas.getByRole('heading', { level: 2, name: 'Tala → Novaliches' }),
     ).toBeInTheDocument();
+    await expect(canvas.queryByTestId('card-controller')).toBeNull();
+    await expect(canvas.queryByRole('button', { name: 'Back' })).toBeNull();
+    await expect(canvas.queryByRole('button', { name: 'Close' })).toBeNull();
+    await userEvent.keyboard('{Escape}');
+    await expect(args.onClose).toHaveBeenCalledTimes(1);
   },
 };
 
@@ -269,7 +275,7 @@ export const Ejeep: Story = { args: { livery: 'ejeep' } };
 /** UV Express: its rail in Text/primary, as E-Jeep's. */
 export const UvExpress: Story = { args: { livery: 'uv-express' } };
 
-/** Turned round: the way back, so PAPUNTA reads Pabalik, and a tap leads to Papunta. */
+/** Turned round: the way back, so ⇅ on the ends card leads to Papunta, and turns it there. */
 export const TheWayBack: Story = {
   args: {
     routeOrigin: 'Novaliches',
@@ -279,6 +285,17 @@ export const TheWayBack: Story = {
     way: 'Pabalik',
     wayTo: 'Papunta',
   },
+  play: async ({ args, canvasElement }) => {
+    const turn = within(canvasElement).getByTestId('trip-ends-switch');
+    await expect(turn).toHaveAccessibleName('Papunta');
+    await userEvent.click(turn);
+    await expect(args.onSwitch).toHaveBeenCalledTimes(1);
+  },
+};
+
+/** The studio's, turned round: its Controller's PAPUNTA reads Pabalik, and a tap leads to Papunta. */
+export const TheWayBackWithTheController: Story = {
+  args: { ...TheWayBack.args, hasController: true },
   play: async ({ canvasElement }) => {
     const way = within(canvasElement).getByTestId('card-switch');
     await expect(way).toHaveAccessibleName('Pabalik');
@@ -286,8 +303,9 @@ export const TheWayBack: Story = {
   },
 };
 
-/** Something behind it, the list it was picked from: ‹ stands in the bar, and no ✕. */
+/** The studio's, something behind it, the list it was picked from: ‹ in the bar, and no ✕. */
 export const SomethingBehind: Story = {
+  args: { hasController: true },
   play: async ({ args, canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(canvas.queryByRole('button', { name: 'Close' })).toBeNull();
@@ -296,8 +314,9 @@ export const SomethingBehind: Story = {
   },
 };
 
-/** Opened with no list behind it — a tap on its line, a hotspot's card — and no other route sharing an end drawn its way round: nothing to go back to, so ✕ stands where ‹ would. */
+/** The studio's, opened with no list behind it — a tap on its line, a hotspot's card — and no other route sharing an end drawn its way round: nothing to go back to, so ✕ stands where ‹ would. */
 export const NothingToGoBackTo: Story = {
+  args: { hasController: true },
   render: (args) => <TimelineRouteDetailCard {...args} onBackToList={null} />,
   play: async ({ args, canvasElement }) => {
     const canvas = within(canvasElement);
@@ -307,8 +326,13 @@ export const NothingToGoBackTo: Story = {
   },
 };
 
-/** The route's other way is not drawn yet: PAPUNTA rests disabled. */
-export const NothingTheOtherWay: Story = { args: { switchable: false } };
+/** The route's other way is not drawn yet: ⇅ rests disabled. */
+export const NothingTheOtherWay: Story = {
+  args: { switchable: false },
+  play: async ({ canvasElement }) => {
+    await expect(within(canvasElement).getByTestId('trip-ends-switch')).toBeDisabled();
+  },
+};
 
 /**
  * A mode with no fare rule: no fare tile, and the Estimated Time Arrival takes the top row (the

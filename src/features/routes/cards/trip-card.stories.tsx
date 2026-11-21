@@ -152,10 +152,10 @@ export const Jeepney: Story = {};
 /** Raised to full height: every hintuan on the way in sight. */
 export const JeepneyFull: Story = { args: { height: { snap: 'full', onSnap: fn() } } };
 
-/** PAPUNTA turns it round: the way back is drawn, so the card asks for that direction. */
+/** ⇅ on the ends card turns it round: the way back is drawn, so the card asks for that direction. */
 export const TurnsRound: Story = {
   play: async ({ args, canvasElement }) => {
-    const turn = within(canvasElement).getByTestId('card-switch');
+    const turn = within(canvasElement).getByTestId('trip-ends-switch');
     await userEvent.click(turn);
     turn.blur();
     await expect(args.onSwitch).toHaveBeenCalledWith(novalichesToTala);
@@ -170,20 +170,21 @@ export const TheWayBack: Story = {
   },
 };
 
-/** The way back still a slot: PAPUNTA rests disabled, and a tap asks for nothing. */
+/** The way back still a slot: ⇅ rests disabled, and a tap asks for nothing. */
 export const NoWayBack: Story = {
   args: { directions: [talaToNovaliches, { ...novalichesToTala, shape: null }] },
   play: async ({ args, canvasElement }) => {
-    const turn = within(canvasElement).getByTestId('card-switch');
+    const turn = within(canvasElement).getByTestId('trip-ends-switch');
     await expect(turn).toBeDisabled();
     await userEvent.click(turn);
     await expect(args.onSwitch).not.toHaveBeenCalled();
   },
 };
 
-/** In the studio, the way back still a slot: PAPUNTA is open, and a tap starts drawing it. */
+/** In the studio, the way back still a slot: its PAPUNTA is open, and a tap starts drawing it. */
 export const DrawTheWayBack: Story = {
   args: {
+    hasController: true,
     directions: [talaToNovaliches, { ...novalichesToTala, shape: null }],
     onDrawOtherWay: fn(),
   },
@@ -196,8 +197,9 @@ export const DrawTheWayBack: Story = {
   },
 };
 
-/** Opened from a hotspot's card, not the list: no ‹ back to it. */
+/** The studio's, opened from a hotspot's card, not the list: no ‹ back to it on its Controller. */
 export const NoList: Story = {
+  args: { hasController: true },
   render: (args) => <Keeping {...args} onBackToList={null} />,
 };
 
@@ -409,7 +411,7 @@ export const Loop: Story = {
   args: { direction: ikot, directions: [ikot], timeline: ikotTimeline, livery: 'bus' },
   play: async ({ canvasElement }) => {
     const card = within(canvasElement);
-    await expect(card.queryByTestId('card-switch')).toBeNull();
+    await expect(card.queryByTestId('trip-ends-switch')).toBeNull();
     await expect(
       card.getByRole('heading', { level: 2, name: 'UP – Ikot (Ikot)' }),
     ).toBeInTheDocument();
