@@ -40,7 +40,8 @@ configured host.
   `tiles.para-commute.org`, a domain of Para's own, so Cloudflare's edge cache
   is on (on `workers.dev` it is off and every tile is an R2 read). The host in
   `.env.production` and `EXTRA_ORIGINS` in `workers/tiles/wrangler.jsonc` change
-  together. The `workers.dev` address keeps answering, but nothing points at it.
+  together. Since 2026-11-11 it is the Worker's only address: its `workers.dev`
+  address is off, because the edge cache and the rate limit work only on the zone.
 - **Phones keep OpenFreeMap's cached tiles** under the same cache name until
   they age out (30 days) or the 1,000-entry cap pushes them out; the first view
   on our host downloads its tiles once.
