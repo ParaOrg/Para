@@ -1,0 +1,31 @@
+{
+  "schema": 1,
+  "cell": "2413-280",
+  "attribution": "© OpenStreetMap contributors",
+  "establishments": [
+    ["n13109891304","atm",120.69786,14.04846],
+    ["n3736801929","bank",120.65287,14.03721,"Farmers Rural Bank"],
+    ["w454160580","bank",120.65257,14.03716,"Farmers Rural Bank",{"atm":true}],
+    ["n11189446737","convenience",120.6873,14.04637,"Boss Dimz Store"],
+    ["n11189534137","convenience",120.68538,14.04749,"Alvin MiniStore"],
+    ["n11189542938","convenience",120.68385,14.04846,"Hazel Store"],
+    ["n11209197337","convenience",120.69063,14.04641,"Mama Gie's"],
+    ["n11209198637","convenience",120.69004,14.04637,"Janella Store"],
+    ["n11209205537","convenience",120.68389,14.04846,"Samuel or Hazel  Store"],
+    ["w453446533","convenience",120.69827,14.04852,"7-Eleven"],
+    ["w454167347","convenience",120.65223,14.03947,"7-Eleven"],
+    ["w865536458","convenience",120.697,14.04839,"Jeralie Convenience Store"],
+    ["n1295111890","restaurant",120.65183,14.03999,"Sr. Pedro"],
+    ["n8067470171","restaurant",120.69821,14.0485,"Tropitalian Restaurant"],
+    ["n11294571769","restaurant",120.65346,14.03723,"Kawali Ala Eh!!!"],
+    ["w311874108","fast_food",120.69772,14.04795,"Jollibee"],
+    ["n13109904927","fuel",120.68719,14.04665,"Spyder Fuel"],
+    ["w311874109","fuel",120.69802,14.0482,"Caltex"],
+    ["w453941279","fuel",120.65382,14.03372,"Petron"],
+    ["w462077301","fuel",120.69697,14.04828,"RePhil"],
+    ["w463589111","fuel",120.69759,14.04918,"Seaoil"],
+    ["w863241924","fuel",120.65952,14.04008],
+    ["w1273146765","fuel",120.69561,14.04726,"Unioil"],
+    ["w454190965","police",120.65718,14.03883,"PNP Police Station Malaruhatan"]
+  ]
+}

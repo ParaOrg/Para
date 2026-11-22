@@ -1,0 +1,14 @@
+{
+  "schema": 1,
+  "cell": "2427-280",
+  "attribution": "© OpenStreetMap contributors",
+  "establishments": [
+    ["w1182496673","convenience",121.36425,14.03295,"Alfamart"],
+    ["n7189008188","supermarket",121.39063,14.01394,"South Emerald"],
+    ["n1675637962","restaurant",121.35242,14.02381,"Patis Tito Garden Cafe"],
+    ["n9269083520","fast_food",121.3912,14.01392,"501"],
+    ["n4760968127","fuel",121.39353,14.01425,"SJR Gasoline Station"],
+    ["w160438847","fuel",121.39094,14.01382,"NTN"],
+    ["w1564511770","fuel",121.35113,14.04444]
+  ]
+}

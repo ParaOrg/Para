@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "cell": "2421-283",
+  "attribution": "© OpenStreetMap contributors",
+  "establishments": [
+    ["n8095681717","convenience",121.09289,14.16571,"Karyll - james monday"],
+    ["n8095703017","convenience",121.09351,14.16559,"BBOAC cooperative"],
+    ["n8095714517","convenience",121.0964,14.16757,"Bunene store"],
+    ["n8113592024","convenience",121.09502,14.18686,"Mildan"],
+    ["n8113592025","convenience",121.09366,14.18594,"Josie"],
+    ["n8113620223","convenience",121.09481,14.18678,"Aposaga"],
+    ["n8113620224","convenience",121.09432,14.18644,"Berna"],
+    ["n8113620225","convenience",121.09412,14.18644,"Jacky"],
+    ["n8113620226","convenience",121.09343,14.18582,"Crizel"],
+    ["n8113620227","convenience",121.09186,14.18536,"Sikap buhay"],
+    ["n8113620228","convenience",121.09199,14.18441,"Melitons fang - james wednesday"],
+    ["n8113620229","convenience",121.09262,14.18448,"Aristotle - james wednesday"],
+    ["n8113620519","convenience",121.09396,14.18632,"Manzos"],
+    ["n9873826917","convenience",121.08781,14.19559,"bil store"],
+    ["n3053759166","fuel",121.06048,14.15185,"Total",{"brand":"TotalEnergies"}],
+    ["w1156843919","police",121.07272,14.18399]
+  ]
+}

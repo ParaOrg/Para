@@ -1,0 +1,11 @@
+{
+  "schema": 1,
+  "cell": "2426-287",
+  "attribution": "© OpenStreetMap contributors",
+  "establishments": [
+    ["n11758064565","restaurant",121.32468,14.35629,"Bikes & Breakfast"],
+    ["n11751911418","cafe",121.32474,14.35613,"Pakape"],
+    ["w963333295","fuel",121.33069,14.36321,"Petron"],
+    ["w963339341","fuel",121.33903,14.39866,"Dual Fuel"]
+  ]
+}

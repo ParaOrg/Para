@@ -1,0 +1,10 @@
+{
+  "schema": 1,
+  "cell": "2416-284",
+  "attribution": "© OpenStreetMap contributors",
+  "establishments": [
+    ["n12682692331","convenience",120.84759,14.21993,"Alfamart"],
+    ["n13472869940","convenience",120.84552,14.23702,"Dali"],
+    ["n12682692332","cafe",120.84543,14.22175,"Little HQ Cafe"]
+  ]
+}

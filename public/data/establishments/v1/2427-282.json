@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "cell": "2427-282",
+  "attribution": "© OpenStreetMap contributors",
+  "establishments": [
+    ["n2845861646","pharmacy",121.39306,14.11019,"TGP"],
+    ["n8004954785","convenience",121.3947,14.10971,"JohnJacob Store"],
+    ["n8420746117","convenience",121.39779,14.10907,"Kuya jof house"],
+    ["n12917570003","convenience",121.39839,14.10901,"Isles Store"],
+    ["w220343861","convenience",121.39766,14.11206,"Snack Bar"],
+    ["w223106197","fuel",121.36432,14.10506,"Flying V"],
+    ["w237174402","clinic",121.39393,14.11116,"Rizal Rural Health Center"],
+    ["n3308869302","toilets",121.36476,14.11262],
+    ["w220343862","toilets",121.39695,14.11173]
+  ]
+}

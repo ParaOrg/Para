@@ -1,0 +1,14 @@
+{
+  "schema": 1,
+  "cell": "2428-276",
+  "attribution": "© OpenStreetMap contributors",
+  "establishments": [
+    ["n7836834286","convenience",121.4207,13.80354,"Ligaya Store"],
+    ["n7836891785","convenience",121.40536,13.82968,"Jaylien Calitcalit San Juan"],
+    ["n12730146306","convenience",121.4437,13.84013,"henry"],
+    ["n5284930658","restaurant",121.40519,13.80018,"Marimar Gotohan"],
+    ["n1627782462","fuel",121.40495,13.82573,"Gulf"],
+    ["w1344564670","fuel",121.4092,13.82662,"RL"],
+    ["w1344564672","fuel",121.4039,13.82553]
+  ]
+}

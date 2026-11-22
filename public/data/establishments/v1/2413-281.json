@@ -1,0 +1,24 @@
+{
+  "schema": 1,
+  "cell": "2413-281",
+  "attribution": "© OpenStreetMap contributors",
+  "establishments": [
+    ["n1735379867","bank",120.6619,14.05189,"BPI",{"atm":true}],
+    ["n11155221605","convenience",120.67188,14.05194,"More set Store"],
+    ["n11155369605","convenience",120.66399,14.07447,"imee Lpg store"],
+    ["n11155405006","convenience",120.67971,14.06729,"Jenifer Ramos"],
+    ["n11158144405","convenience",120.67811,14.06527,"Gina Villapania"],
+    ["n11189433338","convenience",120.69838,14.05199,"Jade and Jonas sari sari store"],
+    ["n11189562437","convenience",120.67751,14.05217,"Aileen Granados"],
+    ["n11189578837","convenience",120.67297,14.05066,"jeanalyn Store"],
+    ["n11189581237","convenience",120.67238,14.05045,"Gladyn Canete"],
+    ["n11189590137","convenience",120.67022,14.05207,"Analee Store"],
+    ["n11191878737","convenience",120.66677,14.05176,"3 Angels Store"],
+    ["n11191881737","convenience",120.65976,14.05171,"Cherish and antonete"],
+    ["n11191889137","convenience",120.65721,14.05151,"charmel mendoza store"],
+    ["n11191890337","convenience",120.65694,14.05158,"AJJ store"],
+    ["n13109873215","convenience",120.69871,14.05208,"Shell Select"],
+    ["w458228117","convenience",120.65086,14.05104,"Shell Select"],
+    ["n13149509301","restaurant",120.65771,14.07815,"Primia’s Lomi"]
+  ]
+}

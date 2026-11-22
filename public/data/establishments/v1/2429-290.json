@@ -1,0 +1,14 @@
+{
+  "schema": 1,
+  "cell": "2429-290",
+  "attribution": "© OpenStreetMap contributors",
+  "establishments": [
+    ["n2849688427","convenience",121.48348,14.54188,"Kash N Karry Store"],
+    ["n2849689008","convenience",121.48381,14.542,"sari-sari"],
+    ["n11868679069","convenience",121.48318,14.54914,"Little Baguio One Stop Shop"],
+    ["n2849688408","restaurant",121.48302,14.54629,"Heaven's Valley Cafe"],
+    ["n11861499369","restaurant",121.48349,14.54876,"La View Mountain Resort"],
+    ["w785322681","restaurant",121.48364,14.54481,"Km90 Ecopark & Restaurant"],
+    ["n2849688428","fuel",121.4835,14.54189,"Kash N Karry Store"]
+  ]
+}

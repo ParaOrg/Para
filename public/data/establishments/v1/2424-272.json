@@ -1,0 +1,11 @@
+{
+  "schema": 1,
+  "cell": "2424-272",
+  "attribution": "© OpenStreetMap contributors",
+  "establishments": [
+    ["n7836936786","convenience",121.24525,13.61811,"Buendia Store Soloc Lobo"],
+    ["n7836937485","convenience",121.21024,13.64873,"Arias Store"],
+    ["n5553359883","clinic",121.21078,13.64774,"Mendoza Dental"],
+    ["n13183353191","clinic",121.2099,13.64571,"Alcan Dental Clinic"]
+  ]
+}

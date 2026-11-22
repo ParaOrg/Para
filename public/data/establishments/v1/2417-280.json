@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "cell": "2417-280",
+  "attribution": "© OpenStreetMap contributors",
+  "establishments": [
+    ["n8815990319","convenience",120.85386,14.04782,"0192355 NEDIE'S STORE"],
+    ["n8815997417","convenience",120.85424,14.01254,"0148877 YOLLY ORTIZ"],
+    ["n8816008717","convenience",120.86378,14.01607,"0149806 REYES STORE"],
+    ["n8816008718","convenience",120.86507,14.01649,"0191666 HERNANDEZ TWINS"],
+    ["n8816023617","convenience",120.86522,14.01706,"0191648 MARIA STORE"],
+    ["n8816023618","convenience",120.87317,14.00967,"0149809 FELY"],
+    ["n8816086917","convenience",120.87331,14.0096,"0149809 FELY"],
+    ["n8816087017","convenience",120.88976,14.00047,"0149837 SERWELAS"],
+    ["n8858871817","convenience",120.88171,14.00643,"0149842 MARGARITA"],
+    ["n8858871917","convenience",120.88597,14.00266,"0149838 DE LEON"],
+    ["n5154094260","restaurant",120.86781,14.01491,"Brewed For You Coffee House and Resto"]
+  ]
+}

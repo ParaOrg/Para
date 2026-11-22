@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "cell": "2419-298",
+  "attribution": "© OpenStreetMap contributors",
+  "establishments": [
+    ["n2028175364","convenience",120.99201,14.90643,"Tagaytay Grocery"],
+    ["n10122848817","convenience",120.99976,14.93887,"FJ Store"],
+    ["n10600269012","convenience",120.96806,14.90712,"CRISTINA BERNARDO PATASIN"],
+    ["n10600433805","convenience",120.96113,14.94828,"Kuya Sonnie Store"],
+    ["n12475248267","convenience",120.97402,14.90106,"Alfamart"],
+    ["n12475248268","convenience",120.97918,14.91833,"Alfamart"],
+    ["n12475253587","convenience",120.99168,14.90596,"Alfamart"],
+    ["w1348649648","convenience",120.96728,14.90042,"Alfamart"],
+    ["w810618543","fuel",120.98381,14.90002,"Eng"],
+    ["w891182644","fuel",120.98713,14.93718]
+  ]
+}
