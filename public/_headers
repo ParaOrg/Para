@@ -45,9 +45,11 @@
   Content-Security-Policy-Report-Only: default-src 'self'; script-src 'self' https://challenges.cloudflare.com; frame-src https://challenges.cloudflare.com; connect-src 'self' https://smzwbqxttdyvohuizynl.supabase.co https://tiles.para-commute.org https://tiles.openfreemap.org https://router.project-osrm.org https://server.arcgisonline.com https://elevation-tiles-prod.s3.amazonaws.com; worker-src 'self' blob:; img-src 'self' data: blob:
 
 # The contributor page has a sign-in, a password, the consent and delete
-# buttons: keep it out of other sites' frames for the same reason. Its policy
-# adds the database it uploads to and Turnstile's script and frame.
+# buttons: keep it out of search results and other sites' frames for the
+# same reason. Its policy adds the database it uploads to and Turnstile's
+# script and frame.
 /contribute/*
+  X-Robots-Tag: noindex
   X-Frame-Options: DENY
   Content-Security-Policy: frame-ancestors 'none'
   Content-Security-Policy-Report-Only: default-src 'self'; script-src 'self' https://challenges.cloudflare.com; frame-src https://challenges.cloudflare.com; connect-src 'self' https://smzwbqxttdyvohuizynl.supabase.co https://tiles.para-commute.org https://tiles.openfreemap.org; worker-src 'self' blob:; img-src 'self' data: blob:
@@ -67,3 +69,11 @@
 /data/signboards/*
   Content-Security-Policy: default-src 'none'; style-src 'unsafe-inline'; img-src data:; sandbox
   Cache-Control: public, max-age=31536000, immutable
+
+# Coming soon, which the production site answers / and its other pages with
+# (workers/site/src/coming-soon.ts): out of search results until Para is out.
+# Its policy is the app's page's, with its own inline script and stylesheet
+# by hash: the same waitlist form, Turnstile and waitlist function.
+/coming-soon/*
+  X-Robots-Tag: noindex
+  Content-Security-Policy-Report-Only: default-src 'self'; script-src 'self' 'sha256-wyWN7SSP0iud1vc8sBtRD7wimzNMqopywzTAHyz8UuI=' https://challenges.cloudflare.com; style-src 'self' 'sha256-0XLk4MyG6Ftbvst/JONuIzFicmQqVyxVbqsU2aoq9DU='; frame-src https://challenges.cloudflare.com; connect-src 'self' https://smzwbqxttdyvohuizynl.supabase.co
