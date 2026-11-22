@@ -802,7 +802,12 @@ const keepOnPhone = (page, key, stored) =>
     .getByRole('button', { name: 'History' })
     .click();
   const card = page.getByRole('listitem').filter({ hasText: 'Fairview' });
-  await card.waitFor({ timeout: 15000 });
+  // Read once the card says where its recording is, on the phone or sending: the card can be there
+  // before its words are drawn. Any other words still reach the check below, and fail it.
+  await card
+    .getByText(/Only on this phone|Sending/)
+    .waitFor({ timeout: 15000 })
+    .catch(() => {});
   const whileUnsure = (await card.innerText()).replace(/\s+/g, ' ');
   await page.unroute('**/auth/v1/token**');
   for (const route of renewals) {

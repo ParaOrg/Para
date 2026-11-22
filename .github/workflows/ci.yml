@@ -22,8 +22,8 @@
 #   2. Every suite at once, in jobs sized by measured time, so the run takes as
 #      long as the slowest job, not the sum of them all. The suites under a
 #      minute or so share a job, since each job repeats its setup and waits for
-#      one of the free plan's ~20 runners; commuter-test, the slowest by far,
-#      runs as six parts (COMMUTER_PART, see its top), phone-test as three, the
+#      one of the free plan's ~20 runners; commuter-test runs as two parts
+#      (COMMUTER_PART, see its top), phone-test as three, the
 #      drawing suites as two, and the built-app suites share one job that makes its own builds.
 #      What every job repeats is kept between runs: Playwright's Chromium and node_modules.
 #   3. The drawing suites only where they are needed. group, regression-
@@ -335,8 +335,10 @@ jobs:
   # OpenFreeMap's tiles; gate-test opens /studio/'s sign-in door. A job runs its `suites` one after
   # another, so the short ones share a runner's setup and a place in the queue (the free plan runs
   # about 20 jobs at once, across every run): gate, scale, map-pins, back, where and loop take
-  # about 4 minutes together. commuter-test runs in six parts (COMMUTER_PART, see its top) and
-  # phone-test in three (PHONE_PART, see its top).
+  # about 4 minutes together. commuter-test runs in two parts (COMMUTER_PART, see its top): with
+  # hotspot taps off (VITE_HOTSPOT_TAPS unset) the whole suite is about 4 minutes, and each part
+  # repeats the opening sections, so more parts cost runners and setup for no time. phone-test
+  # runs in three (PHONE_PART, see its top).
   public-suite:
     name: ${{ matrix.name }}
     needs: changes
@@ -354,12 +356,8 @@ jobs:
           - name: The short public suites
             slug: short-public
             suites: gate-test scale-test map-pins-test back-test where-test loop-test
-          - { name: commuter-test (1 of 6), slug: commuter-1, suites: commuter-test, part: 1/6 }
-          - { name: commuter-test (2 of 6), slug: commuter-2, suites: commuter-test, part: 2/6 }
-          - { name: commuter-test (3 of 6), slug: commuter-3, suites: commuter-test, part: 3/6 }
-          - { name: commuter-test (4 of 6), slug: commuter-4, suites: commuter-test, part: 4/6 }
-          - { name: commuter-test (5 of 6), slug: commuter-5, suites: commuter-test, part: 5/6 }
-          - { name: commuter-test (6 of 6), slug: commuter-6, suites: commuter-test, part: 6/6 }
+          - { name: commuter-test (1 of 2), slug: commuter-1, suites: commuter-test, part: 1/2 }
+          - { name: commuter-test (2 of 2), slug: commuter-2, suites: commuter-test, part: 2/2 }
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       # Node, npm ci, and Playwright's Chromium with its system packages, from the caches every
@@ -402,6 +400,61 @@ jobs:
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: ${{ matrix.slug }}-screenshots
+          path: |
+            *.png
+            vite.log
+          if-no-files-found: ignore
+
+  # commuter-test with hotspot taps on (VITE_HOTSPOT_TAPS=1), on pushes to staging only. The
+  # public map hides those taps for now, so every other run skips the per-hotspot sequence; this
+  # keeps it checked for when they come back. Six parts, as the sequence takes about 7 minutes a
+  # part with taps on. A part fails if the log says the taps were off, so it cannot pass by
+  # skipping what it is here for.
+  taps-on:
+    name: commuter-test, hotspot taps on (${{ matrix.part }})
+    needs: changes
+    if: github.event_name == 'push' && github.ref == 'refs/heads/staging'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        part: [1/6, 2/6, 3/6, 4/6, 5/6, 6/6]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      # Node, npm ci, and Playwright's Chromium with its system packages, from the caches every
+      # browser suite shares (the action's own comments).
+      - uses: ./.github/actions/prepare-browser-suite
+      - name: Give the dev server the public database address and key, taps on
+        run: |
+          cp .env.production .env.local
+          echo VITE_BASEMAP_HOST=https://tiles.openfreemap.org >> .env.local
+          echo VITE_TURNSTILE_SITE_KEY=1x00000000000000000000AA >> .env.local
+          echo VITE_CONTRIBUTIONS=0 >> .env.local
+          echo VITE_HOTSPOT_TAPS=1 >> .env.local
+      - name: Start the dev server
+        run: |
+          npx vite --port 5173 --strictPort > vite.log 2>&1 &
+          for i in $(seq 1 60); do
+            curl -sf -o /dev/null http://localhost:5173/ && exit 0
+            sleep 1
+          done
+          echo "The dev server did not answer in 60 s"; cat vite.log; exit 1
+      - name: commuter-test, hotspot taps on
+        env:
+          COMMUTER_PART: ${{ matrix.part }}
+        run: |
+          set -o pipefail
+          node tests/e2e/commuter-test.mjs | tee commuter.log
+          if grep -q 'hotspot taps are off' commuter.log; then
+            echo "::error::the build had hotspot taps off: the per-hotspot sequence did not run"
+            exit 1
+          fi
+      - name: Keep the screenshots and the dev server log
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: commuter-taps-on-${{ strategy.job-index }}-screenshots
           path: |
             *.png
             vite.log
@@ -743,17 +796,17 @@ jobs:
   # for a result fails it.
   public:
     name: Build and the public map
-    needs: [changes, build, unit, public-suite, contribute-suite, preview-suite, storybook]
+    needs: [changes, build, unit, public-suite, contribute-suite, preview-suite, storybook, taps-on]
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
       - env:
-          RESULTS: ${{ needs.changes.result }} ${{ needs.build.result }} ${{ needs.unit.result }} ${{ needs.public-suite.result }} ${{ needs.contribute-suite.result }} ${{ needs.preview-suite.result }} ${{ needs.storybook.result }}
+          RESULTS: ${{ needs.changes.result }} ${{ needs.build.result }} ${{ needs.unit.result }} ${{ needs.public-suite.result }} ${{ needs.contribute-suite.result }} ${{ needs.preview-suite.result }} ${{ needs.storybook.result }} ${{ needs.taps-on.result }}
         run: |
-          echo "changes, build, unit checks, public suites, contributor suites, preview suites, Storybook plays: $RESULTS"
+          echo "changes, build, unit checks, public suites, contributor suites, preview suites, Storybook plays, commuter with hotspot taps on: $RESULTS"
           read -ra results <<< "$RESULTS"
-          if [ "${#results[@]}" -ne 7 ] || [ "${results[0]}" != success ]; then exit 1; fi
+          if [ "${#results[@]}" -ne 8 ] || [ "${results[0]}" != success ]; then exit 1; fi
           for result in "${results[@]}"; do
             case "$result" in success | skipped) ;; *) exit 1 ;; esac
           done

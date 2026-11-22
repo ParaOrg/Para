@@ -695,13 +695,14 @@ const fingerOn = async (locator, isCentred = false) => {
  * A finger on `locator` where a person would tap it (fingerOn), and `done()` true within 1.5 s.
  * False when there is no such element; a FAIL when the tap could not reach it or did nothing. A
  * tap Chromium dropped on a target fingerOn verified (no pointer press, the target still topmost
- * there) is sent again by hand as a finger sends it: pointerdown, pointerup, the click.
+ * there) is sent again by hand as a finger sends it: pointerdown, pointerup, the click. `more`
+ * adds to a FAIL's text what the caller knows of the moment (closeCard's: the cards on show).
  */
-const buttonTap = async (locator, done) => {
+const buttonTap = async (locator, done, more = async () => '') => {
   if ((await locator.count()) === 0) return false;
   const { at, why } = await fingerOn(locator);
   if (!at) {
-    await missed(locator, why);
+    await missed(locator, `${why}${await more()}`);
     return true;
   }
   const presses = await pointerPresses();
@@ -718,7 +719,7 @@ const buttonTap = async (locator, done) => {
       const late = (await until(done, Boolean, 3500))
         ? `, it came ${Date.now() - t0 + 1500} ms after the tap`
         : ', nor 3.5 s later';
-      await missed(locator, `tapped, and nothing came of it in 1.5 s${late}`);
+      await missed(locator, `tapped, and nothing came of it in 1.5 s${late}${await more()}`);
     } else {
       handSent(locator);
       await locator.first().evaluate((node, { x, y }) => {
@@ -735,7 +736,7 @@ const buttonTap = async (locator, done) => {
         node.dispatchEvent(new MouseEvent('click', { ...finger, detail: 1, button: 0 }));
       }, at);
       if (!(await until(done, Boolean, 1500)))
-        await missed(locator, 'sent again by hand, and nothing came of it in 1.5 s');
+        await missed(locator, `sent again by hand, and nothing came of it in 1.5 s${await more()}`);
     }
   }
   // Whatever the tap set going, a sheet or the camera, come to rest.
@@ -2919,7 +2920,27 @@ const closeCard = async () => {
       const before = await atTop();
       const moved = async () => (await atTop()) !== before;
       if ((await leave.count()) > 0) {
-        if (!(await buttonTap(leave, moved))) break;
+        // For a FAIL to say which card was open and what the tap met (ci-flakes ticket 07): where
+        // the button was, where this tap's pointerdown landed, and the cards' tops before and now.
+        // Read, not waited for: a button not drawn yet must not hold up the tap's own reading.
+        const box = await leave.evaluate((button) => {
+          window.__leaveDown = 'none';
+          document.addEventListener(
+            'pointerdown',
+            (e) => {
+              const at = e.target instanceof Element ? e.target : null;
+              window.__leaveDown = button.contains(at)
+                ? 'on the button'
+                : `on ${at?.closest('[data-testid]')?.getAttribute('data-testid') ?? at?.tagName.toLowerCase() ?? 'nothing'} at (${Math.round(e.clientX)}, ${Math.round(e.clientY)})`;
+            },
+            { capture: true, once: true },
+          );
+          const r = button.getBoundingClientRect();
+          return { x: r.x, y: r.y, width: r.width, height: r.height };
+        });
+        const more = async () =>
+          `; the button at ${box ? `(${Math.round(box.x)}, ${Math.round(box.y)}) ${Math.round(box.width)}×${Math.round(box.height)}` : 'no box'}; the tap's pointerdown ${await page.evaluate(() => window.__leaveDown)}; on show before "${before}", now "${await atTop()}"`;
+        if (!(await buttonTap(leave, moved, more))) break;
       } else if (!(await leaveTrip(moved))) break;
       await cardsSettled(page);
     }
@@ -4933,6 +4954,101 @@ if (runsPart(3)) {
       isOpen && isClosed && focus.isOnMap,
       `opened ${isOpen}; closed ${isClosed}; focus on ${focus.now}`,
     );
+  }
+
+  // --------------------------------------- 4g. the route list, raised by keys
+  // On a phone of its own (newPhone): raised to full from the keyboard (Enter on the list's handle,
+  // drawn in the flow only while so focused), a finger's tap still lands where it was made. The
+  // handle stays shown until the click has landed, so nothing moves between the press and the
+  // click; before, it folded away as the tap took the focus, everything under the finger moved up
+  // by its height, and the click reached neither the card pressed nor what was then under it.
+  if (shared) {
+    await newPhone({ isTouchOnly: false });
+    const chooser = page.locator('[data-testid="chooser"]');
+    const listAt = async () => chooser.first().getAttribute('data-snap');
+    const openList = async () => {
+      await jumpTo(page, shared.point);
+      const anchor = await project(page, shared.point);
+      const box = await canvasBox();
+      await drawnAt('saved-routes-hit', anchor);
+      await mapTap(box.x + anchor[0], box.y + anchor[1]);
+      await cardsSettled(page);
+      return (await chooser.count()) > 0;
+    };
+    const listHandle = chooser.first().locator('[data-testid="dock-handle"]');
+    // Whether it got to full with the handle shown, focused from the keyboard: the case to check.
+    const keysToFull = async () => {
+      for (let i = 0; i < 4 && (await listAt()) !== 'full'; i++) {
+        await listHandle.focus();
+        await page.keyboard.press('Enter');
+        await cardsSettled(page);
+      }
+      return (
+        (await listAt()) === 'full' &&
+        (await listHandle.evaluate(
+          (el) => el.matches(':focus-visible') && el.getBoundingClientRect().height > 1,
+        ))
+      );
+    };
+    // A tap sent by hand (Chromium dropped the touch) goes to the button itself and would pass
+    // with or without the shift: then the check is skipped, not passed.
+    const byFinger = async (name, locator, done) => {
+      const drops = chromiumDrops;
+      await touchTap(locator, done);
+      if (chromiumDrops !== drops) {
+        skip(name, 'Chromium made no pointer events from the touch, so the tap went by hand');
+        return null;
+      }
+      return await done();
+    };
+    const cardName = 'raised to full by Enter on its handle, a tap on a card opens its trip';
+    const isListed = await openList();
+    const byKeys = isListed && (await keysToFull());
+    const topName = chooser.first().locator('[data-testid="chooser-select"]').first();
+    const opened = await byFinger(cardName, topName, async () => (await trip().count()) > 0);
+    if (opened !== null)
+      check(
+        cardName,
+        byKeys && opened,
+        `list open ${isListed}; raised by keys, its handle shown ${byKeys}; trip open ${opened}`,
+      );
+    await closeCard();
+    const rowName = 'raised to full by Enter on its handle, a tap on a row opens its trip';
+    const isListedAgain = await openList();
+    const byKeysAgain = isListedAgain && (await keysToFull());
+    const firstRow = chooser.first().locator('[data-testid="chooser-item"]').first();
+    const rowOpened = await byFinger(rowName, firstRow, async () => (await trip().count()) > 0);
+    if (rowOpened !== null)
+      check(
+        rowName,
+        byKeysAgain && rowOpened,
+        `list open ${isListedAgain}; raised by keys, its handle shown ${byKeysAgain}; trip open ${rowOpened}`,
+      );
+    await closeCard();
+    // And raised to full by a finger's drag up the list from its first card, held before letting go.
+    const fingerName = 'raised to full by a finger, a tap on a card opens its trip';
+    const isListedThird = await openList();
+    const cardBox = await chooser
+      .first()
+      .locator('[data-testid="chooser-origin"]')
+      .first()
+      .boundingBox();
+    if (cardBox)
+      await fingerPan(cardBox.x + cardBox.width / 2, cardBox.y + 40, 0, -(cardBox.y + 80));
+    await cardsSettled(page);
+    const isFullByFinger = (await listAt()) === 'full';
+    const fingerOpened = await byFinger(
+      fingerName,
+      topName,
+      async () => (await trip().count()) > 0,
+    );
+    if (fingerOpened !== null)
+      check(
+        fingerName,
+        isListedThird && isFullByFinger && fingerOpened,
+        `list open ${isListedThird}; full by a finger ${isFullByFinger}; trip open ${fingerOpened}`,
+      );
+    await closeCard();
   }
 
   // Run whole, the sections after this one go on a phone touched by finger alone again.
