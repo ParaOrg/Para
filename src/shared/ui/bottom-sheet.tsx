@@ -141,8 +141,8 @@ const FLOATS_AT = {
  *
  * Its siblings: sheet-gesture.ts decides the heights and the drags, and
  * measures the status bar; use-sheet-gestures.ts binds the finger, the mouse
- * and the wheel; sheet-header.tsx is the header with ✕ a card may bring;
- * sheet-room.ts is the room the sheet leaves the camera.
+ * and the wheel; features/studio/panels/sheet-header.tsx is a card's ✕ header;
+ * features/routes/map/sheet-room.ts is the room the sheet leaves the camera.
  *
  * A page that builds its own Tailwind with source(none) must @source this file: its
  * classes are not seen otherwise (contribute.css does).

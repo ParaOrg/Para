@@ -1,6 +1,7 @@
 // The Map Style card's Location Labels switch (src/features/routes/map/location-labels.ts): a
 // basemap label is a symbol layer drawn from a source that is not GeoJSON, found by what it is and
-// not by name; hiding them leaves Para's own labels alone, and showing them keeps the style's own.
+// not by name; hiding them leaves Para's own labels alone, and showing them keeps the style's own
+// and asks for the establishments over them.
 //
 //   node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs tests/unit/location-labels-test.mjs
 import { test } from 'node:test';
@@ -124,7 +125,6 @@ test('hidden, a place layer keeps its train stations alone, class railway, by th
     ['match', ['get', 'class'], ['airport', 'bus', 'rail'], true, false],
     ['==', ['get', 'class'], 'railway'],
   ]);
-  assert.equal(layer(withLocationLabels(STYLE, true), 'poi_r1'), layer(STYLE, 'poi_r1'));
 });
 
 test('hidden, every basemap label is hidden and nothing else changes', () => {
@@ -145,10 +145,15 @@ test('hidden, every basemap label is hidden and nothing else changes', () => {
   assert.deepEqual(hidden.sources, STYLE.sources);
 });
 
-test('shown, the style is as it came: a label the style hides stays hidden', () => {
-  assert.equal(withLocationLabels(STYLE, true), STYLE);
-  assert.equal(layer(STYLE, 'highway_ref').layout.visibility, 'none');
-  assert.equal(layer(STYLE, 'highway_name').layout, undefined);
+test("shown, the style is as it came, with the establishments' anchor last", () => {
+  const shown = withLocationLabels(STYLE, true);
+  for (const l of STYLE.layers) assert.equal(layer(shown, l.id), l, `${l.id} is as it came`);
+  assert.equal(layer(shown, 'highway_ref').layout.visibility, 'none', 'still hidden by the style');
+  assert.equal(shown.layers.length, STYLE.layers.length + 1);
+  const anchor = shown.layers.at(-1);
+  assert.equal(anchor.id, 'establishments', 'the sign they are wanted, last');
+  assert.equal(anchor.layout.visibility, 'none', 'drawing nothing itself');
+  assert.equal(withLocationLabels(STYLE, false).layers.length, STYLE.layers.length, 'hidden, none');
 });
 
 test('the style handed in is left alone', () => {
@@ -177,16 +182,27 @@ function withStorage(run, { isBlocked = false } = {}) {
   }
 }
 
-test('the public pages default off, remembering only a choice away from it', () => {
+test('the public map defaults on, remembering only a choice away from it', () => {
   withStorage((stored) => {
-    assert.equal(readLocationLabels('map'), false, 'off by default');
-    rememberLocationLabels('map', true);
-    assert.equal(readLocationLabels('map'), true);
-    assert.deepEqual([...stored.keys()], ['para.location-labels.v1']);
+    assert.equal(readLocationLabels('map'), true, 'on by default');
     rememberLocationLabels('map', false);
+    assert.equal(readLocationLabels('map'), false);
+    assert.deepEqual([...stored.keys()], ['para.location-labels.v2']);
+    rememberLocationLabels('map', true);
     assert.equal(stored.size, 0, 'the default is no entry at all');
-    stored.set('para.location-labels.v1', 'yes');
-    assert.equal(readLocationLabels('map'), false, 'anything else reads as the default');
+    stored.set('para.location-labels.v2', 'yes');
+    assert.equal(readLocationLabels('map'), true, 'anything else reads as the default');
+  });
+});
+
+test("the contributor page defaults off, under the key the public map's choice once shared", () => {
+  withStorage((stored) => {
+    stored.set('para.location-labels.v1', 'shown');
+    assert.equal(readLocationLabels('contribute'), true, 'its choice is kept');
+    assert.equal(readLocationLabels('map'), true, "the public map's starts at its default");
+    rememberLocationLabels('contribute', false);
+    assert.equal(stored.size, 0);
+    assert.equal(readLocationLabels('contribute'), false, 'off by default');
   });
 });
 
@@ -195,7 +211,7 @@ test('the studio defaults on, under a key of its own', () => {
     assert.equal(readLocationLabels('studio'), true, 'on by default');
     rememberLocationLabels('studio', false);
     assert.equal(readLocationLabels('studio'), false);
-    assert.equal(readLocationLabels('map'), false, "the public pages' choice is apart");
+    assert.equal(readLocationLabels('map'), true, "the public map's choice is apart");
     assert.deepEqual([...stored.keys()], ['para.studio.location-labels.v1']);
     rememberLocationLabels('studio', true);
     assert.equal(stored.size, 0);
@@ -205,9 +221,10 @@ test('the studio defaults on, under a key of its own', () => {
 test("storage that throws reads as each page's default and remembers nothing, quietly", () => {
   withStorage(
     () => {
-      assert.equal(readLocationLabels('map'), false);
+      assert.equal(readLocationLabels('map'), true);
+      assert.equal(readLocationLabels('contribute'), false);
       assert.equal(readLocationLabels('studio'), true);
-      assert.doesNotThrow(() => rememberLocationLabels('map', true));
+      assert.doesNotThrow(() => rememberLocationLabels('map', false));
     },
     { isBlocked: true },
   );

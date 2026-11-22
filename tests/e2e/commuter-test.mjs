@@ -16,10 +16,11 @@
 // to localStorage, never calls the OSRM route snapper or the database (it
 // reads the published /data/index.v5.json, once), and tapping a route vs. a
 // hotspot — including one hotspot with a route drawn through it — opens the
-// right card with the right content; and, since 2026-10-04, that the end
-// circles' GL program is compiled before any tap and a trip's tap compiles
-// none (since 2026-10-05 asked of it as the first tap of a page of its
-// own), and that the map is made framed on the routes, where their fit
+// right card with the right content (a hotspot's only in a build with
+// VITE_HOTSPOT_TAPS; without, a tap on a box opens no place's card); and,
+// since 2026-10-04, that the end circles' GL program is compiled before any
+// tap and a trip's tap compiles none (since 2026-10-05 asked of it as the
+// first tap of a page of its own), and that the map is made framed on the routes, where their fit
 // framed it, and stays there (the owner's Q1).
 import { readFileSync } from 'node:fs';
 
@@ -310,6 +311,9 @@ await page.goto(`${BASE}/`, { waitUntil: 'load' });
 await page.waitForFunction(() => window.__map && window.__map.loaded(), null, { timeout: 30000 });
 await waitForSource(page, 'saved-stops');
 await mapIdle(page);
+// A build without hotspot taps (VITE_HOTSPOT_TAPS) reads a tap on a box as the route's under it or
+// the empty map's, so no place's card opens from the map; the page's root says which.
+const isHotspotTapOn = (await page.locator('[data-hotspot-taps="on"]').count()) > 0;
 
 // 0. The map is made framed on the routes (the owner's Q1, 2026-10-04):
 // where their fit put it after the map's 'load' until then — the box round
@@ -531,12 +535,46 @@ check(
   `${atRest.keys.length} programs${atRest.warmed ? '' : `, no warm-up in ${atRest.ms / 1000} s`}`,
 );
 
-// 3. Tap each hotspot: fly to a point inside it, click, read the card.
+// 3. Tap each hotspot: fly to a point inside it, click, read the card. Without hotspot taps, the
+// same tap opens no place's card, and what its card leads to is not reached from the map.
 const hotspotParts = partOfHotspot(snapshot.polys.length);
+if (!isHotspotTapOn)
+  console.log(
+    'SKIP  a tap on each hotspot opens its card, its RouteCards, counter, ⇄ and trips: hotspot taps are off in this build (VITE_HOTSPOT_TAPS)',
+  );
 for (const [i, p] of snapshot.polys.entries()) {
   if (hotspotParts[i] !== PART) continue;
   const desc = `${p.kind} #${i} "${p.name}"`;
   const candidates = interiorCandidates(p.ring);
+  if (!isHotspotTapOn) {
+    const [x, y] = candidates[0] ?? centroidOf(p.ring);
+    await page.evaluate(
+      ([cx, cy]) => {
+        window.__map.jumpTo({ center: [cx, cy], zoom: 18 });
+      },
+      [x, y],
+    );
+    await mapIdle(page);
+    const pt = await page.evaluate(
+      ([cx, cy]) => {
+        const q = window.__map.project([cx, cy]);
+        return [q.x, q.y];
+      },
+      [x, y],
+    );
+    const box = await page.locator('canvas.maplibregl-canvas').boundingBox();
+    await page.mouse.click(box.x + pt[0], box.y + pt[1]);
+    // A route under the box may rightly open its trip or the list: only a place's card is wrong.
+    await appears(ANY_CARD, 1000);
+    const state = await cardKind();
+    check(
+      `tap ${desc}, hotspot taps off: no place's card opens`,
+      state.kind !== 'hotspot' && (await page.locator(PLACE_UP).count()) === 0,
+      `card ${state.kind}`,
+    );
+    await closeCard();
+    continue;
+  }
   let opened = null;
   for (const [x, y] of candidates) {
     await page.evaluate(
@@ -895,7 +933,8 @@ for (const [i, p] of snapshot.polys.entries()) {
 // hintuan only show the card, then select route show the route"): a tap on
 // a route line inside a hotspot opens the hotspot's card alone — no list,
 // the line through it not taken — where until then both were offered, the
-// hotspot first. SKIP if no such vertex exists.
+// hotspot first. Without hotspot taps the box takes none, so the line under the tap is the
+// route's: its trip or the list. SKIP if no such vertex exists.
 const inBox = findVertexInsideAnyHotspot(snapshot.routeLines, snapshot.polys);
 if (!RUNS_ONE_OFFS) {
   // The last part's, with 4b.
@@ -914,12 +953,20 @@ if (!RUNS_ONE_OFFS) {
   await shows();
   const state = await cardKind();
   const lists = await page.locator('[data-testid="chooser"]').count();
-  // Its card lights the routes it lists, as any hotspot's card does.
-  check(
-    'a tap on a route line inside a hotspot opens the hotspot alone: its card, no list',
-    state.kind === 'hotspot' && state.text.includes(inBox.hotspot.name) && lists === 0,
-    `card ${state.kind} "${state.text.split('\n')[0] ?? ''}"; ${lists} list(s)`,
-  );
+  const seen = `card ${state.kind} "${state.text.split('\n')[0] ?? ''}"; ${lists} list(s)`;
+  if (isHotspotTapOn)
+    // Its card lights the routes it lists, as any hotspot's card does.
+    check(
+      'a tap on a route line inside a hotspot opens the hotspot alone: its card, no list',
+      state.kind === 'hotspot' && state.text.includes(inBox.hotspot.name) && lists === 0,
+      seen,
+    );
+  else
+    check(
+      "hotspot taps off: a tap on a route line inside a hotspot is the route's, its trip or the list, no place's card",
+      state.kind !== 'hotspot' && (state.kind === 'route' || lists > 0),
+      seen,
+    );
   await closeCard();
 }
 
@@ -998,39 +1045,34 @@ if (!RUNS_ONE_OFFS) {
     const card = row.locator('xpath=ancestor::*[@data-livery][1]');
     const colour = await card.getAttribute('data-livery');
     const name = card.locator('[data-testid="chooser-select"]');
+    // A tap on a card off its rows opens its first row's trip, its line alone lit; no card is
+    // Selected on the public map (the owner, 2026-11-22). The empty map tapped goes back.
+    const firstId = await card
+      .locator('[data-testid="chooser-item"]')
+      .first()
+      .getAttribute('data-direction');
     await name.click();
-    await inState(card, 'selected');
-    const cardIds = await cardDirections(card);
-    const picked = await until(litNow, (lit) => sameIds(lit, cardIds));
-    const looks = await paintNow(page);
-    const cardLook = LOOKS?.byLivery[colour];
+    await shows(TRIP_UP);
+    const openedLit = await until(litNow, (lit) => lit.length === 1);
+    const openedKind = (await cardKind()).kind;
+    const selectedOnOpen = await chooser.locator('[data-state="selected"]').count();
     check(
-      "  a tap on a card selects it, its routes drawn over the rest in the card's colour",
-      (await card.getAttribute('data-state')) === 'selected' &&
-        twoLooks(looks, cardLook?.line ?? MAP?.['Map/RouteLine/surface-selected']),
-      JSON.stringify(looks),
+      "  a tap on a card off its rows opens its first row's trip, its line alone lit, nothing Selected",
+      openedKind === 'route' && sameIds(openedLit, [firstId]) && selectedOnOpen === 0,
+      `card ${openedKind}; lit ${JSON.stringify(openedLit)}; first row ${firstId}; ${selectedOnOpen} Selected`,
     );
-    const seenPicked = await rideLook(page);
-    const endsPicked = await endsWear(colour);
-    check(
-      "  its chevrons in the card's words' colour, its end circles ringed in its own",
-      wears(seenPicked, cardLook) && endsPicked.ok,
-      `${colour}: ${JSON.stringify(seenPicked)}; ${endsPicked.detail}`,
-    );
-    // Narrower than the list only where the list has other cards.
-    if (cardIds.length < listed.length)
-      check(
-        '  and lights just its routes',
-        sameIds(picked, cardIds),
-        `${picked.length} lit for ${cardIds.length} row(s) of ${listed.length}`,
-      );
-    else
-      skip(
-        '  and lights just its routes',
-        'one card lists every route this way round under this tap',
-      );
-    // Its row, the card picked: the trip opens, and ‹ brings the list back
-    // at rest.
+    await tapEmptyMap();
+    await hides('[data-testid="card"]');
+    await page
+      .waitForFunction(
+        () => !document.querySelector('[data-testid="chooser"]')?.closest('[hidden]'),
+        null,
+        { timeout: 3000 },
+      )
+      .catch(() => {
+        throw new Error('the empty map tapped on the trip: the route list not back within 3000 ms');
+      });
+    // Its row: the trip opens, and the empty map tapped brings the list back at rest.
     await row.click();
     await shows(TRIP_UP);
     const state = await cardKind();
@@ -1079,7 +1121,7 @@ if (!RUNS_ONE_OFFS) {
       const relit = await until(litNow, (lit) => sameIds(lit, listed));
       const stillSelected = await chooser.locator('[data-state="selected"]').count();
       check(
-        '  ‹ brings it back at rest: no card picked, every route lit',
+        '  it comes back at rest: nothing Selected, every route lit',
         stillSelected === 0 && sameIds(relit, listed),
         `${stillSelected} Selected; ${relit.length} lit, ${listed.length} listed`,
       );
@@ -1097,29 +1139,15 @@ if (!RUNS_ONE_OFFS) {
         wears(seenRest, oneCard ? LOOKS?.byLivery[oneCard] : LOOKS?.lit) && endsRest.ok,
         `${oneCard ?? 'blue'}: ${JSON.stringify(seenRest)}; ${endsRest.detail}`,
       );
-      // Picked, a second tap lets it go.
-      await name.click();
-      const repicked = (await inState(card, 'selected')) === 'selected';
-      await name.click();
-      await inState(card, 'rest');
-      const letGo = await until(litNow, (lit) => sameIds(lit, listed));
-      check(
-        '  a second tap on a picked card lets it go: every route it shows lit again',
-        repicked && (await card.getAttribute('data-state')) === 'rest' && sameIds(letGo, listed),
-        `picked ${repicked}; ${letGo.length} lit, ${listed.length} listed`,
-      );
-      // SWITCH lets a picked card go and lights all of the other way round;
-      // there, where each place is a card of its own, a pick narrows it.
-      // Vice Versa, floating on the map over the list (the owner, 2026-11-21).
+      // SWITCH lights all of the other way round, nothing Selected. Vice Versa, floating on the
+      // map over the list (the owner, 2026-11-21).
       const flip = page.locator('[data-testid="chooser-flip"]');
       if (!(await flip.isEnabled())) {
         skip(
-          '  SWITCH lets a picked card go: nothing Selected, the other way round lit',
+          '  SWITCH lights the other way round, nothing Selected',
           'nothing drawn the other way round under this tap',
         );
       } else {
-        await name.click();
-        const pickedAgain = (await inState(card, 'selected')) === 'selected';
         const was = await flip.getAttribute('data-back');
         await flip.click();
         await turned(flip, was);
@@ -1127,31 +1155,13 @@ if (!RUNS_ONE_OFFS) {
         const switched = await until(litNow, (lit) => sameIds(lit, otherWay));
         const stillPicked = await chooser.locator('[data-state="selected"]').count();
         check(
-          '  SWITCH lets a picked card go: nothing Selected, the other way round lit',
-          pickedAgain && stillPicked === 0 && otherWay.length > 0 && sameIds(switched, otherWay),
-          `picked ${pickedAgain}; ${switched.length} lit, ${otherWay.length} listed, ${stillPicked} Selected`,
+          '  SWITCH lights the other way round, nothing Selected',
+          stillPicked === 0 && otherWay.length > 0 && sameIds(switched, otherWay),
+          `${switched.length} lit, ${otherWay.length} listed, ${stillPicked} Selected`,
         );
-        const backCards = chooser.locator('[data-testid="chooser-origin"]');
-        if ((await backCards.count()) < 2) {
-          skip(
-            "  a pick there lights just its card's routes, fewer than the list's",
-            'one card the other way round too',
-          );
-        } else {
-          const one = backCards.first();
-          await one.locator('[data-testid="chooser-select"]').click();
-          await inState(one, 'selected');
-          const oneIds = await cardDirections(one);
-          const narrowed = await until(litNow, (lit) => sameIds(lit, oneIds));
-          check(
-            "  a pick there lights just its card's routes, fewer than the list's",
-            oneIds.length > 0 && oneIds.length < otherWay.length && sameIds(narrowed, oneIds),
-            `${narrowed.length} lit for ${oneIds.length} of ${otherWay.length}`,
-          );
-        }
       }
-      // The filter: the map lights what the cards list under each kind of ride, a Selected card
-      // let go as ⇆ lets it go, and All lighting the whole list again (README decision 14). The
+      // The filter: the map lights what the cards list under each kind of ride, and All lighting
+      // the whole list again (README decision 14). The
       // camera's framing is 4a′'s, where a tap lists more than one kind of ride.
       const filterButton = page.locator('[data-testid="chooser-filter"]');
       const filterTo = async (label) => {
@@ -1163,14 +1173,6 @@ if (!RUNS_ONE_OFFS) {
         );
       };
       const before = await listedNow();
-      // A card at rest, held by its place in the list: the checks above may leave one picked, and
-      // a `[data-state="rest"]` locator would move off it once it is picked.
-      const restAt = await cards.evaluateAll((els) =>
-        els.findIndex((e) => e.dataset.state === 'rest'),
-      );
-      const firstCard = cards.nth(Math.max(restAt, 0));
-      await firstCard.locator('[data-testid="chooser-select"]').click();
-      const pickedFirst = (await inState(firstCard, 'selected')) === 'selected';
       const agree = [];
       for (const label of ['Jeep', 'E-Jeep', 'Bus', 'LRT', 'MRT', 'Ferry']) {
         await filterTo(label);
@@ -1185,12 +1187,11 @@ if (!RUNS_ONE_OFFS) {
       }
       const selectedLeft = await chooser.locator('[data-state="selected"]').count();
       check(
-        '  each filter lights just what the cards list, and lets a Selected card go',
-        pickedFirst &&
-          selectedLeft === 0 &&
+        '  each filter lights just what the cards list, nothing Selected',
+        selectedLeft === 0 &&
           agree.every((a) => a.ok) &&
           agree.some((a) => a.listed < before.length),
-        `picked ${pickedFirst}, ${selectedLeft} Selected after; ` +
+        `${selectedLeft} Selected after; ` +
           agree.map((a) => `${a.label} ${a.lit}/${a.listed}`).join(', ') +
           ` of ${before.length}`,
       );
@@ -1955,7 +1956,13 @@ if (RUNS_ONE_OFFS) {
   await p.goto(`${BASE}/`, { waitUntil: 'load' });
   await waitForMap(p);
   await mapIdle(p);
-  await checkLocationLabels(p, { check, prefix: 'public map', waitForMap });
+  await checkLocationLabels(p, {
+    check,
+    prefix: 'public map',
+    waitForMap,
+    isOnByDefault: true,
+    key: 'para.location-labels.v2',
+  });
   await p.close();
 }
 

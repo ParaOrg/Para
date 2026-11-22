@@ -5,7 +5,7 @@ import { BottomSheet, type SheetHeight } from '@/shared/ui/bottom-sheet';
 import { HintuanCardBox } from './hintuan-card-box';
 import { HintuanCardCounter } from './hintuan-card-counter';
 import { HintuanCardHeader } from './hintuan-card-header';
-import { RouteCardStack, type PickedPlace } from './route-card-stack';
+import { RouteCardStack } from './route-card-stack';
 import { useTellShown } from './use-tell-shown';
 import { switchWord } from '../model/departures';
 import { hintuanCardShows } from '../model/hintuan-card-shows';
@@ -25,13 +25,10 @@ interface Props {
   /** Called with the direction picked, and the colour its card wore: its trip wears the same. */
   onSelectDirection: (v: Direction, livery?: Livery) => void;
   /**
-   * The routes stopping at the box as RouteCards, as the route list shows
-   * them: the place whose card is Selected, what to do when one is picked or
-   * let go, and where to say which directions they show, for the map to light.
+   * The routes stopping at the box as RouteCards, as the route list shows them, each opening its
+   * trip on a tap, and where to say which directions they show, for the map to light.
    */
   routeCards: {
-    selected: string | null;
-    onSelect: (place: PickedPlace | null) => void;
     /** What the RouteCards show while the card is open; null once it closes. */
     onShown: (ids: readonly string[] | null) => void;
     /**
@@ -155,14 +152,7 @@ export function HintuanCard({
         // The first RouteCard makes room at its top for the counter: 36 over
         // its title's own 8 (Figma 3854:12526).
         <div className="relative [&>:first-child]:pt-9">
-          <RouteCardStack
-            routes={routes}
-            back={back}
-            selected={routeCards.selected}
-            onSelect={routeCards.onSelect}
-            onRoute={onSelectDirection}
-            testId="card"
-          />
+          <RouteCardStack routes={routes} back={back} onRoute={onSelectDirection} testId="card" />
           <HintuanCardCounter
             count={count}
             word={showing.every(isLoop) ? null : switchWord(back, showing)}
@@ -170,7 +160,6 @@ export function HintuanCard({
             canSwitch={!!switchTo}
             onFlip={() => {
               if (!switchTo) return;
-              routeCards.onSelect(null);
               setFlipped(!back);
               routeCards.onSwitch?.(switchTo.id !== hotspot.id ? switchTo.id : null);
             }}

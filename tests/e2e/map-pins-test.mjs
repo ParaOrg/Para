@@ -3,15 +3,15 @@
 // file: a pin at each box's middle from the zoom where the scale bar first reads 500 m, a dot below
 // it, and the names from where the bar first reads 300 m. The public map draws no pins and no dots
 // for now (HOTSPOT_MARKS in public-map-app.tsx): its boxes and names stay, and a tap on a box
-// opens it.
+// opens it only in a build with VITE_HOTSPOT_TAPS; without, the tap opens no card of its place.
 //
 //   npm run dev                          (in another terminal)
 //   node tests/e2e/map-pins-test.mjs
 //   PARA_SHOTS=dir node tests/e2e/map-pins-test.mjs   keeps each page at both zooms
 //
 // What it proves: on the public map, no pin is drawn and its chunk is not fetched, no dot shows at
-// any zoom, a terminal's or a hintuan's, and the boxes, their names and their taps work without
-// either. In the studio, the pins and dots stand over the boxes
+// any zoom, a terminal's or a hintuan's, and the boxes, their names and their taps (or, with taps
+// off, none) work without either. In the studio, the pins and dots stand over the boxes
 // and the route lines and under the hotspots' names, and tapping a pin's head (off its box) or a
 // dot opens that box's card, as tapping the box does; on the contributor page the hotspots come
 // in after the map settles, in a chunk of their own, and a pin there is display-only: a tap on it
@@ -311,32 +311,59 @@ async function pinToTap(page, alone) {
     3000,
   );
   check(`public map: the hotspots' names still drawn at ${NAMES_IN}`, names > 0, `${names}`);
+  // A build without hotspot taps (VITE_HOTSPOT_TAPS) takes none on a box: the tap is the route's
+  // under it, its trip or the list, or the empty map's, and no place's card opens.
+  const isHotspotTapOn = (await page.locator('[data-hotspot-taps="on"]').count()) > 0;
+  /** Whether a place's card is open: none may be, the box's taps off. */
+  const placeOpen = () =>
+    page.evaluate(() => !!document.querySelector('[data-testid="card-place"]'));
+  /** After a tap on `boxId`'s box, taps off: whether it stays unchosen and no place's card opens. */
+  const tookNoTap = async (boxId) =>
+    (await until(
+      async () => (await isChosen(page, boxId)) || (await placeOpen()),
+      (v) => v,
+      1500,
+    )) === false;
   await settle(page, hintuanAt, ZOOMED_IN);
   const middle = await screenPoint(page, hintuanAt);
   await page.mouse.click(middle.x, middle.y);
-  check(
-    "public map: a tap on a hintuan's box opens its card, with no pin or dot there",
-    await until(
-      () => isChosen(page, hintuanId),
-      (v) => v,
-      3000,
-    ),
-    `on the box: ${middle.onBox}`,
-  );
+  if (isHotspotTapOn)
+    check(
+      "public map: a tap on a hintuan's box opens its card, with no pin or dot there",
+      await until(
+        () => isChosen(page, hintuanId),
+        (v) => v,
+        3000,
+      ),
+      `on the box: ${middle.onBox}`,
+    );
+  else
+    check(
+      "public map, hotspot taps off: a tap on a hintuan's box opens no card of its place",
+      await tookNoTap(hintuanId),
+      `on the box: ${middle.onBox}`,
+    );
   await page.reload({ waitUntil: 'load' });
   await page.waitForFunction(() => window.__map && window.__map.loaded(), null, { timeout: 30000 });
   await waitForSource(page, 'saved-stops-pins', 30000);
   await settle(page, at, ZOOMED_IN);
   const box = await screenPoint(page, at);
   await page.mouse.click(box.x, box.y);
-  check(
-    "public map: a tap on a terminal's box opens its card, with no pin or dot there",
-    await until(
-      () => isChosen(page, id),
-      (v) => v,
-      3000,
-    ),
-  );
+  if (isHotspotTapOn)
+    check(
+      "public map: a tap on a terminal's box opens its card, with no pin or dot there",
+      await until(
+        () => isChosen(page, id),
+        (v) => v,
+        3000,
+      ),
+    );
+  else
+    check(
+      "public map, hotspot taps off: a tap on a terminal's box opens no card of its place",
+      await tookNoTap(id),
+      `on the box: ${box.onBox}`,
+    );
   check(
     "public map: the pins' chunk is never fetched",
     pinChunks.length === 0,

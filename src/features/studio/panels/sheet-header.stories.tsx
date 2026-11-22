@@ -4,7 +4,7 @@ import { expect, fn, userEvent, within } from 'storybook/test';
 import { SheetHeader } from './sheet-header';
 
 const meta = {
-  title: 'Shared/UI/SheetHeader',
+  title: 'Features/Studio/SheetHeader',
   component: SheetHeader,
   // As wide as a phone's sheet, on the sheet's own surface.
   decorators: [

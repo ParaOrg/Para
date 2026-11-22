@@ -45,7 +45,7 @@ import {
   loadHotspotsFromFile,
 } from '@/features/routes/published/fetch-index';
 import { fetchLine } from '@/features/routes/published/fetch-line';
-import { isPlaceSearchShown, isRidePickingOn } from '@/shared/config/env';
+import { isHotspotTapOn, isPlaceSearchShown, isRidePickingOn } from '@/shared/config/env';
 import { useTurn } from '@/shared/hooks/commit-turn';
 import { retryingLazy } from '@/shared/lib/retrying-lazy';
 import { cn } from '@/shared/utils/cn';
@@ -65,11 +65,11 @@ const PageToasts = retryingLazy(() =>
 );
 
 /**
- * The hotspots' marks the commuter map draws: no pins zoomed in and no dots zoomed out, a
- * terminal's or a hintuan's (the owner's call); the boxes and their names say where each one is,
- * and a tap there opens it as before. The studio keeps its pins and dots.
+ * The hotspots on the commuter map, the owner's calls for now: no pins zoomed in, no dots zoomed
+ * out, and no tap unless isHotspotTapOn, a tap on a box then the route's or the empty map's; the
+ * boxes and names still say where each one is. The studio keeps its pins, dots and taps.
  */
-const HOTSPOT_MARKS = { shouldShowPins: false, dotKinds: [] } as const;
+const HOTSPOT_MARKS = { shouldShowPins: false, dotKinds: [], isTappable: isHotspotTapOn } as const;
 
 /**
  * While a place's card stands docked at full height, the toast sits 12 under its ✕ (map strip 24,
@@ -151,7 +151,6 @@ export function PublicMapApp() {
     flipList,
     filterList,
     otherRoute,
-    pickOnPlaceCard,
     openPlace,
     openTripFromPlace,
     goHere,
@@ -201,8 +200,8 @@ export function PublicMapApp() {
   const credits = useMapCredits(root);
 
   return (
-    // `data-directions`: how many the index brought, for the suites on a
-    // production build, where the map itself is out of their reach.
+    // `data-directions` and `data-hotspot-taps`: how many the index brought and whether a box takes
+    // a tap (isHotspotTapOn), for the suites on a production build, the map out of their reach.
     // `data-dock-host`: the open card's sheet says where its top is here
     // at rest, and on what follows it (`data-dock-follower`, the LocatorButton,
     // the map's ⓘ) as a finger drags it (BottomSheet). While "Update Para!"
@@ -212,6 +211,7 @@ export function PublicMapApp() {
       ref={root}
       data-dock-host
       data-directions={saved.directions.length}
+      data-hotspot-taps={isHotspotTapOn ? 'on' : 'off'}
       className={cn(
         'group/map @container relative h-full w-full overflow-clip',
         needRefresh && '[--toast-top:calc(env(safe-area-inset-top)+--spacing(19))]',
@@ -415,8 +415,6 @@ export function PublicMapApp() {
           <HintuanCard
             key={placeKey(hotspots.selected)}
             routeCards={{
-              selected: saved.highlight?.where === 'hotspot' ? saved.highlight.card : null,
-              onSelect: pickOnPlaceCard,
               onShown: saved.showCard,
               // The other way round, the camera kept where it is (HintuanCard's onSwitch).
               onSwitch: (box) => box && hotspots.select(box),
@@ -459,8 +457,6 @@ export function PublicMapApp() {
             listing={saved.listing}
             onFlip={flipList}
             modeFilter={{ filter: saved.modeFilter, onFilter: filterList }}
-            selected={saved.highlight?.where === 'list' ? saved.highlight.card : null}
-            onSelect={(p) => saved.highlightCard(p && { where: 'list', ...p })}
             onRoute={openTrip}
             onHotspot={(s) => cards.openHotspot(s.id)}
             onClose={cards.closeAll}

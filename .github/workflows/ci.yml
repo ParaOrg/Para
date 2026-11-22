@@ -270,17 +270,19 @@ jobs:
       #     report, and the run's counts kept in ESLINT_JSON for Code health below
       #     (scripts/checks/eslint-formatter.mjs).
       #   Long files: no new source file over 150 lines; the long ones already there are held to
-      #     their length.
+      #     their length. With the base commit fetched above, a file git saw moved keeps its limit
+      #     at its new path (--base-ref); on a push there is no base, and nothing counts as a move.
       #   Architecture page: docs/architecture.md is generated from src/; a change to the
       #     structure that did not regenerate it fails (`npm run docs:architecture`).
       #   Build: import boundaries, no editor code on /, the installable app's files.
       - name: Lint, long files, the architecture page and the build
         env:
           ESLINT_JSON: ${{ runner.temp }}/eslint.json
+          BASE: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha }}
         run: |
           node scripts/checks/side-by-side.mjs \
             "Lint::npm run lint -- --format ./scripts/checks/eslint-formatter.mjs" \
-            "Long files::node scripts/checks/long-files.mjs --base \"$RUNNER_TEMP/long-files-base.json\"" \
+            "Long files::node scripts/checks/long-files.mjs --base \"$RUNNER_TEMP/long-files-base.json\" --base-ref \"$BASE\"" \
             "Architecture page::npm run docs:architecture:check" \
             "Build, with the boundary and build checks::npm run build"
       # The code-health page: `npm run health` (long files, comments, stories, the build's

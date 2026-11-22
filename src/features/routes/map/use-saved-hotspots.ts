@@ -13,17 +13,15 @@ import type { HotspotLink, Hotspot, HotspotKind } from '../model/hotspots';
 import { orderLinked } from '../model/timeline';
 
 /**
- * Every saved hotspot, drawn for everyone as a shaded outline in its kind's
- * colour, with its route links alongside so the tap card can list them.
+ * Every saved hotspot, drawn for everyone as a shaded outline in its kind's colour, with its route
+ * links alongside so the tap card can list them.
  *
- * `load` decides where the hotspots come from: the public map reads the
- * published map, the editor the live tables. Pass a function defined once at
- * module level, not a new one per render, or it reloads every render.
+ * `load` decides where the hotspots come from: the public map reads the published map, the editor
+ * the live tables. Pass a function defined once at module level, or it reloads every render.
  *
- * The editor also passes `drawing` and `hiddenHotspotId`; the public map passes
- * neither, and both default to off. Both pass `muted` while a trip is open: the hotspot card or route list it was picked from waits
- * hidden behind it, and the hotspots that lit go dark until ‹ brings it back,
- * so the map lights only the trip.
+ * The editor also passes `drawing` and `hiddenHotspotId`; the public map neither. Both pass `muted`
+ * while a trip is open: what it was picked from waits hidden behind it, and the hotspots that lit
+ * go dark until it is left, so the map lights only the trip.
  */
 export function useSavedHotspots<S extends Hotspot>(
   map: MapLibreMap | null,
@@ -36,9 +34,11 @@ export function useSavedHotspots<S extends Hotspot>(
     shouldShowPins?: boolean;
     /** Whose dots are drawn zoomed out: these kinds' alone, or every hotspot's when not given. */
     dotKinds?: readonly HotspotKind[];
+    /** Whether a tap on a hotspot opens it (useHotspotTaps); the public map's take none for now. */
+    isTappable?: boolean;
   } = {},
 ) {
-  const { muted = false, hiddenHotspotId, shouldShowPins, dotKinds } = opts;
+  const { muted = false, hiddenHotspotId, shouldShowPins, dotKinds, isTappable } = opts;
   const [hotspots, setHotspots] = useState<S[]>([]);
   const [links, setLinks] = useState<HotspotLink[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -94,8 +94,7 @@ export function useSavedHotspots<S extends Hotspot>(
     }
   }, [load]);
 
-  // Once for each loader, however many times React runs the effect: twice
-  // as a page mounts in development (load-once.ts).
+  // Once for each loader, however often React runs the effect (load-once.ts).
   const loadedBy = useRef<typeof load | null>(null);
   useEffect(() => {
     loadOnce(loadedBy, load, () => void reload());
@@ -124,6 +123,7 @@ export function useSavedHotspots<S extends Hotspot>(
     map,
     { drawing: drawingRef, byId },
     { selectedId: setSelectedId, candidates: setCandidates },
+    isTappable,
   );
 
   const selected = hotspots.find((s) => s.id === selectedId) ?? null;

@@ -12,7 +12,8 @@
 // so that Back with no card open has somewhere to leave to: a trip opened on
 // its own closes on Back and the page stays; Back again leaves. A trip opened
 // from a place's card steps back to the card, the card closes on the next
-// Back, and the one after leaves. The same from the route list. A card closed
+// Back, and the one after leaves (in a build with VITE_HOTSPOT_TAPS, where a
+// box opens its card). The same from the route list. A card closed
 // by its own ✕ leaves no Back behind it. The address never changes.
 import { chromium } from 'playwright';
 import { readFileSync } from 'node:fs';
@@ -238,30 +239,38 @@ const back = async (page) => {
 }
 
 // ----------------------------------------------- 2. a trip opened from a place's card
+// The place's card is opened by a tap on its box, which a build without hotspot taps
+// (VITE_HOTSPOT_TAPS) does not take.
 {
   const { context, page, errors } = await phone([IKOT]);
-  await tapBox(page, PALMA);
-  await page.locator(PLACE).waitFor({ timeout: 15000 });
-  await raise(page, '[data-testid="card"]');
-  await page.locator('[data-testid="card-item"]').first().tap();
-  await page.locator(TRIP).waitFor({ timeout: 15000 });
+  if ((await page.locator('[data-hotspot-taps="on"]').count()) === 0) {
+    console.log(
+      "SKIP  Back on a trip opened from a place's card, then on the card: hotspot taps are off in this build (VITE_HOTSPOT_TAPS)",
+    );
+  } else {
+    await tapBox(page, PALMA);
+    await page.locator(PLACE).waitFor({ timeout: 15000 });
+    await raise(page, '[data-testid="card"]');
+    await page.locator('[data-testid="card-item"]').first().tap();
+    await page.locator(TRIP).waitFor({ timeout: 15000 });
 
-  await back(page);
-  await gone(page, TRIP);
-  check(
-    "Back on a trip opened from a place's card closes the trip",
-    (await shown(page, TRIP)) === 0,
-  );
-  check("  and the place's card is back", (await shown(page, PLACE)) === 1);
-  check('  on the map still', await onPara(page), page.url());
+    await back(page);
+    await gone(page, TRIP);
+    check(
+      "Back on a trip opened from a place's card closes the trip",
+      (await shown(page, TRIP)) === 0,
+    );
+    check("  and the place's card is back", (await shown(page, PLACE)) === 1);
+    check('  on the map still', await onPara(page), page.url());
 
-  await back(page);
-  await gone(page, PLACE);
-  check("Back again closes the place's card", (await shown(page, PLACE)) === 0);
-  check('  on the map still', await onPara(page), page.url());
+    await back(page);
+    await gone(page, PLACE);
+    check("Back again closes the place's card", (await shown(page, PLACE)) === 0);
+    check('  on the map still', await onPara(page), page.url());
 
-  await back(page);
-  check('and the next Back leaves the page', page.url() === 'about:blank', page.url());
+    await back(page);
+    check('and the next Back leaves the page', page.url() === 'about:blank', page.url());
+  }
   check('no page errors', errors.length === 0, errors.join('; '));
   await context.close();
 }

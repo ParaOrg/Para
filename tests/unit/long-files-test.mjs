@@ -10,6 +10,7 @@ import {
   longFilesOf,
   loweredBaseline,
   problemsOf,
+  renamesOf,
 } from '../../scripts/checks/long-files.mjs';
 
 test('lines are counted as an editor numbers them', () => {
@@ -40,6 +41,68 @@ test('on a pull request the baseline may only shrink', () => {
   assert.match(
     problemsOf({}, { 'old.ts': 200, 'sneak.ts': 300 }, previous)[0],
     /^sneak\.ts: added/,
+  );
+});
+
+test("git's renames are read from --name-status, and nothing else is", () => {
+  assert.deepEqual(
+    renamesOf(
+      [
+        'R100\tsrc/shared/ui/room.ts\tsrc/features/routes/map/room.ts',
+        'R087\tsrc/a.ts\tsrc/b/a.ts',
+        'M\tsrc/c.ts',
+        'A\tsrc/d.ts',
+        'D\tsrc/e.ts',
+        '',
+      ].join('\n'),
+    ),
+    { 'src/features/routes/map/room.ts': 'src/shared/ui/room.ts', 'src/b/a.ts': 'src/a.ts' },
+  );
+});
+
+test('a file git saw moved keeps its limit at its new path', () => {
+  const previous = { 'src/shared/ui/room.ts': 215 };
+  const renames = { 'src/features/routes/map/room.ts': 'src/shared/ui/room.ts' };
+  assert.deepEqual(
+    problemsOf({}, { 'src/features/routes/map/room.ts': 215 }, previous, renames),
+    [],
+  );
+  assert.deepEqual(
+    problemsOf({}, { 'src/features/routes/map/room.ts': 200 }, previous, renames),
+    [],
+  );
+});
+
+test('a move whose limit is raised fails', () => {
+  const previous = { 'src/shared/ui/room.ts': 215 };
+  const renames = { 'src/features/routes/map/room.ts': 'src/shared/ui/room.ts' };
+  assert.match(
+    problemsOf({}, { 'src/features/routes/map/room.ts': 216 }, previous, renames)[0],
+    /moved from src\/shared\/ui\/room\.ts and raised from 215 to 216/,
+  );
+});
+
+test('an entry git did not see moved is an addition, and fails', () => {
+  const previous = { 'src/shared/ui/room.ts': 215 };
+  // A new entry, with no rename at all.
+  assert.match(
+    problemsOf({}, { 'src/shared/ui/room.ts': 215, 'src/new.ts': 200 }, previous, {})[0],
+    /^src\/new\.ts: added/,
+  );
+  // One long file deleted and an unrelated one added under the same name: git reports no rename.
+  assert.match(
+    problemsOf({}, { 'src/features/routes/map/room.ts': 215 }, previous, {})[0],
+    /^src\/features\/routes\/map\/room\.ts: added/,
+  );
+  // A rename from a path whose entry is still in the baseline is not a move of that entry.
+  assert.match(
+    problemsOf(
+      {},
+      { 'src/shared/ui/room.ts': 215, 'src/features/routes/map/room.ts': 215 },
+      previous,
+      { 'src/features/routes/map/room.ts': 'src/shared/ui/room.ts' },
+    )[0],
+    /^src\/features\/routes\/map\/room\.ts: added/,
   );
 });
 
