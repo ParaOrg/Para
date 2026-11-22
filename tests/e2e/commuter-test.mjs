@@ -1956,7 +1956,13 @@ if (RUNS_ONE_OFFS) {
   await p.goto(`${BASE}/`, { waitUntil: 'load' });
   await waitForMap(p);
   await mapIdle(p);
-  await checkLocationLabels(p, { check, prefix: 'public map', waitForMap });
+  await checkLocationLabels(p, {
+    check,
+    prefix: 'public map',
+    waitForMap,
+    isOnByDefault: true,
+    key: 'para.location-labels.v2',
+  });
   await p.close();
 }
 

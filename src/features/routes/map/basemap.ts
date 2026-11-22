@@ -160,9 +160,6 @@ function satelliteStyle(style: StyleSpecification, imagery: Imagery): StyleSpeci
   };
 }
 
-/** A design MapLibre can take by its URL, with nothing to add. */
-const isPlain = (b: Basemap): boolean => !b.dressing && !b.imagery && !b.elevation;
-
 const DRESSINGS: Record<Dressing, (style: StyleSpecification) => StyleSpecification> = {
   monochrome: monochromeStyle,
   daylight: daylightStyle,
@@ -203,7 +200,6 @@ export async function initialStyle(
   b: Basemap,
   areLabelsShown: boolean,
 ): Promise<StyleSpecification | string> {
-  if (isPlain(b) && areLabelsShown) return b.url;
   try {
     const r = await fetch(b.url);
     if (!r.ok) return b.url;

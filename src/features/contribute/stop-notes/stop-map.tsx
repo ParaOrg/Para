@@ -56,6 +56,7 @@ export function StopMap({ trail, at }: StopMapProps) {
       hasMapStyleButton={false}
       foldCredits
       makeStyle={MAKE_STYLE}
+      labelsPlace="contribute"
       transformRequest={BASEMAP_REQUESTS}
     />
   );

@@ -19,6 +19,7 @@ import { openingFallback } from './basemap-failover';
 import { followHostDrawing } from './basemap-host-drawing';
 import { BASEMAP_THUMBNAILS } from './basemap-thumbnails';
 import { diagnose, type Diagnosis } from './diagnose';
+import { drawEstablishments } from './establishment-loader';
 import { exposeMap, exposeMapEarly } from './expose-map';
 import {
   OPENING_WAIT_MS,
@@ -405,6 +406,7 @@ export function MapView({
         credits.options.customAttribution = mapAttribution(host);
       });
       map.addControl(credits, coarse && !creditsAtBottom ? 'top-right' : 'bottom-right');
+      drawEstablishments(map);
       // What MapLibre itself does to them on the first drag.
       if (foldCredits)
         map

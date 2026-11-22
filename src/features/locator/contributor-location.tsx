@@ -189,7 +189,7 @@ export function ContributorLocation({
           isMapLoaded={isMapLoaded}
           basemaps={BASEMAPS}
           basemapThumbnails={BASEMAP_THUMBNAILS}
-          labelsPlace="map"
+          labelsPlace="contribute"
           docked={isDocked}
           dockCap="top"
           above={above}
