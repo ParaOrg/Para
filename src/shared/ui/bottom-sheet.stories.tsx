@@ -1,13 +1,14 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import type { ComponentProps } from 'react';
+import type { ComponentProps, ReactNode } from 'react';
 import { useState } from 'react';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
+import { IconButton } from '@/design-system/primitives/icon-button';
 import { cn } from '@/shared/utils/cn';
 
 import { BottomSheet } from './bottom-sheet';
+import { CloseIcon } from './route-icons';
 import type { Snap } from './sheet-gesture';
-import { SheetHeader } from './sheet-header';
 
 /** Sample rows only: enough of them to need the sheet's whole height. */
 const rows = (count: number) =>
@@ -46,11 +47,24 @@ function Keeping({ startsAt, ...props }: ComponentProps<typeof BottomSheet> & { 
   );
 }
 
+/**
+ * A card's header, what was tapped and ✕, with SheetHeader's own classes. It stands in for the
+ * studio's SheetHeader (studio/panels) because a shared story may not import a feature: keep it.
+ */
+function SampleHeader({ children }: { children: ReactNode }) {
+  return (
+    <div className="flex items-start justify-between gap-3 px-4">
+      <div className="min-w-0 flex-1">{children}</div>
+      <IconButton icon={<CloseIcon />} label="Close" tooltip="top" onClick={fn()} />
+    </div>
+  );
+}
+
 const header = (
-  <SheetHeader onClose={fn()}>
+  <SampleHeader>
     <h2 className="text-lg font-semibold text-content-primary">Tala Jeepney Terminal</h2>
     <p className="text-sm text-content-secondary">Tala</p>
-  </SheetHeader>
+  </SampleHeader>
 );
 
 const meta = {
@@ -286,11 +300,11 @@ export const LongHeader: Story = {
   args: {
     label: 'Fairview Teraccess Transport Terminal, Quirino Highway corner Regalado Avenue',
     header: (
-      <SheetHeader onClose={fn()}>
+      <SampleHeader>
         <h2 className="text-lg font-semibold text-content-primary">
           Fairview Teraccess Transport Terminal, Quirino Highway corner Regalado Avenue
         </h2>
-      </SheetHeader>
+      </SampleHeader>
     ),
   },
 };
