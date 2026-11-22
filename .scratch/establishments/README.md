@@ -239,8 +239,8 @@ The build, one pull request each, into staging:
 | --- | --- | --- |
 | E1 | The basemap's own places drawn as establishments (`src/features/routes/map/establishment*.ts`), Location Labels on by default on the public map, the contributor page keeping its own choice | Merged (#1142) |
 | E2 | Landmarks and footbridges from the Geofabrik Philippines extract, covering the whole panning box | Merged (#1138; the files in #1140) |
-| E3 | E3a: the establishment files from OpenStreetMap, `public/data/establishments/v1/`, an index and a file per 0.05° cell (the hub's call: one file would be 4–5 MB). E3b: a layer for pawnshops, remittance and bayad centers, which the basemap's tiles lack. E3c: Overture as a layer of its own. E3d: search, once search is shown | E3a in review |
-| E4 | Editors' corrections (hide, rename, move) in a Supabase table, applied by the nightly publish | Planned |
+| E3 | E3a: the establishment files from OpenStreetMap, `public/data/establishments/v1/`, an index and a file per 0.05° cell (the hub's call: one file would be 4–5 MB). E3b: a layer for pawnshops, remittance and bayad centers, which the basemap's tiles lack. E3c: Overture as a layer of its own. E3d: search, once search is shown | E3a merged (#1143, data #1148); E3b in review (#1152) |
+| E4 | Editors' corrections (hide, rename, move) in a Supabase table, applied by the nightly publish | Planned: [e4-plan.md](e4-plan.md), waiting on the owner's answers |
 
 E1's markers, for the owner's Figma: eight families as tokens (`--map-establishment-<family>-surface` in `tokens.css`), glyphs from Maki 8.2.0 and Temaki 5.13.0 (both CC0, vendored with their licences in `establishment-icons/`), a legend in Storybook (Features/Routes/EstablishmentMarkers). The basemap's tiles have no class for pawnshops, remittance centres or bayad centers, so those wait for E3.
 
