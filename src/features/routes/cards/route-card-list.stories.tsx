@@ -360,6 +360,30 @@ export const SheetLow: Story = {
   },
 };
 
+/** At Low, on the public map, a tap on a card opens its trip straight away: the sheet stays. */
+export const SheetLowACardOpens: Story = {
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getAllByTestId('chooser-select')[0]);
+    await expect(args.onRoute).toHaveBeenCalledTimes(1);
+    await expect(canvas.getByTestId('chooser')).toHaveAttribute('data-snap', 'low');
+  },
+};
+
+/** At Low, in the studio, a tap on a card raises the sheet a third, as the handle does: no pick. */
+export const SheetLowInTheStudioRaises: Story = {
+  args: { hasController: true, selection: { selected: null, onSelect: fn() } },
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getAllByTestId('chooser-select')[0]);
+    await waitFor(() =>
+      expect(canvas.getByTestId('chooser')).not.toHaveAttribute('data-snap', 'low'),
+    );
+    await expect(args.selection?.onSelect).not.toHaveBeenCalled();
+    await expect(args.onRoute).not.toHaveBeenCalled();
+  },
+};
+
 /** A filter with nothing to show under this tap: it says so, with a way back to All. */
 export const FilterWithNoMatch: Story = {
   // Raised: at Low a tap on the body raises the sheet, and Show all routes is in the body.

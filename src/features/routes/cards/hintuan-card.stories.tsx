@@ -164,8 +164,9 @@ const meta = {
   ],
   parameters: { layout: 'fullscreen' },
   args: {
-    // Raised, as a commuter has them before tapping a row: at Low a tap on the body raises the
-    // sheet and reaches nothing under it. The stories about the sheet's heights keep their own.
+    // Raised, as a commuter has them before tapping a row: at Low a tap on the boxes or the room
+    // around them raises the sheet, though a RouteCard opens its trip there. The stories about the
+    // sheet's heights keep their own.
     height: { snap: 0.55, onSnap: fn() },
     hotspot: terminal,
     hotspots,

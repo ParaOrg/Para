@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { expect, fn, userEvent, within } from 'storybook/test';
+import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
 import { RouteCard } from './route-card';
 import type { RouteCardEndPoint, RouteCardRide } from './route-card-ride';
@@ -162,22 +162,22 @@ export const Ferry: Story = {
 };
 
 /** The studio's (its editors keep Selected): a card Selected, or let go, by a tap off its rows. */
-const studio = () => ({ onSelect: fn() });
+const studio = (state: 'rest' | 'selected') => ({ selection: { state, onSelect: fn() } });
 
 /**
  * In the studio, Selected: pressed in under Route/RouteCardPrimarySelected; nothing else changes.
  * On the public map a card wears it only while a finger is down on it.
  */
-export const Selected: Story = { args: { ...studio(), state: 'selected' } };
+export const Selected: Story = { args: { ...studio('selected') } };
 
 /** Selected, on a light card: pressed in under Route/RouteCardInverseSelected. */
 export const UvExpressSelected: Story = {
-  args: { ...UvExpress.args, ...studio(), state: 'selected' },
+  args: { ...UvExpress.args, ...studio('selected') },
 };
 
 /** Selected, a train: as Jeep. */
 export const LightRailWayOneSelected: Story = {
-  args: { ...LightRailWayOne.args, ...studio(), state: 'selected' },
+  args: { ...LightRailWayOne.args, ...studio('selected') },
 };
 
 /** Every destination is listed, however many: the card grows, and nothing is cut to "+N more". */
@@ -270,15 +270,32 @@ export const ARowOpens: Story = {
   },
 };
 
+/**
+ * Pressed, on the public map: while a finger is down on the card off its rows, it is pressed in
+ * under the Selected shadow (`data-pressed`); let go, it rests again. It is never Selected.
+ */
+export const Pressed: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const card = canvas.getByTestId('chooser-origin');
+    const target = canvas.getByTestId('chooser-select');
+    target.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+    await waitFor(() => expect(card).toHaveAttribute('data-pressed', 'true'));
+    await expect(card).toHaveAttribute('data-state', 'rest');
+    target.dispatchEvent(new PointerEvent('pointerup', { bubbles: true }));
+    await waitFor(() => expect(card).not.toHaveAttribute('data-pressed'));
+  },
+};
+
 /** In the studio, Selected, a row still opens its direction; a tap on the card lets it go. */
 export const SelectedRowsOpen: Story = {
-  args: { ...studio(), state: 'selected' },
+  args: studio('selected'),
   play: async ({ args, canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.click(canvas.getByText('Novaliches'));
     await expect(args.onPick).toHaveBeenCalledWith('1');
     await userEvent.click(canvas.getByRole('button', { name: 'Tala', pressed: true }));
-    await expect(args.onSelect).toHaveBeenCalledTimes(1);
+    await expect(args.selection?.onSelect).toHaveBeenCalledTimes(1);
   },
 };
 

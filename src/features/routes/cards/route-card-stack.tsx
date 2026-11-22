@@ -54,8 +54,8 @@ function endCodeOf(v: Direction): string | null {
  * place they leave from and mode, run by mode (routeCards), and per train line and bound or the
  * ferry, each in its livery — its first row's mode's, or a train's or the ferry's line's own
  * (liveryOf) — with a row per drawn direction. Every card shows its mode, the cards after one of
- * the same mode too. A row opens its trip; a tap elsewhere on a card opens its first row's (the
- * owner, 2026-11-22). With `selection` (the studio's), that tap selects the card instead, one at a
+ * the same mode too. A row opens its trip; a tap elsewhere on a card opens its first row's. With
+ * `selection` (the studio's), that tap selects the card instead, one at a
  * time, and the map lights its directions alone; a row still opens its trip and picks none. The route
  * list stacks them over its Controller; the public map's HintuanCard under its place's boxes, the
  * routes stopping at the Selected one; the studio's hotspot card under "Routes that pass through",
@@ -114,7 +114,6 @@ export function RouteCardStack({
                   vehicle: p.vehicle && !isRailwayVehicle(p.vehicle) ? p.vehicle : null,
                 }
           }
-          state={selection?.selected === p.card ? 'selected' : 'rest'}
           routeOrigin={p.from}
           endPoints={p.directions.map((d) => ({
             id: d.v.id,
@@ -122,7 +121,12 @@ export function RouteCardStack({
             via: d.via,
             stationCode: endCodeOf(d.v),
           }))}
-          onSelect={selection && (() => pick(p, selection))}
+          selection={
+            selection && {
+              state: selection.selected === p.card ? 'selected' : 'rest',
+              onSelect: () => pick(p, selection),
+            }
+          }
           onPick={(id) => open(id, p.livery)}
         />
       ))}

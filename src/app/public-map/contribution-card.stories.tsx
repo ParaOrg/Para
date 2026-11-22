@@ -33,7 +33,6 @@ function AfterRouteCard({ livery, origin }: { livery: Livery; origin: string }) 
     <div className="w-97.5">
       <RouteCard
         ride={ride}
-        state="rest"
         routeOrigin={origin}
         endPoints={[
           {
@@ -43,7 +42,6 @@ function AfterRouteCard({ livery, origin }: { livery: Livery; origin: string }) 
             stationCode: null,
           },
         ]}
-        onSelect={() => undefined}
         onPick={() => undefined}
         testId="chooser"
       />
