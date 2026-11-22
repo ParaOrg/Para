@@ -1,6 +1,6 @@
 # Establishments on the map: a feasibility study
 
-Status: study only, 2026-11-22. No app code changed. For the owner's decision; nothing here is built.
+Status: study done 2026-11-22; the owner answered the same day, and the build has started (Answers and the build, below).
 
 The owner wants the map to feel richer, closer to Google Maps: ATMs, banks, shops, restaurants, pharmacies, convenience stores and the like, and search for them later. This study asks where such places could come from legally, how good they are in Metro Manila, how heavy they would be, and how Para could carry them without breaking its rules: commuters read only files Para publishes (ADR 0001), nothing leaves the phone (ADR 0004), and Para serves its own basemap (ADR 0007).
 
@@ -218,6 +218,31 @@ Trade-offs in one line: OSM is clean, legally simple and compact, but thinner on
 5. **Corrections: how fast?** Monthly, with the extract, or nightly, with the publish? Nightly means the publish workflow learns to rebuild the establishments file too.
 6. **Fix on OpenStreetMap?** Will Para's editors also fix wrong places on OpenStreetMap itself, under an OSM account of Para's or their own? That is the durable fix and needs a short how-to.
 7. **The landmark file's area gap.** Move both files to the Geofabrik Philippines extract, built in Actions, so the provinces inside the panning box are covered? This is a separate small change.
+
+## Answers and the build (2026-11-22)
+
+The owner's answers, through the hub:
+
+1. Categories: the study's, plus pawnshops and remittance centres (Palawan, Cebuana, bayad centers), laundry, sari-sari stores, public toilets and police.
+2. Drawing first.
+3. Location Labels on by default on the public map, and establishments follow it.
+4. Overture yes, as its own layer, never merged into the ODbL file, with its licence and NOTICE texts shipped.
+5. Corrections apply nightly, with the map publish.
+6. No editing on OpenStreetMap for now.
+7. Move to the Geofabrik Philippines extract, built in Actions.
+
+Design direction for the markers: Apple Maps' pattern, not its assets. Round markers in a colour per family with a white glyph, the marker alone first and its name beside it a zoom closer, collisions thinning them, the big places before the small shops.
+
+The build, one pull request each, into staging:
+
+| Step | What | Status |
+| --- | --- | --- |
+| E1 | The basemap's own places drawn as establishments (`src/features/routes/map/establishment*.ts`), Location Labels on by default on the public map, the contributor page keeping its own choice | In review |
+| E2 | Landmarks and footbridges from the Geofabrik Philippines extract, covering the whole panning box | Planned |
+| E3 | `establishments.v1.json` from OpenStreetMap; a layer for pawnshops, remittance and bayad centers, which the basemap's tiles lack; Overture as a layer of its own; search, once search is shown | Planned |
+| E4 | Editors' corrections (hide, rename, move) in a Supabase table, applied by the nightly publish | Planned |
+
+E1's markers, for the owner's Figma: eight families as tokens (`--map-establishment-<family>-surface` in `tokens.css`), glyphs from Maki 8.2.0 and Temaki 5.13.0 (both CC0, vendored with their licences in `establishment-icons/`), a legend in Storybook (Features/Routes/EstablishmentMarkers). The basemap's tiles have no class for pawnshops, remittance centres or bayad centers, so those wait for E3.
 
 ## How it was measured
 

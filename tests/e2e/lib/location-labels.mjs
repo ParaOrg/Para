@@ -1,7 +1,8 @@
 // The Map Style card's Location Labels switch, driven the same way on the public map
-// (commuter-test) and the contributor page (contribute-test): off by default, the basemap's
-// labels hidden and ours kept; on, they show; the choice survives a basemap switch and a reload.
-// A basemap label is a symbol layer from a source that is not GeoJSON (location-labels.ts).
+// (commuter-test) and the contributor page (contribute-test): each page's default (on for the
+// public map, off for the contributor page), the basemap's labels hidden and ours kept when off;
+// on, they show with the establishments over them; the choice survives a basemap switch and a
+// reload. A basemap label is a symbol layer from a source that is not GeoJSON (location-labels.ts).
 
 /**
  * Labels as the map has them now: the basemap's, those of them shown, ours shown, and the
@@ -13,10 +14,13 @@ export const labelsNow = (page) =>
     const style = window.__map.getStyle();
     const isOurs = (l) => style.sources[l.source]?.type === 'geojson';
     const isShown = (l) => l.layout?.visibility !== 'none';
-    const isStation = (l) => l['source-layer'] === 'poi' && l.layout?.['icon-image'] !== undefined;
+    const isEstablishment = (l) => l.id.startsWith('establishments-');
+    const isStation = (l) =>
+      l['source-layer'] === 'poi' && l.layout?.['icon-image'] !== undefined && !isEstablishment(l);
     const symbols = style.layers.filter((l) => l.type === 'symbol');
-    const basemap = symbols.filter((l) => !isOurs(l) && !isStation(l));
+    const basemap = symbols.filter((l) => !isOurs(l) && !isStation(l) && !isEstablishment(l));
     return {
+      establishments: symbols.filter(isEstablishment).map((l) => l.id),
       ids: style.layers.map((l) => l.id).join(','),
       basemap: basemap.map((l) => l.id),
       basemapShown: basemap.filter(isShown).map((l) => l.id),
@@ -64,35 +68,67 @@ const pick = async (page, label) => {
 const sameIds = (a, b) => [...a].sort().join() === [...b].sort().join();
 
 /**
- * Off, on, a basemap switch, a reload, off again and another switch, each read off the map.
- * `prefix` starts each check's name; `waitForMap` waits for a reloaded page's map.
+ * The page's default, then off and on, a basemap switch, a reload, off again and another switch,
+ * each read off the map. `prefix` starts each check's name; `waitForMap` waits for a reloaded
+ * page's map; `isOnByDefault` and `key` are the page's own (location-labels.ts).
  */
-export async function checkLocationLabels(page, { check, prefix, waitForMap }) {
-  const atFirst = await labelsWhen(page, (now) => now.basemap.length > 0);
+export async function checkLocationLabels(
+  page,
+  { check, prefix, waitForMap, isOnByDefault = false, key = 'para.location-labels.v1' },
+) {
+  const stored = () => page.evaluate((k) => localStorage.getItem(k), key);
+  // What the phone keeps for each state: nothing for the default, the choice away from it.
+  const keptOn = isOnByDefault ? null : 'shown';
+  const keptOff = isOnByDefault ? 'hidden' : null;
+  const atFirst = await labelsWhen(page, (now) =>
+    isOnByDefault ? now.establishments.length > 0 : now.basemap.length > 0,
+  );
   await openCard(page);
   check(
-    `${prefix}: Location Labels is off by default, and the basemap's labels are hidden`,
-    (await labelsSwitch(page).getAttribute('aria-checked')) === 'false' &&
+    `${prefix}: Location Labels is ${isOnByDefault ? 'on' : 'off'} by default, and the basemap's labels ${isOnByDefault ? 'show, with the establishments' : 'are hidden'}`,
+    (await labelsSwitch(page).getAttribute('aria-checked')) === String(isOnByDefault) &&
       atFirst.basemap.length > 0 &&
-      atFirst.basemapShown.length === 0,
-    `${atFirst.basemapShown.length} of ${atFirst.basemap.length} shown`,
+      (isOnByDefault
+        ? atFirst.basemapShown.length > 0 && atFirst.establishments.length === 3
+        : atFirst.basemapShown.length === 0 && atFirst.establishments.length === 0) &&
+      (await stored()) === null,
+    `${atFirst.basemapShown.length} of ${atFirst.basemap.length} shown; establishments ${atFirst.establishments.join(', ') || 'none'}`,
   );
+  if (isOnByDefault) {
+    await labelsSwitch(page).click();
+    const offFirst = await labelsWhen(page, (now) => now.basemapShown.length === 0);
+    check(
+      `${prefix}: off, the basemap's labels and the establishments go; ours stay, and the choice is kept`,
+      offFirst.basemapShown.length === 0 &&
+        offFirst.establishments.length === 0 &&
+        sameIds(offFirst.ours, atFirst.ours) &&
+        (await stored()) === keptOff,
+      `${offFirst.basemapShown.length} shown; ours ${offFirst.ours.join(', ') || 'none'}`,
+    );
+  }
 
   await labelsSwitch(page).click();
-  const shown = await labelsWhen(page, (now) => now.basemapShown.length > 0);
+  const shown = await labelsWhen(
+    page,
+    (now) => now.basemapShown.length > 0 && now.establishments.length > 0,
+  );
   check(
-    `${prefix}: on, they show; ours stay as they were, and the choice is kept on the phone`,
+    `${prefix}: on, they show with the establishments; ours stay as they were, and the choice is kept on the phone`,
     (await labelsSwitch(page).getAttribute('aria-checked')) === 'true' &&
       shown.basemapShown.length > 0 &&
+      shown.establishments.length === 3 &&
       sameIds(shown.ours, atFirst.ours) &&
-      (await page.evaluate(() => localStorage.getItem('para.location-labels.v1'))) === 'shown',
+      (await stored()) === keptOn,
     `${shown.basemapShown.length} of ${shown.basemap.length} shown; ours ${shown.ours.join(', ') || 'none'}`,
   );
 
-  const colour = await pick(page, 'Coloured');
+  await pick(page, 'Coloured');
+  const colour = await labelsWhen(page, (now) => now.establishments.length > 0);
   check(
-    `${prefix}: a switch to Coloured keeps them shown`,
-    colour.basemapShown.length > 0 && sameIds(colour.ours, atFirst.ours),
+    `${prefix}: a switch to Coloured keeps them shown, with the establishments`,
+    colour.basemapShown.length > 0 &&
+      colour.establishments.length === 3 &&
+      sameIds(colour.ours, atFirst.ours),
     `${colour.basemapShown.length} of ${colour.basemap.length} shown`,
   );
 
@@ -126,8 +162,9 @@ export async function checkLocationLabels(page, { check, prefix, waitForMap }) {
     off.basemapShown.length === 0 &&
       fiordHidden.basemap.length > 0 &&
       fiordHidden.basemapShown.length === 0 &&
+      fiordHidden.establishments.length === 0 &&
       sameIds(fiordHidden.ours, atFirst.ours) &&
-      (await page.evaluate(() => localStorage.getItem('para.location-labels.v1'))) === null,
+      (await stored()) === keptOff,
     `${dark.basemapShown.length} of ${dark.basemap.length} shown on Dark`,
   );
 
