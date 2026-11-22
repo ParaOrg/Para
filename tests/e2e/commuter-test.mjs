@@ -224,12 +224,27 @@ page.on('response', (res) => {
 
 // Every card closed: a place's card by its ✕, a trip and the route list, which have none (the
 // owner, 2026-11-21), by Escape, a trip back to what it was opened from and the list closed.
+// Each step waits for what is open to change, not for the clock: a close can leave as many
+// layers open as before (a trip closes back onto its place's card), so it is what is open that
+// is compared, not how many.
+const OPEN_LAYERS = '[data-testid="card"]:not([hidden]), [data-testid="chooser"]:not([hidden])';
+const openLayers = () =>
+  page.evaluate(
+    (q) =>
+      [...document.querySelectorAll(q)]
+        .map(
+          (e) =>
+            `${e.dataset.testid}:${['trip', 'card-place']
+              .filter((id) => e.querySelector(`[data-testid="${id}"]`))
+              .join('+')}`,
+        )
+        .join(','),
+    OPEN_LAYERS,
+  );
 const closeCard = async () => {
   for (let i = 0; i < 4; i++) {
-    const open = page.locator(
-      '[data-testid="card"]:not([hidden]), [data-testid="chooser"]:not([hidden])',
-    );
-    if ((await open.count()) === 0) return;
+    const was = await openLayers();
+    if (was === '') return;
     const close = page
       .locator('[data-testid="card"]:not([hidden])')
       .getByRole('button', { name: 'Close' });
@@ -239,7 +254,9 @@ const closeCard = async () => {
         .click()
         .catch(() => {});
     else await page.keyboard.press('Escape');
-    await page.waitForTimeout(350);
+    // A close that changes nothing is tried again, as many times as before; the check after the
+    // close reads what stayed open.
+    await until(openLayers, (now) => now !== was, 3000);
   }
 };
 // A trip left as the commuter leaves it: the empty map tapped, back to what it was opened from.
