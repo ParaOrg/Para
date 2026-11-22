@@ -1,0 +1,11 @@
+{
+  "schema": 1,
+  "cell": "2421-281",
+  "attribution": "© OpenStreetMap contributors",
+  "establishments": [
+    ["n12486230749","convenience",121.0728,14.08418,"Dali"],
+    ["n12486230750","convenience",121.07224,14.0843,"Alfamart"],
+    ["w844436761","restaurant",121.07289,14.05945,"Tagpuan Lomi Haus"],
+    ["w1455691387","restaurant",121.07158,14.07661,"The Longtable"]
+  ]
+}

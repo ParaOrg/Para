@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# Rebuilds the landmark file place search reads, public/data/landmarks.v1.json, and the
-# footbridge file the map draws, public/data/footbridges.v1.json, from OpenStreetMap
+# Rebuilds the landmark file place search reads, public/data/landmarks.v1.json, the
+# footbridge file the map draws, public/data/footbridges.v1.json, and the establishment files,
+# public/data/establishments/v1/ (.scratch/establishments, step E3a), from OpenStreetMap
 # (.scratch/place-search/README.md, step 2; .scratch/footbridges, ticket 01). Run it by hand or
 # from the monthly workflow, then commit the files as a normal pull request. Commuters never reach
 # OpenStreetMap: this runs once, here, and the app reads the committed files.
@@ -77,3 +78,15 @@ osmium export --overwrite "$work/footbridges.osm.pbf" -f geojsonseq --add-unique
 node "$root/scripts/footbridges/footbridges.mjs" "$work/footbridges.geojsonseq" "$extract_at" \
   "$root/public/data/footbridges.v1.json"
 node "$root/scripts/footbridges/check.mjs" "$root/public/data/footbridges.v1.json"
+
+# The establishments from the same download (.scratch/establishments, step E3a): the shops,
+# banks, ATMs, eateries and the like, an index and a file per area cell (establishments.mjs).
+osmium tags-filter --overwrite "$extract" \
+  $(node --experimental-strip-types "$root/scripts/establishments/establishments.mjs" --filters) \
+  -o "$work/establishments.osm.pbf"
+osmium export --overwrite "$work/establishments.osm.pbf" -f geojsonseq --add-unique-id=type_id \
+  -o "$work/establishments.geojsonseq"
+node --experimental-strip-types "$root/scripts/establishments/establishments.mjs" \
+  "$work/establishments.geojsonseq" "$extract_at" "$root/public/data/establishments/v1"
+node --experimental-strip-types "$root/scripts/establishments/check.mjs" \
+  "$root/public/data/establishments/v1"

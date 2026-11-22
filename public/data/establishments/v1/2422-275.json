@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "cell": "2422-275",
+  "attribution": "© OpenStreetMap contributors",
+  "establishments": [
+    ["n9925962620","convenience",121.10185,13.77788,"Poseidon san pedro mpc"],
+    ["n9925963320","convenience",121.12742,13.76093,"Shirley store"],
+    ["n9925963519","convenience",121.10226,13.77785,"Mpc"],
+    ["n10948930210","convenience",121.1206,13.76311,"C"],
+    ["n11072550773","convenience",121.11798,13.75472,"Shanon General Merchandise"],
+    ["w454199058","convenience",121.14484,13.75114,"Grandeur Printing and General Merchandise"],
+    ["n8771135064","restaurant",121.12487,13.75415,"Mother Lily's"],
+    ["w947590370","fuel",121.14595,13.75088],
+    ["w947590374","police",121.14117,13.75237,"Solid East Police Assistance Center"]
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "schema": 1,
+  "cell": "2417-277",
+  "attribution": "© OpenStreetMap contributors",
+  "establishments": [
+    ["n8810209717","convenience",120.89636,13.8999,"0300336 MA. SOLEDAD AQUINO STORE"],
+    ["n8810213017","convenience",120.89175,13.89725,"0149810 DENNIS & BABY"],
+    ["n8810219917","convenience",120.89289,13.89583,"0149824 DELA CRUZ"],
+    ["n8810234217","convenience",120.89178,13.89669,"0149776 BELEN STORE"],
+    ["n8810234717","convenience",120.8918,13.89676,"0149813 ICE ICE BABY"],
+    ["n8810239517","convenience",120.89143,13.89701,"0149812 FRANZ & YUNA"],
+    ["n8810275117","convenience",120.88982,13.89749,"0149818 MARITESS"],
+    ["n8810282617","convenience",120.88945,13.89793,"0300330 CELESTE STORE"],
+    ["n8810282618","convenience",120.88893,13.89817,"0149823 BETH STORE"],
+    ["n8810303417","convenience",120.8881,13.89885,"0149811 EUFAR MINIMART"],
+    ["n8810343617","convenience",120.88653,13.8999,"0149822 LORIE"],
+    ["n8810367117","convenience",120.8876,13.89931,"0191839 ZY & FIA"],
+    ["n8843580522","convenience",120.88974,13.89754,"0149818 MARITESS"]
+  ]
+}

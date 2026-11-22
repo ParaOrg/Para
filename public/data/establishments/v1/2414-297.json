@@ -1,0 +1,28 @@
+{
+  "schema": 1,
+  "cell": "2414-297",
+  "attribution": "© OpenStreetMap contributors",
+  "establishments": [
+    ["w480569570","bank",120.70512,14.89203,"China Bank"],
+    ["n1276063266","convenience",120.70393,14.88994,"MM Grocery"],
+    ["n1277200158","convenience",120.7046,14.88907,"CPN Grocery"],
+    ["n9901067617","convenience",120.74223,14.86359,"4ACES"],
+    ["n10122682232","convenience",120.73897,14.86854,"JOAN AND ERIC"],
+    ["n13329556601","convenience",120.71998,14.89545,"Alfamart"],
+    ["n13366235501","convenience",120.72001,14.89547,"Alfamart"],
+    ["w125434718","convenience",120.74154,14.866,"Big Value"],
+    ["w481724328","convenience",120.70405,14.89085,"7-Eleven"],
+    ["w1343433767","convenience",120.73469,14.88311,"Alfamart"],
+    ["w1343435203","convenience",120.73232,14.89462,"Alfamart"],
+    ["n1276067721","supermarket",120.70489,14.89139,"Puregold"],
+    ["n1276075014","supermarket",120.70339,14.89012,"Maribel Supermarket"],
+    ["n13332399301","supermarket",120.72088,14.89548,"O!Save Supermarket"],
+    ["n255061508","fuel",120.71456,14.86529,"Petron"],
+    ["n1275998761","fuel",120.71134,14.89954],
+    ["n4476766691","fuel",120.70231,14.891,null,{"brand":"Petron"}],
+    ["n12540889147","fuel",120.71006,14.88062,"Echo Fuels"],
+    ["n12540889150","fuel",120.70797,14.87762,"R One Fuel"],
+    ["n13366235801","fuel",120.71571,14.89909],
+    ["w1453488857","fuel",120.70826,14.87954]
+  ]
+}

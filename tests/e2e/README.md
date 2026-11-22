@@ -120,10 +120,9 @@ re-record (the script above, with the dev server up), then look again.
     node tests/e2e/retire-pwa-test.mjs        # 12: the production site retires an installed map, against the build on :4173 and a site in front of it on :4175 answered by the site Worker's code — the map's worker and its stores go, its tab reloads onto Coming soon, the contributor page's worker and store and an open editor tab are left alone
 
 **On GitHub** (`.github/workflows/ci.yml`), every suite is its own job and they
-run at once, so a run takes as long as the slowest. commuter-test, the slowest by
-far, runs as three jobs, `COMMUTER_PART=1/3`, `2/3` and `3/3`: each opens the map
-and runs the checks that cost little, and takes a third of the hotspots. Unset,
-it runs whole, as on your machine. The studio's save flows are three suites, save-test,
+run at once, so a run takes as long as the slowest. commuter-test runs as two
+jobs, `COMMUTER_PART=1/2` and `2/2`: each opens the map and runs the checks that
+cost little, and takes half the hotspots. Unset, it runs whole, as on your machine. The studio's save flows are three suites, save-test,
 save-ikot-test and save-edit-test, a job each: each opens its own page on the stand-in
 in `lib/save-studio.mjs` and draws its own ground. A pull request runs only what
 its files can reach: docs alone run nothing; `docs/architecture.md`, `tests/unit/` and the scripts only the
@@ -135,7 +134,8 @@ studio's, `src/app/contribute/` or `src/features/contribute/` alone runs the bui
 contributor page's suites only, anything shared runs both. A pull request into a branch that
 has a merge queue (`docs/agents/staging-protection.md`) runs the build and unit jobs alone, whatever its
 files: the queue runs every suite on the commit the merge would make. pwa-test, handover-test,
-retire-pwa-test and contribute-offline-test run on preview builds the build job makes once. The drawing suites
+retire-pwa-test and contribute-offline-test run in one job, "The built app", on
+the preview builds it makes first. The drawing suites
 (group, regression-gestures, hotspot, snap, extend, studio-phone) are not run on pull requests.
 They run on every push to `main` or `staging`, nightly and on "Run workflow", one at a time
 with one retry after a minute for the shared router. The pull request's two checks keep their

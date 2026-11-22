@@ -65,19 +65,14 @@ import './end-titles.css';
  * taps, and a tap on it reaches the line or the box beneath; the circle never
  * takes one, as the picked hintuan's does not.
  *
- * Given `onTrip`, a Tail Route that one lit ride alone goes to opens that
- * ride's trip instead (the owner's call): its TimelineRouteDetailCard, its
- * line lit, as the card's row of the same arrow does. Where two rides go, the
- * place's own card lists both, so the tap opens that. TODO: how a focused or
- * pressed pill looks is the owner's to design; until then it is the browser's
- * own focus ring.
+ * TODO: how a focused or pressed pill looks is the owner's to design; until
+ * then it is the browser's own focus ring.
  */
 export function EndTitles({
   map,
   rides,
   livery = null,
   onPick,
-  onTrip,
 }: {
   map: MapLibreMap;
   rides: readonly Ride[];
@@ -87,8 +82,6 @@ export function EndTitles({
    */
   livery?: Livery | null;
   onPick?: (hotspotId: string) => void;
-  /** A direction's trip to open, from the one ride a tail names. */
-  onTrip?: (directionId: string) => void;
 }) {
   // A train's ends are stations: each named with its sign code, GL02, as
   // Figma's CodeSign draws it (4073:7215); null for a jeepney's, the ferry's,
@@ -99,32 +92,27 @@ export function EndTitles({
   };
   return (
     <>
-      {rideEnds(rides).map(
-        ({ end, name, named, at, hotspotId, rides: here, of, paled, isMarked, mark }) => {
-          const trip = onTrip && end === 'to' && here.length === 1 ? here[0] : null;
-          const handlePlacePick = onPick && hotspotId ? () => onPick(hotspotId) : undefined;
-          const handlePick = trip ? () => onTrip?.(trip) : handlePlacePick;
-          return (
-            <EndTitle
-              // The ride's own end: two rides can end at one point under one name (a route's two ways round).
-              key={`${of ?? name}:${end}@${at.join(',')}`}
-              map={map}
-              at={at}
-              name={name}
-              named={named}
-              head={end === 'from'}
-              // An end the ride picked on its trip doesn't reach, or a trip whose start stands alone: the S or E is on a pick's pin.
-              marked={isMarked}
-              mark={mark}
-              livery={livery}
-              codeSign={codeAt(of, name)}
-              paled={paled}
-              opens={trip ? 'trip' : 'place'}
-              onPick={handlePick}
-            />
-          );
-        },
-      )}
+      {rideEnds(rides).map(({ end, name, named, at, hotspotId, of, paled, isMarked, mark }) => {
+        const handlePick = onPick && hotspotId ? () => onPick(hotspotId) : undefined;
+        return (
+          <EndTitle
+            // The ride's own end: two rides can end at one point under one name (a route's two ways round).
+            key={`${of ?? name}:${end}@${at.join(',')}`}
+            map={map}
+            at={at}
+            name={name}
+            named={named}
+            head={end === 'from'}
+            // An end the ride picked on its trip doesn't reach, or a trip whose start stands alone: the S or E is on a pick's pin.
+            marked={isMarked}
+            mark={mark}
+            livery={livery}
+            codeSign={codeAt(of, name)}
+            paled={paled}
+            onPick={handlePick}
+          />
+        );
+      })}
     </>
   );
 }
@@ -140,12 +128,6 @@ const SPOKEN = {
   unselected: '',
 } satisfies Record<RouteLineEndingsLabelVariant, string>;
 
-/** What a pill's button says a tap opens. */
-const OPENS = {
-  trip: 'the trip there',
-  place: 'the routes there',
-} satisfies Record<'trip' | 'place', string>;
-
 /** The selected blue's ring, Map/RouteLine/surface-selected, with no card's colour on. */
 const LIT_RAIL = 'bg-map-route-line-surface-selected';
 
@@ -160,7 +142,6 @@ function EndTitle({
   livery,
   codeSign,
   paled,
-  opens,
   onPick,
 }: {
   map: MapLibreMap;
@@ -179,8 +160,6 @@ function EndTitle({
   codeSign: string | null;
   /** Outside the ride: the circle ringed in the card's pale, the pill at 60%. */
   paled: boolean;
-  /** What a tap opens: the ride's trip, or the place's card. */
-  opens: 'trip' | 'place';
   onPick?: () => void;
 }) {
   const el = useMarkerElement(named ? 'end-title' : 'end-circle', 'end-title');
@@ -190,7 +169,7 @@ function EndTitle({
   // Said on the marker for the suites: which end, of which name, where, and
   // what it wears. The name can pass to another ride's end (rideEnds names
   // the first to reach a place), so the test id follows.
-  const opensWhat = onPick ? opens : '';
+  const opensWhat = onPick ? 'place' : '';
   useEffect(() => {
     el.setAttribute('data-testid', named ? 'end-title' : 'end-circle');
     el.setAttribute('data-name', name);
@@ -215,7 +194,7 @@ function EndTitle({
             ? {
                 type: 'button' as const,
                 // The code is only on the map: the button says it too.
-                'aria-label': `${SPOKEN[variant]}${codeSign && marked ? `${codeSign} ` : ''}${name}: ${OPENS[opens]}`,
+                'aria-label': `${SPOKEN[variant]}${codeSign && marked ? `${codeSign} ` : ''}${name}: the routes there`,
               }
             : {})}
           className="flex max-w-64 flex-col items-center"

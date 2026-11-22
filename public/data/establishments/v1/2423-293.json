@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "cell": "2423-293",
+  "attribution": "© OpenStreetMap contributors",
+  "establishments": [
+    ["n10065645117","bank",121.1674,14.65585,"sandugo camp"],
+    ["n3202503892","convenience",121.15431,14.6576,"Sari Sari"],
+    ["n11089034112","convenience",121.1515,14.65816,"Alfamart"],
+    ["w329670140","convenience",121.15874,14.69642,"Sari Sari"],
+    ["n3906795896","fast_food",121.17706,14.66772,"Ka Vergel's Trail Stop"],
+    ["n11089034305","laundry",121.15013,14.6584,"J's Laundry Shop"]
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "schema": 1,
+  "cell": "2427-291",
+  "attribution": "© OpenStreetMap contributors",
+  "establishments": [
+    ["n5648628677","convenience",121.36684,14.5798,"Jerickson Store"],
+    ["n5648628678","convenience",121.36689,14.5798,"Jackimarus Carinderia & Store"],
+    ["n5648628849","convenience",121.36014,14.58016,"Araceli Store"],
+    ["n10184420711","convenience",121.36871,14.58073,"Sheila"],
+    ["n10184502295","convenience",121.36863,14.58029,"M. J."],
+    ["n1744533825","restaurant",121.36962,14.57036,"Ang Kainan sa Pranjetto Hills"],
+    ["n1945395169","restaurant",121.36963,14.57098,"Paseo Rizal"],
+    ["n1945395172","restaurant",121.37029,14.56965,"Bulaluhan"],
+    ["n4732760021","restaurant",121.35327,14.58918,"Pico De Pino (Cafe & Restaurant)"],
+    ["n5514231522","restaurant",121.37027,14.56864,"BNK Cafe and Restaurant"],
+    ["n5514231621","restaurant",121.36647,14.55502,"Travelers Mini Stop"],
+    ["n5648627812","restaurant",121.35411,14.58978,"Kaminawis Grill House Km26"],
+    ["n5648628674","restaurant",121.35204,14.59172,"Adre's Garden Restaurant"],
+    ["n5648628923","restaurant",121.3688,14.57852,"Pit Stop"],
+    ["n7993968089","restaurant",121.3953,14.55282,"Qalmara Private Resort"],
+    ["n9557361097","restaurant",121.36639,14.57411,"Wyndell's Al Fresco"],
+    ["n9861703812","restaurant",121.36805,14.57328,"Weshley's Food Park"],
+    ["n9861723002","restaurant",121.36843,14.57328,"Isaw Haus"],
+    ["n4424826790","cafe",121.36842,14.57526,"Cafe Katerina"],
+    ["n9861702099","cafe",121.36753,14.57227,"Coffee Periodt."],
+    ["n9861703811","cafe",121.36396,14.57796,"Tanay Highlands"],
+    ["n9861723097","cafe",121.36863,14.57367,"Kape Natividad"],
+    ["n9861780487","cafe",121.37264,14.57388,"Caffe Marisse"],
+    ["n13944281101","cafe",121.37261,14.57372,"Verdant View Cafe"]
+  ]
+}

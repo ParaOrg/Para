@@ -1,0 +1,11 @@
+{
+  "schema": 1,
+  "cell": "2416-280",
+  "attribution": "© OpenStreetMap contributors",
+  "establishments": [
+    ["n8815990218","convenience",120.83651,14.0031,"0352970 RELACION SARI-SARI STORE"],
+    ["n8815990317","convenience",120.83901,14.01162,"0148950 SHERLY PILAPIL"],
+    ["n8815990318","convenience",120.83911,14.01183,"0148947 CAIBIGAN"],
+    ["n1995658193","toilets",120.80682,14.04338]
+  ]
+}
