@@ -69,8 +69,11 @@ const files = {
     return fetch(`${base}${pathname}${search}`, { redirect: 'manual' });
   },
 };
+/** Each time the site answered /sw.js as the production site: what a failed swap reports. */
+let productionWorkerAnswers = 0;
 const site = createServer(async (incoming, outgoing) => {
   const path = incoming.url ?? '/';
+  if (isProduction && new URL(path, PRODUCTION).pathname === '/sw.js') productionWorkerAnswers++;
   const asked = new Request(`${PRODUCTION}${path}`, { method: incoming.method });
   const response = isProduction ? await servePage(asked, files) : await files.fetch(asked);
   const headers = Object.fromEntries(response.headers);
@@ -83,26 +86,52 @@ const site = createServer(async (incoming, outgoing) => {
 await new Promise((done) => site.listen(SITE_PORT, '127.0.0.1', done));
 const siteBase = `http://localhost:${SITE_PORT}`;
 
-const browser = await chromium.launch();
+// Nothing but the site is reachable: every other host is not found, for the pages and the
+// workers alike, so the basemap's requests fail at once rather than stay in flight, which would
+// hold a new worker's activation back. A request route would not do: Playwright's interception
+// of a page a worker controls can leave a request of the old worker open, and the new one
+// waiting behind it.
+const browser = await chromium.launch({
+  args: ['--host-resolver-rules=MAP * ~NOTFOUND, EXCLUDE localhost'],
+});
 const context = await browser.newContext({ viewport: { width: 393, height: 852 } });
 const errors = [];
 
-// Nothing but the site is reachable.
-await context.route('**/*', (route) =>
-  new URL(route.request().url()).origin === siteBase ? route.continue() : route.abort(),
-);
 context.on('page', (page) => page.on('pageerror', (error) => errors.push(error.message)));
 
-/** What a page can see of the workers and the stores. */
+/**
+ * What a page can see of the workers and the stores, and each registration's workers, for a
+ * failed swap to report. Read mid-navigation, a page has nothing to say yet.
+ */
 const state = (page) =>
-  page.evaluate(async () => ({
-    scopes: (await navigator.serviceWorker.getRegistrations()).map(
-      (r) => new URL(r.scope).pathname,
-    ),
-    caches: await caches.keys(),
-    title: document.title,
-    marked: window.__retirePwaMark === true,
-  }));
+  page
+    .evaluate(async () => {
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      return {
+        scopes: registrations.map((r) => new URL(r.scope).pathname),
+        settled: registrations
+          .filter((r) => !r.installing && !r.waiting && r.active?.state === 'activated')
+          .map((r) => new URL(r.scope).pathname),
+        workers: registrations.map(
+          (r) =>
+            `${new URL(r.scope).pathname} ` +
+            ['installing', 'waiting', 'active']
+              .map((slot) => `${slot}:${r[slot]?.state ?? '-'}`)
+              .join(','),
+        ),
+        caches: await caches.keys(),
+        title: document.title,
+        marked: window.__retirePwaMark === true,
+      };
+    })
+    .catch(() => ({
+      scopes: ['?'],
+      settled: [],
+      workers: [],
+      caches: ['?'],
+      title: '?',
+      marked: true,
+    }));
 
 try {
   // 1. As a Preview serves it: the map installs, then the contributor page, and the editor opens.
@@ -126,7 +155,7 @@ try {
   await until(
     () => state(contribute),
     (s) =>
-      s.scopes.includes('/contribute/') && s.caches.some((n) => n.startsWith('para-contribute-')),
+      s.settled.includes('/contribute/') && s.caches.some((n) => n.startsWith('para-contribute-')),
     30_000,
   );
 
@@ -137,9 +166,9 @@ try {
 
   const before = await state(map);
   check(
-    'before: the map worker and the contributor page worker are installed',
-    before.scopes.includes('/') && before.scopes.includes('/contribute/'),
-    before.scopes.join(' '),
+    'before: the map worker and the contributor page worker are installed and active, none pending',
+    before.settled.includes('/') && before.settled.includes('/contribute/'),
+    before.workers.join(' | '),
   );
   check(
     "before: the map's stores are filled",
@@ -152,15 +181,16 @@ try {
   // 2. The production site: the installed app checks for an update, as it does on a navigation,
   //    hourly, and at least daily.
   isProduction = true;
-  const reloaded = map.waitForEvent('framenavigated', { timeout: 20_000 });
   await map.evaluate(async () => (await navigator.serviceWorker.getRegistration('/'))?.update());
-  await reloaded;
-  await map.waitForLoadState('load');
-
   const seen = await until(
     () => state(map),
     (s) => !s.scopes.includes('/') && s.title === 'Para is coming soon',
     20_000,
+  );
+  check(
+    'after: the site answered the update check with the retiring worker',
+    productionWorkerAnswers > 0,
+    `${productionWorkerAnswers} answer(s); workers ${seen.workers.join(' | ')}`,
   );
   check("after: the map's worker is gone", !seen.scopes.includes('/'), seen.scopes.join(' '));
   check(
