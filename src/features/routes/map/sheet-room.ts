@@ -12,7 +12,7 @@ import {
   shownAt,
   type SheetShape,
   type Snap,
-} from './sheet-gesture';
+} from '@/shared/ui/sheet-gesture';
 
 /** MapLibre's fit padding, a side at a time. */
 export interface Room {
