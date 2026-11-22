@@ -28,10 +28,8 @@ const meta = {
   ],
   args: {
     ride: { kind: 'road', livery: 'jeep', vehicle: 'Jeepney' },
-    state: 'rest',
     routeOrigin: 'Tala',
     endPoints: roadRows(['SM Fairview', 'Novaliches']),
-    onSelect: fn(),
     onPick: fn(),
     testId: 'chooser',
   },
@@ -163,15 +161,23 @@ export const Ferry: Story = {
   },
 };
 
-/** Selected: pressed in under Route/RouteCardPrimarySelected; nothing else changes. */
-export const Selected: Story = { args: { state: 'selected' } };
+/** The studio's (its editors keep Selected): a card Selected, or let go, by a tap off its rows. */
+const studio = () => ({ onSelect: fn() });
+
+/**
+ * In the studio, Selected: pressed in under Route/RouteCardPrimarySelected; nothing else changes.
+ * On the public map a card wears it only while a finger is down on it.
+ */
+export const Selected: Story = { args: { ...studio(), state: 'selected' } };
 
 /** Selected, on a light card: pressed in under Route/RouteCardInverseSelected. */
-export const UvExpressSelected: Story = { args: { ...UvExpress.args, state: 'selected' } };
+export const UvExpressSelected: Story = {
+  args: { ...UvExpress.args, ...studio(), state: 'selected' },
+};
 
 /** Selected, a train: as Jeep. */
 export const LightRailWayOneSelected: Story = {
-  args: { ...LightRailWayOne.args, state: 'selected' },
+  args: { ...LightRailWayOne.args, ...studio(), state: 'selected' },
 };
 
 /** Every destination is listed, however many: the card grows, and nothing is cut to "+N more". */
@@ -240,7 +246,7 @@ export const NoMode: Story = {
 
 /**
  * A row opens its direction straight away; a tap anywhere else on the card — its name, the room
- * around its rows — selects it.
+ * around its rows — opens its first row's, the card one button named for its place and that row.
  */
 export const ARowOpens: Story = {
   play: async ({ args, canvasElement }) => {
@@ -252,20 +258,21 @@ export const ARowOpens: Story = {
     const under = doc.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2);
     await expect(under?.closest('[data-testid]')?.getAttribute('data-testid')).toBe('chooser-item');
     await userEvent.click(row);
-    await expect(args.onPick).toHaveBeenCalledWith('1');
-    await expect(args.onSelect).not.toHaveBeenCalled();
-    // Below the last row, the card's own room is the name's.
+    await expect(args.onPick).toHaveBeenLastCalledWith('1');
+    // Below the last row, the card's own room is the name's: it opens the first row's direction.
     const card = canvas.getByTestId('chooser-origin').getBoundingClientRect();
     const room = doc.elementFromPoint(card.x + card.width / 2, card.bottom - 3);
     await expect(room?.getAttribute('data-testid')).toBe('chooser-select');
+    await expect(room).toHaveAccessibleName('Tala, to SM Fairview');
+    await expect(room).not.toHaveAttribute('aria-pressed');
     if (room) await userEvent.click(room);
-    await expect(args.onSelect).toHaveBeenCalledTimes(1);
+    await expect(args.onPick).toHaveBeenLastCalledWith('0');
   },
 };
 
-/** Selected, a row still opens its direction; a tap on the card lets it go. */
+/** In the studio, Selected, a row still opens its direction; a tap on the card lets it go. */
 export const SelectedRowsOpen: Story = {
-  args: { state: 'selected' },
+  args: { ...studio(), state: 'selected' },
   play: async ({ args, canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.click(canvas.getByText('Novaliches'));

@@ -151,7 +151,6 @@ export function PublicMapApp() {
     flipList,
     filterList,
     otherRoute,
-    pickOnPlaceCard,
     openPlace,
     openTripFromPlace,
     goHere,
@@ -416,8 +415,6 @@ export function PublicMapApp() {
           <HintuanCard
             key={placeKey(hotspots.selected)}
             routeCards={{
-              selected: saved.highlight?.where === 'hotspot' ? saved.highlight.card : null,
-              onSelect: pickOnPlaceCard,
               onShown: saved.showCard,
               // The other way round, the camera kept where it is (HintuanCard's onSwitch).
               onSwitch: (box) => box && hotspots.select(box),
@@ -460,8 +457,6 @@ export function PublicMapApp() {
             listing={saved.listing}
             onFlip={flipList}
             modeFilter={{ filter: saved.modeFilter, onFilter: filterList }}
-            selected={saved.highlight?.where === 'list' ? saved.highlight.card : null}
-            onSelect={(p) => saved.highlightCard(p && { where: 'list', ...p })}
             onRoute={openTrip}
             onHotspot={(s) => cards.openHotspot(s.id)}
             onClose={cards.closeAll}

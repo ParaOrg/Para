@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import type { ComponentProps, ReactNode } from 'react';
 
 import { BottomSheet, type SheetHeight } from '@/shared/ui/bottom-sheet';
 import type { SheetShape } from '@/shared/ui/sheet-gesture';
@@ -6,7 +6,7 @@ import { cn } from '@/shared/utils/cn';
 
 import { listWay } from './list-way';
 import { ModeFilterEmpty } from './mode-filter-empty';
-import { RouteCardStack, type PickedPlace } from './route-card-stack';
+import { RouteCardStack } from './route-card-stack';
 import { RouteListController } from './route-list-controller';
 import { RouteListHotspotRows } from './route-list-hotspot-rows';
 import { listedDepartures, routeCards, type Listing } from '../model/departures';
@@ -31,10 +31,8 @@ interface Props {
   listing: Listing;
   /** PAPUNTA: show them all the other way round. Read only with the Controller. */
   onFlip: () => void;
-  /** The place whose card is Selected, by name; null when none is. */
-  selected: string | null;
-  /** A card was picked — the map lights its directions alone — or let go (null): everything listed lit again. */
-  onSelect: (place: PickedPlace | null) => void;
+  /** The Selected card and what picks or lets one go: the studio's alone (RouteCardStack). */
+  selection?: ComponentProps<typeof RouteCardStack>['selection'];
   /** Called with the direction a row opens, and the colour its card wore: its trip wears the same. */
   onRoute: (v: Direction, livery: Livery) => void;
   /** A hotspot's row: open its card. */
@@ -101,8 +99,7 @@ export function RouteCardList({
   back,
   listing,
   onFlip,
-  selected,
-  onSelect,
+  selection,
   onRoute,
   onHotspot,
   onClose,
@@ -170,8 +167,7 @@ export function RouteCardList({
           routes={filtered}
           back={back}
           listing={listing}
-          selected={selected}
-          onSelect={onSelect}
+          selection={selection}
           onRoute={onRoute}
           testId="chooser"
           end={end}

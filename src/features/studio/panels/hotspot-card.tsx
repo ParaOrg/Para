@@ -198,8 +198,8 @@ export function HotspotCard({
             <RouteCardStack
               routes={linked}
               back={back}
-              selected={routeCards.selected}
-              onSelect={routeCards.onSelect}
+              // The studio's editors keep Selected; the public map's cards open on a tap.
+              selection={{ selected: routeCards.selected, onSelect: routeCards.onSelect }}
               onRoute={onSelectDirection}
               testId="card"
             />

@@ -110,14 +110,13 @@ const links: Record<string, string[]> = {
 };
 
 /**
- * Picks another box as the public map does: that row Selected, the Selected
- * RouteCard let go. The Selected row tapped lets it go, as the map does too.
+ * Picks another box as the public map does: that row Selected. The Selected row tapped lets it
+ * go, as the map does too.
  * SWITCH selects the box the other way leaves from, as the map does with no
  * glide (public-map-app's onSwitch), not through onPickBox.
  */
 function Picking(props: ComponentProps<typeof HintuanCard>) {
   const [hotspot, setHotspot] = useState(props.hotspot);
-  const [selected, setSelected] = useState<string | null>(null);
   const [deselected, setDeselected] = useState(props.deselected ?? false);
   return (
     <HintuanCard
@@ -126,16 +125,10 @@ function Picking(props: ComponentProps<typeof HintuanCard>) {
       deselected={deselected}
       onDeselect={() => {
         props.onDeselect?.();
-        setSelected(null);
         setDeselected(true);
       }}
       routeCards={{
         ...props.routeCards,
-        selected,
-        onSelect: (p) => {
-          props.routeCards.onSelect(p);
-          setSelected(p?.from ?? null);
-        },
         onSwitch: (box) => {
           props.routeCards.onSwitch?.(box);
           if (box) setHotspot(hotspots.find((s) => s.id === box) ?? hotspot);
@@ -143,7 +136,6 @@ function Picking(props: ComponentProps<typeof HintuanCard>) {
       }}
       onPickBox={(id) => {
         props.onPickBox(id);
-        setSelected(null);
         setDeselected(false);
         setHotspot(hotspots.find((s) => s.id === id) ?? hotspot);
       }}
@@ -180,7 +172,7 @@ const meta = {
     linkedDirectionIds: (id: string) => links[id] ?? [],
     directions: [fvOut, fvIn, nvOut, nvIn],
     onSelectDirection: fn(),
-    routeCards: { selected: null, onSelect: fn(), onShown: fn(), onSwitch: fn() },
+    routeCards: { onShown: fn(), onSwitch: fn() },
     onPickBox: fn(),
     onClose: fn(),
   },
