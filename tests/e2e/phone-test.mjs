@@ -3591,8 +3591,9 @@ if (runsPart(1)) {
         JSON.stringify(corner),
       );
 
-      // The ⓘ is the licences' credit, MapLibre's corner gone: it stays reachable in its corner, over
-      // the sheet raised to full height and held part way alike.
+      // The ⓘ is the licences' credit, MapLibre's corner gone. At full height no map shows and the
+      // card fills its corner: it is hidden, not drawn and out of the keyboard's way (the owner,
+      // 2026-11-22); held part way up, with map showing, it is back in its corner, reachable.
       const infoReachable = () =>
         page.evaluate(() => {
           const info = document.querySelector('button[aria-label="Map data sources"]');
@@ -3602,10 +3603,17 @@ if (runsPart(1)) {
           return { top: Math.round(box.top), isOnTop: !!hit && info.contains(hit) };
         });
       const before = await sheetState();
-      const atFull = (await handleTo('full')) ? await infoReachable() : null;
+      const atFull = (await handleTo('full'))
+        ? await page.evaluate(() => {
+            const info = document.querySelector('button[aria-label="Map data sources"]');
+            return info
+              ? { drawn: info.checkVisibility(), box: info.getClientRects().length }
+              : null;
+          })
+        : null;
       check(
-        "  with the card at full height, the map's ⓘ is still reachable in its corner, over the sheet",
-        atFull?.isOnTop === true && atFull.top >= 0,
+        "  with the card at full height, the map's ⓘ is hidden: not drawn, not focusable",
+        atFull !== null && !atFull.drawn && atFull.box === 0,
         JSON.stringify(atFull),
       );
       await toRaised();
@@ -3628,7 +3636,7 @@ if (runsPart(1)) {
         await cardsSettled(page);
       }
       check(
-        "  with the card held part way up, the map's ⓘ stays in its corner, reachable",
+        "  with the card held part way up, the map's ⓘ is back in its corner, reachable",
         midway?.isOnTop === true,
         JSON.stringify(midway),
       );
