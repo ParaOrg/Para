@@ -10,12 +10,16 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readdirSync, readFileSync } from 'node:fs';
+import { ESTABLISHMENT_COLOURS } from '../../src/design-system/foundation/establishment-colours.ts';
 import {
-  MAP_COLOURS,
+  MAP_COLOURS as MAP_COLOURS_ALONE,
   MAP_PAINT,
   MODE_COLOURS,
   MONOCHROME_LEAN,
 } from '../../src/design-system/foundation/map-colours.ts';
+
+/** Every Map/… hex: map-colours.ts's, and the establishments' kept in a file of their own. */
+const MAP_COLOURS = { ...MAP_COLOURS_ALONE, ...ESTABLISHMENT_COLOURS };
 
 const read = (path) => readFileSync(new URL(path, import.meta.url), 'utf8');
 const tokens = read('../../src/design-system/foundation/tokens.css');
