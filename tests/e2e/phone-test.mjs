@@ -28,7 +28,8 @@
 // route list where two routes share a road ("N Routes", a card per place), the trip a
 // row opens in its card's colour and the empty map tapped back to the list, every card at rest; a tap
 // just outside a hotspot, and the bottom sheet on a hotspot's card — tap and
-// drag the handle, Middle → Max → Low → Middle → Low → gone; a trip opened
+// drag the handle, Middle → Max → Low → Middle → Low → gone (in a build with
+// VITE_HOTSPOT_TAPS; without, a tap there opens no place's card); a trip opened
 // by a tap on its own line (no ?r= link since the owner took trip links out,
 // 2026-10-03), the view it frames, and leaving it listing the routes sharing an
 // end with its own; the fine-pointer desktop control (±5 px, no zoom
@@ -528,6 +529,10 @@ await page.goto(`${BASE}/`, { waitUntil: 'load' });
 await page.waitForFunction(() => window.__map && window.__map.loaded(), null, { timeout: 30000 });
 await waitForSource(page, 'saved-routes');
 await mapIdle(page);
+// A build without hotspot taps (VITE_HOTSPOT_TAPS) reads a tap on a box as the route's under it or
+// the empty map's, so no place's card opens from the map; the page's root says which. One build
+// serves every phone this suite opens.
+const isHotspotTapOn = (await page.locator('[data-hotspot-taps="on"]').count()) > 0;
 
 check(
   'no Contributor button is on the public map',
@@ -3859,9 +3864,8 @@ if (runsPart(3)) {
     const isPicked = async () =>
       (await wanted.count()) > 0 && (await wantedCard.getAttribute('data-state')) === 'selected';
     const wantedName = wantedCard.locator('[data-testid="chooser-select"]');
-    // At Low a tap on the list raises it a third and reaches nothing under it (the owner's rule):
-    // picking a card there takes a tap to raise, then a tap to pick. The camera is read once the
-    // raise has settled.
+    // At Low a tap on a card opens its trip straight away, as it would higher up (the owner,
+    // 2026-11-22); elsewhere on the list it raises it a third.
     const listAt = async () => chooser.first().getAttribute('data-snap');
     const raisedFirst = (await listAt()) === 'low';
     if (raisedFirst) {
@@ -3894,90 +3898,34 @@ if (runsPart(3)) {
       );
       await touchTap(
         topCard.locator('[data-testid="chooser-select"]'),
-        async () => (await listAt()) !== 'low',
+        async () => (await trip().count()) > 0,
       );
       check(
-        '  at Low, a tap on a card raises the list a third and picks nothing',
-        (await listAt()) === 'free' &&
-          !(await isPicked()) &&
-          (await topCard.getAttribute('data-state')) !== 'selected',
-        `data-snap=${await listAt()}; picked ${await isPicked()}`,
+        '  at Low, a tap on a card opens its trip straight away, the card never Selected',
+        (await trip().count()) > 0 && (await topCard.getAttribute('data-state')) !== 'selected',
+        `trip open ${(await trip().count()) > 0}; data-state ${await topCard.getAttribute('data-state')}`,
       );
+      await leaveTrip(listShown);
     }
     await cardsSettled(page);
-    const camBeforeCardPick = await camNow();
-    await buttonTap(wantedName, isPicked);
-    const pickedIds = (await wanted.count()) ? await directionsIn(wantedCard) : [];
-    const litPicked = (await litIds(page)) ?? [];
-    check(
-      '  a tap on a card off its rows selects it, opening no trip',
-      (await isPicked()) && (await trip().count()) === 0,
-      `Selected ${await isPicked()}; trip open ${(await trip().count()) > 0}`,
-    );
-    // The camera stays where it was: a card picked fits nothing (the owner, 2026-10-21).
-    // Fitted, it would be by the time the card and the camera are at rest.
-    await cardsSettled(page);
-    const camAfterCardPick = await camNow();
-    check(
-      '  and the camera stays where it was: its routes are not fitted',
-      sameCamera(camBeforeCardPick, camAfterCardPick),
-      JSON.stringify({ camBeforeCardPick, camAfterCardPick }),
-    );
-    // Picked and not fitted, so the Overview button shows; pressed, it takes the card's routes
-    // in above the list, and hides once there.
-    const overview = page.getByRole('button', { name: 'Overview' });
-    check('  a card picked: Overview shows', (await isPicked()) && (await overview.isVisible()));
-    const pickedBoxes = pickedIds
-      .map((id) => snapshot.routes.find((o) => o.id === id)?.bbox)
-      .filter(Boolean);
-    const pickedBbox = pickedBoxes.length
-      ? [
-          Math.min(...pickedBoxes.map((b) => b[0])),
-          Math.min(...pickedBoxes.map((b) => b[1])),
-          Math.max(...pickedBoxes.map((b) => b[2])),
-          Math.max(...pickedBoxes.map((b) => b[3])),
-        ]
+    // A tap on a card off its rows opens its first row's trip, its line alone lit; no card is
+    // Selected on the public map (the owner, 2026-11-22).
+    const firstRow = wantedCard.locator('[data-testid="chooser-item"]').first();
+    const firstRowId = (await wanted.count())
+      ? await firstRow.getAttribute('data-direction')
       : null;
-    const overviewPressed = await buttonTap(overview, async () => !(await overview.isVisible()));
-    await page
-      .waitForFunction(() => !window.__map.isMoving(), null, { timeout: 5000 })
-      .catch(() => {});
-    const cardFitted = pickedBbox && (await framedAboveCard(pickedBbox, 'chooser'));
+    await buttonTap(wantedName, async () => (await trip().count()) > 0);
+    const litOpened = (await litIds(page)) ?? [];
     check(
-      "  Overview pressed: the card's routes above the list, and the button gone",
-      overviewPressed && cardFitted?.inside === true && !(await overview.isVisible()),
-      JSON.stringify({ pickedIds: pickedIds.length, cardFitted }),
+      "  a tap on a card off its rows opens its first row's trip, its line alone lit, nothing Selected",
+      (await trip().count()) > 0 &&
+        !(await isPicked()) &&
+        litOpened.length === 1 &&
+        litOpened[0] === firstRowId,
+      `trip open ${(await trip().count()) > 0}; Selected ${await isPicked()}; lit ${JSON.stringify(litOpened)}; first row ${firstRowId}`,
     );
-    const seenPicked = await rideLook(page);
-    const endsPicked = await endsWear(cardColour);
-    check(
-      "  its routes in the card's colour, chevrons and end circles too",
-      wears(seenPicked, LOOKS?.byLivery[cardColour]) && endsPicked.ok,
-      `${cardColour}: ${JSON.stringify(seenPicked)}; ${endsPicked.detail}`,
-    );
-    // Narrower than the list only where the list has other cards.
-    if (pickedIds.length > 0 && pickedIds.length < new Set(listedIds).size) {
-      check(
-        '  and lights just its routes',
-        sameSet(litPicked, pickedIds),
-        `${litPicked.length} lit for ${pickedIds.length} row(s) of ${listedIds.length}`,
-      );
-    } else {
-      skip(
-        '  and lights just its routes',
-        'the picked card holds every route the list shows today',
-      );
-    }
-    await buttonTap(wantedName, async () => !(await isPicked()));
-    const litLetGo = (await litIds(page)) ?? [];
-    check(
-      '  a second tap lets it go, every route it lists lit again',
-      !(await isPicked()) && sameSet(litLetGo, listedIds),
-      `Selected ${await isPicked()}; ${litLetGo.length} lit`,
-    );
-    // Picked again, its row opens the trip; ‹ will bring the list back at rest.
-    await buttonTap(wantedName, isPicked);
-    const pickedForTrip = await isPicked();
+    await leaveTrip(listShown);
+    // A row opens its own trip; leaving it brings the list back at rest.
     await buttonTap(wanted, async () => (await trip().count()) > 0);
     // The trip card takes the list's place, and the list stays behind it,
     // hidden, for the trip's ‹ (the owner's frames, 2026-09-28).
@@ -4009,14 +3957,13 @@ if (runsPart(3)) {
       const again = (await listShown()) ? await chooser.first().innerText() : '';
       const litBack = (await litIds(page)) ?? [];
       check(
-        '  the empty map tapped on the trip, from a picked card, goes back to the list at rest: no card picked, every route it lists lit',
+        '  the empty map tapped on the trip goes back to the list at rest, every route it lists lit',
         again === chooserText &&
           (await card().count()) === 0 &&
-          pickedForTrip &&
           !(await isPicked()) &&
           sameSet(litBack, listedIds),
         again
-          ? `card count ${await card().count()}; picked before ${pickedForTrip}, now ${await isPicked()}; ${litBack.length} lit`
+          ? `card count ${await card().count()}; Selected ${await isPicked()}; ${litBack.length} lit`
           : 'the list did not come back',
       );
       if (trip3.picked) check('  and lets the picked hintuan go', await noPickLeft());
@@ -4037,9 +3984,8 @@ if (runsPart(3)) {
         `${oneCard ?? 'blue'}: ${JSON.stringify(seenRest)}; ${endsRest.detail}`,
       );
       // A Tail Route one lit ride alone goes to opens that ride's trip, its
-      // line lit (the owner's ask, 2026-10-01); ‹ back to the list. The card
-      // picked first: the list's routes may all end at one place (the way
-      // back), and a tail two rides share opens the place instead.
+      // line lit (the owner's ask, 2026-10-01); ‹ back to the list. The list's routes may all end
+      // at one place (the way back), and a tail two rides share opens the place instead: skipped.
       // Start's S and End's E before every lit line's ends, a list's in the
       // selected blue too (the owner's "the rules for RouteLineEndingsLabel
       // must be applicable to these RouteLine", 2026-10-13; plain names in the
@@ -4062,28 +4008,11 @@ if (runsPart(3)) {
         inBlue.titles > 0 && inBlue.marked === inBlue.titles,
         JSON.stringify(inBlue),
       );
-      await buttonTap(wantedName, isPicked);
-      await page
-        .waitForFunction(
-          () =>
-            [...document.querySelectorAll('[data-testid="end-title"]')].every((t) =>
-              t.querySelector('[data-part="start"], [data-part="end"]'),
-            ),
-          null,
-          { timeout: 2000 },
-        )
-        .catch(() => {});
-      const inCard = await marks();
-      check(
-        "  a picked card's ends wear Start's S or End's E, every one",
-        inCard.titles > 0 && inCard.marked === inCard.titles,
-        JSON.stringify(inCard),
-      );
       const tails = page.locator('[data-testid="end-title"][data-opens="trip"] button');
       if ((await tails.count()) === 0) {
         skip(
           "  a tap on a tail's name opens its ride's trip",
-          "no tail of the picked card is one ride's alone",
+          "no tail the list lights is one ride's alone",
         );
       } else {
         const tail = tails.first();
@@ -4147,12 +4076,8 @@ if (runsPart(3)) {
         await leaveTrip(listShown);
         check('  and the empty map tapped goes back to the list', await listShown());
       }
-      // Back at rest, nothing picked, for what follows.
-      if (await isPicked()) await buttonTap(wantedName, async () => !(await isPicked()));
-      // Picked, then a tap on the map where the list opened: a fresh list,
-      // nothing Selected, every route it lists lit.
-      await buttonTap(wantedName, isPicked);
-      const repicked = await isPicked();
+      // A tap on the map where the list opened: a fresh list, nothing Selected, every route it
+      // lists lit.
       // Where the list opened, brought into the map above the list, where a finger can reach it:
       // centred on the screen it sits under the list.
       await jumpTo(page, shared.point);
@@ -4175,9 +4100,9 @@ if (runsPart(3)) {
       const litTapped = (await litIds(page)) ?? [];
       const pickedAfter = await chooser.locator('[data-state="selected"]').count();
       check(
-        '  a map tap lets it go: nothing Selected, every route it lists lit',
-        repicked && pickedAfter === 0 && (await listShown()) && sameSet(litTapped, listedIds),
-        `picked ${repicked}; ${pickedAfter} Selected; ${litTapped.length} lit`,
+        '  a map tap where it opened: a fresh list, nothing Selected, every route it lists lit',
+        pickedAfter === 0 && (await listShown()) && sameSet(litTapped, listedIds),
+        `${pickedAfter} Selected; ${litTapped.length} lit`,
       );
       // The list and the trip opened from it are one height (the owner's ask
       // of 2026-09-30: "if RouteDetail was in medium, if they go back, the
@@ -4243,7 +4168,9 @@ if (runsPart(3)) {
   // so "under" reaches 9 px); a route merely inside the ±20 px box shares the
   // route list with the hotspot; no route near, and the hotspot opens on its own.
   // Hotspots are a few tens of metres across, so this section zooms to 18, where
-  // a person tapping a terminal would be, and scales its metres per pixel to match.
+  // a person tapping a terminal would be, and scales its metres per pixel to match. A build without
+  // hotspot taps (VITE_HOTSPOT_TAPS) takes none on a box: 4a and 4b check that no place's card
+  // opens, and 4c to 4f, which need one opened from the map, skip.
   const Z_HOT = 18;
   const M_HOT = M_PER_PX / 2 ** (Z_HOT - ZOOM);
   const UNDER_M = 9 * M_HOT + 3 * M_HOT;
@@ -4292,6 +4219,28 @@ if (runsPart(3)) {
         ? `no point inside a hotspot today is ${Math.round(UNDER_M)} m clear of every route line`
         : 'no hotspots on the map today',
     );
+  } else if (!isHotspotTapOn) {
+    // The box takes no tap: a route in the finger's reach is what opens, and with none, nothing.
+    console.log(
+      'SKIP  a tap inside a hotspot opens its card alone, its rows let go and picked: hotspot taps are off in this build (VITE_HOTSPOT_TAPS)',
+    );
+    const { poly, point, routesInBox } = inside;
+    await jumpTo(page, point, Z_HOT);
+    const anchor = await project(page, point);
+    const box = await canvasBox();
+    await mapTap(box.x + anchor[0], box.y + anchor[1]);
+    await cardsSettled(page);
+    const seen = {
+      places: await page.locator('[data-testid="card-place"]').count(),
+      cards: await card().count(),
+      lists: await page.locator('[data-testid="chooser"]').count(),
+    };
+    check(
+      `hotspot taps off: a tap inside "${poly.name}" opens no place's card${routesInBox.length ? '' : ', nor anything, no route in reach'}`,
+      seen.places === 0 && (routesInBox.length > 0 || seen.cards + seen.lists === 0),
+      `${JSON.stringify(seen)}; ${routesInBox.length} route(s) in reach`,
+    );
+    await closeCard();
   } else {
     const { poly, point, routesInBox } = inside;
     await jumpTo(page, point, Z_HOT);
@@ -4425,16 +4374,26 @@ if (runsPart(3)) {
     await cardsSettled(page);
 
     const text = await cardText();
-    check(
-      `a tap 15 px outside "${poly.name}" still opens it`,
-      text.includes(poly.name),
-      `${text.split('\n')[0] || '(no card)'}; the box drawn at its centre: ${drawn === 1 ? 'yes' : drawn}`,
-    );
-    check(
-      `  the card has its row Selected`,
-      (await pressedBox()) === poly.id,
-      `${await pressedBox()}`,
-    );
+    if (!isHotspotTapOn) {
+      // The box takes no tap, and no route is in the tap's reach: it is the empty map's.
+      const lists = await page.locator('[data-testid="chooser"]').count();
+      check(
+        `hotspot taps off: a tap 15 px outside "${poly.name}" opens nothing`,
+        (await card().count()) === 0 && lists === 0,
+        `${text.split('\n')[0] || '(no card)'}; ${lists} list(s); the box drawn at its centre: ${drawn === 1 ? 'yes' : drawn}`,
+      );
+    } else {
+      check(
+        `a tap 15 px outside "${poly.name}" still opens it`,
+        text.includes(poly.name),
+        `${text.split('\n')[0] || '(no card)'}; the box drawn at its centre: ${drawn === 1 ? 'yes' : drawn}`,
+      );
+      check(
+        `  the card has its row Selected`,
+        (await pressedBox()) === poly.id,
+        `${await pressedBox()}`,
+      );
+    }
     await closeCard();
   }
 
@@ -4618,6 +4577,11 @@ if (runsPart(3)) {
     skip(
       "the sheet handle opens and closes a hotspot's card",
       'no hotspot clear of every route to open a card on (see 4b)',
+    );
+  } else if (!isHotspotTapOn) {
+    // 4c, 4e and 4f open their card by a tap on the map, beside the box (openSheet).
+    console.log(
+      "SKIP  the sheet's handle, drags and throws, a mouse's drag and Escape, on a hotspot's card: hotspot taps are off in this build (VITE_HOTSPOT_TAPS)",
     );
   } else {
     await page.evaluate(() => {
@@ -4826,6 +4790,10 @@ if (runsPart(3)) {
         ? 'no hotspot has a drawn route linked today'
         : 'the published map could not be read',
     );
+  } else if (!isHotspotTapOn) {
+    console.log(
+      'SKIP  a tap on the handle of a hotspot card with routes raises it, opening none, its late click reaching nothing: hotspot taps are off in this build (VITE_HOTSPOT_TAPS)',
+    );
   } else {
     const c = centroidOf(withRoutes.ring);
     await jumpTo(page, c, Z_HOT);
@@ -4924,7 +4892,7 @@ if (runsPart(3)) {
 
   // ----------------------------------------------- 4e. the handle, by a mouse
   // On a phone of its own, not touched by finger alone (newPhone).
-  if (hotspot) {
+  if (hotspot && isHotspotTapOn) {
     await newPhone({ isTouchOnly: false });
     // A mouse's drag, on a narrow window: the browser then clicks the handle it
     // was held on, and that click toggled the sheet straight back — pulled up,
@@ -4998,7 +4966,7 @@ if (runsPart(3)) {
   // On a phone of its own (newPhone): Escape, the keyboard's close, takes the card away, and focus
   // goes back to what had it as the card opened (useDialogFocus): the map, which the tap that
   // opened it focused. The card is opened by one tap, the phone's first input, before any key.
-  if (hotspot) {
+  if (hotspot && isHotspotTapOn) {
     await newPhone({ isTouchOnly: false });
     await openSheet();
     const isOpen = (await card().count()) > 0;
@@ -5378,37 +5346,43 @@ if (runsPart(2)) {
     // A terminal with no link: its card lists no route, though the route starts
     // there. Today's behaviour, an open question for the owner (public-map-01):
     // when the card comes to count a route's head and tail, this check changes
-    // with it.
-    const [tx, ty] = WEST_TERMINAL.point.coordinates;
-    // Inside its box, on the side away from the two lines that leave it.
-    const inBox = [tx - 0.0003, ty];
-    await jumpTo(page, inBox);
-    const [px, py] = await project(page, inBox);
-    const frame = await canvasBox();
-    await mapTap(frame.x + px, frame.y + py);
-    await page
-      .waitForFunction(() => !!document.querySelector('[data-testid="card-place"]'), null, {
-        timeout: 10000,
-      })
-      .catch(() => {});
-    const terminal = await page.evaluate(() => {
-      const shown = [...document.querySelectorAll('[data-testid="card"]')].find((c) => !c.hidden);
-      return {
-        place: shown?.querySelector('[data-testid="card-place"]')?.innerText.trim() ?? null,
-        boxes: shown?.querySelectorAll('[data-testid="card-box"]').length ?? 0,
-        routes: shown?.querySelectorAll('[data-testid="card-origin"]').length ?? 0,
-        counter: shown?.querySelectorAll('[data-testid="card-count"]').length ?? 0,
-      };
-    });
-    check(
-      "a terminal with no link opens its card with no route and no counter (today's behaviour, public-map-01)",
-      !!terminal.place?.includes(WEST_TERMINAL.name) &&
-        terminal.boxes === 1 &&
-        terminal.routes === 0 &&
-        terminal.counter === 0,
-      JSON.stringify(terminal),
-    );
-    await closeCard();
+    // with it. Opened by a tap on its box, which a build without hotspot taps does not take.
+    if (!isHotspotTapOn) {
+      console.log(
+        'SKIP  a terminal with no link opens its card with no route and no counter: hotspot taps are off in this build (VITE_HOTSPOT_TAPS)',
+      );
+    } else {
+      const [tx, ty] = WEST_TERMINAL.point.coordinates;
+      // Inside its box, on the side away from the two lines that leave it.
+      const inBox = [tx - 0.0003, ty];
+      await jumpTo(page, inBox);
+      const [px, py] = await project(page, inBox);
+      const frame = await canvasBox();
+      await mapTap(frame.x + px, frame.y + py);
+      await page
+        .waitForFunction(() => !!document.querySelector('[data-testid="card-place"]'), null, {
+          timeout: 10000,
+        })
+        .catch(() => {});
+      const terminal = await page.evaluate(() => {
+        const shown = [...document.querySelectorAll('[data-testid="card"]')].find((c) => !c.hidden);
+        return {
+          place: shown?.querySelector('[data-testid="card-place"]')?.innerText.trim() ?? null,
+          boxes: shown?.querySelectorAll('[data-testid="card-box"]').length ?? 0,
+          routes: shown?.querySelectorAll('[data-testid="card-origin"]').length ?? 0,
+          counter: shown?.querySelectorAll('[data-testid="card-count"]').length ?? 0,
+        };
+      });
+      check(
+        "a terminal with no link opens its card with no route and no counter (today's behaviour, public-map-01)",
+        !!terminal.place?.includes(WEST_TERMINAL.name) &&
+          terminal.boxes === 1 &&
+          terminal.routes === 0 &&
+          terminal.counter === 0,
+        JSON.stringify(terminal),
+      );
+      await closeCard();
+    }
   }
 
   onMadeUpMap = false;

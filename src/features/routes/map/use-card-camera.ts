@@ -3,9 +3,9 @@ import { useEffect, useRef, useState, type RefObject } from 'react';
 
 import type { SheetHeight } from '@/shared/ui/bottom-sheet';
 import type { Snap } from '@/shared/ui/sheet-gesture';
-import { clearOfSheet } from '@/shared/ui/sheet-room';
 import type { LngLat } from '@/shared/utils/geo';
 
+import { clearOfSheet } from './sheet-room';
 import { useOverview } from './use-overview';
 import { useCameraBefore, useRideOverview, useSwitchOverview } from './use-overviews';
 import { useRideTo } from './use-ride-to';

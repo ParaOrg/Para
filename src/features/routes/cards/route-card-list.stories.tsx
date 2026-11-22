@@ -136,12 +136,13 @@ const FRAME = {
 const frameOf = (p: { frame?: Frame }) => FRAME[p.frame ?? 'phone'];
 
 /**
- * Keeps the Selected card and the way round as the apps do, and the filter where a story gives
- * one, so a story can be tapped through; PAPUNTA lets the card go. The studio's Controller
+ * Keeps the way round as the apps do, the filter where a story gives one, and the Selected card
+ * where it has `selection` (the studio's), so a story can be tapped through; PAPUNTA lets it go. The studio's Controller
  * (`hasController`) has sliders only where a filter is kept.
  */
 function Picking(props: ComponentProps<typeof RouteCardList>) {
-  const [selected, setSelected] = useState(props.selected);
+  const [selected, setSelected] = useState(props.selection?.selected ?? null);
+  const onSelect = props.selection?.onSelect;
   const [back, setBack] = useState(props.back);
   const [filter, setFilter] = useState<ModeFilter>(props.modeFilter?.filter ?? 'all');
   return (
@@ -162,11 +163,15 @@ function Picking(props: ComponentProps<typeof RouteCardList>) {
         setBack((b) => !b);
         setSelected(null);
       }}
-      selected={selected}
-      onSelect={(p) => {
-        props.onSelect(p);
-        setSelected(p?.from ?? null);
-      }}
+      selection={
+        onSelect && {
+          selected,
+          onSelect: (p) => {
+            onSelect(p);
+            setSelected(p?.card ?? null);
+          },
+        }
+      }
     />
   );
 }
@@ -195,9 +200,7 @@ const meta = {
     routes: talaRoutes,
     back: false,
     listing: 'every-line',
-    selected: null,
     onFlip: fn(),
-    onSelect: fn(),
     onRoute: fn(),
     onHotspot: fn(),
     onClose: fn(),
@@ -230,8 +233,14 @@ export const FilteredToJeep: Story = {
 /** Turned round with PAPUNTA: out of Tala both ways, one card — "1 Route". */
 export const Switched: Story = { args: { back: true } };
 
-/** Tala's card picked: pressed in, its routes alone lit on the map. */
-export const ACardSelected: Story = { args: { back: true, selected: 'Tala|jeep' } };
+/** The studio's, Tala's card picked: pressed in, its routes alone lit on the map. */
+export const InTheStudioACardSelected: Story = {
+  args: {
+    back: true,
+    hasController: true,
+    selection: { selected: 'Tala|jeep', onSelect: fn() },
+  },
+};
 
 /** From 1024 wide (Figma 4831:53545): docked the map's whole height on the left, 384 wide. */
 export const Floating: Story = { parameters: { frame: 'wide' } };
@@ -348,6 +357,30 @@ export const SheetLow: Story = {
     const sheet = within(canvasElement).getByTestId('chooser');
     await expect(sheet).toHaveAttribute('data-snap', 'low');
     await expect(sheet).toHaveAttribute('data-low-px', '240');
+  },
+};
+
+/** At Low, on the public map, a tap on a card opens its trip straight away: the sheet stays. */
+export const SheetLowACardOpens: Story = {
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getAllByTestId('chooser-select')[0]);
+    await expect(args.onRoute).toHaveBeenCalledTimes(1);
+    await expect(canvas.getByTestId('chooser')).toHaveAttribute('data-snap', 'low');
+  },
+};
+
+/** At Low, in the studio, a tap on a card raises the sheet a third, as the handle does: no pick. */
+export const SheetLowInTheStudioRaises: Story = {
+  args: { hasController: true, selection: { selected: null, onSelect: fn() } },
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getAllByTestId('chooser-select')[0]);
+    await waitFor(() =>
+      expect(canvas.getByTestId('chooser')).not.toHaveAttribute('data-snap', 'low'),
+    );
+    await expect(args.selection?.onSelect).not.toHaveBeenCalled();
+    await expect(args.onRoute).not.toHaveBeenCalled();
   },
 };
 
