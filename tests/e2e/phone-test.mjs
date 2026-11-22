@@ -4935,6 +4935,101 @@ if (runsPart(3)) {
     );
   }
 
+  // --------------------------------------- 4g. the route list, raised by keys
+  // On a phone of its own (newPhone): raised to full from the keyboard (Enter on the list's handle,
+  // drawn in the flow only while so focused), a finger's tap still lands where it was made. The
+  // handle stays shown until the click has landed, so nothing moves between the press and the
+  // click; before, it folded away as the tap took the focus, everything under the finger moved up
+  // by its height, and the click reached neither the card pressed nor what was then under it.
+  if (shared) {
+    await newPhone({ isTouchOnly: false });
+    const chooser = page.locator('[data-testid="chooser"]');
+    const listAt = async () => chooser.first().getAttribute('data-snap');
+    const openList = async () => {
+      await jumpTo(page, shared.point);
+      const anchor = await project(page, shared.point);
+      const box = await canvasBox();
+      await drawnAt('saved-routes-hit', anchor);
+      await mapTap(box.x + anchor[0], box.y + anchor[1]);
+      await cardsSettled(page);
+      return (await chooser.count()) > 0;
+    };
+    const listHandle = chooser.first().locator('[data-testid="dock-handle"]');
+    // Whether it got to full with the handle shown, focused from the keyboard: the case to check.
+    const keysToFull = async () => {
+      for (let i = 0; i < 4 && (await listAt()) !== 'full'; i++) {
+        await listHandle.focus();
+        await page.keyboard.press('Enter');
+        await cardsSettled(page);
+      }
+      return (
+        (await listAt()) === 'full' &&
+        (await listHandle.evaluate(
+          (el) => el.matches(':focus-visible') && el.getBoundingClientRect().height > 1,
+        ))
+      );
+    };
+    // A tap sent by hand (Chromium dropped the touch) goes to the button itself and would pass
+    // with or without the shift: then the check is skipped, not passed.
+    const byFinger = async (name, locator, done) => {
+      const drops = chromiumDrops;
+      await touchTap(locator, done);
+      if (chromiumDrops !== drops) {
+        skip(name, 'Chromium made no pointer events from the touch, so the tap went by hand');
+        return null;
+      }
+      return await done();
+    };
+    const cardName = 'raised to full by Enter on its handle, a tap on a card opens its trip';
+    const isListed = await openList();
+    const byKeys = isListed && (await keysToFull());
+    const topName = chooser.first().locator('[data-testid="chooser-select"]').first();
+    const opened = await byFinger(cardName, topName, async () => (await trip().count()) > 0);
+    if (opened !== null)
+      check(
+        cardName,
+        byKeys && opened,
+        `list open ${isListed}; raised by keys, its handle shown ${byKeys}; trip open ${opened}`,
+      );
+    await closeCard();
+    const rowName = 'raised to full by Enter on its handle, a tap on a row opens its trip';
+    const isListedAgain = await openList();
+    const byKeysAgain = isListedAgain && (await keysToFull());
+    const firstRow = chooser.first().locator('[data-testid="chooser-item"]').first();
+    const rowOpened = await byFinger(rowName, firstRow, async () => (await trip().count()) > 0);
+    if (rowOpened !== null)
+      check(
+        rowName,
+        byKeysAgain && rowOpened,
+        `list open ${isListedAgain}; raised by keys, its handle shown ${byKeysAgain}; trip open ${rowOpened}`,
+      );
+    await closeCard();
+    // And raised to full by a finger's drag up the list from its first card, held before letting go.
+    const fingerName = 'raised to full by a finger, a tap on a card opens its trip';
+    const isListedThird = await openList();
+    const cardBox = await chooser
+      .first()
+      .locator('[data-testid="chooser-origin"]')
+      .first()
+      .boundingBox();
+    if (cardBox)
+      await fingerPan(cardBox.x + cardBox.width / 2, cardBox.y + 40, 0, -(cardBox.y + 80));
+    await cardsSettled(page);
+    const isFullByFinger = (await listAt()) === 'full';
+    const fingerOpened = await byFinger(
+      fingerName,
+      topName,
+      async () => (await trip().count()) > 0,
+    );
+    if (fingerOpened !== null)
+      check(
+        fingerName,
+        isListedThird && isFullByFinger && fingerOpened,
+        `list open ${isListedThird}; full by a finger ${isFullByFinger}; trip open ${fingerOpened}`,
+      );
+    await closeCard();
+  }
+
   // Run whole, the sections after this one go on a phone touched by finger alone again.
   if (PHONE_PARTS === 1) await newPhone();
 
