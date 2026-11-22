@@ -1,5 +1,6 @@
 // The monthly landmark refresh's comparison (scripts/landmarks/compare.mjs): each kind's count
-// before and after for its pull request, and a refusal when the file lost more than 20%.
+// before and after for its pull request, a refusal when the file lost more than 20%, and the new
+// ground a wider extract adds.
 //
 //   node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs tests/unit/landmark-compare-test.mjs
 import { test } from 'node:test';
@@ -8,6 +9,8 @@ import {
   SHRINK_LIMIT,
   compareLandmarkFiles,
   comparisonTable,
+  newGround,
+  newGroundText,
 } from '../../scripts/landmarks/compare.mjs';
 
 const file = (counts, kinds = Object.keys(counts)) => ({
@@ -52,4 +55,27 @@ test('the table shows each change with its sign, 0 where a kind held', () => {
   assert.match(table, /^\| mall \| 10 \| 8 \| -2 \|$/m);
   assert.match(table, /^\| school \| 4 \| 4 \| 0 \|$/m);
   assert.match(table, /^\| \*\*All\*\* \| \*\*14\*\* \| \*\*12\*\* \| \*\*-2\*\* \|$/m);
+});
+
+test('new ground: the landmarks farther than 2 km from every landmark before, the known kinds by name', () => {
+  const at = (name, kind, point) => ({ id: `n${name.length}`, name, kind, point });
+  const before = { landmarks: [at('Gateway', 'mall', [121.053, 14.62])] };
+  const after = {
+    landmarks: [
+      at('Gateway', 'mall', [121.053, 14.62]),
+      at('Farmers Plaza', 'mall', [121.0525, 14.6185]), // 170 m away: old ground
+      at('SM Masinag', 'mall', [121.1636, 14.6253]), // Antipolo, 12 km east
+      at('San Isidro', 'barangay', [121.17, 14.63]),
+    ],
+  };
+  const ground = newGround(before, after);
+  assert.deepEqual(
+    ground.map(({ name }) => name),
+    ['SM Masinag', 'San Isidro'],
+  );
+  const text = newGroundText(ground);
+  assert.match(text, /^2 landmarks lie more than 2 km/);
+  assert.match(text, /- SM Masinag \(mall, 14\.6253, 121\.1636\)/);
+  assert.doesNotMatch(text, /San Isidro/, 'a barangay is counted, not listed');
+  assert.equal(newGroundText([]), 'No landmark lies on new ground.');
 });
