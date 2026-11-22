@@ -376,6 +376,7 @@ All three look Windows-only; CI on Linux passes them. They matter for hooks: **a
   - Balance phone-test's parts (3m57s, 5m03s, 8m01s; even is about 5m40s). Then commuter-test's 7 minutes is the long pole. Free.
   - Replace fixed waits in the long suites with waits for the thing itself. Size unknown until per-check times are recorded.
   - More commuter parts (6 to 12 gives about 3m30s). Each costs a runner slot and a setup, so it pays only after waiting and setup are fixed.
+    - **Dropped (the owner, 22 November).** Since #1137 hid hotspot taps behind `VITE_HOTSPOT_TAPS`, which CI does not set, commuter-test skips its per-hotspot sequence. Its six parts took 2m03s at most on staging's run 45014533363, against 6m42s to 8m19s on run 44974645918 before it. More parts would add jobs and save nothing. The hidden stop-tap checks are to be kept alive by a separate push-only job built with the flag on, once the flag-on branch of the suite is updated to the one-tap RouteCard.
   - Bigger machines with several pages at once inside a job is a rewrite of the long suites, not a setting.
   - A floor of **about 3 to 4 minutes** for the full suite looks reachable with paid runners. Not 35 seconds.
 - **"No required job waits on another":** conflicts with `how-we-work.md`: the required checks "keep their names, and their `needs` still cover what they covered". The summary jobs exist to wait. The one edge that can go is the built-app suites waiting about 3 minutes for the build job's artifact: they could make their own preview build (11 s). They stay under "Build and the public map".
@@ -555,6 +556,14 @@ Biggest measured bucket first, then cost. One small pull request each, with `ana
 | 12 | The failure ledger, two weeks | fewer tests | no | evidence | same |
 
 5 to 10 are six `.github/` changes, one at a time. 1, 2, 3, 11 and 12 can run beside them.
+
+Status on 22 November:
+
+- **Done:**
+  - 1 (`check-times/`, #1132);
+  - 3 for commuter-test (#1144: `closeCard` waits on a condition; no measurable speed-up);
+  - 8 (#1146): a push went from 33 jobs in 9m41s to 29 jobs in 7m34s, and a pull request from 32 jobs to 28.
+- **Skipped:** 2, because phone-test is not the long pole.
 
 ### Needs the owner first
 
