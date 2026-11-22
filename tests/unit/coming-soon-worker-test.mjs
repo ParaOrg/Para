@@ -81,11 +81,22 @@ test('on a Preview, / is the map, asked once', async () => {
   assert.deepEqual(binding.asked, ['/']);
 });
 
-test('on the production site, the editor and a script are served as they are', async () => {
-  const binding = assets({ '/sw.js': { body: 'sw', type: 'text/javascript' } });
+test('on the production site, the editor, the contributor worker and a script are served as they are', async () => {
+  const binding = assets({
+    '/contribute/sw.js': { body: 'contributor worker', type: 'text/javascript' },
+    '/old-app-cleanup.js': { body: 'cleanup', type: 'text/javascript' },
+  });
   const studio = await servePage(new Request('https://www.para-commute.org/studio/'), binding);
   assert.equal(await studio.text(), 'the map');
-  const sw = await servePage(new Request('https://www.para-commute.org/sw.js'), binding);
-  assert.equal(await sw.text(), 'sw');
-  assert.deepEqual(binding.asked, ['/studio/', '/sw.js']);
+  const contributor = await servePage(
+    new Request('https://www.para-commute.org/contribute/sw.js'),
+    binding,
+  );
+  assert.equal(await contributor.text(), 'contributor worker');
+  const script = await servePage(
+    new Request('https://www.para-commute.org/old-app-cleanup.js'),
+    binding,
+  );
+  assert.equal(await script.text(), 'cleanup');
+  assert.deepEqual(binding.asked, ['/studio/', '/contribute/sw.js', '/old-app-cleanup.js']);
 });
