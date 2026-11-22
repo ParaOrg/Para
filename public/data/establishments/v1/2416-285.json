@@ -1,0 +1,26 @@
+{
+  "schema": 1,
+  "cell": "2416-285",
+  "attribution": "© OpenStreetMap contributors",
+  "establishments": [
+    ["n12159057493","bank",120.84021,14.287,"Asia United Bank"],
+    ["n8526839917","pharmacy",120.8011,14.29396,"marjes pharmacy"],
+    ["n12014393970","convenience",120.8468,14.26627,"Blaire"],
+    ["n12581861263","convenience",120.83042,14.29183,"Dali"],
+    ["n12581861264","convenience",120.80959,14.28648,"Dali"],
+    ["n13998878301","convenience",120.80028,14.29393,"Berna Store"],
+    ["n13998989701","convenience",120.80693,14.29085,"Abunda Store"],
+    ["n13998998901","convenience",120.80758,14.2911,"Amore Textile Printing Services"],
+    ["n13999001601","convenience",120.80772,14.29039,"Loury Store"],
+    ["n13999004101","convenience",120.80943,14.29349,"Mario Store"],
+    ["w414936221","convenience",120.84487,14.27928,"Puremart"],
+    ["w435582327","convenience",120.82425,14.26736,"Dali"],
+    ["w1359040224","convenience",120.80261,14.29353,"Dali"],
+    ["w1493182639","convenience",120.84861,14.28093,"7-Eleven"],
+    ["n13682670490","supermarket",120.84851,14.28133,"Step Mart Supermarket"],
+    ["n13682678209","cafe",120.84971,14.28149,"39ers Milk Tea"],
+    ["n13682738294","cafe",120.84846,14.28112,"DF Cafe"],
+    ["w1493182635","fuel",120.84885,14.28102,"Fuel Force"],
+    ["w1502090860","toilets",120.84389,14.28175]
+  ]
+}

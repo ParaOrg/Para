@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "cell": "2429-282",
+  "attribution": "© OpenStreetMap contributors",
+  "establishments": [
+    ["n1582134974","bank",121.47138,14.14305,"Majayjay Rural Bank",{"atm":true}],
+    ["n1582134969","remittance",121.47135,14.14303,"Bayad Center"],
+    ["n5585265203","pharmacy",121.47211,14.14512,"Save Health & Meds Pharmacy"],
+    ["n5585265218","pharmacy",121.47068,14.14708,"TGP",{"brand":"The Generics Pharmacy"}],
+    ["w261801292","supermarket",121.47164,14.14558,"Aida's Station Mart"],
+    ["w584273698","supermarket",121.47195,14.1453,"Mauricia Grocery"],
+    ["n1315638419","restaurant",121.47095,14.14648,"Titanic"],
+    ["n5623976721","restaurant",121.47092,14.1462,"Jabella"],
+    ["n11468644756","restaurant",121.46372,14.10056,"Popo & Nery’s Cafe Restaurant"],
+    ["n5585265204","fast_food",121.47209,14.14516,"Angel's Burger"],
+    ["n5585265210","fast_food",121.47164,14.14584,"Franks N' Burger"],
+    ["n1390372918","fuel",121.48181,14.14776],
+    ["w1408729832","fuel",121.47421,14.14527,"Petron"],
+    ["w116775129","clinic",121.471,14.1463,"Majayjay Rural Health Unit"],
+    ["n1315638447","toilets",121.47083,14.14681]
+  ]
+}

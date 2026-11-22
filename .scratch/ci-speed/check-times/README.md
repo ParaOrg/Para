@@ -38,4 +38,6 @@ This was a full run, all 32 jobs green. It read 4,848 checks in 27 jobs: [`out/4
 
 These seven checks take about 1,900 of those 2,600 seconds. Item 3 (fixed waits replaced by waits on a real condition) starts with them.
 
+Since #1137 (22 November) these checks no longer run in CI: hotspot taps are off unless `VITE_HOTSPOT_TAPS=1`. commuter-test's parts now take 2m03s at most. The long pole on a pull request is contribute-test, at about 6.5 minutes.
+
 **phone-test** has few checks, but long ones: 30 to 84 checks a part, 3.4 to 6.2 s each on average. Its slowest are stop lists and taps across a whole trip, such as "every stop shows, in reach, and nothing folds" at 40.7 s.

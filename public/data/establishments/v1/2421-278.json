@@ -1,0 +1,14 @@
+{
+  "schema": 1,
+  "cell": "2421-278",
+  "attribution": "© OpenStreetMap contributors",
+  "establishments": [
+    ["w454993618","convenience",121.05676,13.90164,"German's Sari-sari Store"],
+    ["n703062280","restaurant",121.07119,13.91503,"Ereneos Mountain view Restaurant"],
+    ["n4726921491","restaurant",121.05151,13.90078,"vVic's Eatery"],
+    ["n4636304792","fast_food",121.0843,13.91474,"Corcolon lomi house"],
+    ["n5977515786","fast_food",121.05128,13.90076,"G2B Lomi"],
+    ["n3914538863","fuel",121.06473,13.90479,"Petron"],
+    ["w1135048320","fuel",121.0811,13.92362]
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "schema": 1,
+  "cell": "2414-279",
+  "attribution": "© OpenStreetMap contributors",
+  "establishments": [
+    ["n8355926419","bank",120.72945,13.95173,"PSBank"],
+    ["n5605278322","convenience",120.70804,13.95056,"Store"],
+    ["n4435855889","restaurant",120.729,13.9532,"Madalunot"],
+    ["n8355996717","restaurant",120.72943,13.95186,"L’Bulalo Restaurant"],
+    ["n10934832554","fast_food",120.72886,13.9503,"McDonald's"],
+    ["w1421730770","fast_food",120.72888,13.9503,"KFC"],
+    ["n10256919317","cafe",120.72736,13.98925,"Babas Blend Milktea Station"],
+    ["n4361367189","fuel",120.72837,13.95638,"Caltex Balayan"],
+    ["w865193311","fuel",120.72837,13.9933,"Be4"],
+    ["w903420318","fuel",120.72931,13.95329,"Total",{"brand":"TotalEnergies"}],
+    ["w903420320","fuel",120.72824,13.95087,"Phoenix"],
+    ["w1416386724","fuel",120.72627,13.96647,"Uno"],
+    ["n4435855890","toilets",120.7272,13.98553]
+  ]
+}

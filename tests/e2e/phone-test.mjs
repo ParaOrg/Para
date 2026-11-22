@@ -3869,6 +3869,37 @@ if (runsPart(3)) {
       listedIds.length > 0 && sameSet(litOpen, listedIds),
       `${litOpen.length} lit, ${listedIds.length} listed`,
     );
+    // Lit but not open, a list's routes are their highlighted lines alone (the owner, 2026-11-22):
+    // no chevron flows, no end is named, and with the camera still nothing is drawn per frame, so
+    // the page asks for no animation frame at all. Counted over 2 s, after a settle.
+    await cardsSettled(page);
+    const quiet = await page.evaluate(async () => {
+      const m = window.__map;
+      await new Promise((r) => (m.isMoving() ? m.once('idle', r) : r()));
+      await new Promise((r) => setTimeout(r, 500));
+      let frames = 0;
+      const ask = window.requestAnimationFrame.bind(window);
+      window.requestAnimationFrame = (cb) => {
+        frames++;
+        return ask(cb);
+      };
+      await new Promise((r) => setTimeout(r, 2000));
+      window.requestAnimationFrame = ask;
+      const chevrons = m.getLayer('direction-arrow-chevrons')
+        ? m.queryRenderedFeatures({ layers: ['direction-arrow-chevrons'] }).length
+        : 0;
+      return {
+        frames,
+        chevrons,
+        ends: document.querySelectorAll('[data-testid="end-title"], [data-testid="end-circle"]')
+          .length,
+      };
+    });
+    check(
+      '  lit but not open, its routes are their lines alone: no chevrons, no ends, no animation frames in 2 s',
+      quiet.chevrons === 0 && quiet.ends === 0 && quiet.frames === 0,
+      JSON.stringify(quiet),
+    );
     const isPicked = async () =>
       (await wanted.count()) > 0 && (await wantedCard.getAttribute('data-state')) === 'selected';
     const wantedName = wantedCard.locator('[data-testid="chooser-select"]');
@@ -3983,107 +4014,14 @@ if (runsPart(3)) {
           ? await listCards.first().getAttribute('data-livery')
           : null;
       const seenRest = await rideLook(page);
-      const endsRest = await endsWear(oneCard);
+      // Lit with no trip open: its lines alone, no ends to wear the colour (the owner, 2026-11-22).
       check(
         oneCard
           ? "  and its lines are its one card's colour again"
           : '  and its lines are the selected blue again',
-        wears(seenRest, oneCard ? LOOKS?.byLivery[oneCard] : LOOKS?.lit) && endsRest.ok,
-        `${oneCard ?? 'blue'}: ${JSON.stringify(seenRest)}; ${endsRest.detail}`,
+        wears(seenRest, oneCard ? LOOKS?.byLivery[oneCard] : LOOKS?.lit),
+        `${oneCard ?? 'blue'}: ${JSON.stringify(seenRest)}`,
       );
-      // A Tail Route one lit ride alone goes to opens that ride's trip, its
-      // line lit (the owner's ask, 2026-10-01); ‹ back to the list. The list's routes may all end
-      // at one place (the way back), and a tail two rides share opens the place instead: skipped.
-      // Start's S and End's E before every lit line's ends, a list's in the
-      // selected blue too (the owner's "the rules for RouteLineEndingsLabel
-      // must be applicable to these RouteLine", 2026-10-13; plain names in the
-      // blue from 2026-10-02, the words Start and End over the names until his
-      // icons of 2026-10-12).
-      const marks = () =>
-        page.evaluate(() => {
-          const titles = [...document.querySelectorAll('[data-testid="end-title"]')];
-          return {
-            titles: titles.length,
-            marked: titles.filter((t) => t.querySelector('[data-part="start"], [data-part="end"]'))
-              .length,
-          };
-        });
-      const inBlue = await marks();
-      check(
-        oneCard
-          ? "  in its one card's colour, the ends wear Start's S or End's E"
-          : "  in the selected blue, the ends wear Start's S or End's E too",
-        inBlue.titles > 0 && inBlue.marked === inBlue.titles,
-        JSON.stringify(inBlue),
-      );
-      const tails = page.locator('[data-testid="end-title"][data-opens="trip"] button');
-      if ((await tails.count()) === 0) {
-        skip(
-          "  a tap on a tail's name opens its ride's trip",
-          "no tail the list lights is one ride's alone",
-        );
-      } else {
-        const tail = tails.first();
-        const tailName = await tail.evaluate(
-          (b) => b.closest('[data-testid="end-title"]').dataset.name,
-        );
-        const tailAt = await page.evaluate(
-          (n) => window.__ends().find((e) => e.named && e.name === n)?.at,
-          tailName,
-        );
-        // Where a finger could tap it: a list left at full height (its handle's
-        // taps dropped by a slow runner) covers the map, so it comes down first.
-        const listHandle = page
-          .locator('[data-testid="chooser"]')
-          .first()
-          .locator('button[data-testid="dock-handle"]');
-        const listSnap = async () =>
-          page.locator('[data-testid="chooser"]').first().getAttribute('data-snap');
-        if ((await listSnap()) === 'full')
-          await buttonTap(listHandle, async () => (await listSnap()) !== 'full');
-        if (tailAt) await jumpAboveSheet(page, tailAt);
-        const namePill = tail.locator('[data-part="name"]');
-        const reachable = await namePill.evaluate((el) => {
-          const r = el.getBoundingClientRect();
-          const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
-          return !!hit && el.contains(hit);
-        });
-        const isTripShown = () =>
-          page.evaluate(
-            () =>
-              document.querySelectorAll('[data-testid="card"]:not([hidden]) [data-testid="trip"]')
-                .length === 1,
-          );
-        if (reachable) await buttonTap(namePill, isTripShown);
-        await page
-          .waitForFunction(
-            () =>
-              document.querySelectorAll('[data-testid="card"]:not([hidden]) [data-testid="trip"]')
-                .length === 1,
-            null,
-            { timeout: 4000 },
-          )
-          .catch(() => {});
-        const tripName = await tripLabel();
-        const litTrip = (await litIds(page)) ?? [];
-        check(
-          "  a tap on a tail's name opens its ride's trip, its line alone lit",
-          reachable &&
-            tripName.includes(tailName) &&
-            litTrip.length === 1 &&
-            listedIds.includes(litTrip[0]) &&
-            !(await listShown()),
-          JSON.stringify({
-            tail: tailName,
-            reachable,
-            list: await listSnap(),
-            trip: tripName,
-            lit: litTrip,
-          }),
-        );
-        await leaveTrip(listShown);
-        check('  and the empty map tapped goes back to the list', await listShown());
-      }
       // A tap on the map where the list opened: a fresh list, nothing Selected, every route it
       // lists lit.
       // Where the list opened, brought into the map above the list, where a finger can reach it:

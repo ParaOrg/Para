@@ -231,12 +231,11 @@ export const RidePickedBackwards: Story = {
 };
 
 /**
- * Given `onPick` and `onTrip`, as both apps give them, and a ride that says
- * its hotspots: the pills are buttons. The tail, which one ride alone goes
- * to, opens that ride's trip; the head opens its place's routes.
+ * Given `onPick`, as both apps give it, and a ride that says its hotspots: the pills are buttons,
+ * each opening its place's routes.
  */
 export const PillsAsButtons: Story = {
-  args: { onPick: fn(), onTrip: fn() },
+  args: { onPick: fn() },
   play: async ({ canvasElement, args }) => {
     const ends = await endsOf(canvasElement, 2);
     await settled(canvasElement);
@@ -245,13 +244,13 @@ export const PillsAsButtons: Story = {
     const tailButton = tail.querySelector('button');
     const headButton = head.querySelector('button');
     if (!tailButton || !headButton) throw new Error('no button rendered');
-    await expect(tail).toHaveAttribute('data-opens', 'trip');
-    await expect(tailButton).toHaveAttribute('aria-label', 'End, Novaliches: the trip there');
+    await expect(tail).toHaveAttribute('data-opens', 'place');
+    await expect(tailButton).toHaveAttribute('aria-label', 'End, Novaliches: the routes there');
     await expect(head).toHaveAttribute('data-opens', 'place');
     await expect(headButton).toHaveAttribute('aria-label', 'Start, Tala: the routes there');
     // The button takes no taps itself, its pill does (end-titles.css): the tap lands on the pill.
     await userEvent.click(partOf(tail, 'name'));
-    await expect(args.onTrip).toHaveBeenCalledWith('tala-novaliches');
+    await expect(args.onPick).toHaveBeenCalledWith('novaliches');
     await userEvent.click(partOf(head, 'name'));
     await expect(args.onPick).toHaveBeenCalledWith('tala');
   },

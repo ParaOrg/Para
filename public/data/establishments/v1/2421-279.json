@@ -1,0 +1,9 @@
+{
+  "schema": 1,
+  "cell": "2421-279",
+  "attribution": "© OpenStreetMap contributors",
+  "establishments": [
+    ["n11443325469","restaurant",121.0984,13.9992,"Doña Lola's Restaurant"],
+    ["n11443326369","cafe",121.09845,13.99898,"Tomato and Basil Cafe"]
+  ]
+}

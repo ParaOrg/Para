@@ -1,0 +1,31 @@
+{
+  "schema": 1,
+  "cell": "2417-284",
+  "attribution": "© OpenStreetMap contributors",
+  "establishments": [
+    ["n12553657552","convenience",120.88633,14.24875,"Puremart"],
+    ["n12553657553","convenience",120.88676,14.24871,"Dali"],
+    ["n12682628474","convenience",120.88821,14.22033,"Alfamart"],
+    ["n12682628475","convenience",120.88362,14.22688,"Dali"],
+    ["n12682628487","convenience",120.88967,14.20584,"7-Eleven"],
+    ["n12682692330","convenience",120.85305,14.21471,"Dali"],
+    ["n12683570360","convenience",120.87064,14.20676,"Dali"],
+    ["n12684421024","convenience",120.8791,14.20163,"Dali"],
+    ["w1471518880","convenience",120.8724,14.20551,"Alfamart"],
+    ["w1497129953","convenience",120.88929,14.20702,"Alfamart"],
+    ["w1497129956","convenience",120.89067,14.20054,"Alfamart"],
+    ["w1497129957","convenience",120.89051,14.20049,"Dali"],
+    ["n13081237517","restaurant",120.87945,14.24108,"Samgyup sa Farm Indang"],
+    ["w414915270","cafe",120.88781,14.20022,"Creations Pastry and Cafe"],
+    ["n12682628460","fuel",120.87957,14.24185,"Fuel Force"],
+    ["w318119367","fuel",120.88536,14.22383,"iCoop Fuel"],
+    ["w414915384","fuel",120.89237,14.20033,"Gasso"],
+    ["w1369414095","fuel",120.87856,14.24423,"Caltex"],
+    ["w1369414096","fuel",120.88109,14.23837,"Petron"],
+    ["w1373257927","fuel",120.87167,14.20592,"Sea10"],
+    ["w1497129952","fuel",120.89087,14.2075,"Petron"],
+    ["n13437193345","clinic",120.87326,14.20023,"Indang Main Health Center"],
+    ["w413241119","clinic",120.86637,14.21233,"Calumpang Cerca Dialysis Center"],
+    ["w1369506620","police",120.87504,14.20307,"Indang Municipal Police Station"]
+  ]
+}

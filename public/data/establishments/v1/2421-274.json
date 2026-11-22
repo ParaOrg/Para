@@ -1,0 +1,28 @@
+{
+  "schema": 1,
+  "cell": "2421-274",
+  "attribution": "© OpenStreetMap contributors",
+  "establishments": [
+    ["n4574521638","atm",121.05736,13.7492,null,{"brand":"BDO"}],
+    ["n4693208775","bank",121.06833,13.74758,"Card SME Bank"],
+    ["n4164287880","pharmacy",121.07016,13.74421,"TGP"],
+    ["n8762118643","convenience",121.07239,13.73319,"NCT Doyoung's Sari-sari Store"],
+    ["n9925963319","convenience",121.07745,13.74597,"Poseidon len"],
+    ["n10943167206","convenience",121.07368,13.71703,"C"],
+    ["n11115623105","convenience",121.07662,13.71584,"MARCIA STORE"],
+    ["n11822972769","convenience",121.05944,13.70643,"0957436 EMILY CATAPANG"],
+    ["n11822972770","convenience",121.05946,13.7064,"0957465 rodelio bondad"],
+    ["w415802238","convenience",121.07138,13.73853,"Octane"],
+    ["w347449157","supermarket",121.05753,13.74877,"Puregold"],
+    ["n4164287875","restaurant",121.07041,13.74318,"Jocas Lomi Haus"],
+    ["n4693208780","restaurant",121.07071,13.7429,"Ng Wanam Food House"],
+    ["n7911788208","restaurant",121.07389,13.74888,"Club Yolanda"],
+    ["n8874531898","restaurant",121.06432,13.74807,"Hammburguesa de Campo"],
+    ["w452398013","restaurant",121.06593,13.71603,"Fae Fae"],
+    ["n14105391732","fast_food",121.07038,13.74463,"FreezeMe Food Corner"],
+    ["w946653303","fuel",121.06916,13.7178,"Jnber Trading"],
+    ["w1530404997","fuel",121.07004,13.74997,"Octane"],
+    ["n4580797345","toilets",121.05767,13.74865],
+    ["n8395623486","police",121.0748,13.73192,"Upland San Isidro COMPAC/PCP"]
+  ]
+}

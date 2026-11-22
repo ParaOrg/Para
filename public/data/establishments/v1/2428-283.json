@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "cell": "2428-283",
+  "attribution": "© OpenStreetMap contributors",
+  "establishments": [
+    ["n8041209286","convenience",121.42819,14.18687,"R-Bjem"],
+    ["n8041209287","convenience",121.42848,14.18917,"Black Gate Consumer"],
+    ["n8041209386","convenience",121.42828,14.1859,"Meg and Mac"],
+    ["n8041236548","convenience",121.42964,14.19467,"Lucia"],
+    ["n8041244389","convenience",121.42902,14.19705,"Gilda"],
+    ["n8041244390","convenience",121.42918,14.19822,"Mistica"],
+    ["n8041244587","convenience",121.42894,14.19736,"Avenido"],
+    ["n8041250685","convenience",121.42924,14.19628,"Lucky"],
+    ["n8041250985","convenience",121.4289,14.19754,"Gilda"],
+    ["n8041258588","convenience",121.4305,14.19856,"Chichabz"],
+    ["n8041266485","convenience",121.43079,14.19834,"Shawas"],
+    ["n8178180619","convenience",121.43306,14.19774,"Beng MD"],
+    ["n8178181017","convenience",121.4298,14.19762,"Lanie MD"],
+    ["w1148120771","clinic",121.42965,14.19849,"Magdalena Rural Health Unit"],
+    ["w741237649","police",121.42798,14.19997,"Magdalena Police Station"]
+  ]
+}

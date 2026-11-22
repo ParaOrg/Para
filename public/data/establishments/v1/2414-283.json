@@ -1,0 +1,11 @@
+{
+  "schema": 1,
+  "cell": "2414-283",
+  "attribution": "© OpenStreetMap contributors",
+  "establishments": [
+    ["n3246543012","remittance",120.73992,14.1774,"Smart Padala"],
+    ["n924256799","convenience",120.74317,14.17864,"Kabulusan Sarisari store"],
+    ["n1684477269","convenience",120.73712,14.17663,"Poojaris Mini Mart"],
+    ["n924256812","clinic",120.74067,14.17776,"Rural Health Unit"]
+  ]
+}
