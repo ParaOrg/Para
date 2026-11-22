@@ -1,0 +1,30 @@
+{
+  "schema": 1,
+  "cell": "2425-276",
+  "attribution": "© OpenStreetMap contributors",
+  "establishments": [
+    ["n7838261985","convenience",121.26182,13.83665,"Dimaano"],
+    ["n7838261986","convenience",121.28392,13.8474,"Alupay MPC"],
+    ["n7838262085","convenience",121.26234,13.83515,"Macaraig"],
+    ["n7838262086","convenience",121.29074,13.84493,"Monitor"],
+    ["n7838262185","convenience",121.28642,13.84281,"Levis Store"],
+    ["n7838262186","convenience",121.29524,13.84617,"Yolly"],
+    ["n8833972426","convenience",121.25014,13.80605,"BTGS0300298"],
+    ["n8834326017","convenience",121.25028,13.8109,"BTGS0300301"],
+    ["n9027821756","convenience",121.2858,13.84363,"Riza Store"],
+    ["n9027821757","convenience",121.28574,13.84362,"Alday Store & Meatshop"],
+    ["n12696358352","convenience",121.26678,13.82006,"Alfamart"],
+    ["n12696358353","convenience",121.25194,13.83248,"Alfamart"],
+    ["w975562731","convenience",121.29876,13.8447,"Holy Infant Bakery and General Merchandise"],
+    ["w975562629","restaurant",121.25749,13.83316,"Green Star Lomi Hauz"],
+    ["w975562738","restaurant",121.2895,13.84368,"Yao's Kitchen"],
+    ["w975562740","restaurant",121.29041,13.84376,"Wacky's Food House"],
+    ["n9027821755","fast_food",121.28588,13.84364,"Jumong Burgers"],
+    ["n9027821762","fast_food",121.25263,13.83203,"Angel's Burger"],
+    ["n2921693027","fuel",121.25282,13.83213,"HPB Fuels"],
+    ["n4195185435","fuel",121.28344,13.84342,"AMCO Gas Station"],
+    ["w659960647","fuel",121.25647,13.83322,"Petron"],
+    ["w975562630","fuel",121.25814,13.83373,"Uno Fuel"],
+    ["w975562736","fuel",121.28513,13.84359,"Alupay Gasoline Station"]
+  ]
+}

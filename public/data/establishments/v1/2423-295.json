@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "cell": "2423-295",
+  "attribution": "© OpenStreetMap contributors",
+  "establishments": [
+    ["n12638129990","convenience",121.15595,14.75649,"Alfamart"],
+    ["n12728400144","convenience",121.15789,14.75759,"Alfamart"],
+    ["n12728400145","convenience",121.15877,14.75119,"Dali"],
+    ["w871463593","convenience",121.15768,14.75283,"7-Eleven"],
+    ["w887886333","convenience",121.15733,14.75273,"Alfamart"],
+    ["w561397182","supermarket",121.15397,14.76076,"Ultra Mega Supermarket"],
+    ["w887895816","supermarket",121.15794,14.75313,"Savemore"],
+    ["w1059080453","fuel",121.15083,14.75591,null,{"brand":"Diesel & Gasoline Station"}],
+    ["w868601395","clinic",121.15328,14.76095,"Rodriguez Rural Health Unit 3"],
+    ["n2363159172","police",121.15299,14.76137]
+  ]
+}

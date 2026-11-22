@@ -1,0 +1,14 @@
+{
+  "schema": 1,
+  "cell": "2429-291",
+  "attribution": "© OpenStreetMap contributors",
+  "establishments": [
+    ["n2849688432","convenience",121.49873,14.56305,"Manny's Store"],
+    ["n2849688410","restaurant",121.49688,14.56346,"Jariel's Peak"],
+    ["n2849688433","restaurant",121.49829,14.56324,"Marquez Bulalohan"],
+    ["n6433966587","restaurant",121.49973,14.563,"Hungry Tummy Marquez Restaurant"],
+    ["n6433967090","restaurant",121.49974,14.56304,"Hungry Tummy Marquez Restaurant"],
+    ["n2849688407","fuel",121.49843,14.56318,"Gasoline"],
+    ["n2849688405","police",121.48319,14.55275,"Charlie (Cavaliers) Company"]
+  ]
+}

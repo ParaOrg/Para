@@ -1,0 +1,11 @@
+{
+  "schema": 1,
+  "cell": "2426-290",
+  "attribution": "© OpenStreetMap contributors",
+  "establishments": [
+    ["n1744533877","convenience",121.31706,14.52095,"Norlyn Valle Store"],
+    ["n1744533824","restaurant",121.33963,14.54129,"Alta Vista de Padre Pio Restaurant"],
+    ["n11242979087","restaurant",121.3005,14.50827,"Delterros grill house"],
+    ["n11242925970","clinic",121.30112,14.50913,"Alagang Aldea Maternity clinic"]
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "schema": 1,
+  "cell": "2421-273",
+  "attribution": "© OpenStreetMap contributors",
+  "establishments": [
+    ["n8762945752","bank",121.0518,13.69435,"KooPinoy"],
+    ["n8762945753","convenience",121.05181,13.69438,"Coop Mart"],
+    ["w459117854","restaurant",121.051,13.69397,"Bamboo House"],
+    ["n2657258802","fuel",121.05207,13.6928,"FLYING V LMG",{"brand":"Flying V"}]
+  ]
+}

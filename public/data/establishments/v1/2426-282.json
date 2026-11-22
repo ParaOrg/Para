@@ -1,0 +1,32 @@
+{
+  "schema": 1,
+  "cell": "2426-282",
+  "attribution": "© OpenStreetMap contributors",
+  "establishments": [
+    ["n290110821","bank",121.31441,14.14672,"Rural Bank of Calauan"],
+    ["n492176533","bank",121.31523,14.14583,"QCRB",{"atm":true}],
+    ["n492176546","bank",121.31347,14.14859,"LDB",{"atm":true}],
+    ["n5229471921","bank",121.31372,14.14814,"Cavite United Rural Bank (CURB)"],
+    ["n1301674563","pharmacy",121.31488,14.14584,"Bambies Pharmacy"],
+    ["n2430105533","pharmacy",121.31467,14.14621,"Bose Pharmacy"],
+    ["n2859793043","pharmacy",121.31309,14.14838,"Mercury Drug"],
+    ["n492176440","convenience",121.31957,14.14856,"Mylene Store"],
+    ["n534051699","convenience",121.31124,14.13649,"Manalo Store"],
+    ["n534051932","convenience",121.30397,14.12434,"Velasco Store"],
+    ["n534052103","convenience",121.30342,14.12084,"Celing's Store"],
+    ["n1479854720","convenience",121.30041,14.10663,"Tentay Ube Special"],
+    ["n1825095439","convenience",121.31462,14.14588,"7-Eleven"],
+    ["n1975144583","convenience",121.30143,14.10364,"Alcantara Store"],
+    ["n1975144587","convenience",121.3104,14.12999,"Ana Store"],
+    ["n2279352316","convenience",121.30013,14.10677,"Vangies"],
+    ["n12702124859","convenience",121.31285,14.14911,"Dali"],
+    ["w445879858","convenience",121.31341,14.14842,"Alfamart"],
+    ["w241876355","supermarket",121.31285,14.14836,"Puregold"],
+    ["n1316702546","restaurant",121.31431,14.14642,"Chooks-to-Go"],
+    ["n1316702532","fast_food",121.31434,14.14637,"Siomai Foodhouse"],
+    ["n1316702557","fast_food",121.31439,14.1463,"Lugaw Queen"],
+    ["w230220415","fuel",121.31314,14.1492,"Total"],
+    ["w230220429","fuel",121.31361,14.14751,"Eon"],
+    ["w789339853","fuel",121.3151,14.14578,"Shell"]
+  ]
+}

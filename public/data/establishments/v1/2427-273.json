@@ -1,0 +1,14 @@
+{
+  "schema": 1,
+  "cell": "2427-273",
+  "attribution": "© OpenStreetMap contributors",
+  "establishments": [
+    ["n7838330485","convenience",121.37391,13.6637,"Harriet Store"],
+    ["n7838540885","convenience",121.38919,13.67642,"DM Store"],
+    ["n8594306817","convenience",121.39723,13.67577,"7-Eleven"],
+    ["w1295586210","restaurant",121.39425,13.67312,"The Sands"],
+    ["w1295586208","toilets",121.3941,13.67331],
+    ["w1295586218","toilets",121.39423,13.67233],
+    ["w1408378532","toilets",121.38114,13.66705]
+  ]
+}

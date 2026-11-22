@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "cell": "2416-286",
+  "attribution": "© OpenStreetMap contributors",
+  "establishments": [
+    ["n13126288690","pharmacy",120.80547,14.323,"Goodwell Pharmacy"],
+    ["n13157218452","pharmacy",120.80072,14.33292,"Era Pharmacy & Mini Mart"],
+    ["n11471949346","convenience",120.8165,14.32017,"Adel's Sari-sari Store"],
+    ["n13125785984","convenience",120.80648,14.3227,"Alfamart Ciudad Nuevo"],
+    ["n13126316493","supermarket",120.80846,14.31846,"SM Hypermarket"],
+    ["n13157179401","fast_food",120.80598,14.32348,"PAREKOY SUPERBOWL"],
+    ["w1550611578","fuel",120.80069,14.30901,"SEA10"],
+    ["n4843811823","clinic",120.81839,14.31767,"Saddle Equine Racetrack"],
+    ["n13126344637","clinic",120.80545,14.32292,"Sabang Animal Bite Center"],
+    ["n13126358351","clinic",120.80353,14.32168,"Pasinaya West Medical Clinic"]
+  ]
+}

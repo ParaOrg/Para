@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "cell": "2420-282",
+  "attribution": "© OpenStreetMap contributors",
+  "establishments": [
+    ["n11853049569","atm",121.03386,14.14201],
+    ["w1520602468","convenience",121.03433,14.13476,"7-Eleven"],
+    ["n4921569021","restaurant",121.03915,14.14655,"Sport Club Restaurant"],
+    ["n6435952242","restaurant",121.0218,14.14592,"Bulaluhan sa Dapdap West"],
+    ["n9209634217","restaurant",121.02024,14.1443,"364 Alpha Bulalohan Tagaytay Curve View"],
+    ["n11503338870","restaurant",121.00081,14.1289,"Melencio's Tagaytay"],
+    ["n13871905715","restaurant",121.03879,14.14641,"Amare la Cucina"],
+    ["n13871905726","restaurant",121.0353,14.13485,"Comida y Vino"],
+    ["n13871905727","restaurant",121.03524,14.1349,"Kuranosuke"],
+    ["n13871905728","restaurant",121.03531,14.13492,"Chona's Garden Cafe"],
+    ["n13871905729","restaurant",121.03527,14.13496,"Cheong Jung"],
+    ["w548924194","restaurant",121.04015,14.14889,"Geraldines Diner"],
+    ["w548924221","restaurant",121.03708,14.14585,"Highlands China Palace"],
+    ["w548924322","restaurant",121.0332,14.13416,"Highlands Steakhouse"],
+    ["w548964474","restaurant",121.03424,14.13486,"Canteen"],
+    ["w548988272","restaurant",121.0421,14.14025,"Greenhouse Bistro"],
+    ["w971348140","restaurant",121.0063,14.13835,"NAPA at Crosswinds"],
+    ["n9452096017","fast_food",121.02215,14.14666,"All is Well Eatery"],
+    ["n4719630690","cafe",121.01112,14.13614,"Cafe Voila"],
+    ["n4719647789","cafe",121.01117,14.13609,"The Coffee Bean and Tea Leaf"],
+    ["w893200116","cafe",121.00752,14.13696,"Ruined Project"],
+    ["w694517778","clinic",121.03287,14.14844,"Calabuso Barangay Health and Nutrition Center"]
+  ]
+}

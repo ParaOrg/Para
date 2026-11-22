@@ -1,0 +1,31 @@
+{
+  "schema": 1,
+  "cell": "2423-280",
+  "attribution": "© OpenStreetMap contributors",
+  "establishments": [
+    ["w350783379","bank",121.15733,14.04713,"Rural Bank of Cuenca"],
+    ["w350783401","bank",121.15716,14.04746,"PNB Savings Bank"],
+    ["w366058198","bank",121.15811,14.04689,"BPI",{"atm":true}],
+    ["w370526907","bank",121.16001,14.04067,"Progressive Bank"],
+    ["n3736816679","convenience",121.16563,14.00853,"7-Eleven"],
+    ["n4308247189","convenience",121.15842,14.04406,"Uncle John's"],
+    ["n4780124216","convenience",121.15842,14.04484,"7-Eleven"],
+    ["n12690719740","convenience",121.15865,14.04427,"Alfamart"],
+    ["n12690719741","convenience",121.15708,14.04838,"Dali"],
+    ["w764893599","supermarket",121.16855,14.01078,"Robinsons Supermarket"],
+    ["n5925839146","fast_food",121.16482,14.0119,"Nazareth's Lomi and Bulaluhan"],
+    ["n9677867517","fast_food",121.15797,14.04296,"Maria's Kitchen"],
+    ["w826841281","fast_food",121.16512,14.00843,"Jollibee"],
+    ["w338076890","fuel",121.15767,14.04778,"Malvar Shell Gas Station",{"brand":"Shell"}],
+    ["w370527449","fuel",121.1583,14.04569,"Seaoil"],
+    ["w463796693","fuel",121.16285,14.0253,"Uno Fuel"],
+    ["w1361980254","fuel",121.1544,14.04121,"Uno Fuel"],
+    ["w1361980255","fuel",121.15455,14.04179,"Caltex"],
+    ["w1361980256","fuel",121.15302,14.04111,"Flexfuel"],
+    ["w1368498424","fuel",121.15963,14.03792,"Phoenix Gas Station",{"brand":"Phoenix"}],
+    ["w489530354","clinic",121.15976,14.03565,"Luta Sur Health Center"],
+    ["w1267503821","clinic",121.19989,14.02276,"Melchor and Martina Ona Memorial Health Care Center"],
+    ["n3742212293","police",121.15678,14.04321,"Malvar Police Station"],
+    ["w370526908","police",121.15841,14.04493,"Malvar Police Sub Station"]
+  ]
+}
