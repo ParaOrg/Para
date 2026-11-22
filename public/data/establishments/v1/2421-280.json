@@ -1,0 +1,11 @@
+{
+  "schema": 1,
+  "cell": "2421-280",
+  "attribution": "© OpenStreetMap contributors",
+  "establishments": [
+    ["n4819455208","convenience",121.09556,14.01764,"Lorie Convenience Store"],
+    ["n4819455209","convenience",121.09582,14.01775,"Romel Sari-sari Store"],
+    ["w902148354","convenience",121.09446,14.01811,"Alfamart"],
+    ["w1187066719","clinic",121.09598,14.01624,"Balete Municipal Health Center"]
+  ]
+}

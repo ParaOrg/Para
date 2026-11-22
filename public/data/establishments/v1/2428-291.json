@@ -1,0 +1,12 @@
+{
+  "schema": 1,
+  "cell": "2428-291",
+  "attribution": "© OpenStreetMap contributors",
+  "establishments": [
+    ["n6577904949","supermarket",121.44398,14.56225,"Nomer Feeds Supply"],
+    ["n2849688440","fast_food",121.44123,14.56109,"lomi house"],
+    ["w1535138829","cafe",121.43974,14.5574,"Cafe Cecilia"],
+    ["n10839668601","fuel",121.4332,14.55201,"Gas"],
+    ["w677487932","clinic",121.44056,14.56364,"Madilay-dilay Rural Health Unit"]
+  ]
+}

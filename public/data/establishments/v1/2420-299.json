@@ -1,0 +1,12 @@
+{
+  "schema": 1,
+  "cell": "2420-299",
+  "attribution": "© OpenStreetMap contributors",
+  "establishments": [
+    ["n1573409732","convenience",121.00872,14.9518,"Edlin Grocery Store"],
+    ["n10122854017","convenience",121.01465,14.95322,"MILA(MARUNGKO)"],
+    ["n10122884218","convenience",121.02106,14.95506,"JECK AND REA"],
+    ["n1573409723","fuel",121.00816,14.95038,"Shell"],
+    ["n1604278612","fuel",121.02246,14.9528,"Flores Gas Station"]
+  ]
+}

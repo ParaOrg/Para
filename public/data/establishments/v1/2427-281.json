@@ -1,0 +1,12 @@
+{
+  "schema": 1,
+  "cell": "2427-281",
+  "attribution": "© OpenStreetMap contributors",
+  "establishments": [
+    ["n12706717681","convenience",121.3597,14.09633,"Dali"],
+    ["n12706717682","convenience",121.35065,14.08825,"Alfamart"],
+    ["w1118950790","fast_food",121.3589,14.09447,"Sitio de Felicidad"],
+    ["n12331195138","cafe",121.36222,14.07227,"CDC 1028 Cafe"],
+    ["w911845577","fuel",121.35869,14.0943,"Total"]
+  ]
+}

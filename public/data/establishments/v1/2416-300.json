@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "cell": "2416-300",
+  "attribution": "© OpenStreetMap contributors",
+  "establishments": [
+    ["n12270712706","atm",120.82944,15.02569,"RCBC ATM Go"],
+    ["n12270712708","atm",120.82896,15.02548,"BDO Cash Agad"],
+    ["n10705998811","convenience",120.83373,15.02712,"Alfamart"],
+    ["n12367934089","convenience",120.84068,15.01306,"7-Eleven"],
+    ["w1560968703","convenience",120.82231,15.02467,"Alfamart"],
+    ["w910712738","fuel",120.84278,15.02452,"JACC Fuel Station"],
+    ["w769402075","clinic",120.82335,15.02488,"San Isidro Health Center"],
+    ["w769413656","clinic",120.83948,15.01333,"San Roque Health Center"],
+    ["w857970970","clinic",120.80005,15.04737,"San Nicolas Barangay Health Station"],
+    ["w910658669","clinic",120.83322,15.02788,"Barit Health Center"],
+    ["w910659011","clinic",120.84994,15.01929,"Manalili-Peña Dental Clinic"]
+  ]
+}
