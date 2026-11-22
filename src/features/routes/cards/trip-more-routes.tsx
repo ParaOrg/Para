@@ -25,6 +25,8 @@ interface TripMoreRoutesProps {
   onRoute: (id: string) => void;
   /** The rest of the trip, on the panel under the band and the list. */
   children: ReactNode;
+  /** Whether the Controller's bar tops the sheet where it floats (the studio's): the band clears it. */
+  isUnderBar?: boolean;
 }
 
 const TAB = {
@@ -40,7 +42,14 @@ const TAB = {
  * the page when closed, hidden, after the band and before the tab, so the tab is one button that
  * keeps its focus as it toggles.
  */
-export function TripMoreRoutes({ ends, from, routes, onRoute, children }: TripMoreRoutesProps) {
+export function TripMoreRoutes({
+  ends,
+  from,
+  routes,
+  onRoute,
+  children,
+  isUnderBar = false,
+}: TripMoreRoutesProps) {
   const [isOpen, setIsOpen] = useState(false);
   const listId = useId();
   const headingId = useId();
@@ -48,7 +57,14 @@ export function TripMoreRoutes({ ends, from, routes, onRoute, children }: TripMo
   const more = `${count} more ${count === 1 ? 'destination' : 'destinations'}`;
   return (
     <div className="isolate flex w-full flex-col items-center">
-      <div className="relative z-2 w-full bg-bg-surface px-3 pt-3 sheet-floating:pt-19">{ends}</div>
+      <div
+        className={cn(
+          'relative z-2 w-full bg-bg-surface px-3 pt-3',
+          isUnderBar && 'sheet-floating:pt-19',
+        )}
+      >
+        {ends}
+      </div>
       {count > 0 && (
         <section
           id={listId}
