@@ -2378,27 +2378,27 @@ const ON_THE_FORM_MS = 100_000;
   await page.getByRole('heading', { name: 'Save Recording' }).waitFor();
   // Never under something the contributor is answering: the sheet holds the ten minutes.
   await page.getByRole('button', { name: 'What did you ride?' }).click();
-  await page.clock.fastForward(605_000);
+  await page.clock.runFor(605_000);
   check(
     'the form does not save itself while the ride sheet is open over it',
     (await page.getByRole('heading', { name: 'Save Recording' }).count()) === 1 &&
       (await page.getByRole('dialog', { name: 'What did you ride?' }).count()) === 1,
   );
   await page.keyboard.press('Escape');
-  await page.clock.fastForward(61_000);
+  await page.clock.runFor(61_000);
   check(
     'a minute alone, the form is still open: it says nothing of its ten minutes, it keeps them',
     (await page.getByRole('heading', { name: 'Save Recording' }).count()) === 1,
   );
   // A hand on the form starts the ten minutes again: still open 598 s after it.
   await page.getByLabel('Description').fill('Crowded');
-  await page.clock.fastForward(2_000);
-  await page.clock.fastForward(596_000);
+  await page.clock.runFor(2_000);
+  await page.clock.runFor(596_000);
   check(
     'a hand on the form starts the ten minutes again: still on it a couple of seconds before',
     (await page.getByRole('heading', { name: 'Save Recording' }).count()) === 1,
   );
-  await page.clock.fastForward(3_000);
+  await page.clock.runFor(3_000);
   await page.getByTestId('toast').filter({ hasText: 'Route recorded' }).waitFor({ timeout: 5000 });
   check('left alone for ten minutes, the form closes and saves', true);
   await page.clock.resume();
@@ -2453,22 +2453,22 @@ const ON_THE_FORM_MS = 100_000;
   await page.getByRole('button', { name: 'Stop 1 on the map' }).click();
   const map = page.getByRole('dialog', { name: 'Stop 1 on the map' });
   await map.waitFor();
-  await page.clock.fastForward(605_000);
+  await page.clock.runFor(605_000);
   check("the form does not save itself while a stop's map is open over it", await onTheForm());
   // Its Delete question, left alone as long: the stop must still be there to delete.
   await map.getByRole('button', { name: 'Delete' }).click();
   const question = page.getByRole('alertdialog', { name: 'Delete this stop?' });
   await question.waitFor();
-  await page.clock.fastForward(605_000);
+  await page.clock.runFor(605_000);
   check(
     '  nor under its Delete question, which can still be answered',
     (await onTheForm()) && (await question.getByRole('button', { name: 'Delete' }).isEnabled()),
   );
   await question.getByRole('button', { name: 'Keep' }).click();
   await map.getByRole('button', { name: 'Close' }).click();
-  await page.clock.fastForward(598_000);
+  await page.clock.runFor(598_000);
   check('  the map closed, the ten minutes run again from there', await onTheForm());
-  await page.clock.fastForward(5_000);
+  await page.clock.runFor(5_000);
   await page.getByTestId('toast').filter({ hasText: 'Route recorded' }).waitFor({ timeout: 5000 });
   check('  and run out, the form saves', true);
   await page.clock.resume();
