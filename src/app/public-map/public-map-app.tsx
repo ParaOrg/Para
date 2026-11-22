@@ -215,6 +215,8 @@ export function PublicMapApp() {
       className={cn(
         'group/map @container relative h-full w-full overflow-clip',
         needRefresh && '[--toast-top:calc(env(safe-area-inset-top)+--spacing(19))]',
+        // 16 over an open card's sheet for its controls and the locate-me column (4831:54489).
+        cards.open && '[--dock-gap:1rem]',
         sheetTopUnderSearch(needRefresh, offline || age.stale),
       )}
     >

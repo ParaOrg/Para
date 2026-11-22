@@ -39,7 +39,7 @@ interface MapSheetControlsProps {
 export function MapSheetControls({ map, overview, list, onFlip, onFilter }: MapSheetControlsProps) {
   const way = list && listWay(list.candidates, list.back, list.listing, list.modeFilter);
   return (
-    <MapControlsDock isBesideCredits={false}>
+    <MapControlsDock>
       {list && way && way.way !== null && (
         <ViceVersaButton
           way={way.way}
