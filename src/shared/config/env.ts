@@ -28,6 +28,12 @@ export const isPlaceSearchShown: boolean = import.meta.env.VITE_PLACE_SEARCH ===
  */
 export const isRidePickingOn: boolean = import.meta.env.VITE_RIDE_PICKS === '1';
 
+/**
+ * Whether a tap on a hotspot's box opens its card on the public map: only in a build made with
+ * `VITE_HOTSPOT_TAPS=1`. Without it a tap there is the route's under it or the empty map's.
+ */
+export const isHotspotTapOn: boolean = import.meta.env.VITE_HOTSPOT_TAPS === '1';
+
 // TODO: nothing reads this yet; the notice that tells an editor so waits for the owner's design.
 /**
  * Whether a page at `hostname` is a preview that works on the live data: staging's and every

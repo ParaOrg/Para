@@ -1,7 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, within } from 'storybook/test';
 
-import { RouteCard, type RouteCardRide } from '@/features/routes/cards/route-card';
+import { RouteCard } from '@/features/routes/cards/route-card';
+import type { RouteCardRide } from '@/features/routes/cards/route-card-ride';
 import { isRoadLivery, type Livery, type RoadLivery } from '@/features/routes/model/liveries';
 import type { RailwayVehicle, RoadVehicle } from '@/features/routes/model/vehicles';
 
@@ -32,7 +33,6 @@ function AfterRouteCard({ livery, origin }: { livery: Livery; origin: string }) 
     <div className="w-97.5">
       <RouteCard
         ride={ride}
-        state="rest"
         routeOrigin={origin}
         endPoints={[
           {
@@ -42,7 +42,6 @@ function AfterRouteCard({ livery, origin }: { livery: Livery; origin: string }) 
             stationCode: null,
           },
         ]}
-        onSelect={() => undefined}
         onPick={() => undefined}
         testId="chooser"
       />
