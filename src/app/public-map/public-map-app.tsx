@@ -244,6 +244,7 @@ export function PublicMapApp() {
         {!credits.isSheetMissing && (
           <MapCreditsDock
             isDocked={cards.open}
+            corner="top-left"
             onOpen={credits.open}
             buttonRef={credits.buttonRef}
           />
@@ -251,7 +252,6 @@ export function PublicMapApp() {
         <MapSheetControls
           map={map}
           overview={overviewButton}
-          isBesideCredits={!credits.isSheetMissing}
           list={cards.choosing && !saved.selected && !cards.tripBehind ? saved : null}
           onFlip={flipList}
           onFilter={filterList}

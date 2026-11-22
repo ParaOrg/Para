@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { fn } from 'storybook/test';
+import { expect, fn, within } from 'storybook/test';
 
 import { MapCreditsDock } from './map-credits-dock';
 
@@ -30,3 +30,20 @@ export const AtTheMapsFoot: Story = {};
 
 /** A card open: 12 over the card's sheet, following its top. */
 export const OverAnOpenCard: Story = { args: { isDocked: true } };
+
+/**
+ * The public map's: in the map's top-left corner, 12 in from each side, over a card's sheet even at
+ * full height (it stays reachable), wherever the card is.
+ */
+export const InTheTopLeftCorner: Story = {
+  args: { corner: 'top-left', isDocked: true },
+  play: async ({ canvasElement }) => {
+    const host = canvasElement.querySelector('[data-dock-host]')?.getBoundingClientRect();
+    const button = within(canvasElement).getByRole('button').getBoundingClientRect();
+    await expect(host).toBeDefined();
+    if (host) {
+      await expect(Math.round(button.left - host.left)).toBe(12);
+      await expect(Math.round(button.top - host.top)).toBe(12);
+    }
+  },
+};
