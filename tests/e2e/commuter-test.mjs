@@ -692,9 +692,8 @@ for (const [i, p] of snapshot.polys.entries()) {
     );
     // A hotspot's cards light every route they show, the way round ⇄ has
     // them (the owner, 2026-09-29: "on hintuan it should light its routes");
-    // a tap on a card off its rows narrows that to its own, a second lets it
-    // go; a row opens its trip straight away, and ‹ comes back to every card
-    // at rest (his "back to normal", the same day).
+    // a card or a row opens its trip straight away, and ‹ comes back to every
+    // card, all lit (his "back to normal", the same day).
     const firstCard = cards.first();
     const name = firstCard.locator('[data-testid="card-select"]');
     const shownIds = (await cardDirections(page.locator('[data-testid="card"]').first())).filter(
@@ -718,27 +717,27 @@ for (const [i, p] of snapshot.polys.entries()) {
       Math.abs(a.lat - b.lat) < 1e-6;
     const settled = () =>
       page.waitForFunction(() => !window.__map.isMoving(), null, { timeout: 4000 }).catch(() => {});
-    // Where the commuter had the camera as the card opened, before any pick:
+    // Where the commuter had the camera as the card opened, before any tap:
     // where the trip's ‹ brings it back (the owner, 2026-10-02).
     await settled();
     const camHome = await view();
-    await name.click();
-    await inState(firstCard, 'selected');
-    const cardIds = await cardDirections(firstCard);
-    const picked = await until(litNow, (lit) => sameIds(lit, cardIds));
-    check(
-      `  a tap on its first card selects it and lights just its routes`,
-      (await firstCard.getAttribute('data-state')) === 'selected' && sameIds(picked, cardIds),
-      `${picked.length} lit for ${cardIds.length} row(s) of ${shownIds.length}`,
-    );
+    // A RouteCard is one tap target on the public map (the owner's call in #1137): a tap off its
+    // rows opens its first row's trip straight away, no card Selected on the way, and the map
+    // lights that route alone.
+    const firstRow = await rows.first().getAttribute('data-direction');
     const label = (await rows.first().innerText()).replace(/\s+/g, ' ').trim();
-    await rows.first().click();
+    await name.click();
     await shows(TRIP_UP);
     const after = await cardKind();
+    const tripLit = await until(litNow, (lit) => sameIds(lit, [firstRow]));
     check(
-      `  its first route row opens a route card straight away`,
-      after.kind === 'route',
-      `row "${label}" -> ${after.kind}`,
+      `  a tap on its first card opens its first row's trip straight away, lighting that route alone`,
+      after.kind === 'route' &&
+        (await page
+          .locator('[data-testid="card"] [data-testid="card-origin"][data-state="selected"]')
+          .count()) === 0 &&
+        sameIds(tripLit, [firstRow]),
+      `card "${label}" -> ${after.kind}; ${tripLit.length} lit`,
     );
     if (after.kind === 'route') {
       // In its card's colour, the hotspot's card kept behind it for its ‹
@@ -773,18 +772,18 @@ for (const [i, p] of snapshot.polys.entries()) {
       );
       const relit = await until(litNow, (lit) => sameIds(lit, shownIds));
       check(
-        `  ‹ comes back to its cards at rest, every route lit again`,
+        `  ‹ comes back to its cards, none Selected, every route lit again`,
         (await page
           .locator('[data-testid="card"] [data-testid="card-origin"][data-state="selected"]')
           .count()) === 0 && sameIds(relit, shownIds),
         `${relit.length} lit of ${shownIds.length}`,
       );
       // …and the camera comes back in to where the commuter had it before
-      // the pick, out of the trip's overview (the owner's ask, 2026-10-02).
+      // the tap, out of the trip's overview (the owner's ask, 2026-10-02).
       await cardsSettled(page);
       const camBack = await until(view, (v) => sameView(v, camHome));
       check(
-        `  and the camera back where it was before the pick`,
+        `  and the camera back where it was before the tap`,
         sameView(camBack, camHome),
         JSON.stringify({ camHome, camBack }),
       );
@@ -805,32 +804,6 @@ for (const [i, p] of snapshot.polys.entries()) {
         `  a row tapped at rest: the trip opens taking in its route, and leaving it brings the camera back`,
         opened2 && moved && sameView(camRowBack, camRow),
         JSON.stringify({ opened: opened2, moved, camRow, camRowBack }),
-      );
-      // Picked, a second tap lets it go — and the camera, after the pick's
-      // overview, goes back to where the commuter had it (the owner, 2026-10-01).
-      const camBefore = await view();
-      await name.click();
-      const repicked = (await inState(firstCard, 'selected')) === 'selected';
-      // The pick's overview flown before it is let go.
-      await cardsSettled(page);
-      await name.click();
-      await inState(firstCard, 'rest');
-      const letGo = await until(litNow, (lit) => sameIds(lit, shownIds));
-      check(
-        `  a second tap on a picked card lets it go: every route lit again`,
-        repicked &&
-          (await firstCard.getAttribute('data-state')) === 'rest' &&
-          sameIds(letGo, shownIds),
-        `picked ${repicked}; ${letGo.length} lit`,
-      );
-      await cardsSettled(page);
-      const camAfter = await until(view, (v) => sameView(v, camBefore));
-      check(
-        `  and the camera goes back to where it was before the pick`,
-        Math.abs(camAfter.zoom - camBefore.zoom) < 0.01 &&
-          Math.abs(camAfter.lng - camBefore.lng) < 1e-6 &&
-          Math.abs(camAfter.lat - camBefore.lat) < 1e-6,
-        JSON.stringify({ camBefore, camAfter }),
       );
       // ⇄ turns the routes round and leaves the camera where the commuter tapped
       // the hintuan: no zoom, no glide, even onto another box of the place (the
@@ -904,18 +877,12 @@ for (const [i, p] of snapshot.polys.entries()) {
           JSON.stringify({ wornTurned, wornBack, wornTurned2, wornBack2 }),
         );
       }
-      // ✕ closes it, a picked card and all: nothing stays lit.
-      await name.click();
-      const pickedAgain = (await inState(firstCard, 'selected')) === 'selected';
+      // ✕ closes it: nothing stays lit.
       await closeCard();
       // Nothing lit as soon as the map has drawn the close: a runner drawing a
       // few frames a second may take more than a quarter second (2026-10-01).
       const closed = await until(litNow, (lit) => lit.length === 0, 2000);
-      check(
-        `  ✕ closes it all: nothing lit`,
-        pickedAgain && closed.length === 0,
-        `picked ${pickedAgain}; ${closed.length} lit`,
-      );
+      check(`  ✕ closes it all: nothing lit`, closed.length === 0, `${closed.length} lit`);
     }
   } else {
     // No route stops here: no counter, no SWITCH.
