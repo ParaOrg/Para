@@ -1,4 +1,4 @@
-import type { ComponentProps, ReactNode } from 'react';
+import type { ComponentProps } from 'react';
 
 import { BottomSheet, type SheetHeight } from '@/shared/ui/bottom-sheet';
 import type { SheetShape } from '@/shared/ui/sheet-gesture';
@@ -47,8 +47,6 @@ interface Props {
    * cards follow it. Without one, every route is listed and the Controller has no sliders.
    */
   modeFilter?: ModeFilterControl;
-  /** Drawn after the last route card, handed its livery: the public map's contribute card. */
-  end?: (livery: Livery) => ReactNode;
   /**
    * Whether the Controller bar stands on the sheet: the studio's. The public map's has none; its
    * PAPUNTA and filter float on the map instead (Vice Versa and the sliders, MapControlsDock).
@@ -106,7 +104,6 @@ export function RouteCardList({
   hidden,
   height,
   modeFilter,
-  end,
   hasController = false,
 }: Props) {
   const filter = modeFilter?.filter ?? 'all';
@@ -148,12 +145,12 @@ export function RouteCardList({
         )
       }
     >
-      {/* At least the sheet's height, so what `end` draws can grow into the room a short list
-          leaves; with the Controller, padded by its height, at the foot on a phone and the top
-          where the list docks, so no card hides under it. */}
+      {/* The list ends at its last card, the sheet's own surface below it (the owner, 2026-11-22).
+          With the Controller, padded by its height, at the foot on a phone and the top where the
+          list docks, so no card hides under it. */}
       <div
         className={cn(
-          'flex min-h-full flex-col',
+          'flex flex-col',
           hasController && 'pb-20 sheet-floating:pt-16 sheet-floating:pb-0',
         )}
       >
@@ -170,7 +167,6 @@ export function RouteCardList({
           selection={selection}
           onRoute={onRoute}
           testId="chooser"
-          end={end}
         />
       </div>
     </BottomSheet>
