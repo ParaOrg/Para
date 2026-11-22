@@ -19,7 +19,7 @@ import { ESTABLISHMENT_IMAGE_PREFIX } from './establishment-loader';
 export type EstablishmentFamily =
   'food' | 'shopping' | 'money' | 'health' | 'education' | 'transport' | 'services' | 'safety';
 
-/** The glyph's file name, without `.svg`, in establishment-icons/maki/ or, for the ATM, temaki/. */
+/** The glyph's file name, without `.svg`, in establishment-icons/maki/ or, for the ATM and the remittance centre, temaki/. */
 export type EstablishmentGlyph =
   | 'restaurant'
   | 'fast-food'
@@ -38,7 +38,9 @@ export type EstablishmentGlyph =
   | 'fuel'
   | 'laundry'
   | 'toilet'
-  | 'police';
+  | 'police'
+  | 'jewelry-store'
+  | 'money-hand';
 
 /** 1: the big places a commuter gives directions by; 2: the everyday errands; 3: the rest. */
 export type EstablishmentTier = 1 | 2 | 3;
@@ -81,6 +83,14 @@ export const ESTABLISHMENT_KINDS: readonly EstablishmentKind[] = [
   { glyph: 'toilet', family: 'services', tier: 3, classes: ['toilets'] },
 ];
 
+/**
+ * The places the basemap's tiles lack, drawn from Para's own establishment files (E3b,
+ * establishment-extra.ts): pawnshops by a jewel, the pawn they mostly take, and remittance and
+ * bayad centers by money in hand. Both are money.
+ */
+export const EXTRA_KIND_GLYPH = { pawnshop: 'jewelry-store', remittance: 'money-hand' } as const;
+export const EXTRA_FAMILY: EstablishmentFamily = 'money';
+
 /** Each family's marker colour, as the map paints it (tokens.css, Map/Establishment/…). */
 export const FAMILY_COLOUR: Record<EstablishmentFamily, string> = {
   food: ESTABLISHMENT_COLOURS['Map/Establishment/Food/surface'],
@@ -106,5 +116,6 @@ export function establishmentImageOf(glyph: EstablishmentGlyph): string {
 
 /** The family a glyph's marker is coloured by: each glyph belongs to one. */
 export function familyOfGlyph(glyph: EstablishmentGlyph): EstablishmentFamily | null {
+  if (Object.values(EXTRA_KIND_GLYPH).some((extra) => extra === glyph)) return EXTRA_FAMILY;
   return ESTABLISHMENT_KINDS.find((kind) => kind.glyph === glyph)?.family ?? null;
 }

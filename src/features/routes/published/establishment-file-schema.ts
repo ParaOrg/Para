@@ -31,8 +31,8 @@ const cellNameSchema = z.string().check(z.regex(/^\d+-\d+$/));
 /** One cell as the index lists it: what a phone needs to fetch it and know when it changed. */
 const cellEntrySchema = z.object({
   cell: cellNameSchema,
-  count: z.number().check(z.int(), z.positive()),
-  bytes: z.number().check(z.int(), z.positive()),
+  count: z.number(),
+  bytes: z.number(),
   /** The first 16 hex digits of the cell file's SHA-256: changes whenever the file does. */
   hash: z.string().check(z.regex(/^[0-9a-f]{16}$/)),
 });
@@ -44,31 +44,49 @@ export const establishmentIndexSchema = z.object({
   attribution: z.string().check(z.minLength(1)),
   license_note: z.string().check(z.minLength(1)),
   source: z.string().check(z.minLength(1)),
-  extract_at: z.iso.datetime(),
-  cell_deg: z.number().check(z.positive()),
+  extract_at: z.string().check(z.minLength(1)),
+  cell_deg: z.number(),
   kinds: z.array(establishmentKindSchema),
   cells: z.array(cellEntrySchema),
 });
 export type EstablishmentIndex = z.infer<typeof establishmentIndexSchema>;
 
 /** A row: [OSM id, kind, lng, lat], then its name (or null) and its extras when it has any. */
-const rowSchema = z.union([
-  z.tuple([z.string(), establishmentKindSchema, z.number(), z.number()]),
-  z.tuple([z.string(), establishmentKindSchema, z.number(), z.number(), z.nullable(z.string())]),
-  z.tuple([
-    z.string(),
-    establishmentKindSchema,
-    z.number(),
-    z.number(),
-    z.nullable(z.string()),
-    z.object({ brand: z.optional(z.string()), atm: z.optional(z.literal(true)) }),
-  ]),
-]);
+export type EstablishmentRow =
+  | [string, EstablishmentKind, number, number]
+  | [string, EstablishmentKind, number, number, string | null]
+  | [string, EstablishmentKind, number, number, string | null, { brand?: string; atm?: true }];
+
+const KINDS: readonly unknown[] = establishmentKindSchema.options;
+const isExtras = (value: unknown): boolean =>
+  typeof value === 'object' &&
+  value !== null &&
+  Object.entries(value).every(
+    ([key, v]) => (key === 'brand' && typeof v === 'string') || (key === 'atm' && v === true),
+  );
+
+/**
+ * A row's shape, checked by hand: a tuple of four to six whose fifth is a name or null and whose
+ * sixth is the extras. Written out rather than with zod's tuples and unions, which the page's
+ * opening zod chunk would otherwise carry for this one reader.
+ */
+function isRow(row: unknown): row is EstablishmentRow {
+  if (!Array.isArray(row) || row.length < 4 || row.length > 6) return false;
+  const [id, kind, lng, lat, name, extras]: unknown[] = row;
+  return (
+    typeof id === 'string' &&
+    KINDS.includes(kind) &&
+    typeof lng === 'number' &&
+    typeof lat === 'number' &&
+    (row.length < 5 || name === null || typeof name === 'string') &&
+    (row.length < 6 || isExtras(extras))
+  );
+}
 
 export const establishmentCellSchema = z.object({
   schema: z.literal(1),
   cell: cellNameSchema,
   attribution: z.string().check(z.minLength(1)),
-  establishments: z.array(rowSchema).check(z.minLength(1)),
+  establishments: z.array(z.custom<EstablishmentRow>(isRow)).check(z.minLength(1)),
 });
 export type EstablishmentCell = z.infer<typeof establishmentCellSchema>;
