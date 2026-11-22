@@ -695,13 +695,14 @@ const fingerOn = async (locator, isCentred = false) => {
  * A finger on `locator` where a person would tap it (fingerOn), and `done()` true within 1.5 s.
  * False when there is no such element; a FAIL when the tap could not reach it or did nothing. A
  * tap Chromium dropped on a target fingerOn verified (no pointer press, the target still topmost
- * there) is sent again by hand as a finger sends it: pointerdown, pointerup, the click.
+ * there) is sent again by hand as a finger sends it: pointerdown, pointerup, the click. `more`
+ * adds to a FAIL's text what the caller knows of the moment (closeCard's: the cards on show).
  */
-const buttonTap = async (locator, done) => {
+const buttonTap = async (locator, done, more = async () => '') => {
   if ((await locator.count()) === 0) return false;
   const { at, why } = await fingerOn(locator);
   if (!at) {
-    await missed(locator, why);
+    await missed(locator, `${why}${await more()}`);
     return true;
   }
   const presses = await pointerPresses();
@@ -718,7 +719,7 @@ const buttonTap = async (locator, done) => {
       const late = (await until(done, Boolean, 3500))
         ? `, it came ${Date.now() - t0 + 1500} ms after the tap`
         : ', nor 3.5 s later';
-      await missed(locator, `tapped, and nothing came of it in 1.5 s${late}`);
+      await missed(locator, `tapped, and nothing came of it in 1.5 s${late}${await more()}`);
     } else {
       handSent(locator);
       await locator.first().evaluate((node, { x, y }) => {
@@ -735,7 +736,7 @@ const buttonTap = async (locator, done) => {
         node.dispatchEvent(new MouseEvent('click', { ...finger, detail: 1, button: 0 }));
       }, at);
       if (!(await until(done, Boolean, 1500)))
-        await missed(locator, 'sent again by hand, and nothing came of it in 1.5 s');
+        await missed(locator, `sent again by hand, and nothing came of it in 1.5 s${await more()}`);
     }
   }
   // Whatever the tap set going, a sheet or the camera, come to rest.
@@ -2919,7 +2920,27 @@ const closeCard = async () => {
       const before = await atTop();
       const moved = async () => (await atTop()) !== before;
       if ((await leave.count()) > 0) {
-        if (!(await buttonTap(leave, moved))) break;
+        // For a FAIL to say which card was open and what the tap met (ci-flakes ticket 07): where
+        // the button was, where this tap's pointerdown landed, and the cards' tops before and now.
+        // Read, not waited for: a button not drawn yet must not hold up the tap's own reading.
+        const box = await leave.evaluate((button) => {
+          window.__leaveDown = 'none';
+          document.addEventListener(
+            'pointerdown',
+            (e) => {
+              const at = e.target instanceof Element ? e.target : null;
+              window.__leaveDown = button.contains(at)
+                ? 'on the button'
+                : `on ${at?.closest('[data-testid]')?.getAttribute('data-testid') ?? at?.tagName.toLowerCase() ?? 'nothing'} at (${Math.round(e.clientX)}, ${Math.round(e.clientY)})`;
+            },
+            { capture: true, once: true },
+          );
+          const r = button.getBoundingClientRect();
+          return { x: r.x, y: r.y, width: r.width, height: r.height };
+        });
+        const more = async () =>
+          `; the button at ${box ? `(${Math.round(box.x)}, ${Math.round(box.y)}) ${Math.round(box.width)}×${Math.round(box.height)}` : 'no box'}; the tap's pointerdown ${await page.evaluate(() => window.__leaveDown)}; on show before "${before}", now "${await atTop()}"`;
+        if (!(await buttonTap(leave, moved, more))) break;
       } else if (!(await leaveTrip(moved))) break;
       await cardsSettled(page);
     }
