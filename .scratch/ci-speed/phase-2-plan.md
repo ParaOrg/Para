@@ -542,7 +542,7 @@ Biggest measured bucket first, then cost. One small pull request each, with `ana
 | # | Change | Bucket | Touches `.github/` | Expected | Job count |
 | --- | --- | --- | --- | --- | --- |
 | 1 | Record each check's and part's duration on full runs | running (evidence) | no | none yet; needed for 2, 3 and shards | same |
-| 2 | Balance phone-test's three parts by measured time | running | no | long pole 8m01s to about 7m | same |
+| 2 | ~~Balance phone-test's three parts by measured time~~ Skipped (hub, 22 November): measured on run 44974645918, phone-test's parts take 5m06s at most and commuter-test's 6m42s to 8m19s, so phone-test is not the long pole (`check-times/README.md`) | running | no | none | same |
 | 3 | Replace fixed waits in commuter-test and phone-test, one suite a pull request | running | no | unknown until 1 | same |
 | 4 | Find why `npm ci` slowed (a throwaway pull request with `--timing`) | setup | yes, never merged | up to 30 s a job if it can be undone | same |
 | 5 | Cache `node_modules`; drop the npm download cache | setup | yes | 38 s to about 8 s a job | same |
