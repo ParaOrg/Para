@@ -22,8 +22,8 @@
 #   2. Every suite at once, in jobs sized by measured time, so the run takes as
 #      long as the slowest job, not the sum of them all. The suites under a
 #      minute or so share a job, since each job repeats its setup and waits for
-#      one of the free plan's ~20 runners; commuter-test, the slowest by far,
-#      runs as six parts (COMMUTER_PART, see its top), phone-test as three, the
+#      one of the free plan's ~20 runners; commuter-test runs as two parts
+#      (COMMUTER_PART, see its top), phone-test as three, the
 #      drawing suites as two, and the built-app suites share one job that makes its own builds.
 #      What every job repeats is kept between runs: Playwright's Chromium and node_modules.
 #   3. The drawing suites only where they are needed. group, regression-
@@ -335,8 +335,10 @@ jobs:
   # OpenFreeMap's tiles; gate-test opens /studio/'s sign-in door. A job runs its `suites` one after
   # another, so the short ones share a runner's setup and a place in the queue (the free plan runs
   # about 20 jobs at once, across every run): gate, scale, map-pins, back, where and loop take
-  # about 4 minutes together. commuter-test runs in six parts (COMMUTER_PART, see its top) and
-  # phone-test in three (PHONE_PART, see its top).
+  # about 4 minutes together. commuter-test runs in two parts (COMMUTER_PART, see its top): with
+  # hotspot taps off (VITE_HOTSPOT_TAPS unset) the whole suite is about 4 minutes, and each part
+  # repeats the opening sections, so more parts cost runners and setup for no time. phone-test
+  # runs in three (PHONE_PART, see its top).
   public-suite:
     name: ${{ matrix.name }}
     needs: changes
@@ -354,12 +356,8 @@ jobs:
           - name: The short public suites
             slug: short-public
             suites: gate-test scale-test map-pins-test back-test where-test loop-test
-          - { name: commuter-test (1 of 6), slug: commuter-1, suites: commuter-test, part: 1/6 }
-          - { name: commuter-test (2 of 6), slug: commuter-2, suites: commuter-test, part: 2/6 }
-          - { name: commuter-test (3 of 6), slug: commuter-3, suites: commuter-test, part: 3/6 }
-          - { name: commuter-test (4 of 6), slug: commuter-4, suites: commuter-test, part: 4/6 }
-          - { name: commuter-test (5 of 6), slug: commuter-5, suites: commuter-test, part: 5/6 }
-          - { name: commuter-test (6 of 6), slug: commuter-6, suites: commuter-test, part: 6/6 }
+          - { name: commuter-test (1 of 2), slug: commuter-1, suites: commuter-test, part: 1/2 }
+          - { name: commuter-test (2 of 2), slug: commuter-2, suites: commuter-test, part: 2/2 }
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       # Node, npm ci, and Playwright's Chromium with its system packages, from the caches every
