@@ -1,7 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
-import { RouteCard, type RouteCardEndPoint, type RouteCardRide } from './route-card';
+import { RouteCard } from './route-card';
+import type { RouteCardEndPoint, RouteCardRide } from './route-card-ride';
 
 /** Rows to the given places, with no station codes. */
 const roadRows = (places: readonly string[]): RouteCardEndPoint[] =>
