@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "cell": "2415-285",
+  "attribution": "© OpenStreetMap contributors",
+  "establishments": [
+    ["n924762860","convenience",120.77706,14.25516,"Sari-Sari Store"],
+    ["n3246543011","convenience",120.77352,14.26038,"Shane Store"],
+    ["n8553917617","convenience",120.75388,14.27332,"7-Eleven"],
+    ["n11055805105","convenience",120.77565,14.289,"Alfa Mart"],
+    ["n12553642672","convenience",120.77293,14.2966,"Puremart"],
+    ["n12578811664","convenience",120.75365,14.29313,"Dali"],
+    ["n13998831601","convenience",120.75099,14.29321,"sharon store (gcash)"],
+    ["n13998835101","convenience",120.75114,14.29308,"Ej's Store"],
+    ["w407858522","convenience",120.77226,14.29656,"Dali"],
+    ["w415678035","convenience",120.75244,14.29179,"Alfamart"],
+    ["w415933035","convenience",120.78817,14.29887,"Dali"],
+    ["w445859032","convenience",120.75557,14.27342,"Alfamart"],
+    ["w1431496168","convenience",120.78814,14.29854,"7-Eleven"],
+    ["w1431496172","convenience",120.78732,14.2991,"Alfamart"],
+    ["w1499288314","convenience",120.79412,14.29559,"Dali"],
+    ["n10203714336","cafe",120.75808,14.27383,"Teabound Maragondon"],
+    ["n923902491","fuel",120.75207,14.27331,"Texxon"],
+    ["w233938410","fuel",120.77149,14.2684,"Petron"],
+    ["w1039830561","fuel",120.75396,14.29336,"Clean Fuel"],
+    ["w1415709321","fuel",120.77271,14.29657,"Spyder Fuel"],
+    ["w1431496169","fuel",120.786,14.29917],
+    ["w1573250425","fuel",120.76042,14.29978,"Hebron"]
+  ]
+}

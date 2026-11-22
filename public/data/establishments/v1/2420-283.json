@@ -1,0 +1,33 @@
+{
+  "schema": 1,
+  "cell": "2420-283",
+  "attribution": "© OpenStreetMap contributors",
+  "establishments": [
+    ["n2270328559","convenience",121.00921,14.18103,"Ester Store"],
+    ["n2270328564","convenience",121.01256,14.18344,"Samantha's Store"],
+    ["n2270328775","convenience",121.00781,14.18,"4M's Store"],
+    ["n12684177334","convenience",121.00723,14.18109,"Dali"],
+    ["n13404018515","convenience",121.01832,14.19379,"Ted's Variety Store"],
+    ["n13404020144","convenience",121.01925,14.19521,"Kambal Store"],
+    ["n13404024641","convenience",121.01888,14.19442,"Kaydee Store"],
+    ["n13404034938","convenience",121.01174,14.18254,"Anika Store"],
+    ["n13404035707","convenience",121.01313,14.18377,"Alfamart"],
+    ["n13404039180","convenience",121.01941,14.19515,"Lyn Store"],
+    ["n13404039407","convenience",121.00823,14.17986,"JC Store"],
+    ["n13404040578","convenience",121.0086,14.18018,"SL Store"],
+    ["w1372586178","convenience",121.0016,14.1724,"Shell Select"],
+    ["n2015024557","restaurant",121.002,14.17365,"Leonarda's"],
+    ["n2201261371","restaurant",121.01295,14.18289,"Mexippines"],
+    ["n13403965073","restaurant",121.00883,14.1806,"Chloe's Gotohan"],
+    ["n13403990083","restaurant",121.01909,14.19502,"Lalafang's Canteen"],
+    ["n13404004144","restaurant",121.00859,14.18045,"KrispyPapi"],
+    ["w849975255","restaurant",121.00092,14.16972,"Rekados Cafe and Restaurant"],
+    ["n13404034274","fast_food",121.01215,14.1829,"Mr. Liempo"],
+    ["n4760011922","cafe",121.00822,14.18009,"Bunch o' Munch"],
+    ["n6125057085","cafe",121.01125,14.18213,"Tabby Town Cat Cafe & Corgi Club"],
+    ["w849975252","cafe",121.00026,14.16891,"Leonarda's Brew"],
+    ["w766843204","fuel",121.01273,14.18327,"Caltex"],
+    ["w1372586177","fuel",121.00188,14.17231,"Shell"],
+    ["n14394253696","toilets",121.00178,14.17236]
+  ]
+}

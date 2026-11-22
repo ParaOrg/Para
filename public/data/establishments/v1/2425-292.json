@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "cell": "2425-292",
+  "attribution": "© OpenStreetMap contributors",
+  "establishments": [
+    ["n8490918117","convenience",121.29392,14.62104,"Ate chona"],
+    ["n2861456210","restaurant",121.28297,14.61614,"Park, Rest and Dine"],
+    ["n8463082117","cafe",121.27812,14.6183,"Cabin Cafe"],
+    ["n5644901098","fuel",121.25071,14.62438,"Mountain Hills"],
+    ["n12306500168","fuel",121.26182,14.60013,"Yeye Gasoline Station"],
+    ["w961536029","fuel",121.26091,14.62223,"Western Fuel"]
+  ]
+}

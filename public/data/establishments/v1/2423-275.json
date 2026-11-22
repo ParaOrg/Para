@@ -1,0 +1,14 @@
+{
+  "schema": 1,
+  "cell": "2423-275",
+  "attribution": "© OpenStreetMap contributors",
+  "establishments": [
+    ["n10177541117","atm",121.19674,13.76187,"CHICABOM"],
+    ["w579966609","bank",121.18955,13.79646,"Rural Bank of Taysan",{"atm":true}],
+    ["n5553296427","convenience",121.18899,13.79633,"Ntiara Variety Store"],
+    ["n5553296433","convenience",121.18905,13.79768,"Z.B. Store"],
+    ["n6682977186","convenience",121.18903,13.79487,"7-Eleven"],
+    ["w579966614","clinic",121.18872,13.79792,"Taysan Rural Health Center"],
+    ["w1426627545","police",121.18998,13.79463,"Police outpost"]
+  ]
+}

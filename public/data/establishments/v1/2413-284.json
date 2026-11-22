@@ -1,0 +1,11 @@
+{
+  "schema": 1,
+  "cell": "2413-284",
+  "attribution": "© OpenStreetMap contributors",
+  "establishments": [
+    ["n3246489742","convenience",120.66417,14.22703,"Mang Rey's Store"],
+    ["n2724727536","restaurant",120.65769,14.23254,"Kainan sa D.E.N.R."],
+    ["n1874522703","toilets",120.66429,14.22673,"Base Camp 1 Restroom"],
+    ["n1874677040","toilets",120.65779,14.23256]
+  ]
+}

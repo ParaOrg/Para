@@ -1,0 +1,24 @@
+{
+  "schema": 1,
+  "cell": "2418-298",
+  "attribution": "© OpenStreetMap contributors",
+  "establishments": [
+    ["n10122682235","convenience",120.91159,14.90207,"Angelo"],
+    ["n10243692310","convenience",120.90596,14.94635,"Aling Tessie Store"],
+    ["n12473380563","convenience",120.92404,14.94398,"Alfamart"],
+    ["n12615478002","convenience",120.9086,14.93531,"Mhakaren Mharan (friday) San pedro bustos bul"],
+    ["n12615495101","convenience",120.9093,14.93623,"Rosemarie santos (friday) San pedro bustos bul."],
+    ["n12615495102","convenience",120.909,14.93557,"Maribel galvez (friday) San pedro bustos bul."],
+    ["n13135491778","convenience",120.91039,14.94222,"Alfamart"],
+    ["w1301979900","cafe",120.90993,14.94261,"Café Galilea"],
+    ["n4754252230","fuel",120.91214,14.94405,"DMC"],
+    ["n12473380562","fuel",120.92405,14.9442,"FastLane"],
+    ["w588495553","fuel",120.92249,14.93182,"Petron"],
+    ["w1220154296","fuel",120.91337,14.94618],
+    ["w1341506259","fuel",120.92233,14.90541,"Petron"],
+    ["w1527927787","fuel",120.92686,14.93446,"Kalisi Gas"],
+    ["w1527930811","fuel",120.92756,14.94313,"Shell"],
+    ["w1527936950","fuel",120.93116,14.90914,"Xevron"],
+    ["n4754118322","clinic",120.91209,14.94395,"Klinika MJGB Children's Clinic"]
+  ]
+}

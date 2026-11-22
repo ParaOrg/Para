@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "cell": "2429-284",
+  "attribution": "© OpenStreetMap contributors",
+  "establishments": [
+    ["n8178180217","convenience",121.49951,14.246,"Connie del Mundo"],
+    ["n8593746817","convenience",121.49975,14.24637,"L.A store"],
+    ["n9570028517","convenience",121.49103,14.22373,"Prospect 1"],
+    ["n9570028817","convenience",121.49134,14.22408,"Prospect 2"],
+    ["n9570028917","convenience",121.49079,14.23437,"Prospect 3"],
+    ["n9570029017","convenience",121.49443,14.23739,"Prospect 4"],
+    ["n14152325078","restaurant",121.49323,14.2044,"Brics Hideout Restobar"],
+    ["n9122017717","fast_food",121.49781,14.20052,"BUKO BIBINGKA"],
+    ["w1025940655","fuel",121.49763,14.24971,"Petron"],
+    ["n3260444864","toilets",121.49836,14.24991,"Petron"]
+  ]
+}

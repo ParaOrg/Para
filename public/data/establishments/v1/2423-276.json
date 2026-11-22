@@ -1,0 +1,28 @@
+{
+  "schema": 1,
+  "cell": "2423-276",
+  "attribution": "© OpenStreetMap contributors",
+  "establishments": [
+    ["n9052022074","bank",121.19567,13.84393,"QCredit Corporation"],
+    ["n9052022089","pharmacy",121.19726,13.84404,"Healthybots Pharmacy"],
+    ["n12643248641","convenience",121.1586,13.82957,"7-Eleven"],
+    ["n12686812137","convenience",121.15389,13.82808,"Alfamart"],
+    ["n12692691159","convenience",121.1861,13.83867,"7-Eleven"],
+    ["n12692691160","convenience",121.18484,13.83824,"Dali"],
+    ["w1178205790","convenience",121.18537,13.83866,"Alfamart"],
+    ["w419462512","supermarket",121.19975,13.8449,"SM Hypermarket"],
+    ["n10945158912","restaurant",121.19964,13.84461,"Giligan's"],
+    ["n10945158937","restaurant",121.19995,13.84462,"Shakey's"],
+    ["w978260828","restaurant",121.1981,13.84412,"Thess Food House"],
+    ["w1178205792","restaurant",121.1997,13.84455,"Burnt"],
+    ["n10945158922","fast_food",121.18578,13.83851,"Yoriram Lomi Haus"],
+    ["n12688884256","fuel",121.17486,13.83287,"South Oil"],
+    ["w419462518","fuel",121.18548,13.83831,"Total"],
+    ["w825513878","fuel",121.1799,13.83496,"Marz"],
+    ["w978260672","fuel",121.19609,13.84359,"Phoenix"],
+    ["w978260674","fuel",121.19652,13.84367,"Petron"],
+    ["w978322742","fuel",121.18685,13.83981,"Shell"],
+    ["n9052009366","clinic",121.19967,13.84421,"Clet-Galabit Dental Clinic"],
+    ["w978260667","clinic",121.19702,13.84402,"Namunga Pediatric Clinic"]
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "schema": 1,
+  "cell": "2415-283",
+  "attribution": "© OpenStreetMap contributors",
+  "establishments": [
+    ["n14394148730","atm",120.75674,14.18744,null,{"brand":"7-Eleven"}],
+    ["n1684477274","bank",120.75691,14.18746,"Rural Bank of Maragondon"],
+    ["w420206634","bank",120.79663,14.1833,"Rural Bank of Bailen"],
+    ["n10747621519","pawnshop",120.79667,14.18357,"Palawan Pawnshop"],
+    ["w420194848","pawnshop",120.79692,14.18309,"Cebuana Lhuillier"],
+    ["w409729177","remittance",120.7945,14.18701,"GCash"],
+    ["n924798989","pharmacy",120.79635,14.18261,"Farmacia Golfo"],
+    ["w420194776","pharmacy",120.79728,14.18466,"TGP",{"brand":"The Generics Pharmacy"}],
+    ["w408154187","convenience",120.75699,14.18751,"7-Eleven"],
+    ["w420194815","convenience",120.79534,14.1842,"Bailen Animal Feed Store"],
+    ["w420208875","convenience",120.79719,14.18356,"Pure Mart"],
+    ["w420209770","convenience",120.79554,14.18412,"Alfamart"],
+    ["w430711572","convenience",120.79582,14.1846,"Alfamart"],
+    ["n10747621518","restaurant",120.7967,14.1836,"Cabisera de Bailen"],
+    ["n10747621508","fast_food",120.79572,14.18444,"Frank's Burger"],
+    ["n10747621516","fast_food",120.79663,14.18367,"Andok's"],
+    ["n10747621551","fast_food",120.79578,14.18503,"MBC Litson Manok and Liempo"],
+    ["w430711573","fast_food",120.796,14.18454,"Angel's Burger"],
+    ["w1155693747","fast_food",120.79686,14.1837,"Whataburger"],
+    ["n10747621557","cafe",120.79559,14.18542,"Big Brew"],
+    ["w408126036","cafe",120.75695,14.1897,"Big Brew Cafe"],
+    ["w430481918","fuel",120.75488,14.18657,"Petron"],
+    ["w877786026","fuel",120.79752,14.18178,"Plus Filling"]
+  ]
+}

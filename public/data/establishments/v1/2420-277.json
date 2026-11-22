@@ -1,0 +1,19 @@
+{
+  "schema": 1,
+  "cell": "2420-277",
+  "attribution": "© OpenStreetMap contributors",
+  "establishments": [
+    ["n9134485118","convenience",121.03855,13.8563,"NORA"],
+    ["n9134485618","convenience",121.03882,13.85488,"PURI"],
+    ["n9134569217","convenience",121.03795,13.85281,"ARLYN"],
+    ["n12686832773","convenience",121.04368,13.89202,"Alfamart"],
+    ["n12686832775","convenience",121.04982,13.89958,"Alfamart"],
+    ["n12696366227","convenience",121.02145,13.86774,"Alfamart"],
+    ["n12696366228","convenience",121.02197,13.86776,"Dali"],
+    ["n12696366229","convenience",121.00458,13.86421,"Dali"],
+    ["w300591238","fuel",121.04505,13.89515,"Shell"],
+    ["w719069398","fuel",121.02172,13.86793,"Phoenix"],
+    ["n4819416040","clinic",121.00635,13.86603,"TB Dots Center"],
+    ["w458420358","police",121.00583,13.86618,"Alitagtag MPS"]
+  ]
+}

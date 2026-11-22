@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "cell": "2428-280",
+  "attribution": "© OpenStreetMap contributors",
+  "establishments": [
+    ["n4755574024","atm",121.40114,14.0173,null,{"brand":"CARD Bank"}],
+    ["n677321914","bank",121.40111,14.01729,"CARD Bank"],
+    ["n8889232918","bank",121.40192,14.01782,"Yakap at Halik Multi-Purpose Cooperative"],
+    ["w925046181","bank",121.4022,14.01641,"Rural Bank of Dolores"],
+    ["n4755573928","pharmacy",121.40108,14.01725,"BotiCARD"],
+    ["n677322104","convenience",121.40332,14.01595,"Vien's Store"],
+    ["n2155583190","convenience",121.43696,14.04399,"Mini Store (Jump-Off/Registration)"],
+    ["n4514596190","convenience",121.42994,14.03396,"Mamania's Store"],
+    ["w925046184","clinic",121.40209,14.01654,"Parish Health Center"],
+    ["n676763303","toilets",121.40238,14.01736,"Restroom"],
+    ["w925046183","toilets",121.40386,14.01673,"Rest Room"]
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "cell": "2423-277",
+  "attribution": "© OpenStreetMap contributors",
+  "establishments": [
+    ["n7836902085","convenience",121.18882,13.86366,"Tampayak MPC Santa Cruz Rosario"],
+    ["n12211520898","convenience",121.15111,13.88823,"Malyn's Store"],
+    ["n12689223054","convenience",121.15092,13.89083,"Alfamart"],
+    ["n12689223055","convenience",121.15098,13.89007,"Dali"],
+    ["n13826680590","convenience",121.15133,13.88739,"ALL EN one"],
+    ["w1246280037","convenience",121.15223,13.88791,"USANA"],
+    ["w1246280026","restaurant",121.15117,13.88853,"Jaylord Malunggay Pandesal"],
+    ["w1246280034","restaurant",121.15112,13.88745,"4 Brothers Lomi & Tapapsilugan"]
+  ]
+}

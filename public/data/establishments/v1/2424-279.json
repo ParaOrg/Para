@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "cell": "2424-279",
+  "attribution": "© OpenStreetMap contributors",
+  "establishments": [
+    ["n2047845366","convenience",121.22477,13.97313,"Marzol Store"],
+    ["n12690672551","convenience",121.20515,13.95661,"Dali"],
+    ["w467100650","convenience",121.20472,13.98047,"SALCEDO'S SARI SARI STORE AND UBE HALAYA"],
+    ["n8240227319","fast_food",121.20226,13.97355,"Peejays Special Sisig"],
+    ["n9677859517","fast_food",121.20039,13.97922,"Bhabez Gotong Batangas and Inihaw na Liempo"],
+    ["w1003619404","fast_food",121.21167,13.98591,"Juancho's"],
+    ["n1280459489","cafe",121.22874,13.98979,"Mang Berting"],
+    ["n1280459535","cafe",121.23304,13.99103,"Mang Pirying/ Tatay Tino's Kubo"],
+    ["n2048003261","toilets",121.23304,13.99113]
+  ]
+}
