@@ -9,6 +9,8 @@ import {
   CARD_INK,
   ROUTE_CARD_BLOB_PLACE,
   ROUTE_CARD_FILL,
+  ROUTE_CARD_HAS_BLOB,
+  ROUTE_CARD_ORIGIN_GAP,
   ROUTE_CARD_REST_SHADOW,
 } from './route-card-look';
 import { RouteCardMode } from './route-card-mode';
@@ -73,18 +75,20 @@ export function RouteCard({
         CARD_INK[livery],
       )}
     >
-      <img
-        src={CARD_BLOB[livery].src}
-        alt=""
-        aria-hidden
-        className={cn(ROUTE_CARD_BLOB_PLACE, CARD_BLOB[livery].className)}
-      />
+      {ROUTE_CARD_HAS_BLOB[livery] && (
+        <img
+          src={CARD_BLOB[livery].src}
+          alt=""
+          aria-hidden
+          className={cn(ROUTE_CARD_BLOB_PLACE, CARD_BLOB[livery].className)}
+        />
+      )}
       {vehicle && (
         <div className="flex px-3">
           <RouteCardMode vehicle={vehicle} bound={isRail ? ride.bound : null} livery={livery} />
         </div>
       )}
-      <div className="flex w-full flex-col">
+      <div className={cn('flex w-full flex-col', ROUTE_CARD_ORIGIN_GAP[livery])}>
         <div className="flex w-full items-center gap-2 px-3">
           {/* The name is the card's own target, stretched over all of it; the rows are drawn over
               that, so they keep their own taps. Long names wrap. At a sheet's Low, one line of it
