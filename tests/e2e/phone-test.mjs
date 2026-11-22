@@ -811,8 +811,8 @@ check(
   'no zoom buttons on a touch screen',
   (await page.locator('.maplibregl-ctrl-zoom-in').count()) === 0,
 );
-// The map's credits: its own ⓘ at the bottom left (Figma 4494:2048, as on the contributor page's
-// Start), MapLibre's corner credits stepped aside; the ⓘ opens them as the Map Data Source sheet
+// The map's credits: its own ⓘ in the map's top-left corner (the owner, 2026-11-22; the studio and
+// the contributor page keep theirs at the bottom left), MapLibre's corner credits stepped aside; the ⓘ opens them as the Map Data Source sheet
 // (4494:10177), so the licences' credit is always a tap away. Checked by mouse and keys (Escape, Enter) on a
 // phone of its own: the shared one is touched by finger alone (guardTouchOnly).
 {
@@ -822,11 +822,11 @@ check(
   const sheet = keysPage.getByRole('dialog', { name: 'Map Data Source' });
   const infoBox = await info.boundingBox();
   check(
-    "the map's ⓘ sits at the bottom left, 12 in, 32 across, and MapLibre's corner credits are gone",
+    "the map's ⓘ sits in the top-left corner, 12 in from each side, 32 across, and MapLibre's corner credits are gone",
     !!infoBox &&
       Math.abs(infoBox.x - 12) < 1 &&
       Math.abs(infoBox.width - 32) < 1 &&
-      Math.abs(844 - (infoBox.y + infoBox.height) - 12) < 1 &&
+      Math.abs(infoBox.y - 12) < 1 &&
       !(await keysPage.locator('.maplibregl-ctrl-attrib').isVisible()),
     JSON.stringify(infoBox),
   );
@@ -3576,26 +3576,24 @@ if (runsPart(1)) {
     }
 
     const trip2 = await tripChecks();
-    // The ⓘ rides 12 over the card's sheet, as the LocatorButton does on the right.
+    // The ⓘ keeps its corner with a card open: it no longer rides over the sheet.
     if (['free', 'low'].includes(await sheetState())) {
       await cardsSettled(page);
-      const above = await page.evaluate(() => {
+      const corner = await page.evaluate(() => {
         const info = document
           .querySelector('button[aria-label="Map data sources"]')
           ?.getBoundingClientRect();
-        const top = document
-          .querySelector('[data-testid="card"]:not([hidden])')
-          ?.getBoundingClientRect().top;
-        return info && top !== undefined ? top - info.bottom : null;
+        return info ? { x: Math.round(info.left), y: Math.round(info.top) } : null;
       });
       check(
-        "  with a card open the map's ⓘ stands 12 over its sheet",
-        above !== null && Math.abs(above - 12) < 2,
-        String(above),
+        "  with a card open the map's ⓘ stays in the top-left corner, 12 in",
+        corner !== null && Math.abs(corner.x - 12) < 2 && Math.abs(corner.y - 12) < 2,
+        JSON.stringify(corner),
       );
 
-      // The ⓘ is the licences' credit, MapLibre's corner gone: over any map left showing it stays
-      // reachable, the sheet raised to full height and held part way alike.
+      // The ⓘ is the licences' credit, MapLibre's corner gone. At full height no map shows and the
+      // card fills its corner: it is hidden, not drawn and out of the keyboard's way (the owner,
+      // 2026-11-22); held part way up, with map showing, it is back in its corner, reachable.
       const infoReachable = () =>
         page.evaluate(() => {
           const info = document.querySelector('button[aria-label="Map data sources"]');
@@ -3605,10 +3603,17 @@ if (runsPart(1)) {
           return { top: Math.round(box.top), isOnTop: !!hit && info.contains(hit) };
         });
       const before = await sheetState();
-      const atFull = (await handleTo('full')) ? await infoReachable() : null;
+      const atFull = (await handleTo('full'))
+        ? await page.evaluate(() => {
+            const info = document.querySelector('button[aria-label="Map data sources"]');
+            return info
+              ? { drawn: info.checkVisibility(), box: info.getClientRects().length }
+              : null;
+          })
+        : null;
       check(
-        "  with the card at full height, the map's ⓘ is still in the strip of map above it, reachable",
-        atFull?.isOnTop === true && atFull.top >= 0,
+        "  with the card at full height, the map's ⓘ is hidden: not drawn, not focusable",
+        atFull !== null && !atFull.drawn && atFull.box === 0,
         JSON.stringify(atFull),
       );
       await toRaised();
@@ -3631,7 +3636,7 @@ if (runsPart(1)) {
         await cardsSettled(page);
       }
       check(
-        "  with the card held part way up, the map's ⓘ rides over it, reachable",
+        "  with the card held part way up, the map's ⓘ is back in its corner, reachable",
         midway?.isOnTop === true,
         JSON.stringify(midway),
       );
@@ -5354,7 +5359,7 @@ if (runsPart(1)) {
     (await dpage.locator('.maplibregl-ctrl-zoom-in, .maplibregl-ctrl-compass').count()) === 0,
   );
   check(
-    "a fine pointer gets the same ⓘ at the bottom left, MapLibre's corner credits gone",
+    "a fine pointer gets the same ⓘ, MapLibre's corner credits gone",
     (await dpage.getByRole('button', { name: 'Map data sources' }).isVisible()) &&
       !(await dpage.locator('.maplibregl-ctrl-attrib').isVisible()),
   );

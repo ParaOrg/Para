@@ -78,6 +78,10 @@ const HOTSPOT_MARKS = { shouldShowPins: false, dotKinds: [], isTappable: isHotsp
 const TOAST_UNDER_FULL_CARD =
   '@max-float:group-has-[[data-testid=card][data-snap=full]:not([hidden]):not(:has([data-testid=trip]))]/map:[--toast-top:calc(env(safe-area-inset-top)+--spacing(23.5))]';
 
+/** The ⓘ hides at full height on a phone, no map to credit and the card under it, until lowered. */
+const CREDITS_HIDDEN_AT_FULL =
+  '@max-float:group-has-[:is([data-testid=card],[data-testid=chooser])[data-snap=full]:not([hidden])]/map:hidden';
+
 /** The too-new map's Reload: the newer app, through the worker (pwa.ts). */
 const handleReloadNewer = () => void reloadForNewerApp();
 
@@ -215,6 +219,7 @@ export function PublicMapApp() {
       className={cn(
         'group/map @container relative h-full w-full overflow-clip',
         needRefresh && '[--toast-top:calc(env(safe-area-inset-top)+--spacing(19))]',
+        cards.open && '[--dock-gap:1rem]', // 16 over a sheet: the controls, locate-me (4831:54489)
         sheetTopUnderSearch(needRefresh, offline || age.stale),
       )}
     >
@@ -242,16 +247,18 @@ export function PublicMapApp() {
           hasMapStyleButton={false}
         />
         {!credits.isSheetMissing && (
-          <MapCreditsDock
-            isDocked={cards.open}
-            onOpen={credits.open}
-            buttonRef={credits.buttonRef}
-          />
+          <div className={cn('contents', CREDITS_HIDDEN_AT_FULL)}>
+            <MapCreditsDock
+              isDocked={cards.open}
+              corner="top-left"
+              onOpen={credits.open}
+              buttonRef={credits.buttonRef}
+            />
+          </div>
         )}
         <MapSheetControls
           map={map}
           overview={overviewButton}
-          isBesideCredits={!credits.isSheetMissing}
           list={cards.choosing && !saved.selected && !cards.tripBehind ? saved : null}
           onFlip={flipList}
           onFilter={filterList}
