@@ -123,7 +123,7 @@
   "src/shared/ui/bottom-sheet.tsx": 394,
   "src/shared/ui/route-icons.tsx": 150,
   "src/shared/ui/sheet-gesture.ts": 267,
-  "src/shared/ui/sheet-room.ts": 215,
+  "src/features/routes/map/sheet-room.ts": 215,
   "src/shared/ui/toast.tsx": 166,
   "src/shared/ui/turnstile.tsx": 164,
   "src/shared/ui/use-sheet-gestures.ts": 267,
