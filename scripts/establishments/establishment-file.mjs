@@ -1,17 +1,32 @@
-// The establishment file's shape, written and checked in one place (.scratch/establishments,
-// step E3a): establishments.mjs writes it, check.mjs and tests/unit/establishment-file-test.mjs
-// read it back with establishmentFileProblems.
+// The establishment files' shape (.scratch/establishments, step E3a): establishments.mjs writes
+// them with establishmentFiles; establishment-problems.mjs, check.mjs and
+// tests/unit/establishment-file-test.mjs read them back.
 //
-// The landmark file's header (JSON has no comments, so the licence and the credit are its first
-// fields), then one establishment per line, so a monthly rebuild reads as a diff of the places
-// that changed. A row is an array, not an object, to keep some 40,000 places under the ceiling:
+// The places are cut by area into cells (establishment-cells.ts, ESTABLISHMENT_CELL_DEG), each a
+// file of its own, so a phone fetches only the cells it looks at. The index carries the landmark
+// file's header (JSON has no comments, so the licence and the credit are its first fields) and
+// each cell's count, size and hash, so a phone can keep cells and know when one changed. Empty
+// cells have no file. A cell holds one establishment per line, so a monthly rebuild reads as a
+// diff of the places that changed. A row is an array, not an object, to keep the cells small:
 // [id, kind, lng, lat] and, when it has them, its name and its extras.
+import { createHash } from 'node:crypto';
+import { mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+
+import {
+  ESTABLISHMENT_CELL_DEG,
+  establishmentCellOf,
+} from '../../src/features/routes/published/establishment-cells.ts';
 import { LANDMARK_SOURCE } from '../landmarks/landmark-file.mjs';
 
 export const ESTABLISHMENT_FILE_SCHEMA = 1;
-export const ESTABLISHMENT_FILE_PATH = 'public/data/establishments.v1.json';
-/** The landmark file's ceiling (.scratch/place-search, decision 7), held to here too. */
-export const ESTABLISHMENT_FILE_MAX_BYTES = 3 * 1024 * 1024;
+/** The folder the index and the cells are written to, served at /data/establishments/v1/. */
+export const ESTABLISHMENT_DIR = 'public/data/establishments/v1';
+export const ESTABLISHMENT_INDEX = 'index.json';
+/** A cell's ceiling: what a phone fetches for one cell at worst. */
+export const ESTABLISHMENT_CELL_MAX_BYTES = 400 * 1024;
+/** All cells together: the whole box, were a phone to fetch every cell. */
+export const ESTABLISHMENT_TOTAL_MAX_BYTES = 8 * 1024 * 1024;
 /**
  * What the owner listed (.scratch/establishments, answer 1), in the order the file keeps them.
  * Schools, hospitals and universities are not here: the landmark file has them.
@@ -33,14 +48,14 @@ export const ESTABLISHMENT_KINDS = [
   'toilets',
   'police',
 ];
-const LICENSE = 'ODbL-1.0';
-const ATTRIBUTION = '© OpenStreetMap contributors';
+export const LICENSE = 'ODbL-1.0';
+export const ATTRIBUTION = '© OpenStreetMap contributors';
 const LICENSE_NOTE =
   'Derived from OpenStreetMap data, which is available under the Open Database License ' +
   '(https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or ' +
   'anything made from it. Built by scripts/landmarks/build.sh.';
 /** Fewer than this many of a kind means the extract or the filter broke. */
-const FEWEST_OF_A_KIND = 20;
+export const FEWEST_OF_A_KIND = 20;
 
 /** A row as the file writes it: [id, kind, lng, lat], then the name and the extras when there are any. */
 function rowOf({ id, kind, point, name, extras }) {
@@ -51,8 +66,29 @@ function rowOf({ id, kind, point, name, extras }) {
   return row;
 }
 
-/** The file's text: the header fields, then one establishment per line. */
-export function establishmentFileText({ extractAt, establishments }) {
+export const sha = (text) => createHash('sha256').update(text).digest('hex').slice(0, 16);
+
+/** A cell's text: its name, the credit, then one establishment per line. */
+function cellText(cell, establishments) {
+  const head = `{\n  "schema": ${ESTABLISHMENT_FILE_SCHEMA},\n  "cell": ${JSON.stringify(cell)},\n  "attribution": ${JSON.stringify(ATTRIBUTION)},\n`;
+  const rows = establishments.map((e) => JSON.stringify(rowOf(e)));
+  return `${head}  "establishments": [\n    ${rows.join(',\n    ')}\n  ]\n}\n`;
+}
+
+/**
+ * The files: each cell's text by its name, and the index's text, which lists every cell with its
+ * count, size and hash. The establishments keep their order inside each cell; the cells go in
+ * name order.
+ */
+export function establishmentFiles({ extractAt, establishments }) {
+  const byCell = new Map();
+  for (const e of establishments) {
+    const cell = establishmentCellOf(e.point[0], e.point[1]);
+    byCell.set(cell, [...(byCell.get(cell) ?? []), e]);
+  }
+  const cells = new Map(
+    [...byCell.keys()].sort().map((cell) => [cell, cellText(cell, byCell.get(cell))]),
+  );
   const header = {
     schema: ESTABLISHMENT_FILE_SCHEMA,
     license: LICENSE,
@@ -60,73 +96,39 @@ export function establishmentFileText({ extractAt, establishments }) {
     license_note: LICENSE_NOTE,
     source: LANDMARK_SOURCE,
     extract_at: extractAt,
+    cell_deg: ESTABLISHMENT_CELL_DEG,
     kinds: ESTABLISHMENT_KINDS,
-    row: ['id', 'kind', 'lng', 'lat', 'name', 'extras'],
   };
   const headerLines = Object.entries(header).map(
     ([key, value]) => `  ${JSON.stringify(key)}: ${JSON.stringify(value)},`,
   );
-  const rows = establishments.map((e) => JSON.stringify(rowOf(e)));
-  return `{\n${headerLines.join('\n')}\n  "establishments": [\n    ${rows.join(',\n    ')}\n  ]\n}\n`;
+  const entries = [...cells].map(([cell, text]) =>
+    JSON.stringify({
+      cell,
+      count: byCell.get(cell).length,
+      bytes: Buffer.byteLength(text, 'utf8'),
+      hash: sha(text),
+    }),
+  );
+  const index = `{\n${headerLines.join('\n')}\n  "cells": [\n    ${entries.join(',\n    ')}\n  ]\n}\n`;
+  return { index, cells };
 }
 
-const isText = (value) => typeof value === 'string' && value.trim() !== '';
-const isCoordinate = (value, low, high) =>
-  typeof value === 'number' && Number.isFinite(value) && value >= low && value <= high;
-const EXTRA_KEYS = new Set(['brand', 'atm']);
+/** The files in `dir` as establishmentFiles makes them: the index's text and each cell's by name. */
+export function readEstablishmentFiles(dir) {
+  const index = readFileSync(join(dir, ESTABLISHMENT_INDEX), 'utf8');
+  const cells = new Map(
+    readdirSync(dir)
+      .filter((name) => name.endsWith('.json') && name !== ESTABLISHMENT_INDEX)
+      .map((name) => [name.slice(0, -'.json'.length), readFileSync(join(dir, name), 'utf8')]),
+  );
+  return { index, cells };
+}
 
-/** What is wrong with an establishment file's text, as sentences; empty when it is sound. */
-export function establishmentFileProblems(text) {
-  const problems = [];
-  const bytes = Buffer.byteLength(text, 'utf8');
-  if (bytes > ESTABLISHMENT_FILE_MAX_BYTES) {
-    problems.push(
-      `The file is ${bytes} bytes, over its ceiling of ${ESTABLISHMENT_FILE_MAX_BYTES}.`,
-    );
-  }
-  let file;
-  try {
-    file = JSON.parse(text);
-  } catch (error) {
-    return [...problems, `The file is not JSON: ${error.message}`];
-  }
-  if (file.schema !== ESTABLISHMENT_FILE_SCHEMA)
-    problems.push(`schema is ${file.schema}, not ${ESTABLISHMENT_FILE_SCHEMA}.`);
-  if (file.license !== LICENSE) problems.push(`license is ${file.license}, not ${LICENSE}.`);
-  if (file.attribution !== ATTRIBUTION) problems.push(`attribution is not "${ATTRIBUTION}".`);
-  if (!isText(file.license_note)) problems.push('license_note is missing.');
-  if (!isText(file.source)) problems.push('source is missing.');
-  if (!isText(file.extract_at) || Number.isNaN(Date.parse(file.extract_at))) {
-    problems.push('extract_at is not a timestamp.');
-  }
-  if (!Array.isArray(file.establishments)) return [...problems, 'establishments is not a list.'];
-
-  const ids = new Set();
-  const counts = new Map(ESTABLISHMENT_KINDS.map((kind) => [kind, 0]));
-  file.establishments.forEach((row, i) => {
-    const [id, kind, lng, lat, name, extras] = Array.isArray(row) ? row : [];
-    const where = `Establishment ${i} (${id ?? 'no id'})`;
-    if (!Array.isArray(row) || row.length < 4 || row.length > 6) {
-      problems.push(`${where}: a row is [id, kind, lng, lat] and, maybe, a name and extras.`);
-      return;
-    }
-    if (!/^[nwr]\d+$/.test(id ?? '')) problems.push(`${where}: the id is not an OSM id.`);
-    else if (ids.has(id)) problems.push(`${where}: the id is repeated.`);
-    ids.add(id);
-    if (!counts.has(kind)) problems.push(`${where}: unknown kind ${kind}.`);
-    else counts.set(kind, counts.get(kind) + 1);
-    if (!isCoordinate(lng, -180, 180) || !isCoordinate(lat, -90, 90))
-      problems.push(`${where}: the point is not lng, lat.`);
-    if (row.length >= 5 && name !== null && !isText(name))
-      problems.push(`${where}: the name, when present, is text or null.`);
-    if (row.length === 6) {
-      const keys = extras && typeof extras === 'object' ? Object.keys(extras) : [];
-      if (keys.length === 0 || keys.some((key) => !EXTRA_KEYS.has(key)))
-        problems.push(`${where}: extras, when present, hold brand or atm only.`);
-    }
-  });
-  for (const [kind, count] of counts) {
-    if (count < FEWEST_OF_A_KIND) problems.push(`Only ${count} establishments of kind ${kind}.`);
-  }
-  return problems;
+/** Writes the files into `dir`, after removing the files of the build before. */
+export function writeEstablishmentFiles(dir, { index, cells }) {
+  mkdirSync(dir, { recursive: true });
+  for (const name of readdirSync(dir)) if (name.endsWith('.json')) rmSync(join(dir, name));
+  for (const [cell, text] of cells) writeFileSync(join(dir, `${cell}.json`), text);
+  writeFileSync(join(dir, ESTABLISHMENT_INDEX), index);
 }

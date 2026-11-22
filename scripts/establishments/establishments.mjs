@@ -1,15 +1,19 @@
 // Turns the OpenStreetMap features build.sh filtered out of the extract (one GeoJSON feature per
-// line, from `osmium export`) into the establishment file: public/data/establishments.v1.json
-// (.scratch/establishments, step E3a). One point per place, an area's centroid, inside the map's
+// line, from `osmium export`) into the establishment files: public/data/establishments/v1/, an
+// index and a file per cell (.scratch/establishments, step E3a). One point per place, an area's centroid, inside the map's
 // panning box. Nothing here reaches the network: the same features always give the same file.
 //
-// Usage: node --experimental-strip-types scripts/establishments/establishments.mjs <features.geojsonseq> <extract timestamp> <out.json>
-import { createReadStream, writeFileSync } from 'node:fs';
+// Usage: node --experimental-strip-types scripts/establishments/establishments.mjs <features.geojsonseq> <extract timestamp> <out dir>
+import { createReadStream } from 'node:fs';
 import { createInterface } from 'node:readline';
 
 import { osmIdOf, pointOf } from '../landmarks/landmarks.mjs';
 import { readPanningBox } from '../tiles/area.mjs';
-import { ESTABLISHMENT_KINDS, establishmentFileText } from './establishment-file.mjs';
+import {
+  ESTABLISHMENT_KINDS,
+  establishmentFiles,
+  writeEstablishmentFiles,
+} from './establishment-file.mjs';
 
 /** osmium may start each record with RS (RFC 8142). */
 const RECORD_SEPARATOR = '\u001e';
@@ -117,18 +121,21 @@ async function readFeatures(path) {
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
-  const [featuresPath, extractAt, outPath] = process.argv.slice(2);
+  const [featuresPath, extractAt, outDir] = process.argv.slice(2);
   if (featuresPath === '--filters') {
     console.log(osmiumFilters().join(' '));
     process.exit(0);
   }
-  if (!featuresPath || !extractAt || !outPath) {
+  if (!featuresPath || !extractAt || !outDir) {
     console.error(
-      'Usage: node --experimental-strip-types scripts/establishments/establishments.mjs <features.geojsonseq> <extract timestamp> <out.json>',
+      'Usage: node --experimental-strip-types scripts/establishments/establishments.mjs <features.geojsonseq> <extract timestamp> <out dir>',
     );
     process.exit(2);
   }
   const establishments = establishmentsFrom(await readFeatures(featuresPath), readPanningBox());
-  writeFileSync(outPath, establishmentFileText({ extractAt, establishments }));
-  console.error(`Wrote ${establishments.length} establishments to ${outPath}.`);
+  const files = establishmentFiles({ extractAt, establishments });
+  writeEstablishmentFiles(outDir, files);
+  console.error(
+    `Wrote ${establishments.length} establishments in ${files.cells.size} cells to ${outDir}.`,
+  );
 }
