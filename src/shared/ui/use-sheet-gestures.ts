@@ -7,6 +7,7 @@ import {
   type RefObject,
 } from 'react';
 
+import { holdShownUntilClick } from './hold-shown-handle';
 import { raisesAtLow } from './raises-at-low';
 import { glideTo } from './sheet-coast';
 import {
@@ -131,10 +132,9 @@ export function useSheetGestures({
   const drag = useRef<AbortController | null>(null);
   useLayoutEffect(() => () => drag.current?.abort(), []);
 
-  // At full height, the pull down from the list's top. Touch events, not pointer ones: the browser
-  // takes a scroll for itself and cancels the pointer, but a non-passive touchmove can still be
-  // claimed. A wheel's deliberate push steps the sheet a third, as a tap on the handle does, but
-  // never raises it from Low.
+  // At full height, the pull down from the list's top: touch events, as the browser takes a scroll
+  // and cancels the pointer, but a non-passive touchmove can still be claimed. A wheel's deliberate
+  // push steps the sheet a third, as a tap on the handle does, never raising it from Low.
   useLayoutEffect(() => {
     const body = bodyRef.current;
     const sheet = own.current;
@@ -168,8 +168,7 @@ export function useSheetGestures({
       pull = null;
       if (track) now.current.throwTo(track.lift(e.timeStamp));
     };
-    // A wheel moves the sheet only on a deliberate push: its deltas add up and act past DRAG_PX,
-    // never inside a scroll's tail, however long — reaching the top is not a pull down.
+    // A wheel moves the sheet only on a push its deltas add up past DRAG_PX, never a scroll's tail.
     let pushed = 0;
     let lastWheel = 0;
     let scrolledAt = -Infinity;
@@ -208,6 +207,7 @@ export function useSheetGestures({
   // click after a drag, or a tap on the handle, is swallowed (sheetGesture).
   const onPointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
     lastPress.current = e.timeStamp;
+    holdShownUntilClick(handleRef.current);
     const sheet = own.current;
     const handle = handleRef.current;
     // One pointer at a time, a mouse's main button only, and docked only.

@@ -368,7 +368,7 @@ const HANDLE = {
   shown: 'flex w-full pt-2 pb-1',
   // Focused from the keyboard, it shows as the notch every other card draws: focus is always seen.
   hidden:
-    'sr-only focus-visible:not-sr-only focus-visible:flex focus-visible:w-full focus-visible:pt-2 focus-visible:pb-1',
+    'sr-only focus-visible:not-sr-only focus-visible:flex focus-visible:w-full focus-visible:pt-2 focus-visible:pb-1 data-held:not-sr-only data-held:flex data-held:w-full data-held:pt-2 data-held:pb-1',
 } satisfies Record<NonNullable<Props['handle']>, string>;
 
 /**
