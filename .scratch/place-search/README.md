@@ -32,7 +32,7 @@ A commuter types a place and the map takes them there. Two steps: first Para's o
 
 The landmark file is derived from OpenStreetMap and is available under the **Open Database License (ODbL 1.0)**, © OpenStreetMap contributors. JSON has no comments, so the file's first fields are its header: `license` (`ODbL-1.0`), `attribution`, `license_note`, `source` and `extract_at`. Keep the credit with any copy, and wherever the app shows a landmark.
 
-The source is openstreetmap.fr's daily Metro Manila extract (`https://download.openstreetmap.fr/extracts/asia/philippines/metro_manila.osm.pbf`, about 60 MB, checked against its MD5): Geofabrik's smallest file is the whole Philippines, and the public Overpass servers are not reachable from the build sessions. `osmium-tool` (apt, not npm) filters the tags; `scripts/landmarks/landmarks.mjs` makes the points.
+The source is Geofabrik's Philippines extract (`https://download.geofabrik.de/asia/philippines-latest.osm.pbf`, about 600 MB, checked against its MD5), cut to the map's panning box, so the provinces the map reaches past Metro Manila's line are covered (the owner's answer 7 in `.scratch/establishments`, 2026-11-22). It was openstreetmap.fr's Metro Manila extract until then, which ends at the NCR line. Geofabrik is reachable from GitHub's runners, not from the build sessions, so the file is built in Actions. `osmium-tool` (apt, not npm) filters the tags; `scripts/landmarks/landmarks.mjs` makes the points.
 
 Known limits of the file:
 

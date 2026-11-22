@@ -68,7 +68,7 @@ What each CI job that runs a browser or reaches off the runner touches, on a pul
 | pwa-test (own tiles) (ci.yml)                               | None: its loopback server answers from `fixtures/basemap/` | Stood in, live too; an address the fixtures lack fails the run |
 | The contributor app's emulator jobs (contributor-app.yml)   | OpenFreeMap tiles in the app's WebView; the APK build's style fetch                | Live: a ticket, the owner to decide                                          |
 | The APK build (contributor-app.yml)                         | OpenFreeMap's styles, baked into the app (`vite.apk.config.ts`)                     | Live: a ticket                                                              |
-| Tiles (tiles.yml), landmarks (landmarks.yml)                | Geofabrik, Planetiler's sources, OpenFreeMap's assets; openstreetmap.fr             | Live by design: the sanctioned copies (`docs/operations.md`)                 |
+| Tiles (tiles.yml), landmarks (landmarks.yml)                | Geofabrik, Planetiler's sources, OpenFreeMap's assets                               | Live by design: the sanctioned copies (`docs/operations.md`)                 |
 | Watch (watch.yml)                                           | Para's own site and tiles host                                                      | Live by design: a dry run, no issue written                                 |
 | Publish map, backup                                         | The database, R2                                                                    | Never on a pull request: production jobs                                     |
 

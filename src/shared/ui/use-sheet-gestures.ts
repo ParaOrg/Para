@@ -7,6 +7,7 @@ import {
   type RefObject,
 } from 'react';
 
+import { raisesAtLow } from './raises-at-low';
 import { glideTo } from './sheet-coast';
 import {
   DRAG_PX,
@@ -214,9 +215,8 @@ export function useSheetGestures({
     const target = e.target instanceof Node ? e.target : null;
     // At full height the body scrolls as a list does; the header brings the sheet down.
     if (snap === 'full' && !headRef.current?.contains(target) && !handle.contains(target)) return;
-    // At Low the top of the body is not for picking: a tap there raises the sheet, as the handle.
     const raises =
-      handle.contains(target) || (snap === 'low' && !!bodyRef.current?.contains(target));
+      handle.contains(target) || (snap === 'low' && raisesAtLow(bodyRef.current, target));
     const h = sheet.offsetHeight;
     const heights = heightsOf(h);
     const track = follow(e.clientY, e.timeStamp, shownOnScreen(sheet), h, heights);
