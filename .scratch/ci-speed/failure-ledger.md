@@ -38,6 +38,7 @@ Item 12 of [phase-2-plan.md](phase-2-plan.md): every red CI job, with its cause,
 | Date (UTC) | Run | Event, branch | Job | First failure line | Cause | Evidence |
 | --- | --- | --- | --- | --- | --- | --- |
 | 2026-11-22 | [44980317006](https://github.com/ParaOrg/Para/actions/runs/44980317006) | pull request #1129, `claude/retire-pwa` | retire-pwa-test (and the summary "Build and the public map") | `FAIL the suite ran to the end page.waitForEvent: Timeout 20000ms exceeded while waiting for event "framenavigated"` | real | The suite was new in #1129. Its next commit, 8fbf630 ("retire-pwa-test: block other hosts in the browser, not by a request route"), changed only that suite, and run 44983010389 passed |
+| 2026-11-22 | [44994857857](https://github.com/ParaOrg/Para/actions/runs/44994857857) | pull request #1133, `claude/folders-sheet-header` | commuter-test (4 of 6) (and the summary "Build and the public map") | `Error: shows: nothing matched [data-testid="card"]:not([hidden]) [data-testid="card-place"] within 3000 ms`, after 456 checks passed, at the empty-map tap that leaves a trip for its place's card | flake, likely | #1133 moves only studio code and two stories; the step is the public map's. The same commit's part 4 passed 4 times out of 4 locally, 492 checks each (the step passed for all 21 places each time). The step is new in the suites since 2026-11-21 (c1c0c8c7). A ticket in `ci-flakes/issues/` if it shows again |
 
 ## Known, not yet seen here
 
