@@ -16,7 +16,7 @@ const meta = {
     ),
   ],
   args: {
-    routeOrigin: 'B. Silang Kanan Ph 5',
+    routeOrigin: 'B.Silang Kanan Ph 5',
     routeDirection: 'SM Fairview',
     via: 'Maligaya',
     way: 'Pabalik',
@@ -28,18 +28,24 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** As Figma draws it (4796:33202): the Start card, the End card with its via line, ⇅ between. */
+/** As Figma draws it (TopContent, 4796:30411): Start's place over End's and its via line, one card. */
 export const Default: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(canvas.getByText('Start')).toBeVisible();
     await expect(canvas.getByText('End')).toBeVisible();
-    await expect(canvas.getByText('B. Silang Kanan Ph 5')).toBeVisible();
+    await expect(canvas.getByText('B.Silang Kanan Ph 5')).toBeVisible();
     await expect(canvas.getByText('via Maligaya')).toBeVisible();
-    // The place in Bold 18/26.
+    // The place in SemiBold 20/28.
     const place = getComputedStyle(canvas.getByText('SM Fairview'));
-    await expect(place.fontSize).toBe('18px');
-    await expect(place.lineHeight).toBe('26px');
+    await expect(place.fontSize).toBe('20px');
+    await expect(place.lineHeight).toBe('28px');
+    await expect(place.fontWeight).toBe('600');
+    // ⇅ on the hairline, named for the way a tap leads.
+    await expect(canvas.getByTestId('trip-ends-switch')).toHaveAccessibleName('Pabalik');
+    await expect(canvas.getByTestId('trip-ends-switch')).toHaveAccessibleDescription(
+      'turns to Pabalik',
+    );
   },
 };
 
@@ -51,14 +57,6 @@ export const SwitchPressed: Story = {
   },
 };
 
-/** No via known yet: End holds its place alone. */
-export const WithoutVia: Story = {
-  args: { via: undefined },
-  play: async ({ canvasElement }) => {
-    await expect(within(canvasElement).queryByText(/^via /)).toBeNull();
-  },
-};
-
 /** The other way round has nothing drawn: ⇅ rests disabled. */
 export const NotSwitchable: Story = {
   args: { isSwitchable: false },
@@ -67,17 +65,34 @@ export const NotSwitchable: Story = {
   },
 };
 
-/** A loop: no way back, so the Start card alone and no ⇅. */
-export const Loop: Story = {
-  args: { routeOrigin: 'UP Diliman', routeDirection: 'UP Diliman', via: undefined, way: null },
+/** No via known yet: End holds its place alone. */
+export const WithoutVia: Story = {
+  args: { via: undefined },
   play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await expect(canvas.queryByTestId('trip-ends-switch')).toBeNull();
-    await expect(canvas.queryByText('End')).toBeNull();
+    await expect(within(canvasElement).queryByText(/^via /)).toBeNull();
   },
 };
 
-/** A train's ends, and its other bound on ⇅. */
+/** Variants=Ikot (4825:48754): a loop's name alone, under its grey Ikot pill. */
+export const Ikot: Story = {
+  args: {
+    routeOrigin: 'Palma Hall',
+    routeDirection: 'Palma Hall',
+    via: undefined,
+    loopName: 'UP Ikot',
+    way: null,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByText('Ikot')).toBeVisible();
+    await expect(canvas.getByText('UP Ikot')).toBeVisible();
+    await expect(canvas.queryByText('Start')).toBeNull();
+    await expect(canvas.queryByText('End')).toBeNull();
+    await expect(canvas.queryByTestId('trip-ends-switch')).toBeNull();
+  },
+};
+
+/** A train's ends. */
 export const Train: Story = {
   args: {
     routeOrigin: 'Fernando Poe Jr.',
@@ -89,7 +104,7 @@ export const Train: Story = {
 
 const longOrigin = 'Novaliches (Bayan) via Zabarte and Quirino Highway';
 
-/** Long names wrap, the Start card's clear of ⇅. */
+/** Long names wrap. */
 export const LongNames: Story = {
   args: {
     routeOrigin: longOrigin,
@@ -97,7 +112,14 @@ export const LongNames: Story = {
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(canvas.getByText(longOrigin).getBoundingClientRect().height).toBeGreaterThan(26);
+    const place = canvas.getByText(longOrigin);
+    await expect(place.getBoundingClientRect().height).toBeGreaterThan(28);
+    // Start's words, not their padded box, stop clear of ⇅, which straddles the hairline under them.
+    const words = document.createRange();
+    words.selectNodeContents(place);
+    await expect(words.getBoundingClientRect().right).toBeLessThan(
+      canvas.getByTestId('trip-ends-switch').getBoundingClientRect().left,
+    );
   },
 };
 
@@ -113,6 +135,6 @@ export const OnPhoneAtLow: Story = {
   ],
   play: async ({ canvasElement }) => {
     const origin = within(canvasElement).getByText(longOrigin);
-    await waitFor(() => expect(origin.getBoundingClientRect().height).toBe(26));
+    await waitFor(() => expect(origin.getBoundingClientRect().height).toBe(28));
   },
 };

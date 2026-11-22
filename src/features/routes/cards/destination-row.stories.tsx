@@ -24,26 +24,20 @@ const CARD_FILL = {
 } satisfies Record<Livery, string>;
 
 /**
- * Figma's Destinationn (4794:20296): on a RouteCard in its livery, and on the sheet's surface in
- * the detail's list of more destinations (MiddleContent, 4795:20406). Pressed is `:active`: hold a
+ * Figma's Destinationn (4794:20296), on a RouteCard in its livery. Pressed is `:active`: hold a
  * row to see it.
  */
 const meta = {
   title: 'Features/Routes/DestinationRow',
   component: DestinationRow,
-  args: { destination: 'SM Fairview', livery: 'jeep', on: 'card', onClick: fn() },
+  args: { destination: 'SM Fairview', livery: 'jeep', onClick: fn() },
   decorators: [
     // A story that draws its own card (parameters.ownCard) is left unwrapped.
     (Story, { args, parameters }) =>
       parameters.ownCard === true ? (
         <Story />
       ) : (
-        <div
-          className={cn(
-            'w-98.25',
-            args.on === 'surface' ? 'bg-bg-surface' : CARD_FILL[args.livery],
-          )}
-        >
+        <div className={cn('w-98.25', CARD_FILL[args.livery])}>
           <Story />
         </div>
       ),
@@ -120,28 +114,6 @@ export const LongName: Story = {
     destination: 'Bagong Silang Kanan 5 Phase 3 Package 2 Terminal',
     additionalNotes: 'Via Quirino Highway, Regalado Avenue and Commonwealth Avenue',
   },
-};
-
-/** On the surface, in the detail's list: Text/primary words, the arrow in the jeep's fill. */
-export const OnSurface: Story = {
-  args: { on: 'surface', additionalNotes: 'Via Maligaya' },
-};
-
-/** Pressed on the surface, forced: the grey pill, as today. */
-export const OnSurfacePressed: Story = {
-  args: { on: 'surface', additionalNotes: 'Via Maligaya', className: 'bg-surface-tertiary' },
-};
-
-/** On the surface for each mode: the arrow wears its mode's card fill where it reaches 3:1, else Text/primary. */
-export const OnSurfaceEachMode: Story = {
-  args: { on: 'surface' },
-  render: (args) => (
-    <div className="flex flex-col">
-      {LIVERIES.map((livery) => (
-        <DestinationRow key={livery} {...args} livery={livery} destination={livery} />
-      ))}
-    </div>
-  ),
 };
 
 /** Every card the rows sit on, with a via, as the list stacks them. */

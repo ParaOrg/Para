@@ -1,8 +1,13 @@
-import { ReloadIcon } from '@/shared/ui/route-icons';
+import type { ReactNode } from 'react';
+
 import { cn } from '@/shared/utils/cn';
 import { kmLabel } from '@/shared/utils/geo';
 
-import { FREE, farePesos, type Fare } from './trip-fare';
+import type { Fare } from './trip-fare';
+import { FareTile } from './trip-fare-tile';
+import { Tile } from './trip-tile';
+import { FIGURE, NAME } from './trip-tile-look';
+import { travelLabel, travelSpoken, type TravelEstimate } from '../model/travel-time';
 
 interface TripTilesProps {
   /** The fare the tile shows, or FREE; undefined when unpriced, and the tile with it. */
@@ -14,67 +19,94 @@ interface TripTilesProps {
   turns: number;
   /** The fare tile was tapped: turn it to the other fare. */
   onTurn: () => void;
+  /** The ride's estimated minutes (estimateTravel); omitted, no Estimated Time Arrival tile. */
+  estimate?: TravelEstimate;
+  /** What the trip rides, "Jeep", "LRT Line 1"; omitted, no Transport mode tile. */
+  transportMode?: string;
+  /** A train's bound, "Southbound", on its own row at the top; omitted on every other trip. */
+  bound?: string;
 }
 
 /**
- * The ride's two tiles, side by side and 12 apart (BottomContent, 4796:29410): the fare on the
- * left, the distance on the right. Unpriced, the distance takes the row alone.
+ * The ride's facts (BottomContent, 4821:40538), in rows split by hairlines: a train's Direction
+ * on its own, then the fare and the Estimated Time Arrival, then the Transport mode and the
+ * Distance, a hairline between each pair too. Unpriced, the Estimated Time Arrival takes its row.
  */
-export function TripTiles({ shown, shownMetres, isDiscounted, turns, onTurn }: TripTilesProps) {
+export function TripTiles({
+  shown,
+  shownMetres,
+  isDiscounted,
+  turns,
+  onTurn,
+  estimate,
+  transportMode,
+  bound,
+}: TripTilesProps) {
   const kind = isDiscounted ? 'Discounted fare' : 'Regular fare';
+  const fare = shown !== undefined && (
+    <FareTile shown={shown} kind={kind} isDiscounted={isDiscounted} turns={turns} onTurn={onTurn} />
+  );
+  const eta = estimate && (
+    <Tile name="Estimated Time Arrival">
+      <span data-testid="trip-time">
+        <span aria-hidden>{travelLabel(estimate)}</span>
+        <span className="sr-only">{travelSpoken(estimate)}</span>
+      </span>
+    </Tile>
+  );
+  const mode = transportMode !== undefined && (
+    <Tile name="Transport mode">
+      <span data-testid="trip-mode">{transportMode}</span>
+    </Tile>
+  );
+  const distance = (
+    <Tile name="Distance">
+      <span data-testid="trip-km">{kmLabel(shownMetres)}</span>
+    </Tile>
+  );
+  // Unpriced on a mode the design draws no vehicle for, Distance is the one tile, and its row
+  // takes the first row's room.
+  const hasTopRow = Boolean(fare || eta);
   return (
-    <div data-testid="trip-tiles" className="flex w-full gap-3 text-center font-sn-pro">
-      {shown === FREE && (
-        <div className={TILE}>
-          <span data-testid="trip-fare" className={FIGURE}>
-            Free
+    <div data-testid="trip-tiles" className="flex w-full flex-col text-center font-sn-pro">
+      {bound !== undefined && (
+        <div className="flex flex-col items-center gap-0.5 border-b-0-6 border-stroke-secondary pb-4">
+          <span data-testid="trip-bound" className={FIGURE}>
+            {bound}
           </span>
-          <span className={NAME}>Fare</span>
+          <span className={NAME}>Direction</span>
         </div>
       )}
-      {shown !== undefined && shown !== FREE && (
-        <button
-          type="button"
-          data-testid="trip-fare-turn"
-          // The words on the tile first, as they read, so saying them reaches the button.
-          aria-label={`${farePesos(shown, isDiscounted)} ${kind}. Show the ${isDiscounted ? 'regular' : 'discounted'} fare`}
-          onClick={onTurn}
-          className={cn(TILE, PRESSABLE)}
-        >
-          <span data-testid="trip-fare" className={FIGURE}>
-            {farePesos(shown, isDiscounted)}
-          </span>
-          <span className={cn(NAME, 'flex items-center gap-2')}>
-            {kind}
-            <span
-              aria-hidden
-              style={{ rotate: `${turns * 360}deg` }}
-              className="size-4 shrink-0 transition-[rotate] duration-turn ease-move *:size-full motion-reduce:transition-none"
-            >
-              <ReloadIcon />
-            </span>
-          </span>
-        </button>
+      {hasTopRow && (
+        <TileRow isFirst>
+          {fare}
+          {eta}
+        </TileRow>
       )}
-      <div className={TILE}>
-        <span data-testid="trip-km" className={FIGURE}>
-          {kmLabel(shownMetres)}
-        </span>
-        <span className={NAME}>Distance</span>
-      </div>
+      <TileRow isFirst={!hasTopRow}>
+        {mode}
+        {distance}
+      </TileRow>
     </div>
   );
 }
 
-/**
- * One tile (4796:29411): its figure, Bold 24/32, over its name, Medium 14/20, on bg-fill rounded
- * 24, 14 in, under shadow-sm.
- */
-const TILE =
-  'flex min-w-0 flex-1 basis-0 flex-col items-center justify-center gap-1 overflow-clip rounded-3xl bg-bg-fill p-3.5 shadow-sm';
-const FIGURE = 'text-2xl/8 font-bold text-text-primary';
-const NAME = 'text-sm/5 font-medium text-text-tertiary';
-// Figma draws no hover or pressed state for the fare's button; bg-fill-secondary stands in until
-// the owner draws one.
-const PRESSABLE =
-  'transition-colors duration-quick ease-move hover:bg-bg-fill-secondary active:bg-bg-fill-secondary';
+interface TileRowProps {
+  /** The first row under the signboard or Direction: 20 over its figures, as Figma pads it. */
+  isFirst?: boolean;
+  children: ReactNode;
+}
+
+/** A row of one or two tiles, a hairline under it, and between two of them. */
+function TileRow({ isFirst = false, children }: TileRowProps) {
+  return (
+    <div
+      className={cn(
+        'flex w-full border-b-0-6 border-stroke-secondary *:not-first:border-l-0-6 *:not-first:border-stroke-secondary',
+        isFirst ? '*:pt-5 *:pb-4' : '*:py-4',
+      )}
+    >
+      {children}
+    </div>
+  );
+}

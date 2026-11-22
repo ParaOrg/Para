@@ -10,6 +10,7 @@ import { RouteStopSlot } from './route-stop-slot';
 import { RouteStopsTimelineRow, type TimelineRowState } from './route-stops-timeline-row';
 import type { RouteTripLineDetailPillContent } from './route-trip-line-detail-pill';
 import type { RowRole } from './timeline-row-role';
+import { TimelineRowTap } from './timeline-row-tap';
 import type { Livery } from '../model/liveries';
 
 interface TimelineHintuanProps {
@@ -28,12 +29,14 @@ interface TimelineHintuanProps {
   mark: RouteStopSignKind | null;
   /** The button under the row: Set as start under the end, × Remove as start under the start. */
   action: RowRole['action'];
-  onPick: (id: string) => void;
+  /** The row tapped; omitted, the row is not a control (TimelineRowTap). */
+  onPick?: (id: string) => void;
 }
 
 /**
- * A hintuan on the way (RouteStopsTimeline Middle, 4611:10957); the whole row is its button, which
- * picks it as the ride's end or, picked, lets it go. Under a picked row, its own button.
+ * A hintuan on the way (RouteStopsTimeline Middle, 4611:10957). Where picking is on
+ * (TimelineRowTap), the whole row is its button, which picks it as the ride's end or, picked, lets
+ * it go; under a picked row, its own button.
  */
 export function TimelineHintuan({
   id,
@@ -56,13 +59,12 @@ export function TimelineHintuan({
   const isRailBelow = state === 'rest' || state === 'selectedTop';
   return (
     <li data-testid="trip-hintuan" data-hintuan={id} data-state={selected ? 'selected' : 'rest'}>
-      <button
-        type="button"
+      <TimelineRowTap
         ref={pickButton}
-        data-testid="trip-hintuan-pick"
-        aria-pressed={selected}
-        onClick={() => onPick(id)}
-        className={cn('flex w-full text-left', pressed)}
+        testId="trip-hintuan-pick"
+        isSelected={selected}
+        pressed={pressed}
+        onTap={onPick && (() => onPick(id))}
       >
         <RouteStopsTimelineRow
           variant="middle"
@@ -71,7 +73,7 @@ export function TimelineHintuan({
           label={<span data-part="name">{label}</span>}
           slot={<RouteStopSlot livery={livery} sign={mark} pill={pill} />}
         />
-      </button>
+      </TimelineRowTap>
       {/* Under the row, its own button (Figma Choosing and Variant3,
           4137:9887 and 4148:12161): a sibling of the row's, never inside it. */}
       {action && (

@@ -17,6 +17,7 @@ const PAGES = [
   { path: '/studio/', file: 'studio/index.html', hasMap: true },
   { path: '/contribute/', file: 'contribute/index.html', hasMap: true },
   { path: '/app/', file: 'app/index.html', hasMap: false },
+  { path: '/coming-soon/', file: 'coming-soon/index.html', hasMap: false },
 ];
 
 /** Each inline block of `tag` in a page's HTML, by the hash a policy names it with. */

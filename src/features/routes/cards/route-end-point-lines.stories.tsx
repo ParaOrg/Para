@@ -43,3 +43,33 @@ export const OnDarkWords: Story = {
     ),
   ],
 };
+
+/**
+ * Beside a trip's list heading (DestinationGroup, 4821:37271): the straight line alone, no arrow,
+ * in text/quaternary on the sheet's surface.
+ */
+export const Through: Story = {
+  args: { position: 'through', isFaint: false },
+  decorators: [
+    (Story) => (
+      <div className="flex h-10 w-12 bg-bg-surface text-text-quaternary">
+        <Story />
+      </div>
+    ),
+  ],
+};
+
+/**
+ * A DestinationBar's (4820:33754): the arrow 12 down, by the place's first line, not the middle of
+ * a row its via line makes 60 tall.
+ */
+export const FirstLine: Story = {
+  args: { position: 'top', isFaint: false, arrowAlign: 'first-line' },
+  decorators: [
+    (Story) => (
+      <div className="flex h-16 w-12 bg-bg-surface text-text-quaternary">
+        <Story />
+      </div>
+    ),
+  ],
+};

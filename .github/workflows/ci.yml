@@ -223,7 +223,7 @@ jobs:
         run: node scripts/checks/glossary.mjs
 
   build:
-    name: Build, lint and formatting
+    name: Build and lint
     needs: changes
     if: needs.changes.outputs.build == 'true'
     runs-on: ubuntu-latest
@@ -261,11 +261,11 @@ jobs:
           if [ -n "$BASE" ] && git fetch --quiet --no-tags --depth=1 origin "$BASE"; then
             git show "$BASE:scripts/checks/long-files-baseline.json" > "$RUNNER_TEMP/long-files-base.json" 2> /dev/null || true
           fi
-      # The job's five checks, started together and each run to its end, so one failure never
+      # The job's four checks, started together and each run to its end, so one failure never
       # hides another: every check's output is printed under its verdict, and every failure is
-      # named (scripts/checks/side-by-side.mjs). Lint and formatting each keep to one core, so
-      # they do not slow each other; the unit checks, which fill every core, have their own job.
-      #   Formatting: Prettier, as .prettierrc asks; a file left unformatted fails.
+      # named (scripts/checks/side-by-side.mjs). Lint is the long one and sets the job's length;
+      # what slowed it on the same runner has its own job: the unit checks, which fill every
+      # core, and formatting, which took lint from 31 s to 56 s beside it (pull request 1120).
       #   Lint: ESLint, the rules the standards name as errors (eslint.config.js). Its usual
       #     report, and the run's counts kept in ESLINT_JSON for Code health below
       #     (scripts/checks/eslint-formatter.mjs).
@@ -274,12 +274,11 @@ jobs:
       #   Architecture page: docs/architecture.md is generated from src/; a change to the
       #     structure that did not regenerate it fails (`npm run docs:architecture`).
       #   Build: import boundaries, no editor code on /, the installable app's files.
-      - name: Formatting, lint, long files, the architecture page and the build
+      - name: Lint, long files, the architecture page and the build
         env:
           ESLINT_JSON: ${{ runner.temp }}/eslint.json
         run: |
           node scripts/checks/side-by-side.mjs \
-            "Formatting::npm run format:check" \
             "Lint::npm run lint -- --format ./scripts/checks/eslint-formatter.mjs" \
             "Long files::node scripts/checks/long-files.mjs --base \"$RUNNER_TEMP/long-files-base.json\"" \
             "Architecture page::npm run docs:architecture:check" \
@@ -332,13 +331,15 @@ jobs:
           include-hidden-files: true
           retention-days: 1
 
-  # The unit checks, on a runner of their own: Node's test runner, no browser, every
-  # tests/unit/*-test.mjs. The runner spreads the files over every core, and so does the type
-  # check in the build job, so side by side on one runner's four cores each took more than twice
-  # what it takes alone (pull request 1116's numbers). Apart, the two jobs run at once and each
-  # check takes what it takes alone. node_modules comes from the same cache as the build job's.
+  # The unit checks and formatting, on a runner apart from the build job's. The unit checks are
+  # Node's test runner, no browser, every tests/unit/*-test.mjs; the runner spreads the files
+  # over every core, and so does the type check in the build job, so side by side on one
+  # runner's four cores each took more than twice what it takes alone (pull request 1116's
+  # numbers). Formatting is Prettier, as .prettierrc asks; a file left unformatted fails. Both
+  # run to their end, and every failure is named (scripts/checks/side-by-side.mjs). The two jobs
+  # run at once; node_modules comes from the same cache as the build job's.
   unit:
-    name: The unit checks
+    name: Formatting and the unit checks
     needs: changes
     if: needs.changes.outputs.build == 'true'
     runs-on: ubuntu-latest
@@ -361,8 +362,11 @@ jobs:
         with:
           path: node_modules
           key: ${{ steps.modules.outputs.cache-primary-key }}
-      - name: The unit checks
-        run: npm run test:unit
+      - name: Formatting and the unit checks
+        run: |
+          node scripts/checks/side-by-side.mjs \
+            "Formatting::npm run format:check" \
+            "The unit checks::npm run test:unit"
 
   # The public map's pages against the dev server. Each needs only the published map file and
   # OpenFreeMap's tiles; gate-test opens /studio/'s sign-in door. A job runs its `suites` one after

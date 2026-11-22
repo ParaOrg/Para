@@ -9,7 +9,7 @@
 //   node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs tests/unit/map-pins-test.mjs
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { createPropertyExpression, latest } from '@maplibre/maplibre-gl-style-spec';
+import { createPropertyExpression, featureFilter, latest } from '@maplibre/maplibre-gl-style-spec';
 import { boxCentre, ringCentroid } from '../../src/features/routes/geo/box-centre.ts';
 import { pointInRing } from '../../src/features/routes/geo/ring.ts';
 import {
@@ -21,6 +21,7 @@ import {
   hotspotPinsData,
 } from '../../src/features/routes/map/hotspot-pins.ts';
 import { NAMES_FROM } from '../../src/features/routes/map/saved-hotspots-labels.ts';
+import { hiddenHotspotFilters } from '../../src/features/routes/map/saved-hotspots-layers.ts';
 import {
   HOTSPOTS_FILL_LAYER,
   ROUTES_HIT_LAYER,
@@ -173,6 +174,34 @@ test('the dot below that zoom and the pin from it: one or the other, never both'
   assert.equal(dot.type, 'circle');
   assert.equal(pin.layout['icon-anchor'], 'bottom-left');
   assert.deepEqual(pin.layout['icon-offset'], [-2, 0], "the stem's middle on the point");
+});
+
+test("a map given dot kinds draws only those kinds' dots, the box being edited left out still; given none, every hotspot's", () => {
+  const point = (id, kind) => ({ type: 1, properties: { id, kind } });
+  const points = [point('h1', 'hintuan'), point('h2', 'hintuan'), point('t1', 'terminal')];
+  const dotted = (dotKinds, hidden = '') => {
+    const layers = [];
+    addHotspotPins(
+      { addSource: () => {}, addLayer: (l) => layers.push(l) },
+      [],
+      undefined,
+      dotKinds,
+    );
+    const added = layers.find((l) => l.id === DOT).filter;
+    const filters = new Map(hiddenHotspotFilters(hidden, dotKinds));
+    const shown = (filter) =>
+      points
+        .filter((p) => featureFilter(filter, 'filter').filter({ zoom: 11 }, p))
+        .map((p) => p.properties.id);
+    // As added, and as the studio sets it on opening an outline: the same dots.
+    if (hidden === '')
+      assert.deepEqual(shown(added), shown(filters.get(DOT)), 'added and set agree');
+    return shown(filters.get(DOT));
+  };
+  assert.deepEqual(dotted(undefined), ['h1', 'h2', 't1']);
+  assert.deepEqual(dotted(['terminal']), ['t1'], "the public map's: a terminal's dot alone");
+  assert.deepEqual(dotted([]), [], 'no kind, no dot');
+  assert.deepEqual(dotted(['hintuan'], 'h1'), ['h2'], 'the box being edited has no dot either way');
 });
 
 // ------------------------------------------------------------ the tap

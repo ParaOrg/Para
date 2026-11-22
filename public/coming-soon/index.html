@@ -1,0 +1,290 @@
+<!doctype html>
+<!--
+  Coming soon, the production site's page in the map's place: the site Worker answers /, /app/ and
+  every other page address with this one on www.para-commute.org (workers/site/src/coming-soon.ts),
+  while every branch's Preview, staging's among them, keeps the map. It is /app/'s page with the
+  words changed, nothing shown of the map and no Android download: the heading, a waitlist for
+  everyone, and a way to write. Plain HTML, copied as it is from public/, with /app/'s logo and
+  fonts.
+-->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="color-scheme" content="only light" />
+    <meta name="robots" content="noindex" />
+    <title>Para is coming soon</title>
+    <meta
+      name="description"
+      content="Para is coming soon. Leave your email and we'll tell you when it's out."
+    />
+    <!-- What Messenger and Facebook show when the link is shared: no picture, since /app/'s shows the map. -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://www.para-commute.org/" />
+    <meta property="og:title" content="Para is coming soon" />
+    <meta property="og:description" content="Leave your email and we'll tell you when it's out." />
+    <meta name="twitter:card" content="summary" />
+    <link rel="icon" type="image/png" href="/icons/favicon.png" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <link
+      rel="preload"
+      href="/app/fonts/SNPro-SemiBold.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <style>
+      @font-face {
+        font-family: 'SN Pro';
+        src: url('/app/fonts/SNPro-Regular.woff2') format('woff2');
+        font-weight: 400;
+        font-display: swap;
+      }
+      @font-face {
+        font-family: 'SN Pro';
+        src: url('/app/fonts/SNPro-SemiBold.woff2') format('woff2');
+        font-weight: 600;
+        font-display: swap;
+      }
+      :root {
+        /* The design system's tokens (src/design-system/foundation/tokens.css). */
+        --brand: #4900be; /* parabrand-800 */
+        --brand-dark: #3b009a; /* parabrand-900 */
+        --brand-soft: #ececff; /* parabrand-100 */
+        --ink: #171717; /* neutral-900 */
+        --muted: #525252; /* neutral-600 */
+        --line: #e5e5e5; /* neutral-200 */
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: #ffffff;
+        color: var(--ink);
+        font:
+          400 1rem/1.5 'SN Pro',
+          system-ui,
+          sans-serif;
+      }
+      main {
+        max-width: 32rem;
+        margin: 0 auto;
+        padding: max(1.25rem, env(safe-area-inset-top)) 1.25rem
+          max(2.5rem, env(safe-area-inset-bottom));
+      }
+      .logo {
+        display: block;
+        height: 2.5rem;
+        width: auto;
+      }
+      /* /app/'s hero picture stood here; without it, the heading keeps the same room below the logo. */
+      .logo + h1 {
+        margin-top: 1.5rem;
+      }
+      .hero {
+        display: block;
+        width: 100%;
+        height: auto;
+        margin: 1.25rem 0 1.5rem;
+        border-radius: 1.5rem;
+        aspect-ratio: 1200 / 630;
+        object-fit: cover;
+      }
+      h1 {
+        margin: 0 0 0.5rem;
+        font-size: 2rem;
+        line-height: 1.15;
+        font-weight: 600;
+      }
+      h2 {
+        margin: 0 0 0.25rem;
+        font-size: 1.25rem;
+        line-height: 1.3;
+        font-weight: 600;
+      }
+      p {
+        margin: 0 0 1rem;
+      }
+      .lead {
+        font-size: 1.125rem;
+        color: var(--muted);
+      }
+      section {
+        padding: 1.5rem 0;
+        border-top: 1px solid var(--line);
+      }
+      .button {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 3.25rem;
+        padding: 0.75rem 1.5rem;
+        border-radius: 999px;
+        background: var(--brand);
+        color: #ffffff;
+        font-weight: 600;
+        font-size: 1.125rem;
+        text-decoration: none;
+      }
+      .button:hover {
+        background: var(--brand-dark);
+      }
+      .button.plain {
+        background: var(--brand-soft);
+        color: var(--brand);
+      }
+      .button.plain:hover {
+        background: #dadaff; /* parabrand-200 */
+      }
+      form {
+        display: grid;
+        gap: 0.75rem;
+        margin-bottom: 1.5rem;
+      }
+      label {
+        font-weight: 600;
+      }
+      input {
+        min-height: 3.25rem;
+        padding: 0.75rem 1.25rem;
+        border: 1px solid #737373; /* neutral-500, 4.7 to 1 on white */
+        border-radius: 999px;
+        font: inherit;
+        color: inherit;
+      }
+      button.button {
+        border: 0;
+        font-family: inherit;
+        cursor: pointer;
+      }
+      button.button:disabled {
+        opacity: 0.6;
+        cursor: default;
+      }
+      form .note {
+        margin: 0;
+      }
+      a:focus-visible,
+      button:focus-visible,
+      input:focus-visible {
+        outline: 3px solid var(--brand);
+        outline-offset: 3px;
+      }
+      .note {
+        margin: 0.75rem 0 0;
+        font-size: 0.875rem;
+        color: var(--muted);
+      }
+      ol {
+        margin: 0.75rem 0 0;
+        padding-left: 1.25rem;
+        font-size: 0.875rem;
+        color: var(--muted);
+      }
+      .links {
+        display: grid;
+        gap: 0.75rem;
+      }
+      a {
+        color: var(--brand);
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <img class="logo" src="/app/para-logo.svg" alt="Para" width="98" height="64" />
+      <h1>Para is coming soon</h1>
+      <p class="lead">Leave your email and we'll tell you when it's out.</p>
+
+      <section aria-labelledby="waitlist-heading">
+        <h2 id="waitlist-heading">Join the waitlist</h2>
+        <form id="waitlist">
+          <label for="email">Your email</label>
+          <input
+            id="email"
+            name="email"
+            type="email"
+            required
+            maxlength="254"
+            autocomplete="email"
+          />
+          <!-- Cloudflare's bot check. The site key is public, the one in .env.production. -->
+          <div class="cf-turnstile" data-sitekey="0x4AAAAAAFbtZb_Xw79jsru8"></div>
+          <button class="button" type="submit">Tell me when it's out</button>
+          <p class="note" id="waitlist-said" role="status"></p>
+          <p class="note">
+            We use your email to confirm you're on the list and to tell you when Para is out, and
+            for nothing else. To be taken off the list, email para.ph.info@gmail.com.
+          </p>
+        </form>
+      </section>
+
+      <section aria-labelledby="more">
+        <h2 id="more">Questions?</h2>
+        <div class="links">
+          <a href="mailto:para.ph.info@gmail.com">Email para.ph.info@gmail.com</a>
+        </div>
+      </section>
+    </main>
+    <script>
+      // The waitlist, as /app/'s. The form posts to the waitlist Edge Function
+      // (supabase/functions/waitlist), which asks Cloudflare whether the bot check passed, saves
+      // the email and sends one confirmation. Cloudflare's script loads only once someone touches
+      // the form, so opening the page from a poster loads nothing from another site.
+      const form = document.getElementById('waitlist');
+      const said = document.getElementById('waitlist-said');
+      const FAILED = "That didn't go through. Try again in a bit.";
+      // True once Cloudflare's script fails to load (a blocker, or no signal).
+      let blocked = false;
+      const WHY = {
+        email: "That email doesn't look right. Check it and try again.",
+        check: "We couldn't check that you're a person. Try again.",
+      };
+      form.addEventListener(
+        'focusin',
+        () => {
+          const check = document.createElement('script');
+          check.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
+          check.onerror = () => (blocked = true);
+          document.head.append(check);
+        },
+        { once: true },
+      );
+      form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const data = new FormData(form);
+        const token = data.get('cf-turnstile-response');
+        if (!token) {
+          said.textContent = blocked
+            ? "The check that you're a person didn't load. Reload the page and try again."
+            : "Still checking that you're a person. Try again in a moment.";
+          return;
+        }
+        const button = form.querySelector('button');
+        button.disabled = true;
+        said.textContent = 'Sending…';
+        try {
+          const response = await fetch(
+            'https://smzwbqxttdyvohuizynl.supabase.co/functions/v1/waitlist',
+            {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ email: data.get('email'), token }),
+            },
+          );
+          const answer = await response.json().catch(() => ({}));
+          if (response.ok) {
+            form.reset();
+            said.textContent = "You're on the list. We'll email you when Para is out.";
+          } else said.textContent = WHY[answer.error] ?? FAILED;
+        } catch {
+          said.textContent = FAILED;
+        }
+        button.disabled = false;
+        // A token is good for one request.
+        window.turnstile?.reset();
+      });
+    </script>
+  </body>
+</html>

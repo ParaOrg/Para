@@ -1,10 +1,9 @@
-import { cn } from '@/shared/utils/cn';
-
 import type { RouteStopSignKind } from './route-stop-sign';
 import { RouteStopSlot } from './route-stop-slot';
 import type { TimelineRowState } from './route-stops-timeline-row';
 import { RouteStopsTimelineRow } from './route-stops-timeline-row';
 import type { RouteTripLineDetailPillContent } from './route-trip-line-detail-pill';
+import { TimelineRowTap } from './timeline-row-tap';
 import type { Livery } from '../model/liveries';
 
 interface TimelineTopProps {
@@ -22,7 +21,8 @@ interface TimelineTopProps {
   /** Its row's state (timelineRowStates). */
   state: TimelineRowState;
   selected: boolean;
-  onTap: () => void;
+  /** The row tapped; omitted, the row is not a control (TimelineRowTap). */
+  onTap?: () => void;
 }
 
 /**
@@ -43,12 +43,7 @@ export function TimelineTop({
 }: TimelineTopProps) {
   return (
     <li data-testid="trip-origin" data-state={selected ? 'selected' : 'rest'}>
-      <button
-        type="button"
-        aria-pressed={selected}
-        onClick={onTap}
-        className={cn('flex w-full text-left', pressed)}
-      >
+      <TimelineRowTap onTap={onTap} isSelected={selected} pressed={pressed}>
         <RouteStopsTimelineRow
           variant="top"
           state={state}
@@ -56,7 +51,7 @@ export function TimelineTop({
           label={<span data-part="name">{routeOrigin}</span>}
           slot={<RouteStopSlot livery={livery} sign={mark} pill={pill} code={code} />}
         />
-      </button>
+      </TimelineRowTap>
     </li>
   );
 }

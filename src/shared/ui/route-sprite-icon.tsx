@@ -15,12 +15,15 @@ const ROUTE_SPRITE_VIEW_BOX = {
   information: '0 0 24 24',
   start: '0 0 24 24',
   end: '0 0 24 24',
+  ikot: '0 0 16 16',
+  'switch-vertical': '0 0 24 24',
   'close-large': '0 0 28 28',
   'arrow-left-right-large': '0 0 28 28',
   'filter-large': '0 0 28 28',
-  'arrow-up-down': '0 0 20 20',
   'circle-arrow-right': '0 0 24 24',
-  hourglass: '0 0 24 24',
+  filter: '0 0 24 24',
+  'switch-horizontal': '0 0 20 20',
+  overview: '0 0 20 20',
 } as const;
 
 type RouteSpriteId = keyof typeof ROUTE_SPRITE_VIEW_BOX;

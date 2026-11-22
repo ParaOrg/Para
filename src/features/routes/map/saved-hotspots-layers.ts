@@ -4,12 +4,12 @@ import { MAP_OPACITY } from '@/design-system/foundation/map-colours';
 
 import { HOTSPOT_COLOUR, HOTSPOT_CONTENT, HOTSPOT_OPACITY } from './colours';
 import { hatch, hatchOf } from './hotspot-hatch';
-import { DOT, PIN, PINS_SRC, addHotspotPins, pinsOf } from './hotspot-pins';
+import { DOT, PIN, PINS_SRC, addHotspotPins, dotsOf, pinsOf } from './hotspot-pins';
 import { LAYERS, firstLayerOfType } from './layers';
 import { hotspotsData } from './saved-hotspots-data';
 import { HINTUAN_LABEL, LABEL, addHotspotLabels, labelsOf } from './saved-hotspots-labels';
 import { HOTSPOTS_FILL_LAYER } from './tap';
-import type { Hotspot } from '../model/hotspots';
+import type { Hotspot, HotspotKind } from '../model/hotspots';
 
 /*
  * The saved hotspots on the map: their source, the place wash's, their
@@ -38,10 +38,9 @@ const HINTUAN_STRONGER =
   1 - (1 - MAP_OPACITY['Map/OverlayCard/Hintuan/surface-selected']) / (1 - HOTSPOT_OPACITY.hintuan);
 
 /**
- * The place highlight: tap one box and its siblings — the boxes sharing its
- * informal name — draw stronger, and a soft wash over the hull of all of them
- * says "one place". Studio and public map alike. The wash has its own source,
- * rebuilt when the selection changes.
+ * The place highlight: tap one box and its siblings — the boxes sharing its informal name — draw
+ * stronger, and a soft wash over the hull of all of them says "one place". Studio and public map
+ * alike. The wash has its own source, rebuilt when the selection changes.
  */
 export const SIBLINGS = 'saved-stops-siblings';
 export const SIBLING_LAYERS = [SIBLINGS] as const;
@@ -57,17 +56,19 @@ const ROUTES_ABOVE = LAYERS.routesCasing;
 const DRAW_ABOVE = LAYERS.drawCasing;
 
 /**
- * The filter of each layer drawn from the hotspots' source, the box being
- * edited (`hidden`, '' for none) left out: what the studio sets as it opens
- * an outline, and sets back once it is closed. The boxes' layers get one
- * filter, SIBLINGS too. MapLibre's worker lays out the layers of a source
- * that share a type, a filter and a layout as one bucket; left on its first
- * filter, SIBLINGS would be a fill bucket of its own, every box triangulated
- * and uploaded a second time. It never draws the box being edited: the studio
- * closes the hotspot's card, and its siblings' marks with it, before it opens
- * the outline, and takes no tap on a box while one is open.
+ * The filter of each layer drawn from the hotspots' source, the box being edited (`hidden`, '' for
+ * none) left out, and the dots of `dotKinds` alone when given: what the studio sets as it opens an
+ * outline, and sets back once it is closed. The boxes' layers get one filter, SIBLINGS too.
+ * MapLibre's worker lays out the layers of a source that share a type, a filter and a layout as one
+ * bucket; left on its first filter, SIBLINGS would be a fill bucket of its own, every box
+ * triangulated and uploaded a second time. It never draws the box being edited: the studio closes
+ * the hotspot's card, and its siblings' marks with it, before it opens the outline, and takes no
+ * tap on a box while one is open.
  */
-export function hiddenHotspotFilters(hidden: string): [string, FilterSpecification][] {
+export function hiddenHotspotFilters(
+  hidden: string,
+  dotKinds?: readonly HotspotKind[],
+): [string, FilterSpecification][] {
   const boxes: FilterSpecification = [
     'all',
     ['==', ['geometry-type'], 'Polygon'],
@@ -80,16 +81,15 @@ export function hiddenHotspotFilters(hidden: string): [string, FilterSpecificati
     [HATCH, boxes],
     [LABEL, labelsOf('terminal', hidden)],
     [HINTUAN_LABEL, labelsOf('hintuan', hidden)],
-    [DOT, pinsOf(hidden)],
+    [DOT, dotsOf(hidden, dotKinds)],
     [PIN, pinsOf(hidden)],
   ];
 }
 
 /**
- * Where a map other than the public map's and the studio's puts the
- * hotspots: the boxes under `boxesUnder`, and the pins and names under
- * `marksUnder` (the contributor page's, under its published routes and its
- * trail). Unset, the boxes go under the routes and the marks on top.
+ * Where a map other than the public map's and the studio's puts the hotspots: the boxes under
+ * `boxesUnder`, and the pins and names under `marksUnder` (the contributor page's, under its
+ * published routes and its trail). Unset, the boxes go under the routes and the marks on top.
  */
 export interface HotspotsPlacement {
   boxesUnder?: string;
@@ -97,11 +97,10 @@ export interface HotspotsPlacement {
 }
 
 /**
- * The saved hotspots' source, laid out from `hotspots`, and the place wash's
- * and the pins', and their layers, added to `map` under the routes: what
- * useSavedHotspotsLayers adds once a map is there, apart so a unit check can
- * read it (map-sources-test). The pins' images are hotspot-pin-images.ts's,
- * added beside this by whoever calls it.
+ * The saved hotspots' source, laid out from `hotspots`, and the place wash's and the pins', and
+ * their layers, added to `map` under the routes, the dots of `dotKinds` alone when given: what
+ * useSavedHotspotsLayers adds once a map is there, apart so a unit check can read it
+ * (map-sources-test). The pins' images are hotspot-pin-images.ts's, added by whoever calls this.
  */
 export function addSavedHotspots(
   map: Pick<
@@ -110,6 +109,7 @@ export function addSavedHotspots(
   >,
   hotspots: readonly Hotspot[] = [],
   placement: HotspotsPlacement = {},
+  dotKinds?: readonly HotspotKind[],
 ): void {
   // Under the routes, under the draft, and under the basemap's labels in
   // any case: a box never hides a street name.
@@ -242,7 +242,7 @@ export function addSavedHotspots(
     before,
   );
   // The pins over the boxes and the routes, the names over the pins.
-  addHotspotPins(map, hotspots, placement.marksUnder);
+  addHotspotPins(map, hotspots, placement.marksUnder, dotKinds);
   addHotspotLabels(map, SRC, placement.marksUnder);
 }
 

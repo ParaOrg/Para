@@ -16,7 +16,7 @@
 // by its own ✕ leaves no Back behind it. The address never changes.
 import { chromium } from 'playwright';
 import { readFileSync } from 'node:fs';
-import { BASE, bareStyle, harness } from './lib/harness.mjs';
+import { BASE, bareStyle, emptyMapPoint, harness } from './lib/harness.mjs';
 
 const NO_TILES = !!process.env.PARA_NO_TILES;
 const { check, tally } = harness();
@@ -294,20 +294,18 @@ const back = async (page) => {
   await context.close();
 }
 
-// --------------------------------------------------- 4. a card closed by its own ✕
+// ------------------------------------- 4. a card closed by the page, not by Back
 {
   const { context, page, errors } = await phone([IKOT]);
   await tapLine(page);
   await page.locator(TRIP).waitFor({ timeout: 15000 });
-  // The trip card's own ✕: a toast on the page has a Close of its own.
-  await page
-    .locator('[data-testid="card"]', { has: page.locator(TRIP) })
-    .getByRole('button', { name: 'Close' })
-    .first()
-    .tap();
+  // A trip has no ✕ (the owner, 2026-11-21): the empty map tapped closes one with nothing behind.
+  const empty = await emptyMapPoint(page);
+  if (!empty) throw new Error('no empty map in sight to tap');
+  await page.touchscreen.tap(empty.x, empty.y);
   await gone(page, TRIP);
   await page.waitForTimeout(400);
-  check('✕ closes the trip, on the map still', await onPara(page), page.url());
+  check('the empty map tapped closes the trip, on the map still', await onPara(page), page.url());
 
   await back(page);
   check(

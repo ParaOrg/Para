@@ -21,9 +21,9 @@ export function estimateTravel(vehicle: Vehicle, metres: number, stops: number):
   return { low, high };
 }
 
-/** The estimate as the time pill writes it: "~30–60 min". */
+/** The estimate as a trip's Estimated Time Arrival tile writes it: "30 - 60mins". */
 export function travelLabel({ low, high }: TravelEstimate): string {
-  return `~${low}–${high} min`;
+  return `${low} - ${high}mins`;
 }
 
 /** …and as a screen reader hears it: "About 30 to 60 minutes, an estimate". */
