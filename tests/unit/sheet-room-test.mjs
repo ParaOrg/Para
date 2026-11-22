@@ -9,7 +9,7 @@ import {
   clearOfRects,
   framedAt,
   roomFromRects,
-} from '../../src/shared/ui/sheet-room.ts';
+} from '../../src/features/routes/map/sheet-room.ts';
 import { FRAMED_SHARE } from '../../src/shared/ui/sheet-gesture.ts';
 
 // A phone's map, 400 wide and 800 tall, and a desktop's, 1200 by 800.
