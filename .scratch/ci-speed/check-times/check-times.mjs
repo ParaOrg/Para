@@ -133,7 +133,14 @@ const report = [
 const missing = jobs.filter((job) => job.missing).map((job) => job.name);
 mkdirSync(join(HERE, 'out'), { recursive: true });
 writeFileSync(join(HERE, 'out', `${label}.md`), `${report}\n`);
-writeFileSync(join(HERE, 'out', `${label}.json`), `${JSON.stringify({ label, parts }, null, 1)}\n`);
+// One check a line: a record that diffs and greps, without a line per field.
+const checkLines = (part) => part.checks.map((check) => `   ${JSON.stringify(check)}`).join(',\n');
+writeFileSync(
+  join(HERE, 'out', `${label}.json`),
+  `{"label": ${JSON.stringify(label)}, "parts": [\n${parts
+    .map(({ checks, ...rest }) => `  {${JSON.stringify(rest).slice(1, -1)}, "checks": [\n${checkLines({ checks })}\n  ]}`)
+    .join(',\n')}\n]}\n`,
+);
 console.log(
   `${label}: ${parts.length} parts with checks, ${allChecks.length} checks${missing.length ? `; no log for ${missing.join(', ')}` : ''}`,
 );
