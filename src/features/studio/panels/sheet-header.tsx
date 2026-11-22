@@ -1,8 +1,7 @@
 import type { ReactNode } from 'react';
 
 import { IconButton } from '@/design-system/primitives/icon-button';
-
-import { CloseIcon } from './route-icons';
+import { CloseIcon } from '@/shared/ui/route-icons';
 
 interface SheetHeaderProps {
   /** What ✕ does: the card's close, as Escape is the sheet's. */
