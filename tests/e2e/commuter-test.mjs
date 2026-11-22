@@ -16,10 +16,11 @@
 // to localStorage, never calls the OSRM route snapper or the database (it
 // reads the published /data/index.v5.json, once), and tapping a route vs. a
 // hotspot — including one hotspot with a route drawn through it — opens the
-// right card with the right content; and, since 2026-10-04, that the end
-// circles' GL program is compiled before any tap and a trip's tap compiles
-// none (since 2026-10-05 asked of it as the first tap of a page of its
-// own), and that the map is made framed on the routes, where their fit
+// right card with the right content (a hotspot's only in a build with
+// VITE_HOTSPOT_TAPS; without, a tap on a box opens no place's card); and,
+// since 2026-10-04, that the end circles' GL program is compiled before any
+// tap and a trip's tap compiles none (since 2026-10-05 asked of it as the
+// first tap of a page of its own), and that the map is made framed on the routes, where their fit
 // framed it, and stays there (the owner's Q1).
 import { readFileSync } from 'node:fs';
 
@@ -310,6 +311,9 @@ await page.goto(`${BASE}/`, { waitUntil: 'load' });
 await page.waitForFunction(() => window.__map && window.__map.loaded(), null, { timeout: 30000 });
 await waitForSource(page, 'saved-stops');
 await mapIdle(page);
+// A build without hotspot taps (VITE_HOTSPOT_TAPS) reads a tap on a box as the route's under it or
+// the empty map's, so no place's card opens from the map; the page's root says which.
+const isHotspotTapOn = (await page.locator('[data-hotspot-taps="on"]').count()) > 0;
 
 // 0. The map is made framed on the routes (the owner's Q1, 2026-10-04):
 // where their fit put it after the map's 'load' until then — the box round
@@ -531,12 +535,46 @@ check(
   `${atRest.keys.length} programs${atRest.warmed ? '' : `, no warm-up in ${atRest.ms / 1000} s`}`,
 );
 
-// 3. Tap each hotspot: fly to a point inside it, click, read the card.
+// 3. Tap each hotspot: fly to a point inside it, click, read the card. Without hotspot taps, the
+// same tap opens no place's card, and what its card leads to is not reached from the map.
 const hotspotParts = partOfHotspot(snapshot.polys.length);
+if (!isHotspotTapOn)
+  console.log(
+    'SKIP  a tap on each hotspot opens its card, its RouteCards, counter, ⇄ and trips: hotspot taps are off in this build (VITE_HOTSPOT_TAPS)',
+  );
 for (const [i, p] of snapshot.polys.entries()) {
   if (hotspotParts[i] !== PART) continue;
   const desc = `${p.kind} #${i} "${p.name}"`;
   const candidates = interiorCandidates(p.ring);
+  if (!isHotspotTapOn) {
+    const [x, y] = candidates[0] ?? centroidOf(p.ring);
+    await page.evaluate(
+      ([cx, cy]) => {
+        window.__map.jumpTo({ center: [cx, cy], zoom: 18 });
+      },
+      [x, y],
+    );
+    await mapIdle(page);
+    const pt = await page.evaluate(
+      ([cx, cy]) => {
+        const q = window.__map.project([cx, cy]);
+        return [q.x, q.y];
+      },
+      [x, y],
+    );
+    const box = await page.locator('canvas.maplibregl-canvas').boundingBox();
+    await page.mouse.click(box.x + pt[0], box.y + pt[1]);
+    // A route under the box may rightly open its trip or the list: only a place's card is wrong.
+    await appears(ANY_CARD, 1000);
+    const state = await cardKind();
+    check(
+      `tap ${desc}, hotspot taps off: no place's card opens`,
+      state.kind !== 'hotspot' && (await page.locator(PLACE_UP).count()) === 0,
+      `card ${state.kind}`,
+    );
+    await closeCard();
+    continue;
+  }
   let opened = null;
   for (const [x, y] of candidates) {
     await page.evaluate(
@@ -895,7 +933,8 @@ for (const [i, p] of snapshot.polys.entries()) {
 // hintuan only show the card, then select route show the route"): a tap on
 // a route line inside a hotspot opens the hotspot's card alone — no list,
 // the line through it not taken — where until then both were offered, the
-// hotspot first. SKIP if no such vertex exists.
+// hotspot first. Without hotspot taps the box takes none, so the line under the tap is the
+// route's: its trip or the list. SKIP if no such vertex exists.
 const inBox = findVertexInsideAnyHotspot(snapshot.routeLines, snapshot.polys);
 if (!RUNS_ONE_OFFS) {
   // The last part's, with 4b.
@@ -914,12 +953,20 @@ if (!RUNS_ONE_OFFS) {
   await shows();
   const state = await cardKind();
   const lists = await page.locator('[data-testid="chooser"]').count();
-  // Its card lights the routes it lists, as any hotspot's card does.
-  check(
-    'a tap on a route line inside a hotspot opens the hotspot alone: its card, no list',
-    state.kind === 'hotspot' && state.text.includes(inBox.hotspot.name) && lists === 0,
-    `card ${state.kind} "${state.text.split('\n')[0] ?? ''}"; ${lists} list(s)`,
-  );
+  const seen = `card ${state.kind} "${state.text.split('\n')[0] ?? ''}"; ${lists} list(s)`;
+  if (isHotspotTapOn)
+    // Its card lights the routes it lists, as any hotspot's card does.
+    check(
+      'a tap on a route line inside a hotspot opens the hotspot alone: its card, no list',
+      state.kind === 'hotspot' && state.text.includes(inBox.hotspot.name) && lists === 0,
+      seen,
+    );
+  else
+    check(
+      "hotspot taps off: a tap on a route line inside a hotspot is the route's, its trip or the list, no place's card",
+      state.kind !== 'hotspot' && (state.kind === 'route' || lists > 0),
+      seen,
+    );
   await closeCard();
 }
 
