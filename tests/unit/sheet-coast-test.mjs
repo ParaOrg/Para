@@ -23,6 +23,14 @@ test('the coast is v²/2a, up positive and down negative; a placement does not c
   assert.equal(coast(0.05), 0);
 });
 
+test('the owner’s glide: 1 px/ms coasts 200 px over 400 ms, 2 px/ms 800 px over 800 ms', () => {
+  assert.equal(coast(1), 200);
+  assert.equal(coast(2), 800);
+  // From just above Low, with room to coast: the glide takes v/a.
+  assert.ok(Math.abs((glideTo(140, 1, heights, H).glideMs ?? 0) - 400) < 1e-9);
+  assert.ok(MAX_GLIDE_MS >= 2 / SHEET_DECEL);
+});
+
 test('thrown up, it rests further the faster, and glides there from the finger’s speed', () => {
   const slow = glideTo(300, 0.6, heights, H);
   const fast = glideTo(300, 1.2, heights, H);

@@ -2,10 +2,10 @@ import { FLICK, shownAt, snapFor, type SheetHeights, type Snap } from './sheet-g
 
 /**
  * How fast a let-go sheet slows, in px/ms²: a finger leaving it at 1 px/ms (a brisk drag) coasts
- * 100 px over 200 ms, at 2 px/ms (a flick) 400 px over 400 ms. Slower than this and a flick
- * flies off past where the eye follows it; faster and it stops dead, as if thrown into a wall.
+ * 200 px over 400 ms, at 2 px/ms (a flick) 800 px over 800 ms, as far as the sheet goes. Twice the
+ * glide it had at 0.005, the owner's pick (2026-11-22): at that, a flick barely carried on.
  */
-export const SHEET_DECEL = 0.005;
+export const SHEET_DECEL = 0.0025;
 
 /**
  * Below this speed, in px/ms, a release is a placement, not a throw: no coast, and the sheet
@@ -13,8 +13,11 @@ export const SHEET_DECEL = 0.005;
  */
 const MIN_THROW = 0.1;
 
-/** The longest a glide takes, in ms, however short the throw: a slow one still arrives. */
-export const MAX_GLIDE_MS = 700;
+/**
+ * The longest a glide takes, in ms, however short the throw: a slow one still arrives. Twice what
+ * it was with the glide, so the doubled glide of a hard flick (v/a, 800 ms at 2 px/ms) is not cut.
+ */
+export const MAX_GLIDE_MS = 1400;
 
 /**
  * Even deceleration as CSS draws it: x(t) = 2t − t², which starts at twice the average speed (the
