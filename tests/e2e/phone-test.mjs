@@ -3867,9 +3867,8 @@ if (runsPart(3)) {
     const isPicked = async () =>
       (await wanted.count()) > 0 && (await wantedCard.getAttribute('data-state')) === 'selected';
     const wantedName = wantedCard.locator('[data-testid="chooser-select"]');
-    // At Low a tap on the list raises it a third and reaches nothing under it (the owner's rule):
-    // picking a card there takes a tap to raise, then a tap to pick. The camera is read once the
-    // raise has settled.
+    // At Low a tap on a card opens its trip straight away, as it would higher up (the owner,
+    // 2026-11-22); elsewhere on the list it raises it a third.
     const listAt = async () => chooser.first().getAttribute('data-snap');
     const raisedFirst = (await listAt()) === 'low';
     if (raisedFirst) {
@@ -3902,90 +3901,34 @@ if (runsPart(3)) {
       );
       await touchTap(
         topCard.locator('[data-testid="chooser-select"]'),
-        async () => (await listAt()) !== 'low',
+        async () => (await trip().count()) > 0,
       );
       check(
-        '  at Low, a tap on a card raises the list a third and picks nothing',
-        (await listAt()) === 'free' &&
-          !(await isPicked()) &&
-          (await topCard.getAttribute('data-state')) !== 'selected',
-        `data-snap=${await listAt()}; picked ${await isPicked()}`,
+        '  at Low, a tap on a card opens its trip straight away, the card never Selected',
+        (await trip().count()) > 0 && (await topCard.getAttribute('data-state')) !== 'selected',
+        `trip open ${(await trip().count()) > 0}; data-state ${await topCard.getAttribute('data-state')}`,
       );
+      await leaveTrip(listShown);
     }
     await cardsSettled(page);
-    const camBeforeCardPick = await camNow();
-    await buttonTap(wantedName, isPicked);
-    const pickedIds = (await wanted.count()) ? await directionsIn(wantedCard) : [];
-    const litPicked = (await litIds(page)) ?? [];
-    check(
-      '  a tap on a card off its rows selects it, opening no trip',
-      (await isPicked()) && (await trip().count()) === 0,
-      `Selected ${await isPicked()}; trip open ${(await trip().count()) > 0}`,
-    );
-    // The camera stays where it was: a card picked fits nothing (the owner, 2026-10-21).
-    // Fitted, it would be by the time the card and the camera are at rest.
-    await cardsSettled(page);
-    const camAfterCardPick = await camNow();
-    check(
-      '  and the camera stays where it was: its routes are not fitted',
-      sameCamera(camBeforeCardPick, camAfterCardPick),
-      JSON.stringify({ camBeforeCardPick, camAfterCardPick }),
-    );
-    // Picked and not fitted, so the Overview button shows; pressed, it takes the card's routes
-    // in above the list, and hides once there.
-    const overview = page.getByRole('button', { name: 'Overview' });
-    check('  a card picked: Overview shows', (await isPicked()) && (await overview.isVisible()));
-    const pickedBoxes = pickedIds
-      .map((id) => snapshot.routes.find((o) => o.id === id)?.bbox)
-      .filter(Boolean);
-    const pickedBbox = pickedBoxes.length
-      ? [
-          Math.min(...pickedBoxes.map((b) => b[0])),
-          Math.min(...pickedBoxes.map((b) => b[1])),
-          Math.max(...pickedBoxes.map((b) => b[2])),
-          Math.max(...pickedBoxes.map((b) => b[3])),
-        ]
+    // A tap on a card off its rows opens its first row's trip, its line alone lit; no card is
+    // Selected on the public map (the owner, 2026-11-22).
+    const firstRow = wantedCard.locator('[data-testid="chooser-item"]').first();
+    const firstRowId = (await wanted.count())
+      ? await firstRow.getAttribute('data-direction')
       : null;
-    const overviewPressed = await buttonTap(overview, async () => !(await overview.isVisible()));
-    await page
-      .waitForFunction(() => !window.__map.isMoving(), null, { timeout: 5000 })
-      .catch(() => {});
-    const cardFitted = pickedBbox && (await framedAboveCard(pickedBbox, 'chooser'));
+    await buttonTap(wantedName, async () => (await trip().count()) > 0);
+    const litOpened = (await litIds(page)) ?? [];
     check(
-      "  Overview pressed: the card's routes above the list, and the button gone",
-      overviewPressed && cardFitted?.inside === true && !(await overview.isVisible()),
-      JSON.stringify({ pickedIds: pickedIds.length, cardFitted }),
+      "  a tap on a card off its rows opens its first row's trip, its line alone lit, nothing Selected",
+      (await trip().count()) > 0 &&
+        !(await isPicked()) &&
+        litOpened.length === 1 &&
+        litOpened[0] === firstRowId,
+      `trip open ${(await trip().count()) > 0}; Selected ${await isPicked()}; lit ${JSON.stringify(litOpened)}; first row ${firstRowId}`,
     );
-    const seenPicked = await rideLook(page);
-    const endsPicked = await endsWear(cardColour);
-    check(
-      "  its routes in the card's colour, chevrons and end circles too",
-      wears(seenPicked, LOOKS?.byLivery[cardColour]) && endsPicked.ok,
-      `${cardColour}: ${JSON.stringify(seenPicked)}; ${endsPicked.detail}`,
-    );
-    // Narrower than the list only where the list has other cards.
-    if (pickedIds.length > 0 && pickedIds.length < new Set(listedIds).size) {
-      check(
-        '  and lights just its routes',
-        sameSet(litPicked, pickedIds),
-        `${litPicked.length} lit for ${pickedIds.length} row(s) of ${listedIds.length}`,
-      );
-    } else {
-      skip(
-        '  and lights just its routes',
-        'the picked card holds every route the list shows today',
-      );
-    }
-    await buttonTap(wantedName, async () => !(await isPicked()));
-    const litLetGo = (await litIds(page)) ?? [];
-    check(
-      '  a second tap lets it go, every route it lists lit again',
-      !(await isPicked()) && sameSet(litLetGo, listedIds),
-      `Selected ${await isPicked()}; ${litLetGo.length} lit`,
-    );
-    // Picked again, its row opens the trip; ‹ will bring the list back at rest.
-    await buttonTap(wantedName, isPicked);
-    const pickedForTrip = await isPicked();
+    await leaveTrip(listShown);
+    // A row opens its own trip; leaving it brings the list back at rest.
     await buttonTap(wanted, async () => (await trip().count()) > 0);
     // The trip card takes the list's place, and the list stays behind it,
     // hidden, for the trip's ‹ (the owner's frames, 2026-09-28).
@@ -4017,14 +3960,13 @@ if (runsPart(3)) {
       const again = (await listShown()) ? await chooser.first().innerText() : '';
       const litBack = (await litIds(page)) ?? [];
       check(
-        '  the empty map tapped on the trip, from a picked card, goes back to the list at rest: no card picked, every route it lists lit',
+        '  the empty map tapped on the trip goes back to the list at rest, every route it lists lit',
         again === chooserText &&
           (await card().count()) === 0 &&
-          pickedForTrip &&
           !(await isPicked()) &&
           sameSet(litBack, listedIds),
         again
-          ? `card count ${await card().count()}; picked before ${pickedForTrip}, now ${await isPicked()}; ${litBack.length} lit`
+          ? `card count ${await card().count()}; Selected ${await isPicked()}; ${litBack.length} lit`
           : 'the list did not come back',
       );
       if (trip3.picked) check('  and lets the picked hintuan go', await noPickLeft());
@@ -4045,9 +3987,8 @@ if (runsPart(3)) {
         `${oneCard ?? 'blue'}: ${JSON.stringify(seenRest)}; ${endsRest.detail}`,
       );
       // A Tail Route one lit ride alone goes to opens that ride's trip, its
-      // line lit (the owner's ask, 2026-10-01); ‹ back to the list. The card
-      // picked first: the list's routes may all end at one place (the way
-      // back), and a tail two rides share opens the place instead.
+      // line lit (the owner's ask, 2026-10-01); ‹ back to the list. The list's routes may all end
+      // at one place (the way back), and a tail two rides share opens the place instead: skipped.
       // Start's S and End's E before every lit line's ends, a list's in the
       // selected blue too (the owner's "the rules for RouteLineEndingsLabel
       // must be applicable to these RouteLine", 2026-10-13; plain names in the
@@ -4070,28 +4011,11 @@ if (runsPart(3)) {
         inBlue.titles > 0 && inBlue.marked === inBlue.titles,
         JSON.stringify(inBlue),
       );
-      await buttonTap(wantedName, isPicked);
-      await page
-        .waitForFunction(
-          () =>
-            [...document.querySelectorAll('[data-testid="end-title"]')].every((t) =>
-              t.querySelector('[data-part="start"], [data-part="end"]'),
-            ),
-          null,
-          { timeout: 2000 },
-        )
-        .catch(() => {});
-      const inCard = await marks();
-      check(
-        "  a picked card's ends wear Start's S or End's E, every one",
-        inCard.titles > 0 && inCard.marked === inCard.titles,
-        JSON.stringify(inCard),
-      );
       const tails = page.locator('[data-testid="end-title"][data-opens="trip"] button');
       if ((await tails.count()) === 0) {
         skip(
           "  a tap on a tail's name opens its ride's trip",
-          "no tail of the picked card is one ride's alone",
+          "no tail the list lights is one ride's alone",
         );
       } else {
         const tail = tails.first();
@@ -4155,12 +4079,8 @@ if (runsPart(3)) {
         await leaveTrip(listShown);
         check('  and the empty map tapped goes back to the list', await listShown());
       }
-      // Back at rest, nothing picked, for what follows.
-      if (await isPicked()) await buttonTap(wantedName, async () => !(await isPicked()));
-      // Picked, then a tap on the map where the list opened: a fresh list,
-      // nothing Selected, every route it lists lit.
-      await buttonTap(wantedName, isPicked);
-      const repicked = await isPicked();
+      // A tap on the map where the list opened: a fresh list, nothing Selected, every route it
+      // lists lit.
       // Where the list opened, brought into the map above the list, where a finger can reach it:
       // centred on the screen it sits under the list.
       await jumpTo(page, shared.point);
@@ -4183,9 +4103,9 @@ if (runsPart(3)) {
       const litTapped = (await litIds(page)) ?? [];
       const pickedAfter = await chooser.locator('[data-state="selected"]').count();
       check(
-        '  a map tap lets it go: nothing Selected, every route it lists lit',
-        repicked && pickedAfter === 0 && (await listShown()) && sameSet(litTapped, listedIds),
-        `picked ${repicked}; ${pickedAfter} Selected; ${litTapped.length} lit`,
+        '  a map tap where it opened: a fresh list, nothing Selected, every route it lists lit',
+        pickedAfter === 0 && (await listShown()) && sameSet(litTapped, listedIds),
+        `${pickedAfter} Selected; ${litTapped.length} lit`,
       );
       // The list and the trip opened from it are one height (the owner's ask
       // of 2026-09-30: "if RouteDetail was in medium, if they go back, the
