@@ -135,7 +135,8 @@ studio's, `src/app/contribute/` or `src/features/contribute/` alone runs the bui
 contributor page's suites only, anything shared runs both. A pull request into a branch that
 has a merge queue (`docs/agents/staging-protection.md`) runs the build and unit jobs alone, whatever its
 files: the queue runs every suite on the commit the merge would make. pwa-test, handover-test,
-retire-pwa-test and contribute-offline-test run on preview builds the build job makes once. The drawing suites
+retire-pwa-test and contribute-offline-test run in one job, "The built app", on
+the preview builds it makes first. The drawing suites
 (group, regression-gestures, hotspot, snap, extend, studio-phone) are not run on pull requests.
 They run on every push to `main` or `staging`, nightly and on "Run workflow", one at a time
 with one retry after a minute for the shared router. The pull request's two checks keep their

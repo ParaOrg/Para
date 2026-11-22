@@ -314,13 +314,5 @@ export function useCardCamera<V extends Direction, S extends Hotspot>(
      */
     openPlace: (hotspotId: string) =>
       cards.openPlace(hotspotId, tripDock.current ? tripDock : hotspotDock),
-
-    /** A tail's name with no trip open: its ride's trip, in the colour of the card picked, if one is. */
-    openRide: (id: string) => {
-      const v = saved.directions.find((x) => x.id === id);
-      if (!v) return;
-      keepForTrip();
-      cards.openTrip(v, saved.highlight?.livery);
-    },
   };
 }
