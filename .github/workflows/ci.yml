@@ -123,7 +123,7 @@ jobs:
         run: |
           # The suites that run on a build (preview-suite): every one for the public map, the
           # contributor page's own alone for the contributor page.
-          ALL_PREVIEWS='[{"suite":"pwa-test","basemap":"openfreemap"},{"suite":"pwa-test","basemap":"own-tiles"},{"suite":"handover-test","basemap":"openfreemap"},{"suite":"contribute-offline-test","basemap":"openfreemap"}]'
+          ALL_PREVIEWS='[{"suite":"pwa-test","basemap":"openfreemap"},{"suite":"pwa-test","basemap":"own-tiles"},{"suite":"handover-test","basemap":"openfreemap"},{"suite":"retire-pwa-test","basemap":"openfreemap"},{"suite":"contribute-offline-test","basemap":"openfreemap"}]'
           CONTRIBUTE_PREVIEWS='[{"suite":"contribute-offline-test","basemap":"openfreemap"}]'
           if [ "$EVENT" != "pull_request" ]; then
             echo "public=true" >> "$GITHUB_OUTPUT"
@@ -167,7 +167,7 @@ jobs:
               docs/*|*.md) ;;
               src/app/studio/*|src/features/studio/*|tests/e2e/turnstile-test.mjs|tests/e2e/studio-scale-test.mjs|tests/e2e/studio-contributors-test.mjs|tests/e2e/studio-public-view-test.mjs|tests/e2e/studio-two-editors-test.mjs|tests/e2e/save-test.mjs|tests/e2e/save-ikot-test.mjs|tests/e2e/save-edit-test.mjs|tests/e2e/save-drafts-test.mjs|tests/e2e/group-test.mjs|tests/e2e/regression-gestures.mjs|tests/e2e/hotspot-test.mjs|tests/e2e/snap-test.mjs|tests/e2e/extend-test.mjs|tests/e2e/studio-phone-test.mjs)
                 studio=true ;;
-              src/app/public-map/*|src/features/published-map/*|public/*|tests/e2e/commuter-test.mjs|tests/e2e/phone-test.mjs|tests/e2e/where-test.mjs|tests/e2e/scale-test.mjs|tests/e2e/pwa-test.mjs|tests/e2e/own-tiles-stand-in.mjs|tests/e2e/handover-test.mjs|tests/e2e/fixtures/*|tests/e2e/gate-test.mjs|tests/e2e/loop-test.mjs|tests/e2e/back-test.mjs|tests/e2e/map-pins-test.mjs)
+              src/app/public-map/*|src/features/published-map/*|public/*|tests/e2e/commuter-test.mjs|tests/e2e/phone-test.mjs|tests/e2e/where-test.mjs|tests/e2e/scale-test.mjs|tests/e2e/pwa-test.mjs|tests/e2e/own-tiles-stand-in.mjs|tests/e2e/handover-test.mjs|tests/e2e/retire-pwa-test.mjs|tests/e2e/fixtures/*|tests/e2e/gate-test.mjs|tests/e2e/loop-test.mjs|tests/e2e/back-test.mjs|tests/e2e/map-pins-test.mjs)
                 public=true ;;
               src/app/contribute/*|src/features/contribute/*|tests/e2e/contribute-test.mjs|tests/e2e/contribute-offline-test.mjs|tests/e2e/upload-test.mjs|tests/e2e/account-test.mjs|tests/e2e/profile-test.mjs|tests/e2e/claim-test.mjs)
                 contribute=true ;;
@@ -517,7 +517,8 @@ jobs:
             vite.log
           if-no-files-found: ignore
 
-  # The built app: pwa-test and handover-test (:4173) and contribute-offline-test (:4174) start
+  # The built app: pwa-test, handover-test and retire-pwa-test (:4173, and :4175 in front of it)
+  # and contribute-offline-test (:4174) start
   # and stop their own `vite preview` on the build job's preview builds. pwa-test runs a second
   # time for Para's own tiles server, against a stand-in for it (tests/e2e/own-tiles-stand-in.mjs).
   # Which of them run is the changes job's `preview`.
