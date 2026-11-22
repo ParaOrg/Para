@@ -1,10 +1,14 @@
+import { servePage } from './coming-soon';
 import { handleReport } from './report';
 import { submitRouteReport } from './submit';
 import { isTurnstileVerified } from './turnstile';
 
 /**
- * The site's Worker, `para`. wrangler.jsonc sends only /api/* here (run_worker_first); every other
- * address is served from dist/ as before, without this script running.
+ * The site's Worker, `para`. wrangler.jsonc sends /api/* here, and every page address
+ * (run_worker_first): /api/report is the route report, and a page is served from dist/, with Coming
+ * soon in the map's place on the production site (coming-soon.ts). The built files under /assets/,
+ * /data/, /fonts/ and /icons/, the editor and the contributor page are served from dist/ without
+ * this script running.
  */
 
 /** The slice of Cloudflare's runtime this Worker uses, so it bundles with no install step. */
@@ -35,7 +39,7 @@ const unavailable = (): Response =>
 
 async function handle(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
   const { pathname } = new URL(request.url);
-  if (!pathname.startsWith('/api/')) return env.ASSETS.fetch(request);
+  if (!pathname.startsWith('/api/')) return servePage(request, env.ASSETS);
   if (pathname !== '/api/report') return notFound();
   const databaseUrl = env.REPORT_DATABASE_URL;
   const turnstileSecret = env.TURNSTILE_SECRET_KEY;
