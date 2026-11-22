@@ -122,7 +122,10 @@ re-record (the script above, with the dev server up), then look again.
 **On GitHub** (`.github/workflows/ci.yml`), every suite is its own job and they
 run at once, so a run takes as long as the slowest. commuter-test runs as two
 jobs, `COMMUTER_PART=1/2` and `2/2`: each opens the map and runs the checks that
-cost little, and takes half the hotspots. Unset, it runs whole, as on your machine. The studio's save flows are three suites, save-test,
+cost little, and takes half the hotspots. Unset, it runs whole, as on your machine. On a push to
+`staging` it also runs with hotspot taps on (`VITE_HOTSPOT_TAPS=1`), in six parts, so
+the per-hotspot sequence the public map hides for now stays checked; such a part fails
+if its log says the taps were off. The studio's save flows are three suites, save-test,
 save-ikot-test and save-edit-test, a job each: each opens its own page on the stand-in
 in `lib/save-studio.mjs` and draws its own ground. A pull request runs only what
 its files can reach: docs alone run nothing; `docs/architecture.md`, `tests/unit/` and the scripts only the
