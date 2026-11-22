@@ -144,6 +144,12 @@ _Avoid_: nickname, alias (an alias is something else)
 Another way people say the same place — "Fairview", "SM City Fairview" — kept
 so a search can match it. Never shown as the place's name.
 
+**Establishment**:
+A shop, bank, ATM, pharmacy, eatery or the like that the map draws from
+OpenStreetMap, as a round marker in its family's colour, while Location Labels
+show. Not a place: no route ends at one, and Para never draws one itself.
+_Avoid_: POI, point of interest (the tiles' word), business
+
 ### A direction and its places
 
 **Passes** (a direction passes a hotspot):

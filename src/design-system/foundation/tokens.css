@@ -336,6 +336,17 @@
   --map-ferry-surface-pale: var(--color-ferry-200);
   --map-ferry-border-primary: var(--color-ferry-700);
   --map-ferry-timeline-surface: var(--color-ferry-800);
+  /* Provisional, not in Figma yet: an establishment's marker on the map (establishment-kinds.ts),
+     one colour per family, after Apple Maps' pattern. Each passes 3:1 against Monochrome's and
+     Coloured's ground and carries a white glyph at 4.5:1; on Dark, the marker's white rim does. */
+  --map-establishment-food-surface: var(--color-orange-700);
+  --map-establishment-shopping-surface: var(--color-yellow-700);
+  --map-establishment-money-surface: var(--color-teal-700);
+  --map-establishment-health-surface: var(--color-red-600);
+  --map-establishment-education-surface: var(--color-amber-800);
+  --map-establishment-transport-surface: var(--color-cyan-700);
+  --map-establishment-services-surface: var(--color-slate-600);
+  --map-establishment-safety-surface: var(--color-blue-900);
 }
 
 /* The semantics as utilities: text-content-primary, bg-surface, border-border-primary… */
@@ -468,6 +479,14 @@
   --color-map-ferry-surface-pale: var(--map-ferry-surface-pale);
   --color-map-ferry-border-primary: var(--map-ferry-border-primary);
   --color-map-ferry-timeline-surface: var(--map-ferry-timeline-surface);
+  --color-map-establishment-food-surface: var(--map-establishment-food-surface);
+  --color-map-establishment-shopping-surface: var(--map-establishment-shopping-surface);
+  --color-map-establishment-money-surface: var(--map-establishment-money-surface);
+  --color-map-establishment-health-surface: var(--map-establishment-health-surface);
+  --color-map-establishment-education-surface: var(--map-establishment-education-surface);
+  --color-map-establishment-transport-surface: var(--map-establishment-transport-surface);
+  --color-map-establishment-services-surface: var(--map-establishment-services-surface);
+  --color-map-establishment-safety-surface: var(--map-establishment-safety-surface);
 }
 
 /*

@@ -6,6 +6,7 @@ import type {
 } from 'maplibre-gl';
 import * as z from 'zod/mini';
 
+import { ESTABLISHMENT_ANCHOR } from './establishment-loader';
 import { IS_RAIL_STOP } from './monochrome';
 import { isExpressionFilter } from './station-mask';
 
@@ -60,8 +61,9 @@ function stationIconsOnly(layer: SymbolLayerSpecification): SymbolLayerSpecifica
 }
 
 /**
- * The style with its basemap labels hidden but for the stations' icons, or as
- * it came when they are shown. Pure: the input is left alone. Applied to a
+ * The style with its basemap labels hidden but for the stations' icons, or, when they are
+ * shown, as it came with the establishments' anchor last (establishment-loader.ts), which
+ * has them drawn over it. Pure: the input is left alone. Applied to a
  * style fresh from its file, so showing them again keeps a label the style
  * itself hides.
  */
@@ -69,7 +71,7 @@ export function withLocationLabels(
   style: StyleSpecification,
   areShown: boolean,
 ): StyleSpecification {
-  if (areShown) return style;
+  if (areShown) return { ...style, layers: [...style.layers, ESTABLISHMENT_ANCHOR] };
   return {
     ...style,
     layers: style.layers.map((layer) => {
@@ -80,11 +82,17 @@ export function withLocationLabels(
   };
 }
 
-/** Which page's choice: the public map and the contributor page share one; the studio keeps its own. */
-export type LabelsPlace = 'map' | 'studio';
+/** Which page's choice: the public map, the contributor page and the studio each keep their own. */
+export type LabelsPlace = 'map' | 'contribute' | 'studio';
 
+/**
+ * The public map shows them, with the establishments, unless the device chose otherwise. Each page
+ * keeps its choice under a key of its own; the contributor page's key once held the public map's
+ * too, and the public map's new one starts it at its default.
+ */
 const PREFERENCE: Record<LabelsPlace, { key: string; isShownByDefault: boolean }> = {
-  map: { key: 'para.location-labels.v1', isShownByDefault: false },
+  map: { key: 'para.location-labels.v2', isShownByDefault: true },
+  contribute: { key: 'para.location-labels.v1', isShownByDefault: false },
   studio: { key: 'para.studio.location-labels.v1', isShownByDefault: true },
 };
 
