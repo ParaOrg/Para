@@ -187,6 +187,7 @@ export function ContributeMap({
         areCreditsShown={areCreditsShown}
         isCovered={isCovered}
         makeStyle={MAKE_STYLE}
+        labelsPlace="contribute"
         transformRequest={BASEMAP_REQUESTS}
       />
       {/* Over the map's canvas, under the locator's buttons (drawn after it) and every screen. */}

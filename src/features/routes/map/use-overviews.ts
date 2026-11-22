@@ -2,10 +2,10 @@ import type { MapLibreMap } from 'maplibre-gl';
 import { useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 
 import type { Snap } from '@/shared/ui/sheet-gesture';
-import { roomBeside } from '@/shared/ui/sheet-room';
 import { bboxOf, type LngLat } from '@/shared/utils/geo';
 
 import { APP_MOVE } from './map-view';
+import { roomBeside } from './sheet-room';
 import { directionLine, type Direction } from '../model/routes';
 
 /*
