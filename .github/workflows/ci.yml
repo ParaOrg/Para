@@ -24,8 +24,8 @@
 #      minute or so share a job, since each job repeats its setup and waits for
 #      one of the free plan's ~20 runners; commuter-test, the slowest by far,
 #      runs as six parts (COMMUTER_PART, see its top), phone-test as three, the
-#      drawing suites as two. What every job repeats is made once: the build job makes the preview builds
-#      the built-app suites run, and Playwright's Chromium is kept between runs.
+#      drawing suites as two, and the built-app suites share one job that makes its own builds.
+#      What every job repeats is kept between runs: Playwright's Chromium and node_modules.
 #   3. The drawing suites only where they are needed. group, regression-
 #      gestures, hotspot, snap, extend and studio-phone draw through the public OSRM demo
 #      router (about one request a second, shared with the world) and read
@@ -291,45 +291,6 @@ jobs:
         env:
           ESLINT_JSON: ${{ runner.temp }}/eslint.json
         run: npm run --silent health >> "$GITHUB_STEP_SUMMARY" || true
-      # The builds pwa-test, handover-test and contribute-offline-test run in `vite preview`, made
-      # once here for preview-suite. Each reads the suites' .env.local as well as .env.production
-      # (a build reads both, the latter winning), so it is the build those suites would make.
-      # OpenFreeMap is named for all but pwa-test's own-tiles run, which is built for a stand-in
-      # of the tiles server on 127.0.0.1 (tests/e2e/own-tiles-stand-in.mjs), never the real one.
-      # The own-tiles build only for a public change: pwa-test's own-tiles run is a public suite.
-      - name: The preview builds
-        if: needs.changes.outputs.preview != '[]'
-        env:
-          OWN_TILES: ${{ needs.changes.outputs.public }}
-        run: |
-          cp .env.production .env.local
-          echo VITE_BASEMAP_HOST=https://tiles.openfreemap.org >> .env.local
-          echo VITE_TURNSTILE_SITE_KEY=1x00000000000000000000AA >> .env.local
-          echo VITE_CONTRIBUTIONS=0 >> .env.local
-          VITE_BASEMAP_HOST=https://tiles.openfreemap.org npm run build
-          mv dist preview-openfreemap
-          if [ "$OWN_TILES" = true ]; then
-            VITE_BASEMAP_HOST=http://127.0.0.1:4390 npm run build
-            mv dist preview-own-tiles
-          fi
-          rm .env.local
-      - name: Keep the OpenFreeMap preview build
-        if: needs.changes.outputs.preview != '[]'
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
-        with:
-          name: preview-openfreemap
-          path: preview-openfreemap
-          include-hidden-files: true
-          retention-days: 1
-      # Made only for a public change (The preview builds, above).
-      - name: Keep the own-tiles preview build
-        if: needs.changes.outputs.public == 'true'
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
-        with:
-          name: preview-own-tiles
-          path: preview-own-tiles
-          include-hidden-files: true
-          retention-days: 1
 
   # The unit checks and formatting, on a runner apart from the build job's. The unit checks are
   # Node's test runner, no browser, every tests/unit/*-test.mjs; the runner spreads the files
@@ -517,39 +478,67 @@ jobs:
             vite.log
           if-no-files-found: ignore
 
-  # The built app: pwa-test, handover-test and retire-pwa-test (:4173, and :4175 in front of it)
-  # and contribute-offline-test (:4174) start
-  # and stop their own `vite preview` on the build job's preview builds. pwa-test runs a second
-  # time for Para's own tiles server, against a stand-in for it (tests/e2e/own-tiles-stand-in.mjs).
-  # Which of them run is the changes job's `preview`.
+  # The built app's suites, one job: pwa-test, handover-test and retire-pwa-test (:4173, and
+  # :4175 in front of it) and contribute-offline-test (:4174) start and stop their own
+  # `vite preview` on the build this job makes, one suite after another. Each step runs whatever
+  # the steps before it gave, so one red suite does not hide another, and the job fails if any
+  # did. pwa-test runs a second time for Para's own tiles server, on a build made for a stand-in
+  # of it on 127.0.0.1 (tests/e2e/own-tiles-stand-in.mjs), never the real one. Which suites run
+  # is the changes job's `preview`. One job rather than one each: the four or five took a runner
+  # and a setup apiece for under a minute of work, and waited on the build job for its builds.
   preview-suite:
-    name: ${{ matrix.suite }}${{ matrix.basemap == 'own-tiles' && ' (own tiles)' || '' }}
-    needs: [changes, build]
+    name: The built app
+    needs: changes
     if: needs.changes.outputs.preview != '[]'
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    strategy:
-      fail-fast: false
-      matrix:
-        include: ${{ fromJSON(needs.changes.outputs.preview) }}
+    env:
+      PREVIEW: ${{ needs.changes.outputs.preview }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       # Node, npm ci, and Playwright's Chromium with its system packages, from the caches every
       # browser suite shares (the action's own comments).
       - uses: ./.github/actions/prepare-browser-suite
-      # The build was made in the build job; `vite preview` serves it as it is.
-      - name: The preview build
-        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
-        with:
-          name: preview-${{ matrix.basemap }}
-          path: dist
-      - name: ${{ matrix.suite }}
-        run: node tests/e2e/${{ matrix.suite }}.mjs
+      # The builds those suites would make: their .env.local as well as .env.production (a build
+      # reads both, the latter winning), for OpenFreeMap, and for the own-tiles stand-in when
+      # pwa-test's own-tiles run is on. The suites then run without that .env.local, as before.
+      - name: The builds
+        env:
+          OWN_TILES: ${{ contains(needs.changes.outputs.preview, '"basemap":"own-tiles"') }}
+        run: |
+          cp .env.production .env.local
+          echo VITE_BASEMAP_HOST=https://tiles.openfreemap.org >> .env.local
+          echo VITE_TURNSTILE_SITE_KEY=1x00000000000000000000AA >> .env.local
+          echo VITE_CONTRIBUTIONS=0 >> .env.local
+          if [ "$OWN_TILES" = true ]; then
+            VITE_BASEMAP_HOST=http://127.0.0.1:4390 npm run build
+            mv dist preview-own-tiles
+          fi
+          VITE_BASEMAP_HOST=https://tiles.openfreemap.org npm run build
+          rm .env.local
+      - name: pwa-test
+        if: ${{ !cancelled() && contains(env.PREVIEW, '"suite":"pwa-test","basemap":"openfreemap"') }}
+        run: node tests/e2e/pwa-test.mjs
+      - name: handover-test
+        if: ${{ !cancelled() && contains(env.PREVIEW, '"suite":"handover-test"') }}
+        run: node tests/e2e/handover-test.mjs
+      - name: retire-pwa-test
+        if: ${{ !cancelled() && contains(env.PREVIEW, '"suite":"retire-pwa-test"') }}
+        run: node tests/e2e/retire-pwa-test.mjs
+      - name: contribute-offline-test
+        if: ${{ !cancelled() && contains(env.PREVIEW, '"suite":"contribute-offline-test"') }}
+        run: node tests/e2e/contribute-offline-test.mjs
+      - name: The own-tiles build in dist/
+        if: ${{ !cancelled() && contains(env.PREVIEW, '"basemap":"own-tiles"') }}
+        run: rm -rf dist && mv preview-own-tiles dist
+      - name: pwa-test (own tiles)
+        if: ${{ !cancelled() && contains(env.PREVIEW, '"suite":"pwa-test","basemap":"own-tiles"') }}
+        run: node tests/e2e/pwa-test.mjs
       - name: Keep the screenshots
         if: failure()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
-          name: ${{ matrix.suite }}${{ matrix.basemap == 'own-tiles' && '-own-tiles' || '' }}-screenshots
+          name: built-app-screenshots
           path: '*.png'
           if-no-files-found: ignore
 
