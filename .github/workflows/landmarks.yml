@@ -50,8 +50,7 @@ jobs:
   build:
     name: Build and check the landmark file
     runs-on: ubuntu-latest
-    # The Philippines extract is about 600 MB: its download and the cut to the box take minutes.
-    timeout-minutes: 30
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -77,7 +76,8 @@ jobs:
           node scripts/landmarks/compare.mjs "$RUNNER_TEMP/before.json" public/data/landmarks.v1.json > "$RUNNER_TEMP/counts.md"
           echo >> "$RUNNER_TEMP/counts.md"
           node scripts/footbridges/compare.mjs "$RUNNER_TEMP/footbridges-before.json" public/data/footbridges.v1.json >> "$RUNNER_TEMP/counts.md"
-          cat "$RUNNER_TEMP/counts.md" >> "$GITHUB_STEP_SUMMARY"
+          # In the log too, so the counts can be read without the run's page.
+          tee -a "$GITHUB_STEP_SUMMARY" < "$RUNNER_TEMP/counts.md"
           git add -N public/data/footbridges.v1.json
           if git diff --quiet -- public/data/landmarks.v1.json public/data/footbridges.v1.json; then
             echo "The files are unchanged: nothing to open." >> "$GITHUB_STEP_SUMMARY"
