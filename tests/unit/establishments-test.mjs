@@ -131,6 +131,23 @@ test("a design's place labels give the establishments up, and theirs are drawn l
   assert.equal(places.filter({ zoom: 17 }, place('lodging', 'hotel')), true, 'the hotel is not');
   const photo = { version: 8, sources: {}, layers: [] };
   assert.equal(withEstablishments(photo), photo, 'a style without the tiles is left alone');
+  // Coloured's ranked place layer, as Liberty has it: an icon by the place's class.
+  const liberty = {
+    ...style,
+    layers: [
+      ...style.layers,
+      {
+        id: 'poi_r1',
+        type: 'symbol',
+        source: 'openmaptiles',
+        'source-layer': 'poi',
+        layout: {
+          'icon-image': ['match', ['get', 'subclass'], ['florist'], 'x', ['get', 'class']],
+        },
+      },
+    ],
+  };
+  assert.equal(withEstablishments(liberty), liberty, 'Coloured keeps its own place icons');
 });
 
 test('every glyph has its file and its licence', () => {

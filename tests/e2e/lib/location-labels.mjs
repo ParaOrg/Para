@@ -122,12 +122,11 @@ export async function checkLocationLabels(
     `${shown.basemapShown.length} of ${shown.basemap.length} shown; ours ${shown.ours.join(', ') || 'none'}`,
   );
 
-  await pick(page, 'Coloured');
-  const colour = await labelsWhen(page, (now) => now.establishments.length > 0);
+  const colour = await pick(page, 'Coloured');
   check(
-    `${prefix}: a switch to Coloured keeps them shown, with the establishments`,
+    `${prefix}: a switch to Coloured keeps them shown, with its own place icons and no establishments`,
     colour.basemapShown.length > 0 &&
-      colour.establishments.length === 3 &&
+      colour.establishments.length === 0 &&
       sameIds(colour.ours, atFirst.ours),
     `${colour.basemapShown.length} of ${colour.basemap.length} shown`,
   );

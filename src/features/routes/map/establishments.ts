@@ -1,5 +1,4 @@
 import type {
-  ExpressionSpecification,
   LayerSpecification,
   MapLibreMap,
   StyleSpecification,
@@ -8,12 +7,11 @@ import type {
 
 import { MAP_PAINT } from '@/design-system/foundation/map-colours';
 
+import { byKind, isEstablishment } from './establishment-expressions';
 import {
-  ESTABLISHMENT_KINDS,
   FAMILY_COLOUR,
   TIER_ZOOM,
   establishmentImageOf,
-  type EstablishmentKind,
   type EstablishmentTier,
 } from './establishment-kinds';
 import { ESTABLISHMENT_ANCHOR } from './establishment-loader';
@@ -31,49 +29,6 @@ const SOURCE_LAYER = 'poi';
 export const ESTABLISHMENT_LAYER_PREFIX = 'establishments-';
 
 const TIERS: readonly EstablishmentTier[] = [3, 2, 1];
-
-const matches = (
-  key: 'class' | 'subclass',
-  values: readonly string[],
-): boolean | ExpressionSpecification =>
-  values.length > 0 ? ['match', ['get', key], [...values], true, false] : false;
-
-/** Whether a place is one of the kinds, or one of a tier's when `tier` is given. */
-export function isEstablishment(tier?: EstablishmentTier): ExpressionSpecification {
-  const kinds = ESTABLISHMENT_KINDS.filter((kind) => tier === undefined || kind.tier === tier);
-  return [
-    'any',
-    matches(
-      'class',
-      kinds.flatMap((kind) => kind.classes ?? []),
-    ),
-    matches(
-      'subclass',
-      kinds.flatMap((kind) => kind.subclasses ?? []),
-    ),
-  ];
-}
-
-/** A match on `key`, from each value list to its output, else `fallback`. */
-function matchOn(
-  key: 'class' | 'subclass',
-  pairs: readonly (readonly [string[], string])[],
-  fallback: string | ExpressionSpecification,
-): string | ExpressionSpecification {
-  const [first, ...rest] = pairs.filter(([values]) => values.length > 0);
-  if (!first) return fallback;
-  return ['match', ['get', key], first[0], first[1], ...rest.flat(), fallback];
-}
-
-/**
- * What each place shows, by its kind (`output`): its subclass's kind first, then its class's, else
- * `fallback`. The kinds never overlap (establishment-kinds.ts), so the order only saves a lookup.
- */
-function byKind(output: (kind: EstablishmentKind) => string, fallback: string) {
-  const pairs = (key: 'classes' | 'subclasses') =>
-    ESTABLISHMENT_KINDS.map((kind): [string[], string] => [[...(kind[key] ?? [])], output(kind)]);
-  return matchOn('subclass', pairs('subclasses'), matchOn('class', pairs('classes'), fallback));
-}
 
 /** A tier's layer: the marker from its zoom, small at first; the name beside it a zoom closer. */
 export function establishmentLayer(tier: EstablishmentTier): SymbolLayerSpecification {
@@ -118,9 +73,26 @@ function withoutEstablishments(layer: LayerSpecification): LayerSpecification {
   return { ...layer, filter: ['all', layer.filter ?? true, ['!', isEstablishment()]] };
 }
 
-/** A design with its establishments drawn, last, over its own labels. Pure; a style without the tiles as it is. */
+/**
+ * Whether a design draws its places by icons of its own, each by its class: Coloured's ranked
+ * place layers (Liberty's). It keeps them, and draws no establishments, until the owner decides
+ * whether ours replace them there. Monochrome's one gray dot and Dark's none are not such icons.
+ */
+export function drawsItsOwnPlaceIcons(layers: readonly LayerSpecification[]): boolean {
+  return layers.some(
+    (layer) =>
+      layer.type === 'symbol' &&
+      layer['source-layer'] === SOURCE_LAYER &&
+      JSON.stringify(layer.layout?.['icon-image'] ?? '').includes('class'),
+  );
+}
+
+/**
+ * A design with its establishments drawn, last, over its own labels. Pure; a style without the
+ * tiles, or with place icons of its own, as it is.
+ */
 export function withEstablishments(style: StyleSpecification): StyleSpecification {
-  if (!(SOURCE in style.sources)) return style;
+  if (!(SOURCE in style.sources) || drawsItsOwnPlaceIcons(style.layers)) return style;
   return {
     ...style,
     layers: [...style.layers.map(withoutEstablishments), ...TIERS.map(establishmentLayer)],
@@ -130,13 +102,15 @@ export function withEstablishments(style: StyleSpecification): StyleSpecificatio
 /**
  * The map's style as withEstablishments makes it, done to the map: its place labels' filters, and
  * the layers at the anchor, under Para's own labels. Nothing when the style does not want them,
- * has no tiles, or has them already.
+ * has no tiles, draws its own place icons, or has them already.
  */
 export function addEstablishmentLayers(map: MapLibreMap): void {
   const anchor = ESTABLISHMENT_ANCHOR.id;
   if (!map.getLayer(anchor) || !map.getSource(SOURCE) || map.getLayer(establishmentLayer(1).id))
     return;
-  for (const layer of map.getStyle().layers) {
+  const { layers } = map.getStyle();
+  if (drawsItsOwnPlaceIcons(layers)) return;
+  for (const layer of layers) {
     const given = withoutEstablishments(layer);
     if (given !== layer && 'filter' in given) map.setFilter(layer.id, given.filter);
   }
