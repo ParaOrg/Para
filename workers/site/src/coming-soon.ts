@@ -1,14 +1,22 @@
 /**
  * The public site shows "Coming soon" and the waitlist in place of the map, so the map is not on
- * show yet (the owner, 2026-11-21). Only the production site does: www.para-commute.org, the bare
+ * show yet. Only the production site does: www.para-commute.org, the bare
  * domain, and the Worker's own workers.dev address, para.<account>.workers.dev. Every branch's
  * Preview (<branch>-para.<account>.workers.dev), the staging site among them, keeps the map, so it
  * can still be built and checked there. The editor (/studio/) and the contributor page
  * (/contribute/) work as before on every host.
  *
+ * The map's installed copy (its offline worker, /sw.js) is retired there too: see
+ * retiring-worker.ts.
+ *
  * The switch is the request's host, read here at the edge, not a build flag: production and every
  * Preview are built and deployed from the same dist/, so what CI checks is what serves.
  */
+
+import { retiringWorkerResponse } from './retiring-worker';
+
+/** The public map's offline worker, as the page registers it (src/features/published-map/pwa.ts). */
+const MAP_WORKER_PATH = '/sw.js';
 
 /** The production site's hosts: the custom domain, bare and www, and the Worker's workers.dev name. */
 export function isComingSoonHost(hostname: string): boolean {
@@ -42,14 +50,16 @@ interface Assets {
 }
 
 /**
- * Any address but /api/*: the built file as usual, or on the production site, a page that is not
- * kept is answered with Coming soon in its place, at the same address (200, not a redirect), so a
- * link to / or /app/ still lands on it.
+ * Any address but /api/*: the built file as usual. On the production site, /sw.js is the retiring
+ * worker, and a page that is not kept is answered with Coming soon in its place, at the same
+ * address (200, not a redirect), so a link to / or /app/ still lands on it.
  */
 export async function servePage(request: Request, assets: Assets): Promise<Response> {
-  const response = await assets.fetch(request);
   const url = new URL(request.url);
-  if (!isComingSoonHost(url.hostname)) return response;
+  const isProduction = isComingSoonHost(url.hostname);
+  if (isProduction && url.pathname === MAP_WORKER_PATH) return retiringWorkerResponse();
+  const response = await assets.fetch(request);
+  if (!isProduction) return response;
   if (!showsComingSoon(url.pathname, response.headers.get('content-type'))) return response;
   return assets.fetch(new Request(new URL(COMING_SOON_PATH, url), request));
 }
