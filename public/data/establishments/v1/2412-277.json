@@ -1,0 +1,10 @@
+{
+  "schema": 1,
+  "cell": "2412-277",
+  "attribution": "© OpenStreetMap contributors",
+  "establishments": [
+    ["n6466210885","convenience",120.64065,13.87976,"7-Eleven"],
+    ["n11816213454","restaurant",120.63326,13.89331,"Sunrise & Sunset Restaurant"],
+    ["w1499840101","fuel",120.63048,13.89822,"Pemex Gas Station"]
+  ]
+}

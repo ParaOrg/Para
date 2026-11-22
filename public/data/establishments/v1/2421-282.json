@@ -1,0 +1,10 @@
+{
+  "schema": 1,
+  "cell": "2421-282",
+  "attribution": "© OpenStreetMap contributors",
+  "establishments": [
+    ["n5973869385","restaurant",121.09555,14.10045,"Botcho's Kitchenette"],
+    ["n1986736354","fast_food",121.0983,14.10132,"Tita Lomi House"],
+    ["w263199191","fuel",121.09808,14.10122,"Total"]
+  ]
+}

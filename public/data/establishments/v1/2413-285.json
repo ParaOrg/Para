@@ -1,0 +1,12 @@
+{
+  "schema": 1,
+  "cell": "2413-285",
+  "attribution": "© OpenStreetMap contributors",
+  "establishments": [
+    ["n8865813120","restaurant",120.69328,14.27018,"The Deck Restaurant"],
+    ["n9395839417","restaurant",120.69338,14.2703,"Block 8 Grill & Sizzling House"],
+    ["n9395920617","restaurant",120.69342,14.27029,"Block 8 Grill and Sizzling House"],
+    ["n11774811648","restaurant",120.6986,14.27355,"El Gringo"],
+    ["n7051351230","cafe",120.6951,14.27144,"Mountain Brew"]
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "cell": "2421-288",
+  "attribution": "© OpenStreetMap contributors",
+  "establishments": [
+    ["n12920510255","atm",121.05014,14.41897,null,{"brand":"7-Eleven"}],
+    ["n9865966998","pharmacy",121.05058,14.44225,"TGP",{"brand":"The Generics Pharmacy"}],
+    ["n11897095266","pharmacy",121.0502,14.43496,"TGP",{"brand":"The Generics Pharmacy"}],
+    ["n12624259604","pharmacy",121.0505,14.44248],
+    ["n6845778685","convenience",121.05012,14.41899,"7-Eleven"],
+    ["n12543558090","convenience",121.0505,14.44193,"Alfamart"],
+    ["n12543587943","convenience",121.05012,14.41064,"Dali"],
+    ["n9865966999","fast_food",121.05058,14.44227,"Angel's Burger"],
+    ["n11517966470","fast_food",121.05037,14.40222,"Burger Haus"],
+    ["w1087050480","fuel",121.05022,14.4242,"Seaoil"]
+  ]
+}

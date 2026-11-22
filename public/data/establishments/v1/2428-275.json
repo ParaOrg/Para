@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "cell": "2428-275",
+  "attribution": "© OpenStreetMap contributors",
+  "establishments": [
+    ["n7836800586","convenience",121.40815,13.78925,"San Vicente MPC Buhay na Sapa San Juan"],
+    ["n7836834186","convenience",121.41533,13.76957,"Baby Store Abung San Juan"],
+    ["n7836834188","convenience",121.40741,13.79053,"Nhela Store"],
+    ["n7836834285","convenience",121.41562,13.76875,"Apjakeshly Jamrish Store Abung San Juan"],
+    ["n7836834287","convenience",121.40779,13.79064,"Wenslie Buhay na Sapa San Juan"],
+    ["n7836834485","convenience",121.40679,13.79043,"RJAY Renz Store Buhay na Sapa San Juan"],
+    ["n9470333617","convenience",121.41768,13.76305,"JOVELYN STORE"],
+    ["n5307978418","clinic",121.40757,13.79133,"San Juan Rural Health Unit2"]
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "cell": "2421-276",
+  "attribution": "© OpenStreetMap contributors",
+  "establishments": [
+    ["n6549183811","convenience",121.08912,13.81589,"Gwyneth Grocery Store"],
+    ["n9925964517","convenience",121.06423,13.81961,"joel store"],
+    ["n12145039901","convenience",121.07996,13.8296,"Alfamart"],
+    ["w454156756","convenience",121.0896,13.81053,"SIDC Coop Mart"],
+    ["w465345434","convenience",121.07554,13.82142,"Sari-sari store"],
+    ["w953629530","convenience",121.08915,13.84921,"Double A Convenience Store"],
+    ["n6549183808","restaurant",121.08914,13.8165,"Jorjhanes"],
+    ["n11944863432","restaurant",121.06628,13.81546,"Banaba Food House"],
+    ["n11944863433","restaurant",121.06626,13.81556,"G-Que's Grill House"],
+    ["w451279709","restaurant",121.06902,13.80602,"Hot Bowl's Lomi Haus"],
+    ["w465109696","restaurant",121.07469,13.81867,"Erniedee Eatery & Lomi House"],
+    ["w851699500","fast_food",121.07361,13.80218,"Chesha's Eatery"],
+    ["w953629531","fuel",121.0897,13.84946,"Double A Gas Station"],
+    ["w953880972","fuel",121.07483,13.81359,"Shell"],
+    ["w1042076915","fuel",121.06868,13.80662,"Petron"],
+    ["w851699535","clinic",121.07036,13.80051,"Balagtas Health Center"]
+  ]
+}

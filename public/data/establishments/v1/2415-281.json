@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "cell": "2415-281",
+  "attribution": "© OpenStreetMap contributors",
+  "establishments": [
+    ["n1247875016","convenience",120.77269,14.09116,"Talamitam Convenience Store"],
+    ["n11118419506","convenience",120.79262,14.09494,"connie store"],
+    ["n11155172405","convenience",120.78983,14.09233,"piguerra's store"],
+    ["n11155185305","convenience",120.76969,14.08704,"liza store"],
+    ["n11155186705","convenience",120.76073,14.08123,"Loreta Store"],
+    ["n11155220605","convenience",120.75659,14.0788,"Helen Bautista Store"],
+    ["w1096663157","restaurant",120.78289,14.09048,"FGGA Food Hub"],
+    ["w1096663159","fuel",120.78283,14.09031,"FGGA Fuel Station",{"brand":"FGGA"}],
+    ["n2083472064","toilets",120.77085,14.09043],
+    ["n2083472108","toilets",120.77339,14.09114]
+  ]
+}

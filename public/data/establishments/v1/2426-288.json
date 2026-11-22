@@ -1,0 +1,10 @@
+{
+  "schema": 1,
+  "cell": "2426-288",
+  "attribution": "© OpenStreetMap contributors",
+  "establishments": [
+    ["n11282732197","convenience",121.33525,14.43593,"7-Eleven"],
+    ["n11282739526","convenience",121.33516,14.43696,"Alfa Mart"],
+    ["n11282783367","fuel",121.33497,14.43789,"Hebron"]
+  ]
+}

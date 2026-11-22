@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "cell": "2415-287",
+  "attribution": "© OpenStreetMap contributors",
+  "establishments": [
+    ["n7216604130","convenience",120.79727,14.35043,"7-Eleven"],
+    ["n12585111967","convenience",120.79218,14.35869,"Puremart"],
+    ["n12587096889","convenience",120.79792,14.35052,"Dali"],
+    ["w1359800606","convenience",120.79782,14.35164,"Alfamart"],
+    ["w1498985502","convenience",120.79486,14.35599,"Dali"],
+    ["n7216614117","fuel",120.79738,14.35054,"Total",{"brand":"TotalEnergies"}],
+    ["r13332801","fuel",120.79754,14.35125,"Petron"],
+    ["n5010976666","toilets",120.79195,14.36015],
+    ["w1217354921","police",120.78716,14.35537,"Cavite Maritime Police Station"]
+  ]
+}

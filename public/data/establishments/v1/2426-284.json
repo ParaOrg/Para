@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "cell": "2426-284",
+  "attribution": "© OpenStreetMap contributors",
+  "establishments": [
+    ["w490932434","bank",121.33299,14.22469,"Rural Bank of Bay"],
+    ["n4566006089","convenience",121.34644,14.2036,"Vic's Honey & General Merchandising"],
+    ["n5201599909","convenience",121.32839,14.22799,"7-Eleven"],
+    ["n492158855","supermarket",121.34969,14.20733,"South Emerald Supermarket"],
+    ["n13096672908","supermarket",121.34638,14.20304,"M&W"],
+    ["w1168419738","supermarket",121.34699,14.20372,"Michelene's Mart"],
+    ["n1513700379","restaurant",121.34982,14.2076,"Capitulo"],
+    ["n6194703785","restaurant",121.34475,14.20234,"Itlog Ni Kuya"],
+    ["n13097837628","restaurant",121.34492,14.20244,"Papa Japs"],
+    ["n13138383938","restaurant",121.34625,14.20361,"Leo & Paz"],
+    ["n911594849","fast_food",121.32529,14.22469,"Rollysmer's Kinulob na Itik"],
+    ["n13096588817","cafe",121.3467,14.2041,"Muni Coffee"],
+    ["n13147030506","cafe",121.34486,14.20239,"Karsada Kapé"],
+    ["w1168419735","fuel",121.34948,14.20712,"Bee Fuel"],
+    ["w537080264","clinic",121.32871,14.22769,"Peregrina Rebong-Dator Memorial Health Center"],
+    ["n4793524907","toilets",121.32731,14.22673]
+  ]
+}
