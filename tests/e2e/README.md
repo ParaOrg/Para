@@ -117,6 +117,7 @@ re-record (the script above, with the dev server up), then look again.
     node tests/e2e/turnstile-test.mjs        # 20: with a Turnstile site key (VITE_TURNSTILE_SITE_KEY, Cloudflare's always-pass test key in CI) and stand-ins for Cloudflare's script, Supabase Auth and am_i_editor — an editor is asked about and let in; a contributor's account, signed in at the door or restored on load, is told "This account isn't an editor" (focus on the heading, kept in the notice), sees no editing tool and is signed out of the studio only (scope local, the contributor page's session kept); Sign in waits for the check, a refused sign-in carried its token and the next try a new one, Change password's current-password check carries its own, Change password says the password rule (8 characters, letters and numbers) under the new password and refuses one that breaks it before sending, Forgot password's reset carries one, the script loads once
     node tests/e2e/pwa-test.mjs               # 45: the installable app, against the build in its own `vite preview` on :4173 — manifest, worker, offline, slow network, update, a trip opened by a tap (found on a screenshot) and its line kept for offline, a map published for a newer app and its Reload
     node tests/e2e/handover-test.mjs          # 13: a phone carrying the old app's worker (fixtures/para-ph-sw.js) moves to this build on :4173 — takes over with no prompt and no reload, the old cache goes, a later version still gets the prompt
+    node tests/e2e/retire-pwa-test.mjs        # 12: the production site retires an installed map, against the build on :4173 and a site in front of it on :4175 answered by the site Worker's code — the map's worker and its stores go, its tab reloads onto Coming soon, the contributor page's worker and store and an open editor tab are left alone
 
 **On GitHub** (`.github/workflows/ci.yml`), every suite is its own job and they
 run at once, so a run takes as long as the slowest. commuter-test, the slowest by
@@ -133,8 +134,8 @@ alone skips the public suites, the public map's own folders (`src/app/public-map
 studio's, `src/app/contribute/` or `src/features/contribute/` alone runs the build and the
 contributor page's suites only, anything shared runs both. A pull request into a branch that
 has a merge queue (`docs/agents/staging-protection.md`) runs the build and unit jobs alone, whatever its
-files: the queue runs every suite on the commit the merge would make. pwa-test, handover-test and
-contribute-offline-test run on preview builds the build job makes once. The drawing suites
+files: the queue runs every suite on the commit the merge would make. pwa-test, handover-test,
+retire-pwa-test and contribute-offline-test run on preview builds the build job makes once. The drawing suites
 (group, regression-gestures, hotspot, snap, extend, studio-phone) are not run on pull requests.
 They run on every push to `main` or `staging`, nightly and on "Run workflow", one at a time
 with one retry after a minute for the shared router. The pull request's two checks keep their
