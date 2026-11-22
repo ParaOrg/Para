@@ -5,10 +5,12 @@
 # from the monthly workflow, then commit the files as a normal pull request. Commuters never reach
 # OpenStreetMap: this runs once, here, and the app reads the committed files.
 #
-# One download: openstreetmap.fr's daily Metro Manila extract (about 60 MB), checked against its
-# MD5. osmium keeps the tags place search lists (decision 6: malls, schools, universities,
-# hospitals, churches, markets, transport stations, barangays and major streets; no shops or
-# houses), and landmarks.mjs turns them into one point each.
+# One download: Geofabrik's Philippines extract (about 600 MB), checked against its MD5, then cut
+# to the map's panning box (scripts/tiles/area.mjs, METRO_MANILA), so the provinces the map
+# reaches past Metro Manila's line are in it. osmium keeps the tags place search lists (decision 6:
+# malls, schools, universities, hospitals, churches, markets, transport stations, barangays and
+# major streets; no shops or houses), and landmarks.mjs turns them into one point each. Geofabrik
+# is reachable from GitHub's runners, not from the agents' containers: the build runs in Actions.
 #
 # The data is ODbL: the file carries the licence and the credit in its first fields.
 #
@@ -21,18 +23,31 @@ root="$(cd "$(dirname "$0")/../.." && pwd)"
 work="${1:-$(mktemp -d)}"
 mkdir -p "$work"
 source_url="$(node --input-type=module -e "import { LANDMARK_SOURCE } from '$root/scripts/landmarks/landmark-file.mjs'; console.log(LANDMARK_SOURCE)")"
-extract="$work/metro-manila.osm.pbf"
+download="$work/philippines.osm.pbf"
+extract="$work/panning-box.osm.pbf"
 
+# The checksum first, so it cannot be newer than the extract it is checked against.
 echo "Downloading $source_url"
-curl -fsSL --retry 3 --retry-delay 10 -o "$extract" "$source_url"
 expected="$(curl -fsSL --retry 3 --retry-delay 10 "$source_url.md5" | cut -d' ' -f1)"
-actual="$(md5sum "$extract" | cut -d' ' -f1)"
+curl -fsSL --retry 3 --retry-delay 10 -o "$download" "$source_url"
+actual="$(md5sum "$download" | cut -d' ' -f1)"
 if [ "$expected" != "$actual" ]; then
   echo "The extract's MD5 is $actual, not the $expected the server lists: a broken download." >&2
   exit 1
 fi
-extract_at="$(osmium fileinfo -g header.option.timestamp "$extract")"
+# Geofabrik names the data's moment as the replication timestamp; an extract may carry either.
+extract_at="$(osmium fileinfo -g header.option.timestamp "$download" || true)"
+if [ -z "$extract_at" ]; then
+  extract_at="$(osmium fileinfo -g header.option.osmosis_replication_timestamp "$download" || true)"
+fi
+if [ -z "$extract_at" ]; then
+  echo "The extract names no timestamp in its header." >&2
+  exit 1
+fi
 echo "Extract of $extract_at"
+box="$(node "$root/scripts/tiles/area.mjs")"
+echo "Cut to the panning box $box"
+osmium extract --overwrite -b "$box" "$download" -o "$extract"
 
 osmium tags-filter --overwrite "$extract" \
   nwr/shop=mall \

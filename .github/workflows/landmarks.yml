@@ -1,7 +1,7 @@
 # The monthly refresh of place search's landmark file (.scratch/place-search, ticket 04) and the
 # map's footbridge file (.scratch/footbridges, ticket 01): scripts/landmarks/build.sh rebuilds
-# public/data/landmarks.v1.json and public/data/footbridges.v1.json from openstreetmap.fr's
-# Metro Manila extract, and, when either changed, the run opens one pull request into staging with
+# public/data/landmarks.v1.json and public/data/footbridges.v1.json from Geofabrik's Philippines
+# extract, cut to the map's panning box, and, when either changed, the run opens one pull request into staging with
 # the count of each kind, and of footbridges, before and after. Nothing merges by itself: a person, or the session that
 # owns place search, merges it like any other pull request, and only the owner merges into main.
 #
@@ -76,7 +76,8 @@ jobs:
           node scripts/landmarks/compare.mjs "$RUNNER_TEMP/before.json" public/data/landmarks.v1.json > "$RUNNER_TEMP/counts.md"
           echo >> "$RUNNER_TEMP/counts.md"
           node scripts/footbridges/compare.mjs "$RUNNER_TEMP/footbridges-before.json" public/data/footbridges.v1.json >> "$RUNNER_TEMP/counts.md"
-          cat "$RUNNER_TEMP/counts.md" >> "$GITHUB_STEP_SUMMARY"
+          # In the log too, so the counts can be read without the run's page.
+          tee -a "$GITHUB_STEP_SUMMARY" < "$RUNNER_TEMP/counts.md"
           git add -N public/data/footbridges.v1.json
           if git diff --quiet -- public/data/landmarks.v1.json public/data/footbridges.v1.json; then
             echo "The files are unchanged: nothing to open." >> "$GITHUB_STEP_SUMMARY"
@@ -131,7 +132,7 @@ jobs:
             -m "The monthly refresh (.github/workflows/landmarks.yml), run $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID."
           git push origin "$branch"
           {
-            echo "The monthly refresh of place search's landmark file and the map's footbridge file, from OpenStreetMap's Metro Manila extract of $extract_at (ODbL, © OpenStreetMap contributors)."
+            echo "The monthly refresh of place search's landmark file and the map's footbridge file, from OpenStreetMap's Philippines extract of $extract_at, cut to the map's panning box (ODbL, © OpenStreetMap contributors)."
             echo
             cat "$RUNNER_TEMP/refresh/counts.md"
             echo
