@@ -157,7 +157,6 @@ export function PublicMapApp() {
     letGoalGo,
     goalLandmark,
     walk,
-    openRide,
     openTrip,
     backFromTrip,
     pickOnTrip,
@@ -166,7 +165,8 @@ export function PublicMapApp() {
   } = useCardCamera(map, saved, hotspots, cards, { tipId });
   // What the lit routes wear on the map, their ends named (useLitRides): a
   // picked hintuan's ride flowing only as far as there.
-  const rides = useLitRides(map, saved, hotspots.hotspots, null, ride.ridden, ride.startId, tipId);
+  const { ridden, startId } = ride;
+  const rides = useLitRides(map, saved, hotspots.hotspots, null, ridden, startId, tipId, true);
 
   // The commuter's own position, the dot and the camera with them live in
   // CommuterLocation, so a fix, the phone's compass and the dot's moods
@@ -284,15 +284,7 @@ export function PublicMapApp() {
         Each lit ride's ends, named over their circles; with no trip open, a
         tail opens its ride's.
       */}
-        {map && (
-          <EndTitles
-            map={map}
-            rides={rides}
-            livery={litLivery}
-            onPick={openPlace}
-            onTrip={saved.selected ? undefined : openRide}
-          />
-        )}
+        {map && <EndTitles map={map} rides={rides} livery={litLivery} onPick={openPlace} />}
         {/*
         The open trip's hintuans along its line, a train's stations and a
         jeepney's hintuans alike, each named (RouteLineLabel). Where picking is

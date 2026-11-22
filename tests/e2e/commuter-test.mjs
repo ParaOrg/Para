@@ -1133,11 +1133,11 @@ if (!RUNS_ONE_OFFS) {
           ? await listCards.first().getAttribute('data-livery')
           : null;
       const seenRest = await rideLook(page);
-      const endsRest = await endsWear(oneCard);
+      // Lit with no trip open: its lines alone, no ends to wear the colour (the owner, 2026-11-22).
       check(
         oneCard ? "  in its one card's colour again" : '  in the selected blue again',
-        wears(seenRest, oneCard ? LOOKS?.byLivery[oneCard] : LOOKS?.lit) && endsRest.ok,
-        `${oneCard ?? 'blue'}: ${JSON.stringify(seenRest)}; ${endsRest.detail}`,
+        wears(seenRest, oneCard ? LOOKS?.byLivery[oneCard] : LOOKS?.lit),
+        `${oneCard ?? 'blue'}: ${JSON.stringify(seenRest)}`,
       );
       // SWITCH lights all of the other way round, nothing Selected. Vice Versa, floating on the
       // map over the list (the owner, 2026-11-21).
