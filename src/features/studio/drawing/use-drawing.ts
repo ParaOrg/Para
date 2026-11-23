@@ -11,7 +11,7 @@ import {
 } from '@/shared/utils/geo';
 
 import { curveSegment, keptFirstHandle, mirror, outHandle } from './curves';
-import { readDraft, restoredState, useDraftSaving } from './draft';
+import { clearDraft, readDraft, restoredState, useDraftSaving } from './draft';
 import { useDrawArrows } from './draw-arrows';
 import { useDrawLayers } from './draw-layers';
 import { addBeforeJoin, insertInGap, removeAt, ringSegments } from './drawing-edits';
@@ -494,6 +494,7 @@ export function useDrawing(
   );
 
   const cancel = useCallback(() => {
+    clearDraft();
     setDrawing(false);
     reset();
     setTarget({ routeId: null, directionId: null });
@@ -503,8 +504,7 @@ export function useDrawing(
 
   // ------------------------------------------------------------------ draft
 
-  // Once per page: development's StrictMode runs effects twice, which would ask
-  // the router for every pending gap twice.
+  // Once per page: StrictMode runs effects twice in development, asking for every pending gap twice.
   const restoredRef = useRef(false);
 
   useEffect(() => {
