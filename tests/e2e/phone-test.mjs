@@ -3862,16 +3862,21 @@ if (runsPart(3)) {
       if (back && isBack) await throwFrom(back[0], back[1], 150, 3, 16);
       return rest;
     };
-    // How tall its content stands: from the sheet's top to its last card's foot.
-    const cardsTall = has
-      ? await chooser.first().evaluate((el) => {
-          const cards = el.querySelectorAll('[data-testid="chooser-origin"]');
-          const last = cards[cards.length - 1];
-          return last
-            ? Math.round(last.getBoundingClientRect().bottom - el.getBoundingClientRect().top)
-            : 0;
-        })
-      : 0;
+    // How tall its content stands, from the sheet's top to its last card's foot, and whether every
+    // place name is drawn whole (at Low they are cut to a line; raised, never).
+    const cardsNow = () =>
+      chooser.first().evaluate((el) => {
+        const cards = el.querySelectorAll('[data-testid="chooser-origin"]');
+        const last = cards[cards.length - 1];
+        const tall = last
+          ? Math.round(last.getBoundingClientRect().bottom - el.getBoundingClientRect().top)
+          : 0;
+        const cut = [...el.querySelectorAll('[data-cut-at-low]')].filter(
+          (name) => name.scrollHeight > name.clientHeight + 1,
+        ).length;
+        return { tall, cut };
+      });
+    const cardsTall = has ? (await cardsNow()).tall : 0;
     const screenFull = has ? await chooser.first().evaluate((el) => el.offsetHeight) : 0;
     const listFull = Math.max(listLow, Math.min(screenFull, cardsTall));
     // A short list, its highest barely above Low, is thrown once: a flick back down from there
@@ -3879,11 +3884,17 @@ if (runsPart(3)) {
     const isShort = listFull - listLow < 120;
     const gentle = has && !isShort ? await listThrown(12, 30) : null;
     const hard = has ? await listThrown(4, 16, !isShort) : null;
+    // Raised, its names drawn whole may stand taller than at Low: its highest is its cards then.
+    const raised = has && isShort ? await cardsNow() : null;
     if (isShort)
       check(
-        '  thrown up hard, a short list rises no higher than its last card',
-        hard !== null && hard >= listLow - 2 && hard <= listFull + 2,
-        `hard ${hard} px shown (Low ${listLow}, its cards ${cardsTall}, the screen ${screenFull}); now data-snap=${await listRest()}`,
+        '  thrown up hard, a short list rises no higher than its last card, every name drawn whole',
+        hard !== null &&
+          raised !== null &&
+          raised.cut === 0 &&
+          hard >= listLow - 2 &&
+          hard <= Math.max(listFull, Math.min(screenFull, raised.tall)) + 2,
+        `hard ${hard} px shown (Low ${listLow}, its cards ${cardsTall} at Low and ${raised?.tall} raised, ${raised?.cut} names cut, the screen ${screenFull}); now data-snap=${await listRest()}`,
       );
     else
       check(

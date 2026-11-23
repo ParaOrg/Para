@@ -416,23 +416,43 @@ export const FilteredToNothing: Story = {
   },
 };
 
-/** Low with a long place: one line of it, 32 tall (RouteCard's 24/32), cut short (3817:6007). */
+/**
+ * Low with a long place, in a list taller than Low: one line of it, 32 tall (RouteCard's 24/32),
+ * cut short (3817:6007).
+ */
 export const SheetLowLongName: Story = {
-  args: { routes: longName },
+  args: { routes: [...longName, ...talaRoutes] },
   play: async ({ canvasElement }) => {
     const name = within(canvasElement).getByText(LONG);
     await waitFor(() => expect(name.getBoundingClientRect().height).toBe(32));
   },
 };
 
-/** Raised a third with a long place: all of it, on as many lines as it takes. */
-export const SheetRaisedLongName: Story = {
+/** Low with a long place, in a list whose cards fit within Low: all of it, as nothing is cut. */
+export const SheetLowLongNameFits: Story = {
   args: { routes: longName },
   play: async ({ canvasElement }) => {
+    const name = within(canvasElement).getByText(LONG);
+    await waitFor(() => expect(name.getBoundingClientRect().height).toBeGreaterThan(32));
+    await expect(within(canvasElement).getByTestId('chooser')).toHaveAttribute('data-snap', 'low');
+  },
+};
+
+/**
+ * Raised a third with a long place: all of it, on as many lines as it takes, the list rising no
+ * higher than its last card.
+ */
+export const SheetRaisedLongName: Story = {
+  args: { routes: [...longName, ...talaRoutes] },
+  play: async ({ canvasElement }) => {
     await pressHandle(canvasElement);
-    await expect(
-      within(canvasElement).getByText(LONG).getBoundingClientRect().height,
-    ).toBeGreaterThan(32);
+    const sheet = within(canvasElement).getByTestId('chooser');
+    await expect(sheet).not.toHaveAttribute('data-snap', 'low');
+    const name = within(canvasElement).getByText(LONG);
+    await waitFor(() => expect(name.getBoundingClientRect().height).toBeGreaterThan(32));
+    const cards = within(sheet).getAllByTestId('chooser-origin');
+    const lastFoot = cards[cards.length - 1]?.getBoundingClientRect().bottom ?? 0;
+    await expect(lastFoot).toBeGreaterThanOrEqual(window.innerHeight - 1);
   },
 };
 
