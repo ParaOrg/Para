@@ -22,7 +22,8 @@ export const LANDMARK_KINDS = [
   'street',
 ];
 /** Geofabrik's Philippines extract, which build.sh cuts to the map's panning box. */
-export const LANDMARK_SOURCE = 'https://download.geofabrik.de/asia/philippines-latest.osm.pbf';
+export const LANDMARK_SOURCE =
+  'https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf';
 const LICENSE = 'ODbL-1.0';
 const ATTRIBUTION = '© OpenStreetMap contributors';
 const LICENSE_NOTE =
