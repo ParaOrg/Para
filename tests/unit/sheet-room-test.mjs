@@ -8,6 +8,7 @@ import {
   FIT_ROOM_MIN_PX,
   clearOfRects,
   framedAt,
+  isMapOutOfSight,
   roomFromRects,
 } from '../../src/features/routes/map/sheet-room.ts';
 import { FRAMED_SHARE } from '../../src/shared/ui/sheet-gesture.ts';
@@ -89,4 +90,33 @@ test('a strip under the least room: the margins give way, never below 0', () => 
     top: 0,
     bottom: shows,
   });
+});
+
+/**
+ * A map on a page (`[data-dock-host]`) with one shown sheet: `glides` whether its translate
+ * transition runs (getAnimations), `snap` where it rests, `top` its top on the screen.
+ */
+const page = ({ dragging = false, glides = false, snap = 'low', top = 600 } = {}) => {
+  const sheet = {
+    dataset: { snap },
+    getAnimations: () => (glides ? [{}] : []),
+    getBoundingClientRect: () => ({ top, width: 400 }),
+  };
+  const host = {
+    hasAttribute: (name) => name === 'data-dock-dragging' && dragging,
+    // Every shown sheet, or, with :not([data-snap="low"]), those above Low.
+    querySelectorAll: (selector) =>
+      selector.includes('not([data-snap="low"])') && snap === 'low' ? [] : [sheet],
+  };
+  return {
+    closest: () => host,
+    getBoundingClientRect: () => ({ top: 0, height: 800, width: 400 }),
+  };
+};
+
+test('the map is out of sight under a finger, and while a sheet glides; at rest at Low it shows', () => {
+  assert.equal(isMapOutOfSight(page({ dragging: true })), true);
+  assert.equal(isMapOutOfSight(page({ glides: true })), true);
+  assert.equal(isMapOutOfSight(page()), false);
+  assert.equal(isMapOutOfSight(page({ snap: 'full', top: 24 })), true);
 });
