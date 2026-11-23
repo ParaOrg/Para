@@ -51,7 +51,7 @@ Approved by the owner with the consent text, 2026-10-24:
 
 ### The public map
 
-- The route list's end card (`app/public-map/contribution-card.tsx`) keeps its surface and size but shows nothing: no text, no link.
+- The route list's end card (`app/public-map/contribution-card.tsx`) kept its surface and size but showed nothing: no text, no link. The owner removed it on 2026-11-22: the list now ends at its last card.
 - The map's "+ Contribute" button (`contributor-button.tsx`) is not shown.
 - The public page still never loads contribute code (`check-build.mjs`).
 

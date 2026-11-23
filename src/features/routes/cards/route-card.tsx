@@ -104,6 +104,7 @@ export function RouteCard({
             onPointerCancel={() => setIsPressed(false)}
             onPointerLeave={() => setIsPressed(false)}
             className="min-w-0 flex-1 text-left text-3xl/8 font-bold after:absolute after:inset-0 sheet-low:line-clamp-1"
+            data-cut-at-low
           >
             {routeOrigin}
           </button>

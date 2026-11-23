@@ -32,6 +32,7 @@ import {
   done,
   draftOf,
   drafted,
+  keptAtToast,
   drawLine,
   drawnPoints,
   drawTheRoute,
@@ -140,8 +141,13 @@ let drawn;
     said(writesSince(n)),
   );
   await page.getByLabel('Ikot name').fill('UP – Ikot');
+  const isKeptAtToast = keptAtToast();
   await saveButton().click();
   await drafted();
+  check(
+    "the drawing kept on the device is gone the instant the save's toast shows, so a tab closed then brings nothing back",
+    (await isKeptAtToast) === false,
+  );
   w = writesSince(n);
   const ikotDraft = tables.draft.find((d) => d.kind === 'route' && d.payload.route.is_loop);
   const draftV = ikotDraft?.payload.directions ?? [];
