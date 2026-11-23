@@ -101,3 +101,30 @@ export const ROUTE_CARD_REST_SHADOW = {
   'metro-rail-way-three': 'shadow-route-card-fill',
   ferry: 'shadow-route-card-fill',
 } satisfies Record<Livery, string>;
+
+/**
+ * The room between the place a card's routes leave from and its rows (RouteCard, 4629:22776):
+ * 4 on every card Figma draws, but E-jeep's, which it draws flush.
+ */
+export const ROUTE_CARD_ORIGIN_GAP = {
+  jeep: 'gap-1',
+  'uv-express': 'gap-1',
+  ejeep: 'gap-0',
+  bus: 'gap-1',
+  'light-rail-way-one': 'gap-1',
+  'light-rail-way-two': 'gap-1',
+  'metro-rail-way-three': 'gap-1',
+  ferry: 'gap-1',
+} satisfies Record<Livery, string>;
+
+/** Whether the card wears the Blob's glow (RouteCard, 4629:22776): every card but E-jeep's. */
+export const ROUTE_CARD_HAS_BLOB = {
+  jeep: true,
+  'uv-express': true,
+  ejeep: false,
+  bus: true,
+  'light-rail-way-one': true,
+  'light-rail-way-two': true,
+  'metro-rail-way-three': true,
+  ferry: true,
+} satisfies Record<Livery, boolean>;
