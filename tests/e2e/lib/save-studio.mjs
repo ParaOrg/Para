@@ -11,6 +11,8 @@
 //
 // Importing it opens the page: save-test, save-ikot-test and save-edit-test
 // each start from it, then draw their own ground on it.
+import { basename } from 'node:path';
+
 import { chromium } from 'playwright';
 import { readPublished } from './big-map.mjs';
 import { BASE, bareStyle, harness, waitFor } from './harness.mjs';
@@ -22,7 +24,14 @@ const PROJECT_REF = 'smzwbqxttdyvohuizynl';
 /** A request line past this is trouble at the gateway; the link sync once sent 19 kB. */
 export const URL_LIMIT = 2000;
 
-export const { check, tally } = harness();
+const counted = harness();
+export const { tally } = counted;
+let hasFailed = false;
+/** The harness's check, noting a failure so `finish` keeps the trace. */
+export const check = (name, ok, detail = '') => {
+  if (!ok) hasFailed = true;
+  counted.check(name, ok, detail);
+};
 
 // ------------------------------------------------------------- the tables
 const m = readPublished();
@@ -629,6 +638,24 @@ async function mapLoaded(page) {
 }
 
 export const page = await open(true, '/studio/');
+
+// A failed run keeps what CI's artifact needs to say why: the trace of every
+// step (the page as each action found it) and the screen as it stopped, named
+// for the suite. A passing run keeps neither.
+const SUITE = basename(process.argv[1] ?? 'save-studio', '.mjs');
+await page.context().tracing.start({ snapshots: true, screenshots: true });
+async function keepTheFailure() {
+  await page.screenshot({ path: `${SUITE}-failure.png` });
+  await page.context().tracing.stop({ path: `${SUITE}-trace.zip` });
+  console.log(`Kept ${SUITE}-failure.png and ${SUITE}-trace.zip (npx playwright show-trace).`);
+}
+// A step that throws (a click that times out) ends the suite here, not at finish.
+process.on('uncaughtException', (error) => {
+  console.error(error);
+  keepTheFailure()
+    .catch((keepError) => console.error('The failure could not be kept:', keepError))
+    .finally(() => process.exit(1));
+});
 export const body = async () => (await page.locator('body').innerText()).replace(/\s+/g, ' ');
 export const since = (n) => log.slice(n);
 export const writesSince = (n) => since(n).filter((w) => w.method !== 'GET' && w.method !== 'HEAD');
@@ -864,6 +891,8 @@ export async function finish(screenshot) {
     warnings.slice(0, 3).join(' | '),
   );
   await page.screenshot({ path: screenshot });
+  if (hasFailed) await keepTheFailure();
+  else await page.context().tracing.stop();
   await b.close();
   tally();
 }
