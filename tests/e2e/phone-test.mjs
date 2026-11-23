@@ -3759,34 +3759,57 @@ if (runsPart(3)) {
     );
     // The list's sheet coasts as a card's does: thrown up from its Low from the top of the list
     // (its handle is drawn as none), a hard throw rests higher than a gentle one, both between Low
-    // and full; a fast flick down takes it back to Low after each.
+    // and its highest; a fast flick down takes it back to Low after each. Its highest is its cards'
+    // foot, never the screen's top past them (BottomSheet's `fits`; the owner, 2026-11-23): a list
+    // shorter than that rises only to its last card, and that is what is checked of it.
     const listTop = async () => {
       const r = await chooser.first().boundingBox();
       return r ? [r.x + r.width / 2, r.y + 24] : null;
     };
     const listRest = () => chooser.first().getAttribute('data-snap');
-    const listThrown = async (steps, gap) => {
+    const listLow = has ? await shownOf(chooser) : 0;
+    const listThrown = async (steps, gap, isBack = true) => {
       const from = await listTop();
       if (!from || (await listRest()) !== 'low') return null;
       await throwFrom(from[0], from[1], -200, steps, gap);
       const rest = await shownOf(chooser);
       const back = await listTop();
       // A short fast flick: let go above Low, so it lands on Low rather than past it, closed.
-      if (back) await throwFrom(back[0], back[1], 150, 3, 16);
+      if (back && isBack) await throwFrom(back[0], back[1], 150, 3, 16);
       return rest;
     };
-    const listLow = has ? await shownOf(chooser) : 0;
-    const gentle = has ? await listThrown(12, 30) : null;
-    const hard = has ? await listThrown(4, 16) : null;
-    const listFull = has ? await chooser.first().evaluate((el) => el.offsetHeight) : 0;
-    check(
-      '  thrown up from Low, the list coasts: a hard throw rests higher than a gentle one, both between Low and full',
-      gentle !== null &&
-        hard !== null &&
-        hard > gentle + 40 &&
-        [gentle, hard].every((r) => r >= listLow - 2 && r <= listFull + 2),
-      `gentle ${gentle} px, hard ${hard} px shown (Low ${listLow}, full ${listFull}); now data-snap=${await listRest()}`,
-    );
+    // How tall its content stands: from the sheet's top to its last card's foot.
+    const cardsTall = has
+      ? await chooser.first().evaluate((el) => {
+          const cards = el.querySelectorAll('[data-testid="chooser-origin"]');
+          const last = cards[cards.length - 1];
+          return last
+            ? Math.round(last.getBoundingClientRect().bottom - el.getBoundingClientRect().top)
+            : 0;
+        })
+      : 0;
+    const screenFull = has ? await chooser.first().evaluate((el) => el.offsetHeight) : 0;
+    const listFull = Math.max(listLow, Math.min(screenFull, cardsTall));
+    // A short list, its highest barely above Low, is thrown once: a flick back down from there
+    // would close it (a fast flick down from about Low closes a sheet).
+    const isShort = listFull - listLow < 120;
+    const gentle = has && !isShort ? await listThrown(12, 30) : null;
+    const hard = has ? await listThrown(4, 16, !isShort) : null;
+    if (isShort)
+      check(
+        '  thrown up hard, a short list rises no higher than its last card',
+        hard !== null && hard >= listLow - 2 && hard <= listFull + 2,
+        `hard ${hard} px shown (Low ${listLow}, its cards ${cardsTall}, the screen ${screenFull}); now data-snap=${await listRest()}`,
+      );
+    else
+      check(
+        '  thrown up from Low, the list coasts: a hard throw rests higher than a gentle one, both between Low and its highest',
+        gentle !== null &&
+          hard !== null &&
+          hard > gentle + 40 &&
+          [gentle, hard].every((r) => r >= listLow - 2 && r <= listFull + 2),
+        `gentle ${gentle} px, hard ${hard} px shown (Low ${listLow}, highest ${listFull}: its cards ${cardsTall}, the screen ${screenFull}); now data-snap=${await listRest()}`,
+      );
     const chooserText = has ? await chooser.first().innerText() : '';
     // The routes' rows, inside their cards: a hotspot under the tap would be a
     // row of the list too, above them.

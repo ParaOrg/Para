@@ -128,6 +128,9 @@ export function RouteCardList({
       height={height}
       floats="dock"
       shape={LIST_SHAPE}
+      // At most as tall as its cards: a short list rises no higher than its last card, and only a
+      // list taller than the screen scrolls (the owner, 2026-11-23).
+      fits
       handle="hidden"
       header={null}
       footer={

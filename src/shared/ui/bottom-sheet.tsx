@@ -192,7 +192,7 @@ export function BottomSheet({
     return () => observer.disconnect();
   }, [fits]);
   const fitted: FittedSheet | null =
-    fits && fit ? { heightsFor: (h) => fitHeightsFor(h, fit.contentPx) } : null;
+    fits && fit ? { heightsFor: (h) => fitHeightsFor(h, fit.contentPx, shape) } : null;
   const snap = height?.snap ?? ownSnap;
   /**
    * Where the sheet rests at `to`: a CSS length that follows the map's size, or, for a fitted
