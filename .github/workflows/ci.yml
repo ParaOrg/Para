@@ -674,13 +674,14 @@ jobs:
             echo "::endgroup::"
           done
           exit $status
-      - name: Keep the screenshots and the dev server log
+      - name: Keep the screenshots, the save suites' traces and the dev server log
         if: failure()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: ${{ matrix.slug }}-screenshots
           path: |
             *.png
+            *-trace.zip
             vite.log
           if-no-files-found: ignore
 

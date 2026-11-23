@@ -51,7 +51,6 @@ import { retryingLazy } from '@/shared/lib/retrying-lazy';
 import { cn } from '@/shared/utils/cn';
 import { retryingImport } from '@/shared/utils/retrying-import';
 
-import { ContributionCard } from './contribution-card';
 import { MapSheetControls } from './map-sheet-controls';
 import type { SaidNote } from './page-toasts';
 import { PlaceSearchBar, sheetTopUnderSearch } from './place-search-bar';
@@ -459,7 +458,6 @@ export function PublicMapApp() {
             onRoute={openTrip}
             onHotspot={(s) => cards.openHotspot(s.id)}
             onClose={cards.closeAll}
-            end={(livery) => <ContributionCard livery={livery} />}
           />
         )}
       </div>

@@ -1,5 +1,3 @@
-import type { ReactNode } from 'react';
-
 import { RouteCard } from './route-card';
 import { routeCards, type Listing } from '../model/departures';
 import { isRoadLivery, type Livery } from '../model/liveries';
@@ -32,8 +30,6 @@ interface Props {
   onRoute: (v: Direction, livery: Livery) => void;
   /** What the suites call each card and row (RouteCard). */
   testId: 'chooser' | 'card';
-  /** Drawn after the last card, handed that card's livery; nothing when no card is listed. */
-  end?: (livery: Livery) => ReactNode;
 }
 
 /** The station a train card's directions leave, as its line's table codes it; null on the ferry or an unknown station. */
@@ -68,7 +64,6 @@ export function RouteCardStack({
   selection,
   onRoute,
   testId,
-  end,
 }: Props) {
   const places = routeCards(routes, back, listing);
 
@@ -130,7 +125,6 @@ export function RouteCardStack({
           onPick={(id) => open(id, p.livery)}
         />
       ))}
-      {end && places.length > 0 && end(places[places.length - 1].livery)}
     </>
   );
 }

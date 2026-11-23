@@ -76,9 +76,8 @@ export function useRideTo(
     before.current = null;
   }, [selected?.id]);
 
-  // The hintuan a jeep's SWITCH carried over: the camera frames the whole ride
-  // as SWITCH does (useSwitchOverview) and never glides in to it. A row picked
-  // after lets it go.
+  // The hintuan a jeep's SWITCH carried over: the camera stays where SWITCH
+  // leaves it and never glides in to it. A row picked after lets it go.
   const carried = useRef<string | null>(null);
 
   const tipId = opts.tipId ?? null;

@@ -3372,18 +3372,30 @@ if (runsPart(1)) {
       !!from && !!to && origin === from && end === to,
       `"${label}": top "${origin}", bottom "${end}"`,
     );
-    // Opened, the camera takes in the whole route once, above the sheet at its opening height, as
-    // the Overview button's fit does; at that overview, the button stays hidden.
+    // Opened, the camera stays where the commuter had it (the owner, 2026-11-23: choosing a route
+    // never moves the map), and the Overview is offered. Pressed, it takes in the whole route above
+    // the sheet at its opening height, and at that overview it hides.
     await page
       .waitForFunction(() => !window.__map.isMoving(), null, { timeout: 5000 })
       .catch(() => {});
     const camAfterLineTap = await camNow();
-    const openFit = await framedAboveCard(r.bbox);
-    const overviewShown = await page.getByRole('button', { name: 'Overview' }).isVisible();
+    const overview = page.getByRole('button', { name: 'Overview' });
+    const isOfferedAtOpen = await overview.isVisible();
     check(
-      '  the camera takes in the whole route, above the sheet, and Overview stays hidden',
-      !sameCamera(camBeforeLineTap, camAfterLineTap) && openFit.inside && !overviewShown,
-      JSON.stringify({ openFit, overviewShown }),
+      '  the camera stays where it was, and the Overview is offered',
+      sameCamera(camBeforeLineTap, camAfterLineTap) && isOfferedAtOpen,
+      JSON.stringify({ camBeforeLineTap, camAfterLineTap, isOfferedAtOpen }),
+    );
+    if (isOfferedAtOpen) await buttonTap(overview, async () => !(await overview.isVisible()));
+    await page
+      .waitForFunction(() => !window.__map.isMoving(), null, { timeout: 5000 })
+      .catch(() => {});
+    const openFit = await framedAboveCard(r.bbox);
+    const isShownAtFit = await overview.isVisible();
+    check(
+      '  the Overview takes in the whole route, above the sheet, and then hides',
+      openFit.inside && !isShownAtFit,
+      JSON.stringify({ openFit, isShownAtFit }),
     );
     const routeEnds = r.signboard.split(' – ').map((e) => e.replace(/ via .*$/, ''));
     check(
@@ -3843,34 +3855,68 @@ if (runsPart(3)) {
     );
     // The list's sheet coasts as a card's does: thrown up from its Low from the top of the list
     // (its handle is drawn as none), a hard throw rests higher than a gentle one, both between Low
-    // and full; a fast flick down takes it back to Low after each.
+    // and its highest; a fast flick down takes it back to Low after each. Its highest is its cards'
+    // foot, never the screen's top past them (BottomSheet's `fits`; the owner, 2026-11-23): a list
+    // shorter than that rises only to its last card, and that is what is checked of it.
     const listTop = async () => {
       const r = await chooser.first().boundingBox();
       return r ? [r.x + r.width / 2, r.y + 24] : null;
     };
     const listRest = () => chooser.first().getAttribute('data-snap');
-    const listThrown = async (steps, gap) => {
+    const listLow = has ? await shownOf(chooser) : 0;
+    const listThrown = async (steps, gap, isBack = true) => {
       const from = await listTop();
       if (!from || (await listRest()) !== 'low') return null;
       await throwFrom(from[0], from[1], -200, steps, gap);
       const rest = await shownOf(chooser);
       const back = await listTop();
       // A short fast flick: let go above Low, so it lands on Low rather than past it, closed.
-      if (back) await throwFrom(back[0], back[1], 150, 3, 16);
+      if (back && isBack) await throwFrom(back[0], back[1], 150, 3, 16);
       return rest;
     };
-    const listLow = has ? await shownOf(chooser) : 0;
-    const gentle = has ? await listThrown(12, 30) : null;
-    const hard = has ? await listThrown(4, 16) : null;
-    const listFull = has ? await chooser.first().evaluate((el) => el.offsetHeight) : 0;
-    check(
-      '  thrown up from Low, the list coasts: a hard throw rests higher than a gentle one, both between Low and full',
-      gentle !== null &&
+    // How tall its content stands, from the sheet's top to its last card's foot, and whether every
+    // place name is drawn whole (at Low they are cut to a line; raised, never).
+    const cardsNow = () =>
+      chooser.first().evaluate((el) => {
+        const cards = el.querySelectorAll('[data-testid="chooser-origin"]');
+        const last = cards[cards.length - 1];
+        const tall = last
+          ? Math.round(last.getBoundingClientRect().bottom - el.getBoundingClientRect().top)
+          : 0;
+        const cut = [...el.querySelectorAll('[data-cut-at-low]')].filter(
+          (name) => name.scrollHeight > name.clientHeight + 1,
+        ).length;
+        return { tall, cut };
+      });
+    const cardsTall = has ? (await cardsNow()).tall : 0;
+    const screenFull = has ? await chooser.first().evaluate((el) => el.offsetHeight) : 0;
+    const listFull = Math.max(listLow, Math.min(screenFull, cardsTall));
+    // A short list, its highest barely above Low, is thrown once: a flick back down from there
+    // would close it (a fast flick down from about Low closes a sheet).
+    const isShort = listFull - listLow < 120;
+    const gentle = has && !isShort ? await listThrown(12, 30) : null;
+    const hard = has ? await listThrown(4, 16, !isShort) : null;
+    // Raised, its names drawn whole may stand taller than at Low: its highest is its cards then.
+    const raised = has && isShort ? await cardsNow() : null;
+    if (isShort)
+      check(
+        '  thrown up hard, a short list rises no higher than its last card, every name drawn whole',
         hard !== null &&
-        hard > gentle + 40 &&
-        [gentle, hard].every((r) => r >= listLow - 2 && r <= listFull + 2),
-      `gentle ${gentle} px, hard ${hard} px shown (Low ${listLow}, full ${listFull}); now data-snap=${await listRest()}`,
-    );
+          raised !== null &&
+          raised.cut === 0 &&
+          hard >= listLow - 2 &&
+          hard <= Math.max(listFull, Math.min(screenFull, raised.tall)) + 2,
+        `hard ${hard} px shown (Low ${listLow}, its cards ${cardsTall} at Low and ${raised?.tall} raised, ${raised?.cut} names cut, the screen ${screenFull}); now data-snap=${await listRest()}`,
+      );
+    else
+      check(
+        '  thrown up from Low, the list coasts: a hard throw rests higher than a gentle one, both between Low and its highest',
+        gentle !== null &&
+          hard !== null &&
+          hard > gentle + 40 &&
+          [gentle, hard].every((r) => r >= listLow - 2 && r <= listFull + 2),
+        `gentle ${gentle} px, hard ${hard} px shown (Low ${listLow}, highest ${listFull}: its cards ${cardsTall}, the screen ${screenFull}); now data-snap=${await listRest()}`,
+      );
     const chooserText = has ? await chooser.first().innerText() : '';
     // The routes' rows, inside their cards: a hotspot under the tap would be a
     // row of the list too, above them.
@@ -5148,10 +5194,11 @@ if (runsPart(3)) {
     skip('two overlapping hotspots open the list', 'no two hotspot polygons overlap today');
 }
 
-// ---------------------------------------- 5. a trip opened by a tap, framed
+// ---------------------------------------- 5. a trip opened by a tap, framed by the Overview
 // Trip links (?r=<id>) went on 2026-10-03, the owner's "remove that for
-// now": the address stays as it was, and the view a trip frames is checked
-// on a trip opened by a tap on its own line, as it was on one opened by a link.
+// now": the address stays as it was. A trip opened by a tap on its own line
+// leaves the camera where it was, and the Overview frames it when asked (the
+// owner, 2026-11-23: choosing a route never moves the map).
 if (runsPart(1)) {
   if (!routeA) {
     skip('a trip opened by a tap leaves the address as it was', 'no lone route vertex to select');
@@ -5173,21 +5220,20 @@ if (runsPart(1)) {
     const r = opened && snapshot.routes.find((o) => o.id === opened.id);
     if (!r)
       skip(
-        '  it frames the whole route, above the card',
+        '  the camera stays where it was, and the Overview frames the whole route',
         `no direction named "${await tripLabel()}" on the map`,
       );
     else {
-      // Opened, the camera takes in the whole route once, above the sheet.
+      // Opened, the camera stays where it was, and the Overview is offered.
       await page
         .waitForFunction(() => !window.__map.isMoving(), null, { timeout: 5000 })
         .catch(() => {});
       const camAfterOpen = await camNow();
-      const openFit = await framedAboveCard(r.bbox);
       const overviewAtOpen = await page.getByRole('button', { name: 'Overview' }).isVisible();
       check(
-        '  the camera takes in the whole route, above the sheet, and Overview stays hidden',
-        !sameCamera(camBeforeOpen, camAfterOpen) && openFit.inside && !overviewAtOpen,
-        JSON.stringify({ camBeforeOpen, camAfterOpen, openFit, overviewAtOpen }),
+        '  the camera stays where it was, and the Overview is offered',
+        sameCamera(camBeforeOpen, camAfterOpen) && overviewAtOpen,
+        JSON.stringify({ camBeforeOpen, camAfterOpen, overviewAtOpen }),
       );
       // A guard on the trip as it is drawn: at full height, every stop shown, so that it runs past
       // the screen, scrolled to its end, its last row is in reach, as when a Controller stood over
@@ -5214,12 +5260,12 @@ if (runsPart(1)) {
           ? JSON.stringify({ camAfterOpen, camAtFull, camAtLow })
           : `the handle would not step there: data-snap=${await sheetState()}`,
       );
-      // The screen changed size since the opening fit (the small phone above, and back), which can
-      // leave the route cut off, so the Overview button shows; pressed, it takes the whole route in
-      // above the sheet again, and hides once there.
+      // The sheet stepped and the screen resized (the small phone above, and back): nothing has
+      // framed the route, so the Overview button still shows; pressed, it takes the whole route in
+      // above the sheet, and hides once there.
       const overview = page.getByRole('button', { name: 'Overview' });
       check(
-        '  the screen resized since the opening fit: Overview shows',
+        '  the sheet stepped and the screen resized: Overview still shows',
         await overview.isVisible(),
       );
       const pressed = await buttonTap(overview, async () => !(await overview.isVisible()));
