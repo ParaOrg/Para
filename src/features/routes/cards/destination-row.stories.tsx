@@ -5,23 +5,8 @@ import { cn } from '@/shared/utils/cn';
 
 import { DestinationRow } from './destination-row';
 import { RouteBadge } from './route-badge';
-import { LIVERIES, type Livery } from '../model/liveries';
-
-/**
- * The card fills the rows sit on in Figma's RouteCardStackedList (4633:19780), for these stories
- * only: RouteCard itself moves to them in its own change. E-jeep's card has no fill among the new
- * semantics, so it keeps its old one.
- */
-const CARD_FILL = {
-  jeep: 'bg-card-jeep-fill',
-  'uv-express': 'bg-card-uv-express-fill',
-  ejeep: 'bg-card-ejeep-surface',
-  bus: 'bg-card-bus-fill',
-  'light-rail-way-one': 'bg-card-lrt-one-fill',
-  'light-rail-way-two': 'bg-card-lrt-two-fill',
-  'metro-rail-way-three': 'bg-card-mrt-three-fill',
-  ferry: 'bg-card-ferry-fill',
-} satisfies Record<Livery, string>;
+import { ROUTE_CARD_FILL } from './route-card-look';
+import { LIVERIES } from '../model/liveries';
 
 /**
  * Figma's Destinationn (4794:20296), on a RouteCard in its livery. Pressed is `:active`: hold a
@@ -37,7 +22,7 @@ const meta = {
       parameters.ownCard === true ? (
         <Story />
       ) : (
-        <div className={cn('w-98.25', CARD_FILL[args.livery])}>
+        <div className={cn('w-98.25', ROUTE_CARD_FILL[args.livery])}>
           <Story />
         </div>
       ),
@@ -47,22 +32,22 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** On a jeep card: the place alone, 38 tall; a tap calls onClick. */
+/** On a jeep card: the place alone, 36 tall; a tap calls onClick. */
 export const OnCard: Story = {
   play: async ({ canvasElement, args }) => {
     const row = within(canvasElement).getByRole('button', { name: 'SM Fairview' });
-    await expect(row.getBoundingClientRect().height).toBe(38);
+    await expect(row.getBoundingClientRect().height).toBe(36);
     await userEvent.click(row);
     await expect(args.onClick).toHaveBeenCalled();
   },
 };
 
-/** A route's via under its place, as Bagong Silang Phase 5's card draws it: 58 tall. */
+/** A route's via under its place, as Bagong Silang Phase 5's card draws it: 56 tall. */
 export const OnCardWithVia: Story = {
   args: { additionalNotes: 'Via Maligaya' },
   play: async ({ canvasElement }) => {
     const row = within(canvasElement).getByRole('button', { name: 'SM Fairview , Via Maligaya' });
-    await expect(row.getBoundingClientRect().height).toBe(58);
+    await expect(row.getBoundingClientRect().height).toBe(56);
   },
 };
 
@@ -122,7 +107,7 @@ export const OnEachCard: Story = {
   render: (args) => (
     <div className="flex flex-col">
       {LIVERIES.map((livery) => (
-        <div key={livery} className={CARD_FILL[livery]}>
+        <div key={livery} className={ROUTE_CARD_FILL[livery]}>
           <DestinationRow
             {...args}
             livery={livery}
@@ -143,7 +128,7 @@ export const Phone: Story = {
   },
   parameters: { ownCard: true },
   render: (args) => (
-    <div className={cn('@container w-80', CARD_FILL[args.livery])}>
+    <div className={cn('@container w-80', ROUTE_CARD_FILL[args.livery])}>
       <DestinationRow {...args} />
     </div>
   ),
