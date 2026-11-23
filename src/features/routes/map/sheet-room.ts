@@ -201,15 +201,15 @@ export function isMapOutOfSight(map: HTMLElement): boolean {
   const host = map.closest('[data-dock-host]');
   if (!host) return false;
   if (host.hasAttribute('data-dock-dragging')) return true;
-  const sheets = host.querySelectorAll<HTMLElement>(
-    '[role="dialog"][data-snap]:not([data-snap="low"]):not([hidden])',
-  );
+  // The sheets on show (only a BottomSheet carries data-snap); one gliding hides the map too.
+  const sheets = [...host.querySelectorAll<HTMLElement>('[data-snap]:not([hidden])')];
+  if (sheets.some((sheet) => sheet.getAnimations().length > 0)) return true;
   const under = map.getBoundingClientRect();
   // Docked along the bottom, as wide as the map: at full height whatever strip it leaves, which
   // a tall status bar widens; else with its top above the foot of the map's top tenth.
-  return [...sheets].some((sheet) => {
+  return sheets.some((sheet) => {
     const over = sheet.getBoundingClientRect();
-    if (over.width < under.width - 1) return false;
+    if (sheet.dataset.snap === 'low' || over.width < under.width - 1) return false;
     return sheet.dataset.snap === 'full' || over.top - under.top < under.height * COVERED_ABOVE;
   });
 }

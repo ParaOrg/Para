@@ -218,18 +218,17 @@ export function BottomSheet({
   }, !hidden);
 
   /**
-   * Where the sheet slides to. What sits on the map above the sheet follows it
-   * (ScreenLocationBehavior, Figma 3870:5941) as `--dock-y`, while this is the
-   * sheet on show: the same length, so both glide alike. At rest it is written
-   * on the page's `[data-dock-host]`, for a follower that comes later to find;
-   * a finger's move writes it on the followers alone (`[data-dock-follower]`),
-   * since a property changed on the page's root restyles the whole page, and a
-   * drag writes one each frame.
+   * Where the sheet slides to, on it and on its footer, the one part that reads it (--sheet-y
+   * does not pass down: map-frame.css). What sits on the map above follows (ScreenLocationBehavior,
+   * Figma 3870:5941) as `--dock-y`, the same length: on the page's `[data-dock-host]` at rest, for
+   * a follower that comes later, and on the followers alone (`[data-dock-follower]`) on a finger's
+   * move, as one changed on the page's root restyles the whole page, and a drag writes one a frame.
    */
   function at(y: string, isMove = false) {
     const sheet = own.current;
     if (!sheet) return;
-    sheet.style.setProperty('--sheet-y', y);
+    for (const el of [sheet, sheet.querySelector<HTMLElement>('[data-sheet-footer]')])
+      el?.style.setProperty('--sheet-y', y);
     if (sheet.hidden) return;
     const host = sheet.closest<HTMLElement>('[data-dock-host]');
     if (!host) return;
@@ -311,9 +310,10 @@ export function BottomSheet({
         // floating as a card, its own shadow-xl takes over.
         'absolute inset-0 z-10 flex flex-col overflow-clip bg-surface shadow-bottom-sheet-top-shadow outline-none ' +
         'pb-[env(safe-area-inset-bottom)] ' +
-        'translate-y-(--sheet-y) motion-reduce:transition-none ' +
+        // Its own layer, so a move is the compositor's alone: no repaint of what it holds.
+        'translate-y-(--sheet-y) will-change-[translate] motion-reduce:transition-none ' +
         (dragging ? '' : 'transition-[translate] duration-sheet ease-enter ') +
-        'sheet-floating:translate-y-0 sheet-floating:transition-none ' +
+        'sheet-floating:translate-y-0 sheet-floating:transition-none sheet-floating:will-change-auto ' +
         FLOATS_AT[floats]
       }
     >
