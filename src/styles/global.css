@@ -39,7 +39,8 @@
  * --container-float, its `card` kind at --container-wide (the widths are
  * written out: a container query cannot read a variable). `sheet-floating:`
  * is that, on the sheet and on what it holds; `sheet-low:` is a sheet still
- * docked, at Low, for what it holds.
+ * docked, at Low, for what it holds, unless a fitted sheet's content is whole
+ * within Low (data-whole-at-low): then nothing there needs cutting short.
  */
 @custom-variant sheet-floating {
   @container (width >= 64rem) {
@@ -60,12 +61,15 @@
 }
 @custom-variant sheet-low {
   @container (width < 64rem) {
-    &:where([data-floats='corner'][data-snap='low'] *, [data-floats='dock'][data-snap='low'] *) {
+    &:where(
+      [data-floats='corner'][data-snap='low']:not([data-whole-at-low]) *,
+      [data-floats='dock'][data-snap='low']:not([data-whole-at-low]) *
+    ) {
       @slot;
     }
   }
   @container (width < 40rem) {
-    &:where([data-floats='card'][data-snap='low'] *) {
+    &:where([data-floats='card'][data-snap='low']:not([data-whole-at-low]) *) {
       @slot;
     }
   }

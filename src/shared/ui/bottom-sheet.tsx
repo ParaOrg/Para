@@ -13,6 +13,7 @@ import { useEscape } from '@/shared/hooks/use-escape';
 import { useHeightOf } from '@/shared/hooks/use-height-of';
 import { cn } from '@/shared/utils/cn';
 
+import { raisedHeightOf } from './raised-height';
 import {
   CARD_SHAPE,
   MAX_STRIP_PX,
@@ -46,11 +47,10 @@ interface Props {
   /** The sheet itself, for the map to keep what it glides to clear of it (clearOfDock). */
   ref?: Ref<HTMLDivElement>;
   /**
-   * What it is on a wide screen, where it stops being a sheet: the route
-   * list's, a trip's and a place's (the public map's HintuanCard) panel in
-   * the top-left corner from `@float:` (`corner`, the default), or the card
-   * the studio's hotspot card floats as, 16 in, from `@wide:` (`card`). What it
-   * holds reads which with `sheet-floating:` and `sheet-low:` (global.css). `dock`: the route
+   * What it is on a wide screen, where it stops being a sheet: the route list's, a trip's and a
+   * place's (the public map's HintuanCard) panel in the top-left corner from `@float:` (`corner`,
+   * the default), or the card the studio's hotspot card floats as, 16 in, from `@wide:` (`card`).
+   * What it holds reads which with `sheet-floating:` and `sheet-low:` (global.css). `dock`: the route
    * list's, docked the map's whole height on the left from `@float:`, 384 wide (Figma 4683:32635),
    * its `footer` its top bar.
    */
@@ -136,9 +136,8 @@ const FLOATS_AT = {
  * below half of Low, or flicked down from it, the sheet closes. Below full
  * height the body does not scroll: a swipe on it moves the sheet, the owner's
  * pick; at full it scrolls, and a pull down from its top takes hold of the
- * sheet, as a drag does. A tap on the handle or Enter on it steps a third of
- * the map, up from Low and down from full (stepFrom); a wheel's push steps the
- * same between them, but never raises a sheet from Low.
+ * sheet, as a drag does. A tap on the handle or Enter on it steps a third of the map, up from
+ * Low and down from full (stepFrom); a wheel's push steps the same, but never raises it from Low.
  *
  * Its siblings: sheet-gesture.ts decides the heights and the drags, and
  * measures the status bar; use-sheet-gestures.ts binds the finger, the mouse
@@ -172,7 +171,7 @@ export function BottomSheet({
   const [footerRef, footerPx] = useHeightOf();
   const [ownSnap, setOwnSnap] = useState<Snap>('low');
   const setSnap = height?.onSnap ?? setOwnSnap;
-  // A fitted sheet's measure: the map's height, and its handle, header and content's together.
+  // A fitted sheet's measure: the map's height, and its handle, header and content's raised.
   const [fit, setFit] = useState<{ mapPx: number; contentPx: number } | null>(null);
   useLayoutEffect(() => {
     const sheet = own.current;
@@ -184,7 +183,7 @@ export function BottomSheet({
         contentPx:
           (handleRef.current?.offsetHeight ?? 0) +
           (headRef.current?.offsetHeight ?? 0) +
-          content.offsetHeight,
+          raisedHeightOf(content),
       });
     measure();
     const observer = new ResizeObserver(measure);
@@ -192,7 +191,9 @@ export function BottomSheet({
     return () => observer.disconnect();
   }, [fits]);
   const fitted: FittedSheet | null =
-    fits && fit ? { heightsFor: (h) => fitHeightsFor(h, fit.contentPx) } : null;
+    fits && fit ? { heightsFor: (h) => fitHeightsFor(h, fit.contentPx, shape) } : null;
+  // Content whole within Low: nothing there needs cutting short (`sheet-low:` reads it).
+  const isWholeAtLow = !!fit && !!fitted && fit.contentPx <= fitted.heightsFor(fit.mapPx).low + 1;
   const snap = height?.snap ?? ownSnap;
   /**
    * Where the sheet rests at `to`: a CSS length that follows the map's size, or, for a fitted
@@ -298,6 +299,7 @@ export function BottomSheet({
       tabIndex={-1}
       data-testid={testId}
       data-snap={snapName(snap)}
+      data-whole-at-low={isWholeAtLow || undefined}
       data-floats={floats}
       data-footer={footer ? '' : undefined}
       data-low-px={shape.lowPx}
@@ -382,10 +384,7 @@ function fullBodyStyle(shape: SheetShape, footerPx: number): CSSProperties {
     : { paddingBottom: 'calc(var(--map-safe-top) + ' + (MAX_STRIP_PX + footerPx) + 'px)' };
 }
 
-/**
- * What a screen reader hears on the handle: the height the sheet is at, and which way Enter steps
- * it, a third of the map (stepFrom).
- */
+/** The handle's spoken name: the height, and which way Enter steps it a third (stepFrom). */
 function handleLabelFor(snap: Snap, isUp: boolean): string {
   const step = `${isUp ? 'Raise' : 'Lower'} it a third`;
   if (snap === 'low') return `Sheet lowered. ${step}`;
