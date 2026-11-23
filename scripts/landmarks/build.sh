@@ -17,7 +17,8 @@
 # Overture files carry Overture's licences instead, with their texts beside them.
 #
 # Needs: curl, md5sum, Node 22, osmium-tool (apt-get install osmium-tool) and, for Overture,
-# Python 3 with duckdb (pip install duckdb), none of them an npm dependency.
+# Python 3 with duckdb (pip install duckdb; OVERTURE_PYTHON names another Python, such as a virtual
+# environment's), none of them an npm dependency.
 # Usage: scripts/landmarks/build.sh [work dir]    the work dir defaults to a new temporary one
 set -euo pipefail
 
@@ -112,7 +113,7 @@ osmium tags-filter --overwrite "$extract" \
   $(node --experimental-strip-types "$root/scripts/overture/overture.mjs" --roads) \
   -o "$work/roads.osm.pbf"
 osmium export --overwrite "$work/roads.osm.pbf" -f geojsonseq -o "$work/roads.geojsonseq"
-python3 -I "$root/scripts/overture/pull.py" "$box" "$work/overture.ndjson"
+"${OVERTURE_PYTHON:-python3}" -I "$root/scripts/overture/pull.py" "$box" "$work/overture.ndjson"
 (cd "$root" && node --experimental-strip-types scripts/overture/overture.mjs \
   "$work/overture.ndjson" "$work/roads.geojsonseq" public/data/overture/v1)
 node --experimental-strip-types "$root/scripts/overture/check.mjs" \
