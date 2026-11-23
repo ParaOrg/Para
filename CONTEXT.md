@@ -10,7 +10,8 @@ they cannot change: the R2 bucket `parapo-tiles` (a bucket cannot be renamed)
 and the tile archives in it (`tiles/parapo-*.pmtiles`, which the live
 `current.json` names), the weekly backups (`parapo-*.sql.gz.gpg`), the
 contributor app's signing key with its secret `PARAPO_KEY_PASSPHRASE`, and the
-old site's addresses on `villaralvorovic2.workers.dev`.
+old site's addresses on `villaralvorovic2.workers.dev`, retired: the owner deleted their
+Workers on 2026-11-23, so they answer 404 (`docs/operations/retire-old-site.md`).
 
 ## Language
 
