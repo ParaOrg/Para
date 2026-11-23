@@ -153,11 +153,11 @@ export const DOCK_TOP_CSS = 'calc(var(--map-safe-top) + 128px)';
 export type SheetHeights = ReturnType<typeof heightsFor>;
 
 /**
- * A fitted sheet's two ends (BottomSheet's `fits`): Low, and its content's height, `contentPx`,
- * never above full nor below Low. It moves freely between them.
+ * A fitted sheet's two ends (BottomSheet's `fits`): its shape's Low, and its content's height,
+ * `contentPx`, never above full nor below Low. It moves freely between them.
  */
-export function fitHeightsFor(h: number, contentPx: number): SheetHeights {
-  const { low, full } = heightsFor(h);
+export function fitHeightsFor(h: number, contentPx: number, shape?: SheetShape): SheetHeights {
+  const { low, full } = heightsFor(h, shape);
   return { low, full: Math.max(low, Math.min(full, Math.round(contentPx))) };
 }
 
