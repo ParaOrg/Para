@@ -1,0 +1,14 @@
+{
+  "schema": 1,
+  "cell": "2425-282",
+  "attribution": "© OpenStreetMap contributors",
+  "establishments": [
+    ["n1474006002","convenience",121.25168,14.12254,"Laila Store"],
+    ["n7922111386","convenience",121.25375,14.14726,"Almiz store - joning friday"],
+    ["n7941643889","convenience",121.25356,14.14773,"Renalyn - friday"],
+    ["n7941644186","convenience",121.2537,14.1475,"Josie - friday"],
+    ["w252866016","convenience",121.27393,14.14962,"Alfamart"],
+    ["n11738959269","fuel",121.27124,14.13133,"masay"],
+    ["w1372274324","fuel",121.29979,14.10734,"Cleanfuel"]
+  ]
+}

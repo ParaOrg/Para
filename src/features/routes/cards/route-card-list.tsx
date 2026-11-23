@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import type { ComponentProps } from 'react';
 
 import { BottomSheet, type SheetHeight } from '@/shared/ui/bottom-sheet';
 import type { SheetShape } from '@/shared/ui/sheet-gesture';
@@ -6,7 +6,7 @@ import { cn } from '@/shared/utils/cn';
 
 import { listWay } from './list-way';
 import { ModeFilterEmpty } from './mode-filter-empty';
-import { RouteCardStack, type PickedPlace } from './route-card-stack';
+import { RouteCardStack } from './route-card-stack';
 import { RouteListController } from './route-list-controller';
 import { RouteListHotspotRows } from './route-list-hotspot-rows';
 import { listedDepartures, routeCards, type Listing } from '../model/departures';
@@ -31,10 +31,8 @@ interface Props {
   listing: Listing;
   /** PAPUNTA: show them all the other way round. Read only with the Controller. */
   onFlip: () => void;
-  /** The place whose card is Selected, by name; null when none is. */
-  selected: string | null;
-  /** A card was picked — the map lights its directions alone — or let go (null): everything listed lit again. */
-  onSelect: (place: PickedPlace | null) => void;
+  /** The Selected card and what picks or lets one go: the studio's alone (RouteCardStack). */
+  selection?: ComponentProps<typeof RouteCardStack>['selection'];
   /** Called with the direction a row opens, and the colour its card wore: its trip wears the same. */
   onRoute: (v: Direction, livery: Livery) => void;
   /** A hotspot's row: open its card. */
@@ -49,8 +47,6 @@ interface Props {
    * cards follow it. Without one, every route is listed and the Controller has no sliders.
    */
   modeFilter?: ModeFilterControl;
-  /** Drawn after the last route card, handed its livery: the public map's contribute card. */
-  end?: (livery: Livery) => ReactNode;
   /**
    * Whether the Controller bar stands on the sheet: the studio's. The public map's has none; its
    * PAPUNTA and filter float on the map instead (Vice Versa and the sliders, MapControlsDock).
@@ -101,15 +97,13 @@ export function RouteCardList({
   back,
   listing,
   onFlip,
-  selected,
-  onSelect,
+  selection,
   onRoute,
   onHotspot,
   onClose,
   hidden,
   height,
   modeFilter,
-  end,
   hasController = false,
 }: Props) {
   const filter = modeFilter?.filter ?? 'all';
@@ -134,6 +128,9 @@ export function RouteCardList({
       height={height}
       floats="dock"
       shape={LIST_SHAPE}
+      // At most as tall as its cards: a short list rises no higher than its last card, and only a
+      // list taller than the screen scrolls (the owner, 2026-11-23).
+      fits
       handle="hidden"
       header={null}
       footer={
@@ -151,12 +148,12 @@ export function RouteCardList({
         )
       }
     >
-      {/* At least the sheet's height, so what `end` draws can grow into the room a short list
-          leaves; with the Controller, padded by its height, at the foot on a phone and the top
-          where the list docks, so no card hides under it. */}
+      {/* The list ends at its last card, the sheet's own surface below it (the owner, 2026-11-22).
+          With the Controller, padded by its height, at the foot on a phone and the top where the
+          list docks, so no card hides under it. */}
       <div
         className={cn(
-          'flex min-h-full flex-col',
+          'flex flex-col',
           hasController && 'pb-20 sheet-floating:pt-16 sheet-floating:pb-0',
         )}
       >
@@ -170,11 +167,9 @@ export function RouteCardList({
           routes={filtered}
           back={back}
           listing={listing}
-          selected={selected}
-          onSelect={onSelect}
+          selection={selection}
           onRoute={onRoute}
           testId="chooser"
-          end={end}
         />
       </div>
     </BottomSheet>

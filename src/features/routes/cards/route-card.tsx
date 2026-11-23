@@ -1,3 +1,5 @@
+import { useState } from 'react';
+
 import { cn } from '@/shared/utils/cn';
 
 import { DestinationRow } from './destination-row';
@@ -7,52 +9,28 @@ import {
   CARD_INK,
   ROUTE_CARD_BLOB_PLACE,
   ROUTE_CARD_FILL,
+  ROUTE_CARD_HAS_BLOB,
+  ROUTE_CARD_ORIGIN_GAP,
   ROUTE_CARD_REST_SHADOW,
 } from './route-card-look';
 import { RouteCardMode } from './route-card-mode';
+import type { RouteCardEndPoint, RouteCardRide } from './route-card-ride';
 import { MODE_LABEL } from './route-modes';
-import { RAILWAY_LIVERY, type RoadLivery } from '../model/liveries';
-import type { Bound } from '../model/rail-codes';
-import type { RailwayVehicle, RoadVehicle } from '../model/vehicles';
-
-/** What a card's routes ride, which sets its colours and badges: a road mode's or a train line's. */
-export type RouteCardRide =
-  | {
-      kind: 'road';
-      livery: RoadLivery;
-      /** The mode its badge names; null for a ride Figma draws no badge for (P2P, tricycle). */
-      vehicle: RoadVehicle | null;
-    }
-  | {
-      kind: 'rail';
-      railway: RailwayVehicle;
-      /** Which way the line's trains run; null on the ferry, or when it is not known. */
-      bound: Bound | null;
-      /** The origin's station code, `PL01`; null on the ferry, or a station the line's table does not know. */
-      originCode: string | null;
-    };
-
-export interface RouteCardEndPoint {
-  /** Which direction the row opens. */
-  id: string;
-  /** Figma's Destination: the place this direction goes to. */
-  destination: string;
-  /** Its route's via, under the place; null with none. */
-  via: string | null;
-  /** The station's code, `PL27`, at the row's end; null on a road card, the ferry, or an unknown station. */
-  stationCode: string | null;
-}
+import { RAILWAY_LIVERY } from '../model/liveries';
 
 interface RouteCardProps {
   ride: RouteCardRide;
-  /** Selected: pressed in under the Selected shadow while the map lights its routes alone. */
-  state: 'rest' | 'selected';
   /** Figma's Route Origin: the place the card's routes leave from. */
   routeOrigin: string;
   /** One row per direction leaving it, in the order given; every one is shown, and the card grows. */
   endPoints: readonly RouteCardEndPoint[];
-  /** A tap on the card outside its rows: select it, or let it go. */
-  onSelect: () => void;
+  /**
+   * The studio's alone, its editors keeping Selected: whether the card is Selected (pressed in
+   * under the Selected shadow while the map lights its routes alone), and what a tap outside its
+   * rows does, select it or let it go. Without it, as on the public map, that tap opens the first
+   * row's trip.
+   */
+  selection?: { state: 'rest' | 'selected'; onSelect: () => void };
   /** A row was tapped: open that direction. */
   onPick: (id: string) => void;
   /** The suites' name for it — `<testId>-origin`, `-select`, `-item` — in the list or a hotspot's card. */
@@ -63,18 +41,23 @@ interface RouteCardProps {
  * A place and the routes that leave it on one ride, in its colours (RouteCard, 4629:22776): what
  * they ride (RouteCardMode), the place in Bold 28/32, and a DestinationRow per place it goes to. A
  * train card has station codes by the origin and each row. A row opens its trip; a tap elsewhere
- * selects the card, or lets it go. Figma draws no Selected card here: it wears CARD_SHADOW_SELECTED.
+ * opens the first row's, the card pressed in under CARD_SHADOW_SELECTED while the finger is down
+ * (`data-pressed`); at a sheet's Low it opens too (`data-opens-at-low`). With `selection` (the
+ * studio's), that tap selects the card instead, or lets it go, and Selected wears the shadow.
  */
 export function RouteCard({
   ride,
-  state,
+  selection,
   routeOrigin,
   endPoints,
-  onSelect,
   onPick,
   testId,
 }: RouteCardProps) {
+  const [isPressed, setIsPressed] = useState(false);
+  const state = selection?.state ?? 'rest';
   const isSelected = state === 'selected';
+  // Every card has a row (RouteCardStack builds none without); the guard keeps the type honest.
+  const first = endPoints[0];
   const isRail = ride.kind === 'rail';
   const livery = isRail ? RAILWAY_LIVERY[ride.railway] : ride.livery;
   const vehicle = isRail ? ride.railway : ride.vehicle;
@@ -84,24 +67,28 @@ export function RouteCard({
       data-testid={`${testId}-origin`}
       data-livery={livery}
       data-state={state}
+      data-pressed={isPressed || undefined}
+      data-opens-at-low={selection ? undefined : ''}
       className={cn(
         'relative isolate flex w-full flex-col items-start gap-2 overflow-clip pt-3 pb-2 font-sn-pro',
         ROUTE_CARD_FILL[livery],
         CARD_INK[livery],
       )}
     >
-      <img
-        src={CARD_BLOB[livery].src}
-        alt=""
-        aria-hidden
-        className={cn(ROUTE_CARD_BLOB_PLACE, CARD_BLOB[livery].className)}
-      />
+      {ROUTE_CARD_HAS_BLOB[livery] && (
+        <img
+          src={CARD_BLOB[livery].src}
+          alt=""
+          aria-hidden
+          className={cn(ROUTE_CARD_BLOB_PLACE, CARD_BLOB[livery].className)}
+        />
+      )}
       {vehicle && (
         <div className="flex px-3">
           <RouteCardMode vehicle={vehicle} bound={isRail ? ride.bound : null} livery={livery} />
         </div>
       )}
-      <div className="flex w-full flex-col">
+      <div className={cn('flex w-full flex-col', ROUTE_CARD_ORIGIN_GAP[livery])}>
         <div className="flex w-full items-center gap-2 px-3">
           {/* The name is the card's own target, stretched over all of it; the rows are drawn over
               that, so they keep their own taps. Long names wrap. At a sheet's Low, one line of it
@@ -109,9 +96,15 @@ export function RouteCard({
           <button
             type="button"
             data-testid={`${testId}-select`}
-            aria-pressed={isSelected}
-            onClick={onSelect}
+            aria-pressed={selection ? isSelected : undefined}
+            aria-label={selection || !first ? undefined : `${routeOrigin}, to ${first.destination}`}
+            onClick={selection?.onSelect ?? (() => first && onPick(first.id))}
+            onPointerDown={() => setIsPressed(true)}
+            onPointerUp={() => setIsPressed(false)}
+            onPointerCancel={() => setIsPressed(false)}
+            onPointerLeave={() => setIsPressed(false)}
             className="min-w-0 flex-1 text-left text-3xl/8 font-bold after:absolute after:inset-0 sheet-low:line-clamp-1"
+            data-cut-at-low
           >
             {routeOrigin}
           </button>
@@ -139,7 +132,7 @@ export function RouteCard({
         aria-hidden
         className={cn(
           'pointer-events-none absolute inset-0',
-          isSelected ? CARD_SHADOW_SELECTED[livery] : ROUTE_CARD_REST_SHADOW[livery],
+          isSelected || isPressed ? CARD_SHADOW_SELECTED[livery] : ROUTE_CARD_REST_SHADOW[livery],
         )}
       />
     </div>

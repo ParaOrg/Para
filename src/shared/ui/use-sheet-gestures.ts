@@ -7,6 +7,8 @@ import {
   type RefObject,
 } from 'react';
 
+import { holdShownUntilClick } from './hold-shown-handle';
+import { raisesAtLow } from './raises-at-low';
 import { glideTo } from './sheet-coast';
 import {
   DRAG_PX,
@@ -84,7 +86,6 @@ export function useSheetGestures({
   shape,
   closesOnPull,
 }: SheetGesturesOptions): SheetGestures {
-  // A sheet that does not close on a pull rests at Low instead.
   const landing = (next: Snap | 'close'): Snap | 'close' =>
     next === 'close' && !closesOnPull ? 'low' : next;
   const glide = useSheetGlide(own);
@@ -98,10 +99,11 @@ export function useSheetGestures({
   /** The two ends of a sheet on a map `h` tall. */
   const heightsOf = (h: number): SheetHeights =>
     fitted ? fitted.heightsFor(h) : heightsFor(h, shape);
-  /** A drag let go: where its momentum carries the sheet, and how long it glides (glideTo). */
-  const throwTo = ({ shown, velocity }: { shown: number; velocity: number }) => {
+  /** A drag let go at `now`: where its momentum carries the sheet, and how long it glides (glideTo). */
+  const throwTo = (track: ReturnType<typeof follow>, now: number, at?: number) => {
     const h = own.current?.offsetHeight ?? 0;
-    const { to, glideMs } = glideTo(shown, velocity, heightsOf(h), h, isReducedMotion());
+    const { shown, velocity, from } = track.lift(now, at);
+    const { to, glideMs } = glideTo(shown, velocity, heightsOf(h), h, isReducedMotion(), from);
     settle(to, glideMs);
   };
   // The way the handle's steps go: up from Low, down from full, and on the way they went between.
@@ -130,10 +132,9 @@ export function useSheetGestures({
   const drag = useRef<AbortController | null>(null);
   useLayoutEffect(() => () => drag.current?.abort(), []);
 
-  // At full height, the pull down from the list's top. Touch events, not pointer ones: the browser
-  // takes a scroll for itself and cancels the pointer, but a non-passive touchmove can still be
-  // claimed. A wheel's deliberate push steps the sheet a third, as a tap on the handle does, but
-  // never raises it from Low.
+  // At full height, the pull down from the list's top: touch events, as the browser takes a scroll
+  // and cancels the pointer, but a non-passive touchmove can still be claimed. A wheel's deliberate
+  // push steps the sheet a third, as a tap on the handle does, never raising it from Low.
   useLayoutEffect(() => {
     const body = bodyRef.current;
     const sheet = own.current;
@@ -165,10 +166,9 @@ export function useSheetGestures({
     const end = (e: TouchEvent) => {
       const track = pull?.track;
       pull = null;
-      if (track) now.current.throwTo(track.lift(e.timeStamp));
+      if (track) now.current.throwTo(track, e.timeStamp);
     };
-    // A wheel moves the sheet only on a deliberate push: its deltas add up and act past DRAG_PX,
-    // never inside a scroll's tail, however long — reaching the top is not a pull down.
+    // A wheel moves the sheet only on a push its deltas add up past DRAG_PX, never a scroll's tail.
     let pushed = 0;
     let lastWheel = 0;
     let scrolledAt = -Infinity;
@@ -207,6 +207,7 @@ export function useSheetGestures({
   // click after a drag, or a tap on the handle, is swallowed (sheetGesture).
   const onPointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
     lastPress.current = e.timeStamp;
+    holdShownUntilClick(handleRef.current);
     const sheet = own.current;
     const handle = handleRef.current;
     // One pointer at a time, a mouse's main button only, and docked only.
@@ -214,9 +215,8 @@ export function useSheetGestures({
     const target = e.target instanceof Node ? e.target : null;
     // At full height the body scrolls as a list does; the header brings the sheet down.
     if (snap === 'full' && !headRef.current?.contains(target) && !handle.contains(target)) return;
-    // At Low the top of the body is not for picking: a tap there raises the sheet, as the handle.
     const raises =
-      handle.contains(target) || (snap === 'low' && !!bodyRef.current?.contains(target));
+      handle.contains(target) || (snap === 'low' && raisesAtLow(bodyRef.current, target));
     const h = sheet.offsetHeight;
     const heights = heightsOf(h);
     const track = follow(e.clientY, e.timeStamp, shownOnScreen(sheet), h, heights);
@@ -237,7 +237,7 @@ export function useSheetGestures({
       if (ev.pointerId !== e.pointerId) return;
       hotspot();
       if (moving || raises) swallowTheTapsClick(ev.clientX, ev.clientY);
-      if (moving) now.current.throwTo(track.lift(ev.timeStamp, ev.clientY));
+      if (moving) now.current.throwTo(track, ev.timeStamp, ev.clientY);
       else if (raises) now.current.settle(now.current.afterTap(snap));
     };
     const cancel = (ev: PointerEvent) => {

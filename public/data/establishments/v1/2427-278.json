@@ -1,0 +1,20 @@
+{
+  "schema": 1,
+  "cell": "2427-278",
+  "attribution": "© OpenStreetMap contributors",
+  "establishments": [
+    ["n12662357069","convenience",121.36355,13.9456,"Alfamart"],
+    ["n4543006175","restaurant",121.39606,13.93343,"Driverstop Restaurant"],
+    ["n11393393969","restaurant",121.35205,13.94838,"Tiaong"],
+    ["n6124165885","cafe",121.36118,13.94616,"Sanduki"],
+    ["n4499161991","fuel",121.39818,13.93274],
+    ["n5289325721","fuel",121.35615,13.93241,"Timbreza Petron Station"],
+    ["w294637593","fuel",121.37771,13.94043,"Power Oil"],
+    ["w296008903","fuel",121.39445,13.93403,"Petron"],
+    ["w369855645","fuel",121.36759,13.94442,"Shell"],
+    ["w750697336","fuel",121.3934,13.93497,"Total"],
+    ["w1442194557","fuel",121.36334,13.94565,"Phoenix"],
+    ["n358634302","toilets",121.3778,13.94007],
+    ["w149723339","police",121.39699,13.93252,"Camp Soledad L. Dolor"]
+  ]
+}

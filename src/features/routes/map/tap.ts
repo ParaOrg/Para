@@ -1,11 +1,12 @@
 import type { MapLibreMap, MapMouseEvent } from 'maplibre-gl';
 
+import { clearlyNearest } from './clearly-nearest';
+import { areHotspotsTappable } from './hotspot-tappable';
 import { LAYERS } from './layers';
 
 /**
- * How big a tap is, and what it lands on. A finger covers far more of the map
- * than a mouse pointer does, so on a phone we ask the map what is near the
- * tap, not what is under the single pixel it reported.
+ * How big a tap is, and what it lands on. A finger covers far more of the map than a mouse pointer
+ * does, so on a phone we ask the map what is near the tap, not the single pixel it reported.
  */
 
 /** Half-width in px of the box queried around a tap: a finger vs a mouse. */
@@ -163,13 +164,12 @@ function queryTargets(
     const drawn = layers.filter((layer) => map.getLayer(layer));
     return drawn.length > 0 ? map.queryRenderedFeatures(where, { layers: drawn }) : [];
   };
-  // A pin, a dot or a box under the tap, topmost first, each one the box's: one query for all
-  // three, as a tap asks the map once (phone-test counts them).
+  // A pin, a dot or a box under the tap, topmost first, one query for all three (phone-test).
   const hotspots = (where: typeof box | [number, number] = box) =>
-    idsInOrder(features(HOTSPOT_TAP_LAYERS, where));
+    areHotspotsTappable(map) ? idsInOrder(features(HOTSPOT_TAP_LAYERS, where)) : [];
   const inside = hotspots([point.x, point.y]);
   if (inside.length > 0) return { routeIds: [], routeKeys: [], hotspotIds: inside };
-  const routes = features([ROUTES_HIT_LAYER]);
+  const routes = clearlyNearest(map, point, features([ROUTES_HIT_LAYER]));
   if (routes.length > 0)
     return {
       routeIds: idsInOrder(routes),

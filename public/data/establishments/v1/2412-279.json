@@ -1,0 +1,10 @@
+{
+  "schema": 1,
+  "cell": "2412-279",
+  "attribution": "© OpenStreetMap contributors",
+  "establishments": [
+    ["n8204779517","convenience",120.6198,13.95237,"Alfamart Matabungkay Lian"],
+    ["w454223105","convenience",120.62025,13.95191,"7-Eleven"],
+    ["w1388115491","toilets",120.61033,13.95017]
+  ]
+}

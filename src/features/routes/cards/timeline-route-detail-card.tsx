@@ -98,6 +98,7 @@ export function TimelineRouteDetailCard({
       {/* The trip's name as its heading, over the cards' own, for a screen reader; nothing is drawn. */}
       <h2 className="sr-only">{name}</h2>
       <TripMoreRoutes
+        isUnderBar={hasController}
         ends={
           <TripEndsCard
             routeOrigin={routeOrigin}

@@ -126,6 +126,12 @@ You need Node.js on the computer (any recent version) and the Villaralvorovic2 a
    the tiles Worker's allow-list) waits for it. Merged earlier, it would break the old site's map
    before the old site redirected.
 
+## Where it stands
+
+On 2026-11-23 the owner deleted the old Workers, `parapo` and `parapo-studio-review-preview`, so
+`parapo`, `staging-parapo` and `parapo-studio-review-preview` on `villaralvorovic2.workers.dev`
+answer 404, and nothing redirects any more. The tiles Worker no longer allows those origins.
+
 ## Do not delete
 
 - **The Turnstile widget** in the Villaralvorovic2 account (**Turnstile → ParaPo**). Its site key

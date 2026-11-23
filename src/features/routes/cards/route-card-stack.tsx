@@ -1,5 +1,3 @@
-import type { ReactNode } from 'react';
-
 import { RouteCard } from './route-card';
 import { routeCards, type Listing } from '../model/departures';
 import { isRoadLivery, type Livery } from '../model/liveries';
@@ -23,16 +21,15 @@ interface Props {
   back: boolean;
   /** The way round alone, or every line, a route with none drawn that way by its other: the route list's (routeCards). */
   listing?: Listing;
-  /** The card that is Selected, by its key (PickedPlace's card); null when none is. */
-  selected: string | null;
-  /** A card was picked, or let go (null). */
-  onSelect: (place: PickedPlace | null) => void;
+  /**
+   * The card that is Selected, by its key (PickedPlace's card), and what picks one or lets it go
+   * (null): the studio's alone, its editors keep Selected. Without them a card opens on a tap.
+   */
+  selection?: { selected: string | null; onSelect: (place: PickedPlace | null) => void };
   /** Called with the direction a row opens, and the colour its card wore: its trip wears the same. */
   onRoute: (v: Direction, livery: Livery) => void;
   /** What the suites call each card and row (RouteCard). */
   testId: 'chooser' | 'card';
-  /** Drawn after the last card, handed that card's livery; nothing when no card is listed. */
-  end?: (livery: Livery) => ReactNode;
 }
 
 /** The station a train card's directions leave, as its line's table codes it; null on the ferry or an unknown station. */
@@ -53,9 +50,9 @@ function endCodeOf(v: Direction): string | null {
  * place they leave from and mode, run by mode (routeCards), and per train line and bound or the
  * ferry, each in its livery — its first row's mode's, or a train's or the ferry's line's own
  * (liveryOf) — with a row per drawn direction. Every card shows its mode, the cards after one of
- * the same mode too. One card at a time is Selected, and the map lights its directions alone; a
- * row opens its trip straight away, whether its card is picked or not, and picks none: selecting it
- * too is confusing, and the trip's ‹ comes back to every card at rest. The route
+ * the same mode too. A row opens its trip; a tap elsewhere on a card opens its first row's. With
+ * `selection` (the studio's), that tap selects the card instead, one at a
+ * time, and the map lights its directions alone; a row still opens its trip and picks none. The route
  * list stacks them over its Controller; the public map's HintuanCard under its place's boxes, the
  * routes stopping at the Selected one; the studio's hotspot card under "Routes that pass through",
  * or a terminal's "Routes that stage here".
@@ -64,17 +61,18 @@ export function RouteCardStack({
   routes,
   back,
   listing = 'way-round',
-  selected,
-  onSelect,
+  selection,
   onRoute,
   testId,
-  end,
 }: Props) {
   const places = routeCards(routes, back, listing);
 
   const byId = new Map(places.flatMap((p) => p.directions.map((d) => [d.v.id, d.v] as const)));
 
-  const pick = (p: (typeof places)[number]) =>
+  const pick = (
+    p: (typeof places)[number],
+    { selected, onSelect }: NonNullable<Props['selection']>,
+  ) =>
     onSelect(
       selected === p.card
         ? null
@@ -111,7 +109,6 @@ export function RouteCardStack({
                   vehicle: p.vehicle && !isRailwayVehicle(p.vehicle) ? p.vehicle : null,
                 }
           }
-          state={selected === p.card ? 'selected' : 'rest'}
           routeOrigin={p.from}
           endPoints={p.directions.map((d) => ({
             id: d.v.id,
@@ -119,11 +116,15 @@ export function RouteCardStack({
             via: d.via,
             stationCode: endCodeOf(d.v),
           }))}
-          onSelect={() => pick(p)}
+          selection={
+            selection && {
+              state: selection.selected === p.card ? 'selected' : 'rest',
+              onSelect: () => pick(p, selection),
+            }
+          }
           onPick={(id) => open(id, p.livery)}
         />
       ))}
-      {end && places.length > 0 && end(places[places.length - 1].livery)}
     </>
   );
 }

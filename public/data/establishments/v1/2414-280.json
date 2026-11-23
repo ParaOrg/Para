@@ -1,0 +1,20 @@
+{
+  "schema": 1,
+  "cell": "2414-280",
+  "attribution": "© OpenStreetMap contributors",
+  "establishments": [
+    ["w455585674","bank",120.72956,14.01867,"Malarayat Rural Bank"],
+    ["w455585675","bank",120.72981,14.0188,"Malarayat Rural Bank Building1"],
+    ["n6779063885","convenience",120.72938,14.01987,"7-Eleven"],
+    ["w456542319","convenience",120.72878,14.01887,"TIME Cooperative Store"],
+    ["w456542644","fast_food",120.73104,14.0194,"Tuy Food Plaza"],
+    ["n8936107954","cafe",120.72951,14.019,"ATM Hub"],
+    ["w456542391","cafe",120.73073,14.01914,"ATM Hub - Tuy"],
+    ["w456277489","fuel",120.72438,14.02442,"Uno"],
+    ["w865193338","fuel",120.72734,14.01556,"Petron"],
+    ["w865193339","fuel",120.72747,14.01701],
+    ["w865193343","fuel",120.7286,14.01583],
+    ["w1218201046","fuel",120.72815,14.01272,"'D Power Fuel"],
+    ["w319635701","police",120.73092,14.0189,"Tuy Municipal Police Station"]
+  ]
+}

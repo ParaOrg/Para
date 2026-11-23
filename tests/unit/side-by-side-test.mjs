@@ -89,7 +89,7 @@ const sideBySide = (job) => {
 test('the build job’s step runs four of the six checks the job ran one by one before', () => {
   assert.deepEqual(sideBySide(jobOf('build')), [
     'npm run lint -- --format ./scripts/checks/eslint-formatter.mjs',
-    'node scripts/checks/long-files.mjs --base \\"$RUNNER_TEMP/long-files-base.json\\"',
+    'node scripts/checks/long-files.mjs --base \\"$RUNNER_TEMP/long-files-base.json\\" --base-ref \\"$BASE\\"',
     'npm run docs:architecture:check',
     'npm run build',
   ]);

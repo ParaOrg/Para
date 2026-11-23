@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "cell": "2420-278",
+  "attribution": "© OpenStreetMap contributors",
+  "establishments": [
+    ["n702536767","convenience",121.04307,13.90763,"Mountaineer's Store"],
+    ["n12686832774","convenience",121.04992,13.90014,"Dali"],
+    ["w191570066","convenience",121.04602,13.92034,"Maculot 7-11"],
+    ["n702536655","fast_food",121.04395,13.91522,"Halo-Halo"],
+    ["w452190399","clinic",121.04987,13.90105,"Cuenca Rural Health Unit"],
+    ["w300590912","police",121.04968,13.90063,"Cuenca Municipal Police Station"]
+  ]
+}

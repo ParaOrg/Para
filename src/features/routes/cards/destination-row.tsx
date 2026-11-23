@@ -22,9 +22,10 @@ interface DestinationRowProps extends Omit<
 }
 
 /**
- * Figma's Destinationn (4794:20296), on a RouteCard in its livery: the arrow, the place a route
- * goes to, and its via beneath, a button that opens the route. Long places and notes wrap. Figma
- * draws no pressed state; the row presses to its card's timeline colour (ROW_PRESSED) meanwhile.
+ * Figma's Destinationn (4794:20296), on a RouteCard in its livery: the arrow, 16, the place a
+ * route goes to in SemiBold 16/24, and its via beneath in Regular 14/20, a button that opens the
+ * route: 36 tall, 56 with a via. Long places and notes wrap. Figma draws no pressed state; the row
+ * presses to its card's timeline colour (ROW_PRESSED) meanwhile.
  */
 export function DestinationRow({
   destination,
@@ -46,10 +47,12 @@ export function DestinationRow({
       )}
     >
       <span className="flex w-full items-center gap-1.5">
-        <span className="size-5 shrink-0 *:size-full">
-          <CircleArrowRightIcon />
+        <span className="flex min-w-0 flex-1 items-center gap-2">
+          <span className="size-4 shrink-0 *:size-full">
+            <CircleArrowRightIcon />
+          </span>
+          <span className="min-w-0 flex-1 text-base-lower/6 font-semibold">{destination}</span>
         </span>
-        <span className="min-w-0 flex-1 text-lg/6.5 font-bold">{destination}</span>
         {/* The commas are for a screen reader: "Antipolo, PL13, Via Almar" reads as three things. */}
         {slot && (
           <>
@@ -59,7 +62,7 @@ export function DestinationRow({
         )}
       </span>
       {additionalNotes && (
-        <span className="text-sm/5 font-medium">
+        <span className="text-sm/5 font-normal">
           <span className="sr-only">, </span>
           {additionalNotes}
         </span>

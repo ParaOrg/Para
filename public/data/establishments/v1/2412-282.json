@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "cell": "2412-282",
+  "attribution": "© OpenStreetMap contributors",
+  "establishments": [
+    ["n4941455836","pawnshop",120.60078,14.13103,"Tambunting"],
+    ["n8720277517","convenience",120.60046,14.13123,"Lucy's Store"],
+    ["n8720277518","convenience",120.60179,14.13078,"Ophelia's Store"],
+    ["n9491303355","convenience",120.6036,14.13078,"Lucky 8 Store"],
+    ["n11198939337","convenience",120.63835,14.10269,"Malou Store"],
+    ["n11198957937","convenience",120.63879,14.11237,"Felly Store"],
+    ["n11198965737","convenience",120.64352,14.11686,"Erna Store"],
+    ["n11199031737","convenience",120.64682,14.11792,"Eufrocina store"],
+    ["n11199031837","convenience",120.64733,14.11903,"Gloria Store"],
+    ["n14272672082","convenience",120.60861,14.12888,"Dali"],
+    ["w452704823","convenience",120.60149,14.13073,"Milet Store"],
+    ["n4943626016","restaurant",120.60119,14.12886,"The Victoria Pavilion Store and Cafe"],
+    ["n13788702847","fast_food",120.60861,14.12906,"Andok's"],
+    ["n11755222076","cafe",120.60813,14.12918,"Fuego"],
+    ["n4078188379","toilets",120.63087,14.11041]
+  ]
+}

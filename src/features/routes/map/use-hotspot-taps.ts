@@ -1,6 +1,7 @@
 import type { MapLibreMap, MapMouseEvent } from 'maplibre-gl';
 import { useEffect, type RefObject } from 'react';
 
+import { setHotspotsTappable } from './hotspot-tappable';
 import {
   ROUTES_HIT_LAYER,
   HOTSPOTS_FILL_LAYER,
@@ -23,18 +24,21 @@ const ROUTES_HIT = ROUTES_HIT_LAYER;
  * Binds the map's click once, and the pointer over a box where a pointer
  * can hover, from when one can (bindHover). The handler reads today's
  * hotspots and whether the editor is drawing through `read`, and answers
- * through the hook's setters (`set`), which never change.
+ * through the hook's setters (`set`), which never change. Not `isTappable` (the public map's, for
+ * now), a tap on a hotspot is no hotspot's, and no hand shows over one.
  */
 export function useHotspotTaps<S extends Hotspot>(
   map: MapLibreMap | null,
   read: { drawing: RefObject<boolean>; byId: RefObject<Map<string, S>> },
   set: { selectedId: (id: string | null) => void; candidates: (c: S[]) => void },
+  isTappable = true,
 ) {
   // Refs and setters: the same each render, so the click is bound once per map.
   const { drawing, byId } = read;
   const { selectedId: setSelectedId, candidates: setCandidates } = set;
   useEffect(() => {
     if (!map || !map.getLayer(FILL)) return;
+    setHotspotsTappable(map, isTappable);
     const canvas = map.getCanvas();
 
     // Over a route line, the pointer is the line's (the routes hook sets it).
@@ -70,10 +74,13 @@ export function useHotspotTaps<S extends Hotspot>(
     map.on('click', onMapClick);
     // The hand over a box, its pin or its dot only where a pointer can hover,
     // and from when one can, as over a line (use-route-taps.ts; bindHover).
-    const unhovers = HOTSPOT_TAP_LAYERS.map((layer) => bindHover(map, layer, enter, leave));
+    const unhovers = isTappable
+      ? HOTSPOT_TAP_LAYERS.map((layer) => bindHover(map, layer, enter, leave))
+      : [];
     return () => {
       map.off('click', onMapClick);
       for (const unhover of unhovers) unhover();
+      setHotspotsTappable(map, true);
     };
-  }, [map, drawing, byId, setSelectedId, setCandidates]);
+  }, [map, drawing, byId, setSelectedId, setCandidates, isTappable]);
 }

@@ -376,6 +376,7 @@ All three look Windows-only; CI on Linux passes them. They matter for hooks: **a
   - Balance phone-test's parts (3m57s, 5m03s, 8m01s; even is about 5m40s). Then commuter-test's 7 minutes is the long pole. Free.
   - Replace fixed waits in the long suites with waits for the thing itself. Size unknown until per-check times are recorded.
   - More commuter parts (6 to 12 gives about 3m30s). Each costs a runner slot and a setup, so it pays only after waiting and setup are fixed.
+    - **Dropped (the owner, 22 November).** Since #1137 hid hotspot taps behind `VITE_HOTSPOT_TAPS`, which CI does not set, commuter-test skips its per-hotspot sequence. Its six parts took 2m03s at most on staging's run 45014533363, against 6m42s to 8m19s on run 44974645918 before it. More parts would add jobs and save nothing. The hidden stop-tap checks are to be kept alive by a separate push-only job built with the flag on, once the flag-on branch of the suite is updated to the one-tap RouteCard.
   - Bigger machines with several pages at once inside a job is a rewrite of the long suites, not a setting.
   - A floor of **about 3 to 4 minutes** for the full suite looks reachable with paid runners. Not 35 seconds.
 - **"No required job waits on another":** conflicts with `how-we-work.md`: the required checks "keep their names, and their `needs` still cover what they covered". The summary jobs exist to wait. The one edge that can go is the built-app suites waiting about 3 minutes for the build job's artifact: they could make their own preview build (11 s). They stay under "Build and the public map".
@@ -542,7 +543,7 @@ Biggest measured bucket first, then cost. One small pull request each, with `ana
 | # | Change | Bucket | Touches `.github/` | Expected | Job count |
 | --- | --- | --- | --- | --- | --- |
 | 1 | Record each check's and part's duration on full runs | running (evidence) | no | none yet; needed for 2, 3 and shards | same |
-| 2 | Balance phone-test's three parts by measured time | running | no | long pole 8m01s to about 7m | same |
+| 2 | ~~Balance phone-test's three parts by measured time~~ Skipped (hub, 22 November): measured on run 44974645918, phone-test's parts take 5m06s at most and commuter-test's 6m42s to 8m19s, so phone-test is not the long pole (`check-times/README.md`) | running | no | none | same |
 | 3 | Replace fixed waits in commuter-test and phone-test, one suite a pull request | running | no | unknown until 1 | same |
 | 4 | Find why `npm ci` slowed (a throwaway pull request with `--timing`) | setup | yes, never merged | up to 30 s a job if it can be undone | same |
 | 5 | Cache `node_modules`; drop the npm download cache | setup | yes | 38 s to about 8 s a job | same |
@@ -555,6 +556,23 @@ Biggest measured bucket first, then cost. One small pull request each, with `ana
 | 12 | The failure ledger, two weeks | fewer tests | no | evidence | same |
 
 5 to 10 are six `.github/` changes, one at a time. 1, 2, 3, 11 and 12 can run beside them.
+
+Status on 22 November:
+
+- **Done:**
+  - 1 (`check-times/`, #1132);
+  - 3 for commuter-test (#1144: `closeCard` waits on a condition; no measurable speed-up);
+  - 8 (#1146): a push went from 33 jobs in 9m41s to 29 jobs in 7m34s, and a pull request from 32 jobs to 28.
+- **Skipped:** 2, because phone-test is not the long pole.
+- **Since then, the same day:**
+  - #1149: commuter-test runs in 2 parts, not 6. Since #1137 hid hotspot taps behind `VITE_HOTSPOT_TAPS`, each part took 2m03s at most, so six parts only added setup. A push took 7m22s with 25 jobs.
+  - #1154: a push to `staging` also runs commuter-test with hotspot taps on (`taps-on`, 6 parts), so the hidden checks still run before `main`. A push now has 31 jobs and takes 8m37s, of which 1m15s was waiting for runners. A pull request has 24 jobs.
+  - #1156, reverted in #1158: contribute-test's form timeout used `page.clock.fastForward` instead of `runFor`. It passed 6 local runs and the pull request's run, then failed on the push. Closing a stop's map releases the form's hold through two passive effects, which land after the test has already jumped. `fastForward`'s single tick could still see the hold, where `runFor`'s later ticks saw the release. It saved about 15 s of contribute-test's 6.5 minutes, so it is not being tried again. Recorded in `../ci-flakes/ledger.md`.
+  - #1159: the revert's push then failed in account-test. A race in the test that predates today: it read a History card's text before the card had drawn it. It now waits for the card's status words first. Also in the ledger.
+- **Where a pull request's time goes now:** contribute-test, at about 6.5 minutes, is the long pole. Its 40 fixed waits each either prove something does not happen (22) or let something settle (18). Shortening them is item 3's work, with a condition for each, not a shorter wait.
+- **Lessons:**
+  - "The state is fixed through the jump" does not hold right after a click that changes it. A clock jump straight after a click races the click's effects.
+  - Passing local runs, even six, do not prove there is no race. A race can pass every time on one machine and fail on another.
 
 ### Needs the owner first
 

@@ -3,12 +3,8 @@ import type { ComponentProps } from 'react';
 import { useState } from 'react';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
-import { cn } from '@/shared/utils/cn';
-
-import { CARD_SURFACE, CARD_TEXT } from './livery-card';
 import { RouteCardList } from './route-card-list';
 import type { Hotspot } from '../model/hotspots';
-import type { Livery } from '../model/liveries';
 import type { ModeFilter } from '../model/mode-filter';
 import type { Direction } from '../model/routes';
 
@@ -136,12 +132,13 @@ const FRAME = {
 const frameOf = (p: { frame?: Frame }) => FRAME[p.frame ?? 'phone'];
 
 /**
- * Keeps the Selected card and the way round as the apps do, and the filter where a story gives
- * one, so a story can be tapped through; PAPUNTA lets the card go. The studio's Controller
+ * Keeps the way round as the apps do, the filter where a story gives one, and the Selected card
+ * where it has `selection` (the studio's), so a story can be tapped through; PAPUNTA lets it go. The studio's Controller
  * (`hasController`) has sliders only where a filter is kept.
  */
 function Picking(props: ComponentProps<typeof RouteCardList>) {
-  const [selected, setSelected] = useState(props.selected);
+  const [selected, setSelected] = useState(props.selection?.selected ?? null);
+  const onSelect = props.selection?.onSelect;
   const [back, setBack] = useState(props.back);
   const [filter, setFilter] = useState<ModeFilter>(props.modeFilter?.filter ?? 'all');
   return (
@@ -162,11 +159,15 @@ function Picking(props: ComponentProps<typeof RouteCardList>) {
         setBack((b) => !b);
         setSelected(null);
       }}
-      selected={selected}
-      onSelect={(p) => {
-        props.onSelect(p);
-        setSelected(p?.from ?? null);
-      }}
+      selection={
+        onSelect && {
+          selected,
+          onSelect: (p) => {
+            onSelect(p);
+            setSelected(p?.card ?? null);
+          },
+        }
+      }
     />
   );
 }
@@ -195,9 +196,7 @@ const meta = {
     routes: talaRoutes,
     back: false,
     listing: 'every-line',
-    selected: null,
     onFlip: fn(),
-    onSelect: fn(),
     onRoute: fn(),
     onHotspot: fn(),
     onClose: fn(),
@@ -230,8 +229,14 @@ export const FilteredToJeep: Story = {
 /** Turned round with PAPUNTA: out of Tala both ways, one card — "1 Route". */
 export const Switched: Story = { args: { back: true } };
 
-/** Tala's card picked: pressed in, its routes alone lit on the map. */
-export const ACardSelected: Story = { args: { back: true, selected: 'Tala|jeep' } };
+/** The studio's, Tala's card picked: pressed in, its routes alone lit on the map. */
+export const InTheStudioACardSelected: Story = {
+  args: {
+    back: true,
+    hasController: true,
+    selection: { selected: 'Tala|jeep', onSelect: fn() },
+  },
+};
 
 /** From 1024 wide (Figma 4831:53545): docked the map's whole height on the left, 384 wide. */
 export const Floating: Story = { parameters: { frame: 'wide' } };
@@ -351,6 +356,30 @@ export const SheetLow: Story = {
   },
 };
 
+/** At Low, on the public map, a tap on a card opens its trip straight away: the sheet stays. */
+export const SheetLowACardOpens: Story = {
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getAllByTestId('chooser-select')[0]);
+    await expect(args.onRoute).toHaveBeenCalledTimes(1);
+    await expect(canvas.getByTestId('chooser')).toHaveAttribute('data-snap', 'low');
+  },
+};
+
+/** At Low, in the studio, a tap on a card raises the sheet a third, as the handle does: no pick. */
+export const SheetLowInTheStudioRaises: Story = {
+  args: { hasController: true, selection: { selected: null, onSelect: fn() } },
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getAllByTestId('chooser-select')[0]);
+    await waitFor(() =>
+      expect(canvas.getByTestId('chooser')).not.toHaveAttribute('data-snap', 'low'),
+    );
+    await expect(args.selection?.onSelect).not.toHaveBeenCalled();
+    await expect(args.onRoute).not.toHaveBeenCalled();
+  },
+};
+
 /** A filter with nothing to show under this tap: it says so, with a way back to All. */
 export const FilterWithNoMatch: Story = {
   // Raised: at Low a tap on the body raises the sheet, and Show all routes is in the body.
@@ -387,23 +416,43 @@ export const FilteredToNothing: Story = {
   },
 };
 
-/** Low with a long place: one line of it, 32 tall (RouteCard's 24/32), cut short (3817:6007). */
+/**
+ * Low with a long place, in a list taller than Low: one line of it, 32 tall (RouteCard's 24/32),
+ * cut short (3817:6007).
+ */
 export const SheetLowLongName: Story = {
-  args: { routes: longName },
+  args: { routes: [...longName, ...talaRoutes] },
   play: async ({ canvasElement }) => {
     const name = within(canvasElement).getByText(LONG);
     await waitFor(() => expect(name.getBoundingClientRect().height).toBe(32));
   },
 };
 
-/** Raised a third with a long place: all of it, on as many lines as it takes. */
-export const SheetRaisedLongName: Story = {
+/** Low with a long place, in a list whose cards fit within Low: all of it, as nothing is cut. */
+export const SheetLowLongNameFits: Story = {
   args: { routes: longName },
   play: async ({ canvasElement }) => {
+    const name = within(canvasElement).getByText(LONG);
+    await waitFor(() => expect(name.getBoundingClientRect().height).toBeGreaterThan(32));
+    await expect(within(canvasElement).getByTestId('chooser')).toHaveAttribute('data-snap', 'low');
+  },
+};
+
+/**
+ * Raised a third with a long place: all of it, on as many lines as it takes, the list rising no
+ * higher than its last card.
+ */
+export const SheetRaisedLongName: Story = {
+  args: { routes: [...longName, ...talaRoutes] },
+  play: async ({ canvasElement }) => {
     await pressHandle(canvasElement);
-    await expect(
-      within(canvasElement).getByText(LONG).getBoundingClientRect().height,
-    ).toBeGreaterThan(32);
+    const sheet = within(canvasElement).getByTestId('chooser');
+    await expect(sheet).not.toHaveAttribute('data-snap', 'low');
+    const name = within(canvasElement).getByText(LONG);
+    await waitFor(() => expect(name.getBoundingClientRect().height).toBeGreaterThan(32));
+    const cards = within(sheet).getAllByTestId('chooser-origin');
+    const lastFoot = cards[cards.length - 1]?.getBoundingClientRect().bottom ?? 0;
+    await expect(lastFoot).toBeGreaterThanOrEqual(window.innerHeight - 1);
   },
 };
 
@@ -425,47 +474,3 @@ export const WithALoop: Story = { args: { routes: [...talaRoutes, ikotLoop] } };
 
 /** Only a loop: no way back to turn to, so the studio's Controller has no PAPUNTA. */
 export const OnlyALoop: Story = { args: { routes: [ikotLoop], hasController: true } };
-
-/**
- * The `end` slot, handed the last card's livery: drawn after it. A stand-in
- * that grows, as the contribute card does, to fill what the list leaves of the sheet.
- */
-const growingEnd = (livery: Livery) => (
-  <p data-testid="end" className={cn('grow p-4', CARD_SURFACE[livery], CARD_TEXT[livery])}>
-    After the last card: {livery}
-  </p>
-);
-
-export const WithAnEnd: Story = { args: { end: growingEnd } };
-
-/** Short list, Low, where it opens: the end fills what the sheet shows. */
-export const WithAnEndLow: Story = { args: { end: growingEnd } };
-
-/** Short list, full height: the end fills to the bottom of the screen. */
-export const WithAnEndFull: Story = {
-  args: { end: growingEnd },
-  play: async ({ canvasElement }) => {
-    await pressHandle(canvasElement, 'full');
-  },
-};
-
-/** From 1024 wide, floating in the corner. */
-export const WithAnEndFloating: Story = {
-  args: { end: growingEnd },
-  parameters: { frame: 'wide' },
-};
-
-/** Taller than the sheet: the end keeps its own height and the list scrolls. */
-export const WithAnEndLongList: Story = { args: { routes: many, end: growingEnd } };
-
-/** With no route card listed, only hotspots, the slot is never called. */
-export const NoEndWithoutRouteCards: Story = {
-  args: {
-    routes: [],
-    hotspots: twoBoxes,
-    end: () => <p data-testid="end">Never drawn</p>,
-  },
-  play: async ({ canvasElement }) => {
-    await expect(within(canvasElement).queryByTestId('end')).toBeNull();
-  },
-};

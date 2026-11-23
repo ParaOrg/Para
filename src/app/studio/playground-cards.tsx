@@ -37,9 +37,7 @@ interface PlaygroundCardsProps {
 }
 
 /**
- * The Playground's cards over the map, as on the public map: the trip's marks
- * on the map (PlaygroundMarks), the trip card, a hotspot's card and the route
- * list.
+ * The Playground's cards, as on the public map (marks, trip, hotspot, list); a tap selects a card.
  */
 export function PlaygroundCards({
   map,
@@ -162,8 +160,10 @@ export function PlaygroundCards({
           listing={saved.listing}
           onFlip={flipList}
           modeFilter={{ filter: saved.modeFilter, onFilter: filterList }}
-          selected={saved.highlight?.where === 'list' ? saved.highlight.card : null}
-          onSelect={(p) => saved.highlightCard(p && { where: 'list', ...p })}
+          selection={{
+            selected: saved.highlight?.where === 'list' ? saved.highlight.card : null,
+            onSelect: (p) => saved.highlightCard(p && { where: 'list', ...p }),
+          }}
           onRoute={openTrip}
           onHotspot={(s) => cards.openHotspot(s.id)}
           onClose={closeAll}

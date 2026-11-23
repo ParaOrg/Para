@@ -44,11 +44,8 @@ interface Overview {
  * `originalEvent`) or the app's (a hintuan's glide, locate-me), rather than by comparing bounds.
  * `framing` names what is framed (a trip, the picked cards), null when nothing is; a new name
  * starts away from its overview. It shows only where a press would move the camera: a map, and
- * routes to take in.
- *
- * `opened` names a trip as it opens (its id; null with none): the camera takes in its whole route
- * once, as a press would, so the button starts hidden. A trip whose line has not loaded yet is
- * taken in as it lands. Only a new trip fits again; dragging the sheet never does.
+ * routes to take in. Nothing else frames them: a trip opening, SWITCH and the filter leave the
+ * camera where the commuter has it, so the button is how they ask (the owner, 2026-11-23).
  */
 export function useOverview(
   map: MapLibreMap | null,
@@ -56,7 +53,6 @@ export function useOverview(
   framed: Framed,
   dock: () => HTMLElement | null,
   snap: Snap,
-  opened: string | null = null,
 ): Overview {
   const [settledOn, setSettledOn] = useState<string | null>(null);
   // The framing the button's fit is on its way to; null once any other move starts.
@@ -89,17 +85,6 @@ export function useOverview(
       map.off('moveend', handleMoveEnd);
     };
   }, [map]);
-
-  // The trip the camera last took in as it opened; let go as it closes, so the same trip opened
-  // again fits again.
-  const fittedOpen = useRef<string | null>(null);
-  const hasLines = lines.length > 0;
-  useEffect(() => {
-    if (opened === null) fittedOpen.current = null;
-    if (!map || opened === null || !hasLines || fittedOpen.current === opened) return;
-    fittedOpen.current = opened;
-    fitFramed(map, now.current, fitting);
-  }, [map, opened, hasLines]);
 
   const go = () => {
     if (map) fitFramed(map, now.current, fitting);

@@ -1,28 +1,25 @@
 /**
- * How BottomSheet's handle and drags decide on a phone, for every card. It
- * also measures the status bar full height stands clear of (measureSafeTop). The
- * listeners that act on these are useSheetGestures'.
+ * How BottomSheet's handle and drags decide on a phone, for every card. It also measures the status
+ * bar full height stands clear of (measureSafeTop). The listeners that act on these are
+ * useSheetGestures'.
  */
 
 /** How far a drag must travel before it counts as a pull rather than a tap. */
 export const DRAG_PX = 24;
 
 /**
- * Drops the `click` the browser sends after a tap on the handle. By the time
- * it is dispatched the sheet has already re-rendered, so the click is aimed
- * at whatever now lies under the finger: pulled down, the map, which would
- * read it as a tap on nothing and close the card; pulled up, whatever the
- * sheet now shows there — a hotspot's route, which it would open. Caught at
- * the capture phase on the document, before MapLibre or React sees it, and
- * only where the finger lifted: a tap on the sheet's ✕ right after lands
- * elsewhere, and is one the commuter meant. Forgotten when the next gesture
- * starts, if none came, not after a set time: on a busy page the click can
- * come a second after the finger lifted, and 300 ms was too short (seen on a
- * phone-sized page slowed 20×, and on the Philcoa card on GitHub's runners
- * once its routes flowed), so it landed on the RouteCard the sheet had pulled
- * up under it. Armed after a drag too: a finger's sends no click, and the
- * next touch ends the watch; a mouse's ends with a click on the handle it was
- * held on, which would toggle the sheet straight back (the handle's onClick).
+ * Drops the `click` the browser sends after a tap on the handle. By the time it is dispatched the
+ * sheet has already re-rendered, so the click is aimed at whatever now lies under the finger:
+ * pulled down, the map, which would read it as a tap on nothing and close the card; pulled up,
+ * whatever the sheet now shows there — a hotspot's route, which it would open. Caught at the
+ * capture phase on the document, before MapLibre or React sees it, and only where the finger
+ * lifted: a tap on the sheet's ✕ right after lands elsewhere, and is one the commuter meant.
+ * Forgotten when the next gesture starts, if none came, not after a set time: on a busy page the
+ * click can come a second after the finger lifted, and 300 ms was too short (seen on a phone-sized
+ * page slowed 20×, and on the Philcoa card on GitHub's runners once its routes flowed), so it
+ * landed on the RouteCard the sheet had pulled up under it. Armed after a drag too: a finger's
+ * sends no click, and the next touch ends the watch; a mouse's ends with a click on the handle it
+ * was held on, which would toggle the sheet straight back (the handle's onClick).
  */
 export function swallowTheTapsClick(x: number, y: number) {
   const hotspot = (e: MouseEvent) => {
@@ -153,11 +150,11 @@ export const DOCK_TOP_CSS = 'calc(var(--map-safe-top) + 128px)';
 export type SheetHeights = ReturnType<typeof heightsFor>;
 
 /**
- * A fitted sheet's two ends (BottomSheet's `fits`): Low, and its content's height, `contentPx`,
- * never above full nor below Low. It moves freely between them.
+ * A fitted sheet's two ends (BottomSheet's `fits`): its shape's Low, and its content's height,
+ * `contentPx`, never above full nor below Low. It moves freely between them.
  */
-export function fitHeightsFor(h: number, contentPx: number): SheetHeights {
-  const { low, full } = heightsFor(h);
+export function fitHeightsFor(h: number, contentPx: number, shape?: SheetShape): SheetHeights {
+  const { low, full } = heightsFor(h, shape);
   return { low, full: Math.max(low, Math.min(full, Math.round(contentPx))) };
 }
 
@@ -227,27 +224,29 @@ export function follow(
       return shown(at);
     },
     /** Where it rests let go at `at` (the last move's, when the release has no position). */
-    release: (now: number, at = y): Snap | 'close' => snapFor(shown(at), speed(now), heights, h),
-    /** Let go: how much shows, and the finger's speed upwards (px/ms), for its momentum (glideTo). */
-    lift: (now: number, at = y) => ({ shown: shown(at), velocity: speed(now) }),
+    release: (now: number, at = y): Snap | 'close' =>
+      snapFor(shown(at), speed(now), heights, h, from),
+    /** Let go: how much shows, the finger's speed upwards (px/ms), how much showed as it began. */
+    lift: (now: number, at = y) => ({ shown: shown(at), velocity: speed(now), from }),
   };
 }
 
 /**
  * Where a drag lets go (the owner's rule): where it ends, the sheet following the finger and
- * staying. Low alone keeps a magnet: let go within LOW_MAGNET_PX of it, or flicked down from
- * anywhere, the sheet goes to Low. A flick up is no jump. Pulled below half of Low it closes,
- * however slowly, and so does a flick down from Low. `shown` is how much of the sheet is on screen
- * as the finger lifts, `velocity` the finger's speed upwards in px/ms (negative: downwards), `h`
- * the map's height.
+ * staying. Low alone keeps a magnet: let go within LOW_MAGNET_PX of it, or flicked down from above
+ * it, the sheet goes to Low, even past it (a short list has little room). A flick up is no jump.
+ * Pulled below half of Low it closes, however slowly, and so does a flick down begun at Low.
+ * `shown` is how much of the sheet is on screen as the finger lifts, `from` as the drag began,
+ * `velocity` the finger's speed upwards in px/ms (negative: downwards), `h` the map's height.
  */
 export function snapFor(
   shown: number,
   velocity: number,
   heights: SheetHeights,
   h: number,
+  from = shown,
 ): Snap | 'close' {
-  if (velocity <= -FLICK) return shown > heights.low + 1 ? 'low' : 'close';
+  if (velocity <= -FLICK) return Math.max(shown, from) > heights.low + 1 ? 'low' : 'close';
   if (shown < heights.low / 2) return 'close';
   // The top first: a short sheet (a fitted one) may lie wholly within Low's magnet.
   if (shown >= heights.full - 1) return 'full';

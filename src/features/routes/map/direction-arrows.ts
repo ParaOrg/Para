@@ -2,7 +2,6 @@ import type { GeoJSONSource, MapLibreMap } from 'maplibre-gl';
 import { useEffect, useMemo } from 'react';
 
 import { MAP_COLOURS } from '@/design-system/foundation/map-colours';
-import { isMapOutOfSight } from '@/shared/ui/sheet-room';
 import { haversine, metresPerPixel, type LngLat } from '@/shared/utils/geo';
 import { prefersReducedMotion } from '@/shared/utils/motion';
 
@@ -21,6 +20,7 @@ import { TILE_BUFFER, useLayerReady } from './layers';
 import { litWidthAt } from './line-style';
 import type { LineLook } from './livery-line';
 import { REST_LAYER, restDrawn } from './ride-rest';
+import { isMapOutOfSight } from './sheet-room';
 import { ROUTES_HIT_LAYER } from './tap';
 
 /**

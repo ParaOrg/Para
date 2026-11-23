@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "cell": "2416-282",
+  "attribution": "© OpenStreetMap contributors",
+  "establishments": [
+    ["n11158182305","convenience",120.81361,14.10085,"Janet Store"],
+    ["n3851612775","restaurant",120.84863,14.10562,"The Gingerbread House"],
+    ["n13890205370","restaurant",120.82935,14.10456,"My Inasal"],
+    ["n924905926","fuel",120.84461,14.13452,"gas station"],
+    ["n13109895206","fuel",120.81299,14.10105,"Spyder Fuel"],
+    ["w879112567","fuel",120.84927,14.13354]
+  ]
+}

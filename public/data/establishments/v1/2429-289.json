@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "cell": "2429-289",
+  "attribution": "© OpenStreetMap contributors",
+  "establishments": [
+    ["n2591557471","convenience",121.49089,14.47074,"Abaiz Store"],
+    ["n2596298745","convenience",121.4649,14.45368,"Convenience store"],
+    ["n8265420819","convenience",121.48881,14.4695,"Baby - md"],
+    ["n8265439217","convenience",121.49299,14.47694,"Lerma - md"],
+    ["n8481641254","supermarket",121.46459,14.45373,"Sari Sari 71  Store"],
+    ["n8481779422","supermarket",121.47838,14.46723,"Sari Sari Store"],
+    ["n2283356658","restaurant",121.46503,14.454,"Trois Pizzeria"],
+    ["n8481503948","restaurant",121.46341,14.4536,"Nelia Eatery"],
+    ["n8481503949","restaurant",121.46489,14.45387,"Trois Food House"],
+    ["n4031695155","toilets",121.49026,14.45474]
+  ]
+}

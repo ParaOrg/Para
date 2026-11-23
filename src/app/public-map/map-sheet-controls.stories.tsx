@@ -61,7 +61,8 @@ const listOf = (candidates: readonly Direction[]) => ({
 
 /**
  * The public map's controls for the card on show (Figma 4831:54489), over a phone's map, 393 wide,
- * the sheet's top at 60% (`--dock-y`, as BottomSheet sets it), the map's ⓘ drawn as its 32 box.
+ * the sheet's top at 60% (`--dock-y`, as BottomSheet sets it), the map's ⓘ drawn as its 32 box in
+ * the top-left corner, where the public map has it.
  */
 const meta = {
   title: 'App/PublicMap/MapSheetControls',
@@ -69,7 +70,6 @@ const meta = {
   args: {
     map: null,
     overview: { isShown: false, go: fn() },
-    isBesideCredits: true,
     list: listOf(talaRoutes),
     onFlip: fn(),
     onFilter: fn(),
@@ -81,7 +81,7 @@ const meta = {
         className="@container relative h-160 w-98.25 overflow-hidden bg-bg-surface-secondary [--dock-y:60%]"
       >
         <div className="absolute inset-x-0 top-[60%] bottom-0 rounded-t-3xl bg-bg-surface" />
-        <div className="absolute bottom-[calc(40%+0.75rem)] left-3 size-8 rounded-full bg-bg-surface" />
+        <div className="absolute top-3 left-3 size-8 rounded-full bg-bg-surface" />
         <Story />
       </div>
     ),
@@ -100,8 +100,24 @@ export const List: Story = {
   },
 };
 
-/** A card picked on the list and the camera moved off it: Overview beside Vice Versa. */
-export const ListOffTheOverview: Story = { args: { overview: { isShown: true, go: fn() } } };
+/**
+ * A card picked on the list and the camera moved off it: one column at the left, Vice Versa by the
+ * sheet, the Overview over it and the sliders over that, each 8 above the last.
+ */
+export const ListOffTheOverview: Story = {
+  args: { overview: { isShown: true, go: fn() } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const boxOf = (name: string) => canvas.getByRole('button', { name }).getBoundingClientRect();
+    const viceVersa = boxOf('Vice Versa');
+    const overview = canvas.getByTestId('overview').getBoundingClientRect();
+    const filter = boxOf('Filter');
+    await expect(overview.bottom).toBeLessThanOrEqual(viceVersa.top - 7);
+    await expect(filter.bottom).toBeLessThanOrEqual(overview.top - 7);
+    await expect(Math.abs(overview.left - viceVersa.left)).toBeLessThan(1);
+    await expect(Math.abs(filter.left - viceVersa.left)).toBeLessThan(1);
+  },
+};
 
 /** A filter on: the dot on the sliders, and their name says which. */
 export const ListFiltered: Story = {
@@ -116,10 +132,7 @@ export const NothingTheOtherWay: Story = {
   },
 };
 
-/**
- * Only loops listed: no way back, so no Vice Versa; the sliders keep their 12 over the sheet, the
- * empty row not drawn.
- */
+/** Only loops listed: no way back, so no Vice Versa; the sliders keep their 12 over the sheet. */
 export const OnlyLoops: Story = {
   args: { list: listOf([ikotLoop]) },
   play: async ({ canvasElement }) => {

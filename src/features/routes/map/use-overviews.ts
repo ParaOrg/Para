@@ -2,17 +2,17 @@ import type { MapLibreMap } from 'maplibre-gl';
 import { useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 
 import type { Snap } from '@/shared/ui/sheet-gesture';
-import { roomBeside } from '@/shared/ui/sheet-room';
 import { bboxOf, type LngLat } from '@/shared/utils/geo';
 
 import { APP_MOVE } from './map-view';
-import { directionLine, type Direction } from '../model/routes';
+import { roomBeside } from './sheet-room';
 
 /*
- * The camera taking in routes whole — SWITCH pressed, an end picked, the
- * Overview button, a trip opening (useOverview) — zooming in or out, clear of
- * the card's sheet. Picking a RouteCard, opening the route list and the sheet
- * changing height move nothing: the camera is the commuter's until they ask.
+ * The camera taking in routes whole — the Overview button (useOverview), an end
+ * picked — zooming in or out, clear of the card's sheet. Choosing a route moves
+ * nothing: opening a trip, SWITCH, the filter, opening the route list and the
+ * sheet changing height leave the camera the commuter's until they ask (the
+ * owner, 2026-11-23). Choosing a place, or yourself, still takes the camera there.
  */
 
 type MoveData = Readonly<Record<string, unknown>>;
@@ -41,35 +41,6 @@ export function overview(
     { padding, maxZoom: 16, duration: 700, linear: true },
     data,
   );
-}
-
-/**
- * SWITCH pressed — on the route list, a hotspot's card or a trip: the camera
- * takes in what is lit now, the routes the other way round, as a pick does
- * (the owner's call). `switches` counts the presses. What is lit is read a
- * frame later: a hotspot's card says what it shows from its own effect, a
- * render after the press.
- */
-export function useSwitchOverview(
-  map: MapLibreMap | null,
-  lit: readonly Direction[],
-  switches: number,
-  dock: () => HTMLElement | null,
-  snap: Snap,
-): void {
-  const litRef = useRef(lit);
-  // Kept current as each render commits, for the frame below to read.
-  useLayoutEffect(() => {
-    litRef.current = lit;
-  });
-  useEffect(() => {
-    if (!map || switches === 0) return;
-    const frame = requestAnimationFrame(() =>
-      overview(map, litRef.current.map(directionLine), dock(), snap),
-    );
-    return () => cancelAnimationFrame(frame);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- only as SWITCH is pressed (see above): the count says when
-  }, [map, switches]);
 }
 
 /**
