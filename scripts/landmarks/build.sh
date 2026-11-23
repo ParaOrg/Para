@@ -28,10 +28,22 @@ source_url="$(node --input-type=module -e "import { LANDMARK_SOURCE } from '$roo
 download="$work/philippines.osm.pbf"
 extract="$work/panning-box.osm.pbf"
 
+# A download that fails says whose side it failed on, so the monthly run's alert explains itself:
+# Geofabrik answering 404 or not at all is theirs (it replaces each extract once a day), not ours.
+fetch_failed() {
+  echo "Geofabrik did not give $1 (curl exit $2: 22 means it answered with an HTTP error such as" \
+    "404; the others mean the connection failed). That is on Geofabrik's side, not in this" \
+    "script: the file may be mid-replacement. Run the workflow again later." >&2
+  exit 1
+}
+
 # The checksum first, so it cannot be newer than the extract it is checked against.
 echo "Downloading $source_url"
-expected="$(curl -fsSL --retry 3 --retry-delay 10 "$source_url.md5" | cut -d' ' -f1)"
-curl -fsSL --retry 3 --retry-delay 10 -o "$download" "$source_url"
+md5_line="$(curl -fsSL --retry 3 --retry-delay 10 "$source_url.md5")" ||
+  fetch_failed "$source_url.md5" "$?"
+expected="$(cut -d' ' -f1 <<<"$md5_line")"
+curl -fsSL --retry 3 --retry-delay 10 -o "$download" "$source_url" ||
+  fetch_failed "$source_url" "$?"
 actual="$(md5sum "$download" | cut -d' ' -f1)"
 if [ "$expected" != "$actual" ]; then
   echo "The extract's MD5 is $actual, not the $expected the server lists: a broken download." >&2
