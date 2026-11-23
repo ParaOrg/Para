@@ -71,3 +71,13 @@ body,
 [data-credits-hidden] .maplibregl-ctrl-bottom-left {
   left: calc(env(safe-area-inset-left) + 3rem);
 }
+
+/*
+ * Where a docked sheet slides to (BottomSheet). Not passed down: a drag writes it each frame, and
+ * an inherited property would restyle everything the sheet holds each time. Its footer, the one
+ * part that reads it, has it written on it as well.
+ */
+@property --sheet-y {
+  syntax: '*';
+  inherits: false;
+}
