@@ -2,11 +2,20 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useEffect, useRef } from 'react';
 import { expect } from 'storybook/test';
 
+import { EXTRA_MIN_ZOOM } from './establishment-extra';
 import { markerImage } from './establishment-images';
-import { ESTABLISHMENT_KINDS, TIER_ZOOM, type EstablishmentGlyph } from './establishment-kinds';
+import {
+  ESTABLISHMENT_KINDS,
+  EXTRA_FAMILY,
+  EXTRA_KIND_GLYPH,
+  TIER_ZOOM,
+  type EstablishmentGlyph,
+} from './establishment-kinds';
 
 /** Every glyph once, in the kinds' order: what the map can draw. */
 const GLYPHS = [...new Set(ESTABLISHMENT_KINDS.map((kind) => kind.glyph))];
+/** The places the basemap's tiles lack, from Para's own files (establishment-extra.ts). */
+const EXTRAS = Object.entries(EXTRA_KIND_GLYPH);
 
 interface MarkerProps {
   glyph: EstablishmentGlyph;
@@ -47,6 +56,15 @@ function EstablishmentLegend() {
           </li>
         );
       })}
+      {EXTRAS.map(([kind, glyph]) => (
+        <li key={glyph} className="flex items-center gap-3">
+          <Marker glyph={glyph} />
+          <span>
+            {glyph}: {kind}, {EXTRA_FAMILY}, from Para&apos;s own files, the marker from zoom{' '}
+            {EXTRA_MIN_ZOOM}, its name from {EXTRA_MIN_ZOOM + 1}
+          </span>
+        </li>
+      ))}
     </ul>
   );
 }
@@ -61,7 +79,9 @@ type Story = StoryObj<typeof meta>;
 
 export const Legend: Story = {
   play: async ({ canvasElement }) => {
-    await expect(canvasElement.querySelectorAll('li')).toHaveLength(GLYPHS.length);
-    await expect(canvasElement.querySelectorAll('canvas')).toHaveLength(GLYPHS.length);
+    await expect(canvasElement.querySelectorAll('li')).toHaveLength(GLYPHS.length + EXTRAS.length);
+    await expect(canvasElement.querySelectorAll('canvas')).toHaveLength(
+      GLYPHS.length + EXTRAS.length,
+    );
   },
 };
