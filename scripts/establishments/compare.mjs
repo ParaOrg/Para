@@ -3,7 +3,8 @@
 // broken extract in that area; a build that lost more than SHRINK_LIMIT of all its places fails
 // before any pull request is opened, unless ALLOW_SHRINK=1, as the landmark file's does.
 //
-// Usage: node --experimental-strip-types scripts/establishments/compare.mjs <before dir> <after dir>
+// Usage: node --experimental-strip-types scripts/establishments/compare.mjs <before dir> <after dir> [title]
+//   the title heads the table, "Establishments" unless given (the Overture files pass theirs)
 //   a missing before dir reads as no establishments at all (the first build)
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
@@ -54,9 +55,12 @@ export function compareEstablishments(before, after, kinds) {
 }
 
 /** The comparison as Markdown: a table by kind, the cells, and any cell flagged. */
-export function comparisonText({ rows, halved, totalBefore, totalAfter, cellsBefore, cellsAfter }) {
+export function comparisonText(
+  { rows, halved, totalBefore, totalAfter, cellsBefore, cellsAfter },
+  title = 'Establishments',
+) {
   return [
-    '| Establishments | Before | After | Change |',
+    `| ${title} | Before | After | Change |`,
     '| --- | ---: | ---: | ---: |',
     ...rows.map(
       ({ kind, before, after }) => `| ${kind} | ${before} | ${after} | ${change(before, after)} |`,
@@ -74,7 +78,7 @@ export function comparisonText({ rows, halved, totalBefore, totalAfter, cellsBef
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
-  const [beforeDir, afterDir] = process.argv.slice(2);
+  const [beforeDir, afterDir, title] = process.argv.slice(2);
   if (!beforeDir || !afterDir) {
     console.error('Usage: compare.mjs <before dir> <after dir>');
     process.exit(2);
@@ -86,10 +90,10 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     countsOf(after),
     JSON.parse(after.index).kinds,
   );
-  console.log(comparisonText(comparison));
+  console.log(comparisonText(comparison, title));
   if (comparison.hasShrunkTooMuch && process.env.ALLOW_SHRINK !== '1') {
     console.error(
-      `The establishments shrank from ${comparison.totalBefore} to ${comparison.totalAfter}, more than ` +
+      `${title ?? 'The establishments'} shrank from ${comparison.totalBefore} to ${comparison.totalAfter}, more than ` +
         `${SHRINK_LIMIT * 100}%: a broken extract or filter, most likely. Run the workflow again with ` +
         '"allow shrink" ticked if it is real.',
     );
