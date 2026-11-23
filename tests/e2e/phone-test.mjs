@@ -3737,6 +3737,90 @@ if (runsPart(3)) {
     }
   }
 
+  // A tap clearly nearest one line is that line's, even with another route's line inside the
+  // finger's box; midway between the two, the list asks which (the owner, 2026-11-23: a tap on one
+  // route sometimes brought up the list). Found: a route's vertex with one other route's line
+  // 13–18 px off at this zoom, inside the ±20 px box, and no third route near.
+  let beside = null;
+  for (const r of snapshot.routes) {
+    if (beside) break;
+    for (const vi of sampleIndices(r.coords.length, 2000 / Math.max(1, snapshot.routes.length))) {
+      const p = r.coords[vi];
+      const k = mPerDegLng(p[1]);
+      const near = routesNear(p, snapshot.routes, BOX_M + 20, k);
+      const others = near.filter((o) => o.routeId !== r.routeId);
+      if (others.length === 0 || new Set(others.map((o) => o.routeId)).size !== 1) continue;
+      const d = Math.min(...others.map((o) => distToLine(p, o.coords, k)));
+      if (d < 13 * M_PER_PX || d > 18 * M_PER_PX) continue;
+      beside = { route: r, other: others[0], point: p };
+      break;
+    }
+  }
+  if (!beside) {
+    skip(
+      'a tap on one line with another route 13–18 px off opens its trip',
+      'no route vertex today has one other route 13–18 px off and no third near',
+    );
+  } else {
+    // Where the tap lands, and the nearest point of the other route's line, in screen px.
+    await jumpTo(page, beside.point);
+    const anchor = await project(page, beside.point);
+    const other = await page.evaluate(
+      ([q, lines]) => {
+        const m = window.__map;
+        let best = { x: q[0], y: q[1], d: Infinity };
+        for (const coords of lines) {
+          const pts = coords.map((c) => m.project(c));
+          for (let i = 1; i < pts.length; i++) {
+            const [e, f] = [pts[i - 1], pts[i]];
+            const ex = f.x - e.x;
+            const ey = f.y - e.y;
+            const t = Math.max(
+              0,
+              Math.min(1, ((q[0] - e.x) * ex + (q[1] - e.y) * ey) / (ex * ex + ey * ey || 1)),
+            );
+            const x = e.x + t * ex;
+            const y = e.y + t * ey;
+            const d = Math.hypot(q[0] - x, q[1] - y);
+            if (d < best.d) best = { x, y, d };
+          }
+        }
+        return best;
+      },
+      [
+        anchor,
+        snapshot.routes.filter((o) => o.routeId === beside.other.routeId).map((o) => o.coords),
+      ],
+    );
+    const box = await canvasBox();
+    await drawnAt('saved-routes-hit', anchor);
+    await mapTap(box.x + anchor[0], box.y + anchor[1]);
+    await cardsSettled(page);
+    const tripOpen = (await trip().count()) > 0;
+    const lit = (await litIds(page)) ?? [];
+    const ownIds = snapshot.routes
+      .filter((o) => o.routeId === beside.route.routeId)
+      .map((o) => o.id);
+    const lists = await page.locator('[data-testid="chooser"]:not([hidden])').count();
+    check(
+      `a tap on "${beside.route.signboard}" with "${beside.other.signboard}" ${Math.round(other.d)} px off opens its trip, no list`,
+      tripOpen && lists === 0 && lit.length > 0 && lit.every((id) => ownIds.includes(id)),
+      `trip open ${tripOpen}; ${lists} list(s); lit ${JSON.stringify(lit)}`,
+    );
+    await closeCard();
+    // Midway between the two lines: as near one as the other, so the list asks.
+    const mid = [(anchor[0] + other.x) / 2, (anchor[1] + other.y) / 2];
+    await mapTap(box.x + mid[0], box.y + mid[1]);
+    await cardsSettled(page);
+    const midLists = await page.locator('[data-testid="chooser"]:not([hidden])').count();
+    check(
+      '  midway between it and the other line, the list asks which',
+      midLists > 0 && (await trip().count()) === 0,
+      `${midLists} list(s); trip open ${(await trip().count()) > 0}`,
+    );
+    await closeCard();
+  }
+
   if (!shared) {
     skip(
       'a tap where two routes share a road opens the chooser',

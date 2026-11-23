@@ -40,7 +40,7 @@ type Story = StoryObj<typeof meta>;
 
 /**
  * Variatns=Jeep: Card/jeep/fill, white words, the jeep alone at the top; the place in Bold 28/32,
- * each row Figma's Destinationn, 38 tall. The list keeps the mode's name in words.
+ * each row Figma's Destinationn, 36 tall. The list keeps the mode's name in words.
  */
 export const Jeep: Story = {
   play: async ({ canvasElement }) => {
@@ -52,7 +52,16 @@ export const Jeep: Story = {
     await expect(canvas.queryByText('Jeep')).toBeNull();
     await expect(canvas.getByRole('list', { name: 'Jeep' })).toBeVisible();
     const [row] = canvas.getAllByTestId('chooser-item');
-    await expect(row?.getBoundingClientRect().height).toBe(38);
+    await expect(row?.getBoundingClientRect().height).toBe(36);
+    // Destinationn: the place in SemiBold 16/24 after a 16 arrow, 4 under the origin.
+    const words = row ? getComputedStyle(within(row).getByText('SM Fairview')) : null;
+    await expect(words?.fontSize).toBe('16px');
+    await expect(words?.lineHeight).toBe('24px');
+    await expect(words?.fontWeight).toBe('600');
+    await expect(row?.querySelector('svg')?.getBoundingClientRect().width).toBe(16);
+    const origin = canvas.getByTestId('chooser-select').getBoundingClientRect();
+    await expect((row?.getBoundingClientRect().top ?? 0) - origin.bottom).toBe(4);
+    await expect(canvasElement.querySelector('img')).not.toBeNull();
   },
 };
 
@@ -74,7 +83,7 @@ export const WithVias: Story = {
   play: async ({ canvasElement }) => {
     const rows = within(canvasElement).getAllByTestId('chooser-item');
     await expect(rows[0]?.textContent).toBe('SM Fairview, Via Maligaya');
-    await expect(rows[0]?.getBoundingClientRect().height).toBe(58);
+    await expect(rows[0]?.getBoundingClientRect().height).toBe(56);
   },
 };
 
@@ -87,12 +96,22 @@ export const UvExpress: Story = {
   },
 };
 
-/** Variatns=E Jeep: as UV Express, on E-jeep's own surface (no new fill yet). */
+/**
+ * Variatns=E Jeep: as UV Express, on E-jeep's own surface (no new fill yet), with no Blob and its
+ * rows flush under the origin, as Figma draws it.
+ */
 export const Ejeep: Story = {
   args: {
     ride: { kind: 'road', livery: 'ejeep', vehicle: 'E-Jeep' },
     routeOrigin: 'Palmer',
     endPoints: roadRows(['SM Fairview', 'Novaliches', 'Philcoa', 'Cubao']),
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvasElement.querySelector('img')).toBeNull();
+    const origin = canvas.getByTestId('chooser-select').getBoundingClientRect();
+    const [row] = canvas.getAllByTestId('chooser-item');
+    await expect((row?.getBoundingClientRect().top ?? 0) - origin.bottom).toBe(0);
   },
 };
 
