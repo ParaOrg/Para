@@ -3,12 +3,8 @@ import type { ComponentProps } from 'react';
 import { useState } from 'react';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
-import { cn } from '@/shared/utils/cn';
-
-import { CARD_SURFACE, CARD_TEXT } from './livery-card';
 import { RouteCardList } from './route-card-list';
 import type { Hotspot } from '../model/hotspots';
-import type { Livery } from '../model/liveries';
 import type { ModeFilter } from '../model/mode-filter';
 import type { Direction } from '../model/routes';
 
@@ -420,23 +416,43 @@ export const FilteredToNothing: Story = {
   },
 };
 
-/** Low with a long place: one line of it, 32 tall (RouteCard's 24/32), cut short (3817:6007). */
+/**
+ * Low with a long place, in a list taller than Low: one line of it, 32 tall (RouteCard's 24/32),
+ * cut short (3817:6007).
+ */
 export const SheetLowLongName: Story = {
-  args: { routes: longName },
+  args: { routes: [...longName, ...talaRoutes] },
   play: async ({ canvasElement }) => {
     const name = within(canvasElement).getByText(LONG);
     await waitFor(() => expect(name.getBoundingClientRect().height).toBe(32));
   },
 };
 
-/** Raised a third with a long place: all of it, on as many lines as it takes. */
-export const SheetRaisedLongName: Story = {
+/** Low with a long place, in a list whose cards fit within Low: all of it, as nothing is cut. */
+export const SheetLowLongNameFits: Story = {
   args: { routes: longName },
   play: async ({ canvasElement }) => {
+    const name = within(canvasElement).getByText(LONG);
+    await waitFor(() => expect(name.getBoundingClientRect().height).toBeGreaterThan(32));
+    await expect(within(canvasElement).getByTestId('chooser')).toHaveAttribute('data-snap', 'low');
+  },
+};
+
+/**
+ * Raised a third with a long place: all of it, on as many lines as it takes, the list rising no
+ * higher than its last card.
+ */
+export const SheetRaisedLongName: Story = {
+  args: { routes: [...longName, ...talaRoutes] },
+  play: async ({ canvasElement }) => {
     await pressHandle(canvasElement);
-    await expect(
-      within(canvasElement).getByText(LONG).getBoundingClientRect().height,
-    ).toBeGreaterThan(32);
+    const sheet = within(canvasElement).getByTestId('chooser');
+    await expect(sheet).not.toHaveAttribute('data-snap', 'low');
+    const name = within(canvasElement).getByText(LONG);
+    await waitFor(() => expect(name.getBoundingClientRect().height).toBeGreaterThan(32));
+    const cards = within(sheet).getAllByTestId('chooser-origin');
+    const lastFoot = cards[cards.length - 1]?.getBoundingClientRect().bottom ?? 0;
+    await expect(lastFoot).toBeGreaterThanOrEqual(window.innerHeight - 1);
   },
 };
 
@@ -458,47 +474,3 @@ export const WithALoop: Story = { args: { routes: [...talaRoutes, ikotLoop] } };
 
 /** Only a loop: no way back to turn to, so the studio's Controller has no PAPUNTA. */
 export const OnlyALoop: Story = { args: { routes: [ikotLoop], hasController: true } };
-
-/**
- * The `end` slot, handed the last card's livery: drawn after it. A stand-in
- * that grows, as the contribute card does, to fill what the list leaves of the sheet.
- */
-const growingEnd = (livery: Livery) => (
-  <p data-testid="end" className={cn('grow p-4', CARD_SURFACE[livery], CARD_TEXT[livery])}>
-    After the last card: {livery}
-  </p>
-);
-
-export const WithAnEnd: Story = { args: { end: growingEnd } };
-
-/** Short list, Low, where it opens: the end fills what the sheet shows. */
-export const WithAnEndLow: Story = { args: { end: growingEnd } };
-
-/** Short list, full height: the end fills to the bottom of the screen. */
-export const WithAnEndFull: Story = {
-  args: { end: growingEnd },
-  play: async ({ canvasElement }) => {
-    await pressHandle(canvasElement, 'full');
-  },
-};
-
-/** From 1024 wide, floating in the corner. */
-export const WithAnEndFloating: Story = {
-  args: { end: growingEnd },
-  parameters: { frame: 'wide' },
-};
-
-/** Taller than the sheet: the end keeps its own height and the list scrolls. */
-export const WithAnEndLongList: Story = { args: { routes: many, end: growingEnd } };
-
-/** With no route card listed, only hotspots, the slot is never called. */
-export const NoEndWithoutRouteCards: Story = {
-  args: {
-    routes: [],
-    hotspots: twoBoxes,
-    end: () => <p data-testid="end">Never drawn</p>,
-  },
-  play: async ({ canvasElement }) => {
-    await expect(within(canvasElement).queryByTestId('end')).toBeNull();
-  },
-};
