@@ -1,5 +1,7 @@
 # E4: editors' corrections to establishments, the plan
 
+**Status: parked by the owner** (2026-11-23: "not important for now, we'll do that later"). Nothing is built. The owner's answers are recorded below, so the work can start from them when it's picked up again.
+
 Step E4 of `.scratch/establishments` (README, "Editor corrections"). Written 2026-11-22, before any code. The owner's answers so far: corrections apply **nightly, with the map publish** (question 5), and there is **no editing on OpenStreetMap** for now (question 6).
 
 ## What it does
@@ -136,3 +138,16 @@ Every PR: `npm run check` before push, one PR in CI at a time, the hub's go befo
 6. **Orphans.** Only in "The map needs a look" issue, or also flagged in the studio's list? Recommended: both.
 7. **Hidden places in the studio.** Ghosted, so they can be un-hidden, or gone as on the public map? Recommended: ghosted.
 8. **The tile-id dependency.** Accept that hiding a basemap place relies on OpenFreeMap's id encoding, guarded by a unit check at each stand-in refresh? The alternative is Para's own establishment tiles in R2 (the study's option (b)), which needs a Worker deploy and an upload by the owner.
+
+## The owner's answers (2026-11-23, through the hub)
+
+All the recommended picks, with one addition: recategorising comes now.
+
+1. **Hide, rename, move and recategorise** now. Adding places comes later. Recategorising needs a `kind` the editor picks, stored in the row's `kind` column, which the plan already has for moves.
+2. **One row per place**, with its editor and time. No full history.
+3. **Reason optional**, shown in the studio's list only, never published.
+4. **Every editor, directly**, with undo. No draft step.
+5. **Figma first.** E4c waits for the owner's frames for the card, the move, the ghosted marker and the list.
+6. **Orphans** go in "The map needs a look".
+7. **Hidden places ghosted** in the studio, so they can be un-hidden.
+8. **The tile-id dependency is accepted**, guarded by the unit check on a committed tile.
