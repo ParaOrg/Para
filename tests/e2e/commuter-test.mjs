@@ -795,8 +795,8 @@ for (const [i, p] of snapshot.polys.entries()) {
           .count()) === 0 && sameIds(relit, shownIds),
         `${relit.length} lit of ${shownIds.length}`,
       );
-      // …and the camera comes back in to where the commuter had it before
-      // the tap, out of the trip's overview (the owner's ask, 2026-10-02).
+      // …and the camera is where the commuter had it before the tap: choosing a route
+      // never moves it (the owner, 2026-11-23).
       await cardsSettled(page);
       const camBack = await until(view, (v) => sameView(v, camHome));
       check(
@@ -804,8 +804,9 @@ for (const [i, p] of snapshot.polys.entries()) {
         sameView(camBack, camHome),
         JSON.stringify({ camHome, camBack }),
       );
-      // A row tapped with no card picked, the owner's own way in: the trip opens taking in its
-      // whole route, and its ‹ brings the camera back to where the row was tapped.
+      // A row tapped with no card picked, the owner's own way in: the trip opens with the camera
+      // where the row was tapped, the Overview offered to take in its route, and leaving it moves
+      // nothing (the owner, 2026-11-23: choosing a route never moves the map).
       const camRow = await view();
       await rows.first().click();
       await shows(TRIP_UP);
@@ -813,14 +814,15 @@ for (const [i, p] of snapshot.polys.entries()) {
       await cardsSettled(page);
       const opened2 = (await cardKind()).kind === 'route';
       const moved = !sameView(await view(), camRow);
+      const isOverviewOffered = await page.getByRole('button', { name: 'Overview' }).isVisible();
       await tapEmptyMap();
       await shows(PLACE_UP);
       await cardsSettled(page);
       const camRowBack = await view();
       check(
-        `  a row tapped at rest: the trip opens taking in its route, and leaving it brings the camera back`,
-        opened2 && moved && sameView(camRowBack, camRow),
-        JSON.stringify({ opened: opened2, moved, camRow, camRowBack }),
+        `  a row tapped at rest: the trip opens with the camera kept still and the Overview offered, and leaving it moves nothing`,
+        opened2 && !moved && isOverviewOffered && sameView(camRowBack, camRow),
+        JSON.stringify({ opened: opened2, moved, isOverviewOffered, camRow, camRowBack }),
       );
       // ⇄ turns the routes round and leaves the camera where the commuter tapped
       // the hintuan: no zoom, no glide, even onto another box of the place (the
@@ -1204,9 +1206,10 @@ if (!RUNS_ONE_OFFS) {
   }
 }
 
-// 4a′. The filter frames what it leaves lit (README decision 14): where a rail line runs over a
-// jeep's road, outside every box, one tap lists both kinds of ride, and narrowing the list to the
-// rail moves the camera to take it in, as ⇆ does. The last part's, with 4a.
+// 4a′. The filter lights what it leaves listed and moves nothing (the owner, 2026-11-23: choosing a
+// route never moves the map): where a rail line runs over a jeep's road, outside every box, one
+// tap lists both kinds of ride, and narrowing the list to the rail keeps the camera still, the
+// Overview offered to take the rail in. The last part's, with 4a.
 if (RUNS_ONE_OFFS) {
   const modeOf = new Map(
     JSON.parse(readFileSync('public/data/index.v5.json', 'utf8')).variants.map((v) => [
@@ -1225,7 +1228,7 @@ if (RUNS_ONE_OFFS) {
     );
   if (!mixed) {
     check(
-      'a tap where a rail line runs over a jeep road: the LRT filter frames the rail',
+      'a tap where a rail line runs over a jeep road: the LRT filter lights the rail, the camera kept still',
       false,
       'the map file has no such road any more: pick another two kinds of ride',
     );
@@ -1262,14 +1265,16 @@ if (RUNS_ONE_OFFS) {
       Math.abs(cameraNow.zoom - cameraWas.zoom) > 1e-6 ||
       Math.abs(cameraNow.lng - cameraWas.lng) > 1e-9 ||
       Math.abs(cameraNow.lat - cameraWas.lat) > 1e-9;
+    const isOverviewOffered = await page.getByRole('button', { name: 'Overview' }).isVisible();
     check(
-      'a tap where a rail line runs over a jeep road: the LRT filter frames the rail',
+      'a tap where a rail line runs over a jeep road: the LRT filter lights the rail, the camera kept still',
       liveries.some((l) => l?.includes('rail')) &&
         liveries.includes('jeep') &&
         listed.length > 0 &&
         sameIds(lit, listed) &&
-        moved,
-      `cards ${liveries.join(', ')}; ${lit.length} lit, ${listed.length} listed; camera ${JSON.stringify(cameraWas)} → ${JSON.stringify(cameraNow)}`,
+        !moved &&
+        isOverviewOffered,
+      `cards ${liveries.join(', ')}; ${lit.length} lit, ${listed.length} listed; camera ${JSON.stringify(cameraWas)} → ${JSON.stringify(cameraNow)}; Overview ${isOverviewOffered ? 'offered' : 'hidden'}`,
     );
     await closeCard();
   }
@@ -1421,10 +1426,20 @@ if (RUNS_ONE_OFFS) {
       );
       const litIds = (await page.evaluate(() => window.__lit('saved-routes'))) ?? [];
       check('  exactly one direction is lit', litIds.length === 1, JSON.stringify(litIds));
-      // On a desktop too, the trip opens with the camera taking in its whole route once, beside
-      // the docked panel, read once the card and the camera are at rest.
+      // On a desktop too, the trip opens with the camera where the commuter had it (the owner,
+      // 2026-11-23: choosing a route never moves the map), read once the card is at rest; the
+      // Overview, pressed, takes in its whole route beside the docked panel.
       await cardsSettled(page);
       const camAfterTap = await readCamera();
+      const overview = page.getByRole('button', { name: 'Overview' });
+      const isOverviewOffered = await overview.isVisible();
+      check(
+        '  the camera stays where it was, and the Overview is offered',
+        Math.abs(camAfterTap.zoom - camBeforeTap.zoom) < 0.01 && isOverviewOffered,
+        `zoom ${camBeforeTap.zoom.toFixed(2)} → ${camAfterTap.zoom.toFixed(2)}; Overview ${isOverviewOffered ? 'offered' : 'hidden'}`,
+      );
+      if (isOverviewOffered) await overview.click();
+      await cardsSettled(page);
       const litLine = await page.evaluate(
         async (ids) =>
           (await window.__src('saved-routes'))?.features.find((f) => ids.includes(f.properties.id))
@@ -1432,11 +1447,7 @@ if (RUNS_ONE_OFFS) {
         litIds,
       );
       const openFit = await routeFitted(page, litLine);
-      check(
-        '  the camera takes in the whole route, beside the panel',
-        Math.abs(camAfterTap.zoom - camBeforeTap.zoom) >= 0.01 && openFit.ok,
-        `${openFit.why}; zoom ${camBeforeTap.zoom.toFixed(2)} → ${camAfterTap.zoom.toFixed(2)}`,
-      );
+      check('  the Overview takes in the whole route, beside the panel', openFit.ok, openFit.why);
       // The chevrons: flowing along the lit direction, each cut to exactly
       // the lit line's width. Measured on screen, across the chevron's own
       // axis (outer tip to inner tip); the line's width comes from
@@ -1502,10 +1513,9 @@ if (RUNS_ONE_OFFS) {
             ? `; and ${compiled.standIn.length} a real basemap compiles at load, which the stand-in does not: ${compiled.standIn.map((k) => k.split('/')[0]).join(', ')}`
             : ''),
       );
-      // The trip opens on its whole route (the owner's ask, 2026-10-01); the
-      // flow is counted back where the tap was, close in, as before: a
-      // runner drawing without a GPU manages a few frames a second on the
-      // whole route, and the flow steps on frames.
+      // The flow is counted where the tap was, close in: a runner drawing
+      // without a GPU manages a few frames a second on a whole route, and the
+      // flow steps on frames.
       await page.evaluate((c) => {
         window.__map.jumpTo({ center: c, zoom: 17 });
       }, clean);

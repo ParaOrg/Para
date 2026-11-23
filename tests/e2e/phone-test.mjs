@@ -3372,18 +3372,30 @@ if (runsPart(1)) {
       !!from && !!to && origin === from && end === to,
       `"${label}": top "${origin}", bottom "${end}"`,
     );
-    // Opened, the camera takes in the whole route once, above the sheet at its opening height, as
-    // the Overview button's fit does; at that overview, the button stays hidden.
+    // Opened, the camera stays where the commuter had it (the owner, 2026-11-23: choosing a route
+    // never moves the map), and the Overview is offered. Pressed, it takes in the whole route above
+    // the sheet at its opening height, and at that overview it hides.
     await page
       .waitForFunction(() => !window.__map.isMoving(), null, { timeout: 5000 })
       .catch(() => {});
     const camAfterLineTap = await camNow();
-    const openFit = await framedAboveCard(r.bbox);
-    const overviewShown = await page.getByRole('button', { name: 'Overview' }).isVisible();
+    const overview = page.getByRole('button', { name: 'Overview' });
+    const isOfferedAtOpen = await overview.isVisible();
     check(
-      '  the camera takes in the whole route, above the sheet, and Overview stays hidden',
-      !sameCamera(camBeforeLineTap, camAfterLineTap) && openFit.inside && !overviewShown,
-      JSON.stringify({ openFit, overviewShown }),
+      '  the camera stays where it was, and the Overview is offered',
+      sameCamera(camBeforeLineTap, camAfterLineTap) && isOfferedAtOpen,
+      JSON.stringify({ camBeforeLineTap, camAfterLineTap, isOfferedAtOpen }),
+    );
+    if (isOfferedAtOpen) await buttonTap(overview, async () => !(await overview.isVisible()));
+    await page
+      .waitForFunction(() => !window.__map.isMoving(), null, { timeout: 5000 })
+      .catch(() => {});
+    const openFit = await framedAboveCard(r.bbox);
+    const isShownAtFit = await overview.isVisible();
+    check(
+      '  the Overview takes in the whole route, above the sheet, and then hides',
+      openFit.inside && !isShownAtFit,
+      JSON.stringify({ openFit, isShownAtFit }),
     );
     const routeEnds = r.signboard.split(' – ').map((e) => e.replace(/ via .*$/, ''));
     check(
@@ -5148,10 +5160,11 @@ if (runsPart(3)) {
     skip('two overlapping hotspots open the list', 'no two hotspot polygons overlap today');
 }
 
-// ---------------------------------------- 5. a trip opened by a tap, framed
+// ---------------------------------------- 5. a trip opened by a tap, framed by the Overview
 // Trip links (?r=<id>) went on 2026-10-03, the owner's "remove that for
-// now": the address stays as it was, and the view a trip frames is checked
-// on a trip opened by a tap on its own line, as it was on one opened by a link.
+// now": the address stays as it was. A trip opened by a tap on its own line
+// leaves the camera where it was, and the Overview frames it when asked (the
+// owner, 2026-11-23: choosing a route never moves the map).
 if (runsPart(1)) {
   if (!routeA) {
     skip('a trip opened by a tap leaves the address as it was', 'no lone route vertex to select');
@@ -5173,21 +5186,20 @@ if (runsPart(1)) {
     const r = opened && snapshot.routes.find((o) => o.id === opened.id);
     if (!r)
       skip(
-        '  it frames the whole route, above the card',
+        '  the camera stays where it was, and the Overview frames the whole route',
         `no direction named "${await tripLabel()}" on the map`,
       );
     else {
-      // Opened, the camera takes in the whole route once, above the sheet.
+      // Opened, the camera stays where it was, and the Overview is offered.
       await page
         .waitForFunction(() => !window.__map.isMoving(), null, { timeout: 5000 })
         .catch(() => {});
       const camAfterOpen = await camNow();
-      const openFit = await framedAboveCard(r.bbox);
       const overviewAtOpen = await page.getByRole('button', { name: 'Overview' }).isVisible();
       check(
-        '  the camera takes in the whole route, above the sheet, and Overview stays hidden',
-        !sameCamera(camBeforeOpen, camAfterOpen) && openFit.inside && !overviewAtOpen,
-        JSON.stringify({ camBeforeOpen, camAfterOpen, openFit, overviewAtOpen }),
+        '  the camera stays where it was, and the Overview is offered',
+        sameCamera(camBeforeOpen, camAfterOpen) && overviewAtOpen,
+        JSON.stringify({ camBeforeOpen, camAfterOpen, overviewAtOpen }),
       );
       // A guard on the trip as it is drawn: at full height, every stop shown, so that it runs past
       // the screen, scrolled to its end, its last row is in reach, as when a Controller stood over
@@ -5214,12 +5226,12 @@ if (runsPart(1)) {
           ? JSON.stringify({ camAfterOpen, camAtFull, camAtLow })
           : `the handle would not step there: data-snap=${await sheetState()}`,
       );
-      // The screen changed size since the opening fit (the small phone above, and back), which can
-      // leave the route cut off, so the Overview button shows; pressed, it takes the whole route in
-      // above the sheet again, and hides once there.
+      // The sheet stepped and the screen resized (the small phone above, and back): nothing has
+      // framed the route, so the Overview button still shows; pressed, it takes the whole route in
+      // above the sheet, and hides once there.
       const overview = page.getByRole('button', { name: 'Overview' });
       check(
-        '  the screen resized since the opening fit: Overview shows',
+        '  the sheet stepped and the screen resized: Overview still shows',
         await overview.isVisible(),
       );
       const pressed = await buttonTap(overview, async () => !(await overview.isVisible()));

@@ -30,7 +30,7 @@ interface MapSheetControlsProps {
 /**
  * The public map's controls on the map for the card on show (Figma 4831:54489, 4831:54492); its
  * sheets carry no Controller bar: the route list's Vice Versa and sliders, and the Overview, which
- * shows wherever the camera is off what is framed (a trip, the picked cards). One column at the
+ * shows wherever the camera is off what is framed (a trip, the list's lit routes). One column at the
  * map's left, from the sheet up: Vice Versa where it was (the owner to confirm), then the Overview
  * and the sliders stacked over it (the owner, 2026-11-22). Vice Versa is not there when only loops
  * are listed: they have no way back. The map's ⓘ is in the top-left corner, so nothing stands
