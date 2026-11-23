@@ -38,9 +38,9 @@ export interface Landing {
  * Where a sheet let go rests, with its momentum: it coasts on from where the finger lifted
  * (`shown`, px on screen) at the finger's speed, slowing evenly, and rests where it stops, clamped
  * between Low and full, the soft stop at either with no bounce. A fast flick down still takes it
- * to Low, or closes it from Low, and a sheet let go below half of Low still closes (snapFor);
- * Low's magnet catches it where it stops. Under reduced motion there is no coast: it snaps as
- * snapFor rules.
+ * to Low, or closes it when it began at Low (`from`, px on screen as the drag began), and a sheet
+ * let go below half of Low still closes (snapFor); Low's magnet catches it where it stops. Under
+ * reduced motion there is no coast: it snaps as snapFor rules.
  */
 export function glideTo(
   shown: number,
@@ -48,9 +48,10 @@ export function glideTo(
   heights: SheetHeights,
   h: number,
   isReducedMotion = false,
+  from = shown,
 ): Landing {
   if (isReducedMotion || velocity <= -FLICK || shown < heights.low / 2) {
-    return { to: snapFor(shown, velocity, heights, h), glideMs: null };
+    return { to: snapFor(shown, velocity, heights, h, from), glideMs: null };
   }
   const rest = Math.max(heights.low, Math.min(heights.full, shown + coast(velocity)));
   const to = snapFor(rest, 0, heights, h);

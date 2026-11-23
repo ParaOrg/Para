@@ -43,6 +43,15 @@ test('thrown up past full, it stops softly at full, sooner than its whole coast'
 test('a fast flick down still goes to Low, or closes from Low, in the usual glide', () => {
   assert.deepEqual(glideTo(600, -2, heights, H), { to: 'low', glideMs: null });
   assert.deepEqual(glideTo(LOW_PX, -2, heights, H), { to: 'close', glideMs: null });
+  // Begun above Low, as a short list's highest, it goes to Low however far past Low it lifts.
+  assert.deepEqual(glideTo(LOW_PX - 100, -2, heights, H, false, LOW_PX + 17), {
+    to: 'low',
+    glideMs: null,
+  });
+  assert.deepEqual(glideTo(LOW_PX - 100, -2, heights, H, false, LOW_PX), {
+    to: 'close',
+    glideMs: null,
+  });
 });
 
 test('a slower release down glides a little, and Low’s magnet catches it where it stops', () => {
