@@ -1484,10 +1484,10 @@ if (RUNS_ONE_OFFS) {
         chevrons.all.length > 0 && fit,
         `${chevrons.all.length} chevrons, ${chevrons.all[0]?.across.toFixed(2)} px across; the lit line ${chevrons.line?.toFixed(2) ?? 'unread'} px`,
       );
-      // They flow for as long as the route is lit (the owner's ask of
-      // 2026-09-30: "yes continuous arrows"), fifteen steps a second rather
-      // than every frame, so a phone's main thread is not kept busy: a look
-      // a second apart finds them moved, in about fifteen redraws.
+      // Lit, they flow for a while (ARROWS_FLOW_MS, about 3 s of flowing) and then rest where they
+      // are until the map is touched (the owner, 2026-11-23); flowing, fifteen steps a second rather
+      // than every frame, so a phone's main thread is not kept busy: a look a second apart finds
+      // them moved, in about fifteen redraws.
       const where = () =>
         page.evaluate(async () =>
           ((await window.__src('direction-arrows'))?.features ?? [])
@@ -1520,26 +1520,51 @@ if (RUNS_ONE_OFFS) {
         window.__map.jumpTo({ center: c, zoom: 17 });
       }, clean);
       await mapIdle(page);
-      const flowA = await until(where, (w) => w !== '');
-      const sets = await page.evaluate(
-        () =>
-          new Promise((resolve) => {
-            const src = window.__map.getSource('direction-arrows');
-            const set = src.setData;
-            let n = 0;
-            src.setData = function (...a) {
-              n++;
-              return set.apply(this, a);
-            };
-            setTimeout(() => {
-              src.setData = set;
-              resolve(n);
-            }, 1000);
-          }),
+      /** How many times the chevrons are drawn in the next `ms`. */
+      const drawsIn = (ms) =>
+        page.evaluate(
+          (ms) =>
+            new Promise((resolve) => {
+              const src = window.__map.getSource('direction-arrows');
+              const set = src.setData;
+              let n = 0;
+              src.setData = function (...a) {
+                n++;
+                return set.apply(this, a);
+              };
+              setTimeout(() => {
+                src.setData = set;
+                resolve(n);
+              }, ms);
+            }),
+          ms,
+        );
+      // Lit long enough, they rest: no redraw in a whole 600 ms, within their while and a margin.
+      const atRest = await until(
+        () => drawsIn(600),
+        (n) => n === 0,
+        10000,
       );
+      const restingAt = await where();
+      check(
+        '  having flowed their while, they rest where they are, still drawn',
+        atRest === 0 && restingAt !== '',
+        `${atRest} redraw(s) in 600 ms; ${restingAt === '' ? 'none drawn' : 'drawn'}`,
+      );
+      // A mouse dragging the map a little (a touch, not a tap, which would close the trip): they
+      // flow again, fifteen steps a second.
+      const canvas = await page.locator('canvas.maplibregl-canvas').boundingBox();
+      const [mx, my] = [canvas.x + canvas.width * 0.75, canvas.y + canvas.height * 0.5];
+      await page.mouse.move(mx, my);
+      await page.mouse.down();
+      await page.mouse.move(mx + 20, my + 20, { steps: 4 });
+      await page.mouse.up();
+      await mapIdle(page);
+      const flowA = await until(where, (w) => w !== '');
+      const sets = await drawsIn(1000);
       const flowB = await where();
       check(
-        '  and they keep flowing, about fifteen steps a second',
+        '  touched, they flow again, about fifteen steps a second',
         flowA !== '' && flowA !== flowB && sets >= 8 && sets <= 18,
         `${flowA === flowB ? 'still' : 'moved'}; ${sets} redraw(s) in a second`,
       );
