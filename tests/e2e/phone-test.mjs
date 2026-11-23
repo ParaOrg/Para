@@ -3870,7 +3870,7 @@ if (runsPart(3)) {
       await throwFrom(from[0], from[1], -200, steps, gap);
       const rest = await shownOf(chooser);
       const back = await listTop();
-      // A short fast flick: let go above Low, so it lands on Low rather than past it, closed.
+      // A short fast flick down, begun above Low: it lands on Low.
       if (back && isBack) await throwFrom(back[0], back[1], 150, 3, 16);
       return rest;
     };
@@ -3891,14 +3891,14 @@ if (runsPart(3)) {
     const cardsTall = has ? (await cardsNow()).tall : 0;
     const screenFull = has ? await chooser.first().evaluate((el) => el.offsetHeight) : 0;
     const listFull = Math.max(listLow, Math.min(screenFull, cardsTall));
-    // A short list, its highest barely above Low, is thrown once: a flick back down from there
-    // would close it (a fast flick down from about Low closes a sheet).
+    // A short list, its highest barely above Low, is thrown up once, then flicked back down from
+    // there on its own check below.
     const isShort = listFull - listLow < 120;
     const gentle = has && !isShort ? await listThrown(12, 30) : null;
     const hard = has ? await listThrown(4, 16, !isShort) : null;
     // Raised, its names drawn whole may stand taller than at Low: its highest is its cards then.
     const raised = has && isShort ? await cardsNow() : null;
-    if (isShort)
+    if (isShort) {
       check(
         '  thrown up hard, a short list rises no higher than its last card, every name drawn whole',
         hard !== null &&
@@ -3908,7 +3908,19 @@ if (runsPart(3)) {
           hard <= Math.max(listFull, Math.min(screenFull, raised.tall)) + 2,
         `hard ${hard} px shown (Low ${listLow}, its cards ${cardsTall} at Low and ${raised?.tall} raised, ${raised?.cut} names cut, the screen ${screenFull}); now data-snap=${await listRest()}`,
       );
-    else
+      // Flicked down fast from its highest, the finger lifts far below Low: a flick begun above
+      // Low rests at Low, as a trip's does, rather than closing (the owner, 2026-11-23).
+      const from = await listTop();
+      const wasAt = await listRest();
+      if (from) await throwFrom(from[0], from[1], 150, 3, 16);
+      const isOpen = (await chooser.count()) > 0 && (await chooser.first().isVisible());
+      const restsAt = isOpen ? await listRest() : 'closed';
+      check(
+        '  flicked down fast from its highest, a short list rests at Low, still open',
+        !!from && wasAt !== 'low' && restsAt === 'low',
+        `from data-snap=${wasAt}; now ${restsAt}`,
+      );
+    } else
       check(
         '  thrown up from Low, the list coasts: a hard throw rests higher than a gentle one, both between Low and its highest',
         gentle !== null &&
