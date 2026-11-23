@@ -25,6 +25,7 @@ import {
   type SheetShape,
   type Snap,
 } from './sheet-gesture';
+import { useGlideIn } from './use-glide-in';
 import { useSheetGestures, type FittedSheet } from './use-sheet-gestures';
 
 interface Props {
@@ -206,10 +207,9 @@ export function BottomSheet({
   const [dragging, setDragging] = useState(false);
   // The status bar's height as this sheet sees it, before anything asks for full height.
   useLayoutEffect(() => measureSafeTop(own.current), []);
-  // Where it first stands, drawn with it: a card opening over another (a
-  // place's name tapped) is new, and without this it would show at full height
-  // for a moment and glide down to its height. Never changed after, so React
-  // leaves the drag's and the glide's --sheet-y alone.
+  // Where it first stands, drawn with it: a card opening over another (a place's name tapped) is
+  // new, and without this it would show at full height for a moment and glide down to its height.
+  // Never changed after, so React leaves the drag's and the glide's --sheet-y alone.
   const [opensAt] = useState<CSSProperties>(() => ({ '--sheet-y': slide(snap, shape) }));
   useDialogFocus(own, hidden);
   // A sheet left open under an inert page (the studio's other maps) is out of reach, Escape too.
@@ -238,23 +238,23 @@ export function BottomSheet({
       follower.style.setProperty('--dock-y', y);
   }
 
-  // Whether this sheet put the mark on the page: only it takes it off, so a
-  // hidden sheet's change, or one unmounting, leaves another's drag alone.
+  // Shown in another sheet's place, it glides in from where that one stood: before the rest below.
+  useGlideIn(own, hidden);
+  // Whether this sheet put the mark on the page: only it takes it off, so a hidden sheet's change,
+  // or one unmounting, leaves another's drag alone.
   const markedRef = useRef(false);
   const restY = restAt(snap);
   useLayoutEffect(() => {
     if (!dragging) at(restY);
-    // What follows the sheet on the page (the LocatorButton) glides with it,
-    // or keeps up with the finger.
+    // What follows the sheet on the page (the LocatorButton) glides with it, or follows a finger.
     const mark = dragging && !hidden;
     if (mark === markedRef.current) return;
     own.current?.closest('[data-dock-host]')?.toggleAttribute('data-dock-dragging', mark);
     markedRef.current = mark;
   }, [restY, dragging, hidden]);
-  // A flick that closes the sheet unmounts it mid-drag, before the effect
-  // above runs with the drag over, and the page would keep the attribute: the
-  // LocatorButton would stop gliding for good. The host is held from the
-  // mount, as the sheet is gone from it by the cleanup.
+  // A flick that closes the sheet unmounts it mid-drag, before the effect above runs with the drag
+  // over, and the page would keep the attribute: the LocatorButton would stop gliding for good.
+  // The host is held from the mount, as the sheet is gone from it by the cleanup.
   useLayoutEffect(() => {
     const host = own.current?.closest('[data-dock-host]');
     return () => {
