@@ -564,6 +564,15 @@ Status on 22 November:
   - 3 for commuter-test (#1144: `closeCard` waits on a condition; no measurable speed-up);
   - 8 (#1146): a push went from 33 jobs in 9m41s to 29 jobs in 7m34s, and a pull request from 32 jobs to 28.
 - **Skipped:** 2, because phone-test is not the long pole.
+- **Since then, the same day:**
+  - #1149: commuter-test runs in 2 parts, not 6. Since #1137 hid hotspot taps behind `VITE_HOTSPOT_TAPS`, each part took 2m03s at most, so six parts only added setup. A push took 7m22s with 25 jobs.
+  - #1154: a push to `staging` also runs commuter-test with hotspot taps on (`taps-on`, 6 parts), so the hidden checks still run before `main`. A push now has 31 jobs and takes 8m37s, of which 1m15s was waiting for runners. A pull request has 24 jobs.
+  - #1156, reverted in #1158: contribute-test's form timeout used `page.clock.fastForward` instead of `runFor`. It passed 6 local runs and the pull request's run, then failed on the push. Closing a stop's map releases the form's hold through two passive effects, which land after the test has already jumped. `fastForward`'s single tick could still see the hold, where `runFor`'s later ticks saw the release. It saved about 15 s of contribute-test's 6.5 minutes, so it is not being tried again. Recorded in `../ci-flakes/ledger.md`.
+  - #1159: the revert's push then failed in account-test. A race in the test that predates today: it read a History card's text before the card had drawn it. It now waits for the card's status words first. Also in the ledger.
+- **Where a pull request's time goes now:** contribute-test, at about 6.5 minutes, is the long pole. Its 40 fixed waits each either prove something does not happen (22) or let something settle (18). Shortening them is item 3's work, with a condition for each, not a shorter wait.
+- **Lessons:**
+  - "The state is fixed through the jump" does not hold right after a click that changes it. A clock jump straight after a click races the click's effects.
+  - Passing local runs, even six, do not prove there is no race. A race can pass every time on one machine and fail on another.
 
 ### Needs the owner first
 
