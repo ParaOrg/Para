@@ -156,7 +156,7 @@ export function runtimeCaches(basemapRules: BasemapCacheRules): RuntimeCaching {
       },
     },
     {
-      // The establishment files (.scratch/establishments, steps E3a and E3b):
+      // The establishment files and Overture's (.scratch/establishments, steps E3a to E3c):
       // the index and the cells the map has looked at, read once the map
       // reaches street level with Location Labels on, then served from the
       // copy kept at once and refreshed behind it, as the landmarks are. A
@@ -166,13 +166,15 @@ export function runtimeCaches(basemapRules: BasemapCacheRules): RuntimeCaching {
       urlPattern: ({ url, request }) =>
         request.method === 'GET' &&
         url.origin === self.location.origin &&
-        url.pathname.startsWith('/data/establishments/v1/') &&
+        (url.pathname.startsWith('/data/establishments/v1/') ||
+          url.pathname.startsWith('/data/overture/v1/')) &&
         url.pathname.endsWith('.json'),
       handler: 'StaleWhileRevalidate',
       options: {
         cacheName: 'establishments',
         cacheableResponse: { statuses: [200] },
-        expiration: { maxEntries: 60, purgeOnQuotaError: true },
+        // Two folders' indexes and the cells looked at in each.
+        expiration: { maxEntries: 120, purgeOnQuotaError: true },
         plugins: [
           {
             // Only JSON: a file not there is the map's page, 200.
