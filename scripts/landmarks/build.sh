@@ -31,19 +31,23 @@ extract="$work/panning-box.osm.pbf"
 
 # A download that fails says whose side it failed on, so the monthly run's alert explains itself:
 # Geofabrik answering 404 or not at all is theirs (it replaces each extract once a day), not ours.
+# A stalled download fails too, instead of holding the job to its 20-minute timeout with nothing
+# said (curl exit 28): each try gets 30 s for the checksum and 3 minutes for the extract (586 MB,
+# under a minute on a runner), and curl tries each three times, so a stalled Geofabrik fails the
+# run in about 10 minutes at most.
 fetch_failed() {
   echo "Geofabrik did not give $1 (curl exit $2: 22 means it answered with an HTTP error such as" \
-    "404; the others mean the connection failed). That is on Geofabrik's side, not in this" \
+    "404, 28 that it stalled past the time allowed; the others mean the connection failed). That is on Geofabrik's side, not in this" \
     "script: the file may be mid-replacement. Run the workflow again later." >&2
   exit 1
 }
 
 # The checksum first, so it cannot be newer than the extract it is checked against.
 echo "Downloading $source_url"
-md5_line="$(curl -fsSL --retry 3 --retry-delay 10 "$source_url.md5")" ||
+md5_line="$(curl -fsSL --connect-timeout 30 --max-time 30 --retry 2 --retry-delay 10 "$source_url.md5")" ||
   fetch_failed "$source_url.md5" "$?"
 expected="$(cut -d' ' -f1 <<<"$md5_line")"
-curl -fsSL --retry 3 --retry-delay 10 -o "$download" "$source_url" ||
+curl -fsSL --connect-timeout 30 --max-time 180 --retry 2 --retry-delay 10 -o "$download" "$source_url" ||
   fetch_failed "$source_url" "$?"
 actual="$(md5sum "$download" | cut -d' ' -f1)"
 if [ "$expected" != "$actual" ]; then
