@@ -1,25 +1,26 @@
 import { useState } from 'react';
 
 import { coarsePointer } from '@/features/routes/map/tap';
+import { cn } from '@/shared/utils/cn';
 
-import { whyCannotCloseLoop } from './loop-closing';
+import { DrawCount } from './draw-count';
+import { PILL, TOOL } from './draw-toolbar-look';
 import { PickBar } from './pick-bar';
 import { FollowChip, PointBar, PutBack } from './point-bar';
-import { TapDraw } from './tap-draw';
-import {
-  drawHint,
-  formatDistance,
-  uTurnWarning,
-  whyNotDone,
-  type ExtendEnds,
-} from './toolbar-text';
+import { SnapDraw } from './snap-draw';
+import { whyCannotSave, withCommand, type ExtendEnds } from './toolbar-text';
+import { UndoRedo } from './undo-redo';
 import { useDrawKeys } from './use-draw-keys';
 import type { Drawing } from './use-drawing';
-import type { LoopPlan } from './use-loop-closing';
 
 interface DrawToolbarProps {
   draw: Drawing;
-  onDone: () => void;
+  /**
+   * Done, opening the save form. Absent while the route's form stands beside
+   * the map, where its Save is Done: then the toolbar has no Done, and
+   * Ctrl/⌘+Enter does nothing.
+   */
+  onDone?: () => void;
   /** Whether the keyboard shortcuts may act. False while a panel is open. */
   keys?: boolean;
   /**
@@ -28,205 +29,125 @@ interface DrawToolbarProps {
    * keep buttons can say which part they keep in the jeep's own order.
    */
   ends?: ExtendEnds | null;
-  /** While drawing a route's return trip: where the loop closes (use-loop-closing.ts). */
-  loop?: LoopPlan | null;
 }
 
 /**
- * Replaces the single idle button while drawing. Deliberately small: the map
- * is the document, and this is the only chrome allowed to compete with it.
+ * Replaces the single idle button while drawing: Undo | Redo in one pill and
+ * Move · Snap · Draw | Done in another, after the owner's frame. No Close the
+ * loop (a line closes by its first point's badge), and no hint and no count: the owner's toolbar has neither, and what is drawn so
+ * far is read out to a screen reader instead (draw-count.tsx). Deliberately
+ * small: the map is the document, and this is the only chrome allowed to
+ * compete with it.
  *
  * Serves both a route trace and a hotspot outline. The outline needs three
- * corners, has no router to wait for, and has no Tap | Draw switch because
+ * corners, has no router to wait for, and has no Snap | Draw switch because
  * every edge is already straight.
  *
- * Three of the buttons answer to a key as well — Ctrl+Z, Enter, F — but only
- * while `keys` is true: the studio turns them off the moment a panel opens,
- * so Enter in the save form submits the form and Ctrl+Z in a field is the
- * browser's own undo. Esc is deliberately unbound: cancel discards the whole
- * trace, and that should not be one stray key away.
+ * The buttons answer to keys as well (use-draw-keys.ts) — Ctrl/⌘+Z,
+ * Ctrl/⌘+Shift+Z, Ctrl/⌘+Enter, S, D, F — but only while `keys` is true: the
+ * studio turns them off the moment a panel opens, so Enter in the save form
+ * submits the form and Ctrl+Z in a field is the browser's own undo. Escape
+ * only hides the selected point's handles; it never cancels, because cancel
+ * discards the whole trace, and that should not be one stray key away.
  */
-export function DrawToolbar({
-  draw,
-  onDone,
-  keys = true,
-  ends = null,
-  loop = null,
-}: DrawToolbarProps) {
+export function DrawToolbar({ draw, onDone, keys = true, ends = null }: DrawToolbarProps) {
   if (draw.picking) return <PickBar draw={draw} ends={ends} />;
-  return <Toolbar draw={draw} onDone={onDone} keys={keys} loop={loop} />;
+  return <Toolbar draw={draw} onDone={onDone} keys={keys} />;
 }
 
 function Toolbar({
   draw,
   onDone,
   keys,
-  loop,
 }: {
   draw: Drawing;
-  onDone: () => void;
+  onDone: (() => void) | undefined;
   keys: boolean;
-  loop: LoopPlan | null;
 }) {
   const points = draw.controlPoints.length;
-  const freehandCount = draw.segments.filter((s) => s?.snap === 'freehand').length;
   const area = draw.area;
-  const minPoints = area ? 3 : 2;
   const noun = area ? 'corner' : 'point';
-  const uTurns = draw.uTurns.length;
-  // A stand-in still on the line is not road geometry yet, and must not be saved.
-  const waiting = draw.snapping > 0 || draw.unresolved;
-  const canDone = points >= minPoints && !waiting;
-  // A phone has no hover for a title, no right-click and no shift key: it is
-  // told what a finger does, asked before ✕ throws the drawing away, and
-  // gets the point bar (point-bar.tsx) for what the mouse's clicks do.
+  // A phone has no right-click and no shift key: it is asked before ✕ throws
+  // the drawing away, and gets the point bar (point-bar.tsx) for what the
+  // mouse's clicks do.
   const finger = coarsePointer();
   const [confirming, setConfirming] = useState(false);
-  const [uTurnHelp, setUTurnHelp] = useState(false);
-  const uTurnText = uTurnWarning(uTurns);
-  const doneReason = whyNotDone(points, minPoints, noun, waiting);
+  const doneReason = whyCannotSave(draw);
+  const canDone = doneReason === null;
 
-  // While ✕ asks, Enter must not save what is about to be thrown away.
-  useDrawKeys({ draw, isOn: keys && !confirming, points, canDone, isArea: !!area, onDone });
-
-  const hint = drawHint({
-    uTurnHelp: uTurnHelp ? uTurnText : null,
-    isFinger: finger,
-    isArea: !!area,
+  // While ✕ asks, Ctrl/⌘+Enter must not save what is about to be thrown away.
+  useDrawKeys({
+    draw,
+    isOn: keys && !confirming,
     points,
-    loopOther: loop?.other ?? null,
+    canDone: canDone && onDone !== undefined,
+    isArea: !!area,
+    onDone: () => onDone?.(),
   });
-  const contextual = draw.selected !== null || draw.canPutBack || draw.followOffer !== null;
 
   return (
     <div
       data-testid="draw-toolbar"
       className="absolute bottom-[calc(1.5rem+env(safe-area-inset-bottom))] left-1/2 z-10 flex w-max max-w-[calc(100%-2rem)] -translate-x-1/2 flex-col items-center gap-2"
     >
-      {/* Dragging and right-clicking are not discoverable on a bare map (drawHint). */}
-      {hint && !contextual && (
-        <p
-          className={
-            finger
-              ? 'rounded-full bg-neutral-900/80 px-3 py-1.5 text-center text-xs text-white'
-              : 'text-center text-[11px] text-neutral-600 [text-shadow:0_1px_2px_white]'
-          }
-        >
-          {hint}
-        </p>
-      )}
-
       <PointBar draw={draw} />
       <PutBack draw={draw} />
       <FollowChip draw={draw} />
 
-      {!area && <TapDraw draw={draw} />}
+      {/* The count, for a screen reader only: the owner's toolbar shows none. */}
+      <DrawCount draw={draw} />
 
-      <div className="flex flex-col items-center rounded-3xl bg-white p-1.5 shadow-lg ring-1 ring-black/10">
-        <span className="px-3 pt-0.5 text-center text-xs text-neutral-500 tabular-nums">
-          {area && (
-            <span className="font-medium text-neutral-700">
-              {area.kind === 'terminal' ? 'Terminal' : 'Hintuan'} ·{' '}
-            </span>
-          )}
-          {points} {points === 1 ? noun : `${noun}s`}
-          {!area && draw.line.length > 1 && <> · {formatDistance(draw.metres)}</>}
-          {!area && freehandCount > 0 && (
-            <span className="text-neutral-400"> · {freehandCount} straight</span>
-          )}
-          {!area && uTurns > 0 && (
-            <button
-              type="button"
-              onClick={() => setUTurnHelp(!uTurnHelp)}
-              title={uTurnText}
-              className="text-amber-700 underline decoration-dotted underline-offset-2"
-            >
-              · ⚠ {uTurns} U-turn{uTurns === 1 ? '' : 's'}
-            </button>
-          )}
-          {draw.snapping > 0 && <span className="text-rose-600"> · snapping…</span>}
-          {finger && doneReason && points > 0 && !draw.snapping && (
-            <span className="text-neutral-400"> · {doneReason.toLowerCase()}</span>
-          )}
-        </span>
+      {confirming ? (
+        <div className={PILL}>
+          <span className="px-2 text-sm text-content-tertiary">
+            Discard this {area ? 'hotspot' : 'route'}?
+          </span>
+          <button
+            type="button"
+            onClick={() => setConfirming(false)}
+            className={cn(TOOL, 'text-content-tertiary')}
+          >
+            Keep
+          </button>
+          <button type="button" onClick={draw.cancel} className={cn(TOOL, 'text-content-error')}>
+            Discard
+          </button>
+        </div>
+      ) : (
+        <div className="flex flex-wrap items-center justify-center gap-2">
+          <UndoRedo draw={draw} noun={noun} />
 
-        {confirming ? (
-          <div className="flex items-center gap-1">
-            <span className="px-2 text-sm text-neutral-700">
-              Discard this {area ? 'hotspot' : 'route'}?
-            </span>
-            <button type="button" onClick={() => setConfirming(false)} className={TOOL}>
-              Keep
-            </button>
-            <button type="button" onClick={draw.cancel} className={TOOL + ' text-red-600'}>
-              Discard
-            </button>
+          <div className={PILL}>
+            {!area && <SnapDraw draw={draw} />}
+            {onDone && (
+              <button
+                type="button"
+                onClick={onDone}
+                disabled={!canDone}
+                title={
+                  doneReason ??
+                  `${area ? 'Save this hotspot' : 'Save this route'} (${withCommand('Enter')})`
+                }
+                className="rounded-full bg-parabrand-800 px-4 py-1.5 text-sm font-medium text-content-inverse disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                Done
+              </button>
+            )}
           </div>
-        ) : (
-          <div className="flex items-center gap-1">
-            <button
-              type="button"
-              onClick={draw.undo}
-              disabled={points === 0}
-              title={`Undo last ${noun} (Ctrl+Z)`}
-              className={TOOL}
-            >
-              ↶ Undo
-            </button>
 
-            {loop && <CloseLoop draw={draw} loop={loop} />}
-
-            <button
-              type="button"
-              onClick={onDone}
-              disabled={!canDone}
-              title={doneReason ?? (area ? 'Save this hotspot (Enter)' : 'Save this route (Enter)')}
-              className="rounded-full bg-neutral-900 px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              ✓ Done
-            </button>
-
+          <div className={PILL}>
             <button
               type="button"
               onClick={finger && points > 0 ? () => setConfirming(true) : draw.cancel}
+              aria-label={area ? 'Discard this hotspot' : 'Discard this route'}
               title={area ? 'Discard this hotspot' : 'Discard this route'}
-              className={TOOL + ' text-neutral-500'}
+              className={cn(TOOL, 'text-content-quaternary')}
             >
               ✕
             </button>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
-  );
-}
-
-/**
- * A tool button, the same size under a finger as under a mouse: touch targets have no
- * 44 px floor (they follow Figma), and the toolbar isn't drawn in Figma yet.
- */
-const TOOL =
-  'rounded-full px-3 py-2 text-sm text-neutral-700 hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-40';
-
-/**
- * Ends a return trip on the first point of the way already drawn, routed like
- * any click (or straight in freehand). Disabled, and saying why in its label,
- * until there is a point to come from and while the loop is already closed.
- */
-function CloseLoop({ draw, loop }: { draw: Drawing; loop: LoopPlan }) {
-  const reason = whyCannotCloseLoop(draw.controlPoints, loop.closeAt, loop.other === null);
-  const label = reason ? `Close the loop: ${reason}` : 'Close the loop';
-  return (
-    <button
-      type="button"
-      data-testid="close-loop"
-      onClick={() => void draw.addPoint(loop.closeAt)}
-      disabled={reason !== null}
-      aria-label={label}
-      title={reason ? label : `End the line where ${loop.other ?? 'it'} began`}
-      className={TOOL}
-    >
-      ⟲ Close the loop
-    </button>
   );
 }

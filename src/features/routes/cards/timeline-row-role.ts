@@ -1,16 +1,14 @@
+import type { RouteStopSignKind } from './route-stop-sign';
 import type { RouteTripLineDetailPillContent } from './route-trip-line-detail-pill';
-import type { RailReach } from './timeline-rail';
-import type { TimelineStickConnection, TimelineStickVariant } from './timeline-stick';
 
-/** Where a ride starts (Start's S) or ends (End's E), before a row's name. */
-export type RideMarkKind = 'start' | 'end';
+/** Where a ride starts (Start's S) or ends (End's E), in its row's slot. */
 
 /** An end of the trip, picked from its row: the origin (`from`) or the destination (`to`). */
 export type EndRow = 'from' | 'to';
 
 /** A row's part in the ride: its S or E, its pill, and the button under it. */
 export interface RowRole {
-  mark: RideMarkKind | null;
+  mark: RouteStopSignKind | null;
   pill: RouteTripLineDetailPillContent | null;
   action: { label: string; isRemove: boolean; onTap: () => void } | null;
 }
@@ -35,8 +33,11 @@ export interface RowRoleInput {
  * its end.
  */
 export function rowRole(row: RowRoleInput): RowRole {
-  const priced = (code: string | null) =>
-    row.pickedPesos ? { code, pesos: row.pickedPesos } : null;
+  // Priced, its code and the pesos; unpriced, a station's code alone (T1).
+  const priced = (code: string | null): RouteTripLineDetailPillContent | null => {
+    if (row.pickedPesos) return { code, pesos: row.pickedPesos };
+    return code === null ? null : { code };
+  };
   if (row.isStart) {
     return {
       mark: 'start',
@@ -64,7 +65,10 @@ export function rowRole(row: RowRoleInput): RowRole {
  * on; End's E when, a start picked, it is the ride's end, tapped with the
  * start kept; else nothing.
  */
-export function originMark(start: string | null, endPicked: EndRow | null): RideMarkKind | null {
+export function originMark(
+  start: string | null,
+  endPicked: EndRow | null,
+): RouteStopSignKind | null {
   if (start === null) return 'start';
   return endPicked === 'from' ? 'end' : null;
 }
@@ -80,18 +84,4 @@ export function endRowPill(
   pickedPesos: string | undefined,
 ): RouteTripLineDetailPillContent | null {
   return start !== null && pickedPesos ? { code: pickedCode, pesos: pickedPesos } : null;
-}
-
-/**
- * A hintuan row's piece of the rail, from whether the rail runs on above its
- * dot and below it: a row the rail neither reaches nor leaves is its dot alone.
- */
-export function railPiece({ hasAbove, hasBelow }: RailReach): {
-  connection: TimelineStickConnection;
-  piece: TimelineStickVariant;
-} {
-  if (hasAbove && hasBelow) return { connection: 'connected', piece: 'middle' };
-  if (hasBelow) return { connection: 'connected', piece: 'middleTop' };
-  if (hasAbove) return { connection: 'connected', piece: 'middleBottom' };
-  return { connection: 'disconnected', piece: 'middle' };
 }

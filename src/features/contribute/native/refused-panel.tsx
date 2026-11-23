@@ -1,8 +1,8 @@
 import { Button } from '@/design-system/primitives/button';
+import { useFocusHeading } from '@/shared/hooks/use-focus-heading';
 
 import type { NativePermission } from './native-permissions';
 import { canRecordWithout, PERMISSION_REASONS } from './permission-steps';
-import { useFocusHeading } from '../common/use-focus-heading';
 
 interface RefusedPanelProps {
   permission: NativePermission;
@@ -30,7 +30,7 @@ export function RefusedPanel({
         id="refused-heading"
         ref={headingRef}
         tabIndex={-1}
-        className="text-xl/7 font-extrabold focus:outline-none"
+        className="text-xl/7 font-bold focus:outline-none"
       >
         {PERMISSION_REASONS[permission].refusedTitle}
       </h1>

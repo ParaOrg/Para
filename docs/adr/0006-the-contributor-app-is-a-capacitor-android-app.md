@@ -39,9 +39,11 @@ service with a visible "Para is recording" notification.
   release keystore from the secret `PARAPO_KEY_PASSPHRASE` and uploads it
   encrypted (AES-256-CBC, PBKDF2) with the certificate's SHA-256 fingerprint.
   Both are committed (`android/release-key.p12.enc`, `android/release-key.sha256`).
-  The release build decrypts the key with the same secret into a temp file,
-  deletes it at the end, and refuses an APK whose certificate is not the
-  recorded fingerprint. **The repository is public, so the passphrase is all
+  The release is built unsigned by a job that has no secret. A separate job,
+  `sign`, which checks out three files, installs no packages and runs no build
+  script, decrypts the key with the same secret into a temp file, signs the
+  APK, deletes the key at the end, and refuses an APK whose certificate is not
+  the recorded fingerprint. **The repository is public, so the passphrase is all
   that protects the key**: anyone can download the file and guess offline. It
   must be at least 24 characters, ideally six or more random words, kept in a
   password manager. A release run with no passphrase fails; it never publishes
@@ -98,3 +100,32 @@ service with a visible "Para is recording" notification.
 - Rejected: a wrapped web page (a Trusted Web Activity), which can't record
   with the screen off; a separate native app, which would rewrite the recorder;
   an iPhone build, for now.
+
+## Amendment, 2026-11-02
+
+- **The ride's notification is Para's own card**, not the plugin's "Para is recording" (#632,
+  #638): the app builds it (`RideNotification`) and its actions (`RideActionReceiver`): Pause
+  and Lakad or Sakay while recording, Resume and Finish while paused.
+- **The plugin is pinned to exactly `1.3.1`** in `package.json`. The app swaps the plugin's
+  notification for its own through `ParaServiceWatchers.java`, which sits in the plugin's own
+  package (`com.equimaps.capacitor_background_geolocation`) to reach the service's watchers, so a
+  new plugin version must be checked against it before the pin moves.
+
+## Amendment, 2026-11-06
+
+- **The ride records in Para's own foreground service, `RideService`**, not the plugin's. The
+  plugin's service was bound to the page, so it died when the app was swiped away, and the ride
+  stopped there. `RideService` is started (not bound) by the contributor's Start, of type
+  `location`, with `stopWithTask="false"` and sticky, so it records on with the app swiped away
+  and comes back if Android kills the process; only Pause, Finish or a refused permission stops it.
+- It takes the fixes from Play Services' `FusedLocationProviderClient`, one a second, writes each
+  straight to `FixLog` and hands it to the page while the page is there (`RidePlugin`'s `rideFix`
+  event). The page keeps its catch-up from the log (`native-fix-catch-up.ts`, `importNativeFixes`).
+- The notification's Pause and Finish stop the service; Resume starts it again while the page is
+  alive and its watch was on, as before. A page gone no longer ends a recording ride.
+- `ParaServiceWatchers.java` and `ParaApplication`'s broadcast listener are gone with the
+  plugin's service, and the npm plugin `@capacitor-community/background-geolocation` is removed
+  (the owner's yes, once the phone test of RideService passed). The app declares the location,
+  foreground service and notification permissions in its own manifest.
+- Google Play asks an app with a location foreground service for a declaration and a short video
+  (`.scratch/contribute-apk/play-declaration.md`); the app is not on the Play Store today.

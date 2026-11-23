@@ -23,6 +23,9 @@ import { createRequire } from 'node:module';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { until } from './lib/harness.mjs';
+import { checkPolicies, watchPolicies } from './lib/policy.mjs';
+import { serveBasemapOverHttps } from './lib/stand-ins.mjs';
 import { OPENFREEMAP_HOST, builtBasemapHost, startOwnTilesStandIn } from './own-tiles-stand-in.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
@@ -33,6 +36,14 @@ let failed = 0;
 const check = (name, ok, detail = '') => {
   if (!ok) failed++;
   console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}${detail ? '  ' + detail : ''}`);
+};
+/** A tile, by its z/x/y address: glyphs are .pbf files and the sprite a .png too. */
+const isTile = (url) => /\/\d+\/\d+\/\d+\.(pbf|png)(\?.*)?$/.test(url);
+/** How many of each outcome, as "200 direct ×4, net::ERR_FAILED ×2". */
+const tally = (outcomes) => {
+  const counts = new Map();
+  for (const o of outcomes) counts.set(o, (counts.get(o) ?? 0) + 1);
+  return [...counts].map(([o, n]) => `${o} ×${n}`).join(', ') || 'none asked';
 };
 
 if (!existsSync(join(root, 'dist', 'sw.js'))) {
@@ -95,7 +106,7 @@ console.log(`preview at ${base}`);
  * Opens a trip as a commuter does, by a tap on its line. A production build
  * keeps its map to itself (no window.__map) and trip links went on
  * 2026-10-03, so the line is found on a screenshot: a pixel in the colour
- * routes rest in (Map/RouteLine/surface-default, #8ec5ff), away from the
+ * routes rest in (Map/RouteLine/surface-default, #c1bfff), away from the
  * screen's edges. A tap there opens a trip, or the route list where routes
  * share the road, whose first row then opens one. The directions it may be,
  * with its name: the row's own when the list was used, else every direction
@@ -121,7 +132,7 @@ async function openSomeTrip(page) {
         for (let x = Math.round(width * 0.1); x < width * 0.9; x += 2) {
           const k = (y * width + x) * 4;
           if (
-            Math.abs(data[k] - 0x8e) + Math.abs(data[k + 1] - 0xc5) + Math.abs(data[k + 2] - 0xff) <
+            Math.abs(data[k] - 0xc1) + Math.abs(data[k + 1] - 0xbf) + Math.abs(data[k + 2] - 0xff) <
             12
           )
             hits.push([x / scale, y / scale]);
@@ -144,7 +155,12 @@ async function openSomeTrip(page) {
   let viaList = null;
   if (!(await trip.count()) && (await row.count())) {
     viaList = await row.first().getAttribute('data-direction');
+    // The list opens at Low, where a tap on a row only raises it: a second tap picks.
     await row.first().tap();
+    await trip
+      .first()
+      .waitFor({ timeout: 2000 })
+      .catch(() => row.first().tap());
     await trip
       .first()
       .waitFor({ timeout: 10000 })
@@ -163,6 +179,15 @@ async function openSomeTrip(page) {
 }
 
 const stopStandIn = isOwnTiles ? await startOwnTilesStandIn(basemapHost) : null;
+// What the pages' content policies flag, both contexts' together. The stand-in's loopback address
+// is a test build's alone: the policies name the hosts the site is deployed with.
+const policyWatch = {
+  into: [],
+  allow: (blocked) => isOwnTiles && blocked.startsWith(basemapHost),
+};
+// Its worker caches the basemap, so the stand-in is a real server rather than routes
+// (.scratch/ci-flakes/issues/04).
+await serveBasemapOverHttps();
 const browser = await chromium.launch();
 const phone = {
   viewport: { width: 390, height: 844 },
@@ -203,11 +228,12 @@ try {
   // ------------------------------------------------- the studio: no worker
   {
     const ctx = await browser.newContext();
+    await watchPolicies(ctx, policyWatch);
     const page = await ctx.newPage();
     await page.goto(`${base}/studio/`, { waitUntil: 'load' });
     // The positive control: the two negatives below mean nothing on a blank page.
     const door = await page
-      .getByText('Sign in to Para Studio')
+      .getByText('Studio sign in')
       .waitFor({ timeout: 15000 })
       .then(
         () => true,
@@ -226,13 +252,44 @@ try {
 
   // ---------------------------------------------- the map: online, then off
   const ctx = await browser.newContext(phone);
+  await watchPolicies(ctx, policyWatch);
+  // How many new workers the browser found, for the update check's detail only: with the basemap
+  // stood in, Chromium finds an extra one after the tap (.scratch/ci-flakes/issues/04).
+  let workersFound = 0;
+  await ctx.addInitScript(() => {
+    const watch = async () => {
+      const registration = await navigator.serviceWorker?.getRegistration();
+      if (!registration || registration.onupdatefound) return;
+      registration.onupdatefound = () => console.log('pwa-test: updatefound');
+    };
+    navigator.serviceWorker?.addEventListener('controllerchange', () => void watch());
+    addEventListener('load', () => void watch());
+  });
   const page = await ctx.newPage();
+  page.on('console', (m) => {
+    if (m.text() === 'pwa-test: updatefound') workersFound++;
+  });
   const errors = [];
   page.on('pageerror', (e) => errors.push(String(e)));
   let supabase = 0;
   page.on('request', (r) => {
     if (/\.supabase\.co/.test(r.url())) supabase++;
   });
+  // What the first visit's tile requests did, and whether the worker answered them, for the day
+  // no tile reaches the cache: the check below then says so. A tile that fails is not asked again
+  // until the map moves, so no wait brings it.
+  const firstVisitTiles = [];
+  const noteTileResponse = (res) => {
+    if (isTile(res.url()))
+      firstVisitTiles.push(
+        `${res.status()} ${res.fromServiceWorker() ? 'through the worker' : 'direct'}`,
+      );
+  };
+  const noteTileFailure = (req) => {
+    if (isTile(req.url())) firstVisitTiles.push(req.failure()?.errorText ?? 'failed');
+  };
+  page.on('response', noteTileResponse);
+  page.on('requestfailed', noteTileFailure);
 
   await page.goto(`${base}/`, { waitUntil: 'load' });
   check(
@@ -296,15 +353,27 @@ try {
   check(`online: the published map's ${routeCount} directions arrive`, online);
   await page.waitForSelector('canvas.maplibregl-canvas', { timeout: 20000 });
   await mapLoad(page);
-  await page.waitForTimeout(4000);
+  // The worker stores what came as each response lands, a tile from the basemap's host as slowly
+  // as that host answers: read the caches until a tile is in, for up to 60 s. OpenFreeMap has taken
+  // longer than 20 s (staging run 42792842300: no tile at 20 s, four in the cache a second later).
+  const readCaches = () =>
+    page.evaluate(async () => {
+      const names = await window.caches.keys();
+      const out = {};
+      for (const n of names)
+        out[n] = (await (await window.caches.open(n)).keys()).map((r) => r.url);
+      return out;
+    });
+  const caches = await until(
+    readCaches,
+    (now) =>
+      Object.entries(now).some(([n, urls]) => n.includes('basemap-tiles') && urls.length > 0),
+    60000,
+  );
+  page.off('response', noteTileResponse);
+  page.off('requestfailed', noteTileFailure);
   check('online: no offline notice', (await page.locator('[data-testid="offline"]').count()) === 0);
 
-  const caches = await page.evaluate(async () => {
-    const names = await window.caches.keys();
-    const out = {};
-    for (const n of names) out[n] = (await (await window.caches.open(n)).keys()).map((r) => r.url);
-    return out;
-  });
   const names = Object.keys(caches);
   const mapFile = names.find((n) => n.includes('map-file'));
   const meta = names.find((n) => n.includes('basemap-meta'));
@@ -331,9 +400,11 @@ try {
         isOwnTiles ? u.startsWith(`${basemapHost}/assets/`) : u.endsWith('/planet'),
       ),
   );
+  const tilesKept = tiles ? caches[tiles].length : 0;
   check(
-    `basemap-tiles holds tiles (${tiles ? caches[tiles].length : 0})`,
-    !!tiles && caches[tiles].length > 0,
+    `basemap-tiles holds tiles (${tilesKept})`,
+    tilesKept > 0,
+    tilesKept > 0 ? '' : `the first visit's tile requests: ${tally(firstVisitTiles)}`,
   );
   check(
     'precache holds no studio chunk',
@@ -374,10 +445,8 @@ try {
   // Now with no network at all: the phone keeps everything it needs.
   await ctx.setOffline(true);
   let tilesFromWorker = 0;
-  // Tiles only, by their z/x/y address: glyphs are .pbf files and the sprite a .png too.
   const countTiles = (res) => {
-    if (/\/\d+\/\d+\/\d+\.(pbf|png)(\?.*)?$/.test(res.url()) && res.fromServiceWorker())
-      tilesFromWorker++;
+    if (isTile(res.url()) && res.fromServiceWorker()) tilesFromWorker++;
   };
   page.on('response', countTiles);
   await page.reload({ waitUntil: 'load' }).catch(() => {});
@@ -405,7 +474,11 @@ try {
     "offline: the map's 'load' comes: the design button up, no failure banner, no \"Loading map…\"",
     loaded,
   );
-  await page.waitForTimeout(2000);
+  await until(
+    async () => tilesFromWorker,
+    (count) => count > 0,
+    20000,
+  );
   page.off('response', countTiles);
   check(`offline: tiles came from the worker's cache (${tilesFromWorker})`, tilesFromWorker > 0);
   check(
@@ -434,10 +507,12 @@ try {
   await ctx.setOffline(false);
   // Back to the bare address, with no card open.
   await page.goto(`${base}/`, { waitUntil: 'load' });
+  // Time for an "Update Para!" that must not come, below.
   await page.waitForTimeout(2000);
+  const offlineNotices = () => page.locator('[data-testid="offline"]').count();
   check(
     'back online: the notice is gone',
-    (await page.locator('[data-testid="offline"]').count()) === 0,
+    (await until(offlineNotices, (n) => n === 0, 20000)) === 0,
   );
   check(
     'no "Update Para!" button on an unchanged build',
@@ -470,8 +545,7 @@ try {
   );
   await ctx.unroute('**/data/index.v5.json', slow);
   await page.reload({ waitUntil: 'load' });
-  await page.waitForTimeout(2000);
-  check('fast again: no notice', (await page.locator('[data-testid="offline"]').count()) === 0);
+  check('fast again: no notice', (await until(offlineNotices, (n) => n === 0, 20000)) === 0);
 
   // A trip opened reads its direction's full line, and the worker keeps it.
   // Opened by a tap, as a commuter opens one: trip links (?r=<id>) went on
@@ -484,16 +558,20 @@ try {
       'no trip opened: no route line found on the screen to tap',
     );
   else {
-    await page.waitForTimeout(2500);
-    const kept = await page.evaluate(async (ids) => {
-      const name = (await window.caches.keys()).find((n) => n.includes('map-lines'));
-      return (
-        !!name &&
-        (await (await window.caches.open(name)).keys()).some((r) =>
-          ids.some((id) => r.url.endsWith(`/data/lines/${id}.json`)),
-        )
-      );
-    }, opened.ids);
+    const kept = await until(
+      () =>
+        page.evaluate(async (ids) => {
+          const name = (await window.caches.keys()).find((n) => n.includes('map-lines'));
+          return (
+            !!name &&
+            (await (await window.caches.open(name)).keys()).some((r) =>
+              ids.some((id) => r.url.endsWith(`/data/lines/${id}.json`)),
+            )
+          );
+        }, opened.ids),
+      (isKept) => isKept,
+      20000,
+    );
     check('an opened trip reads its full line, and the worker keeps it', kept, `"${opened.name}"`);
   }
   await page.goto(`${base}/`, { waitUntil: 'load' });
@@ -566,19 +644,23 @@ try {
         page.waitForEvent('load', { timeout: 15000 }).catch(() => {}),
         page.locator('[data-testid="update"]').click(),
       ]);
-      await page.waitForTimeout(1500);
-      const after = await page.evaluate(async () => {
-        const reg = await navigator.serviceWorker.getRegistration();
-        return {
-          waiting: !!reg?.waiting,
-          controlled: !!navigator.serviceWorker.controller,
-          button: !!document.querySelector('[data-testid="update"]'),
-        };
-      });
+      const after = await until(
+        () =>
+          page.evaluate(async () => {
+            const reg = await navigator.serviceWorker.getRegistration();
+            return {
+              waiting: !!reg?.waiting,
+              controlled: !!navigator.serviceWorker.controller,
+              button: !!document.querySelector('[data-testid="update"]'),
+            };
+          }),
+        (now) => !now.waiting && now.controlled && !now.button,
+        20000,
+      );
       check(
         'tapping Reload brings the new worker in and the button goes',
         !after.waiting && after.controlled && !after.button,
-        JSON.stringify(after),
+        `${JSON.stringify(after)}, ${workersFound} new worker(s) found`,
       );
     }
   } finally {
@@ -588,6 +670,7 @@ try {
   // --------------------------------------------------------- housekeeping
   check('no page errors', errors.length === 0, errors.join(' | '));
   check('no request to the database', supabase === 0);
+  checkPolicies(check, policyWatch.into);
   await ctx.close();
 } finally {
   await browser.close();

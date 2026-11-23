@@ -12,12 +12,16 @@ import {
 
 interface PlaygroundSaveSheetsProps {
   isPlayground: boolean;
+  /** A route's form beside the map while it is drawn (StudioSaveSheets). */
+  isBeside: boolean;
   draw: ReturnType<typeof useDrawing>;
   saved: ReturnType<typeof useSavedRoutes<DirectionRow>>;
   hotspots: ReturnType<typeof useSavedHotspots<HotspotRow>>;
   target: ReturnType<typeof useSaveTarget>;
   saveFlow: ReturnType<typeof useSaveFlow>;
   contribution: ReturnType<typeof useContributionStart>;
+  /** Hotspots that are drafts only, which the sidebar opens as it does approved ones. */
+  draftHotspots: readonly HotspotRow[];
 }
 
 /**
@@ -26,34 +30,36 @@ interface PlaygroundSaveSheetsProps {
  */
 export function PlaygroundSaveSheets({
   isPlayground,
+  isBeside,
   draw,
   saved,
   hotspots,
   target,
   saveFlow,
   contribution,
+  draftHotspots,
 }: PlaygroundSaveSheetsProps) {
-  const { isSaving, setIsSaving, onSaved, onSavedHotspot, onDrafted } = saveFlow;
+  const { isSaving, setIsSaving, onDrafted, onPublished, onUnpublished, onDiscarded } = saveFlow;
 
   return (
     <div inert={!isPlayground} className={isPlayground ? 'contents' : 'hidden'}>
       <StudioSaveSheets
         isSaving={isSaving}
+        isBeside={isBeside}
         draw={draw}
         saved={saved}
         hotspots={hotspots}
         target={target}
-        onSaved={(v) => {
-          void contribution.recordSaved(v.id, draw.controlPoints);
-          onSaved(v);
-        }}
-        onSavedHotspot={(s) => {
-          void contribution.recordSaved(s.id, draw.controlPoints);
-          onSavedHotspot(s);
-        }}
+        draftHotspots={draftHotspots}
         onDrafted={(subjectId) => {
           void contribution.recordSaved(subjectId, draw.controlPoints);
           onDrafted();
+        }}
+        onUnpublished={onUnpublished}
+        onDiscarded={onDiscarded}
+        onPublished={(subjectId) => {
+          void contribution.recordSaved(subjectId, draw.controlPoints);
+          onPublished();
         }}
         onCancel={() => setIsSaving(false)}
       />

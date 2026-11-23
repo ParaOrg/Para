@@ -161,7 +161,7 @@ const REFUSED = [
   'https://3f2a9c1b-para.villaralvorovic2.workers.dev',
   'http://localhost:3000',
   'null',
-  // The old site's addresses, which now redirect to www.para-commute.org.
+  // The old site's addresses: their Workers are deleted, so nothing there may ask for tiles.
   'https://parapo.villaralvorovic2.workers.dev',
   'https://staging-parapo.villaralvorovic2.workers.dev',
   'https://3f2a9c1b-parapo.villaralvorovic2.workers.dev',

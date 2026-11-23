@@ -10,7 +10,8 @@ interface HintuanCardHeaderProps {
 
 /**
  * RouteCardHeader/Variant3: the place's name, ⓘ and ✕; ‹ before the name when a trip's name on
- * the map opened it, as a trip has.
+ * the map opened it, as a trip has. The name is the card's heading, so a screen reader's user
+ * can move to it by heading; it looks as it did.
  */
 export function HintuanCardHeader({ label, onBack, onClose }: HintuanCardHeaderProps) {
   return (
@@ -27,9 +28,9 @@ export function HintuanCardHeader({ label, onBack, onClose }: HintuanCardHeaderP
           onClick={onBack}
         />
       )}
-      <p className="min-w-0 flex-1 truncate font-sn-pro text-2xl/8 font-black text-content-primary">
+      <h2 className="min-w-0 flex-1 truncate font-sn-pro text-2xl/8 font-black text-content-primary">
         {label}
-      </p>
+      </h2>
       <div className="flex shrink-0 items-center gap-2">
         <IconButton
           variant="special"

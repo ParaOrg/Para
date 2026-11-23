@@ -1,0 +1,6 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!-- The test build (a PR's debug APK) sits beside the real app: its own id (.debug) and name. -->
+<resources>
+    <string name="app_name">Para (test)</string>
+    <string name="title_activity_main">Para (test)</string>
+</resources>

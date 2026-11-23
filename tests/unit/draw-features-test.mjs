@@ -10,6 +10,8 @@ import assert from 'node:assert/strict';
 import {
   areaFeatures,
   borrowFeatures,
+  handleFeatures,
+  handlePoints,
   lineFeatures,
   pointFeatures,
   uTurnFeatures,
@@ -90,4 +92,49 @@ test('Extend: nothing while not picking; the line, then its spot once one is pic
     ['LineString', 'Point'],
   );
   assert.deepEqual(spotted.features[1].geometry.coordinates, B);
+});
+
+test("handles: the shown points' own, the one in and the one out; none for a hotspot", () => {
+  const curve = (from, to, c1, c2) => ({
+    snap: 'freehand',
+    coordinates: [from, [121.005, 14.702], to],
+    handles: [c1, c2],
+  });
+  const inB = [121.008, 14.701];
+  const outB = [121.012, 14.699];
+  const segments = [curve(A, B, A, inB), curve(B, C, outB, C)];
+  const points = [A, B, C];
+  const at = (i) => handleFeatures(segments, points, null, [i], null).features;
+  assert.equal(handleFeatures(segments, points, null, [], null).features.length, 0, 'none shown');
+  const onB = at(1);
+  assert.equal(onB.length, 4, 'an arm and a dot each');
+  assert.deepEqual(
+    onB.filter((f) => f.geometry.type === 'Point').map((f) => [f.properties.seg, f.properties.end]),
+    [
+      [0, 1],
+      [1, 0],
+    ],
+  );
+  assert.equal(at(0).length, 0, "A's handle lies on it: a corner, none to show");
+  assert.equal(handleFeatures(segments, points, AREA, [1], null).features.length, 0, 'a hotspot');
+});
+
+test('handles: the last point placed smooth shows the handle it will send, not to be dragged', () => {
+  const out = [121.012, 14.701];
+  const points = [A, B];
+  const features = handleFeatures([seg('freehand', A, B)], points, null, [1], {
+    point: B,
+    out,
+  }).features;
+  const dot = features.find((f) => f.geometry.type === 'Point');
+  assert.deepEqual(dot?.geometry.coordinates, out);
+  assert.equal(dot?.properties.seg, -1);
+});
+
+test('handles show on the last two points always, and on the one selected', () => {
+  assert.deepEqual(handlePoints(null, 0), []);
+  assert.deepEqual(handlePoints(null, 1), [0]);
+  assert.deepEqual(handlePoints(null, 5), [3, 4]);
+  assert.deepEqual(handlePoints(1, 5), [1, 3, 4]);
+  assert.deepEqual(handlePoints(4, 5), [3, 4], 'selected among the last two: once');
 });

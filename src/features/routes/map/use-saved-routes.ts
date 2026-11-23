@@ -2,13 +2,16 @@ import type { MapLibreMap } from 'maplibre-gl';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { ROUTES_FRAMING, framesRoutes, routesBounds } from './framing';
+import { requestLine } from './line-requests';
 import { loadOnce } from './load-once';
 import { perFrame, type PerFrame } from './per-frame';
 import { RESTING_LAYERS, ROUTES_LINE } from './rail-rest-layers';
-import { useRouteTaps } from './route-taps';
 import { litOf, shownOf, showingOf, steady } from './routes-shown';
+import { useRouteTaps } from './use-route-taps';
 import { useSavedRoutesLayers } from './use-saved-routes-layers';
+import type { Listing } from '../model/departures';
 import type { Livery } from '../model/liveries';
+import { passesModeFilter, type ModeFilter } from '../model/mode-filter';
 import { directionLine, type LineStringGeoJSON, type Direction } from '../model/routes';
 
 /**
@@ -103,9 +106,27 @@ export function useSavedRoutes<T extends Direction>(
    */
   const [back, setBack] = useState(false);
   /**
+   * What the list lists: under a tap, every line under the finger, a route
+   * with nothing drawn the way round shown by its other (the owner's call);
+   * behind a trip opened on its own, the routes sharing its end its way round
+   * alone (openList).
+   */
+  const [listing, setListing] = useState<Listing>('every-line');
+  /**
+   * The kind of ride the list narrows to (ModeFilterCard), All again with each new list (the
+   * owner's call). The map lights what passes it, as the cards show; a hotspot's own card does
+   * not follow it.
+   */
+  const [modeFilter, setModeFilter] = useState<ModeFilter>('all');
+  /** A new list under a tap: every kind of ride again. */
+  const listRoutes = useCallback((c: T[]) => {
+    setCandidates(c);
+    setModeFilter('all');
+  }, []);
+  /**
    * The Selected RouteCard, whose directions alone are lit while no trip is
    * open; with none picked, a list lights every direction it shows, so it
-   * never lights nothing (the owner's call). SWITCH, a new list, a map tap,
+   * never lights nothing (the owner's call). PAPUNTA, a new list, a map tap,
    * opening a trip and closing let it go.
    */
   const [highlight, setHighlight] = useState<Highlight | null>(null);
@@ -117,6 +138,11 @@ export function useSavedRoutes<T extends Direction>(
   const [cardShows, setCardShows] = useState<readonly string[] | null>(null);
   const flip = useCallback(() => {
     setBack((b) => !b);
+    setHighlight(null);
+  }, []);
+  /** The filter changed: a Selected card is let go, as PAPUNTA lets it go (the owner's call). */
+  const filterModes = useCallback((filter: ModeFilter) => {
+    setModeFilter(filter);
     setHighlight(null);
   }, []);
 
@@ -143,7 +169,9 @@ export function useSavedRoutes<T extends Direction>(
   const openList = useCallback((directions: readonly T[], way: boolean) => {
     setSelectedId(null);
     setCandidates([...directions]);
+    setModeFilter('all');
     setBack(way);
+    setListing('way-round');
     setHighlight(null);
   }, []);
 
@@ -221,8 +249,15 @@ export function useSavedRoutes<T extends Direction>(
 
   // What is shown and what is lit (routes-shown.ts).
   const showing = useMemo(
-    () => showingOf(candidates, back, directions, cardShows),
-    [candidates, back, directions, cardShows],
+    () =>
+      showingOf(
+        candidates.filter((v) => passesModeFilter(v, modeFilter)),
+        back,
+        listing,
+        directions,
+        cardShows,
+      ),
+    [candidates, modeFilter, back, listing, directions, cardShows],
   );
   // Each kept one array while it holds the same (steady): an unrelated
   // line's arrival lights nothing new, and the chevrons flow on.
@@ -269,16 +304,14 @@ export function useSavedRoutes<T extends Direction>(
   const request = useCallback(
     (id: string) => {
       if (!loadLine || requestedRef.current.has(id) || !drawn.has(id)) return;
-      requestedRef.current.add(id);
-      failedRef.current.delete(id);
-      loadLine(id).then(
-        (line) => {
-          if (line) arrivals.current?.add(id, line);
-        },
-        () => {
-          requestedRef.current.delete(id);
-          failedRef.current.add(id);
-        },
+      // Kept only if the routes have not been loaded again by the time it comes (line-requests.ts).
+      const askedUnder = latestLoad.current;
+      requestLine(
+        id,
+        loadLine,
+        { requested: requestedRef.current, failed: failedRef.current },
+        () => askedUnder === latestLoad.current,
+        (line) => arrivals.current?.add(id, line),
       );
     },
     [loadLine, drawn],
@@ -320,17 +353,22 @@ export function useSavedRoutes<T extends Direction>(
   useEffect(() => {
     shownRef.current = shown;
   }, [shown]);
+  const backRef = useRef(back);
+  useEffect(() => {
+    backRef.current = back;
+  }, [back]);
 
   // ----------------------------------------------------------------- events
 
   useRouteTaps(
     map,
-    { drawing: drawingRef, byId, shown: shownRef },
+    { drawing: drawingRef, byId, shown: shownRef, back: backRef },
     {
       highlight: setHighlight,
       selectedId: setSelectedId,
-      candidates: setCandidates,
+      candidates: listRoutes,
       back: setBack,
+      listing: setListing,
     },
   );
 
@@ -348,7 +386,10 @@ export function useSavedRoutes<T extends Direction>(
     openList,
     candidates,
     back,
+    listing,
     flip,
+    modeFilter,
+    filterModes,
     highlight,
     highlightCard: setHighlight,
     showCard: setCardShows,

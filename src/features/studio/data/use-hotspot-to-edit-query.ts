@@ -1,0 +1,41 @@
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+
+import type { HotspotRow } from '@/features/routes/model/hotspots';
+
+import { draftOf } from './drafts';
+import { hotspotToEdit, type HotspotToEdit } from './hotspot-to-edit';
+import { reviewKeys } from './review-keys';
+
+/**
+ * The hotspot as Edit opens it (hotspot-to-edit.ts), read under the key the
+ * card's lock reads the draft by (use-draft-lock.ts). The draft is parsed in
+ * `select`, so a payload that does not parse is this query's error. Off with
+ * no hotspot.
+ */
+export function useHotspotToEditQuery(hotspot: HotspotRow | null) {
+  const hotspotId = hotspot?.id ?? '';
+  return useQuery({
+    queryKey: reviewKeys.draftOf('hotspot', hotspotId),
+    queryFn: () => draftOf('hotspot', hotspotId),
+    select: (draft) => (hotspot ? hotspotToEdit(hotspot, draft) : null),
+    enabled: hotspot !== null,
+  });
+}
+
+/**
+ * Reads the hotspot as Edit opens it at the moment Edit is pressed, never from
+ * the cache: a draft saved a moment ago may not be in it yet, and opening the
+ * outline from before that save would save it over the draft. The read lands
+ * in the cache, so the save sheet's query (above) starts from it.
+ */
+export function useFetchHotspotToEdit() {
+  const client = useQueryClient();
+  return async (hotspot: HotspotRow): Promise<HotspotToEdit> => {
+    const draft = await client.fetchQuery({
+      queryKey: reviewKeys.draftOf('hotspot', hotspot.id),
+      queryFn: () => draftOf('hotspot', hotspot.id),
+      staleTime: 0,
+    });
+    return hotspotToEdit(hotspot, draft);
+  };
+}

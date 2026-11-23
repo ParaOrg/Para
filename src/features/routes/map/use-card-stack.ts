@@ -1,18 +1,18 @@
 import type { MapLibreMap } from 'maplibre-gl';
-import { useMemo, useState, type RefObject } from 'react';
+import { useState, type RefObject } from 'react';
 
 import type { SheetHeight } from '@/shared/ui/bottom-sheet';
 import type { Snap } from '@/shared/ui/sheet-gesture';
-import { clearOfSheet } from '@/shared/ui/sheet-room';
 
 import { useRideColours } from './direction-arrows';
 import { useLitLineColour } from './lighting';
 import { LIT_LINE, LIVERY_LINE, type LineLook } from './livery-line';
+import { clearOfSheet } from './sheet-room';
 import type { Highlight } from './use-saved-routes';
 import { isChoosing, sharedSnap, tripBack, tripBehindHolds } from '../cards/card-stack';
-import { useTripLivery } from '../cards/trip-card';
-import { routeCards, sharingAnEnd } from '../model/departures';
-import { cardLiveries, type Livery } from '../model/liveries';
+import { useTripLivery } from '../cards/use-trip-livery';
+import { routeCards, sharingAnEnd, type Listing } from '../model/departures';
+import type { Livery } from '../model/liveries';
 import type { Direction } from '../model/routes';
 
 interface Routes<V extends Direction> {
@@ -21,6 +21,8 @@ interface Routes<V extends Direction> {
   candidates: readonly V[];
   /** Which way round the list shows them. */
   back: boolean;
+  /** Whether the list lists every line, or the way round alone. */
+  listing: Listing;
   highlight: Highlight | null;
   select: (id: string | null, opts?: { keepList?: boolean }) => void;
   openList: (directions: readonly V[], way: boolean) => void;
@@ -55,8 +57,8 @@ export function useCardStack<V extends Direction, S extends { id: string }>(
   const choosing = isChoosing(saved.candidates, hotspots.candidates);
 
   // One height for the sheets that stand in for one another: a pick and ‹
-  // keep it; with nothing open it goes back to Middle (sharedSnap).
-  const [snap, setSnap] = useState<Snap>('middle');
+  // keep it; with nothing open it goes back to Low (sharedSnap).
+  const [snap, setSnap] = useState<Snap>('low');
   const anyOpen = !!saved.selected || !!hotspots.selected || choosing;
   const resting = sharedSnap(snap, anyOpen);
   if (resting !== snap) setSnap(resting);
@@ -68,30 +70,19 @@ export function useCardStack<V extends Direction, S extends { id: string }>(
   // The colour a card wore — in the list, or in a hotspot's card — for the
   // trip picked from it. Read only as the trip opens, and only while that
   // card stands behind it: a card of several routes wears one of them
-  // (liveries.ts), so the same trip opened again any other way wears its own
-  // route's kept colour. Once open, the trip keeps what it opened in until it
+  // (its first row's mode's), so the same trip opened again any other way wears its own
+  // route's. Once open, the trip keeps what it opened in until it
   // closes — through SWITCH, and even when a tap on its own line closes the
   // list behind it: a card never changes colour while it is open (the owner's
   // call).
   const [worn, setWorn] = useState<{ id: string; livery: Livery } | null>(null);
   const tripLivery = useTripLivery(saved.selected, worn, choosing || !!hotspots.selected);
-  // A list of one RouteCard: its routes wear that card's colour, picked or
-  // not, a pick only bringing the camera to them (the owner's call). The
-  // colour is the one the card is drawn in (cardLiveries keeps a jeepney
-  // route's draw for the visit, and a train's is its line's, so the card
-  // reads the same). Only while the list is what is up: behind a place's card
-  // it decides nothing (showingOf).
-  const onlyPlace = choosing && !hotspots.selected ? routeCards(saved.candidates, saved.back) : [];
-  // Its rows' routes, the first row's first, as RouteCardStack keys the card
-  // (a card is never empty; the ids are uuids, with no space to split on).
-  const onlyRoutes =
-    onlyPlace.length === 1 ? onlyPlace[0].directions.map((d) => d.v.routeId).join(' ') : null;
-  // Its line, a train's or the ferry: then the line's colour, as the card wears.
-  const onlyLine = onlyPlace.length === 1 ? onlyPlace[0].railway : null;
-  const onlyLivery = useMemo(
-    () => (onlyRoutes ? cardLiveries([onlyRoutes.split(' ')], [onlyLine])[0] : null),
-    [onlyRoutes, onlyLine],
-  );
+  // A list of one RouteCard: its routes wear that card's colour, picked or not, a pick only
+  // bringing the camera to them (the owner's call). Only while the list is what is up: behind a
+  // place's card it decides nothing (showingOf).
+  const onlyPlace =
+    choosing && !hotspots.selected ? routeCards(saved.candidates, saved.back, saved.listing) : [];
+  const onlyLivery = onlyPlace.length === 1 ? onlyPlace[0].livery : null;
   // What is lit wears the colour of the card it answers: the open trip's, the
   // picked RouteCard's, or a list's only card's; a list of several with none
   // picked lights its routes in the selected blue (the owner's call).

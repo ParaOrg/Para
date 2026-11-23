@@ -1,10 +1,11 @@
 import { useEffect, useId, useRef } from 'react';
 
 import { IconButton } from '@/design-system/primitives/icon-button';
+import { useTabLoop } from '@/shared/hooks/use-tab-loop';
 import { CloseIcon } from '@/shared/ui/route-icons';
 
 import type { Basemap } from './basemap';
-import { LocationLabelsRow } from './location-labels-row';
+import { MapStyleRows } from './map-style-rows';
 import type { MapStyleDirection } from './use-map-style-card';
 
 import './map-style.css';
@@ -35,7 +36,7 @@ interface MapStyleProps {
  * The MapStyle card (Figma 4179:10790): "Map Style" and ✕ over a picture of
  * each design, its name under it, the one shown ringed in Brand/surface (the
  * frame draws no ring). Three a row, so the studio's five wrap onto a second.
- * Under them, Location Labels (4474:6524): the basemap's own labels on or off.
+ * Under them, Location Labels and the page's own rows (MapStyleRows).
  * A pick switches the map behind and moves the ring; the card stays until ✕,
  * Escape or a tap outside, so whoever picked sees it.
  *
@@ -81,25 +82,10 @@ export function MapStyle({
   // On each opening, a reopening during the leave too: the keyboard to the
   // design shown, and held in the card. Not while it leaves.
   useEffect(() => {
-    const card = cardRef.current;
-    if (!card || isClosing) return;
-    card.querySelector<HTMLButtonElement>('button[aria-pressed="true"]')?.focus();
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key !== 'Tab') return;
-      const buttons = [...card.querySelectorAll<HTMLButtonElement>('button')];
-      const first = buttons.at(0);
-      const last = buttons.at(-1);
-      if (e.shiftKey && document.activeElement === first) {
-        e.preventDefault();
-        last?.focus();
-      } else if (!e.shiftKey && document.activeElement === last) {
-        e.preventDefault();
-        first?.focus();
-      }
-    };
-    card.addEventListener('keydown', handleKeyDown);
-    return () => card.removeEventListener('keydown', handleKeyDown);
+    if (isClosing) return;
+    cardRef.current?.querySelector<HTMLButtonElement>('button[aria-pressed="true"]')?.focus();
   }, [isClosing]);
+  useTabLoop(cardRef, 'button', !isClosing);
 
   return (
     <div
@@ -118,7 +104,7 @@ export function MapStyle({
       <div className="flex items-center">
         <h2
           id={titleId}
-          className="min-w-0 flex-1 text-lg leading-7 font-extrabold text-content-primary"
+          className="min-w-0 flex-1 text-lg leading-7 font-bold text-content-primary"
         >
           Map Style
         </h2>
@@ -142,7 +128,7 @@ export function MapStyle({
           />
         ))}
       </div>
-      <LocationLabelsRow areShown={areLabelsShown} onToggle={onLabelsToggle} />
+      <MapStyleRows areLabelsShown={areLabelsShown} onLabelsToggle={onLabelsToggle} />
     </div>
   );
 }

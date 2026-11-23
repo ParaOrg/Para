@@ -1,8 +1,4 @@
-import {
-  CARD_COLOURS,
-  CARD_PALE_COLOURS,
-  MAP_COLOURS,
-} from '@/design-system/foundation/map-colours';
+import { MAP_COLOURS, MODE_COLOURS } from '@/design-system/foundation/map-colours';
 
 import type { Livery } from '../model/liveries';
 
@@ -20,40 +16,28 @@ export interface LineLook {
 
 /**
  * A picked RouteCard's routes, and an open trip's line, in the card's own
- * colour (the owner's call): Card/<livery>/surface, the chevrons in
- * Map/RouteLine/Arrow/Rest, white, as the card's own words are on every
- * jeepney livery; and past a picked hintuan the rest of the trip's line in
- * Card/<livery>/surface-pale (the owner's call). A train's line wears its own
- * line's Map/Rail/<line>/surface and surface-pale, and MRT-3's yellow takes
- * …/Arrow/Inverse, near-black, as its card's words are dark. The ferry's is
- * Map/Ferry/surface and surface-pale.
+ * colour (the owner's call): a road mode's MODE_COLOURS, a train's its line's
+ * Map/Rail/<line>/surface, the ferry's Map/Ferry/surface. The chevrons are
+ * Map/RouteLine/Arrow/Rest, white, on the dark lines, and …/Arrow/Inverse,
+ * near-black, on the light ones (UV Express, E-Jeep, MRT-3's yellow), as their
+ * cards' words are. Past a picked hintuan the rest of the trip's line is a
+ * train's surface-pale, and for a road mode Map/RouteLine/surface-default,
+ * the light purple: the modes have no pale of their own. (A road route at
+ * rest wears this pale too, ROUTES_LINE_COLOUR.)
  */
+const REST = MAP_COLOURS['Map/RouteLine/surface-default'];
+const WHITE_ARROW = MAP_COLOURS['Map/RouteLine/Arrow/Rest'];
+const DARK_ARROW = MAP_COLOURS['Map/RouteLine/Arrow/Inverse'];
+
 export const LIVERY_LINE = {
-  orange: {
-    line: CARD_COLOURS['Card/orange/surface'],
-    arrow: MAP_COLOURS['Map/RouteLine/Arrow/Rest'],
-    pale: CARD_PALE_COLOURS['Card/orange/surface-pale'],
+  jeep: { line: MODE_COLOURS['Card/Jeep/Jeep-surface'], arrow: WHITE_ARROW, pale: REST },
+  'uv-express': {
+    line: MODE_COLOURS['Card/UVExpress/UVExpress-surface-border'],
+    arrow: DARK_ARROW,
+    pale: REST,
   },
-  violet: {
-    line: CARD_COLOURS['Card/violet/surface'],
-    arrow: MAP_COLOURS['Map/RouteLine/Arrow/Rest'],
-    pale: CARD_PALE_COLOURS['Card/violet/surface-pale'],
-  },
-  rose: {
-    line: CARD_COLOURS['Card/rose/surface'],
-    arrow: MAP_COLOURS['Map/RouteLine/Arrow/Rest'],
-    pale: CARD_PALE_COLOURS['Card/rose/surface-pale'],
-  },
-  fuchsia: {
-    line: CARD_COLOURS['Card/fuchsia/surface'],
-    arrow: MAP_COLOURS['Map/RouteLine/Arrow/Rest'],
-    pale: CARD_PALE_COLOURS['Card/fuchsia/surface-pale'],
-  },
-  pink: {
-    line: CARD_COLOURS['Card/pink/surface'],
-    arrow: MAP_COLOURS['Map/RouteLine/Arrow/Rest'],
-    pale: CARD_PALE_COLOURS['Card/pink/surface-pale'],
-  },
+  ejeep: { line: MODE_COLOURS['Card/Ejeep/Ejeep-surface-border'], arrow: DARK_ARROW, pale: REST },
+  bus: { line: MODE_COLOURS['Card/Bus/Bus-surface'], arrow: WHITE_ARROW, pale: REST },
   'light-rail-way-one': {
     line: MAP_COLOURS['Map/Rail/LightRailWayOne/surface'],
     arrow: MAP_COLOURS['Map/RouteLine/Arrow/Rest'],
@@ -97,11 +81,10 @@ type LineColour = Livery | 'selected';
 
 /** A label's fill in the line's colour (the owner's call). */
 export const LINE_SURFACE = {
-  orange: 'bg-card-orange-surface',
-  violet: 'bg-card-violet-surface',
-  rose: 'bg-card-rose-surface',
-  fuchsia: 'bg-card-fuchsia-surface',
-  pink: 'bg-card-pink-surface',
+  jeep: 'bg-card-jeep-surface',
+  'uv-express': 'bg-card-uv-express-surface-border',
+  ejeep: 'bg-card-ejeep-surface-border',
+  bus: 'bg-card-bus-surface',
   'light-rail-way-one': 'bg-map-rail-light-rail-way-one-surface',
   'light-rail-way-two': 'bg-map-rail-light-rail-way-two-surface',
   'metro-rail-way-three': 'bg-map-rail-metro-rail-way-three-surface',
@@ -111,11 +94,10 @@ export const LINE_SURFACE = {
 
 /** The pointer under an end's label, in the line's colour (RouteLineEndingsLabel). */
 export const LINE_FILL = {
-  orange: 'fill-card-orange-surface',
-  violet: 'fill-card-violet-surface',
-  rose: 'fill-card-rose-surface',
-  fuchsia: 'fill-card-fuchsia-surface',
-  pink: 'fill-card-pink-surface',
+  jeep: 'fill-card-jeep-surface',
+  'uv-express': 'fill-card-uv-express-surface-border',
+  ejeep: 'fill-card-ejeep-surface-border',
+  bus: 'fill-card-bus-surface',
   'light-rail-way-one': 'fill-map-rail-light-rail-way-one-surface',
   'light-rail-way-two': 'fill-map-rail-light-rail-way-two-surface',
   'metro-rail-way-three': 'fill-map-rail-metro-rail-way-three-surface',
@@ -124,16 +106,15 @@ export const LINE_FILL = {
 } satisfies Record<LineColour, string>;
 
 /**
- * A label's own words and icons, on its line-coloured fill: white, as the
- * chevrons are; near-black (Map/RouteLine/Arrow/Inverse) on MRT-3's yellow,
- * as its chevrons and its card's words are.
+ * A label's own words and icons, on its line-coloured fill: a mode's
+ * on-surface, as its card's words are; white on a train's, and near-black
+ * (Map/RouteLine/Arrow/Inverse) on MRT-3's yellow, as its chevrons are.
  */
 export const LINE_WORDS = {
-  orange: 'text-content-inverse',
-  violet: 'text-content-inverse',
-  rose: 'text-content-inverse',
-  fuchsia: 'text-content-inverse',
-  pink: 'text-content-inverse',
+  jeep: 'text-card-jeep-on-surface',
+  'uv-express': 'text-card-uv-express-on-surface',
+  ejeep: 'text-card-ejeep-on-surface',
+  bus: 'text-card-bus-on-surface',
   'light-rail-way-one': 'text-content-inverse',
   'light-rail-way-two': 'text-content-inverse',
   'metro-rail-way-three': 'text-map-route-line-arrow-inverse',

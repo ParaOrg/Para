@@ -16,7 +16,7 @@ const meta = {
       </div>
     ),
   ],
-  args: { name: 'Label', livery: 'rose' },
+  args: { name: 'Label', livery: 'uv-express' },
 } satisfies Meta<typeof HintuanLabel>;
 
 export default meta;
@@ -175,11 +175,10 @@ export const LongName: Story = {
 };
 
 /** A trip in each card colour. */
-export const OrangeEnd: Story = { args: { variant: 'hintuan-end', livery: 'orange' } };
-export const Orange: Story = { args: { variant: 'hintuan', livery: 'orange' } };
-export const Violet: Story = { args: { variant: 'hintuan-end', livery: 'violet' } };
-export const Fuchsia: Story = { args: { variant: 'hintuan', livery: 'fuchsia' } };
-export const Pink: Story = { args: { variant: 'hintuan-end', livery: 'pink' } };
+export const BusEnd: Story = { args: { variant: 'hintuan-end', livery: 'bus' } };
+export const Bus: Story = { args: { variant: 'hintuan', livery: 'bus' } };
+export const Jeep: Story = { args: { variant: 'hintuan-end', livery: 'jeep' } };
+export const Ejeep: Story = { args: { variant: 'hintuan', livery: 'ejeep' } };
 export const LightRailWayOne: Story = {
   args: { variant: 'hintuan-end', livery: 'light-rail-way-one' },
 };
@@ -199,7 +198,7 @@ export const MetroRailWayThreeStart: Story = {
 export const MetroRailWayThreeCodeSign: Story = {
   args: { variant: 'hintuan-end', codeSign: 'YL05', livery: 'metro-rail-way-three' },
 };
-export const OrangeStart: Story = { args: { variant: 'hintuan-start', livery: 'orange' } };
+export const BusStart: Story = { args: { variant: 'hintuan-start', livery: 'bus' } };
 
 /** Along an MRT-3 trip: the dot ringed in its yellow, the name near-black on it. */
 export const MetroRailWayThreeHintuan: Story = {

@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "cell": "2412-283",
+  "attribution": "© OpenStreetMap contributors",
+  "establishments": [
+    ["n13895150910","pharmacy",120.62895,14.16537,"Care Marc"],
+    ["n1295109592","convenience",120.62341,14.19215,"Milo Store"],
+    ["n2723615457","convenience",120.60247,14.19324,"Grab N Go"],
+    ["n11774798531","convenience",120.62874,14.16566,"Dali"],
+    ["n2723615458","restaurant",120.60228,14.19336,"Lagoa"],
+    ["n2723615459","restaurant",120.60219,14.1922,"Pico Restaurant and Bar"],
+    ["n7048802568","restaurant",120.62022,14.18953,"Pearl Cuisine"],
+    ["n4588406692","fuel",120.62885,14.1654,"Mt. Pico"]
+  ]
+}

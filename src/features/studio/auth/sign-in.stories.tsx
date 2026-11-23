@@ -3,21 +3,29 @@ import { expect, fn, userEvent, within } from 'storybook/test';
 
 import { SignIn } from './sign-in';
 
+/**
+ * The open dialog, to query inside. Found, not got: it opens in an effect, which a built
+ * Storybook runs only after the play has begun (install-prompt.stories.tsx).
+ */
+async function openDialog(canvasElement: HTMLElement) {
+  return within(await within(canvasElement.ownerDocument.body).findByRole('dialog'));
+}
+
+/** Escape as the browser answers it: a scripted keypress is untrusted, so the play sends `cancel`. */
+function pressEscape(canvasElement: HTMLElement) {
+  canvasElement.ownerDocument
+    .querySelector('dialog[open]')
+    ?.dispatchEvent(new Event('cancel', { cancelable: true }));
+}
+
 const meta = {
   title: 'Features/Studio/SignIn',
   component: SignIn,
-  // The panel dims the map it sits over, so give it a map-sized box. The
-  // `phone` parameter gives it a handset's width, as card-actions.stories.tsx
-  // does.
+  // A modal dialog sits in the top layer, against the viewport, over a map-coloured page. A
+  // Phone story sets the viewport (as InstallPrompt's do), not a box.
   decorators: [
-    (Story, ctx) => (
-      <div
-        className={
-          ctx.parameters.phone
-            ? 'relative h-160 w-[390px] bg-surface-quaternary'
-            : 'relative h-160 bg-surface-quaternary'
-        }
-      >
+    (Story) => (
+      <div className="h-160 bg-surface-quaternary">
         <Story />
       </div>
     ),
@@ -33,11 +41,15 @@ type Story = StoryObj<typeof meta>;
  * is a link to the public map, not Cancel.
  */
 export const FrontDoor: Story = {
+  args: { title: 'Studio sign in' },
   play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await expect(canvas.getByRole('heading', { name: 'Sign in to save' })).toBeVisible();
+    const canvas = await openDialog(canvasElement);
+    await expect(canvas.getByRole('heading', { name: 'Studio sign in' })).toBeVisible();
     await expect(canvas.getByRole('link', { name: 'Public map' })).toHaveAttribute('href', '/');
     await expect(canvas.queryByRole('button', { name: 'Cancel' })).toBeNull();
+    // Nothing behind it to go back to: Escape leaves it open.
+    pressEscape(canvasElement);
+    await expect(canvas.getByRole('heading', { name: 'Studio sign in' })).toBeVisible();
   },
 };
 
@@ -45,38 +57,65 @@ export const FrontDoor: Story = {
 export const AsADialog: Story = {
   args: { onDismiss: fn() },
   play: async ({ canvasElement, args }) => {
-    await userEvent.click(within(canvasElement).getByRole('button', { name: 'Cancel' }));
+    await userEvent.click(
+      (await openDialog(canvasElement)).getByRole('button', { name: 'Cancel' }),
+    );
     await expect(args.onDismiss).toHaveBeenCalledOnce();
   },
 };
 
-/** Opened with a notice, such as why a reset link was refused: it shows as the error line. */
+/** Escape closes it, as Cancel does. */
+export const EscapeCloses: Story = {
+  args: { onDismiss: fn() },
+  play: async ({ canvasElement, args }) => {
+    await openDialog(canvasElement);
+    pressEscape(canvasElement);
+    await expect(args.onDismiss).toHaveBeenCalledOnce();
+  },
+};
+
+/**
+ * Opened with a notice, such as why a reset link was refused: it shows where an error would,
+ * under Password, with neither field marked wrong; it goes once the person tries again.
+ */
 export const WithANotice: Story = {
   args: {
     notice: 'That reset link has expired or was already used. Ask for a new one below.',
   },
-};
-
-/** Forgot password?: the same panel asks only for the email it will send the link to. */
-export const ForgotPassword: Story = {
   play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await userEvent.click(canvas.getByRole('button', { name: 'Forgot password?' }));
-    await expect(canvas.getByRole('heading', { name: 'Reset your password' })).toBeVisible();
-    await expect(canvas.queryByPlaceholderText('Password')).toBeNull();
-    await expect(canvas.getByRole('button', { name: 'Send reset link' })).toBeEnabled();
+    const canvas = await openDialog(canvasElement);
+    await expect(canvas.getByRole('textbox', { name: 'Email' })).not.toHaveAttribute(
+      'aria-invalid',
+    );
+    const password = canvas.getByLabelText('Password', { exact: true });
+    await expect(password).not.toHaveAttribute('aria-invalid');
+    await expect(password).toHaveAccessibleDescription(
+      'That reset link has expired or was already used. Ask for a new one below.',
+    );
   },
 };
 
-/** Remembered it?: back to signing in, the email still typed. */
+/** Forgot password: the same card asks only for the email it will send the link to. */
+export const ForgotPassword: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = await openDialog(canvasElement);
+    await userEvent.click(canvas.getByRole('button', { name: 'Forgot password' }));
+    await expect(canvas.getByRole('heading', { name: 'Forgot password' })).toBeVisible();
+    await expect(canvas.queryByLabelText('Password', { exact: true })).toBeNull();
+    // Visible, not enabled: a built Storybook carries the site key, so it waits for the check.
+    await expect(canvas.getByRole('button', { name: 'Send reset link' })).toBeVisible();
+  },
+};
+
+/** Sign in, from Forgot password: back to signing in, the email still typed. */
 export const RememberedIt: Story = {
   play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await userEvent.type(canvas.getByPlaceholderText('you@example.com'), 'owner@example.com');
-    await userEvent.click(canvas.getByRole('button', { name: 'Forgot password?' }));
+    const canvas = await openDialog(canvasElement);
+    await userEvent.type(canvas.getByRole('textbox', { name: 'Email' }), 'owner@example.com');
+    await userEvent.click(canvas.getByRole('button', { name: 'Forgot password' }));
     await userEvent.click(canvas.getByRole('button', { name: 'Sign in' }));
     await expect(canvas.getByRole('heading', { name: 'Sign in to save' })).toBeVisible();
-    await expect(canvas.getByPlaceholderText('you@example.com')).toHaveValue('owner@example.com');
+    await expect(canvas.getByRole('textbox', { name: 'Email' })).toHaveValue('owner@example.com');
   },
 };
 
@@ -92,4 +131,7 @@ export const LongContent: Story = {
 };
 
 /** At phone width, the front door as a phone first opens the studio. */
-export const Phone: Story = { parameters: { phone: true } };
+export const Phone: Story = {
+  args: { title: 'Studio sign in' },
+  globals: { viewport: { value: 'mobile1', isRotated: false } },
+};

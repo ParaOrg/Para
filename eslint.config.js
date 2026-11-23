@@ -81,6 +81,9 @@ const BROWSER_GLOBALS = [
 ];
 const readonly = (names) => Object.fromEntries(names.map((name) => [name, 'readonly']));
 
+const CORE_MESSAGE =
+  'routes/model, geo and published stay free of React, MapLibre and browser globals (docs/adr/0008-the-commuter-app-is-react-native-expo.md).';
+
 const SOURCE = [
   'src/**/*.{ts,tsx}',
   '.storybook/**/*.{ts,tsx}',
@@ -89,6 +92,63 @@ const SOURCE = [
   'capacitor.config.ts',
   'scripts/**/*.ts',
   'workers/tiles/src/**/*.ts',
+  'workers/site/src/**/*.ts',
+  'supabase/functions/**/*.ts',
+];
+
+// The MapLibre Map methods the suites call that return the map itself (an esquery regex): see the
+// tests/e2e block below.
+const MAP_RETURNS_ITSELF =
+  '/^(jumpTo|easeTo|flyTo|panTo|panBy|zoomTo|zoomIn|zoomOut|setZoom|setCenter|setPitch|setBearing|rotateTo|resetNorth|fitBounds|fitScreenCoordinates|resize|stop|setPadding|setMaxBounds|setMinZoom|setMaxZoom|setPaintProperty|setLayoutProperty|setFilter|setStyle|addLayer|removeLayer|moveLayer|addSource|removeSource|setFeatureState|removeFeatureState|addImage|removeImage|triggerRepaint)$/';
+
+// No `enum` (.claude/CLAUDE.md, "Other naming rules"): an enum is code at run time and its own
+// kind of type, where a union of literals or an `as const` object is neither.
+const NO_ENUM = {
+  selector: 'TSEnumDeclaration',
+  message:
+    "Don't use `enum`. Use a union type or an `as const` object (.claude/CLAUDE.md, Naming conventions).",
+};
+
+// `import.meta.env` is read in the env modules alone (.claude/CLAUDE.md, "Validation with Zod"),
+// so every variable a page depends on is named, and checked, in one place per page. MODE, DEV and
+// PROD are Vite's own and may be read anywhere, for a branch the build works out.
+const ENV_MODULES = [
+  'src/shared/config/env.ts',
+  'src/features/studio/data/env.ts',
+  'src/features/contribute/api/env.ts',
+  'src/features/contribute/api/app-update-env.ts',
+];
+const ENV_MESSAGE =
+  "Read import.meta.env in an env module (src/shared/config/env.ts, or the feature's own env.ts) and import the value from there. MODE, DEV and PROD may be read anywhere.";
+const ENV_ONLY_IN_ENV_MODULES = [
+  {
+    // import.meta.env.VITE_X
+    selector:
+      "MemberExpression[object.type='MemberExpression'][object.object.type='MetaProperty'][object.property.name='env'][property.name!=/^(MODE|DEV|PROD)$/]",
+    message: ENV_MESSAGE,
+  },
+  {
+    // import.meta.env handed on whole: parse(import.meta.env), const { VITE_X } = import.meta.env
+    selector:
+      ":not(MemberExpression) > MemberExpression[object.type='MetaProperty'][property.name='env']",
+    message: ENV_MESSAGE,
+  },
+];
+
+// React's plain `lazy` keeps a failed fetch for good, and under only the page's error boundary one
+// missed chunk turns the whole page into the error screen. Lazy parts go through retryingLazy
+// (src/shared/lib/retrying-lazy.tsx), which draws nothing and asks again.
+const PLAIN_LAZY_MESSAGE =
+  'Use retryingLazy from @/shared/lib/retrying-lazy: a plain React.lazy stays failed after one missed fetch.';
+const NO_PLAIN_LAZY = [
+  {
+    selector: "ImportDeclaration[source.value='react'] > ImportSpecifier[imported.name='lazy']",
+    message: PLAIN_LAZY_MESSAGE,
+  },
+  {
+    selector: "MemberExpression[object.name='React'][property.name='lazy']",
+    message: PLAIN_LAZY_MESSAGE,
+  },
 ];
 
 export default defineConfig([
@@ -101,6 +161,8 @@ export default defineConfig([
     'public/',
     '.vite/',
     '.scratch/',
+    // Other sessions' worktrees on a person's machine: each is linted from its own root.
+    '.claude/worktrees/',
     // Generated; see the header of the file.
     'src/shared/types/database.types.ts',
   ]),
@@ -143,6 +205,13 @@ export default defineConfig([
         'error',
         { fixStyle: 'separate-type-imports' },
       ],
+      // No `as` to quiet the compiler (.claude/CLAUDE.md, "TypeScript"); `as const` is not one
+      // and passes. The few kept carry a single-line disable whose reason names their ticket
+      // (.scratch/type-assertions/issues/).
+      '@typescript-eslint/consistent-type-assertions': ['error', { assertionStyle: 'never' }],
+      // No `enum`, the build's variables read only in the env modules, and no plain `lazy`
+      // (all above).
+      'no-restricted-syntax': ['error', NO_ENUM, ...ENV_ONLY_IN_ENV_MODULES, ...NO_PLAIN_LAZY],
 
       // Imports: four groups, blank lines between, alphabetical within.
       // `tsc` already proves every import resolves, so the resolver rule is off
@@ -365,6 +434,72 @@ export default defineConfig([
   },
 
   {
+    // The shared core stays plain (ADR 0008): the native commuter app imports these three folders,
+    // so no React, MapLibre or browser global. A flat-config rule replaces the earlier block's
+    // option for the same files, so the general patterns are repeated here. `fetch` stays allowed
+    // because published/'s readers fetch the map files, and React Native has fetch too.
+    // shared/utils/geo.ts is in it too: the three folders import it, so the app does.
+    files: ['src/features/routes/{model,geo,published}/**/*.ts', 'src/shared/utils/geo.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            { name: 'react', message: CORE_MESSAGE },
+            { name: 'react-dom', message: CORE_MESSAGE },
+            { name: 'maplibre-gl', message: CORE_MESSAGE },
+          ],
+          patterns: [
+            {
+              group: [
+                '@/features/*/*',
+                '!@/features/*/index',
+                '!@/features/routes/*',
+                '!@/features/routes/*/*',
+              ],
+              message:
+                'Import a feature through its index.ts, never its inner files (routes: through its concern folders).',
+            },
+            {
+              group: ['@/app/*', '@/pages/*'],
+              message:
+                'Nothing imports from app/ or pages/; imports flow app → pages → features → shared.',
+            },
+            {
+              group: [
+                'react/*',
+                'react-dom/*',
+                '@maplibre/*',
+                '@tanstack/*',
+                '@supabase/*',
+                '**/*.tsx',
+                '**/map',
+                '**/map/*',
+                '**/cards',
+                '**/cards/*',
+              ],
+              message: CORE_MESSAGE,
+            },
+          ],
+        },
+      ],
+      'no-restricted-globals': [
+        'error',
+        ...[
+          'window',
+          'document',
+          'navigator',
+          'localStorage',
+          'sessionStorage',
+          'indexedDB',
+          'caches',
+          'location',
+        ].map((name) => ({ name, message: CORE_MESSAGE })),
+      ],
+    },
+  },
+
+  {
     // Storybook metas and config files are the only allowed default exports.
     files: [
       'src/**/*.stories.tsx',
@@ -375,10 +510,26 @@ export default defineConfig([
       'eslint.config.js',
       // The Workers runtime requires a default export.
       'workers/tiles/src/index.ts',
+      'workers/site/src/index.ts',
     ],
     rules: {
       'import-x/no-default-export': 'off',
     },
+  },
+
+  {
+    // Plain `lazy` is allowed in two places. shared/lib holds retryingLazy itself. The contributor
+    // page draws its screens through React.lazy on purpose: a screen whose fetch failed shows
+    // "Try again", which makes fresh ones (features/contribute/lazy-screens.ts says why a
+    // retrying one would never stop there).
+    files: ['src/shared/lib/**', 'src/features/contribute/**'],
+    rules: { 'no-restricted-syntax': ['error', NO_ENUM, ...ENV_ONLY_IN_ENV_MODULES] },
+  },
+  {
+    // The env modules are where import.meta.env is read. After the block above, so the
+    // contributor page's two env modules get this one.
+    files: ENV_MODULES,
+    rules: { 'no-restricted-syntax': ['error', NO_ENUM, ...NO_PLAIN_LAZY] },
   },
 
   {
@@ -407,5 +558,25 @@ export default defineConfig([
       'tests/e2e/**/*.mjs',
     ],
     languageOptions: { globals: { ...readonly(NODE_GLOBALS), ...readonly(BROWSER_GLOBALS) } },
+  },
+  {
+    // A function handed to page.evaluate returns its value to Node, and these MapLibre methods
+    // return the map itself: Playwright then copies the whole map across, 1 to 4 s a call
+    // (commuter-test's hotspot loop spent about 9 minutes of a CI run on it). Call them as a
+    // statement inside braces.
+    files: ['tests/e2e/**/*.mjs'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        ...[
+          'ArrowFunctionExpression > CallExpression.body',
+          'ReturnStatement > CallExpression.argument',
+        ].map((returned) => ({
+          selector: `${returned}[callee.object.property.name='__map'][callee.property.name=${MAP_RETURNS_ITSELF}]`,
+          message:
+            'This returns the MapLibre map to Node, which Playwright copies at length. Call it inside braces so nothing is returned.',
+        })),
+      ],
+    },
   },
 ]);

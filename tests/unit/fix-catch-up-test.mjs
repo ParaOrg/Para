@@ -42,32 +42,52 @@ test('the first read asks for the whole log', async () => {
   assert.deepEqual(batches, [[1000, 2000]]);
 });
 
-test('a live fix after a silence reads only the fixes after the last one handed on', async () => {
-  const slept = [fix(10_000), fix(11_000), fix(12_000), fix(13_000)];
-  const log = fakeLog([fix(1000), fix(2000), ...slept]);
-  const { batches, onFixes } = recorder();
-  const { handleLive } = createFixCatchUp(log.readAfter, onFixes);
-  handleLive(fix(1000));
-  handleLive(fix(2000));
-  // The page slept: the next live fix is far past the last, so the log fills the gap first.
-  handleLive(fix(2000 + GAP_MS + 12_000));
-  log.answer();
-  await settle();
-  assert.deepEqual(log.reads, [2000]);
-  assert.deepEqual(batches, [[1000], [2000], [10_000, 11_000, 12_000, 13_000, 19_000]]);
-});
-
-test('live fixes during a read wait and go out after the log, and a read is not doubled', async () => {
+test('a live fix before the first read waits for it: the fixes logged before it are not skipped', async () => {
+  // The service kept 1000 and 2000 between the page's opening import and the watch's start.
   const log = fakeLog([fix(1000), fix(2000), fix(3000)]);
   const { batches, onFixes } = recorder();
   const { readLog, handleLive } = createFixCatchUp(log.readAfter, onFixes);
-  handleLive(fix(1000));
+  handleLive(fix(3000));
+  readLog();
+  log.answer();
+  await settle();
+  assert.deepEqual(log.reads, [null]);
+  assert.deepEqual(batches, [[1000, 2000, 3000]]);
+});
+
+test('a live fix after a silence reads only the fixes after the last one handed on', async () => {
+  const logged = [fix(1000), fix(2000)];
+  const log = fakeLog(logged);
+  const { batches, onFixes } = recorder();
+  const { readLog, handleLive } = createFixCatchUp(log.readAfter, onFixes);
+  readLog();
+  log.answer();
+  await settle();
+  handleLive(fix(3000));
+  // The page slept: the next live fix is far past the last, so the log fills the gap first.
+  logged.push(fix(10_000), fix(11_000), fix(12_000), fix(13_000));
+  handleLive(fix(3000 + GAP_MS + 12_000));
+  log.answer();
+  await settle();
+  assert.deepEqual(log.reads, [null, 3000]);
+  assert.deepEqual(batches, [[1000, 2000], [3000], [10_000, 11_000, 12_000, 13_000, 20_000]]);
+});
+
+test('live fixes during a read wait and go out after the log, and a read is not doubled', async () => {
+  const logged = [fix(1000)];
+  const log = fakeLog(logged);
+  const { batches, onFixes } = recorder();
+  const { readLog, handleLive } = createFixCatchUp(log.readAfter, onFixes);
+  readLog();
+  log.answer();
+  await settle();
+  logged.push(fix(2000), fix(3000));
   readLog();
   handleLive(fix(4000));
   readLog();
   log.answer();
   await settle();
-  assert.deepEqual(log.reads, [1000]);
+  assert.deepEqual(log.reads, [null, 1000]);
   assert.deepEqual(batches, [[1000], [2000, 3000, 4000]]);
 });
 
@@ -91,6 +111,7 @@ test('a log that cannot be read still lets the waiting live fixes through', asyn
   console.error = () => undefined;
   try {
     handleLive(fix(1000));
+    await settle();
     handleLive(fix(1000 + GAP_MS + 1000));
     await settle();
   } finally {

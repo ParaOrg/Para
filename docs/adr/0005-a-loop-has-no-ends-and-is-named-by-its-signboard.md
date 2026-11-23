@@ -39,3 +39,12 @@ glossary.
   until passes get numbers (PLAN.md, M8). A place of two boxes the line
   passes at different times can be two rows; the ride cuts both at the
   place's last pass.
+
+## Amendment 2026-11-05: the Ikot name field
+
+The studio stops asking for a signboard on any route: an uploaded signboard
+picture will stand for it, in a design to come. A loop is still named by the
+words its jeeps are called by, now typed in a field labelled **Ikot name**,
+stored where the signboard was, so existing loops keep their names and two
+loops on the same streets still tell themselves apart. The decision above
+stands.

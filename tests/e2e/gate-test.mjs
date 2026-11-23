@@ -22,12 +22,12 @@ page.on('pageerror', (e) => errors.push(String(e)));
 // 1. Signed out, no bypass: the door and nothing else.
 await page.goto(`${BASE}/studio/`, { waitUntil: 'load' });
 await page
-  .getByText('Sign in to Para Studio')
+  .getByText('Studio sign in')
   .waitFor({ timeout: 15000 })
   .catch(() => {});
 check(
   'signed-out /studio/ shows the sign-in door',
-  (await page.getByText('Sign in to Para Studio').count()) === 1,
+  (await page.getByText('Studio sign in').count()) === 1,
 );
 check(
   '  no + New button',
@@ -43,15 +43,15 @@ check(
   '  the page asks search engines to stay away',
   (await page.locator('meta[name="robots"]').getAttribute('content')) === 'noindex, nofollow',
 );
-await page.getByRole('button', { name: 'Forgot password?' }).click();
+await page.getByRole('button', { name: 'Forgot password' }).click();
 check(
-  '  Forgot password? opens the reset form',
-  (await page.getByText('Reset your password').count()) === 1,
+  '  Forgot password opens the reset form',
+  (await page.getByRole('heading', { name: 'Forgot password' }).count()) === 1,
 );
 await page.getByRole('button', { name: 'Sign in', exact: true }).click();
 check(
   '  and "Sign in" comes back to the door',
-  (await page.getByText('Sign in to Para Studio').count()) === 1,
+  (await page.getByText('Studio sign in').count()) === 1,
 );
 
 // 2. ?e2e=1, development only: the tools, and Done still asks for sign-in.
@@ -83,7 +83,7 @@ check(
     (await page.getByText(/Save this terminal/).count()) === 0,
 );
 await page.getByRole('button', { name: 'Cancel' }).click();
-await page.getByRole('button', { name: '✕' }).click();
+await page.getByRole('button', { name: 'Discard this hotspot' }).click();
 
 // 3. An auth result arriving at / goes to /studio/ untouched.
 await page.goto(`${BASE}/?type=recovery&probe=1#frag=2`, { waitUntil: 'load' });

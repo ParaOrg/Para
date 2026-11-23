@@ -1,4 +1,4 @@
-import { canUpload } from '../api/contribute-client';
+import { canUpload } from '../api/contribute-config';
 import { useAccountQuery } from '../api/use-account-query';
 import { useClaimRetry } from '../api/use-claim-retry';
 

@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { expect, fn, userEvent, within } from 'storybook/test';
+import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
 import { NewPlaceForm } from './new-place-form';
 
@@ -31,7 +31,8 @@ type Story = StoryObj<typeof meta>;
 export const Head: Story = {
   play: async ({ args, canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(canvas.getByLabelText(/Ground name/)).toHaveFocus();
+    // The name takes the focus once the form has opened, a frame after it shows.
+    await waitFor(() => expect(canvas.getByLabelText(/Ground name/)).toHaveFocus());
     await expect(canvas.getByLabelText('Terminal')).toBeChecked();
     await userEvent.keyboard('{Escape}');
     await expect(args.onCancel).toHaveBeenCalledOnce();

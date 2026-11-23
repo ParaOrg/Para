@@ -4,6 +4,10 @@ import { createRoot } from 'react-dom/client';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import '@/styles/global.css';
 import { listenForInstallOffer, registerServiceWorker } from '@/features/published-map';
+import { cacheStorageMapFiles } from '@/features/routes/map/map-file-store';
+import { setMapFileStore } from '@/features/routes/published/fetch-index';
+import { ErrorBoundary } from '@/shared/ui/error-boundary';
+import { PageErrorScreen } from '@/shared/ui/page-error-screen';
 
 import { PublicMapApp } from './public-map-app.tsx';
 
@@ -34,6 +38,9 @@ function studioAddressForAuthResult(): string | null {
   return carriesAuth(query) || carriesAuth(fragment) ? `/studio/${search}${hash}` : null;
 }
 
+/** The line under the error screen's heading: a stand-in until the owner writes it. */
+const PAGE_ERROR_DESCRIPTION = 'Check your signal, then tap Try again.';
+
 const forwardTo = studioAddressForAuthResult();
 
 if (forwardTo) {
@@ -43,12 +50,16 @@ if (forwardTo) {
   // (src/features/routes/published/map-file.ts) and never talk to the database. That keeps
   // supabase-js out of this page's bundle, which scripts/checks/check-build.mjs proves.
   registerServiceWorker();
+  // With no signal, the map file the worker kept from an earlier visit (fetch-index.ts).
+  setMapFileStore(cacheStorageMapFiles);
   listenForInstallOffer();
   const root = document.getElementById('root');
   if (!root) throw new Error('index.html has no #root to draw the map into');
   createRoot(root).render(
     <StrictMode>
-      <PublicMapApp />
+      <ErrorBoundary fallback={<PageErrorScreen description={PAGE_ERROR_DESCRIPTION} />}>
+        <PublicMapApp />
+      </ErrorBoundary>
     </StrictMode>,
   );
 }

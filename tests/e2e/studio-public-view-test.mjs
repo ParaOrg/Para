@@ -1,6 +1,6 @@
-// The studio's Public map: /studio/?e2e=1 with VITE_STUDIO_DRAFTS=1.
+// The studio's Public map: /studio/?e2e=1.
 //
-//   VITE_STUDIO_DRAFTS=1 npm run dev           (in another terminal)
+//   npm run dev                                (in another terminal)
 //   node tests/e2e/studio-public-view-test.mjs
 //
 // For the same published index (public/data/index.v5.json) the studio's Public

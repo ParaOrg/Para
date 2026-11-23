@@ -1,0 +1,38 @@
+{
+  "about": "Which area of Para each folder belongs to, by its path's start; the first match wins. A pull request whose files fall in more than one area gets a warning in CI (scripts/checks/pr-areas.mjs): one area per pull request keeps reviews small. Files in no area (docs, tests, scripts, workflows) are not counted.",
+  "areas": {
+    "contributor APK": [
+      "android/",
+      "scripts/apk/",
+      "scripts/android/",
+      "capacitor.config.ts",
+      "vite.apk.config.ts",
+      ".env.apk",
+      ".github/workflows/contributor-app.yml",
+      ".github/actions/prepare-app-build/",
+      ".github/actions/prepare-emulator/"
+    ],
+    "contributor": ["src/app/contribute/", "src/features/contribute/", "contribute/"],
+    "studio": ["src/app/studio/", "src/features/studio/", "studio/"],
+    "commuter": [
+      "src/app/public-map/",
+      "src/features/published-map/",
+      "src/features/locator/",
+      "public/",
+      "index.html",
+      "workers/"
+    ],
+    "shared": [
+      "src/features/routes/",
+      "src/shared/",
+      "src/design-system/",
+      "src/styles/",
+      "supabase/",
+      "package.json",
+      "package-lock.json",
+      "vite.config.ts",
+      "tsconfig.json",
+      "eslint.config.js"
+    ]
+  }
+}

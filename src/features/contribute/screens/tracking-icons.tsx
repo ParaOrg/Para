@@ -1,7 +1,7 @@
 // Figma's `pause` and `finish` icons (the tracking bars' 24px icons), as the bars draw them: currentColor.
 // `play`, which Start uses too, is its own file (play-icon.tsx).
 
-/** Figma's `pause`, on Pause, and on Stop when a recording was left open. */
+/** Figma's `pause`, on Pause. */
 export function PauseIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden>
@@ -11,7 +11,7 @@ export function PauseIcon() {
   );
 }
 
-/** Figma's `finish`, a chequered flag, on Finish. */
+/** Figma's `finish`, a chequered flag, on Finish, and on Stop when a recording was left open. */
 export function FinishIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden>

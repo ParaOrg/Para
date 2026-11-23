@@ -1,8 +1,8 @@
 import { Button } from '@/design-system/primitives/button';
+import { useFocusHeading } from '@/shared/hooks/use-focus-heading';
 
 import type { NativePermission } from './native-permissions';
 import { PERMISSION_REASONS } from './permission-steps';
-import { useFocusHeading } from '../common/use-focus-heading';
 
 interface PermissionPanelProps {
   permission: NativePermission;
@@ -24,7 +24,7 @@ export function PermissionPanel({ permission, onContinue, onCancel }: Permission
         id="permission-heading"
         ref={headingRef}
         tabIndex={-1}
-        className="text-xl/7 font-extrabold focus:outline-none"
+        className="text-xl/7 font-bold focus:outline-none"
       >
         {title}
       </h1>

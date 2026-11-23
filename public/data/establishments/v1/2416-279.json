@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "cell": "2416-279",
+  "attribution": "© OpenStreetMap contributors",
+  "establishments": [
+    ["n8815911817","convenience",120.82618,13.97207,"0148943 RONDEL STORE"],
+    ["n8815990217","convenience",120.83565,13.99823,"0324184 JVT SARI-SARI STORE"],
+    ["n8837304617","convenience",120.82645,13.95537,"BTGS0200403"],
+    ["n8837356817","convenience",120.82784,13.95811,"BTGS0200404"],
+    ["n8837382617","convenience",120.83271,13.96318,"BTGS0200405"],
+    ["n8837399349","convenience",120.83436,13.96637,"BTGS0200406"],
+    ["n8837479417","convenience",120.83782,13.98056,"BTGS0200407"],
+    ["n8837507717","convenience",120.8379,13.98105,"BTGS0200408"],
+    ["n8837622217","convenience",120.83972,13.98979,"BTGS0200410"]
+  ]
+}

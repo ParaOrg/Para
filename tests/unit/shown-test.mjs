@@ -33,21 +33,34 @@ const all = [out, back, bOut, slot];
 
 test('a list shows its routes the way round it is showing, drawn ones only', () => {
   assert.deepEqual(
-    showingOf(all, false, all, null).map((v) => v.id),
+    showingOf(all, false, 'every-line', all, null).map((v) => v.id),
     ['a-out', 'b-out'],
   );
+  // b has no way back drawn: its line under the tap is shown the other way
+  // round, as the list lists it (chooserDepartures); c, nothing drawn, is not.
   assert.deepEqual(
-    showingOf(all, true, all, null).map((v) => v.id),
+    showingOf(all, true, 'every-line', all, null).map((v) => v.id),
+    ['a-back', 'b-out'],
+  );
+});
+
+test('a list behind a trip opened on its own shows the way round alone', () => {
+  assert.deepEqual(
+    showingOf(all, true, 'way-round', all, null).map((v) => v.id),
     ['a-back'],
+  );
+  assert.deepEqual(
+    showingOf(all, false, 'way-round', all, null).map((v) => v.id),
+    ['a-out', 'b-out'],
   );
 });
 
 test('with no list, what a hotspot card shows is shown', () => {
   assert.deepEqual(
-    showingOf([], false, all, ['b-out', 'c-back']).map((v) => v.id),
+    showingOf([], false, 'every-line', all, ['b-out', 'c-back']).map((v) => v.id),
     ['b-out'],
   );
-  assert.deepEqual(showingOf([], false, all, null), []);
+  assert.deepEqual(showingOf([], false, 'every-line', all, null), []);
 });
 
 test('lit: the chosen direction alone, else the Selected card, else everything shown', () => {
@@ -127,15 +140,15 @@ test('the wash is a hull over the chosen box and its siblings; none for a place 
 // keeps the list behind both; the place's card, not the list, is shown.
 test("with a hotspot card open over a kept list, the card's routes are shown", () => {
   assert.deepEqual(
-    showingOf(all, false, all, ['a-back', 'c-back']).map((v) => v.id),
+    showingOf(all, false, 'every-line', all, ['a-back', 'c-back']).map((v) => v.id),
     ['a-back'],
   );
   assert.deepEqual(
-    showingOf(all, false, all, null).map((v) => v.id),
+    showingOf(all, false, 'every-line', all, null).map((v) => v.id),
     ['a-out', 'b-out'],
   );
   // An open card that shows no route lights none of the list's either.
-  assert.deepEqual(showingOf(all, false, all, []), []);
+  assert.deepEqual(showingOf(all, false, 'every-line', all, []), []);
 });
 
 // The cheap-phone plan, step 16 (c), 2026-10-04: what is lit kept one array
@@ -166,7 +179,7 @@ test("step 16 (c): a line arriving keeps what is lit unless it is a lit directio
   // directions, and litOf a new array of the same ones, which is kept.
   const candidates = [out, back, bOut];
   const listLit = (variants) =>
-    litOf(null, null, variants, showingOf(candidates, false, variants, null));
+    litOf(null, null, variants, showingOf(candidates, false, 'every-line', variants, null));
   const before = listLit(all);
   const arrived = all.map((v) => (v === out ? { ...v, shape: { ...v.shape } } : v));
   const after = listLit(arrived);
@@ -197,12 +210,12 @@ test('a loop shows whichever way round the list is: it has one direction and no 
   const withLoop = [...all, loop];
   for (const back of [false, true]) {
     assert.ok(
-      showingOf(withLoop, back, withLoop, null).some((v) => v.id === 'loop'),
+      showingOf(withLoop, back, 'every-line', withLoop, null).some((v) => v.id === 'loop'),
       `way back ${back}`,
     );
   }
   assert.deepEqual(
-    showingOf(withLoop, true, withLoop, null).map((v) => v.id),
-    ['a-back', 'loop'],
+    showingOf(withLoop, true, 'every-line', withLoop, null).map((v) => v.id),
+    ['a-back', 'b-out', 'loop'],
   );
 });

@@ -1,0 +1,17 @@
+/*
+ * The skeleton's light (skeleton.tsx): a soft band sweeping left to right, about 1.5 s a sweep, as
+ * the owner asked. Transform only, so the browser moves it without repainting. With reduced
+ * motion there is no band (motion-reduce:hidden), so the shapes stand still.
+ */
+@keyframes skeleton-shimmer {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+
+.skeleton-shimmer {
+  animation: skeleton-shimmer 1.5s linear infinite;
+}

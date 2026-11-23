@@ -1,5 +1,4 @@
 import type { Fix } from '@/features/routes/model/ride-recording';
-import type { LngLat } from '@/shared/utils/geo';
 
 import { UPLOAD_LIMITS } from './recording-limits';
 import type { MarkRow, Recording } from '../storage/recording-schema';
@@ -10,6 +9,32 @@ export const MAX_MARKS = 200;
 /** The marks with one more at `time`, or the same marks once the ride holds the most. */
 export function withMark(marks: MarkRow[], time: number): MarkRow[] {
   return marks.length >= MAX_MARKS ? marks : [...marks, { time }];
+}
+
+/** The longest note a flagged stop keeps, so a ride full of flags still fits one upload. */
+export const NOTE_MAX_LENGTH = 200;
+
+/** A note as it is kept: trimmed, and no longer than NOTE_MAX_LENGTH. */
+export const keptNote = (note: string): string => note.trim().slice(0, NOTE_MAX_LENGTH);
+
+/**
+ * The recording with the note of its mark at `time` set, or taken off when the note is empty. A
+ * mark is known by its time, which two taps never share and a deleted mark never shifts. Null
+ * when there is no such mark.
+ */
+export function notedRecording(recording: Recording, time: number, note: string): Recording | null {
+  const marks = recording.marks ?? [];
+  if (!marks.some((mark) => mark.time === time)) return null;
+  const kept = keptNote(note);
+  const noted: MarkRow = kept === '' ? { time } : { time, note: kept };
+  return { ...recording, marks: marks.map((mark) => (mark.time === time ? noted : mark)) };
+}
+
+/** The recording without its mark at `time`, its note with it. Null when there is no such mark. */
+export function unmarkedRecording(recording: Recording, time: number): Recording | null {
+  const marks = recording.marks ?? [];
+  const left = marks.filter((mark) => mark.time !== time);
+  return left.length === marks.length ? null : { ...recording, marks: left };
 }
 
 /** A recording with one more mark, and how many it holds now. */
@@ -40,11 +65,6 @@ export function markFixIndexes(kept: readonly Fix[], marks: readonly MarkRow[]):
     }
     return low;
   });
-}
-
-/** Where each mark is on the map: the fix it sits on. */
-export function markPlaces(kept: readonly Fix[], marks: readonly MarkRow[]): LngLat[] {
-  return markFixIndexes(kept, marks).map((index) => kept[index].at);
 }
 
 /**

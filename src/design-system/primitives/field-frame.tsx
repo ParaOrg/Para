@@ -11,6 +11,11 @@ interface FieldFrameProps {
   label: ReactNode;
   /** Figma's Property 1=Variant3: the message under the box, the box in error colours. */
   error?: string;
+  /**
+   * The box in error colours with no message under it: a form whose one message sits under
+   * another field (the studio's sign-in, 4618:10526: both fields red, the message under Password).
+   */
+  isInvalid?: boolean;
   /** The id the control's aria-describedby names, so a screen reader reads the error with it. */
   errorId: string;
   isDisabled: boolean;
@@ -51,13 +56,14 @@ export function FieldFrame({
   id,
   label,
   error,
+  isInvalid = false,
   errorId,
   isDisabled,
   isMultiline = false,
   children,
   trailing,
 }: FieldFrameProps) {
-  const state: FieldState = isDisabled ? 'disabled' : error ? 'error' : 'default';
+  const state: FieldState = isDisabled ? 'disabled' : error || isInvalid ? 'error' : 'default';
   return (
     <div className="flex w-full flex-col gap-1.5 font-sn-pro">
       <label htmlFor={id} className="text-sm/5 text-content-quaternary">

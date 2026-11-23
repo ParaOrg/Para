@@ -1,12 +1,17 @@
 import type { ComponentPropsWithoutRef, ReactNode } from 'react';
 
+import { cn } from '@/shared/utils/cn';
+
 import { ROW_PRESSED } from './livery-card';
 import { RouteEndPointLines, type RouteEndPointPosition } from './route-end-point-lines';
 import type { Livery } from '../model/liveries';
 
-type RouteEndPointBarSize = 'base' | 'xl';
+type RouteEndPointBarSize = 'base' | 'medium';
 
-type Props = Omit<ComponentPropsWithoutRef<'button'>, 'type' | 'children' | 'slot'> & {
+type RouteEndPointBarProps = Omit<
+  ComponentPropsWithoutRef<'button'>,
+  'type' | 'children' | 'slot'
+> & {
   /** Figma's routeDirection: the place the row's route goes to. */
   routeDirection: string;
   /**
@@ -17,27 +22,35 @@ type Props = Omit<ComponentPropsWithoutRef<'button'>, 'type' | 'children' | 'slo
   on: Livery | 'surface';
   /** Where the row sits among its rows, which decides how its tree line ends. */
   position: RouteEndPointPosition;
-  /** Figma's ❄️ Slot, after the name: a station's badge on a RouteCardRailway. Empty on every other row. */
+  /** Figma's ❄️ Slot, after the name: a station's code on a train RouteCard's rows. Empty on every other row. */
   slot?: ReactNode;
-  /** The row's words: base, SemiBold 17/24 (RouteCard); xl, Medium 20/28 (RouteCardRailway). */
+  /**
+   * The row's words: base, SemiBold 17/24, 40 tall (a trip's Other routes); medium, Medium 17/24,
+   * 32 tall, its tree line at full strength (RouteCard, 4629:22776).
+   */
   size?: RouteEndPointBarSize;
 };
 
-const BAR = 'flex w-full items-center px-4 text-left';
+const BAR = 'flex w-full items-center text-left';
 const SIZE_CLASSES = {
   base: 'text-base/6 font-semibold',
-  xl: 'text-xl/7 font-medium',
+  medium: 'text-base/6 font-medium',
+} satisfies Record<RouteEndPointBarSize, string>;
+const WORDS_PADDING = {
+  base: 'py-2',
+  medium: 'py-1',
 } satisfies Record<RouteEndPointBarSize, string>;
 // Pressed, Background/surface-tertiary, as Figma's RouteTripDetail Pressed draws it. The hover is
 // tertiary too.
 const ON_SURFACE =
-  'gap-2 rounded-full text-content-primary transition-colors duration-quick ease-move hover:bg-surface-tertiary active:bg-surface-tertiary';
-const ON_CARD = 'gap-1';
+  'gap-2 rounded-full px-4 text-content-primary transition-colors duration-quick ease-move hover:bg-surface-tertiary active:bg-surface-tertiary';
+// RouteCard's 12 in from its edges, and 8 between the tree line and the words.
+const ON_CARD = 'gap-2 px-3';
 
 /**
  * Figma's .RouteEndPointBar (3848:11928): a route by where it goes, the tree line before it, a
  * button that opens it. One component where Figma has one, so a change to the row is made once: a
- * RouteCard's rows and a trip's "Other routes", both 40 tall.
+ * RouteCard's rows, a train's and a road mode's alike, and a trip's "Other routes".
  */
 export function RouteEndPointBar({
   routeDirection,
@@ -47,23 +60,21 @@ export function RouteEndPointBar({
   size = 'base',
   className,
   ...rest
-}: Props) {
+}: RouteEndPointBarProps) {
   const isOnSurface = on === 'surface';
   return (
     <button
       type="button"
       {...rest}
-      className={
-        BAR +
-        ' ' +
-        SIZE_CLASSES[size] +
-        ' ' +
-        (isOnSurface ? ON_SURFACE : ON_CARD + ' ' + ROW_PRESSED[on]) +
-        (className ? ' ' + className : '')
-      }
+      className={cn(
+        BAR,
+        SIZE_CLASSES[size],
+        isOnSurface ? ON_SURFACE : cn(ON_CARD, ROW_PRESSED[on]),
+        className,
+      )}
     >
-      <RouteEndPointLines position={position} />
-      <span className="flex min-w-0 flex-1 items-center gap-1 py-2">
+      <RouteEndPointLines position={position} isFaint={size !== 'medium'} />
+      <span className={cn('flex min-w-0 flex-1 items-center gap-1', WORDS_PADDING[size])}>
         <span className="min-w-0 flex-1">{routeDirection}</span>
         {slot}
       </span>

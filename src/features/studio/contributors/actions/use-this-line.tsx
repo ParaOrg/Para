@@ -3,6 +3,7 @@ import type { LngLat } from '@/shared/utils/geo';
 
 import { controlPointsOf, type ContributionStart } from './contribution-start';
 import { RideList } from './ride-list';
+import { UsePart } from './use-part';
 import type { Contribution, ContributionDetail } from '../../data/contributions-read';
 import { rideLines, splitTrail } from '../trail-parts';
 
@@ -36,13 +37,14 @@ export function UseThisLine({
   const pieces = detail ? splitTrail(detail.trail, detail.parts) : [];
   const hasWalk = pieces.some((piece) => piece.mode === 'walk');
   const rides = hasWalk ? rideLines(pieces) : [];
-  const start = (line: readonly LngLat[]) =>
+  // A part's ends are not the upload's start and end, so it starts unnamed.
+  const start = (line: readonly LngLat[], isPart = false) =>
     onStart({
       kind: 'direction',
       contributionId: c.id,
       points: controlPointsOf(line),
-      startName: c.startName,
-      endName: c.endName,
+      startName: isPart ? '' : c.startName,
+      endName: isPart ? '' : c.endName,
     });
 
   if (hasWalk && rides.length > 1) {
@@ -68,6 +70,7 @@ export function UseThisLine({
     <>
       {hasWalk && <p className={NOTE}>Walking is left out: Use this line takes the ride only.</p>}
       <Button variant="primary" label="Use this line" onClick={() => start(line)} />
+      <UsePart line={line} onUse={(part) => start(part, true)} />
     </>
   );
 }

@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "cell": "2417-279",
+  "attribution": "© OpenStreetMap contributors",
+  "establishments": [
+    ["n8816087018","convenience",120.8914,13.999,"E lite Mart"],
+    ["n8816087019","convenience",120.89229,13.99508,"0149840 JAIRUS"],
+    ["n8816087517","convenience",120.89188,13.99812,"0357414 LOLO SARI-SARI STORE"],
+    ["n8816088317","convenience",120.89222,13.9976,"0149841 DE CASTRO"],
+    ["n8816088517","convenience",120.89081,13.9884,"0149836 RASH JALL"],
+    ["n8816190917","convenience",120.88896,13.9801,"0149830 303 STORE"],
+    ["n8816192117","convenience",120.88885,13.97985,"0330888 ZEIKE MINIMART"],
+    ["n8816219717","convenience",120.88744,13.97525,"0318189 A.V. BARREDO CONVENIENCE STORE"],
+    ["n8816220117","convenience",120.88635,13.96427,"0353696 ERR STORE & RESTAURANT"],
+    ["n8816225917","convenience",120.88307,13.95589,"0149773 MOLENO"],
+    ["w416518574","fuel",120.89029,13.98481,"Flying V"]
+  ]
+}

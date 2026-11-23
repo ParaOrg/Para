@@ -13,6 +13,11 @@ export const STYLE_PATH = '/styles/positron';
 export const PUBLISH_MAX_AGE_DAYS = 1.5;
 export const BACKUP_MAX_AGE_DAYS = 8;
 export const TILES_BUILD_MAX_AGE_DAYS = 35;
+// A publish reaches the live site when Cloudflare has built and deployed main, minutes after
+// the push. Two hours behind is a build that failed, or never started.
+export const DEPLOY_MAX_LAG_HOURS = 2;
+// The watch is asked for every 15 minutes: over 45 is two runs in a row late or dropped.
+export const WATCH_MAX_GAP_MINUTES = 45;
 
 const TRIES = 3;
 const TRY_GAP_MS = 20_000;
@@ -81,6 +86,50 @@ export async function checkPublishedMap(fetchImpl, site = SITE) {
 }
 
 /**
+ * The live map is the one on main. The nightly publish ends at its push to main; the deploy is
+ * Cloudflare's build, and when that fails the publish and every other check stay green while
+ * commuters keep yesterday's map. `github.publishedMapOnMain()` answers main's index's
+ * `publishedAt` and when main last took a commit to it (`committedAt`). Either side out of
+ * reach is not a failed deploy: there is nothing to compare, and other checks say so.
+ */
+export async function checkDeployedMap(fetchImpl, github, now, site = SITE) {
+  let main;
+  try {
+    main = await github.publishedMapOnMain();
+  } catch (error) {
+    const why = error instanceof Error ? error.message : String(error);
+    return { ok: true, answer: `main's map could not be read, so nothing was compared: ${why}` };
+  }
+  const url = `${site}/data/index.v5.json`;
+  let live;
+  try {
+    const response = await fetchImpl(url);
+    live = response.status === 200 ? JSON.parse(await response.text()).published_at : undefined;
+  } catch {
+    live = undefined;
+  }
+  if (typeof live !== 'string') {
+    return {
+      ok: true,
+      answer: `The live map could not be read at ${url}, so nothing was compared`,
+    };
+  }
+  if (live === main.publishedAt)
+    return { ok: true, answer: `The live map is the map on main, published ${live}` };
+  const lagMinutes = (Date.parse(now) - Date.parse(main.committedAt)) / 60_000;
+  if (lagMinutes < DEPLOY_MAX_LAG_HOURS * 60) {
+    return {
+      ok: true,
+      answer: `main took a new map ${Math.round(lagMinutes)} minutes ago; the live site has ${DEPLOY_MAX_LAG_HOURS} hours to show it`,
+    };
+  }
+  return {
+    ok: false,
+    answer: `The live map is the one published ${live}; main has had the one published ${main.publishedAt} for ${(lagMinutes / 60).toFixed(1)} hours`,
+  };
+}
+
+/**
  * A check that one style, then one tile, answer 200 from the tiles Worker. The tile is
  * fetched at most once per check however often it is retried, and only once the style
  * passes, so a broken Worker costs the tile budget one request per run, not three.
@@ -109,6 +158,23 @@ export function checkLastSuccess(runs, events, maxAgeDays, now) {
     (Date.parse(now) - Date.parse(last.run_started_at ?? last.created_at)) / 86_400_000;
   const answer = `Last success ${ageDays.toFixed(1)} days ago: ${last.html_url}`;
   return { ok: ageDays < maxAgeDays, answer };
+}
+
+/**
+ * How long ago the watch itself last ran. GitHub runs a schedule late, or drops it, and then
+ * none of the checks above is being made. `runs` are the watch's own successful runs, newest
+ * first; a pull request's dry run is not one.
+ */
+export function checkWatchGap(runs, now, maxGapMinutes = WATCH_MAX_GAP_MINUTES) {
+  const last = runs.find((run) => run.event !== 'pull_request');
+  if (!last) return { ok: true, answer: 'No earlier run of the watch to measure from' };
+  const minutes = (Date.parse(now) - Date.parse(last.run_started_at ?? last.created_at)) / 60_000;
+  const ago =
+    minutes < 120 ? `${Math.round(minutes)} minutes` : `${(minutes / 60).toFixed(1)} hours`;
+  return {
+    ok: minutes <= maxGapMinutes,
+    answer: `The watch last ran ${ago} ago: ${last.html_url}`,
+  };
 }
 
 /** True when the newest finished run not made for a pull request succeeded. */

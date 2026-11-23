@@ -14,7 +14,7 @@ import { daylightStyle } from './daylight';
 import { withLocationLabels } from './location-labels';
 import { monochromeStyle } from './monochrome';
 import { maskedStyle } from './station-mask';
-import { terrainStyle } from './terrain';
+import { leaveTerrain, terrainStyle } from './terrain';
 
 /**
  * The basemap designs a commuter can choose between: Monochrome, Coloured and
@@ -160,9 +160,6 @@ function satelliteStyle(style: StyleSpecification, imagery: Imagery): StyleSpeci
   };
 }
 
-/** A design MapLibre can take by its URL, with nothing to add. */
-const isPlain = (b: Basemap): boolean => !b.dressing && !b.imagery && !b.elevation;
-
 const DRESSINGS: Record<Dressing, (style: StyleSpecification) => StyleSpecification> = {
   monochrome: monochromeStyle,
   daylight: daylightStyle,
@@ -186,7 +183,7 @@ const styleOutlineSchema = z.looseObject({
   layers: z.array(z.unknown()),
 });
 
-function isStyle(raw: unknown): raw is StyleSpecification {
+export function isStyle(raw: unknown): raw is StyleSpecification {
   return styleOutlineSchema.safeParse(raw).success;
 }
 
@@ -203,15 +200,26 @@ export async function initialStyle(
   b: Basemap,
   areLabelsShown: boolean,
 ): Promise<StyleSpecification | string> {
-  if (isPlain(b) && areLabelsShown) return b.url;
   try {
     const r = await fetch(b.url);
     if (!r.ok) return b.url;
     const style: unknown = await r.json();
-    return isStyle(style) ? withLocationLabels(dressed(b, style), areLabelsShown) : b.url;
+    return isStyle(style) ? styleToDraw(b, style, areLabelsShown) : b.url;
   } catch {
     return b.url;
   }
+}
+
+/**
+ * A fetched style as the map draws `b`: dressed, its labels shown or hidden. For a page that makes
+ * its own (MapView's `makeStyle`: the contributor app's, with its copies).
+ */
+export function styleToDraw(
+  b: Basemap,
+  style: StyleSpecification,
+  areLabelsShown: boolean,
+): StyleSpecification {
+  return withLocationLabels(dressed(b, style), areLabelsShown);
 }
 
 // -------------------------------------------------------------- the switch
@@ -260,12 +268,12 @@ function styleTransform(b: Basemap, map: MapLibreMap, areLabelsShown: boolean) {
 }
 
 /**
- * Swap the basemap under everything drawn on it, its labels shown or hidden;
- * the same design again only shows or hides them, as setStyle's diff changes
- * no more than that. The new style is not checked against the spec as a
- * whole: setStyle takes the map's `validateStyle: false` (map-view.tsx) as
- * its default, so no option is passed here.
+ * Swap the basemap under everything drawn on it, its labels shown or hidden; the same design
+ * again only shows or hides them, as setStyle's diff changes no more than that. The new style is
+ * not checked against the spec as a whole: setStyle takes the map's `validateStyle: false`
+ * (map-view.tsx) as its default, so no option is passed here.
  */
 export function applyBasemap(map: MapLibreMap, b: Basemap, areLabelsShown: boolean): void {
+  leaveTerrain(map, b);
   map.setStyle(b.url, { transformStyle: styleTransform(b, map, areLabelsShown) });
 }

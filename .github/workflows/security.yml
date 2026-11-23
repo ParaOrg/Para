@@ -19,6 +19,12 @@
 # devDependencies). It needs no install. When it fails, `npm audit` locally
 # names the package and the version that fixes it; Dependabot opens most of
 # these on its own.
+#
+# A second audit reads the devDependencies too: the tools that build and check
+# the app. Nothing of theirs reaches a commuter, so it blocks nothing: the job
+# may fail and the run still passes (continue-on-error). It is there so a hole
+# in a dev tool is seen in the nightly run, not found by chance. It does not run
+# on a pull request, where a red mark that means "not yours" would only confuse.
 name: Security
 
 on:
@@ -30,9 +36,11 @@ on:
     # 05:30 in Manila (UTC+8), after CI's nightly run.
     - cron: '30 21 * * *'
 
+# On a pull request a newer push cancels the run for the older one. On main and staging a run
+# that has started is never cancelled (as in ci.yml): the commit it checks gets its full verdict.
 concurrency:
   group: security-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
@@ -43,17 +51,26 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           fetch-depth: 0
+
+      # The release is kept in Actions' cache, by its version, so a GitHub release download outage
+      # (2026-11-08) does not turn the check red; the checksum is checked either way.
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        with:
+          path: gitleaks.tar.gz
+          key: gitleaks-8.30.1-linux-x64
 
       - name: Install gitleaks
         env:
           VERSION: 8.30.1
           SHA256: 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb
         run: |
-          curl -sSfL -o gitleaks.tar.gz \
-            "https://github.com/gitleaks/gitleaks/releases/download/v${VERSION}/gitleaks_${VERSION}_linux_x64.tar.gz"
+          if [ ! -f gitleaks.tar.gz ]; then
+            curl -sSfL --retry 3 -o gitleaks.tar.gz \
+              "https://github.com/gitleaks/gitleaks/releases/download/v${VERSION}/gitleaks_${VERSION}_linux_x64.tar.gz"
+          fi
           echo "${SHA256}  gitleaks.tar.gz" | sha256sum -c -
           tar -xzf gitleaks.tar.gz gitleaks
 
@@ -73,11 +90,53 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: 22
 
       - name: npm audit
         run: npm audit --omit=dev --audit-level=high
+
+  dev-audit:
+    name: Known holes in the dev tools (report only)
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 22
+
+      - name: npm audit, dev tools included
+        run: npm audit --audit-level=high
+
+  # A failed nightly run opens the `alert` issue (scripts/watch/report-failed-run.mjs); the watch
+  # closes it once the next run passes. Not on a pull request, whose own checks say it failed.
+  alert:
+    needs: [secrets, audit]
+    if: failure() && github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+          sparse-checkout: scripts/watch
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 22
+      - name: Open or update the alert issue
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          WORKFLOW_NAME: ${{ github.workflow }}
+          WORKFLOW_FILE: security.yml
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: node scripts/watch/report-failed-run.mjs

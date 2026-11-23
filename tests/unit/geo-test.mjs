@@ -18,6 +18,7 @@ import {
   overviewOf,
   pointToSegmentM,
   simplifyLine,
+  sliceLine,
 } from '../../src/shared/utils/geo.ts';
 
 test('a degree of latitude is what haversine measures it', () => {
@@ -173,4 +174,24 @@ test('a spot on the line is measured along the line as it is joined, hop include
   const spot = nearestSpot(segments, [121.0405, 14.70016]);
   const along = lineLength([[121.039, 14.7], click, onRoad, spot.point]);
   assert.ok(Math.abs(spot.metres - along) < 0.01, `${spot.metres} vs ${along}`);
+});
+
+test('a slice of a line runs between the two distances, its ends cut where they fall', () => {
+  // Three points due north, about 1.1 km apart.
+  const line = [
+    [121, 14.6],
+    [121, 14.61],
+    [121, 14.62],
+  ];
+  const total = lineLength(line);
+  const part = sliceLine(line, 500, total - 500);
+  assert.equal(part.length, 3);
+  assert.ok(Math.abs(lineLength(part) - (total - 1000)) < 1);
+  assert.ok(Math.abs(metresAlong(line, part[0]) - 500) < 1);
+  assert.deepEqual(part[1], line[1]);
+  // Inside one segment, the whole line, and nothing.
+  assert.equal(sliceLine(line, 100, 200).length, 2);
+  assert.deepEqual(sliceLine(line, 0, total + 10), line);
+  assert.deepEqual(sliceLine(line, 800, 800), []);
+  assert.deepEqual(sliceLine(line, 900, 300), []);
 });

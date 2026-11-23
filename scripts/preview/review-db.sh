@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # The isolated review preview's database (README.md, step 2): para_preview on
 # the disposable server supabase/verify/run.sh has just checked, with every
-# migration through 0022 in ledger order, the reviewed approval, the auth.uid()
+# migration through 0022 in ledger order, the review rules through Draft and
+# Published (20261105160000_draft_published), the auth.uid()
 # stand-in PostgREST needs, a login role for PostgREST and the fixture editor.
 # Refuses anything but a local Docker container.
 #   PSQL="docker exec -i para-review-db psql -U postgres" bash scripts/preview/review-db.sh
@@ -21,6 +22,10 @@ for n in 0001 0002 0003 0004 0005 0006 0007 0008 0009 0010 0011 0012 0015 0013 0
   apply < ../migrations/${n}_*.sql
 done
 apply < ../migrations/20261018112757_reviewed_draft_approval.sql
+apply < ../migrations/20261026090000_draft_update_own.sql
+apply < ../migrations/20261105120000_review_rules.sql
+apply < ../migrations/20261105130000_draft_update_makerless.sql
+apply < ../migrations/20261105160000_draft_published.sql
 apply <<'SQL'
 -- PostgREST hands the claims over as one JSON setting; the verification
 -- scripts set the subject alone. auth.uid() reads either.
@@ -40,4 +45,4 @@ grant anon, authenticated to authenticator;
 insert into auth.users (id, is_anonymous) values ('00000000-0000-0000-0000-0000000000e1', false);
 insert into private.editor (user_id) values ('00000000-0000-0000-0000-0000000000e1');
 SQL
-echo 'review preview database: para_preview through 0022 and the reviewed approval, editor e1'
+echo 'review preview database: para_preview through draft_published, editor e1'

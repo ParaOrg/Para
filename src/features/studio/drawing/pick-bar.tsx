@@ -20,7 +20,7 @@ export function PickBar({ draw, ends }: PickBarProps) {
       <p className="mb-2 text-center text-[11px] text-neutral-600 [text-shadow:0_1px_2px_white]">
         {spot
           ? `${(spot.metres / 1000).toFixed(2)} km along the line · tap again to move the spot`
-          : 'Tap the blue line where the new route leaves it'}
+          : 'Tap the highlighted line where the new route leaves it'}
       </p>
       <div className="flex flex-wrap items-center justify-center gap-1 rounded-2xl bg-white p-1.5 shadow-lg ring-1 ring-black/10">
         {spot ? (

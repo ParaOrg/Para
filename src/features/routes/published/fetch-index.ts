@@ -1,14 +1,13 @@
-import { indexOutlineSchema, indexSchema, type Index } from './index-schema';
+import type { Index } from './index-schema';
 import {
   EARLY_MAP_FILE,
-  MAP_FILE_CACHE,
   MAP_FILE_SCHEMA,
-  MAP_FILE_TOO_NEW,
   MAP_FILE_URL,
   SERVED_FROM_HEADER,
   STORED_OLD,
   type EarlyMapFile,
 } from './map-file';
+import { parseIndex } from './parse-index';
 import type { Direction } from '../model/direction-schema';
 
 /**
@@ -33,11 +32,20 @@ let settled: { file: Index | null } | null = null;
  * Null on a page without one (the studio's, a test's).
  */
 function takeEarly(): EarlyMapFile | null {
-  const page = globalThis as { [EARLY_MAP_FILE]?: EarlyMapFile };
-  const early = page[EARLY_MAP_FILE];
+  const early: unknown = Reflect.get(globalThis, EARLY_MAP_FILE);
   if (!early) return null;
-  Reflect.deleteProperty(page, EARLY_MAP_FILE);
-  return typeof early.then === 'function' ? early : null;
+  Reflect.deleteProperty(globalThis, EARLY_MAP_FILE);
+  return isEarlyMapFile(early) ? early : null;
+}
+
+/** Whether what index.html left can be awaited: its own request, not something else by that name. */
+function isEarlyMapFile(early: unknown): early is EarlyMapFile {
+  return (
+    typeof early === 'object' &&
+    early !== null &&
+    'then' in early &&
+    typeof early.then === 'function'
+  );
 }
 
 /**
@@ -69,32 +77,6 @@ function ask(): Promise<{ res: Response; json: () => Promise<unknown> }> {
 }
 
 /**
- * A file read off `url` as the index of shape `schema`, its overviews as the
- * lines the map draws first. The refusals, in order: not a map at all
- * (whatever number it carries), a shape this app does not know (the banner's
- * message, MAP_FILE_TOO_NEW), another shape than asked for, and a row the
- * schema cannot read.
- */
-function parseIndex(raw: unknown, url: string, schema: number): Index {
-  const outline = indexOutlineSchema.safeParse(raw);
-  if (!outline.success) throw new Error(`${url} is not a published map`);
-  const { schema: shape } = outline.data;
-  // A file with no shape is the first one.
-  const shapeNumber = typeof shape === 'number' ? shape : 1;
-  if (shapeNumber > MAP_FILE_SCHEMA) throw new Error(MAP_FILE_TOO_NEW);
-  if (shape !== schema) throw new Error(`${url} is shape ${shapeNumber}, not the index`);
-  const parsed = indexSchema.safeParse(raw);
-  if (!parsed.success) {
-    const [issue] = parsed.error.issues;
-    const at = issue?.path.map(String).join('.') ?? '';
-    throw new Error(
-      `${url} has a row this app cannot read: ${at} ${issue?.message ?? ''}`.trimEnd(),
-    );
-  }
-  return parsed.data;
-}
-
-/**
  * The copy the worker kept of the index itself, else the newest older one.
  * The worker falls back to its copy only when the network fails or takes over
  * 3 s (scripts/node/offline-worker-caches.ts, the map-file rule): a server's
@@ -107,16 +89,30 @@ async function storedCopy(): Promise<Index | null> {
   );
 }
 
+/**
+ * Where a copy kept from an earlier visit is read: a map file's JSON by its path, or null when
+ * none is kept or it does not read. The web gives its pages the browser's Cache Storage
+ * (routes/map/map-file-store.ts, the worker's MAP_FILE_CACHE); the commuter app (ADR 0008) gives
+ * its own. Until one is given there is no copy: the network's answer only.
+ */
+export type MapFileStore = (url: string) => Promise<unknown>;
+
+let readStored: MapFileStore = async () => null;
+
+/** The page's or the app's store of earlier copies, given once as it starts. */
+export function setMapFileStore(store: MapFileStore): void {
+  readStored = store;
+}
+
 /** The newest older copy the worker kept, if any (STORED_OLD). A copy that does not read is passed over. */
 async function storedOldCopy(
   candidates: readonly { url: string; schema: number }[] = STORED_OLD,
 ): Promise<Index | null> {
-  if (typeof caches === 'undefined') return null;
   for (const { url, schema } of candidates) {
-    const res = await caches.match(url, { cacheName: MAP_FILE_CACHE }).catch(() => undefined);
-    if (!res?.ok) continue;
+    const raw = await readStored(url).catch(() => null);
+    if (raw === null || raw === undefined) continue;
     try {
-      return parseIndex(await res.json(), url, schema);
+      return parseIndex(raw, url, schema);
     } catch {
       continue;
     }
@@ -148,14 +144,17 @@ export function fetchIndex(): Promise<Index> {
           return kept('not JSON');
         }
         stale = res.headers.get(SERVED_FROM_HEADER) === 'cache';
-        // A file that reads but is not this app's (too new, another shape, a
-        // row it cannot read) is said as it is: the banner's Reload is the
-        // answer to that, never a stored copy in its place.
-        return parseIndex(raw, MAP_FILE_URL, MAP_FILE_SCHEMA);
+        // A file that reads but is not this app's (too new, another shape,
+        // no direction it can read) is said as it is: the banner's Reload is
+        // the answer to that, never a stored copy in its place. A row it
+        // cannot read is left out and the rest of the map kept.
+        return parseIndex(raw, MAP_FILE_URL, MAP_FILE_SCHEMA, 'skip');
       },
       async (e: unknown) => {
-        // No network and nothing stored under this path: an update made offline.
-        const old = await storedOldCopy();
+        // No network. On the web the worker has already answered with its copy of this path when
+        // it had one, so this is an update made offline: an older path's copy. An app with no
+        // worker (the commuter app's store) may hold this path's copy itself, so it is asked first.
+        const old = await storedCopy();
         if (!old) throw e;
         stale = true;
         return old;

@@ -1,0 +1,24 @@
+{
+  "schema": 1,
+  "cell": "2412-300",
+  "attribution": "© OpenStreetMap contributors",
+  "establishments": [
+    ["n4574085594","convenience",120.62594,15.0102,"Yolly"],
+    ["n9348955662","convenience",120.61065,15.00072,"Santino Sari-sari Store"],
+    ["n9348955663","convenience",120.61056,15.00055,"Cita's Store"],
+    ["n9349010679","convenience",120.60896,15.00201,"Denden Store"],
+    ["n9349010680","convenience",120.60938,15.00148,"Zoey Store"],
+    ["n393731191","restaurant",120.64318,15.00078,"BistroVerde Bacolor"],
+    ["w908244896","fuel",120.6081,15.00292,"3CL Gas Station"],
+    ["w998803583","fuel",120.64427,15.00178,"Cleantech"],
+    ["w1013340386","fuel",120.61097,15.00062,"Petron"],
+    ["n7882852650","clinic",120.61611,15.04072,"Duat Health Center"],
+    ["w772614368","clinic",120.64286,15.01141,"Parulog Health Center"],
+    ["w772634031","clinic",120.64603,15.03788,"San Isidro Rural Health Unit II"],
+    ["w778547082","clinic",120.60987,15.01182,"San Isidro Health Center"],
+    ["w782449256","clinic",120.61824,15.00017,"Santa Rita Rural Health Unit"],
+    ["w823997572","clinic",120.6219,15.00314,"San Juan Health Center"],
+    ["w844928751","clinic",120.60447,15.0352,"Balas Health Center"],
+    ["w1504097331","police",120.61673,15.00099,"Santa Rita Municipal Police Station"]
+  ]
+}

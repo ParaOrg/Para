@@ -1,4 +1,4 @@
-// The upload's packing (src/features/contribute/api/pack-recording.ts): a saved
+// The upload's packing (src/features/contribute/uploads/packing/pack-recording.ts): a saved
 // recording in the database's shape, with the points the database would refuse
 // dropped beforehand, so a real ride is never refused whole for one bad fix.
 //
@@ -6,7 +6,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { packRecording, VEHICLE_OF } from '../../src/features/contribute/api/pack-recording.ts';
+import { VEHICLE_OF } from '../../src/features/contribute/api/contribution-vehicles.ts';
+import { packRecording } from '../../src/features/contribute/uploads/packing/pack-recording.ts';
 import { RIDE_KINDS } from '../../src/features/contribute/storage/recording-schema.ts';
 import { UPLOAD_LIMITS } from '../../src/features/contribute/recorder/recording-limits.ts';
 import { contributionPayloadSchema } from '../../src/features/contribute/api/contribution-payload-schema.ts';
@@ -90,7 +91,7 @@ test('the details go in the database names and limits; the stand is a hinto', ()
     ['stop', 'save'],
   );
   assert.equal(payload.format_version, 2);
-  assert.equal(payload.rules_version, 2);
+  assert.equal(payload.rules_version, 3);
   assert.equal(payload.hintos.length, 1);
   assert.ok(payload.hintos[0].seconds >= 100 && payload.hintos[0].seconds <= 130);
   assert.equal(payload.line.type, 'LineString');
@@ -174,6 +175,21 @@ test('marks go up as mark events among the modes, in time order', () => {
     { kind: 'mark', at: new Date(T0 + 5_000).toISOString() },
     { kind: 'mode', at: new Date(T0 + 10_000).toISOString(), to: 'ride' },
     { kind: 'mark', at: new Date(T0 + 15_000).toISOString() },
+  ]);
+  assert.ok(contributionPayloadSchema.safeParse(payload).success);
+});
+
+test("a flag's note goes up on its mark event", () => {
+  const fixes = rideFixes(20);
+  const recording = {
+    ...rideRecording(ID, fixes),
+    marks: [{ time: T0 + 5_000, note: 'Under the footbridge' }, { time: T0 + 9_000 }],
+  };
+  const { payload } = packed(fixes, recording);
+  const marks = payload.events.filter((event) => event.kind === 'mark');
+  assert.deepEqual(marks, [
+    { kind: 'mark', at: new Date(T0 + 5_000).toISOString(), note: 'Under the footbridge' },
+    { kind: 'mark', at: new Date(T0 + 9_000).toISOString() },
   ]);
   assert.ok(contributionPayloadSchema.safeParse(payload).success);
 });

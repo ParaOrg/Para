@@ -49,16 +49,19 @@ export const modeSchema = z.object({
 
 export type ModeRow = z.infer<typeof modeSchema>;
 
-/** A tap on the mark button: when it was. Where it was is worked out from the fixes. */
-export const markSchema = z.object({ time: z.number() });
+/**
+ * A tap on the mark button: when it was, and the contributor's note on the stop, if they wrote one.
+ * Where it was is worked out from the fixes.
+ */
+export const markSchema = z.object({ time: z.number(), note: z.optional(z.string()) });
 
 export type MarkRow = z.infer<typeof markSchema>;
 
 /**
  * What became of a saved recording's upload, as this phone last knew it. Absent
  * until the first upload goes through. `by` is the phone's identity at the time:
- * a removal is only possible from that identity. `removed` keeps the phone's
- * copy and stops it being sent again unless the contributor asks.
+ * only that identity can tell whether Para still has it. `removed` keeps the
+ * phone's copy and stops it being sent again unless the contributor asks.
  */
 export const uploadMarkSchema = z.union([
   z.object({ state: z.literal('uploaded'), at: z.number(), by: z.string() }),

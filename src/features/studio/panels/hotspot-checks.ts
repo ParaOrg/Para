@@ -1,8 +1,8 @@
-import { ringCrossesItself } from '@/features/routes/geo/ring';
 import { hotspotLabel, type HotspotRow } from '@/features/routes/model/hotspots';
 import type { LngLat } from '@/shared/utils/geo';
 
 import { terminalAlreadyAt } from './places';
+import { ringCrossesItself } from '../data/hotspot-ring';
 import type { HotspotKind } from '../drawing/drawing-types';
 
 /**
@@ -54,6 +54,21 @@ export function knownInformalNames(
     seen.set(label.toLowerCase(), label);
   }
   return [...seen.values()].sort((a, b) => a.localeCompare(b));
+}
+
+/**
+ * The ticks a hotspot's panel opens with, or null to pre-tick the directions that start inside
+ * the outline once their lines are read: a new hotspot, and a saved terminal that links nothing,
+ * which a terminal drawn before its routes is. A saved terminal with links keeps exactly those.
+ */
+export function ticksAtOpening(
+  kind: HotspotKind,
+  saved: HotspotRow | null,
+  savedLinks: readonly string[],
+): Set<string> | null {
+  if (!saved) return null;
+  if (kind === 'terminal' && savedLinks.length === 0) return null;
+  return new Set(savedLinks);
 }
 
 /**

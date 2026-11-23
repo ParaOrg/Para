@@ -7,8 +7,9 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
-  canUploadFromMenu,
   cardStatusOf,
+  isMidUpload,
+  rideStatusOf,
 } from '../../src/features/contribute/history/card-status.ts';
 import { sketchLines } from '../../src/features/contribute/history/trail-sketch-paths.ts';
 import {
@@ -20,19 +21,10 @@ import { FAILED } from '../../src/features/contribute/uploads/upload-failures.ts
 
 const failed = (reason) => ({ state: 'failed', ...FAILED[reason] });
 
-test('uploaded is green; a removal that failed says why, in red', () => {
-  assert.deepEqual(cardStatusOf({ state: 'uploaded', at: 1, by: 'p' }, true, true), {
+test('uploaded is green, whoever sent it', () => {
+  assert.deepEqual(cardStatusOf({ state: 'uploaded', at: 1, by: 'p' }, true), {
     tone: 'uploaded',
     words: 'Uploaded',
-  });
-  // Sent under an identity this phone no longer has: it cannot be deleted from here, and says why.
-  assert.deepEqual(cardStatusOf({ state: 'uploaded', at: 1, by: 'p' }, false, true), {
-    tone: 'uploaded',
-    words: 'Uploaded from an earlier sign-in',
-  });
-  assert.deepEqual(cardStatusOf({ state: 'uploaded', at: 1, by: 'p', problem: 'Not removed' }), {
-    tone: 'problem',
-    words: 'Not removed',
   });
 });
 
@@ -42,11 +34,11 @@ test('only a failure the page will not retry by itself offers Tap retry upload',
   }
   assert.deepEqual(cardStatusOf(failed('offline')), { tone: 'quiet', words: 'Waiting for signal' });
   // Queued: for the signal with none, else only for its turn.
-  assert.deepEqual(cardStatusOf({ state: 'waiting' }, true, false), {
+  assert.deepEqual(cardStatusOf({ state: 'waiting' }, false), {
     tone: 'quiet',
     words: 'Waiting for signal',
   });
-  assert.deepEqual(cardStatusOf({ state: 'waiting' }, true, true), {
+  assert.deepEqual(cardStatusOf({ state: 'waiting' }, true), {
     tone: 'quiet',
     words: 'Waiting to send',
   });
@@ -75,11 +67,33 @@ test('in flight reads Sending…; held, removed and unavailable are only on this
   assert.equal(cardStatusOf({ state: 'removed', byEditor: true }).words, 'Removed by an editor');
 });
 
-test('Upload to Para is offered for a recording kept back or taken off Para, and nothing else', () => {
-  assert.equal(canUploadFromMenu({ state: 'held' }), true);
-  assert.equal(canUploadFromMenu({ state: 'removed' }), true);
-  assert.equal(canUploadFromMenu({ state: 'waiting' }), false);
-  assert.equal(canUploadFromMenu({ state: 'uploaded', at: 1, by: 'p' }), false);
+test('the ride sheet offers Tap to upload for one kept back or taken off Para, and nothing else', () => {
+  const tapToUpload = { tone: 'retry', words: 'Tap to upload' };
+  assert.deepEqual(rideStatusOf({ state: 'held' }, true), tapToUpload);
+  assert.deepEqual(rideStatusOf({ state: 'removed' }, true), tapToUpload);
+  assert.deepEqual(rideStatusOf({ state: 'removed', byEditor: true }, false), tapToUpload);
+  for (const status of [
+    { state: 'waiting' },
+    { state: 'unavailable' },
+    { state: 'uploaded', at: 1, by: 'p' },
+    failed('refused'),
+  ]) {
+    assert.deepEqual(rideStatusOf(status, true), cardStatusOf(status, true), status.state);
+  }
+});
+
+test('Delete this record waits only while an upload is under way', () => {
+  for (const state of ['checking', 'uploading']) {
+    assert.equal(isMidUpload({ state }), true, state);
+  }
+  for (const status of [
+    { state: 'waiting' },
+    { state: 'held' },
+    { state: 'uploaded', at: 1, by: 'p' },
+    failed('offline'),
+  ]) {
+    assert.equal(isMidUpload(status), false, status.state);
+  }
 });
 
 const trail = (...lines) => ({ lines, markers: [], marks: [] });

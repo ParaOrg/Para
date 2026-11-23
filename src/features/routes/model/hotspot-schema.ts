@@ -85,10 +85,3 @@ export const toHotspotLink = (raw: RawHotspotLink) => ({
 });
 export const hotspotLinkSchema = z.pipe(rawHotspotLinkSchema, z.transform(toHotspotLink));
 export type HotspotLink = ReturnType<typeof toHotspotLink>;
-
-/** A link as the route_stop table takes it: the way back, for the studio's writes. */
-export const toLinkRow = (link: HotspotLink): RawHotspotLink => ({
-  route_variant_id: link.directionId,
-  stop_id: link.hotspotId,
-  stop_sequence: link.sequence,
-});

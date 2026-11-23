@@ -7,9 +7,7 @@ import assert from 'node:assert/strict';
 
 import { haversine } from '../../src/shared/utils/geo.ts';
 import {
-  BEARING_WINDOW_S,
   HINTO_MIN_SECONDS,
-  courseBearing,
   currentMode,
   distanceM,
   hintosOf,
@@ -23,6 +21,7 @@ import {
   silentGaps,
   summarize,
 } from '../../src/features/routes/model/ride-recording.ts';
+import { BEARING_WINDOW_S, courseBearing } from '../../src/features/routes/model/course-bearing.ts';
 
 const T0 = Date.UTC(2026, 9, 17, 6, 0, 0);
 /** A fix `s` seconds after the start, `east` metres east of Tala and `north` metres north. */
@@ -115,6 +114,15 @@ test('standing in a hinto adds no distance, but the leg that leaves it does', ()
   assert.equal(hintos.length, 1);
   assert.ok(pathLengthM(fixes) > 130);
   assert.ok(Math.abs(pathLengthM(fixes, hintos) - 100) < 1);
+});
+
+// Gab, 2026-11-10: a 37-minute walk read 0 m. At 1.3 m/s a walk stays within 25 m for
+// 19 s, so all of it is a hinto; its moves past WANDER_M still count.
+test('a walk is slow enough to be a hinto, and its distance still counts', () => {
+  const fixes = Array.from({ length: 301 }, (_, s) => fix(s, s * 1.3));
+  const hintos = hintosOf(fixes);
+  assert.equal(hintos.length, 1, 'the whole walk is one hinto');
+  assert.ok(Math.abs(pathLengthM(fixes, hintos) - 390) < 5);
 });
 
 test('a hinto is 8 s or more within 25 m of where it began', () => {

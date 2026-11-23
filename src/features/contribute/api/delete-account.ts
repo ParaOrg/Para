@@ -8,20 +8,16 @@ import {
 } from './account-deletion';
 import { accountErrorOf } from './account-errors';
 import { AccountError } from './account-problem';
+import { callRpc } from './call-rpc';
 import { dropPendingClaim } from './claim-token';
 import { CONTRIBUTOR_AUTH_KEY } from './contribute-client';
 import { requireClient } from './require-client';
 import { deleteRecording, loadRecordings } from '../storage/recording-store';
 import { tellSavedRecordingsChanged } from '../storage/saved-recordings-channel';
 
-export interface DeleteAccountChoice {
-  /** "Also delete my uploaded routes": off, they stay on Para with no one’s name on them. */
-  deleteUploads: boolean;
-}
-
 /**
  * Deletes the signed-in account from Para (delete_my_account): its name, email, number and
- * password, and its stats; its uploads too when `deleteUploads`, else they stay, unlinked. Then
+ * password, and its stats. Its uploads stay on Para, unlinked, with no one's name on them. Then
  * forgets it on this phone: the session, an unfinished claim, the answers kept for it, and every
  * saved recording (recordingsToForget). Needs signal; nothing is forgotten on the phone unless
  * Para deleted it.
@@ -32,7 +28,7 @@ export interface DeleteAccountChoice {
  * With no answer kept, a lapsed session clears nothing.
  * Not while a recording is running: the screen calls it from Account settings only.
  */
-export async function deleteAccount({ deleteUploads }: DeleteAccountChoice): Promise<void> {
+export async function deleteAccount(): Promise<void> {
   let deletion: AccountDeletion;
   try {
     const client = await requireClient();
@@ -43,18 +39,18 @@ export async function deleteAccount({ deleteUploads }: DeleteAccountChoice): Pro
       deletion = step.deletion;
     } else {
       deletion = step.kept ?? { accountId: step.accountId };
-      const { error, status } = await client.rpc('delete_my_account', {
-        delete_uploads: deleteUploads,
-      });
-      if (error) {
-        if (status === 0) throw new AccountError('offline', error.message);
+      // Said every time: left out (or true), delete_my_account refuses and deletes nothing. Its
+      // default stays true for the app versions that call it so; only false deletes an account.
+      const result = await callRpc(client, 'delete_my_account', { delete_uploads: false });
+      if (result.kind === 'failure') {
+        if (result.isOffline) throw new AccountError('offline', result.message);
         // An anonymous phone, an editor, or an account that still owns rows of the map.
-        if (error.code === '42501' || error.message.startsWith('owns_map_rows')) {
+        if (result.code === '42501' || result.message.startsWith('owns_map_rows')) {
           dropDeletion();
-          throw new AccountError('not-deletable', error.message);
+          throw new AccountError('not-deletable', result.message);
         }
-        console.warn(`Para did not delete the account (HTTP ${status}):`, error.message);
-        throw new AccountError('not-accepting', error.message);
+        console.warn(`Para did not delete the account (HTTP ${result.status}):`, result.message);
+        throw new AccountError('not-accepting', result.message);
       }
       // Kept only once Para has said yes: a deletion kept before an answer that never came would
       // let a later tap, its session lapsed meanwhile, clear the phone of an account Para still has.

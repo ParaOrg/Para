@@ -63,6 +63,10 @@ export function lookReaders() {
         ]),
       ),
       lit: m.getPaintProperty('saved-routes-selected', 'line-color'),
+      // No rim at rest: the resting casing's layer is there, hidden; the lit lines' is drawn.
+      casingShown: m.getLayoutProperty('saved-routes-casing', 'visibility') !== 'none',
+      litCasing: m.getPaintProperty('saved-routes-selected-casing', 'line-color'),
+      roadLayers: m.getLayersOrder().filter((id) => id.startsWith('saved-routes-road-')),
       shaded,
     };
   };

@@ -29,6 +29,7 @@ const MARKER = /<!-- alert: (\S+) since=(\S+) failures=(\d+) -->/;
  * @property {string} [hint] The first thing to try, for a failure.
  * @property {string} [runbook] The runbook's link, from `runbookLink`.
  * @property {boolean} [isEvent] A failed run, not a state: each one is worth a comment.
+ * @property {string[]} [labels] Labels beside `alert` for a new issue, e.g. `needs-triage`.
  */
 
 /**
@@ -116,7 +117,12 @@ export function planAlerts(results, issues, now) {
       actions.push({ type: 'reopen', number: closed.number, body, comment });
       continue;
     }
-    actions.push({ type: 'create', title: result.title, body: alertBody(result, now, 1, now) });
+    actions.push({
+      type: 'create',
+      title: result.title,
+      body: alertBody(result, now, 1, now),
+      ...(result.labels && { labels: result.labels }),
+    });
   }
   return actions;
 }

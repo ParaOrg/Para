@@ -3,21 +3,22 @@ import { expect, fn, within } from 'storybook/test';
 
 import { AuthDialogs } from './auth-dialogs';
 
+/**
+ * The open dialog, to query inside. Found, not got: it opens in an effect, which a built
+ * Storybook runs only after the play has begun (install-prompt.stories.tsx).
+ */
+async function openDialog(canvasElement: HTMLElement) {
+  return within(await within(canvasElement.ownerDocument.body).findByRole('dialog'));
+}
+
 const meta = {
   title: 'Features/Studio/AuthDialogs',
   component: AuthDialogs,
-  // The dialogs dim the map they sit over, so give them a map-sized box. The
-  // `phone` parameter gives it a handset's width, as card-actions.stories.tsx
-  // does.
+  // A modal dialog sits in the top layer, against the viewport, over a map-coloured page. A
+  // Phone story sets the viewport (as InstallPrompt's do), not a box.
   decorators: [
-    (Story, ctx) => (
-      <div
-        className={
-          ctx.parameters.phone
-            ? 'relative h-160 w-[390px] bg-surface-quaternary'
-            : 'relative h-160 bg-surface-quaternary'
-        }
-      >
+    (Story) => (
+      <div className="h-160 bg-surface-quaternary">
         <Story />
       </div>
     ),
@@ -39,7 +40,7 @@ type Story = StoryObj<typeof meta>;
 /** No flag up, the usual case: nothing over the map. */
 export const None: Story = {
   play: async ({ canvasElement }) => {
-    await expect(within(canvasElement).queryByRole('heading')).toBeNull();
+    await expect(within(canvasElement.ownerDocument.body).queryByRole('dialog')).toBeNull();
   },
 };
 
@@ -47,7 +48,7 @@ export const None: Story = {
 export const SigningIn: Story = {
   args: { signingIn: true },
   play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+    const canvas = await openDialog(canvasElement);
     await expect(canvas.getByRole('heading', { name: 'Sign in to save' })).toBeVisible();
     await expect(canvas.getByRole('button', { name: 'Cancel' })).toBeVisible();
   },
@@ -58,7 +59,7 @@ export const Resetting: Story = {
   args: { resetting: true },
   play: async ({ canvasElement }) => {
     await expect(
-      within(canvasElement).getByRole('heading', { name: 'Choose a new password' }),
+      (await openDialog(canvasElement)).getByRole('heading', { name: 'Choose a new password' }),
     ).toBeVisible();
   },
 };
@@ -68,7 +69,7 @@ export const Invited: Story = {
   args: { resetting: true, isInvite: true },
   play: async ({ canvasElement }) => {
     await expect(
-      within(canvasElement).getByRole('heading', { name: 'Set your password' }),
+      (await openDialog(canvasElement)).getByRole('heading', { name: 'Set your password' }),
     ).toBeVisible();
   },
 };
@@ -77,11 +78,14 @@ export const Invited: Story = {
 export const ChangingPassword: Story = {
   args: { changingPasswordFor: 'owner@example.com' },
   play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+    const canvas = await openDialog(canvasElement);
     await expect(canvas.getByRole('heading', { name: 'Change password' })).toBeVisible();
     await expect(canvas.getByText('Signed in as owner@example.com.')).toBeVisible();
   },
 };
 
 /** At phone width, signing in. */
-export const Phone: Story = { args: { signingIn: true }, parameters: { phone: true } };
+export const Phone: Story = {
+  args: { signingIn: true },
+  globals: { viewport: { value: 'mobile1', isRotated: false } },
+};

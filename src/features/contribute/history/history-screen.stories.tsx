@@ -1,10 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { expect, fn, within } from 'storybook/test';
+import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
 import { HistoryScreen } from './history-screen';
 import type { HistoryItems, HistoryLoad } from './use-history-items';
-import { BottomToolbar, TOOLBAR_PLACE } from '../screens/bottom-toolbar';
 import type { Recording } from '../storage/recording-schema';
+import { BottomToolbar } from '../toolbar/bottom-toolbar';
+import { TOOLBAR_PLACE } from '../toolbar/toolbar-place';
 import type { UploadStatus } from '../uploads/upload-state';
 import type { Uploads } from '../uploads/use-uploads';
 
@@ -56,8 +57,6 @@ const uploadsOf = (statuses: Record<string, UploadStatus>, fallback: UploadStatu
     statusOf,
     waitingCount: 0,
     upload: fn(),
-    removeUploaded: fn(() => Promise.resolve()),
-    canRemove: (recording) => statusOf(recording).state === 'uploaded',
     check: null,
   };
 };
@@ -75,6 +74,7 @@ const itemsOf = (
   uploads,
   isOnPhone: (recording) => !elsewhere.some((other) => other.id === recording.id),
   factsOf: () => ({ distanceM: 12_400, isWalkOnly: false, trail: null }),
+  usedOf: () => [],
   load,
 });
 
@@ -86,7 +86,7 @@ const meta = {
     items: itemsOf(rides, allOf(UPLOADED)),
     pictures: new Map(),
     onOpenRecord: fn(),
-    onRemoveFromPhone: fn(),
+    onOpenRide: fn(),
   },
   decorators: [
     (Story) => (
@@ -123,7 +123,9 @@ export const Mixed: Story = {
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(canvas.getByRole('heading', { level: 1, name: 'History' })).toHaveFocus();
+    await waitFor(() =>
+      expect(canvas.getByRole('heading', { level: 1, name: 'History' })).toHaveFocus(),
+    );
     await expect(canvas.getAllByRole('heading', { level: 2 })).toHaveLength(5);
     await expect(canvas.getByRole('navigation', { name: 'Screens' })).toBeInTheDocument();
     await expect(
@@ -177,25 +179,26 @@ export const Scrolled: Story = {
     const list = canvasElement.querySelector('ul')?.parentElement;
     list?.scrollTo({ top: 400 });
     list?.dispatchEvent(new Event('scroll'));
-    await expect(canvasElement.querySelector('header')).toHaveClass('shadow-bottom-shadow');
+    await waitFor(() =>
+      expect(canvasElement.querySelector('header')).toHaveClass('shadow-bottom-shadow'),
+    );
   },
 };
 
 const OTHER_PHONE = [ride(10, 'Fairview Center Mall'), ride(11, 'Philcoa')];
 
-/** Uploads the account made on another phone sit among the rest; only Delete from Para is behind their ⋮. */
+/** Uploads the account made on another phone sit among the rest, and open their ride the same way. */
 export const FromAnotherPhone: Story = {
   args: {
     items: itemsOf([...rides.slice(0, 2), ...OTHER_PHONE], allOf(UPLOADED), {
       elsewhere: OTHER_PHONE,
     }),
   },
-  play: async ({ canvasElement }) => {
+  play: async ({ args, canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(canvas.getAllByRole('listitem')).toHaveLength(4);
-    await expect(
-      canvas.queryByRole('button', { name: /^Remove from this phone, .*Fairview Center Mall/ }),
-    ).toBeNull();
+    await userEvent.click(canvas.getByRole('button', { name: 'Fairview Center Mall' }));
+    await expect(args.onOpenRide).toHaveBeenCalledTimes(1);
   },
 };
 
@@ -211,11 +214,17 @@ export const LoadingAlongside: Story = {
   args: { items: itemsOf(rides, allOf(UPLOADED), { load: LOADING }) },
 };
 
-/** Nothing on this phone and the account's uploads not here yet. */
+/**
+ * Nothing on this phone and the account's uploads not here yet: after the first moments, cards'
+ * shapes shimmer where the list comes.
+ */
 export const Loading: Story = {
   args: { items: itemsOf([], allOf(UPLOADED), { load: LOADING }) },
   play: async ({ canvasElement }) => {
-    await expect(within(canvasElement).getByRole('status')).toHaveTextContent('Loading…');
+    await expect(within(canvasElement).getByRole('status')).toHaveTextContent('Loading your rides');
+    await waitFor(() =>
+      expect(canvasElement.querySelector('[data-skeleton]:not(.invisible)')).not.toBeNull(),
+    );
   },
 };
 

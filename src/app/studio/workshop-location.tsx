@@ -3,13 +3,14 @@ import { Suspense, useState, type ComponentProps } from 'react';
 
 import { LocationIcon } from '@/design-system/primitives/location-icon';
 import { CommuterLocation, type LocatorNote } from '@/features/locator';
+import { OverviewButton } from '@/features/routes/map/overview-button';
 import type { useCardCamera } from '@/features/routes/map/use-card-camera';
 import type { useCardStack } from '@/features/routes/map/use-card-stack';
 import type { useSavedHotspots } from '@/features/routes/map/use-saved-hotspots';
 import type { useSavedRoutes } from '@/features/routes/map/use-saved-routes';
 import type { HotspotRow } from '@/features/routes/model/hotspots';
 import type { DirectionRow } from '@/features/routes/model/routes';
-import { STUDIO_BASEMAPS, STUDIO_BASEMAP_THUMBNAILS } from '@/features/studio';
+import { FootbridgesSwitch, STUDIO_BASEMAPS, STUDIO_BASEMAP_THUMBNAILS } from '@/features/studio';
 import type { Turn } from '@/shared/hooks/commit-turn';
 import { retryingLazy } from '@/shared/lib/retrying-lazy';
 import type { StandingToast } from '@/shared/ui/standing-toasts';
@@ -25,6 +26,8 @@ interface WorkshopLocationProps {
   /** The page's turn for the pill's camera, taken where the workshop's hooks stand. */
   cameraTurn: Turn;
   hushedAt: ComponentProps<typeof CommuterLocation>['hushedAt'];
+  /** Whether the map's ⓘ stands at the bottom left, for the Overview button to stand beside it. */
+  hasCredits: boolean;
 }
 
 /** What the locator last said, and how many times: each says it again (Locator's onNote). */
@@ -43,7 +46,8 @@ const StandingToasts = retryingLazy(() =>
 /**
  * The commuter's own position and the map's design, one pill, as on the
  * public map: the studio sees the map the way a commuter does. What the
- * locator has to say is a problem toast at the top, as there.
+ * locator has to say is a problem toast at the top, as there; the Overview
+ * button stands at the bottom left, as there too.
  */
 export function WorkshopLocation({
   map,
@@ -54,6 +58,7 @@ export function WorkshopLocation({
   camera,
   cameraTurn,
   hushedAt,
+  hasCredits,
 }: WorkshopLocationProps) {
   const { ride, clearOfOpen } = camera;
   // What the locator last said, and how many times (Locator's onNote).
@@ -80,7 +85,9 @@ export function WorkshopLocation({
     : [];
 
   return (
-    <>
+    <FootbridgesSwitch map={map}>
+      {/* The camera back on what the open card frames, as on the public map. */}
+      <OverviewButton {...camera.overviewButton} isBesideCredits={hasCredits} map={map} />
       <CommuterLocation
         map={map}
         isMapLoaded={isMapLoaded}
@@ -108,6 +115,6 @@ export function WorkshopLocation({
           <StandingToasts toasts={toasts} />
         </Suspense>
       )}
-    </>
+    </FootbridgesSwitch>
   );
 }

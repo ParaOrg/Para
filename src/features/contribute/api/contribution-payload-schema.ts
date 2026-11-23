@@ -31,6 +31,12 @@ const farePhpSchema = z.number().check(
   z.refine((fare) => Math.abs(fare * 100 - Math.round(fare * 100)) < 1e-6, 'whole centavos'),
 );
 
+/** A ride's whole trail as it is uploaded and kept on Para: one thinned GeoJSON line. */
+export const rideLineSchema = z.object({
+  type: z.literal('LineString'),
+  coordinates: z.array(z.tuple([z.number(), z.number()])),
+});
+
 /** What `save_contribution` takes: one recording, whole, in the database's own names. */
 export const contributionPayloadSchema = z.object({
   id: z.string(),
@@ -56,14 +62,17 @@ export const contributionPayloadSchema = z.object({
   /** What the contributor paid for the whole recording, in pesos; absent until the app asks. */
   fare_php: z.optional(z.nullable(farePhpSchema)),
   point_count: z.number(),
-  events: z.array(z.object({ kind: z.string(), at: isoTime, to: z.optional(z.string()) })),
-  gaps: z.array(z.object({ from: isoTime, to: isoTime, reasons: z.array(z.string()) })),
-  line: z.nullable(
+  /** A mark's `note` is the contributor's words on the stop they flagged. */
+  events: z.array(
     z.object({
-      type: z.literal('LineString'),
-      coordinates: z.array(z.tuple([z.number(), z.number()])),
+      kind: z.string(),
+      at: isoTime,
+      to: z.optional(z.string()),
+      note: z.optional(z.string()),
     }),
   ),
+  gaps: z.array(z.object({ from: isoTime, to: isoTime, reasons: z.array(z.string()) })),
+  line: z.nullable(rideLineSchema),
   west: z.nullable(z.number()),
   south: z.nullable(z.number()),
   east: z.nullable(z.number()),

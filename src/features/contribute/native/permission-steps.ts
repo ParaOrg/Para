@@ -8,8 +8,7 @@ const BACKGROUND_LOCATION_SDK = 29;
 export const PERMISSION_REASONS = {
   notifications: {
     title: 'Show the recording notice',
-    reason:
-      'While you record, Android shows a notice that says Para is recording. It is how you know the recording is on.',
+    reason: 'While you record, the notice shows your ride. It is how you know the recording is on.',
     refusedTitle: 'The recording notice is off',
     refused:
       'Without it, Para cannot show its recording notice. You can still record, but the notice that tells you it is on will not show.',
@@ -54,4 +53,16 @@ export function firstMissing(
 /** Without location nothing can be recorded; the others only change how well it goes on. */
 export function canRecordWithout(permission: NativePermission): boolean {
   return permission !== 'location';
+}
+
+/**
+ * Whether a Start may go on with the phone's location: on already, or turned on from Google's
+ * "Turn on location?" dialog (`askToTurnOn`, asked only when it is off). "No, thanks", or a phone
+ * without the dialog ("unknown"), is no.
+ */
+export async function isLocationReady(
+  isLocationOn: boolean,
+  askToTurnOn: () => Promise<'on' | 'off' | 'unknown'>,
+): Promise<boolean> {
+  return isLocationOn || (await askToTurnOn()) === 'on';
 }

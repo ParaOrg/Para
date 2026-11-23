@@ -49,10 +49,10 @@ export function StudioApp() {
 
   if (!session && !admitted && !skipSignInForTests()) {
     return (
-      <div className="relative h-full w-full bg-neutral-100">
+      <div className="relative h-full w-full bg-surface">
         {notice ?? (
           <SignIn
-            title="Sign in to Para Studio"
+            title="Studio sign in"
             notice={recovery.error ? `Reset link problem: ${recovery.error}` : null}
           />
         )}

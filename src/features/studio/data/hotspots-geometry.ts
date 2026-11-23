@@ -1,10 +1,11 @@
 import { passIndex } from '@/features/routes/geo/pass';
-import { entryDistance, firstTouchIndex, type Ring } from '@/features/routes/geo/ring';
+import { firstTouchIndex, type Ring } from '@/features/routes/geo/ring';
 import { servedBy, directionLine, isLoop, type DirectionRow } from '@/features/routes/model/routes';
 
-// Pure functions, kept apart from the writes (hotspots-write.ts), which need the
-// Supabase client a test cannot load: so they can be unit-tested, and so the
-// save panel can show exactly what a save will write before it writes it.
+import { entryDistance } from './hotspot-ring';
+
+// Pure functions, so they can be unit-tested, and so the save panel can show
+// exactly what a save will write before it writes it.
 
 /**
  * Which directions pass this outline, and where along each one. This is a

@@ -3,42 +3,49 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import type { LngLat } from '@/shared/utils/geo';
 
-import { useHotspotTaps } from './hotspot-taps';
 import { boxMarks, placeHull } from './hotspots-shown';
 import { loadOnce } from './load-once';
 import { APP_MOVE } from './map-view';
+import { useHotspotTaps } from './use-hotspot-taps';
 import { useSavedHotspotsLayers } from './use-saved-hotspots-layers';
 import { letGoHolds } from '../cards/card-stack';
-import type { HotspotLink, Hotspot } from '../model/hotspots';
+import type { HotspotLink, Hotspot, HotspotKind } from '../model/hotspots';
 import { orderLinked } from '../model/timeline';
 
 /**
- * Every saved hotspot, drawn for everyone as a shaded outline in its kind's
- * colour, with its route links alongside so the tap card can list them.
+ * Every saved hotspot, drawn for everyone as a shaded outline in its kind's colour, with its route
+ * links alongside so the tap card can list them.
  *
- * `load` decides where the hotspots come from: the public map reads the
- * published map, the editor the live tables. Pass a function defined once at
- * module level, not a new one per render, or it reloads every render.
+ * `load` decides where the hotspots come from: the public map reads the published map, the editor
+ * the live tables. Pass a function defined once at module level, or it reloads every render.
  *
- * The editor also passes `drawing` and `hiddenHotspotId`; the public map passes
- * neither, and both default to off. Both pass `muted` while a trip is open: the hotspot card or route list it was picked from waits
- * hidden behind it, and the hotspots that lit go dark until ‹ brings it back,
- * so the map lights only the trip.
+ * The editor also passes `drawing` and `hiddenHotspotId`; the public map neither. Both pass `muted`
+ * while a trip is open: what it was picked from waits hidden behind it, and the hotspots that lit
+ * go dark until it is left, so the map lights only the trip.
  */
 export function useSavedHotspots<S extends Hotspot>(
   map: MapLibreMap | null,
   load: () => Promise<{ hotspots: S[]; links: HotspotLink[] }>,
-  opts: { drawing?: boolean; hiddenHotspotId?: string | null; muted?: boolean } = {},
+  opts: {
+    drawing?: boolean;
+    hiddenHotspotId?: string | null;
+    muted?: boolean;
+    /** Whether the hotspots' pins are drawn zoomed in; their boxes and names are either way. */
+    shouldShowPins?: boolean;
+    /** Whose dots are drawn zoomed out: these kinds' alone, or every hotspot's when not given. */
+    dotKinds?: readonly HotspotKind[];
+    /** Whether a tap on a hotspot opens it (useHotspotTaps); the public map's take none for now. */
+    isTappable?: boolean;
+  } = {},
 ) {
-  const muted = opts.muted ?? false;
+  const { muted = false, hiddenHotspotId, shouldShowPins, dotKinds, isTappable } = opts;
   const [hotspots, setHotspots] = useState<S[]>([]);
   const [links, setLinks] = useState<HotspotLink[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   /**
-   * The hotspots under a tap that landed on several things (hotspots, routes
-   * or both), for a chooser. Empty otherwise. The routes hook keeps the route
-   * half of the same tap.
+   * The hotspots under a tap that landed on several things (hotspots, routes or both), for a
+   * chooser. Empty otherwise. The routes hook keeps the route half of the same tap.
    */
   const [candidates, setCandidates] = useState<S[]>([]);
   /**
@@ -48,9 +55,8 @@ export function useSavedHotspots<S extends Hotspot>(
   const [letGoId, setLetGoId] = useState<string | null>(null);
 
   /**
-   * Choosing one hotspot answers the question the chooser was asking — unless
-   * `keepList`: a place opened over a trip keeps the list behind the trip,
-   * for its ‹ to find whole.
+   * Choosing one hotspot answers the question the chooser was asking — unless `keepList`: a place
+   * opened over a trip keeps the list behind the trip, for its ‹ to find whole.
    */
   const select = useCallback((id: string | null, opts: { keepList?: boolean } = {}) => {
     setSelectedId(id);
@@ -88,8 +94,7 @@ export function useSavedHotspots<S extends Hotspot>(
     }
   }, [load]);
 
-  // Once for each loader, however many times React runs the effect: twice
-  // as a page mounts in development (load-once.ts).
+  // Once for each loader, however often React runs the effect (load-once.ts).
   const loadedBy = useRef<typeof load | null>(null);
   useEffect(() => {
     loadOnce(loadedBy, load, () => void reload());
@@ -110,7 +115,7 @@ export function useSavedHotspots<S extends Hotspot>(
 
   // ----------------------------------------------------------------- layers
 
-  useSavedHotspotsLayers(map, hotspots, opts.hiddenHotspotId, marks, hull);
+  useSavedHotspotsLayers(map, hotspots, hiddenHotspotId, marks, hull, shouldShowPins, dotKinds);
 
   // ----------------------------------------------------------------- events
 
@@ -118,6 +123,7 @@ export function useSavedHotspots<S extends Hotspot>(
     map,
     { drawing: drawingRef, byId },
     { selectedId: setSelectedId, candidates: setCandidates },
+    isTappable,
   );
 
   const selected = hotspots.find((s) => s.id === selectedId) ?? null;

@@ -1,12 +1,13 @@
 // The cards that stand in for one another over the map, and what each does
 // to the others (src/features/routes/cards/card-stack.ts): the list asking, a trip's ‹,
-// the shared height, a trip behind a place's card, a row let go, and what
-// the card on show frames as the sheet settles.
+// the shared height, a trip behind a place's card, a row let go, what
+// the card on show frames for its Overview button, and what the browser's Back does.
 //
 //   node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs tests/unit/card-stack-test.mjs
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  backMove,
   framedBy,
   isChoosing,
   letGoHolds,
@@ -68,9 +69,9 @@ test('no ‹ when no other route sharing an end is drawn that way round', () => 
   assert.equal(tripBack(null, [talaNova, talaFv], false), null);
 });
 
-test('the shared height stays as left while a card is open, Middle once none is', () => {
-  for (const snap of ['low', 'middle', 'max', 0.7]) assert.equal(sharedSnap(snap, true), snap);
-  for (const snap of ['low', 'middle', 'max', 0.7]) assert.equal(sharedSnap(snap, false), 'middle');
+test('the shared height stays as left while a card is open, Low once none is', () => {
+  for (const snap of ['low', 'full', 0.7]) assert.equal(sharedSnap(snap, true), snap);
+  for (const snap of ['low', 'full', 0.7]) assert.equal(sharedSnap(snap, false), 'low');
 });
 
 test("a trip behind a place's card holds only while that card is open and no trip is", () => {
@@ -116,7 +117,7 @@ test('an open trip frames its route, whatever stands behind it', () => {
 });
 
 // The owner's ask of 2026-10-16: an end picked after a start, "the overview
-// of new start and end", and so as the sheet settles after.
+// of new start and end", and so the Overview button after.
 test('an open trip with a ride from a start to an end frames that ride', () => {
   const ride = [
     [121.01, 14.7],
@@ -151,4 +152,52 @@ test('the route list with none picked frames what it lights', () => {
 
 test('nothing open frames nothing', () => {
   assert.equal(framedBy(null, null, null, false, null, [lit]), null);
+});
+
+/** The cards up, none unless named. */
+const up = (cards) => ({ trip: false, place: false, list: false, tripBehind: false, ...cards });
+
+test('Back on a trip: its ‹ where a card is kept behind it, else its ✕', () => {
+  assert.equal(backMove(up({ trip: true, list: true })), 'trip-to-behind');
+  assert.equal(backMove(up({ trip: true, place: true })), 'trip-to-behind');
+  // Opened on its own: Back closes it, and never lists the routes sharing its ends.
+  assert.equal(backMove(up({ trip: true })), 'close-all');
+});
+
+test("Back on a place's card: the trip it stood in front of, else it closes", () => {
+  assert.equal(backMove(up({ place: true, tripBehind: true })), 'place-to-trip');
+  assert.equal(backMove(up({ place: true, tripBehind: true, list: true })), 'place-to-trip');
+  assert.equal(backMove(up({ place: true })), 'close-place');
+});
+
+test('Back on the route list closes it; with no card up, Back is not ours', () => {
+  assert.equal(backMove(up({ list: true })), 'close-all');
+  assert.equal(backMove(up({})), null);
+});
+
+test('Back after Back always ends with no card up: it can never hold a commuter on the page', () => {
+  /** The cards after a move, as useCardStack leaves them. */
+  const after = (cards, move) =>
+    ({
+      'trip-to-behind': { ...cards, trip: false },
+      // The trip is back, over whatever stood behind it before the place's card.
+      'place-to-trip': { ...cards, trip: true, place: false, tripBehind: false },
+      'close-place': { ...cards, place: false },
+      'close-all': up({}),
+    })[move];
+  for (const trip of [false, true])
+    for (const place of [false, true])
+      for (const list of [false, true])
+        for (const tripBehind of [false, true]) {
+          let cards = { trip, place, list, tripBehind };
+          let presses = 0;
+          for (let move = backMove(cards); move !== null; move = backMove(cards)) {
+            cards = after(cards, move);
+            presses += 1;
+            assert.ok(
+              presses <= 4,
+              `still a card up after ${presses} Backs from ${JSON.stringify({ trip, place, list, tripBehind })}`,
+            );
+          }
+        }
 });

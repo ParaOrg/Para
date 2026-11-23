@@ -3,23 +3,33 @@ import { useEffect, useRef, useState, type RefObject } from 'react';
 
 import type { SheetHeight } from '@/shared/ui/bottom-sheet';
 import type { Snap } from '@/shared/ui/sheet-gesture';
-import { clearOfSheet } from '@/shared/ui/sheet-room';
 import type { LngLat } from '@/shared/utils/geo';
 
-import {
-  useCameraBefore,
-  useHeightOverview,
-  useRideOverview,
-  useSwitchOverview,
-} from './use-overviews';
+import { clearOfSheet } from './sheet-room';
+import { useOverview } from './use-overview';
+import { useCameraBefore, useRideOverview, useSwitchOverview } from './use-overviews';
 import { useRideTo } from './use-ride-to';
 import type { Highlight } from './use-saved-routes';
 import { framedBy, type Framed } from '../cards/card-stack';
 import type { PickedPlace } from '../cards/route-card-stack';
 import type { Hotspot } from '../model/hotspots';
+import { nearestStopOn, walkToLandmark, type HintuanNearHere } from '../model/landmark-search';
 import type { Livery } from '../model/liveries';
+import type { ModeFilter } from '../model/mode-filter';
 import { routeTimeline } from '../model/ride';
 import { directionLine, type Direction } from '../model/routes';
+import { rowOfBox } from '../model/timeline';
+import type { Landmark } from '../published/landmark-file-schema';
+
+/**
+ * A landmark made the goal by "Go here" (ticket 07): the hintuans near it, and, once a route is
+ * opened from the place's card, where that trip's end was picked for it.
+ */
+interface LandmarkGoal {
+  landmark: Landmark;
+  near: readonly HintuanNearHere[];
+  end: { directionId: string; rowId: string; distanceM: number } | null;
+}
 
 interface Routes<V extends Direction> {
   directions: readonly V[];
@@ -28,6 +38,7 @@ interface Routes<V extends Direction> {
   litDirections: readonly V[];
   select: (id: string | null, opts?: { keepList?: boolean }) => void;
   flip: () => void;
+  filterModes: (filter: ModeFilter) => void;
   highlightCard: (h: Highlight | null) => void;
 }
 
@@ -41,6 +52,8 @@ interface Hotspots<S extends Hotspot> {
 }
 
 interface Cards {
+  /** Any card up: with none, a landmark's "Go here" is let go. */
+  open: boolean;
   snap: Snap;
   backFromTrip: (() => void) | null;
   height: SheetHeight;
@@ -53,10 +66,11 @@ interface Cards {
 /**
  * The camera with the cards, for both apps: a hintuan picked on a trip, the
  * map gliding there; the overviews of use-overviews.ts — SWITCH, an end
- * picked, the sheet settled at another height — and the camera from before a
- * RouteCard was picked on a hotspot's card, back as it is let go; and the card
- * buttons that move it. Opening a trip, picking a RouteCard and opening the
- * route list leave the camera where the commuter had it. `root` goes on the page,
+ * picked — and the Overview button's (useOverview), which also takes in a
+ * trip's whole route once as it opens; the camera from before a RouteCard was
+ * picked on a hotspot's card, back as it is let go; and the card buttons that
+ * move it. Picking a RouteCard, opening the route list and the sheet changing
+ * height leave the camera where the commuter had it. `root` goes on the page,
  * `tripDock` on the trip card, `hotspotDock` on a hotspot's.
  *
  * `camera: false` turns those off: the overviews and the camera kept from
@@ -91,6 +105,15 @@ export function useCardCamera<V extends Direction, S extends Hotspot>(
     onGlide: () => cards.clearOf(tripDock)(),
     tipId: opts.tipId ?? null,
   });
+  // "Go here" from a landmark (ticket 07). Gone with the cards: once none is up, the trip it was
+  // for is over. Let go in the render that finds them closed, as the ride's picks are (useRidePicks).
+  const [goal, setGoal] = useState<LandmarkGoal | null>(null);
+  if (goal && !cards.open) setGoal(null);
+  // The walk from the trip's end to the landmark, while that end is the one picked for it.
+  const walk =
+    goal?.end && saved.selected?.id === goal.end.directionId && ride.pickedId === goal.end.rowId
+      ? walkToLandmark(goal.end.distanceM, goal.landmark.name)
+      : null;
   // The page, and the card's sheet on show in it, for what the camera keeps clear of.
   const root = useRef<HTMLDivElement>(null);
   const openSheet = () =>
@@ -119,20 +142,17 @@ export function useCardCamera<V extends Direction, S extends Hotspot>(
   const switched = () => setSwitches((n) => n + 1);
   useSwitchOverview(cam, saved.litDirections, switches, openSheet, cards.snap);
   // A ride from a start to an end (the owner's call): what the camera takes
-  // in once the end is picked (pickOnTrip, endOnTrip), and what the trip
-  // frames as the sheet settles, in place of its whole route.
+  // in once the end is picked (pickOnTrip, endOnTrip), and what the trip's
+  // Overview frames, in place of its whole route.
   const rideLine = ride.startId !== null ? (ride.ridden?.line ?? null) : null;
   const [endPicks, setEndPicks] = useState(0);
   useRideOverview(cam, rideLine && [rideLine], endPicks, openSheet, cards.snap);
-  /** An end picked after a start: the sheet to Middle, or, there already, the camera alone. */
-  const takeInTheRide = () => {
-    if (cards.height.snap === 'middle') setEndPicks((n) => n + 1);
-    else cards.height.onSnap('middle');
-  };
-  // The sheet settled at another height: what the card on show frames, again,
-  // in the map it leaves — a trip's route, or its ride from a start to an
-  // end; a picked card's routes or what the list lights, a hotspot's place
-  // (framedBy).
+  /**
+   * An end picked after a start: the camera takes in the ride, the sheet left where it is (the
+   * owner's rule: once raised, the commuter moves it).
+   */
+  const takeInTheRide = () => setEndPicks((n) => n + 1);
+  // What the Overview button frames: a trip's route or ride, a picked card's routes (framedBy).
   const framed = (): Framed => {
     const ids = saved.highlight && new Set(saved.highlight.ids);
     const picked = ids && saved.directions.filter((v) => ids.has(v.id));
@@ -145,7 +165,12 @@ export function useCardCamera<V extends Direction, S extends Hotspot>(
       saved.litDirections,
     );
   };
-  useHeightOverview(cam, cards.snap, framed, openSheet);
+  // The button is for a trip and a picked RouteCard; the name changes with what it would frame.
+  const framing = saved.selected
+    ? `trip:${saved.selected.id}:${ride.startId ?? ''}:${ride.endPicked ?? ''}`
+    : saved.highlight && `cards:${saved.highlight.ids.join(',')}`;
+  const opened = saved.selected?.id ?? null;
+  const overviewButton = useOverview(cam, framing || null, framed(), openSheet, cards.snap, opened);
 
   return {
     root,
@@ -154,6 +179,7 @@ export function useCardCamera<V extends Direction, S extends Hotspot>(
     ride,
     openSheet,
     switched,
+    overviewButton,
 
     /** Where the commuter's own position sits as the camera follows it: clear of the card on show. */
     clearOfOpen: (): [number, number] =>
@@ -163,6 +189,45 @@ export function useCardCamera<V extends Direction, S extends Hotspot>(
     openTrip: (v: { id: string }, livery?: Livery) => {
       keepForTrip();
       cards.openTrip(v, livery);
+    },
+
+    /** The landmark "Go here" made the goal, while it holds: its pin stays on the map. */
+    goalLandmark: goal?.landmark ?? null,
+    /** The walk to it from the trip's end, in words for the trip card; null unless that end is picked. */
+    walk,
+
+    /**
+     * "Go here" on a hintuan near a landmark (ticket 07): the landmark made the goal, and the
+     * hintuan's place opened, its routes listed as a tap on its name lists them.
+     */
+    goHere: (landmark: Landmark, near: readonly HintuanNearHere[], hotspotId: string) => {
+      setGoal({ landmark, near, end: null });
+      cards.openPlace(hotspotId, tripDock.current ? tripDock : hotspotDock);
+    },
+
+    /** The search started over: the goal let go. */
+    letGoalGo: () => setGoal(null),
+
+    /**
+     * A route picked on a place's card: its trip, the camera as it was kept for the trip's ‹. With
+     * a landmark the goal (ticket 07), its end is already picked at the hintuan nearest the
+     * landmark that the route stops at.
+     */
+    openTripFromPlace: (v: Direction, livery?: Livery) => {
+      keepForTrip();
+      cards.openTrip(v, livery);
+      const stop = goal && nearestStopOn(v.id, goal.near);
+      if (!stop) return;
+      const timeline = routeTimeline(
+        v,
+        hotspots.hotspots,
+        hotspots.hotspotsAlong(v.id, directionLine(v)),
+      );
+      const rows = [timeline.from, ...timeline.between, timeline.to].filter((r) => r !== null);
+      const rowId = rowOfBox(stop.hintuan, rows, hotspots.hotspots);
+      if (!rowId) return;
+      ride.pickOn(v.id, rowId);
+      setGoal({ ...goal, end: { directionId: v.id, rowId, distanceM: stop.distanceM } });
     },
 
     /** The trip's ‹ (useCardStack's), and the camera from before the trip back with the card. Null: no ‹. */
@@ -175,9 +240,8 @@ export function useCardCamera<V extends Direction, S extends Hotspot>(
 
     /**
      * A row picked on the trip, or its dot on the map (useRideTo's pick). An
-     * end picked after a start takes the sheet to Middle and the camera in to
-     * the ride between them (the owner's call): as the sheet settles there,
-     * or at once when it is already there.
+     * end picked after a start takes the camera in to the ride between them,
+     * the sheet left where it is (the owner's rule).
      */
     pickOnTrip: (id: string | null) => {
       const isNewEnd =
@@ -221,15 +285,17 @@ export function useCardCamera<V extends Direction, S extends Hotspot>(
       switched();
     },
 
-    /**
-     * A trip's "Other routes": the sheet to Middle from wherever it is, so
-     * the map shows the route the camera takes in (the owner's call), and
-     * that route's trip in this one's place.
-     */
-    otherRoute: (v: { id: string }) => {
-      if (cards.height.snap !== 'middle') cards.height.onSnap('middle');
-      saved.select(v.id, { keepList: true });
+    /** The route list's filter: the camera takes in what it leaves lit, as for SWITCH (the owner's call). */
+    filterList: (filter: ModeFilter) => {
+      saved.filterModes(filter);
+      switched();
     },
+
+    /**
+     * A trip's "Other routes": that route's trip in this one's place, the
+     * sheet left where it is (the owner's rule).
+     */
+    otherRoute: (v: { id: string }) => saved.select(v.id, { keepList: true }),
 
     /**
      * A RouteCard on a hotspot's card picked, or let go: the camera from
@@ -248,13 +314,5 @@ export function useCardCamera<V extends Direction, S extends Hotspot>(
      */
     openPlace: (hotspotId: string) =>
       cards.openPlace(hotspotId, tripDock.current ? tripDock : hotspotDock),
-
-    /** A tail's name with no trip open: its ride's trip, in the colour of the card picked, if one is. */
-    openRide: (id: string) => {
-      const v = saved.directions.find((x) => x.id === id);
-      if (!v) return;
-      keepForTrip();
-      cards.openTrip(v, saved.highlight?.livery);
-    },
   };
 }

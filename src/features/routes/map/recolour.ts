@@ -2,7 +2,7 @@ import type { LayerSpecification, StyleSpecification } from 'maplibre-gl';
 
 /*
  * Changing every colour a style draws by one rule: Colour's muting
- * (daylight.ts) and Monochrome's cool gray (monochrome.ts). A rule takes each
+ * (daylight.ts) and Monochrome's violet gray (monochrome.ts). A rule takes each
  * colour as hue, saturation and lightness and gives back its replacement, so
  * the colours drawn stay the style's own (or map-colours.ts's), moved, and no
  * colour is written here.
@@ -66,6 +66,13 @@ function parseColour(text: string): Hsla | null {
     return { hue, saturation, lightness, alpha };
   }
   return null;
+}
+
+/** The hue of a CSS colour as the styles write them, 0 to 360; throws on any other string. */
+export function hueOf(text: string): number {
+  const colour = parseColour(text);
+  if (!colour) throw new Error(`not a colour: ${text}`);
+  return colour.hue;
 }
 
 const asCss = (c: Hsla): string =>

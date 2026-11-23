@@ -1,12 +1,12 @@
 import type { Ref } from 'react';
 
 import { CreditsButton } from '@/features/routes/map/credits-button';
+import { useFocusHeading } from '@/shared/hooks/use-focus-heading';
 
 import { RecordingCard } from './recording-card';
 import { TrackingButton } from './tracking-button';
 import { BackToMapButton } from '../common/back-to-map-button';
-import { useFocusHeading } from '../common/use-focus-heading';
-import { useStackRoom } from '../common/use-stack-room';
+import { useHeightVar } from '../common/use-height-var';
 import type { RecordingFigures } from '../recorder/recording-figures';
 
 interface UnfinishedScreenProps {
@@ -32,7 +32,7 @@ export function UnfinishedScreen({
   creditsButtonRef,
 }: UnfinishedScreenProps) {
   const headingRef = useFocusHeading();
-  const stackRef = useStackRoom();
+  const stackRef = useHeightVar('--stack-room');
   return (
     <>
       <BackToMapButton />
@@ -52,7 +52,7 @@ export function UnfinishedScreen({
             id="unfinished-heading"
             ref={headingRef}
             tabIndex={-1}
-            className="text-xl/7 font-extrabold focus:outline-none"
+            className="text-xl/7 font-bold focus:outline-none"
           >
             A recording was left open
           </h1>

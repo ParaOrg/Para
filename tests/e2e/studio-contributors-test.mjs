@@ -350,7 +350,7 @@ await open('SM Fairview to Cubao');
 await shot('1-contributors-opened');
 const before = writes().length;
 await page.getByRole('button', { name: 'Use this line' }).click();
-await page.getByRole('button', { name: /Done/ }).waitFor({ timeout: 10000 });
+await page.getByTestId('draw-toolbar').waitFor({ timeout: 10000 });
 const draft = async () =>
   page.evaluate(() => JSON.parse(localStorage.getItem('para.draft.v1') ?? 'null'));
 await page
@@ -379,18 +379,20 @@ check(
 );
 check('  nothing is written yet', writes().length === before);
 await shot('2-use-this-line');
-await page.getByRole('button', { name: /Done/ }).click();
+// On a computer the route's form already stands beside the map; narrower, Done opens it.
+if (!(await page.getByTestId('sidebar').isVisible()))
+  await page.getByRole('button', { name: /Done/ }).click();
 await page.getByTestId('save-head').waitFor({ timeout: 10000 });
 await page.getByTestId('save-head').selectOption({ label: 'Fairview Terminal' });
 await page.getByTestId('save-tail').selectOption({ label: 'Cubao Terminal' });
 await shot('3-save-panel');
-await page.getByRole('button', { name: /^Save$/ }).click();
-const wrote = await waitFor(
-  () => db.tables.route_variant.length > 0 && db.tables.contribution_use.length > 0,
-);
-const drawnDirection = db.tables.route_variant.find((v) => v.shape);
+await page.getByRole('button', { name: 'Save as draft', exact: true }).click();
+// The save is a draft: the direction it holds is the one the use is recorded against.
+const routeDraft = () => db.tables.draft.find((d) => d.kind === 'route');
+const wrote = await waitFor(() => !!routeDraft() && db.tables.contribution_use.length > 0);
+const drawnDirection = routeDraft()?.payload.directions.find((v) => v.shape);
 check(
-  'saving the direction records contribution_use (direction), against the direction it wrote',
+  'saving the direction records contribution_use (direction), against the direction its draft holds',
   wrote &&
     db.tables.contribution_use.length === 1 &&
     db.tables.contribution_use[0].kind === 'direction' &&
@@ -411,7 +413,7 @@ await page.getByText('Contributors', { exact: true }).click();
 await list.waitFor();
 await open('SM Fairview to Cubao');
 await page.getByRole('button', { name: 'Draw a hintuan here' }).click();
-await page.getByRole('button', { name: /Done/ }).waitFor({ timeout: 10000 });
+await page.getByTestId('draw-toolbar').waitFor({ timeout: 10000 });
 const box = await draft();
 check(
   'Draw a hintuan here opens the Playground with a box begun round the hinto',
@@ -423,14 +425,19 @@ check(
   /Shape the box/.test(await page.getByRole('region', { name: 'From an upload' }).innerText()),
 );
 await shot('4-draw-a-hintuan');
-await page.getByRole('button', { name: /Done/ }).click();
+// On a computer the hotspot's sidebar already stands beside the map; narrower, Done opens it.
+if (!(await page.getByTestId('sidebar').isVisible()))
+  await page.getByRole('button', { name: /Done/ }).click();
 await page.getByPlaceholder('SM Fairview Ilalim').fill('Mid-route Hintuan');
-await page.getByRole('button', { name: 'Save hintuan' }).click();
+await page.getByRole('button', { name: 'Save as draft', exact: true }).click();
 await waitFor(() => db.tables.contribution_use.length > 1);
-const newStop = db.tables.stop.find((s) => s.name === 'Mid-route Hintuan');
+const newStopDraft = db.tables.draft.find(
+  (d) => d.kind === 'hotspot' && d.payload.stop.name === 'Mid-route Hintuan',
+);
+const newStop = newStopDraft && { id: newStopDraft.subject_id };
 const hintuanUses = db.tables.contribution_use.filter((u) => u.kind === 'hintuan');
 check(
-  'saving the hintuan records contribution_use (hintuan) for each upload with a hinto inside the box',
+  "saving the hintuan records contribution_use (hintuan) for each upload with a hinto inside the box, against its draft's id",
   !!newStop &&
     hintuanUses.length === 2 &&
     hintuanUses.every((u) => u.subject_id === newStop.id) &&
@@ -534,7 +541,7 @@ check(
   (await body()).includes('Walking is left out: Use this line takes the ride only.'),
 );
 await page.getByRole('button', { name: 'Use this line' }).click();
-await page.getByRole('button', { name: /Done/ }).waitFor({ timeout: 10000 });
+await page.getByTestId('draw-toolbar').waitFor({ timeout: 10000 });
 const rideOnly = await draft();
 check(
   '  which begins the direction at the ride: from the 2nd minute to the 5th',
@@ -593,7 +600,7 @@ check(
 /** The control points a ride's Use this line begins, read off the draft. */
 const useRide = async (n) => {
   await useButtons.nth(n).click();
-  await page.getByRole('button', { name: /Done/ }).waitFor({ timeout: 10000 });
+  await page.getByTestId('draw-toolbar').waitFor({ timeout: 10000 });
   const points = (await draft())?.controlPoints ?? [];
   await page.getByTitle('Discard this route').click();
   await waitFor(
@@ -630,7 +637,7 @@ await page.getByText('Contributors', { exact: true }).click();
 await list.waitFor();
 await open('SM Fairview to Cubao');
 await page.getByRole('button', { name: 'Use this line' }).click();
-await page.getByRole('button', { name: /Done/ }).waitFor({ timeout: 10000 });
+await page.getByTestId('draw-toolbar').waitFor({ timeout: 10000 });
 const first = await draft();
 await page.getByText('Contributors', { exact: true }).click();
 await open('Fairview to Cubao');

@@ -14,6 +14,8 @@ import { chunkModules } from './scripts/node/vite-plugins/chunk-modules.ts';
 import { mapFileEarly } from './scripts/node/vite-plugins/map-file-early.ts';
 import { maplibreWorkerWithThePage } from './scripts/node/vite-plugins/maplibre-worker.ts';
 import { onlyTheMapHasAManifest } from './scripts/node/vite-plugins/only-the-map-has-a-manifest.ts';
+import { previewPolicies } from './scripts/node/vite-plugins/preview-policies.ts';
+import { servedSource } from './scripts/node/vite-plugins/served-source.ts';
 import { stylesheetsFirst } from './scripts/node/vite-plugins/stylesheets-first.ts';
 import { parseBasemapHost } from './src/shared/config/basemap-host.ts';
 
@@ -46,6 +48,10 @@ export default defineConfig({
     stylesheetsFirst(),
     // The contributor page's own worker, apart from the one above: dist/contribute/sw.js.
     contributeWorker(),
+    // `vite preview` only: the content policies of the build's _headers, as Cloudflare sends them.
+    previewPolicies(),
+    // Under `npm run dev` only: which folder and commit this server serves, for the browser suites.
+    servedSource(),
   ],
   resolve: {
     // `@/x` is src/x, for any import that leaves its own folder. tsconfig.json
@@ -143,17 +149,18 @@ export default defineConfig({
               test: /[\\/]node_modules[\\/](@supabase[\\/][^\\/]+|iceberg-js|tslib)[\\/]/,
               priority: 1,
             },
-            //  - tanstack-query: the studio's server state (the review queue
-            //    and the Contributors map), two lazy chunks of the studio's.
+            //  - tanstack-query: the server state of the studio (the review queue
+            //    and the Contributors map) and of the contributor page. Never
+            //    loaded by the public page (check-build.mjs proves it).
             {
               name: 'tanstack-query',
               test: /[\\/]node_modules[\\/]@tanstack[\\/]/,
               priority: 1,
             },
-            //  - fields: the design system's input fields, which only the
-            //    studio and the contributor page draw. Both import them, so left
-            //    to `shared` they would ride along on the public page, which has
-            //    no form.
+            //  - fields: the design system's input fields. The studio and the
+            //    contributor page draw most of them; the public page draws one,
+            //    its place search (and a toast borrows a field's icon), so it
+            //    loads this chunk too.
             {
               name: 'fields',
               test: /[\\/]src[\\/]design-system[\\/]primitives[\\/](field-frame|field-error|field-icons|text-field|text-area-field|password-field|phone-field|otp-field|select-field)\.tsx$/,
@@ -170,12 +177,41 @@ export default defineConfig({
             //    toast, its host and the location drawing a location problem
             //    leads with: the public page fetches them the first time it has
             //    something to say, and in `shared` they would ride along on its
-            //    opening.
+            //    opening. Nor what only the other pages or a lazy chunk draw: the
+            //    design system's Switch (the Map Style card's, fetched with the
+            //    card), the contributor page's locator (ContributorLocation and
+            //    its permission check) and its css-duration. Nor the one
+            //    QueryClient (shared/lib/query-client.ts) the studio and the
+            //    contributor page make: in `shared` it brought TanStack Query
+            //    onto the public page's opening, which never asks a server. Nor
+            //    the hotspots' pin images and their layer, which the public map
+            //    and the studio fetch once the boxes are drawn and the
+            //    contributor page with its hotspots: no opening view shows a
+            //    pin. Nor place search (routes/search, the place, landmark and
+            //    directions-at models, look-at): the studio imports it too, and
+            //    in `shared` it would count against the public page's opening
+            //    budget for code it already carried in its own chunk; apart, it
+            //    is one chunk both pages load. Nor the footbridge layer and its
+            //    reader (.scratch/footbridges), fetched at street level by the
+            //    public map and, behind its switch, by the studio; nor the Map
+            //    Style card's rows, which the studio's switch joins. A
+            //    module lands in `shared` when two chunks import it, whichever
+            //    pages they are.
+            //  - contribute-core: the contributor page's client and its two error
+            //    kinds, which its opening and its lazy chunks (the claim, the
+            //    upload requests) both import. Left alone, Rolldown gives each a
+            //    file of its own, and every file the page opens with costs it
+            //    bytes against its budget (check-build.mjs); one file holds them.
+            {
+              name: 'contribute-core',
+              test: /[\\/]src[\\/]features[\\/]contribute[\\/]api[\\/](env|contribute-config|contribute-client|require-client|upload-problem|account-problem)\.ts$/,
+              priority: 1,
+            },
             {
               name: 'shared',
               minShareCount: 2,
               test: (id: string) =>
-                !/[\\/]src[\\/]((app|features)[\\/](studio|contribute)[\\/]|shared[\\/]ui[\\/]turnstile|features[\\/]routes[\\/]published[\\/](fetch-index|fetch-line|line-file-schema)\.ts$|features[\\/]routes[\\/]map[\\/]map-style\.tsx$|shared[\\/]ui[\\/](toast|toast-host|toast-queue|use-toast|standing-toasts)\.tsx?$|design-system[\\/]primitives[\\/]location-icon\.tsx$)/.test(
+                !/[\\/]src[\\/]((app|features)[\\/](studio|contribute)[\\/]|shared[\\/]ui[\\/]turnstile|features[\\/]routes[\\/]published[\\/](fetch-index|fetch-line|line-file-schema|fetch-footbridges|footbridge-file-schema)\.ts$|features[\\/]routes[\\/](search[\\/]|model[\\/](place-search|landmark-search|directions-at)\.ts$|map[\\/](look-at|footbridge-layer)\.ts$)|features[\\/]routes[\\/]map[\\/](map-style(-rows|-switch-row)?|location-labels-row)\.tsx$|shared[\\/]ui[\\/](toast|toast-host|toast-queue|use-toast|standing-toasts)\.tsx?$|design-system[\\/]primitives[\\/](location-icon|switch)\.tsx$|features[\\/]locator[\\/](contributor-location\.tsx|location-permission\.ts)$|shared[\\/]utils[\\/]css-duration\.ts$|shared[\\/]lib[\\/]query-client\.ts$|features[\\/]routes[\\/]map[\\/](hotspot-pin-images\.ts|(terminal|hintuan)-pin-icon\.svg\?raw)$)/.test(
                   id,
                 ),
             },

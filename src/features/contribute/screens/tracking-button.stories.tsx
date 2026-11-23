@@ -24,7 +24,7 @@ export const Resume: Story = { args: { variant: 'resume' } };
 
 export const Pause: Story = { args: { variant: 'pause' } };
 
-/** A recording left open after a reload stops where it was: red, as an end is. */
+/** A recording left open after a reload stops where it was: red, as an end is, with Finish's flag. */
 export const Stop: Story = { args: { variant: 'stop' } };
 
 /** Finish, the dark bar with the flag, while paused (4482:24032). */

@@ -2,12 +2,13 @@ import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-quer
 import { useMemo } from 'react';
 
 import { historyKeys } from './history-keys';
-import { mergeHistory } from './history-merge';
-import { rideFactsOf, storedFactsOf, uploadFactsOf, type RideFacts } from './ride-facts';
+import { rideFactsOf, storedFactsOf, type RideFacts } from './ride-facts';
+import { useMergedHistory } from './use-merged-history';
 import { accountKeys } from '../api/account-keys';
 import { UploadError } from '../api/upload-problem';
 import { useAccountUploadsQuery } from '../api/use-account-uploads-query';
-import { useRemoveAccountUploadMutation } from '../api/use-remove-account-upload-mutation';
+import { useMyUsesQuery } from '../api/use-my-uses-query';
+import { askAgain, useLoadGiveUp } from '../common/use-load-give-up';
 import { fixOfRow } from '../recorder/recording-fixes';
 import type { Recording } from '../storage/recording-schema';
 import { loadFixes, updateRecording } from '../storage/recording-store';
@@ -28,6 +29,8 @@ export interface HistoryItems {
   isOnPhone: (recording: Recording) => boolean;
   /** Its distance and trail: read from its fixes on this phone, or what the database keeps of an upload from another; null until read. */
   factsOf: (recording: Recording) => RideFacts | null;
+  /** What an editor made of it on the map, by name: route directions and hintuans; empty for nothing yet. */
+  usedOf: (recording: Recording) => readonly string[];
   load: HistoryLoad;
 }
 
@@ -42,15 +45,18 @@ function loadStateOf(query: {
   return 'ready';
 }
 
+const NO_SIGNAL_MESSAGE = "No signal — can't load your uploads";
+
+/** What History says of its load: none while it goes well, and why not once it fails or is given up. */
+function loadMessage(hasGivenUp: boolean, error: unknown): string | null {
+  if (hasGivenUp) return NO_SIGNAL_MESSAGE;
+  return error ? loadMessageOf(error) : null;
+}
+
 const loadMessageOf = (error: unknown): string =>
   error instanceof UploadError && error.problem === 'offline'
-    ? "No signal — can't load your uploads"
+    ? NO_SIGNAL_MESSAGE
     : "Can't load your uploads right now";
-
-const removeBriefOf = (error: unknown): string =>
-  error instanceof UploadError && error.problem === 'offline'
-    ? 'No signal'
-    : "Para isn't taking this now";
 
 /**
  * A recording's facts from its fixes, the one read History makes of them: for its trail, when it
@@ -70,20 +76,26 @@ async function factsFromFixes(recording: Recording): Promise<RideFacts> {
   return facts;
 }
 
+const NONE: readonly string[] = [];
+
 /**
  * What History lists: this phone's recordings merged with the account's uploads from the
- * database, whichever phone sent them. Any upload the account owns can be removed. A recording's
- * fixes are read only when its card needs them: no distance kept, or no picture to show
- * (`pictures`, unknown until they are read).
+ * database, whichever phone sent them, less those deleted from History here (`hidden`). A
+ * recording's fixes are read only when its card needs them: no distance kept, or no picture to
+ * show (`pictures`, unknown until they are read).
  */
 export function useHistoryItems(
   saved: readonly Recording[],
   uploads: Uploads,
   pictures: ReadonlyMap<string, string> | undefined,
+  hidden: ReadonlySet<string>,
 ): HistoryItems {
-  const queryClient = useQueryClient();
   const query = useAccountUploadsQuery();
-  const removal = useRemoveAccountUploadMutation();
+  const uses = useMyUsesQuery().data;
+  const queryClient = useQueryClient();
+  // A load with no answer after a while is said as one with no signal, with Try again.
+  const queryState = loadStateOf(query);
+  const giveUp = useLoadGiveUp(queryState === 'loading');
   const needsFixes = saved.filter(
     (recording) =>
       recording.distanceM === undefined || (pictures !== undefined && !pictures.has(recording.id)),
@@ -111,51 +123,35 @@ export function useHistoryItems(
     () => new Map(saved.map((recording) => [recording.id, storedFactsOf(recording)])),
     [saved],
   );
-  const accountUploads = query.data ?? [];
-  const ownedIds = new Set(accountUploads.map((upload) => upload.id));
-  const uploadById = new Map(accountUploads.map((upload) => [upload.id, upload]));
+  const { recordings, uploadFacts } = useMergedHistory(saved, query.data, hidden);
   const onPhoneIds = new Set(saved.map((recording) => recording.id));
 
   const isOnPhone = (recording: Recording) => onPhoneIds.has(recording.id);
 
-  const statusOf = (recording: Recording): UploadStatus => {
-    if (isOnPhone(recording)) return uploads.statusOf(recording);
-    const status: UploadStatus = { state: 'uploaded', at: recording.startedAt, by: '' };
-    if (removal.variables !== recording.id) return status;
-    if (removal.isPending) return { state: 'removing' };
-    if (removal.isError)
-      return { ...status, problem: `Not removed. ${removeBriefOf(removal.error)}` };
-    return status;
-  };
-
-  const canRemove = (recording: Recording): boolean =>
-    uploads.canRemove(recording) ||
-    (ownedIds.has(recording.id) && statusOf(recording).state === 'uploaded');
-
-  const removeUploaded = async (recording: Recording): Promise<void> => {
-    if (!isOnPhone(recording)) {
-      removal.mutate(recording.id);
-      return;
-    }
-    await uploads.removeUploaded(recording);
-    await queryClient.invalidateQueries({ queryKey: accountKeys.uploads() });
-  };
+  // An upload from another phone is uploaded: that is all this phone knows of it.
+  const statusOf = (recording: Recording): UploadStatus =>
+    isOnPhone(recording)
+      ? uploads.statusOf(recording)
+      : { state: 'uploaded', at: recording.startedAt, by: '' };
 
   return {
-    recordings: mergeHistory(saved, accountUploads),
-    uploads: { ...uploads, statusOf, canRemove, removeUploaded },
+    recordings,
+    uploads: { ...uploads, statusOf },
     isOnPhone,
     factsOf: (recording) => {
       if (isOnPhone(recording)) {
         return factsQuery.data?.get(recording.id) ?? storedFacts.get(recording.id) ?? null;
       }
-      const upload = uploadById.get(recording.id);
-      return upload ? uploadFactsOf(upload) : null;
+      return uploadFacts.get(recording.id) ?? null;
     },
+    usedOf: (recording) => uses?.get(recording.id) ?? NONE,
     load: {
-      state: loadStateOf(query),
-      message: query.isError ? loadMessageOf(query.error) : null,
-      onRetry: () => void query.refetch(),
+      state: giveUp.hasGivenUp ? 'error' : queryState,
+      message: loadMessage(giveUp.hasGivenUp, query.isError ? query.error : null),
+      onRetry: () => {
+        giveUp.restart();
+        void askAgain(queryClient, accountKeys.uploads(), query.refetch);
+      },
     },
   };
 }

@@ -5,7 +5,7 @@ import { hintuansAlong } from '@/features/routes/model/timeline';
 import { directionRows } from './direction-rows';
 import type { RouteDraftDirection, RouteDraftRoute } from './drafts';
 import { blankToNull, byStop, byWay, type Link, type RouteDraftState } from './route-draft-state';
-import { DRAWN_ALREADY, LOOP_TAKEN, type SaveInput } from './routes-write';
+import { DRAWN_ALREADY, LOOP_TAKEN, type SaveInput } from './route-save-input';
 
 // What each studio action does to a route's draft state: a direction saved,
 // emptied or given its signboards, and the hintuan links a drawn line gets.

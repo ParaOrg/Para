@@ -1,14 +1,18 @@
 // Stands in for Para's own tiles server (workers/tiles) on a loopback address, for a build made
 // with VITE_BASEMAP_HOST set to it (http://127.0.0.1:<port>). Not a suite itself: pwa-test starts
-// it when the build it runs names a host other than OpenFreeMap. The styles are OpenFreeMap's,
-// rewritten by the Worker's own rewriteStyle, so the page and the offline worker see the addresses
-// the real server hands out (tiles at the root, sprite and glyphs under /assets); the bytes behind
-// them come from OpenFreeMap, fetched once each. A real server rather than Playwright routes: a
-// routed request held in the offline worker keeps a new worker from taking over, and the update
-// checks would fail for that alone. Offline, the browser reaches it no more than any other host.
+// it when the build it runs names a host other than OpenFreeMap. The styles are the basemap
+// fixtures (fixtures/basemap/), rewritten by the Worker's own rewriteStyle, so the page and the
+// offline worker see the addresses the real server hands out (tiles at the root, sprite and glyphs
+// under /assets). Every answer comes from those fixtures, through the basemap stand-in's
+// basemapAnswer: nothing here reaches the network, and an address the fixtures do not cover is
+// named at the end of the run and fails it. A real server rather than Playwright routes: a routed
+// request held in the offline worker keeps a new worker from taking over, and the update checks
+// would fail for that alone. Offline, the browser reaches it no more than any other host.
 import { createServer } from 'node:http';
 
 import { rewriteStyle } from '../../workers/tiles/src/styles.ts';
+
+import { basemapAnswer } from './lib/stand-ins.mjs';
 
 export const OPENFREEMAP_HOST = 'https://tiles.openfreemap.org';
 /** The address CI builds pwa-test's own-tiles run with. */
@@ -19,64 +23,48 @@ export function builtBasemapHost(indexHtml) {
   return /<link rel="preconnect" href="([^"]+)" crossorigin \/>/.exec(indexHtml)?.[1] ?? null;
 }
 
-/** Serves `host` (a loopback origin) from OpenFreeMap. Resolves to a function that stops it. */
+/** The OpenFreeMap address the fixtures answer for one of the host's, and whether it is a style. */
+function upstreamOf(path) {
+  const style = /^\/styles\/([\w-]+)$/.exec(path);
+  if (style) return { url: `${OPENFREEMAP_HOST}/styles/${style[1]}`, isStyle: true };
+  const tile = /^\/(\d+)\/(\d+)\/(\d+)\.pbf$/.exec(path);
+  if (tile) return { url: `${OPENFREEMAP_HOST}/planet/stand-in/${tile.slice(1).join('/')}.pbf` };
+  // OpenFreeMap keeps its sprite in a versioned folder; the Worker serves it flat.
+  if (path.startsWith('/assets/sprites/')) {
+    return { url: `${OPENFREEMAP_HOST}/sprites/ofm_f384/${path.slice('/assets/sprites/'.length)}` };
+  }
+  if (path.startsWith('/assets/')) return { url: `${OPENFREEMAP_HOST}/${path.slice(8)}` };
+  return null;
+}
+
+/** The fixtures' answer for one of the host's addresses, as the host would give it. */
+function answerOf(path, host, header) {
+  const upstream = upstreamOf(path);
+  // An address the real server does not have: the fixtures have no answer, and the run names it.
+  if (!upstream) return basemapAnswer(`${host}${path}`);
+  const answer = basemapAnswer(upstream.url);
+  if (!upstream.isStyle || (answer.status ?? 200) !== 200) return answer;
+  const style = rewriteStyle(JSON.parse(String(answer.body)), host, header, 'stand-in');
+  return { contentType: 'application/json', body: JSON.stringify(style) };
+}
+
+/** Serves `host` (a loopback origin) from the basemap fixtures. Resolves to a function that stops it. */
 export async function startOwnTilesStandIn(host) {
   const { hostname, port } = new URL(host);
   if (hostname !== '127.0.0.1' || !port) {
     throw new Error(`build with VITE_BASEMAP_HOST=${STAND_IN_HOST} to run against the stand-in`);
   }
-  const tileJson = await (await fetch(`${OPENFREEMAP_HOST}/planet`)).json();
-  const tileUrl = tileJson.tiles[0];
-  const header = { maxZoom: tileJson.maxzoom, bounds: tileJson.bounds };
-  const positron = await (await fetch(`${OPENFREEMAP_HOST}/styles/positron`)).json();
-  // OpenFreeMap keeps its sprite in a versioned folder; the Worker serves it flat.
-  const spriteFolder = positron.sprite.slice(0, positron.sprite.lastIndexOf('/') + 1);
+  const tileJson = JSON.parse(String(basemapAnswer(`${OPENFREEMAP_HOST}/planet`).body));
+  // The fixture's TileJSON names no bounds; the real server's archive covers the world.
+  const header = { maxZoom: tileJson.maxzoom, bounds: [-180, -85.051129, 180, 85.051129] };
 
-  /** The OpenFreeMap address behind one of the host's, and whether it is a style to rewrite. */
-  const upstreamOf = (path) => {
-    const style = /^\/styles\/([\w-]+)$/.exec(path);
-    if (style) return { url: `${OPENFREEMAP_HOST}/styles/${style[1]}`, isStyle: true };
-    const tile = /^\/(\d+)\/(\d+)\/(\d+)\.pbf$/.exec(path);
-    if (tile) {
-      const [, z, x, y] = tile;
-      return { url: tileUrl.replace('{z}', z).replace('{x}', x).replace('{y}', y) };
-    }
-    if (path.startsWith('/assets/sprites/')) {
-      return { url: spriteFolder + path.slice('/assets/sprites/'.length) };
-    }
-    if (path.startsWith('/assets/')) return { url: `${OPENFREEMAP_HOST}/${path.slice(8)}` };
-    return null;
-  };
-
-  const answers = new Map();
-  /** OpenFreeMap's answer for one address, as the host would give it, fetched once. */
-  const answerOf = (upstream) => {
-    if (!answers.has(upstream.url)) {
-      const answer = fetchAnswer(upstream);
-      answers.set(upstream.url, answer);
-      answer.catch(() => answers.delete(upstream.url));
-    }
-    return answers.get(upstream.url);
-  };
-  const fetchAnswer = async (upstream) => {
-    const res = await fetch(upstream.url, { signal: AbortSignal.timeout(10_000) });
-    const type = res.headers.get('content-type') ?? 'application/octet-stream';
-    if (!upstream.isStyle || !res.ok) {
-      return { status: res.status, type, body: Buffer.from(await res.arrayBuffer()) };
-    }
-    const style = rewriteStyle(await res.json(), host, header, 'stand-in');
-    return { status: 200, type, body: JSON.stringify(style) };
-  };
-
-  const server = createServer(async (req, res) => {
+  const server = createServer((req, res) => {
     const cors = { 'access-control-allow-origin': '*' };
-    const upstream = upstreamOf(decodeURIComponent(new URL(req.url, host).pathname));
-    const answer = upstream ? await answerOf(upstream).catch(() => null) : null;
-    if (!answer) {
-      res.writeHead(upstream ? 502 : 404, cors).end();
-      return;
-    }
-    res.writeHead(answer.status, { ...cors, 'content-type': answer.type }).end(answer.body);
+    const path = decodeURIComponent(new URL(req.url, host).pathname);
+    const answer = answerOf(path, host, header);
+    res
+      .writeHead(answer.status ?? 200, { ...cors, 'content-type': answer.contentType })
+      .end(answer.body);
   });
   await new Promise((resolve) => server.listen(Number(port), hostname, resolve));
   return () => new Promise((resolve) => server.close(resolve));

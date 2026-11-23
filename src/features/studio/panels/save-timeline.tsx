@@ -1,6 +1,8 @@
+import { useId } from 'react';
+
 import type { Timeline } from '@/features/routes/model/timeline';
 
-import { DirectionTimeline, passesThrough } from './direction-timeline';
+import { RouteLine } from './route-line';
 
 interface SaveTimelineProps {
   isLoop: boolean;
@@ -10,25 +12,39 @@ interface SaveTimelineProps {
   preview: Timeline;
 }
 
-/** What the line passes, by the rule the save will apply: seen first, stored the same. */
+/**
+ * The sidebar's Route line section: what the line passes, by the rule the save will apply, seen
+ * first and stored the same. Until it passes a place between its ends, a line under it says how
+ * one gets there.
+ */
 export function SaveTimeline({ isLoop, loopPlacesCount, preview }: SaveTimelineProps) {
+  const headingId = useId();
+  const emptyHint = emptyTimelineHint(isLoop, loopPlacesCount, preview.between.length);
   return (
-    <div data-testid="save-timeline" className="mt-3 rounded-lg bg-neutral-50 px-3 py-2">
-      <p className="text-xs font-medium text-neutral-600">
-        {timelineHeading(isLoop, loopPlacesCount, preview.between.length)}
-      </p>
-      <DirectionTimeline timeline={preview} />
-    </div>
+    <section
+      data-testid="save-timeline"
+      aria-labelledby={headingId}
+      className="flex flex-col gap-3"
+    >
+      <h3 id={headingId} className="text-xl/7 font-semibold text-content-primary">
+        Route line
+      </h3>
+      <RouteLine timeline={preview} />
+      {emptyHint && <p className="text-xs text-content-quaternary">{emptyHint}</p>}
+    </section>
   );
 }
 
-function timelineHeading(isLoop: boolean, loopPlacesCount: number, passed: number): string {
-  if (isLoop) {
-    if (loopPlacesCount === 0)
-      return 'Goes round no place yet — draw a hintuan across the road and it appears here';
-    return `Goes round ${loopPlacesCount} ${loopPlacesCount === 1 ? 'place' : 'places'}, from the first drawn, in this order`;
-  }
-  if (passed === 0)
-    return 'Passes through no hintuan yet — draw one across the road and it appears here';
-  return `${passesThrough(passed)}, in this order`;
+function emptyTimelineHint(
+  isLoop: boolean,
+  loopPlacesCount: number,
+  passed: number,
+): string | null {
+  if (isLoop)
+    return loopPlacesCount === 0
+      ? 'Goes round no place yet — draw a hintuan across the road and it appears here.'
+      : null;
+  return passed === 0
+    ? 'Passes through no hintuan yet — draw one across the road and it appears here.'
+    : null;
 }

@@ -72,7 +72,7 @@ database.users.set(EDITOR_ID, {
  * A phone signed in to the account, on the shared database; `signedIn: false` has no session,
  * and `userId` signs in as another user (the editor).
  */
-async function phone({ signedIn = true, userId = ACCOUNT_ID } = {}) {
+async function phone({ signedIn = true, userId = ACCOUNT_ID, search = '' } = {}) {
   const context = await browser.newContext({
     viewport: { width: 393, height: 852 },
     deviceScaleFactor: 2,
@@ -99,7 +99,7 @@ async function phone({ signedIn = true, userId = ACCOUNT_ID } = {}) {
   );
   const errors = [];
   page.on('pageerror', (e) => errors.push(String(e)));
-  await page.goto(`${BASE}/contribute/`, { waitUntil: 'load' });
+  await page.goto(`${BASE}/contribute/${search}`, { waitUntil: 'load' });
   return { page, fake, errors };
 }
 
@@ -137,10 +137,20 @@ const start = (page) => page.getByRole('button', { name: 'Start Tracking' });
 /** The Sakay or Lakad row of the Commute Statistics' legend. */
 const legendRow = (stats, word) => stats.getByRole('listitem').filter({ hasText: word });
 const row = (page, name) => page.getByRole('listitem').filter({ hasText: name });
-const moreOf = (page, name) => row(page, name).getByRole('button', { name: /^More actions/ });
-const actionsOf = async (page, name) => {
-  await moreOf(page, name).click();
-  return row(page, name).getByRole('button');
+/** A card opened: its ride's screen, with the sheet folded. */
+const openRide = async (page, name) => {
+  await row(page, name).locator('[data-ride-card]').click();
+  await page.getByTestId('dock-handle').waitFor();
+};
+/** The ride's sheet raised, its Delete this record asked, and confirmed: back on History. */
+const deleteRecord = async (page) => {
+  await page.getByTestId('dock-handle').click();
+  await page.getByRole('button', { name: 'Delete this record' }).click();
+  await page
+    .getByRole('alertdialog', { name: 'You want to remove this recording?' })
+    .getByRole('button', { name: 'Delete this record' })
+    .click();
+  await page.getByRole('heading', { level: 1, name: 'History' }).waitFor();
 };
 /** A card's status line, the one under its date: Uploaded, Only on this phone, … */
 // Its text, not its rendered text: a card off screen is not drawn (content-visibility), and its
@@ -570,26 +580,32 @@ async function seed(page, id, name, upload) {
   await page.waitForTimeout(400);
 
   // Every value is the owner's Motion token, read by the script's fallbacks from the same place.
-  const timing = await page.evaluate(() =>
-    import('/src/features/contribute/common/tab-motion.ts').then((motion) => ({
-      arrive: motion.motionOf('arrive'),
-      move: motion.motionOf('move'),
-      shift: motion.tabShift(1),
-    })),
-  );
+  const timing = await page.evaluate(async () => {
+    const { motionOf } = await import('/src/shared/utils/motion.ts');
+    const { ARRIVE, MOVE, PILL } = await import('/src/features/contribute/motion/motion.ts');
+    const { tabShift } = await import('/src/features/contribute/motion/tab-motion.ts');
+    return {
+      arrive: motionOf(ARRIVE),
+      move: motionOf(MOVE),
+      pill: motionOf(PILL),
+      shift: tabShift(1),
+    };
+  });
   check(
-    "the moves' timings are the owner's Motion tokens: base on ease-enter, gentle on ease-move, a 7-step shift",
+    "the moves' timings are the owner's Motion tokens: base on ease-enter, gentle on ease-move, the pill's own spring, a 7-step shift",
     timing.arrive.duration === 200 &&
       timing.arrive.easing === 'cubic-bezier(0.22, 1, 0.36, 1)' &&
       timing.move.duration === 300 &&
       timing.move.easing === 'cubic-bezier(0.65, 0, 0.35, 1)' &&
+      timing.pill.duration === 390 &&
+      timing.pill.easing.startsWith('cubic-bezier(') &&
       /calc\(1 \* calc\(.*\* 7\)\)/.test(timing.shift),
     JSON.stringify(timing),
   );
 
   // A move to where the phone already is (a second tap) shows nothing: no slide replayed.
   const noMove = await page.evaluate(() =>
-    import('/src/features/contribute/common/tab-motion.ts').then((motion) => {
+    import('/src/features/contribute/motion/tab-motion.ts').then((motion) => {
       motion.moveBetweenScreens(
         () => false,
         () => {},
@@ -1305,9 +1321,11 @@ async function seed(page, id, name, upload) {
   /**
    * A touch tap on `name` that drifts `drift` px along the bar before it lifts; once the move
    * shows, it is held a quarter into the pill's glide and the pill read, from the page and from
-   * its pixels. A press the harness was too slow to keep under the hold is tried again.
+   * its pixels. A press the harness was too slow to keep under the hold is tried again, from
+   * `from`: a hold opens the tab all the same (the slide's settle), and a tap on the tab already
+   * open has no glide to read, so every try after it would find none.
    */
-  const driftedTap = async (name, drift) => {
+  const driftedTap = async (name, drift, from, fromShows) => {
     for (let attempt = 0; attempt < 3; attempt += 1) {
       await noMove();
       await page.waitForTimeout(300);
@@ -1344,6 +1362,13 @@ async function seed(page, id, name, upload) {
       const [pressMs] = await page.evaluate(() => window.presses);
       if (!isMoving || pressMs >= 250) {
         await noMove();
+        const isOpened =
+          (await page.locator(`.tab-toolbar [data-tab="${name}"][aria-current="page"]`).count()) >
+          0;
+        if (isOpened) {
+          await page.locator(`.tab-toolbar button[data-tab="${from}"]`).click();
+          await fromShows().waitFor();
+        }
         continue;
       }
       const placed = await page.evaluate(() => {
@@ -1374,12 +1399,13 @@ async function seed(page, id, name, upload) {
   };
   const isBetween = (value, a, b) => value > Math.min(a, b) + 4 && value < Math.max(a, b) - 4;
 
-  for (const [drift, to, from, shows] of [
-    [9, 'history', 'record', () => heading('History')],
-    [12, 'record', 'history', () => start(page)],
+  const shows = { history: () => heading('History'), record: () => start(page) };
+  for (const [drift, to, from] of [
+    [9, 'history', 'record'],
+    [12, 'record', 'history'],
   ]) {
-    const seen = await driftedTap(to, drift);
-    await shows().waitFor();
+    const seen = await driftedTap(to, drift, from, shows[from]);
+    await shows[to]().waitFor();
     const paintedCentre = seen?.painted ? (seen.painted.from + seen.painted.to) / 2 : null;
     check(
       `${drift === 9 ? '' : '  '}a touch tap that drifts ${drift} px opens ${to === 'history' ? 'History' : 'Record'}, the pill a quarter into its glide between the tabs, not at the end`,
@@ -1403,9 +1429,17 @@ async function seed(page, id, name, upload) {
       (event) => {
         if (event.target.closest('[data-tab]')?.dataset.tab !== 'record') return;
         const pill = toolbar.querySelector(':scope > span[aria-hidden]');
+        const history = toolbar.querySelector('[data-tab="history"]');
+        const xOf = (keyframe) => Number(/translateX\(([-\d.]+)px\)/.exec(keyframe.transform)?.[1]);
+        // How far the glide to History has gone, by its own clock: the check's premise.
+        const toHistory = pill
+          .getAnimations()
+          .find((glide) => xOf(glide.effect.getKeyframes().at(-1)) === history.offsetLeft);
+        const timing = toHistory?.effect.getComputedTiming();
         window.pillAtRecordTap = {
           x: pill.getBoundingClientRect().left - toolbar.getBoundingClientRect().left,
           isGliding: pill.getAnimations().some((glide) => glide.playState === 'running'),
+          progress: timing ? Number(timing.localTime) / Number(timing.duration) : null,
         };
       },
       true,
@@ -1418,7 +1452,9 @@ async function seed(page, id, name, upload) {
       touchPoints: [{ x: at.x, y: at.y, id: 1 }],
     });
     await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
-    if (name === 'history') await page.waitForTimeout(120);
+    // A quarter of the way, and well short of History: a slow runner's delay still leaves it
+    // mid-glide. (At 120 ms the pill is already 87% there on --ease-pill, and arrives ~40 ms later.)
+    if (name === 'history') await page.waitForTimeout(30);
   }
   const turn = await page
     .waitForFunction(
@@ -1447,9 +1483,15 @@ async function seed(page, id, name, upload) {
     .catch(() => null);
   const atTap = await page.evaluate(() => window.pillAtRecordTap ?? null);
   await start(page).waitFor();
+  // The premise: Record is tapped while the glide to History is well short of it. Past 60% the
+  // spring is near History and soon over it; a tap that late says nothing of a turn mid-glide, so
+  // it fails as itself, never as the turn.
+  const PREMISE_PROGRESS = 0.6;
+  const isPremiseMet = typeof atTap?.progress === 'number' && atTap.progress <= PREMISE_PROGRESS;
   check(
     '  a burst, History then Record mid-glide: the pill turns to Record from where it is, the glide to History let go',
-    !!atTap &&
+    isPremiseMet &&
+      !!atTap &&
       atTap.isGliding &&
       !!turn &&
       // From where it was, give or take the frame before the screen is drawn; never from History,
@@ -1457,7 +1499,9 @@ async function seed(page, id, name, upload) {
       Math.abs(turn.from - atTap.x) <= 6 &&
       turn.from < turn.history &&
       turn.others === 0,
-    JSON.stringify({ atTap, turn }),
+    isPremiseMet
+      ? JSON.stringify({ atTap, turn })
+      : `premise not met: Record tapped at ${atTap?.progress == null ? 'no' : Math.round(atTap.progress * 100) + '%'} of the glide to History  ${JSON.stringify({ atTap, turn })}`,
   );
   check('  no page errors', errors.length === 0, errors.join(' | '));
   await page.context().close();
@@ -1613,47 +1657,41 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
     fromA.includes('Jeep,') && fromA.includes('4.2 km') && fromA.includes('0h 10m'),
     fromA,
   );
-  const buttons = await actionsOf(page, 'From phone A');
-  const names = await buttons.evaluateAll((all) =>
-    all.map((b) => b.getAttribute('aria-label') ?? b.textContent),
-  );
-  check(
-    '  an upload from another phone can be deleted from Para, and offers no Remove from this phone',
-    names.some((name) => name.startsWith('Delete from Para')) &&
-      !names.some((name) => name.startsWith('Remove from this phone')),
-    names.join(' | '),
-  );
-  await row(page, 'From phone A')
-    .getByRole('button', { name: /^Delete from Para/ })
-    .click();
-  await row(page, 'From phone A').getByRole('button', { name: 'Delete', exact: true }).click();
+  // Nothing deletes an upload from Para: deleting takes it off this phone and out of History, and
+  // the id is kept so the account's list never brings it back here.
+  await openRide(page, 'From phone A');
+  await deleteRecord(page);
   await row(page, 'From phone A').waitFor({ state: 'detached' });
   check(
-    '  Delete takes it out of Para and off the list',
-    !database.rows.has('dddddddd-0000-4000-8000-000000000001') && fake.deleteRequests === 1,
+    "  an upload from another phone can be deleted here: off the list, Para's row stays",
+    database.rows.has('dddddddd-0000-4000-8000-000000000001') && fake.deleteRequests === 0,
+  );
+  // A reload on #history lands on History itself.
+  await page.reload({ waitUntil: 'load' });
+  await page.getByRole('heading', { level: 1, name: 'History' }).waitFor();
+  await row(page, 'Also phone A').waitFor({ timeout: 15000 });
+  check(
+    '  and after a reload it does not come back',
+    (await row(page, 'From phone A').count()) === 0,
   );
 
-  const here = await actionsOf(page, 'Here and there');
+  await openRide(page, 'Here and there');
+  await deleteRecord(page);
+  await row(page, 'Here and there').waitFor({ state: 'detached' });
   check(
-    "  an upload this phone sent under an earlier sign-in is the account's: it can be deleted from Para",
-    await here.evaluateAll((all) =>
-      all.some((b) => b.getAttribute('aria-label')?.startsWith('Delete from Para')),
-    ),
+    "  an upload this phone sent under an earlier sign-in is deleted the same way: gone from History and the phone, Para's row stays",
+    database.rows.has('dddddddd-0000-4000-8000-000000000003') &&
+      fake.deleteRequests === 0 &&
+      (await page.getByRole('listitem').filter({ hasText: 'Here and there' }).count()) === 0,
   );
-  await row(page, 'Here and there')
-    .getByRole('button', { name: /^Delete from Para/ })
-    .click();
-  await row(page, 'Here and there').getByRole('button', { name: 'Delete', exact: true }).click();
-  await page.waitForFunction(
-    () =>
-      [...document.querySelectorAll('li')]
-        .find((li) => li.textContent.includes('Here and there'))
-        ?.querySelector('[aria-live]')?.textContent === 'Only on this phone',
-  );
+  // A reload on #history lands on History itself.
+  await page.reload({ waitUntil: 'load' });
+  await page.getByRole('heading', { level: 1, name: 'History' }).waitFor();
+  await row(page, 'Also phone A').waitFor({ timeout: 15000 });
   check(
-    '  and reads Only on this phone, kept, once it is deleted from Para',
-    !database.rows.has('dddddddd-0000-4000-8000-000000000003') &&
-      (await page.getByRole('listitem').filter({ hasText: 'Here and there' }).count()) === 1,
+    '  and it stays hidden after a reload',
+    (await row(page, 'Here and there').count()) === 0 &&
+      (await row(page, 'Only here').count()) === 1,
   );
   check('  no request the stand-in does not know', fake.unknown.length === 0, fake.unknown.join());
   check('  no page errors', errors.length === 0, errors.join(' | '));
@@ -1667,15 +1705,33 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
   await page.reload({ waitUntil: 'load' });
   fake.next.list = 'hold';
   await openHistory(page);
-  await page.getByRole('status').filter({ hasText: 'Loading…' }).waitFor();
+  const stillComing = page.getByRole('status').filter({ hasText: 'Loading your rides' });
+  await stillComing.waitFor();
   check(
-    "while the account's uploads load, this phone's own are already listed",
-    (await row(page, 'Only here').count()) === 1,
+    "while the account's uploads load, this phone's own are already listed, the rest as skeletons",
+    (await row(page, 'Only here').count()) === 1 &&
+      (await page.locator('[data-history-skeleton]').count()) === 1,
   );
   await shot(page, '4-history-loading');
+  // No answer in 8 s: the skeletons give way to the line with no signal, and Try again.
+  const givenUp = page
+    .getByRole('alert')
+    .filter({ hasText: "No signal — can't load your uploads" });
+  check(
+    '  no answer in 8 s: History says so, with Try again, and still lists its own',
+    await givenUp.waitFor({ timeout: 12000 }).then(
+      () => true,
+      () => false,
+    ),
+  );
+  // Try again asks afresh, and the rest arrive: the line and the skeletons go.
+  await page.getByRole('button', { name: 'Try again' }).click();
   fake.release();
   await row(page, 'Also phone A').waitFor();
-  check('  and the rest arrive', (await page.getByText('Loading…').count()) === 0);
+  check(
+    '  Try again: the rest arrive, and the line goes',
+    (await stillComing.count()) === 0 && (await givenUp.count()) === 0,
+  );
 
   // The page stays on #history through the reload, and asks for the list as it opens.
   fake.next.list = 'offline';
@@ -1706,9 +1762,11 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
   await openHistory(page);
   await row(page, 'Also phone A').waitFor({ timeout: 15000 });
   check(
-    'another phone signed in to the account sees its uploads, with none of its own',
-    (await page.getByRole('listitem').count()) === 2 &&
+    'another phone signed in to the account sees all its uploads, those deleted on the first phone too (Para keeps them), with none of its own',
+    (await page.getByRole('listitem').count()) === 4 &&
+      (await statusOf(page, 'From phone A')) === 'Uploaded' &&
       (await statusOf(page, 'Also phone A')) === 'Uploaded' &&
+      (await statusOf(page, 'Here and there')) === 'Uploaded' &&
       (await statusOf(page, 'Only here')) === 'Uploaded',
   );
   check('  no page errors', errors.length === 0, errors.join(' | '));
@@ -1740,19 +1798,6 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
     "an editor signed in here sees only its own uploads in History, not everyone's",
     (await page.getByRole('listitem').count()) === 1,
     String(await page.getByRole('listitem').count()),
-  );
-  const others = [...database.rows.keys()].filter((id) => id !== mine);
-  await page.evaluate(
-    (ids) =>
-      import('/src/features/contribute/api/upload-contribution.ts').then((upload) =>
-        Promise.all(ids.map((id) => upload.removeUpload(id))),
-      ),
-    others,
-  );
-  check(
-    "  and removing someone else's upload does nothing, though the session could delete it",
-    others.length > 0 && others.every((id) => database.rows.has(id)),
-    `${others.length} others`,
   );
   check('  no page errors', errors.length === 0, errors.join(' | '));
 }
@@ -1847,6 +1892,16 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
 // ------------ signing out leaves a claim waiting for its own account
 {
   const { page, fake } = await phone();
+  // A claim waits only while it cannot finish: here, no answer comes for it while signed in, as
+  // with no signal. Without this the page finishes it as its own account, rightly, whenever it
+  // looks (the account read, the page shown or online), and whether that came before the logout
+  // was a race the check lost now and then. Each call is told apart by whether the sign-out was in.
+  let isSignedOut = false;
+  const finishesAfterSignOut = [];
+  await page.route(/\/rest\/v1\/rpc\/finish_claim/, (route) => {
+    if (isSignedOut) finishesAfterSignOut.push(route.request().url());
+    return route.abort('internetdisconnected');
+  });
   await start(page).waitFor({ timeout: 30000 });
   await page.evaluate(
     ([id]) =>
@@ -1865,6 +1920,7 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
   await page
     .getByRole('heading', { name: 'Welcome Contributor', level: 1 })
     .waitFor({ timeout: 15000 });
+  isSignedOut = true;
   await page.evaluate(() => window.dispatchEvent(new Event('online')));
   await page.waitForTimeout(500);
   const kept = JSON.parse(
@@ -1872,8 +1928,10 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
   );
   check(
     'Logout keeps a waiting claim, still bound to its account, and finishes nothing',
-    kept?.accountId === ACCOUNT_ID && !fake.claims.includes('finish_claim'),
-    JSON.stringify({ kept, claims: fake.claims }),
+    kept?.accountId === ACCOUNT_ID &&
+      finishesAfterSignOut.length === 0 &&
+      !fake.claims.includes('finish_claim'),
+    JSON.stringify({ kept, finishesAfterSignOut, claims: fake.claims }),
   );
 }
 
@@ -2051,14 +2109,12 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
   const screenText = await page.locator('[data-screen-hash="#delete-account"]').innerText();
   const counting = page.getByRole('button', { name: /^Delete account \(\d\)$/ });
   check(
-    'Delete account (Figma 4543:5309) is a screen of its own: what goes, what stays, the switch off',
+    'Delete account (Figma 4543:5309) is a screen of its own: what goes, what stays, no switch to delete the uploads',
     (await page.evaluate(() => location.hash)) === '#delete-account' &&
       /removes your name, email, phone number and password/.test(screenText) &&
       /stay on Para, with your name taken off them/.test(screenText) &&
       /all recordings on this phone will be deleted too/.test(screenText) &&
-      (await page
-        .getByRole('switch', { name: 'Also delete my uploaded routes' })
-        .getAttribute('aria-checked')) === 'false',
+      (await page.getByRole('switch').count()) === 0,
     screenText,
   );
   const firstCount = await counting.innerText();
@@ -2278,54 +2334,6 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
   );
   check('  no page errors', errors.length === 0, errors.join(' | '));
 }
-{
-  // "Also delete my uploaded routes" on: Para is asked to delete them too, and does.
-  const SWEEPER_ID = 'ffffffff-0000-4000-8000-000000000005';
-  database.users.set(SWEEPER_ID, {
-    email: 'sweeper@example.com',
-    password: 'hunter2hunter2',
-    isAccount: true,
-    profile: { name: 'Sweeper', phone: '+639170000005' },
-  });
-  database.rows.set('ffffffff-1111-4000-8000-000000000005', {
-    by: SWEEPER_ID,
-    recording: {
-      id: 'ffffffff-1111-4000-8000-000000000005',
-      started_at: new Date(T0).toISOString(),
-      ended_at: new Date(T0 + 600_000).toISOString(),
-      start_name: 'Sweeping',
-      end_name: 'Cubao',
-      description: '',
-    },
-  });
-  const { page, fake, errors } = await phone({ userId: SWEEPER_ID });
-  await start(page).waitFor({ timeout: 30000 });
-  await accountTab(page).click();
-  await button(page, 'Account settings').click();
-  await button(page, 'Delete account').click();
-  await page.getByRole('heading', { level: 1, name: 'Delete account' }).waitFor();
-  await page.getByRole('switch', { name: 'Also delete my uploaded routes' }).click();
-  const screenText = await page.locator('[data-screen-hash="#delete-account"]').innerText();
-  await button(page, 'Delete account').waitFor({ timeout: 8000 });
-  await button(page, 'Delete account').click();
-  await page
-    .getByRole('alertdialog', { name: 'Do you want to delete your account?' })
-    .getByRole('button', { name: 'Delete this account' })
-    .click();
-  await page
-    .getByRole('heading', { name: 'Welcome Contributor', level: 1 })
-    .waitFor({ timeout: 15000 });
-  check(
-    'with the switch on, the words say the uploads go too, and Para is asked to delete them, and does',
-    /The routes you’ve already uploaded are deleted from Para too/.test(screenText) &&
-      !/stay on Para/.test(screenText) &&
-      fake.deleteUploadsAsked.join() === 'true' &&
-      !database.rows.has('ffffffff-1111-4000-8000-000000000005'),
-    JSON.stringify({ asked: fake.deleteUploadsAsked, screenText }),
-  );
-  check('  no page errors', errors.length === 0, errors.join(' | '));
-}
-
 // ------------------------------------------------ the toolbar stands still between its screens
 {
   const { page } = await phone();
@@ -2703,6 +2711,283 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
     pillAnimations === 0 && (await pillLeft()) === restingLeft,
     pillAnimations,
   );
+}
+
+// ---------------------- skeletons while History and Account load
+{
+  /** Some numbers for Commute Statistics: with none (null) the section is left out. */
+  const SOME_STATS = {
+    rides: 2,
+    distanceM: 12_000,
+    movingS: 3600,
+    standingS: 600,
+    walkM: 2_000,
+    rideM: 10_000,
+    jeepRides: 2,
+    eJeepRides: 0,
+    busRides: 0,
+    trainRides: 0,
+    tricycleRides: 0,
+    farePhpTotal: 26,
+    fareRecordings: 2,
+  };
+  /** Whether a skeleton is drawn and seen (not one still waiting its first moments, unseen). */
+  const seenSkeletons = (page) =>
+    page.evaluate(() => document.querySelectorAll('[data-skeleton]:not(.invisible)').length);
+  /** The skeletons' light: the shimmer animations running on the page. */
+  const shimmers = (page) =>
+    page.evaluate(
+      () =>
+        document
+          .getAnimations()
+          .filter((animation) => animation.animationName === 'skeleton-shimmer').length,
+    );
+  /** From now on, notes whether a seen skeleton ever shows. */
+  const watchForSkeletons = (page) =>
+    page.evaluate(() => {
+      window.__sawSkeleton = false;
+      const look = () => {
+        if (document.querySelector('[data-skeleton]:not(.invisible)')) window.__sawSkeleton = true;
+      };
+      new MutationObserver(look).observe(document.body, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: ['class'],
+      });
+    });
+
+  /**
+   * Lets the page run until `isThere` holds, its clock held still while anything it loads (data
+   * from the fake server, code from the dev server) is on its way, and moved on a millisecond at a
+   * time only while nothing is: a chained `setTimeout(0)`, such as TanStack Query's notices, is due
+   * a millisecond on under Playwright's clock. So the page's own time counts its work, never the
+   * runner's speed.
+   */
+  const runHeldUntil = async (page, inFlight, isThere) => {
+    const deadline = Date.now() + 15_000;
+    while (!(await isThere())) {
+      if (Date.now() > deadline) throw new Error('The page did not get there with its clock held');
+      // What is due now runs at once; then the page is given a moment to do the work it leads to.
+      await page.clock.runFor(0);
+      await new Promise((resolve) => setTimeout(resolve, 10));
+      if (inFlight.size === 0 && !(await isThere())) await page.clock.runFor(1);
+    }
+  };
+  /** The page's requests to the fake server and the dev server not yet answered, from now on. */
+  const watchLoads = (page) => {
+    const inFlight = new Set();
+    const isLoad = (request) =>
+      /^https:\/\/[^/]+\.supabase\.co\//.test(request.url()) || request.url().startsWith(BASE);
+    page.on('request', (request) => isLoad(request) && inFlight.add(request));
+    page.on('requestfinished', (request) => inFlight.delete(request));
+    page.on('requestfailed', (request) => inFlight.delete(request));
+    return inFlight;
+  };
+
+  // A quick load shows none: History and Account open on what loads at once, with no flash.
+  // "Quick" is by the page's own clock, held still while the loads are on their way: a slow
+  // runner takes longer in real time, but the 300 ms timer cannot fire before the data is in.
+  {
+    const { page, fake, errors } = await phone();
+    fake.stats = SOME_STATS;
+    await start(page).waitFor({ timeout: 30000 });
+    await watchForSkeletons(page);
+    const inFlight = watchLoads(page);
+    await page.clock.install();
+    await page.clock.pauseAt((await page.evaluate(() => Date.now())) + 1000);
+    const heldAt = await page.evaluate(() => performance.now());
+    await openHistory(page);
+    await runHeldUntil(
+      page,
+      inFlight,
+      async () =>
+        (await page.getByRole('heading', { level: 1, name: 'History' }).count()) === 1 &&
+        (await page.locator('[aria-busy="true"]').count()) === 0,
+    );
+    await toolbarRecord(page).click();
+    await accountTab(page).click();
+    const statsIn = page
+      .getByRole('region', { name: 'Commute Statistics' })
+      .getByText('Total time');
+    await runHeldUntil(
+      page,
+      inFlight,
+      async () =>
+        (await statsIn.count()) === 1 && (await page.locator('[aria-busy="true"]').count()) === 0,
+    );
+    const heldFor = (await page.evaluate(() => performance.now())) - heldAt;
+    // Then time moves on past the delay: a timer the loads left behind would show a skeleton now.
+    await page.clock.runFor(1000);
+    check(
+      'a load quicker than 300 ms shows no skeleton, on History or on Account',
+      heldFor < 300 && (await page.evaluate(() => window.__sawSkeleton)) === false,
+      JSON.stringify({ heldFor }),
+    );
+    check('  no page errors', errors.length === 0, errors.join(' | '));
+  }
+
+  // ?slowload holds the loads back 2 s: the skeletons show in their places, and go.
+  {
+    const { page, fake, errors } = await phone();
+    fake.stats = SOME_STATS;
+    await page.goto(`${BASE}/contribute/?slowload`, { waitUntil: 'load' });
+    await start(page).waitFor({ timeout: 30000 });
+    await openHistory(page);
+    const list = page.locator('[data-history-skeleton]');
+    await list.waitFor({ timeout: 5000 });
+    await page.waitForTimeout(600);
+    const history = await page.evaluate(() => ({
+      cards: document.querySelectorAll('[data-history-skeleton] > li:not(.invisible)').length,
+      busy: !!document.querySelector('[aria-busy="true"] [data-history-skeleton]'),
+      said:
+        document.querySelector('[data-screen-hash="#history"] [role="status"]')?.textContent ??
+        null,
+    }));
+    const historyShimmers = await shimmers(page);
+    await shot(page, '5-history-skeleton');
+    check(
+      '?slowload: History shows four card skeletons, shimmering, in a busy region that says "Loading your rides"',
+      history.cards === 4 &&
+        history.busy &&
+        history.said === 'Loading your rides' &&
+        historyShimmers > 0,
+      JSON.stringify({ ...history, historyShimmers }),
+    );
+    await list.waitFor({ state: 'detached', timeout: 10000 });
+    check(
+      '  and once the uploads are in, the skeleton is gone and nothing is busy',
+      (await seenSkeletons(page)) === 0 && (await page.locator('[aria-busy="true"]').count()) === 0,
+    );
+
+    // Account: the profile card and the stats' tiles, the same height as what replaces them.
+    await toolbarRecord(page).click();
+    await accountTab(page).click();
+    const card = page.locator('[aria-busy="true"]').filter({ hasText: 'Loading your account' });
+    await card.waitFor({ timeout: 5000 });
+    await page.waitForTimeout(600);
+    const stats = page.getByRole('region', { name: 'Commute Statistics' });
+    const loading = {
+      seen: await seenSkeletons(page),
+      card: (await card.boundingBox())?.height,
+      stats: (await stats.boundingBox())?.height,
+    };
+    await shot(page, '6-account-skeleton');
+    await stats.getByText('Total time').waitFor({ timeout: 10000 });
+    const loaded = {
+      seen: await seenSkeletons(page),
+      card: (await page.getByText(ACCOUNT.email).locator('..').locator('..').boundingBox())?.height,
+      stats: (await stats.boundingBox())?.height,
+    };
+    check(
+      '  Account: the profile card and the stats shimmer while they load, then their content takes the same room',
+      loading.seen > 10 &&
+        loaded.seen === 0 &&
+        Math.abs(loading.card - loaded.card) < 1 &&
+        Math.abs(loading.stats - loaded.stats) < 2,
+      JSON.stringify({ loading, loaded }),
+    );
+
+    // Less motion asked for: the shapes stand still.
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await page.goto(`${BASE}/contribute/#account-settings`, { waitUntil: 'load' });
+    const fields = page.locator('[aria-busy="true"]').filter({ hasText: 'Loading your account' });
+    await fields.waitFor({ timeout: 30000 });
+    await page.waitForTimeout(600);
+    const settings = { seen: await seenSkeletons(page), shimmers: await shimmers(page) };
+    check(
+      '  Account settings: its fields shimmer in their places; with less motion asked for, still shapes with no animation',
+      settings.seen === 4 && settings.shimmers === 0,
+      JSON.stringify(settings),
+    );
+    await field(page, 'Name').waitFor({ timeout: 10000 });
+    check(
+      '  then the form takes their place',
+      (await seenSkeletons(page)) === 0 && (await fields.count()) === 0,
+    );
+    check('  no page errors', errors.length === 0, errors.join(' | '));
+  }
+}
+
+// --------------------------- the phone's Back on Account's questions (the Android app)
+// Back on a question before something that cannot be undone is its safe answer: nothing done,
+// and focus back where it was. Back as BackPlugin.java hands it to the page, through a
+// development build's `?e2e` hook (navigation/use-android-back.ts).
+{
+  const BACK_ID = 'ffffffff-0000-4000-8000-000000000004';
+  database.users.set(BACK_ID, {
+    email: 'back@example.com',
+    password: 'hunter2hunter2',
+    isAccount: true,
+    profile: { name: 'Back', phone: '+639170000004' },
+  });
+  const { page, fake, errors } = await phone({ userId: BACK_ID, search: '?e2e=1' });
+  await start(page).waitFor({ timeout: 30000 });
+  await page.waitForFunction(() => typeof window.__paraBack === 'function', null, {
+    timeout: 10000,
+  });
+  /** Back, as Android sends it; then the page's next frame. */
+  const back = async () => {
+    await page.evaluate(() => window.__paraBack());
+    await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => setTimeout(r, 0))));
+  };
+  const focused = () => page.evaluate(() => document.activeElement?.textContent);
+  const isSignedIn = () => page.evaluate((key) => localStorage.getItem(key) !== null, AUTH_KEY);
+  const gone = (locator) =>
+    locator.waitFor({ state: 'detached', timeout: 5000 }).then(
+      () => true,
+      () => false,
+    );
+
+  await accountTab(page).click();
+  await button(page, 'Logout').click();
+  const logoutSheet = logoutQuestion(page);
+  await logoutSheet.waitFor();
+  await back();
+  check(
+    "the phone's Back on Logout's question is Cancel: still signed in, focus back on Logout",
+    (await gone(logoutSheet)) &&
+      fake.logouts.length === 0 &&
+      (await isSignedIn()) &&
+      (await focused()) === 'Logout' &&
+      (await page.evaluate(() => window.__paraLeaves)) === 0,
+    `${fake.logouts.length} logout(s); focus on ${await focused()}`,
+  );
+
+  await button(page, 'Account settings').click();
+  await page.getByRole('heading', { level: 1, name: 'Account settings' }).waitFor();
+  // The countdown runs on the suite's clock, not the runner's speed.
+  await page.clock.install();
+  await button(page, 'Delete account').click();
+  const deleteScreen = page.getByRole('heading', { level: 1, name: 'Delete account' });
+  await deleteScreen.waitFor();
+  await page.clock.fastForward(5000);
+  await button(page, 'Delete account').waitFor({ timeout: 8000 });
+  await button(page, 'Delete account').click();
+  const deleteSheet = page.getByRole('alertdialog', {
+    name: 'Do you want to delete your account?',
+  });
+  await deleteSheet.waitFor();
+  await back();
+  check(
+    "the phone's Back on Delete account's question is No, I change my mind: nothing deleted, the account there, focus back on Delete account",
+    (await gone(deleteSheet)) &&
+      fake.deleteAccountRequests === 0 &&
+      database.users.has(BACK_ID) &&
+      (await isSignedIn()) &&
+      (await deleteScreen.count()) === 1 &&
+      (await focused()) === 'Delete account',
+    `${fake.deleteAccountRequests} request(s); focus on ${await focused()}`,
+  );
+  await back();
+  check(
+    "  the next Back is the screen's back arrow, to Account settings, still signed in",
+    (await gone(deleteScreen)) &&
+      (await page.getByRole('heading', { level: 1, name: 'Account settings' }).count()) === 1 &&
+      (await isSignedIn()),
+  );
+  check('  no page errors', errors.length === 0, errors.join(' | '));
+  await page.context().close();
 }
 
 await browser.close();

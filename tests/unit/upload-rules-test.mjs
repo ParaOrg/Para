@@ -57,7 +57,7 @@ test('waiting, checking, uploading and failed still have to go; the rest do not'
   for (const state of ['waiting', 'checking', 'uploading', 'failed']) {
     assert.equal(isWaitingToGo({ state }), true, state);
   }
-  for (const state of ['uploaded', 'removing', 'removed', 'held', 'unavailable']) {
+  for (const state of ['uploaded', 'removed', 'held', 'unavailable']) {
     assert.equal(isWaitingToGo({ state }), false, state);
   }
 });
@@ -66,7 +66,7 @@ test('not sent: those still to go, and those held back as made before the curren
   for (const state of ['waiting', 'checking', 'uploading', 'failed', 'held']) {
     assert.equal(isNotSent({ state }), true, state);
   }
-  for (const state of ['uploaded', 'removing', 'removed', 'unavailable']) {
+  for (const state of ['uploaded', 'removed', 'unavailable']) {
     assert.equal(isNotSent({ state }), false, state);
   }
 });

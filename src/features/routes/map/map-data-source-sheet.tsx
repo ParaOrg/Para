@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
 
 import { IconButton } from '@/design-system/primitives/icon-button';
+import { useBackLayer } from '@/shared/hooks/use-back-layer';
 import { useDialogFocus } from '@/shared/hooks/use-dialog-focus';
 import { useEscape } from '@/shared/hooks/use-escape';
+import { useTabLoop } from '@/shared/hooks/use-tab-loop';
 import { CloseIcon } from '@/shared/ui/route-icons';
-import { cssDurationMs } from '@/shared/utils/css-duration';
+import { motionOf, prefersReducedMotion, SINK } from '@/shared/utils/motion';
 
 import type { MapCredit } from './map-attribution';
 
@@ -24,19 +26,6 @@ interface MapDataSourceSheetProps {
 
 /** If the slide down never ends (a hidden page), the sheet goes all the same. */
 const SINK_GIVE_UP_MS = 1000;
-
-/** The owner's Motion token for a sheet's move, read as the page has it (tokens.css). */
-function sheetDuration(): number {
-  const style = getComputedStyle(document.documentElement);
-  return cssDurationMs(style.getPropertyValue('--transition-duration-gentle')) ?? 0;
-}
-
-/** The leaving ease, as the page has it (tokens.css). */
-function exitEase(): string {
-  return (
-    getComputedStyle(document.documentElement).getPropertyValue('--ease-exit').trim() || 'ease-in'
-  );
-}
 
 /**
  * The map's credits (Figma 4494:10177), on the public map and the contributor page: a
@@ -73,7 +62,7 @@ export function MapDataSourceSheet({ credits, onClose, onClosed }: MapDataSource
     onClose();
     const sheet = sheetRef.current;
     const scrim = scrimRef.current;
-    if (!sheet || !scrim || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    if (!sheet || !scrim || prefersReducedMotion()) {
       onClosed();
       return;
     }
@@ -82,7 +71,7 @@ export function MapDataSourceSheet({ credits, onClose, onClosed }: MapDataSource
     const shade = getComputedStyle(scrim).opacity;
     for (const animation of [...sheet.getAnimations(), ...scrim.getAnimations()])
       animation.cancel();
-    const timing = { duration: sheetDuration(), easing: exitEase(), fill: 'forwards' } as const;
+    const timing = { ...motionOf(SINK), fill: 'forwards' } as const;
     const sink = sheet.animate(
       [{ transform: from === 'none' ? 'translateY(0)' : from }, { transform: 'translateY(100%)' }],
       timing,
@@ -100,6 +89,8 @@ export function MapDataSourceSheet({ credits, onClose, onClosed }: MapDataSource
     sink.finished.then(gone, gone);
   }, [isClosing, onClose, onClosed]);
   useEscape(close, !isClosing);
+  // The contributor app's Back closes it as ✕ does, sliding down.
+  useBackLayer(!isClosing, close);
 
   // A tap anywhere but the sheet, on the dimmed map, closes it: on the tap's click, so the
   // same tap ends on the scrim and presses nothing under it. Not the click that opened it,
@@ -116,25 +107,7 @@ export function MapDataSourceSheet({ credits, onClose, onClosed }: MapDataSource
   }, [close]);
 
   // Tab goes round inside the sheet, from its last link to ✕ and back.
-  useEffect(() => {
-    const sheet = sheetRef.current;
-    if (!sheet) return;
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key !== 'Tab') return;
-      const stops = [...sheet.querySelectorAll<HTMLElement>('a, button')];
-      const first = stops.at(0);
-      const last = stops.at(-1);
-      if (e.shiftKey && (document.activeElement === first || document.activeElement === sheet)) {
-        e.preventDefault();
-        last?.focus();
-      } else if (!e.shiftKey && document.activeElement === last) {
-        e.preventDefault();
-        first?.focus();
-      }
-    };
-    sheet.addEventListener('keydown', handleKeyDown);
-    return () => sheet.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  useTabLoop(sheetRef, 'a, button');
 
   return (
     <>

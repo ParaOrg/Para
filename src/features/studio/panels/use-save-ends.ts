@@ -52,12 +52,15 @@ export function useSaveEnds({
   const [nearHead, nearTail] = endsByHead(line, headNow);
 
   // The ends are the route's: a return trip takes them as they are, and Edit
-  // route starts from them; a new route's are guessed from where the line
-  // actually starts and finishes, once, and corrected by hand when the guess
-  // is wrong.
-  const [firstGuess] = useState(() => guessEnds(places, hotspots, line, directions));
-  const [headId, setHeadId] = useState(parent?.headHotspotId ?? firstGuess[0]);
-  const [tailId, setTailId] = useState(parent?.tailHotspotId ?? firstGuess[1]);
+  // route starts from them. A new route's are guessed from where the line
+  // starts and finishes now, so they follow the line while it is drawn beside
+  // the open form, until the editor picks one by hand. One point is no line
+  // yet: its start would be guessed as both ends.
+  const guess = line.length > 1 ? guessEnds(places, hotspots, line, directions) : ['', ''];
+  const [pickedHeadId, setHeadId] = useState<string | null>(parent?.headHotspotId ?? null);
+  const [pickedTailId, setTailId] = useState<string | null>(parent?.tailHotspotId ?? null);
+  const headId = pickedHeadId ?? guess[0];
+  const tailId = pickedTailId ?? guess[1];
 
   const head = hotspots.find((s) => s.id === headId);
   const tail = hotspots.find((s) => s.id === tailId);

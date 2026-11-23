@@ -32,16 +32,16 @@ export interface LineSpot {
 /** The spot on the line nearest p, and how far p is from it. Null for a line with no edges. */
 export function nearestSpot(segments: Segment[], p: LngLat): (LineSpot & { off: number }) | null {
   let best: (LineSpot & { off: number }) | null = null;
-  segments.forEach((s, seg) => {
+  for (const [seg, s] of segments.entries()) {
     const c = s?.coordinates ?? [];
     for (let edge = 0; edge < c.length - 1; edge++) {
       const { point } = nearestOnSegment(p, c[edge], c[edge + 1]);
       const off = haversine(p, point);
       if (!best || off < best.off) best = { seg, edge, point, metres: 0, off };
     }
-  });
+  }
   if (!best) return null;
-  const b = best as LineSpot & { off: number };
+  const b = best;
   // Measured on the line as joinSegments makes it: a join that is not one point
   // keeps the hop between them (a freehand stretch ending on the click, the
   // road starting where the router put it), and two lengths added apart would
@@ -101,7 +101,10 @@ export function cutAt(
     if (head.length < 2) return { controlPoints: points, segments: kept };
     return {
       controlPoints: [...points, spot.point],
-      segments: [...kept, { ...s, coordinates: head, streets: trimStreets(s.streets, 0, cutM) }],
+      segments: [
+        ...kept,
+        { ...cut(s), coordinates: head, streets: trimStreets(s.streets, 0, cutM) },
+      ],
     };
   }
 
@@ -112,8 +115,21 @@ export function cutAt(
   if (tail.length < 2) return { controlPoints: points, segments: kept };
   return {
     controlPoints: [spot.point, ...points],
-    segments: [{ ...s, coordinates: tail, streets: trimStreets(s.streets, cutM, total) }, ...kept],
+    segments: [
+      { ...cut(s), coordinates: tail, streets: trimStreets(s.streets, cutM, total) },
+      ...kept,
+    ],
   };
+}
+
+/**
+ * A segment cut part way: a curve's handles belong to the whole of it, so
+ * the part kept is the line as it lies, without them.
+ */
+function cut(s: Segment): Segment {
+  const rest = { ...s };
+  delete rest.handles;
+  return rest;
 }
 
 /**
@@ -131,6 +147,7 @@ export function reverseDrawing(
       ...s,
       coordinates: [...s.coordinates].reverse(),
       streets: s.streets ? [...s.streets].reverse() : undefined,
+      ...(s.handles ? { handles: [s.handles[1], s.handles[0]] } : {}),
     })),
   };
 }

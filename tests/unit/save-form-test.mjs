@@ -1,5 +1,6 @@
 // The Save Recording form's rules: the fare as typed (fare-text.ts), what "What did you ride?"
-// offers (ride-choices.ts), and how a kept recording carries both to the upload (pack-recording.ts).
+// offers (ride-choices.ts), and how a kept recording carries both to the upload
+// (contribution-vehicles.ts).
 //
 //   node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs tests/unit/save-form-test.mjs
 import { test } from 'node:test';
@@ -7,7 +8,7 @@ import assert from 'node:assert/strict';
 
 import { FARE_ERROR, fareFromText } from '../../src/features/contribute/screens/fare-text.ts';
 import { RIDE_CHOICES, RIDE_LABEL } from '../../src/features/contribute/screens/ride-choices.ts';
-import { VEHICLE_OF } from '../../src/features/contribute/api/pack-recording.ts';
+import { VEHICLE_OF } from '../../src/features/contribute/api/contribution-vehicles.ts';
 import {
   RIDE_KINDS,
   storedRecordingSchema,

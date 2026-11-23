@@ -4,7 +4,7 @@ import { Button } from '@/design-system/primitives/button';
 
 import type { StudioMapName } from './studio-map';
 
-type PlaceholderMap = Exclude<StudioMapName, 'playground'>;
+type PlaceholderMap = Exclude<StudioMapName, 'playground' | 'public'>;
 
 interface MapPlaceholderProps {
   map: PlaceholderMap;
@@ -17,10 +17,6 @@ const WORDS: Record<PlaceholderMap, { title: string; body: string }> = {
   contributors: {
     title: 'Contributors map',
     body: 'Rides that contributors record will appear here, to look over before anything is drawn from them. None are shown yet.',
-  },
-  public: {
-    title: 'Public map',
-    body: 'The map commuters see will appear here, as published. It is not shown in the studio yet.',
   },
 };
 

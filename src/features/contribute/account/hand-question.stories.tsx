@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { expect, fn, within } from 'storybook/test';
+import { expect, fn, waitFor, within } from 'storybook/test';
 
 import { HandQuestion } from './hand-question';
 
@@ -35,7 +35,9 @@ type Story = StoryObj<typeof meta>;
 export const Delete: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(canvas.getByRole('button', { name: 'No, I change my mind' })).toHaveFocus();
+    await waitFor(() =>
+      expect(canvas.getByRole('button', { name: 'No, I change my mind' })).toHaveFocus(),
+    );
   },
 };
 
@@ -48,6 +50,37 @@ export const Logout: Story = {
     confirmVariant: 'primary',
     busyLabel: 'Logging out…',
     cancelLabel: 'Cancel',
+  },
+};
+
+/**
+ * Delete this record's question (4569:5015): the title alone, Keep recording leading in brand
+ * blue and the act under it in plain red words. Focus is on Keep recording all the same.
+ */
+export const KeepFirst: Story = {
+  args: {
+    title: 'You want to remove this recording?',
+    text: null,
+    confirmLabel: 'Delete this record',
+    confirmVariant: 'plain-error',
+    busyLabel: 'Delete this record',
+    cancelLabel: 'Keep recording',
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await waitFor(() =>
+      expect(canvas.getByRole('button', { name: 'Keep recording' })).toHaveFocus(),
+    );
+  },
+};
+
+/** The keep-first look under way: both answers wait, as any look's do. */
+export const KeepFirstBusy: Story = {
+  args: { ...KeepFirst.args, busyLabel: 'Deleting…', isBusy: true },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole('button', { name: 'Deleting…' })).toBeDisabled();
+    await expect(canvas.getByRole('button', { name: 'Keep recording' })).toBeDisabled();
   },
 };
 

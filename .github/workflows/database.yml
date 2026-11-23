@@ -10,8 +10,10 @@
 #      contributor-accounts.sh).
 #   2. `review`: the isolated review preview (scripts/preview/README.md) on its
 #      own Postgres and PostgREST containers, then review-test (the studio in a
-#      browser: draft, submit, approve, send back) and review-publication-test
-#      (approve, then the real publisher in a copy of the repository).
+#      browser: a draft opened from its mark, approved in its sidebar,
+#      published; a stale draft refused, then discarded) and
+#      review-publication-test (publish, then the real publisher in a copy of
+#      the repository).
 #
 # On pull requests that touch the SQL, the code that calls it, the preview or
 # these suites; nightly; and on demand.
@@ -30,6 +32,7 @@ on:
       - 'tests/e2e/review-test.mjs'
       - 'tests/e2e/review-publication-test.mjs'
       - '.github/workflows/database.yml'
+      - '.github/actions/prepare-browser-suite/**'
   schedule:
     # 03:43 in Manila (UTC+8), before the 04:00 publish.
     - cron: '43 19 * * *'
@@ -52,16 +55,18 @@ jobs:
         image: postgres:17
         env:
           POSTGRES_PASSWORD: verify-only
+        # The health check goes over TCP, so the image's temporary first-start server (Unix
+        # socket only) never counts as ready.
         options: >-
-          --health-cmd "pg_isready -U postgres"
+          --health-cmd "pg_isready -h 127.0.0.1 -U postgres"
           --health-interval 2s
           --health-timeout 5s
           --health-retries 30
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: 22
           cache: npm
@@ -79,27 +84,34 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
-      - uses: actions/setup-node@v5
-        with:
-          node-version: 22
-          cache: npm
-      - run: npm ci
-      # Playwright's Chromium, at the version package-lock pins.
-      - run: npx playwright install --with-deps chromium
+      # Node, npm ci, and Playwright's Chromium with its system packages, from the caches every
+      # browser suite shares (the action's own comments).
+      - uses: ./.github/actions/prepare-browser-suite
       # Step 1 of scripts/preview/README.md: Postgres 17 as para-review-db on a
       # private network, no port published, checked by run.sh first.
       - name: Start the disposable database
         run: |
           docker network create para-review
           docker run -d --name para-review-db --network para-review -e POSTGRES_PASSWORD=preview-only postgres:17
-          for _ in $(seq 60); do
-            docker exec para-review-db pg_isready -U postgres -q && exit 0
+          # On first start the image runs a temporary server on the Unix socket only, to run its
+          # init scripts, then stops it and starts the real one. A check over the socket can pass
+          # against the temporary one just before it stops ("psql: no such socket" in the next
+          # step). Over TCP only the real server answers; three answers in a row confirm it.
+          answered=0
+          for _ in $(seq 90); do
+            if docker exec para-review-db psql -h 127.0.0.1 -U postgres -tAc 'select 1' > /dev/null 2>&1; then
+              answered=$((answered + 1))
+              [ "$answered" -ge 3 ] && exit 0
+            else
+              answered=0
+            fi
             sleep 1
           done
-          echo '::error::the disposable Postgres did not start'
+          echo '::error::the disposable Postgres did not answer over TCP three times in a row within 90 s'
+          docker logs para-review-db | tail -n 20
           exit 1
       - name: supabase/verify/run.sh on it
         env:
@@ -134,11 +146,10 @@ jobs:
           cp -a src scripts public .env.production /tmp/para-review-publish/
           ln -s "$PWD/node_modules" /tmp/para-review-publish/node_modules
           bash scripts/preview/reset-review.sh
-      # Step 5: the app built against the loopback server, drafts on, and
+      # Step 5: the app built against the loopback server, and
       # the server that stands in for Supabase's auth and proxies to PostgREST.
       - name: Build the preview and start its server
         env:
-          VITE_STUDIO_DRAFTS: '1'
           VITE_SUPABASE_URL: http://127.0.0.1:4180/api
           VITE_SUPABASE_PUBLISHABLE_KEY: isolated-preview-publishable
           VITE_BASEMAP_HOST: https://tiles.openfreemap.org
@@ -168,9 +179,35 @@ jobs:
         run: |
           cat /tmp/para-review-server.log || true
           docker logs para-review-api || true
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         if: failure()
         with:
           name: review-screenshots
           path: /tmp/para-review-screenshots
           if-no-files-found: ignore
+
+  # A failed nightly run opens the `alert` issue (scripts/watch/report-failed-run.mjs); the watch
+  # closes it once the next run passes. Not on a pull request, whose own checks say it failed.
+  alert:
+    needs: [verify, review]
+    if: failure() && github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+          sparse-checkout: scripts/watch
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 22
+      - name: Open or update the alert issue
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          WORKFLOW_NAME: ${{ github.workflow }}
+          WORKFLOW_FILE: database.yml
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: node scripts/watch/report-failed-run.mjs

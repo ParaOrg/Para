@@ -37,7 +37,7 @@ Much of the codebase predates this file.
 | Storybook | Component development and documentation |
 | vite-plugin-pwa | Installable, offline-capable mobile app |
 | Cloudflare Turnstile | The bot check on a contributor's first save and on the studio's sign-in. Cloudflare's own script, loaded on those two pages only; no npm package |
-| Capacitor 8 | The contributor app: the contributor page's own build inside a native Android shell, with `@capacitor-community/background-geolocation` for recording with the screen off and `@capacitor/haptics` for the toolbar's slide ticks. The web bundle carries none of it (ADR 0006) |
+| Capacitor 8 | The contributor app: the contributor page's own build inside a native Android shell, with its own foreground service (`RideService`) for recording with the screen off and `@capacitor/haptics` for the toolbar's slide ticks. The web bundle carries none of it (ADR 0006) |
 | Cloudflare R2 | The weekly encrypted backup of contributions, written by a GitHub workflow. Nothing in the app reads it |
 | ESLint 10 + Prettier | Automatic enforcement of these standards. Every rule is an error (since 2026-10-14): a new rule warns only until the tree is clean of it. jsx-a11y's ESLint peer range is overridden in package.json until it declares 10 |
 
@@ -49,7 +49,7 @@ The structure is feature-based: code lives next to the feature that uses it.
 
 ```
 src/
-├── app/                        # App shells. Wiring only, no business logic.
+├── app/                        # App shells: wiring, and the parts only that page draws that join several features. No business logic.
 │   ├── public-map/             # The public map at /: main.tsx, public-map-app.tsx, status-bar.ts
 │   ├── studio/                 # The studio at /studio/: main.tsx, studio-app.tsx
 │   └── contribute/             # The contributor page at /contribute/: main.tsx, contribute-app.tsx
@@ -60,25 +60,27 @@ src/
 │   │   ├── geo/                # The pass and babaan-side rules.
 │   │   ├── map/                # The map view (the one MapLibre owner), its basemap and layers, the route and hotspot layers and hooks.
 │   │   ├── published/          # The published map's reader: the index and the line files, for the public map and the studio's Public map.
-│   │   └── cards/              # The cards and timelines.
+│   │   ├── cards/              # The cards and timelines.
+│   │   └── search/             # Place search: the field and its results.
 │   ├── locator/                # "Where am I". index.ts is its public API.
 │   ├── published-map/          # Tracks the published map's freshness and runs the installed app's updates. index.ts.
 │   ├── studio/                 # The editor. The public page never loads it. index.ts.
-│   │   └── auth/ data/ drawing/ panels/
+│   │   └── auth/ contributors/ data/ drawing/ maps/ panels/ public-view/
 │   ├── contribute/             # The contributor page: consent, the recorder, saving and sending. index.ts. The public page never loads it.
+│   │   └── account/ api/ app-update/ consent/ history/ map/ motion/ native/ native-bridge/ navigation/ notices/ recorder/ screens/ stop-notes/ storage/ toolbar/ tutorial/ uploads/, and common/ for what several of them share
 │   └── <small-feature>/        # components/ hooks/ api/ schemas/ types/ utils/ constants.ts index.ts
 ├── shared/                     # Used by 2+ features. Knows nothing about any feature.
 │   └── ui/ hooks/ utils/       # lib/ config/ types/ constants/ when first needed
-├── styles/global.css           # Tailwind entry. Imports the design system's tokens and fonts.
+├── styles/                     # global.css: the Tailwind entry, importing the design system's tokens and fonts. map-frame.css: the page and the map's corners, for every page that holds a map.
 ├── design-system/              # Domain-free: foundation/ ← primitives/ ← patterns/ (not yet). Imports nothing else. Tokens live here.
 └── assets/                     # Not yet: static images, icons. Today a feature keeps its own beside its code.
 ```
 
 Outside `src/`, `android/` is the contributor app's native Android project (Capacitor; ADR 0006). Edit it with `npx cap`, not by hand where Capacitor generates it. `.github/workflows/contributor-app.yml` builds it, and `vite.apk.config.ts` builds its web side.
 
-Create only the folders a feature actually needs. Don't scaffold empty ones.
+Create only the folders a feature actually needs. Don't scaffold empty ones. A small feature may stay flat, with no kind folders, until about 30 files (`locator` and `published-map` are flat).
 
-A large feature groups by concern (`routes`: model, geo, map, published, cards; `studio`: auth, data, drawing, panels), because that is the layering the code has: no React in a model, MapLibre only in a map folder. The kind folders (`components`, `hooks`, `api`, `schemas`, `utils`) are the default for a small feature and appear inside a concern folder when it grows.
+A large feature groups by concern (`routes`: model, geo, map, published, cards, search; `studio`: auth, contributors, data, drawing, maps, panels, public-view; `contribute`: the folders in the tree above), because that is the layering the code has: no React in a model, MapLibre only in a map folder. The kind folders (`components`, `hooks`, `api`, `schemas`, `utils`) are the default for a small feature and appear inside a concern folder when it grows. No concern folder has been split by sub-concern yet (the largest, `routes/map`, holds about 130 files); a few hold one small helper folder (`studio/contributors/actions`, `contribute/uploads/packing`, the two `basemap-thumbnails`). Splitting one is a planned change of its own, by sub-concern, never a side effect of other work.
 
 ### Import rules
 
@@ -122,7 +124,8 @@ Other naming rules:
 
 - Names describe the domain, not the implementation: `routeStops`, not `dataArray`. No abbreviations beyond universal ones (`id`, `url`, `api`).
 - Don't use `enum`. Use a union type or an `as const` object.
-- The only extra file-name suffixes allowed are `.stories.tsx` and `.d.ts`. Name everything else by what it is: `route-schema.ts`, `route-keys.ts`. Unit checks live in `tests/unit/*-test.mjs` under Node's test runner with the TypeScript hook; headless suites in `tests/e2e/`. The `.test.ts` suffix is reserved for colocated tests if they are ever adopted.
+- The only extra file-name suffixes allowed are `.stories.tsx` and `.d.ts`. Name everything else by what it is: `route-schema.ts`, `route-keys.ts`. Unit checks live in `tests/unit/*-test.mjs` under Node's test runner with the TypeScript hook; headless suites in `tests/e2e/`. The `.test.ts` suffix is reserved for colocated tests if they are ever adopted. `README.md` and a licence's own file (`OFL.txt`) keep their names, and `database.types.ts` keeps the name Supabase's generator gives it.
+- A file whose only export is a hook is `use-x.ts`. A file that exports a hook beside the rules and constants it reads is named for what it is about (`layers.ts`, `dot-gaze.ts`), not `use-…`.
 - Names use the words in `CONTEXT.md`. Database names (`stop`, `route_variant`) are translated to the glossary's (hotspot, direction) at the `api/` boundary, together with snake_case to camelCase, so neither reaches components.
 
 ## Components
@@ -190,7 +193,7 @@ Choose the right home for each piece of state:
 
 | State | Where it lives |
 | --- | --- |
-| Data from Supabase or any server | TanStack Query, nowhere else |
+| Data from Supabase or any server | TanStack Query, nowhere else. The one exception is the published map (see Hooks and effects) |
 | UI state for one component | `useState` / `useReducer` |
 | UI state shared inside one feature | React context in that feature, provided as low in the tree as possible |
 | Shareable or bookmarkable state (filters, selected route, search text) | The URL |
@@ -242,7 +245,7 @@ export function useRoutesQuery(filters: RouteFilters) {
 Validate data at every boundary where it enters the app:
 
 - Supabase and API responses, parsed in the fetcher.
-- Environment variables, parsed once per page with Zod: `shared/config/env.ts` for the flags any page may read, and the Supabase and Turnstile values in the feature that uses them (`features/studio/data/env.ts`, `features/contribute/api/env.ts`), so the database's address never enters a module the public page loads. Nothing else reads `import.meta.env`.
+- Environment variables, parsed once per page with Zod: `shared/config/env.ts` for the flags any page may read, and the Supabase and Turnstile values in the feature that uses them (`features/studio/data/env.ts`, `features/contribute/api/env.ts`), so the database's address never enters a module the public page loads. Nothing else reads `import.meta.env`. `MODE`, `DEV` and `PROD` may be read anywhere, for a branch the build works out.
 - Form input, URL and search params, and anything read from `localStorage` or IndexedDB.
 
 ```ts
@@ -261,6 +264,7 @@ Never put secrets in the frontend. Only the Supabase URL, the publishable key an
 - Custom hooks do one thing and are named for it: `useRouteSearch`, not `useRouteStuff`.
 - Use `useEffect` **only to sync with something outside React**: MapLibre, the DOM, subscriptions, timers. Every effect that subscribes, listens or schedules also cleans up.
 - Never use an effect to derive state, transform data or fetch data. Compute during render or use TanStack Query.
+  - The one exception is the published map's reads (`features/routes/published/` and the hooks that load them, such as `use-saved-routes.ts`). They load in an effect because the public page carries no TanStack Query, to keep it small; `scripts/checks/check-build.mjs` proves it.
 - Use `useMemo` and `useCallback` only for a measured performance problem, or when a stable reference is genuinely required (an effect dependency, a memoized child).
 - Wrap imperative libraries like MapLibre in one component or hook that owns the instance in a `useRef`. The rest of the app talks to it through props and callbacks, never by reaching into the instance.
 
@@ -317,7 +321,7 @@ import { useState } from 'react';                        // 1. external packages
 import { useQuery } from '@tanstack/react-query';
 
 import { cn } from '@/shared/utils/cn';                  // 2. internal via @/
-import { useRoutesQuery } from '@/features/routes';
+import { routeName } from '@/features/routes/model/routes';
 
 import { RouteCardSkeleton } from './route-card-skeleton'; // 3. relative
 
@@ -344,7 +348,7 @@ These configs are installed and enforce everything above. Every ESLint rule is a
   - `eslint-plugin-react-hooks` (rules of hooks + exhaustive deps)
   - `eslint-plugin-jsx-a11y`
   - Import ordering (groups as above) and a no-default-export rule
-  - `eslint-plugin-check-file` to enforce kebab-case file and folder names
+  - `eslint-plugin-check-file` to enforce kebab-case file and folder names. It reads `.ts`, `.tsx` and `.css` files; fonts, pictures and other files are kept kebab-case by hand
   - `no-restricted-imports` to enforce the import direction and ban deep feature imports
 - **Scripts:** `npm run typecheck`, `npm run lint` and `npm run format`. `npm run check` runs them all as CI does: `format:check`, `lint`, `build` (typecheck, Vite and the build guards) and the unit checks.
 

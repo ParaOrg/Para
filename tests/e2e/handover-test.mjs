@@ -20,6 +20,10 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { until } from './lib/harness.mjs';
+import { checkPolicies, watchPolicies } from './lib/policy.mjs';
+import { keepBasemapUnreachable } from './lib/stand-ins.mjs';
+
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const require = createRequire(join(root, 'package.json'));
 const { chromium } = require('playwright');
@@ -76,7 +80,10 @@ const state = (page) =>
 // Nothing but the preview is reachable, so the basemap's requests fail at once.
 // The browser lets the new worker activate only when the old one has no request
 // in flight; with no route to the tile host those requests would hang for
-// minutes and the hand-over would wait for them.
+// minutes and the hand-over would wait for them. So the basemap is not stood in
+// either: with it stood in, Chromium finds a new worker on every update check,
+// and "Update Para!" comes back after the reload (.scratch/ci-flakes/issues/04).
+keepBasemapUnreachable();
 const browser = await chromium.launch({
   args: ['--host-resolver-rules=MAP * ~NOTFOUND, EXCLUDE localhost'],
 });
@@ -86,6 +93,7 @@ try {
     isMobile: true,
     hasTouch: true,
   });
+  const flagged = await watchPolicies(ctx);
   const errors = [];
   const page = await ctx.newPage();
   page.on('pageerror', (e) => errors.push(e.message));
@@ -120,8 +128,13 @@ try {
     if (!ours) await page.waitForTimeout(500);
   }
   check("this app's worker took over from the old one", ours);
+  // Time for an "Update Para!" or a reload that must not come, then the worker settling in.
   await page.waitForTimeout(2000);
-  const after = await state(page);
+  const after = await until(
+    () => state(page),
+    (now) => now.controlled && now.controllerState === 'activated' && !now.waiting,
+    20000,
+  );
   check(
     "this app's worker controls the page, and nothing waits",
     after.controlled && after.controllerState === 'activated' && !after.waiting,
@@ -154,8 +167,11 @@ try {
       // Not a tap: with the basemap unreachable its failure banner sits over the button.
       page.locator('[data-testid="update"]').dispatchEvent('click'),
     ]);
-    await page.waitForTimeout(1500);
-    const done = await state(page);
+    const done = await until(
+      () => state(page),
+      (now) => !now.waiting && now.controlled && !now.update,
+      20000,
+    );
     check(
       'tapping Reload brings it in and the button goes',
       !done.waiting && done.controlled && !done.update,
@@ -164,6 +180,7 @@ try {
   }
 
   check('no page errors', errors.length === 0, errors.join(' | '));
+  checkPolicies(check, flagged);
   await ctx.close();
 } finally {
   writeFileSync(swFile, ourWorker);

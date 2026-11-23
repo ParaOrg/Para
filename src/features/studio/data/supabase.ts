@@ -2,14 +2,14 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 
 import type { Database } from '@/shared/types/database.types';
 
+import { supabasePublishableKey, supabaseUrl } from './env';
+
 /** The studio's client, typed by the generated schema. */
 export type StudioClient = SupabaseClient<Database>;
 
-const url = import.meta.env.VITE_SUPABASE_URL as string | undefined;
-const key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined;
-
 /** The project's address and publishable key, or null when the build has none. */
-export const supabaseConfig: { url: string; key: string } | null = url && key ? { url, key } : null;
+export const supabaseConfig: { url: string; key: string } | null =
+  supabaseUrl && supabasePublishableKey ? { url: supabaseUrl, key: supabasePublishableKey } : null;
 
 /**
  * Set when the build had no Supabase config. The map still renders and

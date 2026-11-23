@@ -30,15 +30,25 @@ An ed25519 key pair is a public half (goes to GitHub as the deploy key) and a pr
    - Key: paste the whole contents of `para-publish.pub` (`notepad para-publish.pub`).
    - Tick **Allow write access**.
    - **Add key**.
-4. Add the private key: **Settings** → **Secrets and variables** → **Actions** → **New repository secret**.
+4. Add the private key to the `publish` environment, which only `main` may use: **Settings** → **Environments** → **New environment**, name `publish`. Under **Deployment branches and tags** choose **Selected branches and tags** and add `main` only. Then, on that environment, **Add environment secret**.
    - Name: `PUBLISH_DEPLOY_KEY`
    - Secret: paste the whole contents of `para-publish` (`notepad para-publish`), including the `-----BEGIN OPENSSH PRIVATE KEY-----` and `-----END OPENSSH PRIVATE KEY-----` lines and the final newline.
    - **Add secret**.
 5. Delete both files from the computer: `Remove-Item para-publish, para-publish.pub`. Empty the Recycle Bin if you used Explorer.
 
+## Moving an existing key into the environment
+
+When `PUBLISH_DEPLOY_KEY` is already a repository secret (it was until the change that added `environment: publish`), the order keeps every nightly run working:
+
+1. Before that change reaches `main`, the owner creates the `publish` environment (`main` only) and adds the same key there as an environment secret, as in step 4. The repository secret stays.
+2. The change reaches `main` in a release. From then on the job reads the environment's copy.
+3. After one green nightly run, the owner deletes the repository secret.
+
+The backup's secrets move the same way, into the `backup` environment (`main` only); the backup.yml header's setup step 5 lists them.
+
 ## The hub's step afterwards
 
-Two rulesets, not one: an admin bypass covers every rule in its ruleset, so putting the admin role in the ruleset with the CI rule would let admins merge with CI red. `5` is the built-in **admin** repository role. `15368` is the GitHub Actions app, the source of the CI checks. A `DeployKey` actor takes `actor_id: null`, and `pull_request` bypass mode does not apply to it, so it uses `always`. "Build and unit checks" is not listed: the two summary checks depend on it.
+Two rulesets, not one: an admin bypass covers every rule in its ruleset, so putting the admin role in the ruleset with the CI rule would let admins merge with CI red. `5` is the built-in **admin** repository role. `15368` is the GitHub Actions app, the source of the CI checks. A `DeployKey` actor takes `actor_id: null`, and `pull_request` bypass mode does not apply to it, so it uses `always`. "Build and lint" and "Formatting and the unit checks" are not listed: the two summary checks depend on them.
 
 A ruleset "main: no deleting, no force-push" (id 25882502) already exists. Ruleset A replaces it: create A, check it is active, then delete 25882502.
 
@@ -99,6 +109,31 @@ Create each with `gh api -X POST repos/ParaOrg/Para/rulesets --input <file>.json
 
 The shapes come from GitHub's REST reference, "Create a repository ruleset": <https://docs.github.com/en/rest/repos/rules?apiVersion=2022-11-28#create-a-repository-ruleset>. For `bypass_actors` it says `actor_type` can be `DeployKey` ("If actor_type is DeployKey, this should be null" for `actor_id`) and that `pull_request` bypass mode "is not applicable for the DeployKey actor type".
 
+## Adding the secrets scan to the required checks
+
+Not done yet: the owner's step, once the nightly failures of Security open an alert (so a broken scan is seen the same day it would start blocking merges). Ruleset A is id 26126587. In its `required_status_checks`, add one line after "The editor":
+
+```json
+{ "context": "No secrets in the history", "integration_id": 15368 }
+```
+
+Read the ruleset with `gh api repos/ParaOrg/Para/rulesets/26126587`, add the line to its `rules`, and send the whole ruleset back with `gh api -X PUT repos/ParaOrg/Para/rulesets/26126587 --input <file>.json`. Don't add "No known holes in production dependencies": a new advisory for a package Para uses would block every merge the day it is published.
+
 ## Why CI skips the publish commit
 
 A deploy-key push starts other workflows, unlike `GITHUB_TOKEN`. `ci.yml` ignores a push that only touches `public/data/**` (`paths-ignore`): a full run on `main` includes the drawing suites, which go through the shared OSRM router, for a file the publish already checked with `check-map-data.mjs`; CI's own nightly run at 05:00 covers `main` right after. Pull requests are not filtered. The contributor app's release runs on `app-v*` tags only, and nothing in the publish pushes a tag.
+
+## Releases are merge commits (proposed, the owner's decision)
+
+The contributor app's release refuses a tag that is not on `main`, or whose commit CI did not pass (`scripts/publish/release-guard.mjs`, the first step of `build-release` in `contributor-app.yml`). That check means what it says only while a release reaches `main` as a merge commit: a squash or a rebase makes new commits on `main`, and `staging`'s own commits are then not on `main` at all.
+
+To make GitHub offer only "Create a merge commit" on pull requests into `main`, add one line to the `pull_request` rule's `parameters` in ruleset A (id 26126587):
+
+```json
+"allowed_merge_methods": ["merge"]
+```
+
+Read the ruleset with `gh api repos/ParaOrg/Para/rulesets/26126587`, add the line, and send the whole ruleset back with `gh api -X PUT repos/ParaOrg/Para/rulesets/26126587 --input <file>.json`. Not applied: the owner decides.
+
+A release is tagged once its CI on `main` is green. The tag may sit on `main`'s tip the day after: the nightly "Publish map" commits change only `public/data/` and run no CI, so the guard steps back over them to the release's own commit and reads its result.
+

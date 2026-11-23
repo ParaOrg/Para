@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Map as MapLibreMap } from 'maplibre-gl';
 import type { ComponentProps } from 'react';
 import { useEffect, useRef, useState } from 'react';
-import { expect, fn, userEvent, waitFor } from 'storybook/test';
+import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
 import type { LngLat } from '@/shared/utils/geo';
 
@@ -117,7 +117,7 @@ const meta = {
     ),
   ],
   parameters: { layout: 'fullscreen' },
-  args: { selected: direction, hotspots, rows, livery: 'rose', onPick: fn() },
+  args: { selected: direction, hotspots, rows, livery: 'uv-express', onPick: fn() },
 } satisfies Meta<typeof OnAnEmptyMap>;
 
 export default meta;
@@ -183,15 +183,27 @@ export const AtRest: Story = {
       await expect(station).not.toHaveAttribute('data-far');
       await expect(labelOpacity(station)).toBe('1');
       await expect(getComputedStyle(dotOf(station)).backgroundColor).toBe(
-        wornBy(CARD_SURFACE.rose),
+        wornBy(CARD_SURFACE['uv-express']),
       );
     }
-    // Both apps give `onPick`: each dot and its name are one button, named for the row.
+    // Given `onPick`, as the studio does: each dot and its name are one button, named for the row.
     for (const [i, station] of stations.entries()) {
       const buttons = station.querySelectorAll('button');
       await expect(buttons).toHaveLength(1);
       await expect(buttons[0]).toHaveAttribute('aria-label', rows[i].label);
     }
+  },
+};
+
+/** Picking off, the public map's default: each dot and its name are plain, no button among them. */
+export const PickingOff: Story = {
+  args: { onPick: undefined },
+  play: async ({ canvasElement }) => {
+    const stations = await stationsOf(canvasElement, 5);
+    await expect(stations.map((s) => s.querySelector('[data-part="words"]')?.textContent)).toEqual(
+      rows.map((r) => r.label),
+    );
+    await expect(within(canvasElement).queryAllByRole('button')).toHaveLength(0);
   },
 };
 
@@ -224,13 +236,15 @@ export const WithARide: Story = {
       await expect(station).toHaveAttribute('data-paled');
       await expect(labelOpacity(station)).toBe('0.6');
       await expect(getComputedStyle(dotOf(station)).backgroundColor).toBe(
-        wornBy(CARD_SURFACE_PALE.rose),
+        wornBy(CARD_SURFACE_PALE['uv-express']),
       );
     }
     const inside = stationNamed(stations, 'Pangarap');
     await expect(inside).not.toHaveAttribute('data-paled');
     await expect(labelOpacity(inside)).toBe('1');
-    await expect(getComputedStyle(dotOf(inside)).backgroundColor).toBe(wornBy(CARD_SURFACE.rose));
+    await expect(getComputedStyle(dotOf(inside)).backgroundColor).toBe(
+      wornBy(CARD_SURFACE['uv-express']),
+    );
   },
 };
 
@@ -253,7 +267,7 @@ export const StartAlone: Story = {
       await expect(station).toHaveAttribute('data-paled');
       await expect(labelOpacity(station)).toBe('0.6');
       await expect(getComputedStyle(dotOf(station)).backgroundColor).toBe(
-        wornBy(CARD_SURFACE_PALE.rose),
+        wornBy(CARD_SURFACE_PALE['uv-express']),
       );
     }
   },

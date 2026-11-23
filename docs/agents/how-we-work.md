@@ -8,7 +8,7 @@ The goals: a codebase that is easy to review, work that scales, and an app whose
 
 - **The owner owns the design.** A session never makes up a look. When Figma doesn't cover something, the session collects its questions and sends them to the owner in one batch, not one at a time.
 - **One coordinator session** hands out the work, merges between branches, and writes the release summary.
-- **Sessions merge their own finished work** into `staging` through a pull request, once its CI is green. **Only the owner merges** into `main`.
+- **Sessions merge their own finished work** into `staging` through a pull request, once its CI is green. **Only the owner merges** into `main`. `main-protection.md` holds the rules GitHub enforces on `main`; `staging-protection.md` holds the ruleset for `staging`, for the owner to turn on.
 
 ## Which model does what
 
@@ -27,22 +27,27 @@ The goals: a codebase that is easy to review, work that scales, and an app whose
 
 - Hand independent work to other sessions. At most about four build at the same time: the limit is how much the owner can review, not how fast the sessions work.
 - Each session owns folders, not tasks. No two sessions edit the same file at the same time.
+- The folders make five areas (`areas.json`): commuter, studio, contributor, contributor APK and shared. A pull request stays in one area where it can; CI warns when one spans several.
 - Work that touches files most open pull requests touch (a rename, a pass over comments, file splits) waits until those pull requests land.
 - One browser suite at a time in a container.
+- Local e2e batches: one dev server per worktree, on its own port, with `PARA_BASE` set. A suite prints, as it starts, the folder and commit the server serves beside its own, and warns when they differ.
 - Testing follows the size of the change. A simple change (copy, a token, a class, a one-line fix) is pushed without running the checks; CI still runs on its pull request. A medium or hard change, or any change the owner asks to be tested, runs `npm run check` and the browser suites it reaches before pushing.
 
 ## How work lands
 
 - Work lands in batches. Each batch is one combined branch with one preview link and one summary of what changed on screen, with screenshots.
+- **Don't sign in to the studio or the contributor page on a branch preview address** (`<branch>-para…workers.dev`). Its code hasn't been reviewed and it talks to the live database. Test signed-in work on staging or locally. The lasting fix is `.scratch/staging-backend/spec.md`.
 - The owner reviews the screens. The coordinator and an Opus review cover the code.
 - The small pull requests stay underneath, one purpose each, so the history stays readable.
 - `staging` is always kept up to date with finished work.
+- **Where `staging` has a merge queue** (`staging-protection.md`), a pull request runs the build job and the unit job alone: formatting, lint, the build and its guards, and the unit checks. `gh pr merge <number>` puts it in the queue, which runs every browser suite and Storybook on the commit the merge would make, and lands it only if they pass. To have the suites' answer before queueing, run the ones the change reaches locally (`tests/e2e/README.md`), or CI's "Run workflow" on the branch.
 - Before `staging` is merged into `main`, `staging` itself is tested as a whole: `npm run check` and every browser suite.
+- **A change to `.github/`** (a workflow, an action, `dependabot.yml`) merges alone, because a broken workflow stops CI for everyone. Before it merges, the coordinator gets what changed in which jobs, and the job count, and gives the go-ahead. Nothing else merges after it until staging's push run on its merge commit is green with the job count checked. The checks branch protection requires ("What changed", "Build and the public map", "The editor") keep their names, and their `needs` still cover what they covered.
 
 ## Keeping the codebase easy to scan
 
 - **Comments say why.** Who asked for a change, when, and what the code used to do go in the commit message and the pull request, not in the code (`.claude/CLAUDE.md`, Comments).
-- **Files stay under about 150 lines** (`.claude/CLAUDE.md`, Components). Long files are split folder by folder, biggest first.
+- **Files stay under about 150 lines** (`.claude/CLAUDE.md`, Components). A new source file over 150 lines fails CI (`npm run check:long-files`); those already long are listed in `scripts/checks/long-files-baseline.json`, each held to its length, and the list may only shrink. Long files are split folder by folder, biggest first.
 - **An architecture page built from the code:** the apps, the features, what each exposes, which part uses which, and where the data flows. CI checks that it is current. Planned.
 - **System design:** a few diagrams of how data moves (studio, database, publish, map files, public map; and the driver app once it is designed), with each big decision in `docs/adr/`. Planned.
-- **A code-health page each release:** files over the limit, lint warnings left, the app's size against its budget, the test count, and components without stories. Planned.
+- **A code-health page:** `npm run health` (files over the limit, comments, components without stories, the app's size against its budget), on every CI run's summary, and pasted into each release's summary.

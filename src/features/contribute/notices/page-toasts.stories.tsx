@@ -11,12 +11,8 @@ import {
   POSITION_UNAVAILABLE_PROBLEM,
   STORAGE_PROBLEM,
 } from './recorder-problems';
-import {
-  pointsLostWords,
-  routeRecordedWords,
-  uploadFailedProblem,
-  type RouteRecordedGiven,
-} from './route-recorded';
+import type { RouteRecordedGiven } from './route-recorded';
+import { uploadFailedProblem } from './upload-failed-problem';
 import type { UploadStatus } from '../uploads/upload-state';
 
 const meta = {
@@ -34,7 +30,8 @@ const meta = {
     problem: null,
     isScreenFreeToSleep: false,
     mapNote: null,
-    stopsFlagged: 0,
+    notesAdded: 0,
+    stopNotesFailures: 0,
     routeRecorded: null,
     uploadProblem: null,
   },
@@ -98,6 +95,30 @@ export const LocatorNote: Story = {
   },
 };
 
+/**
+ * In the app, the locate button tapped with the phone's location off and Google's "Turn on
+ * location?" dialog declined (its words are the locator's, locator-note.ts LOCATION_OFF_NOTE).
+ */
+export const LocatorLocationOffInTheApp: Story = {
+  args: {
+    mapNote: {
+      note: {
+        id: 'location',
+        title: 'Location is off',
+        body: 'Turn it on in Quick Settings to see where you are.',
+      },
+      timesGiven: 1,
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(await canvas.findByTestId('toast')).toHaveTextContent('Location is off');
+    await expect(canvas.getByRole('alert')).toHaveTextContent(
+      'Location is off. Turn it on in Quick Settings to see where you are.',
+    );
+  },
+};
+
 /** The recorder and the locator both say location is wrong: one toast, the recorder's. */
 export const RecorderAndLocator: Story = {
   args: { problem: LOCATION_BLOCKED_PROBLEM, mapNote: LOCATOR_NOTE },
@@ -113,31 +134,41 @@ export const RecorderAndLocator: Story = {
   },
 };
 
+/** A stop's card or Stops notes could not be fetched: it closed, and this stays until ✕. */
+export const StopNotesFailed: Story = {
+  args: { stopNotesFailures: 1 },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(await canvas.findByTestId('toast')).toHaveTextContent(
+      'Stop notes could not be opened',
+    );
+    await expect(canvas.getByRole('alert')).toHaveTextContent(
+      'Stop notes could not be opened. Check your connection, then try again.',
+    );
+  },
+};
+
 /** Two at once: one at a time, the recorder's first, the screen's after it is closed. */
 export const TwoAtOnce: Story = {
   args: { problem: POSITION_UNAVAILABLE_PROBLEM, isScreenFreeToSleep: true },
 };
 
-/** A stop just flagged: "Stop flagged" with the flag, an info toast that leaves by itself. */
-export const StopFlagged: Story = {
-  args: { stopsFlagged: 1 },
+/** A stop's note saved from its card: "Note successfully added", the compact info toast. */
+export const NoteAdded: Story = {
+  args: { notesAdded: 1 },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(await canvas.findByTestId('toast')).toHaveTextContent('Stop flagged');
-    await expect(canvas.getByRole('status')).toHaveTextContent('Stop flagged');
+    await expect(await canvas.findByTestId('toast')).toHaveTextContent('Note successfully added');
+    await expect(canvas.getByRole('status')).toHaveTextContent('Note successfully added');
   },
 };
 
-/** A save, as the page says it: the words built by route-recorded.ts, as the page builds them. */
+/** A save, as the page tells of it: the toasts put it in words (route-recorded.ts). */
 const saved = (
   status: UploadStatus,
   isOnline: boolean,
   failedFixWrites = 0,
-): RouteRecordedGiven => ({
-  words: routeRecordedWords(status, isOnline),
-  pointsLost: pointsLostWords(failedFixWrites),
-  times: 1,
-});
+): RouteRecordedGiven => ({ status, isOnline, failedFixWrites, times: 1 });
 
 /** A route just saved and on its way: "Route recorded", with the check, leaving by itself. */
 export const RouteRecordedOnItsWay: Story = {

@@ -18,7 +18,7 @@ a live database URL. The demo signing key authenticates disposable fixtures only
 4. Copy `src`, `scripts`, `public` and the public `.env.production` into
    `/tmp/para-review-publish`, and link its `node_modules` to the workspace.
    Run `reset-review.sh` to create a deterministic dataset.
-5. Build Vite to `/tmp/para-review-preview` with `VITE_STUDIO_DRAFTS=1`,
+5. Build Vite to `/tmp/para-review-preview` with
    `VITE_SUPABASE_URL=http://127.0.0.1:4180/api`, and a dummy publishable key.
    Start `node scripts/preview/review-server.mjs`.
 6. Run `tests/e2e/review-test.mjs` with Playwright and

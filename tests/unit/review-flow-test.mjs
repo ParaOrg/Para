@@ -3,9 +3,6 @@ import { test } from 'node:test';
 import { fakeSupabase } from './fixtures/fake-supabase.mjs';
 import { setSupabase } from '../../src/features/studio/data/supabase.ts';
 import { runReviewCommand } from '../../src/features/studio/data/review-commands.ts';
-import { saveDraftFacts } from '../../src/features/studio/data/draft-facts.ts';
-import { reviewFields } from '../../src/features/studio/data/review-diff.ts';
-import { reviewDependencies } from '../../src/features/studio/data/review-dependencies.ts';
 import { reviewAnchor, reviewLines } from '../../src/features/studio/data/review-geometry.ts';
 import { waitingForPublication } from '../../src/features/studio/data/publication.ts';
 
@@ -35,122 +32,27 @@ const draft = {
   submitted_at: null,
 };
 
-test('approval sends the reviewed draft revision through the guarded RPC', async () => {
+test('Publish sends the draft revision on screen to publish_draft, in one call', async () => {
   const { client, log } = fakeSupabase(() => ({ data: { code: 'approved' } }));
   setSupabase(client);
-  assert.equal((await runReviewCommand({ action: 'approve', draft })).code, 'approved');
-  assert.equal(log[0].op, 'approve_reviewed_draft');
-  assert.deepEqual(log[0].payload, { p_draft: 'd', p_revision: 3 });
-});
-test('Approve on a draft not yet submitted submits it, then approves the revision submitting gave it', async () => {
-  const { client, log } = fakeSupabase((query) =>
-    query.op === 'submit_draft'
-      ? { data: { code: 'submitted', draft: { ...draft, status: 'pending', revision: 4 } } }
-      : { data: { code: 'approved' } },
-  );
-  setSupabase(client);
-  const result = await runReviewCommand({
-    action: 'approve',
-    draft: { ...draft, status: 'draft' },
-  });
-  assert.equal(result.code, 'approved');
+  assert.equal((await runReviewCommand({ action: 'publish', draft })).code, 'approved');
   assert.deepEqual(
     log.map((entry) => [entry.op, entry.payload]),
-    [
-      ['submit_draft', { p_draft: 'd', p_revision: 3 }],
-      ['approve_reviewed_draft', { p_draft: 'd', p_revision: 4 }],
-    ],
+    [['publish_draft', { p_draft: 'd', p_revision: 3 }]],
   );
 });
-test('a refused submit is the answer, and nothing is approved', async () => {
-  const { client, log } = fakeSupabase(() => ({
+test('a refused publish is the answer', async () => {
+  const { client } = fakeSupabase(() => ({
     data: { code: 'revision_mismatch', current_revision: 5 },
   }));
   setSupabase(client);
-  const result = await runReviewCommand({
-    action: 'approve',
-    draft: { ...draft, status: 'draft' },
-  });
+  const result = await runReviewCommand({ action: 'publish', draft });
   assert.equal(result.code, 'revision_mismatch');
-  assert.deepEqual(
-    log.map((entry) => entry.op),
-    ['submit_draft'],
-  );
-});
-test('editing sent-back facts preserves geometry and the complete link set', async () => {
-  const { client, log } = fakeSupabase((query) => ({
-    data: { ...draft, status: 'draft', revision: 4, payload: query.payload.payload },
-  }));
-  setSupabase(client);
-  await saveDraftFacts({ ...draft, status: 'draft' }, { name: ' Corrected place ' });
-  assert.deepEqual(
-    log.map((q) => [q.table, q.op]),
-    [['draft', 'update']],
-  );
-  assert.equal(log[0].payload.payload.stop.name, 'Corrected place');
-  assert.deepEqual(log[0].payload.payload.stop.point, draft.payload.stop.point);
-  assert.deepEqual(log[0].payload.payload.links, draft.payload.links);
-  assert.ok(
-    log[0].filters.some(([op, key, value]) => op === 'eq' && key === 'revision' && value === 3),
-  );
-});
-test('comparison detects moved geometry even with the same number of points', () => {
-  const before = {
-    version: 1,
-    stop: { name: 'Same', point: { type: 'Point', coordinates: [121, 14] } },
-  };
-  const after = {
-    version: 1,
-    stop: { name: 'Same', point: { type: 'Point', coordinates: [122, 14] } },
-  };
-  const fields = reviewFields({ approved: before, proposed: after });
-  assert.equal(fields[0].label, 'Place / Position');
-  assert.equal(fields[0].changed, true);
-  assert.equal(
-    fields.find((field) => field.label === 'Place / Ground name' || field.label === 'Place / name')
-      .changed,
-    false,
-  );
 });
 test('drawing markers come from the draft geometry, including new draft-only places', () => {
   assert.deepEqual(reviewLines(draft.payload), [[[121, 14]]]);
   assert.deepEqual(reviewAnchor(draft.payload), [121, 14]);
   assert.equal(reviewAnchor({ bad: 'payload' }), null);
-});
-test('route dependencies include new linked places, not only endpoints', async () => {
-  const dependent = { ...draft, id: 'new-place-draft', subject_id: 'new-place' };
-  const { client } = fakeSupabase((query) =>
-    query.table === 'stop'
-      ? {
-          data: [
-            { id: 'head', name: 'Head', status: 'approved' },
-            { id: 'tail', name: 'Tail', status: 'approved' },
-          ],
-        }
-      : { data: dependent },
-  );
-  setSupabase(client);
-  const missing = await reviewDependencies({
-    route: { head_stop_id: 'head', tail_stop_id: 'tail' },
-    directions: [{ links: [{ stop_id: 'new-place' }] }],
-  });
-  assert.deepEqual(missing, [
-    { subjectId: 'new-place', label: 'Place', draftId: 'new-place-draft' },
-  ]);
-});
-test('dependency lookups keep request batches bounded', async () => {
-  const { client, log } = fakeSupabase((query) => ({
-    data: query.filters
-      .find(([op]) => op === 'in')[2]
-      .map((id) => ({ id, name: id, status: 'approved' })),
-  }));
-  setSupabase(client);
-  await reviewDependencies({
-    route: { head_stop_id: null, tail_stop_id: null },
-    directions: [{ links: Array.from({ length: 95 }, (_, i) => ({ stop_id: `s${i}` })) }],
-  });
-  assert.equal(log.length, 4);
-  assert.ok(log.every((query) => query.filters.find(([op]) => op === 'in')[2].length <= 30));
 });
 const index = {
   publishedAt: '2026-10-18T10:00:00Z',

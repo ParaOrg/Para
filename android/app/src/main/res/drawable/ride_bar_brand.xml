@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A bar at the foot of the notification's card (ride_notification_expanded.xml), its outer corner
+     rounded as the card's: brand. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="@color/ride_brand_surface" />
+    <stroke android:width="0.6dp" android:color="@color/ride_brand_border" />
+    <corners android:bottomLeftRadius="16dp" />
+</shape>

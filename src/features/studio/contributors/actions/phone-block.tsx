@@ -6,6 +6,10 @@ import { TextAreaField } from '@/design-system/primitives/text-area-field';
 import { useContributorQuery, useBlockContributorMutation } from '../../data/use-contributor-query';
 import { manilaTime } from '../contribution-format';
 
+/** Said under the phone when a later read fails: what is shown is the last read. */
+const staleNotice = (phoneCode: string) =>
+  `Couldn’t refresh phone ${phoneCode}. Showing what was last read.`;
+
 interface PhoneBlockProps {
   contributorId: string;
   phoneCode: string;
@@ -23,14 +27,30 @@ export function PhoneBlock({ contributorId, phoneCode }: PhoneBlockProps) {
   const phone = useContributorQuery(contributorId);
   const change = useBlockContributorMutation(contributorId);
 
+  const handleRetry = () => void phone.refetch();
+  // Greyed while the read is under way, so a second tap cannot start another.
+  const retryButton = (
+    <Button
+      variant="secondary"
+      size="small"
+      label={phone.isFetching ? 'Trying…' : 'Try again'}
+      disabled={phone.isFetching}
+      onClick={handleRetry}
+    />
+  );
   if (phone.isPending) return <p aria-live="polite">Reading phone {phoneCode}…</p>;
-  if (phone.error)
+  // A later read that fails keeps what was read: only a first read that failed has nothing to show.
+  if (phone.data === undefined)
     return (
-      <p role="alert">
-        Phone {phoneCode} could not be read. {phone.error.message}
-      </p>
+      <div className="flex w-full flex-col items-start gap-2">
+        <p role="alert">
+          Phone {phoneCode} could not be read. {phone.error.message}
+        </p>
+        {retryButton}
+      </div>
     );
   const { uploadCount, blockedAt, blockNote } = phone.data;
+  const notice = phone.error ? staleNotice(phoneCode) : null;
 
   const send = (isBlocking: boolean) =>
     change.mutate(
@@ -43,10 +63,22 @@ export function PhoneBlock({ contributorId, phoneCode }: PhoneBlockProps) {
       },
     );
 
+  // The status line stays mounted, so a screen reader hears the notice when it appears.
   const summary = (
-    <p>
-      Phone {phoneCode} has sent {uploadCount} {uploadCount === 1 ? 'upload' : 'uploads'}.
-    </p>
+    <>
+      <p>
+        Phone {phoneCode} has sent {uploadCount} {uploadCount === 1 ? 'upload' : 'uploads'}.
+      </p>
+      <p role="status" className="sr-only">
+        {notice}
+      </p>
+      {notice && (
+        <div className="flex items-center gap-2 text-sm text-content-secondary">
+          <p aria-hidden="true">{notice}</p>
+          {retryButton}
+        </div>
+      )}
+    </>
   );
   if (blockedAt !== null) {
     return (

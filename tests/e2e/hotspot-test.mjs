@@ -8,16 +8,18 @@
 // to 2 corners, checks the draft survives a reload, then traces a 2-point
 // route and checks it snaps to roads via the public OSRM router. To stay
 // independent of whatever is saved today, the map is recentred on the middle
-// vertex of the saved route with the most coordinates (or a fixed Metro Manila
+// vertex of the pinned subject line, lib/subject-line.mjs (or a fixed Metro Manila
 // fallback when there are none) before drawing, so clicks land on real streets instead of
 // wherever the saved-routes bounding box happens to fit right now.
 import { chromium } from 'playwright';
 import { BASE, harness, nodeFetch, waitForSource } from './lib/harness.mjs';
+import { assertNoOverview, subjectLine, watchOverviews } from './lib/subject-line.mjs';
 
 const { check, tally } = harness();
 
 const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
+const overviews = watchOverviews(page);
 // Headless Chromium cannot use this container's TLS relay, but Node can reach
 // the internet directly: serve every https request through Node fetch.
 let routerCalls = 0;
@@ -77,24 +79,23 @@ if (savedCount > 0) {
 // Known risk: the map's opening view fits the saved-routes bounds, which
 // drifts as routes are added and can leave the centre over water or inside a
 // block, where the public OSRM router can't snap. Recentre on solid ground
-// before drawing: the middle vertex of the saved route with the most
-// coordinates, or a fixed Metro Manila fallback (Cubao) when the database has
+// before drawing: the middle vertex of the pinned subject line
+// (lib/subject-line.mjs), or a fixed Metro Manila fallback (Cubao) when the database has
 // none yet. Not the first saved route: they come most recently updated first,
 // so the first changes whenever the owner edits one. The route clicks below
 // reuse this same line. Recentre both now and again after the reload below,
 // since a reload resets the camera.
 const FALLBACK_CENTER = [121.0527, 14.6187]; // Cubao, Metro Manila
-const savedLine = savedRoutes
-  .filter((f) => f.geometry?.type === 'LineString' && (f.geometry.coordinates?.length ?? 0) > 1)
-  .reduce(
-    (a, f) => (!a || f.geometry.coordinates.length > a.geometry.coordinates.length ? f : a),
-    null,
-  );
+// The pinned subject line (lib/subject-line.mjs): the same roads every run.
+const savedLine = savedCount > 0 ? subjectLine(savedRoutes) : null;
+if (savedLine) assertNoOverview(overviews, savedLine.properties.id, 'clicking its road vertices');
 const center = savedLine
   ? savedLine.geometry.coordinates[Math.floor(savedLine.geometry.coordinates.length / 2)]
   : FALLBACK_CENTER;
 const recentre = () =>
-  page.evaluate(([lng, lat]) => window.__map.jumpTo({ center: [lng, lat], zoom: 15 }), center);
+  page.evaluate(([lng, lat]) => {
+    window.__map.jumpTo({ center: [lng, lat], zoom: 15 });
+  }, center);
 await recentre();
 await page.waitForTimeout(300);
 
@@ -108,7 +109,7 @@ check(
     () => false,
   ),
 );
-check('Tap | Draw hidden in area mode', (await page.getByTestId('tap-draw').count()) === 0);
+check('Snap | Draw hidden in area mode', (await page.getByTestId('snap-draw').count()) === 0);
 
 // click 4 corners around the centre of the map
 const box = await page.locator('canvas.maplibregl-canvas').boundingBox();
@@ -151,8 +152,8 @@ check(
   `${probe.lineFeatures} features, closing=${probe.hasClosing}`,
 );
 check(
-  'hintuan colour is green',
-  probe.fillColor === '#00c951' && probe.lineColor === '#00c951',
+  'a new hotspot is drawn in the brand colour',
+  probe.fillColor === '#4900be' && probe.lineColor === '#4900be',
   `${probe.fillColor}/${probe.lineColor}`,
 );
 check('no router calls made while tracing an area', routerCalls === 0, `${routerCalls}`);
@@ -173,6 +174,22 @@ check(
   !(await page.getByRole('button', { name: /Done/ }).isEnabled()),
 );
 
+// Redo puts the undone corners back, the button and Ctrl+Shift+Z alike; Undo takes one off again.
+const cornersNow = async () => (await window.__src('draw-points'))?.features?.length ?? 0;
+await page.getByRole('button', { name: 'Redo' }).click();
+await page.keyboard.press('Control+Shift+Z');
+await page.waitForTimeout(200);
+const afterRedo = await page.evaluate(cornersNow);
+check(
+  'redo puts both corners back, and then has nothing left to redo',
+  afterRedo === 4 && !(await page.getByRole('button', { name: 'Redo' }).isEnabled()),
+  `${afterRedo}`,
+);
+await page.getByRole('button', { name: 'Undo' }).click();
+await page.getByRole('button', { name: 'Undo' }).click();
+await page.waitForTimeout(200);
+check('undo after redo takes them off again', (await page.evaluate(cornersNow)) === 2);
+
 // draft survives reload with kind
 await page.mouse.click(cx + 80, cy + 60);
 await page.waitForTimeout(200);
@@ -192,7 +209,7 @@ check(
 );
 
 await page.screenshot({ path: 'hotspot-trace.png' });
-await page.getByRole('button', { name: '✕' }).click();
+await page.getByRole('button', { name: /^Discard this/ }).click();
 
 // ---- Regression: a 2-point route still snaps to roads
 await page.getByRole('button', { name: 'New route, terminal or hintuan' }).click();
@@ -218,13 +235,18 @@ for (let attempt = 0; attempt < 5; attempt++) {
   });
   if (settled) break;
 }
+// Only where the canvas itself is the topmost element: the place search bar sits over the
+// top of the map.
 const onRoad = await page.evaluate((line) => {
   const m = window.__map,
-    { clientWidth: w, clientHeight: h } = m.getCanvas();
+    canvas = m.getCanvas(),
+    { clientWidth: w, clientHeight: h } = canvas,
+    rect = canvas.getBoundingClientRect();
   const picked = [];
   for (const c of line) {
     const p = m.project(c);
     if (p.x < 80 || p.x > w - 80 || p.y < h / 2 - 320 || p.y > h / 2 + 260) continue;
+    if (document.elementFromPoint(rect.left + p.x, rect.top + p.y) !== canvas) continue;
     if (picked.every(([x, y]) => Math.hypot(p.x - x, p.y - y) >= 120)) picked.push([p.x, p.y]);
     if (picked.length === 2) break;
   }
@@ -281,7 +303,7 @@ check(
 );
 check('route: geometry is road-following (>2 coords)', route.coords > 2, `${route.coords} coords`);
 check('route: no polygon fill in route mode', route.polygons === 0);
-check('route: rose colour restored', route.lineColor === '#e11d48', route.lineColor);
+check('route: brand colour', route.lineColor === '#4900be', route.lineColor);
 check(
   'route: freehand toggle + distance readout back',
   route.freehandVisible && route.distanceShown,

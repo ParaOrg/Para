@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "cell": "2416-288",
+  "attribution": "© OpenStreetMap contributors",
+  "establishments": [
+    ["n13694795478","convenience",120.84971,14.41946,"Dali"],
+    ["w411214915","convenience",120.84794,14.4133,"Puremart"],
+    ["w411218659","convenience",120.8475,14.41304,"7-Eleven"],
+    ["w422141932","convenience",120.84815,14.4127,"Dali"],
+    ["w422142004","convenience",120.84865,14.41312,"O!Save"],
+    ["n9584644061","supermarket",120.84696,14.40482,"Alfamart"],
+    ["n9584647665","supermarket",120.84663,14.40486,"7-Eleven"],
+    ["n9585401010","supermarket",120.84451,14.40366,"Dali Everyday Grocery"]
+  ]
+}

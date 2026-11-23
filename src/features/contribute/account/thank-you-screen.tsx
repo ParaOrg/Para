@@ -1,7 +1,7 @@
 import { Button } from '@/design-system/primitives/button';
+import { useFocusHeading } from '@/shared/hooks/use-focus-heading';
 
 import thumbsUp from './thumbs-up.svg';
-import { useFocusHeading } from '../common/use-focus-heading';
 
 interface ThankYouScreenProps {
   /** Leads on: the gate lets go, and the page goes on to what comes after an account. */

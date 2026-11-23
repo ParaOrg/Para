@@ -386,7 +386,9 @@ check(
 );
 // Google Maps' way (the owner's screenshots, 2026-10-01): the circle is the
 // fix's metres, so zoomed out it shrinks under the dot and is gone.
-await page.evaluate(() => window.__map.jumpTo({ zoom: 12 }));
+await page.evaluate(() => {
+  window.__map.jumpTo({ zoom: 12 });
+});
 await until(async () => (await attr(page, 'data-halo-px')) === '0', 3000);
 check(
   '  zoomed out till the dot covers its circle, the circle is gone',
@@ -400,7 +402,9 @@ check(
   `scale ${await attr(page, 'data-scale')}`,
 );
 // A fix indoors, 1 km out: the circle claims 80 m at most (the owner's call, 2026-10-01).
-await page.evaluate(() => window.__map.jumpTo({ zoom: 16 }));
+await page.evaluate(() => {
+  window.__map.jumpTo({ zoom: 16 });
+});
 await ctx.setGeolocation({ ...p, accuracy: 1000 });
 await until(async () => (await attr(page, 'data-accuracy-m')) === '1000');
 await mapIdle(page);
@@ -530,10 +534,9 @@ check(
 // The app moves the camera for the commuter (a hintuan picked, an end tapped:
 // features/routes/map/map-view.tsx APP_MOVE). That lets go too, or the next fix undoes it.
 const away = north(p, 400);
-await page.evaluate(
-  (c) => window.__map.easeTo({ center: [c.longitude, c.latitude], duration: 0 }, { appMove: true }),
-  away,
-);
+await page.evaluate((c) => {
+  window.__map.easeTo({ center: [c.longitude, c.latitude], duration: 0 }, { appMove: true });
+}, away);
 await until(async () => (await mode()) === 'TrackOwnLocation', 3000);
 check(
   'an app camera move lets go: TrackOwnLocation',
@@ -640,15 +643,12 @@ if (!onLine) {
   );
 
   // The card that tap opened set to another height while the camera follows
-  // the commuter: the card's overview starts (useHeightOverview) and the
-  // camera following the commuter takes over in the same commit, as it did
-  // when the locator's hooks were PublicMapApp's own, after the cards'. Since
-  // they moved into CommuterLocation, which React runs before the page's own
-  // effects, its camera waits for the page's turn (commit-turn.ts; the
-  // cheap-phone plan, step 15, 2026-10-05). It stays on the commuter, at the
-  // zoom it followed at.
-  // A list where routes share the road, or a trip's card: either has a handle.
-  const handle = page.locator('button[data-testid="dock-handle"]:visible').first();
+  // the commuter: the sheet's height moves no route overview, and the camera
+  // following the commuter keeps them clear of the sheet at its new height,
+  // at the zoom it followed at.
+  // A list where routes share the road, or a trip's card: either has a handle. The list's draws
+  // nothing, kept for the keyboard alone, so the height is set as a keyboard sets it.
+  const handle = page.locator('button[data-testid="dock-handle"]').first();
   if (!(await handle.count())) {
     check(
       'a card set to another height while the camera follows: it stays on the commuter',
@@ -661,13 +661,14 @@ if (!onLine) {
     await mapIdle(page);
     const following = await camera(page);
     const was = await onScreen(page, p);
-    await handle.click();
+    await handle.focus();
+    await page.keyboard.press('Enter');
     // The sheet at its new height, and the camera after it.
     await cardsSettled(page);
     const now = await camera(page);
     const is = await onScreen(page, p);
     check(
-      "a card set to another height while the camera follows: it stays on the commuter, at its zoom, the card's overview overtaken",
+      'a card set to another height while the camera follows: it stays on the commuter, at its zoom',
       Math.abs(now.zoom - following.zoom) < 0.05 &&
         Math.abs(is.x - is.w / 2) < 4 &&
         is.y > 0 &&
@@ -736,6 +737,63 @@ check(
   await until(() => toastSays(page2, 'Location is off for this site'), 5000),
   `${await toast2.count()} toast(s)`,
 );
+// A trip's card raised to full height under that toast: the toast stays at the top, for the
+// trip's ‹ or ✕ is in its Controller at the card's foot, in reach and uncovered. The trip opened from a route line in sight; a list where
+// routes share the road takes a tap to raise it at Low, and one more to pick.
+{
+  const at = await page2.evaluate(() => {
+    const m = window.__map;
+    const { clientWidth: w, clientHeight: h } = m.getContainer();
+    for (const f of m.queryRenderedFeatures({ layers: ['saved-routes-hit'] })) {
+      if (f.geometry.type !== 'LineString') continue;
+      for (const c of f.geometry.coordinates) {
+        const p = m.project(c);
+        if (p.x > w * 0.15 && p.x < w * 0.85 && p.y > h * 0.3 && p.y < h * 0.6) return [p.x, p.y];
+      }
+    }
+    return null;
+  });
+  const card = page2.locator('[data-testid="card"]:not([hidden])').first();
+  const trip = page2.locator('[data-testid="trip"]');
+  if (at) {
+    await page2.touchscreen.tap(at[0], at[1]);
+    const row = page2.locator(
+      '[data-testid="chooser"] [data-testid="chooser-item"][data-direction]',
+    );
+    await until(async () => (await trip.count()) > 0 || (await row.count()) > 0, 8000);
+    for (let i = 0; i < 2 && !(await trip.count()) && (await row.count()); i++) {
+      await row.first().tap();
+      await until(async () => (await trip.count()) > 0, 2000);
+    }
+    for (
+      let i = 0;
+      i < 4 && (await trip.count()) && (await card.getAttribute('data-snap')) !== 'full';
+      i++
+    ) {
+      await card.getByTestId('dock-handle').focus();
+      await page2.keyboard.press('Enter');
+      await cardsSettled(page2);
+    }
+  }
+  // The trip has no ‹ or ✕ (the owner, 2026-11-21): its first control below the handle, ⇅ on the
+  // ends card where it has one, is what the toast must stay clear of.
+  const way = card.locator('button:not([data-testid="dock-handle"])').first();
+  const placed = (await trip.count())
+    ? {
+        snap: await card.getAttribute('data-snap'),
+        wayTop: await way.evaluate((e) => e.getBoundingClientRect().top),
+        toastTop: await toast2.evaluate((e) => e.getBoundingClientRect().top),
+        toastBottom: await toast2.evaluate((e) => e.getBoundingClientRect().bottom),
+      }
+    : null;
+  check(
+    "  over a trip's card at full height it stays 12 from the top, clear of the trip's first control",
+    placed?.snap === 'full' &&
+      Math.abs(placed.toastTop - 12) <= 1 &&
+      placed.toastBottom < placed.wayTop,
+    placed ? JSON.stringify(placed) : 'no trip opened from a route line',
+  );
+}
 await ctx2.close();
 
 // ---------------------------------------------------------- no fix, ever

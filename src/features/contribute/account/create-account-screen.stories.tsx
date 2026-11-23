@@ -3,6 +3,7 @@ import { expect, fn, userEvent, within } from 'storybook/test';
 
 import { NO_CAPTCHA } from './account-stories-args';
 import { CreateAccountScreen } from './create-account-screen';
+import { waitForHeadingFocus } from '../common/heading-focus-play';
 
 const meta = {
   title: 'Features/Contribute/CreateAccountScreen',
@@ -41,6 +42,7 @@ export const FieldErrors: Story = {
 /** The number typed after +63 is sent in the form the database stores. */
 export const Filled: Story = {
   play: async ({ args, canvasElement }) => {
+    await waitForHeadingFocus(canvasElement);
     const canvas = within(canvasElement);
     await userEvent.type(canvas.getByLabelText('Full name'), 'Juan dela Cruz');
     await userEvent.type(canvas.getByLabelText('Email'), 'juan@example.com');

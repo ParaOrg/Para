@@ -34,7 +34,7 @@ test('a path maps to the unit of its folder', () => {
     'features/studio/index.ts': 'features/studio',
     'features/studio/panels/save-panel.tsx': 'features/studio/panels',
     'shared/ui/bottom-sheet.tsx': 'shared/ui',
-    'design-system/foundation/fonts/SNPro/a.woff2': 'design-system/foundation',
+    'design-system/foundation/fonts/livvic/a.woff2': 'design-system/foundation',
     'styles/global.css': 'styles',
   };
   for (const [path, unit] of Object.entries(cases)) {
@@ -60,10 +60,7 @@ test('imports resolve from @/ and from relative paths, and packages resolve to n
   const from = 'features/routes/cards/route-card.tsx';
   assert.equal(resolveImport('@/shared/utils/geo', from), 'shared/utils/geo');
   assert.equal(resolveImport('../geo/pass', from), 'features/routes/geo/pass');
-  assert.equal(
-    resolveImport('./route-card-header', from),
-    'features/routes/cards/route-card-header',
-  );
+  assert.equal(resolveImport('./route-stops-card', from), 'features/routes/cards/route-stops-card');
   assert.equal(resolveImport('./sprite.svg?url', from), 'features/routes/cards/sprite.svg');
   assert.equal(resolveImport('react', from), null);
   assert.equal(resolveImport('maplibre-gl/dist/maplibre-gl.css', from), null);

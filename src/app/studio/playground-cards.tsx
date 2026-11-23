@@ -28,6 +28,8 @@ interface PlaygroundCardsProps {
   camera: ReturnType<typeof useCardCamera<DirectionRow, HotspotRow>>;
   trip: ReturnType<typeof useStudioTrip>;
   canEdit: boolean;
+  /** A computer's screen: a tapped hotspot opens in the sidebar (StudioHotspotCard). */
+  isWideScreen: boolean;
   opening: ReturnType<typeof useFollow>['opening'];
   deletes: ReturnType<typeof useDeleteActions>;
   hush: ReturnType<typeof useGazeHush>['hush'];
@@ -35,9 +37,7 @@ interface PlaygroundCardsProps {
 }
 
 /**
- * The Playground's cards over the map, as on the public map: the trip's marks
- * on the map (PlaygroundMarks), the trip card, a hotspot's card and the route
- * list.
+ * The Playground's cards, as on the public map (marks, trip, hotspot, list); a tap selects a card.
  */
 export function PlaygroundCards({
   map,
@@ -48,6 +48,7 @@ export function PlaygroundCards({
   camera,
   trip,
   canEdit,
+  isWideScreen,
   opening,
   deletes,
   hush,
@@ -60,6 +61,7 @@ export function PlaygroundCards({
     clearOfOpen,
     switchTrip,
     flipList,
+    filterList,
     pickOnPlaceCard,
     openTrip,
     backFromTrip,
@@ -132,6 +134,7 @@ export function PlaygroundCards({
           draw={draw}
           height={height}
           canEdit={canEdit}
+          opensInSidebar={isWideScreen}
           clearOfOpen={clearOfOpen}
           onPickOnPlaceCard={pickOnPlaceCard}
           onOpenTrip={openTrip}
@@ -142,21 +145,25 @@ export function PlaygroundCards({
       )}
 
       {/*
-        Several saved things under one click: the same list the public map
-        has, kept hidden behind the trip picked from it. It lists only what is
-        drawn, and the owner keeps it so.
+        Several saved things under one click: the public map's list, with its Controller, kept
+        hidden behind the trip picked from it. It lists only what is drawn, the owner's way.
       */}
       {!draw.drawing && choosing && (
         <RouteCardList
+          hasController
           key={choice.map((c) => c.id).join()}
           hidden={!!saved.selected}
           height={height}
           routes={saved.candidates}
           hotspots={hotspots.candidates}
           back={saved.back}
+          listing={saved.listing}
           onFlip={flipList}
-          selected={saved.highlight?.where === 'list' ? saved.highlight.card : null}
-          onSelect={(p) => saved.highlightCard(p && { where: 'list', ...p })}
+          modeFilter={{ filter: saved.modeFilter, onFilter: filterList }}
+          selection={{
+            selected: saved.highlight?.where === 'list' ? saved.highlight.card : null,
+            onSelect: (p) => saved.highlightCard(p && { where: 'list', ...p }),
+          }}
           onRoute={openTrip}
           onHotspot={(s) => cards.openHotspot(s.id)}
           onClose={closeAll}

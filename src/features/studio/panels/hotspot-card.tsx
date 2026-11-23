@@ -8,7 +8,8 @@ import type { Livery } from '@/features/routes/model/liveries';
 import { placeSummary, siblingsOf } from '@/features/routes/model/places';
 import type { Direction } from '@/features/routes/model/routes';
 import { BottomSheet, type SheetHeight } from '@/shared/ui/bottom-sheet';
-import { SheetHeader } from '@/shared/ui/sheet-header';
+
+import { SheetHeader } from './sheet-header';
 
 interface Props {
   hotspot: Hotspot;
@@ -33,10 +34,7 @@ interface Props {
   hotspots?: readonly Hotspot[];
   /** Show a sibling box on the map: select it and go there. */
   onPickSibling?: (id: string) => void;
-  /**
-   * Buttons along the bottom. The studio passes Edit and Delete when an editor
-   * is signed in.
-   */
+  /** Buttons along the bottom. The studio passes Edit and Delete when an editor is signed in. */
   actions?: ReactNode;
   onClose: () => void;
   /** Kept but not shown, while a trip picked from it is on top: ‹ comes back to it as it was left, every card at rest. */
@@ -200,8 +198,8 @@ export function HotspotCard({
             <RouteCardStack
               routes={linked}
               back={back}
-              selected={routeCards.selected}
-              onSelect={routeCards.onSelect}
+              // The studio's editors keep Selected; the public map's cards open on a tap.
+              selection={{ selected: routeCards.selected, onSelect: routeCards.onSelect }}
               onRoute={onSelectDirection}
               testId="card"
             />

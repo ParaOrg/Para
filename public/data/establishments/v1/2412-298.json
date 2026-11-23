@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "cell": "2412-298",
+  "attribution": "© OpenStreetMap contributors",
+  "establishments": [
+    ["w804301265","bank",120.62257,14.94341,"Rural Bank of Sasmuan, Inc."],
+    ["n8027482975","pharmacy",120.60021,14.93804,"Medsave Pharmacy"],
+    ["n8322993369","pharmacy",120.6228,14.93557,"The Generics Pharmacy"],
+    ["n8323246406","pharmacy",120.62368,14.93724,"Magpayo Pharmacy"],
+    ["n8323517149","pharmacy",120.62257,14.93592,"Tamvel Convenient Store"],
+    ["w447617082","pharmacy",120.62212,14.93742,"Botica Plus"],
+    ["w243257123","convenience",120.60138,14.93775,"Morales Store"],
+    ["w246250324","convenience",120.60041,14.93842,"Alfamart"],
+    ["w248781510","convenience",120.60042,14.9371,"Poultry Store"],
+    ["w1481969008","convenience",120.60071,14.93796,"7-Eleven"],
+    ["w248950574","fast_food",120.6018,14.93769,"Canteen"],
+    ["w804279053","fuel",120.6223,14.93681,"Petron"],
+    ["w895422739","fuel",120.62184,14.9369,"Shell"],
+    ["n8027465912","clinic",120.60107,14.93554,"Santa Lucia Health Center"],
+    ["n8027477691","clinic",120.60033,14.93806,"Lubao Optical Clinic"],
+    ["n8323260312","clinic",120.62244,14.94393,"Roldan-Bualan Dental Clinic"],
+    ["w158620911","clinic",120.62173,14.94282,"Sasmuan Rural Health Unit"],
+    ["w810370956","clinic",120.62457,14.93382,"Santa Monica Health Center"],
+    ["w810387451","clinic",120.62174,14.93792,"Dizon Clinic"],
+    ["w895395634","clinic",120.62421,14.94092,"Sitio Remedios Health Center"],
+    ["n2509391996","toilets",120.60189,14.93905],
+    ["w122959008","police",120.62232,14.93658,"Sasmuan Municipal Police Station"]
+  ]
+}

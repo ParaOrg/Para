@@ -145,3 +145,23 @@ test("an issue without the marker, or someone else's, is never touched", () => {
   const [action] = planAlerts([up, down], issues, '2026-10-28T00:00:00Z');
   assert.equal(action.type, 'create');
 });
+
+test('a red staging run opens its issue labelled for triage; a later green one closes it', () => {
+  const red = {
+    key: 'staging:.github/workflows/ci.yml',
+    title: 'Staging is red: the CI run failed',
+    ok: false,
+    answer: 'Run https://example.test/runs/1 failed on staging at abc1234.',
+    isEvent: true,
+    labels: ['needs-triage'],
+  };
+  const [opened] = planAlerts([red], [], '2026-11-10T00:00:00Z');
+  assert.equal(opened.type, 'create');
+  assert.deepEqual(opened.labels, ['needs-triage']);
+  const issue = { number: 7, state: 'open', body: opened.body, closedAt: null };
+  const [closed] = planAlerts([{ ...red, ok: true }], [issue], '2026-11-10T01:00:00Z');
+  assert.equal(closed.type, 'close');
+  // The watch's own alerts get no extra label.
+  const [plain] = planAlerts([{ ...red, labels: undefined }], [], '2026-11-10T00:00:00Z');
+  assert.equal('labels' in plain, false);
+});

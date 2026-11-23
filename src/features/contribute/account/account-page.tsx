@@ -1,11 +1,11 @@
 import { useEffect, type ReactNode } from 'react';
 
 import { IconButton } from '@/design-system/primitives/icon-button';
+import { useFocusHeading } from '@/shared/hooks/use-focus-heading';
 import { Turnstile } from '@/shared/ui/turnstile';
 
 import { ArrowLeftIcon } from './arrow-left-icon';
 import type { Captcha } from './use-captcha';
-import { useFocusHeading } from '../common/use-focus-heading';
 
 /** Sign in sits in the middle of the screen; the others start under the back button's row. */
 type Placement = 'centre' | 'top';

@@ -38,7 +38,7 @@ const RAIL_MODES: readonly TransportMode[] = ['lrt', 'mrt'];
 export const RAIL_LINES = ['LRT-1', 'LRT-2', 'MRT-3'] as const;
 export type RailLine = (typeof RAIL_LINES)[number];
 export const isRailLine = (code: string | null | undefined): code is RailLine =>
-  (RAIL_LINES as readonly string[]).includes(code ?? '');
+  RAIL_LINES.some((line) => line === code);
 
 /** The train line a direction's route runs on, by its routeCode; null for every other route. */
 export const railLineOf = (v: Pick<Direction, 'route'>): RailLine | null => {
@@ -238,17 +238,6 @@ export function directionEnds(v: Direction): { from: string; to: string } {
   if (from && to) return { from, to };
   const [head = '', tail = ''] = (v.route?.name ?? '').replace(/ via .*$/, '').split(` ${DASH} `);
   return v.reversed ? { from: tail, to: head } : { from: head, to: tail };
-}
-
-/**
- * A direction as a card's row says it: where it goes, then its route's via —
- * `SM Fairview via Maligaya` — so two routes to the same place read apart. A
- * loop's row already is its name, via included, so it gets none added.
- */
-export function directionRowName(v: Direction): string {
-  const { to } = directionEnds(v);
-  const via = v.route?.via?.trim();
-  return via && !isLoop(v) ? `${to} via ${via}` : to;
 }
 
 /** The hotspots a direction runs from and to: its route's head and tail, the way it rides them. */

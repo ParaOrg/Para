@@ -28,9 +28,12 @@ export function routeStreets(segments: Segment[]): {
       missing++;
       continue;
     }
-    for (const r of s.streets as unknown[]) {
+    // Stored with the line and read back as it comes: each run is checked, not trusted.
+    const stored: unknown[] = s.streets;
+    for (const r of stored) {
       if (!r || typeof r !== 'object') continue;
-      const { name, metres } = r as Partial<StreetRun>;
+      const name = 'name' in r ? r.name : undefined;
+      const metres = 'metres' in r ? r.metres : undefined;
       if (typeof name !== 'string' || typeof metres !== 'number' || !Number.isFinite(metres))
         continue;
       const last = runs[runs.length - 1];

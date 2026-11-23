@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { expect, fn, userEvent, within } from 'storybook/test';
+import { expect, fireEvent, fn, userEvent, within } from 'storybook/test';
 
 import { UseThisLine } from './use-this-line';
 import {
@@ -38,6 +38,20 @@ export const WithLine: Story = {
     await userEvent.click(within(canvasElement).getByRole('button', { name: 'Use this line' }));
     await expect(args.onStart).toHaveBeenCalledWith(
       expect.objectContaining({ kind: 'direction', startName: 'SM Fairview', endName: 'Cubao' }),
+    );
+  },
+};
+
+/** Part of it: the sliders pick a stretch, which goes to the Playground with its ends unnamed. */
+export const PartOfIt: Story = {
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByText('Use part of it'));
+    fireEvent.change(canvas.getByLabelText(/^From/), { target: { value: '500' } });
+    await expect(canvas.getByText('From 0.5 km')).toBeInTheDocument();
+    await userEvent.click(canvas.getByRole('button', { name: /^Use this part/ }));
+    await expect(args.onStart).toHaveBeenCalledWith(
+      expect.objectContaining({ kind: 'direction', startName: '', endName: '' }),
     );
   },
 };

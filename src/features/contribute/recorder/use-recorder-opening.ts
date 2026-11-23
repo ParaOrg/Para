@@ -66,11 +66,12 @@ export function useRecorderOpening({
               void open(true);
             });
           } else if (opening.kind === 'open') {
-            const { recording, rows } = opening;
+            const { recording, rows, isFinished, isStillRecording } = opening;
             hold(recording, rows.map(fixOfRow));
-            const reopened = reopenPoint(recording, rows);
+            const reopened = reopenPoint(recording, rows, isStillRecording);
             resetFixWrites(reopened.nextSeq, reopened.failedFixWrites);
-            setPhase(reopened.phase);
+            // Finished from the app's notification: straight to its details.
+            setPhase(isFinished ? 'form' : reopened.phase);
           } else {
             setPhase('ready');
           }

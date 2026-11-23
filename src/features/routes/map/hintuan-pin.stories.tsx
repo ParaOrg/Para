@@ -70,7 +70,7 @@ const meta = {
     ),
   ],
   parameters: { layout: 'fullscreen' },
-  args: { label: 'Novaliches Terminal', livery: 'rose' },
+  args: { label: 'Novaliches Terminal', livery: 'uv-express' },
 } satisfies Meta<typeof OnAnEmptyMap>;
 
 export default meta;
@@ -133,7 +133,7 @@ export const End: Story = {
   play: async ({ canvasElement }) => {
     const pin = await pinOf(canvasElement);
     await expect(pin.dataset.marks).toBe('end');
-    await expect(pin.dataset.livery).toBe('rose');
+    await expect(pin.dataset.livery).toBe('uv-express');
     await expect(partOf(pin, 'name').contains(partOf(pin, 'end'))).toBe(true);
     await expect(pin.querySelector('[data-part="start"]')).toBeNull();
     await expect(partOf(pin, 'words').textContent).toBe('Novaliches Terminal');

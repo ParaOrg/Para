@@ -13,8 +13,6 @@ import { hotspotRefusal } from './hotspot-checks';
 import { placeAlreadyNamed } from './places';
 import { useNearLines } from './use-near-lines';
 import { saveNewPlaceDraft } from '../data/draft-new-place';
-import { STUDIO_DRAFTS } from '../data/flags';
-import { saveHotspot } from '../data/hotspots-write';
 
 interface UseNewPlaceSaveOptions {
   ring: Ring;
@@ -31,8 +29,8 @@ interface NewPlaceFields {
 
 /**
  * The save of a place made from the route's save panel: the hotspot panel's
- * own checks (hotspotRefusal) and its own write (saveHotspot), so a place made
- * here has the refusals and the links of one drawn on the map. Ready once the
+ * own checks (hotspotRefusal) and a draft of its own (saveNewPlaceDraft), so a
+ * place made here has the refusals and the links of one drawn on the map. Ready once the
  * lines near the box are read, which its links are worked out on.
  */
 export function useNewPlaceSave({ ring, hotspots, directions, onSaved }: UseNewPlaceSaveOptions) {
@@ -42,10 +40,9 @@ export function useNewPlaceSave({ ring, hotspots, directions, onSaved }: UseNewP
   // A save in flight, read before the next render has set isBusy: two Enters in
   // one tick must write one box.
   const isSaving = useRef(false);
-  // The row a save wrote when its links failed after: the retry updates it
-  // rather than writing the box again (useHotspotSave's writtenId).
+  // The new place's id, the same on every retry: a draft whose answer was lost
+  // is updated, not made a second time.
   const draftId = useRef<string | null>(null);
-  const writtenId = useRef<string | null>(null);
 
   async function save({ kind, name, informal }: NewPlaceFields) {
     // Not before the lines near the box are read: a hintuan's links are worked
@@ -58,7 +55,7 @@ export function useNewPlaceSave({ ring, hotspots, directions, onSaved }: UseNewP
     }
     // A name already standing is that place: the route would end at its terminal,
     // wherever it is, so the editor picks it from the list or names this one apart.
-    const named = placeAlreadyNamed(hotspots, { name, informal }, writtenId.current);
+    const named = placeAlreadyNamed(hotspots, { name, informal }, null);
     if (named) {
       setError(
         `${hotspotLabel(named)} is already a place: pick it from the list, or give this one its own name.`,
@@ -69,7 +66,7 @@ export function useNewPlaceSave({ ring, hotspots, directions, onSaved }: UseNewP
       ring,
       kind,
       hotspots,
-      hotspotId: writtenId.current,
+      hotspotId: null,
       name,
       informal,
     });
@@ -81,7 +78,7 @@ export function useNewPlaceSave({ ring, hotspots, directions, onSaved }: UseNewP
     setIsBusy(true);
     try {
       const input = {
-        hotspotId: writtenId.current,
+        hotspotId: null,
         kind,
         name,
         informal,
@@ -92,15 +89,8 @@ export function useNewPlaceSave({ ring, hotspots, directions, onSaved }: UseNewP
         directionIds: kind === 'terminal' ? [] : undefined,
         directions: lined,
       };
-      if (STUDIO_DRAFTS) {
-        draftId.current ??= crypto.randomUUID();
-        onSaved(await saveNewPlaceDraft(input, draftId.current));
-        return;
-      }
-      const place = await saveHotspot(input, (id) => {
-        writtenId.current = id;
-      });
-      onSaved(place);
+      draftId.current ??= crypto.randomUUID();
+      onSaved(await saveNewPlaceDraft(input, draftId.current));
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
       isSaving.current = false;

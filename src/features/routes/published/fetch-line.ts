@@ -21,14 +21,7 @@ export function fetchLine(id: string): Promise<LineStringGeoJSON | null> {
     line = fetch(`${LINES_URL}${encodeURIComponent(id)}.json`, { cache: 'no-cache' })
       .then(async (res) => {
         if (!res.ok) throw new Error(`${LINES_URL}${id}.json: HTTP ${res.status}`);
-        const parsed = lineFileSchema.safeParse(await res.json());
-        if (!parsed.success || parsed.data.id !== id) {
-          throw new Error(`${LINES_URL}${id}.json is not that direction's line`);
-        }
-        const file = parsed.data;
-        if (!file.shape) return null;
-        keepLinePass(file.shape, file);
-        return file.shape;
+        return readLineFile(await res.json(), id);
       })
       .catch((e: unknown) => {
         lines.delete(id);
@@ -37,4 +30,20 @@ export function fetchLine(id: string): Promise<LineStringGeoJSON | null> {
     lines.set(id, line);
   }
   return line;
+}
+
+/**
+ * A direction's line file, already fetched, as its line: null for a direction with none. Throws
+ * for a file that is not that direction's. For a reader that fetches it another way (the
+ * contributor app's).
+ */
+export function readLineFile(raw: unknown, id: string): LineStringGeoJSON | null {
+  const parsed = lineFileSchema.safeParse(raw);
+  if (!parsed.success || parsed.data.id !== id) {
+    throw new Error(`${LINES_URL}${id}.json is not that direction's line`);
+  }
+  const file = parsed.data;
+  if (!file.shape) return null;
+  keepLinePass(file.shape, file);
+  return file.shape;
 }

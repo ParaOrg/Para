@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { expect, fn, userEvent, within } from 'storybook/test';
 
 import { CommuteStats, type CommuteNumbers } from './commute-stats';
 import type { VehicleRides } from './vehicle-grid';
@@ -64,9 +65,24 @@ export const Default: Story = {};
 /** Placeholders until the first numbers come. */
 export const Loading: Story = { args: { state: { kind: 'loading' } } };
 
-/** No numbers to be had, offline with none kept: one short line. */
+const retry = fn();
+
+/**
+ * No numbers to be had, offline with none kept, or none come in 8 s: one short line, and Try
+ * again.
+ */
 export const Offline: Story = {
-  args: { state: { kind: 'failed', message: 'Your statistics show when you’re online.' } },
+  args: {
+    state: { kind: 'failed', message: 'Your statistics show when you’re online.', onRetry: retry },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole('alert')).toHaveTextContent(
+      'Your statistics show when you’re online.',
+    );
+    await userEvent.click(canvas.getByRole('button', { name: 'Try again' }));
+    await expect(retry).toHaveBeenCalledOnce();
+  },
 };
 
 /** No recordings yet: zeros, and the bar empty and grey. */

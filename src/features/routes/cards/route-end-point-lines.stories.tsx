@@ -3,14 +3,14 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { CARD_SURFACE, CARD_TEXT } from './livery-card';
 import { RouteEndPointLines } from './route-end-point-lines';
 
-/** Figma's Lines (4235:12313): the tree line before a RouteCard's row, white, drawn here on orange at a row's 40. */
+/** Figma's Lines (4235:12313): the tree line before a RouteCard's row, in the card's words' colour, drawn here on a Bus card at a row's 40. */
 const meta = {
   title: 'Features/Routes/RouteEndPointLines',
   component: RouteEndPointLines,
   args: { position: 'top' },
   decorators: [
     (Story) => (
-      <div className="flex h-10 w-12 bg-card-orange-surface text-content-inverse">
+      <div className={'flex h-10 w-12 ' + CARD_SURFACE.bus + ' ' + CARD_TEXT.bus}>
         <Story />
       </div>
     ),
@@ -38,6 +38,36 @@ export const OnDarkWords: Story = {
           CARD_TEXT['metro-rail-way-three']
         }
       >
+        <Story />
+      </div>
+    ),
+  ],
+};
+
+/**
+ * Beside a trip's list heading (DestinationGroup, 4821:37271): the straight line alone, no arrow,
+ * in text/quaternary on the sheet's surface.
+ */
+export const Through: Story = {
+  args: { position: 'through', isFaint: false },
+  decorators: [
+    (Story) => (
+      <div className="flex h-10 w-12 bg-bg-surface text-text-quaternary">
+        <Story />
+      </div>
+    ),
+  ],
+};
+
+/**
+ * A DestinationBar's (4820:33754): the arrow 12 down, by the place's first line, not the middle of
+ * a row its via line makes 60 tall.
+ */
+export const FirstLine: Story = {
+  args: { position: 'top', isFaint: false, arrowAlign: 'first-line' },
+  decorators: [
+    (Story) => (
+      <div className="flex h-16 w-12 bg-bg-surface text-text-quaternary">
         <Story />
       </div>
     ),

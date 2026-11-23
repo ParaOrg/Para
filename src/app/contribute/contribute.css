@@ -16,16 +16,22 @@
 @source '../../features/contribute/';
 @source '../../features/locator/';
 @source '../../features/routes/map/basemap-control.tsx';
+@source '../../features/routes/map/credits-button.tsx';
+@source '../../features/routes/map/map-data-source-sheet.tsx';
 @source '../../features/routes/map/map-style.tsx';
 @source '../../features/routes/map/location-labels-row.tsx';
+@source '../../features/routes/map/map-style-switch-row.tsx';
 @source '../../features/routes/map/map-style-button.tsx';
 @source '../../features/routes/map/map-type-icon.tsx';
+@source '../../features/routes/map/map-failure.tsx';
 @source '../../features/routes/map/map-view.tsx';
 @source '../../features/routes/cards/livery-card.ts';
 @source '../../design-system/primitives/';
+@source '../../shared/ui/bottom-sheet.tsx';
 @source '../../shared/ui/toast.tsx';
 @source '../../shared/ui/turnstile.tsx';
 @source '../../shared/ui/toast-host.tsx';
+@source '../../shared/ui/page-error-screen.tsx';
 @source not '../../**/*.stories.tsx';
 
 /*
@@ -43,6 +49,8 @@
  * keeps clear of what the page stands there (`--dock-foot`, locator.tsx).
  */
 :root {
+  /* Light only, as index.html says: form controls and scroll bars stay light in a dark theme. */
+  color-scheme: only light;
   --dock-foot: var(--stack-room, 0px);
   /* Figma's Start (4485:24815) stands the map-type and locator column 16px over the tabs and
      16px in from the edge, where the public map keeps 12px. */

@@ -1,4 +1,4 @@
-import { drawnDepartures } from './departures';
+import { drawnDepartures, routeCards } from './departures';
 import type { Hotspot } from './hotspots';
 import { boxTheOtherWay, placeBoxes } from './places';
 import { isLoop, type Direction } from './routes';
@@ -30,7 +30,7 @@ export interface HintuanCardShows<V extends Direction> {
   showing: V[];
   /** Their ids: what the map lights. */
   shown: string[];
-  /** How many RouteCards, a head route each: the counter's number. */
+  /** How many RouteCards, a place and mode each: the counter's number. */
   heads: number;
   /** Where SWITCH takes the selection, here or another box of the place; null when it is disabled. */
   switchTo: Hotspot | null;
@@ -96,7 +96,7 @@ export function hintuanCardShows<V extends Direction>({
     back,
     showing,
     shown: showing.map((v) => v.id),
-    heads: departing.length,
+    heads: routeCards(routes, back).length,
     switchTo,
   };
 }

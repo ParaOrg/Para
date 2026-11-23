@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The card's own sizes where they fit: the bars' words (tracking-button.tsx text-lg) and the
+     status by the dot (recording-card.tsx). -->
+<resources>
+    <dimen name="ride_bar_text">18sp</dimen>
+    <dimen name="ride_status_text">13sp</dimen>
+</resources>

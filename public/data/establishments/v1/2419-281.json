@@ -1,0 +1,11 @@
+{
+  "schema": 1,
+  "cell": "2419-281",
+  "attribution": "© OpenStreetMap contributors",
+  "establishments": [
+    ["n3268230837","restaurant",120.97971,14.08683,"Villa Khristalene Resort Restaurant"],
+    ["n11001245554","restaurant",120.97666,14.08814,"Anniebet Resort"],
+    ["n10613539206","cafe",120.97666,14.08815,"JBM COFFEE"],
+    ["w1362796178","fuel",120.96711,14.08634,"Gasso"]
+  ]
+}

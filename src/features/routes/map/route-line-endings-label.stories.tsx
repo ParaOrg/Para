@@ -16,7 +16,7 @@ const meta = {
       </div>
     ),
   ],
-  args: { name: 'Label', livery: 'rose' },
+  args: { name: 'Label', livery: 'uv-express' },
 } satisfies Meta<typeof RouteLineEndingsLabel>;
 
 export default meta;
@@ -60,13 +60,13 @@ const knobbFill = (pill: HTMLElement) => {
 };
 
 /**
- * SN Pro Medium, 28 tall, never MapLibre's Helvetica Neue: a signed pill's name
+ * Livvic Medium, 28 tall, never MapLibre's Helvetica Neue: a signed pill's name
  * Figma's text-base/Lower/medium, 16, an unsigned one's text-sm/medium, 14.
  */
 const expectFigmaType = async (pill: HTMLElement) => {
   const style = getComputedStyle(pill);
   const isSigned = !!pill.querySelector('[data-part="start"], [data-part="end"]');
-  await expect(style.fontFamily).toMatch(/^"?SN Pro/);
+  await expect(style.fontFamily).toMatch(/^"?Livvic/);
   await expect(style.fontSize).toBe(isSigned ? '16px' : '14px');
   await expect(style.fontWeight).toBe('500');
   await expect(pill.getBoundingClientRect().height).toBe(28);
@@ -93,7 +93,7 @@ export const HeadRoute: Story = {
   },
 };
 
-/** Head Route stays green on the list's blue lines, as on a card's colour. */
+/** Head Route stays green on the list's resting lines, as on a card's colour. */
 export const HeadRouteSelectedBlue: Story = {
   args: { variant: 'head', livery: null },
   play: async ({ canvasElement }) => {
@@ -115,7 +115,7 @@ export const TailRoute: Story = {
   },
 };
 
-/** Tail Route is red on the list's blue lines and on any card's colour: the line's colour is not worn. */
+/** Tail Route is red on the list's resting lines and on any card's colour: the line's colour is not worn. */
 export const TailRouteSelectedBlue: Story = {
   args: { variant: 'tail', livery: null },
   play: async ({ canvasElement }) => {
@@ -141,7 +141,9 @@ export const Default: Story = {
   play: async ({ canvasElement }) => {
     const pill = pillOf(canvasElement);
     await expect(signOf(pill)).toBe('none');
-    await expect(getComputedStyle(pill).backgroundColor).toBe(wornBy('bg-card-rose-surface'));
+    await expect(getComputedStyle(pill).backgroundColor).toBe(
+      wornBy('bg-card-uv-express-surface-border'),
+    );
     await expect(knobbFill(pill)).toBe(getComputedStyle(pill).backgroundColor);
   },
 };

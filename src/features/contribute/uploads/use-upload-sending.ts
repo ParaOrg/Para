@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useRef, useState, type RefObject } from 'react';
 
+import { loadPacking } from './packing/load-packing';
 import { FAILED, problemOfError } from './upload-failures';
 import { isSentOnItsOwn, storedUploadStatus } from './upload-rules';
 import type { UploadGate, UploadStatus } from './upload-state';
-import { packRecording } from '../api/pack-recording';
-import { removeUpload, uploadContribution } from '../api/upload-contribution';
+import { loadContributionRequests } from '../api/load-contribution-requests';
 import { UploadError } from '../api/upload-problem';
 import { sentConsentVersion } from '../consent/consent-version';
 import { fixOfRow } from '../recorder/recording-fixes';
@@ -19,27 +19,23 @@ interface UploadSendingOptions {
   identityForUpload: () => Promise<string | null>;
   /** Hears that a send waits on the person check; `isRefused` when its token was refused. */
   onCheckNeeded: (isRefused: boolean) => void;
-  /** Hears the identity a send went under. */
-  onIdentity: (identity: string) => void;
 }
 
 export interface UploadSending {
   statusOf: (recording: Recording) => UploadStatus;
   send: (recording: Recording) => Promise<void>;
-  remove: (recording: Recording) => Promise<void>;
   /** Sends every recording waiting on the person check. */
   sendChecking: () => void;
   /** The saved list as the window's events read it. */
   savedRef: RefObject<readonly Recording[]>;
-  /** Whether a recording is being sent or removed, or has a status from this visit. */
+  /** Whether a recording is being sent, or has a status from this visit. */
   isBusy: (recordingId: string) => boolean;
   setStatus: (recordingId: string, status: UploadStatus) => void;
 }
 
 /**
- * Sends saved recordings to Para and removes uploads. A recording is sent on its own when the
- * list holds it, and one that failed for a reason that passes is tried again when the phone comes
- * back online or to the front.
+ * Sends saved recordings to Para: each on its own once the list holds it, and one that failed for
+ * a reason that passes again when the phone comes back online or to the front.
  */
 export function useUploadSending({
   saved,
@@ -47,7 +43,6 @@ export function useUploadSending({
   isAvailable,
   identityForUpload,
   onCheckNeeded,
-  onIdentity,
 }: UploadSendingOptions): UploadSending {
   const [overlay, setOverlay] = useState<Record<string, UploadStatus>>({});
   const inFlight = useRef(new Set<string>());
@@ -76,6 +71,11 @@ export function useUploadSending({
     setStatus(recording.id, { state: 'uploading' });
     try {
       const rows = await loadFixes(recording.id);
+      // Not fetched (offline before the worker kept them): the catch takes it as no signal.
+      const [{ packRecording }, { uploadContribution }] = await Promise.all([
+        loadPacking(),
+        loadContributionRequests(),
+      ]);
       const packed = packRecording(
         recording,
         rows.map(fixOfRow),
@@ -94,7 +94,6 @@ export function useUploadSending({
         setStatus(recording.id, { state: 'checking' });
         return;
       }
-      onIdentity(by);
       await uploadContribution(packed.payload);
       const mark = { state: 'uploaded', at: Date.now(), by } as const;
       // The answer arrived; if keeping the mark fails, the next send answers 'already saved'.
@@ -109,27 +108,6 @@ export function useUploadSending({
       } else {
         setStatus(recording.id, { state: 'failed', ...FAILED[problemOfError(error)] });
       }
-    } finally {
-      inFlight.current.delete(recording.id);
-    }
-  }
-
-  async function remove(recording: Recording) {
-    const before = statusOf(recording);
-    if (before.state !== 'uploaded' || inFlight.current.has(recording.id)) return;
-    inFlight.current.add(recording.id);
-    setStatus(recording.id, { state: 'removing' });
-    try {
-      await removeUpload(recording.id);
-      await updateRecording(recording.id, (stored) => ({
-        ...stored,
-        upload: { state: 'removed', at: Date.now() },
-      }));
-      setStatus(recording.id, { state: 'removed' });
-    } catch (error) {
-      if (!(error instanceof UploadError)) console.error('Removing an upload failed.', error);
-      const { brief } = FAILED[problemOfError(error)];
-      setStatus(recording.id, { ...before, problem: `Not removed. ${brief}` });
     } finally {
       inFlight.current.delete(recording.id);
     }
@@ -150,9 +128,8 @@ export function useUploadSending({
     gateRef.current = { hasConsent: gate.hasConsent, earlier: gate.earlier };
   }, [gate.hasConsent, gate.earlier]);
 
-  // A recording not tried yet is sent as soon as the list holds it: the page
-  // opened, or one was just saved, or consent or the answer about earlier ones
-  // arrived. A change to the list for any other reason (a delete) retries nothing.
+  // A recording not tried yet is sent as soon as the list holds it: the page opened, or one was
+  // just saved, or consent or the answer about earlier ones arrived. A delete retries nothing.
   useEffect(() => {
     if (!isAvailable) return;
     for (const recording of saved) {
@@ -187,5 +164,5 @@ export function useUploadSending({
     // eslint-disable-next-line react-hooks/exhaustive-deps -- see above
   }, [isAvailable]);
 
-  return { statusOf, send, remove, sendChecking, savedRef, isBusy, setStatus };
+  return { statusOf, send, sendChecking, savedRef, isBusy, setStatus };
 }

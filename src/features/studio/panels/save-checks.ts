@@ -1,7 +1,7 @@
 import { LOOP_CLOSED_M } from '@/features/routes/model/routes';
 
 import type { Place } from './places';
-import { ENDS_TAKEN, LOOP_TAKEN } from '../data/routes-write';
+import { ENDS_TAKEN, LOOP_TAKEN } from '../data/route-save-input';
 
 /**
  * Why the save panel refuses a save, before it writes anything: pure, so
@@ -50,7 +50,7 @@ interface LoopSaveCheck {
 /** Why an ikot cannot be saved, in the panel's words and order; null to go ahead. */
 export function loopSaveRefusal(check: LoopSaveCheck): string | null {
   if (check.signboard.trim() === '') {
-    return 'An ikot is called by its signboard: write what the jeep says, like UP – Ikot.';
+    return 'An ikot is called by its Ikot name: write what the jeep says, like UP – Ikot.';
   }
   if (check.gapM > LOOP_CLOSED_M) {
     return `An ikot ends where it began. This line ends ${Math.round(check.gapM)} m from its start: go back to the map and press ⟲ Close the loop.`;

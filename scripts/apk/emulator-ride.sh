@@ -17,11 +17,14 @@
 #   15:00 the app's process is killed (kill -9: what Android's low-memory killer does), and the
 #         app is opened again; the page imports the fixes the foreground service kept
 #   ~16:00 the screen goes off again; at 20:00 it comes on
+#   20:40 the phone's Back on Record, nothing over it: the app goes to the back as Home sends it,
+#         and the ride goes on (BackPlugin.java)
 #
 # It passes when the ride started once; each rebuilt activity found every fix the service had kept;
 # the service and its notice stayed up with the screen off; fixes arrived at about a second apart;
 # every fix the service had kept at the kill is in the ride after reopening; the ride goes on
-# afterwards; and no fix is twice in it or out of order.
+# afterwards; and no fix is twice in it or out of order. Back then leaves the app for the back,
+# its process and the service alive, and the ride records on.
 #
 # The test marks its own steps in logcat (tag PARA_RIDE_TEST), so the checker knows which of the
 # page's imports followed the rebuilds and which followed the kill.
@@ -29,7 +32,9 @@ set -u
 
 APK=$1
 OUT=$2
-PKG=ph.para.contributor
+# The debug build has its own id, so it installs beside the real app (android/app/build.gradle).
+PKG=ph.para.contributor.debug
+ACTIVITY=ph.para.contributor.MainActivity
 OFF_AFTER=60
 KILL_AT=900
 TOTAL=1200
@@ -79,6 +84,20 @@ for permission in ACCESS_FINE_LOCATION ACCESS_COARSE_LOCATION ACCESS_BACKGROUND_
 done
 adb shell dumpsys battery unplug || true   # on the battery, as a phone on a ride is
 
+# For the host list (contributor-app.yml, scripts/apk/hosts-in-capture.mjs): plain DNS, so the
+# names the phone looks up can be read in the capture, then one lookup the list must show or call
+# the capture incomplete. Under example.com (reserved for examples), not .invalid: a resolver
+# answers .invalid itself and sends nothing (RFC 6761). Both are printed, so the log shows them.
+adb shell settings put global private_dns_mode off || echo "could not turn Private DNS off"
+# Wi-Fi off too: with it up the phone sends its traffic that way, around the NIC the capture
+# records, so the capture holds only what went before Wi-Fi came up. The next line names the
+# network the phone is left with.
+adb shell svc wifi disable || echo "could not turn Wi-Fi off"
+sleep 5
+echo "active network: $(adb shell dumpsys connectivity | tr -d '\r' | grep -m1 -E 'Active default network|NetworkAgentInfo' | cut -c1-160)"
+echo "Private DNS: $(adb shell settings get global private_dns_mode | tr -d '\r')"
+echo "control lookup: $(adb shell ping -c 1 -W 2 capture-check.example.com 2>&1 | head -1 | tr -d '\r')"
+
 adb logcat -c
 adb logcat -v time > "$OUT/logcat.txt" &
 LOGCAT_PID=$!
@@ -92,7 +111,7 @@ FEED_PID=$!
 # A step of the test's own, marked in logcat for the checker.
 mark() { adb shell log -t PARA_RIDE_TEST "$1"; }
 
-adb shell am start -n "$PKG/.MainActivity"
+adb shell am start -n "$PKG/$ACTIVITY"
 sleep 20
 mark rebuild
 adb shell settings put system font_scale 1.15
@@ -113,6 +132,8 @@ sleep $((KILL_AT / 2 - 5))
 # The kill. The count is read just before, so the fixes the service had kept are known.
 PID_BEFORE=$(adb shell pidof "$PKG" | tr -d '\r')
 KEPT_AT_KILL=$(native_fixes)
+# The log itself, for a count that does not match the ride's.
+adb shell "run-as $PKG cat files/fixlog.ndjson" > "$OUT/fixlog-at-kill.ndjson" 2> /dev/null
 mark kill
 if [ -n "$PID_BEFORE" ]; then adb shell "kill -9 $PID_BEFORE" || adb shell am force-stop "$PKG"; fi
 sleep 3
@@ -122,7 +143,7 @@ echo "pid before the kill: ${PID_BEFORE:-none}; right after: ${PID_AFTER_KILL:-n
 # Opened again, on the screen, as a rider unlocking the phone would.
 adb shell input keyevent KEYCODE_WAKEUP
 adb shell wm dismiss-keyguard
-adb shell am start -n "$PKG/.MainActivity"
+adb shell am start -n "$PKG/$ACTIVITY"
 sleep 40
 adb exec-out screencap -p > "$OUT/screen-reopened.png"
 adb shell input keyevent KEYCODE_SLEEP
@@ -131,11 +152,24 @@ adb shell input keyevent KEYCODE_WAKEUP
 adb shell wm dismiss-keyguard
 sleep 40   # one more report with the screen on
 adb exec-out screencap -p > "$OUT/screen-after.png"
+
+# Back on Record mid-ride: nothing is over it, so the page asks to leave (use-android-back.ts).
+mark back
+adb shell input keyevent KEYCODE_BACK
+sleep 3
+adb shell dumpsys activity activities | grep -m1 -E "mResumedActivity|topResumedActivity" | tee "$OUT/resumed-after-back.txt"
+PID_AFTER_BACK=$(adb shell pidof "$PKG" | tr -d '\r')
+adb shell dumpsys activity services "$PKG" > "$OUT/services-after-back.txt"
+# The service's own count: with the app in the back the page may be frozen, as with the screen off.
+FIXES_AT_BACK=$(native_fixes)
+sleep 30
+FIXES_AFTER_BACK=$(native_fixes)
 kill "$FEED_PID" "$LOGCAT_PID" 2> /dev/null
 
-python3 - "$OUT" "$KEPT_AT_KILL" "${PID_BEFORE:-}" "${PID_AFTER_KILL:-}" << 'PY'
+python3 - "$OUT" "$KEPT_AT_KILL" "${PID_BEFORE:-}" "${PID_AFTER_KILL:-}" "${PID_AFTER_BACK:-}" "$PKG" "$FIXES_AT_BACK" "$FIXES_AFTER_BACK" << 'PY'
 import re, sys
-out, kept_at_kill, pid_before, pid_after = sys.argv[1:5]
+out, kept_at_kill, pid_before, pid_after, pid_after_back, pkg = sys.argv[1:7]
+fixes_at_back, fixes_after_back = int(sys.argv[7] or 0), int(sys.argv[8] or 0)
 kept_at_kill = int(kept_at_kill)
 log = open(f"{out}/logcat.txt", errors="replace").read().splitlines()
 # The page's lines, each with where it is in the log, and the test's own marks.
@@ -151,14 +185,28 @@ started = [i for i, r in ride if r.startswith("started")]
 imports = [(i, fields(r)) for i, r in ride if r.startswith("imported")]
 # Every import before the kill followed a rebuilt activity: the test's two, and any of Android's own.
 rebuilt = [f for i, f in imports if i < kill_at]
+# The test's own rebuilds follow its mark. Android may rebuild the activity on its own as the app
+# first opens (a system change landing on it, seen with the launcher rebuilt at the same moment),
+# when the ride is seconds old and the service may have kept no fix yet: that one must catch up
+# and keep the order too, but may find none.
+ours = [f for i, f in imports if rebuild_at < i < kill_at]
+androids = [f for i, f in imports if i < rebuild_at]
 imported = [f for i, f in imports if i > kill_at]
 reports = [fields(r) for i, r in ride if r.startswith("report ")]
+back_at = marks.get("back", len(log))
+resumed_after_back = open(f"{out}/resumed-after-back.txt", errors="replace").read()
+services_after_back = open(f"{out}/services-after-back.txt", errors="replace").read()
 ride = [r for _, r in ride]
 services = open(f"{out}/services.txt", errors="replace").read()
 notification = open(f"{out}/notification.txt", errors="replace").read()
 errors = [r for r in ride if r.startswith(("error", "write-failed", "report-failed"))]
+unread_published = [l for l in log if "could not be shown on the map" in l]
 
 rows_after_import = int(imported[0]["rows"]) if imported else 0
+last_kept = f"tiles={reports[-1].get('tiles', '?')} meta={reports[-1].get('meta', '?')}" if reports else "no report"
+as_count = lambda value: int(value) if value and value.isdigit() else 0
+last_kept_tiles = as_count(reports[-1].get("tiles")) if reports else 0
+last_kept_meta = as_count(reports[-1].get("meta")) if reports else 0
 last_rows = int(reports[-1]["rows"]) if reports else 0
 # The page's own answer (caught): the ride held the log's last fix, read in the same look.
 keeps_every_fix = lambda f: f.get("caught") == "true" and int(f["native"]) > 0 and f.get("sorted") == "true"
@@ -166,10 +214,12 @@ checks = {
     "the ride started, once, before the activity was rebuilt": len(started) == 1
     and started[0] < rebuild_at
     and all(started[0] < i for i, _ in imports),
-    f"each rebuilt activity found every fix the service had kept ({len(rebuilt)} rebuilt)": len(rebuilt) >= 2
-    and all(keeps_every_fix(f) for f in rebuilt),
+    f"each rebuilt activity found every fix the service had kept ({len(ours)} rebuilt by the test)": len(ours) >= 2
+    and all(keeps_every_fix(f) for f in ours)
+    and all(f.get("caught") == "true" and f.get("sorted") == "true" for f in androids),
     "the service ran in the foreground with the screen off": "isForeground=true" in services,
-    "the notice 'Para is recording' was up": "Para is recording" in notification,
+    # The ride's notification (RideNotification.java) holds the service's own id: its title.
+    "the ride's notification, Recording, was up": bool(re.search(r"android\.title=.*Recording", notification)),
     "the app's process was killed": bool(pid_before) and pid_before != pid_after,
     f"the service had kept at least 0.5 fixes a second until the kill ({kept_at_kill})": kept_at_kill >= 0.5 * (900 - 65),
     f"every fix the service kept is in the ride after reopening ({rows_after_import} >= {kept_at_kill})": bool(imported) and rows_after_import >= kept_at_kill,
@@ -177,12 +227,27 @@ checks = {
     f"the ride went on after the reopening ({last_rows} > {rows_after_import})": last_rows > rows_after_import + 60,
     "no fix is out of order at the end": bool(reports) and reports[-1].get("sorted") == "true",
     "no error was reported": not errors,
+    # The app's build carries no published map: its page reads the public site's (published-source.ts).
+    "the map read the published routes and hotspots": not unread_published,
+    # The map under the driver's screens kept the basemap it drew, in the WebView's Cache Storage
+    # (basemap-cache.ts), as a phone's must to draw it with no signal.
+    f"the map kept its basemap tiles and files on the phone ({last_kept})": last_kept_tiles > 0
+    and last_kept_meta > 0,
+    # Back on Record, nothing over it: the task to the back as Home sends it, never the activity ended.
+    f"Back on Record mid-ride left the app for the back ({resumed_after_back.strip()[:80]})": back_at < len(log)
+    and bool(resumed_after_back.strip())
+    and pkg not in resumed_after_back,
+    "the app's process lived on after Back": bool(pid_after_back),
+    "the service stayed in the foreground after Back": "isForeground=true" in services_after_back,
+    f"the service recorded on after Back ({fixes_at_back} then {fixes_after_back} fixes kept)": fixes_after_back
+    >= fixes_at_back + 15,
 }
 lines = [f"{'PASS' if ok else 'FAIL'}: {name}" for name, ok in checks.items()]
 lines.append("")
 lines.append(f"imported after a rebuild: {rebuilt}")
 lines.append(f"imported after the kill: {imported}")
 lines.append(f"errors: {errors}")
+lines.append(f"published map unread: {unread_published[:3]}")
 lines.append(f"reports: {reports}")
 passed = all(checks.values())
 open(f"{out}/summary.txt", "w").write(("PASS" if passed else "FAIL") + "\n" + "\n".join(lines) + "\n")

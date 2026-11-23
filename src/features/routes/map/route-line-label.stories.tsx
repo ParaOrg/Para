@@ -16,7 +16,7 @@ const meta = {
       </div>
     ),
   ],
-  args: { name: 'Label', livery: 'rose' },
+  args: { name: 'Label', livery: 'uv-express' },
 } satisfies Meta<typeof RouteLineLabel>;
 
 export default meta;
@@ -40,7 +40,7 @@ const wornBy = (className: string, property: 'backgroundColor' | 'color' = 'back
 };
 
 /**
- * SN Pro Medium, 28 tall, never MapLibre's Helvetica Neue: a signed pill's name
+ * Livvic Medium, 28 tall, never MapLibre's Helvetica Neue: a signed pill's name
  * Figma's text-base/Lower/medium, 16, an unsigned one's text-sm/medium, 14.
  */
 const expectFigmaType = async (pill: HTMLElement) => {
@@ -48,19 +48,21 @@ const expectFigmaType = async (pill: HTMLElement) => {
   const isSigned = !!(pill.closest('[data-part="label"]') ?? pill).querySelector(
     '[data-part="start"], [data-part="end"]',
   );
-  await expect(style.fontFamily).toMatch(/^"?SN Pro/);
+  await expect(style.fontFamily).toMatch(/^"?Livvic/);
   await expect(style.fontSize).toBe(isSigned ? '16px' : '14px');
   await expect(style.fontWeight).toBe('500');
   await expect(pill.getBoundingClientRect().height).toBe(28);
 };
 
-/** Default (3846:11748): the name alone in the line's colour, a rose card's. */
+/** Default (3846:11748): the name alone in the line's colour, a UV Express line's (its card's surface-border). */
 export const Default: Story = {
   args: { variant: 'default' },
   play: async ({ canvasElement }) => {
     const pill = partOf(canvasElement, 'name');
     await expectFigmaType(pill);
-    await expect(getComputedStyle(pill).backgroundColor).toBe(wornBy('bg-card-rose-surface'));
+    await expect(getComputedStyle(pill).backgroundColor).toBe(
+      wornBy('bg-card-uv-express-surface-border'),
+    );
     await expect(canvasElement.querySelector('[data-part="end"]')).toBeNull();
     await expect(canvasElement.querySelector('.sr-only')).toBeNull();
     await expect(getComputedStyle(partOf(canvasElement, 'label')).opacity).toBe('1');
@@ -76,7 +78,9 @@ export const Unselected: Story = {
   play: async ({ canvasElement }) => {
     const pill = partOf(canvasElement, 'name');
     await expectFigmaType(pill);
-    await expect(getComputedStyle(pill).backgroundColor).toBe(wornBy('bg-card-rose-surface'));
+    await expect(getComputedStyle(pill).backgroundColor).toBe(
+      wornBy('bg-card-uv-express-surface-border'),
+    );
     await expect(getComputedStyle(partOf(canvasElement, 'label')).opacity).toBe('0.6');
     await expect(canvasElement.querySelector('.sr-only')).toBeNull();
   },

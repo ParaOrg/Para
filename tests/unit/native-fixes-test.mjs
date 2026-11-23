@@ -1,5 +1,5 @@
 // The app's native location (src/features/contribute/native/): which fixes the page still has to
-// take from the native log, which permissions each Android version has, and whose battery help applies.
+// take from the native log, which permissions each Android version has, and whose phone is shown Keep Para recording.
 //
 //   node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs tests/unit/native-fixes-test.mjs
 import { test } from 'node:test';
@@ -7,12 +7,20 @@ import assert from 'node:assert/strict';
 
 import { fixesAfter } from '../../src/features/contribute/recorder/recording-fixes.ts';
 import { parseFixLog } from '../../src/features/contribute/native/native-fix-log.ts';
-import { watchErrorOf } from '../../src/features/contribute/native/watch-error.ts';
-import { batteryHelpFor } from '../../src/features/contribute/native/battery-steps.ts';
+import {
+  watchErrorOf,
+  watchErrorOfRideProblem,
+} from '../../src/features/contribute/native/watch-error.ts';
+import {
+  brandOf,
+  stopsBackgroundApps,
+} from '../../src/features/contribute/native/keep-recording-makers.ts';
+import { KEEP_RECORDING_STEPS } from '../../src/features/contribute/native/keep-recording-steps.ts';
 import {
   canRecordWithout,
   firstMissing,
   neededPermissions,
+  isLocationReady,
 } from '../../src/features/contribute/native/permission-steps.ts';
 
 const fix = (timestamp) => ({ timestamp, coords: { longitude: 121, latitude: 14, accuracy: 5 } });
@@ -61,7 +69,7 @@ test('the first permission not granted is asked next, and only location is a mus
   assert.equal(canRecordWithout('backgroundLocation'), true);
 });
 
-test('battery help goes to the makers known to stop background apps, by any casing', () => {
+test('Keep Para recording goes to the makers known to stop background apps, by any casing', () => {
   for (const maker of [
     'xiaomi',
     'Xiaomi',
@@ -73,11 +81,13 @@ test('battery help goes to the makers known to stop background apps, by any casi
     'samsung',
     'HUAWEI',
     'honor',
+    'OnePlus',
+    ' iqoo ',
   ]) {
-    assert.ok(batteryHelpFor(maker)?.steps, maker);
+    assert.equal(stopsBackgroundApps(maker), true, maker);
   }
   for (const maker of ['google', 'motorola', 'nokia', '']) {
-    assert.equal(batteryHelpFor(maker), null, maker);
+    assert.equal(stopsBackgroundApps(maker), false, maker);
   }
 });
 
@@ -109,4 +119,55 @@ test('the plugin refusing because location is switched off is not a denied permi
     2,
   );
   assert.equal(watchErrorOf({ message: 'Service not running.' }).code, 2);
+});
+
+test("the ride's service saying it cannot record reads as the browser's denied, else unavailable", () => {
+  assert.deepEqual(
+    watchErrorOfRideProblem({ code: 'DENIED', message: 'Location permission is missing.' }),
+    { code: 1, message: 'Location permission is missing.' },
+  );
+  assert.equal(
+    watchErrorOfRideProblem({ code: 'UNAVAILABLE', message: 'Location services disabled.' }).code,
+    2,
+  );
+});
+
+test("each maker's phones get their group's steps, its company's whole name too", () => {
+  const groups = {
+    Xiaomi: 'xiaomi',
+    POCO: 'xiaomi',
+    Redmi: 'xiaomi',
+    OPPO: 'oppo',
+    realme: 'oppo',
+    OnePlus: 'oppo',
+    vivo: 'vivo',
+    iQOO: 'vivo',
+    'INFINIX MOBILITY LIMITED': 'transsion',
+    TECNO: 'transsion',
+    samsung: 'samsung',
+    HUAWEI: 'huawei',
+    HONOR: 'huawei',
+  };
+  for (const [maker, brand] of Object.entries(groups)) {
+    assert.equal(brandOf(maker), brand, maker);
+    assert.ok(KEEP_RECORDING_STEPS[brand].steps.length > 0, brand);
+  }
+  for (const maker of ['Google', 'motorola', 'constructor', '']) {
+    assert.equal(brandOf(maker), null, maker);
+  }
+});
+
+test("Start with location off asks Google's dialog, and only its yes starts the ride", async () => {
+  let asked = 0;
+  const answer = (location) => async () => {
+    asked += 1;
+    return location;
+  };
+  assert.equal(await isLocationReady(true, answer('off')), true);
+  assert.equal(asked, 0, 'location on: no dialog');
+  assert.equal(await isLocationReady(false, answer('on')), true);
+  assert.equal(await isLocationReady(false, answer('off')), false);
+  // No Google Play services: no dialog to show, so the Turn on location card.
+  assert.equal(await isLocationReady(false, answer('unknown')), false);
+  assert.equal(asked, 3);
 });

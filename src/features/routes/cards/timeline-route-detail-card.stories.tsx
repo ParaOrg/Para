@@ -25,12 +25,13 @@ const talaToNovaliches = hintuans(
 const talaToFairview = talaToNovaliches.slice(0, 6);
 const aLongWay = hintuans(...Array.from({ length: 30 }, (_, i) => `Hintuan ${i + 1}`));
 
-/** Opens the fold, as a rider's tap would — and lets go of it, since a tap draws no focus ring. */
-const openFold: Story['play'] = async ({ canvasElement }) => {
-  const fold = within(canvasElement).getByRole('button', { name: /more hintuans/ });
-  await userEvent.click(fold);
-  fold.blur();
-};
+/** A hintuan's row, by its id. */
+const hintuanRow = (canvasElement: HTMLElement, id: string) =>
+  canvasElement.querySelector<HTMLElement>(`[data-testid="trip-hintuan"][data-hintuan="${id}"]`);
+
+/** The rail a hintuan's row wears (`data-rail` on its rail column). */
+const railOf = (canvasElement: HTMLElement, id: string) =>
+  hintuanRow(canvasElement, id)?.querySelector('[data-rail]')?.getAttribute('data-rail');
 
 /**
  * Keeps the picks as the public map does (useRideTo): a row picks its hintuan, or an end, and again
@@ -48,7 +49,7 @@ function Picking(props: ComponentProps<typeof TimelineRouteDetailCard>) {
       start={start}
       endPicked={atEnd}
       onPick={(id) => {
-        props.onPick(id);
+        props.onPick?.(id);
         if (id === start) return setStart(null);
         setAtEnd(null);
         setPicked((cur) => (cur === id ? null : id));
@@ -63,7 +64,7 @@ function Picking(props: ComponentProps<typeof TimelineRouteDetailCard>) {
         setStart(null);
       }}
       onEnd={(end) => {
-        props.onEnd(end);
+        props.onEnd?.(end);
         setPicked(null);
         setAtEnd((cur) => (cur === end ? null : end));
       }}
@@ -101,8 +102,10 @@ const meta = {
   ],
   parameters: { layout: 'fullscreen' },
   args: {
-    // Violet: Figma's frames (3762:3546) are drawn yellow, no longer a livery.
-    livery: 'violet',
+    // Raised, as a commuter has them before tapping a row: at Low a tap on the body raises the
+    // sheet and reaches nothing under it. The stories about the sheet's heights keep their own.
+    height: { snap: 0.55, onSnap: fn() },
+    livery: 'jeep',
     // 12.8 km, as Figma's frame has it; its pesos on today's rule.
     metres: 12_800,
     fare: { regular: '₱30–32', discounted: '₱24–26' },
@@ -111,8 +114,9 @@ const meta = {
     routeDirection: 'Novaliches',
     switchable: true,
     back: false,
-    // Papunta showing: SWITCH names the way a tap leads.
-    way: 'Pabalik',
+    // Papunta showing: PAPUNTA names it, and says Pabalik, the way a tap leads.
+    way: 'Papunta',
+    wayTo: 'Pabalik',
     onSwitch: fn(),
     onBackToList: fn(),
     onClose: fn(),
@@ -129,19 +133,18 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** The colour a token class paints, read off a probe wearing it. */
-const wornBy = (className: string) => {
+/** The colour a token class paints, read off a probe wearing it: `property` is the computed style to read. */
+const wornBy = (className: string, property: 'backgroundColor' | 'color') => {
   const probe = document.createElement('i');
   probe.className = className;
   document.body.append(probe);
-  const colour = getComputedStyle(probe).backgroundColor;
+  const colour = getComputedStyle(probe)[property];
   probe.remove();
   return colour;
 };
 
 /** The picked row, its pill and the pesos in it, and the fare and Distance tiles following the pick. */
 const pickedPesos = async (ctx: Parameters<NonNullable<Story['play']>>[0]) => {
-  await openFold(ctx);
   const { canvasElement, args } = ctx;
   const rows = canvasElement.querySelectorAll<HTMLElement>(
     '[data-testid="trip-hintuan"][data-state="selected"]',
@@ -159,48 +162,48 @@ const pickedPesos = async (ctx: Parameters<NonNullable<Story['play']>>[0]) => {
   await expect(within(canvasElement).getByTestId('trip-km').textContent).toBe(
     kmLabel(args.pickedMetres ?? args.metres),
   );
-  // The white is the halves', not the Two's wrapper: the card shows between them.
-  const fill = pill?.querySelector<HTMLElement>('[data-part="pesos"]') ?? pill;
-  return { card: within(canvasElement).getByTestId('trip'), row: rows[0], pill: fill };
+  // The fill is the halves', not the Two's wrapper: the surface shows between them.
+  return pill?.querySelector<HTMLElement>('[data-part="pesos"]') ?? pill;
 };
 
 /**
- * Opened to the picked row, which checks it as Figma's State=Selected draws
- * it: the one row, its pill of pesos in the card's own colours swapped, and
- * the fare tile pricing the ride to there, the same pesos.
+ * The picked row, as the stops on the sheet's surface draw it: the one row, its pill of pesos (a
+ * train's code before them) on the secondary surface in Text/primary (STOP_PILL), whatever the
+ * livery, and the fare tile pricing the ride to there, the same pesos.
  */
 const pickedAsDrawn: Story['play'] = async (ctx) => {
-  const { card, pill } = await pickedPesos(ctx);
+  const pill = await pickedPesos(ctx);
+  await expect(pill).toBeTruthy();
   if (pill) {
-    // Its words' colour behind the pesos, its fill for them.
-    await expect(getComputedStyle(pill).backgroundColor).toBe(getComputedStyle(card).color);
-    await expect(getComputedStyle(pill).color).toBe(getComputedStyle(card).backgroundColor);
-  }
-};
-
-/**
- * A train's pick, as Figma's train frames draw it: the pill white on every line, MRT-3's
- * dark-worded card too, and its pesos in the line's Timeline/surface, the rail's colour, not the
- * card's.
- */
-const pickedOnATrain: Story['play'] = async (ctx) => {
-  const { row, pill } = await pickedPesos(ctx);
-  // The rail's own fill (the picked dot's ring), not the row's active: one.
-  const rail = [...row.querySelectorAll<HTMLElement>('[class*="timeline-surface"]')].find((el) =>
-    [...el.classList].some((c) => c.startsWith('bg-') && c.endsWith('-timeline-surface')),
-  );
-  await expect(rail).toBeDefined();
-  if (pill && rail) {
-    await expect(getComputedStyle(pill).backgroundColor).toBe(wornBy('bg-content-inverse'));
-    await expect(getComputedStyle(pill).color).toBe(getComputedStyle(rail).backgroundColor);
+    await expect(getComputedStyle(pill).backgroundColor).toBe(
+      wornBy('bg-bg-surface-secondary', 'backgroundColor'),
+    );
+    await expect(getComputedStyle(pill).color).toBe(wornBy('text-text-primary', 'color'));
   }
 };
 
 /**
  * On a phone, Figma's frame (3778:3183, Variant2): Tala → Novaliches, its Distance and Expected
- * fare, its ten hintuans folded.
+ * fare, then every stop. The public map's: no Controller, no ‹ and no ✕ (4831:51289); Escape, as a
+ * tap on the empty map does there, takes it away (`onClose`).
  */
-export const Folded: Story = {};
+export const Default: Story = {
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement);
+    // The trip's name is its heading, hidden from the eye, over the cards' own headings.
+    await expect(
+      canvas.getByRole('heading', { level: 2, name: 'Tala → Novaliches' }),
+    ).toBeInTheDocument();
+    await expect(canvas.queryByTestId('card-controller')).toBeNull();
+    await expect(canvas.queryByRole('button', { name: 'Back' })).toBeNull();
+    await expect(canvas.queryByRole('button', { name: 'Close' })).toBeNull();
+    // Escape does what ✕ did, once the sheet has taken the focus as it opens, its own effect
+    // starting it listening (BottomSheet's EscapeCloses).
+    await waitFor(() => expect(canvas.getByTestId('card')).toHaveFocus());
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(args.onClose).toHaveBeenCalledOnce());
+  },
+};
 
 /**
  * The ferry: Free in the fare tile, with no Regular or Discounted to turn, and its fixed note under
@@ -239,16 +242,12 @@ export const FerryPicked: Story = {
   play: pickedAsDrawn,
 };
 
-/** Opened: every hintuan alike — SM Fairview among them — then View less. */
-export const Opened: Story = { play: openFold };
-
-/** Figma's other frame: Tala → SM Fairview, six hintuans, opened. */
+/** Figma's other frame: Tala → SM Fairview, six hintuans. */
 export const ToSMFairview: Story = {
   args: { hintuans: talaToFairview, routeDirection: 'SM Fairview' },
-  play: openFold,
 };
 
-/** One hintuan on the way: shown as it is, not folded behind a row of its own size. */
+/** One hintuan on the way. */
 export const OneHintuan: Story = {
   args: {
     routeOrigin: 'Fatima',
@@ -270,37 +269,81 @@ export const NoHintuan: Story = {
   },
 };
 
-/** Orange (Figma draws the Timeline set in red), with Content/inverse words. */
-export const Orange: Story = { args: { livery: 'orange' } };
+/** Bus: its rail in the bus's red. */
+export const Bus: Story = { args: { livery: 'bus' } };
 
-/** Fuchsia, with Content/inverse words, like orange. */
-export const Fuchsia: Story = { args: { livery: 'fuchsia' } };
+/** E-Jeep: its rail in Text/primary (TIMELINE_RAIL). */
+export const Ejeep: Story = { args: { livery: 'ejeep' } };
 
-/** Pink (4071:7014), with Content/inverse words, like fuchsia. */
-export const Pink: Story = { args: { livery: 'pink' } };
+/** UV Express: its rail in Text/primary, as E-Jeep's. */
+export const UvExpress: Story = { args: { livery: 'uv-express' } };
 
-/** SWITCHed: the way back, so SWITCH reads Papunta, the way a tap leads. */
+/** Turned round: the way back, so ⇅ on the ends card leads to Papunta, and turns it there. */
 export const TheWayBack: Story = {
   args: {
     routeOrigin: 'Novaliches',
     hintuans: [...talaToNovaliches].reverse(),
     routeDirection: 'Tala',
     back: true,
-    way: 'Papunta',
+    way: 'Pabalik',
+    wayTo: 'Papunta',
+  },
+  play: async ({ args, canvasElement }) => {
+    const turn = within(canvasElement).getByTestId('trip-ends-switch');
+    await expect(turn).toHaveAccessibleName('Papunta');
+    await userEvent.click(turn);
+    await expect(args.onSwitch).toHaveBeenCalledTimes(1);
   },
 };
 
-/** Opened with no list behind it — a tap on its line, a hotspot's card — and no other route sharing an end drawn its way round: nothing to go back to, so no ‹. */
-export const NothingToGoBackTo: Story = {
-  render: (args) => <TimelineRouteDetailCard {...args} onBackToList={null} />,
+/** The studio's, turned round: its Controller's PAPUNTA reads Pabalik, and a tap leads to Papunta. */
+export const TheWayBackWithTheController: Story = {
+  args: { ...TheWayBack.args, hasController: true },
+  play: async ({ canvasElement }) => {
+    const way = within(canvasElement).getByTestId('card-switch');
+    await expect(way).toHaveAccessibleName('Pabalik');
+    await expect(way).toHaveAttribute('data-back', 'true');
+    // ⇅ on the ends card is named for where a tap leads, as PAPUNTA's hint is.
+    await expect(within(canvasElement).getByTestId('trip-ends-switch')).toHaveAccessibleName(
+      'Papunta',
+    );
+  },
 };
 
-/** The route's other way is not drawn yet: SWITCH rests disabled. */
-export const NothingTheOtherWay: Story = { args: { switchable: false } };
+/** The studio's, something behind it, the list it was picked from: ‹ in the bar, and no ✕. */
+export const SomethingBehind: Story = {
+  args: { hasController: true },
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.queryByRole('button', { name: 'Close' })).toBeNull();
+    await userEvent.click(canvas.getByRole('button', { name: 'Back' }));
+    await expect(args.onBackToList).toHaveBeenCalledTimes(1);
+  },
+};
+
+/** The studio's, opened with no list behind it — a tap on its line, a hotspot's card — and no other route sharing an end drawn its way round: nothing to go back to, so ✕ stands where ‹ would. */
+export const NothingToGoBackTo: Story = {
+  args: { hasController: true },
+  render: (args) => <TimelineRouteDetailCard {...args} onBackToList={null} />,
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.queryByRole('button', { name: 'Back' })).toBeNull();
+    await userEvent.click(canvas.getByRole('button', { name: 'Close' }));
+    await expect(args.onClose).toHaveBeenCalledTimes(1);
+  },
+};
+
+/** The route's other way is not drawn yet: ⇅ rests disabled. */
+export const NothingTheOtherWay: Story = {
+  args: { switchable: false },
+  play: async ({ canvasElement }) => {
+    await expect(within(canvasElement).getByTestId('trip-ends-switch')).toBeDisabled();
+  },
+};
 
 /**
- * A mode with no fare rule: no Expected fare tile, and Distance takes the row (Figma draws nothing
- * for it; the owner keeps this default).
+ * A mode with no fare rule: no fare tile, and the Estimated Time Arrival takes the top row (the
+ * owner's call, Figma draws nothing for it).
  */
 export const Unpriced: Story = { args: { fare: undefined } };
 
@@ -321,13 +364,13 @@ export const FareTurns: Story = {
   },
 };
 
-/** Thirty hintuans, opened: taller than the room, the rail scrolls under the header. */
-export const ALongWay: Story = { args: { hintuans: aLongWay }, play: openFold };
+/** Thirty hintuans: taller than the room, the rail scrolls under the header. */
+export const ALongWay: Story = { args: { hintuans: aLongWay } };
 
 /** Place names too long for one line wrap; they are never cut. How a wrapped row sits on the rail is not drawn yet. */
 export const LongNames: Story = {
   args: {
-    livery: 'orange',
+    livery: 'bus',
     metres: 8_600,
     fare: { regular: '₱24–26', discounted: '₱19–21' },
     routeOrigin: 'Novaliches (Bayan) via Zabarte',
@@ -338,74 +381,101 @@ export const LongNames: Story = {
     ),
     routeDirection: 'Fairview Teraccess Transport Terminal',
   },
-  play: openFold,
 };
 
-/** From 1024 wide, in the top-left corner where the list sits. */
+/**
+ * From 1024 wide, docked the map's whole height on the left where the list docks, 384 wide as the
+ * list is (Figma 4796:33161 draws 393: the owner to confirm), the Controller its top bar.
+ */
 export const Floating: Story = { parameters: { frame: 'wide' } };
 
-/** In the corner and opened: Tala → Novaliches is taller than 640, so the rail scrolls. */
-export const FloatingOpened: Story = { parameters: { frame: 'wide' }, play: openFold };
+/** Docked, thirty hintuans: the body scrolls under the top bar, no scrollbar drawn, as the list's. */
+export const FloatingALongWay: Story = {
+  args: { hintuans: aLongWay },
+  parameters: { frame: 'wide' },
+};
+
+/**
+ * Docked under the public map's place search, as the list is: the page sets `--sheet-float-top`
+ * (place-search-bar.tsx's 7.375rem). Figma's panel starts at the screen's top, with no search
+ * drawn: the owner to confirm.
+ */
+export const FloatingUnderTheSearch: Story = {
+  parameters: { frame: 'wide' },
+  decorators: [
+    (Story) => (
+      <div className="contents [--sheet-float-top:7.375rem]">
+        <Story />
+      </div>
+    ),
+  ],
+};
+
+/** The route's via under End's place, "via Maligaya", as Figma's End card has it. */
+export const WithVia: Story = { args: { via: 'Maligaya' } };
 
 /** Figma's 640 frame: still docked, as wide as the screen. */
 export const Tablet: Story = { parameters: { frame: 'tablet' } };
 
 /**
- * A hintuan picked, orange — the Timeline set's Selected row, drawn on Figma's red card (3769:2895, 3778:3183):
- * Amparo's dot a white ring round the rail's orange, its name ExtraBold, and a white pill with the
- * pesos from Tala to there in the card's orange. Opened, since the fold keeps it.
+ * A hintuan picked, bus: Amparo's dot a white ring round the rail's red, End in its slot, and the
+ * pill with the pesos from Tala to there.
  */
-export const PickedOrange: Story = {
-  args: { livery: 'orange', picked: 'h3' },
+export const PickedBus: Story = {
+  args: { livery: 'bus', picked: 'h3' },
   play: pickedAsDrawn,
 };
 
-/** Fuchsia, as orange: the pill white, its pesos in the card's fuchsia. */
-export const PickedFuchsia: Story = {
-  args: { livery: 'fuchsia', picked: 'h3' },
+/** Picked, E-Jeep: the same pill on every livery. */
+export const PickedEjeep: Story = {
+  args: { livery: 'ejeep', picked: 'h3' },
   play: pickedAsDrawn,
 };
 
-/** Pink, as fuchsia: the pill white, its pesos in the card's pink. */
-export const PickedPink: Story = {
-  args: { livery: 'pink', picked: 'h3' },
+/** Picked, UV Express, as E-Jeep. */
+export const PickedUvExpress: Story = {
+  args: { livery: 'uv-express', picked: 'h3' },
   play: pickedAsDrawn,
 };
 
-/** LRT-1, a train's trip (4074:7402): its line's colours, Content/inverse words. */
+/** Picked, Jeep, as Bus. */
+export const PickedJeep: Story = {
+  args: { livery: 'jeep', picked: 'h3' },
+  play: pickedAsDrawn,
+};
+
+/** LRT-1, a train's trip (4074:7402): its rail in the line's colour. */
 export const LightRailWayOne: Story = { args: { livery: 'light-rail-way-one' } };
 
-/** Picked, LRT-1: the pill white, the station's code and its pesos in the line's Timeline/surface. */
+/** Picked, LRT-1: the station's code and its pesos, the pill's two halves. */
 export const PickedLightRailWayOne: Story = {
   args: { livery: 'light-rail-way-one', picked: 'h3', pickedCode: 'GL04' },
-  play: pickedOnATrain,
+  play: pickedAsDrawn,
 };
 
-/** LRT-2, a train's trip (4080:4124): its line's colours, Content/inverse words. */
+/** LRT-2, a train's trip (4080:4124): its rail in the line's colour. */
 export const LightRailWayTwo: Story = { args: { livery: 'light-rail-way-two' } };
 
-/** Picked, LRT-2: the pill white, the station's code and its pesos in the line's Timeline/surface. */
+/** Picked, LRT-2: the station's code and its pesos, the pill's two halves. */
 export const PickedLightRailWayTwo: Story = {
   args: { livery: 'light-rail-way-two', picked: 'h3', pickedCode: 'PL04' },
-  play: pickedOnATrain,
+  play: pickedAsDrawn,
 };
 
-/** MRT-3, a train's trip (4080:4241): its line's colours, Content/primary, dark, words. */
+/** MRT-3, a train's trip (4080:4241): its rail in its yellow, card/MRTThree/fill (TIMELINE_RAIL). */
 export const MetroRailWayThree: Story = { args: { livery: 'metro-rail-way-three' } };
 
-/** Picked, MRT-3: the pill's two white halves, YL06 and ₱20–22, in the line's Timeline/surface. */
+/** Picked, MRT-3: the pill's two halves, YL06 and ₱20–22. */
 export const PickedMetroRailWayThree: Story = {
   args: { livery: 'metro-rail-way-three', picked: 'h3', pickedCode: 'YL06' },
-  play: pickedOnATrain,
+  play: pickedAsDrawn,
 };
 
 /** Tapped through: Amparo's row picks it, pill and all; the tile turned to Discounted, the pill with it; a second tap lets it go. */
 export const PickAndLetGo: Story = {
   play: async (ctx) => {
-    await openFold(ctx);
     const { canvasElement, args } = ctx;
     const canvas = within(canvasElement);
-    // The opened rows come into sight a frame or two after the tap.
     await userEvent.click(await canvas.findByRole('button', { name: /Amparo/, pressed: false }));
     await expect(args.onPick).toHaveBeenCalledWith('h3');
     await expect(canvas.getByTestId('trip-hintuan-fare').textContent).toBe('₱20–22');
@@ -419,6 +489,13 @@ export const PickAndLetGo: Story = {
     await expect(canvasElement.querySelectorAll('[data-state="selected"]').length).toBe(0);
   },
 };
+
+/**
+ * The trip's ends by the place's name, whatever a screen reader hears after it: the ride's mark
+ * (", start") and, picked, its pesos.
+ */
+const TALA = /^Tala\b/;
+const NOVALICHES = /^Novaliches\b/;
 
 /**
  * The ends are buttons too, and picked like a hintuan: Tala picks itself, its dot the Selected one,
@@ -435,29 +512,27 @@ export const EndsShowTheWhole: Story = {
     const origin = () => canvas.getByTestId('trip-origin').getAttribute('data-state');
     const destination = () => canvas.getByTestId('trip-destination').getAttribute('data-state');
     await expect(selected()).toBe(1);
-    await userEvent.click(canvas.getByRole('button', { name: 'Tala', pressed: false }));
+    await userEvent.click(canvas.getByRole('button', { name: TALA, pressed: false }));
     await expect(args.onEnd).toHaveBeenLastCalledWith('from');
     await expect(selected()).toBe(0);
     await expect(origin()).toBe('selected');
     await expect(destination()).toBe('rest');
-    await userEvent.click(canvas.getByRole('button', { name: 'Tala', pressed: true }));
+    await userEvent.click(canvas.getByRole('button', { name: TALA, pressed: true }));
     await expect(origin()).toBe('rest');
-    // Amparo let go by Tala folds the list back as it was: opened again to pick Amparo.
-    await userEvent.click(canvas.getByRole('button', { name: /more hintuans/ }));
-    await userEvent.click(await canvas.findByRole('button', { name: /Amparo/, pressed: false }));
+    await userEvent.click(canvas.getByRole('button', { name: /Amparo/, pressed: false }));
     await expect(selected()).toBe(1);
-    await userEvent.click(canvas.getByRole('button', { name: 'Novaliches', pressed: false }));
+    await userEvent.click(canvas.getByRole('button', { name: NOVALICHES, pressed: false }));
     await expect(args.onEnd).toHaveBeenLastCalledWith('to');
     await expect(selected()).toBe(0);
     await expect(destination()).toBe('selected');
     await expect(canvas.queryByTestId('trip-hintuan-fare')).toBeNull();
-    await userEvent.click(canvas.getByRole('button', { name: 'Novaliches', pressed: true }));
+    await userEvent.click(canvas.getByRole('button', { name: NOVALICHES, pressed: true }));
     await expect(destination()).toBe('rest');
     // Picked again, then let go by the origin, picked in its place; and the
     // origin let go by a hintuan.
-    await userEvent.click(canvas.getByRole('button', { name: 'Novaliches', pressed: false }));
+    await userEvent.click(canvas.getByRole('button', { name: NOVALICHES, pressed: false }));
     await expect(destination()).toBe('selected');
-    await userEvent.click(canvas.getByRole('button', { name: 'Tala', pressed: false }));
+    await userEvent.click(canvas.getByRole('button', { name: TALA, pressed: false }));
     await expect(destination()).toBe('rest');
     await expect(origin()).toBe('selected');
     await userEvent.click(canvas.getByRole('button', { name: /Amparo/, pressed: false }));
@@ -467,30 +542,10 @@ export const EndsShowTheWhole: Story = {
 };
 
 /** Where the trip leaves from, picked: its dot a white ring round the rail's colour, as a picked hintuan's; its name and the tiles as they were. */
-export const OriginPicked: Story = { args: { livery: 'orange', endPicked: 'from' } };
+export const OriginPicked: Story = { args: { livery: 'bus', endPicked: 'from' } };
 
 /** Where the trip goes, picked, the same way. */
-export const DestinationPicked: Story = { args: { livery: 'orange', endPicked: 'to' } };
-
-/**
- * A pick is in the ride, so it never folds away: View less folds only the rows after it, and opened
- * again they are back, the pick still there, pill and all.
- */
-export const PickWithTheRestFolded: Story = {
-  play: async (ctx) => {
-    await openFold(ctx);
-    const { canvasElement } = ctx;
-    const canvas = within(canvasElement);
-    await userEvent.click(await canvas.findByRole('button', { name: /Amparo/, pressed: false }));
-    await userEvent.click(canvas.getByRole('button', { name: /View less/ }));
-    await expect(canvas.getByRole('button', { name: /Amparo/, pressed: true })).toBeVisible();
-    await expect(canvas.getByRole('button', { name: /6 more hintuans/ })).toBeTruthy();
-    await openFold(ctx);
-    await expect(await canvas.findByRole('button', { name: /Bestlink/ })).toBeVisible();
-    await expect(canvas.getByTestId('trip-hintuan-fare').textContent).toBe('₱20–22');
-    await expect(canvas.getByTestId('trip-fare').textContent).toBe('₱20–22');
-  },
-};
+export const DestinationPicked: Story = { args: { livery: 'bus', endPicked: 'to' } };
 
 /**
  * Set as start: Amparo picked, then made the start, S before it and × Remove as start under it, the
@@ -504,7 +559,6 @@ export const StartAndEnd: Story = {
     pickedFare: { regular: '₱14', discounted: '₱11–12' },
   },
   play: async (ctx) => {
-    await openFold(ctx);
     const { canvasElement } = ctx;
     const canvas = within(canvasElement);
     const wholeKm = canvas.getByTestId('trip-km').textContent;
@@ -527,9 +581,9 @@ export const StartAndEnd: Story = {
 };
 
 /**
- * A ride from Amparo to Bistek, the rows outside it folded, and Bistek tapped again: the end let
- * go, Amparo a start alone. The rows after a start alone fold back as they were, Bistek among them,
- * and the keyboard's focus goes to the fold that now holds it.
+ * A ride from Amparo to Bistek, and Bistek tapped again: the end let go, Amparo a start alone, so
+ * every row stands alone, off the rail, until an end is picked. The keyboard's focus stays on
+ * Bistek's row.
  */
 export const LetTheEndGo: Story = {
   args: {
@@ -540,13 +594,21 @@ export const LetTheEndGo: Story = {
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const bistek = canvasElement.querySelector('[data-testid="trip-hintuan"][data-hintuan="h7"]');
+    const bistek = hintuanRow(canvasElement, 'h7');
+    await expect(railOf(canvasElement, 'h7')).toBe('above');
     await userEvent.click(canvas.getByRole('button', { name: /Bistek/, pressed: true }));
     await expect(bistek?.getAttribute('data-state')).toBe('rest');
-    await expect(bistek?.classList.contains('invisible')).toBe(true);
-    const after = canvasElement.querySelector('[data-testid="trip-fold"][data-part="after"]');
-    await expect(after?.getAttribute('aria-expanded')).toBe('false');
-    await expect(document.activeElement).toBe(after);
+    await expect(bistek?.querySelector('[data-part="end"]')).toBeNull();
+    await expect(
+      hintuanRow(canvasElement, 'h3')?.querySelector('[data-part="start"]'),
+    ).toBeTruthy();
+    const rails = [...canvasElement.querySelectorAll('[data-rail]')].map((el) =>
+      el.getAttribute('data-rail'),
+    );
+    await expect(rails.every((rail) => rail === 'disconnected')).toBe(true);
+    await expect(document.activeElement).toBe(
+      bistek?.querySelector('[data-testid="trip-hintuan-pick"]'),
+    );
   },
 };
 
@@ -575,10 +637,8 @@ export const EndRowKeepsStart: Story = {
 /**
  * A row above the start tapped, Figma's Variant5 (4151:13619): Amparo is the end, above Bistek, the
  * start, and the ride runs back between them (not SWITCHed, which would confuse a commuter). The
- * rail breaks just above Amparo and just below Bistek, running on along the rows outside the ride.
- * The keyboard's focus stays on Amparo; then the hintuans above the ride are opened, the rail
- * running along them and stopping at Pangarap, View less just above Amparo with none beside it
- * (Figma 4194:12702).
+ * ride's rows are on the rail, Amparo's below its dot and Bistek's above it; every row outside the
+ * ride stands alone. The keyboard's focus stays on Amparo.
  */
 export const EndAboveStart: Story = {
   args: {
@@ -588,32 +648,25 @@ export const EndAboveStart: Story = {
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const row = (id: string) =>
-      canvasElement.querySelector(`[data-testid="trip-hintuan"][data-hintuan="${id}"]`);
     await userEvent.click(await canvas.findByRole('button', { name: /Amparo/, pressed: false }));
-    await expect(row('h3')?.querySelector('[data-part="end"]')).toBeTruthy();
-    await expect(row('h7')?.querySelector('[data-part="start"]')).toBeTruthy();
+    await expect(hintuanRow(canvasElement, 'h3')?.querySelector('[data-part="end"]')).toBeTruthy();
+    await expect(
+      hintuanRow(canvasElement, 'h7')?.querySelector('[data-part="start"]'),
+    ).toBeTruthy();
     await expect(canvas.getByTestId('trip-km').textContent).toBe(kmLabel(4_200));
-    const railOf = (id: string) => row(id)?.querySelector('[data-rail]')?.getAttribute('data-rail');
-    await expect(railOf('h3')).toBe('below');
-    await expect(railOf('h7')).toBe('above');
+    await expect(
+      ['h2', 'h3', 'h4', 'h6', 'h7', 'h8'].map((id) => railOf(canvasElement, id)),
+    ).toEqual(['disconnected', 'below', 'through', 'through', 'above', 'disconnected']);
+    await expect(
+      canvas.getByTestId('trip-origin').querySelector('[data-rail]')?.getAttribute('data-rail'),
+    ).toBe('disconnected');
     await expect(document.activeElement).toBe(
-      row('h3')?.querySelector('[data-testid="trip-hintuan-pick"]'),
-    );
-    // The hintuans above the ride opened: the rail along them, ending at
-    // Pangarap (MiddleBottom); View less, just above Amparo, has none.
-    const before = await canvas.findByRole('button', { name: /3 more hintuans/ });
-    await expect(before.dataset.part).toBe('before');
-    await userEvent.click(before);
-    await expect(railOf('h1')).toBe('through');
-    await expect(railOf('h2')).toBe('above');
-    await expect(before.querySelector('[data-rail]')?.getAttribute('data-rail')).toBe(
-      'disconnected',
+      hintuanRow(canvasElement, 'h3')?.querySelector('[data-testid="trip-hintuan-pick"]'),
     );
   },
 };
 
-/** The lone hintuan picked: no fold to open. */
+/** The lone hintuan picked. */
 export const OneHintuanPicked: Story = {
   args: {
     ...OneHintuan.args,
@@ -631,20 +684,20 @@ export const OneHintuanPicked: Story = {
  */
 export const PickedUnpriced: Story = {
   args: { fare: undefined, picked: 'h3', pickedMetres: undefined, pickedFare: undefined },
-  play: openFold,
+  play: async ({ canvasElement }) => {
+    await expect(within(canvasElement).queryByTestId('trip-hintuan-fare')).toBeNull();
+  },
 };
 
 /** In the corner, picked. */
 export const FloatingPicked: Story = {
   args: { picked: 'h3' },
   parameters: { frame: 'wide' },
-  play: openFold,
 };
 
 /**
  * A name too long for one line, picked: it wraps beside the pill, which
- * keeps its line. Sample pesos. Bistek, the one row after it, is shown as it
- * is, with nothing to fold.
+ * keeps its line. Sample pesos. Bistek, after it, stands alone.
  */
 export const LongNamesPicked: Story = {
   args: {
@@ -656,29 +709,36 @@ export const LongNamesPicked: Story = {
 };
 
 /**
- * Figma's BottomSheetConfiguration (3815:5637), on a phone: the stories above open at Middle; a tap
- * on the HandleNotch goes round.
+ * Figma's BottomSheetConfiguration (3815:5637), on a phone: the stories above sit raised (0.55, from
+ * the meta), these below open at Low; a tap on the HandleNotch steps a third of the map, up to full height and back. Taps it until the
+ * sheet is at `until`, or once with no `until`.
  */
-const tapHandle = async (canvasElement: HTMLElement, times: number) => {
+const tapHandle = async (canvasElement: HTMLElement, until?: 'full') => {
   const handle = within(canvasElement).getByTestId('dock-handle');
-  for (let i = 0; i < times; i++) await userEvent.click(handle);
+  const sheet = within(canvasElement).getByTestId('card');
+  for (let i = 0; i < 4; i++) {
+    await userEvent.click(handle);
+    if (!until || sheet.getAttribute('data-snap') === until) break;
+  }
   handle.blur();
 };
 
-/** Max: the whole map, the header at the top, the rest scrolling under it (3815:4306). */
-export const SheetMax: Story = {
-  args: { hintuans: aLongWay },
+/** Full height: the whole map, the header at the top, the rest scrolling under it (3815:4306). */
+export const SheetFull: Story = {
+  args: { height: undefined, hintuans: aLongWay },
   play: async (ctx) => {
-    await openFold(ctx);
-    await tapHandle(ctx.canvasElement, 1);
-    await expect(within(ctx.canvasElement).getByTestId('card')).toHaveAttribute('data-snap', 'max');
+    await tapHandle(ctx.canvasElement, 'full');
+    await expect(within(ctx.canvasElement).getByTestId('card')).toHaveAttribute(
+      'data-snap',
+      'full',
+    );
   },
 };
 
-/** Low: the header and the origin along the bottom, the map above it (3814:3976). */
+/** Low, where it opens: the header and the origin along the bottom, the map above it (3814:3976). */
 export const SheetLow: Story = {
+  args: { height: undefined },
   play: async (ctx) => {
-    await tapHandle(ctx.canvasElement, 2);
     await expect(within(ctx.canvasElement).getByTestId('card')).toHaveAttribute('data-snap', 'low');
   },
 };
@@ -690,39 +750,47 @@ const longOrigin = 'Novaliches (Bayan) via Zabarte and Quirino Highway';
 
 /** Low with a long origin: one line of it, 28 tall, cut short (3814:3976). */
 export const SheetLowLongName: Story = {
-  args: { ...LongNames.args, routeOrigin: longOrigin },
+  args: { height: undefined, ...LongNames.args, routeOrigin: longOrigin },
   play: async (ctx) => {
-    await tapHandle(ctx.canvasElement, 2);
-    const origin = within(ctx.canvasElement).getByText(longOrigin);
+    const ends = within(within(ctx.canvasElement).getByTestId('trip-ends'));
+    const origin = ends.getByText(longOrigin);
     await waitFor(() => expect(origin.getBoundingClientRect().height).toBe(28));
   },
 };
 
-/** Middle with a long origin: all of it, on as many lines as it takes. */
-export const SheetMiddleLongName: Story = {
-  args: { ...LongNames.args, routeOrigin: longOrigin },
+/** Raised a third with a long origin: all of it, on as many lines as it takes. */
+export const SheetRaisedLongName: Story = {
+  args: { height: undefined, ...LongNames.args, routeOrigin: longOrigin },
   play: async (ctx) => {
-    const origin = within(ctx.canvasElement).getByText(longOrigin);
-    await expect(origin.getBoundingClientRect().height).toBeGreaterThan(28);
+    await tapHandle(ctx.canvasElement);
+    const ends = within(within(ctx.canvasElement).getByTestId('trip-ends'));
+    await expect(ends.getByText(longOrigin).getBoundingClientRect().height).toBeGreaterThan(28);
   },
 };
 
 /**
- * "Other routes" under the tiles (Figma 3778:3183): the other routes out of where the trip starts,
- * each by where it goes; a tap opens that route's trip in this one's place. With none, as in every
- * story above, the section is not there.
+ * "View 2 more destinations" under the trip's ends: the other routes out of where the trip starts, each
+ * by where it goes; a tap opens that route's trip in this one's place. With none, as in every
+ * story above, the tab is not there.
  */
 export const OtherRoutes: Story = {
   args: {
     otherRoutes: [
-      { id: 'tala-sm', to: 'SM Fairview' },
-      { id: 'tala-bs', to: 'Bagong Silang Kanan 5 Phase 3 Package 2 Terminal' },
+      { id: 'tala-sm', to: 'SM Fairview', via: 'Maligaya' },
+      {
+        id: 'tala-bs',
+        to: 'Bagong Silang Kanan 5 Phase 3 Package 2 Terminal',
+        via: null,
+      },
     ],
     onOtherRoute: fn(),
   },
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
-    await userEvent.click(await canvas.findByRole('button', { name: 'SM Fairview' }));
+    await userEvent.click(canvas.getByRole('button', { name: 'View 2 more destinations' }));
+    // SM Fairview is a hintuan too: the one in the list.
+    const others = within(canvas.getByTestId('trip-other-routes'));
+    await userEvent.click(others.getByRole('button', { name: /^SM Fairview/ }));
     await expect(args.onOtherRoute).toHaveBeenCalledWith('tala-sm');
   },
 };
@@ -737,8 +805,8 @@ const board = (top: string, under: string) =>
   );
 
 /**
- * Figma's Signboard (3919:11355): the direction's boards between the card and the tiles, in their
- * own white strip (Figma 4051:5528), 40 tall, 8 apart, 16 under the card and 16 over the tiles.
+ * The direction's boards on their own card, "Signboard" over them (4822:43834), 32 tall, 8 apart,
+ * right above the tiles, whose first row pads itself 20 (BottomContent, 4821:40538).
  */
 export const Signboards: Story = {
   args: { signboards: [board('BAYAN', 'SIMBAHAN'), board('SM', 'FAIRVIEW')] },
@@ -746,36 +814,25 @@ export const Signboards: Story = {
     const canvas = within(canvasElement);
     const boards = canvas.getAllByTestId('trip-signboard');
     await expect(boards).toHaveLength(2);
-    await waitFor(() => expect(boards[0].getBoundingClientRect().height).toBe(40));
-    // Under the card, over the tiles, and no heading over them.
-    const strip = canvas.getByTestId('trip-signboards');
-    const card = canvas.getByTestId('trip');
+    await waitFor(() => expect(boards[0].getBoundingClientRect().height).toBe(32));
+    // On their own card, "Signboard" over them, right above the tiles.
+    const section = canvas.getByRole('region', { name: 'Signboard' });
     const tiles = canvas.getByTestId('trip-tiles');
-    await expect(
-      card.compareDocumentPosition(strip) & Node.DOCUMENT_POSITION_FOLLOWING,
-    ).toBeTruthy();
-    await expect(
-      strip.compareDocumentPosition(tiles) & Node.DOCUMENT_POSITION_FOLLOWING,
-    ).toBeTruthy();
-    await expect(canvas.queryByRole('heading', { name: 'Signboard' })).toBeNull();
-    const top = (el: Element) => el.getBoundingClientRect().top;
-    await expect(top(boards[0]) - card.getBoundingClientRect().bottom).toBe(16);
-    await expect(top(tiles) - boards[0].getBoundingClientRect().bottom).toBe(0);
-    await expect(getComputedStyle(tiles).paddingTop).toBe('16px');
+    const box = (el: Element) => el.getBoundingClientRect();
+    await expect(box(tiles).top - box(section).bottom).toBe(0);
   },
 };
 
-/** None uploaded: no strip, the tiles 16 under the card. */
+/** None uploaded: no card, the stops 20 under the tiles, the panel's own padding. */
 export const NoSignboards: Story = {
   args: { signboards: [] },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(canvas.queryByTestId('trip-signboards')).toBeNull();
     const tiles = canvas.getByTestId('trip-tiles');
-    await expect(tiles.getBoundingClientRect().top).toBe(
-      canvas.getByTestId('trip').getBoundingClientRect().bottom,
-    );
-    await expect(getComputedStyle(tiles).paddingTop).toBe('16px');
+    await expect(
+      canvas.getByTestId('trip').getBoundingClientRect().top - tiles.getBoundingClientRect().bottom,
+    ).toBe(20);
   },
 };
 
@@ -809,21 +866,52 @@ export const ManySignboards: Story = {
   },
 };
 
-/** The signboards between the card and the tiles, and Other routes under the tiles, as the frame stacks them (3778:3183). */
+/** The signboards above the tiles, and the other routes above them, at the top. */
 export const SignboardsAndOtherRoutes: Story = {
   args: {
     signboards: [board('BAYAN', 'SIMBAHAN'), board('SM', 'FAIRVIEW')],
     otherRoutes: [
-      { id: 'tala-sm', to: 'SM Fairview' },
-      { id: 'tala-nova', to: 'Novaliches' },
+      { id: 'tala-sm', to: 'SM Fairview', via: null },
+      { id: 'tala-nova', to: 'Novaliches', via: null },
     ],
     onOtherRoute: fn(),
   },
   play: async ({ canvasElement }) => {
+    // The other routes come first, at the top, under the trip's ends.
     const boards = within(canvasElement).getByTestId('trip-signboards');
     const others = within(canvasElement).getByTestId('trip-other-routes');
     await expect(
-      boards.compareDocumentPosition(others) & Node.DOCUMENT_POSITION_FOLLOWING,
+      boards.compareDocumentPosition(others) & Node.DOCUMENT_POSITION_PRECEDING,
     ).toBeTruthy();
+  },
+};
+
+/**
+ * A trip opened by "Go here" from a landmark (ticket 07): its end picked at the hintuan nearest
+ * the landmark, and under the stops, first, how far the walk is from there, in a straight line.
+ * With a line's own note too, the walk comes before it.
+ */
+export const WalkToALandmark: Story = {
+  args: {
+    ...Ferry.args,
+    picked: 'h3',
+    walk: 'About 300 m to SM North EDSA, in a straight line',
+  },
+  play: async ({ canvasElement, args }) => {
+    const card = within(canvasElement);
+    const walk = card.getByTestId('trip-walk');
+    await expect(walk.textContent).toBe(args.walk);
+    const note = card.getByTestId('trip-note');
+    await expect(
+      walk.compareDocumentPosition(note) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  },
+};
+
+/** No goal: no walk line. */
+export const NoWalk: Story = {
+  args: { picked: 'h3' },
+  play: async ({ canvasElement }) => {
+    await expect(within(canvasElement).queryByTestId('trip-walk')).toBeNull();
   },
 };

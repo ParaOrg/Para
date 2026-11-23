@@ -67,3 +67,35 @@ test('no picture for a trail of fewer than two points', () => {
   assert.equal(trailFit(trail(), 393, 852), null);
   assert.equal(trailFit(trail([[121, 14.6]]), 393, 852), null);
 });
+
+test("a ride's screen frames its whole trail: the corners of every run", async () => {
+  const { trailBounds } = await import('../../src/features/contribute/map/trail-picture-frame.ts');
+  const trail = {
+    lines: [
+      {
+        mode: 'walk',
+        path: [
+          [121.05, 14.62],
+          [121.06, 14.63],
+        ],
+      },
+      {
+        mode: 'ride',
+        path: [
+          [121.06, 14.63],
+          [121.15, 14.6],
+        ],
+      },
+    ],
+    markers: [],
+    marks: [],
+  };
+  assert.deepEqual(trailBounds(trail), [
+    [121.05, 14.6],
+    [121.15, 14.63],
+  ]);
+  assert.equal(
+    trailBounds({ lines: [{ mode: 'ride', path: [[121, 14]] }], markers: [], marks: [] }),
+    null,
+  );
+});

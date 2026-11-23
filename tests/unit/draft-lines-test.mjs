@@ -35,3 +35,19 @@ test('a way not drawn, a one-point line, a place draft and a bad payload add no 
   ]);
   assert.deepEqual(data.features, []);
 });
+
+test("each way carries its direction's id, so a tap opens the way tapped", () => {
+  const data = draftLinesData([
+    draft('a', {
+      directions: [
+        { id: 'out', shape: line([121, 14], [121.1, 14.1]) },
+        { id: 'back', shape: line([121.1, 14.1], [121, 14]) },
+        { shape: line([121, 14], [121.2, 14.2]) },
+      ],
+    }),
+  ]);
+  assert.deepEqual(
+    data.features.map((f) => f.properties),
+    [{ draftId: 'a', directionId: 'out' }, { draftId: 'a', directionId: 'back' }, { draftId: 'a' }],
+  );
+});

@@ -106,18 +106,28 @@ export function keptFixes(fixes: readonly Fix[]): Fix[] {
   return kept;
 }
 
+/** Within a hinto, a move shorter than this from the last point counted is the phone's wander. */
+export const WANDER_M = 20;
+
 /**
  * The length of the path through these fixes, in metres. Across a gap the
- * straight line counts. Within a hinto it does not: standing still, the phone's
- * position wanders a few metres, and every wander is a leg that would add up.
+ * straight line counts. Within a hinto a leg counts only once the position is
+ * WANDER_M from the last point counted: standing still, the phone's position
+ * wanders a few metres, and every wander is a leg that would add up. A walk is
+ * slow enough to be a hinto too (25 m in 8 s or more), and it does move on, so
+ * it still counts (Gab, 2026-11-10: a 37-minute walk read 0 m).
  */
 export function pathLengthM(fixes: readonly Fix[], hintos: readonly Hinto[] = []): number {
   const inside = (fix: Fix) => hintos.find((h) => fix.time >= h.from && fix.time <= h.to);
   let total = 0;
-  for (let i = 1; i < fixes.length; i++) {
-    const was = inside(fixes[i - 1]);
-    if (was && was === inside(fixes[i])) continue;
-    total += distanceM(fixes[i - 1].at, fixes[i].at);
+  let [counted] = fixes;
+  for (const fix of fixes.slice(1)) {
+    const now = inside(fix);
+    const leg = distanceM(counted.at, fix.at);
+    if (!now || now !== inside(counted) || leg >= WANDER_M) {
+      total += leg;
+      counted = fix;
+    }
   }
   return total;
 }
@@ -457,65 +467,4 @@ export function rideHintos(hintos: readonly Hinto[], switches: readonly ModeSwit
       .filter((span) => (span.to - span.from) / 1000 >= HINTO_MIN_SECONDS)
       .map((span) => ({ ...span, at: hinto.at })),
   );
-}
-
-/**
- * A direction of travel needs the recent fixes' older and newer halves to sit
- * this far apart (their averages, not single fixes); less is the phone's
- * wander, not a heading. A jeep at 15 km/h covers about 21 m between the
- * halves, so it still gets a heading, and a crawl keeps the last one.
- */
-export const BEARING_MIN_M = 20;
-/**
- * The fixes that decide a heading are the ones this recent. Standing, the
- * phone drifts (HINTO_RADIUS_M allows 25 m); with no time limit the drift adds
- * up to a heading and the map turns while the contributor waits. It also stops
- * a heading being measured from before a stop.
- */
-export const BEARING_WINDOW_S = 10;
-/**
- * Each half needs this many fixes. One phone fix is off by 8 m or more; the
- * average of several is off by about that over their square root, so a false
- * 20 m between the halves is rare where between two single fixes it is not.
- */
-const BEARING_MIN_FIXES_PER_HALF = 2;
-
-/** The initial great-circle bearing from one point to another, in degrees clockwise from north. */
-function bearingBetween([lng1, lat1]: LngLat, [lng2, lat2]: LngLat): number {
-  const dLng = toRad(lng2 - lng1);
-  const y = Math.sin(dLng) * Math.cos(toRad(lat2));
-  const x =
-    Math.cos(toRad(lat1)) * Math.sin(toRad(lat2)) -
-    Math.sin(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.cos(dLng);
-  return ((Math.atan2(y, x) * 180) / Math.PI + 360) % 360;
-}
-
-/** The average position of some fixes; short distances only, where lng and lat average plainly. */
-function meanPosition(fixes: readonly Fix[]): LngLat {
-  const sum = fixes.reduce<LngLat>((acc, fix) => [acc[0] + fix.at[0], acc[1] + fix.at[1]], [0, 0]);
-  return [sum[0] / fixes.length, sum[1] / fixes.length];
-}
-
-/**
- * The direction of travel for a course-up map, in degrees clockwise from
- * north. The kept fixes within BEARING_WINDOW_S of the latest one are split by
- * time into an older and a newer half; each needs at least two fixes, and the
- * heading runs from the older half's average position to the newer half's,
- * which must sit BEARING_MIN_M apart. Anything less (standing, crawling, too
- * few fixes) gives `previous`, or null when there is none, so the map keeps the
- * heading it had. Averaging first is what stops GPS noise turning the map.
- */
-export function courseBearing(fixes: readonly Fix[], previous: number | null): number | null {
-  const latest = fixes[fixes.length - 1];
-  if (!latest) return previous;
-  const recent = fixes.filter((fix) => latest.time - fix.time <= BEARING_WINDOW_S * 1000);
-  const middle = (recent[0].time + latest.time) / 2;
-  const older = recent.filter((fix) => fix.time < middle);
-  const newer = recent.filter((fix) => fix.time >= middle);
-  if (older.length < BEARING_MIN_FIXES_PER_HALF || newer.length < BEARING_MIN_FIXES_PER_HALF) {
-    return previous;
-  }
-  const from = meanPosition(older);
-  const to = meanPosition(newer);
-  return distanceM(from, to) >= BEARING_MIN_M ? bearingBetween(from, to) : previous;
 }

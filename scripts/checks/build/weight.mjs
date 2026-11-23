@@ -8,7 +8,14 @@
 //    leaves React's name alone, and MapLibre's two unless it starts or stops
 //    importing one of MapLibre's exports: Rolldown keeps of MapLibre only what
 //    our code imports (vite.config.ts says more), and no check here can tell.
-import { FONTS_MAX_KB, GROUPS, SHARED_MAX_GZ_KB, fontBytes, gzipBytes } from '../build-weight.mjs';
+import {
+  FONTS_MAX_KB,
+  GROUPS,
+  SHARED_MAX_GZ_KB,
+  TANSTACK_QUERY_MAX_GZ_KB,
+  fontBytes,
+  gzipBytes,
+} from '../build-weight.mjs';
 
 // The contribute page's own weight: what it loads beyond the public page's
 // chunks: its script only (its stylesheet is not counted), so it stays a page
@@ -23,7 +30,7 @@ const CONTRIBUTE_UPLOAD_MAX_GZ_KB = 60;
 
 export function proveWeight(build, check) {
   const { dist, manifest, modules, chunksOf, chunksNamed, sourceModules, packageModules } = build;
-  const { commuterFiles, contributeOnlyFiles } = build;
+  const { commuterFiles, contributeOnlyFiles, html } = build;
 
   // The budgets and how they are measured are in build-weight.mjs.
   const fontsBytes = fontBytes(dist);
@@ -80,8 +87,40 @@ export function proveWeight(build, check) {
     `${(groupsGz / 1024).toFixed(1)} kB`,
   );
 
+  // TanStack Query: the studio's and the contributor page's, a vendor chunk like React and Zod,
+  // but one the public page never loads (vite.config.ts keeps its QueryClient out of `shared`).
+  const tanstackChunks = chunksNamed('tanstack-query');
+  const tanstackFiles = tanstackChunks.map((c) => c.file);
+  const tanstackGz = gzipBytes(dist, tanstackFiles);
+  const tanstackImports = tanstackChunks
+    .flatMap((c) => c.imports ?? [])
+    .map((k) => manifest[k].file)
+    .filter(
+      (f) =>
+        !vendorFiles.includes(f) && !/^assets\/(rolldown-runtime|vite-preload)-[\w-]+\.js$/.test(f),
+    );
+  check(
+    `the tanstack-query chunk is named, holds @tanstack alone and none of our code, imports none of it, and is under ${TANSTACK_QUERY_MAX_GZ_KB} kB gzipped`,
+    tanstackFiles.length === 1 &&
+      packageModules(tanstackFiles).length > 0 &&
+      packageModules(tanstackFiles).every((p) => p.startsWith('@tanstack/')) &&
+      sourceModules(tanstackFiles).length === 0 &&
+      tanstackImports.length === 0 &&
+      tanstackGz < TANSTACK_QUERY_MAX_GZ_KB * 1024,
+    `${tanstackFiles.join(', ') || 'no chunk named tanstack-query'}: ${(tanstackGz / 1024).toFixed(1)} kB${tanstackImports.length ? `; imports ${tanstackImports.join(', ')}` : ''}`,
+  );
+  check(
+    'the public page never loads TanStack Query, nor preloads it',
+    tanstackFiles.length === 1 &&
+      !commuterFiles.some((f) => tanstackFiles.includes(f)) &&
+      !html('index.html').includes(tanstackFiles[0]),
+    commuterFiles.filter((f) => tanstackFiles.includes(f)).join(', '),
+  );
+
+  // React and Zod are the public page's, so not the contributor page's own; TanStack Query, a
+  // package's chunk like them, is left out by name.
   const contributeOpening = chunksOf('contribute/index.html', { isStaticOnly: true }).filter(
-    (f) => !commuterFiles.includes(f),
+    (f) => !commuterFiles.includes(f) && !tanstackFiles.includes(f),
   );
   const contributeOnDemand = contributeOnlyFiles.filter((f) => !contributeOpening.includes(f));
   const contributeOwnGz = gzipBytes(dist, contributeOpening);

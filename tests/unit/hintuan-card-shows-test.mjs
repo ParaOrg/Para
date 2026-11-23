@@ -159,3 +159,20 @@ test('a box missing from the hotspots is still its own row', () => {
     ['x'],
   );
 });
+
+test('the counter counts RouteCards: a place that jeeps and a bus leave from is two', () => {
+  const bus = {
+    ...direction('bus', 'Tala', 'Cubao', false),
+    route: { name: 'Tala – Cubao', mode: 'bus', isLoop: false },
+  };
+  const s = hintuanCardShows({
+    hotspot: LAGRO_1,
+    hotspots: HOTSPOTS,
+    linkedDirectionIds: (id) => ({ l1: ['there', 'nova', 'bus'] })[id] ?? [],
+    directions: [THERE, BACK, NOVA, bus],
+    deselected: false,
+    flipped: false,
+  });
+  assert.deepEqual(s.shown, ['there', 'nova', 'bus']);
+  assert.equal(s.heads, 2, "one card for Tala's jeeps, one for its bus");
+});

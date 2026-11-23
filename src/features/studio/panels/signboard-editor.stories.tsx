@@ -19,19 +19,28 @@ const pictures: Record<string, string> = {
   'b.svg': svg('SM', 'FAIRVIEW'),
 };
 
-const direction = (signboards: string[], reversed = false) =>
-  ({
-    id: 'v1',
-    routeId: 'r1',
-    name: null,
-    originTerminal: null,
-    destinationTerminal: null,
-    shape: null,
-    reversed,
-    confidence: 'drawn',
-    route: { id: 'r1' },
-    signboards,
-  }) as unknown as Direction;
+const direction = (signboards: string[], reversed = false): Direction => ({
+  id: 'v1',
+  routeId: 'r1',
+  name: null,
+  originTerminal: null,
+  destinationTerminal: null,
+  shape: null,
+  reversed,
+  confidence: 'drawn',
+  route: {
+    id: 'r1',
+    signboard: null,
+    longName: null,
+    mode: 'jeepney',
+    fareNote: null,
+    headHotspotId: 'h1',
+    tailHotspotId: 'h2',
+    via: null,
+    name: 'Sample route',
+  },
+  signboards,
+});
 
 /** The bucket and the row, in memory: each call answers as the live one does, after a moment. */
 const standIn = (): SignboardCalls => ({

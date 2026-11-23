@@ -1,10 +1,11 @@
 import { useState } from 'react';
 
-import type { HotspotRow } from '@/features/routes/model/hotspots';
-import type { DirectionRow } from '@/features/routes/model/routes';
-
 import type { SaveToast } from './save-toasts';
 import { DRAFTED } from '../data/draft-save';
+import { reviewMessage } from '../data/review-commands';
+
+/** What the toast says once a route is unpublished. */
+const UNPUBLISHED = 'Unpublished. It leaves the public map at the next publish.';
 
 interface UseSaveFlowOptions {
   /** Whether a line or an area is being drawn: a save panel belongs to one. */
@@ -13,9 +14,9 @@ interface UseSaveFlowOptions {
   recoveryError: string | null;
   /** Ends the drawing that was saved. */
   cancelDrawing: () => void;
-  /** Reads the saved routes again. */
+  /** Reads the saved routes again, once a publish has changed them. */
   reloadRoutes: () => unknown;
-  /** Reads the saved hotspots again. */
+  /** Reads the saved hotspots again, once a publish has changed them. */
   reloadHotspots: () => unknown;
 }
 
@@ -40,36 +41,40 @@ export function useSaveFlow({
   // link is read once, on arrival, so its error is known before this mounts
   // and never comes later.
   const [toast, setToast] = useState<SaveToast | null>(() =>
-    recoveryError ? { kind: 'notice', text: `Reset link problem: ${recoveryError}` } : null,
+    recoveryError ? { text: `Reset link problem: ${recoveryError}` } : null,
   );
-  const setNotice = (text: string | null) =>
-    setToast(text === null ? null : { kind: 'notice', text });
+  const setNotice = (text: string | null) => setToast(text === null ? null : { text });
 
-  const onSaved = (v: DirectionRow) => {
-    setIsSaving(false);
-    cancelDrawing();
-    void reloadRoutes();
-    // A moved line may have entered or left a hintuan; its links were re-synced.
-    void reloadHotspots();
-    setToast({ kind: 'route', v });
-  };
-
-  const onSavedHotspot = (s: HotspotRow) => {
-    setIsSaving(false);
-    cancelDrawing();
-    void reloadHotspots();
-    // The directions too: their names are generated from the hotspots at
-    // their ends when they load, so a renamed end would leave every card, the
-    // list and the pill on the old name until the next route save.
-    void reloadRoutes();
-    setToast({ kind: 'hotspot', s });
-  };
-
-  // With STUDIO_DRAFTS on: the save is a draft, so nothing on the map is read again.
+  // A save is a draft, so nothing on the map is read again.
   const onDrafted = () => {
     setIsSaving(false);
     cancelDrawing();
     setNotice(DRAFTED);
+  };
+
+  // A draft published: the map's own rows changed, so both are read again.
+  const onPublished = () => {
+    setIsSaving(false);
+    cancelDrawing();
+    void reloadRoutes();
+    void reloadHotspots();
+    setNotice(reviewMessage({ code: 'approved' }));
+  };
+
+  // A route unpublished: it leaves the map, so both are read again.
+  const onUnpublished = () => {
+    setIsSaving(false);
+    cancelDrawing();
+    void reloadRoutes();
+    void reloadHotspots();
+    setNotice(UNPUBLISHED);
+  };
+
+  // A draft discarded: what is published is unchanged, so nothing on the map is read again.
+  const onDiscarded = () => {
+    setIsSaving(false);
+    cancelDrawing();
+    setNotice(reviewMessage({ code: 'discarded' }));
   };
 
   return {
@@ -78,10 +83,9 @@ export function useSaveFlow({
     toast,
     setToast,
     setNotice,
-    /** The direction a save just wrote, while its toast is up. */
-    justSaved: toast?.kind === 'route' ? toast.v : null,
-    onSaved,
-    onSavedHotspot,
     onDrafted,
+    onPublished,
+    onUnpublished,
+    onDiscarded,
   };
 }

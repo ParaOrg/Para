@@ -1,12 +1,12 @@
 // The studio's Contributors map, apart from the browser: an upload's trail
-// decoded as the phone packed it (src/features/contribute/api/pack-recording.ts),
+// decoded as the phone packed it (src/features/contribute/uploads/packing/pack-recording.ts),
 // and the map drawing exactly the uploads the list holds.
 //
 //   node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs tests/unit/contributions-read-test.mjs
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { packRecording } from '../../src/features/contribute/api/pack-recording.ts';
+import { packRecording } from '../../src/features/contribute/uploads/packing/pack-recording.ts';
 import { decodeTrail } from '../../src/features/studio/data/contributions-read.ts';
 import { uploadsData } from '../../src/features/studio/contributors/contribution-layers.ts';
 

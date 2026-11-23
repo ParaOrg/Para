@@ -70,20 +70,28 @@ type Frame = 'list' | 'hotspot';
 const FRAME = { list: 'w-96', hotspot: 'w-80' } satisfies Record<Frame, string>;
 const frameOf = (p: { frame?: Frame }) => FRAME[p.frame ?? 'list'];
 
-/** Keeps the Selected card as the apps do, so a story can be tapped through. */
+/** Keeps the Selected card as the studio does, so a story with `selection` can be tapped through. */
 function Picking(props: ComponentProps<typeof RouteCardStack>) {
-  const [selected, setSelected] = useState(props.selected);
+  const [selected, setSelected] = useState(props.selection?.selected ?? null);
+  const onSelect = props.selection?.onSelect;
   return (
     <RouteCardStack
       {...props}
-      selected={selected}
-      onSelect={(p) => {
-        props.onSelect(p);
-        setSelected(p?.from ?? null);
-      }}
+      selection={
+        onSelect && {
+          selected,
+          onSelect: (p) => {
+            onSelect(p);
+            setSelected(p?.card ?? null);
+          },
+        }
+      }
     />
   );
 }
+
+/** The studio's hotspot card's: a card Selected, or none, as its editors keep it. */
+const studio = (selected: string | null) => ({ selection: { selected, onSelect: fn() } });
 
 const meta = {
   title: 'Features/Routes/RouteCardStack',
@@ -99,8 +107,6 @@ const meta = {
   args: {
     routes: tala,
     back: false,
-    selected: null,
-    onSelect: fn(),
     onRoute: fn(),
     testId: 'card',
   },
@@ -109,7 +115,7 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** The way there: one place, Tala, with its two ways out — one card. The colours are drawn at random. */
+/** The way there: one place, Tala, with its two ways out — one card. Each card wears its mode's colour. */
 export const OnePlace: Story = {};
 
 /** The way back: a card per place, Novaliches and SM Fairview, never alike side by side. */
@@ -118,18 +124,20 @@ export const TwoPlaces: Story = { args: { back: true } };
 /** As narrow as a hotspot's card on a wide screen, 320: the cards fill it edge to edge. */
 export const InAHotspotCard: Story = { parameters: { frame: 'hotspot' } };
 
-/** The way back with SM Fairview's card Selected: pressed in, the other at rest. */
-export const OneSelected: Story = { args: { back: true, selected: 'SM Fairview' } };
+/** In the studio, the way back with SM Fairview's card Selected: pressed in, the other at rest. */
+export const InTheStudioOneSelected: Story = {
+  args: { back: true, ...studio('SM Fairview|jeep') },
+};
 
 /**
- * A station: its jeeps on its RouteCard, then a RouteCardRailway per line and
+ * A station: its jeeps on its RouteCard, then a RouteCard per line and
  * bound — LRT-2 Eastbound, LRT-2 Westbound with two stations — and the
  * ferry's, each in its line's colours. Sample places, not the real map.
  */
 export const AStation: Story = {
   args: { routes: cubao },
   play: async ({ canvasElement }) => {
-    const cards = within(canvasElement).getAllByTestId('chooser-origin');
+    const cards = within(canvasElement).getAllByTestId('card-origin');
     await expect(cards.map((c) => c.dataset.livery)).toEqual([
       expect.any(String),
       'light-rail-way-two',
@@ -139,25 +147,144 @@ export const AStation: Story = {
   },
 };
 
-/** The station with LRT-2 Westbound Selected: that card alone pressed in. */
-export const AStationLineSelected: Story = {
-  args: { routes: cubao, selected: 'Araneta Center-Cubao|LRT-2|Westbound' },
+/** In the studio, the station with LRT-2 Westbound Selected: that card alone pressed in. */
+export const InTheStudioAStationLineSelected: Story = {
+  args: { routes: cubao, ...studio('Araneta Center-Cubao|LRT-2|Westbound') },
 };
 
 /**
- * Tapped through: a row opens its trip straight away and picks no card, since
- * selecting it too is confusing; a tap on Tala's card selects it, handing the
- * map its two directions, and a second lets it go.
+ * Tapped through, as on the public map: a row opens its trip; a tap anywhere else on Tala's card
+ * opens its first row's, the card one button named for its place and that row. Nothing is pressed
+ * or Selected.
  */
-export const ARowOpens: Story = {
+export const ATapOpens: Story = {
   play: async ({ args, canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.click(canvas.getByText('SM Fairview'));
     await expect(args.onRoute).toHaveBeenCalledTimes(1);
-    await expect(args.onSelect).not.toHaveBeenCalled();
+    const card = canvas.getByRole('button', { name: /^Tala, to / });
+    await expect(card).not.toHaveAttribute('aria-pressed');
+    await userEvent.click(card);
+    const firstRow = canvas.getAllByTestId('card-item')[0];
+    await expect(args.onRoute).toHaveBeenLastCalledWith(
+      expect.objectContaining({ id: firstRow.dataset.direction }),
+      expect.any(String),
+    );
+  },
+};
+
+/**
+ * In the studio, tapped through: a row opens its trip straight away and picks no card; a tap on
+ * Tala's card selects it, handing the map its two directions, and a second lets it go.
+ */
+export const InTheStudioATapSelects: Story = {
+  args: studio(null),
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement);
+    const onSelect = args.selection?.onSelect;
+    await userEvent.click(canvas.getByText('SM Fairview'));
+    await expect(args.onRoute).toHaveBeenCalledTimes(1);
+    await expect(onSelect).not.toHaveBeenCalled();
     await userEvent.click(canvas.getByRole('button', { name: 'Tala', pressed: false }));
-    await expect(args.onSelect).toHaveBeenCalledWith(expect.objectContaining({ from: 'Tala' }));
+    await expect(onSelect).toHaveBeenCalledWith(expect.objectContaining({ from: 'Tala' }));
     await userEvent.click(canvas.getByRole('button', { name: 'Tala', pressed: true }));
-    await expect(args.onSelect).toHaveBeenLastCalledWith(null);
+    await expect(onSelect).toHaveBeenLastCalledWith(null);
+  },
+};
+
+/** A road route out of `from` to `to`, on this mode. */
+function road(id: string, from: string, to: string, mode: Direction['route']['mode']): Direction {
+  const v = direction(id, `${from} – ${to}`, `${from} → ${to}`, 4);
+  return { ...v, route: { ...v.route, mode } };
+}
+
+/**
+ * RouteCardStackedList (4633:19780): a card per place and mode, edge to edge, run by mode (Jeep,
+ * UV Express, E-Jeep, Bus, then the trains). Every card shows its mode, the cards after one of
+ * the same mode too.
+ */
+export const StackedList: Story = {
+  args: {
+    routes: [
+      road('t1', 'Tala', 'SM Fairview', 'jeepney'),
+      road('t2', 'Tala', 'Novaliches', 'jeepney'),
+      road('b1', 'Bigte', 'SM Fairview', 'jeepney'),
+      road('b2', 'Bigte', 'Novaliches', 'jeepney'),
+      road('s1', 'S. Palay', 'GMA', 'bus'),
+      road('s2', 'S. Palay', 'PITX', 'bus'),
+      road('u1', 'SM Fairview', 'SM North', 'uv_express'),
+      road('u2', 'SM Fairview', 'Buendia', 'uv_express'),
+      road('p1', 'Palmer', 'SM Fairview', 'e_jeepney'),
+      road('p2', 'Palmer', 'Cubao', 'e_jeepney'),
+      road('a1', 'Amparo Sanana', 'Novaliches', 'jeepney'),
+      road('r1', 'Robinson Fairview', 'Munoz', 'bus'),
+      ...cubao.slice(1, 2),
+    ],
+  },
+  play: async ({ canvasElement }) => {
+    // A road card names its mode in words on its list of rows, not on a badge.
+    const modes = within(canvasElement).getAllByRole('list', {
+      name: /^(Jeep|UV Express|E-Jeep|Bus)$/,
+    });
+    await expect(modes.map((m) => m.getAttribute('aria-label'))).toEqual([
+      'Jeep',
+      'Jeep',
+      'Jeep',
+      'UV Express',
+      'E-Jeep',
+      'Bus',
+      'Bus',
+    ]);
+  },
+};
+
+/**
+ * A P2P card names no mode (Figma has no word for it) though it wears UV Express's colours; the
+ * UV Express card after it names its own, on its list of rows.
+ */
+export const P2pBesideUvExpress: Story = {
+  args: {
+    routes: [
+      road('p2p', 'Tala', 'Makati', 'p2p'),
+      road('uv', 'Bigte', 'Buendia', 'uv_express'),
+      road('uv2', 'Bigte', 'SM North', 'uv_express'),
+    ],
+  },
+  play: async ({ canvasElement }) => {
+    const cards = within(canvasElement).getAllByTestId('card-origin');
+    await expect(cards.map((c) => c.dataset.livery)).toEqual(['uv-express', 'uv-express']);
+    await expect(within(cards[0]).queryByRole('list', { name: 'UV Express' })).toBeNull();
+    await expect(within(cards[1]).getByRole('list', { name: 'UV Express' })).toBeVisible();
+  },
+};
+
+/**
+ * One place, several road modes: each mode stands apart on a card of its own, in its own colour and
+ * under its own mode — Tala's jeeps, its UV Express, its P2P (UV Express's colours, no mode), its
+ * e-jeep and its bus — and each is selected on its own.
+ */
+export const OnePlaceManyModes: Story = {
+  args: {
+    routes: [
+      road('j1', 'Tala', 'SM Fairview', 'jeepney'),
+      road('b1', 'Tala', 'PITX', 'bus'),
+      road('u1', 'Tala', 'Buendia', 'uv_express'),
+      road('p1', 'Tala', 'Makati', 'p2p'),
+      road('j2', 'Tala', 'Novaliches', 'jeepney'),
+      road('e1', 'Tala', 'Cubao', 'e_jeepney'),
+    ],
+  },
+  play: async ({ canvasElement }) => {
+    const cards = within(canvasElement).getAllByTestId('card-origin');
+    await expect(cards.map((c) => c.dataset.livery)).toEqual([
+      'jeep',
+      'uv-express',
+      'uv-express',
+      'ejeep',
+      'bus',
+    ]);
+    await expect(cards.map((c) => within(c).getAllByTestId('card-item').length)).toEqual([
+      2, 1, 1, 1, 1,
+    ]);
   },
 };

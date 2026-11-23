@@ -1,9 +1,7 @@
 import { useCallback, useState } from 'react';
 
 import { locationProblem } from './location-problem';
-import { keepsRecordingInBackground } from './native-fixes';
 import { takeWatchedFixes } from './recording-fixes';
-import { markedRecording } from './recording-marks';
 import { MODE_LABEL, currentMode } from './recording-rules';
 import type { Phase, RecordingState } from './recording-state';
 import {
@@ -12,17 +10,25 @@ import {
   stoppedRecording,
   switchedMode,
 } from './recording-transitions';
-import { useGeolocationWatch, type WatchedFix } from './use-geolocation-watch';
+import { useGeolocationWatch } from './use-geolocation-watch';
 import { useHiddenGaps } from './use-hidden-gaps';
 import { useLiveFigures } from './use-live-figures';
+import { useMarkActions } from './use-mark-actions';
 import { useNativeFinish } from './use-native-finish';
 import { useRecorderOpening } from './use-recorder-opening';
 import { useRecorderProblems } from './use-recorder-problems';
 import { useRecordingFixWrites } from './use-recording-fix-writes';
 import { useRecordingInHand } from './use-recording-in-hand';
 import { useRecordingSave } from './use-recording-save';
+import { useRideNotice } from './use-ride-notice';
 import { useWakeLock } from './use-wake-lock';
+import type { WatchedFix } from '../native-bridge/native-contract';
+import { keepsRecordingInBackground } from '../native-bridge/native-fixes';
 import { useSavedRecordings } from '../storage/use-saved-recordings';
+
+/** The app's ride notification: the web build has none, and drops the hook and its code with it. */
+const useRideNoticeInApp: typeof useRideNotice =
+  import.meta.env.MODE === 'apk' ? useRideNotice : () => undefined;
 
 /**
  * The page's whole state: what phase it is in, the recording being made and
@@ -34,7 +40,7 @@ export function useRecording(): RecordingState {
   const [phase, setPhase] = useState<Phase>('loading');
   const [announcement, setAnnouncement] = useState('');
   const [focusTarget, setFocusTarget] = useState<'heading' | 'pause'>('heading');
-  const problems = useRecorderProblems();
+  const problems = useRecorderProblems(phase === 'recording');
   const { reportStore, clearStorageProblem, setLocationProblem } = problems;
 
   // A native log that cannot be read leaves the ride with the fixes the page already holds.
@@ -136,6 +142,8 @@ export function useRecording(): RecordingState {
       },
     );
   }
+  useRideNoticeInApp({ phase, recording: current, currentRef, keep, finish, setPhase });
+
   const stop = () => finish(Date.now(), 'paused');
   const stopAtLastFix = () => finish(fixes[fixes.length - 1]?.time ?? Date.now(), 'paused');
 
@@ -173,15 +181,12 @@ export function useRecording(): RecordingState {
     setAnnouncement(`Switched to ${MODE_LABEL[switched.to]}`);
   }
 
-  function markPlace(): boolean {
-    const recording = currentRef.current;
-    if (!recording) return false;
-    const marked = markedRecording(recording, Date.now());
-    if (!marked) return false;
-    // Said by the page's "Stop flagged" toast, not the status line: one word for one flag.
-    keep(marked.recording);
-    return true;
-  }
+  const { markPlace, noteMark, deleteMark } = useMarkActions(
+    currentRef,
+    keep,
+    isSaving,
+    setAnnouncement,
+  );
 
   return {
     phase,
@@ -201,6 +206,8 @@ export function useRecording(): RecordingState {
     resume,
     switchMode,
     markPlace,
+    noteMark,
+    deleteMark,
     openSave,
     keepRecording,
     focusTarget,

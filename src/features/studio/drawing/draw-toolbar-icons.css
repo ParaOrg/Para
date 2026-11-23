@@ -1,0 +1,34 @@
+/*
+ * The drawing toolbar's icons, Figma's drawings unedited (the toolbar frame,
+ * 4614:15351), used as masks so each is painted in the colour of the words
+ * around it (currentColor) rather than the fills the files carry: a picked
+ * tool's icon in the brand, the others in the content colour. Files, not
+ * inline SVG, as the contributor page's start-icons.css does.
+ */
+.draw-icon {
+  display: block;
+  flex-shrink: 0;
+  background-color: currentColor;
+  mask-repeat: no-repeat;
+  mask-size: 100% 100%;
+}
+
+.draw-icon-undo {
+  mask-image: url('./undo-icon.svg');
+}
+
+.draw-icon-redo {
+  mask-image: url('./redo-icon.svg');
+}
+
+.draw-icon-move {
+  mask-image: url('./move-icon.svg');
+}
+
+.draw-icon-snap {
+  mask-image: url('./snap-icon.svg');
+}
+
+.draw-icon-draw {
+  mask-image: url('./draw-icon.svg');
+}

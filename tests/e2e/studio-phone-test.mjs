@@ -6,13 +6,14 @@
 //
 // Taps go through Playwright's touchscreen; drags, long-presses and pinches
 // are real touch events sent through the DevTools protocol, so MapLibre sees
-// what a phone sends it. Points are put down on the saved route with the most
-// coordinates, on its own vertices, so the router has a road to snap to. The
+// what a phone sends it. Points are put down on the pinned subject line
+// (lib/subject-line.mjs), on its own vertices, so the router has a road to snap to. The
 // router's requests are counted as the browser sends them (or as Node serves
 // them, with PARA_NODE_FETCH=1).
 import { chromium } from 'playwright';
 import { BASE, harness, nodeFetch, waitForSource } from './lib/harness.mjs';
 import { drawing } from './lib/studio.mjs';
+import { assertNoOverview, subjectLine, watchOverviews } from './lib/subject-line.mjs';
 
 const W = 390,
   H = 844;
@@ -25,6 +26,7 @@ const ctx = await b.newContext({
   deviceScaleFactor: 3,
 });
 const page = await ctx.newPage();
+const overviews = watchOverviews(page);
 let routerCalls = 0;
 const isRouter = (url) => /routing\.openstreetmap\.de|route\/v1\/driving/.test(url);
 if (process.env.PARA_NODE_FETCH)
@@ -107,13 +109,21 @@ const discard = async () => {
 await page.goto(`${BASE}/studio/?e2e=1`, { waitUntil: 'load' });
 await page.waitForFunction(() => window.__map?.loaded(), null, { timeout: 30000 });
 const saved = await waitForSource(page, 'saved-routes', 20000);
-const line = (saved ?? [])
-  .map((f) => f.geometry?.coordinates ?? [])
-  .reduce((a, c) => (c.length > a.length ? c : a), []);
+// The pinned subject line (lib/subject-line.mjs): the same roads every run.
+const subject = saved?.length ? subjectLine(saved) : null;
+const line = subject?.geometry.coordinates ?? [];
+if (subject) {
+  assertNoOverview(overviews, subject.properties.id, 'putting points on its road vertices');
+}
 const centre = line.length ? line[Math.floor(line.length / 2)] : [121.0527, 14.6187];
 box = await page.locator('canvas.maplibregl-canvas').boundingBox();
 const recentre = async (zoom = 15) => {
-  await page.evaluate(([c, z]) => window.__map.jumpTo({ center: c, zoom: z }), [centre, zoom]);
+  await page.evaluate(
+    ([c, z]) => {
+      window.__map.jumpTo({ center: c, zoom: z });
+    },
+    [centre, zoom],
+  );
   await page.waitForTimeout(500);
 };
 // The saved route's vertices on screen, `gap` px apart, clear of the
@@ -395,7 +405,9 @@ check(
 // desktop's delete. Held on a point, it must not delete it: MapLibre drops a
 // contextmenu after a touch itself, and this keeps it doing so.
 c = await cp();
-await page.evaluate((p) => window.__map.jumpTo({ center: p }), c[1]);
+await page.evaluate((p) => {
+  window.__map.jumpTo({ center: p });
+}, c[1]);
 await page.waitForTimeout(300);
 const held = await proj(c[1]);
 // What Android sends: a bare contextmenu, no mousedown before it.
@@ -560,40 +572,34 @@ check(
   `bar ${await bar.count()}`,
 );
 
-// ---------------------------------------------------------------- Tap | Draw
-const tapDraw = page.getByTestId('tap-draw');
+// --------------------------------------------------------------- Snap | Draw
+const snapDraw = page.getByTestId('snap-draw');
 const [nx, ny] = (await roadPixels(6, 70))[4] ?? [W / 2, 200];
-await tapDraw.getByRole('button', { name: 'Draw' }).tap();
+await snapDraw.getByRole('button', { name: 'Draw' }).tap();
 await tap(nx, ny);
 await settle();
 check(
   'Draw makes the next stretch straight',
   (await snaps()).at(-1) === 'freehand' &&
-    (await tapDraw.getByRole('button', { name: 'Draw' }).getAttribute('aria-pressed')) === 'true',
+    (await snapDraw.getByRole('button', { name: 'Draw' }).getAttribute('aria-pressed')) === 'true',
   `${await snaps()}`,
 );
-await tapDraw.getByRole('button', { name: 'Tap' }).tap();
+await snapDraw.getByRole('button', { name: 'Snap' }).tap();
 const [mx, my] = (await roadPixels(7, 70))[5] ?? [W / 2, 260];
 await tap(mx, my);
 await settle();
 check(
-  'Tap makes the next one follow the streets again',
+  'Snap makes the next one follow the streets again',
   (await snaps()).at(-1) === 'snapped',
   `${await snaps()}`,
 );
 
 // ---------------------------------------------------------------- toolbar
-// A point opened and closed again: no bar, no Follow offer, the hint back.
+// A point opened and closed again, so ✕ below is the drawing's, not the point's.
 await tap(...(await proj((await cp())[0])));
 await page.waitForTimeout(300);
 await bar.getByRole('button', { name: 'Close' }).tap();
 await page.waitForTimeout(300);
-const hintText = await page.getByTestId('draw-toolbar').innerText();
-check(
-  'the hint speaks of taps, not right-clicks',
-  hintText.includes('tap a point for options') && !/right-click|shift-click/.test(hintText),
-  hintText.replace(/\n/g, ' / '),
-);
 await page.locator('button[title="Discard this route"]').tap();
 check(
   '✕ asks before discarding',

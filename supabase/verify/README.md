@@ -6,8 +6,9 @@ applies 0018 over them twice through `../apply/0018_apply.sql` (the file the
 owner pastes), then checks it, and undoes it on a second database:
 
 - `bootstrap.sql`: stand-ins for what the migrations expect of Supabase
-  (`anon`, `authenticated`, `auth.users`, `auth.uid()`, `storage`). Only for a
-  throwaway server.
+  (`anon`, `authenticated`, `auth.users`, `auth.uid()`, `storage`), and the
+  default grants a project gives the API roles on new tables, sequences and
+  functions in `public`. Only for a throwaway server.
 - `before-0018.sql`: rows that exist before the migration.
 - `after-0018.sql`: reads as `anon`, a signed-in non-editor and an editor;
   uniqueness on approved rows (routes, loops, terminals); the two guards; the
@@ -54,8 +55,7 @@ re-apply passes 0022_check.sql`, or stops at the first failure.
 
 ## studio-drafts.sh
 
-The studio's draft saves (`src/features/studio/data/draft-save.ts`, behind
-`VITE_STUDIO_DRAFTS`) end to end. Each payload is built by the studio's own
+The studio's draft saves (`src/features/studio/data/draft-save.ts`) end to end. Each payload is built by the studio's own
 code (`studio-drafts.mjs`) from the rows as they stand, claimed as an editor,
 submitted and approved. It checks that a stored draft changes no approved row
 (a hash of every fixture row before and after each claim), and that approval
@@ -218,3 +218,208 @@ second run must stop and change nothing), and runs `…_check.sql`: its rolled-b
 raise nothing and leave no row behind, and its 7 read-only rows must be `t`. The revert refuses over a
 stored fare, over retired totals counting one and over an E-Jeep ride. On a second database, apply then revert twice
 leaves the schema as before, and re-applying passes the check.
+
+## delete-account-refuse-uploads.sh
+
+`migrations/20261105090000_delete_account_refuse_uploads.sql` on databases of its own, run last by `run.sh` or alone:
+
+    PSQL="docker exec -i pg-verify psql -U postgres" bash supabase/verify/delete-account-refuse-uploads.sh
+
+It applies every earlier migration and the contributor paste files as live will have them
+(account_stats, delete_my_account, contribution_fare, delete_account_keep_uploads), then
+`../apply/20261105090000_delete_account_refuse_uploads_apply.sql` twice (the second run must stop and
+change nothing), and runs `…_check.sql`: its rolled-back behaviour part must raise nothing and leave
+no row behind, and its 5 read-only rows must be `t`. On a second database, without
+delete_account_keep_uploads, the apply refuses and writes no ledger row. On a third, apply then revert
+twice leaves the schema as before, and re-applying passes the check.
+
+## review-rules.sh
+
+`migrations/20261105120000_review_rules.sql` on databases of its own, run last by `run.sh` or alone:
+
+    PSQL="docker exec -i pg-verify psql -U postgres" bash supabase/verify/review-rules.sh
+
+It applies every earlier migration and the review paste files as live has them (0018, 0022,
+reviewed_draft_approval, draft_update_own), then `../apply/20261105120000_review_rules_apply.sql` twice
+(the second run must stop and change nothing), and runs `…_check.sql`: its rolled-back behaviour part
+must raise nothing and leave no row behind, and its 9 read-only rows must be `t`. The behaviour part
+proves that an approval with unchanged links moves no neighbour's revision (route and hotspot), that a
+changed link is written and moves only the hotspots it touches, that a hotspot listed twice is still
+`refused`, that Keep rebuilds a hintuan's links from the approved directions (and keeps its own list when
+the draft moves the outline) and keeps a terminal's ticked links only, that an editor cannot update
+`base_revision`, `editor_id`, `subject_id`, `kind` or `is_new`, that another editor cannot update, delete
+or discard someone's draft (`not_your_draft`) while the maker can, and that a maker-less draft is
+discarded by any editor. Then `after-0022.sql` (its one direct `base_revision` fixture step run as
+postgres), `concurrency-0022.sh`, `deadlock-0022.sh`, `studio-drafts.sh` and `reviewed-draft.sql` run
+again over it. On a second database, without draft_update_own, the apply refuses and writes no ledger
+row. On a third, apply then revert twice leaves the schema as before, and re-applying passes the check.
+
+## draft-update-makerless.sh
+
+`migrations/20261105130000_draft_update_makerless.sql` on databases of its own, run last by `run.sh` or alone:
+
+    PSQL="docker exec -i pg-verify psql -U postgres" bash supabase/verify/draft-update-makerless.sh
+
+It applies every earlier migration and the review paste files as live has them (through review_rules),
+then `../apply/20261105130000_draft_update_makerless_apply.sql` twice (the second run must stop and change
+nothing), and runs `…_check.sql`: its rolled-back behaviour part must raise nothing and leave no row
+behind, and its 4 read-only rows must be `t`. The behaviour part proves that any editor edits a draft
+whose maker is gone and it stays maker-less, that nobody can set `editor_id`, that another editor still
+cannot edit, delete or discard a draft whose maker is there, that a maker-less draft is discarded by any
+editor and not deleted directly, and that the maker edits their own. On a second database, without
+review_rules, the apply refuses and writes no ledger row. On a third, apply then revert twice leaves the
+schema as before, and re-applying passes the check.
+
+## draft-published.sh
+
+`migrations/20261105160000_draft_published.sql` on databases of its own, run last by `run.sh` or alone:
+
+    PSQL="docker exec -i pg-verify psql -U postgres" bash supabase/verify/draft-published.sh
+
+It applies every earlier migration and the review paste files as live has them (through
+draft_update_makerless), with a taken-down route and a draft as live has them, then
+`../apply/20261105160000_draft_published_apply.sql` twice (the second run must stop and change
+nothing). It checks the backfill: every row's last save from `status_at` and `owner_id`, a publish date
+only on approved rows, no revision or `updated_at` moved, the draft's base and last saver kept. Then
+`…_check.sql`: its rolled-back behaviour part must raise nothing and leave no row behind, and its 8
+read-only rows must be `t`. `draft-published-race.sh` races `publish_draft` against a live edit of its
+route (edit first: `conflict`, nothing applied; publish first: it lands whole, the edit on top), against
+a second publish of the same draft (`approved` / `no_draft`), and against `unpublish` in both orders
+(publish first: published, then down with a draft of what was published; unpublish first: down, the
+draft rebased, the publish `revision_mismatch`); none may deadlock. Then every fixture route and hotspot
+is unpublished, routes first; the drafts left are read by the studio's own code
+(`unpublished-drafts.mjs`: a route's payload parses into the studio's draft state and builds back into
+the same payload; a hotspot's opens in Edit with its links), and publishing them all, hotspots first,
+puts back exactly the map that was there. Then `after-0022.sql`, the two race scripts, `studio-drafts.sh`
+and `reviewed-draft.sql` run again over it, as the studio on `main` still uses the old path, and every
+route it approved is stamped. On a second database, without draft_update_makerless, the
+apply refuses and writes no ledger row. On a third, apply then revert twice leaves the schema as
+before, and re-applying passes the check.
+
+## keep-uploads-on-user-delete.sh
+
+`migrations/20261105180000_keep_uploads_on_user_delete.sql` on databases of its own, run last by `run.sh` or
+alone:
+
+    PSQL="docker exec -i pg-verify psql -U postgres" bash supabase/verify/keep-uploads-on-user-delete.sh
+
+It applies every earlier migration and the contributor paste files as live has them (through
+delete_account_refuse_uploads), then `../apply/20261105180000_keep_uploads_on_user_delete_apply.sql` twice
+(the second run must stop and change nothing), and runs `…_check.sql`: its rolled-back behaviour part must
+raise nothing and leave no row behind, and its 3 read-only rows must be `t`. The behaviour part deletes an
+account's user, an anonymous phone's user and a contributor row directly, and each ride stays with its
+point batch, hinto and use, unlinked and marked with its typed words cleared, while the person's own rows go;
+`delete_my_account(false)` leaves what it left before; a claim still moves a phone's ride to the account,
+linked, and deleting the phone's user afterwards changes none of it. Then
+`20261105090000_delete_account_refuse_uploads_check.sql` runs again over it. On a second database, without
+delete_account_keep_uploads, the apply refuses and writes no ledger row. On a third, apply then revert twice
+leaves the schema as before, and re-applying passes the check. Without the trigger the check fails at its
+first step.
+
+## lock-map-tables.sh
+
+`migrations/20261105190000_lock_map_tables.sql` on databases of its own, run last by `run.sh` or alone:
+
+    PSQL="docker exec -i pg-verify psql -U postgres" bash supabase/verify/lock-map-tables.sh
+
+It applies every earlier migration and the review paste files as live has them (through draft_published),
+then `../apply/20261105190000_lock_map_tables_apply.sql` twice (the second run must stop and change nothing),
+and runs `…_check.sql`: its rolled-back behaviour part (every direct insert, update and delete on route,
+route_variant, stop and route_stop refused for an editor; reads kept; a hotspot claimed and published, a route
+unpublished and published back, a take-down and put-back) must raise nothing and leave no row behind, and its
+4 read-only rows must be `t`. Then `draft-published-race.sh`, `concurrency-0022.sh`, `deadlock-0022.sh` and
+`studio-drafts.sh`, which change the map only through the draft functions, run again over it. On a second
+database, without draft_published, the apply refuses and writes no ledger row. On a third, apply then revert
+twice leaves the schema as before, and re-applying passes the check.
+
+## drop-dead-weight.sh
+
+`migrations/20261105200000_drop_dead_weight.sql` on databases of its own, run last by `run.sh` or alone:
+
+    PSQL="docker exec -i pg-verify psql -U postgres" bash supabase/verify/drop-dead-weight.sh
+
+It applies every earlier migration with the paste files as live has them (the review flow through
+draft_published, the contributor flow through keep_uploads_on_user_delete), then proves the apply refuses,
+changing nothing, while `gps_session` has a row or a route has a `short_name`. Then
+`../apply/20261105200000_drop_dead_weight_apply.sql` twice (the second run must stop and change nothing), and
+`…_check.sql`: its rolled-back behaviour part (`delete_my_account(false)` deletes the person and keeps the ride
+unlinked, anything but false is still refused, a route is published and read whole without the two columns)
+must raise nothing and leave no row behind, and its 5 read-only rows must be `t`. Then
+`20261105180000_keep_uploads_on_user_delete_check.sql` runs again over it. On a second database, without
+keep_uploads_on_user_delete, the apply refuses and writes no ledger row. On a third, apply then revert twice
+leaves the schema as before, line for line once the dumps are sorted (the two columns come back at the end of
+`route`), and re-applying passes the check.
+
+## waitlist.sh
+
+`migrations/20261112120000_waitlist.sql` on databases of its own, run by `run.sh` or alone:
+
+    PSQL="docker exec -i pg-verify psql -U postgres" bash supabase/verify/waitlist.sh
+
+The migration leans on no other, so each database starts from `bootstrap.sql` alone, whose default privileges
+hand a new table to `anon` and `authenticated` as a project from before 0017 did: the migration's own revoke
+is what closes it. Then `../apply/20261112120000_waitlist_apply.sql` twice (the second run must stop and change
+nothing), and `…_check.sql`: its rolled-back behaviour part (`anon` and a signed-in phone can neither read nor
+add, `service_role` adds an email once and cannot delete, an email in capitals, with a space or with no dot is
+refused) must raise nothing and leave no row behind, and its 4 read-only rows must be `t`. On a second
+database the revert refuses while the list holds an email, then, once it is empty, revert twice leaves the
+schema as before and re-applying passes the check. The function itself is checked by
+`tests/unit/waitlist-test.mjs`, with a fake fetch.
+
+## schema-snapshot.sh
+
+`../schema/snapshot.sql` is the `public` and `private` schemas as the live project has them, in one file:
+tables, columns, indexes, functions as they stand after every copy, triggers, row-security policies and
+grants, and no rows. It ends having to read three migrations to know what one function does now (review M5,
+M6). It is never applied.
+
+    PSQL="docker exec -i pg-verify psql -U postgres" bash supabase/verify/schema-snapshot.sh           # check, run last by run.sh
+    PSQL="docker exec -i pg-verify psql -U postgres" bash supabase/verify/schema-snapshot.sh --write   # rewrite
+
+The script builds a database from every migration the ledger lists, in the ledger's order (not the file
+names' order), each through its paste file where it has one, as the owner applied it. It then dumps the two
+schemas (`pg_dump --schema-only --no-owner`). The check fails when the snapshot differs. When a migration is
+recorded as applied, add it to `APPLIED` in the script and rewrite the snapshot in the same change. A
+migration not yet applied stays out until it is.
+
+It is rebuilt here, not read from the live project, so it has what the migrations made. It does not have
+what Supabase adds around them, such as Supabase's own schemas.
+
+Before it compares, the script runs `anon-functions.sql` on the same database: the functions in `public`
+and `private` that `anon` may run, trigger functions aside. It should list none, and the script fails on
+any row. A project gives each new function in `public` to `anon` by default, and `bootstrap.sql` does the
+same, so a migration that makes a function takes it back from `anon` by name (taking it back from `PUBLIC`
+alone leaves `anon` with it). A function `anon` is meant to run is listed in `anon-functions.sql` with the
+reason.
+
+## retire-review-steps.sh
+
+`migrations/20261110190000_retire_review_steps.sql` on databases of its own, run last by `run.sh` or alone:
+
+    PSQL="docker exec -i pg-verify psql -U postgres" bash supabase/verify/retire-review-steps.sh
+
+It applies every earlier migration and the review paste files as live has them (through
+draft_published), then `../apply/20261110190000_retire_review_steps_apply.sql` twice (the second run
+must stop and change nothing), and runs `…_check.sql`: its rolled-back behaviour part (no direct update
+of a draft; save_draft still saves and names its saver; publish_draft still publishes) must raise
+nothing and leave no row behind, and its 4 read-only rows must be `t`. `draft-published-race.sh` runs
+again over it. On a second database, without draft_published, the apply refuses and writes no ledger
+row. On a third, apply then revert twice leaves the schema as before, and re-applying passes the check.
+
+## drop-inert-write-policies.sh
+
+`migrations/20261112100000_drop_inert_write_policies.sql` on databases of its own, run by `run.sh` or alone:
+
+    PSQL="docker exec -i pg-verify psql -U postgres" bash supabase/verify/drop-inert-write-policies.sh
+
+It builds the database as live has it through draft_published, lock_map_tables and retire_review_steps,
+takes the publish's reads as `anon` (`publish-reads.sql`: the columns, filters and order
+`scripts/publish/read-database.mjs` asks for), then applies
+`../apply/20261112100000_drop_inert_write_policies_apply.sql` twice (the second run must stop and change
+nothing). The same reads must give the same rows, and the schema must differ by the twelve policies alone.
+`…_check.sql` then runs: its rolled-back part (every direct write refused for anon, an account that is no
+editor and an editor; the reads unchanged; the draft functions still publishing, unpublishing, taking down
+and putting back) must raise nothing and leave no row behind, and its 5 read-only rows must be `t`.
+`draft-published-race.sh` runs again over it. On a second database the apply refuses without
+lock_map_tables, and again while an app role holds a write grant, changing nothing. On a third, apply then
+revert twice leaves the schema as before, and re-applying passes the check.

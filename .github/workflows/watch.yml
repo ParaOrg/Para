@@ -13,7 +13,9 @@
 #     moves only when the map changes, so it says nothing about the publish), the last
 #     Backup under 8 days and the last Tiles build under 35;
 #   - a failed run's alert (opened by the last job of publish-map.yml, backup.yml and
-#     tiles.yml) closes once that workflow's next run passes.
+#     tiles.yml) closes once that workflow's next run passes;
+#   - its own last run started under 45 minutes ago: GitHub runs a schedule late, or drops
+#     it, and then nothing above is being checked.
 #
 # It reads the live site and the repository's runs, and writes only issues.
 #
@@ -52,11 +54,11 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
           sparse-checkout: scripts/watch
-      - uses: actions/setup-node@v5
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: 22
       - name: Check, and keep the alert issues

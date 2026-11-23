@@ -1,6 +1,6 @@
 # 08: An accidental pause was worrying
 
-Status: needs-info (owner: the Figma design)
+Status: resolved
 Type: design question
 Who: the owner, then a session
 Source: the owner's phone test of the app, 2026-10-26, feedback (c)
@@ -18,3 +18,7 @@ The owner paused by accident and was worried. Today Stop is a full-width red bar
 ## Not decided here
 
 No UI is proposed. Behaviour today (Stop pauses, Resume continues, Save ends) is correct and stays until the design arrives.
+
+## Answer
+
+Stop became Pause, which ends nothing: paused, the ride waits for Resume or Finish, and the map frosts over so the pause shows at a glance (#631). The ride's notification carries the same buttons: Pause while recording, Resume and Finish while paused (#632, #638).

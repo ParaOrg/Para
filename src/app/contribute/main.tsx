@@ -5,6 +5,7 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import './contribute.css';
 
 import {
+  applySlowloadIfAsked,
   applySlowmoIfAsked,
   askForPersistentStorage,
   connectContributions,
@@ -22,6 +23,9 @@ import { registerContributeWorker } from './register-worker.ts';
 connectContributions();
 // The test switch for watching the motion slowly (?slowmo), fetched only when it is asked for.
 applySlowmoIfAsked();
+// The test switch for seeing the skeletons on a phone (?slowload): History's and Account's loads
+// held back, fetched only when it is asked for.
+applySlowloadIfAsked();
 const root = document.getElementById('root');
 if (!root) throw new Error('contribute/index.html has no #root element to mount the page in.');
 
@@ -37,7 +41,9 @@ if (import.meta.env.MODE === 'apk') {
 }
 
 // The CI emulator ride's driver: only in the build made for it (contributor-app.yml), never in the
-// APK a tester installs.
+// APK a tester installs. The flag is read here, not from the feature's env module, so the build
+// sees `false` on the spot and leaves the driver's file out of every other build.
+// eslint-disable-next-line no-restricted-syntax -- a build-time branch: read in place so the driver is dropped
 if (import.meta.env.MODE === 'apk' && import.meta.env.VITE_EMULATOR_RIDE === '1') {
   void runEmulatorRide();
 }

@@ -1,6 +1,6 @@
 # 11: When to press Start
 
-Status: needs-info (owner: copy)
+Status: resolved
 Type: product decision
 Who: the owner
 Source: the owner's phone test of the app, 2026-10-26, feedback (f)
@@ -19,3 +19,7 @@ The owner's call, with Figma: the Ready screen (above Start), the consent text, 
 
 - Is "start when you board" right for the testers?
 - Where should it be said, and in which words (English, Filipino or both)?
+
+## Answer
+
+The tutorial (Figma 4530:3552, #617) says it at Start: "Tap here when you start your trip", with Lakad for the walk and Sakay once on board, so a recording may start before boarding.

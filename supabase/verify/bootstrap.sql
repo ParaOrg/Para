@@ -8,6 +8,10 @@ grant anon, authenticated, service_role to postgres;
 grant usage on schema public to anon, authenticated, service_role;
 alter default privileges in schema public grant select, insert, update, delete, maintain on tables to anon, authenticated;
 alter default privileges in schema public grant usage, select, update on sequences to anon, authenticated;
+-- A Supabase project also hands every new function in public to all three API roles. So a
+-- migration that takes a function back from PUBLIC alone leaves anon able to run it, and only
+-- a stand-in with the same default shows that (anon-functions.sql).
+alter default privileges in schema public grant all on functions to anon, authenticated, service_role;
 
 create schema auth;
 grant usage on schema auth to anon, authenticated;

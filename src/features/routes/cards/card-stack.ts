@@ -36,11 +36,11 @@ export function tripBack(
 }
 
 /**
- * The height the sheets share: a pick and ‹ keep Low, Middle or Max as they
- * were; with nothing open it goes back to Middle, where every sheet opens.
+ * The height the sheets share: a pick and ‹ keep it as it was; with nothing
+ * open it goes back to Low, where every sheet opens (the owner's rule).
  */
 export function sharedSnap(snap: Snap, anyOpen: boolean): Snap {
-  return anyOpen ? snap : 'middle';
+  return anyOpen ? snap : 'low';
 }
 
 /**
@@ -50,6 +50,30 @@ export function sharedSnap(snap: Snap, anyOpen: boolean): Snap {
  */
 export function tripBehindHolds(tripOpen: boolean, placeOpen: boolean): boolean {
   return placeOpen && !tripOpen;
+}
+
+/** The cards that are up: a trip, a place's card, the route list, and a trip stepped behind a place's card. */
+export interface CardsUp {
+  trip: boolean;
+  place: boolean;
+  list: boolean;
+  tripBehind: boolean;
+}
+
+/** What the browser's Back does to the cards that are up. */
+export type BackMove = 'trip-to-behind' | 'place-to-trip' | 'close-place' | 'close-all';
+
+/**
+ * What the browser's Back does: the ‹ of the card on show where a card is kept behind it, its ✕
+ * where none is. A trip steps back to the place's card or the list behind it; a place's card, to
+ * the trip it stood in front of. Never the trip's ‹ that lists its route with those sharing an
+ * end: Back takes a card away and opens none, so enough Backs always leave the page. Null with no
+ * card up: Back is the browser's own.
+ */
+export function backMove(up: CardsUp): BackMove | null {
+  if (up.trip) return up.place || up.list ? 'trip-to-behind' : 'close-all';
+  if (up.place) return up.tripBehind ? 'place-to-trip' : 'close-place';
+  return up.list ? 'close-all' : null;
 }
 
 /**
@@ -64,8 +88,8 @@ export function letGoHolds(letGoId: string | null, selectedId: string | null): b
 export type Framed = { lines: readonly (readonly LngLat[])[] } | { at: LngLat } | null;
 
 /**
- * What the card on show frames as the sheet settles at another height
- * (useHeightOverview): an open trip, its route, or the ride picked on it from
+ * What the card on show frames when the Overview button is pressed
+ * (useOverview): an open trip, its route, or the ride picked on it from
  * a start to an end (`ride`), so the overview takes in the new start and end;
  * a place's card, the routes of the RouteCard picked on it, else the place;
  * the route list, the picked card's routes, else what it lights (`lit`);

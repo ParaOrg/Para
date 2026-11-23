@@ -15,14 +15,18 @@
 // the list does not show stay drawn as they rest. A click on the light-blue
 // way back switches the list to it, and a click on a shown line where its
 // outbound runs too keeps the shown one.
-// Reads the live tables, so it finds its own spot: a vertex of
-// one route lying on another route's line. SKIPs when no two routes share
-// a road.
+// Reads made-up tables (fixtures/shared-road-tables.mjs) from the stand-in
+// for the database, never the live ones: three routes on one road, each drawn
+// both ways with hintuans along it, so every check here has what it needs on
+// any day. It still finds its own spot, a vertex of one route lying on
+// another route's line, and a check that skips fails the run.
 import { chromium } from 'playwright';
+import { SHARED_ROAD_TABLES } from './fixtures/shared-road-tables.mjs';
+import { fakeStudioDb } from './lib/fake-studio-db.mjs';
 import { BASE, harness, waitForSource } from './lib/harness.mjs';
 import { lookReaders } from './lib/looks.mjs';
 
-const { check, skip, tally } = harness();
+const { check, skip, tally } = harness({ knownSkips: [] });
 
 const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
@@ -35,6 +39,7 @@ await page.addInitScript(() => {
   };
 });
 await page.addInitScript(lookReaders);
+await fakeStudioDb(page, SHARED_ROAD_TABLES);
 
 await page.goto(`${BASE}/studio/?e2e=1`, { waitUntil: 'load' });
 await page.waitForFunction(() => window.__map && window.__map.loaded(), null, { timeout: 30000 });
@@ -44,7 +49,7 @@ if ((await waitForSource(page, 'saved-routes')).length === 0)
 const lines = await page.evaluate(async () =>
   (await window.__src('saved-routes')).features.map((f) => ({
     id: f.properties.id,
-    route: f.properties.route_id,
+    route: f.properties.routeId,
     coords: f.geometry.coordinates,
   })),
 );
@@ -106,13 +111,15 @@ for (const a of lines) {
   }
 }
 
-if (!spot) {
-  skip(
-    'a tap where two routes share a road',
-    'no two routes share a road in the live tables today',
-  );
-} else {
-  await page.evaluate((c) => window.__map.jumpTo({ center: c, zoom: 17 }), spot);
+if (!spot) throw new Error('no two routes share a road in the made-up tables');
+// The map's own pixels start below the studio's bar: a tap is given in the map's and
+// lands in the page's.
+const canvas = await page.locator('canvas.maplibregl-canvas').boundingBox();
+const tap = (x, y) => page.mouse.click(canvas.x + x, canvas.y + y);
+{
+  await page.evaluate((c) => {
+    window.__map.jumpTo({ center: c, zoom: 17 });
+  }, spot);
   await page.waitForTimeout(900);
   const [x, y] = await page.evaluate((c) => {
     const q = window.__map.project(c);
@@ -135,7 +142,7 @@ if (!spot) {
     ],
     [x, y],
   );
-  await page.mouse.click(x, y);
+  await tap(x, y);
   await page.waitForTimeout(700);
 
   const chooser = page.locator('[data-testid="chooser"]');
@@ -520,11 +527,6 @@ if (!spot) {
         'no hintuan on this direction',
       );
     } else {
-      const fold = cardEl.locator('button[data-testid="trip-fold"]');
-      if ((await fold.count()) > 0) {
-        await fold.first().click();
-        await page.waitForTimeout(450);
-      }
       const pickedIndex = Math.floor(((await hintuanRows.count()) - 1) / 2);
       const hintuanRow = hintuanRows.nth(pickedIndex);
       const pick = hintuanRow.locator('button[data-testid="trip-hintuan-pick"]');
@@ -534,7 +536,7 @@ if (!spot) {
       const onMap = async () =>
         page.evaluate(async () => {
           const trip = document.querySelector('[data-testid="trip"]');
-          // The card's pale, Card/<livery>/surface-pale (tokens.css's own variable; the
+          // A road ride's rest: a line at rest, Map/RouteLine/surface-default (its own variable; the
           // @theme inline alias is never emitted), as the DOM computes it, oklch as the
           // rings come: what the dots along the rest wear.
           const probe = document.createElement('span');
@@ -545,9 +547,15 @@ if (!spot) {
             ? `var(--map-rail-${livery}-surface-pale)`
             : livery === 'ferry'
               ? 'var(--map-ferry-surface-pale)'
-              : `var(--card-${livery}-surface-pale)`;
+              : 'var(--map-route-line-surface-default)';
           document.body.append(probe);
           const cardPale = getComputedStyle(probe).backgroundColor;
+          // The line's colour is a card's surface in the trip's livery (livery-line.ts): read off
+          // CARD_SURFACE's classes, the colour the map draws the trip's line in.
+          const { CARD_SURFACE } = await import('/src/features/routes/cards/livery-card.ts');
+          probe.style.backgroundColor = '';
+          probe.className = CARD_SURFACE[livery] ?? '';
+          const lineColour = getComputedStyle(probe).backgroundColor;
           probe.remove();
           return {
             lit: ((await window.__lit('saved-routes')) ?? []).length,
@@ -560,8 +568,7 @@ if (!spot) {
               ring: getComputedStyle(e.querySelector('.station-label-tap > span:first-child'))
                 .backgroundColor,
             })),
-            // The line's colour is the card's surface (livery-line.ts): the card's own background.
-            line: trip ? getComputedStyle(trip).backgroundColor : null,
+            line: lineColour,
             pale: cardPale,
           };
         });
@@ -604,7 +611,9 @@ if (!spot) {
         `${after.pins} circle(s), ${after.rest} stretch(es) at rest, ${after.stations.filter((s) => s.paled).length} dot(s) along it, ${after.lit} lit`,
       );
     }
-    await page.locator('[data-testid="card"] button[aria-label="Close"]').first().click();
+    // A trip a list's row opened closes in two steps: ‹ back to the list, then the list's ✕.
+    await page.locator('[data-testid="card"]').getByRole('button', { name: 'Back' }).click();
+    await chooser.getByRole('button', { name: 'Close' }).click();
     await page.waitForTimeout(400);
     const endsNone = await page.evaluate(() => window.__ends().length);
     check('  closing it leaves no circles', endsNone === 0, `${endsNone} circle(s)`);
@@ -619,9 +628,11 @@ if (!spot) {
    * `shown`).
    */
   const reopen = async (wantBack) => {
-    await page.evaluate((c) => window.__map.jumpTo({ center: c, zoom: 17 }), spot);
+    await page.evaluate((c) => {
+      window.__map.jumpTo({ center: c, zoom: 17 });
+    }, spot);
     await page.waitForTimeout(700);
-    await page.mouse.click(x, y);
+    await tap(x, y);
     await page.waitForTimeout(700);
     if ((await showsBack()) !== wantBack) {
       await chooser.locator('[data-testid="chooser-flip"]').click();
@@ -636,7 +647,9 @@ if (!spot) {
    */
   const findSpot = async (coords, ok) => {
     for (const c of coords.filter((_, i) => i % Math.max(1, Math.floor(coords.length / 8)) === 0)) {
-      await page.evaluate((c) => window.__map.jumpTo({ center: c, zoom: 17 }), c);
+      await page.evaluate((c) => {
+        window.__map.jumpTo({ center: c, zoom: 17 });
+      }, c);
       await page.waitForTimeout(600);
       const p = await page.evaluate((c) => {
         const m = window.__map;
@@ -666,9 +679,11 @@ if (!spot) {
    * routes, as on the public map (2026-10-01), and leaves the spot elsewhere.
    */
   const clickAt = async (p) => {
-    await page.evaluate((c) => window.__map.jumpTo({ center: c, zoom: 17 }), p.at);
+    await page.evaluate((c) => {
+      window.__map.jumpTo({ center: c, zoom: 17 });
+    }, p.at);
     await page.waitForTimeout(600);
-    await page.mouse.click(p.x, p.y);
+    await tap(p.x, p.y);
     await page.waitForTimeout(700);
     const now = await read();
     const shown = now.origins.length
@@ -815,6 +830,45 @@ if (!spot) {
         `caught ${mixed.ids.length} line(s), ${after.shown}`,
       );
     }
+  }
+  // The filter, in the studio as on the public map (README decisions 12 and 14): under each kind
+  // of ride the map lights just what the list shows, All lights the whole list again, and a new
+  // list starts at All. Last, as a filter moves the camera.
+  {
+    const all = await reopen(false);
+    const filterButton = chooser.locator('[data-testid="chooser-filter"]');
+    const filterTo = async (label) => {
+      await filterButton.click();
+      await page.getByRole('radio', { name: label, exact: true }).click();
+      await page.waitForTimeout(500);
+    };
+    const agree = [];
+    for (const label of ['Jeep', 'E-Jeep', 'Bus', 'LRT', 'MRT', 'Ferry']) {
+      await filterTo(label);
+      const under = await read();
+      agree.push({
+        label,
+        listed: under.listed.length,
+        ok: same([...new Set(under.lit)], under.listed),
+      });
+    }
+    check(
+      "the studio list's filter lights just what the list shows under each kind of ride",
+      all.length > 0 && agree.every((a) => a.ok) && agree.some((a) => a.listed < all.length),
+      agree.map((a) => `${a.label} ${a.ok ? 'ok' : 'off'} ${a.listed}`).join(', ') +
+        ` of ${all.length}`,
+    );
+    await filterTo('All');
+    const whole = await read();
+    check(
+      '  All lights the whole list again',
+      same([...new Set(whole.lit)], all) && same(whole.listed, all),
+      `${new Set(whole.lit).size} lit, ${whole.listed.length} listed of ${all.length}`,
+    );
+    await filterTo('Ferry');
+    await reopen(false);
+    const label = await filterButton.getAttribute('aria-label');
+    check('  a new list starts at All', label === 'Filter', String(label));
   }
 }
 

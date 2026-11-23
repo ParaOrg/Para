@@ -1,33 +1,58 @@
+import { useId } from 'react';
+
 interface TripSignboardsProps {
   /** Addresses of the SVG files the studio uploaded, in order. */
   signboards: readonly string[];
+  /**
+   * Where the trip goes, for "Going to SM Fairview" under the heading. Absent on a loop, which goes
+   * round, not to a place: Figma's Ikot draws no line there (4825:48753).
+   */
+  routeDirection?: string;
+  /** The route's via, for "… via Maligaya"; absent with none. */
+  via?: string;
 }
 
 /**
- * Between the card and the tiles, the direction's signboards (Figma strip 4051:5528): a white
- * strip, 12 in from the sides and 16 above, each board 40 tall at its own width, 8 apart, wrapping
- * on a narrow phone (3919:11447). No heading: the boards say what they are. Pictures, so nothing in
- * a file can run. None uploaded, no strip: the tiles sit right under the card. At a sheet's Low the
- * card's top is all that shows (sheetGesture's LOW_PX), so the strip needs no hiding of its own.
+ * The direction's signboards on their own card (Signboard, 4822:43834): "Signboard", Bold 16/24,
+ * over where the boards say the jeep is going, Regular 12/16; then the boards, each 32 tall at its
+ * own width, 8 apart, wrapping on a narrow phone. White, rounded 24, 16 in, sunk under Figma's
+ * Signboard shadow. Pictures, so nothing in a file can run. None uploaded, no card.
  */
-export function TripSignboards({ signboards }: TripSignboardsProps) {
+export function TripSignboards({ signboards, routeDirection, via }: TripSignboardsProps) {
+  const heading = useId();
+  if (signboards.length === 0) return null;
   return (
-    <ul
+    <section
       data-testid="trip-signboards"
-      aria-label="Signboards"
-      className="flex w-full flex-wrap gap-2 bg-surface px-3 pt-4"
+      aria-labelledby={heading}
+      className="flex w-full flex-col gap-3 overflow-clip rounded-3xl bg-bg-fill p-4 font-sn-pro shadow-signboard"
     >
-      {signboards.map((src, i) => (
-        <li key={src}>
-          <img
-            data-testid="trip-signboard"
-            src={src}
-            alt={signboards.length > 1 ? `Signboard ${i + 1} of ${signboards.length}` : 'Signboard'}
-            className="block h-10 w-auto max-w-full"
-            decoding="async"
-          />
-        </li>
-      ))}
-    </ul>
+      <div className="flex w-full flex-col">
+        <h3 id={heading} className="text-base-lower/6 font-bold text-text-primary">
+          Signboard
+        </h3>
+        {routeDirection !== undefined && (
+          <p className="text-xs/4 text-text-secondary">
+            Going to {routeDirection}
+            {via !== undefined && ` via ${via}`}
+          </p>
+        )}
+      </div>
+      <ul className="flex w-full flex-wrap gap-2">
+        {signboards.map((src, i) => (
+          <li key={src}>
+            <img
+              data-testid="trip-signboard"
+              src={src}
+              alt={
+                signboards.length > 1 ? `Signboard ${i + 1} of ${signboards.length}` : 'Signboard'
+              }
+              className="block h-8 w-auto max-w-full"
+              decoding="async"
+            />
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }

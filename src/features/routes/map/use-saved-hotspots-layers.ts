@@ -1,6 +1,7 @@
 import type { GeoJSONSource, MapLibreMap } from 'maplibre-gl';
 import { useEffect, useRef } from 'react';
 
+import { PINS_SRC, hotspotPinsData } from './hotspot-pins';
 import { boxState, type BoxMark } from './hotspots-shown';
 import { useLayerSwitch } from './layer-switch';
 import { applyHidden, layOutOnce } from './layers';
@@ -16,13 +17,29 @@ import {
   hiddenHotspotFilters,
 } from './saved-hotspots-layers';
 import { maskStations } from './station-mask';
+import { useHotspotPins } from './use-hotspot-pins';
+import { warmSoon, type Twin } from './warm-programs';
 import { ringToPolygon, type Ring } from '../geo/ring';
-import type { Hotspot } from '../model/hotspots';
+import type { Hotspot, HotspotKind } from '../model/hotspots';
 
 /**
- * The saved hotspots' sources and layers on `map`: laid out from `hotspots`, the
- * one being edited hidden, each box marked as `marks` says (hotspots-shown.ts),
- * and the place wash over `hull`.
+ * The boxes' outline's twin (warm-programs.ts). The outline first draws where the boxes come into
+ * view, past the opening view's zoom: a trip's opening fit, or a hand zooming in, would compile its
+ * program then, as the card comes up. Its colour stays by the box's kind, as the outline's is, so
+ * the twin compiles the outline's own program; clear for either kind, so the speck shows nothing.
+ */
+const OUTLINE_TWIN: Twin = {
+  type: 'line',
+  paint: {
+    'line-color': ['match', ['get', 'kind'], 'terminal', 'transparent', 'transparent'],
+    'line-width': 0.6,
+  },
+};
+
+/**
+ * The saved hotspots' sources and layers on `map`: laid out from `hotspots`, the one being edited
+ * hidden, each box marked as `marks` says (hotspots-shown.ts), the place wash over `hull`, and
+ * the dots of `dotKinds` alone when given (dotsOf).
  */
 export function useSavedHotspotsLayers(
   map: MapLibreMap | null,
@@ -30,6 +47,8 @@ export function useSavedHotspotsLayers(
   hiddenHotspotId: string | null | undefined,
   marks: ReadonlyMap<string, BoxMark>,
   hull: Ring,
+  shouldShowPins = true,
+  dotKinds?: readonly HotspotKind[],
 ) {
   // The hotspots the source was last laid out from: added with them when they are already in,
   // laid out in the one worker round trip that adds the source rather
@@ -38,10 +57,10 @@ export function useSavedHotspotsLayers(
   const laidOut = useRef<readonly Hotspot[] | null>(null);
   useEffect(() => {
     if (!map || map.getSource(SRC)) return;
-    addSavedHotspots(map, hotspots);
+    addSavedHotspots(map, hotspots, {}, dotKinds);
     maskStations(map, hotspots);
     laidOut.current = hotspots;
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- lays out the hotspots the source is made with; later ones are the next effect's
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- lays out the hotspots (and dot kinds) the source is made with; later ones are the next effect's
   }, [map]);
 
   useEffect(() => {
@@ -50,6 +69,7 @@ export function useSavedHotspotsLayers(
     if (!src) return;
     layOutOnce(laidOut, hotspots, (next) => {
       src.setData(hotspotsData(next));
+      map.getSource<GeoJSONSource>(PINS_SRC)?.setData(hotspotPinsData(next));
       // The basemap's stations beside ours, hidden (station-mask.ts).
       maskStations(map, next);
     });
@@ -85,6 +105,22 @@ export function useSavedHotspotsLayers(
     );
   }, [map, marks, siblingSwitch, hatchSwitch]);
 
+  // OUTLINE_TWIN's program compiled while idle, and after a lost GL context, as layer-switch.ts's.
+  useEffect(() => {
+    if (!map) return;
+    const twins = () => [OUTLINE_TWIN];
+    let cancel = warmSoon(map, twins);
+    const restored = () => {
+      cancel();
+      cancel = warmSoon(map, twins);
+    };
+    map.on('webglcontextrestored', restored);
+    return () => {
+      cancel();
+      map.off('webglcontextrestored', restored);
+    };
+  }, [map]);
+
   // The place highlight's wash: a hull over the chosen box and its siblings.
   useEffect(() => {
     if (!map || !map.getLayer(SIBLINGS)) return;
@@ -98,14 +134,17 @@ export function useSavedHotspotsLayers(
     });
   }, [map, hull]);
 
-  // The hotspot being edited is drawn by the editor; hide the saved copy.
-  // Set only once there is one, and once more to show it again
-  // (applyHidden): the public map never hides one, and sets no filter.
+  // The hotspot being edited is drawn by the editor; hide the saved copy. Set only once there is
+  // one, and once more to show it again (applyHidden): the public map never hides one, and sets no
+  // filter. The pins' layer, added once its chunk is here, takes what is hidden then.
   const hiddenNow = useRef<string | null>(null);
   useEffect(() => {
     if (!map || !map.getLayer(FILL)) return;
     applyHidden(hiddenNow, hiddenHotspotId, (hidden) => {
-      for (const [id, filter] of hiddenHotspotFilters(hidden)) map.setFilter(id, filter);
+      for (const [id, filter] of hiddenHotspotFilters(hidden, dotKinds)) {
+        if (map.getLayer(id)) map.setFilter(id, filter);
+      }
     });
-  }, [map, hiddenHotspotId]);
+  }, [map, hiddenHotspotId, dotKinds]);
+  useHotspotPins(map, hiddenNow, shouldShowPins);
 }

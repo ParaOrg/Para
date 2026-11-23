@@ -2,14 +2,17 @@
 <resources>
 
     <!-- Base application theme. -->
+    <!-- Para is light only (the owner, 2026-11-02): never darkened by Android's dark theme or its
+         force-dark, nor the WebView's algorithmic darkening (MainActivity). -->
     <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
-        <!-- Customize your theme here. -->
+        <item name="android:forceDarkAllowed">false</item>
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
     </style>
 
-    <style name="AppTheme.NoActionBar" parent="Theme.AppCompat.DayNight.NoActionBar">
+    <style name="AppTheme.NoActionBar" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="android:forceDarkAllowed">false</item>
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
         <item name="android:background">@null</item>
@@ -17,6 +20,7 @@
 
 
     <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
+        <item name="android:forceDarkAllowed">false</item>
         <item name="android:background">@drawable/splash</item>
     </style>
 </resources>

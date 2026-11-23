@@ -20,8 +20,15 @@ export function distanceFigure(metres: number): Figure {
     : { value: kilometresText(whole), unit: 'km' };
 }
 
-/** Metres as kilometres to one decimal: `4.2`. */
-export const kilometresText = (metres: number): string => (metres / 1000).toFixed(1);
+/**
+ * Metres as kilometres to one decimal, a half rounded up: `4.2`, and 1150 m `1.2`. Counted in
+ * whole tenths, as the ride's notification does (RideNotification.distanceText), so the card and
+ * the notification always agree. toFixed would round the binary fraction: 1150 m as 1.1.
+ */
+export function kilometresText(metres: number): string {
+  const tenths = Math.round(metres / 100);
+  return `${Math.floor(tenths / 10)}.${tenths % 10}`;
+}
 
 /** Seconds as a clock: `1:42`. */
 export function countdownText(seconds: number): string {
@@ -58,3 +65,30 @@ export function cardDistanceText(metres: number): string {
   if (whole < 10_000) return `${kilometresText(whole)} km`;
   return `${Math.round(whole / 1000)} km`;
 }
+
+/**
+ * A trip's whole time, in words, as the ride's screen says it: `4 hr 30 mins and 40 secs`,
+ * `12 mins`, `40 secs`. Parts that are zero are left out; under a second reads `0 secs`.
+ */
+export function tripTimeText(seconds: number): string {
+  const whole = Math.max(0, Math.floor(seconds));
+  const hours = Math.floor(whole / 3600);
+  const minutes = Math.floor((whole % 3600) / 60);
+  const secs = whole % 60;
+  const parts = [
+    hours > 0 && `${hours} hr`,
+    minutes > 0 && `${minutes} ${minutes === 1 ? 'min' : 'mins'}`,
+    secs > 0 && `${secs} ${secs === 1 ? 'sec' : 'secs'}`,
+  ].filter((part) => part !== false);
+  if (parts.length === 0) return '0 secs';
+  const last = parts.pop();
+  return parts.length === 0 ? `${last}` : `${parts.join(' ')} and ${last}`;
+}
+
+/** A time of day as the ride's flags say it: `10:42 AM`, Manila's, whatever the phone's zone. */
+export const clockText = (time: number): string =>
+  new Date(time).toLocaleTimeString('en-US', {
+    timeZone: 'Asia/Manila',
+    hour: 'numeric',
+    minute: '2-digit',
+  });

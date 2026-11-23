@@ -1,11 +1,14 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import type { ComponentProps } from 'react';
+import type { ComponentProps, ReactNode } from 'react';
 import { useState } from 'react';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
+import { IconButton } from '@/design-system/primitives/icon-button';
+import { cn } from '@/shared/utils/cn';
+
 import { BottomSheet } from './bottom-sheet';
+import { CloseIcon } from './route-icons';
 import type { Snap } from './sheet-gesture';
-import { SheetHeader } from './sheet-header';
 
 /** Sample rows only: enough of them to need the sheet's whole height. */
 const rows = (count: number) =>
@@ -26,7 +29,7 @@ function Rows({ count }: { count: number }) {
 
 /**
  * Keeps the height as the public map does (`height`), starting where the
- * story says: a sheet left to keep its own always opens at Middle.
+ * story says: a sheet left to keep its own always opens at Low.
  */
 function Keeping({ startsAt, ...props }: ComponentProps<typeof BottomSheet> & { startsAt: Snap }) {
   const [snap, setSnap] = useState<Snap>(startsAt);
@@ -44,11 +47,24 @@ function Keeping({ startsAt, ...props }: ComponentProps<typeof BottomSheet> & { 
   );
 }
 
+/**
+ * A card's header, what was tapped and ✕, with SheetHeader's own classes. It stands in for the
+ * studio's SheetHeader (studio/panels) because a shared story may not import a feature: keep it.
+ */
+function SampleHeader({ children }: { children: ReactNode }) {
+  return (
+    <div className="flex items-start justify-between gap-3 px-4">
+      <div className="min-w-0 flex-1">{children}</div>
+      <IconButton icon={<CloseIcon />} label="Close" tooltip="top" onClick={fn()} />
+    </div>
+  );
+}
+
 const header = (
-  <SheetHeader onClose={fn()}>
+  <SampleHeader>
     <h2 className="text-lg font-semibold text-content-primary">Tala Jeepney Terminal</h2>
     <p className="text-sm text-content-secondary">Tala</p>
-  </SheetHeader>
+  </SampleHeader>
 );
 
 const meta = {
@@ -56,17 +72,22 @@ const meta = {
   component: BottomSheet,
   // The sheet fills the map it sits on, so give it a map-sized box marked
   // `@container`, as the apps' roots are, and `data-dock-host`, as the page
-  // is. The `phone` parameter shrinks the box to a handset, where it docks
-  // along the bottom; otherwise it is 1024 wide, where it floats (`@float:`).
+  // is. The `phone` parameter shrinks the box to a handset (`'small'`, a
+  // 375×667 one), where it docks along the bottom; otherwise it is 1024 wide,
+  // where it floats (`@float:`).
+  // `underSearch` sets `--sheet-float-top` as the public map does under its place search.
   decorators: [
     (Story, ctx) => (
       <div
         data-dock-host
-        className={
-          ctx.parameters.phone
-            ? '@container relative h-[700px] w-[390px] overflow-clip bg-surface-quaternary'
-            : '@container relative h-[40rem] w-[1024px] overflow-clip bg-surface-quaternary'
-        }
+        className={cn(
+          ctx.parameters.phone === 'small'
+            ? '@container relative h-[667px] w-[375px] overflow-clip bg-surface-quaternary'
+            : ctx.parameters.phone
+              ? '@container relative h-[700px] w-[390px] overflow-clip bg-surface-quaternary'
+              : '@container relative h-[40rem] w-[1024px] overflow-clip bg-surface-quaternary',
+          ctx.parameters.underSearch && '[--sheet-float-top:7.375rem]',
+        )}
       >
         <Story />
       </div>
@@ -85,48 +106,99 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** On a phone it opens at Middle: the handle, the header, and the top of the body. */
-export const Middle: Story = {};
-
-/** Low: the header and the top of the first row; a tap on the handle raises it. */
+/** On a phone it opens at Low: the header and the top of the first row; a tap on the handle raises it a third. */
 export const Low: Story = {
-  render: (args) => <Keeping {...args} startsAt="low" />,
-  args: { height: { snap: 'low', onSnap: fn() } },
-};
-
-/** Max: the whole map but a strip of it, the body scrolling under the header. */
-export const Max: Story = {
-  render: (args) => <Keeping {...args} startsAt="max" />,
-  args: { height: { snap: 'max', onSnap: fn() }, children: <Rows count={30} /> },
-};
-
-/** A free height between Middle and Max, set by a caller rather than a drag: its body still, and the handle says so. */
-export const Free: Story = {
-  render: (args) => <Keeping {...args} startsAt={0.75} />,
-  args: { height: { snap: 0.75, onSnap: fn() } },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(canvas.getByTestId('card')).toHaveAttribute('data-snap', 'free');
+    await expect(canvas.getByTestId('card')).toHaveAttribute('data-snap', 'low');
     await expect(canvas.getByTestId('dock-handle')).toHaveAccessibleName(
-      'Sheet raised past half the screen. Raise to full screen',
+      'Sheet lowered. Raise it a third',
     );
   },
 };
 
-/** The handle from the keyboard goes round: Middle → Max → Low → Middle, and says where it is. */
-export const HandleGoesRound: Story = {
+/** Full height: the whole map but a strip of it, the body scrolling under the header. */
+export const Full: Story = {
+  render: (args) => <Keeping {...args} startsAt="full" />,
+  args: { height: { snap: 'full', onSnap: fn() }, children: <Rows count={30} /> },
+};
+
+/**
+ * Left between Low and full, where a drag let go: its body still, and the handle says how high it
+ * is.
+ */
+export const Free: Story = {
+  render: (args) => <Keeping {...args} startsAt={0.55} />,
+  args: { height: { snap: 0.55, onSnap: fn() } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByTestId('card')).toHaveAttribute('data-snap', 'free');
+    await expect(canvas.getByTestId('dock-handle')).toHaveAccessibleName(
+      'Sheet at 55% of the map. Raise it a third',
+    );
+  },
+};
+
+/** Presses Enter on `handle` until `sheet` is at `end`, at most four times; how many it took. */
+async function enterUntil(sheet: HTMLElement, end: 'low' | 'full'): Promise<number> {
+  for (let presses = 1; presses <= 4; presses++) {
+    await userEvent.keyboard('{Enter}');
+    if (sheet.getAttribute('data-snap') === end) return presses;
+  }
+  return Infinity;
+}
+
+/**
+ * Fitted (`fits`, Figma 4560:12422): its highest is its content's height, the map in sight above.
+ * The handle raises it there, three rows needing less than a third, and lowers it again.
+ */
+export const FitsContent: Story = {
+  render: (args) => <Keeping {...args} startsAt="low" />,
+  args: { fits: true, height: { snap: 'low', onSnap: fn() }, children: <Rows count={3} /> },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const handle = canvas.getByTestId('dock-handle');
+    await expect(handle).toHaveAccessibleName('Sheet lowered. Raise it a third');
+    await userEvent.click(handle);
+    await expect(canvas.getByTestId('card')).toHaveAttribute('data-snap', 'full');
+    await expect(handle).toHaveAccessibleName('Sheet at full height. Lower it a third');
+    await userEvent.click(handle);
+    await expect(canvas.getByTestId('card')).toHaveAttribute('data-snap', 'low');
+  },
+};
+
+/** Fitted, with more than the map holds: the handle raises it a third at a time to full height, where its body scrolls. */
+export const FitsTallContent: Story = {
+  render: (args) => <Keeping {...args} startsAt="low" />,
+  args: { fits: true, height: { snap: 'low', onSnap: fn() }, children: <Rows count={30} /> },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const sheet = canvas.getByTestId('card');
+    canvas.getByTestId('dock-handle').focus();
+    await expect(await enterUntil(sheet, 'full')).toBeLessThanOrEqual(3);
+  },
+};
+
+/**
+ * The handle from the keyboard steps a third of the map: up from Low to full, then down to Low
+ * again, and says each time how high the sheet is and which way it goes next.
+ */
+export const HandleStepsThirds: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const sheet = canvas.getByTestId('card');
     const handle = canvas.getByTestId('dock-handle');
-    await expect(handle).toHaveAccessibleName('Sheet at half the screen. Raise to full screen');
     handle.focus();
     await userEvent.keyboard('{Enter}');
-    await expect(sheet).toHaveAttribute('data-snap', 'max');
+    await expect(sheet).toHaveAttribute('data-snap', 'free');
+    await expect(handle.getAttribute('aria-label')).toMatch(
+      /^Sheet at \d+% of the map\. Raise it a third$/,
+    );
+    await expect(await enterUntil(sheet, 'full')).toBeLessThanOrEqual(3);
+    await expect(handle).toHaveAccessibleName('Sheet at full height. Lower it a third');
     await userEvent.keyboard('{Enter}');
-    await expect(sheet).toHaveAttribute('data-snap', 'low');
-    await userEvent.keyboard('{Enter}');
-    await expect(sheet).toHaveAttribute('data-snap', 'middle');
+    await expect(handle.getAttribute('aria-label')).toMatch(/Lower it a third$/);
+    await expect(await enterUntil(sheet, 'low')).toBeLessThanOrEqual(3);
     handle.blur();
   },
 };
@@ -138,6 +210,40 @@ export const EscapeCloses: Story = {
     await waitFor(() => expect(within(canvasElement).getByTestId('card')).toHaveFocus());
     await userEvent.keyboard('{Escape}');
     await expect(args.onClose).toHaveBeenCalledOnce();
+  },
+};
+
+/** A finger's pull down on the handle, `px` long, as the sheet's own listeners hear it. */
+function pullDown(handle: HTMLElement, px: number) {
+  const { left, top, width } = handle.getBoundingClientRect();
+  const x = left + width / 2;
+  const at = (y: number) => ({ pointerId: 7, button: 0, clientX: x, clientY: y, bubbles: true });
+  handle.dispatchEvent(new PointerEvent('pointerdown', at(top + 4)));
+  for (let moved = 20; moved <= px; moved += 20) {
+    window.dispatchEvent(new PointerEvent('pointermove', at(top + 4 + moved)));
+  }
+  window.dispatchEvent(new PointerEvent('pointerup', at(top + 4 + px)));
+}
+
+/** Pulled down from Low, a card closes: the public map's and the studio's way. */
+export const PullCloses: Story = {
+  render: (args) => <Keeping {...args} startsAt="low" />,
+  args: { height: { snap: 'low', onSnap: fn() } },
+  play: async ({ args, canvasElement }) => {
+    pullDown(within(canvasElement).getByTestId('dock-handle'), 200);
+    await waitFor(() => expect(args.onClose).toHaveBeenCalledOnce());
+  },
+};
+
+/** With `closesOnPull` off (a contributor's ride), the same pull leaves it at Low, open. */
+export const PullRestsAtLow: Story = {
+  render: (args) => <Keeping {...args} startsAt="low" />,
+  args: { closesOnPull: false, height: { snap: 'low', onSnap: fn() } },
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement);
+    pullDown(canvas.getByTestId('dock-handle'), 200);
+    await waitFor(() => expect(canvas.getByTestId('card')).toHaveAttribute('data-snap', 'low'));
+    await expect(args.onClose).not.toHaveBeenCalled();
   },
 };
 
@@ -154,6 +260,32 @@ export const Hidden: Story = {
 /** A wide map: the route list's and a trip's panel, flush in the top-left corner, 384 wide. */
 export const Corner: Story = { parameters: { phone: false } };
 
+/** The sheet's top and bottom against its host, rounded to the pixel. */
+const sheetEdges = (canvasElement: HTMLElement) => {
+  const host = (
+    canvasElement.querySelector('[data-dock-host]') ?? canvasElement
+  ).getBoundingClientRect();
+  const sheet = within(canvasElement).getByTestId('card').getBoundingClientRect();
+  return {
+    top: Math.round(sheet.top - host.top),
+    bottomGap: Math.round(host.bottom - sheet.bottom),
+  };
+};
+
+/**
+ * The corner panel under the public map's place search (`--sheet-float-top`, 118 = 7.375rem):
+ * it starts there, and a long body still ends inside the map.
+ */
+export const CornerUnderSearch: Story = {
+  args: { children: <Rows count={30} /> },
+  parameters: { phone: false, underSearch: true },
+  play: async ({ canvasElement }) => {
+    const { top, bottomGap } = sheetEdges(canvasElement);
+    await expect(top).toBe(118);
+    await expect(bottomGap).toBeGreaterThanOrEqual(0);
+  },
+};
+
 /** A wide map, `floats="card"`: the studio's card, 16 in, rounded, with its own shadow. */
 export const Card: Story = { args: { floats: 'card' }, parameters: { phone: false } };
 
@@ -168,11 +300,198 @@ export const LongHeader: Story = {
   args: {
     label: 'Fairview Teraccess Transport Terminal, Quirino Highway corner Regalado Avenue',
     header: (
-      <SheetHeader onClose={fn()}>
+      <SampleHeader>
         <h2 className="text-lg font-semibold text-content-primary">
           Fairview Teraccess Transport Terminal, Quirino Highway corner Regalado Avenue
         </h2>
-      </SheetHeader>
+      </SampleHeader>
     ),
+  },
+};
+
+/** A footer for the stories: a row of two buttons at the sheet's foot, the rest of it see-through. */
+const footer = (
+  <div className="flex w-full justify-between px-6 pb-8 sheet-floating:w-22 sheet-floating:flex-col sheet-floating:items-center sheet-floating:gap-2 sheet-floating:px-5 sheet-floating:pt-5">
+    <button
+      type="button"
+      className="rounded-full bg-surface-tertiary px-4 py-2 text-content-primary"
+    >
+      Close
+    </button>
+    <button
+      type="button"
+      className="rounded-full bg-surface-tertiary px-4 py-2 text-content-primary"
+    >
+      Filter
+    </button>
+  </div>
+);
+
+/** A sheet with a shape of its own (`shape`), as the route list's: Low 240, a full height that fills the screen. */
+const LIST_SHAPE = { lowPx: 240, isMaxFull: true };
+
+/** `shape` at Low: 240 tall, its own Low rather than every card's 133. */
+export const ShapeLow: Story = {
+  render: (args) => <Keeping {...args} startsAt="low" />,
+  args: { shape: LIST_SHAPE, height: { snap: 'low', onSnap: fn() } },
+  play: async ({ canvasElement }) => {
+    const sheet = within(canvasElement).getByTestId('card');
+    await waitFor(() => expect(sheet).toHaveAttribute('data-low-px', '240'));
+    await waitFor(() =>
+      expect(
+        Math.round(
+          canvasElement.getBoundingClientRect().bottom - sheet.getBoundingClientRect().top,
+        ),
+      ).toBe(240),
+    );
+  },
+};
+
+/** `shape` at full height: the whole screen, no strip of map above it. */
+export const ShapeFullFills: Story = {
+  render: (args) => <Keeping {...args} startsAt="full" />,
+  args: {
+    shape: LIST_SHAPE,
+    height: { snap: 'full', onSnap: fn() },
+    children: <Rows count={30} />,
+  },
+  play: async ({ canvasElement }) => {
+    const host = canvasElement.querySelector('[data-dock-host]') ?? canvasElement;
+    const sheet = within(canvasElement).getByTestId('card');
+    await waitFor(() =>
+      expect(Math.round(sheet.getBoundingClientRect().top - host.getBoundingClientRect().top)).toBe(
+        0,
+      ),
+    );
+  },
+};
+
+/** `handle="hidden"`: no notch drawn, but the button is still there for Tab and a screen reader. */
+export const HandleHidden: Story = {
+  args: { handle: 'hidden', header: null },
+  play: async ({ canvasElement }) => {
+    const handle = within(canvasElement).getByTestId('dock-handle');
+    await expect(handle).toHaveAccessibleName('Sheet lowered. Raise it a third');
+    await expect(handle.getBoundingClientRect().height).toBeLessThanOrEqual(1);
+    handle.focus();
+    await userEvent.keyboard('{Enter}');
+    await expect(within(canvasElement).getByTestId('card')).toHaveAttribute('data-snap', 'free');
+  },
+};
+
+/** `footer`: drawn at the sheet's foot on the screen, the rows scrolling under it. */
+export const Footer: Story = {
+  args: { footer, header: null },
+  play: async ({ canvasElement }) => {
+    const host = canvasElement.querySelector('[data-dock-host]') ?? canvasElement;
+    const foot = within(canvasElement).getByTestId('sheet-footer');
+    await waitFor(() =>
+      expect(
+        Math.round(host.getBoundingClientRect().bottom - foot.getBoundingClientRect().bottom),
+      ).toBe(0),
+    );
+  },
+};
+
+/**
+ * A footer with a button in its middle too, as a trip's Controller has (its SWITCH): what a finger
+ * at the middle of a row under it would touch instead of the row.
+ */
+const middledFooter = (
+  <div className="flex w-full justify-between px-6 pb-8">
+    {['Back', 'Switch', 'Filter'].map((name) => (
+      <button
+        key={name}
+        type="button"
+        className="rounded-full bg-surface-tertiary px-4 py-2 text-content-primary"
+      >
+        {name}
+      </button>
+    ))}
+  </div>
+);
+
+/**
+ * The sheet's body scrolled to its end: whether a finger at the middle of its last row touches
+ * that row, not the footer drawn over the body's foot.
+ */
+async function lastRowClearsFooter(canvasElement: HTMLElement) {
+  const sheet = within(canvasElement).getByTestId('card');
+  await waitFor(() => expect(sheet).toHaveAttribute('data-snap', 'full'));
+  const body = [...sheet.children].find(
+    (el): el is HTMLElement =>
+      el instanceof HTMLElement && getComputedStyle(el).overflowY === 'auto',
+  );
+  if (!body) throw new Error('no scrolling body at full height');
+  // Longer than the screen, or any padding would pass.
+  await expect(body.scrollHeight).toBeGreaterThan(body.clientHeight);
+  body.scrollTop = body.scrollHeight;
+  const lastRow = within(body).getAllByRole('listitem').at(-1);
+  if (!lastRow) throw new Error('no rows in the body');
+  const foot = within(canvasElement).getByTestId('sheet-footer');
+  await waitFor(() => {
+    const r = lastRow.getBoundingClientRect();
+    const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+    expect(hit === lastRow || lastRow.contains(hit)).toBe(true);
+    expect(Math.round(r.bottom)).toBeLessThanOrEqual(Math.round(foot.getBoundingClientRect().top));
+  });
+}
+
+/** `footer` at full height on a small phone, scrolled to the end: the last row clears the footer. */
+export const FooterLastRowClear: Story = {
+  render: (args) => <Keeping {...args} startsAt="full" />,
+  args: {
+    footer: middledFooter,
+    header: null,
+    height: { snap: 'full', onSnap: fn() },
+    children: <Rows count={30} />,
+  },
+  parameters: { phone: 'small' },
+  play: async ({ canvasElement }) => lastRowClearsFooter(canvasElement),
+};
+
+/** The same with a full height that fills the screen (`shape`), as the route list's does. */
+export const FooterLastRowClearFills: Story = {
+  render: (args) => <Keeping {...args} startsAt="full" />,
+  args: {
+    footer: middledFooter,
+    header: null,
+    shape: LIST_SHAPE,
+    height: { snap: 'full', onSnap: fn() },
+    children: <Rows count={30} />,
+  },
+  parameters: { phone: 'small' },
+  play: async ({ canvasElement }) => lastRowClearsFooter(canvasElement),
+};
+
+/** `footer` at Low: still at the screen's foot, over what Low shows. */
+export const FooterAtLow: Story = {
+  render: (args) => <Keeping {...args} startsAt="low" />,
+  args: { footer, header: null, shape: LIST_SHAPE, height: { snap: 'low', onSnap: fn() } },
+};
+
+/** The docked list under the public map's place search: from 118 down to the map's bottom. */
+export const DockUnderSearch: Story = {
+  args: { floats: 'dock', footer, header: null, handle: 'hidden', children: <Rows count={30} /> },
+  parameters: { phone: false, underSearch: true },
+  play: async ({ canvasElement }) => {
+    const { top, bottomGap } = sheetEdges(canvasElement);
+    await expect(top).toBe(118);
+    await expect(bottomGap).toBe(0);
+  },
+};
+
+/** `floats="dock"` on a wide screen: the map's whole height on the left, 384 wide, the footer its top bar. */
+export const Dock: Story = {
+  args: { floats: 'dock', footer, header: null, handle: 'hidden', children: <Rows count={30} /> },
+  parameters: { phone: false },
+  play: async ({ canvasElement }) => {
+    const host = canvasElement.querySelector('[data-dock-host]') ?? canvasElement;
+    const sheet = within(canvasElement).getByTestId('card').getBoundingClientRect();
+    const foot = within(canvasElement).getByTestId('sheet-footer').getBoundingClientRect();
+    await expect(Math.round(sheet.width)).toBe(384);
+    await expect(Math.round(sheet.height)).toBe(Math.round(host.getBoundingClientRect().height));
+    await expect(Math.round(foot.top)).toBe(Math.round(sheet.top));
+    await expect(Math.round(foot.width)).toBe(384);
   },
 };

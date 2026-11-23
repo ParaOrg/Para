@@ -1,4 +1,4 @@
-import type { PackRefusal } from '../api/pack-recording';
+import type { PackRefusal } from './packing/pack-recording';
 import { UploadError, type UploadProblem } from '../api/upload-problem';
 
 /** What a failed upload says: the whole sentence, its reason alone for History, and whether it tries again. */

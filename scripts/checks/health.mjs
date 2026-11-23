@@ -9,6 +9,7 @@ import { spawnSync } from 'node:child_process';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { withoutComments } from '../docs/source-scan.mjs';
+import { INDEX_SOFT_MAX_GZ_KB, indexWeight } from '../publish/index-weight.mjs';
 import {
   FONTS_MAX_KB,
   GROUPS,
@@ -82,7 +83,20 @@ function commentShare(files) {
   ];
 }
 
-function eslintReport() {
+/**
+ * Every file's ESLint result: the ones CI's Lint step kept (ESLINT_JSON, written by
+ * eslint-formatter.mjs in the same job), so the page costs no second ESLint run there;
+ * otherwise a run of its own. Null when neither gave a report.
+ */
+function lintResults() {
+  const keptFile = process.env.ESLINT_JSON;
+  if (keptFile && existsSync(keptFile)) {
+    try {
+      return JSON.parse(readFileSync(keptFile, 'utf8'));
+    } catch {
+      // An unreadable file is no report: fall through to a run of our own.
+    }
+  }
   const run = spawnSync('npx', ['--no-install', 'eslint', '.', '-f', 'json'], {
     cwd: root,
     encoding: 'utf8',
@@ -90,12 +104,16 @@ function eslintReport() {
     shell: process.platform === 'win32',
     maxBuffer: 256 * 1024 * 1024,
   });
-  let results;
   try {
-    results = JSON.parse(run.stdout);
+    return JSON.parse(run.stdout);
   } catch {
-    return ['- **ESLint:** no report (eslint did not print JSON; run `npm run lint`)'];
+    return null;
   }
+}
+
+/** The page's ESLint lines for a run's results: the totals, then each rule by how often it fired. */
+export function eslintLines(results) {
+  if (!results) return ['- **ESLint:** no report (eslint did not print JSON; run `npm run lint`)'];
   const errors = results.reduce((n, r) => n + r.errorCount, 0);
   const warnings = results.reduce((n, r) => n + r.warningCount, 0);
   const byRule = new Map();
@@ -142,6 +160,19 @@ function buildSize() {
   return lines;
 }
 
+/** The published index as committed: what every phone downloads again after a changed publish. */
+function publishedIndex() {
+  const path = 'public/data/index.v5.json';
+  if (!existsSync(join(root, path))) return [`- **Published index:** \`${path}\` is missing`];
+  const weight = indexWeight(read(path));
+  const share = (part) => `${(part * 100).toFixed(0)}%`;
+  return [
+    `- **Published index (\`${path}\`):** ${kb(weight.gzippedBytes)} gzipped of a soft maximum of ${INDEX_SOFT_MAX_GZ_KB} kB, ${kb(weight.rawBytes)} raw`,
+    `  - ${weight.directions} directions: ${kb(weight.gzippedBytesPerDirection)} gzipped each`,
+    `  - of the raw bytes: directions ${share(weight.shares.variants)}, hotspots ${share(weight.shares.stops)}, links ${share(weight.shares.links)}`,
+  ];
+}
+
 function testCounts() {
   const unit = [...filesUnder(join(root, 'tests', 'unit'), (n) => n.endsWith('-test.mjs'))]
     .map((path) => ({ path, tests: (read(path).match(/(?:^|[^\w.])test\(/g) ?? []).length }))
@@ -177,8 +208,9 @@ function main() {
     '',
     ...longFiles(files),
     ...commentShare(files),
-    ...eslintReport(),
+    ...eslintLines(lintResults()),
     ...buildSize(),
+    ...publishedIndex(),
     ...testCounts(),
     ...componentsWithoutStory(files),
     '',

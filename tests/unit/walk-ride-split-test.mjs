@@ -1,13 +1,14 @@
-// A recording's walked and ridden distance and time (src/features/contribute/api/walk-ride-split.ts),
-// as the upload sends them in walk_m, ride_m, walk_s and ride_s: they add up to the totals, no
-// switches is all ride, and the studio reads the same walk and ride parts from the uploaded events.
+// A recording's walked and ridden distance and time
+// (src/features/contribute/uploads/packing/walk-ride-split.ts), as the upload sends them in
+// walk_m, ride_m, walk_s and ride_s: they add up to the totals, no switches is all ride, and the
+// studio reads the same walk and ride parts from the uploaded events.
 //
 //   node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs tests/unit/walk-ride-split-test.mjs
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { packRecording } from '../../src/features/contribute/api/pack-recording.ts';
-import { walkRideSplit } from '../../src/features/contribute/api/walk-ride-split.ts';
+import { packRecording } from '../../src/features/contribute/uploads/packing/pack-recording.ts';
+import { walkRideSplit } from '../../src/features/contribute/uploads/packing/walk-ride-split.ts';
 import { contributionPayloadSchema } from '../../src/features/contribute/api/contribution-payload-schema.ts';
 import { summarize } from '../../src/features/routes/model/ride-recording.ts';
 import { partsOf } from '../../src/features/studio/data/contribution-events.ts';

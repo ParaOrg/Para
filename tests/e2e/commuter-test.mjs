@@ -16,22 +16,27 @@
 // to localStorage, never calls the OSRM route snapper or the database (it
 // reads the published /data/index.v5.json, once), and tapping a route vs. a
 // hotspot — including one hotspot with a route drawn through it — opens the
-// right card with the right content; and, since 2026-10-04, that the end
-// circles' GL program is compiled before any tap and a trip's tap compiles
-// none (since 2026-10-05 asked of it as the first tap of a page of its
-// own), and that the map is made framed on the routes, where their fit
+// right card with the right content (a hotspot's only in a build with
+// VITE_HOTSPOT_TAPS; without, a tap on a box opens no place's card); and,
+// since 2026-10-04, that the end circles' GL program is compiled before any
+// tap and a trip's tap compiles none (since 2026-10-05 asked of it as the
+// first tap of a page of its own), and that the map is made framed on the routes, where their fit
 // framed it, and stays there (the owner's Q1).
+import { readFileSync } from 'node:fs';
+
 import { chromium } from 'playwright';
 import {
   BASE,
   cardsSettled,
+  emptyMapPoint,
   harness,
   mapIdle,
   nodeFetch,
+  recordFailedLoads,
   until,
   waitForSource,
 } from './lib/harness.mjs';
-import { routesFraming } from './lib/framing.mjs';
+import { routeFitted, routesFraming } from './lib/framing.mjs';
 import { checkLocationLabels } from './lib/location-labels.mjs';
 import { centroidOf, pointInPolygon } from './lib/geo.mjs';
 import {
@@ -52,11 +57,30 @@ const { check, skip, tally } = harness({ knownSkips: [] });
 
 // COMMUTER_PART=k/n runs part k of n, so CI can run the parts side by side:
 // every part opens the map and runs sections 1, 2 and 5; section 3's
-// hotspots are dealt out by their place in the list; 4 and 4b are part 1's.
-// Unset, one part runs it all.
+// hotspots are dealt out among the parts; sections 4 to 4b, 6 and 7, run once,
+// are the last part's. Unset, one part runs it all.
 const [PART, PARTS] = (process.env.COMMUTER_PART || '1/1').split('/').map(Number);
 if (!(PARTS >= 1 && PART >= 1 && PART <= PARTS))
   throw new Error(`COMMUTER_PART is k/n with 1 ≤ k ≤ n, not "${process.env.COMMUTER_PART}"`);
+/** Whether this part runs the sections that run once (4 to 4b, 6 and 7): the last part. */
+const RUNS_ONE_OFFS = PART === PARTS;
+/**
+ * The sections that run once, in hotspots' worth of time: about 115 s against
+ * about 15 s a hotspot on a runner (CI, 2026-11-16). The last part starts with
+ * them, so it is dealt that many fewer hotspots and the parts end together.
+ */
+const ONE_OFFS_IN_HOTSPOTS = 8;
+/** Section 3's hotspot `i` (of `count`) goes to the least loaded part so far, in order. */
+const partOfHotspot = (count) => {
+  const load = Array.from({ length: PARTS }, (_, k) =>
+    k === PARTS - 1 && PARTS > 1 ? ONE_OFFS_IN_HOTSPOTS : 0,
+  );
+  return Array.from({ length: count }, () => {
+    const k = load.indexOf(Math.min(...load));
+    load[k]++;
+    return k + 1;
+  });
+};
 
 // ------------------------------------------------------------------ geometry
 // A handful of "probably inside" guesses for a ring (point-in-polygon itself
@@ -128,10 +152,13 @@ const findVertexOutsideHotspots = (routes, polys) => {
   return null;
 };
 // A route vertex outside every box where another route runs within 3 m: a
-// road two routes share, where one tap lists them both.
-const findSharedVertexOutsideHotspots = (routes, polys) => {
-  for (const r of routes) {
-    const others = routes.filter((o) => o.routeId !== r.routeId);
+// road two routes share, where one tap lists them both. Neither is a loop
+// (`loopRouteIds`): a loop's card marks no ends until its trip is opened, and
+// 4a checks the ends a picked card's routes are ringed in.
+const findSharedVertexOutsideHotspots = (routes, polys, loopRouteIds = new Set()) => {
+  const twoEnded = routes.filter((r) => !loopRouteIds.has(r.routeId));
+  for (const r of twoEnded) {
+    const others = twoEnded.filter((o) => o.routeId !== r.routeId);
     for (const c of r.coords) {
       if (polys.some((p) => pointInPolygon(c, p.ring))) continue;
       if (others.some((o) => metresToLine(c, o.coords) < 3)) return c;
@@ -175,6 +202,9 @@ await page.addInitScript(() => {
   });
 });
 const errors = [];
+// Beside the errors: what failed to load, so a "Failed to load resource" names its URL.
+const failedLoads = [];
+recordFailedLoads(page, failedLoads);
 page.on('pageerror', (e) => errors.push(String(e)));
 page.on('console', (m) => {
   if (m.type() === 'error') errors.push(m.text().slice(0, 160));
@@ -193,12 +223,49 @@ page.on('response', (res) => {
     mapFileStatuses.push(res.status());
 });
 
-const closeCard = () =>
-  page
-    .getByRole('button', { name: 'Close' })
-    .first()
-    .click()
-    .catch(() => {});
+// Every card closed: a place's card by its ✕, a trip and the route list, which have none (the
+// owner, 2026-11-21), by Escape, a trip back to what it was opened from and the list closed.
+// Each step waits for what is open to change, not for the clock: a close can leave as many
+// layers open as before (a trip closes back onto its place's card), so it is what is open that
+// is compared, not how many.
+const OPEN_LAYERS = '[data-testid="card"]:not([hidden]), [data-testid="chooser"]:not([hidden])';
+const openLayers = () =>
+  page.evaluate(
+    (q) =>
+      [...document.querySelectorAll(q)]
+        .map(
+          (e) =>
+            `${e.dataset.testid}:${['trip', 'card-place']
+              .filter((id) => e.querySelector(`[data-testid="${id}"]`))
+              .join('+')}`,
+        )
+        .join(','),
+    OPEN_LAYERS,
+  );
+const closeCard = async () => {
+  for (let i = 0; i < 4; i++) {
+    const was = await openLayers();
+    if (was === '') return;
+    const close = page
+      .locator('[data-testid="card"]:not([hidden])')
+      .getByRole('button', { name: 'Close' });
+    if ((await close.count()) > 0)
+      await close
+        .first()
+        .click()
+        .catch(() => {});
+    else await page.keyboard.press('Escape');
+    // A close that changes nothing is tried again, as many times as before; the check after the
+    // close reads what stayed open.
+    await until(openLayers, (now) => now !== was, 3000);
+  }
+};
+// A trip left as the commuter leaves it: the empty map tapped, back to what it was opened from.
+const tapEmptyMap = async () => {
+  const at = await emptyMapPoint(page);
+  if (!at) throw new Error('no empty map in sight to tap, to leave the trip');
+  await page.mouse.click(at.x, at.y);
+};
 const cardKind = async () => {
   const el = page.locator('[data-testid="card"]');
   if ((await el.count()) === 0) return { kind: 'none', text: '' };
@@ -261,6 +328,9 @@ await page.goto(`${BASE}/`, { waitUntil: 'load' });
 await page.waitForFunction(() => window.__map && window.__map.loaded(), null, { timeout: 30000 });
 await waitForSource(page, 'saved-stops');
 await mapIdle(page);
+// A build without hotspot taps (VITE_HOTSPOT_TAPS) reads a tap on a box as the route's under it or
+// the empty map's, so no place's card opens from the map; the page's root says which.
+const isHotspotTapOn = (await page.locator('[data-hotspot-taps="on"]').count()) > 0;
 
 // 0. The map is made framed on the routes (the owner's Q1, 2026-10-04):
 // where their fit put it after the map's 'load' until then — the box round
@@ -438,9 +508,9 @@ check(
     hintuanLabelIdx > hitIdx,
   `terminal labels ${labelIdx}, hintuan labels ${hintuanLabelIdx}, hit ${hitIdx}`,
 );
-// Hotspot names only close in, terminals' and hintuans' alike: once the scale
-// bar's width covers 700 m, zoom 13.40 (the owner, 2026-10-15), so none is
-// drawn at 13 and some are at 14.
+// Hotspot names only close in, terminals' and hintuans' alike: from the moment
+// the scale bar first reads 300 m, its width under 500 m, zoom 13.89, so none
+// is drawn at 13.5 and some are at 14.2.
 const namesAt = (zoom) =>
   page.evaluate(async (zoom) => {
     const m = window.__map;
@@ -459,11 +529,11 @@ const namesAt = (zoom) =>
         .map((f) => f.properties.name),
     ).size;
   }, zoom);
-const [namesFar, namesNear] = [await namesAt(13), await namesAt(14)];
+const [namesFar, namesNear] = [await namesAt(13.5), await namesAt(14.2)];
 check(
-  'hotspot names only close in: none at zoom 13, some at 14',
+  'hotspot names only close in: none at zoom 13.5, some at 14.2',
   namesFar === 0 && namesNear > 0,
-  `${namesFar} at 13, ${namesNear} at 14`,
+  `${namesFar} at 13.5, ${namesNear} at 14.2`,
 );
 const drawLayers = snapshot.order.filter((id) => id.startsWith('draw-'));
 check(
@@ -482,14 +552,54 @@ check(
   `${atRest.keys.length} programs${atRest.warmed ? '' : `, no warm-up in ${atRest.ms / 1000} s`}`,
 );
 
-// 3. Tap each hotspot: fly to a point inside it, click, read the card.
+// 3. Tap each hotspot: fly to a point inside it, click, read the card. Without hotspot taps, the
+// same tap opens no place's card, and what its card leads to is not reached from the map.
+const hotspotParts = partOfHotspot(snapshot.polys.length);
+if (!isHotspotTapOn)
+  console.log(
+    'SKIP  a tap on each hotspot opens its card, its RouteCards, counter, ⇄ and trips: hotspot taps are off in this build (VITE_HOTSPOT_TAPS)',
+  );
 for (const [i, p] of snapshot.polys.entries()) {
-  if (i % PARTS !== PART - 1) continue;
+  if (hotspotParts[i] !== PART) continue;
   const desc = `${p.kind} #${i} "${p.name}"`;
   const candidates = interiorCandidates(p.ring);
+  if (!isHotspotTapOn) {
+    const [x, y] = candidates[0] ?? centroidOf(p.ring);
+    await page.evaluate(
+      ([cx, cy]) => {
+        window.__map.jumpTo({ center: [cx, cy], zoom: 18 });
+      },
+      [x, y],
+    );
+    await mapIdle(page);
+    const pt = await page.evaluate(
+      ([cx, cy]) => {
+        const q = window.__map.project([cx, cy]);
+        return [q.x, q.y];
+      },
+      [x, y],
+    );
+    const box = await page.locator('canvas.maplibregl-canvas').boundingBox();
+    await page.mouse.click(box.x + pt[0], box.y + pt[1]);
+    // A route under the box may rightly open its trip or the list: only a place's card is wrong.
+    await appears(ANY_CARD, 1000);
+    const state = await cardKind();
+    check(
+      `tap ${desc}, hotspot taps off: no place's card opens`,
+      state.kind !== 'hotspot' && (await page.locator(PLACE_UP).count()) === 0,
+      `card ${state.kind}`,
+    );
+    await closeCard();
+    continue;
+  }
   let opened = null;
   for (const [x, y] of candidates) {
-    await page.evaluate(([cx, cy]) => window.__map.jumpTo({ center: [cx, cy], zoom: 18 }), [x, y]);
+    await page.evaluate(
+      ([cx, cy]) => {
+        window.__map.jumpTo({ center: [cx, cy], zoom: 18 });
+      },
+      [x, y],
+    );
     await mapIdle(page);
     const pt = await page.evaluate(
       ([cx, cy]) => {
@@ -599,9 +709,8 @@ for (const [i, p] of snapshot.polys.entries()) {
     );
     // A hotspot's cards light every route they show, the way round ⇄ has
     // them (the owner, 2026-09-29: "on hintuan it should light its routes");
-    // a tap on a card off its rows narrows that to its own, a second lets it
-    // go; a row opens its trip straight away, and ‹ comes back to every card
-    // at rest (his "back to normal", the same day).
+    // a card or a row opens its trip straight away, and ‹ comes back to every
+    // card, all lit (his "back to normal", the same day).
     const firstCard = cards.first();
     const name = firstCard.locator('[data-testid="card-select"]');
     const shownIds = (await cardDirections(page.locator('[data-testid="card"]').first())).filter(
@@ -625,27 +734,27 @@ for (const [i, p] of snapshot.polys.entries()) {
       Math.abs(a.lat - b.lat) < 1e-6;
     const settled = () =>
       page.waitForFunction(() => !window.__map.isMoving(), null, { timeout: 4000 }).catch(() => {});
-    // Where the commuter had the camera as the card opened, before any pick:
+    // Where the commuter had the camera as the card opened, before any tap:
     // where the trip's ‹ brings it back (the owner, 2026-10-02).
     await settled();
     const camHome = await view();
-    await name.click();
-    await inState(firstCard, 'selected');
-    const cardIds = await cardDirections(firstCard);
-    const picked = await until(litNow, (lit) => sameIds(lit, cardIds));
-    check(
-      `  a tap on its first card selects it and lights just its routes`,
-      (await firstCard.getAttribute('data-state')) === 'selected' && sameIds(picked, cardIds),
-      `${picked.length} lit for ${cardIds.length} row(s) of ${shownIds.length}`,
-    );
+    // A RouteCard is one tap target on the public map (the owner's call in #1137): a tap off its
+    // rows opens its first row's trip straight away, no card Selected on the way, and the map
+    // lights that route alone.
+    const firstRow = await rows.first().getAttribute('data-direction');
     const label = (await rows.first().innerText()).replace(/\s+/g, ' ').trim();
-    await rows.first().click();
+    await name.click();
     await shows(TRIP_UP);
     const after = await cardKind();
+    const tripLit = await until(litNow, (lit) => sameIds(lit, [firstRow]));
     check(
-      `  its first route row opens a route card straight away`,
-      after.kind === 'route',
-      `row "${label}" -> ${after.kind}`,
+      `  a tap on its first card opens its first row's trip straight away, lighting that route alone`,
+      after.kind === 'route' &&
+        (await page
+          .locator('[data-testid="card"] [data-testid="card-origin"][data-state="selected"]')
+          .count()) === 0 &&
+        sameIds(tripLit, [firstRow]),
+      `card "${label}" -> ${after.kind}; ${tripLit.length} lit`,
     );
     if (after.kind === 'route') {
       // In its card's colour, the hotspot's card kept behind it for its ‹
@@ -669,81 +778,49 @@ for (const [i, p] of snapshot.polys.entries()) {
         !litUnder.includes(p.id),
         JSON.stringify(litUnder),
       );
-      const back = page.locator('[data-testid="card"]').getByRole('button', { name: 'Back' });
-      if ((await back.count()) > 0) {
-        await back.first().click();
-        await shows(PLACE_UP);
-      }
+      await tapEmptyMap();
+      await shows(PLACE_UP);
       const again = await cardKind();
       const litAgain = await until(hotspotsLit, (lit) => lit.includes(p.id));
       check(
-        `  ‹ on the trip goes back to the hotspot's card, lit again`,
+        `  the empty map tapped on the trip goes back to the hotspot's card, lit again`,
         again.kind === 'hotspot' && again.text === opened && litAgain.includes(p.id),
         `card ${again.kind}; lit ${JSON.stringify(litAgain)}`,
       );
       const relit = await until(litNow, (lit) => sameIds(lit, shownIds));
       check(
-        `  ‹ comes back to its cards at rest, every route lit again`,
+        `  ‹ comes back to its cards, none Selected, every route lit again`,
         (await page
           .locator('[data-testid="card"] [data-testid="card-origin"][data-state="selected"]')
           .count()) === 0 && sameIds(relit, shownIds),
         `${relit.length} lit of ${shownIds.length}`,
       );
       // …and the camera comes back in to where the commuter had it before
-      // the pick, out of the trip's overview (the owner's ask, 2026-10-02).
+      // the tap, out of the trip's overview (the owner's ask, 2026-10-02).
       await cardsSettled(page);
       const camBack = await until(view, (v) => sameView(v, camHome));
       check(
-        `  and the camera back where it was before the pick`,
+        `  and the camera back where it was before the tap`,
         sameView(camBack, camHome),
         JSON.stringify({ camHome, camBack }),
       );
-      // A row tapped with no card picked, the owner's own way in: the trip
-      // opens without moving the camera (the owner, 2026-10-21), and its ‹
-      // leaves it where the row was tapped.
+      // A row tapped with no card picked, the owner's own way in: the trip opens taking in its
+      // whole route, and its ‹ brings the camera back to where the row was tapped.
       const camRow = await view();
       await rows.first().click();
       await shows(TRIP_UP);
-      // Moved, it would be by now: the card and the camera both at rest.
+      // The card and the camera both at rest.
       await cardsSettled(page);
       const opened2 = (await cardKind()).kind === 'route';
       const moved = !sameView(await view(), camRow);
-      if ((await back.count()) > 0) {
-        await back.first().click();
-        await shows(PLACE_UP);
-      }
+      await tapEmptyMap();
+      await shows(PLACE_UP);
       await cardsSettled(page);
       const camRowBack = await view();
       check(
-        `  a row tapped at rest: the trip opens with the camera where it was, and its ‹ leaves it there`,
-        opened2 && !moved && sameView(camRowBack, camRow),
+        `  a row tapped at rest: the trip opens taking in its route, and leaving it brings the camera back`,
+        opened2 && moved && sameView(camRowBack, camRow),
         JSON.stringify({ opened: opened2, moved, camRow, camRowBack }),
-      );
-      // Picked, a second tap lets it go — and the camera, after the pick's
-      // overview, goes back to where the commuter had it (the owner, 2026-10-01).
-      const camBefore = await view();
-      await name.click();
-      const repicked = (await inState(firstCard, 'selected')) === 'selected';
-      // The pick's overview flown before it is let go.
-      await cardsSettled(page);
-      await name.click();
-      await inState(firstCard, 'rest');
-      const letGo = await until(litNow, (lit) => sameIds(lit, shownIds));
-      check(
-        `  a second tap on a picked card lets it go: every route lit again`,
-        repicked &&
-          (await firstCard.getAttribute('data-state')) === 'rest' &&
-          sameIds(letGo, shownIds),
-        `picked ${repicked}; ${letGo.length} lit`,
-      );
-      await cardsSettled(page);
-      const camAfter = await until(view, (v) => sameView(v, camBefore));
-      check(
-        `  and the camera goes back to where it was before the pick`,
-        Math.abs(camAfter.zoom - camBefore.zoom) < 0.01 &&
-          Math.abs(camAfter.lng - camBefore.lng) < 1e-6 &&
-          Math.abs(camAfter.lat - camBefore.lat) < 1e-6,
-        JSON.stringify({ camBefore, camAfter }),
       );
       // ⇄ turns the routes round and leaves the camera where the commuter tapped
       // the hintuan: no zoom, no glide, even onto another box of the place (the
@@ -817,18 +894,12 @@ for (const [i, p] of snapshot.polys.entries()) {
           JSON.stringify({ wornTurned, wornBack, wornTurned2, wornBack2 }),
         );
       }
-      // ✕ closes it, a picked card and all: nothing stays lit.
-      await name.click();
-      const pickedAgain = (await inState(firstCard, 'selected')) === 'selected';
+      // ✕ closes it: nothing stays lit.
       await closeCard();
       // Nothing lit as soon as the map has drawn the close: a runner drawing a
       // few frames a second may take more than a quarter second (2026-10-01).
       const closed = await until(litNow, (lit) => lit.length === 0, 2000);
-      check(
-        `  ✕ closes it all: nothing lit`,
-        pickedAgain && closed.length === 0,
-        `picked ${pickedAgain}; ${closed.length} lit`,
-      );
+      check(`  ✕ closes it all: nothing lit`, closed.length === 0, `${closed.length} lit`);
     }
   } else {
     // No route stops here: no counter, no SWITCH.
@@ -846,29 +917,40 @@ for (const [i, p] of snapshot.polys.entries()) {
 // hintuan only show the card, then select route show the route"): a tap on
 // a route line inside a hotspot opens the hotspot's card alone — no list,
 // the line through it not taken — where until then both were offered, the
-// hotspot first. SKIP if no such vertex exists.
+// hotspot first. Without hotspot taps the box takes none, so the line under the tap is the
+// route's: its trip or the list. SKIP if no such vertex exists.
 const inBox = findVertexInsideAnyHotspot(snapshot.routeLines, snapshot.polys);
-if (PART !== 1) {
-  // Part 1's, with 4b.
+if (!RUNS_ONE_OFFS) {
+  // The last part's, with 4b.
 } else if (!inBox) {
   skip(
     'a tap on a route line inside a hotspot opens the hotspot alone',
     'no saved-route vertex lies inside any hotspot polygon today',
   );
 } else {
-  await page.evaluate((c) => window.__map.jumpTo({ center: c, zoom: 18 }), inBox.point);
+  await page.evaluate((c) => {
+    window.__map.jumpTo({ center: c, zoom: 18 });
+  }, inBox.point);
   await mapIdle(page);
   const box = await page.locator('canvas.maplibregl-canvas').boundingBox();
   await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
   await shows();
   const state = await cardKind();
   const lists = await page.locator('[data-testid="chooser"]').count();
-  // Its card lights the routes it lists, as any hotspot's card does.
-  check(
-    'a tap on a route line inside a hotspot opens the hotspot alone: its card, no list',
-    state.kind === 'hotspot' && state.text.includes(inBox.hotspot.name) && lists === 0,
-    `card ${state.kind} "${state.text.split('\n')[0] ?? ''}"; ${lists} list(s)`,
-  );
+  const seen = `card ${state.kind} "${state.text.split('\n')[0] ?? ''}"; ${lists} list(s)`;
+  if (isHotspotTapOn)
+    // Its card lights the routes it lists, as any hotspot's card does.
+    check(
+      'a tap on a route line inside a hotspot opens the hotspot alone: its card, no list',
+      state.kind === 'hotspot' && state.text.includes(inBox.hotspot.name) && lists === 0,
+      seen,
+    );
+  else
+    check(
+      "hotspot taps off: a tap on a route line inside a hotspot is the route's, its trip or the list, no place's card",
+      state.kind !== 'hotspot' && (state.kind === 'route' || lists > 0),
+      seen,
+    );
   await closeCard();
 }
 
@@ -876,16 +958,26 @@ if (PART !== 1) {
 // list, the routes as RouteCards and nothing else (the owner, 2026-09-29:
 // the Chooser that asked here before is the list now), and a route's row
 // opens its card. SKIP if no such vertex exists.
-const hit = findSharedVertexOutsideHotspots(snapshot.routes, snapshot.polys);
-if (PART !== 1) {
-  // Part 1's, with 4b.
+const loopRouteIds = new Set(
+  await page.evaluate(() =>
+    import('/src/features/routes/published/fetch-index.ts')
+      .then((f) => f.fetchIndex())
+      .then((index) => index.directions.filter((v) => v.route?.isLoop).map((v) => v.routeId))
+      .catch(() => []),
+  ),
+);
+const hit = findSharedVertexOutsideHotspots(snapshot.routes, snapshot.polys, loopRouteIds);
+if (!RUNS_ONE_OFFS) {
+  // The last part's, with 4b.
 } else if (!hit) {
   skip(
     'a tap where two routes share a road lists them, and nothing else',
     'no route vertex outside the boxes has another route within 3 m today',
   );
 } else {
-  await page.evaluate((c) => window.__map.jumpTo({ center: c, zoom: 18 }), hit);
+  await page.evaluate((c) => {
+    window.__map.jumpTo({ center: c, zoom: 18 });
+  }, hit);
   await mapIdle(page);
   const box = await page.locator('canvas.maplibregl-canvas').boundingBox();
   await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
@@ -912,12 +1004,14 @@ if (PART !== 1) {
   );
   if (has) {
     const items = chooser.locator('button[data-testid="chooser-item"]');
-    // The owner's pick of 2026-09-29: the count stays the routes', a card each.
+    // The count stays the routes', a card each: the list's name for a screen reader, since the
+    // list draws no header.
     const title = `${cardCount} ${cardCount === 1 ? 'Route' : 'Routes'}`;
+    const named = await chooser.getAttribute('aria-label');
     check(
-      `  headed "${title}": the routes' count, not the hotspot's`,
-      text.split('\n').includes(title),
-      text.split('\n')[0],
+      `  named "${title}": the routes' count, not the hotspot's`,
+      named === title,
+      String(named),
     );
     // A list lights every route it shows; a tap on a card off its rows
     // narrows the lights to its routes, in its colour over the rest, and a
@@ -935,39 +1029,34 @@ if (PART !== 1) {
     const card = row.locator('xpath=ancestor::*[@data-livery][1]');
     const colour = await card.getAttribute('data-livery');
     const name = card.locator('[data-testid="chooser-select"]');
+    // A tap on a card off its rows opens its first row's trip, its line alone lit; no card is
+    // Selected on the public map (the owner, 2026-11-22). The empty map tapped goes back.
+    const firstId = await card
+      .locator('[data-testid="chooser-item"]')
+      .first()
+      .getAttribute('data-direction');
     await name.click();
-    await inState(card, 'selected');
-    const cardIds = await cardDirections(card);
-    const picked = await until(litNow, (lit) => sameIds(lit, cardIds));
-    const looks = await paintNow(page);
-    const cardLook = LOOKS?.byLivery[colour];
+    await shows(TRIP_UP);
+    const openedLit = await until(litNow, (lit) => lit.length === 1);
+    const openedKind = (await cardKind()).kind;
+    const selectedOnOpen = await chooser.locator('[data-state="selected"]').count();
     check(
-      "  a tap on a card selects it, its routes drawn over the rest in the card's colour",
-      (await card.getAttribute('data-state')) === 'selected' &&
-        twoLooks(looks, cardLook?.line ?? MAP?.['Map/RouteLine/surface-selected']),
-      JSON.stringify(looks),
+      "  a tap on a card off its rows opens its first row's trip, its line alone lit, nothing Selected",
+      openedKind === 'route' && sameIds(openedLit, [firstId]) && selectedOnOpen === 0,
+      `card ${openedKind}; lit ${JSON.stringify(openedLit)}; first row ${firstId}; ${selectedOnOpen} Selected`,
     );
-    const seenPicked = await rideLook(page);
-    const endsPicked = await endsWear(colour);
-    check(
-      "  its chevrons in the card's words' colour, its end circles ringed in its own",
-      wears(seenPicked, cardLook) && endsPicked.ok,
-      `${colour}: ${JSON.stringify(seenPicked)}; ${endsPicked.detail}`,
-    );
-    // Narrower than the list only where the list has other cards.
-    if (cardIds.length < listed.length)
-      check(
-        '  and lights just its routes',
-        sameIds(picked, cardIds),
-        `${picked.length} lit for ${cardIds.length} row(s) of ${listed.length}`,
-      );
-    else
-      skip(
-        '  and lights just its routes',
-        'one card lists every route this way round under this tap',
-      );
-    // Its row, the card picked: the trip opens, and ‹ brings the list back
-    // at rest.
+    await tapEmptyMap();
+    await hides('[data-testid="card"]');
+    await page
+      .waitForFunction(
+        () => !document.querySelector('[data-testid="chooser"]')?.closest('[hidden]'),
+        null,
+        { timeout: 3000 },
+      )
+      .catch(() => {
+        throw new Error('the empty map tapped on the trip: the route list not back within 3000 ms');
+      });
+    // Its row: the trip opens, and the empty map tapped brings the list back at rest.
     await row.click();
     await shows(TRIP_UP);
     const state = await cardKind();
@@ -993,31 +1082,30 @@ if (PART !== 1) {
         wears(seenTrip, LOOKS?.byLivery[tripColour]) && endsTrip.ok,
         `${tripColour}: ${JSON.stringify(seenTrip)}; ${endsTrip.detail}`,
       );
-      // The list stays behind the trip, hidden, for its ‹.
-      const back = page.locator('[data-testid="card"]').getByRole('button', { name: 'Back' });
-      if ((await back.count()) > 0) {
-        await back.first().click();
-        await hides('[data-testid="card"]');
-        await page
-          .waitForFunction(
-            () => !document.querySelector('[data-testid="chooser"]')?.closest('[hidden]'),
-            null,
-            { timeout: 3000 },
-          )
-          .catch(() => {
-            throw new Error('‹ on the trip: the route list not back within 3000 ms');
-          });
-      }
+      // The list stays behind the trip, hidden, for the trip to go back to: the empty map tapped.
+      await tapEmptyMap();
+      await hides('[data-testid="card"]');
+      await page
+        .waitForFunction(
+          () => !document.querySelector('[data-testid="chooser"]')?.closest('[hidden]'),
+          null,
+          { timeout: 3000 },
+        )
+        .catch(() => {
+          throw new Error(
+            'the empty map tapped on the trip: the route list not back within 3000 ms',
+          );
+        });
       const again = (await chooser.first().isVisible()) ? await chooser.first().innerText() : '';
       check(
-        '  ‹ on the trip goes back to the list, as it was',
+        '  the empty map tapped on the trip goes back to the list, as it was',
         again === text && (await cardKind()).kind === 'none',
         again ? `card ${(await cardKind()).kind}` : 'the list did not come back',
       );
       const relit = await until(litNow, (lit) => sameIds(lit, listed));
       const stillSelected = await chooser.locator('[data-state="selected"]').count();
       check(
-        '  ‹ brings it back at rest: no card picked, every route lit',
+        '  it comes back at rest: nothing Selected, every route lit',
         stillSelected === 0 && sameIds(relit, listed),
         `${stillSelected} Selected; ${relit.length} lit, ${listed.length} listed`,
       );
@@ -1029,34 +1117,21 @@ if (PART !== 1) {
           ? await listCards.first().getAttribute('data-livery')
           : null;
       const seenRest = await rideLook(page);
-      const endsRest = await endsWear(oneCard);
+      // Lit with no trip open: its lines alone, no ends to wear the colour (the owner, 2026-11-22).
       check(
         oneCard ? "  in its one card's colour again" : '  in the selected blue again',
-        wears(seenRest, oneCard ? LOOKS?.byLivery[oneCard] : LOOKS?.lit) && endsRest.ok,
-        `${oneCard ?? 'blue'}: ${JSON.stringify(seenRest)}; ${endsRest.detail}`,
+        wears(seenRest, oneCard ? LOOKS?.byLivery[oneCard] : LOOKS?.lit),
+        `${oneCard ?? 'blue'}: ${JSON.stringify(seenRest)}`,
       );
-      // Picked, a second tap lets it go.
-      await name.click();
-      const repicked = (await inState(card, 'selected')) === 'selected';
-      await name.click();
-      await inState(card, 'rest');
-      const letGo = await until(litNow, (lit) => sameIds(lit, listed));
-      check(
-        '  a second tap on a picked card lets it go: every route it shows lit again',
-        repicked && (await card.getAttribute('data-state')) === 'rest' && sameIds(letGo, listed),
-        `picked ${repicked}; ${letGo.length} lit, ${listed.length} listed`,
-      );
-      // SWITCH lets a picked card go and lights all of the other way round;
-      // there, where each place is a card of its own, a pick narrows it.
-      const flip = chooser.locator('[data-testid="chooser-flip"]');
+      // SWITCH lights all of the other way round, nothing Selected. Vice Versa, floating on the
+      // map over the list (the owner, 2026-11-21).
+      const flip = page.locator('[data-testid="chooser-flip"]');
       if (!(await flip.isEnabled())) {
         skip(
-          '  SWITCH lets a picked card go: nothing Selected, the other way round lit',
+          '  SWITCH lights the other way round, nothing Selected',
           'nothing drawn the other way round under this tap',
         );
       } else {
-        await name.click();
-        const pickedAgain = (await inState(card, 'selected')) === 'selected';
         const was = await flip.getAttribute('data-back');
         await flip.click();
         await turned(flip, was);
@@ -1064,30 +1139,138 @@ if (PART !== 1) {
         const switched = await until(litNow, (lit) => sameIds(lit, otherWay));
         const stillPicked = await chooser.locator('[data-state="selected"]').count();
         check(
-          '  SWITCH lets a picked card go: nothing Selected, the other way round lit',
-          pickedAgain && stillPicked === 0 && otherWay.length > 0 && sameIds(switched, otherWay),
-          `picked ${pickedAgain}; ${switched.length} lit, ${otherWay.length} listed, ${stillPicked} Selected`,
+          '  SWITCH lights the other way round, nothing Selected',
+          stillPicked === 0 && otherWay.length > 0 && sameIds(switched, otherWay),
+          `${switched.length} lit, ${otherWay.length} listed, ${stillPicked} Selected`,
         );
-        const backCards = chooser.locator('[data-testid="chooser-origin"]');
-        if ((await backCards.count()) < 2) {
-          skip(
-            "  a pick there lights just its card's routes, fewer than the list's",
-            'one card the other way round too',
-          );
-        } else {
-          const one = backCards.first();
-          await one.locator('[data-testid="chooser-select"]').click();
-          await inState(one, 'selected');
-          const oneIds = await cardDirections(one);
-          const narrowed = await until(litNow, (lit) => sameIds(lit, oneIds));
-          check(
-            "  a pick there lights just its card's routes, fewer than the list's",
-            oneIds.length > 0 && oneIds.length < otherWay.length && sameIds(narrowed, oneIds),
-            `${narrowed.length} lit for ${oneIds.length} of ${otherWay.length}`,
-          );
-        }
       }
+      // The filter: the map lights what the cards list under each kind of ride, and All lighting
+      // the whole list again (README decision 14). The
+      // camera's framing is 4a′'s, where a tap lists more than one kind of ride.
+      const filterButton = page.locator('[data-testid="chooser-filter"]');
+      const filterTo = async (label) => {
+        await filterButton.click();
+        await page.getByRole('radio', { name: label, exact: true }).click();
+        await until(
+          () => filterButton.getAttribute('aria-label'),
+          (l) => l === (label === 'All' ? 'Filter' : `Filter: ${label}`),
+        );
+      };
+      const before = await listedNow();
+      const agree = [];
+      for (const label of ['Jeep', 'E-Jeep', 'Bus', 'LRT', 'MRT', 'Ferry']) {
+        await filterTo(label);
+        const listedUnder = await listedNow();
+        const litUnder = await until(litNow, (lit) => sameIds(lit, listedUnder));
+        agree.push({
+          label,
+          listed: listedUnder.length,
+          lit: litUnder.length,
+          ok: sameIds(litUnder, listedUnder),
+        });
+      }
+      const selectedLeft = await chooser.locator('[data-state="selected"]').count();
+      check(
+        '  each filter lights just what the cards list, nothing Selected',
+        selectedLeft === 0 &&
+          agree.every((a) => a.ok) &&
+          agree.some((a) => a.listed < before.length),
+        `${selectedLeft} Selected after; ` +
+          agree.map((a) => `${a.label} ${a.lit}/${a.listed}`).join(', ') +
+          ` of ${before.length}`,
+      );
+      await filterTo('All');
+      const allAgain = await until(litNow, (lit) => sameIds(lit, before));
+      check(
+        '  All lights the whole list again',
+        sameIds(allAgain, before),
+        `${allAgain.length} lit, ${before.length} listed`,
+      );
+      // Left on one kind of ride, the next list starts at All.
+      await filterTo('Ferry');
+      await closeCard();
+      await page.evaluate((c) => {
+        window.__map.jumpTo({ center: c, zoom: 18 });
+      }, hit);
+      await mapIdle(page);
+      await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+      await shows();
+      const nextLabel = await page
+        .locator('[data-testid="chooser-filter"]')
+        .getAttribute('aria-label');
+      check('  a new list starts at All', nextLabel === 'Filter', String(nextLabel));
     }
+    await closeCard();
+  }
+}
+
+// 4a′. The filter frames what it leaves lit (README decision 14): where a rail line runs over a
+// jeep's road, outside every box, one tap lists both kinds of ride, and narrowing the list to the
+// rail moves the camera to take it in, as ⇆ does. The last part's, with 4a.
+if (RUNS_ONE_OFFS) {
+  const modeOf = new Map(
+    JSON.parse(readFileSync('public/data/index.v5.json', 'utf8')).variants.map((v) => [
+      v.route_id,
+      v.route.mode,
+    ]),
+  );
+  const rails = snapshot.routes.filter((r) => modeOf.get(r.routeId) === 'lrt');
+  const jeeps = snapshot.routes.filter((r) => modeOf.get(r.routeId) === 'jeepney');
+  const mixed = rails
+    .flatMap((r) => r.coords)
+    .find(
+      (c) =>
+        !snapshot.polys.some((p) => pointInPolygon(c, p.ring)) &&
+        jeeps.some((j) => metresToLine(c, j.coords) < 3),
+    );
+  if (!mixed) {
+    check(
+      'a tap where a rail line runs over a jeep road: the LRT filter frames the rail',
+      false,
+      'the map file has no such road any more: pick another two kinds of ride',
+    );
+  } else {
+    await page.evaluate((c) => {
+      window.__map.jumpTo({ center: c, zoom: 18 });
+    }, mixed);
+    await mapIdle(page);
+    const box = await page.locator('canvas.maplibregl-canvas').boundingBox();
+    await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+    await shows();
+    const chooser = page.locator('[data-testid="chooser"]');
+    const liveries = await chooser
+      .locator('[data-testid="chooser-origin"]')
+      .evaluateAll((els) => els.map((e) => e.dataset.livery));
+    const filterButton = page.locator('[data-testid="chooser-filter"]');
+    const camera = () =>
+      page.evaluate(() => {
+        const { lng, lat } = window.__map.getCenter();
+        return { lng, lat, zoom: window.__map.getZoom() };
+      });
+    const cameraWas = await camera();
+    await filterButton.click();
+    await page.getByRole('radio', { name: 'LRT', exact: true }).click();
+    await until(
+      () => filterButton.getAttribute('aria-label'),
+      (l) => l === 'Filter: LRT',
+    );
+    const listed = (await cardDirections(chooser.first())).filter(Boolean);
+    const lit = await until(litNow, (ids) => sameIds(ids, listed));
+    await mapIdle(page);
+    const cameraNow = await camera();
+    const moved =
+      Math.abs(cameraNow.zoom - cameraWas.zoom) > 1e-6 ||
+      Math.abs(cameraNow.lng - cameraWas.lng) > 1e-9 ||
+      Math.abs(cameraNow.lat - cameraWas.lat) > 1e-9;
+    check(
+      'a tap where a rail line runs over a jeep road: the LRT filter frames the rail',
+      liveries.some((l) => l?.includes('rail')) &&
+        liveries.includes('jeep') &&
+        listed.length > 0 &&
+        sameIds(lit, listed) &&
+        moved,
+      `cards ${liveries.join(', ')}; ${lit.length} lit, ${listed.length} listed; camera ${JSON.stringify(cameraWas)} → ${JSON.stringify(cameraNow)}`,
+    );
     await closeCard();
   }
 }
@@ -1108,6 +1291,7 @@ const firstTapPrograms = async (at) => {
         return s ? await s.getData() : null;
       };
     });
+    recordFailedLoads(p, failedLoads);
     p.on('pageerror', (e) => errors.push(String(e)));
     p.on('console', (m) => {
       if (m.type() === 'error') errors.push(m.text().slice(0, 160));
@@ -1122,7 +1306,9 @@ const firstTapPrograms = async (at) => {
     // The warm-up drawn first (it runs after the map's first idle), so the
     // baseline below holds its programs and the tap's are only the tap's.
     await programsAtRest(p);
-    await p.evaluate((c) => window.__map.jumpTo({ center: c, zoom: 17 }), at);
+    await p.evaluate((c) => {
+      window.__map.jumpTo({ center: c, zoom: 17 });
+    }, at);
     await mapIdle(p);
     // Its keys as the baseline: the warm-up has come and gone with the jump above.
     const rest = await programsAtRest(p, 0);
@@ -1148,7 +1334,7 @@ const firstTapPrograms = async (at) => {
 // route alone under the tap opens its card directly, drawn in its trip card's colour over
 // the rest; closing the card lights nothing again. Nothing fades and nothing
 // is see-through (the owner's two looks, 2026-09-29).
-if (PART === 1) {
+if (RUNS_ONE_OFFS) {
   const looks = await paintNow(page);
   check(
     'the lines rest opaque in Map/RouteLine/surface-default, lit in …/surface-selected, none shaded',
@@ -1169,6 +1355,20 @@ if (PART === 1) {
         looks?.rails['mrt-3'] === MAP['Map/Rail/MetroRailWayThree/surface-pale'],
       JSON.stringify(looks?.rails),
     );
+  // The owner's route-line rule: at rest one pale for every road route and no rim; lit, the line
+  // on the neutral-800 casing.
+  if (MAP)
+    check(
+      'at rest every road route in one pale, with no rim; lit, on Map/RouteLine/casing',
+      looks?.roadLayers.length === 0 &&
+        looks?.casingShown === false &&
+        looks?.litCasing === MAP['Map/RouteLine/casing'],
+      JSON.stringify({
+        roads: looks?.roadLayers,
+        casing: looks?.casingShown,
+        lit: looks?.litCasing,
+      }),
+    );
   const clean = findVertexOutsideHotspots(snapshot.routes, snapshot.polys);
   if (!clean) {
     skip(
@@ -1176,7 +1376,9 @@ if (PART === 1) {
       'every route vertex lies inside a hotspot or on a road another route shares today',
     );
   } else {
-    await page.evaluate((c) => window.__map.jumpTo({ center: c, zoom: 17 }), clean);
+    await page.evaluate((c) => {
+      window.__map.jumpTo({ center: c, zoom: 17 });
+    }, clean);
     await mapIdle(page);
     const box = await page.locator('canvas.maplibregl-canvas').boundingBox();
     const readCamera = () =>
@@ -1219,17 +1421,21 @@ if (PART === 1) {
       );
       const litIds = (await page.evaluate(() => window.__lit('saved-routes'))) ?? [];
       check('  exactly one direction is lit', litIds.length === 1, JSON.stringify(litIds));
-      // On a desktop too, the trip opens with the camera where it was: nothing
-      // fits the route (the owner, 2026-10-21). Fitted, it would be by the
-      // time the card and the camera are at rest.
+      // On a desktop too, the trip opens with the camera taking in its whole route once, beside
+      // the docked panel, read once the card and the camera are at rest.
       await cardsSettled(page);
       const camAfterTap = await readCamera();
+      const litLine = await page.evaluate(
+        async (ids) =>
+          (await window.__src('saved-routes'))?.features.find((f) => ids.includes(f.properties.id))
+            ?.geometry.coordinates ?? [],
+        litIds,
+      );
+      const openFit = await routeFitted(page, litLine);
       check(
-        '  the camera stays where it was: the route is not fitted',
-        Math.abs(camAfterTap.zoom - camBeforeTap.zoom) < 0.01 &&
-          Math.abs(camAfterTap.lng - camBeforeTap.lng) < 1e-6 &&
-          Math.abs(camAfterTap.lat - camBeforeTap.lat) < 1e-6,
-        JSON.stringify({ camBeforeTap, camAfterTap }),
+        '  the camera takes in the whole route, beside the panel',
+        Math.abs(camAfterTap.zoom - camBeforeTap.zoom) >= 0.01 && openFit.ok,
+        `${openFit.why}; zoom ${camBeforeTap.zoom.toFixed(2)} → ${camAfterTap.zoom.toFixed(2)}`,
       );
       // The chevrons: flowing along the lit direction, each cut to exactly
       // the lit line's width. Measured on screen, across the chevron's own
@@ -1300,7 +1506,9 @@ if (PART === 1) {
       // flow is counted back where the tap was, close in, as before: a
       // runner drawing without a GPU manages a few frames a second on the
       // whole route, and the flow steps on frames.
-      await page.evaluate((c) => window.__map.jumpTo({ center: c, zoom: 17 }), clean);
+      await page.evaluate((c) => {
+        window.__map.jumpTo({ center: c, zoom: 17 });
+      }, clean);
       await mapIdle(page);
       const flowA = await until(where, (w) => w !== '');
       const sets = await page.evaluate(
@@ -1358,21 +1566,21 @@ if (PART === 1) {
       // tap lets it go, circle, pale rest and all, and ✕ lets a pick go.
       const cardEl = page.locator('[data-testid="card"]').first();
       const rows = cardEl.locator('[data-testid="trip-hintuan"]');
+      // A build without ride picking (VITE_RIDE_PICKS) lists the stops as plain rows, with no
+      // button to pick one.
+      const isPickingOff =
+        (await rows.count()) > 0 &&
+        (await cardEl.locator('[data-testid="trip-hintuan-pick"]').count()) === 0;
       if ((await rows.count()) === 0) {
         skip(
           '  a hintuan row picks it, priced from the start, a circle at it on the map',
           'no hintuan on this direction yet',
         );
+      } else if (isPickingOff) {
+        console.log(
+          'SKIP  a hintuan row picks it, the ends picked in its place: picking is off in this build (VITE_RIDE_PICKS)',
+        );
       } else {
-        const fold = cardEl.locator('button[data-testid="trip-fold"]');
-        if ((await fold.count()) > 0) {
-          await fold.first().click();
-          await until(
-            () => fold.first().getAttribute('aria-expanded'),
-            (open) => open === 'true',
-          );
-          await cardsSettled(page);
-        }
         const pickedIndex = Math.floor(((await rows.count()) - 1) / 2);
         const row = rows.nth(pickedIndex);
         const rowId = await row.getAttribute('data-hintuan');
@@ -1426,7 +1634,7 @@ if (PART === 1) {
           const pins = document.querySelectorAll('[data-testid="hintuan-pin"]');
           const p = pins[0]?.getBoundingClientRect();
           const trip = document.querySelector('[data-testid="trip"]');
-          // The card's pale, Card/<livery>/surface-pale (tokens.css's own variable; the
+          // A road ride's rest: a line at rest, Map/RouteLine/surface-default (its own variable; the
           // @theme inline alias is never emitted), as the DOM computes it, oklch as the
           // rings come: what the dots along the rest wear.
           const probe = document.createElement('span');
@@ -1437,9 +1645,15 @@ if (PART === 1) {
             ? `var(--map-rail-${livery}-surface-pale)`
             : livery === 'ferry'
               ? 'var(--map-ferry-surface-pale)'
-              : `var(--card-${livery}-surface-pale)`;
+              : 'var(--map-route-line-surface-default)';
           document.body.append(probe);
           const cardPale = getComputedStyle(probe).backgroundColor;
+          // The line's colour is a card's surface in the trip's livery (livery-line.ts): read off
+          // CARD_SURFACE's classes, the colour the map draws the trip's line in.
+          const { CARD_SURFACE } = await import('/src/features/routes/cards/livery-card.ts');
+          probe.style.backgroundColor = '';
+          probe.className = CARD_SURFACE[livery] ?? '';
+          const lineColour = getComputedStyle(probe).backgroundColor;
           probe.remove();
           return {
             lit: (await window.__lit('saved-routes')) ?? [],
@@ -1461,8 +1675,7 @@ if (PART === 1) {
                 ? getComputedStyle(e.querySelector('[data-part="label"]')).opacity
                 : null,
             })),
-            // The line's colour is the card's surface (livery-line.ts): the card's own background.
-            line: trip ? getComputedStyle(trip).backgroundColor : null,
+            line: lineColour,
             pale: cardPale,
             order: m.getLayersOrder(),
             livery: trip?.dataset.livery ?? null,
@@ -1684,15 +1897,22 @@ if (PART === 1) {
       await hides('[data-testid="card"]');
       const after = await until(litNow, (lit) => lit.length === 0, 2000);
       check('  closing the card lights nothing again', after.length === 0, JSON.stringify(after));
-      const pickAfter = await page.evaluate(async () => ({
-        pins: document.querySelectorAll('[data-testid="hintuan-pin"]').length,
-        rest: ((await window.__src('ride-rest'))?.features ?? []).length,
-      }));
-      check(
-        '  and lets a picked hintuan go, its circle and the pale rest too',
-        pickAfter.pins === 0 && pickAfter.rest === 0,
-        `${pickAfter.pins} circle(s), ${pickAfter.rest} stretch(es) at rest`,
-      );
+      // With picking off nothing was picked, so there is nothing to let go.
+      if (isPickingOff) {
+        console.log(
+          'SKIP  closing the card lets a picked hintuan go: picking is off in this build (VITE_RIDE_PICKS)',
+        );
+      } else {
+        const pickAfter = await page.evaluate(async () => ({
+          pins: document.querySelectorAll('[data-testid="hintuan-pin"]').length,
+          rest: ((await window.__src('ride-rest'))?.features ?? []).length,
+        }));
+        check(
+          '  and lets a picked hintuan go, its circle and the pale rest too',
+          pickAfter.pins === 0 && pickAfter.rest === 0,
+          `${pickAfter.pins} circle(s), ${pickAfter.rest} stretch(es) at rest`,
+        );
+      }
     }
   }
 }
@@ -1709,9 +1929,9 @@ check(
   `${mapFileStatuses.length} response(s): ${mapFileStatuses.join(', ') || 'none'}`,
 );
 
-// 6. The Map Style card's Location Labels switch: part 1's, on a page of its own, as its choice
+// 6. The Map Style card's Location Labels switch: the last part's, on a page of its own, as its choice
 // is kept in the storage section 5 holds empty. Only the basemap's labels go; ours stay.
-if (PART === 1) {
+if (RUNS_ONE_OFFS) {
   const p = await b.newPage({ viewport: { width: 1280, height: 800 } });
   await nodeFetch(p);
   p.on('pageerror', (e) => errors.push(String(e)));
@@ -1720,13 +1940,19 @@ if (PART === 1) {
   await p.goto(`${BASE}/`, { waitUntil: 'load' });
   await waitForMap(p);
   await mapIdle(p);
-  await checkLocationLabels(p, { check, prefix: 'public map', waitForMap });
+  await checkLocationLabels(p, {
+    check,
+    prefix: 'public map',
+    waitForMap,
+    isOnByDefault: true,
+    key: 'para.location-labels.v2',
+  });
   await p.close();
 }
 
 // 7. A load that fails: never a blank page, but a problem toast at the top with Try again, which
 // reads the map again; it loads, and the toast has gone.
-if (PART === 1) {
+if (RUNS_ONE_OFFS) {
   const p = await b.newPage({
     viewport: { width: 390, height: 844 },
     isMobile: true,
@@ -1775,7 +2001,16 @@ if (PART === 1) {
   await p.close();
 }
 
-check('no page errors', errors.length === 0, errors.slice(0, 2).join(' | '));
+check(
+  'no page errors',
+  errors.length === 0,
+  // Only with an error: a tile the basemap answers 404 is no page error of its own.
+  errors.length === 0
+    ? ''
+    : [...errors.slice(0, 2), ...failedLoads.slice(0, 5).map((load) => `failed: ${load}`)].join(
+        ' | ',
+      ),
+);
 
 await b.close();
 tally();
