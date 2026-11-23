@@ -5,7 +5,10 @@
  */
 export function raisedHeightOf(content: HTMLElement): number {
   let px = content.offsetHeight;
-  for (const cut of content.querySelectorAll<HTMLElement>('[data-cut-at-low]'))
-    px += cut.scrollHeight - cut.clientHeight;
+  for (const cut of content.querySelectorAll('[data-cut-at-low]')) {
+    const hidden = cut.scrollHeight - cut.clientHeight;
+    // Whole lines only (a RouteCard's are 32 px): one drawn whole overflows by a descender's few.
+    if (hidden > 8) px += hidden;
+  }
   return px;
 }
