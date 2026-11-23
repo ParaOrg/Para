@@ -22,6 +22,7 @@ export const MAP_CACHES = [
   'map-lines',
   'signboards',
   'landmarks',
+  'establishments',
   'footbridges',
   'basemap-meta',
   'basemap-tiles',

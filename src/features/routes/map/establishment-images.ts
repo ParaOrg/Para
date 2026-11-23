@@ -12,6 +12,7 @@ import fastFood from './establishment-icons/maki/fast-food.svg?raw';
 import fuel from './establishment-icons/maki/fuel.svg?raw';
 import grocery from './establishment-icons/maki/grocery.svg?raw';
 import hospital from './establishment-icons/maki/hospital.svg?raw';
+import jewelryStore from './establishment-icons/maki/jewelry-store.svg?raw';
 import laundry from './establishment-icons/maki/laundry.svg?raw';
 import pharmacy from './establishment-icons/maki/pharmacy.svg?raw';
 import police from './establishment-icons/maki/police.svg?raw';
@@ -20,6 +21,7 @@ import school from './establishment-icons/maki/school.svg?raw';
 import shop from './establishment-icons/maki/shop.svg?raw';
 import toilet from './establishment-icons/maki/toilet.svg?raw';
 import atm from './establishment-icons/temaki/atm.svg?raw';
+import moneyHand from './establishment-icons/temaki/money-hand.svg?raw';
 import { FAMILY_COLOUR, familyOfGlyph, type EstablishmentGlyph } from './establishment-kinds';
 import { ESTABLISHMENT_IMAGE_PREFIX } from './establishment-loader';
 
@@ -27,7 +29,7 @@ import { ESTABLISHMENT_IMAGE_PREFIX } from './establishment-loader';
  * The establishments' markers, a chunk of its own, fetched the first time the map asks for one
  * (establishment-loader.ts). A marker is a disc in its family's colour, rimmed in the map's
  * white so it holds on Dark too, with the glyph in white over it. The glyphs are Maki 8.2.0 and
- * Temaki 5.13.0 (the ATM), both CC0, kept as their projects ship them, each with its licence.
+ * Temaki 5.13.0 (the ATM and money in hand), both CC0, kept as their projects ship them, each with its licence.
  */
 
 const GLYPHS: Record<EstablishmentGlyph, string> = {
@@ -49,6 +51,8 @@ const GLYPHS: Record<EstablishmentGlyph, string> = {
   laundry,
   toilet,
   police,
+  'jewelry-store': jewelryStore,
+  'money-hand': moneyHand,
 };
 
 /** The marker's size in CSS pixels: the disc with its rim, and the glyph inside it. */
