@@ -133,6 +133,15 @@ export function restoredState(d: Draft): {
   };
 }
 
+/** Lets go of the draft as a drawing ends, not an effect later: a closed tab could beat that. */
+export function clearDraft(): void {
+  try {
+    localStorage.removeItem(DRAFT_KEY);
+  } catch {
+    /* storage unavailable: nothing was kept */
+  }
+}
+
 /**
  * Keeps the draft in step with the drawing: written while there are points,
  * gone when there are none or the drawing ends. A segment still waiting for
@@ -152,30 +161,19 @@ export function useDraftSaving(
 ): void {
   const { drawing, controlPoints, segments, target, area, borrow } = state;
   useEffect(() => {
+    // Not drawing, or every point undone: nothing to keep, nor for a reload to bring back.
+    if (!drawing || controlPoints.length === 0) {
+      clearDraft();
+      return;
+    }
+    const marked = segments.map((s): DraftSegment =>
+      s && isStandIn(s) ? { ...s, pending: true } : s,
+    );
+    const joinAt = joinRef.current ? controlPoints.indexOf(joinRef.current) : -1;
+    const join = joinAt === -1 ? null : joinAt;
     try {
-      if (drawing && controlPoints.length > 0) {
-        const marked: DraftSegment[] = segments.map((s) =>
-          s && isStandIn(s) ? { ...s, pending: true } : s,
-        );
-        const join = joinRef.current ? controlPoints.indexOf(joinRef.current) : -1;
-        localStorage.setItem(
-          DRAFT_KEY,
-          JSON.stringify(
-            toStored({
-              controlPoints,
-              segments: marked,
-              target,
-              area,
-              borrow,
-              join: join === -1 ? null : join,
-            }),
-          ),
-        );
-      } else {
-        // Not drawing, or drawing with every point undone: nothing to keep.
-        // Both clear the draft, so a reload does not bring back what Undo took away.
-        localStorage.removeItem(DRAFT_KEY);
-      }
+      const stored = toStored({ controlPoints, segments: marked, target, area, borrow, join });
+      localStorage.setItem(DRAFT_KEY, JSON.stringify(stored));
     } catch {
       /* storage unavailable: drafts simply do not persist */
     }

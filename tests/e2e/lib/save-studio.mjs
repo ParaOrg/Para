@@ -739,6 +739,23 @@ export const directionsOf = (routeId) => tables.route_variant.filter((v) => v.ro
 export const DRAFTED = 'Saved as a draft. The map changes once it is approved.';
 /** Waits for a save's draft to be stored, as the page says. */
 export const drafted = () => waitFor(async () => (await body()).includes(DRAFTED));
+/**
+ * Whether the drawing kept on the device (para.draft.v1) is still there the instant a save's toast
+ * is drawn: started before the save, awaited after it.
+ */
+export const keptAtToast = () =>
+  page.evaluate(
+    (text) =>
+      new Promise((resolve) => {
+        const observer = new MutationObserver(() => {
+          if (!document.body.textContent?.includes(text)) return;
+          observer.disconnect();
+          resolve(localStorage.getItem('para.draft.v1') !== null);
+        });
+        observer.observe(document.body, { subtree: true, childList: true, characterData: true });
+      }),
+    DRAFTED,
+  );
 /** The draft of a route or hotspot, if one is kept. */
 export const draftOf = (kind, subjectId) =>
   tables.draft.find((d) => d.kind === kind && d.subject_id === subjectId);
