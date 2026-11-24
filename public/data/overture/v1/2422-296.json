@@ -1,0 +1,11 @@
+{
+  "schema": 1,
+  "cell": "2422-296",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o6d7ad5dd46a94421","clinic",121.12735,14.80143,"Abalos Medical Clinic - Montalban San jose Bayan"],
+    ["o755f0eab32544f6d","school",121.13148,14.80111,"Deped San Isidro Labrador Elementary School - Montalban"],
+    ["oc54fd1af3f974a2d","school",121.11446,14.82336,"DepEd Kakawate High School - 307502"],
+    ["occbc63b1f42444a6","school",121.10206,14.81721,"San Roque Elementary School"]
+  ]
+}

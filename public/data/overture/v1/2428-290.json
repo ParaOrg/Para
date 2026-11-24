@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "cell": "2428-290",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o27229b23e6c44e88","fast_food",121.4041,14.50865,"KFC"],
+    ["o5ef657d56f2a4bb3","fast_food",121.44793,14.53593,"KFC"],
+    ["o0ce8d888661a4594","school",121.40672,14.54358,"Matalingting Elementary School"],
+    ["o4a9f537279794132","school",121.41409,14.54643,"Matalingting Elementary School"],
+    ["o6f553c5f974b4074","school",121.42187,14.50517,"DepEd Calangay IHS"],
+    ["o7e826116938c43a0","school",121.43453,14.51042,"Gaudencio Octavio Integrated High School"]
+  ]
+}

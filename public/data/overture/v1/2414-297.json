@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "cell": "2414-297",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o601551a9017f4d99","restaurant",120.73129,14.89102,"Don Welmitos Restaurant Calumpit Bulacan"],
+    ["o724ea8ac1f4840b4","restaurant",120.7094,14.88513,"Dr. Sam-G"],
+    ["oe064cdb6d2d9435b","restaurant",120.70741,14.8832,"Chef Jo’s Korean Grill House"],
+    ["o05e9414e7cea4adb","fast_food",120.73663,14.85005,"Cerdo Fuego Beef Pares Mami"],
+    ["ob3c0bb8ed7af494c","cafe",120.74142,14.85788,"Café Tanglaw"],
+    ["ob953d45e4dee4a0e","cafe",120.73903,14.86791,"Cafe Eros"],
+    ["o11a8104619e74a83","school",120.72011,14.89636,"Svsf National Highschool"],
+    ["o1453a965a21740bf","school",120.7399,14.86621,"Northwest Ecumenical School"],
+    ["o4fa85d5533784a26","school",120.74107,14.86259,"Northwest Ecumenical School"],
+    ["o562ec02e29364d4a","school",120.70597,14.89403,"DepEd Cambasi Elementary School"],
+    ["o5c402ebdf2a04d1f","school",120.73346,14.89552,"Sta. Lucia National High School"],
+    ["o696fe1f834fa455a","school",120.73748,14.8583,"Hangga Elementary School Hagonoy Bulacan"],
+    ["obb619e51b8e848e1","school",120.73939,14.86739,"DepEd San Juan Elementary School 104844"],
+    ["oe84618535bd54d3a","school",120.71954,14.87769,"Candelaria Elementary School"],
+    ["oeb27f2bc0bee45a6","school",120.72124,14.89616,"Tacasan Elementary School Macabebe Pampanga"],
+    ["oeab85c1b299c4c7e","college",120.70503,14.88773,"Holy Cross College"]
+  ]
+}

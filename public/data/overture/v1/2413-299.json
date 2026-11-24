@@ -1,0 +1,27 @@
+{
+  "schema": 1,
+  "cell": "2413-299",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o413096009e1f42db","restaurant",120.65659,14.968,"Patricio's Grill"],
+    ["o69d329271dad45b7","restaurant",120.69001,14.9784,"J.A.J.A Lechon Manok"],
+    ["o8b6042c993be4cc4","restaurant",120.69566,14.98123,"Chooks-to-Go"],
+    ["o98736606cade447e","restaurant",120.65262,14.99957,"Chong’s Inasal - Bacolor"],
+    ["o11a471c475ae4022","cafe",120.65703,14.97881,"Haven Caffe"],
+    ["o3b002955da154de6","cafe",120.68155,14.96551,"Mang Cha-a San Nicolas Plaza Minalin"],
+    ["o8cbeb517be15400b","cafe",120.65331,14.99696,"Metrobean Coffee"],
+    ["of69a5583ab7f4620","cafe",120.65318,14.99683,"NETEA"],
+    ["odd52ed1cc7c84c31","clinic",120.65248,14.9988,"A&A Ultrasound Clinic - Bacolor"],
+    ["odf08326521cd4ec8","clinic",120.65014,14.96746,"Dr. Christia Lagman Calilung Pediatric Clinic"],
+    ["o3e525802755e4147","dentist",120.65217,14.99493,"Klinikaco"],
+    ["o3bd5498aa3264dd7","school",120.68332,14.96667,"Bulac Elementary School"],
+    ["o989abf1d5f5f4b2a","school",120.68601,14.96642,"Minalin Elementary School"],
+    ["o9fba7dfdfadb48ed","school",120.66959,14.95872,"Bulac Elementary School"],
+    ["od9a946a180e9434e","school",120.69279,14.97959,"Sta. Rita Elementary School"],
+    ["o0f63c0d750f54391","college",120.65294,14.99968,"Pampanga State University"],
+    ["o77c30c37881a4d47","college",120.65618,14.99829,"University Hostel"],
+    ["oa5da9f8dd8114642","college",120.65663,14.99829,"Iflip Tech Gadgets"],
+    ["ocb248dac430c45a8","college",120.66379,14.9689,"DHVSU Lubao Campus"],
+    ["of5ed8d12ab6f4c82","college",120.65482,14.99737,"Don Honorio Ventura Technological State University"]
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "cell": "2426-280",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o37dbf961301b4e06","restaurant",121.34206,14.03337,"Cupabilitea"],
+    ["o3d673bfb7cc94660","restaurant",121.34017,14.04932,"Fern's Cafe"],
+    ["o83b714d6ed424d99","restaurant",121.31792,14.01338,"Riders' Rest Stop"],
+    ["o8fc87ded8a474c4d","restaurant",121.34285,14.04657,"Joey Monster Bowl Restaurant"],
+    ["oe1861a466ab74d72","restaurant",121.34283,14.04677,"Heavenly Brew Tea and Coffee"],
+    ["oa8dc3a9726b84f71","fast_food",121.34276,14.04205,"McDonald's San Ignacio San Pablo City",{"brand":"McDonald's"}],
+    ["o6b301e6ed2fb45eb","clinic",121.32003,14.04656,"DepEd Tayo San Pablo Central ES - San Pablo City"],
+    ["ob3a9a2941582491a","school",121.33829,14.01487,"San Vicente National High School"]
+  ]
+}

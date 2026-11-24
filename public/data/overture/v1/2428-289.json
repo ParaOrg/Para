@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "cell": "2428-289",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o0030f84816a54f0d","restaurant",121.42733,14.48181,"Daijon Felip's Seafood Grill and Restaurant"],
+    ["o06251ca433f842a0","restaurant",121.4228,14.46954,"Habi's Bakeshop"],
+    ["o9ccb634bde714d5e","fast_food",121.43671,14.48695,"KFC"],
+    ["obb04c93d2c5b4561","dentist",121.42319,14.46861,"Cornejo-Angeles Dental Clinic"],
+    ["o554977662dfe492c","school",121.42358,14.46907,"Pulong Mindanao Elementary School"],
+    ["ob53c374dbf45406c","school",121.4243,14.46856,"Santa Maria Integrated High School"],
+    ["od31028b232d244ab","school",121.42499,14.475,"Pulong Mindanao Elementary School"],
+    ["oda9d10e46c994bca","school",121.42704,14.47171,"Our Lady of Los Angeles School"],
+    ["o0315ba3d385645d6","college",121.42317,14.46862,"ELI ASIA Siniloan Campus"]
+  ]
+}

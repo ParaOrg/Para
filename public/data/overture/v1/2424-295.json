@@ -1,0 +1,10 @@
+{
+  "schema": 1,
+  "cell": "2424-295",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o39f6dec8094b40e0","fast_food",121.2017,14.7618,"Jollibee"],
+    ["o4545d24402964b81","school",121.20188,14.75985,"Geronimo Elementary School"],
+    ["o7271fc70a3cb4210","school",121.20188,14.75985,"Macabud National High School"]
+  ]
+}

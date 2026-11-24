@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "cell": "2416-281",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o11ef2fe6bf0940cd","restaurant",120.83115,14.08681,"PH 03262 Jorgensen's RESTAURANT"],
+    ["o2dd8fc5aad084f57","restaurant",120.82956,14.09946,"Dairy Queen Wind Residences, Tagaytay"],
+    ["od75f7d2cc3f64f82","restaurant",120.83845,14.07862,"Km 74 Nasugbu Batangas"],
+    ["ofd45a25244b74036","restaurant",120.83488,14.07254,"Batulao View Farm Table Food House"],
+    ["of9ec1db9ec3346ec","fast_food",120.84127,14.07746,"Jollibee"],
+    ["o937014d98a854a84","cafe",120.84535,14.07933,"Kap'ean Coffee"],
+    ["oe4ea612b7eb94800","clinic",120.84523,14.09516,"Nami Carolina Wellness Estate"],
+    ["o95fe89fb71a6444f","school",120.81984,14.05602,"Kaylaway Elementary School"],
+    ["oad58e55fc80c4de7","school",120.82585,14.09324,"Kaylaway, Elementary,school"],
+    ["obf1fa0a373984d6b","school",120.83527,14.08366,"Kaylaway, Elementary,school"],
+    ["odc6fd8b7a9ee4881","school",120.8403,14.07314,"Nasugbu Senior High School I"]
+  ]
+}

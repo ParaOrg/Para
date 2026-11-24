@@ -1,0 +1,26 @@
+{
+  "schema": 1,
+  "cell": "2429-278",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o05009aee3c844d25","restaurant",121.4882,13.93798,"Pampanga's Chicken Inasal"],
+    ["o0898707e699641d7","restaurant",121.49722,13.94526,"Renzky Restaurant"],
+    ["o12c55826c2ec4f47","restaurant",121.49062,13.93429,"WHITE and GOLD Restaurant"],
+    ["o1522e53fc68a4550","restaurant",121.49047,13.90692,"M' Café"],
+    ["o3620132f8a314a1b","restaurant",121.49742,13.94548,"Bibingka De Pugon"],
+    ["o3cca2755540e4600","restaurant",121.48882,13.93859,"Burp and Blends"],
+    ["o425ee2974b52455d","restaurant",121.45189,13.92768,"Dagat Cusina Gubat Official"],
+    ["o50ae0b2016fb4a36","restaurant",121.47388,13.9315,"Mama K’s Logsi at Girasole’s Farm"],
+    ["o79a65e71789c48a8","restaurant",121.48923,13.93842,"Mazapan Sweets D' Original"],
+    ["obcc5180a88dd4f02","restaurant",121.45189,13.92768,"Siowings-Candelaria"],
+    ["of32ea01ec2d84b7b","restaurant",121.49047,13.90692,"The M Cafe Lutucan"],
+    ["o0ed0ccb7ebb1419d","cafe",121.4739,13.9315,"Seasun Café - Candelaria, Quezon"],
+    ["o270f40d7169646bb","cafe",121.47388,13.9315,"Mr. Field’s Coffee+ Waltermart"],
+    ["o77cb876321dc451f","cafe",121.4953,13.94356,"Touchdown Cafe Sto. Cristo, Sariaya Branch"],
+    ["oe9760e7d7c184fa4","cafe",121.46215,13.93143,"Coco Ranch Cafe"],
+    ["o073eac5e7a5f4bf0","school",121.47878,13.93158,"DepEd Concepcion Ibaba Elementary School"],
+    ["o54bddcae845b4e2e","school",121.48969,13.94101,"Montecillo Elementary School"],
+    ["o77ed632e871d4858","school",121.49171,13.94741,"Colegio De Santo Cristo De Burgos Tierra"],
+    ["o860e538813ce4608","school",121.48999,13.94036,"Concepcion Ibaba Elementary School"]
+  ]
+}

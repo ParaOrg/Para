@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "cell": "2429-282",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o29c65671ea52418e","restaurant",121.47085,14.14355,"Daddy Mark"],
+    ["o7cd5f5a0bbcd4433","restaurant",121.46423,14.10472,"The Rustic Bistro"],
+    ["o8aa3d9e2148a4dd3","restaurant",121.45171,14.1312,"Paradise FarmFresh"],
+    ["od7c1737042fa4f3c","restaurant",121.48787,14.14845,"Hilarion's Coffee and Milktea"],
+    ["o6eb0cb9ab2ac4a11","cafe",121.47181,14.14564,"D Brew Delights"],
+    ["o87b6617ae75e4528","school",121.45811,14.14914,"Sta. Catalina Elementry School Majayjay Laguna"],
+    ["oa980c28aa5d54e40","school",121.46535,14.13296,"Blackline Media Agency ADS"],
+    ["odef6f13e3910488c","school",121.47157,14.14712,"Sta. Catalina Elementry School Majayjay Laguna"],
+    ["oe5a895b59db2421f","school",121.47124,14.14248,"Majayjay Elementary School"]
+  ]
+}

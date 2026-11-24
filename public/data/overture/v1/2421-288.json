@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "cell": "2421-288",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o825aca6d083343ea","restaurant",121.05027,14.41517,"Chooks-to-Go"],
+    ["od5f9e9b4a8334907","restaurant",121.05068,14.4435,"Garaje"],
+    ["of872d68cd8a64272","restaurant",121.07269,14.42267,"Chowking"],
+    ["oa7b3ad42697a45dd","fast_food",121.05135,14.44061,"McDonald's"],
+    ["o687c04c154ac4772","cafe",121.05069,14.43807,"KKOPI.Tea - Cupang Muntinlupa City"],
+    ["o81c8dad6c2e64f8e","cafe",121.05042,14.43709,"Day Tea Cafe"],
+    ["o4a68e72e68fe4a49","dentist",121.05001,14.41767,"Dana Smile Dental Clinic and Orthodontics"],
+    ["oae0795698cde4592","dentist",121.05054,14.43491,"J Gonzales Dental Center Muntinlupa Branch"],
+    ["o0835e77e9e0c48f9","school",121.05024,14.41681,"San Roque Catholic School"]
+  ]
+}

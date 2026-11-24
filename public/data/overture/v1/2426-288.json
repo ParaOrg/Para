@@ -1,0 +1,11 @@
+{
+  "schema": 1,
+  "cell": "2426-288",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o320151c8b95b44db","restaurant",121.34099,14.40893,"CRUZina - Cruz Kusina"],
+    ["o3a4c67a364ab45ef","restaurant",121.33961,14.40171,"Lehance food corner"],
+    ["o73d1a33bf5e346d2","fast_food",121.33424,14.44038,"Bayugo Jalajala Rizal"],
+    ["o8902acefb6ef414a","cafe",121.33961,14.40088,"Kairos Cafe"]
+  ]
+}

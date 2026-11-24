@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "cell": "2428-284",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o887c607311d74eb4","restaurant",121.40319,14.2436,"Panyero's Place"],
+    ["o3305fb9d79ce494d","fast_food",121.40321,14.24358,"Kowloon House Santa Cruz, Laguna"],
+    ["o084c41c9fb444d22","dentist",121.43018,14.20176,"De Rosas Dental clinic"],
+    ["o86ea7679eb7f4930","dentist",121.42999,14.20169,"Fernandez Dental Clinic"],
+    ["oab5aa27c5c994cb9","dentist",121.43039,14.2253,"East Oral Care"],
+    ["ob74f61d94d844770","school",121.4292,14.22445,"Buenavista-Cigaras Elementary School"],
+    ["oc4e4a0941e4e42fa","school",121.43391,14.233,"Mario Lanuza Elementary School"],
+    ["oe3a26138ac5442f3","school",121.43388,14.24257,"Unson National High School"]
+  ]
+}

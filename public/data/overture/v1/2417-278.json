@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "cell": "2417-278",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o1f4289e795114dcd","restaurant",120.86514,13.91056,"Don Daloy RESTO Grill"],
+    ["o34483b404e9e4396","restaurant",120.89941,13.90096,"Ysla"],
+    ["oaf68c994c06043b8","restaurant",120.89339,13.9068,"Red Ribbon"],
+    ["od9c5d04512414b52","restaurant",120.88067,13.93796,"BossU tv"],
+    ["oee2dbe48c3784355","restaurant",120.88123,13.94122,"Kalye Lozada"],
+    ["ofc324d062ee74da4","restaurant",120.89328,13.90579,"Anotch's Sizzling Sa Kubo"],
+    ["oc77a088708f44339","cafe",120.8922,13.91482,"Susan's Café - Garden and Tea House"],
+    ["o552e2fc6a36f4ed7","school",120.85607,13.91049,"Sinisian Elementary School"],
+    ["o5db46647bc1a497e","school",120.88333,13.91667,"Lemery Senior High School"],
+    ["oec0cce4143c14346","school",120.88673,13.90904,"Doña Matilde Memorial Elementary School"]
+  ]
+}

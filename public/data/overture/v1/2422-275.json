@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "cell": "2422-275",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o02a71792e2ac44ff","restaurant",121.1056,13.75583,"Sampaga Centro Batangas City"],
+    ["o50cc90dcca904943","restaurant",121.12206,13.75394,"DanDon's Ice Cream"],
+    ["o55e7dfb8d2ed47f3","restaurant",121.10402,13.76532,"TEAMPLA"],
+    ["o8eb1445b32c34f38","restaurant",121.10309,13.75592,"Dos Garden Bistro"],
+    ["oc03bbe7cdf854135","restaurant",121.11658,13.76467,"Mc Onad's Lomi Haus"],
+    ["od81f6395dcc94702","restaurant",121.12315,13.76232,"Wildwest Cafe"],
+    ["oebeb274cc5464274","restaurant",121.10408,13.75571,"Lumanglas Eatery"],
+    ["o8cb483be11cb48df","dentist",121.10287,13.75572,"El Rubio Dentals"],
+    ["o3938283dd4104878","school",121.10307,13.75577,"Sampaga Elementary School"]
+  ]
+}

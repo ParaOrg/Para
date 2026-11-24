@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "cell": "2414-299",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["oc337743545e04222","restaurant",120.74776,14.98769,"Dimsum King CDCP"],
+    ["oea33b4cb406746fa","restaurant",120.71709,14.95553,"Bakeshop \"Deli-Pan\""],
+    ["o65f98c64bc794f0c","fast_food",120.74349,14.99345,"Jollibee"],
+    ["of3266c8985554d68","fast_food",120.74967,14.98644,"KFC"],
+    ["ob5be3fa539ee4bc2","cafe",120.73899,14.98185,"TP"],
+    ["o28d86f1975ad4aba","school",120.71767,14.99721,"Sto. Tomas Elementary School"],
+    ["o295874879ffd4972","school",120.70578,14.987,"STO. TOMAS NHS-Sto. Tomas Pamp"],
+    ["o661306601df847b0","school",120.74255,14.99015,"Sto. Domingo Elementary School"],
+    ["obfbe38c0425547e9","school",120.73746,14.97888,"Sta Maria Elementary School Minalin Pampanga"],
+    ["oea098fa688904c2c","school",120.70415,14.98607,"DepEd San Bartolome Elementary School - Sto. Tomas, Pampanga"],
+    ["oed44445618b34ec4","school",120.71491,14.98989,"Sto. Tomas National High School, Sto. Tomas"]
+  ]
+}

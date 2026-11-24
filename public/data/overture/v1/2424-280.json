@@ -1,0 +1,12 @@
+{
+  "schema": 1,
+  "cell": "2424-280",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o0e14ab6d986c466e","restaurant",121.21985,14.01678,"Drahcir's-DRAKKIR'S Lomi Haus & Tapsihan"],
+    ["obc8dd713b356491d","restaurant",121.20332,14.02534,"Indo's Sisig"],
+    ["o6fbb3d6ddc194c17","school",121.20448,14.03032,"San Fernando Elementar School"],
+    ["oa00356fdf89e478e","school",121.22099,14.04916,"San Ildefonso Elementary School"],
+    ["ob22405d4be384509","school",121.20079,14,"Sta. Teresita Primary School"]
+  ]
+}

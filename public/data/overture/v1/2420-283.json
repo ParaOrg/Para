@@ -1,0 +1,19 @@
+{
+  "schema": 1,
+  "cell": "2420-283",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o05142d6791e745c1","restaurant",121.02228,14.17511,"Kalye Tres"],
+    ["o211da97fc4534bc5","restaurant",121.01269,14.18302,"Orient The Original Buko Pie Bakeshop"],
+    ["o59d14587655346a4","restaurant",121.03162,14.18647,"La Verne Bar & Cafe"],
+    ["o744102ab17e648b0","restaurant",121.02016,14.17083,"Indian Masala Curry House Cabuyao"],
+    ["oa092729d1c6e42b3","restaurant",121.02843,14.1845,"Rou's Weekend Breakfast"],
+    ["oeaa14ad5292a4c39","restaurant",121.00202,14.16816,"Cucina Bernardo"],
+    ["o545060ab3a84495b","cafe",121.01082,14.18068,"Ash&Co Café- Lumil•Silang•Cavite"],
+    ["o546c7b7193104827","cafe",121.01097,14.18187,"Cafe Lulubon"],
+    ["od3ad174404184d41","cafe",121.01291,14.18312,"Once Upon A Cup - Main Branch"],
+    ["of60577194d6247ba","clinic",121.00153,14.17284,"Panhero    Ang tamang Landas   Rehabilitation Center"],
+    ["o21a513f54d9c43c9","dentist",121.00761,14.17969,"Dentista K.O. Dental Center"],
+    ["o36c2387bc7424a31","dentist",121.01266,14.18318,"Hizon-Virgines Dental Clinic"]
+  ]
+}

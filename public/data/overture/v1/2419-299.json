@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "cell": "2419-299",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o070c1fe2dadb42e9","restaurant",120.97717,14.95577,"Edita's Haven Events Place"],
+    ["o5bb26782b7f64c4a","fast_food",120.95674,14.98738,"Jollibee"],
+    ["ocd7cd22b61c34431","fast_food",120.96386,14.95663,"McDonald's"],
+    ["o909c15d646cc4e4f","cafe",120.97691,14.95512,"El Rio Adventura Café"],
+    ["oa2b43ce7f0db4a20","cafe",120.95393,14.96647,"Koffee MIKU"],
+    ["oa7151d208a8442cc","college",120.96162,14.95823,"Bulacan Polytechnic College"]
+  ]
+}
