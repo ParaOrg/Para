@@ -53,7 +53,8 @@ import { retryingImport } from '@/shared/utils/retrying-import';
 
 import { MapSheetControls } from './map-sheet-controls';
 import type { SaidNote } from './page-toasts';
-import { PlaceSearchBar, sheetTopUnderSearch } from './place-search-bar';
+import { PlaceSearchBar } from './place-search-bar';
+import { sheetTopUnderSearch } from './sheet-top-under-search';
 import { useStatusBarColour } from './status-bar';
 
 // The toasts, fetched the first time the page has something to say: the opening page does not
