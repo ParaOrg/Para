@@ -8,9 +8,8 @@
 #
 # One download: the Philippines extract (about 600 MB), from Para's own copy at osm.para-commute.org,
 # or else Geofabrik or openstreetmap.fr (scripts/osm-mirror/fetch-extract.sh), checked against its
-# MD5, then cut
-# to the map's panning box (scripts/tiles/area.mjs, METRO_MANILA), so the provinces the map
-# reaches past Metro Manila's line are in it. osmium keeps the tags place search lists (decision 6:
+# MD5, then cut to the map's panning box (scripts/tiles/area.mjs, METRO_MANILA), so the provinces
+# the map reaches past Metro Manila's line are in it. osmium keeps the tags place search lists (decision 6:
 # malls, schools, universities, hospitals, churches, markets, transport stations, barangays and
 # major streets; no shops or houses), and landmarks.mjs turns them into one point each. Geofabrik
 # is reachable from GitHub's runners, not from the agents' containers: the build runs in Actions.
