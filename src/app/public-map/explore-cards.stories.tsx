@@ -44,9 +44,18 @@ export const OnNarrowPhone: Story = {
 };
 
 /**
- * Where the cards float (Desktop RouteCard, 4852:35445): the top-left corner, 384 wide, under the
- * room the page keeps for the place search bar (sheetTopUnderSearch), as the route list's panel.
+ * Where the cards float (Desktop RouteCard, 4852:35445): flush in the top-left corner, 384 wide.
+ * The page's room for the place search bar (--sheet-float-top) does not move them.
  */
 export const OnWideMap: Story = {
   decorators: [mapOf('w-280 [--sheet-float-top:7.375rem]')],
+  play: async ({ canvasElement }) => {
+    const cards = within(canvasElement).getByTestId('explore-cards');
+    const map = cards.parentElement?.getBoundingClientRect();
+    const box = cards.getBoundingClientRect();
+    await expect({ top: box.top - (map?.top ?? 0), width: box.width }).toEqual({
+      top: 0,
+      width: 384,
+    });
+  },
 };

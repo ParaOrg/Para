@@ -25,7 +25,7 @@ export function ExploreCards({ onLocate }: ExploreCardsProps) {
     <div
       ref={own}
       data-testid="explore-cards"
-      className="absolute inset-x-0 bottom-0 z-10 flex flex-col text-text-on-fill @float:top-[var(--sheet-float-top,0px)] @float:right-auto @float:bottom-auto @float:w-96"
+      className="absolute inset-x-0 bottom-0 z-10 flex flex-col text-text-on-fill @float:top-0 @float:right-auto @float:bottom-auto @float:w-96"
     >
       <WaysToExplore onLocate={onLocate} />
       <DonationCard />
