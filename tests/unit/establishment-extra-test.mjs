@@ -6,10 +6,10 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
+import { cellsIn } from '../../src/features/routes/map/establishment-cell-layer.ts';
 import {
   EXTRA_LAYER,
   EXTRA_MIN_ZOOM,
-  cellsIn,
   extraFeatures,
 } from '../../src/features/routes/map/establishment-extra.ts';
 
@@ -41,8 +41,8 @@ test('a cell gives its pawnshops and remittance centres, nothing else, a nameles
   assert.deepEqual(
     extraFeatures(cell).map(({ properties, geometry }) => [properties, geometry.coordinates]),
     [
-      [{ osm: 'n1', kind: 'pawnshop', name: 'Palawan Pawnshop' }, [121.049, 14.621]],
-      [{ osm: 'n3', kind: 'remittance', name: '' }, [121.048, 14.622]],
+      [{ id: 'n1', kind: 'pawnshop', name: 'Palawan Pawnshop' }, [121.049, 14.621]],
+      [{ id: 'n3', kind: 'remittance', name: '' }, [121.048, 14.622]],
     ],
   );
 });

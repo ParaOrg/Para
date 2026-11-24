@@ -103,6 +103,12 @@ export const FAMILY_COLOUR: Record<EstablishmentFamily, string> = {
   safety: ESTABLISHMENT_COLOURS['Map/Establishment/Safety/surface'],
 };
 
+/**
+ * Where the places from Para's own cell files first show (the pawnshops, Overture's places): the
+ * cells are read only from here in, and each place's name joins it a zoom closer.
+ */
+export const ESTABLISHMENT_FILL_ZOOM = 16;
+
 /** Where a tier's marker first shows, and where its name joins it. */
 export const TIER_ZOOM: Record<EstablishmentTier, { marker: number; name: number }> = {
   1: { marker: 14, name: 15 },
