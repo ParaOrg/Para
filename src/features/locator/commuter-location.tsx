@@ -1,5 +1,5 @@
 import type { MapLibreMap } from 'maplibre-gl';
-import { useEffect, useRef } from 'react';
+import { useEffect, useImperativeHandle, useRef, type Ref } from 'react';
 
 import { BASEMAPS, type Basemap } from '@/features/routes/map/basemap';
 import { BASEMAP_THUMBNAILS } from '@/features/routes/map/basemap-thumbnails';
@@ -17,7 +17,14 @@ import { useLocator } from './use-locator';
 import { useLocatorMood } from './use-locator-mood';
 import { shouldTell } from './where-told';
 
+/** What the page may ask of the locator beyond its own button. */
+export interface CommuterLocationHandle {
+  /** Locate, or bring the camera to the commuter (the public map's "Turn on location" row). */
+  locate: () => void;
+}
+
 interface Props {
+  ref?: Ref<CommuterLocationHandle>;
   map: MapLibreMap | null;
   /** The open card's height: the camera keeps the commuter clear of it as it moves. */
   snap: Snap;
@@ -63,6 +70,7 @@ interface Props {
  * (`cameraTurn`).
  */
 export function CommuterLocation({
+  ref,
   map,
   isMapLoaded,
   basemaps = BASEMAPS,
@@ -78,6 +86,14 @@ export function CommuterLocation({
   onNote,
 }: Props) {
   const locator = useLocator(map, { compass: coarse, snap, offset, cameraTurn });
+  // Asks for the location, or brings the camera back to the commuter, as the button's first taps
+  // do; never its compass step, which a row reading "Turn on location" does not promise.
+  const { mode, tap } = locator;
+  const isOnCommuter = mode === 'TrackedLocation' || mode === 'TracksTheMapBasedOnCompassFacing';
+  useImperativeHandle(ref, () => ({ locate: () => (isOnCommuter ? undefined : tap()) }), [
+    isOnCommuter,
+    tap,
+  ]);
   // How the dot feels: glad as the location comes, a boing at a tap on the
   // button or on the dot, now and then a huff (locatorMood).
   const { mood, face, beat, poke } = useLocatorMood(locator);
