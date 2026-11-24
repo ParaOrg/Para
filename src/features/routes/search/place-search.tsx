@@ -8,7 +8,7 @@ import { RoutesNearHere } from './routes-near-here';
 import type { LoadLandmarks } from './use-landmarks';
 import { usePlaceSearch } from './use-place-search';
 import type { Hotspot } from '../model/hotspots';
-import type { HintuanNearHere } from '../model/landmark-search';
+import type { HintuanNearHere } from '../model/landmark-goal';
 import type { SearchPlace } from '../model/place-search';
 import type { Direction } from '../model/routes';
 import type { Landmark } from '../published/landmark-file-schema';

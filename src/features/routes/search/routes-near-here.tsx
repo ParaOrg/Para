@@ -4,7 +4,8 @@ import { Button } from '@/design-system/primitives/button';
 import { CloseIcon } from '@/shared/ui/route-icons';
 
 import { LANDMARK_KIND_LABEL } from './search-rows';
-import { NEAR_HERE_M, type HintuanNearHere } from '../model/landmark-search';
+import type { HintuanNearHere } from '../model/landmark-goal';
+import { NEAR_HERE_M } from '../model/landmark-search';
 import type { Direction } from '../model/routes';
 import { directionRowName } from '../model/row-name';
 import type { Landmark } from '../published/landmark-file-schema';

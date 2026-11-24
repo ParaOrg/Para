@@ -673,14 +673,18 @@ const closeTrip = async (page) => {
   // The place's card is opened by a tap on its box, which a build without hotspot taps
   // (VITE_HOTSPOT_TAPS) does not take.
   const isHotspotTapOn = (await page.locator('[data-hotspot-taps="on"]').count()) > 0;
-  // A build without place search (VITE_PLACE_SEARCH) has no field: nothing here to check.
-  if ((await field.count()) === 0) {
+  // A build without place search (VITE_PLACE_SEARCH) has no field: nothing here to check. Read
+  // from the build's flag on the page, not the field: the bar is fetched after the map
+  // (public-map-app.tsx), so a build with search on may not have drawn it yet.
+  const isPlaceSearchShown = (await page.locator('[data-place-search="on"]').count()) > 0;
+  if (!isPlaceSearchShown) {
     console.log('SKIP  Escape in place search: hidden in this build (VITE_PLACE_SEARCH)');
   } else if (!isHotspotTapOn) {
     console.log(
       "SKIP  Escape in place search over a place's card: hotspot taps are off in this build (VITE_HOTSPOT_TAPS)",
     );
   } else {
+    await field.waitFor({ timeout: 10000 });
     const at = await screenOf(page, ENGINEERING.at);
     await boxDrawnAt(page, at);
     await page.mouse.click(at.x, at.y);
