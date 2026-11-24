@@ -53,7 +53,6 @@ import { retryingImport } from '@/shared/utils/retrying-import';
 
 import { MapSheetControls } from './map-sheet-controls';
 import type { SaidNote } from './page-toasts';
-import { PlaceSearchBar } from './place-search-bar';
 import { sheetTopUnderSearch } from './sheet-top-under-search';
 import { useStatusBarColour } from './status-bar';
 
@@ -62,6 +61,12 @@ import { useStatusBarColour } from './status-bar';
 // the page, and is asked for again (retryingLazy).
 const PageToasts = retryingLazy(() =>
   retryingImport(() => import('./page-toasts'))().then((module) => module.PageToasts),
+);
+
+// Place search, fetched only where it is shown (isPlaceSearchShown): a build with it off never
+// asks for it, and one with it on draws the bar a beat after the map. Precached, as the toasts.
+const PlaceSearchBar = retryingLazy(() =>
+  retryingImport(() => import('./place-search-bar'))().then((module) => module.PlaceSearchBar),
 );
 
 /**
@@ -204,8 +209,9 @@ export function PublicMapApp() {
   const credits = useMapCredits(root);
 
   return (
-    // `data-directions` and `data-hotspot-taps`: how many the index brought and whether a box takes
-    // a tap (isHotspotTapOn), for the suites on a production build, the map out of their reach.
+    // `data-directions`, `data-hotspot-taps` and `data-place-search`: how many the index brought,
+    // whether a box takes a tap (isHotspotTapOn) and whether search is shown (isPlaceSearchShown),
+    // for the suites on a production build, the map out of their reach.
     // `data-dock-host`: the open card's sheet says where its top is here
     // at rest, and on what follows it (`data-dock-follower`, the LocatorButton,
     // the map's ⓘ) as a finger drags it (BottomSheet). While "Update Para!"
@@ -216,6 +222,7 @@ export function PublicMapApp() {
       data-dock-host
       data-directions={saved.directions.length}
       data-hotspot-taps={isHotspotTapOn ? 'on' : 'off'}
+      data-place-search={isPlaceSearchShown ? 'on' : 'off'}
       className={cn(
         'group/map @container relative h-full w-full overflow-clip',
         needRefresh && '[--toast-top:calc(env(safe-area-inset-top)+--spacing(19))]',
@@ -348,19 +355,21 @@ export function PublicMapApp() {
         )}
         {/* Place search: a place opens as its name tapped does; wide, the cards float under it. */}
         {isPlaceSearchShown && (
-          <PlaceSearchBar
-            map={map}
-            hotspots={hotspots.hotspots}
-            directionsAt={directionsAtHotspots(saved.directions, hotspots.linkedDirectionIds)}
-            whereNow={() => where.current?.at ?? null}
-            onPick={(hotspot) => openPlace(hotspot.id)}
-            onLookAt={(point) => lookAt(map, point)}
-            onGoHere={(landmark, near, hintuan) => goHere(landmark, near, hintuan.id)}
-            onSearchRestart={letGoalGo}
-            isUnderUpdate={needRefresh}
-            isUnderOfflinePill={offline || age.stale}
-            isCardOpen={cards.open}
-          />
+          <Suspense fallback={null}>
+            <PlaceSearchBar
+              map={map}
+              hotspots={hotspots.hotspots}
+              directionsAt={directionsAtHotspots(saved.directions, hotspots.linkedDirectionIds)}
+              whereNow={() => where.current?.at ?? null}
+              onPick={(hotspot) => openPlace(hotspot.id)}
+              onLookAt={(point) => lookAt(map, point)}
+              onGoHere={(landmark, near, hintuan) => goHere(landmark, near, hintuan.id)}
+              onSearchRestart={letGoalGo}
+              isUnderUpdate={needRefresh}
+              isUnderOfflinePill={offline || age.stale}
+              isCardOpen={cards.open}
+            />
+          </Suspense>
         )}
         {/* How old the map is, and a new version waiting. */}
         <Notices offline={offline} age={age} needRefresh={needRefresh} onUpdate={reloadToUpdate} />
