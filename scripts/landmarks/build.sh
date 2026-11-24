@@ -14,10 +14,12 @@
 # major streets; no shops or houses), and landmarks.mjs turns them into one point each. Geofabrik
 # is reachable from GitHub's runners, not from the agents' containers: the build runs in Actions.
 #
-# The data is ODbL: the file carries the licence and the credit in its first fields.
+# The OSM data is ODbL: each file carries the licence and the credit in its first fields. The
+# Overture files carry Overture's licences instead, with their texts beside them.
 #
-# Needs: curl, md5sum, Node 22 and osmium-tool (apt-get install osmium-tool), none of them an
-# npm dependency.
+# Needs: curl, md5sum, Node 22, osmium-tool (apt-get install osmium-tool) and, for Overture,
+# Python 3 with duckdb (pip install duckdb; OVERTURE_PYTHON names another Python, such as a virtual
+# environment's), none of them an npm dependency.
 # Usage: scripts/landmarks/build.sh [work dir]    the work dir defaults to a new temporary one
 set -euo pipefail
 
@@ -85,3 +87,17 @@ node --experimental-strip-types "$root/scripts/establishments/establishments.mjs
   "$work/establishments.geojsonseq" "$extract_at" "$root/public/data/establishments/v1"
 node --experimental-strip-types "$root/scripts/establishments/check.mjs" \
   "$root/public/data/establishments/v1"
+
+# Overture's eateries, cafés, clinics and schools (.scratch/establishments, step E3c), in files of
+# their own under Overture's licences: the latest release from its public bucket (pull.py, with
+# duckdb from pip), less the points on a road's centre line (the roads from the same extract) and
+# the places the OSM files just written already have (overture.mjs).
+osmium tags-filter --overwrite "$extract" \
+  $(node --experimental-strip-types "$root/scripts/overture/overture.mjs" --roads) \
+  -o "$work/roads.osm.pbf"
+osmium export --overwrite "$work/roads.osm.pbf" -f geojsonseq -o "$work/roads.geojsonseq"
+"${OVERTURE_PYTHON:-python3}" -I "$root/scripts/overture/pull.py" "$box" "$work/overture.ndjson"
+(cd "$root" && node --experimental-strip-types scripts/overture/overture.mjs \
+  "$work/overture.ndjson" "$work/roads.geojsonseq" public/data/overture/v1)
+node --experimental-strip-types "$root/scripts/overture/check.mjs" \
+  "$root/public/data/overture/v1" "$root/public/data/establishments/v1"
