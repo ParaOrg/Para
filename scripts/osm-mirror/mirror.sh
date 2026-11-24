@@ -35,7 +35,7 @@ fetch() {
     echo "$name did not give $md5_url." >&2
     return 1
   fi
-  if ! curl -fsSL --connect-timeout 30 --max-time 300 --retry 2 --retry-delay 10 \
+  if ! curl -fsSL --connect-timeout 30 --max-time 420 --retry 1 --retry-delay 10 \
     -D headers.txt -o extract.osm.pbf "$url"; then
     echo "$name did not give $url in time." >&2
     return 1

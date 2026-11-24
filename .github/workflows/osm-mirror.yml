@@ -48,7 +48,7 @@ jobs:
   copy:
     name: Copy the Philippines extract
     runs-on: ubuntu-latest
-    # Two sources, each up to ~11 minutes when it stalls (mirror.sh's time limits), then the upload.
+    # Two sources, each up to ~15 minutes when it stalls (mirror.sh's time limits), then the upload.
     timeout-minutes: 40
     # The branch rule on the environment keeps the keys from a pull request or any other branch.
     environment: ${{ github.event_name != 'pull_request' && 'osm-mirror' || '' }}
