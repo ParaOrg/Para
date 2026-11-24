@@ -1,7 +1,12 @@
 import type { MapLibreMap } from 'maplibre-gl';
 import { Suspense, useRef, useState } from 'react';
 
-import { CommuterLocation, useGazeHush, type LocatorNote } from '@/features/locator';
+import {
+  CommuterLocation,
+  useGazeHush,
+  type CommuterLocationHandle,
+  type LocatorNote,
+} from '@/features/locator';
 import {
   InstallPrompt,
   loadProblemToast,
@@ -47,27 +52,13 @@ import {
 import { fetchLine } from '@/features/routes/published/fetch-line';
 import { isHotspotTapOn, isPlaceSearchShown, isRidePickingOn } from '@/shared/config/env';
 import { useTurn } from '@/shared/hooks/commit-turn';
-import { retryingLazy } from '@/shared/lib/retrying-lazy';
 import { cn } from '@/shared/utils/cn';
-import { retryingImport } from '@/shared/utils/retrying-import';
 
+import { ExploreCards, PageToasts, PlaceSearchBar } from './lazy-parts';
 import { MapSheetControls } from './map-sheet-controls';
 import type { SaidNote } from './page-toasts';
 import { sheetTopUnderSearch } from './sheet-top-under-search';
 import { useStatusBarColour } from './status-bar';
-
-// The toasts, fetched the first time the page has something to say: the opening page does not
-// carry them. Precached, so they come offline too; a fetch that fails all the same never blanks
-// the page, and is asked for again (retryingLazy).
-const PageToasts = retryingLazy(() =>
-  retryingImport(() => import('./page-toasts'))().then((module) => module.PageToasts),
-);
-
-// Place search, fetched only where it is shown (isPlaceSearchShown): a build with it off never
-// asks for it, and one with it on draws the bar a beat after the map. Precached, as the toasts.
-const PlaceSearchBar = retryingLazy(() =>
-  retryingImport(() => import('./place-search-bar'))().then((module) => module.PlaceSearchBar),
-);
 
 /**
  * The hotspots on the commuter map, the owner's calls for now: no pins zoomed in, no dots zoomed
@@ -183,6 +174,7 @@ export function PublicMapApp() {
   // cards' camera above, which a sheet set to another height moves in the
   // same commit (commit-turn.ts).
   const locatorTurn = useTurn();
+  const locator = useRef<CommuterLocationHandle>(null); // For "Turn on location" (ExploreCards).
   // The dot's gaze is hushed by going back: it picks nothing (dot-gaze.ts).
   const { hush, hushedAt } = useGazeHush();
   useBackClosesCards(saved, hotspots, cards, backFromTrip, hush);
@@ -226,7 +218,7 @@ export function PublicMapApp() {
       className={cn(
         'group/map @container relative h-full w-full overflow-clip',
         needRefresh && '[--toast-top:calc(env(safe-area-inset-top)+--spacing(19))]',
-        cards.open && '[--dock-gap:1rem]', // 16 over a sheet: the controls, locate-me (4831:54489)
+        '[--dock-gap:1rem]', // 16 over a sheet or the explore cards: controls, locate-me (4848:33680)
         sheetTopUnderSearch(needRefresh, offline || age.stale),
       )}
     >
@@ -275,6 +267,7 @@ export function PublicMapApp() {
         the card on show; the dot gazes at what was just picked.
       */}
         <CommuterLocation
+          ref={locator}
           map={map}
           isMapLoaded={isMapLoaded}
           snap={cards.snap}
@@ -469,6 +462,12 @@ export function PublicMapApp() {
             onHotspot={(s) => cards.openHotspot(s.id)}
             onClose={cards.closeAll}
           />
+        )}
+        {/* With nothing open: ways to explore, and the donation card (Figma 4852:35066). */}
+        {!cards.open && (
+          <Suspense fallback={null}>
+            <ExploreCards onLocate={() => locator.current?.locate()} />
+          </Suspense>
         )}
       </div>
       <MapCreditsSheet credits={credits} />
