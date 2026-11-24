@@ -13,7 +13,7 @@ import type { Highlight } from './use-saved-routes';
 import { framedBy, type Framed } from '../cards/card-stack';
 import type { PickedPlace } from '../cards/route-card-stack';
 import type { Hotspot } from '../model/hotspots';
-import { nearestStopOn, walkToLandmark, type HintuanNearHere } from '../model/landmark-search';
+import { nearestStopOn, walkToLandmark, type HintuanNearHere } from '../model/landmark-goal';
 import type { Livery } from '../model/liveries';
 import type { ModeFilter } from '../model/mode-filter';
 import { routeTimeline } from '../model/ride';

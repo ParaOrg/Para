@@ -1,6 +1,7 @@
 import { haversine, type LngLat } from '@/shared/utils/geo';
 
 import type { Hotspot } from './hotspots';
+import type { HintuanNearHere } from './landmark-goal';
 import {
   distanceToPlace,
   foldForSearch,
@@ -121,14 +122,6 @@ export function combineResults(
   return { places: shownPlaces, landmarks: shownLandmarks };
 }
 
-export interface HintuanNearHere {
-  hintuan: Hotspot;
-  /** Straight-line metres from the landmark. */
-  distanceM: number;
-  /** The directions that stop there, as the map's hotspots tell them (linkedDirectionIds). */
-  directionIds: string[];
-}
-
 /**
  * The hintuans within NEAR_HERE_M of any of the points, straight-line, nearest first, each with
  * the directions that stop there; a hintuan no direction stops at is left out. A landmark's
@@ -153,24 +146,4 @@ export function routesNearHere(
   return near.sort(
     (a, b) => a.distanceM - b.distanceM || a.hintuan.name.localeCompare(b.hintuan.name),
   );
-}
-
-/**
- * Where a direction would leave a commuter going to a landmark (ticket 07): of the hintuans near it
- * (`near`, nearest first), the nearest that direction stops at; null when it stops at none.
- */
-export function nearestStopOn(
-  directionId: string,
-  near: readonly HintuanNearHere[],
-): HintuanNearHere | null {
-  return near.find((stop) => stop.directionIds.includes(directionId)) ?? null;
-}
-
-/**
- * The walk from the ride's end to the landmark, in words for the trip card (ticket 07): straight-line
- * metres, to the nearest 10 and never under 10, so "about" is honest.
- */
-export function walkToLandmark(distanceM: number, landmarkName: string): string {
-  const metres = Math.max(10, Math.round(distanceM / 10) * 10);
-  return `About ${metres} m to ${landmarkName}, in a straight line`;
 }
