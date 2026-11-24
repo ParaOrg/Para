@@ -57,7 +57,9 @@ jobs:
   build:
     name: Build and check the landmark file
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    # The build takes about 3 minutes once the extract is in. Getting it can take up to ~15 minutes
+    # per source when one stalls (fetch-extract.sh: Para's copy, Geofabrik, openstreetmap.fr).
+    timeout-minutes: 50
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -70,9 +72,14 @@ jobs:
       - name: Install osmium-tool
         run: sudo apt-get update -qq && sudo apt-get install -y -qq osmium-tool
       # duckdb reads Overture's public Places release from S3 for scripts/overture/pull.py
-      # (.scratch/establishments, step E3c). A Python package from pip, pinned; never npm.
+      # (.scratch/establishments, step E3c). A Python package from pip, pinned; never npm. In a
+      # virtual environment of its own: build.sh runs pull.py isolated (`python -I`), which skips
+      # the user's site-packages, so a `pip install --user` would not be found.
       - name: Install duckdb
-        run: python3 -m pip install --quiet --user duckdb==2.0.1
+        run: |
+          python3 -m venv "$RUNNER_TEMP/overture-python"
+          "$RUNNER_TEMP/overture-python/bin/python" -m pip install --quiet duckdb==2.0.1
+          echo "OVERTURE_PYTHON=$RUNNER_TEMP/overture-python/bin/python" >> "$GITHUB_ENV"
       - name: Keep the committed files to compare
         # The footbridge file may not exist yet: compare.mjs reads a missing one as empty.
         run: |

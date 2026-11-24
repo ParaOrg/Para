@@ -1,7 +1,12 @@
 import type { MapLibreMap } from 'maplibre-gl';
 import { Suspense, useRef, useState } from 'react';
 
-import { CommuterLocation, useGazeHush, type LocatorNote } from '@/features/locator';
+import {
+  CommuterLocation,
+  useGazeHush,
+  type CommuterLocationHandle,
+  type LocatorNote,
+} from '@/features/locator';
 import {
   InstallPrompt,
   loadProblemToast,
@@ -47,21 +52,13 @@ import {
 import { fetchLine } from '@/features/routes/published/fetch-line';
 import { isHotspotTapOn, isPlaceSearchShown, isRidePickingOn } from '@/shared/config/env';
 import { useTurn } from '@/shared/hooks/commit-turn';
-import { retryingLazy } from '@/shared/lib/retrying-lazy';
 import { cn } from '@/shared/utils/cn';
-import { retryingImport } from '@/shared/utils/retrying-import';
 
+import { ExploreCards, PageToasts, PlaceSearchBar } from './lazy-parts';
 import { MapSheetControls } from './map-sheet-controls';
 import type { SaidNote } from './page-toasts';
-import { PlaceSearchBar, sheetTopUnderSearch } from './place-search-bar';
+import { sheetTopUnderSearch } from './sheet-top-under-search';
 import { useStatusBarColour } from './status-bar';
-
-// The toasts, fetched the first time the page has something to say: the opening page does not
-// carry them. Precached, so they come offline too; a fetch that fails all the same never blanks
-// the page, and is asked for again (retryingLazy).
-const PageToasts = retryingLazy(() =>
-  retryingImport(() => import('./page-toasts'))().then((module) => module.PageToasts),
-);
 
 /**
  * The hotspots on the commuter map, the owner's calls for now: no pins zoomed in, no dots zoomed
@@ -177,6 +174,7 @@ export function PublicMapApp() {
   // cards' camera above, which a sheet set to another height moves in the
   // same commit (commit-turn.ts).
   const locatorTurn = useTurn();
+  const locator = useRef<CommuterLocationHandle>(null); // For "Turn on location" (ExploreCards).
   // The dot's gaze is hushed by going back: it picks nothing (dot-gaze.ts).
   const { hush, hushedAt } = useGazeHush();
   useBackClosesCards(saved, hotspots, cards, backFromTrip, hush);
@@ -203,8 +201,9 @@ export function PublicMapApp() {
   const credits = useMapCredits(root);
 
   return (
-    // `data-directions` and `data-hotspot-taps`: how many the index brought and whether a box takes
-    // a tap (isHotspotTapOn), for the suites on a production build, the map out of their reach.
+    // `data-directions`, `data-hotspot-taps` and `data-place-search`: how many the index brought,
+    // whether a box takes a tap (isHotspotTapOn) and whether search is shown (isPlaceSearchShown),
+    // for the suites on a production build, the map out of their reach.
     // `data-dock-host`: the open card's sheet says where its top is here
     // at rest, and on what follows it (`data-dock-follower`, the LocatorButton,
     // the map's ⓘ) as a finger drags it (BottomSheet). While "Update Para!"
@@ -215,10 +214,11 @@ export function PublicMapApp() {
       data-dock-host
       data-directions={saved.directions.length}
       data-hotspot-taps={isHotspotTapOn ? 'on' : 'off'}
+      data-place-search={isPlaceSearchShown ? 'on' : 'off'}
       className={cn(
         'group/map @container relative h-full w-full overflow-clip',
         needRefresh && '[--toast-top:calc(env(safe-area-inset-top)+--spacing(19))]',
-        cards.open && '[--dock-gap:1rem]', // 16 over a sheet: the controls, locate-me (4831:54489)
+        '[--dock-gap:1rem]', // 16 over a sheet or the explore cards: controls, locate-me (4848:33680)
         sheetTopUnderSearch(needRefresh, offline || age.stale),
       )}
     >
@@ -267,6 +267,7 @@ export function PublicMapApp() {
         the card on show; the dot gazes at what was just picked.
       */}
         <CommuterLocation
+          ref={locator}
           map={map}
           isMapLoaded={isMapLoaded}
           snap={cards.snap}
@@ -347,19 +348,21 @@ export function PublicMapApp() {
         )}
         {/* Place search: a place opens as its name tapped does; wide, the cards float under it. */}
         {isPlaceSearchShown && (
-          <PlaceSearchBar
-            map={map}
-            hotspots={hotspots.hotspots}
-            directionsAt={directionsAtHotspots(saved.directions, hotspots.linkedDirectionIds)}
-            whereNow={() => where.current?.at ?? null}
-            onPick={(hotspot) => openPlace(hotspot.id)}
-            onLookAt={(point) => lookAt(map, point)}
-            onGoHere={(landmark, near, hintuan) => goHere(landmark, near, hintuan.id)}
-            onSearchRestart={letGoalGo}
-            isUnderUpdate={needRefresh}
-            isUnderOfflinePill={offline || age.stale}
-            isCardOpen={cards.open}
-          />
+          <Suspense fallback={null}>
+            <PlaceSearchBar
+              map={map}
+              hotspots={hotspots.hotspots}
+              directionsAt={directionsAtHotspots(saved.directions, hotspots.linkedDirectionIds)}
+              whereNow={() => where.current?.at ?? null}
+              onPick={(hotspot) => openPlace(hotspot.id)}
+              onLookAt={(point) => lookAt(map, point)}
+              onGoHere={(landmark, near, hintuan) => goHere(landmark, near, hintuan.id)}
+              onSearchRestart={letGoalGo}
+              isUnderUpdate={needRefresh}
+              isUnderOfflinePill={offline || age.stale}
+              isCardOpen={cards.open}
+            />
+          </Suspense>
         )}
         {/* How old the map is, and a new version waiting. */}
         <Notices offline={offline} age={age} needRefresh={needRefresh} onUpdate={reloadToUpdate} />
@@ -459,6 +462,12 @@ export function PublicMapApp() {
             onHotspot={(s) => cards.openHotspot(s.id)}
             onClose={cards.closeAll}
           />
+        )}
+        {/* With nothing open: ways to explore, and the donation card (Figma 4852:35066). */}
+        {!cards.open && (
+          <Suspense fallback={null}>
+            <ExploreCards onLocate={() => locator.current?.locate()} />
+          </Suspense>
         )}
       </div>
       <MapCreditsSheet credits={credits} />

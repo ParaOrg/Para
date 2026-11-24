@@ -6,9 +6,10 @@
 # from the monthly workflow, then commit the files as a normal pull request. Commuters never reach
 # OpenStreetMap: this runs once, here, and the app reads the committed files.
 #
-# One download: Geofabrik's Philippines extract (about 600 MB), checked against its MD5, then cut
-# to the map's panning box (scripts/tiles/area.mjs, METRO_MANILA), so the provinces the map
-# reaches past Metro Manila's line are in it. osmium keeps the tags place search lists (decision 6:
+# One download: the Philippines extract (about 600 MB), from Para's own copy at osm.para-commute.org,
+# or else Geofabrik or openstreetmap.fr (scripts/osm-mirror/fetch-extract.sh), checked against its
+# MD5, then cut to the map's panning box (scripts/tiles/area.mjs, METRO_MANILA), so the provinces
+# the map reaches past Metro Manila's line are in it. osmium keeps the tags place search lists (decision 6:
 # malls, schools, universities, hospitals, churches, markets, transport stations, barangays and
 # major streets; no shops or houses), and landmarks.mjs turns them into one point each. Geofabrik
 # is reachable from GitHub's runners, not from the agents' containers: the build runs in Actions.
@@ -17,38 +18,21 @@
 # Overture files carry Overture's licences instead, with their texts beside them.
 #
 # Needs: curl, md5sum, Node 22, osmium-tool (apt-get install osmium-tool) and, for Overture,
-# Python 3 with duckdb (pip install duckdb), none of them an npm dependency.
+# Python 3 with duckdb (pip install duckdb; OVERTURE_PYTHON names another Python, such as a virtual
+# environment's), none of them an npm dependency.
 # Usage: scripts/landmarks/build.sh [work dir]    the work dir defaults to a new temporary one
 set -euo pipefail
 
 root="$(cd "$(dirname "$0")/../.." && pwd)"
 work="${1:-$(mktemp -d)}"
 mkdir -p "$work"
-source_url="$(node --input-type=module -e "import { LANDMARK_SOURCE } from '$root/scripts/landmarks/landmark-file.mjs'; console.log(LANDMARK_SOURCE)")"
 download="$work/philippines.osm.pbf"
 extract="$work/panning-box.osm.pbf"
 
-# A download that fails says whose side it failed on, so the monthly run's alert explains itself:
-# Geofabrik answering 404 or not at all is theirs (it replaces each extract once a day), not ours.
-fetch_failed() {
-  echo "Geofabrik did not give $1 (curl exit $2: 22 means it answered with an HTTP error such as" \
-    "404; the others mean the connection failed). That is on Geofabrik's side, not in this" \
-    "script: the file may be mid-replacement. Run the workflow again later." >&2
-  exit 1
-}
-
-# The checksum first, so it cannot be newer than the extract it is checked against.
-echo "Downloading $source_url"
-md5_line="$(curl -fsSL --retry 3 --retry-delay 10 "$source_url.md5")" ||
-  fetch_failed "$source_url.md5" "$?"
-expected="$(cut -d' ' -f1 <<<"$md5_line")"
-curl -fsSL --retry 3 --retry-delay 10 -o "$download" "$source_url" ||
-  fetch_failed "$source_url" "$?"
-actual="$(md5sum "$download" | cut -d' ' -f1)"
-if [ "$expected" != "$actual" ]; then
-  echo "The extract's MD5 is $actual, not the $expected the server lists: a broken download." >&2
-  exit 1
-fi
+# Para's own copy first, then Geofabrik, then openstreetmap.fr, each checked against its md5
+# (scripts/osm-mirror/fetch-extract.sh). The files the build writes credit the extract's origin.
+EXTRACT_SOURCE="$("$root/scripts/osm-mirror/fetch-extract.sh" "$download")"
+export EXTRACT_SOURCE
 # Geofabrik names the data's moment as the replication timestamp; an extract may carry either.
 extract_at="$(osmium fileinfo -g header.option.timestamp "$download" || true)"
 if [ -z "$extract_at" ]; then
@@ -112,7 +96,7 @@ osmium tags-filter --overwrite "$extract" \
   $(node --experimental-strip-types "$root/scripts/overture/overture.mjs" --roads) \
   -o "$work/roads.osm.pbf"
 osmium export --overwrite "$work/roads.osm.pbf" -f geojsonseq -o "$work/roads.geojsonseq"
-python3 -I "$root/scripts/overture/pull.py" "$box" "$work/overture.ndjson"
+"${OVERTURE_PYTHON:-python3}" -I "$root/scripts/overture/pull.py" "$box" "$work/overture.ndjson"
 (cd "$root" && node --experimental-strip-types scripts/overture/overture.mjs \
   "$work/overture.ndjson" "$work/roads.geojsonseq" public/data/overture/v1)
 node --experimental-strip-types "$root/scripts/overture/check.mjs" \

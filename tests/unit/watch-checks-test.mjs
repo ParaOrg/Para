@@ -1,6 +1,7 @@
 // The watch's checks (scripts/watch/checks.mjs), fed fake answers: no request leaves the test.
 //
 //   node --test tests/unit/watch-checks-test.mjs
+import { readFile } from 'node:fs/promises';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
@@ -38,11 +39,30 @@ test('the site passes with the app page and the bare domain redirecting to it', 
   assert.equal((await checkSite(fetchImpl)).ok, true);
 });
 
+test('the site passes with the production Coming soon page, read from the file it serves', async () => {
+  const comingSoon = await readFile(
+    new URL('../../public/coming-soon/index.html', import.meta.url),
+    'utf8',
+  );
+  const { fetchImpl } = fakeFetch({
+    'https://www.para-commute.org/': { body: comingSoon },
+    'https://para-commute.org/': { status: 301, location: 'https://www.para-commute.org/' },
+  });
+  const outcome = await checkSite(fetchImpl);
+  assert.equal(outcome.ok, true);
+  assert.match(outcome.answer, /Coming soon/);
+  const lostRedirect = fakeFetch({
+    'https://www.para-commute.org/': { body: comingSoon },
+    'https://para-commute.org/': { body: comingSoon },
+  });
+  assert.match((await checkSite(lostRedirect.fetchImpl)).answer, /not a redirect/);
+});
+
 test('the site fails on an error, on another page, or on a lost redirect', async () => {
   const down = fakeFetch({ 'https://www.para-commute.org/': { status: 522, body: 'oops' } });
   assert.match((await checkSite(down.fetchImpl)).answer, /522/);
   const parked = fakeFetch({ 'https://www.para-commute.org/': { body: 'Domain for sale' } });
-  assert.match((await checkSite(parked.fetchImpl)).answer, /without the app's page/);
+  assert.match((await checkSite(parked.fetchImpl)).answer, /without the app's page or Coming soon/);
   const noRedirect = fakeFetch({
     'https://www.para-commute.org/': { body: page },
     'https://para-commute.org/': { body: page },

@@ -86,7 +86,6 @@ export function useSheetGestures({
   shape,
   closesOnPull,
 }: SheetGesturesOptions): SheetGestures {
-  // A sheet that does not close on a pull rests at Low instead.
   const landing = (next: Snap | 'close'): Snap | 'close' =>
     next === 'close' && !closesOnPull ? 'low' : next;
   const glide = useSheetGlide(own);
@@ -100,10 +99,11 @@ export function useSheetGestures({
   /** The two ends of a sheet on a map `h` tall. */
   const heightsOf = (h: number): SheetHeights =>
     fitted ? fitted.heightsFor(h) : heightsFor(h, shape);
-  /** A drag let go: where its momentum carries the sheet, and how long it glides (glideTo). */
-  const throwTo = ({ shown, velocity }: { shown: number; velocity: number }) => {
+  /** A drag let go at `now`: where its momentum carries the sheet, and how long it glides (glideTo). */
+  const throwTo = (track: ReturnType<typeof follow>, now: number, at?: number) => {
     const h = own.current?.offsetHeight ?? 0;
-    const { to, glideMs } = glideTo(shown, velocity, heightsOf(h), h, isReducedMotion());
+    const { shown, velocity, from } = track.lift(now, at);
+    const { to, glideMs } = glideTo(shown, velocity, heightsOf(h), h, isReducedMotion(), from);
     settle(to, glideMs);
   };
   // The way the handle's steps go: up from Low, down from full, and on the way they went between.
@@ -166,7 +166,7 @@ export function useSheetGestures({
     const end = (e: TouchEvent) => {
       const track = pull?.track;
       pull = null;
-      if (track) now.current.throwTo(track.lift(e.timeStamp));
+      if (track) now.current.throwTo(track, e.timeStamp);
     };
     // A wheel moves the sheet only on a push its deltas add up past DRAG_PX, never a scroll's tail.
     let pushed = 0;
@@ -237,7 +237,7 @@ export function useSheetGestures({
       if (ev.pointerId !== e.pointerId) return;
       hotspot();
       if (moving || raises) swallowTheTapsClick(ev.clientX, ev.clientY);
-      if (moving) now.current.throwTo(track.lift(ev.timeStamp, ev.clientY));
+      if (moving) now.current.throwTo(track, ev.timeStamp, ev.clientY);
       else if (raises) now.current.settle(now.current.afterTap(snap));
     };
     const cancel = (ev: PointerEvent) => {
