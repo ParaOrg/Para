@@ -1,6 +1,7 @@
-// The map's credits (src/features/routes/map/map-attribution.ts), kept in one place: the
-// contributor page's Map Data Source sheet lists all five rows, and the map's corner elsewhere
-// shows the four credits among them, the tiles' line naming whoever serves them.
+// The map's credits (src/features/routes/map/map-attribution.ts), kept in one place: the Map Data
+// Source sheet lists all five rows, with Overture's beside them (data-source-credits.ts), and the
+// map's corner elsewhere shows the four credits among them, the tiles' line naming whoever serves
+// them.
 //
 //   node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs tests/unit/map-attribution-test.mjs
 import { test } from 'node:test';
