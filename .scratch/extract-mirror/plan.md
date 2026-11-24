@@ -2,6 +2,16 @@
 
 Written 2026-11-24, before any code. Nothing is built: the owner chooses, then one small PR per change.
 
+**Update, 2026-11-24:** the owner is setting up option B's storage today, with these names. They replace the names further down:
+- **Bucket:** a new, separate R2 bucket **`para-osm`** in the Para account, holding only the OSM extract. `parapo-tiles` stays private, and the tiles Worker is untouched.
+- **Public read:** through the custom domain **`osm.para-commute.org`**. PR runs and builds read by URL, with no keys.
+- **Write token:** Object Read & Write, scoped to `para-osm` only.
+- **Secrets:** a GitHub Environment **`osm-mirror`** (deployment branches `staging` and `main`) holds `OSM_R2_ENDPOINT`, `OSM_R2_ACCESS_KEY_ID`, `OSM_R2_SECRET_ACCESS_KEY` and `OSM_R2_BUCKET`, as `tiles.yml` does.
+- **Object keys:**
+  - `philippines-latest.osm.pbf`, Geofabrik's **whole** file, not a cut. That keeps its header timestamp, so the landmarks build reads its date as it does today. It costs about 0.6 GB of storage, still far inside the free tier.
+  - `philippines-latest.osm.pbf.md5`, Geofabrik's own.
+  - **`philippines-latest.json`**: the source URL, Geofabrik's `Last-Modified`, the header timestamp, the bytes and the md5. The tiles build takes its extract date from it. R2's public URL answers with the upload's `Last-Modified`, not Geofabrik's, so the date can't travel in a header.
+
 ## Why
 
 On 2026-11-23 Geofabrik failed GitHub's runners four ways in one day:
