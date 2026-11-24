@@ -214,3 +214,25 @@ export const UploadFailed: Story = {
     }),
   },
 };
+
+/**
+ * Saved and refused at once, as when the save itself fetched the toasts and the refusal came
+ * meanwhile: "Route recorded" first, and the refusal after it, until ✕.
+ */
+export const RouteRecordedThenRefused: Story = {
+  args: {
+    routeRecorded: saved({ state: 'uploading' }, true),
+    uploadProblem: uploadFailedProblem({
+      state: 'failed',
+      message: "Para's checks refused this recording. It stays on this phone.",
+      brief: "Refused by Para's checks",
+      willRetry: false,
+    }),
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(await canvas.findByTestId('toast')).toHaveTextContent('Route recorded');
+    await userEvent.click(canvas.getByRole('button', { name: 'Close' }));
+    await waitFor(() => expect(canvas.getByText('Upload didn’t go through')).toBeVisible());
+  },
+};
