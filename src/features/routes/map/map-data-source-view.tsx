@@ -1,7 +1,7 @@
 import { basemapHost } from '@/shared/config/env';
 
 import { useHostDrawing } from './basemap-host-drawing';
-import { mapCredits } from './map-attribution';
+import { dataSourceCredits } from './data-source-credits';
 import { MapDataSourceSheet } from './map-data-source-sheet';
 
 interface MapDataSourceViewProps {
@@ -12,10 +12,12 @@ interface MapDataSourceViewProps {
 }
 
 /**
- * The Map Data Source sheet with the map's credits: the host that draws the basemap decides the
- * tiles' line, this build's unless the map fell back to OpenFreeMap.
+ * The Map Data Source sheet with the map's credits, Overture's among them: the host that draws the
+ * basemap decides the tiles' line, this build's unless the map fell back to OpenFreeMap.
  */
 export function MapDataSourceView({ onClose, onClosed }: MapDataSourceViewProps) {
   const host = useHostDrawing(basemapHost);
-  return <MapDataSourceSheet credits={mapCredits(host)} onClose={onClose} onClosed={onClosed} />;
+  return (
+    <MapDataSourceSheet credits={dataSourceCredits(host)} onClose={onClose} onClosed={onClosed} />
+  );
 }
