@@ -5721,9 +5721,10 @@ if (runsPart(1)) {
 // closing the panel takes it away. Two malls from today's landmark file, each
 // the only landmark of its name, a kilometre or more apart; the page is still on
 // the made-up map, whose places share no name with them, so each is listed as a
-// landmark, not as a Para place. A build without place search (VITE_PLACE_SEARCH) skips it.
-const isPlaceSearchShown =
-  (await page.getByRole('combobox', { name: 'Search places' }).count()) > 0;
+// landmark, not as a Para place. A build without place search (VITE_PLACE_SEARCH) skips it, read
+// from the build's flag on the page, not the field: the bar is fetched after the map
+// (public-map-app.tsx), so a build with search on may not have drawn it yet.
+const isPlaceSearchShown = (await page.locator('[data-place-search="on"]').count()) > 0;
 if (runsPart(2) && !isPlaceSearchShown) {
   console.log('SKIP  place search: hidden in this build (VITE_PLACE_SEARCH)');
 }
@@ -5738,6 +5739,7 @@ if (runsPart(2) && isPlaceSearchShown) {
       (l) => Math.hypot(l.point[0] - first.point[0], l.point[1] - first.point[1]) > 0.01,
     );
     const field = page.getByRole('combobox', { name: 'Search places' });
+    await field.waitFor({ timeout: 10000 });
     const pins = page.locator('[data-testid="landmark-pin"]');
     const pick = async (landmark) => {
       await field.fill(landmark.name);

@@ -57,7 +57,9 @@ jobs:
   build:
     name: Build and check the landmark file
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    # The build takes about 3 minutes once the extract is in. Getting it can take up to ~15 minutes
+    # per source when one stalls (fetch-extract.sh: Para's copy, Geofabrik, openstreetmap.fr).
+    timeout-minutes: 50
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
