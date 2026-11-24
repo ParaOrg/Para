@@ -3,7 +3,7 @@
 # shows it; the issue closes itself when the check passes again. No service but GitHub.
 #
 # Checks (scripts/watch/watch.mjs, each tried 3 times, 20 seconds apart):
-#   - https://www.para-commute.org/ answers with the app's page, and the bare domain
+#   - https://www.para-commute.org/ answers with the app's page or Coming soon, and the bare domain
 #     redirects to it;
 #   - the published map's index answers and parses;
 #   - one style and one tile answer from tiles.para-commute.org, on every other run: about
