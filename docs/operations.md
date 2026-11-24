@@ -104,6 +104,12 @@ Each says what you'd see, the first check, and the fix. When the alert workflow 
 - **First check:** the failed step (landmarks.yml): the download from Geofabrik or its MD5, osmium, the file's own check (`scripts/landmarks/check.mjs`), or the comparison refusing a file that lost more than 20% of its landmarks.
 - **Fix:** place search keeps the committed `public/data/landmarks.v1.json`, so there is no rush. Fix the cause, or, if a shrink is real (a tagging change on OpenStreetMap), Run workflow with "allow shrink" ticked. The run opens a pull request into staging; nothing merges by itself.
 
+### The OSM mirror failed
+
+- **You'd see:** the issue "Alert: the OSM mirror run failed", after the weekly run (Sundays 19:13 UTC, which is 03:13 Manila on Monday).
+- **First check:** the failed step (osm-mirror.yml): a secret missing from the `osm-mirror` environment, an endpoint not in R2's shape, or "No source gave the Philippines extract", when Geofabrik and openstreetmap.fr both failed or stalled (`scripts/osm-mirror/mirror.sh`).
+- **Fix:** the copy at `https://osm.para-commute.org/philippines-latest.osm.pbf` stays last week's, and the builds keep reading it, so there is no rush. Run workflow on staging later.
+
 ### The database check failed
 
 - **You'd see:** the issue "Alert: the Database run failed", after the nightly run (19:43 UTC, which is 03:43 Manila). A pull request's own run shows on the pull request instead and opens no issue.
