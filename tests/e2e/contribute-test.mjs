@@ -3454,13 +3454,14 @@ const REFUSING_LOCATION = () => {
   const expected = [
     ['© Para contributors · ODbL', 'https://github.com/ParaOrg/Para#data-and-licence'],
     ['© OpenStreetMap contributors', 'https://www.openstreetmap.org/copyright'],
+    ['© Overture Maps Foundation', 'https://overturemaps.org'],
     tiles,
     ['OSRM', 'https://project-osrm.org'],
     ['Improve map', 'https://www.openstreetmap.org/fixthemap'],
   ];
   check(
-    `the ⓘ opens Map Data Source: five rows, each a link out in a new tab (${isOpenFreeMap ? 'OpenFreeMap' : 'our tiles'})`,
-    rows.length === 5 &&
+    `the ⓘ opens Map Data Source: six rows, each a link out in a new tab (${isOpenFreeMap ? 'OpenFreeMap' : 'our tiles'})`,
+    rows.length === expected.length &&
       rows.every(
         (row, i) =>
           row.text.startsWith(expected[i][0]) &&
