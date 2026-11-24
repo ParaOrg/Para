@@ -1,0 +1,11 @@
+{
+  "schema": 1,
+  "cell": "2425-280",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["offc321db339b4e5e","restaurant",121.25376,14.0446,"Big Bite by Olarte's Pizza"],
+    ["o578e5acef6114855","school",121.26139,14.04979,"KAMS - Knights and Angels Montessori School, Inc."],
+    ["oa9195a3f98904257","school",121.26492,14.04804,"Palma Elementary School"],
+    ["oec39c7bbddd54332","school",121.28561,14.04415,"Sta. Veronica Elementary School"]
+  ]
+}

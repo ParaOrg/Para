@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "cell": "2419-277",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o324306721f764dcd","restaurant",120.98962,13.85688,"Biryani sa Muzon"],
+    ["o3c06aec572894174","restaurant",120.96523,13.8786,"Sta.Teresita FoodPark"],
+    ["o76b4105e51de4a1a","restaurant",120.96452,13.87979,"Chooks-to-Go"],
+    ["o77818401be5c42b3","restaurant",120.95028,13.88293,"Mimoy's Grill and Food Hub - Taal"],
+    ["o787e298d838042f0","restaurant",120.98757,13.85829,"Boracay LomiHouse and Eatery"],
+    ["od7b8f141e9ec4bfb","restaurant",120.95564,13.88105,"Josephine's Backyard Steakhouse"],
+    ["ofed0e2a823314b24","restaurant",120.988,13.855,"Roberto's Kitchen and  Recipes"],
+    ["offf516c8be4b4e0b","restaurant",120.98889,13.8533,"Glaze and Grind Cafe"],
+    ["o324d8b10b8434dbb","cafe",120.98932,13.85711,"Cafe Seventeen"],
+    ["o91711212529c48fc","cafe",120.96552,13.88012,"Ervin's Hogi Bubble Milk Tea and Food Hub"],
+    ["ob649aa1d5eb948ad","clinic",120.98795,13.8566,"MCM Laboratory and Diagnostic Center"],
+    ["o97e673e6329e410b","dentist",120.97674,13.87033,"ClearDent Dental Clinic"],
+    ["o1e7bad8be1594f34","school",120.96288,13.86158,"Sampa-Pacifico Elementary School"],
+    ["ocab45c762acc4874","school",120.96585,13.87894,"Cyrel Learning Center"],
+    ["occ032d07f94d4798","school",120.97898,13.8687,"Sta. Teresita Central School"],
+    ["odfb2e505301f4c40","school",120.9588,13.86158,"Sampa-Pacifico Elementary School"]
+  ]
+}

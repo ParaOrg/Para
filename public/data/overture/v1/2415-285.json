@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "cell": "2415-285",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o8481ef6a596e4f86","restaurant",120.75472,14.29409,"American Ribs & Wings"],
+    ["o0205c2b2c76f4c6c","cafe",120.75445,14.27336,"Teabound"],
+    ["oa8bdbff27a024562","cafe",120.76218,14.27394,"Camp Maximo Café"],
+    ["oaf3ce702960f4744","cafe",120.75003,14.28853,"Puritas Garden Cafe"],
+    ["oc6982e0d845e4341","dentist",120.7711,14.26898,"Mbl Dental Clinic"],
+    ["o1ef256a79a08419e","school",120.76995,14.26966,"Tulay Elementary School"],
+    ["o531b87eddb1f4991","school",120.76812,14.27461,"Marcelo D. Samaniego Elementary School"],
+    ["oae2feda748a24086","school",120.79435,14.29561,"Naic Integrated National High School"],
+    ["obaa50ce0284b4c58","school",120.78197,14.27595,"DepEd Tayo Balayungan Elementary School - Cavite Province"],
+    ["oeae80fbc47ba4f10","school",120.7524,14.27339,"Bucal 2 Elementary School"],
+    ["obe03c42e7be147e7","college",120.79482,14.29708,"Cavite State University (Main Campus)"]
+  ]
+}

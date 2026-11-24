@@ -1,0 +1,24 @@
+{
+  "schema": 1,
+  "cell": "2427-280",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o1197e4663c094e7a","restaurant",121.35142,14.0438,"Sto Niño Grill"],
+    ["o1e88c3414a4e47eb","restaurant",121.35745,14.04401,"Clydenjosh Restaurant"],
+    ["o781dc5a346b54655","restaurant",121.39169,14.01387,"Izakaya's Cuore di Caffe"],
+    ["o937517acb33a4d2c","restaurant",121.37585,14.00164,"Dagatan, Dolores, Quezon"],
+    ["o9bf55beb80514be3","restaurant",121.379,14.0033,"Dagatan, Dolores, Quezon"],
+    ["oca40f1de5c6f4899","restaurant",121.39983,14.01528,"Desam's Grill and Restaurant"],
+    ["oea91e5654cd74d1c","restaurant",121.37351,14.02535,"Kusina Salud"],
+    ["of3188f0e1c774ada","restaurant",121.39095,14.01371,"Bistro 501"],
+    ["ofbd5fb2a4a4e4258","restaurant",121.35745,14.04401,"Nature's Plate Parilya - San Ignacio Maharlika Highway, SPC"],
+    ["o1c80c9c8d9d743db","fast_food",121.35004,14.0465,"Jollibee"],
+    ["o609718d933e24593","clinic",121.3955,14.01436,"Rencril Diagnostic Laboratory"],
+    ["o4bd9f734432b40f6","dentist",121.39536,14.01425,"Smile Unlimited"],
+    ["o467ac2e6bd80440d","school",121.38674,14.00929,"DepEd Tayo Don Eulogio Capino Elementary School - Quezon Province"],
+    ["o70834f1f30444c6a","school",121.3513,14.04498,"Scoula San Giuseppe Marello"],
+    ["oab70d44f7aae405d","school",121.37556,14.0017,"DepEd Tayo Don Eulogio Capino Elementary School - Quezon Province"],
+    ["oacc91ed4a1e44e03","school",121.36592,14.0325,"DepEd Tayo - Dapdapan ES - San Pablo City"],
+    ["oad40eab15bee4a31","school",121.37532,14.00426,"Dagatan National High School"]
+  ]
+}

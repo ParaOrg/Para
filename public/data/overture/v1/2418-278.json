@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "cell": "2418-278",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o8b7b51e445254046","restaurant",120.93474,13.94004,"New Rise Lomihouse"],
+    ["o8c7004e154084962","restaurant",120.93742,13.91154,"White House Restaurant"],
+    ["od99665944c9b4807","restaurant",120.92151,13.93803,"TJ's Eatery and Lomi Haus"],
+    ["o7d068d6de2ad4e81","cafe",120.93072,13.93442,"Starbucks"],
+    ["o0db43db5b82948b9","dentist",120.92739,13.93305,"Doc Ipe Dental Office"],
+    ["o0450038bdf39464b","school",120.90516,13.90664,"Ayao Iyao Elementary School"],
+    ["oa6dea20be60f4500","school",120.94215,13.91902,"Calangay Elementary School"],
+    ["ocf176f699f2c41ee","school",120.94236,13.92111,"Sgc _San Nicolas National Highschool"],
+    ["oce5350ed96a84103","college",120.92884,13.93494,"Agoncillo College Inc."]
+  ]
+}

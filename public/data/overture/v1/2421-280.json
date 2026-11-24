@@ -1,0 +1,11 @@
+{
+  "schema": 1,
+  "cell": "2421-280",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o495f997d851044ac","restaurant",121.09595,14.01757,"Ilok's Lomi and Restaurant"],
+    ["o6f73eafe54a34c60","restaurant",121.09718,14.03854,"Chickpoint Retaurant"],
+    ["o6fa43f7cd42f466a","restaurant",121.09843,14.01866,"Onnec's Canteen"],
+    ["o3ce0dbf8360e4bc3","school",121.07146,14.0447,"Maria Paz Elementary School"]
+  ]
+}

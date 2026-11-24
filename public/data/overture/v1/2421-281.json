@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "cell": "2421-281",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o688a510df1a246ed","restaurant",121.09958,14.06789,"Zitro Osaka Takoyaki"],
+    ["ob538aa38b0ee4bdd","restaurant",121.07234,14.08406,"Mr. Juan's Lomi House"],
+    ["od41edd22fc17482f","restaurant",121.0721,14.05552,"Trafalgar house resort"],
+    ["odce84b0abf7f4471","restaurant",121.07186,14.06998,"Barrio Aplaya Restaurant"],
+    ["ofa9b1426ca504c23","restaurant",121.07221,14.08422,"Mandy Boy's Cuisine"],
+    ["o08a9c9f635bb4095","fast_food",121.09191,14.06292,"Hezro Cafe"],
+    ["o578b39662077432a","fast_food",121.07235,14.08434,"Fely's Lomi Haus"],
+    ["o2ef95dcd6dfd4d29","dentist",121.08064,14.09029,"ACUÑA Medical-Dental"],
+    ["oea43484e14374cec","school",121.0977,14.08844,"Janopol Elementary School"]
+  ]
+}

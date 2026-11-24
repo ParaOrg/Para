@@ -1,0 +1,30 @@
+{
+  "schema": 1,
+  "cell": "2428-288",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o239ad7021c294496","restaurant",121.44927,14.43631,"Tato's Food Hub"],
+    ["o30c27b91ade042c8","restaurant",121.44694,14.41668,"KuSinarol"],
+    ["o321155caebaa478e","restaurant",121.43975,14.41946,"KFC"],
+    ["o3cc7ba5ca52e4209","restaurant",121.42625,14.4433,"Kainan sa Manggahan"],
+    ["o4980436f5c3643e3","restaurant",121.44977,14.44058,"Cousin's Kanto grill"],
+    ["o5c4b558c65e04e08","restaurant",121.42906,14.42592,"Don Cafe - Mabitac"],
+    ["oedf49a9632da4992","restaurant",121.42027,14.44472,"Taneneng's"],
+    ["o28eff734800b4328","fast_food",121.44892,14.43698,"Potato Corner"],
+    ["o4b935dc3312b4ab1","fast_food",121.42736,14.41688,"KFC"],
+    ["o791c3e1ac29b4897","fast_food",121.40162,14.41748,"KFC"],
+    ["o7a00616af86b43cb","fast_food",121.44649,14.41595,"Magracias Kitchen"],
+    ["oaacc6302a17144b5","fast_food",121.44996,14.43527,"McDonald's Famy Highway",{"brand":"McDonald's"}],
+    ["od837ae867f9f47eb","fast_food",121.44903,14.44085,"Hungry Pirates"],
+    ["o42e3e45808234f99","cafe",121.44662,14.42075,"Ken Delight Cafe"],
+    ["o8245ba1d7f374a44","cafe",121.44879,14.43001,"JOOKIN’s CAFE 108"],
+    ["o9edf8769854c4441","cafe",121.44265,14.42367,"Concordian Signature Coffee"],
+    ["o8effb6b4c76c47e1","clinic",121.44742,14.43618,"KL Dental Clinic"],
+    ["o702d6e63aec84d2f","dentist",121.44575,14.42195,"Rellosa - Sarabia's Dental Clinic"],
+    ["ob9420e21b960409f","school",121.44386,14.41749,"Angela Ong Javier Memorial Elementary School"],
+    ["of659779183944c07","school",121.44808,14.44495,"E.W. De Vela Elementary School"],
+    ["o0ce6536e86c34f65","college",121.4431,14.4159,"Siniloan Caregiver Training Center Inc."],
+    ["oadef509fbbc143db","college",121.44849,14.41293,"LSPU Siniloan"],
+    ["od3b443b50c0d4cfb","college",121.44384,14.41741,"Laguna State Polytechnic University (LSPU)"]
+  ]
+}

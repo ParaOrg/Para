@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "cell": "2417-284",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o32f3de956150494c","restaurant",120.88818,14.24292,"Classic filipino restaurant"],
+    ["ob236d3efca1a45a2","restaurant",120.87737,14.21301,"Greenwich"],
+    ["of6eb4855db984191","restaurant",120.8905,14.20162,"Papcy's Tapsihan at Paresan"],
+    ["oafb0a47c71334496","cafe",120.86235,14.21829,"Bike n Bake"],
+    ["o0503c9d5f9a94dc5","clinic",120.85367,14.2315,"Indang Laboratory & Diagnostic Center"],
+    ["o1bca802818714001","clinic",120.8665,14.21075,"Doc Jo - An Lying - in Clinic"],
+    ["o27deb6469eed4030","clinic",120.88992,14.20599,"VerteCare Medical Clinic"],
+    ["obe40d435a806465d","clinic",120.88709,14.22122,"Drug Rehabilitation Center"],
+    ["o084522cd770947d6","school",120.88539,14.24498,"Santa Lucia School of Light"],
+    ["o743285cb49e049f8","school",120.86584,14.2121,"Dr. A. Pio De Roda Elementary School"],
+    ["ob4b4817f6c3347d5","school",120.88708,14.24484,"Saint Therese Academy of Trece Martires"],
+    ["of27e81462f2a404b","school",120.87385,14.20123,"DepEd Indang Integrated National High School-Senior High School"],
+    ["o35a31c2a3ec54ea0","college",120.88168,14.20257,"College of Veterinary Medicine and Biomedical Sciences"],
+    ["o56374200272b48cd","college",120.87431,14.20581,"Cavite State University"],
+    ["o8b73f8e04a314e5d","college",120.88192,14.20118,"SM rolle hall CvSU main Campus"]
+  ]
+}

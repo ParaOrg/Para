@@ -1,0 +1,10 @@
+{
+  "schema": 1,
+  "cell": "2428-292",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["od6f0e99ef0c24e31","restaurant",121.40085,14.64121,"KFC"],
+    ["ofb5c0ca508544bce","restaurant",121.4292,14.60224,"Tinipak Lodge and Restaurant"],
+    ["o51e3902369544e33","fast_food",121.4152,14.62718,"KFC"]
+  ]
+}

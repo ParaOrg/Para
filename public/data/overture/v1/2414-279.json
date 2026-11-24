@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "cell": "2414-279",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o2098a61da52249b7","restaurant",120.709,13.95047,"J' Silog and Lomi House"],
+    ["o28d7e12c62464357","restaurant",120.7451,13.95022,"Samgyup Sa Bukid Main Branch"],
+    ["o4b96e6ebf62649b4","restaurant",120.72807,13.96138,"Lanatan Pares Hub"],
+    ["o7f2d7d0d6ec34257","restaurant",120.72201,13.9505,"晋晧 Jìn hào Restaurant Chinese-Asian Cuisine- Balayan Main Branch"],
+    ["o87e45026b87041e4","restaurant",120.72939,13.95242,"Kumidor Restaurant"],
+    ["o8869d078bb8444bb","restaurant",120.70225,13.9505,"David's Grill"],
+    ["od083c4cf3d9a4364","restaurant",120.71888,13.95846,"Brylie Lomi House and Best Chami"],
+    ["o4c167028fe894c98","fast_food",120.72788,13.96117,"Hapag Balayeño"],
+    ["ocd0750b3a36a4b78","fast_food",120.72887,13.95024,"Potato Corner"],
+    ["o80c9daf0ec564c0f","cafe",120.72899,13.95587,"Good To Go Cafe (GTG Cafe)"],
+    ["oeac3e1a1343d4d04","cafe",120.72504,13.97288,"El Kapeto Cafe - Tuy"],
+    ["o51691eeedf74471c","clinic",120.71549,13.95023,"Metro Balayan Medical Center - Laboratory"],
+    ["o28b3977ee3574e10","school",120.71103,13.95039,"Cyrel Learning Center Balayan Branch"],
+    ["ode4e85a858a84f6a","school",120.72708,13.96323,"Lanatan-Muntingtubig Elementary School"],
+    ["oe1310768f6284659","school",120.72718,13.96592,"Dao Elementary School Balayan Batangas"]
+  ]
+}

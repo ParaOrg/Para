@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "cell": "2414-280",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o12d945207632471a","restaurant",120.72778,14.01968,"Alpig's"],
+    ["o47b14cd3a8a743d5","restaurant",120.72985,14.00264,"Joey's Diner"],
+    ["o867a836c7dff4f26","restaurant",120.73183,14.01845,"Chooks-to-Go"],
+    ["obfeef2c07dc94056","restaurant",120.72503,14.01681,"JM'S Goto & Lomi House"],
+    ["ofb7754d766e34434","restaurant",120.72763,14.01329,"Enchongs Restaurant official"],
+    ["o0f7bd9a977ec4590","school",120.73053,14.02343,"Erudite Multiple Learning Institute of Western Batangas Inc."],
+    ["o15b504a92e1a4204","school",120.73013,14.02113,"The Gregorian"],
+    ["oe2fdea42cdc64671","school",120.727,14.0103,"Little Home Learning Center Bayudbud Tuy Batangas"],
+    ["oe6970da2557d4799","school",120.7017,14.0436,"Luntal Elementary School"]
+  ]
+}

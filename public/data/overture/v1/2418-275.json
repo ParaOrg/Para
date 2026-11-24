@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "cell": "2418-275",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o5b0b91bd9a3f4faa","restaurant",120.94027,13.75278,"Andok's"],
+    ["obfd84f7ea34f4a49","restaurant",120.92979,13.76227,"Balong's Lomi Haus"],
+    ["o072615e3fc3f44a9","fast_food",120.91817,13.75618,"Chowking"],
+    ["obe94b67b6a39419d","fast_food",120.94123,13.7522,"Jings Lomi house"],
+    ["o69f6b9525ff94f76","dentist",120.94071,13.75236,"Signature Smiles Dental Clinic"],
+    ["o633d285566724ea4","school",120.93954,13.75355,"Santa Fe Integrated School"],
+    ["o89e062d1ed114c78","school",120.94891,13.79363,"Bauan National Agricultural and Vocational High School"],
+    ["oa06323f538f54ee0","school",120.9257,13.78825,"San Pablo Elementary School, Bauan"],
+    ["oc7f24e9a64bc48c9","school",120.9366,13.77964,"Colvo Elementary School"],
+    ["of8fedfe9e45844fd","school",120.93024,13.77109,"Colvo Elementary School"]
+  ]
+}

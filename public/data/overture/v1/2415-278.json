@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "cell": "2415-278",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o57b3c546760a4841","restaurant",120.78676,13.94059,"Mama Belen’s Restaurant"],
+    ["o8eeb5b867a974c84","restaurant",120.78242,13.94097,"Magramo lomi hauz"],
+    ["occ6e4fd389874f44","restaurant",120.79041,13.93976,"La Vita House of Lomi"],
+    ["oce7a0786d3854fa6","restaurant",120.79794,13.92495,"Magramo lomi hauz"],
+    ["o86b1f3e9d54b4f9d","fast_food",120.79551,13.92552,"Quizumbing Calaca Batangas"],
+    ["o30b03003029b4295","cafe",120.75027,13.94644,"UNWD by my place"],
+    ["o5bb0c416029d4859","cafe",120.75043,13.94539,"Bros Cafe"],
+    ["o722a50c914f34416","cafe",120.77975,13.94035,"Sabor Lokal"],
+    ["o8de38502fdae4afe","cafe",120.76015,13.94522,"Highway Cafe"],
+    ["o512bea02845140c0","school",120.79137,13.9393,"Dacanlao Elementary School"],
+    ["ob63d88135155488a","school",120.79193,13.93996,"Dacanlao G. Agoncillo National High School"],
+    ["oba7ebfcedd5a4494","school",120.75832,13.94448,"Balayan Adventist Elementary School"],
+    ["oc538ee4b840f44f1","school",120.76698,13.94291,"Sampaga Elementary School"],
+    ["oedbd4e0a332c4cbf","college",120.79038,13.93976,"Calaca City Global College"]
+  ]
+}

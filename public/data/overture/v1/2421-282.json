@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "cell": "2421-282",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o09d066cb18a94820","restaurant",121.06693,14.14445,"El Cuartel Restaurant and Bar"],
+    ["o3349f8ce0a584298","restaurant",121.07111,14.12374,"Jupeters Restobar"],
+    ["o5229a80b157b41a0","restaurant",121.09555,14.10038,"Botcho's Lomi"],
+    ["o5f7467bc6b47433b","restaurant",121.08469,14.13862,"Don Facundo's Chami-An"],
+    ["of68ecf69e7714952","restaurant",121.08865,14.12762,"S&S"],
+    ["od2b735b967a242e2","cafe",121.07251,14.12353,"TeakMe.café"],
+    ["o14875b34869f4819","dentist",121.05817,14.12077,"Dentista Locale"],
+    ["o1e0647e3d70c49e5","school",121.09642,14.10341,"Paaralang Sentral ng Talaga"]
+  ]
+}

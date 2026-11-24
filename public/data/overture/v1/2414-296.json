@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "cell": "2414-296",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o028c6950a00443e0","restaurant",120.74909,14.83932,"CG’s Restaurant & Catering Services"],
+    ["o059f9b9e63f8411b","restaurant",120.731,14.83002,"Goldilocks"],
+    ["o534967ec1721407e","restaurant",120.73361,14.83587,"Armando's Grill & Restaurant"],
+    ["o9750061aad2440bd","restaurant",120.73324,14.8353,"Mang Inasal"],
+    ["od5375acbcbb54718","fast_food",120.74088,14.83984,"Liomings Rice Noodles Corner Hagonoy Branch"],
+    ["oefeeac1243574e77","fast_food",120.73332,14.83334,"Jollibee"],
+    ["o3acac69106dc44b5","clinic",120.73346,14.83617,"Luz C. Santos-Mangahas Clinic"],
+    ["o8b1b23a5facb4e4b","clinic",120.73409,14.8364,"San Nicolas Hagonoy, Bulacan"],
+    ["oef1d94ae80dd451d","clinic",120.73332,14.83653,"Health TrueValue Diagnostic Laboratory"],
+    ["of4b069c4648947ce","clinic",120.73462,14.83394,"Fervil Medical Clinic"],
+    ["ofb8ab2d9359546a7","clinic",120.73331,14.83646,"Servex Diagnostics"],
+    ["ofccfbc75e66140f9","clinic",120.72744,14.8237,"San Nicolas Hagonoy, Bulacan"],
+    ["o83e8301226994deb","dentist",120.73425,14.83388,"SmileUP Dental Clinic"],
+    ["o03501acf8e584b37","school",120.73519,14.84376,"Hagonoy East Central School"],
+    ["o4a732d27b9e44a68","school",120.73644,14.83232,"San Sebastian Elementary School"],
+    ["o54c185341ff242a3","school",120.73454,14.84343,"Sta Monica Elementary School Hagonoy Bulacan"],
+    ["o70cc40413ebc440a","school",120.7284,14.81623,"Hagonoy West Central School"],
+    ["o9460d6b0d19f4688","school",120.73735,14.83927,"Sta. Monica National High School - Main"],
+    ["oc380467092264f21","school",120.73687,14.84518,"Lantad Elementary School"],
+    ["odc2a577507fc43c0","school",120.7333,14.83673,"Kids Lane Learning Center"],
+    ["oe973d3f25c724737","school",120.72845,14.81582,"Ramona S. Trillana National High School"],
+    ["oee3152a63f424573","school",120.72115,14.81611,"Sta. Cruz Elementary School"]
+  ]
+}
