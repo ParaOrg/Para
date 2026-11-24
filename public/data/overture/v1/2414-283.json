@@ -1,0 +1,11 @@
+{
+  "schema": 1,
+  "cell": "2414-283",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o3dbd2924f5614a94","restaurant",120.73748,14.17394,"Ofelia's Cafe and Pizzeria"],
+    ["ob0acda8b8748441b","restaurant",120.73901,14.1754,"Em SnackHub Lutong Bahay Food Restaurant"],
+    ["o740ae10b2e71466a","cafe",120.73123,14.1655,"Kaloy's Café"],
+    ["oc8af8fd31f4f479c","cafe",120.72371,14.15985,"Salipit Coffee Farm"]
+  ]
+}

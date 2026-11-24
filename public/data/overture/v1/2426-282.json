@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "cell": "2426-282",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o5714522d25b54bf9","restaurant",121.3311,14.11174,"Shakey’s"],
+    ["od14e3b73d5514621","restaurant",121.31016,14.14031,"Grilling 199 - Calauan Laguna"],
+    ["o9ae87e3d415a4772","cafe",121.31039,14.14127,"Cafe Amore"],
+    ["od990e87753eb4446","cafe",121.31436,14.14179,"Oli Cafe"],
+    ["oe8e5b160e1904606","cafe",121.31409,14.1461,"West Cafe"],
+    ["o58669ebf24ac4954","clinic",121.31251,14.14727,"RHU- Calauan Laguna"],
+    ["o575c10d298a94574","dentist",121.31411,14.14749,"Calabon Dental Clinic"],
+    ["o122f9f6ac0ad459c","school",121.31458,14.14375,"Sto. Tomas Elementary School"],
+    ["o212a02f0a71d451d","school",121.34554,14.12692,"Sta. Catalina Elementary School"],
+    ["o3721d79dbb9a43e9","school",121.31458,14.14375,"Dayap National High School (Main)"],
+    ["o39369395b2784c6a","school",121.31695,14.14734,"Kodomo Learning Center"],
+    ["o5748f41da23341a8","school",121.33099,14.10707,"Dolores Elementary and High School"],
+    ["o7f6b0409d5fc4dfa","school",121.31458,14.14375,"Perez Elementary School"],
+    ["o994445b051764243","school",121.3033,14.12263,"Imok Elementary School"],
+    ["oea3923776a674b23","school",121.31052,14.14194,"DepEd Masapang Elementary School - Laguna"]
+  ]
+}

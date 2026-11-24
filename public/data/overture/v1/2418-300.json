@@ -1,0 +1,32 @@
+{
+  "schema": 1,
+  "cell": "2418-300",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o36a8271eae604d4b","restaurant",120.93601,15.03411,"Teodorico's Eat All You Can"],
+    ["o41869bb1a258419e","restaurant",120.93496,15.03037,"The Dizzy Bean"],
+    ["o57c9404c7e4b45c8","restaurant",120.9241,15.00167,"Chowking"],
+    ["o5924087b0aa34aa0","restaurant",120.94342,15.00593,"Kainan ni inang"],
+    ["o70e42c6a9b04423e","restaurant",120.93441,15.02601,"Goldilocks"],
+    ["o8000d756aa7c4df7","restaurant",120.9324,15.00754,"Enteng's"],
+    ["o98b52a445c81409b","restaurant",120.92892,15.02887,"Greenwich"],
+    ["oae9363ba19b849ae","restaurant",120.92892,15.02887,"Andok's"],
+    ["oce4589276be54756","restaurant",120.93491,15.02722,"Pibo's Ramen and Sushi Express - San Rafael"],
+    ["od80411b4f03841da","restaurant",120.93498,15.01786,"HomeCourt Diners"],
+    ["oe65730e932cb452a","restaurant",120.93242,15.0077,"Aji Samsam"],
+    ["oea7497288c6a44b4","restaurant",120.93629,15.035,"Teishoku San Rafael Bulacan"],
+    ["o914328497a31490b","fast_food",120.93807,15.04067,"Bulacan's Prime"],
+    ["o9aa4ed27f34640eb","fast_food",120.93807,15.04067,"Mhaeco."],
+    ["oa76ba3ccb32648ab","fast_food",120.93379,15.02402,"Potato Corner"],
+    ["o78d9e116827a40b7","cafe",120.93498,15.01782,"Cafe Home"],
+    ["ob874a8fd3c6e4c5c","cafe",120.90141,15.00929,"Probeansya Café"],
+    ["obbdc5196bf4848a5","cafe",120.93401,15.0251,"Dunkin Donuts",{"brand":"Dunkin'"}],
+    ["o753478a328bc4f07","clinic",120.94463,15.02463,"Crosshealth Diagnostic Laboratory"],
+    ["o68fbf46b34364207","dentist",120.93139,15.002,"Smile Maker Villalino Dental Clinic - San Rafael Branch"],
+    ["o949a77b200214366","school",120.94907,15.02607,"Diliman 1st Elementary School"],
+    ["o9cd5bc573f374a13","school",120.9341,15.02163,"Carlos F. Gonzales High School"],
+    ["oa704f259da7641ab","school",120.91436,15.03371,"Dagat Dagatan Elementary School San Rafael Bulacan"],
+    ["oe6c75184d4544628","school",120.90438,15.03825,"Vizal Sto. Niño Elementary School"],
+    ["od8051bea19c34309","college",120.9304,15.00167,"Erhard Science College"]
+  ]
+}

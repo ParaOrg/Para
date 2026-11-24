@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "cell": "2418-284",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o038eb7653f4e42af","restaurant",120.93504,14.20348,"Roadside Cusina"],
+    ["oa1c3134157c848ec","restaurant",120.9285,14.21779,"Kazashi Authentic Ramen"],
+    ["oc92b65890b6246f9","restaurant",120.92863,14.21752,"ESPASYO by DR. Pares"],
+    ["odabd07d8e8174b24","restaurant",120.92145,14.23582,"Ben's Halo Halo Ice Cream"],
+    ["of9ef8d2b08de408c","restaurant",120.93032,14.21366,"Amber's Corner foodhub"],
+    ["o011f7f4c39444ec4","cafe",120.92171,14.20604,"Alitaptap Art Cafe"],
+    ["o1ce1e30f41bb4638","cafe",120.93359,14.20591,"CaKe’s Coffee -Amadeo-"],
+    ["o21993b3510074204","cafe",120.93278,14.20825,"March May Cafe"],
+    ["o9552bf1354e94b9a","cafe",120.9353,14.202,"Villa Breads & Coffee"],
+    ["ob761663508944f02","cafe",120.93593,14.20369,"Wasaq - An Artist Place"],
+    ["ocf2ee48c899947df","cafe",120.93503,14.20032,"YANI Garden Cafe"],
+    ["o2796c38bb2a44417","dentist",120.93258,14.20138,"KLU Dental Clinic"],
+    ["o2d24c791cb4c4386","school",120.9315,14.20052,"Halang Banay-Banay Elementary School"],
+    ["o89e2a81462434f1f","school",120.92189,14.23487,"Paaralang Elementarya ng Panungyanan"]
+  ]
+}

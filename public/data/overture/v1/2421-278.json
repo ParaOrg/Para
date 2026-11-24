@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "cell": "2421-278",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o17bd3351ca09411c","restaurant",121.08104,13.92348,"Saja Bangi Samgyupsal"],
+    ["o5ee2b725ab5d4bf8","restaurant",121.07092,13.91045,"Kiks Kitchenette"],
+    ["o793d4871dbcd4de5","restaurant",121.08135,13.9203,"Maria Bar and Restaurant Lounge"],
+    ["o7baae42c8f574527","restaurant",121.08594,13.93573,"Japs Restaurant"],
+    ["obf3b57dc05434ca3","restaurant",121.0526,13.90369,"Red Barrel Garage Diner"],
+    ["o230f8d2b1a094915","fast_food",121.05128,13.90074,"Cucina ni Mommy Kap"],
+    ["o5f23b12f1d644a05","cafe",121.07283,13.94306,"Hinitan Plantation"],
+    ["o97264f24c5104fdb","cafe",121.0509,13.90019,"Cafe en Rico"],
+    ["od26075b4c9234307","cafe",121.07081,13.9336,"Vista Amplia"],
+    ["of27911c823ea4044","cafe",121.05012,13.90034,"Cuencafe"],
+    ["o1ced6abf96eb40a0","dentist",121.07059,13.90764,"JSBernardo Dental Clinic"],
+    ["o1b002fdec3c64cee","school",121.07289,13.91714,"Col. P. Pasia Memorial School"],
+    ["o315d11625a6d4f0b","school",121.07304,13.92233,"DepEd Tayo Fermin La Rosa NHS - Batangas"],
+    ["occ3175d5c30546e4","school",121.09898,13.93108,"Pinagtongulan Integrated National High School"]
+  ]
+}

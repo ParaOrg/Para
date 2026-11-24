@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "cell": "2421-276",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o21cd2296b23844fb","restaurant",121.06579,13.82061,"Tik'Me Panciteria"],
+    ["oa6f81c3137b34a9e","restaurant",121.08877,13.80366,"Kakang Emong's Place"],
+    ["oeb144a73d3994a7d","cafe",121.09014,13.80611,"Happie Corals Cafe"],
+    ["ofc87720db45c40d5","cafe",121.07474,13.81908,"Taza Mia Sorosoro Karsada"],
+    ["o15f296ec588e4d2f","school",121.08365,13.83177,"Navera Memorial National High School"],
+    ["o7fd97aa0acbf45da","school",121.05444,13.80543,"Banaba West National High School"],
+    ["o8c9e59dfdf694413","school",121.06176,13.80773,"Banaba Center Elementary School"],
+    ["od4b22dcd5e83472e","school",121.05445,13.80494,"Banaba West Elementary School"]
+  ]
+}

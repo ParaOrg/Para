@@ -1,0 +1,26 @@
+{
+  "schema": 1,
+  "cell": "2418-297",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o28e1ed5bc6314825","restaurant",120.94209,14.8632,"Hiromitsu Restaurant"],
+    ["o4a0e7c6fb8e04180","restaurant",120.92752,14.88003,"Frank and David Food Manufacturing Corporation"],
+    ["ob1d8925d84774091","restaurant",120.94896,14.86462,"Shakey’s"],
+    ["od0f94375e5354c2d","restaurant",120.91629,14.85361,"Carmelli's Eatery"],
+    ["oe87d344849a64a37","restaurant",120.90883,14.85369,"Chooks-to-Go"],
+    ["of59af4f622c64fe4","restaurant",120.92918,14.85313,"Chowking"],
+    ["o344942f31ce74796","fast_food",120.93512,14.88699,"Jollibee"],
+    ["o0bca5b41da514583","cafe",120.94913,14.89711,"Anytime Café"],
+    ["o945acf2c04154550","cafe",120.90522,14.856,"Kopihauz Cafe"],
+    ["o951322e5bf9a41e1","cafe",120.90505,14.86026,"Tiny Box Café"],
+    ["odc7b00ab853348bc","cafe",120.93941,14.86418,"Hilario Brews"],
+    ["o2c6fa4ff58094bb0","dentist",120.93703,14.85684,"G.A.D's Dental Clinic"],
+    ["o911be2b804bc4ac5","dentist",120.93964,14.85376,"G.A.D's Dental Clinic"],
+    ["o90fd43f8ba674d28","school",120.94921,14.8847,"DepEd Masuso Elementary School"],
+    ["ob66a405dbbcd4839","school",120.94878,14.87541,"DepEd Masuso Elementary School"],
+    ["obfd8e362f151402f","school",120.9066,14.8791,"DepEd Masagana Elementary School - Pandi South 104981"],
+    ["ofbeeb78be9f34e4b","school",120.94745,14.88462,"Masuso Elementary School Pandi"],
+    ["o10860880e8d2402d","college",120.93622,14.86483,"The Sentry Publication - BPC Pandi Campus"],
+    ["o7b6e568d5d8d459a","college",120.93639,14.86454,"Bulacan Polytechnic College - Pandi Campus"]
+  ]
+}

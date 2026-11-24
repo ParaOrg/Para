@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "cell": "2429-288",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o4d574462192b40aa","restaurant",121.46878,14.40281,"K'z Corner Fud Hauz"],
+    ["o67f45aa7f95b47e0","restaurant",121.46347,14.42872,"Barato Family Restaurant"],
+    ["o6f7c5de27b8148e7","restaurant",121.45,14.43755,"Konsi's Place"],
+    ["o84d333e6ac13456e","restaurant",121.46857,14.4026,"Lapoy Bistro"],
+    ["o8540da5ba5b14e62","restaurant",121.46966,14.40621,"Thelma's Goto"],
+    ["ob57efe8b43f54e18","restaurant",121.4697,14.40622,"Houze of Captain Restaurant"],
+    ["of8212d59c3c04a67","restaurant",121.46347,14.42872,"KuSinarol"],
+    ["o22370e7cb96a4fec","fast_food",121.45129,14.43353,"Potato Corner"],
+    ["oc3257d04c0774c07","fast_food",121.46347,14.42872,"Halo Halo ni Edong"],
+    ["o221e22fbb1004371","cafe",121.46347,14.42872,"S Café"],
+    ["o7d84353bbf8d4e34","cafe",121.46451,14.42757,"Café Tea Rea"],
+    ["ofec142cf0a28426b","cafe",121.46682,14.43672,"Starbucks"],
+    ["o1a8123bde7494585","school",121.45069,14.4383,"Famy National Integrated High School - Campus II"],
+    ["o3f4aadf831284b74","school",121.46714,14.40438,"Lightbearer Montessori School"],
+    ["ode36f938107f42a0","school",121.46358,14.44752,"DepEd Mayatba ES - Laguna"]
+  ]
+}

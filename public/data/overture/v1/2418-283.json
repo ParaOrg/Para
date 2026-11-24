@@ -1,0 +1,26 @@
+{
+  "schema": 1,
+  "cell": "2418-283",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o00766a763f40416b","restaurant",120.92439,14.17217,"TakoKami"],
+    ["o31ebfc9324a24c79","restaurant",120.92355,14.16603,"Pizza Hut"],
+    ["o3739b7b989b846e5","restaurant",120.92167,14.16904,"MJK Lomi House"],
+    ["o9e2046b6633848dc","restaurant",120.92516,14.16437,"Lola Elisa Coffee and Sides"],
+    ["oab127dd867c842da","restaurant",120.92287,14.16823,"Max's Restaurant"],
+    ["o22661bc9fcfc4bf2","cafe",120.90089,14.16198,"Indang’s Kape & Pandesal"],
+    ["o3f907a573c864ee9","cafe",120.94924,14.18429,"Tagpuan sa Silang"],
+    ["o6f8c0514226d4bd2","cafe",120.92905,14.18469,"Ivy's Place Cafe and Events"],
+    ["o7d83cffbfa444cf1","cafe",120.92059,14.16919,"Daily Fika"],
+    ["o8651746f4dd34b80","cafe",120.90945,14.19352,"Tiyomontanskopi"],
+    ["o9d77ab25dbe84c53","cafe",120.93069,14.18482,"Bikers' Yard Cafe"],
+    ["ob560dac049b04ec5","cafe",120.93407,14.19509,"AIDa’S CAFE"],
+    ["oc20aa9f6bc7d4432","cafe",120.92082,14.17379,"Unknown Cafe"],
+    ["oc27bc2a0ef664972","cafe",120.92838,14.17612,"Coffee at Arsenia's"],
+    ["oe2040d1df75d409f","cafe",120.928,14.15509,"ALU Garden Tagaytay"],
+    ["ob4eb863b8d454be6","clinic",120.922,14.1703,"Adem Elderly Nursing Home and Services"],
+    ["o5ed816074a714c86","school",120.92377,14.16728,"Amadeo Elementary School"],
+    ["o827f35cb653c49eb","school",120.92505,14.16725,"Amadeo National High School"],
+    ["obe84b1a9148d4010","school",120.92334,14.16811,"Talon Elementary School"]
+  ]
+}

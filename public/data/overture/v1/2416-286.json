@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "cell": "2416-286",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o2677861d974745ca","restaurant",120.84663,14.3293,"Kurozato Milktea House"],
+    ["o9da74f3d429a41a3","restaurant",120.84644,14.32903,"Brisas Sahud Ulan Lying-in Clinic “nurserose”"],
+    ["o68e6c601b8674df0","fast_food",120.8315,14.33206,"Puregold"],
+    ["o70e605311fb4416d","cafe",120.84772,14.34969,"Bambanoidz Internet & Gaming Cafe"],
+    ["o846431ce1881411e","cafe",120.84505,14.33533,"JAM Cafe"],
+    ["oaede85b33ff049a9","school",120.80614,14.32185,"Holy Redeemer School"],
+    ["obd7d10c449bd41c8","school",120.80668,14.32556,"Holy Redeemer School"],
+    ["od636612e985e4e4b","school",120.80576,14.31826,"DepEd Petronilo L. Torres Memorial ES - Cavite Province"],
+    ["oebd2f2f6cfe54247","school",120.80183,14.32895,"Naic Elem School"]
+  ]
+}

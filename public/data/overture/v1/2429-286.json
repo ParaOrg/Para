@@ -1,0 +1,24 @@
+{
+  "schema": 1,
+  "cell": "2429-286",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o2185e8c191d74e9d","restaurant",121.4799,14.30685,"Caliraya Skypod"],
+    ["o273d75161edc4a66","restaurant",121.48154,14.33195,"Brothers Cafe"],
+    ["o5e9dc48bfde04391","restaurant",121.47686,14.32271,"Fritz Daniel Food Corner"],
+    ["o762307a564cd4e94","restaurant",121.47806,14.30394,"D'Boss Cafe and Restaurant"],
+    ["o7a96a4e247554962","restaurant",121.48257,14.34081,"Syzzling Steak and Ramen House"],
+    ["o89a5afa709a04f20","restaurant",121.46425,14.30019,"Janna's Place"],
+    ["o90db8751d4c24fca","restaurant",121.47892,14.3246,"Highway San Juan Kalayaan Laguna"],
+    ["o9c45e292f97b45e2","restaurant",121.47363,14.32672,"Joy's View Resort and Restaurant"],
+    ["oa8ac3f3285104398","restaurant",121.48997,14.30115,"Danilo's Restaurant - by Spacio"],
+    ["oe2a4ff10c0ee457b","restaurant",121.47781,14.30497,"Alexa's Caliraya Heights"],
+    ["oe4baa7fe7a6d4b25","restaurant",121.49092,14.34533,"Kabute sa Kubo Farm"],
+    ["o539f5f093d14446f","fast_food",121.4724,14.31789,"KFC"],
+    ["oa3ff3a8d14324d29","fast_food",121.45842,14.30122,"Potato Corner"],
+    ["o22fb6295ef1c464b","cafe",121.48988,14.30128,"Bottle and Brew"],
+    ["o9e3c945023df4d51","cafe",121.45908,14.30031,"Caffesha"],
+    ["o1c75355d78a547a6","school",121.45774,14.30657,"Home of the Future Leaders"],
+    ["o56fe8bfe274941f0","school",121.45753,14.30824,"Lumban National High School"]
+  ]
+}

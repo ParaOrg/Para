@@ -1,0 +1,26 @@
+{
+  "schema": 1,
+  "cell": "2422-277",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o0030f0fda2ce4585","restaurant",121.10471,13.8757,"OGS Restobar"],
+    ["o06a769deb3d241ba","restaurant",121.10462,13.87533,"Don Luis San Jose Batangas"],
+    ["o1ad26d0840a04d37","restaurant",121.10522,13.8794,"Daddy's Burger"],
+    ["o21bf5db606354dc6","restaurant",121.10139,13.87847,"Chooks-to-Go"],
+    ["o6d7a7a892a184ae1","restaurant",121.11276,13.85662,"Salaban, San Jose, Batangas"],
+    ["o7026987c7fa14438","restaurant",121.10165,13.87864,"Madlangbayan’s Bakery-Taysan Branch"],
+    ["o8d7aa3a290a146da","restaurant",121.10868,13.86005,"Basaysay ni GA"],
+    ["ob6d440d9d7d44ead","restaurant",121.10352,13.87771,"Salaban's Favorite Lomi House"],
+    ["od69748acbef94751","restaurant",121.1045,13.89061,"Casa Rap Garden Cafe"],
+    ["oea8da2243e504704","restaurant",121.10464,13.89848,"Eurasia"],
+    ["o6455e28ddadb465e","cafe",121.10456,13.87617,"Kafenaman"],
+    ["oa65e051eb1314fcc","cafe",121.10097,13.8785,"ohbeshietea Gourmet Station"],
+    ["o0fc032a53a5b43d1","clinic",121.10404,13.87774,"Accuracy Laboratory Corporation"],
+    ["o3fc701d20f8649a3","clinic",121.10479,13.87756,"Tooth Miracle Dental Clinic"],
+    ["obe3f4933efc84caa","clinic",121.10409,13.87777,"Stanmed Medical and Diagnostic Center"],
+    ["o66c4b19f2bc74cb6","dentist",121.10891,13.8714,"Bulaklak Dental Clinic"],
+    ["o8a72c162925143d2","dentist",121.10303,13.87359,"Esquivias Dental Clinic - San Jose, Batangas"],
+    ["o5b1496c071cf4aa4","school",121.14532,13.86996,"DepEd Tayo-Calamias ES"],
+    ["o7b3eaa3e4bfe45e5","school",121.13419,13.85594,"Sto. Nino Elementary School"]
+  ]
+}

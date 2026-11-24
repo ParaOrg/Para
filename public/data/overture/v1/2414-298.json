@@ -1,0 +1,20 @@
+{
+  "schema": 1,
+  "cell": "2414-298",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o8f36357db4d747a3","restaurant",120.71624,14.90852,"Goldilocks"],
+    ["oe9f510177b6946f5","restaurant",120.73476,14.94582,"Batasan Colgante Apalit Pampanga"],
+    ["of16ccd7fc791442f","restaurant",120.71445,14.90054,"Casa Del Lago"],
+    ["o68dd258f66264019","fast_food",120.71619,14.90483,"San Isidro Macabebe Pampanga"],
+    ["o9f602a783d2a491e","fast_food",120.71855,14.92227,"Bornal Macabebe"],
+    ["oce754d6243e54efb","clinic",120.71182,14.90033,"Mallari FamilyCare Clinic | Macabebe"],
+    ["o0cfeffede89543c1","dentist",120.71625,14.90696,"Dentapod Dental Clinic"],
+    ["o856a493888f74a40","dentist",120.71696,14.90734,"JBViray Dental Clinic"],
+    ["oc4573d37d4dd41af","dentist",120.73639,14.94042,"Rainier Bonifacio DMD"],
+    ["oedb7ced340cd4a61","dentist",120.7155,14.90675,"JR Viray Dental & Oral Maxillofacial Surgery"],
+    ["o78c61f9d467f415d","school",120.7134,14.90996,"Macabebe High School"],
+    ["ob70b98c99a0c4c20","school",120.73436,14.93841,"Fausto Gonzales Sioco Memorial School"],
+    ["oe4b104b25dc348d7","school",120.74287,14.91678,"DepEd San Miguel-Meysulao High School"]
+  ]
+}

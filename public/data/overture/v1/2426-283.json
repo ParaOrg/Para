@@ -1,0 +1,25 @@
+{
+  "schema": 1,
+  "cell": "2426-283",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o1626bdf228fd4ff2","restaurant",121.30705,14.15889,"Hannah's LagaLaga/Three EMS Goto House-Calauan Main Branch"],
+    ["o3481159d64564075","restaurant",121.30842,14.17631,"Chef Mau Restaurant and Event Place"],
+    ["o9b0c88fe9833450e","restaurant",121.30963,14.15609,"Hannah's LagaLaga/Three EMS Goto House-Calauan Main Branch"],
+    ["od609160875da4618","restaurant",121.30184,14.17715,"Isdaan Floating Restaurant"],
+    ["oe755cf42df324c4b","restaurant",121.30285,14.1638,"EC2 Madame Restobar"],
+    ["o1b314d122cc94506","cafe",121.30285,14.1638,"The Hustle Beans"],
+    ["of8d414833c894ece","cafe",121.30285,14.1638,"Santan Café"],
+    ["o7afe829ce9b0413c","dentist",121.30285,14.1638,"SOUTH Smiles Dental Clinic"],
+    ["o0091f63b3ea74ab5","school",121.33226,14.16136,"Sto. Tomas Elementary School"],
+    ["o36b25e64284740ad","school",121.34414,14.18022,"Dayap National High School (Main)"],
+    ["o488cd98101834f9a","school",121.34875,14.1678,"Sto. Tomas Integrated High School"],
+    ["o7072cf3637b4464e","school",121.30556,14.16358,"Masiit Elementary School"],
+    ["o90f5d84a88ff4e0f","school",121.33949,14.1777,"DepEd Dayap ES - Annex"],
+    ["o982d9a3109ae4c28","school",121.33841,14.16676,"Santo Tomas Elementary School"],
+    ["oa0785c8018d94fe5","school",121.33524,14.17822,"Lamot Elementary School"],
+    ["ob2f81342c7ad4344","school",121.34911,14.17385,"Madre Giovanna Zippo Learning Center Don Bosco Calauan Laguna"],
+    ["ob69942b5a4f24013","school",121.3481,14.16763,"Sto Tomas Annex Elem. School Calauan Laguna"],
+    ["odecdc7f28c4d4034","school",121.33418,14.19064,"Masapang National High School"]
+  ]
+}

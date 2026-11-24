@@ -1,0 +1,14 @@
+{
+  "schema": 1,
+  "cell": "2416-282",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o73e23ca4cd5a4f2b","restaurant",120.83006,14.10295,"Route 148 Kitchenette"],
+    ["ob47102125ddc4d0d","restaurant",120.80007,14.1267,"Vera Farm Resort and Events Place"],
+    ["o04c403fb81f041e6","cafe",120.84747,14.10953,"Hidden Pines Cafe"],
+    ["o9f83d0888f4b4091","cafe",120.8242,14.14043,"The Cottage Cafe by Polla’s"],
+    ["occb17937560641c6","cafe",120.82941,14.10354,"Starbucks"],
+    ["o5bf40fe1c5db4e2a","school",120.84833,14.13277,"DepEd Marahan Elementary School"],
+    ["ocfcbf3b52d624d31","school",120.82829,14.12723,"Sinaliw Elementary School"]
+  ]
+}

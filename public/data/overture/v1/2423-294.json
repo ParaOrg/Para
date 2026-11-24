@@ -1,0 +1,25 @@
+{
+  "schema": 1,
+  "cell": "2423-294",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o1ec92e54048f4eff","restaurant",121.15596,14.7415,"Tomo-Dachii HotPot & Grill"],
+    ["o51c1fca8558b4ff0","restaurant",121.15305,14.73431,"Quintin's Native Lechon & Bellychon"],
+    ["o54704722697249d2","restaurant",121.15469,14.73365,"Renato's Garden Restaurant"],
+    ["o7ac15a0f6bfc435e","restaurant",121.16885,14.74257,"Goldilocks Montalban Town Centre"],
+    ["o9255e2fca2cc476a","restaurant",121.15067,14.73516,"SamgyKing"],
+    ["oa08a86e064f14db2","restaurant",121.16274,14.74272,"The G-Spot Buffalo Wings and Things"],
+    ["of729f575892d4a81","restaurant",121.15431,14.73807,"JIMS Pairs and Hot Mommy"],
+    ["oae650d2d146042c3","fast_food",121.15411,14.7391,"Bebang's Pares"],
+    ["o2f015faf062345c6","cafe",121.15153,14.74564,"The Village Boho Café"],
+    ["oce4ac42235d94dd6","cafe",121.1554,14.74011,"Gravity Sub-Urban, Montalban"],
+    ["oc39cdbabfbf74733","dentist",121.16513,14.74318,"Greenview Dental Clinic"],
+    ["o1bfc94a3bf8e4e91","school",121.15153,14.74564,"San Isidro Senior High School"],
+    ["o694ddbbc2bdf441d","school",121.16357,14.74803,"Louisian Learning Academy"],
+    ["o6c8910b0cf324eff","school",121.15153,14.74564,"Basecamp Elementary School"],
+    ["ob16536491d5e4aba","school",121.1605,14.731,"Creative Steps Pre School"],
+    ["ob4492d7ba80046ae","school",121.15093,14.73281,"Deped Tayo Blue Rizal San Rafael Elementary School"],
+    ["odaef5d71d01944f2","school",121.15153,14.74564,"SSLG - Southville 8B National High School"],
+    ["o65034d1901ee4ca5","college",121.15467,14.74421,"Colegio de Montalban ROTC Unit"]
+  ]
+}

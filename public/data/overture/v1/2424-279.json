@@ -1,0 +1,19 @@
+{
+  "schema": 1,
+  "cell": "2424-279",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o4be3c787a4d64625","restaurant",121.20921,13.98253,"ChiBongs Lomi House"],
+    ["o8dea77f3f85f4ef0","restaurant",121.20992,13.98817,"Kambingan at Bulaluhan ni Lolo Delfin"],
+    ["oc506f967178e4f8b","restaurant",121.20276,13.98006,"Jawo Lomi House"],
+    ["oeec87400303c45ab","restaurant",121.20504,13.97066,"Anikka Kim Bakeshop"],
+    ["o142caf29c34a4fef","cafe",121.20421,13.98041,"KRĀV CAFE - Lumbang, Lipa City"],
+    ["o20095cb5e8584f36","cafe",121.20546,13.95746,"Starbucks"],
+    ["o2c39cf60b9b743ba","cafe",121.20325,13.98101,"Hana Coffee - Lodlod, Lipa City"],
+    ["oe2aa0653a52948ab","dentist",121.20406,13.95937,"DentPod Dental Clinic - Lipa"],
+    ["o2d29f02952ec4baa","school",121.20457,13.95854,"Lipa Adventist Elementary School - Lipa SDA School"],
+    ["o39f2beecd6984f02","school",121.21486,13.98445,"Sta Cruz Elementary School"],
+    ["o7161df3f001a47af","school",121.21347,13.98792,"Sta Cruz Elementary School"],
+    ["o51488f31799641ec","college",121.21085,13.95983,"Anihan Technical School"]
+  ]
+}

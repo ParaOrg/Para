@@ -1,0 +1,14 @@
+{
+  "schema": 1,
+  "cell": "2412-300",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["obc45454e11214ded","restaurant",120.64348,15.00047,"Apag Marangle"],
+    ["of1b0710392254f7e","restaurant",120.64596,15.00804,"LASA Filipino"],
+    ["o64bf607d37754768","fast_food",120.61082,15.00056,"Potato Corner"],
+    ["o542795576659443c","cafe",120.64172,15.00031,"The Lounge Café at the Granary Private Villas"],
+    ["o8f20a63d1d184744","cafe",120.64568,15.00789,"Nipa Coffee + Roastery"],
+    ["o2a001f6274be4295","clinic",120.64154,15.03704,"MGV Sciechem Corporation"],
+    ["o5638650e5e0e4bef","college",120.64857,15.00122,"Pampanga State University Office of Student Affairs and Development"]
+  ]
+}

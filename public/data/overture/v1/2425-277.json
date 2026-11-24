@@ -1,0 +1,19 @@
+{
+  "schema": 1,
+  "cell": "2425-277",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o0241f58724d044e2","restaurant",121.2665,13.88285,"TM lomi house"],
+    ["o2043015f25c84064","restaurant",121.29073,13.89256,"Pepito's Sekrit Cafe and UnliMeated Samgyupsal"],
+    ["o2a69f9be886b4b35","restaurant",121.26763,13.8842,"Palma's Lomi House"],
+    ["o2e569fd461774c0a","restaurant",121.29602,13.89973,"Sergio and Juliet Eatery"],
+    ["o4d40f4aade1c4ac8","restaurant",121.29038,13.89186,"Kubo ni Tatay Peping"],
+    ["o628e805804824ef7","restaurant",121.28806,13.89802,"Lutong Henerasyon - Biñan"],
+    ["o76dde80ff86f4ea5","cafe",121.29248,13.89478,"Doctor Tea"],
+    ["oc1512f6fc571482e","cafe",121.26776,13.88418,"Veranda Cafe"],
+    ["o58e51afa1c0c4366","clinic",121.29569,13.89823,"Eye Quality Optical Clinic"],
+    ["o5bdb421ef2134b47","dentist",121.28967,13.89316,"Dental Clinic"],
+    ["o31a061bc7f0d43b1","school",121.28621,13.86982,"Dmzes Maugat West"],
+    ["o4a630416c0fb48a2","school",121.2907,13.89526,"ICT-ED Institute of Science and Technology Inc. - San Antonio"]
+  ]
+}

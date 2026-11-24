@@ -1,0 +1,10 @@
+{
+  "schema": 1,
+  "cell": "2416-299",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["od5432aeeb23a4011","restaurant",120.8372,14.96331,"E.M.R. Bakery"],
+    ["o4e7387087e8342bd","school",120.83315,14.97004,"Balucuc Elementary School Special Education"],
+    ["o64200ce20c2a4e15","school",120.84927,14.96767,"Creative Haven Learning School"]
+  ]
+}

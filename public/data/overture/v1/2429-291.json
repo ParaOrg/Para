@@ -1,0 +1,10 @@
+{
+  "schema": 1,
+  "cell": "2429-291",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o50727b7bccc0435a","restaurant",121.49844,14.56313,"Kuya RJ Marilaque Highway"],
+    ["odadb228a20af40c5","restaurant",121.49834,14.56902,"Kuya RJ Marilaque Highway"],
+    ["o318278de1af54437","fast_food",121.45713,14.55368,"KFC"]
+  ]
+}

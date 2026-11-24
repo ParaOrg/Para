@@ -1,0 +1,11 @@
+{
+  "schema": 1,
+  "cell": "2419-281",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o45d2fb7173ac4530","restaurant",120.96223,14.08118,"ARCO Poultry & Gamefarm"],
+    ["o543ec21d38d1477e","restaurant",120.98528,14.08679,"Allas Foodtrip House"],
+    ["oa4c2c0edb74b4c2e","fast_food",120.96538,14.09296,"McDonald's"],
+    ["o18184415a624429b","cafe",120.95214,14.07149,"H I L I G    Café"]
+  ]
+}
