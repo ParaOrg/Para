@@ -10,12 +10,11 @@ import {
   NEAR_HERE_M,
   combineResults,
   isParaPlace,
-  nearestStopOn,
   routesNearHere,
   searchLandmarks as searchFolded,
   searchableLandmarks,
-  walkToLandmark,
 } from '../../src/features/routes/model/landmark-search.ts';
+import { nearestStopOn, walkToLandmark } from '../../src/features/routes/model/landmark-goal.ts';
 import { searchPlaces, searchablePlaces } from '../../src/features/routes/model/place-search.ts';
 import { landmarkFileSchema } from '../../src/features/routes/published/landmark-file-schema.ts';
 

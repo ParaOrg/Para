@@ -2,7 +2,7 @@ import type { MapLibreMap } from 'maplibre-gl';
 
 import { LandmarkPin } from '@/features/routes/map/landmark-pin';
 import type { Hotspot } from '@/features/routes/model/hotspots';
-import type { HintuanNearHere } from '@/features/routes/model/landmark-search';
+import type { HintuanNearHere } from '@/features/routes/model/landmark-goal';
 import type { Direction } from '@/features/routes/model/routes';
 import type { Landmark } from '@/features/routes/published/landmark-file-schema';
 import { PlaceSearch } from '@/features/routes/search/place-search';
