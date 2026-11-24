@@ -3,10 +3,13 @@
 # (.scratch/establishments, step E3a), and the Overture place files (step E3c):
 # scripts/landmarks/build.sh rebuilds public/data/landmarks.v1.json,
 # public/data/footbridges.v1.json and public/data/establishments/v1/ (an index and a file per area
-# cell) from Geofabrik's Philippines extract, cut to the map's panning box, and
-# public/data/overture/v1/ from Overture's latest Places release, and, when any changed, the run opens one pull request into staging with
-# the count of each kind, and of footbridges, before and after. Nothing merges by itself: a person, or the session that
-# owns place search, merges it like any other pull request, and only the owner merges into main.
+# cell) from the OpenStreetMap Philippines extract, cut to the map's panning box, and
+# public/data/overture/v1/ from Overture's latest Places release. The extract comes from Para's own
+# copy at osm.para-commute.org (osm-mirror.yml fills it weekly), or from Geofabrik or
+# openstreetmap.fr when the copy fails (scripts/osm-mirror/fetch-extract.sh). When any file
+# changed, the run opens one pull request into staging with the count of each kind, and of
+# footbridges, before and after. Nothing merges by itself: a person, or the session that owns
+# place search, merges it like any other pull request, and only the owner merges into main.
 #
 # A pull request that changes the script or this file builds and checks the file, and opens
 # nothing. The schedule and "Run workflow" build from staging and open the pull request.
