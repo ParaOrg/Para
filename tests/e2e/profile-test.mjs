@@ -508,24 +508,38 @@ async function seed(page, id, name, upload) {
   await start(page).waitFor();
   await page.waitForTimeout(600);
 
-  /** What is moving 60 ms into a move: the view transition's parts and the toolbar's pill. */
+  /**
+   * What is moving once a move has begun: the view transition's parts and the toolbar's pill. The
+   * look waits for the transition's first frame rather than a fixed time after the tap, since on a
+   * busy machine the move starts later (32–36 ms after the tap alone, 44–55 ms beside another suite).
+   * A move that never starts is read after two seconds, as it stands, and its checks fail.
+   */
   const midMove = async (tap) => {
     await tap.click();
-    await page.waitForTimeout(60);
-    return page.evaluate(() => ({
-      direction: document.documentElement.dataset.tabMotion ?? null,
-      parts: document
-        .getAnimations()
-        .map((a) => a.effect?.pseudoElement)
-        .filter(Boolean),
-      pill: document
-        .getAnimations()
-        .some(
-          (a) =>
-            a.effect?.target?.getAttribute?.('aria-hidden') === 'true' &&
-            a.effect.target.parentElement?.classList.contains('tab-toolbar'),
-        ),
-    }));
+    return page.evaluate(
+      () =>
+        new Promise((resolve) => {
+          const since = performance.now();
+          const look = () => {
+            const animations = document.getAnimations();
+            const parts = animations.map((a) => a.effect?.pseudoElement).filter(Boolean);
+            if (parts.length === 0 && performance.now() - since < 2000) {
+              requestAnimationFrame(look);
+              return;
+            }
+            resolve({
+              direction: document.documentElement.dataset.tabMotion ?? null,
+              parts,
+              pill: animations.some(
+                (a) =>
+                  a.effect?.target?.getAttribute?.('aria-hidden') === 'true' &&
+                  a.effect.target.parentElement?.classList.contains('tab-toolbar'),
+              ),
+            });
+          };
+          look();
+        }),
+    );
   };
   const toHistory = await midMove(historyTab(page));
   check(

@@ -80,11 +80,9 @@ export function PageToasts({
   const pointsLost = routeRecorded && pointsLostWords(routeRecorded.failedFixWrites);
   return (
     <ToastHost>
-      <ProblemsSaid problems={problems} />
-      {/* Compact, as Figma's Note successfully added (4716:9216): its words alone, no ✕. */}
-      <NewsSaid message={NOTE_ADDED_MESSAGE} times={notesAdded} isQuiet={problems.length > 0} />
-      {/* Until ✕: the ride records on, and opening them again asks for their code again. */}
-      <NewsSaid message={STOP_NOTES_FAILED_MESSAGE} times={stopNotesFailures} />
+      {/* The save's news before the problems: mounted with both at once (the toasts' code was
+          fetched by this save, and its upload refused meanwhile), "Route recorded" is said first
+          and the refusal waits its turn behind it. Effects run in this order. */}
       {routeRecorded && (
         <>
           <NewsSaid
@@ -110,6 +108,11 @@ export function PageToasts({
           )}
         </>
       )}
+      <ProblemsSaid problems={problems} />
+      {/* Compact, as Figma's Note successfully added (4716:9216): its words alone, no ✕. */}
+      <NewsSaid message={NOTE_ADDED_MESSAGE} times={notesAdded} isQuiet={problems.length > 0} />
+      {/* Until ✕: the ride records on, and opening them again asks for their code again. */}
+      <NewsSaid message={STOP_NOTES_FAILED_MESSAGE} times={stopNotesFailures} />
     </ToastHost>
   );
 }

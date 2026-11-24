@@ -10,10 +10,11 @@
 # once a second.
 #
 #   0:00  the app starts on the screen
-#   0:20  the font size changes, and at 0:35 changes back: Android rebuilds the activity each time, in
-#         the same process (font scale is not among the manifest's configChanges), as a phone does
-#         on a settings change; the page reloads and imports the fixes the service kept
-#   1:00  the screen goes off
+#   0:20  the font size changes, and once the rebuilt page has imported, changes back: Android
+#         rebuilds the activity each time, in the same process (font scale is not among the
+#         manifest's configChanges), as a phone does on a settings change; the page reloads and
+#         imports the fixes the service kept
+#   ~1:00 the screen goes off, 25 s after the second import
 #   15:00 the app's process is killed (kill -9: what Android's low-memory killer does), and the
 #         app is opened again; the page imports the fixes the foreground service kept
 #   ~16:00 the screen goes off again; at 20:00 it comes on
@@ -111,12 +112,27 @@ FEED_PID=$!
 # A step of the test's own, marked in logcat for the checker.
 mark() { adb shell log -t PARA_RIDE_TEST "$1"; }
 
+# The page's imports so far: each rebuilt page logs one once it has read the service's fixes.
+imports() { grep -c "PARA_RIDE imported" "$OUT/logcat.txt"; }
+# Changes the font size, which rebuilds the activity, then waits for the rebuilt page's import
+# before going on: a slow emulator has taken over 17 s to import, so a fixed wait could rebuild
+# the page again before it had. A page that never imports is named here, and the checker fails.
+rebuild_with_font() {
+  local before
+  before=$(imports)
+  adb shell settings put system font_scale "$1"
+  for _ in $(seq 60); do
+    sleep 1
+    [ "$(imports)" -gt "$before" ] && return
+  done
+  echo "FAIL: the page rebuilt at font size $1 imported nothing within 60 s"
+}
+
 adb shell am start -n "$PKG/$ACTIVITY"
 sleep 20
 mark rebuild
-adb shell settings put system font_scale 1.15
-sleep 15
-adb shell settings put system font_scale 1.0
+rebuild_with_font 1.15
+rebuild_with_font 1.0
 sleep $((OFF_AFTER - 35))
 adb exec-out screencap -p > "$OUT/screen-before.png"
 adb shell input keyevent KEYCODE_SLEEP
