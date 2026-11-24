@@ -1,0 +1,20 @@
+{
+  "schema": 1,
+  "cell": "2412-276",
+  "attribution": "© OpenStreetMap contributors",
+  "establishments": [
+    ["w458644252","bank",120.63259,13.83176,"Bangko Kabayan"],
+    ["n5558629489","convenience",120.6325,13.83243,"Romy Store"],
+    ["n6464148490","convenience",120.63164,13.83143,"7-Eleven"],
+    ["n7837356885","convenience",120.63185,13.83082,"Alfamart"],
+    ["w453647476","restaurant",120.63363,13.83095,"Mama Mia Pizzeria"],
+    ["n2322938359","fuel",120.6322,13.83333,"Petron"],
+    ["n2322938360","fuel",120.62808,13.82908,"Total"],
+    ["w1088567245","fuel",120.63186,13.83909,"Pemex Gas Station"],
+    ["n3176299473","toilets",120.62244,13.81291],
+    ["n3176312459","toilets",120.62248,13.81328],
+    ["w1053481823","toilets",120.62357,13.82955],
+    ["w1436394819","toilets",120.62428,13.8291],
+    ["n2322938357","police",120.63151,13.8326,"Calatagan Municipal Police Station"]
+  ]
+}

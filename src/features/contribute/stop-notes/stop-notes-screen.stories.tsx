@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { useEffect, useState, type ComponentProps } from 'react';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
 import { StopNotesScreen } from './stop-notes-screen';
@@ -106,6 +107,76 @@ export const MapClosed: Story = {
     await userEvent.click(within(popup).getByRole('button', { name: 'Close' }));
     await expect(canvas.queryByRole('dialog')).toBeNull();
     await expect(opener).toHaveFocus();
+  },
+};
+
+/** The page re-drawn while a stop's map is open, as each GPS fix does during a ride. */
+function RedrawnStopNotes(props: ComponentProps<typeof StopNotesScreen>) {
+  const [, setFixes] = useState(0);
+  useEffect(() => {
+    const timer = setInterval(() => setFixes((fixes) => fixes + 1), 50);
+    return () => clearInterval(timer);
+  }, []);
+  return <StopNotesScreen {...props} />;
+}
+
+/** Escape on a stop's map closes the map alone, even after the page has re-drawn under it. */
+export const MapEscapeAfterRedraws: Story = {
+  render: (args) => <RedrawnStopNotes {...args} />,
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole('button', { name: 'Stop 1 on the map' }));
+    await canvas.findByRole('dialog', { name: 'Stop 1 on the map' });
+    // A few re-draws with the map open.
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    await userEvent.keyboard('{Escape}');
+    await expect(canvas.queryByRole('dialog')).toBeNull();
+    await expect(args.onBack).not.toHaveBeenCalled();
+  },
+};
+
+/** Tab stays inside a stop's map: it never reaches the page's Back behind it. */
+export const MapTrapsTab: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole('button', { name: 'Stop 1 on the map' }));
+    const popup = canvas.getByRole('dialog', { name: 'Stop 1 on the map' });
+    for (const shift of [false, false, false, true, true, true]) {
+      await userEvent.tab({ shift });
+      await expect(popup.contains(document.activeElement)).toBe(true);
+    }
+  },
+};
+
+const TEN = Array.from({ length: 10 }, (_, at) => ({ time: T0 + at * 600_000 }));
+
+/** Ten stops scrolled: a stop's map still dims the whole page, not just its top. */
+export const ScrolledMap: Story = {
+  args: {
+    marks: TEN,
+    places: TEN.map((_, at) => `Place ${at + 1}`),
+    points: TEN.map(() => null),
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const frame = canvasElement.querySelector('div');
+    // The page's scrolling column, whichever element it is.
+    const scroller = [...canvasElement.querySelectorAll<HTMLElement>('*')].find(
+      (element) =>
+        element.scrollHeight > element.clientHeight + 1 &&
+        getComputedStyle(element).overflowY === 'auto',
+    );
+    await expect(scroller).toBeDefined();
+    if (!frame || !scroller) return;
+    await userEvent.click(canvas.getByRole('button', { name: 'Stop 1 on the map' }));
+    const dim = canvas.getByRole('dialog', { name: 'Stop 1 on the map' }).parentElement;
+    // The stops scrolled 188 px with the map open over them.
+    scroller.scrollTop = 188;
+    await expect(scroller.scrollTop).toBeGreaterThan(0);
+    const want = frame.getBoundingClientRect();
+    const got = dim?.getBoundingClientRect();
+    await expect(Math.round(got?.top ?? -1)).toBe(Math.round(want.top));
+    await expect(Math.round(got?.bottom ?? -1)).toBe(Math.round(want.bottom));
   },
 };
 

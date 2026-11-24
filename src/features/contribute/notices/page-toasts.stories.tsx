@@ -31,6 +31,7 @@ const meta = {
     isScreenFreeToSleep: false,
     mapNote: null,
     notesAdded: 0,
+    stopNotesFailures: 0,
     routeRecorded: null,
     uploadProblem: null,
   },
@@ -133,6 +134,20 @@ export const RecorderAndLocator: Story = {
   },
 };
 
+/** A stop's card or Stops notes could not be fetched: it closed, and this stays until ✕. */
+export const StopNotesFailed: Story = {
+  args: { stopNotesFailures: 1 },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(await canvas.findByTestId('toast')).toHaveTextContent(
+      'Stop notes could not be opened',
+    );
+    await expect(canvas.getByRole('alert')).toHaveTextContent(
+      'Stop notes could not be opened. Check your connection, then try again.',
+    );
+  },
+};
+
 /** Two at once: one at a time, the recorder's first, the screen's after it is closed. */
 export const TwoAtOnce: Story = {
   args: { problem: POSITION_UNAVAILABLE_PROBLEM, isScreenFreeToSleep: true },
@@ -197,5 +212,27 @@ export const UploadFailed: Story = {
       brief: "Refused by Para's checks",
       willRetry: false,
     }),
+  },
+};
+
+/**
+ * Saved and refused at once, as when the save itself fetched the toasts and the refusal came
+ * meanwhile: "Route recorded" first, and the refusal after it, until ✕.
+ */
+export const RouteRecordedThenRefused: Story = {
+  args: {
+    routeRecorded: saved({ state: 'uploading' }, true),
+    uploadProblem: uploadFailedProblem({
+      state: 'failed',
+      message: "Para's checks refused this recording. It stays on this phone.",
+      brief: "Refused by Para's checks",
+      willRetry: false,
+    }),
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(await canvas.findByTestId('toast')).toHaveTextContent('Route recorded');
+    await userEvent.click(canvas.getByRole('button', { name: 'Close' }));
+    await waitFor(() => expect(canvas.getByText('Upload didn’t go through')).toBeVisible());
   },
 };

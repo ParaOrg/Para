@@ -157,8 +157,16 @@ await nodeFetch(page);
 const isRouter = (u) => /routing\.openstreetmap\.de|route\/v1\/driving/.test(u);
 let routerCalls = 0,
   routerRefused = 0;
+/** Each router request's points, [lng, lat], in the order asked. */
+const routerAsked = [];
+/** The requests from index `from` on that end more than 5 m from every one of `targets`. */
+const askedElsewhere = (from, targets) =>
+  routerAsked.slice(from).filter((points) => targets.every((t) => metres(points.at(-1), t) > 5));
 page.on('request', (r) => {
-  if (isRouter(r.url())) routerCalls++;
+  if (!isRouter(r.url())) return;
+  routerCalls++;
+  const points = new URL(r.url()).pathname.split('/').at(-1) ?? '';
+  routerAsked.push(points.split(';').map((p) => p.split(',').map(Number)));
 });
 page.on('response', (r) => {
   if (isRouter(r.url()) && (r.status() === 429 || r.status() >= 500)) routerRefused++;
@@ -216,7 +224,38 @@ const clickAt = async (c) => {
   const [x, y] = await proj(c);
   await page.mouse.click(box0.x + x, box0.y + y);
 };
+// Once the camera is at rest: its centre the same over REST_FRAMES frames running. The studio's
+// wheel pan glides on in panBy steps of no duration (use-wheel-navigation.ts), which isMoving()
+// never reports, and a jump made while it glides is carried off by its last steps.
+const REST_FRAMES = 5;
+const cameraAtRest = async (ms = 10000) => {
+  const moving = await page.evaluate(
+    ([frames, ms]) =>
+      new Promise((resolve) => {
+        const m = window.__map;
+        const centres = [m.getCenter().toArray()];
+        let still = 0;
+        const deadline = setTimeout(() => resolve(centres.slice(-2)), ms);
+        const look = () => {
+          const [lng, lat] = m.getCenter().toArray();
+          const [lastLng, lastLat] = centres[centres.length - 1];
+          still = lng === lastLng && lat === lastLat && !m.isMoving() ? still + 1 : 0;
+          centres.push([lng, lat]);
+          if (still < frames) return requestAnimationFrame(look);
+          clearTimeout(deadline);
+          resolve(null);
+        };
+        requestAnimationFrame(look);
+      }),
+    [REST_FRAMES, ms],
+  );
+  if (moving) {
+    throw new Error(`view: the camera still moving after ${ms} ms: ${JSON.stringify(moving)}`);
+  }
+};
 // Centre the map on a scenario's points at street level; each scenario spans well under the viewport.
+// The clicks that follow are where these points fall on the screen, so the camera must be exactly
+// here: a drift would ask the router for other points than those recorded.
 const view = async (points) => {
   const lng = points.map((p) => p[0]),
     lat = points.map((p) => p[1]);
@@ -224,8 +263,25 @@ const view = async (points) => {
     (Math.min(...lng) + Math.max(...lng)) / 2,
     (Math.min(...lat) + Math.max(...lat)) / 2,
   ];
-  await page.evaluate(([c, z]) => window.__map.jumpTo({ center: c, zoom: z }), [center, ZOOM]);
+  await cameraAtRest();
+  await page.evaluate(
+    ([c, z]) => {
+      window.__map.jumpTo({ center: c, zoom: z });
+    },
+    [center, ZOOM],
+  );
   await page.waitForTimeout(300);
+  const at = await page.evaluate(() => ({
+    center: window.__map.getCenter().toArray(),
+    zoom: window.__map.getZoom(),
+  }));
+  const isThere =
+    Math.abs(at.center[0] - center[0]) < 1e-9 &&
+    Math.abs(at.center[1] - center[1]) < 1e-9 &&
+    Math.abs(at.zoom - ZOOM) < 1e-9;
+  if (!isThere) {
+    throw new Error(`view: the camera at ${JSON.stringify(at)}, not ${center} at zoom ${ZOOM}`);
+  }
 };
 const newRoute = async () => {
   await page.getByRole('button', { name: 'New route, terminal or hintuan' }).click();
@@ -359,6 +415,21 @@ check(
   "wheel: Ctrl+wheel zooms in, MapLibre's eased zoom",
   cameraAfter.zoom > cameraBefore.zoom + 0.1,
   JSON.stringify([cameraBefore, cameraAfter]),
+);
+// A camera move made while the pan still glides lands where it was sent: the glide stops.
+await page.mouse.wheel(0, 300);
+const sentTo = { lng: cameraAfter.lng + 0.01, lat: cameraAfter.lat + 0.01, zoom: cameraAfter.zoom };
+await page.evaluate((c) => {
+  window.__map.jumpTo({ center: [c.lng, c.lat], zoom: c.zoom });
+}, sentTo);
+await page.waitForTimeout(1000);
+const landed = await camera();
+check(
+  'wheel: a jump while the pan glides lands where it was sent',
+  Math.abs(landed.lng - sentTo.lng) < 1e-9 &&
+    Math.abs(landed.lat - sentTo.lat) < 1e-9 &&
+    Math.abs(landed.zoom - sentTo.zoom) < 1e-9,
+  JSON.stringify([sentTo, landed]),
 );
 
 console.log('== Far click (Quirino Highway, La Mesa watershed)');
@@ -516,9 +587,11 @@ const preview = async () =>
   ((await page.evaluate(() => window.__src('draw-preview')))?.features ?? []).flatMap(
     (f) => f.geometry?.coordinates ?? [],
   );
+// One step: a stepped move rests, on a slow frame, at a point on the way, and the preview then
+// asks the router for a route to that point (askedElsewhere).
 const restAt = async (c) => {
   const [x, y] = await proj(c);
-  await page.mouse.move(box0.x + x, box0.y + y, { steps: 4 });
+  await page.mouse.move(box0.x + x, box0.y + y);
 };
 /** The road offered once the cursor rests, and how long after the rest it came. */
 const roadOffered = async () => {
@@ -530,6 +603,7 @@ const roadOffered = async () => {
   }
   return { line, ms: Date.now() - restedAt };
 };
+const askedBeforePreview = routerAsked.length;
 await drawRoute([A, B]);
 await restAt(D);
 const guide = await preview();
@@ -581,6 +655,12 @@ const drawOnD = await pressed('Draw');
 await page.keyboard.press('s');
 const snapOnS = await pressed('Snap');
 check('keys: D picks Draw, S picks Snap', drawOnD === 'true' && snapOnS === 'true');
+const offPreview = askedElsewhere(askedBeforePreview, [B, D, E]);
+check(
+  'preview: the router is asked for routes to B, D and E only, where the clicks and rests were',
+  offPreview.length === 0,
+  `${routerAsked.length - askedBeforePreview} asked, ${offPreview.length} elsewhere: ${JSON.stringify(offPreview)}`,
+);
 await page.getByTestId('snap-draw').getByRole('button', { name: 'Draw' }).click();
 await restAt(D);
 await page.waitForTimeout(2500);
@@ -881,6 +961,7 @@ await page.mouse.click(box0.x + sx1, box0.y + sy1);
 await page.waitForTimeout(250);
 // A routed stretch is not held: a drag on it leaves the line as it was.
 const handlesInDraw = await handleCount();
+const askedBeforeSnap = routerAsked.length;
 await page.getByTestId('snap-draw').getByRole('button', { name: 'Snap' }).click();
 await page.waitForTimeout(150);
 check(
@@ -888,11 +969,19 @@ check(
   handlesInDraw > 0 && (await handleCount()) === 0,
   `${handlesInDraw} in Draw, ${await handleCount()} in Snap`,
 );
+// One step, from the Snap button straight to D: a stepped move rests, on a slow frame, at a point
+// on the way, and Snap's preview then asks the router for a route to that point.
 const [dx0, dy0] = await proj(D);
-await page.mouse.move(box0.x + dx0, box0.y + dy0, { steps: 3 });
+await page.mouse.move(box0.x + dx0, box0.y + dy0);
 check('cursor line: none in Snap', (await cursorLine()).length === 0);
 await clickAt(D);
 await settle();
+const offD = askedElsewhere(askedBeforeSnap, [D]);
+check(
+  'snap: the router is asked for routes to D only, where the cursor went',
+  offD.length === 0,
+  `${routerAsked.length - askedBeforeSnap} asked, ${offD.length} elsewhere: ${JSON.stringify(offD)}`,
+);
 // The router's answer in, so nothing but the drag could change the line.
 for (let i = 0; i < 30 && !(await drafted()).at(-1)?.streets; i++) await page.waitForTimeout(300);
 const routedLine = (await drafted()).at(-1);

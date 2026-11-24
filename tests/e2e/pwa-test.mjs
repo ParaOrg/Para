@@ -24,6 +24,8 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { until } from './lib/harness.mjs';
+import { checkPolicies, watchPolicies } from './lib/policy.mjs';
+import { serveBasemapOverHttps } from './lib/stand-ins.mjs';
 import { OPENFREEMAP_HOST, builtBasemapHost, startOwnTilesStandIn } from './own-tiles-stand-in.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
@@ -177,6 +179,15 @@ async function openSomeTrip(page) {
 }
 
 const stopStandIn = isOwnTiles ? await startOwnTilesStandIn(basemapHost) : null;
+// What the pages' content policies flag, both contexts' together. The stand-in's loopback address
+// is a test build's alone: the policies name the hosts the site is deployed with.
+const policyWatch = {
+  into: [],
+  allow: (blocked) => isOwnTiles && blocked.startsWith(basemapHost),
+};
+// Its worker caches the basemap, so the stand-in is a real server rather than routes
+// (.scratch/ci-flakes/issues/04).
+await serveBasemapOverHttps();
 const browser = await chromium.launch();
 const phone = {
   viewport: { width: 390, height: 844 },
@@ -217,6 +228,7 @@ try {
   // ------------------------------------------------- the studio: no worker
   {
     const ctx = await browser.newContext();
+    await watchPolicies(ctx, policyWatch);
     const page = await ctx.newPage();
     await page.goto(`${base}/studio/`, { waitUntil: 'load' });
     // The positive control: the two negatives below mean nothing on a blank page.
@@ -240,7 +252,23 @@ try {
 
   // ---------------------------------------------- the map: online, then off
   const ctx = await browser.newContext(phone);
+  await watchPolicies(ctx, policyWatch);
+  // How many new workers the browser found, for the update check's detail only: with the basemap
+  // stood in, Chromium finds an extra one after the tap (.scratch/ci-flakes/issues/04).
+  let workersFound = 0;
+  await ctx.addInitScript(() => {
+    const watch = async () => {
+      const registration = await navigator.serviceWorker?.getRegistration();
+      if (!registration || registration.onupdatefound) return;
+      registration.onupdatefound = () => console.log('pwa-test: updatefound');
+    };
+    navigator.serviceWorker?.addEventListener('controllerchange', () => void watch());
+    addEventListener('load', () => void watch());
+  });
   const page = await ctx.newPage();
+  page.on('console', (m) => {
+    if (m.text() === 'pwa-test: updatefound') workersFound++;
+  });
   const errors = [];
   page.on('pageerror', (e) => errors.push(String(e)));
   let supabase = 0;
@@ -632,7 +660,7 @@ try {
       check(
         'tapping Reload brings the new worker in and the button goes',
         !after.waiting && after.controlled && !after.button,
-        JSON.stringify(after),
+        `${JSON.stringify(after)}, ${workersFound} new worker(s) found`,
       );
     }
   } finally {
@@ -642,6 +670,7 @@ try {
   // --------------------------------------------------------- housekeeping
   check('no page errors', errors.length === 0, errors.join(' | '));
   check('no request to the database', supabase === 0);
+  checkPolicies(check, policyWatch.into);
   await ctx.close();
 } finally {
   await browser.close();

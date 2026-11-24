@@ -10,7 +10,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
-import { dirname, join, relative, resolve } from 'node:path';
+import { dirname, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
@@ -19,6 +19,9 @@ const cssFile = join(src, 'app', 'contribute', 'contribute.css');
 const entry = join(src, 'app', 'contribute', 'main.tsx');
 const page = join(root, 'contribute', 'index.html');
 const apkConfig = join(root, 'vite.apk.config.ts');
+
+/** A file's path from the repository root, written with `/` on every system. */
+const fromRoot = (file) => relative(root, file).split(sep).join('/');
 
 const SPECIFIERS = [
   /\bimport\s+(?:type\s+)?[^'"]*?from\s+['"]([^'"]+)['"]/g,
@@ -79,13 +82,15 @@ test('every file the contributor page draws is in its CSS sources', () => {
   const sources = scanned();
   const missing = [...reachedFrom(entry)]
     .filter((file) => !file.endsWith('.stories.tsx') && writesClasses(file))
-    .filter((file) => !sources.some((source) => file === source || file.startsWith(`${source}/`)))
-    .map((file) => relative(root, file));
+    .filter(
+      (file) => !sources.some((source) => file === source || file.startsWith(`${source}${sep}`)),
+    )
+    .map(fromRoot);
   assert.deepEqual(missing, [], `add to contribute.css: ${missing.join(', ')}`);
 });
 
 test('the walk finds the page’s shared/ui files at all', () => {
-  const reached = [...reachedFrom(entry)].map((file) => relative(root, file));
+  const reached = [...reachedFrom(entry)].map(fromRoot);
   assert.ok(reached.includes('src/shared/ui/toast-host.tsx'), 'toast-host not reached');
   assert.ok(reached.includes('src/shared/ui/turnstile.tsx'), 'turnstile not reached');
 });

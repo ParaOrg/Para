@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef } from 'react';
 
 import { IconButton } from '@/design-system/primitives/icon-button';
+import { useTabLoop } from '@/shared/hooks/use-tab-loop';
 import { CloseIcon } from '@/shared/ui/route-icons';
 
 import type { Basemap } from './basemap';
@@ -81,25 +82,10 @@ export function MapStyle({
   // On each opening, a reopening during the leave too: the keyboard to the
   // design shown, and held in the card. Not while it leaves.
   useEffect(() => {
-    const card = cardRef.current;
-    if (!card || isClosing) return;
-    card.querySelector<HTMLButtonElement>('button[aria-pressed="true"]')?.focus();
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key !== 'Tab') return;
-      const buttons = [...card.querySelectorAll<HTMLButtonElement>('button')];
-      const first = buttons.at(0);
-      const last = buttons.at(-1);
-      if (e.shiftKey && document.activeElement === first) {
-        e.preventDefault();
-        last?.focus();
-      } else if (!e.shiftKey && document.activeElement === last) {
-        e.preventDefault();
-        first?.focus();
-      }
-    };
-    card.addEventListener('keydown', handleKeyDown);
-    return () => card.removeEventListener('keydown', handleKeyDown);
+    if (isClosing) return;
+    cardRef.current?.querySelector<HTMLButtonElement>('button[aria-pressed="true"]')?.focus();
   }, [isClosing]);
+  useTabLoop(cardRef, 'button', !isClosing);
 
   return (
     <div
@@ -118,7 +104,7 @@ export function MapStyle({
       <div className="flex items-center">
         <h2
           id={titleId}
-          className="min-w-0 flex-1 text-lg leading-7 font-extrabold text-content-primary"
+          className="min-w-0 flex-1 text-lg leading-7 font-bold text-content-primary"
         >
           Map Style
         </h2>

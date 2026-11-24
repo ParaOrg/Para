@@ -37,9 +37,7 @@ interface PlaygroundCardsProps {
 }
 
 /**
- * The Playground's cards over the map, as on the public map: the trip's marks
- * on the map (PlaygroundMarks), the trip card, a hotspot's card and the route
- * list.
+ * The Playground's cards, as on the public map (marks, trip, hotspot, list); a tap selects a card.
  */
 export function PlaygroundCards({
   map,
@@ -147,12 +145,12 @@ export function PlaygroundCards({
       )}
 
       {/*
-        Several saved things under one click: the same list the public map
-        has, kept hidden behind the trip picked from it. It lists only what is
-        drawn, and the owner keeps it so.
+        Several saved things under one click: the public map's list, with its Controller, kept
+        hidden behind the trip picked from it. It lists only what is drawn, the owner's way.
       */}
       {!draw.drawing && choosing && (
         <RouteCardList
+          hasController
           key={choice.map((c) => c.id).join()}
           hidden={!!saved.selected}
           height={height}
@@ -162,8 +160,10 @@ export function PlaygroundCards({
           listing={saved.listing}
           onFlip={flipList}
           modeFilter={{ filter: saved.modeFilter, onFilter: filterList }}
-          selected={saved.highlight?.where === 'list' ? saved.highlight.card : null}
-          onSelect={(p) => saved.highlightCard(p && { where: 'list', ...p })}
+          selection={{
+            selected: saved.highlight?.where === 'list' ? saved.highlight.card : null,
+            onSelect: (p) => saved.highlightCard(p && { where: 'list', ...p }),
+          }}
           onRoute={openTrip}
           onHotspot={(s) => cards.openHotspot(s.id)}
           onClose={closeAll}

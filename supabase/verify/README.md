@@ -6,8 +6,9 @@ applies 0018 over them twice through `../apply/0018_apply.sql` (the file the
 owner pastes), then checks it, and undoes it on a second database:
 
 - `bootstrap.sql`: stand-ins for what the migrations expect of Supabase
-  (`anon`, `authenticated`, `auth.users`, `auth.uid()`, `storage`). Only for a
-  throwaway server.
+  (`anon`, `authenticated`, `auth.users`, `auth.uid()`, `storage`), and the
+  default grants a project gives the API roles on new tables, sequences and
+  functions in `public`. Only for a throwaway server.
 - `before-0018.sql`: rows that exist before the migration.
 - `after-0018.sql`: reads as `anon`, a signed-in non-editor and an editor;
   uniqueness on approved rows (routes, loops, terminals); the two guards; the
@@ -382,7 +383,14 @@ recorded as applied, add it to `APPLIED` in the script and rewrite the snapshot 
 migration not yet applied stays out until it is.
 
 It is rebuilt here, not read from the live project, so it has what the migrations made. It does not have
-what Supabase adds around them, such as `service_role`'s grants and Supabase's own schemas.
+what Supabase adds around them, such as Supabase's own schemas.
+
+Before it compares, the script runs `anon-functions.sql` on the same database: the functions in `public`
+and `private` that `anon` may run, trigger functions aside. It should list none, and the script fails on
+any row. A project gives each new function in `public` to `anon` by default, and `bootstrap.sql` does the
+same, so a migration that makes a function takes it back from `anon` by name (taking it back from `PUBLIC`
+alone leaves `anon` with it). A function `anon` is meant to run is listed in `anon-functions.sql` with the
+reason.
 
 ## retire-review-steps.sh
 
@@ -397,3 +405,21 @@ of a draft; save_draft still saves and names its saver; publish_draft still publ
 nothing and leave no row behind, and its 4 read-only rows must be `t`. `draft-published-race.sh` runs
 again over it. On a second database, without draft_published, the apply refuses and writes no ledger
 row. On a third, apply then revert twice leaves the schema as before, and re-applying passes the check.
+
+## drop-inert-write-policies.sh
+
+`migrations/20261112100000_drop_inert_write_policies.sql` on databases of its own, run by `run.sh` or alone:
+
+    PSQL="docker exec -i pg-verify psql -U postgres" bash supabase/verify/drop-inert-write-policies.sh
+
+It builds the database as live has it through draft_published, lock_map_tables and retire_review_steps,
+takes the publish's reads as `anon` (`publish-reads.sql`: the columns, filters and order
+`scripts/publish/read-database.mjs` asks for), then applies
+`../apply/20261112100000_drop_inert_write_policies_apply.sql` twice (the second run must stop and change
+nothing). The same reads must give the same rows, and the schema must differ by the twelve policies alone.
+`…_check.sql` then runs: its rolled-back part (every direct write refused for anon, an account that is no
+editor and an editor; the reads unchanged; the draft functions still publishing, unpublishing, taking down
+and putting back) must raise nothing and leave no row behind, and its 5 read-only rows must be `t`.
+`draft-published-race.sh` runs again over it. On a second database the apply refuses without
+lock_map_tables, and again while an app role holds a write grant, changing nothing. On a third, apply then
+revert twice leaves the schema as before, and re-applying passes the check.

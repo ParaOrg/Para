@@ -1,78 +1,30 @@
-import { useState, type ReactNode, type Ref } from 'react';
+import type { ReactNode, Ref } from 'react';
 
 import type { SheetHeight } from '@/shared/ui/bottom-sheet';
-import { lineLength } from '@/shared/utils/geo';
 
-import { RouteStopsCardHeader } from './route-stops-card-header';
+import { rideFactsOf } from './ride-facts-of';
 import { TimelineRouteDetailCard } from './timeline-route-detail-card';
-import { FREE, type Fare, type Fares } from './trip-fare';
+import { fareFor, pickedFareFor, publishedSignboard, tripFacts } from './trip-facts';
 import { useFareKind } from './use-fare-kind';
-import { otherDirection, otherRoutesFrom, switchWord, wayWord } from '../model/departures';
-import { manilaDate, rideFare } from '../model/fares';
-import { liveryOf, type Livery } from '../model/liveries';
-import { railBound, stationCode } from '../model/rail-codes';
-import { railFares } from '../model/rail-fares';
-import {
-  directionEnds,
-  directionRowName,
-  isDrawn,
-  isFerry,
-  isLoop,
-  isRail,
-  LINE_NOTES,
-  LOOP_WORD,
-  railLineOf,
-  directionLine,
-  type Direction,
-} from '../model/routes';
+import { otherRoutesFrom, switchWord, wayWord } from '../model/departures';
+import type { Livery } from '../model/liveries';
+import { stationCode } from '../model/rail-codes';
+import { LINE_NOTES, LOOP_WORD, type Direction } from '../model/routes';
+import { directionRowParts } from '../model/row-name';
 import type { Timeline } from '../model/timeline';
-import { vehicleOf } from '../model/vehicles';
 
 /**
- * The trip's colour, one owner for it: decided as the trip opens — the RouteCard's it was picked
- * from, in the list or a hotspot's card, while that card stands behind it (a card of several routes
- * wears its first row's), else its own (liveryOf) — and kept until it closes, through PAPUNTA and even
- * when a tap on its own line closes the list behind it: a card never changes colour while it is
- * open. Its line wears it too, so the page reads it, not the card. Settled while rendering, as
- * derived state is, so the card never shows a frame in the wrong colour.
- */
-export function useTripLivery(
-  open: Direction | null,
-  worn: { id: string; livery: Livery } | null,
-  wornBehind: boolean,
-): Livery | null {
-  const [tripWears, setTripWears] = useState<{ routeId: string; livery: Livery } | null>(null);
-  let tripLivery = open && tripWears?.routeId === open.routeId ? tripWears.livery : null;
-  if (open && !tripLivery) {
-    tripLivery = (wornBehind && worn?.id === open.id ? worn.livery : undefined) ?? liveryOf(open);
-    setTripWears({ routeId: open.routeId, livery: tripLivery });
-  } else if (!open && tripWears) {
-    setTripWears(null);
-  }
-  return tripLivery;
-}
-
-/**
- * The chosen direction as Figma's trip card (TimelineRouteDetailCard), from what the map file
- * knows: its ends as the list names them, the whole ride's length and pesos, the hintuans on the
- * way, and its colour — the one its RouteCard wore, when it was picked from one, in the list or in
- * a hotspot's card; its own route's, when not. PAPUNTA turns it round, what it was picked from
- * staying behind it, and the card keeps the colour it opened in.
- *
- * A picked hintuan's pill prices the ride from the start to there, the same pesos the fare tile
- * then shows. The studio shows what an editor needs at the foot (`extras`): the same card, with
- * more below it.
- *
- * No link to a trip: the address does not follow the card.
+ * The chosen direction as Figma's trip card (TimelineRouteDetailCard), from the map file (tripFacts):
+ * its ends and via, the ride's length and pesos, the hintuans on the way, and the colour it opened
+ * in (useTripLivery), kept as it turns round. A picked hintuan's pill prices the ride to there. The
+ * studio's editor facts sit at the foot (`extras`). The address does not follow the card.
  */
 export function TripCard({
   direction,
   directions,
   timeline,
   livery,
-  onBackToList,
   onSwitch,
-  onClose,
   picked,
   pickedMetres,
   pickedCode,
@@ -90,14 +42,17 @@ export function TripCard({
   extras,
   walk = null,
   onDrawOtherWay,
+  ...controller
 }: {
   direction: Direction;
   directions: readonly Direction[];
   timeline: Timeline;
   /** The colour it opened in, kept through PAPUNTA; its line wears it too. */
   livery: Livery;
-  onBackToList: (() => void) | null;
   onSwitch: (sibling: Direction) => void;
+  /** The studio's Controller bar, its ‹ and its ✕, and Escape's move (TimelineRouteDetailCard's). */
+  hasController?: boolean;
+  onBackToList?: (() => void) | null;
   onClose: () => void;
   /** The hintuan picked on the timeline (useRideTo), the ride's end, and how far the ride between the picks runs, when the line reaches them. */
   picked: string | null;
@@ -112,15 +67,16 @@ export function TripCard({
   onSetStart?: () => void;
   /** × Remove as start, under the start's row (useRideTo's `removeStart`). */
   onRemoveStart?: () => void;
-  onPick: (id: string) => void;
+  /** A stop's row tapped (useRideTo). Given or omitted with `onEnd`: omitted, picking is off. */
+  onPick?: (id: string) => void;
   /** The origin's or the destination's row: that end on the map, the whole ride, or with a start the ride's end. */
-  onEnd: (end: 'from' | 'to') => void;
+  onEnd?: (end: 'from' | 'to') => void;
   /** The end picked from its row (useRideTo's `endPicked`), or null. */
   endPicked: 'from' | 'to' | null;
   dockRef: Ref<HTMLDivElement>;
   /** Its sheet's height, shared with the list or card behind it (BottomSheet). */
   height: SheetHeight;
-  /** A row of "Other routes" tapped: that direction's trip in this one's place. Without it, no rows. */
+  /** A row behind "View N more destinations" tapped: that direction's trip in this one's place. Without it, no rows. */
   onOtherRoute?: (direction: Direction) => void;
   /** Where a signboard's file is read: beside the published map, or the studio's bucket. */
   signboardUrl?: (name: string) => string;
@@ -131,22 +87,10 @@ export function TripCard({
   /** The studio's: with the other way not drawn, PAPUNTA starts drawing it, not resting disabled. */
   onDrawOtherWay?: () => void;
 }) {
-  const loop = isLoop(direction);
-  // A loop's trip leaves from its tip and comes back to it: both ends read the timeline's.
-  const { from, to } =
-    loop && timeline.from
-      ? { from: timeline.from.label, to: (timeline.to ?? timeline.from).label }
-      : directionEnds(direction);
-  const line = railLineOf(direction);
-  const vehicle = vehicleOf(direction);
-  const sibling = otherDirection(directions, direction);
-  // A loop has no way back, so no PAPUNTA at all.
-  const switchable = !loop && !!sibling && isDrawn(sibling);
-  const canDrawOtherWay = !loop && !!sibling && !isDrawn(sibling) && !!onDrawOtherWay;
-  // The whole ride, measured once on its full line — the index's figure, so
-  // an overview drawn while the line is read never prices it: its Distance
-  // and its Expected fare.
-  const metres = direction.metres ?? lineLength(directionLine(direction));
+  const trip = tripFacts(direction, directions, timeline);
+  const { isLoop: loop, from, to, line, sibling, metres } = trip;
+  const ride = rideFactsOf(direction, metres, timeline.between.length);
+  const canDrawOtherWay = trip.isOtherWayUndrawn && !!onDrawOtherWay;
   const [fareKind, setFareKind] = useFareKind();
   const others = onOtherRoute ? otherRoutesFrom(directions, direction) : [];
   return (
@@ -172,37 +116,26 @@ export function TripCard({
       dockRef={dockRef}
       height={height}
       routeDirection={to}
+      via={trip.via}
       originCode={line && stationCode(line, from)}
       destinationCode={line && stationCode(line, to)}
       isLoop={loop}
       label={loop ? `${direction.name ?? from} (${LOOP_WORD})` : undefined}
-      header={
-        vehicle && (
-          <RouteStopsCardHeader
-            vehicle={vehicle}
-            bound={line ? railBound(direction) : null}
-            livery={livery}
-            name={loop ? (direction.name ?? LOOP_WORD) : undefined}
-          />
-        )
-      }
-      switchable={switchable || canDrawOtherWay}
+      loopName={loop ? (direction.name ?? from) : undefined}
+      switchable={trip.isSwitchable || canDrawOtherWay}
       back={direction.reversed}
       way={loop ? null : wayWord(direction.reversed, [direction])}
       wayTo={loop ? null : switchWord(direction.reversed, [direction])}
       onSwitch={() => {
-        if (sibling && switchable) onSwitch(sibling);
+        if (sibling && trip.isSwitchable) onSwitch(sibling);
         else if (canDrawOtherWay) onDrawOtherWay?.();
       }}
-      onBackToList={onBackToList}
-      onClose={onClose}
+      {...controller}
+      ride={ride}
       signboards={(direction.signboards ?? []).map(signboardUrl)}
       note={LINE_NOTES[direction.route?.routeCode ?? '']}
       walk={walk}
-      otherRoutes={others.map((v) => ({
-        id: v.id,
-        to: directionRowName(v),
-      }))}
+      otherRoutes={others.map((v) => ({ id: v.id, ...directionRowParts(v) }))}
       onOtherRoute={(id) => {
         const v = others.find((o) => o.id === id);
         if (v) onOtherRoute?.(v);
@@ -212,50 +145,3 @@ export function TripCard({
     </TimelineRouteDetailCard>
   );
 }
-
-/** A ride's pesos, regular and discounted, for the fare tile; undefined when no fare rule prices it. A train's are by its stations (railFares). */
-function faresFor(mode: Parameters<typeof rideFare>[0], metres: number): Fares | undefined {
-  const date = manilaDate();
-  const regular = rideFare(mode, metres, date);
-  const discounted = rideFare(mode, metres, date, 'discounted');
-  return regular && discounted ? { regular, discounted } : undefined;
-}
-
-/** The whole ride's fare: a train's by its stations (railFares), the ferry's free, a jeep's by its metres. */
-function fareFor(direction: Direction, metres: number, timeline: Timeline): Fare | undefined {
-  if (isFerry(direction.route?.mode)) return FREE;
-  if (isRail(direction.route?.mode))
-    return railFares(direction.route.routeCode, timeline.from?.label, timeline.to?.label);
-  return faresFor(direction.route?.mode, metres);
-}
-
-/**
- * The fare of the ride between the picks: a jeep's by the metres between them, a train's by the two
- * stations (railFares takes any pair, whichever way round), the ferry's free. A start left at the
- * origin is that end of the timeline, and an end row picked with a start (`endPicked`) is its own
- * end. No end picked, no ride to price: a start alone is no ride yet.
- */
-function pickedFareFor(
-  direction: Direction,
-  pickedMetres: number | undefined,
-  timeline: Timeline,
-  start: string | null,
-  picked: string | null,
-  endPicked: 'from' | 'to' | null,
-): Fare | undefined {
-  // A start alone is no ride yet: nothing to price until its end is picked.
-  const isEndRow = start !== null && endPicked !== null;
-  if (picked === null && !isEndRow) return undefined;
-  if (isFerry(direction.route?.mode)) return FREE;
-  if (isRail(direction.route?.mode)) {
-    const labelOf = (id: string | null, end: Timeline['from']) =>
-      id === null ? end?.label : timeline.between.find((r) => r.id === id)?.label;
-    const from = labelOf(start, timeline.from);
-    const to = labelOf(picked, endPicked === 'from' ? timeline.from : timeline.to);
-    return railFares(direction.route.routeCode, from, to);
-  }
-  return pickedMetres === undefined ? undefined : faresFor(direction.route?.mode, pickedMetres);
-}
-
-/** A board as the publish writes it, beside the map's own files. */
-const publishedSignboard = (name: string) => `/data/signboards/${encodeURIComponent(name)}`;

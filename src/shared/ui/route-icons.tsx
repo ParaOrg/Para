@@ -1,43 +1,8 @@
 /** The route cards' icons, Figma's paths in route-icons.svg and vehicle-icons.svg: files the page
  * fetches, not paths in its JS (the public page's budget). Each fills with currentColor. */
 
-import routeSprite from './route-icons.svg?url&no-inline';
+import { RouteSpriteIcon } from './route-sprite-icon';
 import vehicleSprite from './vehicle-icons.svg?url&no-inline';
-
-/** Each drawing in route-icons.svg, by its symbol's id, with the symbol's own box. */
-const ROUTE_SPRITE_VIEW_BOX = {
-  jeep: '0 0 24 24',
-  close: '0 0 24 24',
-  'chevron-left': '0 0 24 24',
-  'chevron-left-large': '0 0 24 24',
-  'chevron-down': '0 0 20 20',
-  reload: '0 0 16 16',
-  terminal: '0 0 20 20',
-  hintuan: '0 0 20 20',
-  information: '0 0 24 24',
-  start: '0 0 24 24',
-  end: '0 0 24 24',
-  'close-large': '0 0 28 28',
-  'arrow-left-right-large': '0 0 28 28',
-  'filter-large': '0 0 28 28',
-  'arrow-up-down': '0 0 20 20',
-} as const;
-
-type RouteSpriteId = keyof typeof ROUTE_SPRITE_VIEW_BOX;
-
-interface RouteSpriteIconProps {
-  /** The drawing's id in route-icons.svg. */
-  id: RouteSpriteId;
-}
-
-/** A drawing from route-icons.svg, in currentColor, filling the icon's size. */
-function RouteSpriteIcon({ id }: RouteSpriteIconProps) {
-  return (
-    <svg viewBox={ROUTE_SPRITE_VIEW_BOX[id]} fill="currentColor" aria-hidden>
-      <use href={`${routeSprite}#${id}`} />
-    </svg>
-  );
-}
 
 /** The side-on jeep, beside a hintuan card's count. */
 export function JeepIcon() {
@@ -103,9 +68,18 @@ export function EndIcon() {
   return <RouteSpriteIcon id="end" />;
 }
 
+/** Figma's switch-vertical (4831:51875), 24 across: the ⇅ on a trip's ends card, turning it round. */
+export function SwitchVerticalIcon() {
+  return <RouteSpriteIcon id="switch-vertical" />;
+}
+
+/** Figma's Ikot (4825:49054), 16 across: the disc before a loop's Ikot over its name. */
+export function IkotIcon() {
+  return <RouteSpriteIcon id="ikot" />;
+}
+
 /**
- * The vehicles at the top of a trip's card (RouteStopsCardHeader) and a card's mode
- * (RouteCardMode), Figma's own drawings at 32 across: Train (4170:7029), Jeep (4188:11144, here
+ * The vehicles in a card's mode (RouteCardMode), Figma's own drawings at 32 across: Train (4170:7029), Jeep (4188:11144, here
  * JeepneyIcon, not the side-on Jeep above), EJeep (4188:11168), Bus (4188:11156), Ferry
  * (4189:11183) and UV Express (4236:17067, drawn at 24). One sprite the page fetches (inline, they
  * took the public page over its 400 kB), so the paths keep full precision; hashed and precached.
@@ -164,12 +138,12 @@ export function ArrowLeftRightIcon() {
   return <RouteSpriteIcon id="arrow-left-right-large" />;
 }
 
-/** Figma's arrow-up-down, 20 across: the ⇅ on a trip's ends card, turning the trip round. */
-export function ArrowUpDownIcon() {
-  return <RouteSpriteIcon id="arrow-up-down" />;
+/** Figma's filter-large (4633:22015), 28 across: the Controller's sliders, opening the route list's filter. */
+export function FilterLargeIcon() {
+  return <RouteSpriteIcon id="filter-large" />;
 }
 
-/** Figma's filter-large (4633:22015), 28 across: the Controller's sliders, opening the route list's filter. */
-export function FilterIcon() {
-  return <RouteSpriteIcon id="filter-large" />;
+/** Figma's circle-arrow-right (3632:1755), drawn at 20: the destination row's arrow. */
+export function CircleArrowRightIcon() {
+  return <RouteSpriteIcon id="circle-arrow-right" />;
 }

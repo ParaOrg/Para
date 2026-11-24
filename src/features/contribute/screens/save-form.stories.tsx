@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { useState, type ComponentProps } from 'react';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
 import { SaveForm } from './save-form';
@@ -113,5 +114,36 @@ export const FlaggedStops: Story = {
     await userEvent.type(field, 'Under the footbridge');
     await userEvent.click(canvas.getByRole('button', { name: 'Save' }));
     await expect(args.stopNotes.onNoteMark).toHaveBeenCalledWith(STOP_2, 'Under the footbridge');
+  },
+};
+
+/** The form with one flagged stop that can really be deleted, so its section goes with it. */
+function SaveFormWithOneStop(props: ComponentProps<typeof SaveForm>) {
+  const [marks, setMarks] = useState([{ time: STOP_1 }]);
+  return (
+    <SaveForm
+      {...props}
+      stopNotes={{
+        ...props.stopNotes,
+        marks,
+        onDeleteMark: (time) => setMarks((kept) => kept.filter((mark) => mark.time !== time)),
+      }}
+    />
+  );
+}
+
+/** The last stop deleted: Stops notes goes with it, and focus lands on Discard recordings. */
+export const LastStopDeleted: Story = {
+  render: (args) => <SaveFormWithOneStop {...args} />,
+  play: async ({ canvasElement }) => {
+    await waitForHeadingFocus(canvasElement);
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole('button', { name: 'Stop 1 on the map' }));
+    const popup = canvas.getByRole('dialog', { name: 'Stop 1 on the map' });
+    await userEvent.click(within(popup).getByRole('button', { name: 'Delete' }));
+    const question = canvas.getByRole('alertdialog', { name: 'Delete this stop?' });
+    await userEvent.click(within(question).getByRole('button', { name: 'Delete' }));
+    await expect(canvas.queryByRole('heading', { name: 'Stops notes' })).toBeNull();
+    await expect(canvas.getByRole('button', { name: 'Discard recordings' })).toHaveFocus();
   },
 };

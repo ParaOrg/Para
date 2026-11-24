@@ -21,8 +21,13 @@ export const WORKER_MAX_GZ_KB = 20;
 // its download no heavier. The Map Style card's Location Labels switch (the
 // design system's Switch) is not: it comes with the card, which is fetched on
 // first use (vite.config.ts, the shared group's exclusions).
-// Room for the error screen the public map and the studio now show when a screen fails.
-export const SHARED_MAX_GZ_KB = 413;
+// Room for the error screen the public map and the studio now show when a screen fails, for the
+// travel-time estimate, ~0.3 kB gz, and for the owner's map changes of 2026-11-22: one-tap
+// RouteCards and the hotspot taps behind a flag (413.977 to 414.263 kB gz), the map's controls in
+// one column next (about 414.33), and for a fitted route list that shows long place names whole
+// (415.02 kB gz). Place search stays out of it: the card camera's "Go here" helpers live apart
+// from search's matching (model/landmark-goal.ts), 1.28 kB gz lighter than with them inside.
+export const SHARED_MAX_GZ_KB = 416;
 export const MAPLIBRE_FILE = (name) => new RegExp(`/node_modules/maplibre-gl/dist/${name}\\.mjs$`);
 export const GROUPS = [
   {

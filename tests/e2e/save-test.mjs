@@ -30,6 +30,7 @@
 // (3), a refused step of it said (16); no React warnings.
 import { readFileSync } from 'node:fs';
 
+import { routeFitted } from './lib/framing.mjs';
 import { waitFor } from './lib/harness.mjs';
 import {
   approveAll,
@@ -616,21 +617,30 @@ check(
   'a tap on the line opens its card, with Edit route',
   (await page.getByRole('button', { name: 'Edit route' }).count()) === 1,
 );
-// The camera with the cards, as on the public map (the owner, 2026-10-21):
-// a trip opened by a tap leaves the camera where it was; the route is not
-// fitted to the room the card leaves.
-await page.waitForFunction(() => !window.__map.isMoving(), null, { timeout: 3000 }).catch(() => {});
+// The camera with the cards, as on the public map: a trip opened by a tap leaves the camera where
+// it was (the owner, 2026-11-23: choosing a route never moves the map), and the Overview, pressed,
+// takes in its whole route in the room the card leaves.
 const cameraAfterOpen = await page.evaluate(() => {
   const m = window.__map;
   const c = m.getCenter();
   return { lng: c.lng, lat: c.lat, zoom: m.getZoom() };
 });
+const overview = page.getByRole('button', { name: 'Overview' });
+const isOverviewOffered = await overview.isVisible();
 check(
-  '  the camera stays where it was: the route is not fitted',
-  Math.abs(cameraAfterOpen.zoom - cameraBeforeOpen.zoom) < 0.01 &&
-    Math.abs(cameraAfterOpen.lng - cameraBeforeOpen.lng) < 1e-6 &&
-    Math.abs(cameraAfterOpen.lat - cameraBeforeOpen.lat) < 1e-6,
-  JSON.stringify({ cameraBeforeOpen, cameraAfterOpen }),
+  '  the camera stays where it was, and the Overview is offered',
+  Math.abs(cameraAfterOpen.lng - cameraBeforeOpen.lng) < 1e-6 &&
+    Math.abs(cameraAfterOpen.lat - cameraBeforeOpen.lat) < 1e-6 &&
+    Math.abs(cameraAfterOpen.zoom - cameraBeforeOpen.zoom) < 0.01 &&
+    isOverviewOffered,
+  JSON.stringify({ cameraBeforeOpen, cameraAfterOpen, isOverviewOffered }),
+);
+if (isOverviewOffered) await overview.click();
+const openFit = await routeFitted(page, outLine);
+check(
+  '  the Overview takes in the whole route, in the room the card leaves',
+  openFit.ok,
+  openFit.why,
 );
 await page.getByRole('button', { name: 'Edit route' }).click();
 await waitFor(async () => (await pointsShown()) === OUT.length);

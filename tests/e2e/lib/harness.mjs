@@ -2,7 +2,8 @@
 // lines and the tally at the end, the https route through Node for a
 // sandbox, the bare style that stands in for the basemap, the wait for a
 // map source's first features, and the reload the dev server may be holding
-// for the next page that connects.
+// for the next page that connects. As a suite starts, the folder and commit
+// the dev server serves, beside the run's own.
 //
 // BASE and harness: every suite but pwa-test, which starts its own server and
 // keeps its own count. nodeFetch: gate, commuter, phone, hotspot,
@@ -10,11 +11,45 @@
 // studio-scale and save-studio. waitForSource: commuter, phone, hotspot,
 // regression-gestures, extend, group and studio-phone. takeHeldReload: phone.
 // mapIdle, cardsSettled and until, the waits on the state a check reads: commuter.
+// waitForMapSettled, the map loaded while chevrons flow: extend and regression-gestures.
 // waitFor: save-studio, save, save-ikot, save-edit, save-drafts and
 // studio-contributors.
 
+import { execFileSync } from 'node:child_process';
+import { resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+import './outside-requests.mjs';
+
 /** The dev server's address: PARA_BASE, or http://localhost:5173. */
 export const BASE = (process.env.PARA_BASE ?? 'http://localhost:5173').replace(/\/$/, '');
+
+/** The commit checked out in `folder`, or why there is none to name. */
+const commitIn = (folder) => {
+  try {
+    return execFileSync('git', ['rev-parse', 'HEAD'], { cwd: folder, encoding: 'utf8' }).trim();
+  } catch {
+    return 'not a git checkout';
+  }
+};
+
+/**
+ * Printed as a suite starts: the folder and commit the dev server at BASE serves, beside this
+ * run's own. A suite run from one worktree against another's server checks the other's code,
+ * so a mismatch is said before the first check. Quiet when the server says nothing (pwa-test's
+ * own server, a deployed address).
+ */
+const served = await fetch(`${BASE}/__para/served-source`, { signal: AbortSignal.timeout(2000) })
+  .then((response) => (response.ok ? response.json() : null))
+  .catch(() => null);
+if (served) {
+  const here = resolve(fileURLToPath(new URL('../../..', import.meta.url)));
+  const ours = commitIn(here);
+  const isSame = resolve(served.folder) === here && served.commit === ours;
+  console.log(
+    `${isSame ? '' : 'WARN  '}the dev server at ${BASE} serves ${served.folder} at ${served.commit.slice(0, 8)}; this run is ${here} at ${ours.slice(0, 8)}${isSame ? '' : ': not the code under test'}`,
+  );
+}
 
 /**
  * A suite's count. `check` prints PASS or FAIL and its detail, `skip` prints
@@ -64,6 +99,22 @@ export const harness = ({ bracketed = false, knownSkips = null } = {}) => {
     process.exit(failed || unknown.length > 0 ? 1 : 0);
   };
   return { check, skip, tally };
+};
+
+// What failed to load on page `p`, by URL, into `into`: a request the network dropped (with
+// Chromium's reason, net::ERR_…) or one answered 400 or worse. The console's own line says only
+// "Failed to load resource", so a suite prints these beside its "no page errors" check. A request
+// the page itself cancelled (net::ERR_ABORTED: MapLibre drops the tiles a move leaves behind) is
+// not a failure and is left out.
+export const recordFailedLoads = (p, into) => {
+  p.on('requestfailed', (request) => {
+    const reason = request.failure()?.errorText ?? 'failed';
+    if (reason !== 'net::ERR_ABORTED') into.push(`${request.url().slice(0, 160)} (${reason})`);
+  });
+  p.on('response', (response) => {
+    if (response.status() >= 400)
+      into.push(`${response.url().slice(0, 160)} (${response.status()})`);
+  });
 };
 
 // PARA_NODE_FETCH=1: serve every https request through Node fetch. Needed only
@@ -133,11 +184,12 @@ export const waitForSource = async (page, id, ms = 20000) => {
 };
 
 /**
- * The one source that never comes to rest while a route is lit: its chevrons,
- * set afresh fifteen times a second (direction-arrows.ts). The map is at rest
- * all the same.
+ * The sources that never come to rest while their chevrons flow, set afresh
+ * fifteen times a second (flowChevrons, direction-arrows.ts): a lit route's
+ * and the studio's drawn line's (draw-arrows.ts). The map is at rest all the
+ * same, though MapLibre's loaded() and 'idle' wait on them.
  */
-const FLOWING_SOURCE = 'direction-arrows';
+const FLOWING_SOURCES = ['direction-arrows', 'draw-arrows'];
 
 /**
  * Once the map is at rest: two frames gone by, so a move a handler starts in
@@ -156,7 +208,7 @@ export const mapIdle = async (page, ms = 10000) => {
       new Promise((resolve) => {
         const m = window.__map;
         const sources = Object.entries(m.getStyle()?.sources ?? {})
-          .filter(([id, source]) => source.type === 'geojson' && id !== flowing)
+          .filter(([id, source]) => source.type === 'geojson' && !flowing.includes(id))
           .map(([id]) => id);
         const notAtRest = () => [
           ...(m.isMoving() ? ['the camera moving'] : []),
@@ -184,9 +236,44 @@ export const mapIdle = async (page, ms = 10000) => {
         m.triggerRepaint();
         requestAnimationFrame(look);
       }),
-    [ms, FLOWING_SOURCE],
+    [ms, FLOWING_SOURCES],
   );
   if (unrest) throw new Error(`mapIdle: the map not at rest after ${ms} ms: ${unrest.join(', ')}`);
+};
+
+/**
+ * Once the map is there and settled: every source loaded, the basemap's
+ * included, but the flowing chevrons', and the camera still. What loaded()
+ * reads but those: while chevrons flow, loaded() is true in almost no frame.
+ * Throws when not settled within `ms`, naming what was not.
+ */
+export const waitForMapSettled = async (page, ms = 30000) => {
+  const settled = await page
+    .waitForFunction(
+      (flowing) => {
+        const m = window.__map;
+        if (!m?.getStyle() || m.isMoving()) return false;
+        return Object.keys(m.getStyle().sources)
+          .filter((id) => !flowing.includes(id))
+          .every((id) => m.isSourceLoaded(id));
+      },
+      FLOWING_SOURCES,
+      { timeout: ms },
+    )
+    .then(() => true)
+    .catch(() => false);
+  if (settled) return;
+  const left = await page.evaluate((flowing) => {
+    const m = window.__map;
+    if (!m?.getStyle()) return ['no map or style yet'];
+    return [
+      ...(m.isMoving() ? ['the camera moving'] : []),
+      ...Object.keys(m.getStyle().sources)
+        .filter((id) => !flowing.includes(id) && !m.isSourceLoaded(id))
+        .map((id) => `source ${id} loading`),
+    ];
+  }, FLOWING_SOURCES);
+  throw new Error(`waitForMapSettled: the map not settled after ${ms} ms: ${left.join(', ')}`);
 };
 
 /**
@@ -336,4 +423,62 @@ export const takeHeldReload = async (base = BASE, ms = 3000) => {
       }
     };
   });
+};
+
+/**
+ * A page point on the map where a tap lands on nothing: no line, no hotspot (the hit layers a tap
+ * asks, tap.ts, within the finger's 20 px), no marker or control over it, and above every sheet on
+ * show. The public map's open trip has no ‹ or ✕: the empty map tapped takes it back to what it was
+ * opened from, and closes the route list (the owner, 2026-11-21). Null when no such point is in
+ * sight.
+ */
+export const emptyMapPoint = async (page) => {
+  const { point, why } = await page.evaluate(() => {
+    const m = window.__map;
+    // The canvas's own box: MapLibre's canvas container is 0 tall, the canvas placed inside it.
+    const box = m.getCanvas().getBoundingClientRect();
+    const sheets = [...document.querySelectorAll('[data-testid="card"], [data-testid="chooser"]')]
+      .filter((el) => !el.hidden && el.getClientRects().length > 0)
+      .map((el) => el.getBoundingClientRect());
+    // A sheet floating on the left of a wide map leaves the map to its right.
+    const floats = sheets.filter((r) => r.top <= box.top + 1 && r.bottom >= box.bottom - 1);
+    const left = Math.max(box.left, ...floats.map((r) => r.right)) + 16;
+    const tops = sheets.map((r) => r.top).filter((t) => t > box.top + 1);
+    const bottom = Math.min(box.bottom, ...tops) - 24;
+    // Clear by a little more than the app's own reach for a tap (tap.ts's TAP_HALF_PX: 20 for a
+    // finger, 5 for a mouse), so the tap is the page's empty map, not a line's or a box's.
+    const reach = window.matchMedia('(any-pointer: coarse)').matches ? 22 : 8;
+    const layers = ['saved-routes-hit', 'saved-stops-pin', 'saved-stops-dot', 'saved-stops-fill'];
+    const drawn = layers.filter((id) => m.getLayer(id));
+    const covers = {};
+    let crowded = 0;
+    for (let y = box.top + 40; y < bottom; y += 12) {
+      for (let x = left; x < box.right - 16; x += 12) {
+        const top = document.elementFromPoint(x, y);
+        if (top !== m.getCanvas()) {
+          // What stands over the map where it does, for the reason when no point is found.
+          const name = top
+            ? `${top.tagName.toLowerCase()}${top.dataset?.testid ? `[${top.dataset.testid}]` : ''}.${String(top.className).slice(0, 40)}`
+            : 'nothing';
+          covers[name] = (covers[name] ?? 0) + 1;
+          continue;
+        }
+        const px = x - box.left;
+        const py = y - box.top;
+        const near = m.queryRenderedFeatures(
+          [
+            [px - reach, py - reach],
+            [px + reach, py + reach],
+          ],
+          { layers: drawn },
+        );
+        if (near.length === 0) return { point: { x, y }, why: null };
+        crowded += 1;
+      }
+    }
+    const span = { box: [box.left, box.top, box.right, box.bottom].map(Math.round), left, bottom };
+    return { point: null, why: { reach, drawn, crowded, covers, ...span } };
+  });
+  if (!point) console.log('emptyMapPoint: none,', JSON.stringify(why));
+  return point;
 };

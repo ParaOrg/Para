@@ -4,7 +4,7 @@ import { IconButton } from '@/design-system/primitives/icon-button';
 
 import { NoteIcon } from './stop-note-icons';
 
-export /** The most the Indicator shows; more reads 99+ (a ride rarely flags past 50). */
+/** The most the Indicator shows; more reads 99+ (a ride rarely flags past 50). */
 const MAX_SHOWN = 99;
 
 export interface StopNotesButtonProps {

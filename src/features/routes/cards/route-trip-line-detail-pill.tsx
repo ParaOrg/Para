@@ -1,5 +1,4 @@
-import { TIMELINE_PILL } from './livery-card';
-import type { Livery } from '../model/liveries';
+import { STOP_PILL } from './timeline-look';
 
 /**
  * What a pill says: on the ride's end, the pesos, after the station's code on a train; on a train's
@@ -15,17 +14,17 @@ export type RouteTripLineDetailPillContent =
     }
   | { code: string; pesos?: never };
 
-type RouteTripLineDetailPillProps = RouteTripLineDetailPillContent & { livery: Livery };
+type RouteTripLineDetailPillProps = RouteTripLineDetailPillContent;
 
-/** One white half: Figma's padding 2 × 6, text-sm/medium in SN Pro. TIMELINE_PILL gives the fill and the words. */
+/** One half: Figma's padding 2 × 6, text-sm/medium in Livvic, in STOP_PILL's fill and words. */
 const HALF = 'px-1.5 py-0.5 font-sn-pro text-sm/5 font-medium whitespace-nowrap';
 
 /**
  * The pill beside a picked hintuan, Figma's RouteTripLineDetailPill (4161:8299). Its Property 1 is
  * not a prop: the code decides it.
  *
- * - Two (4161:8298), on a train: the station's code and the pesos as two white halves 2 px apart
- *   (spacing/0-5), so the card's colour between them is the divider.
+ * - Two (4161:8298), on a train: the station's code and the pesos as two halves 2 px apart
+ *   (spacing/0-5), so the surface between them is the divider.
  * - One (4161:8300), on a jeep: the pesos alone, rounded both ends; a train's start, its code alone
  *   in the same shape (Variant3).
  *
@@ -33,8 +32,8 @@ const HALF = 'px-1.5 py-0.5 font-sn-pro text-sm/5 font-medium whitespace-nowrap'
  * the halves is drawn by the gap, not the text, and is there so a screen reader hears "YL06 ₱20" as
  * two words.
  */
-export function RouteTripLineDetailPill({ livery, code, pesos }: RouteTripLineDetailPillProps) {
-  const colours = TIMELINE_PILL[livery];
+export function RouteTripLineDetailPill({ code, pesos }: RouteTripLineDetailPillProps) {
+  const colours = STOP_PILL;
   if (pesos === undefined) {
     return (
       <span

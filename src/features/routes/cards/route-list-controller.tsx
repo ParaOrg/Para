@@ -1,14 +1,14 @@
-import { useId, useRef, type ReactNode } from 'react';
+import type { ReactNode } from 'react';
 
 import { IconButton } from '@/design-system/primitives/icon-button';
-import { ChevronLeftLargeIcon, CloseLargeIcon, FilterIcon } from '@/shared/ui/route-icons';
+import { ChevronLeftLargeIcon, CloseLargeIcon, FilterLargeIcon } from '@/shared/ui/route-icons';
 import { cn } from '@/shared/utils/cn';
 
 import { WAY_TEST_ID, WIDE_BAR, type ControllerOwner } from './controller-look';
-import { ModeFilterCard } from './mode-filter-card';
+import { ModeFilterButton } from './mode-filter-button';
 import { WayButton } from './way-button';
 import type { Livery } from '../model/liveries';
-import { MODE_FILTER_LABEL, type ModeFilterControl } from '../model/mode-filter';
+import type { ModeFilterControl } from '../model/mode-filter';
 
 interface RouteListControllerProps {
   owner: ControllerOwner;
@@ -33,13 +33,13 @@ interface RouteListControllerProps {
 }
 
 /**
- * The bar of a route list and a trip (Controller): ‹ or ✕, PAPUNTA, then the sliders (the list's
- * filter, ModeFilterCard) and an extra slot. On a phone it floats at the sheet's foot, centred on
- * PAPUNTA, over a fade (Gradient/bottom-toolbar, 4679:23737). Where the sheet floats it is the
- * sheet's top bar, 64 tall (4683:32635), in the list's colour or the trip's: PAPUNTA and the
+ * The bar of a route list and a trip in the studio (Controller): ‹ or ✕, PAPUNTA, then the sliders
+ * (the list's filter, ModeFilterButton) and an extra slot. The public map has none: its list and
+ * trip float their controls on the map (MapControlsDock). On a phone it floats at the sheet's
+ * foot, centred on PAPUNTA, over a fade (Gradient/bottom-toolbar, 4679:23737). Where the sheet
+ * floats it is the sheet's top bar, 64 tall (4683:32635), in the list's colour or the trip's: PAPUNTA and the
  * sliders at the left, ‹ or ✕ at the right. The page reads it in that order, PAPUNTA first; on a
- * phone ‹ or ✕ is drawn first. ‹ stands when something is behind, ✕ when nothing is. A filter on
- * puts a dot on the sliders, and their name says which, so the dot is never the only sign.
+ * phone ‹ or ✕ is drawn first. ‹ stands when something is behind, ✕ when nothing is.
  */
 export function RouteListController({
   owner,
@@ -54,10 +54,6 @@ export function RouteListController({
   onBack,
   onClose,
 }: RouteListControllerProps) {
-  const filterCardId = useId();
-  const filterCardRef = useRef<HTMLDivElement>(null);
-  const filter = modeFilter?.filter ?? 'all';
-  const isFiltered = filter !== 'all';
   return (
     <div
       data-testid={`${owner}-controller`}
@@ -83,21 +79,12 @@ export function RouteListController({
           their tooltips point inward, which fits both bars. */}
       <div className="mb-1.5 flex justify-start gap-3 sheet-floating:mb-0">
         {modeFilter && (
-          <span className="relative flex">
-            <IconButton
-              icon={<BarIcon icon={<FilterIcon />} />}
-              label={isFiltered ? `Filter: ${MODE_FILTER_LABEL[filter]}` : 'Filter'}
-              tooltip="left"
-              data-testid={`${owner}-filter`}
-              popoverTarget={filterCardId}
-            />
-            {isFiltered && (
-              <span
-                aria-hidden
-                className="pointer-events-none absolute top-0 right-0 size-3 rounded-full bg-brand-surface ring-2 ring-surface"
-              />
-            )}
-          </span>
+          <ModeFilterButton
+            modeFilter={modeFilter}
+            icon={<BarIcon icon={<FilterLargeIcon />} />}
+            tooltip="left"
+            testId={`${owner}-filter`}
+          />
         )}
         {extra}
       </div>
@@ -109,14 +96,6 @@ export function RouteListController({
           onClick={onBack ?? onClose}
         />
       </div>
-      {modeFilter && (
-        <ModeFilterCard
-          id={filterCardId}
-          ref={filterCardRef}
-          filter={modeFilter.filter}
-          onFilter={modeFilter.onFilter}
-        />
-      )}
     </div>
   );
 }

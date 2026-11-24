@@ -386,7 +386,9 @@ check(
 );
 // Google Maps' way (the owner's screenshots, 2026-10-01): the circle is the
 // fix's metres, so zoomed out it shrinks under the dot and is gone.
-await page.evaluate(() => window.__map.jumpTo({ zoom: 12 }));
+await page.evaluate(() => {
+  window.__map.jumpTo({ zoom: 12 });
+});
 await until(async () => (await attr(page, 'data-halo-px')) === '0', 3000);
 check(
   '  zoomed out till the dot covers its circle, the circle is gone',
@@ -400,7 +402,9 @@ check(
   `scale ${await attr(page, 'data-scale')}`,
 );
 // A fix indoors, 1 km out: the circle claims 80 m at most (the owner's call, 2026-10-01).
-await page.evaluate(() => window.__map.jumpTo({ zoom: 16 }));
+await page.evaluate(() => {
+  window.__map.jumpTo({ zoom: 16 });
+});
 await ctx.setGeolocation({ ...p, accuracy: 1000 });
 await until(async () => (await attr(page, 'data-accuracy-m')) === '1000');
 await mapIdle(page);
@@ -530,10 +534,9 @@ check(
 // The app moves the camera for the commuter (a hintuan picked, an end tapped:
 // features/routes/map/map-view.tsx APP_MOVE). That lets go too, or the next fix undoes it.
 const away = north(p, 400);
-await page.evaluate(
-  (c) => window.__map.easeTo({ center: [c.longitude, c.latitude], duration: 0 }, { appMove: true }),
-  away,
-);
+await page.evaluate((c) => {
+  window.__map.easeTo({ center: [c.longitude, c.latitude], duration: 0 }, { appMove: true });
+}, away);
 await until(async () => (await mode()) === 'TrackOwnLocation', 3000);
 check(
   'an app camera move lets go: TrackOwnLocation',
@@ -640,13 +643,9 @@ if (!onLine) {
   );
 
   // The card that tap opened set to another height while the camera follows
-  // the commuter: the card's overview starts (useHeightOverview) and the
-  // camera following the commuter takes over in the same commit, as it did
-  // when the locator's hooks were PublicMapApp's own, after the cards'. Since
-  // they moved into CommuterLocation, which React runs before the page's own
-  // effects, its camera waits for the page's turn (commit-turn.ts; the
-  // cheap-phone plan, step 15, 2026-10-05). It stays on the commuter, at the
-  // zoom it followed at.
+  // the commuter: the sheet's height moves no route overview, and the camera
+  // following the commuter keeps them clear of the sheet at its new height,
+  // at the zoom it followed at.
   // A list where routes share the road, or a trip's card: either has a handle. The list's draws
   // nothing, kept for the keyboard alone, so the height is set as a keyboard sets it.
   const handle = page.locator('button[data-testid="dock-handle"]').first();
@@ -669,7 +668,7 @@ if (!onLine) {
     const now = await camera(page);
     const is = await onScreen(page, p);
     check(
-      "a card set to another height while the camera follows: it stays on the commuter, at its zoom, the card's overview overtaken",
+      'a card set to another height while the camera follows: it stays on the commuter, at its zoom',
       Math.abs(now.zoom - following.zoom) < 0.05 &&
         Math.abs(is.x - is.w / 2) < 4 &&
         is.y > 0 &&
@@ -776,7 +775,9 @@ check(
       await cardsSettled(page2);
     }
   }
-  const way = card.getByRole('button', { name: /^(Back|Close)$/ }).first();
+  // The trip has no ‹ or ✕ (the owner, 2026-11-21): its first control below the handle, ⇅ on the
+  // ends card where it has one, is what the toast must stay clear of.
+  const way = card.locator('button:not([data-testid="dock-handle"])').first();
   const placed = (await trip.count())
     ? {
         snap: await card.getAttribute('data-snap'),
@@ -786,7 +787,7 @@ check(
       }
     : null;
   check(
-    "  over a trip's card at full height it stays 12 from the top, clear of the trip's ‹ or ✕",
+    "  over a trip's card at full height it stays 12 from the top, clear of the trip's first control",
     placed?.snap === 'full' &&
       Math.abs(placed.toastTop - 12) <= 1 &&
       placed.toastBottom < placed.wayTop,

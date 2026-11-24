@@ -1,8 +1,10 @@
 import { useEffect, useId, useRef } from 'react';
 
 import type { RecordingTrail } from '@/features/routes/map/recording-trail';
+import { useBackLayer } from '@/shared/hooks/use-back-layer';
 import { useDialogFocus } from '@/shared/hooks/use-dialog-focus';
 import { useEscape } from '@/shared/hooks/use-escape';
+import { useTabLoop } from '@/shared/hooks/use-tab-loop';
 import { CloseIcon } from '@/shared/ui/route-icons';
 import type { LngLat } from '@/shared/utils/geo';
 
@@ -48,6 +50,8 @@ export function StopMapPopup({
   const titleId = useId();
   useDialogFocus(dialogRef, false);
   useEscape(onClose, !isUnderQuestion);
+  // The phone's Back closes it, as Close does; under Delete's question, the question first.
+  useBackLayer(true, onClose);
   // Delete's question answered Keep: focus comes back into the card it was asked from.
   const wasUnder = useRef(isUnderQuestion);
   useEffect(() => {
@@ -57,26 +61,9 @@ export function StopMapPopup({
 
   // Tab stays inside the card (a dialog traps focus): without it Tab reaches the page or the save
   // form behind. Idle while the question stands over the card, where it is inert.
-  useEffect(() => {
-    const dialog = dialogRef.current;
-    if (!dialog || isUnderQuestion) return;
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== 'Tab') return;
-      const stops = [...dialog.querySelectorAll<HTMLElement>('button')];
-      const first = stops.at(0);
-      const last = stops.at(-1);
-      const active = document.activeElement;
-      if (event.shiftKey && (active === first || active === dialog)) {
-        event.preventDefault();
-        last?.focus();
-      } else if (!event.shiftKey && active === last) {
-        event.preventDefault();
-        first?.focus();
-      }
-    };
-    dialog.addEventListener('keydown', onKeyDown);
-    return () => dialog.removeEventListener('keydown', onKeyDown);
-  }, [isUnderQuestion]);
+  // Its stops: the map's credits (their ⓘ and links) and the card's buttons. The map itself takes
+  // no keys (stop-map.tsx), so its canvas is no stop.
+  useTabLoop(dialogRef, 'button, summary, a[href]', !isUnderQuestion);
 
   return (
     <div

@@ -1,60 +1,52 @@
 /*
- * PalimosPoDesignSystem type: SN Pro, the family the Figma variables name
- * (font/family/SNPRO). Only the faces designs use are wired — SN Pro 400–700,
- * its ExtraBold 800 (the RouteCards' titles, a trip's origin and its picked
- * hintuan, the Map Style card's title) and its Black 900 (the install
- * prompt's and the HintuanCard's titles) — as woff2 subset to Latin
- * (fonts/subset.sh: 107 kB for all six, from 290 kB). The full sets and
- * italics sit beside them in fonts/, unwired until a design asks, and so do
- * Cubao Free's .otf sources. `swap` because the app is a map first: text in a
- * fallback beats text held back. The worker precaches them, so offline text
- * keeps its face; check-build.mjs holds them under 135 kB together.
+ * PalimosPoDesignSystem type: Livvic, the family the redesign draws in, on every page. Only the
+ * faces designs use are wired, Livvic 400, 500, 600, 700 and its Black 900, as woff2 subset to
+ * Latin (fonts/subset.sh). Livvic has no ExtraBold 800. `swap` because the app is a map first:
+ * text in a fallback beats text held back. The worker precaches them, so offline text keeps its
+ * face; check-build.mjs holds them under its font budget together.
  */
 
 @font-face {
-  font-family: 'SN Pro';
-  src: url('./fonts/SNPro/SNPro-Regular.woff2') format('woff2');
+  font-family: 'Livvic';
+  src: url('./fonts/livvic/livvic-regular.woff2') format('woff2');
   font-weight: 400;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
-  font-family: 'SN Pro';
-  src: url('./fonts/SNPro/SNPro-Medium.woff2') format('woff2');
+  font-family: 'Livvic';
+  src: url('./fonts/livvic/livvic-medium.woff2') format('woff2');
   font-weight: 500;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
-  font-family: 'SN Pro';
-  src: url('./fonts/SNPro/SNPro-SemiBold.woff2') format('woff2');
+  font-family: 'Livvic';
+  src: url('./fonts/livvic/livvic-semi-bold.woff2') format('woff2');
   font-weight: 600;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
-  font-family: 'SN Pro';
-  src: url('./fonts/SNPro/SNPro-Bold.woff2') format('woff2');
+  font-family: 'Livvic';
+  src: url('./fonts/livvic/livvic-bold.woff2') format('woff2');
   font-weight: 700;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
-  font-family: 'SN Pro';
-  src: url('./fonts/SNPro/SNPro-ExtraBold.woff2') format('woff2');
-  font-weight: 800;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: 'SN Pro';
-  src: url('./fonts/SNPro/SNPro-Black.woff2') format('woff2');
+  font-family: 'Livvic';
+  src: url('./fonts/livvic/livvic-black.woff2') format('woff2');
   font-weight: 900;
   font-style: normal;
   font-display: swap;
 }
 
-/* The family as a utility: font-sn-pro. */
+/*
+ * The family as Tailwind's default sans, so every page's text is Livvic with no class. font-sn-pro
+ * resolves to the same stack until a later change deletes it from the files that still carry it.
+ */
 @theme {
-  --font-sn-pro: 'SN Pro', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: 'Livvic', ui-sans-serif, system-ui, sans-serif;
+  --font-sn-pro: 'Livvic', ui-sans-serif, system-ui, sans-serif;
 }

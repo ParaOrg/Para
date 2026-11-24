@@ -1,0 +1,11 @@
+{
+  "schema": 1,
+  "cell": "2412-296",
+  "attribution": "© OpenStreetMap contributors",
+  "establishments": [
+    ["w293249001","convenience",120.60207,14.83165,"Head Grocery Quarters"],
+    ["w302364492","convenience",120.60033,14.83147,"SARI SARI STORE"],
+    ["w779299021","clinic",120.61859,14.81876,"Batang 2nd Barangay Health Station"],
+    ["w783001354","clinic",120.61852,14.84445,"Sebitanan Health Center"]
+  ]
+}

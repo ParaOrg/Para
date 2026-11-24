@@ -1,25 +1,20 @@
-import type { ReactNode } from 'react';
+import type { ComponentProps } from 'react';
 
 import { BottomSheet, type SheetHeight } from '@/shared/ui/bottom-sheet';
 import type { SheetShape } from '@/shared/ui/sheet-gesture';
+import { cn } from '@/shared/utils/cn';
 
+import { listWay } from './list-way';
 import { ModeFilterEmpty } from './mode-filter-empty';
-import { RouteCardStack, type PickedPlace } from './route-card-stack';
+import { RouteCardStack } from './route-card-stack';
 import { RouteListController } from './route-list-controller';
 import { RouteListHotspotRows } from './route-list-hotspot-rows';
-import {
-  listedDepartures,
-  otherWayHasRoutes,
-  routeCards,
-  switchWord,
-  wayWord,
-  type Listing,
-} from '../model/departures';
+import { listedDepartures, routeCards, type Listing } from '../model/departures';
 import type { Hotspot } from '../model/hotspots';
 import type { Livery } from '../model/liveries';
 import { passesModeFilter, type ModeFilterControl } from '../model/mode-filter';
 import { hotspotCount } from '../model/places';
-import { isLoop, type Direction } from '../model/routes';
+import type { Direction } from '../model/routes';
 
 interface Props {
   /** Every direction of every route under the tap, slots included, as the hooks hand them over. */
@@ -34,12 +29,10 @@ interface Props {
    * trip opened on its own, `way-round`: the routes sharing its end its way.
    */
   listing: Listing;
-  /** PAPUNTA: show them all the other way round. */
+  /** PAPUNTA: show them all the other way round. Read only with the Controller. */
   onFlip: () => void;
-  /** The place whose card is Selected, by name; null when none is. */
-  selected: string | null;
-  /** A card was picked — the map lights its directions alone — or let go (null): everything listed lit again. */
-  onSelect: (place: PickedPlace | null) => void;
+  /** The Selected card and what picks or lets one go: the studio's alone (RouteCardStack). */
+  selection?: ComponentProps<typeof RouteCardStack>['selection'];
   /** Called with the direction a row opens, and the colour its card wore: its trip wears the same. */
   onRoute: (v: Direction, livery: Livery) => void;
   /** A hotspot's row: open its card. */
@@ -54,8 +47,11 @@ interface Props {
    * cards follow it. Without one, every route is listed and the Controller has no sliders.
    */
   modeFilter?: ModeFilterControl;
-  /** Drawn after the last route card, handed its livery: the public map's contribute card. */
-  end?: (livery: Livery) => ReactNode;
+  /**
+   * Whether the Controller bar stands on the sheet: the studio's. The public map's has none; its
+   * PAPUNTA and filter float on the map instead (Vice Versa and the sliders, MapControlsDock).
+   */
+  hasController?: boolean;
 }
 
 /**
@@ -67,11 +63,13 @@ const LIST_SHAPE: SheetShape = { lowPx: 240, isMaxFull: true };
 /**
  * Everything under a tap that hit more than one thing (Figma 4633:25516 on a phone, 4633:22034 on
  * a wide screen): a RouteCard per place and mode the routes leave from (RouteCardStack), edge to
- * edge, and the Controller (RouteListController): ✕, PAPUNTA and the filter. On a phone the
- * Controller stands at the sheet's foot and the cards scroll under it; the sheet draws no handle
- * (one stays for the keyboard), its Low shows the first card above the Controller and its Max fills
- * the screen. On a wide screen the list docks the map's whole height on the left, 384 wide, under
- * the Controller as its top bar, in Card/Jeep.
+ * edge, and in the studio the Controller (RouteListController): ✕, PAPUNTA and the filter. On a
+ * phone the Controller stands at the sheet's foot and the cards scroll under it; the sheet draws no
+ * handle (one stays for the keyboard), its Low shows the first card and its Max fills the screen.
+ * On a wide screen the list docks the map's whole height on the left, 384 wide, under the
+ * Controller as its top bar, in Card/Jeep. The public map's list has no Controller (Figma
+ * 4796:34329): Vice Versa and the sliders float on the map instead, and an empty map tapped,
+ * Back or Escape closes it.
  *
  * The grouping is departures': one way round at a time, and PAPUNTA flips them all. The map lights
  * every direction listed, the way round it is showing them; a tap on a card off its rows narrows
@@ -99,21 +97,19 @@ export function RouteCardList({
   back,
   listing,
   onFlip,
-  selected,
-  onSelect,
+  selection,
   onRoute,
   onHotspot,
   onClose,
   hidden,
   height,
   modeFilter,
-  end,
+  hasController = false,
 }: Props) {
   const filter = modeFilter?.filter ?? 'all';
   const filtered = routes.filter((v) => passesModeFilter(v, filter));
   const places = listedDepartures(filtered, back, listing);
-  const switchable = otherWayHasRoutes(filtered, back);
-  const shownDirections = places.flatMap((p) => p.directions.map((d) => d.v));
+  const { way, wayTo, isSwitchable } = listWay(routes, back, listing, filter);
   const hotspotTotal = hotspotCount(hotspots);
   // A RouteCard each, as RouteCardStack lays them out: a place and mode, so a place that jeeps
   // and a train both leave from counts twice.
@@ -132,30 +128,35 @@ export function RouteCardList({
       height={height}
       floats="dock"
       shape={LIST_SHAPE}
+      // At most as tall as its cards: a short list rises no higher than its last card, and only a
+      // list taller than the screen scrolls (the owner, 2026-11-23).
+      fits
       handle="hidden"
       header={null}
       footer={
-        <RouteListController
-          owner="chooser"
-          // Only loops showing: they have no way back, so no PAPUNTA.
-          way={
-            shownDirections.length > 0 && shownDirections.every(isLoop)
-              ? null
-              : wayWord(back, shownDirections)
-          }
-          wayTo={switchWord(back, shownDirections)}
-          isSwitchable={switchable}
-          isBack={back}
-          onSwitch={onFlip}
-          modeFilter={modeFilter}
-          onClose={onClose}
-        />
+        hasController && (
+          <RouteListController
+            owner="chooser"
+            way={way}
+            wayTo={wayTo}
+            isSwitchable={isSwitchable}
+            isBack={back}
+            onSwitch={onFlip}
+            modeFilter={modeFilter}
+            onClose={onClose}
+          />
+        )
       }
     >
-      {/* At least the sheet's height, so what `end` draws can grow into the room a short list
-          leaves; padded by the Controller's height, at the foot on a phone and the top where the
+      {/* The list ends at its last card, the sheet's own surface below it (the owner, 2026-11-22).
+          With the Controller, padded by its height, at the foot on a phone and the top where the
           list docks, so no card hides under it. */}
-      <div className="flex min-h-full flex-col pb-20 sheet-floating:pt-16 sheet-floating:pb-0">
+      <div
+        className={cn(
+          'flex flex-col',
+          hasController && 'pb-20 sheet-floating:pt-16 sheet-floating:pb-0',
+        )}
+      >
         {/* The list's heading, for a screen reader to move to; nothing is drawn. */}
         <h2 className="sr-only">Routes here</h2>
         <RouteListHotspotRows hotspots={hotspots} onHotspot={onHotspot} />
@@ -166,11 +167,9 @@ export function RouteCardList({
           routes={filtered}
           back={back}
           listing={listing}
-          selected={selected}
-          onSelect={onSelect}
+          selection={selection}
           onRoute={onRoute}
           testId="chooser"
-          end={end}
         />
       </div>
     </BottomSheet>

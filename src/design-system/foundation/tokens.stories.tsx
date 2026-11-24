@@ -568,28 +568,25 @@ function TokensPage() {
         />
       </Group>
 
-      <Group title="Type — SN Pro">
+      <Group title="Type — Livvic">
         <div className="w-full rounded-lg border border-border-primary bg-surface p-4">
-          <p className="font-sn-pro text-lg text-content-primary">
-            SN Pro Regular — Tala to SM Fairview, ₱14 the first 4 km
+          <p className="text-lg text-content-primary">
+            Livvic Regular — Tala to SM Fairview, ₱14 the first 4 km
           </p>
-          <p className="font-sn-pro text-lg font-medium text-content-primary">
-            SN Pro Medium — Tala to SM Fairview
+          <p className="text-lg font-medium text-content-primary">
+            Livvic Medium — Tala to SM Fairview
           </p>
-          <p className="font-sn-pro text-lg font-semibold text-content-primary">
-            SN Pro SemiBold — Tala to SM Fairview
+          <p className="text-lg font-semibold text-content-primary">
+            Livvic SemiBold — Tala to SM Fairview
           </p>
-          <p className="font-sn-pro text-lg font-bold text-content-primary">
-            SN Pro Bold — Tala to SM Fairview
+          <p className="text-lg font-bold text-content-primary">
+            Livvic Bold — Novaliches, a trip&rsquo;s origin
           </p>
-          <p className="font-sn-pro text-lg font-extrabold text-content-primary">
-            SN Pro ExtraBold — Novaliches, a trip&rsquo;s origin
-          </p>
-          <p className="font-sn-pro text-lg font-black text-content-primary">
-            SN Pro Black — Novaliches (Bayan)
+          <p className="text-lg font-black text-content-primary">
+            Livvic Black — Novaliches (Bayan)
           </p>
           <p className="mt-1 font-mono text-[11px] text-content-quaternary">
-            font-sn-pro · font-medium · font-semibold · font-bold · font-extrabold · font-black
+            the default sans · font-medium · font-semibold · font-bold · font-black
           </p>
           <p className="mt-3 font-sn-pro text-base/6 font-semibold text-content-primary">
             text-base/6 — font/size/base, 17 on 24: a route card&rsquo;s rows

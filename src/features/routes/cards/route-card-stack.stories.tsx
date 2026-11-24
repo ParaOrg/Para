@@ -70,20 +70,28 @@ type Frame = 'list' | 'hotspot';
 const FRAME = { list: 'w-96', hotspot: 'w-80' } satisfies Record<Frame, string>;
 const frameOf = (p: { frame?: Frame }) => FRAME[p.frame ?? 'list'];
 
-/** Keeps the Selected card as the apps do, so a story can be tapped through. */
+/** Keeps the Selected card as the studio does, so a story with `selection` can be tapped through. */
 function Picking(props: ComponentProps<typeof RouteCardStack>) {
-  const [selected, setSelected] = useState(props.selected);
+  const [selected, setSelected] = useState(props.selection?.selected ?? null);
+  const onSelect = props.selection?.onSelect;
   return (
     <RouteCardStack
       {...props}
-      selected={selected}
-      onSelect={(p) => {
-        props.onSelect(p);
-        setSelected(p?.card ?? null);
-      }}
+      selection={
+        onSelect && {
+          selected,
+          onSelect: (p) => {
+            onSelect(p);
+            setSelected(p?.card ?? null);
+          },
+        }
+      }
     />
   );
 }
+
+/** The studio's hotspot card's: a card Selected, or none, as its editors keep it. */
+const studio = (selected: string | null) => ({ selection: { selected, onSelect: fn() } });
 
 const meta = {
   title: 'Features/Routes/RouteCardStack',
@@ -99,8 +107,6 @@ const meta = {
   args: {
     routes: tala,
     back: false,
-    selected: null,
-    onSelect: fn(),
     onRoute: fn(),
     testId: 'card',
   },
@@ -118,8 +124,10 @@ export const TwoPlaces: Story = { args: { back: true } };
 /** As narrow as a hotspot's card on a wide screen, 320: the cards fill it edge to edge. */
 export const InAHotspotCard: Story = { parameters: { frame: 'hotspot' } };
 
-/** The way back with SM Fairview's card Selected: pressed in, the other at rest. */
-export const OneSelected: Story = { args: { back: true, selected: 'SM Fairview|jeep' } };
+/** In the studio, the way back with SM Fairview's card Selected: pressed in, the other at rest. */
+export const InTheStudioOneSelected: Story = {
+  args: { back: true, ...studio('SM Fairview|jeep') },
+};
 
 /**
  * A station: its jeeps on its RouteCard, then a RouteCard per line and
@@ -139,26 +147,48 @@ export const AStation: Story = {
   },
 };
 
-/** The station with LRT-2 Westbound Selected: that card alone pressed in. */
-export const AStationLineSelected: Story = {
-  args: { routes: cubao, selected: 'Araneta Center-Cubao|LRT-2|Westbound' },
+/** In the studio, the station with LRT-2 Westbound Selected: that card alone pressed in. */
+export const InTheStudioAStationLineSelected: Story = {
+  args: { routes: cubao, ...studio('Araneta Center-Cubao|LRT-2|Westbound') },
 };
 
 /**
- * Tapped through: a row opens its trip straight away and picks no card, since
- * selecting it too is confusing; a tap on Tala's card selects it, handing the
- * map its two directions, and a second lets it go.
+ * Tapped through, as on the public map: a row opens its trip; a tap anywhere else on Tala's card
+ * opens its first row's, the card one button named for its place and that row. Nothing is pressed
+ * or Selected.
  */
-export const ARowOpens: Story = {
+export const ATapOpens: Story = {
   play: async ({ args, canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.click(canvas.getByText('SM Fairview'));
     await expect(args.onRoute).toHaveBeenCalledTimes(1);
-    await expect(args.onSelect).not.toHaveBeenCalled();
+    const card = canvas.getByRole('button', { name: /^Tala, to / });
+    await expect(card).not.toHaveAttribute('aria-pressed');
+    await userEvent.click(card);
+    const firstRow = canvas.getAllByTestId('card-item')[0];
+    await expect(args.onRoute).toHaveBeenLastCalledWith(
+      expect.objectContaining({ id: firstRow.dataset.direction }),
+      expect.any(String),
+    );
+  },
+};
+
+/**
+ * In the studio, tapped through: a row opens its trip straight away and picks no card; a tap on
+ * Tala's card selects it, handing the map its two directions, and a second lets it go.
+ */
+export const InTheStudioATapSelects: Story = {
+  args: studio(null),
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement);
+    const onSelect = args.selection?.onSelect;
+    await userEvent.click(canvas.getByText('SM Fairview'));
+    await expect(args.onRoute).toHaveBeenCalledTimes(1);
+    await expect(onSelect).not.toHaveBeenCalled();
     await userEvent.click(canvas.getByRole('button', { name: 'Tala', pressed: false }));
-    await expect(args.onSelect).toHaveBeenCalledWith(expect.objectContaining({ from: 'Tala' }));
+    await expect(onSelect).toHaveBeenCalledWith(expect.objectContaining({ from: 'Tala' }));
     await userEvent.click(canvas.getByRole('button', { name: 'Tala', pressed: true }));
-    await expect(args.onSelect).toHaveBeenLastCalledWith(null);
+    await expect(onSelect).toHaveBeenLastCalledWith(null);
   },
 };
 
@@ -192,8 +222,11 @@ export const StackedList: Story = {
     ],
   },
   play: async ({ canvasElement }) => {
-    const modes = within(canvasElement).getAllByText(/^(Jeep|UV Express|E-Jeep|Bus)$/);
-    await expect(modes.map((m) => m.textContent)).toEqual([
+    // A road card names its mode in words on its list of rows, not on a badge.
+    const modes = within(canvasElement).getAllByRole('list', {
+      name: /^(Jeep|UV Express|E-Jeep|Bus)$/,
+    });
+    await expect(modes.map((m) => m.getAttribute('aria-label'))).toEqual([
       'Jeep',
       'Jeep',
       'Jeep',
@@ -206,8 +239,8 @@ export const StackedList: Story = {
 };
 
 /**
- * A P2P card draws no mode (Figma has no badge for it) though it wears UV Express's colours; the
- * UV Express card after it names its own.
+ * A P2P card names no mode (Figma has no word for it) though it wears UV Express's colours; the
+ * UV Express card after it names its own, on its list of rows.
  */
 export const P2pBesideUvExpress: Story = {
   args: {
@@ -220,14 +253,14 @@ export const P2pBesideUvExpress: Story = {
   play: async ({ canvasElement }) => {
     const cards = within(canvasElement).getAllByTestId('card-origin');
     await expect(cards.map((c) => c.dataset.livery)).toEqual(['uv-express', 'uv-express']);
-    await expect(within(cards[0]).queryByText('UV Express')).toBeNull();
-    await expect(within(cards[1]).getByText('UV Express')).toBeVisible();
+    await expect(within(cards[0]).queryByRole('list', { name: 'UV Express' })).toBeNull();
+    await expect(within(cards[1]).getByRole('list', { name: 'UV Express' })).toBeVisible();
   },
 };
 
 /**
  * One place, several road modes: each mode stands apart on a card of its own, in its own colour and
- * under its own badge — Tala's jeeps, its UV Express, its P2P (UV Express's colours, no badge), its
+ * under its own mode — Tala's jeeps, its UV Express, its P2P (UV Express's colours, no mode), its
  * e-jeep and its bus — and each is selected on its own.
  */
 export const OnePlaceManyModes: Story = {

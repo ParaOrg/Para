@@ -15,7 +15,12 @@ import {
   spacingPx,
 } from '../../src/features/routes/map/chevrons.ts';
 import { haversine, metresPerPixel } from '../../src/shared/utils/geo.ts';
-import { flowChevrons, onAMove, widened } from '../../src/features/routes/map/direction-arrows.ts';
+import {
+  ARROWS_FLOW_MS,
+  flowChevrons,
+  onAMove,
+  widened,
+} from '../../src/features/routes/map/direction-arrows.ts';
 
 /** A straight line north from [121.04, 14.70], `km` long, in `n` segments: sample data. */
 const north = (km, n = 10, lng = 121.04) =>
@@ -394,6 +399,67 @@ test('a move that starts as another ends, as a camera call stops another, draws 
   await act(async () => root.unmount());
   frame();
   assert.equal(moves(), before, 'nothing after the hook is gone');
+});
+
+test('flowed its while, the flow rests where it is, still drawn as the map moves, until a touch on the map', () => {
+  const queued = new Map();
+  let nextFrame = 1;
+  let now = performance.now();
+  const saved = [globalThis.requestAnimationFrame, globalThis.cancelAnimationFrame];
+  globalThis.requestAnimationFrame = (f) => (queued.set(nextFrame, f), nextFrame++);
+  globalThis.cancelAnimationFrame = (n) => queued.delete(n);
+  // Frames a step apart (1000 / 15 ms), as a phone keeping up draws them.
+  const frame = () => {
+    now += 1000 / 15;
+    const due = [...queued.values()];
+    queued.clear();
+    for (const f of due) f(now);
+  };
+  try {
+    const line = Array.from({ length: 41 }, (_, i) => [121.03 + i * 0.0006, 14.69]);
+    const map = chevronMap(viewAt(line[10], 16));
+    map.addSource('direction-arrows');
+    const draws = map.sets['direction-arrows'];
+    const clock = { flowed: 0 };
+    const stop = flowChevrons(
+      map,
+      map.getSource('direction-arrows'),
+      [line],
+      () => 6,
+      clock,
+      () => false,
+      ARROWS_FLOW_MS,
+    );
+    for (let i = 0; i < 100; i++) frame();
+    // 3 s of flowing is 45 steps; one more frame may round it over.
+    const flowed = clock.flowed;
+    assert.ok(
+      flowed >= ARROWS_FLOW_MS && flowed < ARROWS_FLOW_MS + 2 * (1000 / 15),
+      'it flowed its while',
+    );
+    assert.equal(queued.size, 0, 'at rest: no frame asked for');
+    const drawnAtRest = draws.length;
+    for (let i = 0; i < 30; i++) frame();
+    assert.equal(draws.length, drawnAtRest, 'no draw while it rests');
+    map.fire('move');
+    assert.equal(queued.size, 0, 'a move at rest draws it where it is, and starts no flow');
+    const afterMove = draws.length;
+    assert.equal(clock.flowed, flowed, 'its clock rests with it');
+    map.fire('touchstart');
+    for (let i = 0; i < 15; i++) frame();
+    assert.ok(
+      draws.length > afterMove && clock.flowed > flowed,
+      'a touch on the map flows it again',
+    );
+    for (let i = 0; i < 100; i++) frame();
+    assert.equal(queued.size, 0, 'and it rests again after another while');
+    assert.ok(clock.flowed - flowed < ARROWS_FLOW_MS + 2 * (1000 / 15), 'a while, not more');
+    stop();
+    map.fire('mousedown');
+    assert.equal(queued.size, 0, 'nothing after the hook is gone');
+  } finally {
+    [globalThis.requestAnimationFrame, globalThis.cancelAnimationFrame] = saved;
+  }
 });
 
 test('out of sight or under a finger, the flow waits where it is, its clock too, and flows on from there', () => {

@@ -15,6 +15,25 @@ export const basemapHost: string = parseBasemapHost(import.meta.env.VITE_BASEMAP
  */
 export const isMapExposed: boolean = import.meta.env.DEV || import.meta.env.VITE_EXPOSE_MAP === '1';
 
+/**
+ * Whether the public map shows place search: only in a build made with `VITE_PLACE_SEARCH=1`. A
+ * plain comparison, as `isMapExposed`'s, so a build without it drops the search's code.
+ */
+export const isPlaceSearchShown: boolean = import.meta.env.VITE_PLACE_SEARCH === '1';
+
+/**
+ * Whether the public map lets a commuter pick a ride on a trip: a stop's row or its name on the
+ * map as the ride's end, Set as start. Only in a build made with `VITE_RIDE_PICKS=1`; without it
+ * the stops are a plain list and the tiles show the whole ride. The studio's trip card always can.
+ */
+export const isRidePickingOn: boolean = import.meta.env.VITE_RIDE_PICKS === '1';
+
+/**
+ * Whether a tap on a hotspot's box opens its card on the public map: only in a build made with
+ * `VITE_HOTSPOT_TAPS=1`. Without it a tap there is the route's under it or the empty map's.
+ */
+export const isHotspotTapOn: boolean = import.meta.env.VITE_HOTSPOT_TAPS === '1';
+
 // TODO: nothing reads this yet; the notice that tells an editor so waits for the owner's design.
 /**
  * Whether a page at `hostname` is a preview that works on the live data: staging's and every

@@ -25,6 +25,7 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { until } from './lib/harness.mjs';
+import { keepBasemapUnreachable } from './lib/stand-ins.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const require = createRequire(join(root, 'package.json'));
@@ -91,6 +92,9 @@ const siteBase = `http://localhost:${SITE_PORT}`;
 // hold a new worker's activation back. A request route would not do: Playwright's interception
 // of a page a worker controls can leave a request of the old worker open, and the new one
 // waiting behind it.
+// The basemap unanswered rather than stood in by a route, as in handover-test: the old worker's
+// tile requests answered through Playwright's routing hold its update checks back.
+keepBasemapUnreachable();
 const browser = await chromium.launch({
   args: ['--host-resolver-rules=MAP * ~NOTFOUND, EXCLUDE localhost'],
 });

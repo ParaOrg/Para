@@ -52,6 +52,15 @@ test('a flick down goes to Low from anywhere, and from Low it closes', () => {
   assert.equal(snapFor(LOW_PX, -3, heights, H), 'close');
 });
 
+test('a flick down begun above Low goes to Low even lifted past it; one begun at Low closes', () => {
+  // A short list (fitted to its cards, a few px above Low) has little room: the finger lifts below
+  // Low on any flick, and it rests at Low as a trip does (the owner, 2026-11-23).
+  assert.equal(snapFor(LOW_PX - 100, -3, heights, H, LOW_PX + 17), 'low');
+  assert.equal(snapFor(10, -3, heights, H, LOW_PX + 2), 'low');
+  assert.equal(snapFor(LOW_PX - 100, -3, heights, H, LOW_PX), 'close');
+  assert.equal(snapFor(LOW_PX - 100, -3, heights, H, LOW_PX + 1), 'close');
+});
+
 test('let go slowly below half of Low, it closes; a little under Low it stays at Low', () => {
   assert.equal(snapFor(LOW_PX / 2 - 1, 0, heights, H), 'close');
   assert.equal(snapFor(LOW_PX - 20, 0, heights, H), 'low');
@@ -79,9 +88,14 @@ test('lifted while moving fast down it is a flick: to Low, and down from Low it 
   const down = follow(700, 0, LOW_PX, H);
   for (let i = 1; i <= 4; i++) down.move(700 + i * 50, i * 16);
   assert.equal(down.release(64 + 16), 'close');
+  // Taken hold of 17 px above Low, as a short list's highest, and flicked down 120 px past it.
+  const short = follow(700, 0, LOW_PX + 17, H);
+  for (let i = 1; i <= 4; i++) short.move(700 + i * 30, i * 16);
+  assert.equal(short.lift(64 + 16).from, LOW_PX + 17);
+  assert.equal(short.release(64 + 16), 'low');
 });
 
-test('lifted while moving fast up, it rests where the finger lifted', () => {
+test('without momentum (reduced motion), lifted while moving fast up it rests where it lifted', () => {
   const up = follow(400, 0, 464, H);
   for (let i = 1; i <= 4; i++) up.move(400 - i * 50, i * 16);
   assert.equal(up.release(64 + 16), 664 / H);

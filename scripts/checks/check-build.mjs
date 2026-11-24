@@ -18,6 +18,7 @@
 //   6  stylesheet-order.mjs   stylesheets before scripts, MapLibre's corners in the safe area
 //   7  maplibre-worker.mjs    MapLibre's worker imports only MapLibre's shared code
 //   8  early-map-file.mjs     the root page asks for the map file as it is read
+//   9  content-policy.mjs     one report-only content policy per page, allowing its inline script
 //
 // Each check has a positive control on the studio side — its chunks must hold
 // studio modules, every marker and the Supabase client — or the search itself
@@ -28,6 +29,7 @@
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createChecker, readBuild } from './build/context.mjs';
+import { proveContentPolicy } from './build/content-policy.mjs';
 import { proveContributeWorker } from './build/contribute-worker.mjs';
 import { proveDevelopmentOnly } from './build/development-only.mjs';
 import { proveEarlyMapFile } from './build/early-map-file.mjs';
@@ -52,6 +54,7 @@ const PROOFS = [
   proveStylesheetOrder,
   proveMaplibreWorker,
   proveEarlyMapFile,
+  proveContentPolicy,
 ];
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');

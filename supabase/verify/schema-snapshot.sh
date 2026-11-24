@@ -30,6 +30,7 @@ APPLIED=(
   20261105130000_draft_update_makerless 20261105180000_keep_uploads_on_user_delete
   20261105160000_draft_published 20261105190000_lock_map_tables
   20261105200000_drop_dead_weight 20261110190000_retire_review_steps
+  20261112100000_drop_inert_write_policies
 )
 
 export DB=verify_schema_snapshot
@@ -41,6 +42,10 @@ for name in "${APPLIED[@]}"; do
   elif [ -f "../apply/${name%%_*}_apply.sql" ]; then apply < "../apply/${name%%_*}_apply.sql"
   else apply < ../migrations/${name}.sql; fi
 done
+
+# With every applied migration in, no function is left for anon to run (anon-functions.sql).
+open=$($PSQL -d "$DB" -qAt < anon-functions.sql)
+[ -z "$open" ] || { echo "FAILED: anon may run: $open. Revoke it from anon by name in its migration, or list it in anon-functions.sql with the reason."; exit 1; }
 
 rebuilt=$(mktemp)
 trap 'rm -f "$rebuilt"' EXIT
@@ -60,4 +65,4 @@ if [ "${1:-}" = --write ]; then
 fi
 diff -q "$rebuilt" "$SNAPSHOT" >/dev/null \
   || { echo 'FAILED: supabase/schema/snapshot.sql is out of date: run schema-snapshot.sh --write'; diff "$SNAPSHOT" "$rebuilt" | head -20; exit 1; }
-echo 'schema snapshot: matches every applied migration, in ledger order'
+echo 'schema snapshot: matches every applied migration, in ledger order; anon may run no function'

@@ -24,7 +24,7 @@ export const END_SIGN_LOOK = {
   },
 } satisfies Record<EndSignKind, { surface: string; pointer: string; words: string; word: string }>;
 
-/** Figma's Badge: white, round, its words SN Pro Medium 14/20 in the sign's colour. */
+/** Figma's Badge: white, round, its words Livvic Medium 14/20 in the sign's colour. */
 const BADGE = 'shrink-0 rounded-full bg-content-inverse px-1.5 text-sm/5';
 
 /**

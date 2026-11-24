@@ -3,13 +3,13 @@ import { otherBound, railBound, type Bound } from './rail-codes';
 import {
   directionEndHotspots,
   directionEnds,
-  directionRowName,
   isDrawn,
   isLoop,
   LOOP_WORD,
   type RouteSummary,
   type Direction,
 } from './routes';
+import { directionRowParts } from './row-name';
 import { railwayOf, vehicleOf, type RailwayVehicle, type Vehicle } from './vehicles';
 
 /*
@@ -39,8 +39,8 @@ function groupByRoute<V extends Direction>(directions: readonly V[]): RouteGroup
 /** One place in the chooser, and the directions shown leaving it. */
 export interface Departures<V extends Direction> {
   from: string;
-  /** `to` is the row's words: the place it goes to, with its route's via (directionRowName). */
-  directions: { v: V; to: string; drawn: boolean }[];
+  /** Each row: the place it goes to and its route's via apart (directionRowParts; rowName joins). */
+  directions: { v: V; to: string; via: string | null; drawn: boolean }[];
 }
 
 /**
@@ -106,11 +106,11 @@ function byPlace<V extends Direction>(chosen: readonly V[]): Departures<V>[] {
   const places = new Map<string, Departures<V>>();
   for (const v of chosen) {
     const { from } = directionEnds(v);
-    const to = directionRowName(v);
+    const { to, via } = directionRowParts(v);
     // A loop is its own place, never the one a route of the same name leaves from.
     const key = (isLoop(v) ? 'loop:' : '') + from.toLowerCase();
     const place = places.get(key) ?? { from, directions: [] };
-    place.directions.push({ v, to, drawn: isDrawn(v) });
+    place.directions.push({ v, to, via, drawn: isDrawn(v) });
     places.set(key, place);
   }
   return [...places.values()];
@@ -255,8 +255,8 @@ export function otherRoutesFrom<V extends Direction>(all: readonly V[], of: V): 
 
 /**
  * The word for the way that is showing — Papunta, there; Pabalik, the way
- * back — PAPUNTA's on the Controller, a list's and a trip's. The ⇅ on a
- * trip's ends card says the other way's word (switchWord).
+ * back — PAPUNTA's on the Controller, a list's and a trip's. Where a tap on
+ * it leads is the other way's word (switchWord).
  *
  * On a train it is the bound the riders and the operators say, Northbound or
  * Southbound, Eastbound or Westbound on LRT-2 (railBound; the owner's call).
@@ -274,8 +274,8 @@ export function wayWord(back: boolean, showing: readonly Direction[]): string {
 }
 
 /**
- * The way a tap leads to, not the way showing: the name of the ⇅ on a trip's
- * ends card, and the hintuan card's SWITCH. On a Papunta trip it is Pabalik,
+ * The way a tap leads to, not the way showing: what PAPUNTA says after its
+ * name, and the hintuan card's SWITCH. On a Papunta trip it is Pabalik,
  * on a Pabalik one Papunta. The showing way's word is PAPUNTA's (wayWord).
  * On a train it is the other bound, Southbound on a
  * Northbound card, by the same one-word-fits-all rule as wayWord's.

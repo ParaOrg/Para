@@ -11,7 +11,7 @@ import {
 } from '@/shared/utils/geo';
 
 import { curveSegment, keptFirstHandle, mirror, outHandle } from './curves';
-import { readDraft, restoredState, useDraftSaving } from './draft';
+import { clearDraft, readDraft, restoredState, useDraftSaving } from './draft';
 import { useDrawArrows } from './draw-arrows';
 import { useDrawLayers } from './draw-layers';
 import { addBeforeJoin, insertInGap, removeAt, ringSegments } from './drawing-edits';
@@ -23,10 +23,10 @@ import type {
   Picking,
   Target,
 } from './drawing-types';
-import { useGapResolver } from './gap-resolver';
 import { useCursorLine } from './use-cursor-line';
 import { useDrawEvents } from './use-draw-events';
 import { useDrawRendering } from './use-draw-rendering';
+import { useGapResolver } from './use-gap-resolver';
 import { useLineBorrowing } from './use-line-borrowing';
 import { usePointBar } from './use-point-bar';
 import { useSnapPreview } from './use-snap-preview';
@@ -41,7 +41,7 @@ import { findUTurns } from './uturns';
  * Put back and follow offer are use-point-bar.ts, Extend's keep and the
  * right-click's join use-line-borrowing.ts; what it paints is the draw-*
  * layers (draw-layers.ts), fed by use-draw-rendering.ts; how the pointer
- * drives it is use-draw-events.ts, the router's answers gap-resolver.ts, and
+ * drives it is use-draw-events.ts, the router's answers use-gap-resolver.ts, and
  * the draft on this device draft.ts.
  */
 
@@ -494,6 +494,7 @@ export function useDrawing(
   );
 
   const cancel = useCallback(() => {
+    clearDraft();
     setDrawing(false);
     reset();
     setTarget({ routeId: null, directionId: null });
@@ -503,8 +504,7 @@ export function useDrawing(
 
   // ------------------------------------------------------------------ draft
 
-  // Once per page: development's StrictMode runs effects twice, which would ask
-  // the router for every pending gap twice.
+  // Once per page: StrictMode runs effects twice in development, asking for every pending gap twice.
   const restoredRef = useRef(false);
 
   useEffect(() => {
@@ -657,7 +657,7 @@ export function useDrawing(
     segments,
     line,
     snapping: gaps.snapping,
-    /** True while a stand-in is still on the line (gap-resolver.ts). */
+    /** True while a stand-in is still on the line (use-gap-resolver.ts). */
     unresolved,
     freehand,
     setFreehand,

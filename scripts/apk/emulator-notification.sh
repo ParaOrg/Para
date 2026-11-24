@@ -95,6 +95,20 @@ adb root > /dev/null 2>&1; adb wait-for-device
 # The taps reach the receiver, which is not exported, only as root: without it every tap is lost.
 [ "$(adb shell id -u | tr -d '\r')" = 0 ] || { echo "FAIL: adb is not root" | tee "$OUT/summary.txt"; exit 1; }
 adb install -r "$APK" || { echo "FAIL: install failed" | tee "$OUT/summary.txt"; exit 1; }
+
+# For the host list (contributor-app.yml, scripts/apk/hosts-in-capture.mjs): plain DNS, so the
+# names the phone looks up can be read in the capture, then one lookup the list must show or call
+# the capture incomplete. Under example.com (reserved for examples), not .invalid: a resolver
+# answers .invalid itself and sends nothing (RFC 6761). Both are printed, so the log shows them.
+adb shell settings put global private_dns_mode off || echo "could not turn Private DNS off"
+# Wi-Fi off too: with it up the phone sends its traffic that way, around the NIC the capture
+# records, so the capture holds only what went before Wi-Fi came up. The next line names the
+# network the phone is left with.
+adb shell svc wifi disable || echo "could not turn Wi-Fi off"
+sleep 5
+echo "active network: $(adb shell dumpsys connectivity | tr -d '\r' | grep -m1 -E 'Active default network|NetworkAgentInfo' | cut -c1-160)"
+echo "Private DNS: $(adb shell settings get global private_dns_mode | tr -d '\r')"
+echo "control lookup: $(adb shell ping -c 1 -W 2 capture-check.example.com 2>&1 | head -1 | tr -d '\r')"
 for permission in ACCESS_FINE_LOCATION ACCESS_COARSE_LOCATION ACCESS_BACKGROUND_LOCATION POST_NOTIFICATIONS; do
   adb shell pm grant "$PKG" "android.permission.$permission" || echo "could not grant $permission"
 done

@@ -49,16 +49,16 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /**
- * The jeepney pill: SN Pro Bold on the quiet surface, lit from above with a
+ * The jeepney pill: Livvic Bold on the quiet surface, lit from above with a
  * hairline edge. Hover deepens the glow; press sinks it. The three shadows
  * sit side by side on Foundation/Tokens.
  */
 export const Special: Story = {};
 
-/** Special's surface and shadows in SN Pro Medium: the quieter of a pair, beside a Primary (3732:2512). */
+/** Special's surface and shadows in Livvic Medium: the quieter of a pair, beside a Primary (3732:2512). */
 export const Secondary: Story = { args: { variant: 'secondary' } };
 
-/** Brand blue, SN Pro Medium, bevelled. Hover lights it from the top; press darkens and sinks it. */
+/** Brand blue, Livvic Medium, bevelled. Hover lights it from the top; press darkens and sinks it. */
 export const Primary: Story = { args: { variant: 'primary' } };
 
 /** The destructive red, on Primary's shadows. Press darkens to Error/surface-secondary. */

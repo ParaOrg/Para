@@ -28,7 +28,7 @@ const AUTH_KEY = 'para.contributor-auth';
 const browser = await chromium.launch();
 
 /** A phone with nothing stored, and the stand-in Supabase. */
-async function phone({ fake: shared, isCheckInteractive = false } = {}) {
+async function phone({ fake: shared, isCheckInteractive = false, checkMode } = {}) {
   const context = await browser.newContext({
     viewport: { width: 393, height: 852 },
     deviceScaleFactor: 2,
@@ -41,7 +41,7 @@ async function phone({ fake: shared, isCheckInteractive = false } = {}) {
   const fake = await fakeContributions(page);
   // A second phone shares the first's accounts: the database is one.
   if (shared) fake.users = shared.users;
-  await fakeTurnstile(page, { interactive: isCheckInteractive });
+  await fakeTurnstile(page, { interactive: isCheckInteractive, mode: checkMode });
   const errors = [];
   page.on('pageerror', (e) => errors.push(String(e)));
   await page.goto(`${BASE}/contribute/`, { waitUntil: 'load' });
@@ -184,6 +184,58 @@ if (process.env.PARA_TURNSTILE) {
     await signInButton.isEnabled(),
   );
   await asked.page.context().close();
+
+  // The check failing, expiring and not loading (lib/fake-turnstile.mjs's modes): each says its
+  // line, keeps Sign in off, and the page reloaded with a check that passes recovers.
+  const STATES = [
+    ['fails', 'The check that you are a person did not finish. Reload the page and try again.'],
+    [
+      'cannotLoad',
+      'The check that you are a person could not load. Check your connection and reload.',
+    ],
+  ];
+  const isSignInOff = (page) =>
+    page.getByRole('button', { name: 'Sign in', exact: true }).isDisabled();
+  for (const [checkMode, line] of STATES) {
+    const broken = await phone({ fake, checkMode });
+    await SCREENS.signIn(broken.page).waitFor({ timeout: 30000 });
+    await broken.page.getByText(line).waitFor({ timeout: 5000 });
+    check(
+      `a check that ${checkMode === 'fails' ? 'fails' : 'cannot load'} says so in its line, and Sign in stays off`,
+      (await broken.page.getByRole('alert').filter({ hasText: line }).count()) === 1 &&
+        (await isSignInOff(broken.page)),
+    );
+    await broken.page.unroute(/^https:\/\/challenges\.cloudflare\.com\//);
+    await fakeTurnstile(broken.page);
+    await broken.page.reload({ waitUntil: 'load' });
+    await SCREENS.signIn(broken.page).waitFor({ timeout: 30000 });
+    await broken.page.waitForFunction(
+      () =>
+        ![...document.querySelectorAll('button')].find((b) => b.textContent === 'Sign in')
+          ?.disabled,
+    );
+    check(
+      '  reloaded with a check that passes, the line goes and Sign in is usable',
+      (await broken.page.getByText(line).count()) === 0,
+    );
+    check('  no page errors', broken.errors.length === 0, broken.errors.join(' | '));
+    await broken.context.close();
+  }
+  const expiring = await phone({ fake, checkMode: 'expires' });
+  await SCREENS.signIn(expiring.page).waitFor({ timeout: 30000 });
+  await expiring.page.waitForFunction(
+    () =>
+      ![...document.querySelectorAll('button')].find((b) => b.textContent === 'Sign in')?.disabled,
+  );
+  await expiring.page.waitForFunction(
+    () =>
+      [...document.querySelectorAll('button')].find((b) => b.textContent === 'Sign in')?.disabled,
+  );
+  check(
+    'a check that expires takes Sign in back off, and says (to a screen reader) it is checking again',
+    (await expiring.page.getByText('Checking that you are a person…').count()) === 1,
+  );
+  await expiring.context.close();
 }
 
 // --------------------------------------------- create an account
@@ -750,7 +802,12 @@ const keepOnPhone = (page, key, stored) =>
     .getByRole('button', { name: 'History' })
     .click();
   const card = page.getByRole('listitem').filter({ hasText: 'Fairview' });
-  await card.waitFor({ timeout: 15000 });
+  // Read once the card says where its recording is, on the phone or sending: the card can be there
+  // before its words are drawn. Any other words still reach the check below, and fail it.
+  await card
+    .getByText(/Only on this phone|Sending/)
+    .waitFor({ timeout: 15000 })
+    .catch(() => {});
   const whileUnsure = (await card.innerText()).replace(/\s+/g, ' ');
   await page.unroute('**/auth/v1/token**');
   for (const route of renewals) {

@@ -735,6 +735,34 @@ proves the old path still works.
 - Apply failed: nothing changed. The message names what it found.
 - Applied too early, or it must be withdrawn: run `20261110190000_retire_review_steps_revert.sql`.
 
+# Applying drop_inert_write_policies to the live project
+
+**Applied live 2026-11-21** (ledger `20261121051731`) from its paste file; its read-only check passed (5 rows, all `t`). Do not reapply.
+
+`route`, `route_variant`, `stop` and `route_stop` each carry an insert, an update and a delete policy for
+editors, from 0005 and 0015. Since `lock_map_tables` no app role holds the grants those policies would apply
+to, and the map changes only through the draft functions, which are not subject to them. So the twelve
+policies decide nothing, and they go, leaving these tables with read policies only. Both read policies per
+table stay as two (one merged policy would make `anon` evaluate `private.is_editor()`, which it may not
+run), and so do `takedown`'s, which the nightly publish reads through.
+
+| File | What it does |
+| --- | --- |
+| `20261112100000_drop_inert_write_policies_apply.sql` | One transaction. Checks `lock_map_tables` is in the ledger, this is not, and no app role holds a write grant on the four tables. Applies `migrations/20261112100000_drop_inert_write_policies.sql` (carried unchanged; `verify/drop-inert-write-policies.sh` checks the copy). Checks the twelve are gone, the ten read policies are there and row level security is on, and writes the ledger row. A second run stops and changes nothing. |
+| `20261112100000_drop_inert_write_policies_check_readonly.sql` | **The one to run on the live project.** Read-only: it reads the catalog and the ledger and writes nothing. 5 rows, all `ok` should be `t`. |
+| `20261112100000_drop_inert_write_policies_check_full.sql` | **Never on the live project**: for `verify/drop-inert-write-policies.sh`'s throwaway database only. It adds a test editor, a test account, two places and a route, proves every direct write refused for anon, the account and the editor, the reads unchanged and the draft functions working, rolls all of it back, then gives the same 5 rows. |
+| `20261112100000_drop_inert_write_policies_revert.sql` | One transaction: re-creates the twelve policies as 0005 and 0015 wrote them and removes the ledger row. Touches no data. Safe to run twice. |
+
+## Steps
+
+1. Run `20261112100000_drop_inert_write_policies_apply.sql`. It ends with `COMMIT`; an error means nothing
+   changed.
+2. Run `20261112100000_drop_inert_write_policies_check_readonly.sql`: 5 rows, all `ok = t`.
+3. Record the ledger version
+   (`select version from supabase_migrations.schema_migrations where name = 'drop_inert_write_policies';`)
+   in `migrations/README.md`, add `20261112100000_drop_inert_write_policies` to `APPLIED` in
+   `verify/schema-snapshot.sh` and rewrite the snapshot (`--write`). No types change.
+
 # Applying waitlist to the live project
 
 **Not applied live.** `/app/` has an Android download and nothing to install on an iPhone, so its iPhone part
@@ -788,6 +816,8 @@ message. To take someone off: `delete from public.waitlist where email = '…';`
 ## Recovery
 
 - Apply failed: nothing changed. The message names what it found.
+- It must be withdrawn: run `20261112100000_drop_inert_write_policies_revert.sql`.
+
 - The form says "That didn't go through": the function's logs (Supabase → Edge Functions → waitlist → Logs)
   name the step, `waitlist: saving answered …` or `waitlist: Resend answered …`. A missing secret is named
   there too.

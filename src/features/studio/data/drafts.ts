@@ -125,8 +125,7 @@ export async function claimDraft(
     p_kind: kind,
     p_subject_id: subjectId,
     p_is_new: isNew,
-    // A new subject has no base: SQL null, which the generator cannot express (every argument
-    // it types is non-null), so this one argument is widened. The function requires the null.
+    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- a new subject's base is SQL null, which the generated types cannot express: .scratch/type-assertions/issues/01-claim-draft-null-base-revision.md
     p_base_revision: baseRevision as number,
     p_payload: toJson(payload),
     // Left out rather than null: the argument's default is null.

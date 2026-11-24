@@ -3,6 +3,8 @@ import { Component, type ErrorInfo, type ReactNode } from 'react';
 interface ErrorBoundaryProps {
   /** What stands in for the page once something under it has thrown. */
   fallback: ReactNode;
+  /** Told once something under it has thrown, for a page that answers the failure itself. */
+  onCatch?: () => void;
   children: ReactNode;
 }
 
@@ -24,6 +26,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
   override componentDidCatch(error: unknown, info: ErrorInfo) {
     console.error('The page could not be shown.', error, info.componentStack);
+    this.props.onCatch?.();
   }
 
   override render() {

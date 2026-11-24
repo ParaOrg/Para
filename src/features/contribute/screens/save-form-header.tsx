@@ -17,7 +17,7 @@ export function SaveFormHeader({ headingId }: SaveFormHeaderProps) {
         id={headingId}
         ref={headingRef}
         tabIndex={-1}
-        className="text-3xl/9 font-extrabold focus:outline-none"
+        className="text-3xl/9 font-bold focus:outline-none"
       >
         Save Recording
       </h1>

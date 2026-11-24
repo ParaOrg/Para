@@ -59,7 +59,7 @@ export function HistoryCard({
         <CardPicture picture={picture} trail={facts?.trail ?? null} />
         <div className="flex min-w-0 flex-1 flex-col gap-3 p-3">
           <div className="flex flex-col">
-            <h2 id={titleId} className="text-base/6 font-extrabold">
+            <h2 id={titleId} className="text-base/6 font-bold">
               {/* The whole card is its press area (the ::after over it); a retry on the status
                   line stands above it. */}
               <button

@@ -2,6 +2,7 @@ import { useId, useState } from 'react';
 
 import { Button } from '@/design-system/primitives/button';
 import { IconButton } from '@/design-system/primitives/icon-button';
+import { useBackLayer } from '@/shared/hooks/use-back-layer';
 import { useEscape } from '@/shared/hooks/use-escape';
 import { useFocusHeading } from '@/shared/hooks/use-focus-heading';
 
@@ -10,7 +11,7 @@ import { StopNotesTitle } from './stop-notes-title';
 import { ArrowLeftIcon } from '../account/arrow-left-icon';
 
 interface StopNotesScreenProps extends Omit<StopNotesTimelineProps, 'headingRef' | 'isFlush'> {
-  /** The back arrow, Go back, or Escape closes the page. Android's back follows the WebView's history. */
+  /** The back arrow, Go back, Escape or the phone's Back closes the page. */
   onBack: () => void;
 }
 
@@ -27,6 +28,8 @@ export function StopNotesScreen({ marks, onBack, ...timeline }: StopNotesScreenP
   // re-render mid-open (a GPS fix) can never leave the two listeners in the wrong order.
   const [isOverlayOpen, setIsOverlayOpen] = useState(false);
   useEscape(onBack, !isOverlayOpen);
+  // The phone's Back is its back arrow; a card or a question over it closes first.
+  useBackLayer(true, onBack);
 
   return (
     <section

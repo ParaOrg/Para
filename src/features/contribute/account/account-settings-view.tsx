@@ -1,6 +1,8 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 
+import { useBackLayer } from '@/shared/hooks/use-back-layer';
+
 import { messageOf } from './account-message';
 import { AccountSettingsScreen } from './account-settings-screen';
 import { accountKeys } from '../api/account-keys';
@@ -34,6 +36,9 @@ export function AccountSettingsView({
   onOpenDeleteAccount,
   onBack,
 }: AccountSettingsViewProps) {
+  // The phone's Back is the screen's back arrow. Hidden under Change password (an Activity), it
+  // lets go, and takes Back again on top as it shows.
+  useBackLayer(true, onBack);
   const account = useAccountQuery();
   const profile = useProfileQuery();
   const queryClient = useQueryClient();

@@ -90,6 +90,7 @@ flowchart TD
   app_public_map --> features_routes_model
   app_public_map --> features_routes_published
   app_public_map --> features_routes_search
+  app_public_map --> shared_config
   app_public_map --> shared_hooks
   app_public_map --> shared_lib
   app_public_map --> shared_ui
@@ -126,6 +127,7 @@ flowchart TD
   features_contribute --> features_contribute_tutorial
   features_contribute --> features_contribute_uploads
   features_contribute -.-> features_routes_map
+  features_contribute --> shared_hooks
   features_contribute --> shared_ui
   features_contribute --> shared_utils
   features_contribute_account --> design_system_primitives
@@ -149,7 +151,6 @@ flowchart TD
   features_contribute_app_update --> features_contribute_native_bridge
   features_contribute_common --> design_system_primitives
   features_contribute_common --> features_contribute_native_bridge
-  features_contribute_common --> shared_hooks
   features_contribute_common --> shared_ui
   features_contribute_common --> shared_utils
   features_contribute_consent --> design_system_primitives
@@ -176,6 +177,7 @@ flowchart TD
   features_contribute_history --> features_contribute_uploads
   features_contribute_history --> features_routes_map
   features_contribute_history --> features_routes_model
+  features_contribute_history --> shared_hooks
   features_contribute_history --> shared_ui
   features_contribute_history --> shared_utils
   features_contribute_map --> design_system_foundation
@@ -207,7 +209,9 @@ flowchart TD
   features_contribute_native_bridge --> features_contribute_storage
   features_contribute_native_bridge --> features_routes_model
   features_contribute_navigation --> features_contribute_motion
+  features_contribute_navigation --> features_contribute_native_bridge
   features_contribute_navigation --> features_contribute_toolbar
+  features_contribute_navigation --> shared_hooks
   features_contribute_notices --> design_system_primitives
   features_contribute_notices --> features_contribute_common
   features_contribute_notices --> features_contribute_stop_notes
@@ -220,6 +224,7 @@ flowchart TD
   features_contribute_recorder --> features_contribute_storage
   features_contribute_recorder --> features_routes_map
   features_contribute_recorder --> features_routes_model
+  features_contribute_recorder --> shared_utils
   features_contribute_screens --> design_system_primitives
   features_contribute_screens --> features_contribute_api
   features_contribute_screens -.-> features_contribute_app_update
@@ -237,6 +242,7 @@ flowchart TD
   features_contribute_screens --> shared_ui
   features_contribute_screens --> shared_utils
   features_contribute_stop_notes --> design_system_primitives
+  features_contribute_stop_notes --> features_contribute
   features_contribute_stop_notes --> features_contribute_account
   features_contribute_stop_notes --> features_contribute_common
   features_contribute_stop_notes --> features_contribute_map
@@ -363,26 +369,26 @@ flowchart TD
 | Unit | Imports |
 | --- | --- |
 | `app/contribute` | `design-system/foundation`, `features/contribute`, `features/locator`, `shared/lib`, `shared/ui`, `styles` |
-| `app/public-map` | `design-system/primitives`, `features/locator`, `features/published-map`, `features/routes/cards`, `features/routes/map`, `features/routes/model`, `features/routes/published`, `features/routes/search`, `shared/hooks`, `shared/lib`, `shared/ui`, `shared/utils`, `styles` |
+| `app/public-map` | `design-system/primitives`, `features/locator`, `features/published-map`, `features/routes/cards`, `features/routes/map`, `features/routes/model`, `features/routes/published`, `features/routes/search`, `shared/config`, `shared/hooks`, `shared/lib`, `shared/ui`, `shared/utils`, `styles` |
 | `app/studio` | `design-system/primitives`, `features/locator`, `features/routes/cards`, `features/routes/map`, `features/routes/model`, `features/studio`, `shared/hooks`, `shared/lib`, `shared/types`, `shared/ui`, `shared/utils`, `styles` |
 | `design-system/foundation` | — |
 | `design-system/primitives` | — |
-| `features/contribute` | `features/contribute/account`, `features/contribute/api`, `features/contribute/common`, `features/contribute/consent`, `features/contribute/history`, `features/contribute/map`, `features/contribute/motion`, `features/contribute/native`, `features/contribute/native-bridge`, `features/contribute/navigation`, `features/contribute/notices`, `features/contribute/recorder`, `features/contribute/screens`, `features/contribute/stop-notes`, `features/contribute/storage`, `features/contribute/toolbar`, `features/contribute/tutorial`, `features/contribute/uploads`, `features/routes/map`, `shared/ui`, `shared/utils` |
+| `features/contribute` | `features/contribute/account`, `features/contribute/api`, `features/contribute/common`, `features/contribute/consent`, `features/contribute/history`, `features/contribute/map`, `features/contribute/motion`, `features/contribute/native`, `features/contribute/native-bridge`, `features/contribute/navigation`, `features/contribute/notices`, `features/contribute/recorder`, `features/contribute/screens`, `features/contribute/stop-notes`, `features/contribute/storage`, `features/contribute/toolbar`, `features/contribute/tutorial`, `features/contribute/uploads`, `features/routes/map`, `shared/hooks`, `shared/ui`, `shared/utils` |
 | `features/contribute/account` | `design-system/primitives`, `features/contribute/api`, `features/contribute/common`, `features/contribute/motion`, `features/contribute/native`, `features/contribute/navigation`, `features/contribute/storage`, `features/contribute/toolbar`, `features/contribute/uploads`, `shared/hooks`, `shared/ui`, `shared/utils` |
 | `features/contribute/api` | `features/contribute/common`, `features/contribute/storage`, `shared/types`, `shared/utils` |
 | `features/contribute/app-update` | `design-system/primitives`, `features/contribute/api`, `features/contribute/native-bridge` |
-| `features/contribute/common` | `design-system/primitives`, `features/contribute/native-bridge`, `shared/hooks`, `shared/ui`, `shared/utils` |
+| `features/contribute/common` | `design-system/primitives`, `features/contribute/native-bridge`, `shared/ui`, `shared/utils` |
 | `features/contribute/consent` | `design-system/primitives`, `features/contribute/api`, `features/contribute/common`, `features/contribute/storage`, `shared/hooks`, `shared/utils` |
-| `features/contribute/history` | `design-system/foundation`, `design-system/primitives`, `features/contribute/account`, `features/contribute/api`, `features/contribute/common`, `features/contribute/map`, `features/contribute/motion`, `features/contribute/native`, `features/contribute/native-bridge`, `features/contribute/navigation`, `features/contribute/recorder`, `features/contribute/screens`, `features/contribute/stop-notes`, `features/contribute/storage`, `features/contribute/toolbar`, `features/contribute/uploads`, `features/routes/map`, `features/routes/model`, `shared/ui`, `shared/utils` |
+| `features/contribute/history` | `design-system/foundation`, `design-system/primitives`, `features/contribute/account`, `features/contribute/api`, `features/contribute/common`, `features/contribute/map`, `features/contribute/motion`, `features/contribute/native`, `features/contribute/native-bridge`, `features/contribute/navigation`, `features/contribute/recorder`, `features/contribute/screens`, `features/contribute/stop-notes`, `features/contribute/storage`, `features/contribute/toolbar`, `features/contribute/uploads`, `features/routes/map`, `features/routes/model`, `shared/hooks`, `shared/ui`, `shared/utils` |
 | `features/contribute/map` | `design-system/foundation`, `features/contribute/api`, `features/contribute/history`, `features/contribute/native-bridge`, `features/contribute/notices`, `features/contribute/recorder`, `features/contribute/storage`, `features/routes/map`, `features/routes/model`, `features/routes/published`, `shared/config`, `shared/ui`, `shared/utils` |
 | `features/contribute/motion` | `features/contribute/common`, `features/contribute/navigation`, `shared/utils` |
 | `features/contribute/native` | `design-system/primitives`, `features/contribute/map`, `features/contribute/native-bridge`, `features/contribute/recorder`, `features/contribute/screens`, `features/contribute/storage`, `shared/hooks`, `shared/utils` |
 | `features/contribute/native-bridge` | `features/contribute/api`, `features/contribute/native`, `features/contribute/storage`, `features/routes/model` |
-| `features/contribute/navigation` | `features/contribute/motion`, `features/contribute/toolbar` |
+| `features/contribute/navigation` | `features/contribute/motion`, `features/contribute/native-bridge`, `features/contribute/toolbar`, `shared/hooks` |
 | `features/contribute/notices` | `design-system/primitives`, `features/contribute/common`, `features/contribute/stop-notes`, `features/contribute/uploads`, `shared/ui` |
-| `features/contribute/recorder` | `features/contribute/consent`, `features/contribute/native`, `features/contribute/native-bridge`, `features/contribute/notices`, `features/contribute/storage`, `features/routes/map`, `features/routes/model` |
+| `features/contribute/recorder` | `features/contribute/consent`, `features/contribute/native`, `features/contribute/native-bridge`, `features/contribute/notices`, `features/contribute/storage`, `features/routes/map`, `features/routes/model`, `shared/utils` |
 | `features/contribute/screens` | `design-system/primitives`, `features/contribute/api`, `features/contribute/app-update`, `features/contribute/common`, `features/contribute/consent`, `features/contribute/native`, `features/contribute/navigation`, `features/contribute/recorder`, `features/contribute/stop-notes`, `features/contribute/storage`, `features/contribute/toolbar`, `features/routes/cards`, `features/routes/map`, `shared/hooks`, `shared/ui`, `shared/utils` |
-| `features/contribute/stop-notes` | `design-system/primitives`, `features/contribute/account`, `features/contribute/common`, `features/contribute/map`, `features/contribute/recorder`, `features/contribute/storage`, `features/routes/cards`, `features/routes/geo`, `features/routes/map`, `features/routes/model`, `shared/hooks`, `shared/ui`, `shared/utils` |
+| `features/contribute/stop-notes` | `design-system/primitives`, `features/contribute`, `features/contribute/account`, `features/contribute/common`, `features/contribute/map`, `features/contribute/recorder`, `features/contribute/storage`, `features/routes/cards`, `features/routes/geo`, `features/routes/map`, `features/routes/model`, `shared/hooks`, `shared/ui`, `shared/utils` |
 | `features/contribute/storage` | `features/routes/model` |
 | `features/contribute/toolbar` | `features/contribute/common`, `features/contribute/motion`, `features/contribute/native-bridge`, `features/contribute/screens`, `shared/utils` |
 | `features/contribute/tutorial` | `design-system/primitives`, `features/contribute/common`, `features/contribute/screens`, `shared/hooks`, `shared/utils` |

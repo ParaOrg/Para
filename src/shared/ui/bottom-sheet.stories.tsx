@@ -1,13 +1,14 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import type { ComponentProps } from 'react';
+import type { ComponentProps, ReactNode } from 'react';
 import { useState } from 'react';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
+import { IconButton } from '@/design-system/primitives/icon-button';
 import { cn } from '@/shared/utils/cn';
 
 import { BottomSheet } from './bottom-sheet';
+import { CloseIcon } from './route-icons';
 import type { Snap } from './sheet-gesture';
-import { SheetHeader } from './sheet-header';
 
 /** Sample rows only: enough of them to need the sheet's whole height. */
 const rows = (count: number) =>
@@ -46,11 +47,24 @@ function Keeping({ startsAt, ...props }: ComponentProps<typeof BottomSheet> & { 
   );
 }
 
+/**
+ * A card's header, what was tapped and ✕, with SheetHeader's own classes. It stands in for the
+ * studio's SheetHeader (studio/panels) because a shared story may not import a feature: keep it.
+ */
+function SampleHeader({ children }: { children: ReactNode }) {
+  return (
+    <div className="flex items-start justify-between gap-3 px-4">
+      <div className="min-w-0 flex-1">{children}</div>
+      <IconButton icon={<CloseIcon />} label="Close" tooltip="top" onClick={fn()} />
+    </div>
+  );
+}
+
 const header = (
-  <SheetHeader onClose={fn()}>
+  <SampleHeader>
     <h2 className="text-lg font-semibold text-content-primary">Tala Jeepney Terminal</h2>
     <p className="text-sm text-content-secondary">Tala</p>
-  </SheetHeader>
+  </SampleHeader>
 );
 
 const meta = {
@@ -58,17 +72,20 @@ const meta = {
   component: BottomSheet,
   // The sheet fills the map it sits on, so give it a map-sized box marked
   // `@container`, as the apps' roots are, and `data-dock-host`, as the page
-  // is. The `phone` parameter shrinks the box to a handset, where it docks
-  // along the bottom; otherwise it is 1024 wide, where it floats (`@float:`).
+  // is. The `phone` parameter shrinks the box to a handset (`'small'`, a
+  // 375×667 one), where it docks along the bottom; otherwise it is 1024 wide,
+  // where it floats (`@float:`).
   // `underSearch` sets `--sheet-float-top` as the public map does under its place search.
   decorators: [
     (Story, ctx) => (
       <div
         data-dock-host
         className={cn(
-          ctx.parameters.phone
-            ? '@container relative h-[700px] w-[390px] overflow-clip bg-surface-quaternary'
-            : '@container relative h-[40rem] w-[1024px] overflow-clip bg-surface-quaternary',
+          ctx.parameters.phone === 'small'
+            ? '@container relative h-[667px] w-[375px] overflow-clip bg-surface-quaternary'
+            : ctx.parameters.phone
+              ? '@container relative h-[700px] w-[390px] overflow-clip bg-surface-quaternary'
+              : '@container relative h-[40rem] w-[1024px] overflow-clip bg-surface-quaternary',
           ctx.parameters.underSearch && '[--sheet-float-top:7.375rem]',
         )}
       >
@@ -283,11 +300,11 @@ export const LongHeader: Story = {
   args: {
     label: 'Fairview Teraccess Transport Terminal, Quirino Highway corner Regalado Avenue',
     header: (
-      <SheetHeader onClose={fn()}>
+      <SampleHeader>
         <h2 className="text-lg font-semibold text-content-primary">
           Fairview Teraccess Transport Terminal, Quirino Highway corner Regalado Avenue
         </h2>
-      </SheetHeader>
+      </SampleHeader>
     ),
   },
 };
@@ -374,6 +391,77 @@ export const Footer: Story = {
       ).toBe(0),
     );
   },
+};
+
+/**
+ * A footer with a button in its middle too, as a trip's Controller has (its SWITCH): what a finger
+ * at the middle of a row under it would touch instead of the row.
+ */
+const middledFooter = (
+  <div className="flex w-full justify-between px-6 pb-8">
+    {['Back', 'Switch', 'Filter'].map((name) => (
+      <button
+        key={name}
+        type="button"
+        className="rounded-full bg-surface-tertiary px-4 py-2 text-content-primary"
+      >
+        {name}
+      </button>
+    ))}
+  </div>
+);
+
+/**
+ * The sheet's body scrolled to its end: whether a finger at the middle of its last row touches
+ * that row, not the footer drawn over the body's foot.
+ */
+async function lastRowClearsFooter(canvasElement: HTMLElement) {
+  const sheet = within(canvasElement).getByTestId('card');
+  await waitFor(() => expect(sheet).toHaveAttribute('data-snap', 'full'));
+  const body = [...sheet.children].find(
+    (el): el is HTMLElement =>
+      el instanceof HTMLElement && getComputedStyle(el).overflowY === 'auto',
+  );
+  if (!body) throw new Error('no scrolling body at full height');
+  // Longer than the screen, or any padding would pass.
+  await expect(body.scrollHeight).toBeGreaterThan(body.clientHeight);
+  body.scrollTop = body.scrollHeight;
+  const lastRow = within(body).getAllByRole('listitem').at(-1);
+  if (!lastRow) throw new Error('no rows in the body');
+  const foot = within(canvasElement).getByTestId('sheet-footer');
+  await waitFor(() => {
+    const r = lastRow.getBoundingClientRect();
+    const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+    expect(hit === lastRow || lastRow.contains(hit)).toBe(true);
+    expect(Math.round(r.bottom)).toBeLessThanOrEqual(Math.round(foot.getBoundingClientRect().top));
+  });
+}
+
+/** `footer` at full height on a small phone, scrolled to the end: the last row clears the footer. */
+export const FooterLastRowClear: Story = {
+  render: (args) => <Keeping {...args} startsAt="full" />,
+  args: {
+    footer: middledFooter,
+    header: null,
+    height: { snap: 'full', onSnap: fn() },
+    children: <Rows count={30} />,
+  },
+  parameters: { phone: 'small' },
+  play: async ({ canvasElement }) => lastRowClearsFooter(canvasElement),
+};
+
+/** The same with a full height that fills the screen (`shape`), as the route list's does. */
+export const FooterLastRowClearFills: Story = {
+  render: (args) => <Keeping {...args} startsAt="full" />,
+  args: {
+    footer: middledFooter,
+    header: null,
+    shape: LIST_SHAPE,
+    height: { snap: 'full', onSnap: fn() },
+    children: <Rows count={30} />,
+  },
+  parameters: { phone: 'small' },
+  play: async ({ canvasElement }) => lastRowClearsFooter(canvasElement),
 };
 
 /** `footer` at Low: still at the screen's foot, over what Low shows. */

@@ -73,6 +73,7 @@ export function StudioTripCard({
   const isEditable = canEdit && !lock;
   return (
     <TripCard
+      hasController
       direction={direction}
       directions={saved.directions}
       timeline={timeline}

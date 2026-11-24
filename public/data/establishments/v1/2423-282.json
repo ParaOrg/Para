@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "cell": "2423-282",
+  "attribution": "© OpenStreetMap contributors",
+  "establishments": [
+    ["n12669636098","convenience",121.15577,14.10551,"Alfamart"],
+    ["n12669636100","convenience",121.15499,14.10538,"Dali"],
+    ["n12669703666","convenience",121.15402,14.11731,"Alfamart"],
+    ["n11587270370","supermarket",121.15118,14.10597,"SM Supermarket"],
+    ["n965933981","restaurant",121.15618,14.10139,"Masbate Eatery"],
+    ["n2933766967","restaurant",121.15672,14.10068,"Boss Nick Eatery"],
+    ["w280535086","fuel",121.15259,14.10471,"Total",{"brand":"TotalEnergies"}],
+    ["w1249704672","fuel",121.15493,14.10283,"Unioil"],
+    ["n671189196","police",121.15531,14.10246,"San Miguel Police Assistance Center"]
+  ]
+}
