@@ -245,6 +245,9 @@ export const MetroRailWayThree: Story = {
 /** Ferry: the rail in its mode's colour. Figma draws no ferry trip yet. */
 export const Ferry: Story = { args: { livery: 'ferry' } };
 
+/** The EDSA Carousel: the train's trip in its red. Figma draws no Carousel trip of its own. */
+export const EdsaCarousel: Story = { args: { livery: 'edsa-carousel' } };
+
 /** Picked, MRT-3: the station's code and the pesos, the pill's two halves. */
 export const HintuanPickedMetroRailWayThree: Story = {
   args: { ...MetroRailWayThree.args, picked: 'h3', pickedCode: 'YL06' },

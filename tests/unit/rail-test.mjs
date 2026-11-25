@@ -38,7 +38,7 @@ test('only lrt and mrt are trains', () => {
 test('the ferry is a line, not a train', () => {
   assert.deepEqual(
     MODES.filter((m) => isLineMode(m.value)).map((m) => m.value),
-    ['lrt', 'mrt', 'ferry'],
+    ['lrt', 'mrt', 'ferry', 'busway'],
   );
   assert.deepEqual(
     MODES.filter((m) => isFerry(m.value)).map((m) => m.value),
@@ -46,7 +46,7 @@ test('the ferry is a line, not a train', () => {
   );
   assert.equal(isRail('ferry'), false);
   assert.deepEqual([...FERRY_LINES], ['PRFS']);
-  assert.deepEqual([...LINES], ['LRT-1', 'LRT-2', 'MRT-3', 'PRFS']);
+  assert.deepEqual([...LINES], ['LRT-1', 'LRT-2', 'MRT-3', 'PRFS', 'EDSA-C']);
 });
 
 test('the ferry stops at its own stations only, and no jeep or train at them', () => {

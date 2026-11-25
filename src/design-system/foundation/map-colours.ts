@@ -69,7 +69,7 @@ export const MAP_OPACITY = {
 /**
  * The mode cards' colours a lit line wears, in hex (RouteCard, 4629:22776): Jeep's and Bus's
  * surface; UV Express's and E-Jeep's surface-border, as their light surfaces would not show on the
- * basemap. Each hex is the primitive its token aliases, held to tokens.css by
+ * basemap; the EDSA Carousel's Card/red. Each hex is the primitive its token aliases, held to tokens.css by
  * tests/unit/map-colours-test.mjs as the Map/… ones are.
  */
 export const MODE_COLOURS = {
@@ -77,6 +77,9 @@ export const MODE_COLOURS = {
   'Card/UVExpress/UVExpress-surface-border': '#a1a1a1', // neutral/400
   'Card/Ejeep/Ejeep-surface-border': '#d4d4d4', // neutral/300
   'Card/Bus/Bus-surface': '#ca3500', // orange/700
+  // The EDSA Carousel's line and its pale, in Card/red, the family its card wears (no Map/… yet).
+  'Card/Red/Red-surface': '#9f0712', // red/800
+  'Card/Red/Red-surface-pale': '#ffa2a2', // red/300
 } as const satisfies Record<`Card/${string}`, `#${string}`>;
 
 /**

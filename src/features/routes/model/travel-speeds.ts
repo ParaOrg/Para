@@ -16,6 +16,8 @@ export const TRAVEL_SPEED_KMH = {
   'LRT-2': { slow: 35, fast: 45 },
   'MRT-3': { slow: 30, fast: 40 },
   Ferry: { slow: 10, fast: 15 },
+  // Its own lane, clear of EDSA's traffic but not of its own queue at the stations.
+  'EDSA Carousel': { slow: 20, fast: 35 },
 } satisfies Record<Vehicle, { slow: number; fast: number }>;
 
 /** Minutes a vehicle stands at each stop it passes between the ride's ends. */
@@ -28,6 +30,7 @@ export const DWELL_MINUTES_PER_STOP = {
   'LRT-2': 0.5,
   'MRT-3': 0.5,
   Ferry: 1,
+  'EDSA Carousel': 1,
 } satisfies Record<Vehicle, number>;
 
 /** The estimate's ends are rounded out to this many minutes: down for the low, up for the high. */

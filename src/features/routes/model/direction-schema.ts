@@ -3,17 +3,15 @@ import * as z from 'zod/mini';
 import { lineStringSchema } from './geojson-schema';
 
 /**
- * A direction's rows as they enter the app: from the published index (the
- * reader parses with these, its overview standing in for the line) and from
- * the studio's live reads. The file and the database say `route_id`,
- * `direction_name` and `head_stop_id`; the app says routeId, name and
- * headHotspotId (CONTEXT.md). The raw schemas describe what comes in, the
- * `to…` functions translate, and the schemas the app parses with are the two
- * piped. The types the app uses derive from them; routes.ts re-exports them
- * beside the functions.
+ * A direction's rows as they enter the app: from the published index (the reader parses with
+ * these, its overview standing in for the line) and from the studio's live reads. The file and the
+ * database say `route_id`, `direction_name` and `head_stop_id`; the app says routeId, name and
+ * headHotspotId (CONTEXT.md). The raw schemas describe what comes in, the `to…` functions
+ * translate, and the schemas the app parses with are the two piped. The types the app uses derive
+ * from them; routes.ts re-exports them beside the functions.
  */
 
-/** Mirrors the `transport_mode` enum in supabase/migrations/0001_init.sql. */
+/** Mirrors the `transport_mode` enum in supabase/migrations/0001_init.sql, 0012 and edsa_carousel. */
 export const transportModeSchema = z.enum([
   'jeepney',
   'e_jeepney',
@@ -24,6 +22,7 @@ export const transportModeSchema = z.enum([
   'lrt',
   'mrt',
   'ferry',
+  'busway',
 ]);
 export type TransportMode = z.infer<typeof transportModeSchema>;
 

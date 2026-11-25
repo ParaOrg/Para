@@ -180,6 +180,24 @@ export const Ferry: Story = {
   },
 };
 
+/**
+ * The EDSA Carousel (Figma 4895:21229): on Card/EDSACarousel/fill, its marker and wordmark above the
+ * mode row, then the bus and its bound, no line badge. Its stations have no codes.
+ */
+export const EdsaCarousel: Story = {
+  args: {
+    ride: { kind: 'rail', railway: 'EDSA Carousel', bound: 'Southbound', originCode: null },
+    routeOrigin: 'Monumento',
+    endPoints: trainRow('PITX', null),
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByText('Southbound')).toBeVisible();
+    await expect(canvas.getByTestId('edsa-carousel-mark')).toBeVisible();
+    await expect(canvas.getByRole('list', { name: 'EDSA Carousel' })).toBeVisible();
+  },
+};
+
 /** The studio's (its editors keep Selected): a card Selected, or let go, by a tap off its rows. */
 const studio = (state: 'rest' | 'selected') => ({ selection: { state, onSelect: fn() } });
 
@@ -335,6 +353,7 @@ export const RowPressed: Story = {
         MetroRailWayThree,
         LightRailWayTwo,
         Ferry,
+        EdsaCarousel,
       ].map((story, i) => (
         <RouteCard key={i} {...args} {...story.args} />
       ))}

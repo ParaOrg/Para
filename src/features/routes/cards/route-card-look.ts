@@ -18,6 +18,7 @@ export const ROUTE_CARD_SURFACE = {
   'metro-rail-way-three':
     'bg-map-rail-metro-rail-way-three-surface border-map-rail-metro-rail-way-three-border-primary',
   ferry: 'bg-map-ferry-surface border-map-ferry-border-primary',
+  'edsa-carousel': 'bg-card-red-surface border-card-red-border-primary',
 } satisfies Record<Livery, string>;
 
 /** The origin, the rows and the tree lines. Figma writes the light lines' words in Card/Bus/on-surface. */
@@ -30,6 +31,7 @@ export const ROUTE_CARD_TEXT = {
   'light-rail-way-two': 'text-card-bus-on-surface',
   'metro-rail-way-three': 'text-surface-inverse',
   ferry: 'text-card-bus-on-surface',
+  'edsa-carousel': 'text-card-bus-on-surface',
 } satisfies Record<Livery, string>;
 
 /**
@@ -46,6 +48,7 @@ export const ROUTE_BADGE = {
   'light-rail-way-two': 'bg-card-bus-on-surface text-map-rail-light-rail-way-two-surface',
   'metro-rail-way-three': 'bg-surface-inverse text-map-rail-metro-rail-way-three-surface',
   ferry: 'bg-card-bus-on-surface text-map-ferry-surface',
+  'edsa-carousel': 'bg-card-bus-on-surface text-card-red-surface',
 } satisfies Record<Livery, string>;
 
 /**
@@ -69,6 +72,7 @@ export const ROUTE_CARD_FILL = {
   'light-rail-way-two': 'bg-card-lrt-two-fill',
   'metro-rail-way-three': 'bg-card-mrt-three-fill',
   ferry: 'bg-card-ferry-fill',
+  'edsa-carousel': 'bg-card-edsa-carousel-fill',
 } satisfies Record<Livery, string>;
 
 /**
@@ -84,6 +88,7 @@ export const CARD_INK = {
   'light-rail-way-two': 'text-text-on-fill',
   'metro-rail-way-three': 'text-text-primary',
   ferry: 'text-text-on-fill',
+  'edsa-carousel': 'text-text-on-fill',
 } satisfies Record<Livery, string>;
 
 /**
@@ -100,6 +105,7 @@ export const ROUTE_CARD_REST_SHADOW = {
   'light-rail-way-two': 'shadow-route-card-fill',
   'metro-rail-way-three': 'shadow-route-card-fill',
   ferry: 'shadow-route-card-fill',
+  'edsa-carousel': 'shadow-route-card-fill',
 } satisfies Record<Livery, string>;
 
 /**
@@ -115,6 +121,7 @@ export const ROUTE_CARD_ORIGIN_GAP = {
   'light-rail-way-two': 'gap-1',
   'metro-rail-way-three': 'gap-1',
   ferry: 'gap-1',
+  'edsa-carousel': 'gap-1',
 } satisfies Record<Livery, string>;
 
 /** Whether the card wears the Blob's glow (RouteCard, 4629:22776): every card but E-jeep's. */
@@ -127,4 +134,5 @@ export const ROUTE_CARD_HAS_BLOB = {
   'light-rail-way-two': true,
   'metro-rail-way-three': true,
   ferry: true,
+  'edsa-carousel': true,
 } satisfies Record<Livery, boolean>;

@@ -20,6 +20,17 @@ interface RouteCardModeProps {
  * train, the bound's, 6 apart. The drawing is decoration.
  */
 export function RouteCardMode({ vehicle, bound, livery }: RouteCardModeProps) {
+  // The EDSA Carousel's (4895:20962): its bus, 28, then its bound, 8 apart; its mark above says the line.
+  if (vehicle === 'EDSA Carousel') {
+    return (
+      <span className="flex items-center gap-2">
+        <span aria-hidden className="block size-7 shrink-0 *:size-full">
+          <VehicleIcon vehicle={vehicle} />
+        </span>
+        {bound && <RouteBadge label={bound} livery={livery} />}
+      </span>
+    );
+  }
   if (!isRailwayVehicle(vehicle)) {
     return (
       <span aria-hidden className="block size-7 shrink-0 *:size-full">

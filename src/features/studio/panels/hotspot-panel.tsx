@@ -109,7 +109,7 @@ export function HotspotPanel({
   const lined = useNearLines(ring, directions, setError);
   const lines = lined ?? directions;
 
-  const station = existing?.line ?? null;
+  const [station, setStation] = useState(existing?.line ?? null);
   const through = useMemo(() => linksThrough(ring, lines, station), [ring, lines, station]);
   const throughIds = useMemo(() => new Set(through.map((l) => l.directionId)), [through]);
 
@@ -136,15 +136,13 @@ export function HotspotPanel({
     [lines, throughIds],
   );
 
-  function toggle(id: string) {
-    setChosen((m) => new Map(m).set(id, !ticked.has(id)));
-  }
+  const toggle = (id: string) => setChosen((m) => new Map(m).set(id, !ticked.has(id)));
 
   const label = kind === 'terminal' ? 'Terminal' : 'Hintuan';
 
   // What Exit would lose: the outline or a field changed since the sidebar opened. Whether the
   // outline is as it opened is the caller's (isPublished): the form starts again on a read.
-  const fields = JSON.stringify([name, informal, [...ticked].sort()]);
+  const fields = JSON.stringify([name, informal, station, [...ticked].sort()]);
   const outline = JSON.stringify(ring);
   const [opened] = useState({ fields, outline });
   const isChanged = fields !== opened.fields || outline !== opened.outline;
@@ -181,6 +179,7 @@ export function HotspotPanel({
         ring,
         directionIds: kind === 'terminal' ? [...ticked] : undefined,
         directions: lines,
+        line: station,
       },
       intent,
     );
@@ -262,7 +261,7 @@ export function HotspotPanel({
         {kind === 'terminal' ? (
           <TerminalChecklist groups={groups} ticked={ticked} onToggle={toggle} />
         ) : (
-          <PassesThrough groups={hintuanGroups} />
+          <PassesThrough groups={hintuanGroups} station={station} onStationChange={setStation} />
         )}
 
         <LineDetail points={ring.length} pointsTerm="Corners" status={status} {...stamps} />

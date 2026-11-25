@@ -824,3 +824,33 @@ message. To take someone off: `delete from public.waitlist where email = '…';`
 - The email is saved but no message came: Resend's dashboard. The person is on the list either way.
 - Applied, and it must be withdrawn: export or delete the rows, run `20261112120000_waitlist_revert.sql`, and
   delete the function (`supabase functions delete waitlist`).
+
+# Applying edsa_carousel to the live project
+
+**Not applied live.** The EDSA Carousel is drawn in the studio as a line: a route whose mode is
+`busway` ("EDSA Carousel" in the studio's mode picker) and hintuans marked as its stations (line
+`EDSA-C`). Until this is applied, Publish refuses either one: the database does not know the mode, and
+the station check names only the trains' and the ferry's lines. Rows already saved are valid before and
+after.
+
+| File | What it does |
+| --- | --- |
+| `20261125090000_edsa_carousel_apply.sql` | One transaction. Checks this is not in the ledger. Applies `migrations/20261125090000_edsa_carousel.sql` (carried unchanged; `verify/edsa-carousel.sh` checks the copy). Checks `transport_mode` has `busway` and the station check names all five lines. Writes the ledger row `edsa_carousel`. Any failed check raises and nothing is changed. A second run stops at the first check and changes nothing. |
+| `20261125090000_edsa_carousel_check.sql` | Part one makes a hintuan an EDSA-C station, a PRFS one and none, proves EDSA-X is refused, then rolls all of it back. Part two is read-only: 4 rows, all `ok` should be `t`. |
+| `20261125090000_edsa_carousel_revert.sql` | One transaction: the station check goes back to the four lines and the ledger row goes. Refuses, changing nothing, while a stop is an EDSA-C station or a route is `busway`. The value `busway` stays in the enum (Postgres cannot drop one). Safe to run twice. |
+
+## Steps
+
+1. Run `20261125090000_edsa_carousel_apply.sql`. It ends with `COMMIT`; an error means nothing changed.
+2. Run `20261125090000_edsa_carousel_check.sql`: part one ends with `ROLLBACK` and no error; part two gives
+   4 rows, all `ok = t`.
+3. Record the ledger version
+   (`select version from supabase_migrations.schema_migrations where name = 'edsa_carousel';`) in
+   `migrations/README.md`, add `20261125090000_edsa_carousel` to `APPLIED` in `verify/schema-snapshot.sh`,
+   rewrite the snapshot (`--write`) and regenerate `src/shared/types/database.types.ts`.
+
+## Recovery
+
+- Apply failed: nothing changed. The message names what it found.
+- Applied, and it must be withdrawn: change every `busway` route to another mode and unmark every EDSA-C
+  station, then run `20261125090000_edsa_carousel_revert.sql`.
