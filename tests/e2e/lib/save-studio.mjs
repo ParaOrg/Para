@@ -9,8 +9,8 @@
 // roads, so every line is freehand and nothing needs the network, an account
 // or the router. Nothing reaches the live tables.
 //
-// Importing it opens the page: save-test, save-ikot-test and save-edit-test
-// each start from it, then draw their own ground on it.
+// Importing it opens the page: save-test, save-ikot-test, save-edit-test and
+// studio-osm-start-test each start from it, then draw their own ground on it.
 import { basename } from 'node:path';
 
 import { chromium } from 'playwright';

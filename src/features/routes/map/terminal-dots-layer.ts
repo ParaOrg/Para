@@ -1,4 +1,4 @@
-import type { MapLibreMap } from 'maplibre-gl';
+import type { GeoJSONSource, MapLibreMap } from 'maplibre-gl';
 
 import { MAP_COLOURS, MAP_PAINT } from '@/design-system/foundation/map-colours';
 
@@ -36,13 +36,14 @@ const COLOUR = MAP_COLOURS['Map/Pin/Terminal/surface'];
  * source, so a basemap switch carries it across (basemap.ts).
  */
 export function addTerminalDots(map: MapLibreMap, terminals: readonly Terminal[]): void {
-  if (map.getSource(TERMINAL_DOTS.source)) return;
+  if (map.getLayer(TERMINAL_DOTS.dot)) return;
   if (map.getLayer(TERMINAL_SOURCE)) map.removeLayer(TERMINAL_SOURCE);
   if (map.getSource(TERMINAL_SOURCE)) map.removeSource(TERMINAL_SOURCE);
-  map.addSource(TERMINAL_DOTS.source, {
-    type: 'geojson',
-    data: terminalFeatures(terminals, TERMINAL_KINDS),
-  });
+  const data = terminalFeatures(terminals, TERMINAL_KINDS);
+  // The source the studio claimed at once (useTerminalDots), filled; else a new one.
+  const claimed = map.getSource<GeoJSONSource>(TERMINAL_DOTS.source);
+  if (claimed) claimed.setData(data);
+  else map.addSource(TERMINAL_DOTS.source, { type: 'geojson', data });
   const before = firstOfOurs(map);
   map.addLayer(
     {
