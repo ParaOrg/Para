@@ -61,6 +61,76 @@ export const LODGING_FILTER = 'nwr/tourism=hotel,guest_house,hostel,motel,apartm
  * stay. Serviced and staycation condos (Residences, Condo, Tower) are, so they stay.
  */
 const RESIDENTIAL_NAME = /\bsubd\b\.?|subdivision|heights|village|\bhomes\b|\bphase\b|association/i;
+/**
+ * The hotel brands and big names Overture gives no brand for, whose names may lack a hotel word
+ * (Sofitel Philippine Plaza, Red Planet Ortigas): a hotel, whatever else the name says.
+ */
+const HOTEL_BRAND = new RegExp(
+  `\\b(${[
+    'sofitel',
+    'red planet',
+    'shangri-?la',
+    'marriott',
+    'okada',
+    'solaire',
+    'city of dreams',
+    'nobu',
+    'hilton',
+    'conrad',
+    'hyatt',
+    'novotel',
+    'holiday inn',
+    'crowne plaza',
+    'radisson',
+    'park inn',
+    'seda',
+    'discovery',
+    'fairmont',
+    'raffles',
+    'peninsula',
+    'manila hotel',
+    'diamond hotel',
+    'marco polo',
+    'dusit',
+    'go hotels',
+    'microtel',
+    'hotel 101',
+    'belmont',
+    'savoy',
+    'richmonde',
+    'citadines',
+    'ascott',
+    'somerset',
+    'lanson place',
+    'kabayan hotel',
+    'hotel sogo',
+    'victoria court',
+    'eurotel',
+    'fersal',
+    'hop inn',
+    'mandarin',
+    'ibis',
+    'mercure',
+    'courtyard',
+    'westin',
+    'sheraton',
+    'intercontinental',
+    'oakwood',
+    'fraser',
+    'astoria',
+    'taal vista',
+  ].join('|')})\\b`,
+  'i',
+);
+/**
+ * A small place to stay named only by where it is ("Cainta Rizal City", "Ayala, Alabang"): a
+ * comma or a town's word, and no word that says it is a place to stay. Dropped: on the map it
+ * would read as a hotel named after a town.
+ */
+const PLACE_ONLY_NAME =
+  /,|\b(city|ciy|cavite|bulacan|rizal|laguna|batangas|pampanga|bataan|quezon|manila|metro|province)\b/i;
+const LODGING_WORD =
+  /resort|hotel|\binn\b|transient|staycation|condo|apartelle|suites|lodg|villa|farm|pool|beach|place/i;
 /** A name that says hotel; the small words below win over it. */
 const HOTEL_NAME = /hotel|resort|suites|\binn\b|hostel|motel|lodge/i;
 /** A name of the many small places to stay: drawn a zoom later than the hotels. */
@@ -68,13 +138,18 @@ const SMALL_LODGING_NAME =
   /transient|staycation|apartelle|airbnb|condo|\broom|bed ?space|dorm|pension|home ?stay|cottage|cabin|villa|\bhouse\b|\bunit\b|studio/i;
 
 /**
- * A place to stay's kind: a hotel (drawn with the other places) when it has a brand or its name
- * says hotel, resort, suites, inn, hostel, motel or lodge and none of the small words; otherwise
+ * A place to stay's kind: a hotel (drawn with the other places) when it has a brand, is one of
+ * HOTEL_BRAND's, or its name says hotel, resort, suites, inn, hostel, motel or lodge and none of the small words; otherwise
  * lodging, the many small inns, apartelles and transient houses, drawn a zoom later. Overture's own
  * category cannot tell them apart: plenty of its "hotel" rows are staycation condos.
  */
+/** Whether a small place to stay is named only by where it is (PLACE_ONLY_NAME). */
+export function isPlaceOnlyName(name) {
+  return PLACE_ONLY_NAME.test(name) && !LODGING_WORD.test(name);
+}
+
 export function lodgingKindOf(name, brand) {
-  if (brand) return 'hotel';
+  if (brand || HOTEL_BRAND.test(name)) return 'hotel';
   return HOTEL_NAME.test(name) && !SMALL_LODGING_NAME.test(name) ? 'hotel' : 'lodging';
 }
 /** The same name within this many metres is the same place; the same brand, within more. */
@@ -241,7 +316,7 @@ const isInside = (box, [lng, lat]) =>
  * `places` are pull.py's rows; `roads` a road grid; `osm` an OSM place grid.
  */
 export function overturePlacesFrom(places, { roads, osm, box }) {
-  const dropped = { name: 0, residential: 0, road: 0, osm: 0, closed: 0 };
+  const dropped = { name: 0, residential: 0, placeOnly: 0, road: 0, osm: 0, closed: 0 };
   const byId = new Map();
   for (const place of places) {
     const kind = KIND_OF_CATEGORY[place.category];
@@ -274,6 +349,10 @@ export function overturePlacesFrom(places, { roads, osm, box }) {
     }
     if (isInOsm(osm, candidate)) {
       dropped.osm++;
+      continue;
+    }
+    if (candidate.kind === 'lodging' && isPlaceOnlyName(name)) {
+      dropped.placeOnly++;
       continue;
     }
     if (byId.has(candidate.id)) continue;
@@ -338,6 +417,6 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   writeEstablishmentFiles(outDir, files);
   console.error(
     `Overture ${release}: wrote ${establishments.length} places in ${files.cells.size} cells to ${outDir}; ` +
-      `dropped ${dropped.name} for their names, ${dropped.residential} places to stay named as homes, ${dropped.road} on a road, ${dropped.osm} OSM has, ${dropped.closed} closed.`,
+      `dropped ${dropped.name} for their names, ${dropped.residential} places to stay named as homes, ${dropped.placeOnly} named only by a place, ${dropped.road} on a road, ${dropped.osm} OSM has, ${dropped.closed} closed.`,
   );
 }
