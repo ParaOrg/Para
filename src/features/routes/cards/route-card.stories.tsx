@@ -39,14 +39,14 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /**
- * Variatns=Jeep: Card/jeep/fill, white words, the jeep alone at the top; the place in Bold 28/32,
+ * Variatns=Jeep: Card/jeep/fill, white words, the jeep alone at the top; the place in Bold 24/32,
  * each row Figma's Destinationn, 36 tall. The list keeps the mode's name in words.
  */
 export const Jeep: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const place = getComputedStyle(canvas.getByTestId('chooser-select'));
-    await expect(place.fontSize).toBe('28px');
+    await expect(place.fontSize).toBe('24px');
     await expect(place.lineHeight).toBe('32px');
     await expect(place.fontWeight).toBe('700');
     await expect(canvas.queryByText('Jeep')).toBeNull();

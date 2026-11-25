@@ -1,7 +1,7 @@
 import { useId } from 'react';
 
 import { Button } from '@/design-system/primitives/button';
-import { SwitchHorizontalIcon } from '@/shared/ui/map-control-icons';
+import { SwitchVerticalIcon } from '@/shared/ui/route-icons';
 
 interface ViceVersaButtonProps {
   /** The way the list is showing (wayWord): Papunta, Pabalik, or a train's bound. */
@@ -18,7 +18,7 @@ interface ViceVersaButtonProps {
 
 /**
  * Vice Versa (4831:51276), floating on the map over the public map's route list: the Button's
- * Secondary, its words then ⇆ (switch-horizontal). A tap turns every route listed the other way
+ * Secondary, its words then ⇅ (switch-vertical). A tap turns every route listed the other way
  * round. Its words never change, so a screen reader hears which way is showing and where a tap
  * leads after its name. `chooser-flip` to the suites, as the studio's PAPUNTA is.
  */
@@ -37,7 +37,7 @@ export function ViceVersaButton({
       <Button
         variant="secondary"
         label="Vice Versa"
-        lastIcon={<SwitchHorizontalIcon />}
+        lastIcon={<SwitchVerticalIcon />}
         aria-describedby={hintId}
         data-testid="chooser-flip"
         data-back={isBack}
