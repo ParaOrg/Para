@@ -1,6 +1,6 @@
 # 16: Add get_my_uses to the schema snapshot
 
-Status: ready-for-agent
+Status: resolved
 Type: task
 Who: a session with Postgres 17 (the snapshot's dump needs PG17 privileges such as `maintain`)
 Blocked by: none

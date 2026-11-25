@@ -29,7 +29,8 @@ APPLIED=(
   20261105090000_delete_account_refuse_uploads 20261105120000_review_rules
   20261105130000_draft_update_makerless 20261105180000_keep_uploads_on_user_delete
   20261105160000_draft_published 20261105190000_lock_map_tables
-  20261105200000_drop_dead_weight 20261110190000_retire_review_steps
+  20261105200000_drop_dead_weight 20261106090000_my_contribution_uses
+  20261110190000_retire_review_steps
   20261112100000_drop_inert_write_policies
 )
 
