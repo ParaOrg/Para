@@ -1,0 +1,31 @@
+{
+  "schema": 1,
+  "cell": "2425-281",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o1cd84fd0ec594e37","restaurant",121.27601,14.06313,"Samgyup Luna"],
+    ["o38356576690042a0","restaurant",121.29794,14.06818,"Hot Side Resto Bar"],
+    ["o62dd50a9ffe64131","restaurant",121.259,14.05058,"Gael's Food House"],
+    ["o670cc2c103dc40e6","restaurant",121.29274,14.09056,"Christina's Secret Garden"],
+    ["o7b1d15d21a474e30","restaurant",121.28266,14.07944,"San Crispin"],
+    ["o93116d3ff0734c11","restaurant",121.28657,14.06541,"Baryo Fiesta Restaurant & Bar"],
+    ["o932c63e926124807","restaurant",121.29806,14.06816,"Tapa King"],
+    ["obe627c3c2ec5462e","restaurant",121.28199,14.08816,"Bistro Alejandro"],
+    ["oc3c1ae9993054f9a","restaurant",121.29827,14.06855,"SBW"],
+    ["ocf5e2a6d39e245ff","restaurant",121.28127,14.07311,"Turks"],
+    ["of527d8e038e34f43","restaurant",121.29883,14.06852,"El Mare BUKO PIE Main Store"],
+    ["o7faddb687317437d","cafe",121.25256,14.05386,"Roadside Café Alaminos"],
+    ["od97beb41f63d46e0","cafe",121.25948,14.05677,"Owl Fab CaffÈ"],
+    ["oe08e675c07a64bb4","cafe",121.28848,14.06965,"Kopi Bake and Us Café"],
+    ["ofa15ba6d33244470","cafe",121.26107,14.06173,"Roadside Café Alaminos"],
+    ["o9bf5b3ed4d3346fc","clinic",121.2586,14.06151,"San Agustin Alaminos, Laguna"],
+    ["of0255fc4d68540e8","clinic",121.28311,14.0618,"ORO Optical and Dental Clinic"],
+    ["o0d6db089c66a432a","dentist",121.29189,14.06723,"Dra. Marinel Tolentino Dental Clinic"],
+    ["o943f2d8016244618","dentist",121.29827,14.06855,"Salvacion Dental Clinic - SAN PABLO Branch"],
+    ["oc3b7912d8bdf4db9","dentist",121.27683,14.05133,"Smile Republic Dental Clinic - Signal Village Taguig"],
+    ["o1a559edd4f4f4b28","school",121.28578,14.07461,"Prudencia Pule Elementary School"],
+    ["ocd81301047884ad6","school",121.27871,14.0643,"San Roque Elementary School San Pedro Laguna"],
+    ["ofac583521e45475c","school",121.29626,14.06993,"Prudencia E Fule Elementary School at San Nicolas San Pablo City"],
+    ["ocf32acbc2b4a4578","college",121.29829,14.06838,"SPC College of Nursing"]
+  ]
+}

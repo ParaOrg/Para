@@ -14,9 +14,12 @@
 # (a line that ends far from its terminal, a hintuan the line passes without
 # being linked to it) lets the map go out and is written up for the owner.
 # If the file changed, the change is committed to main and the push deploys
-# as any other: Cloudflare's GitHub App gets the push like any other. The same
-# public/data/ files, and nothing else, are then committed onto staging, so its
-# preview serves the live map too. If nothing changed, nothing is committed: the script writes a byte-identical
+# as any other: Cloudflare's GitHub App gets the push like any other. The files
+# the publish writes, and nothing else, are then committed onto staging, so its
+# preview serves the live map too: never the rest of public/data/, the
+# landmark, footbridge, establishment and Overture files, which the Landmarks
+# workflow refreshes into staging first and main gets only at a release. If
+# nothing changed, nothing is committed: the script writes a byte-identical
 # file for unchanged data.
 #
 # The push goes over SSH with a repository deploy key (the secret
@@ -195,25 +198,30 @@ jobs:
             echo "The map is unchanged; nothing to commit to main."
           fi
 
-          # Staging gets the same data files, and only those, never a merge of
-          # main: main carries release code staging may not have yet. It runs
-          # on an unchanged day too, so a missed push (staging was being
-          # pushed to, or the key failed once) heals on the next run. Files
-          # are copied whole from main's tree; only the files this publish
-          # removed are removed. A push of public/data/ alone skips CI
-          # (paths-ignore) and deploys staging as any other push does.
+          # Staging gets the files the publish writes, and only those
+          # (`published_paths`, write-files.mjs's dataPaths), never a merge of
+          # main: main carries release code staging may not have yet. Never
+          # the rest of public/data/ either: the landmark, footbridge,
+          # establishment and Overture files reach staging before main, and a
+          # copy of main's would undo them every night. It runs on an
+          # unchanged day too, so a missed push (staging was being pushed to,
+          # or the key failed once) heals on the next run. Files are copied
+          # whole from main's tree; only the files this publish removed are
+          # removed. A push of public/data/ alone skips CI (paths-ignore) and
+          # deploys staging as any other push does.
           # Staging's ruleset (docs/agents/staging-protection.md), once on,
           # must list the deploy key as a bypass actor, as main's does, or
           # this push is refused.
+          published_paths=(public/data/map.json public/data/index.json public/data/index.v3.json public/data/index.v4.json public/data/index.v5.json public/data/lines public/data/signboards)
           published="$(git rev-parse HEAD)"
-          removed="$(git diff --name-only --diff-filter=D HEAD~1 HEAD -- public/data 2>/dev/null || true)"
+          removed="$(git diff --name-only --diff-filter=D HEAD~1 HEAD -- "${published_paths[@]}" 2>/dev/null || true)"
           [ "$is_changed" = true ] || removed=""
           for attempt in 1 2 3; do
             git fetch --quiet "$REMOTE" staging 2>&1 | tee -a "$RUNNER_TEMP/publish.log"
             rm -rf "$RUNNER_TEMP/staging"
             git worktree prune
             git worktree add --quiet --detach "$RUNNER_TEMP/staging" FETCH_HEAD
-            git -C "$RUNNER_TEMP/staging" checkout "$published" -- public/data
+            git -C "$RUNNER_TEMP/staging" checkout "$published" -- "${published_paths[@]}"
             if [ -n "$removed" ]; then
               # shellcheck disable=SC2086
               git -C "$RUNNER_TEMP/staging" rm -q --ignore-unmatch -- $removed

@@ -427,7 +427,7 @@ A feature's `index.ts` is the only door into it for code outside the feature. Wh
 
 ### `features/locator`
 
-`useGazeHush`, `CommuterLocation`, `ContributorLocation`, `LocatorNote`
+`useGazeHush`, `CommuterLocation`, `CommuterLocationHandle`, `ContributorLocation`, `LocatorNote`
 
 ### `features/published-map`
 

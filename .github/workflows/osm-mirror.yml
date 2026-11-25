@@ -1,0 +1,128 @@
+# Para's weekly copy of the Philippines extract (.scratch/extract-mirror/plan.md): Geofabrik's
+# whole file, or openstreetmap.fr's when Geofabrik fails, checked against its md5 and put in the
+# R2 bucket `para-osm`, which answers read-only at https://osm.para-commute.org. The monthly
+# landmarks and tiles builds read that copy first, so a slow or broken Geofabrik day no longer
+# stops them. If every source fails, the run fails, the `alert` job says so, and last week's copy
+# stays. A copy the same as the one in the bucket uploads nothing.
+#
+# A pull request that changes this file or the script downloads and checks, and uploads nothing.
+# Upload runs only from `staging` or `main`: the weekly schedule (GitHub runs `schedule` only from
+# the default branch) and "Run workflow".
+#
+# THE OWNER'S SETUP (as tiles.yml's): the R2 bucket `para-osm`, public only through its custom
+# domain osm.para-commute.org ("Public Development URL" off), and an API token ("Object Read &
+# Write", scoped to that bucket); then a GitHub Environment named `osm-mirror`, deployment branches
+# limited to `staging` and `main`, holding these four environment secrets:
+#   OSM_R2_ENDPOINT           https://<account-id>.r2.cloudflarestorage.com
+#   OSM_R2_ACCESS_KEY_ID      the token's Access Key ID
+#   OSM_R2_SECRET_ACCESS_KEY  the token's Secret Access Key
+#   OSM_R2_BUCKET             para-osm
+# The bucket holds only OpenStreetMap data (ODbL), which is open by licence.
+#
+# Nothing here is a dependency of the app: osmium-tool comes from apt, the AWS CLI is preinstalled
+# on ubuntu-latest.
+name: OSM mirror
+
+on:
+  schedule:
+    # Sundays 19:13 UTC = 03:13 Monday in Manila, a quiet hour for Geofabrik's servers in Europe.
+    - cron: '13 19 * * 0'
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - .github/workflows/osm-mirror.yml
+      - scripts/osm-mirror/**
+
+permissions:
+  contents: read
+
+concurrency:
+  group: osm-mirror-${{ github.event_name == 'pull_request' && github.ref || 'copy' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  copy:
+    name: Copy the Philippines extract
+    runs-on: ubuntu-latest
+    # Two sources, each up to ~15 minutes when it stalls (mirror.sh's time limits), then the upload.
+    timeout-minutes: 40
+    # The branch rule on the environment keeps the keys from a pull request or any other branch.
+    environment: ${{ github.event_name != 'pull_request' && 'osm-mirror' || '' }}
+    env:
+      SHOULD_UPLOAD: ${{ github.event_name != 'pull_request' }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 22
+      - name: Install osmium-tool
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq osmium-tool
+      - name: Check the upload may run
+        if: env.SHOULD_UPLOAD == 'true'
+        env:
+          OSM_R2_ENDPOINT: ${{ secrets.OSM_R2_ENDPOINT }}
+          OSM_R2_ACCESS_KEY_ID: ${{ secrets.OSM_R2_ACCESS_KEY_ID }}
+          OSM_R2_SECRET_ACCESS_KEY: ${{ secrets.OSM_R2_SECRET_ACCESS_KEY }}
+          OSM_R2_BUCKET: ${{ secrets.OSM_R2_BUCKET }}
+        run: |
+          if [ "$GITHUB_REF" != refs/heads/staging ] && [ "$GITHUB_REF" != refs/heads/main ]; then
+            echo "::error::The copy is uploaded only from staging or main; this run is on $GITHUB_REF_NAME."
+            exit 1
+          fi
+          missing=0
+          for name in OSM_R2_ENDPOINT OSM_R2_ACCESS_KEY_ID OSM_R2_SECRET_ACCESS_KEY OSM_R2_BUCKET; do
+            if [ -z "${!name}" ]; then
+              echo "::error::The secret $name is not set in the 'osm-mirror' environment (see this file's header). Nothing was downloaded or uploaded."
+              missing=1
+            fi
+          done
+          [ "$missing" = 0 ] || exit 1
+          endpoint_pattern='^https://[0-9a-f]{32}(\.(eu|fedramp))?\.r2\.cloudflarestorage\.com$'
+          if ! [[ "$OSM_R2_ENDPOINT" =~ $endpoint_pattern ]]; then
+            echo "::error::OSM_R2_ENDPOINT is not an R2 endpoint. It must be exactly https://<32-character account id>.r2.cloudflarestorage.com, with no path, quotes, spaces or line break."
+            exit 1
+          fi
+      - name: Download, check and copy
+        env:
+          OSM_R2_ENDPOINT: ${{ secrets.OSM_R2_ENDPOINT }}
+          OSM_R2_BUCKET: ${{ secrets.OSM_R2_BUCKET }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.OSM_R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.OSM_R2_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+        run: |
+          if [ "$SHOULD_UPLOAD" = true ]; then
+            scripts/osm-mirror/mirror.sh "$RUNNER_TEMP/osm" --upload | tee -a "$GITHUB_STEP_SUMMARY"
+          else
+            scripts/osm-mirror/mirror.sh "$RUNNER_TEMP/osm" | tee -a "$GITHUB_STEP_SUMMARY"
+          fi
+
+  # When the run failed: opens or updates this workflow's `alert` issue (scripts/watch).
+  alert:
+    needs: [copy]
+    if: failure() && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+          sparse-checkout: scripts/watch
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 22
+      - name: Open or update the alert issue
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          WORKFLOW_NAME: ${{ github.workflow }}
+          WORKFLOW_FILE: osm-mirror.yml
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: node scripts/watch/report-failed-run.mjs

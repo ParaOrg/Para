@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "cell": "2412-276",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o435870aff2f141ca","restaurant",120.63183,13.83192,"Chooks-to-Go"],
+    ["o5d6a454ba0034ee9","restaurant",120.63232,13.83325,"PAPZI UNLI Chicken WINGS"],
+    ["o7627f73c0fa842e6","restaurant",120.63653,13.82927,"After5 Craftbeer Grill Restobar"],
+    ["o8ee28d336ec54f2d","restaurant",120.62964,13.82901,"Uninay's Home of Special"],
+    ["oa13ebd1d354b4c87","restaurant",120.63197,13.83527,"Tongyen Bakeshop"],
+    ["oacad9f0e9ab4409a","restaurant",120.63187,13.83101,"Andok's"],
+    ["oda39df1418174644","restaurant",120.64259,13.81585,"theiven cafe. Authentic Indian Restaurant"],
+    ["odaf9e64eb2e440fb","restaurant",120.63277,13.8306,"Resto La Esquina"],
+    ["oe8ce94a217c04891","restaurant",120.63232,13.83325,"ASBOK Sizzling Hub"],
+    ["oea299e63c47f4292","restaurant",120.63245,13.82585,"RiceMoto."],
+    ["o06a6c612b6f54ffe","cafe",120.63232,13.83325,"Tide and Tonic Cafe"],
+    ["oed8e6383a65e4191","cafe",120.64124,13.82354,"Glory's Garden Calatagan"],
+    ["o87a6e6e468ad493d","clinic",120.62946,13.83127,"DLR Medical Clinic And Diagnostic Center"],
+    ["o45796b655c3a450e","school",120.64258,13.81661,"DepEd Tayo - Tanagan Elementary School"],
+    ["o9a83c1b9ba2a400d","school",120.63016,13.83312,"Senior High School in Calatagan"],
+    ["ob600eafcf849440b","school",120.6341,13.83195,"Jacobo Zobel Elementary School"]
+  ]
+}

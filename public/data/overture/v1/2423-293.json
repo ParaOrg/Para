@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "cell": "2423-293",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o213726501edc4afe","restaurant",121.15583,14.6775,"Le Stelle"],
+    ["o8519605e74924bef","restaurant",121.16255,14.65865,"Tagpuan sa Banyuhay"],
+    ["oa14054e946b94cec","restaurant",121.1557,14.67755,"Ridge Cafe"],
+    ["od4de7218c63b4a02","fast_food",121.1566,14.67618,"Potato Corner"],
+    ["o90434df3bb9d473d","clinic",121.15181,14.65951,"Medrano Medical Clinic"],
+    ["oeaf663f1ff28498b","clinic",121.15228,14.65804,"Vcd Pediatric and Medical Clinic"],
+    ["o59f543ee785544a1","dentist",121.15304,14.66061,"Daug Dental Clinic"],
+    ["o7a8938df711f490b","school",121.18404,14.65022,"PAREF Northfield School for Boys"],
+    ["oaa51b517f32d4fde","school",121.1636,14.67963,"Manila Waldorf School"],
+    ["oc0b89866657740b1","school",121.15372,14.66354,"Nazarene Ville Elementary School- NDEP"]
+  ]
+}

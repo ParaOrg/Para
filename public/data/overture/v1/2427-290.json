@@ -1,0 +1,25 @@
+{
+  "schema": 1,
+  "cell": "2427-290",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o436c5a5d20a546b8","restaurant",121.36659,14.54601,"Mrs Pandesalan Sampaloc Tanay Rizal Branch"],
+    ["o4c4cc87caf1d40a8","restaurant",121.35051,14.54503,"Epic Park"],
+    ["o5208b529c63a4fa1","restaurant",121.36588,14.54599,"Mrs Pandesalan Sampaloc Tanay Rizal Branch"],
+    ["o65b23becf4a54883","restaurant",121.36197,14.53459,"The Gathering Cafe"],
+    ["o697a7665cf864371","restaurant",121.36159,14.54445,"Lorenzo Garden Grill"],
+    ["o7a9ac665058e4c25","restaurant",121.35058,14.54532,"Epic Resto"],
+    ["o9f2fade6cc0a4d85","restaurant",121.36611,14.54661,"The Milktea Project - Sampaloc Tanay Rizal"],
+    ["oad7cdf02b5744cd5","restaurant",121.35444,14.54114,"Ellen's Balcony"],
+    ["oe12c5146d00246d4","restaurant",121.36728,14.54191,"Hapag"],
+    ["of012bd5f61f34f3c","restaurant",121.37188,14.53708,"Yohanns Restaurant"],
+    ["obcf7a467ee4741ac","fast_food",121.3602,14.5402,"Jollibee"],
+    ["oec104001926641ce","fast_food",121.37696,14.54027,"Two Plus Stew Tanay"],
+    ["o6a7b6cfffe634295","cafe",121.36476,14.54194,"Mealstop Cafe"],
+    ["ob2f43909708a471b","cafe",121.39682,14.54738,"Red Keep Cafe"],
+    ["o62eee7bd2d454bb6","clinic",121.36237,14.53967,"Alagang Aldea Maternity Clinic"],
+    ["o7558a93d30b34f12","dentist",121.36497,14.54201,"Oralfix Dental Center"],
+    ["oe62767d4f195471f","dentist",121.3683,14.54438,"Monje Dental Clinic"],
+    ["o927e43dcaf454bcc","school",121.35849,14.53204,"Sitio Upper Bathala Day Care Center"]
+  ]
+}

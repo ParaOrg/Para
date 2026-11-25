@@ -57,6 +57,24 @@ const LICENSE_NOTE =
 /** Fewer than this many of a kind means the extract or the filter broke. */
 export const FEWEST_OF_A_KIND = 20;
 
+/**
+ * What a set of establishment files says about itself and what its rows may hold. The OSM files
+ * are OSM_FILES; Overture's (scripts/overture/overture-file.mjs, step E3c) are another set in the
+ * same shape, in a folder of their own, under their own licence.
+ */
+export const OSM_FILES = {
+  license: LICENSE,
+  attribution: ATTRIBUTION,
+  licenseNote: LICENSE_NOTE,
+  source: LANDMARK_SOURCE,
+  /** The header field that names the data's moment. */
+  dateKey: 'extract_at',
+  kinds: ESTABLISHMENT_KINDS,
+  idPattern: /^[nwr]\d+$/,
+  idName: 'an OSM id',
+  extraKeys: ['brand', 'atm'],
+};
+
 /** A row as the file writes it: [id, kind, lng, lat], then the name and the extras when there are any. */
 function rowOf({ id, kind, point, name, extras }) {
   const row = [id, kind, point[0], point[1]];
@@ -69,8 +87,8 @@ function rowOf({ id, kind, point, name, extras }) {
 export const sha = (text) => createHash('sha256').update(text).digest('hex').slice(0, 16);
 
 /** A cell's text: its name, the credit, then one establishment per line. */
-function cellText(cell, establishments) {
-  const head = `{\n  "schema": ${ESTABLISHMENT_FILE_SCHEMA},\n  "cell": ${JSON.stringify(cell)},\n  "attribution": ${JSON.stringify(ATTRIBUTION)},\n`;
+function cellText(cell, establishments, attribution) {
+  const head = `{\n  "schema": ${ESTABLISHMENT_FILE_SCHEMA},\n  "cell": ${JSON.stringify(cell)},\n  "attribution": ${JSON.stringify(attribution)},\n`;
   const rows = establishments.map((e) => JSON.stringify(rowOf(e)));
   return `${head}  "establishments": [\n    ${rows.join(',\n    ')}\n  ]\n}\n`;
 }
@@ -80,24 +98,26 @@ function cellText(cell, establishments) {
  * count, size and hash. The establishments keep their order inside each cell; the cells go in
  * name order.
  */
-export function establishmentFiles({ extractAt, establishments }) {
+export function establishmentFiles({ extractAt, establishments }, files = OSM_FILES) {
   const byCell = new Map();
   for (const e of establishments) {
     const cell = establishmentCellOf(e.point[0], e.point[1]);
     byCell.set(cell, [...(byCell.get(cell) ?? []), e]);
   }
   const cells = new Map(
-    [...byCell.keys()].sort().map((cell) => [cell, cellText(cell, byCell.get(cell))]),
+    [...byCell.keys()]
+      .sort()
+      .map((cell) => [cell, cellText(cell, byCell.get(cell), files.attribution)]),
   );
   const header = {
     schema: ESTABLISHMENT_FILE_SCHEMA,
-    license: LICENSE,
-    attribution: ATTRIBUTION,
-    license_note: LICENSE_NOTE,
-    source: LANDMARK_SOURCE,
-    extract_at: extractAt,
+    license: files.license,
+    attribution: files.attribution,
+    license_note: files.licenseNote,
+    source: files.source,
+    [files.dateKey]: extractAt,
     cell_deg: ESTABLISHMENT_CELL_DEG,
-    kinds: ESTABLISHMENT_KINDS,
+    kinds: files.kinds,
   };
   const headerLines = Object.entries(header).map(
     ([key, value]) => `  ${JSON.stringify(key)}: ${JSON.stringify(value)},`,

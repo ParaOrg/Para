@@ -1,0 +1,33 @@
+{
+  "schema": 1,
+  "cell": "2414-300",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o3c6401b7c7244f7b","restaurant",120.71513,15.03059,"Mega Station NLEX Pampanga"],
+    ["o5353ab46939647b8","restaurant",120.70879,15.03677,"Cabalen Restaurant"],
+    ["o69fdb474612d4444","restaurant",120.71556,15.03035,"Chego Bibimbab"],
+    ["o7597b04ddbae4b3a","restaurant",120.72758,15.03306,"Marios events and Party Food trays"],
+    ["o7cff348367a740d3","restaurant",120.70683,15.00188,"Wing Valley"],
+    ["o7dee9694a8474d05","restaurant",120.70985,15.00936,"Funnside Ningnangan"],
+    ["o901cdc9c672845cd","restaurant",120.70942,15.01008,"Ihaw- Ihaw Restaurant San Matias"],
+    ["oa53e7e17dc814720","restaurant",120.74902,15.01416,"Wang Xiang Lou Restaurant"],
+    ["oa975ff06ace84771","restaurant",120.70457,15.01483,"Siowings Food House"],
+    ["obf65cbaed34f4f6c","restaurant",120.7278,15.03303,"Banh Mi Kitchen"],
+    ["oc292f35b94a840d2","restaurant",120.71552,15.03038,"Yellow Cab Pizza Co."],
+    ["oc2e577f13cd547a7","restaurant",120.70372,15.01556,"Siowings-San Nicolas (Main Branch)"],
+    ["of075e40700824dc1","restaurant",120.70759,15.0115,"Baga Burger - San Vicente Apalit, Pampanga"],
+    ["o1f7f3446acc94394","cafe",120.70987,15.00897,"StirItUpCafeCo."],
+    ["o239764aec3d64d0a","cafe",120.72678,15.00086,"Peculiar Coffee + Music"],
+    ["o365346ab800c4db1","cafe",120.72349,15.02178,"Kape Ortelano"],
+    ["o0d33c5a6a0504641","clinic",120.71207,15.00771,"San Matias Diagnostic Laboratory"],
+    ["oab92c4ff658a451b","clinic",120.70759,15.0115,"Core Laboratory and Diagnostic Center"],
+    ["ob1166b5874364835","clinic",120.7278,15.03303,"Peninsula Mexico Diagnostic Clinic Corp"],
+    ["ob6f0d53b99fc4d0d","clinic",120.70506,15.01421,"Dr. Leonardo Manabat Sr."],
+    ["of8bc2ef5d7a14f94","clinic",120.71267,15.00783,"LN Laboratory and Diagnostic Center"],
+    ["oa3c74c54a8014519","dentist",120.70759,15.0115,"Evangelista Dental Centre"],
+    ["of450a61ff6f54119","dentist",120.70913,15.00982,"Canlas-Cruz Dental Clinic"],
+    ["o89cb399bca364efe","school",120.74668,15.02696,"DepEd Tayo - Dela Paz Elementary School -106255"],
+    ["od8451a7d185d4696","school",120.72758,15.03306,"Daytime Kiddie Hub - Mexico"],
+    ["o6c1ad0947a994b65","college",120.70247,15.01346,"DHVSU Sto Tomas Campus"]
+  ]
+}

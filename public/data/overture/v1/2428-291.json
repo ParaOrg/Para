@@ -1,0 +1,11 @@
+{
+  "schema": 1,
+  "cell": "2428-291",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["obbf22c36b5364083","restaurant",121.44256,14.5618,"M&R Ihaw Ihaw and Bulalohan"],
+    ["o56c55158d29f4332","fast_food",121.4154,14.58893,"KFC"],
+    ["of745516729374fdd","fast_food",121.41096,14.576,"KFC"],
+    ["o06daf296bdbf4e52","school",121.4437,14.56423,"Juan Santiago Elementary School"]
+  ]
+}

@@ -3,13 +3,17 @@ import { fn } from 'storybook/test';
 
 import { OPENFREEMAP_HOST } from '@/shared/config/basemap-host';
 
-import { mapCredits } from './map-attribution';
+import { dataSourceCredits } from './data-source-credits';
 import { MapDataSourceSheet } from './map-data-source-sheet';
 
 const meta = {
   title: 'Features/Routes/MapDataSourceSheet',
   component: MapDataSourceSheet,
-  args: { credits: mapCredits('https://tiles.para-commute.org'), onClose: fn(), onClosed: fn() },
+  args: {
+    credits: dataSourceCredits('https://tiles.para-commute.org'),
+    onClose: fn(),
+    onClosed: fn(),
+  },
   // A phone over a map-coloured box: the scrim dims it, the sheet stands at its foot.
   decorators: [
     (Story) => (
@@ -27,7 +31,7 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 /** A build on OpenFreeMap's tiles: its row names OpenFreeMap, with the same description. */
-export const OpenFreeMap: Story = { args: { credits: mapCredits(OPENFREEMAP_HOST) } };
+export const OpenFreeMap: Story = { args: { credits: dataSourceCredits(OPENFREEMAP_HOST) } };
 
 /** A long title and description wrap inside the row, the chevron kept at its side. */
 export const LongContent: Story = {
@@ -39,7 +43,7 @@ export const LongContent: Story = {
         href: 'https://example.org',
         isCredit: true,
       },
-      ...mapCredits(OPENFREEMAP_HOST),
+      ...dataSourceCredits(OPENFREEMAP_HOST),
     ],
   },
 };

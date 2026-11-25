@@ -1,0 +1,20 @@
+{
+  "schema": 1,
+  "cell": "2423-295",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o61244e41fa3e4fd9","restaurant",121.15701,14.75533,"Gomez Grill and Restaurant"],
+    ["oc38ab97b4fbc4f01","restaurant",121.15849,14.7553,"Donny's Eastwood"],
+    ["oe63b785622a24875","fast_food",121.15641,14.75574,"Antonio Junior Eatery - San Isidro Rodriguez Rizal"],
+    ["o56f7b9f492984938","cafe",121.1545,14.76219,"Gravity Sub-Urban, Montalban"],
+    ["of4be8734ab134bd7","cafe",121.16015,14.75105,"Duo Brew - Eastwood Montalban"],
+    ["o27b73f1554774709","school",121.15051,14.75755,"Macaingalan Elementary School"],
+    ["o3c232b9408124575","school",121.15869,14.7507,"Le Mara Learning Academy"],
+    ["o4e50d949863644f9","school",121.16794,14.78321,"Basecamp Elementary School"],
+    ["o8be9706fc81d48d6","school",121.15642,14.75319,"Deped Tayo Blue Rizal San Rafael Elementary School"],
+    ["odaa3b48388414c45","school",121.15304,14.76218,"DepEd Macaingalan High School"],
+    ["of2f611f13dc148e6","school",121.1619,14.75982,"Ecoville Child Development Center"],
+    ["of44f509706ed4fde","school",121.15157,14.76266,"Southville 8 Elementary School"],
+    ["o72f1dd54b7aa4897","college",121.16227,14.75954,"CASAP Rodriguez Campus"]
+  ]
+}

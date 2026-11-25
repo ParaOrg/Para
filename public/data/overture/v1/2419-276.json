@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "cell": "2419-276",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o0e7bbb4c89b84aa3","restaurant",120.99838,13.84459,"Caleb's Corner"],
+    ["o1766f366bc8e400d","restaurant",120.99562,13.81246,"Polly's Alfresco Grill"],
+    ["o49afcc196be14238","restaurant",120.9866,13.84975,"LabStation Burger House"],
+    ["o5c530e07d2304988","restaurant",120.9866,13.84975,"Lab Station Muzon"],
+    ["o71d6d901147942d3","restaurant",120.97177,13.84155,"Paseo's Kitchen"],
+    ["o768bf24afb6044e6","restaurant",120.99895,13.8419,"BonChon"],
+    ["o7a1df6c6d93a4118","restaurant",120.99334,13.82414,"Polly's Alfresco Grill"],
+    ["ocf8ca415411a485f","restaurant",120.9866,13.80274,"Tampisaw Kitchenette"],
+    ["of1f351e02d354114","restaurant",120.96422,13.80401,"Kalumala Heights Gilliann's Diner"],
+    ["o374993b2e31e49d3","fast_food",120.99452,13.8188,"McDonald's"],
+    ["od1864a0e99ef449e","fast_food",120.98102,13.84398,"Jollibee"],
+    ["o967fea6aefea408c","dentist",120.99249,13.82834,"Dentelle Care Dental Clinic - Muzon Branch"],
+    ["od4dd52d723e54afa","dentist",120.97243,13.84215,"Tooth Empire Dental Center -Batangas branch"],
+    ["o67a0cfef26c5489e","school",120.97421,13.80347,"Sinala Elementary School"],
+    ["oef712450d718488a","school",120.9956,13.81682,"Balayong Elementary School"]
+  ]
+}

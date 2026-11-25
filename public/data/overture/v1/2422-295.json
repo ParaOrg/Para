@@ -1,0 +1,28 @@
+{
+  "schema": 1,
+  "cell": "2422-295",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o956c11a09e3548fb","restaurant",121.12916,14.75861,"SAMRA Korean Mart & Meat Shop - Montalban"],
+    ["o9c88c2e74aa948d6","restaurant",121.13819,14.75257,"Villon Midwife Clinic"],
+    ["od04dd7d11a8f4b85","restaurant",121.14311,14.75572,"Tea-Panan House Cafeteria"],
+    ["oe5eb37160d9c4e47","restaurant",121.13698,14.75344,"El Relos All Day Unli Rice and Pansit Batil Patung"],
+    ["o14c5bf3b2ff74658","fast_food",121.14162,14.7518,"Dos Kusinero's"],
+    ["oa1edac65ab124c53","fast_food",121.14378,14.75523,"Jollibee, Montalban Town Center"],
+    ["o8182a8e3c5bf4f9f","cafe",121.1373,14.75408,"Classic keopi corner"],
+    ["oc79c555e80724d44","cafe",121.14822,14.75013,"Gravity Southville"],
+    ["oe555b894977b4754","cafe",121.13815,14.75587,"Gravity Sub-Urban, Montalban"],
+    ["o59d44a4059b24139","clinic",121.12916,14.75861,"Tita Dok’s Pediatric Clinic"],
+    ["o7fb08622bda04d8a","clinic",121.12916,14.75861,"Alberba Dental Clinic"],
+    ["oaa6375b81f7541ff","clinic",121.14921,14.75264,"San Nicolas Banal Health Service"],
+    ["oc7c81205b8a64508","clinic",121.14313,14.75658,"Abalos Medical Clinic - Montalban San jose Bayan"],
+    ["o3f6916a74c404560","school",121.14137,14.75356,"Double L Child Hood Center"],
+    ["o43d146850d74476e","school",121.14474,14.75643,"Southville 8C National High School"],
+    ["o5ee65f0eeed6475b","school",121.11243,14.79986,"Ricafort Elementary School"],
+    ["o81eb942f68fc4f69","school",121.13693,14.75282,"Kohen Tutorial Development Center"],
+    ["obb6b38f88b21452b","school",121.14417,14.75597,"Southville 8C Elementary School"],
+    ["oebc7e1a69c44470f","school",121.14452,14.75274,"Kiddielamp Learning Center"],
+    ["o9be30b3b8ddd4285","college",121.14154,14.75054,"Pamantasan ng Montalban"],
+    ["oa5320ba6527a4ecb","college",121.14201,14.75079,"Colegio de Montalban"]
+  ]
+}

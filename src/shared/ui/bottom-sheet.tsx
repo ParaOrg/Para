@@ -51,8 +51,8 @@ interface Props {
    * place's (the public map's HintuanCard) panel in the top-left corner from `@float:` (`corner`,
    * the default), or the card the studio's hotspot card floats as, 16 in, from `@wide:` (`card`).
    * What it holds reads which with `sheet-floating:` and `sheet-low:` (global.css). `dock`: the route
-   * list's, docked the map's whole height on the left from `@float:`, 384 wide (Figma 4683:32635),
-   * its `footer` its top bar.
+   * list's and a trip's, docked on the left from `@float:`, 384 wide (Figma 4683:32635), as tall as
+   * what it holds up to the map's whole height, scrolling past that, its `footer` its top bar.
    */
   floats?: 'corner' | 'card' | 'dock';
   /**
@@ -111,7 +111,7 @@ export interface SheetHeight {
 const FLOATS_AT = {
   corner:
     '@float:inset-auto @float:top-[var(--sheet-float-top,0px)] @float:left-0 @float:max-h-[calc(100%-var(--sheet-float-top,0px))] @float:w-96 @float:pt-0 @float:pb-0',
-  dock: '@float:inset-auto @float:top-[var(--sheet-float-top,0px)] @float:bottom-0 @float:left-0 @float:w-96 @float:overflow-visible @float:pt-0 @float:pb-0',
+  dock: '@float:inset-auto @float:top-[var(--sheet-float-top,0px)] @float:left-0 @float:max-h-[calc(100%-var(--sheet-float-top,0px))] @float:w-96 @float:overflow-visible @float:pt-0 @float:pb-0',
   card:
     '@wide:inset-auto @wide:top-4 @wide:left-4 @wide:w-80 @wide:max-w-[calc(100%-2rem)] @wide:max-h-[calc(100%-2rem)] ' +
     '@wide:rounded-xl @wide:shadow-xl @wide:ring-1 @wide:ring-black/10 @wide:pt-4 @wide:pb-4',

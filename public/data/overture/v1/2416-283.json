@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "cell": "2416-283",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o383150f4b0aa40ad","restaurant",120.82283,14.15089,"Mang Jose Lechon at Inasal Skyranch Tagaytay"],
+    ["oa9e5d526148545c9","restaurant",120.83535,14.1921,"Sadati Forest"],
+    ["o76f9d49712434a34","cafe",120.81738,14.16636,"The Cottage Cafe by Polla’s"],
+    ["ob500836c018a4b57","cafe",120.80956,14.16267,"The Cottage Cafe by Polla’s"],
+    ["oe45d1fddfe7a4401","cafe",120.81051,14.17248,"Danniel's Den Coffee and Board Games"],
+    ["o6d4ef7282f634c18","dentist",120.84465,14.18973,"A.P Aterrado Dental Clinic"],
+    ["o4adc2a787bfa449a","school",120.84818,14.15115,"Taywanak National High School"],
+    ["of983dd80aa254e9c","school",120.8457,14.18574,"Daine Elementary School"]
+  ]
+}

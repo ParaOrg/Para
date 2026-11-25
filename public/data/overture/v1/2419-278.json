@@ -1,0 +1,12 @@
+{
+  "schema": 1,
+  "cell": "2419-278",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o13697f94f1b04007","restaurant",120.96503,13.90694,"Chenelens Lomi Haus"],
+    ["o1b3558b84f3840ff","restaurant",120.95188,13.92797,"Garage 241"],
+    ["oc1c8a890c47b471e","restaurant",120.95208,13.92988,"San Nicolas Lakefront"],
+    ["o466b6d535a2643e5","school",120.96371,13.90406,"Maabud Elementary School"],
+    ["oefc531b1bf464513","school",120.95026,13.90479,"Bethel Vessels of Wisdom Christian School of Taal"]
+  ]
+}

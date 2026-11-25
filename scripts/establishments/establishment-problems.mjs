@@ -7,35 +7,31 @@ import {
   establishmentCellOf,
 } from '../../src/features/routes/published/establishment-cells.ts';
 import {
-  ATTRIBUTION,
   ESTABLISHMENT_CELL_MAX_BYTES,
   ESTABLISHMENT_FILE_SCHEMA,
-  ESTABLISHMENT_KINDS,
   ESTABLISHMENT_TOTAL_MAX_BYTES,
   FEWEST_OF_A_KIND,
-  LICENSE,
+  OSM_FILES,
   sha,
 } from './establishment-file.mjs';
 
 const isText = (value) => typeof value === 'string' && value.trim() !== '';
 const isCoordinate = (value, low, high) =>
   typeof value === 'number' && Number.isFinite(value) && value >= low && value <= high;
-const EXTRA_KEYS = new Set(['brand', 'atm']);
-
-/** What is wrong with one row, as a sentence, or null. */
-function rowProblem(row) {
+/** What is wrong with one row of `files` (OSM_FILES or another set), as a sentence, or null. */
+function rowProblem(row, files) {
   const [id, kind, lng, lat, name, extras] = Array.isArray(row) ? row : [];
   if (!Array.isArray(row) || row.length < 4 || row.length > 6)
     return 'a row is [id, kind, lng, lat] and, maybe, a name and extras.';
-  if (!/^[nwr]\d+$/.test(id ?? '')) return 'the id is not an OSM id.';
-  if (!ESTABLISHMENT_KINDS.includes(kind)) return `unknown kind ${kind}.`;
+  if (!files.idPattern.test(id ?? '')) return `the id is not ${files.idName}.`;
+  if (!files.kinds.includes(kind)) return `unknown kind ${kind}.`;
   if (!isCoordinate(lng, -180, 180) || !isCoordinate(lat, -90, 90))
     return 'the point is not lng, lat.';
   if (row.length >= 5 && name !== null && !isText(name)) return 'the name is not text or null.';
   if (row.length === 6) {
     const keys = extras && typeof extras === 'object' ? Object.keys(extras) : [];
-    if (keys.length === 0 || keys.some((key) => !EXTRA_KEYS.has(key)))
-      return 'extras, when present, hold brand or atm only.';
+    if (keys.length === 0 || keys.some((key) => !files.extraKeys.includes(key)))
+      return `extras, when present, hold ${files.extraKeys.join(' or ')} only.`;
   }
   return null;
 }
@@ -49,18 +45,25 @@ const parse = (text, what, problems) => {
   }
 };
 
-/** What is wrong with the files, as sentences; empty when they are sound. `cells` maps each cell's name to its text. */
-export function establishmentFilesProblems({ index: indexText, cells }) {
+/**
+ * What is wrong with the files, as sentences; empty when they are sound. `cells` maps each cell's
+ * name to its text; `files` says which set they are (OSM_FILES unless another is given).
+ */
+export function establishmentFilesProblems({ index: indexText, cells }, files = OSM_FILES) {
   const problems = [];
   const index = parse(indexText, 'The index', problems);
   if (!index) return problems;
   if (index.schema !== ESTABLISHMENT_FILE_SCHEMA) problems.push(`schema is ${index.schema}.`);
-  if (index.license !== LICENSE) problems.push(`license is ${index.license}, not ${LICENSE}.`);
-  if (index.attribution !== ATTRIBUTION) problems.push(`attribution is not "${ATTRIBUTION}".`);
+  if (index.license !== files.license)
+    problems.push(`license is ${index.license}, not ${files.license}.`);
+  if (index.attribution !== files.attribution)
+    problems.push(`attribution is not "${files.attribution}".`);
   for (const key of ['license_note', 'source'])
     if (!isText(index[key])) problems.push(`${key} is missing.`);
-  if (!isText(index.extract_at) || Number.isNaN(Date.parse(index.extract_at)))
-    problems.push('extract_at is not a timestamp.');
+  // A timestamp, or a dated release such as Overture's 2026-11-18.0.
+  const date = index[files.dateKey];
+  if (!isText(date) || Number.isNaN(Date.parse(date.replace(/^(\d{4}-\d\d-\d\d)\.\d+$/, '$1'))))
+    problems.push(`${files.dateKey} is not a date.`);
   if (index.cell_deg !== ESTABLISHMENT_CELL_DEG)
     problems.push(`cell_deg is ${index.cell_deg}, not ${ESTABLISHMENT_CELL_DEG}.`);
   if (!Array.isArray(index.cells)) return [...problems, 'cells is not a list.'];
@@ -69,7 +72,7 @@ export function establishmentFilesProblems({ index: indexText, cells }) {
   for (const name of cells.keys())
     if (!listed.has(name)) problems.push(`Cell ${name} has a file the index does not list.`);
   const ids = new Set();
-  const counts = new Map(ESTABLISHMENT_KINDS.map((kind) => [kind, 0]));
+  const counts = new Map(files.kinds.map((kind) => [kind, 0]));
   let total = 0;
   for (const { cell, count, bytes, hash } of index.cells) {
     const text = cells.get(cell);
@@ -89,7 +92,7 @@ export function establishmentFilesProblems({ index: indexText, cells }) {
     if (!file) continue;
     if (
       file.cell !== cell ||
-      file.attribution !== ATTRIBUTION ||
+      file.attribution !== files.attribution ||
       !Array.isArray(file.establishments)
     ) {
       problems.push(`Cell ${cell}: its name, credit or list is wrong.`);
@@ -98,7 +101,7 @@ export function establishmentFilesProblems({ index: indexText, cells }) {
     if (file.establishments.length !== count)
       problems.push(`Cell ${cell} holds ${file.establishments.length}, the index says ${count}.`);
     file.establishments.forEach((row, i) => {
-      const problem = rowProblem(row);
+      const problem = rowProblem(row, files);
       if (problem) return problems.push(`Cell ${cell}, row ${i}: ${problem}`);
       if (ids.has(row[0])) problems.push(`Cell ${cell}, row ${i}: ${row[0]} is repeated.`);
       ids.add(row[0]);

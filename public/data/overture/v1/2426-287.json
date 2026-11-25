@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "cell": "2426-287",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o2d7c253c71064c94","restaurant",121.32864,14.36108,"Bikol Ni's Lugawan"],
+    ["ob3f2d6fd0f964687","restaurant",121.33903,14.39961,"Nelita's - Kainan sa Farmers"],
+    ["of4b9cbd3f75140a8","restaurant",121.33878,14.39808,"Khallels"],
+    ["of6632a51dbe04559","restaurant",121.33411,14.37917,"Rnjj Food House and Mini Mart"],
+    ["offa73a1acc504fa5","restaurant",121.32482,14.35621,"Bikes and Breakfast"],
+    ["o70ff1fec55224654","dentist",121.32603,14.35791,"SamAish Dental Clinic"],
+    ["o6549757e057e4b1c","school",121.33983,14.3993,"Malaya Integrated National High School"],
+    ["o95d045b69f6844b8","school",121.32394,14.3541,"Jalajala Elementary School"],
+    ["oaa5ab5b426dd4ce8","school",121.33131,14.35154,"DepEd Jalajala National High School"]
+  ]
+}

@@ -17,7 +17,7 @@ Written 2026-10-28 from the repo and from what the hub checked live that day. An
 | **The owner's own computer and password manager** | The backup's private GPG key (never on GitHub, R2 or Supabase); the app key passphrase; recovery codes | The owner | Password manager and an offline copy (backup.yml step 3) |
 | **Facebook** | The page the consent wording links as the way to reach the owner (`src/features/contribute/consent/consent-panel.tsx`; the screen is off while the owner redesigns it, ADR 0004) | The owner | (owner to confirm) |
 | **The privacy policy** | Para's privacy policy, a document the owner holds; not in the repo | The owner | – |
-| **Services Para uses without an account** | OpenStreetMap data through Geofabrik's extract and Planetiler (tiles.yml), and through Geofabrik's Philippines extract, cut to the map's panning box, for place search's landmark file and the footbridges (landmarks.yml); OpenFreeMap's styles, sprite and glyphs, copied monthly (`scripts/tiles/fetch-assets.mjs`); the public OSRM demo router for the studio's snapping; Esri and AWS's elevation tiles for the studio's Satellite and Terrain designs (`studio-basemaps.ts`) | – | – |
+| **Services Para uses without an account** | OpenStreetMap data through Geofabrik's extract and Planetiler (tiles.yml), and through Geofabrik's Philippines extract, cut to the map's panning box, for place search's landmark file, the footbridges and the establishment files (landmarks.yml); Overture Maps' public Places release on S3, read anonymously by the same monthly run for the Overture place files (`scripts/overture/pull.py`, duckdb from pip); OpenFreeMap's styles, sprite and glyphs, copied monthly (`scripts/tiles/fetch-assets.mjs`); the public OSRM demo router for the studio's snapping; Esri and AWS's elevation tiles for the studio's Satellite and Terrain designs (`studio-basemaps.ts`) | – | – |
 | **Google Play and Apple** | Nothing yet. The commuter app is planned for both stores (ADR 0008); the contributor app is a direct download (ADR 0006) | – | – |
 
 The addresses (checked live 2026-10-28):
@@ -103,6 +103,12 @@ Each says what you'd see, the first check, and the fix. When the alert workflow 
 - **You'd see:** a red Landmarks run (monthly, 19:37 UTC on the 8th, which is 03:37 Manila on the 9th), and the `alert` issue it opens.
 - **First check:** the failed step (landmarks.yml): the download from Geofabrik or its MD5, osmium, the file's own check (`scripts/landmarks/check.mjs`), or the comparison refusing a file that lost more than 20% of its landmarks.
 - **Fix:** place search keeps the committed `public/data/landmarks.v1.json`, so there is no rush. Fix the cause, or, if a shrink is real (a tagging change on OpenStreetMap), Run workflow with "allow shrink" ticked. The run opens a pull request into staging; nothing merges by itself.
+
+### The OSM mirror failed
+
+- **You'd see:** the issue "Alert: the OSM mirror run failed", after the weekly run (Sundays 19:13 UTC, which is 03:13 Manila on Monday).
+- **First check:** the failed step (osm-mirror.yml): a secret missing from the `osm-mirror` environment, an endpoint not in R2's shape, or "No source gave the Philippines extract", when Geofabrik and openstreetmap.fr both failed or stalled (`scripts/osm-mirror/mirror.sh`).
+- **Fix:** the copy at `https://osm.para-commute.org/philippines-latest.osm.pbf` stays last week's, and the builds keep reading it, so there is no rush. Run workflow on staging later.
 
 ### The database check failed
 

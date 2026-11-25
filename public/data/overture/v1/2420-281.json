@@ -1,0 +1,26 @@
+{
+  "schema": 1,
+  "cell": "2420-281",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o0d16c20c550e4e67","restaurant",121.00336,14.08571,"Frostea Shake & Snack Bar"],
+    ["o232c5a47a058451f","restaurant",121.01755,14.09254,"Talisay Restaurant and Bulalohan"],
+    ["o48fb5823bbec40d7","restaurant",121.03741,14.0942,"Zedricks Lomi House"],
+    ["o8eb13fe73601455a","restaurant",121.03474,14.09981,"RMS Restaurant Tagaytay"],
+    ["ob11c85af95a1452b","restaurant",121.01708,14.09215,"Fedelicious Wings"],
+    ["ob314b6d0a291468f","restaurant",121.01761,14.09285,"Win Wizer Restobar"],
+    ["ob3c0b0872f1741d8","restaurant",121.01817,14.09277,"FunRuckers"],
+    ["od3afc2011204481f","restaurant",121.00353,14.08591,"Frostea Shake & Snack Bar"],
+    ["od823debf578d4637","restaurant",121.02473,14.09329,"Foodiescape Diner"],
+    ["oea4c08c5837d487e","restaurant",121.01993,14.0928,"Hermanos Lechon Manok"],
+    ["of86a303a3b3d4fad","restaurant",121.021,14.09059,"Kamalig Grill and Resto"],
+    ["of8da2be0846d479f","restaurant",121.022,14.09371,"Terraza Cafe & Restaurant"],
+    ["o8dfe095c5c874fc8","fast_food",121.03098,14.088,"Jollibee Tagaytay Mendez"],
+    ["o4da8cbcf5372425d","cafe",121.03818,14.09425,"KM. 29 Brew Cafe"],
+    ["o6cbf6da2d9a94842","cafe",121.01264,14.09214,"Celebritea CaffeTearia"],
+    ["o7724064976ea4e09","cafe",121.01689,14.09107,"Red Egg Deli"],
+    ["o925ab72d41894723","cafe",121.01635,14.09103,"Terraza at Balai Isabel"],
+    ["od7c7a00e37984290","school",121.02151,14.09486,"Venancio Trinidad Sr. Memorial Elementary School"],
+    ["ofe38007a7ba2418e","college",121.01577,14.0927,"Talisay Polytechnic Institute"]
+  ]
+}

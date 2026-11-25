@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "cell": "2417-280",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o309b71b00a664454","restaurant",120.86935,14.01337,"Mang Aning Lomihan"],
+    ["o9d8e7e4a76e044e7","restaurant",120.85943,14.03027,"burger ahuy calaca"],
+    ["ob38afe9035734d75","restaurant",120.87423,14.00976,"Badi's Bistro"],
+    ["ob5273649115a4bc8","restaurant",120.85686,14.04196,"Lake Stop Restaurant, Talisay Batangas"],
+    ["ob7b17d9abd564bce","restaurant",120.85686,14.04196,"Cafe Roo Laurel Batangas"],
+    ["oe1a6b827d73e49f1","cafe",120.86783,14.01489,"Brewed For You Coffee House and Restaurant"]
+  ]
+}

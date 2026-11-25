@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "cell": "2420-282",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o378327bfe9ec41cf","restaurant",121.02232,14.14678,"All Is Well Tapsihan"],
+    ["o4274a07e29204b72","restaurant",121.03839,14.14443,"Tagaytay Highlands Country Club Veranda"],
+    ["o5a95952f1c6b455d","restaurant",121.02222,14.1431,"Tres Angel Eatery"],
+    ["o675c1c0aae084fe8","restaurant",121.03514,14.13498,"Concha's Garden Cafe"],
+    ["o95afa95a63914615","restaurant",121.03828,14.14393,"Aozora Japanese Restaurant"],
+    ["oa516a0b764674394","restaurant",121.03724,14.14565,"China Palace at Tagaytay Highlands"],
+    ["obfa4d85ecc6a4b94","restaurant",121.02278,14.14273,"Ferdinand Coffee House"],
+    ["oc8c4a557058c4389","restaurant",121.03318,14.13433,"The Highlander Steakhouse"],
+    ["oeac816d441e64d13","restaurant",121.03267,14.13583,"The Spa and Lodge at Tagaytay Highlands"],
+    ["o4cc291f634c84504","fast_food",121.0077,14.1032,"Potato Corner"],
+    ["o43fc267b8c9940c1","cafe",121.01118,14.13623,"Coffee Project Crosswinds",{"brand":"Coffee Project"}],
+    ["o80289bed27364d88","cafe",121.01112,14.13626,"The Coffee Bean & Tea Leaf"],
+    ["oaf007bbf30a14292","cafe",121.00794,14.14205,"Windmill Lausanne"],
+    ["oe68ffd3aae7a4e57","cafe",121.01089,14.13632,"Cafe Voi La"]
+  ]
+}

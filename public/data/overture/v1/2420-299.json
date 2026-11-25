@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "cell": "2420-299",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o0d85889b1efe42b0","restaurant",121.02036,14.9561,"Papa Jules Grill House"],
+    ["o26be9a66733442f1","restaurant",121.04968,14.95075,"Drix Family KTV café"],
+    ["o288d37c86a864da8","restaurant",121.00221,14.97934,"SB Bikers Cafe"],
+    ["o43024d94afc846c1","clinic",121.01149,14.95311,"Cinco Doctors Clinic"],
+    ["o5eff21ba6b364c1a","clinic",121.03721,14.95888,"Cinco Doctors Clinic"],
+    ["ob0bee1a1a2734a5d","dentist",121.02063,14.95638,"ReySan Dental Clinic"],
+    ["oc92cbe115e20441d","school",121.02242,14.95105,"Baybay Elementary School"],
+    ["oeceefd41d6fe4ac5","school",121.02476,14.9503,"Binagbag Elementary School"]
+  ]
+}

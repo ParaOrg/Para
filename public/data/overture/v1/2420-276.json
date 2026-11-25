@@ -1,0 +1,25 @@
+{
+  "schema": 1,
+  "cell": "2420-276",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o0dea12bcee414dae","restaurant",121.02459,13.80341,"Batangueños Lutong Bahay"],
+    ["o0efc8a00130e42e6","restaurant",121.03893,13.8028,"Tres Marias Alfresco"],
+    ["o22c2a4a083934362","restaurant",121.02087,13.84235,"Jeika's Lomi House"],
+    ["o27b961f4dd424e57","restaurant",121.03937,13.80264,"American Ribs and Wings"],
+    ["o4d26f8f3940f4e39","restaurant",121.01617,13.81933,"Hidden Resto"],
+    ["o5d235d8d1fd64dcc","restaurant",121.04615,13.84782,"Greenwich Bauan"],
+    ["oa7e34c9030a444bb","restaurant",121.03587,13.80183,"Balbon Lomi and Goto House"],
+    ["odc398f11bcf14015","restaurant",121.02825,13.80074,"Mayne's Foodhouse"],
+    ["oe51eba7308604a04","restaurant",121.03114,13.82802,"Ka Talina's Lomi House"],
+    ["ofb0c8ccb66194a3e","restaurant",121.02204,13.81044,"KFC"],
+    ["o5bf43e4bcbcb4391","cafe",121.01601,13.8055,"Sa Silong By Aa’S"],
+    ["of6f1c59fca1246db","cafe",121.03235,13.80083,"Markus Cafe"],
+    ["o973049c88ccc4dc3","clinic",121.01375,13.81229,"LavenDent Dental Clinic"],
+    ["oa324c5d7b67e45dd","dentist",121.04727,13.81306,"FelizCity Dental Clinic"],
+    ["o5fa1504e785f4a69","school",121.0159,13.82576,"Ilat National High School"],
+    ["o80448d21aefb47a3","school",121.02995,13.82205,"Alalum National High School"],
+    ["o9c41ddf488c144ba","school",121.04669,13.84905,"Rizal National High School. Occidental Mindoro."],
+    ["oe1eddd7de9914227","school",121.02043,13.84187,"Gelerang Kawayan Elementary School"]
+  ]
+}

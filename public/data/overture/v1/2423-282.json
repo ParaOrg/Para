@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "cell": "2423-282",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o447ef9ac99e5477d","restaurant",121.15108,14.10558,"Mesa"],
+    ["ob16a2d46dea440f0","restaurant",121.15443,14.10333,"Dadeh's Lomi House"],
+    ["oef6fbe10410c4038","restaurant",121.15624,14.10145,"JMA EATERY"],
+    ["o4d538872577b4440","fast_food",121.15433,14.11972,"McDonald's"],
+    ["o4fb9d80932b543d2","cafe",121.16512,14.12402,"Dwenas Cafe"],
+    ["ob24ae3532fce4638","cafe",121.15034,14.10587,"Figaro Coffee- Sto. Tomas, Batangas"],
+    ["o5fc747151d364927","dentist",121.15167,14.10468,"Prioriteeth Dental Clinic"],
+    ["o696c8023316a4fab","dentist",121.15283,14.12308,"LC Enriquez Dental Clinic"],
+    ["o872b0700005e495b","dentist",121.15303,14.10406,"Dr. Cherica Marasigan-Pacquin Dental Clinic"],
+    ["o4f96836404a84650","school",121.16,14.12096,"Patac Elementary School Patac, Santo Tomas 2505 La Union"],
+    ["oabf01af8e4a042b7","school",121.17576,14.10075,"Immaculate Conception Montessori School of Sto. Tomas"]
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "schema": 1,
+  "cell": "2424-291",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o2a0ce2d3c44d426b","restaurant",121.21149,14.55919,"Haro Haro Teresa"],
+    ["oc4474b8d8c7b4d06","restaurant",121.21278,14.56312,"Boom Pares"],
+    ["of5d025b4377e4d27","restaurant",121.20786,14.55875,"Chooks-to-Go"],
+    ["o239f60126e3a4c47","fast_food",121.21415,14.56147,"McDonald's"],
+    ["ob2832ac8ec8d471f","fast_food",121.21019,14.55841,"McDonalds Primark Teresa"],
+    ["o8ca03d4dfa3d4459","cafe",121.21696,14.56281,"BigBrew Teresa Rizal"],
+    ["oa49f5f9dd7c3473e","cafe",121.21832,14.55017,"Black Cup Coffee and Tea"],
+    ["odbf7b5c332ba4493","clinic",121.22353,14.56159,"Green Barley-Teresa, Rizal"],
+    ["o0123b16ecce44ffa","dentist",121.20956,14.55873,"Dr. Karina Francisco Dental Clinic"],
+    ["o900127002b644918","dentist",121.21833,14.55013,"Dfg Dental Clinic"],
+    ["o0dd0e93794a24a6f","school",121.22101,14.56232,"Miljohn Christian Academy"],
+    ["o1f473c5e27a94eb3","school",121.20962,14.58355,"Jesus Cabarrus Elementary School"],
+    ["o325f7d187fa0457b","school",121.24149,14.55354,"Talaga Elementary School"],
+    ["o3402e008f55b422d","school",121.21157,14.55757,"Sumilang Elementary School Bgy San Jose Antipolo City"],
+    ["o8cb5d9244eeb4b79","school",121.23663,14.57331,"DepEd Tayo Blue Rizal Pantay Elementary School"],
+    ["ob191e1ec2af54857","school",121.21349,14.5586,"Teresa Elementary School"],
+    ["of03c36ee0a8643dc","school",121.23756,14.56061,"DepEd Tayo Blue Rizal Pantay Elementary School"]
+  ]
+}

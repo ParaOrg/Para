@@ -1,0 +1,24 @@
+{
+  "schema": 1,
+  "cell": "2420-277",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o154179cef48e40cd","restaurant",121.02891,13.86954,"Engineer Baboy"],
+    ["o2678a6a08db641f8","restaurant",121.04984,13.89953,"Al rigga"],
+    ["o32ad425530f34eb6","restaurant",121.01785,13.8677,"Maristela's Restaurant"],
+    ["o36ad0b9decf64766","restaurant",121.03394,13.87907,"Buffalo Station"],
+    ["o5e594f3fa3b6455c","restaurant",121.02185,13.86838,"CHIX ni Bigbro"],
+    ["o7061b7099cff4a2d","restaurant",121.02172,13.86304,"Leo and Thess Lomihaus"],
+    ["o771f5221f9e44577","restaurant",121.029,13.86843,"Jowa's Lomi House"],
+    ["od3579787a20847c1","restaurant",121.04549,13.89473,"Florenel Restaurant and Event Center"],
+    ["o406ac31a6a4d4e09","cafe",121.03504,13.88059,"Florenel Café and Restaurant"],
+    ["oa7babe2b58784dfe","cafe",121.04829,13.89936,"DT Cafe"],
+    ["oe8611ffdeea642a8","cafe",121.04957,13.89811,"Taza Coffee"],
+    ["of4c813237ee54f31","cafe",121.04611,13.89424,"Oasis Auto Care & Cafe"],
+    ["oea11588d312b4f44","clinic",121.04906,13.89806,"Gavino Optical Clinic"],
+    ["o2a1edffa13b64884","dentist",121.04549,13.89473,"Mantuano Dental"],
+    ["o49cd9f2dd0ca46e7","dentist",121.04956,13.89943,"Comia Dental Care Clinic"],
+    ["of1ad7d0699eb4a0b","dentist",121.0491,13.898,"Dental Central by Dr. Cathy"],
+    ["of33ef1815ee24995","college",121.00529,13.86614,"Alitagtag College, Inc."]
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "schema": 1,
+  "cell": "2421-272",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o3db68531258f47d4","restaurant",121.05344,13.63405,"Commando Burger"],
+    ["o85f160227d674651","restaurant",121.07239,13.62879,"Shake 'N Wings"],
+    ["odbabf69eed0540d2","cafe",121.07668,13.62318,"KEPCO Ilijan Corporation"],
+    ["o7bdb3f8cf82c4fa4","dentist",121.07133,13.63333,"Ventura Dental Centre"]
+  ]
+}

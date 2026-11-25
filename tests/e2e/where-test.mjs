@@ -221,14 +221,18 @@ check(
     (await overlay(page).count()) === 0,
 );
 check('it says what it does', (await button.getAttribute('aria-label')) === 'Turn on my location');
+// With nothing open the explore cards stand along the bottom, and the button 16 over them
+// (FirstTime, 4848:33680).
+await page.getByTestId('explore-cards').waitFor();
 const foot = await page.evaluate(() => {
   const b = document.querySelector('[data-testid="where"]').getBoundingClientRect();
   const m = window.__map.getContainer().getBoundingClientRect();
-  return { below: m.bottom - b.bottom, right: m.right - b.right };
+  const cards = document.querySelector('[data-testid="explore-cards"]').getBoundingClientRect();
+  return { overCards: cards.top - b.bottom, right: m.right - b.right };
 });
 check(
-  '  at the map foot, bottom right, 12 in',
-  Math.abs(foot.below - 12) <= 1 && Math.abs(foot.right - 12) <= 1,
+  '  bottom right, 16 over the explore cards and 12 in',
+  Math.abs(foot.overCards - 16) <= 1 && Math.abs(foot.right - 12) <= 1,
   JSON.stringify(foot),
 );
 

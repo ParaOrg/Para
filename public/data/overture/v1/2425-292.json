@@ -1,0 +1,14 @@
+{
+  "schema": 1,
+  "cell": "2425-292",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o282f154abde54fdc","restaurant",121.25839,14.61782,"Chef Tatung's Private Dining"],
+    ["odbe3c2262aac48dd","restaurant",121.29869,14.61186,"Northern Plate"],
+    ["o4193167d56cd42ca","fast_food",121.2605,14.62248,"KFC"],
+    ["oae947505e0c84cf6","fast_food",121.28454,14.62961,"KFC"],
+    ["o8b9f350e2cf6465f","school",121.28799,14.60183,"Pinugay Elementary School"],
+    ["obe371fe3ab734325","school",121.26032,14.60415,"Baras Pinugay Elementary School"],
+    ["oc478db6ec35c40f8","school",121.26073,14.60987,"DepEd Tayo Blue Rizal - Baras-Pinugay Phase 2 National High School"]
+  ]
+}

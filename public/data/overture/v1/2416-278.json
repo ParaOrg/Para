@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "cell": "2416-278",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o0ea9ecb9bdc74795","restaurant",120.80185,13.93513,"Aubmardan Food Hub"],
+    ["o649d635465b74b30","restaurant",120.8131,13.93131,"Buyok's BBQ House"],
+    ["o82525c4810e74d97","restaurant",120.82083,13.92584,"Frangines Foodhouse"],
+    ["o9b7de5a341e74ace","restaurant",120.81747,13.94147,"CJK Food Hub"],
+    ["obac963a1c7c64274","restaurant",120.81748,13.94133,"Lita's Lomi House"],
+    ["oe03143afda6c4ee3","cafe",120.81348,13.92995,"BOBA SIP Coffee. Tea. Snacks"],
+    ["oe3607a2882894a1e","cafe",120.84189,13.92091,"Booble Tea Calaca"],
+    ["o43d62335474d424a","dentist",120.81071,13.92887,"De Villa Alipis Dental Clinic"],
+    ["odae3d27c88564f18","dentist",120.83762,13.91828,"FEP Belarmino Dental Center"],
+    ["oe68dc183811042af","dentist",120.81104,13.92868,"De Villa Alipis Dental Clinic"],
+    ["o6b81806f8fc74cbb","school",120.80535,13.92404,"Camastilisan Elementary School"]
+  ]
+}

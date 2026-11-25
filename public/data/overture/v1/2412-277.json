@@ -1,0 +1,10 @@
+{
+  "schema": 1,
+  "cell": "2412-277",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o0a8f3a7c32de49db","cafe",120.62582,13.87405,"Rafters Cafe"],
+    ["of288ddfe30fe40ab","school",120.63559,13.87607,"Angelita Zobel Elementary School"],
+    ["of1dd6948d43040c7","college",120.63242,13.87466,"Colegio de Sto. Domingo de Silos"]
+  ]
+}

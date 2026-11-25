@@ -1,0 +1,20 @@
+{
+  "schema": 1,
+  "cell": "2426-290",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o340daff9c6e34ecb","restaurant",121.32961,14.53973,"Kowloon House Tanay"],
+    ["o498267768a144e3d","restaurant",121.30115,14.50724,"Qalmara Hilltop Restaurant"],
+    ["o8dac551717584355","restaurant",121.30486,14.51485,"Moolk Creamery Corp"],
+    ["ob6015858475d4971","restaurant",121.33543,14.5397,"Boynita TANAY Branch"],
+    ["ob76cc5de88bf411a","restaurant",121.32961,14.53973,"Jayvee’s Food Hub & Billiard Corner"],
+    ["ode8c8e0e6822415e","restaurant",121.32961,14.53973,"KFC"],
+    ["o24d0c9a4974442df","cafe",121.33598,14.51546,"CityScape Cafe Tanay"],
+    ["o6b7aaaa272f54429","clinic",121.32961,14.53973,"Alagang Aldea Maternity Clinic"],
+    ["oa6631d5fe8084ad5","clinic",121.30486,14.51485,"Prime Dialysis Center Inc - Tanay"],
+    ["od8a2caccaaeb49ec","clinic",121.32961,14.53973,"ECSL Trading and Manufacturing"],
+    ["of245276aac4744b4","dentist",121.30953,14.5175,"Dra. Haidee Pendon-Custodio Dental Clinic"],
+    ["ob9d66518b0914103","school",121.33448,14.51587,"Bathala Elementary"],
+    ["ocb5c38e1ece64f80","school",121.30486,14.51485,"DepEd Manhain Elementary School"]
+  ]
+}

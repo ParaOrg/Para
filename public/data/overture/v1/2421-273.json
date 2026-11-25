@@ -1,0 +1,12 @@
+{
+  "schema": 1,
+  "cell": "2421-273",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o3d4da88f00b8464a","restaurant",121.05164,13.69475,"Zeny's Seaside Eatery and Lomi House"],
+    ["o33ce370377b44cb1","cafe",121.05412,13.69707,"Proper Tea Milktea House"],
+    ["o03fa62db71a14b19","school",121.09579,13.69781,"DepEd    Sto. Niño National High School - Batangas City"],
+    ["o32aa3c36d1594687","school",121.05251,13.6862,"DepEd Pinamukan Integrated School - Batangas City"],
+    ["o90ac1ea049d74626","school",121.05508,13.69739,"DepEd Pinamukan Integrated School - Batangas City"]
+  ]
+}

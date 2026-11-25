@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "cell": "2415-283",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o079dd62818c24acc","restaurant",120.79856,14.18044,"Nelia's Pares Hub"],
+    ["o0da1e67d04b74322","restaurant",120.796,14.1842,"RICEtaurant"],
+    ["o38c529281d3c45fa","restaurant",120.75622,14.18909,"Esquina - Filipino Comfort Food"],
+    ["o7b2d6e2ea0414357","restaurant",120.79712,14.1817,"AR Food Bistro"],
+    ["oa388c8bf3178433a","restaurant",120.75574,14.18617,"Dendiego's Snack Bar"],
+    ["ob7c7fb84ac8e46fd","cafe",120.75176,14.16176,"Anaiah's Cafe"],
+    ["o25baf60304984369","clinic",120.79601,14.1849,"Bailen Multispecialty & Maternity Clinic"],
+    ["oa0b0afdcc8944d62","dentist",120.79989,14.1828,"R.H.Dimapilis Dental Clinic"],
+    ["o0c3d705ba29b450c","school",120.79947,14.18174,"Gen. E. Aguinaldo National High School-Bailen"],
+    ["o3280b6ce5cc5414c","school",120.79322,14.15404,"Guyung-Guyong Elementary School"],
+    ["o81ed4e43b3064775","school",120.76017,14.19015,"Magallanes Elementary School"],
+    ["oe1343515f73c4930","school",120.79565,14.18657,"Petal Preparatory School"],
+    ["of844f0ccffed4e94","school",120.77429,14.17981,"Bendita National High School"],
+    ["o10753fa7ef5941e8","college",120.75172,14.18562,"Gazellian College Foundation Incorporated"]
+  ]
+}

@@ -15,16 +15,17 @@ export const labelsNow = (page) =>
     const isOurs = (l) => style.sources[l.source]?.type === 'geojson';
     const isShown = (l) => l.layout?.visibility !== 'none';
     // The basemap's own places as markers (establishments-1 to -3), and the places its tiles lack,
-    // from Para's own files (establishments-extra, a GeoJSON layer): both go with the labels.
+    // from Para's own files (establishments-extra and -overture, GeoJSON layers): all go with the labels.
     const isEstablishment = (l) => /^establishments-\d$/.test(l.id);
-    const isExtra = (l) => l.id === 'establishments-extra';
+    const isExtra = (l) => l.id === 'establishments-extra' || l.id === 'establishments-overture';
     const isStation = (l) =>
       l['source-layer'] === 'poi' && l.layout?.['icon-image'] !== undefined && !isEstablishment(l);
     const symbols = style.layers.filter((l) => l.type === 'symbol');
     const basemap = symbols.filter((l) => !isOurs(l) && !isStation(l) && !isEstablishment(l));
     return {
       establishments: symbols.filter(isEstablishment).map((l) => l.id),
-      hasExtra: symbols.some(isExtra),
+      // The cell layers drawn: the pawnshops (E3b) and Overture's places (E3c), 2 with the labels.
+      extras: symbols.filter(isExtra).length,
       ids: style.layers.map((l) => l.id).join(','),
       basemap: basemap.map((l) => l.id),
       basemapShown: basemap.filter(isShown).map((l) => l.id),
@@ -93,10 +94,12 @@ export async function checkLocationLabels(
     (await labelsSwitch(page).getAttribute('aria-checked')) === String(isOnByDefault) &&
       atFirst.basemap.length > 0 &&
       (isOnByDefault
-        ? atFirst.basemapShown.length > 0 && atFirst.establishments.length === 3 && atFirst.hasExtra
+        ? atFirst.basemapShown.length > 0 &&
+          atFirst.establishments.length === 3 &&
+          atFirst.extras === 2
         : atFirst.basemapShown.length === 0 &&
           atFirst.establishments.length === 0 &&
-          !atFirst.hasExtra) &&
+          atFirst.extras === 0) &&
       (await stored()) === null,
     `${atFirst.basemapShown.length} of ${atFirst.basemap.length} shown; establishments ${atFirst.establishments.join(', ') || 'none'}`,
   );
@@ -107,7 +110,7 @@ export async function checkLocationLabels(
       `${prefix}: off, the basemap's labels and the establishments go; ours stay, and the choice is kept`,
       offFirst.basemapShown.length === 0 &&
         offFirst.establishments.length === 0 &&
-        !offFirst.hasExtra &&
+        offFirst.extras === 0 &&
         sameIds(offFirst.ours, atFirst.ours) &&
         (await stored()) === keptOff,
       `${offFirst.basemapShown.length} shown; ours ${offFirst.ours.join(', ') || 'none'}`,
@@ -124,7 +127,7 @@ export async function checkLocationLabels(
     (await labelsSwitch(page).getAttribute('aria-checked')) === 'true' &&
       shown.basemapShown.length > 0 &&
       shown.establishments.length === 3 &&
-      shown.hasExtra &&
+      shown.extras === 2 &&
       sameIds(shown.ours, atFirst.ours) &&
       (await stored()) === keptOn,
     `${shown.basemapShown.length} of ${shown.basemap.length} shown; ours ${shown.ours.join(', ') || 'none'}`,
@@ -135,7 +138,7 @@ export async function checkLocationLabels(
     `${prefix}: a switch to Coloured keeps them shown, with its own place icons, none of the basemap's establishments, and Para's own`,
     colour.basemapShown.length > 0 &&
       colour.establishments.length === 0 &&
-      colour.hasExtra &&
+      colour.extras === 2 &&
       sameIds(colour.ours, atFirst.ours),
     `${colour.basemapShown.length} of ${colour.basemap.length} shown`,
   );
@@ -171,7 +174,7 @@ export async function checkLocationLabels(
       fiordHidden.basemap.length > 0 &&
       fiordHidden.basemapShown.length === 0 &&
       fiordHidden.establishments.length === 0 &&
-      !fiordHidden.hasExtra &&
+      fiordHidden.extras === 0 &&
       sameIds(fiordHidden.ours, atFirst.ours) &&
       (await stored()) === keptOff,
     `${dark.basemapShown.length} of ${dark.basemap.length} shown on Dark`,

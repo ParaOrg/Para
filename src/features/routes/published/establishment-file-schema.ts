@@ -26,10 +26,10 @@ export const establishmentKindSchema = z.enum([
 ]);
 export type EstablishmentKind = z.infer<typeof establishmentKindSchema>;
 
-const cellNameSchema = z.string().check(z.regex(/^\d+-\d+$/));
+export const cellNameSchema = z.string().check(z.regex(/^\d+-\d+$/));
 
 /** One cell as the index lists it: what a phone needs to fetch it and know when it changed. */
-const cellEntrySchema = z.object({
+export const cellEntrySchema = z.object({
   cell: cellNameSchema,
   count: z.number(),
   bytes: z.number(),
@@ -57,7 +57,6 @@ export type EstablishmentRow =
   | [string, EstablishmentKind, number, number, string | null]
   | [string, EstablishmentKind, number, number, string | null, { brand?: string; atm?: true }];
 
-const KINDS: readonly unknown[] = establishmentKindSchema.options;
 const isExtras = (value: unknown): boolean =>
   typeof value === 'object' &&
   value !== null &&
@@ -66,22 +65,29 @@ const isExtras = (value: unknown): boolean =>
   );
 
 /**
- * A row's shape, checked by hand: a tuple of four to six whose fifth is a name or null and whose
- * sixth is the extras. Written out rather than with zod's tuples and unions, which the page's
- * opening zod chunk would otherwise carry for this one reader.
+ * A row's check for a set of kinds, written by hand: a tuple of four to six whose fifth is a name
+ * or null and whose sixth is the extras. Written out rather than with zod's tuples and unions,
+ * which the page's opening zod chunk would otherwise carry for these readers. The Overture files
+ * (overture-file-schema.ts) check theirs with it too.
  */
-function isRow(row: unknown): row is EstablishmentRow {
-  if (!Array.isArray(row) || row.length < 4 || row.length > 6) return false;
-  const [id, kind, lng, lat, name, extras]: unknown[] = row;
-  return (
-    typeof id === 'string' &&
-    KINDS.includes(kind) &&
-    typeof lng === 'number' &&
-    typeof lat === 'number' &&
-    (row.length < 5 || name === null || typeof name === 'string') &&
-    (row.length < 6 || isExtras(extras))
-  );
+export function isRowOf(kinds: readonly string[]) {
+  return (row: unknown): boolean => {
+    if (!Array.isArray(row) || row.length < 4 || row.length > 6) return false;
+    const [id, kind, lng, lat, name, extras]: unknown[] = row;
+    return (
+      typeof id === 'string' &&
+      typeof kind === 'string' &&
+      kinds.includes(kind) &&
+      typeof lng === 'number' &&
+      typeof lat === 'number' &&
+      (row.length < 5 || name === null || typeof name === 'string') &&
+      (row.length < 6 || isExtras(extras))
+    );
+  };
 }
+
+const isOsmRow = isRowOf(establishmentKindSchema.options);
+const isRow = (row: unknown): row is EstablishmentRow => isOsmRow(row);
 
 export const establishmentCellSchema = z.object({
   schema: z.literal(1),

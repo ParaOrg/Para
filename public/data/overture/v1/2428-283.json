@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "cell": "2428-283",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o078380c03a754f63","restaurant",121.42831,14.19054,"Freddy's Seafood Grill and Restaurant"],
+    ["o9c1b50539d20488e","restaurant",121.427,14.18439,"Saira’s Bar & Grill"],
+    ["oa49b92aab41a4979","restaurant",121.43005,14.19874,"Taste AndJoy Food House"],
+    ["offc70fc2356a4651","restaurant",121.4172,14.1563,"Andok's"],
+    ["oe1b7d9e1abf74549","fast_food",121.40099,14.1673,"KFC"],
+    ["o42d0f9053a1a40cb","school",121.42975,14.19734,"DepEd Magdalena INHS - Laguna"],
+    ["o7d17eec1893342d1","school",121.42945,14.19753,"Magdalena Integrated National High School"],
+    ["ob41c4e27fc554403","school",121.41032,14.17973,"Sta. Lucia Elementary School"],
+    ["oc879aa2006a84f53","school",121.43448,14.15743,"Francisco S. Brosas Elementary School"],
+    ["of0b9df659c5c4667","school",121.40064,14.19804,"Calumpang National High School"]
+  ]
+}

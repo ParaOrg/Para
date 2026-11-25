@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "cell": "2427-282",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o5fc4c9254bfd4ea0","restaurant",121.39425,14.10973,"Cordel Bistro"],
+    ["o60f767849fe24c11","restaurant",121.39303,14.11051,"Kamulan Kitchen"],
+    ["ob1b388b397234849","restaurant",121.39279,14.11047,"Misael's Eatery"],
+    ["ob46d83c2bdaf44e9","restaurant",121.39348,14.10885,"Apple's Kitchen"],
+    ["o65a071de30e64c10","fast_food",121.38528,14.10951,"McDonald's"],
+    ["o7e1627fb1371410d","fast_food",121.38311,14.11069,"Mango Delight Rizal Laguna"],
+    ["o68a704350bc94ed4","cafe",121.37109,14.12199,"Camp Yambo"],
+    ["ob93466b62521474f","cafe",121.39439,14.10998,"Tayak Cafe"],
+    ["oc73ae2e420a746b6","cafe",121.38553,14.11067,"Sito Cafe"],
+    ["of92b7c0915f74ac9","cafe",121.39298,14.10969,"Cafe Palma"],
+    ["o3400c0b246234387","clinic",121.39919,14.10882,"Triple J Maternity Clinic"],
+    ["o940caf5fdd384f36","dentist",121.39305,14.10995,"Vista Dental Clinic"],
+    ["obcf8d8169d514821","dentist",121.39933,14.10945,"Evaristo Dental Clinic"],
+    ["od0569df034e044f3","dentist",121.38764,14.11077,"Dentista Isleta Klinika"]
+  ]
+}
