@@ -4308,15 +4308,25 @@ if (runsPart(3)) {
           await cardsSettled(page);
         }
       }
-      // At its top the list is at full height, but a short one shows only its cards: the trip
-      // picked there opens at the list's own height, not taller (the owner, 2026-11-25).
+      // A trip picked from the list opens at the middle, and ‹ gives the list back at its own
+      // height, its top (the owner, 2026-11-25).
       const listAtFull = (await listSnap()) === 'full';
       const listTopPx = await shownOf(chooser);
       await buttonTap(wanted, async () => (await trip().count()) > 0);
       const tripPx = (await trip().count()) ? await shownOf(card()) : null;
       check(
-        "  a trip opened from the list at its top opens at the list's height",
-        listAtFull && tripPx !== null && Math.abs(tripPx - listTopPx) <= 2,
+        '  a trip opened from the list at its top opens at the middle (TRIP_OPENS_AT)',
+        listAtFull &&
+          tripPx !== null &&
+          Math.abs(
+            tripPx -
+              Math.round(
+                0.55 *
+                  (await card()
+                    .first()
+                    .evaluate((e) => e.offsetHeight)),
+              ),
+          ) <= 2,
         `list at full ${listAtFull}, ${listTopPx} px; trip ${tripPx} px, ${await sheetState()}`,
       );
       // No map, or little, shows to tap: the phone's Back leaves it (leaveTrip).
@@ -4324,7 +4334,7 @@ if (runsPart(3)) {
       const listBackPx = (await chooser.count()) ? await shownOf(chooser) : null;
       check(
         '  and leaving it brings the list back at its top',
-        listBackPx !== null && Math.abs(listBackPx - listTopPx) <= 2,
+        (await listSnap()) === 'full',
         `list ${await listSnap()}, ${listBackPx} px; was ${listTopPx} px`,
       );
     }
@@ -5961,15 +5971,22 @@ if (runsPart(2) && isPlaceSearchShown) {
 }
 
 // ------------------------------------------ 4e. the height kept, card to card
-// Switching cards keeps the height they stood at (the owner, 2026-11-25): the first card open, the
-// list opens at its height, and at Low, at Low; list to trip, trip to list, and ⇅ keep it; a short
-// list at its top shows only its cards, and a trip opened from it opens at that height; a trip at
-// full height lets a short list back at its highest. Measured in px, ±2.
+// The owner's rules of 2026-11-25, in px (±2): the first card open, the list a tap opens stands at
+// its height, and at Low at Low; a trip a tap opens, on a RouteCard or on a line of one route,
+// opens at the middle (TRIP_OPENS_AT); ⇅ keeps the trip's height; ‹ gives the list back at its own
+// height from before the tap; the first card comes back as it was left.
 if (runsPart(3)) {
   await page.goto(`${BASE}/`, { waitUntil: 'load' });
   await page.waitForFunction(() => window.__map && window.__map.loaded(), null, { timeout: 30000 });
   await waitForSource(page, 'saved-routes');
   await mapIdle(page);
+  const middle = await page.evaluate(async () => {
+    try {
+      return (await import('/src/features/routes/cards/card-stack.ts')).TRIP_OPENS_AT;
+    } catch {
+      return 0.55;
+    }
+  });
   const explore = page.locator('[data-testid="explore-cards"]');
   await explore.waitFor({ state: 'visible', timeout: 10000 }).catch(() => {});
   const chooser = page.locator('[data-testid="chooser"]:not([hidden])');
@@ -5978,7 +5995,15 @@ if (runsPart(3)) {
       .evaluate((e) => Math.round(innerHeight - e.getBoundingClientRect().top))
       .catch(() => null);
   const near = (a, b) => a !== null && b !== null && Math.abs(a - b) <= 2;
-  // Two points on the lines as the page opens: where the most routes pass, and where two do.
+  /** What the trip shows at the middle: its share of the map, as BottomSheet slides it. */
+  const middlePx = async () =>
+    Math.round(
+      middle *
+        (await card()
+          .first()
+          .evaluate((e) => e.offsetHeight)),
+    );
+  // The point on the lines as the page opens where the most routes pass.
   const at = await page.evaluate(() => {
     const m = window.__map;
     const ids = m
@@ -5999,7 +6024,7 @@ if (runsPart(3)) {
         if (n) found.push([x, y, n]);
       }
     found.sort((a, b) => b[2] - a[2]);
-    return { many: found[0] ?? null, two: found.find((f) => f[2] === 2) ?? null };
+    return { many: found[0] ?? null };
   });
   const box = await canvasBox();
   const tapAt = async (p) => {
@@ -6013,6 +6038,7 @@ if (runsPart(3)) {
     if (b) await fingerPan(b.x + 24, Math.max(b.y, 0) + 24, 0, dy);
     await cardsSettled(page).catch(() => {});
   };
+  const allClosed = async () => (await chooser.count()) === 0 && (await card().count()) === 0;
 
   const openPx = await exploreShown();
   await tapAt(at.many);
@@ -6031,41 +6057,43 @@ if (runsPart(3)) {
     );
     await cardsSettled(page).catch(() => {});
     const tripPx = (await trip().count()) ? await shownOf(card()) : null;
+    const wantPx = (await trip().count()) ? await middlePx() : null;
     check(
-      '  a trip opened from the list opens at its height',
-      near(tripPx, listPx),
-      `list ${listPx} px; trip ${tripPx} px`,
+      '  a trip a RouteCard opens opens at the middle, whatever the list stood at',
+      near(tripPx, wantPx),
+      `list ${listPx} px; trip ${tripPx} px, the middle ${wantPx} px`,
     );
+    await leaveTrip(async () => (await chooser.count()) > 0);
+    const backPx = (await chooser.count()) ? await shownOf(chooser) : null;
+    check(
+      '  ‹ gives the list back at its own height from before the tap',
+      near(backPx, listPx),
+      `list ${listPx} px before; ${backPx} px back`,
+    );
+    // ⇅ on a trip of its own: it turns the list behind round too, to its other cards.
+    await touchTap(
+      chooser.locator('[data-testid="chooser-select"]').first(),
+      async () => (await trip().count()) > 0,
+    );
+    await cardsSettled(page).catch(() => {});
     const flip = card().locator('[data-testid="trip-ends-switch"]');
     if ((await flip.count()) > 0 && (await flip.isEnabled())) {
+      await dragTop(card(), -100);
+      const raisedPx = await shownOf(card());
       await touchTap(flip, async () => true);
       await cardsSettled(page).catch(() => {});
       const flippedPx = (await card().count()) ? await shownOf(card()) : null;
       check(
-        '  ⇅ keeps its height',
-        near(flippedPx, tripPx),
-        `${tripPx} px before; ${flippedPx} px after`,
+        "  ⇅ keeps the trip's height",
+        near(flippedPx, raisedPx),
+        `${raisedPx} px before; ${flippedPx} px after`,
       );
     }
     await leaveTrip(async () => (await chooser.count()) > 0);
-    const backPx = (await chooser.count()) ? await shownOf(chooser) : null;
-    // ⇅ above may have turned the list round, to fewer cards: then it stands at its highest.
-    const isWhole = (await chooser.count())
-      ? await chooser.first().evaluate((el) => {
-          const cards = el.querySelectorAll('[data-testid="chooser-origin"]');
-          const last = cards[cards.length - 1];
-          return !!last && last.getBoundingClientRect().bottom <= innerHeight + 1;
-        })
-      : false;
-    check(
-      "  and the list it goes back to stands at the trip's height, or at its highest",
-      near(backPx, tripPx) || (backPx !== null && backPx < (tripPx ?? 0) && isWhole),
-      `trip ${tripPx} px; list ${backPx} px, its cards all shown ${isWhole}`,
-    );
-    await leaveTrip(async () => (await chooser.count()) === 0 && (await card().count()) === 0);
+    await leaveTrip(allClosed);
   }
 
-  // At Low, the first card lets the list open at Low.
+  // At Low, the first card lets the list open at Low, and comes back at Low once it closes.
   await explore.waitFor({ state: 'visible', timeout: 5000 }).catch(() => {});
   const ePx = await exploreShown();
   const eBox = await explore.boundingBox().catch(() => null);
@@ -6079,51 +6107,31 @@ if (runsPart(3)) {
     lowRest === 'low' && listSnap === 'low',
     `first card ${lowRest}; list ${listSnap}`,
   );
-  await leaveTrip(async () => (await chooser.count()) === 0 && (await card().count()) === 0);
+  await leaveTrip(allClosed);
+  await explore.waitFor({ state: 'visible', timeout: 5000 }).catch(() => {});
+  check(
+    '  and the first card comes back as it was left, at Low',
+    (await explore.getAttribute('data-rest').catch(() => null)) === 'low',
+    `${await explore.getAttribute('data-rest').catch(() => null)}`,
+  );
 
-  // A short list at its top is at its own height, and a trip from it opens there.
-  if (!at.two)
+  // A line of one route, tapped where nothing else runs on a fresh page: its trip, at the middle.
+  let alone = false;
+  for (const d of fileDirections.slice(0, 6)) if ((alone = await openAlone(d))) break;
+  if (!alone)
     skip(
-      '  a trip opened from a short list at its top opens at its height, not taller',
-      'no point where two routes pass',
+      '  a trip a line of one route opens opens at the middle',
+      'no route with a vertex clear of every other line',
     );
   else {
-    await tapAt(at.two);
-    if ((await chooser.count()) === 0)
-      skip(
-        '  a trip opened from a short list at its top opens at its height, not taller',
-        'the tap opened no list',
-      );
-    else {
-      await dragTop(chooser, -700);
-      const topPx = await shownOf(chooser);
-      await touchTap(
-        chooser.locator('[data-testid="chooser-select"]').first(),
-        async () => (await trip().count()) > 0,
-      );
-      await cardsSettled(page).catch(() => {});
-      const fromShort = (await trip().count()) ? await shownOf(card()) : null;
-      check(
-        '  a trip opened from it opens at its height, not taller',
-        near(fromShort, topPx),
-        `list ${topPx} px; trip ${fromShort} px`,
-      );
-      if (await handleTo('full')) {
-        await leaveTrip(async () => (await chooser.count()) > 0);
-        const backShort = (await chooser.count()) ? await shownOf(chooser) : null;
-        check(
-          '  a trip at full height lets it back at its highest',
-          near(backShort, topPx),
-          `its highest ${topPx} px; back at ${backShort} px`,
-        );
-      } else
-        check(
-          '  a trip at full height lets it back at its highest',
-          false,
-          'the trip would not go to full',
-        );
-      await leaveTrip(async () => (await chooser.count()) === 0 && (await card().count()) === 0);
-    }
+    const oneTripPx = !(await chooser.count()) ? await shownOf(card()) : null;
+    const wantPx = await middlePx();
+    check(
+      '  a trip a line of one route opens opens at the middle',
+      near(oneTripPx, wantPx),
+      `trip ${oneTripPx} px, the middle ${wantPx} px`,
+    );
+    await leaveTrip(allClosed);
   }
 }
 

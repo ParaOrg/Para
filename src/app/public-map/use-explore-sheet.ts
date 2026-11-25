@@ -38,13 +38,14 @@ const LOW_FOOT = `calc(${LOW_PX}px + env(safe-area-inset-bottom))`;
  * the foot the locate-me column stands on (`--dock-foot`, locator.tsx), at rest and as a finger
  * moves them; floating in the corner they are still and leave the foot alone. Where they rest goes
  * to `onRest` as the height a sheet opening over them takes: open, theirs as a share of the map;
- * at Low or floating, Low.
+ * at Low or floating, Low. They come back as they were left (`startsAt`; the owner, 2026-11-25).
  */
 export function useExploreSheet(
   own: RefObject<HTMLDivElement | null>,
-  onRest?: (snap: Snap) => void,
+  onRest?: (snap: Snap, rest: ExploreRest) => void,
+  startsAt: ExploreRest = 'open',
 ): ExploreSheet {
-  const [rest, setRest] = useState<ExploreRest>('open');
+  const [rest, setRest] = useState<ExploreRest>(startsAt);
   const [isDragging, setDragging] = useState(false);
 
   useLayoutEffect(() => {
@@ -56,7 +57,10 @@ export function useExploreSheet(
       if (!isAlongBottom(cards, host)) place(cards, host, '0px', null);
       else if (isOpen) place(cards, host, '0px', `${cards.offsetHeight}px`);
       else place(cards, host, LOW_Y, LOW_FOOT);
-      onRest?.(isOpen && host.clientHeight > 0 ? cards.offsetHeight / host.clientHeight : 'low');
+      onRest?.(
+        isOpen && host.clientHeight > 0 ? cards.offsetHeight / host.clientHeight : 'low',
+        rest,
+      );
     };
     settle();
     const watch = new ResizeObserver(settle);
