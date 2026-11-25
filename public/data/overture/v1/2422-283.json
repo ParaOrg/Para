@@ -27,6 +27,7 @@
     ["oddde2eb6a6d84d0d","restaurant",121.1437,14.19619,"Jayden's Kitchen"],
     ["odf8423969eae4555","restaurant",121.13994,14.16632,"Jammy Bunny Cafe - Calamba"],
     ["oe3c015b035444309","restaurant",121.12387,14.19628,"Max's Restaurant"],
+    ["oeb2a1e38a18345f2","restaurant",121.13831,14.16234,"Mitha’s Restaurant"],
     ["o24aa5914f7584b53","fast_food",121.13853,14.16178,"Potato Corner"],
     ["o55de2e332f2e46b3","fast_food",121.10973,14.17483,"Pares To Go - VDC Calamba - MAIN South"],
     ["o7a1ed8c8520b44da","fast_food",121.1082,14.18476,"Jollibee"],
@@ -64,6 +65,7 @@
     ["oe88c7b40ac1c4822","school",121.10349,14.18441,"Palo Alto Elem. School Calamba Laguna"],
     ["of4948ac7d7f9448d","school",121.11814,14.1768,"Central 1 Elementary School"],
     ["o1997152605e9400d","college",121.13705,14.15883,"Culinary Building"],
+    ["ob9595000d64b45f1","college",121.13737,14.15902,"Lyceum of the Philippines University Laguna"],
     ["oc5a25ac5accf4845","college",121.13589,14.17814,"NU Laguna"],
     ["of92b50dd5e304d2b","college",121.12147,14.17979,"PHINMA-Rizal College of Laguna",{"brand":"PHINMA"}]
   ]

@@ -3,6 +3,7 @@
   "cell": "2427-285",
   "attribution": "© Overture Maps Foundation",
   "establishments": [
+    ["o4aed229471e44c48","restaurant",121.39039,14.25391,"SouthYard Restaurant and Events Place"],
     ["o4bc15a34ff484c20","restaurant",121.39534,14.28159,"Kenny Rogers Roasters"],
     ["o5431198986b3429b","restaurant",121.39845,14.25918,"GoodsZarap Kitchen"],
     ["o6edf6c1b2c63405b","restaurant",121.38946,14.25325,"Yellow Cab Pizza Co."],
@@ -12,6 +13,9 @@
     ["oaae320b449a545f4","restaurant",121.39563,14.28207,"Conti's Bakeshop & Restaurant"],
     ["oc2bc15f7ed4a42c4","restaurant",121.38454,14.25362,"King Olaf Steakhouse and Cafe"],
     ["oc92983e2c9724062","restaurant",121.39814,14.2587,"Andok's"],
+    ["ocedede1bc3ab4e9e","restaurant",121.38916,14.25329,"Romantic Baboy"],
+    ["od57b5419223a4c8e","restaurant",121.39259,14.25577,"Mang Inasal"],
+    ["odd6888e4c47a4b49","restaurant",121.39178,14.25567,"Red Ribbon"],
     ["oec60c10fdf6c4e51","restaurant",121.39847,14.26461,"Arekkusu"],
     ["of341621e79b84bad","restaurant",121.39792,14.26951,"Mezura"],
     ["o2eb8b282d46440ab","fast_food",121.38999,14.25566,"Bonchon Chicken Philippines",{"brand":"Bonchon"}],
@@ -22,9 +26,11 @@
     ["oc3b320ee6c084790","cafe",121.39754,14.26694,"The Coffee Affair Bistro"],
     ["of44dbf9c02d143dd","cafe",121.35349,14.25758,"Cafe Blee"],
     ["of741313f3cb448ff","cafe",121.39532,14.28166,"Tim Hortons"],
+    ["oc0f0fac2586d4814","clinic",121.3857,14.25677,"JDW Medical Clinic"],
     ["o1bf116cf9e914eb0","dentist",121.39226,14.25562,"Dr. Jam Dental Clinic"],
     ["o5b903a9e54d74791","dentist",121.3894,14.25343,"East Oral Care"],
     ["o4c2195e839aa4d02","school",121.39034,14.25207,"The Busy Kids Playschool"],
+    ["ob8156175f5334466","school",121.3857,14.25678,"DepEd Duhat Elementary School - Sta. Cruz, Laguna"],
     ["od12502cfef934c60","school",121.38513,14.26127,"Gatid Elem. School"],
     ["odcdcbd4e9de6459a","school",121.39738,14.26256,"LSPU Santa Cruz Senior High school"]
   ]
