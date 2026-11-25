@@ -5,7 +5,16 @@
 //   node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs tests/unit/mode-filter-test.mjs
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { MODE_FILTERS, passesModeFilter } from '../../src/features/routes/model/mode-filter.ts';
+import {
+  MODES,
+  MODE_FILTERS,
+  modesPicked,
+  passesModeFilter,
+  passesModePicks,
+  pickCount,
+  picksOf,
+  togglePick,
+} from '../../src/features/routes/model/mode-filter.ts';
 
 /** A direction on a route of this mode and code. */
 const direction = (id, mode, routeCode = null) => ({
@@ -56,4 +65,43 @@ test('a tricycle, P2P and UV Express show under All only', () => {
   for (const id of ['trike', 'p2p', 'uv'])
     for (const f of MODE_FILTERS)
       assert.equal(kept(f).includes(id), f === 'all', `${id} under ${f}`);
+});
+
+const keptBy = (picks) => ROUTES.filter((d) => passesModePicks(d, picks)).map((d) => d.id);
+
+test('several modes picked keep the routes of any of them', () => {
+  assert.deepEqual(keptBy(['jeep', 'bus']), ['jeep', 'bus']);
+  assert.deepEqual(keptBy(['lrt', 'mrt', 'ferry']), ['lrt1', 'lrt2', 'mrt3', 'ferry']);
+});
+
+test('none picked, or every mode picked, keeps every route: both read as All', () => {
+  const every = ROUTES.map((d) => d.id);
+  assert.deepEqual(keptBy([]), every);
+  assert.deepEqual(keptBy(MODES), every);
+  assert.equal(pickCount([]), 0);
+  assert.equal(pickCount(MODES), 0);
+});
+
+test('the count is how many modes are picked', () => {
+  assert.equal(pickCount(['jeep']), 1);
+  assert.equal(pickCount(['jeep', 'bus', 'mrt']), 3);
+});
+
+test('a single choice is the picks of that one mode, and passes as before', () => {
+  assert.deepEqual(picksOf('all'), []);
+  assert.deepEqual(picksOf('bus'), ['bus']);
+  assert.equal(modesPicked('all'), 0);
+  assert.equal(modesPicked('ferry'), 1);
+  for (const filter of MODE_FILTERS) {
+    assert.deepEqual(kept(filter), keptBy(picksOf(filter)), filter);
+  }
+});
+
+test('a toggle picks or lets go, in the filter order; the last mode left out picked reads as All', () => {
+  assert.deepEqual(togglePick([], 'bus'), ['bus']);
+  assert.deepEqual(togglePick(['bus'], 'jeep'), ['jeep', 'bus']);
+  assert.deepEqual(togglePick(['jeep', 'bus'], 'bus'), ['jeep']);
+  assert.deepEqual(togglePick(['jeep'], 'jeep'), []);
+  const allButFerry = MODES.filter((m) => m !== 'ferry');
+  assert.deepEqual(togglePick(allButFerry, 'ferry'), []);
 });
