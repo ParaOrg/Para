@@ -44,7 +44,7 @@ export function gitHub({ repository, token }) {
      * commit to that file. The file is asked for raw, so the answer is the index itself.
      */
     async publishedMapOnMain() {
-      const path = 'public/data/index.v5.json';
+      const path = 'public/data/index.v6.json';
       const index = await call('GET', `/contents/${path}?ref=main`, undefined, RAW);
       const commits = await call('GET', `/commits?sha=main&path=${path}&per_page=1`);
       const committedAt = commits?.[0]?.commit?.committer?.date;

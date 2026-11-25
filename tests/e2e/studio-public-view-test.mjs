@@ -3,7 +3,7 @@
 //   npm run dev                                (in another terminal)
 //   node tests/e2e/studio-public-view-test.mjs
 //
-// For the same published index (public/data/index.v5.json) the studio's Public
+// For the same published index (public/data/index.v6.json) the studio's Public
 // map draws the same directions and hotspots as the public page at /, compared
 // by id. Below it, "Waiting for tonight's publish" lists what was approved or
 // taken down since the index's published_at, and is empty once nothing is.

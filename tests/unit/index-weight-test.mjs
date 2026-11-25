@@ -71,7 +71,7 @@ test('a heavy index still publishes: the publish only prints the warning, after 
   }
   assert.match(
     script,
-    /const indexWarning = indexWeightWarning\(gz\(files\.v5\)\);\nif \(indexWarning\) console\.log\(indexWarning\);\n/,
+    /const indexWarning = indexWeightWarning\(gz\(files\.v6\)\);\nif \(indexWarning\) console\.log\(indexWarning\);\n/,
     'the warning is printed',
   );
   assert.equal(

@@ -121,7 +121,7 @@ export function offlineWorker(basemapRules: BasemapCacheRules): Plugin[] {
         // The map has exactly one address, `/` (with any query), and only that is
         // answered from the stored page. Any other navigation goes to the
         // server as it would without a worker — so `/studio` and `/contribute` (with
-        // or without the slash) open their own pages, and `/data/index.v5.json`
+        // or without the slash) open their own pages, and `/data/index.v6.json`
         // typed into a tab shows the data, not the app. The studio sits inside the installed
         // app's scope regardless; the denylist is the belt to the allowlist.
         navigateFallback: 'index.html',

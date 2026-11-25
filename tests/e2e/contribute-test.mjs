@@ -3650,7 +3650,7 @@ const FIRST_IDLE = () => {
     firstIdle: window.__firstIdle ?? null,
     index: performance
       .getEntriesByType('resource')
-      .filter((entry) => entry.name.includes('/data/index.v5.json'))
+      .filter((entry) => entry.name.includes('/data/index.v6.json'))
       .map((entry) => entry.startTime),
   }));
   check(
@@ -3798,7 +3798,7 @@ const FIRST_IDLE = () => {
   page.on('console', (message) => {
     if (message.type() === 'warning') warnings.push(message.text());
   });
-  await page.route(/\/data\/(index\.v5\.json|lines\/)/, (route) =>
+  await page.route(/\/data\/(index\.v6\.json|lines\/)/, (route) =>
     route.abort('internetdisconnected'),
   );
   await page.reload({ waitUntil: 'load' });

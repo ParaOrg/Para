@@ -46,6 +46,11 @@ What commuters see is what was approved, then published
 recordings by choice ([ADR 0004](0004-location-leaves-the-phone-only-by-choice.md)).
 The public map still sends nothing.
 
-The published map's index is now `index.v5.json`: shape 4 with the loops in. A
+The published map's index became `index.v5.json`: shape 4 with the loops in. A
 loop has no head or tail, which a shape-4 app's schema refuses for the whole
 map, so `index.v4.json` and the older indexes are written without loops.
+
+It is now `index.v6.json`: shape 5 with the EDSA Carousel in. Its mode,
+`busway`, is one a shape-5 app's schema does not know, and it refuses the whole
+map for one such row, so `index.v5.json` and the older indexes are written
+without the Carousel.

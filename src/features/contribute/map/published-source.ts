@@ -4,6 +4,7 @@ import { fetchIndex, setMapFileStore } from '@/features/routes/published/fetch-i
 import { fetchLine, readLineFile } from '@/features/routes/published/fetch-line';
 import type { Index } from '@/features/routes/published/index-schema';
 import { LINES_URL, MAP_FILE_URL } from '@/features/routes/published/map-file';
+import { readOlderIndex } from '@/features/routes/published/older-index';
 import { readIndexFile } from '@/features/routes/published/parse-index';
 
 import { nativeGetText } from '../native-bridge/native-app';
@@ -26,6 +27,17 @@ async function siteJson(path: string): Promise<unknown> {
   return JSON.parse(await nativeGetText(`${PUBLISHED_SITE}${path}`));
 }
 
+/**
+ * The newest older shape the public site serves (STORED_OLD), when its file for this build's shape
+ * does not read: an app built from staging reads the live site, which serves a new shape only once
+ * the release that writes it reaches main. Throws the first error when none reads either.
+ */
+async function olderSiteIndex(first: unknown): Promise<Index> {
+  const older = await readOlderIndex(siteJson);
+  if (!older) throw first;
+  return older;
+}
+
 /** The published index, read once a page; a failure is not kept, so the next read tries again. */
 export function readPublishedIndex(): Promise<Index> {
   if (import.meta.env.MODE !== 'apk') {
@@ -36,6 +48,7 @@ export function readPublishedIndex(): Promise<Index> {
   }
   appIndex ??= siteJson(MAP_FILE_URL)
     .then((raw) => readIndexFile(raw, MAP_FILE_URL))
+    .catch((error: unknown) => olderSiteIndex(error))
     .catch((error: unknown) => {
       appIndex = null;
       throw error;

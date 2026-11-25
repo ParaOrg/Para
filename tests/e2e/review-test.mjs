@@ -77,7 +77,7 @@ await toast('Published. The Studio map shows it now');
 const subjectId = '10000000-0000-4000-8000-000000000001';
 assert.equal((await api(`stop?id=eq.${subjectId}`))[0].name, 'Preview approved place');
 assert.equal((await api(`draft?subject_id=eq.${subjectId}`)).length, 0, 'the draft is gone');
-let publicIndex = await (await fetch(`${BASE}/data/index.v5.json`)).json();
+let publicIndex = await (await fetch(`${BASE}/data/index.v6.json`)).json();
 assert.equal(
   publicIndex.stops.some((stop) => stop.id === subjectId),
   false,
@@ -88,7 +88,7 @@ await page
   .getByRole('status')
   .filter({ hasText: 'Sample map published' })
   .waitFor({ timeout: 90000 });
-publicIndex = await (await fetch(`${BASE}/data/index.v5.json`)).json();
+publicIndex = await (await fetch(`${BASE}/data/index.v6.json`)).json();
 assert.equal(
   publicIndex.stops.some((stop) => stop.id === subjectId),
   true,

@@ -1,6 +1,6 @@
 // Fixture data only. Pipe into the disposable para_preview database.
 import { existsSync, readFileSync } from 'node:fs';
-const index = JSON.parse(readFileSync('public/data/index.v5.json', 'utf8'));
+const index = JSON.parse(readFileSync('public/data/index.v6.json', 'utf8'));
 const owner = '00000000-0000-0000-0000-0000000000e1';
 const quote = (value) => `'${String(value).replaceAll("'", "''")}'`;
 const json = (value) => `${quote(JSON.stringify(value))}::jsonb`;
