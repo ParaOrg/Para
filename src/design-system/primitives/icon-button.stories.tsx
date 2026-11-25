@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { fn } from 'storybook/test';
+import { expect, fn, within } from 'storybook/test';
 
 import { IconButton } from './icon-button';
 
@@ -27,6 +27,46 @@ export const Brand: Story = { args: { variant: 'brand', size: 'large', label: 'A
 
 /** 48px, a 28px icon. */
 export const Large: Story = { args: { size: 'large' } };
+
+/**
+ * Large with a count (the filter, 4885:42133): the Indicator on its top right corner, 4 out from
+ * the pill, 20 across.
+ */
+export const LargeWithCount: Story = {
+  args: { size: 'large', count: 4, label: 'Filter: 4 modes' },
+  play: async ({ canvasElement }) => {
+    const button = within(canvasElement).getByRole('button', { name: 'Filter: 4 modes' });
+    const badge = within(canvasElement).getByText('4');
+    const pill = button.getBoundingClientRect();
+    const box = badge.getBoundingClientRect();
+    await expect({
+      pill: pill.width,
+      badge: [box.width, box.height],
+      out: [box.right - pill.right, pill.top - box.top],
+    }).toEqual({ pill: 48, badge: [20, 20], out: [4, 4] });
+  },
+};
+
+/** Disabled with a count: the badge dims with the pill, at opacity/60. */
+export const LargeWithCountDisabled: Story = {
+  args: { size: 'large', count: 4, label: 'Filter: 4 modes', disabled: true },
+};
+
+/** Two digits, the most the circle holds. */
+export const LargeWithTwoDigitCount: Story = {
+  args: { size: 'large', count: 12, label: 'Filter: 12' },
+};
+
+/** A count of none: no badge, the pill alone. */
+export const LargeCountNone: Story = {
+  args: { size: 'large', count: 0 },
+  play: async ({ canvasElement }) => {
+    await expect(within(canvasElement).queryByText('0')).toBeNull();
+  },
+};
+
+/** The count on Base, as the studio's Controller draws its filter. */
+export const BaseWithCount: Story = { args: { count: 1 } };
 
 /** 32px, a 20px icon. */
 export const Small: Story = { args: { size: 'small' } };

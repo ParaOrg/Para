@@ -5,18 +5,23 @@
  * `<button>` is until it is disabled.
  */
 
-export type Size = 'base' | 'small';
+export type Size = 'large' | 'base' | 'small';
+
+/** The sizes every voice but Secondary has: Large is drawn for Secondary alone. */
+type BaseOrSmall = Exclude<Size, 'large'>;
 
 /**
  * Small exists only where the set draws it — the types keep code from
  * getting ahead of the design: Special, Secondary and Primary (Default, Hover,
  * Pressed and Disabled: 3742:1196, for the timeline's "Set as start",
  * 4147:11947); Primary Small is Primary's fills and shadows at Small's sizes.
- * `size="small"` on error is a compile error until it is designed.
+ * `size="small"` on error is a compile error until it is designed. Large is
+ * Secondary's alone, the commuter map's floating pills (Vice Versa, 4885:42130).
  */
 export type VariantAndSize =
-  | { variant: 'special' | 'secondary'; size?: Size; fill?: never; tone?: never }
-  | { variant: 'primary'; size?: Size; fill?: 'brand'; tone?: never }
+  | { variant: 'special'; size?: BaseOrSmall; fill?: never; tone?: never }
+  | { variant: 'secondary'; size?: Size; fill?: never; tone?: never }
+  | { variant: 'primary'; size?: BaseOrSmall; fill?: 'brand'; tone?: never }
   // A card's fill only as the design draws it, Primary Small and enabled
   // (4147:11947): its Base and its Disabled are compile errors until they are
   // designed.
@@ -26,7 +31,7 @@ export type VariantAndSize =
   // and Small in the studio sidebar's Exit (4591:9746); disabled takes the set's opacity/60, as
   // every voice does. Its words in Content/error (`tone`) are how Account settings' Delete account
   // overrides it (4540:4316).
-  | { variant: 'plain'; size?: Size; fill?: never; tone?: PlainTone };
+  | { variant: 'plain'; size?: BaseOrSmall; fill?: never; tone?: PlainTone };
 
 /** Plain's words: Content/primary, or Content/error for a destructive one. */
 export type PlainTone = 'default' | 'error';
@@ -90,12 +95,15 @@ const PRIMARY_FILL = {
 } satisfies Record<string, string>;
 
 // The weight is each voice's own (VARIANT): Special's Small is bold; Secondary's and Primary's, medium.
+// Large is 48 tall: 20 across and 12 above and below 16/24 words (text-base-lower/Medium).
 const SIZE = {
+  large: 'gap-1 px-5 py-3 text-base-lower/6',
   base: 'gap-1 px-4 py-2 text-base/6',
   small: 'gap-1 px-3 py-1.5 text-sm/5',
 } satisfies Record<Size, string>;
 
 export const ICON = {
+  large: 'size-5',
   base: 'size-5',
   small: 'size-4',
 } satisfies Record<Size, string>;

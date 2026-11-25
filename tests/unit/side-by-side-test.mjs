@@ -4,7 +4,7 @@
 //
 //   node --test tests/unit/side-by-side-test.mjs
 import assert from 'node:assert/strict';
-import { spawnSync } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
@@ -72,6 +72,28 @@ test('run as CI runs it: one failure fails the step, and all passing passes it',
   });
   assert.equal(passed.status, 0);
   assert.match(passed.stdout, /All 2 checks passed\./);
+});
+
+test('on a pipe read late, as a runner’s log is, the report reaches its end', async () => {
+  // A check that prints a megabyte, as the unit checks do, then fails on its last line. Exiting
+  // as soon as the report was handed to stdout lost all but the first 64 kB on a runner, the
+  // failure and the summary with it (pull request 1217's first run).
+  const LONG = `long::${node(
+    "for (let i = 0; i < 40000; i++) console.log('ok ' + i + ' - a passing test'); " +
+      "console.log('not ok 40000 - the last'); process.exitCode = 1",
+  )}`;
+  const child = spawn('node', [SCRIPT, LONG], { stdio: ['ignore', 'pipe', 'inherit'] });
+  child.stdout.pause();
+  const chunks = [];
+  const closed = new Promise((resolve) => child.on('close', resolve));
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+  child.stdout.on('data', (chunk) => chunks.push(chunk));
+  child.stdout.resume();
+  const status = await closed;
+  const output = Buffer.concat(chunks).toString('utf8');
+  assert.equal(status, 1);
+  assert.match(output, /not ok 40000 - the last/);
+  assert.match(output, /1 of 1 checks failed: long\.$/m);
 });
 
 const WORKFLOW = readFileSync(new URL('../../.github/workflows/ci.yml', import.meta.url), 'utf8');
