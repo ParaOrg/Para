@@ -16,6 +16,27 @@
     ["o43fc267b8c9940c1","cafe",121.01118,14.13623,"Coffee Project Crosswinds",{"brand":"Coffee Project"}],
     ["o80289bed27364d88","cafe",121.01112,14.13626,"The Coffee Bean & Tea Leaf"],
     ["oaf007bbf30a14292","cafe",121.00794,14.14205,"Windmill Lausanne"],
-    ["oe68ffd3aae7a4e57","cafe",121.01089,14.13632,"Cafe Voi La"]
+    ["oe68ffd3aae7a4e57","cafe",121.01089,14.13632,"Cafe Voi La"],
+    ["o145deda327d04505","hotel",121.01646,14.13363,"Alta D' Tagaytay Hotel"],
+    ["o15ea38b1fd7f4aca","hotel",121.03318,14.13424,"Tagaytay Highlands",{"brand":"Tagaytay Highlands and Midlands"}],
+    ["o26f09a0494c945cc","hotel",121.00672,14.14153,"Grand Quartier Resort Suites"],
+    ["o3a4ba4ffcd4b465f","hotel",121.00233,14.12948,"The Lakeview Suites, Tagaytay City"],
+    ["o5a4f993abeb24938","hotel",121.03667,14.13392,"Bellevue Hotel, Tagaytay Highlands"],
+    ["o78be068bf79d4597","hotel",121.02251,14.10053,"Double S Resort"],
+    ["o797dfccbea064bc9","hotel",121.00938,14.13483,"Nami Hotel"],
+    ["ob1d746ba7f734c1d","hotel",121.01629,14.13474,"King's Mansion & Resort"],
+    ["oc0eeab5c432d42fc","hotel",121.00669,14.1412,"Crosswinds Resort Suites"],
+    ["od3cbfc55d5914ff2","hotel",121.01001,14.13498,"Royal Taal Inn"],
+    ["of3e29ee6b36f4b17","hotel",121.01019,14.1254,"OYO 839 Monte Bianco Boutique Hotel"],
+    ["o2ac504edb28c443e","lodging",121.01067,14.12201,"Luno’s Hilltop Cabin"],
+    ["o3a1722e855d547c0","lodging",121.01019,14.1254,"OYO 909 Jc Affordable Transient"],
+    ["o6271ddc42daa46f2","lodging",121.00088,14.13808,"Doña Clara Resthouse"],
+    ["oad4233254b494b7e","lodging",121.00601,14.14124,"Casa Cece Farmstay"],
+    ["oaf992f91f5c742d7","lodging",121.01068,14.14935,"Gusty Grove"],
+    ["ob026d782bfcd424f","lodging",121.008,14.14248,"Bud Taal Banwa"],
+    ["obd9cd256fb994fab","lodging",121.03647,14.12816,"Midland Tagaytay Highland"],
+    ["oc970e3a888b4470d","lodging",121.03671,14.12803,"Midlands Veranda"],
+    ["ocae9b877e4ef47c5","lodging",121.01653,14.13519,"San Antonio de Padua Alta de Tagaytay"],
+    ["od9d052775c834797","lodging",121.02207,14.14188,"Tagaytay Overlooking Mansion"]
   ]
 }

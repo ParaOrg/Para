@@ -1,0 +1,12 @@
+{
+  "schema": 1,
+  "cell": "2416-273",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o5b811c352f6946ab","hotel",120.84735,13.67092,"Dapdap Nature Beach Resort"],
+    ["od775e2b6ae7743a4","hotel",120.84735,13.67091,"SMC Island View Beach Resort"],
+    ["o16c55e69dbdf473f","lodging",120.83839,13.66553,"Paraiso Encarnacion Homestay"],
+    ["o34c853e01bcd4de7","lodging",120.84769,13.67039,"Cahaya Cabins"],
+    ["of6034c908c474cb7","lodging",120.83949,13.66144,"Cassa de Macuha Homestay"]
+  ]
+}

@@ -21,6 +21,11 @@
     ["ob191e1ec2af54857","school",121.21349,14.5586,"Teresa Elementary School"],
     ["of03c36ee0a8643dc","school",121.23756,14.56061,"DepEd Tayo Blue Rizal Pantay Elementary School"],
     ["o82ed93fa6cab415b","supermarket",121.21275,14.55919,"SM Hypermarket"],
-    ["od6348af0e117463a","laundry",121.20879,14.55887,"Spin and Fold Laundry Shop"]
+    ["od6348af0e117463a","laundry",121.20879,14.55887,"Spin and Fold Laundry Shop"],
+    ["o425699947d234f61","hotel",121.23831,14.55665,"YAPAK Nature Resort"],
+    ["oe26ce7cac4eb4c5e","hotel",121.20226,14.56676,"Real Cove Resort"],
+    ["o077e692860a74380","lodging",121.21809,14.56283,"green view"],
+    ["o67dc004e94314334","lodging",121.20044,14.56701,"Villa Sampaguita Resort"],
+    ["o7a3bab268c9d4b13","lodging",121.21029,14.5576,"Balai Urunjing"]
   ]
 }

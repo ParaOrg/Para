@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "cell": "2412-284",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o30371f8314e84511","hotel",120.62543,14.22842,"La Bella Vista Resort"],
+    ["o3664a7868a70419d","hotel",120.62455,14.23597,"Backpackers' INN-"],
+    ["o45aed814f58e478d","hotel",120.62401,14.23532,"Green View Resort"],
+    ["o49e5a3e452784696","hotel",120.62595,14.2248,"Ternate beach resort"],
+    ["obafa59b4cc4b4a40","hotel",120.62376,14.21578,"Sanctuary Beach Resort"],
+    ["od500c8e4d118435c","hotel",120.63153,14.23382,"Patungan beach resort"],
+    ["o4656838556ec4675","lodging",120.62414,14.23458,"Calayo"],
+    ["o46c71d6b26374949","lodging",120.62514,14.22971,"The Marina Villa"],
+    ["oa7e63b302e3d4888","lodging",120.6248,14.2341,"Duke The Labradog"]
+  ]
+}

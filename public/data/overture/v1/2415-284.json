@@ -5,6 +5,12 @@
   "establishments": [
     ["obf8e319c4e9d4ffd","fast_food",120.76028,14.21293,"Talipusngo Maragondon Cavite"],
     ["od6dc68a5c3634d9e","fast_food",120.75571,14.21263,"Talipusngo Maragondon Cavite"],
-    ["of5a56d4ec053484d","cafe",120.79647,14.24062,"El Facio Kawayanan Cafe"]
+    ["of5a56d4ec053484d","cafe",120.79647,14.24062,"El Facio Kawayanan Cafe"],
+    ["o36417b39223245d9","hotel",120.78541,14.24932,"Pantihan Kawayanan Resort"],
+    ["o456c543c7a374ba9","hotel",120.79662,14.24066,"Pantihan Kawayanan Resort"],
+    ["o5d078d806fba449d","lodging",120.7618,14.22359,"Dagisdis ng Maragondon"],
+    ["ob79470d7e097490b","lodging",120.77229,14.22585,"El Lins Bonding Camp"],
+    ["oc6432af21ef649f0","lodging",120.78541,14.24931,"Oscar’s Farm"],
+    ["oea0e54dcf7d546fc","lodging",120.76603,14.20774,"Duyann Magallanes Farm"]
   ]
 }

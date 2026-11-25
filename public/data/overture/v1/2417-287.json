@@ -162,6 +162,22 @@
     ["ofb21459b4df9426e","pharmacy",120.85232,14.39253,"Generika Drugstore",{"brand":"Generika"}],
     ["ofb893c4a72394c02","pharmacy",120.86585,14.3969,"Southstar Drug"],
     ["o5d3e6d6f86d54006","laundry",120.85891,14.39891,"Washtopia Laundry Services"],
-    ["o758d0e05656b4368","laundry",120.88007,14.38505,"Ryouichi Laundry Shop - Navarro Branch"]
+    ["o758d0e05656b4368","laundry",120.88007,14.38505,"Ryouichi Laundry Shop - Navarro Branch"],
+    ["o30f9e5bcec2f4cd8","hotel",120.89571,14.38054,"Jardin del Amor Private Resort - Cavite"],
+    ["o44d6201fe6834a0e","hotel",120.88709,14.3832,"Aira Nicolette Hideaway Private Resort"],
+    ["o6abc4488d7904f47","hotel",120.89649,14.36308,"Ri-Lie Private Pool Resort"],
+    ["o795dae7977694124","hotel",120.85315,14.39501,"Amanda's Resort"],
+    ["o8180ddc441a64282","hotel",120.87312,14.37179,"Candi Dasa Resort"],
+    ["oac893b0da1774c32","hotel",120.88203,14.38048,"Sta. Clara, General Trias, Cavite",{"brand":"Sta. Clara International Corporation"}],
+    ["oca192954406f4936","hotel",120.89813,14.36114,"Andrea Resort"],
+    ["ode2d4cfa90254beb","hotel",120.88333,14.38333,"Twin Lakes Hotel, Tagaytay"],
+    ["oe4974a2852e74815","hotel",120.87296,14.38179,"Vezzaro Resort"],
+    ["o07f04e86bfd741e9","lodging",120.88357,14.38848,"Birmingham plains and Sotera"],
+    ["o119efe6745c94538","lodging",120.85275,14.38134,"Villa Monteverde Sbdv Tanza Cavite."],
+    ["o3ff4fa744654457e","lodging",120.87405,14.37862,"Villa Amelia"],
+    ["ob54f3e4a55294679","lodging",120.85862,14.39992,"Poblacion 1 Silangan Tanza"],
+    ["ob870b3894faa46d3","lodging",120.86202,14.3841,"Springtown Tanza"],
+    ["ocba59c4e28ca4b8a","lodging",120.85553,14.39182,"Sto. Niño Beach Camp"],
+    ["occc42ac870a94c6e","lodging",120.87682,14.39114,"Birmingham plains and Sotera"]
   ]
 }

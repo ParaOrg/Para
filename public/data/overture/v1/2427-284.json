@@ -55,6 +55,21 @@
     ["o0a4655036ca64349","college",121.36209,14.22507,"San Antonio de Padua College"],
     ["o3b79e0097a344383","supermarket",121.36589,14.22887,"Leon Meatshop"],
     ["o250ea5e7ebcd4527","pharmacy",121.36471,14.23765,"Mercury Drug"],
-    ["oc644db761911484d","laundry",121.36896,14.24506,"PiLavada"]
+    ["oc644db761911484d","laundry",121.36896,14.24506,"PiLavada"],
+    ["o1173e27341b149a5","hotel",121.3959,14.22054,"Casa Venice Resort"],
+    ["o5c31abf2435a43fb","hotel",121.36279,14.23598,"Antonio Suites"],
+    ["o70158c47b977408c","hotel",121.37327,14.24147,"Jasmine’s Private Resort"],
+    ["obd38a93be46341ed","hotel",121.37858,14.20719,"Montreal Garden Resort"],
+    ["obf8e98139ebd4839","hotel",121.3739,14.2166,"Esguerra's Farm and Resort"],
+    ["oe71abb9501e348d7","hotel",121.36948,14.24571,"Ken-Yo Garden Resort and Hotel"],
+    ["of3e283fda1e24a6a","hotel",121.35041,14.20676,"Slide N Dive Resort and Hotel"],
+    ["o0803c4e6eb3f4ad8","lodging",121.38325,14.22932,"Villa Dolores Resort"],
+    ["o37a0e2165db84ba6","lodging",121.36271,14.23561,"Agua Antonio"],
+    ["o43022d7edb2b456a","lodging",121.37286,14.24568,"Villa Florida Labuin Pila Laguna"],
+    ["o5fc3b050f2074ca6","lodging",121.35875,14.23193,"Villa Zorella Resort"],
+    ["o6383c95002c24e87","lodging",121.39574,14.2474,"Wangvilla"],
+    ["oa7736c9ef8cd44d7","lodging",121.36294,14.21683,"Verdant Acre Farm"],
+    ["oab5b4b8af8cc4249","lodging",121.37045,14.24898,"Tierra Verde Residences"],
+    ["od6b1edbfb6ef4181","lodging",121.37354,14.21536,"Villarica Private Swimming Pool"]
   ]
 }

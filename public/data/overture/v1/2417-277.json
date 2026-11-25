@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "cell": "2417-277",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o1b9e3632b3f845ae","hotel",120.89088,13.89645,"Leonor Beach Resort"],
+    ["o25047211118a428f","hotel",120.89523,13.89352,"Royal Grande Beach Resort"],
+    ["o2df5c12b99f34336","hotel",120.8908,13.89686,"La Rea Beach Resort"],
+    ["o587aea5d2afa40d1","hotel",120.89153,13.89622,"A.Santos Paradise Resort"],
+    ["o75d5dd7db383437a","hotel",120.89323,13.89512,"Orlando's Beach Resort"],
+    ["o7a12aa52bdcb407c","hotel",120.89169,13.89632,"RMS Garden Resort"],
+    ["oa93a0daf32224918","hotel",120.88908,13.89783,"CML Beach Resort & Water Park"],
+    ["ob1f4d209f17344eb","hotel",120.89382,13.89485,"La Suena Brisa Beach Resort and Events Place"],
+    ["odbf531d157e44b93","hotel",120.88736,13.89815,"La petite plage resort"],
+    ["oe6d9919836bc47f1","hotel",120.88779,13.89847,"Palmera Beach Resort"],
+    ["oea649414e3d74985","hotel",120.89244,13.89532,"Heart of the Ocean Beach Resort"],
+    ["of0bebbc5be154526","hotel",120.88533,13.89941,"Eufar Resort and Events Place"],
+    ["of742eb4ba08d4d5e","hotel",120.89032,13.89711,"Abaksa Beach Resort"],
+    ["of81f65970aac41c1","hotel",120.89169,13.89633,"Leonor Beach Resort"],
+    ["o456ee83366f44e9e","lodging",120.89535,13.89412,"Villa Gracia Beach Resort"],
+    ["o760a1cb0333642d0","lodging",120.888,13.89801,"Villa Maristella Beach Resort, Lemery Batangas"]
+  ]
+}

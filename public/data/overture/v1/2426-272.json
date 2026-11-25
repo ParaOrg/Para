@@ -3,6 +3,17 @@
   "cell": "2426-272",
   "attribution": "© Overture Maps Foundation",
   "establishments": [
-    ["o265c681cc7614418","school",121.30389,13.61308,"Balibago-Biga NHS"]
+    ["o265c681cc7614418","school",121.30389,13.61308,"Balibago-Biga NHS"],
+    ["o2e2a5411b7214ab8","hotel",121.33337,13.64005,"Verda'ali Beach Resort"],
+    ["o303b3c20a2aa422b","hotel",121.30893,13.61407,"Bigang Munti Beach Resort II"],
+    ["ob89447abe1264c88","hotel",121.30079,13.60905,"J Barbara Beach Resort"],
+    ["oc8f550c5c8a1421c","hotel",121.31375,13.62033,"Segundo's Crio Beach Camp Resort"],
+    ["occ4a393cd8a34d07","hotel",121.30602,13.6134,"Aplaya Claveria Beach Resort"],
+    ["oea124077d8694a81","hotel",121.31274,13.61577,"El Cuasay Campsite Beach Resort"],
+    ["oed2c63740ff6443a","hotel",121.31489,13.62199,"KF Beach Resort"],
+    ["of64204fff168414f","hotel",121.30602,13.61334,"Labienda's Beach Resort"],
+    ["ofd67b41a61294b79","hotel",121.30553,13.61348,"White Casa Beach Resort Batangas"],
+    ["off0020945e304d6e","hotel",121.34519,13.6459,"Blue Sea Beach Resort"],
+    ["o4bcb0b7ae40c4153","lodging",121.314,13.62082,"Olympus Beach Camp"]
   ]
 }

@@ -5,6 +5,24 @@
   "establishments": [
     ["o0522703988a34fbb","restaurant",120.63201,13.9327,"PIT STOP - Goto.Silog.ATBP"],
     ["of6975e2e18394475","restaurant",120.61686,13.9478,"Cafe Caballero"],
-    ["o751776931ff249a8","cafe",120.6336,13.93139,"Kapehan sa Kawayanan - Balibago"]
+    ["o751776931ff249a8","cafe",120.6336,13.93139,"Kapehan sa Kawayanan - Balibago"],
+    ["o05a9255848cd4e7a","hotel",120.62424,13.92024,"Calatageña Beach Resort"],
+    ["o172f65a2ec144f45","hotel",120.61919,13.949,"Matabungkay Timeout Lodge"],
+    ["o32b30b8fe8f14247","hotel",120.6178,13.94969,"Matabungkay Beach Resort"],
+    ["o6a2def052c104024","hotel",120.61978,13.93154,"Madhavi Beach Resort",{"brand":"OYO Rooms"}],
+    ["o751d32baabed4e75","hotel",120.62914,13.94991,"Triple N Resort"],
+    ["oafd93ef84ae944e6","hotel",120.62017,13.9312,"White Castle Hotel and Resort"],
+    ["oc5f15fce9d2d4844","hotel",120.6199,13.93124,"D&D’s Beach Resort Calatagan, Batangas"],
+    ["od990d4f33ff149fd","hotel",120.62096,13.92771,"Anam Beach Resort"],
+    ["oe470a4a799994162","hotel",120.61773,13.94651,"Bembem Edriel Matabungkay Hotel and Resort"],
+    ["oee701046de5e4a90","hotel",120.617,13.94765,"Matabungkay Beach Hotel and Resort"],
+    ["o01e918eabae74712","lodging",120.62045,13.94859,"Villa Remedios Manalo"],
+    ["o0e295c772fee4cc8","lodging",120.64423,13.90413,"Villa Leonidez Garden Resort"],
+    ["o20fe018804e44c8a","lodging",120.61726,13.93531,"Villa Antonio Matabungkay"],
+    ["o5ae1c3778fe34874","lodging",120.6199,13.94944,"Jaja Beach House/Jenica Resort"],
+    ["o6cb0783d0b66488b","lodging",120.61881,13.91275,"Bayside Beach House"],
+    ["od3755ce657864398","lodging",120.62085,13.9484,"ROOM@Casa Rafael Matabungkay"],
+    ["oe5837ef1929c4788","lodging",120.62424,13.92024,"Arlene's Lodging House"],
+    ["ofc1ad393997f4737","lodging",120.61911,13.94921,"Greendoors Cottages"]
   ]
 }

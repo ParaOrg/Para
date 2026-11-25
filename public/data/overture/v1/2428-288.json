@@ -32,6 +32,9 @@
     ["o6e66e267574945ca","supermarket",121.44495,14.42306,"Digo’s Store"],
     ["o99437e9ac46e4699","supermarket",121.44587,14.42234,"M&W Townstore"],
     ["o99c6bec033dc4424","supermarket",121.44762,14.41555,"Garage Betta Aquatics"],
-    ["o2e4c5b5bc7104d6d","pharmacy",121.44509,14.42279,"Pamilihang Bayan ng Siniloan, Laguna"]
+    ["o2e4c5b5bc7104d6d","pharmacy",121.44509,14.42279,"Pamilihang Bayan ng Siniloan, Laguna"],
+    ["oe128ccd5b7cd4cf9","hotel",121.44933,14.43549,"Blue Pavilion Resort, Infanta, Quezon"],
+    ["oe34aefe9d3644855","lodging",121.43522,14.42583,"Villa Temprosa Resort"],
+    ["of78a08ba14f54e3b","lodging",121.44817,14.4289,"Villa Laura Resort"]
   ]
 }

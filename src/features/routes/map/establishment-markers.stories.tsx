@@ -8,6 +8,7 @@ import {
   ESTABLISHMENT_KINDS,
   EXTRA_FAMILY,
   EXTRA_KIND_GLYPH,
+  OVERTURE_ONLY_GLYPH_FAMILY,
   TIER_ZOOM,
   type EstablishmentGlyph,
 } from './establishment-kinds';
@@ -16,6 +17,10 @@ import {
 const GLYPHS = [...new Set(ESTABLISHMENT_KINDS.map((kind) => kind.glyph))];
 /** The places the basemap's tiles lack, from Para's own files (establishment-extra.ts). */
 const EXTRAS = Object.entries(EXTRA_KIND_GLYPH);
+/** The glyphs only Overture's places use: a place to stay (establishment-overture.ts). */
+const OVERTURE_ONLY = Object.entries(OVERTURE_ONLY_GLYPH_FAMILY).filter(
+  (entry): entry is [EstablishmentGlyph, NonNullable<(typeof entry)[1]>] => entry[1] !== undefined,
+);
 
 interface MarkerProps {
   glyph: EstablishmentGlyph;
@@ -65,6 +70,15 @@ function EstablishmentLegend() {
           </span>
         </li>
       ))}
+      {OVERTURE_ONLY.map(([glyph, family]) => (
+        <li key={glyph} className="flex items-center gap-3">
+          <Marker glyph={glyph} />
+          <span>
+            {glyph}: {family}, Overture&apos;s hotels from zoom {EXTRA_MIN_ZOOM}, its smaller places
+            to stay from {EXTRA_MIN_ZOOM + 1}
+          </span>
+        </li>
+      ))}
     </ul>
   );
 }
@@ -79,9 +93,11 @@ type Story = StoryObj<typeof meta>;
 
 export const Legend: Story = {
   play: async ({ canvasElement }) => {
-    await expect(canvasElement.querySelectorAll('li')).toHaveLength(GLYPHS.length + EXTRAS.length);
+    await expect(canvasElement.querySelectorAll('li')).toHaveLength(
+      GLYPHS.length + EXTRAS.length + OVERTURE_ONLY.length,
+    );
     await expect(canvasElement.querySelectorAll('canvas')).toHaveLength(
-      GLYPHS.length + EXTRAS.length,
+      GLYPHS.length + EXTRAS.length + OVERTURE_ONLY.length,
     );
   },
 };

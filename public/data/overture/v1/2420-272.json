@@ -1,0 +1,10 @@
+{
+  "schema": 1,
+  "cell": "2420-272",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o670e5dbae1d94855","hotel",121.04644,13.63591,"Isola Vista Beach Resort"],
+    ["ofe54f373a5954928","hotel",121.04599,13.63577,"Kamantigue Beach and Diving Resort"],
+    ["o60e872cbfe564685","lodging",121.04519,13.64949,"Faelan Beach"]
+  ]
+}

@@ -4,6 +4,10 @@
   "attribution": "© Overture Maps Foundation",
   "establishments": [
     ["o510acd0a5d614552","school",121.08298,15,"DepEd Kalayakan Elementary School"],
-    ["ob9b7c698b0e34e75","school",121.07188,15.04868,"Akle Elementary School"]
+    ["ob9b7c698b0e34e75","school",121.07188,15.04868,"Akle Elementary School"],
+    ["o33c74f5160364003","hotel",121.09573,15.017,"Carribean Resort"],
+    ["o92f8012158e04d9b","hotel",121.08298,15,"Mountainview Resort"],
+    ["oa61be2fa8e604ca0","hotel",121.09306,15.01156,"Mountainview Resort"],
+    ["o29561de4a3f445ef","lodging",121.083,15,"Zymonne's Agritourism Park"]
   ]
 }

@@ -5,6 +5,22 @@
   "establishments": [
     ["oadacf0f4e42c48a6","restaurant",121.48231,13.89212,"Immaculada's Farm & Garden"],
     ["o37f7331458d04b5b","school",121.47842,13.88934,"DepEd Montecillo Elementary School"],
-    ["o8183abb2498a453e","school",121.49534,13.89316,"Lutucan Bata Elementary School"]
+    ["o8183abb2498a453e","school",121.49534,13.89316,"Lutucan Bata Elementary School"],
+    ["o095699a995f84ffa","hotel",121.49749,13.85415,"Jel Sakalam Beach Resort"],
+    ["o1399219fb1bd43db","hotel",121.48932,13.86275,"Monte Vista Beach Resort"],
+    ["o19d9f02aed934ec4","hotel",121.49537,13.87964,"The Nim Farm & Resort"],
+    ["o1e0172ca8ce34c24","hotel",121.49224,13.85137,"Blue Lagoon Beach Resort"],
+    ["o5e317a6e704f4690","hotel",121.49534,13.89316,"Hayahay Private Resort Sariaya"],
+    ["o6ce75ec444054e97","hotel",121.49675,13.85406,"Sunrise Beach Resort"],
+    ["o7228e8a9fe5047a0","hotel",121.48932,13.86275,"Joshua Resort"],
+    ["o745f94b676c44d83","hotel",121.48636,13.85012,"Williemac Beach Resort"],
+    ["o83b66dd9f186451c","hotel",121.49873,13.85498,"Talon Beach Resort"],
+    ["o8b775210fd3240c6","hotel",121.48932,13.86275,"El Victor Beach Resort"],
+    ["o8f733cd1fd1e4ee1","hotel",121.48932,13.86275,"Stariray BEACH Resort"],
+    ["oabe7d931c23d4e4f","hotel",121.49615,13.88645,"Eagle's Nest / Eagle's Private Resort"],
+    ["ob85e7dd665e047f0","hotel",121.48351,13.89441,"Radzhanele Farm & Resort"],
+    ["ocd00c26659d3412a","hotel",121.4915,13.85098,"Joshua's Beach Resort"],
+    ["o0009bd1f2bf749a1","lodging",121.49749,13.85474,"MJ Beach House and Cottages"],
+    ["o667b361e8ae44e26","lodging",121.48932,13.86275,"Villa Del Prado, Sariaya, Quezon"]
   ]
 }

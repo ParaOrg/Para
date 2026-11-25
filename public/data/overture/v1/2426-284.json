@@ -20,6 +20,8 @@
     ["off3d41a36f624ec9","school",121.32877,14.22703,"Victoria senior high school"],
     ["o4381256b33554151","supermarket",121.32892,14.22789,"Puregold Victoria",{"brand":"Puregold"}],
     ["o6692fb19215e4dd5","supermarket",121.32504,14.2194,"Macabuhay Ministore"],
-    ["o23a0de4a592c4f02","laundry",121.34901,14.20579,"Mr Quickclean Laundry Hub"]
+    ["o23a0de4a592c4f02","laundry",121.34901,14.20579,"Mr Quickclean Laundry Hub"],
+    ["o5d691bba1f8046eb","lodging",121.34801,14.21672,"Relova's Orchard"],
+    ["odef9d81da6eb458b","lodging",121.33003,14.23504,"Tope's Villa"]
   ]
 }

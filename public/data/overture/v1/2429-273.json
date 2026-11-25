@@ -3,6 +3,11 @@
   "cell": "2429-273",
   "attribution": "© Overture Maps Foundation",
   "establishments": [
-    ["od950b4fd3c4d4ead","restaurant",121.45045,13.67412,"Slap Stack Burgers"]
+    ["od950b4fd3c4d4ead","restaurant",121.45045,13.67412,"Slap Stack Burgers"],
+    ["o3412a10dd88b403a","hotel",121.45386,13.69139,"Thea Vista MinMar Beach Resort"],
+    ["o485caa397ecd46f4","hotel",121.45929,13.67735,"Acuaverde Beach Resort and Hotel"],
+    ["ob7e5a756569747c9","hotel",121.46371,13.68108,"Our Beach Resort- San Juan Batangas"],
+    ["of794a2d766014e58","hotel",121.46176,13.68105,"Thea Vista MinMar Beach Resort"],
+    ["oc500ab8bbdf14962","lodging",121.45954,13.67972,"Casa Amara"]
   ]
 }

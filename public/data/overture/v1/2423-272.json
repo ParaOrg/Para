@@ -4,6 +4,16 @@
   "attribution": "© Overture Maps Foundation",
   "establishments": [
     ["o2cd17ab0357347b5","school",121.18511,13.64483,"Punas, Elementary School"],
-    ["o8b1dccb7317a4b8a","college",121.19238,13.64147,"Batstateu CAF Lobo"]
+    ["o8b1dccb7317a4b8a","college",121.19238,13.64147,"Batstateu CAF Lobo"],
+    ["o08b3106f2ceb42bd","hotel",121.18607,13.64445,"Solaya Beach Resort"],
+    ["o171e9ebc1fda44d1","hotel",121.19685,13.63425,"Palm Dreams Resort - La Palmera"],
+    ["o3fd214084975422f","hotel",121.19408,13.63811,"Catada Beach Resort"],
+    ["o5cadacb35ae74dbb","hotel",121.19626,13.63462,"Almalin Beach Resort"],
+    ["o6ee23d8d11604311","hotel",121.193,13.63991,"Pedrosa Resort"],
+    ["ob5d5c58bd1bd4e43","hotel",121.19464,13.63758,"Aplaya Fabrica Resort"],
+    ["oaabff50bb938454c","lodging",121.1947,13.63735,"Kubo Lobo"],
+    ["ob58552a41dd842c7","lodging",121.19864,13.6346,"Morning Walk Beach House"],
+    ["obaa0a6ed47d64c2e","lodging",121.19843,13.63264,"Maxsi Beach House"],
+    ["ofa05947f1a154ff3","lodging",121.19646,13.6344,"Gerthel Beach Lobo"]
   ]
 }

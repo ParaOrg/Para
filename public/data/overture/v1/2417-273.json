@@ -4,6 +4,14 @@
   "attribution": "© Overture Maps Foundation",
   "establishments": [
     ["o7e37acd1fe614403","restaurant",120.86954,13.6629,"Aplaya's Grill and Restaurant"],
-    ["o58e3fd063e1c45e0","school",120.88175,13.65574,"Sto. Tomas Elementary School"]
+    ["o58e3fd063e1c45e0","school",120.88175,13.65574,"Sto. Tomas Elementary School"],
+    ["o353c2c6b6ee74068","hotel",120.87955,13.66003,"Macuha Beach Island Resort"],
+    ["o3a912d3da04a4621","hotel",120.89445,13.6859,"Layag Resort"],
+    ["o47fef2a54e6d4666","hotel",120.8922,13.68649,"Buceo Anilao Beach & Dive Resort"],
+    ["oa28de1e0a4504eac","hotel",120.85468,13.66903,"Olympic Island Resort"],
+    ["oea3d631d23d347a5","hotel",120.89484,13.68742,"Hatcher Hotel at Sea Spring Resort Hotel"],
+    ["o58548db309174ddb","lodging",120.87199,13.6569,"Villa Marco Beach House"],
+    ["o78b74e72b1e940c0","lodging",120.87199,13.6569,"Punta Guarda Seaside Masasa Beach"],
+    ["obb81859801834647","lodging",120.89506,13.68818,"Seas Spring Dive Center 海水温泉 ダイブセンター"]
   ]
 }

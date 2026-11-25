@@ -63,6 +63,18 @@
     ["o252bf288caf34f99","pharmacy",121.01942,14.92245,"Vergel de Dios Pharmacy"],
     ["o34f4517f14fd400a","pharmacy",121.02953,14.92799,"Farmacia Hazel"],
     ["o4a2774c65c70490e","pharmacy",121.04729,14.90907,"BlueCross Pharmacy"],
-    ["oe24125bde2274a2c","pharmacy",121.03005,14.92824,"TGP The Generics Pharmacy"]
+    ["oe24125bde2274a2c","pharmacy",121.03005,14.92824,"TGP The Generics Pharmacy"],
+    ["o08564fcd088840a5","hotel",121.03088,14.91206,"Inang Oreng's Garden- Resort Events Place"],
+    ["o40166e6f7a834167","hotel",121.02497,14.94862,"Frontera Garden Resort"],
+    ["o4f3806ee21804646","hotel",121.04549,14.91427,"Don Roger Resort and Pavilion"],
+    ["o9ae99c7d33f14fb3","hotel",121.03989,14.9038,"Michellas Garden Resort"],
+    ["obc648e2f787b43df","hotel",121.02679,14.92415,"Casa Correa Resort and Events Place"],
+    ["oc16d669d143f41da","hotel",121.02715,14.91893,"La Camellia private resort"],
+    ["odeed6cc4e6914f95","hotel",121.04681,14.9142,"Psalm Mango Farm Resort"],
+    ["oe8ace78d903b4cee","hotel",121.031,14.9281,"JGH Resort"],
+    ["o1608274989a74afc","lodging",121.02795,14.90546,"Villa Antonio Resort, Norzagaray, Bulacan"],
+    ["o2df12b26190b4e4d","lodging",121.0196,14.93884,"Villa Encanto Private Resort"],
+    ["o4930dbc3a7cd4356","lodging",121.0294,14.92295,"Villa Camryn Private Resort"],
+    ["o76bc68360bf34f23","lodging",121.00764,14.94608,"Villa Rita Private Resort"]
   ]
 }

@@ -47,6 +47,16 @@
     ["o54568b422bc34c8d","supermarket",120.76791,14.91363,"Nelly's Special Longganisa"],
     ["o96e8f7786b4840d1","supermarket",120.75574,14.93477,"SM Savemore"],
     ["oeb68af7b73cf4413","supermarket",120.765,14.92434,"Puregold"],
-    ["o104cc0cf5b634582","pharmacy",120.76665,14.91667,"Mercury calumpit"]
+    ["o104cc0cf5b634582","pharmacy",120.76665,14.91667,"Mercury calumpit"],
+    ["o2fdf17d2ead346e7","hotel",120.76394,14.9395,"Atus Resort Alauli Apalit Pampanga"],
+    ["o7670cb8d60d043da","hotel",120.77656,14.93256,"Hotel Impressa Apalit Pampanga"],
+    ["o8f3734bc1009454f","hotel",120.76575,14.92416,"Jed's Island Resort"],
+    ["o90d9887375b445db","hotel",120.78149,14.90479,"Leticia's Garden Resort and Events Place"],
+    ["o9558cf2e4a74411c","hotel",120.77501,14.90759,"Eilat Private Resort and Events Place"],
+    ["o600d12c88b8f4eb0","lodging",120.78539,14.91352,"Oishi Takoyaki"],
+    ["o77d488be0567430d","lodging",120.77309,14.90285,"RIVERSIDE Caniogan"],
+    ["o7ca0344c772b4fe3","lodging",120.76184,14.93718,"Riverside Sulipan Apalit"],
+    ["o7edb93c076284d11","lodging",120.75414,14.90067,"Casa Pia Ysabelle"],
+    ["oa36a7e8e76744bf1","lodging",120.76326,14.90062,"Sta. Lucia Calumpit"]
   ]
 }

@@ -1,8 +1,9 @@
-import type { ExpressionSpecification, MapLibreMap } from 'maplibre-gl';
+import type { ExpressionSpecification, MapLibreMap, SymbolLayerSpecification } from 'maplibre-gl';
 
 import { drawCellLayer, type CellFeature, type CellLayer } from './establishment-cell-layer';
 import { EXTRA_SOURCE, cellSymbolLayer } from './establishment-extra';
 import {
+  ESTABLISHMENT_FILL_ZOOM,
   FAMILY_COLOUR,
   establishmentImageOf,
   familyOfGlyph,
@@ -36,7 +37,12 @@ export const OVERTURE_KIND_GLYPH: Record<OvertureKind, EstablishmentGlyph> = {
   supermarket: 'grocery',
   pharmacy: 'pharmacy',
   laundry: 'laundry',
+  hotel: 'lodging',
+  lodging: 'lodging',
 };
+
+/** The small places to stay (kind lodging, overture.mjs's lodgingKindOf): a zoom after the rest. */
+export const SMALL_LODGING_ZOOM = ESTABLISHMENT_FILL_ZOOM + 1;
 
 /** A cell's places as map points, by kind and name. */
 export function overtureFeatures(cell: OvertureCell): CellFeature[] {
@@ -56,11 +62,14 @@ function byKind(valueOf: (glyph: EstablishmentGlyph) => string): ExpressionSpeci
   return ['match', ['get', 'kind'], first[0], valueOf(first[1]), ...pairs, fallback];
 }
 
-export const OVERTURE_LAYER = cellSymbolLayer(
-  OVERTURE_SOURCE,
-  byKind(establishmentImageOf),
-  byKind((glyph) => FAMILY_COLOUR[familyOfGlyph(glyph) ?? 'food']),
-);
+export const OVERTURE_LAYER: SymbolLayerSpecification = {
+  ...cellSymbolLayer(
+    OVERTURE_SOURCE,
+    byKind(establishmentImageOf),
+    byKind((glyph) => FAMILY_COLOUR[familyOfGlyph(glyph) ?? 'food']),
+  ),
+  filter: ['any', ['!=', ['get', 'kind'], 'lodging'], ['>=', ['zoom'], SMALL_LODGING_ZOOM]],
+};
 
 /** The glyphs the layer's markers need on the map before it is added. */
 export const OVERTURE_GLYPHS: readonly EstablishmentGlyph[] = [

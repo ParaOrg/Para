@@ -47,6 +47,13 @@
     ["o9630ad78d9c04bd8","supermarket",120.72887,13.93678,"Balayan Mall-Type Public Market"],
     ["oe84bf2c6c6334c75","supermarket",120.72904,13.94971,"Waltermart Balayan Batangas",{"brand":"Bravo Biscuits"}],
     ["o20405e6dc27a4b77","pharmacy",120.72936,13.93711,"Mercury Drug"],
-    ["o4622ad12ff7a4662","pharmacy",120.72995,13.94931,"Watsons"]
+    ["o4622ad12ff7a4662","pharmacy",120.72995,13.94931,"Watsons"],
+    ["o1006d5441fc94121","hotel",120.74047,13.93756,"Soler Sea, Seaside Resort Balayan"],
+    ["o3e0a265b072a4810","hotel",120.7166,13.92829,"Henaida Resort"],
+    ["o9730a7c7246f47fb","hotel",120.70499,13.91905,"Cimpulo Beach Resort"],
+    ["ofaf58d68ff504b2f","hotel",120.70947,13.94764,"King and Queen Resort"],
+    ["o34f2dfc168ed442e","lodging",120.74763,13.94693,"Orchards II"],
+    ["oc9e3a7dd96c44ac3","lodging",120.73127,13.94104,"Paz Ilaya Balayan"],
+    ["occ40ef8215e8465b","lodging",120.7281,13.94073,"Espineli's"]
   ]
 }

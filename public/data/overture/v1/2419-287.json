@@ -237,6 +237,21 @@
     ["o7745d7e2b05f4969","laundry",120.9874,14.39415,"Deep Clean Laundry"],
     ["occe33b821e48479d","laundry",120.99969,14.39113,"LCC Laundry Station"],
     ["oe2fbbc470a774db8","laundry",120.97174,14.39616,"Sit and Spin Laundromat Self"],
-    ["oe6b81f0de8b14121","laundry",120.96191,14.39783,"Seth's Laundry Services"]
+    ["oe6b81f0de8b14121","laundry",120.96191,14.39783,"Seth's Laundry Services"],
+    ["o39cc9f65414f4421","hotel",120.98229,14.36006,"Elijah Hotel"],
+    ["oc3f864ceef7348de","hotel",120.97691,14.38663,"Circle Island Resort"],
+    ["ofa3cabf3dbea4dc6","hotel",120.98978,14.39671,"La Roca Resort- Los Banos,Laguna"],
+    ["o2b5e0fb61d5d4c76","lodging",120.97751,14.39053,"Town and Country West Bacoor 3-Storey Roof Deck"],
+    ["o44b8dde0df2a4701","lodging",120.97512,14.36318,"Sta. Catalina"],
+    ["o8c4298278925408b","lodging",120.9939,14.39243,"Camella North Springville"],
+    ["obba533971e2243cb","lodging",120.99625,14.3808,"Brittany Hotel Villar City"],
+    ["obc0d553132994e44","lodging",120.98215,14.39112,"Villa Leoncia Resort"],
+    ["occ904b36093b4123","lodging",120.95114,14.35181,"Sebastian’s Crib"],
+    ["od3e727e7311c4bab","lodging",120.96024,14.35047,"orchard townhouse & villas"],
+    ["oe29dfd0f01eb4285","lodging",120.9751,14.38183,"Ridge Crest"],
+    ["of2be163d40a34a3c","lodging",120.98146,14.39072,"Spv Camella West Molino"],
+    ["of349faafac0c41ed","lodging",120.96782,14.39069,"Parklane Settings Vermosa"],
+    ["of7d75ffdf9784990","lodging",120.99403,14.38461,"Camella Springville South 2"],
+    ["offce2ce8e3fe49fa","lodging",120.98185,14.39264,"Town and Country West"]
   ]
 }

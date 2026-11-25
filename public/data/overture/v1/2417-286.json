@@ -57,6 +57,17 @@
     ["o1714296ff6a04586","pharmacy",120.88007,14.31673,"Farmacia Zapanta GLCM/KAIA Branch"],
     ["o4879d0b466844219","pharmacy",120.89827,14.3142,"Farmacia de Lucido"],
     ["o831fc8023ce24832","pharmacy",120.87336,14.31324,"Farmacia Zapanta"],
-    ["ocae9d17f410f4b8b","laundry",120.87984,14.31618,"LabaTita"]
+    ["ocae9d17f410f4b8b","laundry",120.87984,14.31618,"LabaTita"],
+    ["o011fd28d01674893","hotel",120.8933,14.32313,"AC Garden Resort"],
+    ["o46c2e09353164b37","hotel",120.86044,14.32417,"Legata Familia Resort"],
+    ["o877f7e8375b14401","hotel",120.87243,14.32319,"Puerto Azul paniman beach resort"],
+    ["od8ee7c75bb4e4782","hotel",120.89799,14.31006,"La Traviesa Hotel Resort"],
+    ["oedbeba98d4a540bb","hotel",120.86438,14.3463,"Nahara Resort"],
+    ["of09d4f1d03f243f5","hotel",120.88319,14.33155,"Regina’s Garden Resort"],
+    ["o1c673bbf24c84196","lodging",120.85241,14.33353,"Tropang Bagtas"],
+    ["o8e5c4255c8754c4e","lodging",120.89281,14.31368,"Goldengate 1 Industrial Estate"],
+    ["of05a4cfdba1b4d65","lodging",120.86159,14.32056,"Belvedere Clubhouse"],
+    ["of5d302142a514dbb","lodging",120.89362,14.31455,"Goldengate 1 Industrial Estate"],
+    ["of9a870e99dbc4376","lodging",120.85814,14.30423,"Metroland Terraces"]
   ]
 }

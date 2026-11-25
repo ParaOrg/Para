@@ -60,6 +60,14 @@
     ["od107094a1e07478b","supermarket",121.2428,14.51069,"Shemadz Jodi SF Ramos Store"],
     ["of232b40dd7f842e6","supermarket",121.23698,14.50727,"Morong Public Market"],
     ["o145929e6b99b4374","pharmacy",121.21203,14.52375,"Mercury Drug"],
-    ["o000c8c0e1e794af0","laundry",121.23915,14.51591,"One Big Wash Self Service Laundry Morong"]
+    ["o000c8c0e1e794af0","laundry",121.23915,14.51591,"One Big Wash Self Service Laundry Morong"],
+    ["o401f0efb6d1647be","hotel",121.22896,14.52084,"Beth's Secret Garden Resort"],
+    ["od135eb0b43cf456b","hotel",121.2415,14.51983,"Nature's Land Camp Private Resort"],
+    ["o02b2d7d000f94df4","lodging",121.2095,14.52569,"Martha Belle"],
+    ["o4352835265634c3f","lodging",121.22421,14.52117,"Vista Acosta Private Place"],
+    ["o815cd4bbba9a4d6f","lodging",121.21257,14.52517,"Morong Nordic Rollerski Main"],
+    ["obb3a23d606704557","lodging",121.24393,14.51179,"Tupas Ibaba"],
+    ["oe59c0e7b9887417e","lodging",121.23176,14.52112,"Villa Elizabeth Resort"],
+    ["of9e5a707fb784d82","lodging",121.21382,14.50885,"Casa 1979"]
   ]
 }

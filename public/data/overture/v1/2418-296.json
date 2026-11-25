@@ -105,6 +105,18 @@
     ["oc38d6085388a480d","pharmacy",120.90437,14.82018,"Watsons"],
     ["oe92413c68d8e4d98","pharmacy",120.90929,14.81625,"Generika Balagtas"],
     ["of18388a041394458","pharmacy",120.90495,14.81894,"Botika sa Paso"],
-    ["o86f5b2d5de424fc5","laundry",120.93925,14.81651,"King Leonard Laundry Bar"]
+    ["o86f5b2d5de424fc5","laundry",120.93925,14.81651,"King Leonard Laundry Bar"],
+    ["o1077241c24694add","hotel",120.94527,14.82685,"EG Liblib Private Resort 1"],
+    ["o430faf9833a24cd8","hotel",120.90672,14.82551,"Balagtas Resort"],
+    ["ob97e463fbd494c21","hotel",120.91123,14.83658,"Marangal Greenfields Resort and Pavilion"],
+    ["odcfbc8d0b5c444cf","hotel",120.94695,14.81859,"Cool Water Resort in Bulacan"],
+    ["oe601c6ef100549a6","hotel",120.90504,14.84141,"Fun N Sun Resort Hotel Inc."],
+    ["off37b86d6a954e10","hotel",120.93674,14.849,"Casa Familia Private Resort"],
+    ["offf926bfbbcb4003","hotel",120.94736,14.84698,"A4 Private Resort"],
+    ["o479971719033468a","lodging",120.91918,14.80213,"Valentin Residence Oro Villas II"],
+    ["o5fe901ee2e584032","lodging",120.92184,14.84098,"Villa Damaso Resort and Pavillion"],
+    ["o8e6e1935197e4a24","lodging",120.94044,14.83337,"AFP-PNP Housing"],
+    ["od61c7c69575c4fee","lodging",120.94736,14.84698,"Casa Estrella"],
+    ["odf87bd9367484d37","lodging",120.90669,14.81828,"Red Arc Events Place"]
   ]
 }

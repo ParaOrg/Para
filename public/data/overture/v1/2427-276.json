@@ -53,6 +53,14 @@
     ["ocf75194df31447bb","supermarket",121.39329,13.8242,"San Juan Public Market"],
     ["of9d3d6380772485f","supermarket",121.39315,13.8263,"Puregold Junior",{"brand":"Puregold"}],
     ["o221f0c06f6c0407c","pharmacy",121.39585,13.82739,"Generika Drugstore",{"brand":"Generika"}],
-    ["o64f17ce044724ce7","pharmacy",121.39432,13.82478,"TGP The Generics Pharmacy"]
+    ["o64f17ce044724ce7","pharmacy",121.39432,13.82478,"TGP The Generics Pharmacy"],
+    ["o06c5e03938064478","hotel",121.39743,13.8189,"Red Apple Hotel, Resort, & Events Place"],
+    ["o0c1d9156c52547b2","hotel",121.38848,13.82553,"Richbuon Garden Resort"],
+    ["o3bcef4966be7445f","hotel",121.39432,13.8402,"Laiya Batangas Beach Resort"],
+    ["o4d7406e1e05e4c21","hotel",121.39999,13.83333,"One Laiya Beach Resort"],
+    ["o7cf1aaa0310a4512","hotel",121.39671,13.82556,"Laiya beach resort"],
+    ["od9b98f5757724f5c","hotel",121.39323,13.82595,"Acuatico Beach Resort"],
+    ["o086bf5895ff4404c","lodging",121.39045,13.82811,"Villa Angelica, San Juan, Batangas"],
+    ["o410625af9c0b4f02","lodging",121.37137,13.81782,"Villa Aniciete Resort"]
   ]
 }

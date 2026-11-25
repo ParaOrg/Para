@@ -38,6 +38,15 @@
     ["od32fcc43ffb14544","pharmacy",121.13782,13.95919,"Mariah Pharmacy"],
     ["ofba9fafd7d644406","pharmacy",121.11239,13.9586,"TGP The Generics Pharmacy (Mataas Na Kahoy)",{"brand":"TGP The Generics Pharmacy"}],
     ["o407749de496243ad","laundry",121.11485,13.95636,"Christemar"],
-    ["oc244afe5ecf94ee3","laundry",121.11604,13.95609,"LN Laundromat - Mataas Na Kahoy"]
+    ["oc244afe5ecf94ee3","laundry",121.11604,13.95609,"LN Laundromat - Mataas Na Kahoy"],
+    ["o0b4f9b590bba4def","hotel",121.13564,13.95236,"La Leona Resort"],
+    ["o808d45554ca24b75","hotel",121.13564,13.95236,"Tribalbliss Private Resort"],
+    ["ob70ee772562e498d","hotel",121.10508,13.99277,"Serenewoods Farm and Resort"],
+    ["oef6e10897df547ca","hotel",121.13564,13.95236,"Isla Noah Private Resort"],
+    ["oefc9cd8404ed4867","hotel",121.1384,13.99502,"Don Julian Private Resort"],
+    ["ofc760208d731438d","hotel",121.13255,13.95658,"Lacorte Silva Resort"],
+    ["o9310233d9fbb4bac","lodging",121.11275,13.95529,"Silva's Private Pool - Jardin Feliz"],
+    ["oa7dac50e568d4dee","lodging",121.10729,13.98719,"Bella Vista"],
+    ["occ9176151e544b94","lodging",121.11301,13.96236,"Galilee Place"]
   ]
 }

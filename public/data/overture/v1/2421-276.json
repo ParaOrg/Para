@@ -16,6 +16,10 @@
     ["o16b757f29c384974","convenience",121.06856,13.80868,"AllenOne Grocery & Payment - Balagtas  Batangas Branch"],
     ["of8a50b22a5224e55","convenience",121.08376,13.83527,"Lucky Mart Concepcion",{"brand":"Lucky Mart"}],
     ["oe5c966e7a58c4093","supermarket",121.08755,13.84308,"Baryo Supermart & Restaurant"],
-    ["o6c23fa2b28d44700","laundry",121.08911,13.8163,"Mamay Lavandero Laundry Shop"]
+    ["o6c23fa2b28d44700","laundry",121.08911,13.8163,"Mamay Lavandero Laundry Shop"],
+    ["o2340695f20cc42ab","hotel",121.06674,13.82188,"Modesto's Farm and Resort"],
+    ["o0713be7daca14795","lodging",121.06224,13.80036,"buenafe county villa,balagtas, batangas city"],
+    ["o64ed45a2e0eb4db1","lodging",121.09972,13.84616,"Villa Andrea Resort"],
+    ["oac4f96dc04bc4ea7","lodging",121.09002,13.84223,"Mamay's Farm"]
   ]
 }

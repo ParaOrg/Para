@@ -1,0 +1,11 @@
+{
+  "schema": 1,
+  "cell": "2429-276",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o8108beee56a3494f","hotel",121.48791,13.84918,"Joshua Resort"],
+    ["od58bb16c5c4a4210","hotel",121.47289,13.83922,"La Vineyard Private Resort"],
+    ["of44343e0cb4f4825","hotel",121.46774,13.83627,"La Vineyard Private Resort"],
+    ["o193a8e415f7a453d","lodging",121.48621,13.84842,"Villa Del Prado"]
+  ]
+}
