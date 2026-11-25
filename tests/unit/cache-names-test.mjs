@@ -40,6 +40,7 @@ test('the names are read from the source, so a renamed cache is checked too', ()
     'landmarks',
     'establishments',
     'footbridges',
+    'terminals',
     'basemap-meta',
     'basemap-tiles',
   ]);

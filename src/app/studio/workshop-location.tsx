@@ -8,6 +8,7 @@ import type { useCardCamera } from '@/features/routes/map/use-card-camera';
 import type { useCardStack } from '@/features/routes/map/use-card-stack';
 import type { useSavedHotspots } from '@/features/routes/map/use-saved-hotspots';
 import type { useSavedRoutes } from '@/features/routes/map/use-saved-routes';
+import { useTerminalDots } from '@/features/routes/map/use-terminal-dots';
 import type { HotspotRow } from '@/features/routes/model/hotspots';
 import type { DirectionRow } from '@/features/routes/model/routes';
 import { FootbridgesSwitch, STUDIO_BASEMAPS, STUDIO_BASEMAP_THUMBNAILS } from '@/features/studio';
@@ -61,6 +62,8 @@ export function WorkshopLocation({
   hasCredits,
 }: WorkshopLocationProps) {
   const { ride, clearOfOpen } = camera;
+  // OpenStreetMap's terminals as faint dots, for an editor placing Para's own (.scratch/terminals).
+  useTerminalDots(map);
   // What the locator last said, and how many times (Locator's onNote).
   const [said, setSaid] = useState<SaidNote | null>(null);
   const handleNote = (note: LocatorNote | null) => {

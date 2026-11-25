@@ -24,6 +24,7 @@ export const MAP_CACHES = [
   'landmarks',
   'establishments',
   'footbridges',
+  'terminals',
   'basemap-meta',
   'basemap-tiles',
 ] as const;

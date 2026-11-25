@@ -41,7 +41,8 @@ export type EstablishmentGlyph =
   | 'toilet'
   | 'police'
   | 'jewelry-store'
-  | 'money-hand';
+  | 'money-hand'
+  | 'bus';
 
 /** 1: the big places a commuter gives directions by; 2: the everyday errands; 3: the rest. */
 export type EstablishmentTier = 1 | 2 | 3;
@@ -92,6 +93,10 @@ export const ESTABLISHMENT_KINDS: readonly EstablishmentKind[] = [
 export const EXTRA_KIND_GLYPH = { pawnshop: 'jewelry-store', remittance: 'money-hand' } as const;
 export const EXTRA_FAMILY: EstablishmentFamily = 'money';
 
+/** OpenStreetMap's jeepney, UV and bus terminals (terminal-markers.ts): a bus, in transport's colour. */
+export const TERMINAL_GLYPH = 'bus' satisfies EstablishmentGlyph;
+export const TERMINAL_FAMILY: EstablishmentFamily = 'transport';
+
 /**
  * The glyphs only Overture's places use, none of the basemap's kinds: a place to stay, by Maki's
  * lodging. Its family is a placeholder until the owner picks one.
@@ -133,6 +138,7 @@ export function establishmentImageOf(glyph: EstablishmentGlyph): string {
 /** The family a glyph's marker is coloured by: each glyph belongs to one. */
 export function familyOfGlyph(glyph: EstablishmentGlyph): EstablishmentFamily | null {
   if (Object.values(EXTRA_KIND_GLYPH).some((extra) => extra === glyph)) return EXTRA_FAMILY;
+  if (glyph === TERMINAL_GLYPH) return TERMINAL_FAMILY;
   const overtureOnly = OVERTURE_ONLY_GLYPH_FAMILY[glyph];
   if (overtureOnly) return overtureOnly;
   return ESTABLISHMENT_KINDS.find((kind) => kind.glyph === glyph)?.family ?? null;
