@@ -7,7 +7,7 @@ import {
 } from 'react';
 
 import { ROUTE_SHEET_SHAPE } from '@/features/routes/cards/route-sheet-shape';
-import { DRAG_PX, follow, swallowTheTapsClick } from '@/shared/ui/sheet-gesture';
+import { DRAG_PX, follow, swallowTheTapsClick, type Snap } from '@/shared/ui/sheet-gesture';
 import { twoRestFor } from '@/shared/ui/two-rest';
 
 import { followersOf, isAlongBottom, place } from './explore-sheet-place';
@@ -36,10 +36,16 @@ const LOW_FOOT = `calc(${LOW_PX}px + env(safe-area-inset-bottom))`;
  * owner, 2026-11-25): they open whole, and a drag takes them to Low 80 or back, never resting
  * between (twoRestFor). They never close and nothing in them scrolls. Along the bottom they are
  * the foot the locate-me column stands on (`--dock-foot`, locator.tsx), at rest and as a finger
- * moves them; floating in the corner they are still and leave the foot alone.
+ * moves them; floating in the corner they are still and leave the foot alone. Where they rest goes
+ * to `onRest` as the height a sheet opening over them takes: open, theirs as a share of the map;
+ * at Low or floating, Low. They come back as they were left (`startsAt`; the owner, 2026-11-25).
  */
-export function useExploreSheet(own: RefObject<HTMLDivElement | null>): ExploreSheet {
-  const [rest, setRest] = useState<ExploreRest>('open');
+export function useExploreSheet(
+  own: RefObject<HTMLDivElement | null>,
+  onRest?: (snap: Snap, rest: ExploreRest) => void,
+  startsAt: ExploreRest = 'open',
+): ExploreSheet {
+  const [rest, setRest] = useState<ExploreRest>(startsAt);
   const [isDragging, setDragging] = useState(false);
 
   useLayoutEffect(() => {
@@ -47,16 +53,21 @@ export function useExploreSheet(own: RefObject<HTMLDivElement | null>): ExploreS
     const host = cards?.closest<HTMLElement>('[data-dock-host]');
     if (!cards || !host || isDragging) return;
     const settle = () => {
+      const isOpen = isAlongBottom(cards, host) && rest === 'open';
       if (!isAlongBottom(cards, host)) place(cards, host, '0px', null);
-      else if (rest === 'open') place(cards, host, '0px', `${cards.offsetHeight}px`);
+      else if (isOpen) place(cards, host, '0px', `${cards.offsetHeight}px`);
       else place(cards, host, LOW_Y, LOW_FOOT);
+      onRest?.(
+        isOpen && host.clientHeight > 0 ? cards.offsetHeight / host.clientHeight : 'low',
+        rest,
+      );
     };
     settle();
     const watch = new ResizeObserver(settle);
     watch.observe(cards);
     watch.observe(host);
     return () => watch.disconnect();
-  }, [own, rest, isDragging]);
+  }, [own, rest, isDragging, onRest]);
 
   // Gone (a card opened over the map): the foot goes with them.
   useLayoutEffect(() => {

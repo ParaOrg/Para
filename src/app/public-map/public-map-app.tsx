@@ -61,6 +61,7 @@ import type { SaidNote } from './page-toasts';
 import { sheetTopUnderSearch } from './sheet-top-under-search';
 import { useStatusBarColour } from './status-bar';
 import { TOAST_UNDER_FULL_CARD, TOAST_UNDER_FULL_TRIP } from './toast-under-full';
+import type { ExploreRest } from './use-explore-sheet';
 
 /**
  * The hotspots on the commuter map, the owner's calls for now: no pins zoomed in, no dots zoomed
@@ -132,10 +133,10 @@ export function PublicMapApp() {
   // The route list, a hotspot's card and the trip opened from either: which
   // is up, what stands behind what, their height and colours (useCardStack).
   const cards = useCardStack(map, saved, hotspots);
-  // The camera with the cards: a hintuan picked on the trip, gliding there;
-  // a trip, a picked RouteCard and SWITCH taken in whole, again as the sheet
-  // settles; the camera from before a hotspot's card was picked, back as it
-  // is let go (useCardCamera).
+  const [exploreRest, setExploreRest] = useState<ExploreRest>('open'); // As they were left.
+  // The camera with the cards: a hintuan picked on the trip, gliding there; a trip, a picked
+  // RouteCard and SWITCH taken in whole, again as the sheet settles; the camera from before a
+  // hotspot's card was picked, back as it is let go (useCardCamera).
   const {
     root,
     tripDock,
@@ -163,10 +164,9 @@ export function PublicMapApp() {
   const { ridden, startId } = ride;
   const rides = useLitRides(map, saved, hotspots.hotspots, null, ridden, startId, tipId, true);
 
-  // The commuter's own position, the dot and the camera with them live in
-  // CommuterLocation, so a fix, the phone's compass and the dot's moods
-  // render it alone. Its camera moves here, at this page's turn: after the
-  // cards' camera above, which a sheet set to another height moves in the
+  // The commuter's own position, the dot and the camera with them live in CommuterLocation, so a
+  // fix, the phone's compass and the dot's moods render it alone. Its camera moves here, at this
+  // page's turn: after the cards' camera above, which a sheet set to another height moves in the
   // same commit (commit-turn.ts).
   const locatorTurn = useTurn();
   const locator = useRef<CommuterLocationHandle>(null); // For "Turn on location" (ExploreCards).
@@ -464,7 +464,14 @@ export function PublicMapApp() {
         {/* With nothing open: ways to explore, and the donation card (Figma 4852:35066). */}
         {!cards.open && (
           <Suspense fallback={null}>
-            <ExploreCards onLocate={() => locator.current?.locate()} />
+            <ExploreCards
+              onLocate={() => locator.current?.locate()}
+              startsAt={exploreRest}
+              onRest={(snap, rest) => {
+                cards.setIdleSnap(snap);
+                setExploreRest(rest);
+              }}
+            />
           </Suspense>
         )}
       </div>

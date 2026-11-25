@@ -2,14 +2,19 @@ import { useId, useRef } from 'react';
 
 import { Button } from '@/design-system/primitives/button';
 import blob from '@/features/routes/cards/route-card-blob-primary.svg';
+import type { Snap } from '@/shared/ui/sheet-gesture';
 import { cn } from '@/shared/utils/cn';
 
 import { LocationIcon, NavigationOffArt, RouteIcon } from './explore-cards-icons';
-import { useExploreSheet } from './use-explore-sheet';
+import { useExploreSheet, type ExploreRest } from './use-explore-sheet';
 
 interface ExploreCardsProps {
   /** "Turn on location…" tapped: locate, or bring the camera back (CommuterLocationHandle). */
   onLocate: () => void;
+  /** Where they rest, as the height the card a tap opens over them takes (useCardStack). */
+  onRest?: (snap: Snap, rest: ExploreRest) => void;
+  /** Where they stand as they come back: as they were left. */
+  startsAt?: ExploreRest;
 }
 
 /**
@@ -21,9 +26,9 @@ interface ExploreCardsProps {
  * 4879:36258), 384 wide as the route list's panel, still. They have no ✕ and never hide while no
  * card is open: they go when one opens and come back when it closes.
  */
-export function ExploreCards({ onLocate }: ExploreCardsProps) {
+export function ExploreCards({ onLocate, onRest, startsAt }: ExploreCardsProps) {
   const own = useRef<HTMLDivElement>(null);
-  const sheet = useExploreSheet(own);
+  const sheet = useExploreSheet(own, onRest, startsAt);
   const isOpen = sheet.rest === 'open';
   return (
     <div

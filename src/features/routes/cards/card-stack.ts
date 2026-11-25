@@ -1,4 +1,4 @@
-import type { Snap } from '@/shared/ui/sheet-gesture';
+import { FRAMED_SHARE, type Snap } from '@/shared/ui/sheet-gesture';
 import type { LngLat } from '@/shared/utils/geo';
 
 import { sharingAnEnd } from '../model/departures';
@@ -36,12 +36,21 @@ export function tripBack(
 }
 
 /**
- * The height the sheets share: a pick and ‹ keep it as it was; with nothing
- * open it goes back to Low, where every sheet opens (the owner's rule).
+ * The height the sheets share: a pick, ‹, SWITCH and Vice Versa keep it as it was. With nothing
+ * open it rests where the first card does (`idle`: the public map's explore cards, open at their
+ * own height or at Low), so the card a tap opens stays at the height before it (the owner's rule,
+ * 2026-11-25); where nothing stands there (the studio), at Low.
  */
-export function sharedSnap(snap: Snap, anyOpen: boolean): Snap {
-  return anyOpen ? snap : 'low';
+export function sharedSnap(snap: Snap, anyOpen: boolean, idle: Snap = 'low'): Snap {
+  return anyOpen ? snap : idle;
 }
+
+/**
+ * Where a route's detail opens from a tap — a RouteCard in the list, or a line with one route: the
+ * middle, about half the map, where the controls stop rising (the owner, 2026-11-25). ‹ gives the
+ * list back at its own height; ⇅, Vice Versa and another route keep the trip's.
+ */
+export const TRIP_OPENS_AT: Snap = FRAMED_SHARE;
 
 /**
  * A trip stepped behind a place's card when its name on the map was tapped:
