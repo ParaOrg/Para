@@ -39,6 +39,8 @@ interface Props {
   labelsPlace?: LabelsPlace;
   /** A card is open: the button sits on its sheet. */
   docked: boolean;
+  /** The map-style button over the LocatorButton (the studio), or the LocatorButton alone (Locator). */
+  hasMapStyle?: boolean;
   /** The page's turn for the camera (commit-turn.ts): after the cards' camera. */
   cameraTurn: Turn;
   /** What was just picked, for the dot to gaze at; and when ‹ or ✕ last went back (useGazeHush). */
@@ -79,6 +81,7 @@ export function CommuterLocation({
   snap,
   offset,
   docked,
+  hasMapStyle = true,
   cameraTurn,
   picks,
   hushedAt,
@@ -129,6 +132,7 @@ export function CommuterLocation({
           basemapThumbnails={basemapThumbnails}
           labelsPlace={labelsPlace}
           docked={docked}
+          hasMapStyle={hasMapStyle}
           onNote={onNote}
         />
       )}

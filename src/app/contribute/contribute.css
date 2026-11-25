@@ -22,7 +22,7 @@
 @source '../../features/routes/map/location-labels-row.tsx';
 @source '../../features/routes/map/map-style-switch-row.tsx';
 @source '../../features/routes/map/map-style-button.tsx';
-@source '../../features/routes/map/map-type-icon.tsx';
+@source '../../features/routes/map/layers-icon.tsx';
 @source '../../features/routes/map/map-failure.tsx';
 @source '../../features/routes/map/map-view.tsx';
 @source '../../features/routes/cards/livery-card.ts';

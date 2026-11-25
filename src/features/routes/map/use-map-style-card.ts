@@ -12,6 +12,12 @@ import { readLocationLabels, rememberLocationLabels, type LabelsPlace } from './
  */
 export type MapStyleDirection = 'down' | 'up';
 
+/**
+ * Down from a button in the map's top half, up from one in its foot: the public map's pill, at the
+ * top right on a phone and over the LocatorButton where the card floats (MapViewPill).
+ */
+type MapStyleOpening = MapStyleDirection | 'auto';
+
 /** Closing is the card on its way out, still drawn while its leaving plays. */
 type CardState = 'closed' | 'open' | 'closing';
 
@@ -34,6 +40,8 @@ export interface MapStyleCard {
   card: CardState;
   /** How tall the card may grow, in px, measured as it opens. */
   cardRoom: number | undefined;
+  /** Which way the card opens, worked out as it opens for `auto`. */
+  direction: MapStyleDirection;
   /** The button and its card: a tap outside it closes the card. */
   rootRef: RefObject<HTMLDivElement | null>;
   toggle: () => void;
@@ -55,7 +63,7 @@ export interface MapStyleCard {
 export function useMapStyleCard(
   map: MapLibreMap | null,
   initial: Basemap | (() => Basemap),
-  direction: MapStyleDirection,
+  opening: MapStyleOpening,
   labelsPlace: LabelsPlace,
 ): MapStyleCard {
   const [current, setCurrent] = useState<Basemap>(initial);
@@ -63,6 +71,9 @@ export function useMapStyleCard(
   const [areLabelsShown, setAreLabelsShown] = useState(() => readLocationLabels(labelsPlace));
   const [card, setCard] = useState<CardState>('closed');
   const [cardRoom, setCardRoom] = useState<number | undefined>(undefined);
+  const [direction, setDirection] = useState<MapStyleDirection>(
+    opening === 'auto' ? 'down' : opening,
+  );
   const isOpen = card === 'open';
   const rootRef = useRef<HTMLDivElement>(null);
   const toggleButton = () =>
@@ -81,8 +92,15 @@ export function useMapStyleCard(
   const open = () => {
     const button = toggleButton()?.getBoundingClientRect();
     const edges = map?.getContainer().getBoundingClientRect();
+    const way =
+      opening !== 'auto'
+        ? opening
+        : button && edges && button.top - edges.top > edges.bottom - button.bottom
+          ? 'up'
+          : 'down';
+    setDirection(way);
     const room =
-      direction === 'down'
+      way === 'down'
         ? edges && button && edges.bottom - button.bottom
         : edges && button && button.top - edges.top;
     setCardRoom(room === undefined ? undefined : room - CARD_GAP_PX - CARD_EDGE_PX);
@@ -140,6 +158,7 @@ export function useMapStyleCard(
     areLabelsShown,
     card,
     cardRoom,
+    direction,
     rootRef,
     toggle: () => (isOpen ? close() : open()),
     close,

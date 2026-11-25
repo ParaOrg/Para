@@ -2,17 +2,23 @@ import type { Ref } from 'react';
 
 import { InformationIcon } from '@/shared/ui/route-icons';
 
+/** 32 across (4494:2048), or 28 on the public map (4885:44809). */
+export type CreditsButtonSize = 'md' | 'sm';
+
+const SIZE = { md: 'size-8', sm: 'size-7' } satisfies Record<CreditsButtonSize, string>;
+
 interface CreditsButtonProps {
   onClick: () => void;
+  size?: CreditsButtonSize;
   /** For focus to come back to when the credits close. */
   ref?: Ref<HTMLButtonElement>;
 }
 
 /**
- * Figma's Information (4494:2048): the map's ⓘ, 32 across, in Content/primary at 40%, at the
- * map's bottom left. It opens the map's credits, the Map Data Source sheet.
+ * Figma's Information (4494:2048): the map's ⓘ, 32 across (28 on the public map's corner,
+ * 4885:44809), in Content/primary at 40%. It opens the map's credits, the Map Data Source sheet.
  */
-export function CreditsButton({ onClick, ref }: CreditsButtonProps) {
+export function CreditsButton({ onClick, size = 'md', ref }: CreditsButtonProps) {
   return (
     <button
       ref={ref}
@@ -20,7 +26,7 @@ export function CreditsButton({ onClick, ref }: CreditsButtonProps) {
       aria-label="Map data sources"
       title="Map data sources"
       onClick={onClick}
-      className="size-8 text-content-primary opacity-40 *:size-full"
+      className={SIZE[size] + ' text-content-primary opacity-40 *:size-full'}
     >
       <InformationIcon />
     </button>
