@@ -162,6 +162,11 @@ function TokensPage() {
           token="Gradient/bottom-toolbar"
           cls="bg-(image:--gradient-bottom-toolbar)"
         />
+        <Swatch
+          box="bg-(image:--gradient-signboard)"
+          token="Gradient/signboard"
+          cls="bg-(image:--gradient-signboard)"
+        />
       </Group>
 
       <Group title="Card — End and Start (red and green)">

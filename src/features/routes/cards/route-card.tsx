@@ -39,7 +39,7 @@ interface RouteCardProps {
 
 /**
  * A place and the routes that leave it on one ride, in its colours (RouteCard, 4629:22776): what
- * they ride (RouteCardMode), the place in Bold 28/32, and a DestinationRow per place it goes to. A
+ * they ride (RouteCardMode), the place in Bold 24/32, and a DestinationRow per place it goes to. A
  * train card has station codes by the origin and each row. A row opens its trip; a tap elsewhere
  * opens the first row's, the card pressed in under CARD_SHADOW_SELECTED while the finger is down
  * (`data-pressed`); at a sheet's Low it opens too (`data-opens-at-low`). With `selection` (the
@@ -103,7 +103,7 @@ export function RouteCard({
             onPointerUp={() => setIsPressed(false)}
             onPointerCancel={() => setIsPressed(false)}
             onPointerLeave={() => setIsPressed(false)}
-            className="min-w-0 flex-1 text-left text-3xl/8 font-bold after:absolute after:inset-0 sheet-low:line-clamp-1"
+            className="min-w-0 flex-1 text-left text-2xl/8 font-bold after:absolute after:inset-0 sheet-low:line-clamp-1"
             data-cut-at-low
           >
             {routeOrigin}

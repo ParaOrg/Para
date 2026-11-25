@@ -493,6 +493,22 @@ await page.evaluate(
 );
 await page.waitForFunction(() => window.__map.loaded(), null, { timeout: 30000 });
 await page.waitForTimeout(500);
+// At street zoom the map reads the full lines of the directions in view, at its 'idle'
+// (use-saved-routes.ts, readInView): about twenty one-row reads of "shape". They are the view's,
+// not the follow's, so the count below starts once they are in. On a slow runner 'idle' came
+// after the half second above, and those reads were counted as the follow's.
+await page.evaluate(
+  () =>
+    new Promise((resolve) => {
+      window.__map.once('idle', resolve);
+      window.__map.triggerRepaint();
+    }),
+);
+// Then until half a second passes with no new request: the last of them answered.
+for (let seen = -1, end = Date.now() + 15_000; seen !== asked.length && Date.now() < end;) {
+  seen = asked.length;
+  await page.waitForTimeout(500);
+}
 const at2 = await page.evaluate(
   ([c]) => {
     const q = window.__map.project(c);

@@ -217,6 +217,13 @@
   /* Gradient/bottom-toolbar (4679:23737): the phone's Controller fades what scrolls under it
      into neutral-300. Drawn with `bg-(image:--gradient-bottom-toolbar)`. */
   --gradient-bottom-toolbar: linear-gradient(to bottom, transparent, var(--color-neutral-300));
+  /* Gradient/signboard: the Signboard card's fill (4822:43834), white into neutral-150, a fill
+     Figma draws with no variable. Drawn with `bg-(image:--gradient-signboard)`. */
+  --gradient-signboard: linear-gradient(
+    -66.06deg,
+    var(--color-white) 1.567%,
+    var(--color-neutral-150) 96.433%
+  );
 
   /* The mode cards: a RouteCard's colours by the kind of ride (RouteCard, 4629:22776).
      Figma: Card/Jeep/Jeep-surface… The leaf repeats its group, so the token drops the

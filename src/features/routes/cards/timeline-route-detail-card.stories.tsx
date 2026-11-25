@@ -807,7 +807,7 @@ const board = (top: string, under: string) =>
   );
 
 /**
- * The direction's boards on their own card, "Signboard" over them (4822:43834), 32 tall, 8 apart,
+ * The direction's boards on their own card, "Signboard" over them (4822:43834), 40 tall, 12 apart,
  * right above the tiles, whose first row pads itself 20 (BottomContent, 4821:40538).
  */
 export const Signboards: Story = {
@@ -816,7 +816,7 @@ export const Signboards: Story = {
     const canvas = within(canvasElement);
     const boards = canvas.getAllByTestId('trip-signboard');
     await expect(boards).toHaveLength(2);
-    await waitFor(() => expect(boards[0].getBoundingClientRect().height).toBe(32));
+    await waitFor(() => expect(boards[0].getBoundingClientRect().height).toBe(40));
     // On their own card, "Signboard" over them, right above the tiles.
     const section = canvas.getByRole('region', { name: 'Signboard' });
     const tiles = canvas.getByTestId('trip-tiles');
