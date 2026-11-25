@@ -3,7 +3,7 @@
 
 import { RouteSpriteIcon } from './route-sprite-icon';
 
-/** Figma's filter (4831:51281), 24 across: the map's sliders, opening the route list's filter. */
+/** Figma's filter (the funnel, 4633:21371), 24 across: the map's, opening the route list's filter. */
 export function FilterIcon() {
   return <RouteSpriteIcon id="filter" />;
 }
