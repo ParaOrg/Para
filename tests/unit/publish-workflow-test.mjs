@@ -2,7 +2,8 @@
 // runner's disk while third-party code runs: the checkout keeps no
 // credential, the install runs no package's scripts, and only the step that
 // checks the key is set and the step that pushes ever read the secret
-// (.github/workflows/publish-map.yml).
+// (.github/workflows/publish-map.yml). And the copy onto staging carries only the files the
+// publish writes (write-files.mjs's dataPaths), never the rest of public/data.
 //
 //   node --test tests/unit/publish-workflow-test.mjs
 import { test } from 'node:test';
@@ -50,4 +51,21 @@ test('the commit step deletes the key however the step ends', () => {
   assert.match(commit, /trap 'rm -f "\$key"[^']*' EXIT/);
   assert.match(commit, /GIT_SSH_COMMAND=/);
   assert.match(commit, /StrictHostKeyChecking=yes/);
+});
+
+test('staging is given the files the publish writes, and no other data', async () => {
+  const { dataPaths } = await import('../../scripts/publish/write-files.mjs');
+  const root = '/repo';
+  const written = Object.values(dataPaths(root))
+    .map((path) => path.slice(root.length + 1))
+    .sort();
+  const commit = stepNamed('Commit if the map changed');
+  const list = /published_paths=\(([^)]*)\)/.exec(commit)?.[1];
+  assert.ok(list, 'the commit step names the published paths');
+  assert.deepEqual(list.trim().split(/\s+/).sort(), written);
+  // The copy onto staging and the files it removes read that list, never public/data whole:
+  // landmarks, footbridges, establishments and Overture reach staging before main.
+  assert.match(commit, /checkout "\$published" -- "\$\{published_paths\[@\]\}"/);
+  assert.match(commit, /--diff-filter=D HEAD~1 HEAD -- "\$\{published_paths\[@\]\}"/);
+  assert.doesNotMatch(commit, /checkout "\$published" -- public\/data\b/);
 });
