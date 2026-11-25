@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 15019310,
+  "kind": "bus",
+  "ref": "24",
+  "name": "Route 24: Alabang–Plaza Lawton via Skyway",
+  "from": "Alabang",
+  "to": "Plaza Lawton",
+  "network": "LTFRB National Capital Region",
+  "operator": "Mega Manila Consortium Corporation",
+  "version": 37,
+  "last_edit": "2026-09-01",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["stop_entry_only",121.04655,14.41585,"VTX"]],
+  "line": [[121.04655,14.41585],[121.04597,14.41581],[121.04594,14.41609],[121.04567,14.4164],[121.04567,14.41731],[121.04558,14.41756],[121.04558,14.41893],[121.04567,14.41907],[121.04568,14.41944],[121.04566,14.42262],[121.04555,14.42325],[121.04548,14.43395],[121.04525,14.48514],[121.04505,14.48722],[121.04462,14.48877],[121.04407,14.49006],[121.04026,14.49719],[121.02925,14.51761],[121.02844,14.51895],[121.02784,14.52036],[121.02629,14.52297],[121.02244,14.53025],[121.01741,14.53943],[121.01716,14.54009],[121.01653,14.54108],[121.01524,14.5436],[121.00908,14.55501],[121.00896,14.5554],[121.00756,14.55788],[121.00458,14.55635],[121.00301,14.55574],[120.99718,14.55417],[120.99521,14.56267],[120.99162,14.57026],[120.98152,14.58827],[120.98052,14.59126],[120.97962,14.59341],[120.97932,14.59377],[120.97824,14.59456],[120.9783,14.59475],[120.97942,14.59504]]
+}

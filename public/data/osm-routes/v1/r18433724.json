@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 18433724,
+  "kind": "jeepney",
+  "ref": "T3129",
+  "name": "Muñoz–Vito Cruz via Santa Cruz–Mabini",
+  "from": "Vito Cruz",
+  "to": "Muñoz",
+  "network": "",
+  "operator": "",
+  "version": 10,
+  "last_edit": "2026-08-27",
+  "clipped": false,
+  "provenance": {"note":"incomplete"},
+  "gaps": [],
+  "stops": [["platform",120.99003,14.62657,"A. Bonifacio & Blumentritt"],["platform",120.99544,14.63758,"Del Monte & D. Tuazon"],["platform",120.99544,14.63758,"Del Monte & D. Tuazon"],["platform",120.99812,14.63791,"Del Monte & Matutum"],["platform",121.00034,14.63819,"Z Square"],["platform",121.00603,14.63896,"Jollibee Del Monte Avenue"],["platform",121.00802,14.63921,"Del Monte & Don Ramon"],["platform",121.01009,14.63945,"Caltex Del Monte Avenue"],["platform",121.01216,14.63976,"Masambong Police Station"],["platform",121.01652,14.64096,"FPJ–Frisco"],["platform",121.01685,14.64288,"Watchtower Compound"],["platform",121.01718,14.64478,"Baler Street"],["platform",121.01751,14.64698,"Christian Gospel Center"],["platform",121.01817,14.65129,"Metrobank Roosevelt"],["platform",121.01849,14.6534,"M.H. del Pilar Street"],["platform",121.01891,14.6554,"Mangga Street"],["platform_exit_only",121.01953,14.65704,"Muñoz Market"]],
+  "line": [[120.98206,14.60518],[120.98281,14.60511],[120.98356,14.61432],[120.98654,14.6141],[120.98889,14.61619],[120.98913,14.62388],[120.99055,14.62514],[120.98977,14.62577],[120.98971,14.62599],[120.98993,14.62638],[120.9935,14.63713],[120.99433,14.63746],[120.99501,14.63759],[121.01313,14.63995],[121.01319,14.63964],[121.01344,14.63941],[121.01518,14.63868],[121.01591,14.64029],[121.01642,14.64042],[121.01861,14.65459],[121.01881,14.65535],[121.01916,14.65631],[121.01963,14.65741],[121.01983,14.65752]]
+}

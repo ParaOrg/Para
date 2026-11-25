@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 10335989,
+  "kind": "bus",
+  "ref": "MOA-COD",
+  "name": "MOA–City of Dreams Shuttle (southbound)",
+  "from": "Mall of Asia",
+  "to": "City of Dreams",
+  "network": "LTFRB National Capital Region",
+  "operator": "",
+  "version": 14,
+  "last_edit": "2026-09-17",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["stop_entry_only",120.98321,14.53492,"Mall of Asia"],["stop_exit_only",120.99177,14.52509,"City of Dreams"]],
+  "line": [[120.98321,14.53492],[120.98327,14.53329],[120.98406,14.53332],[120.98404,14.53367],[120.98431,14.53361],[120.98472,14.5286],[120.98514,14.52484],[120.98524,14.52455],[120.99137,14.5252],[120.99153,14.52507],[120.99177,14.52509]]
+}

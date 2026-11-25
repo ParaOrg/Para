@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 10775451,
+  "kind": "bus",
+  "ref": "Medical City",
+  "name": "Pasig Transport: Medical City → City Hall",
+  "from": "",
+  "to": "",
+  "network": "Pasig Transport",
+  "operator": "City Government of Pasig",
+  "version": 39,
+  "last_edit": "2026-09-14",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [[4,5],[22,8],[24,9]],
+  "stops": [],
+  "line": [[121.07133,14.58925],[121.06459,14.58877],[121.06385,14.5889],[121.06377,14.58847],[121.0637,14.58493],[121.0637,14.58488],[121.06359,14.58463],[121.06322,14.58441],[121.05989,14.58446],[121.06,14.5818],[121.05717,14.57817],[121.06642,14.57026],[121.06647,14.56974],[121.06538,14.56375],[121.06538,14.56344],[121.06551,14.56324],[121.0667,14.56287],[121.06765,14.5628],[121.0688,14.56314],[121.06918,14.56337],[121.06979,14.56434],[121.07009,14.56492],[121.07044,14.56594],[121.07045,14.56601],[121.0705,14.56604],[121.07057,14.56607],[121.07098,14.56625],[121.07133,14.56631],[121.07612,14.56598],[121.0758,14.56436],[121.07608,14.56255],[121.07653,14.56141],[121.07656,14.56079],[121.07733,14.56066],[121.07754,14.56072],[121.0776,14.56082],[121.08061,14.55973],[121.0805,14.55939],[121.08049,14.55905],[121.08296,14.55815],[121.0836,14.55968],[121.08095,14.56067]]
+}

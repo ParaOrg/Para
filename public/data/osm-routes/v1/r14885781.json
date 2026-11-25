@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 14885781,
+  "kind": "jeepney",
+  "ref": "160",
+  "name": "Lagro–Rizal Avenue via A. Bonifacio",
+  "from": "Lagro",
+  "to": "Rizal Avenue",
+  "network": "LTFRB National Capital Region",
+  "operator": "Lagro Transport Service Cooperative",
+  "version": 27,
+  "last_edit": "2026-11-17",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",121.03951,14.72106,"Buenamar Plaza"],["platform",121.03991,14.71904,"Sarmiento Street"],["platform",121.04027,14.71663,"Novaliches Elementary School"],["platform",121.04016,14.71411,"Villareal Street"],["platform",121.03966,14.71157,"Villaflor Avenue"],["platform",121.03879,14.7081,"SM City Novaliches"],["platform",121.03796,14.7054,"St. John of Beverly"],["platform",121.03691,14.70359,"E. Evangelista Drive"],["platform",121.03534,14.70153,"Rockville Avenue"],["platform",121.03444,14.70008,"QC University"],["platform",121.0325,14.69681,"T. Carreon Street"],["platform",121.02965,14.69272,"Don Julio Gregorio Street"],["platform",121.0273,14.69007,"Quirino–Mindanao Avenue"],["platform",121.02576,14.68836,"Piko Street"],["platform",121.02489,14.68729,"Talipapa"],["platform",121.02207,14.68397,"Kalapati Street"],["platform",121.02036,14.68196,"SM Hypermarket Sangandaan"],["platform",121.01919,14.68057,"Chowking Sangandaan"],["platform",121.01774,14.67882,"Production Street"],["platform",121.01645,14.67731,"INC Lokal ng Baesa"],["platform",121.01476,14.67526,"Rodriguez Drive"],["platform",121.01373,14.67401,"Baesa Cemetery"],["platform",121.01279,14.67292,"Baesa Town Center"],["platform",121.01114,14.67101,"Masagana Street"],["platform",121.00974,14.6695,"Lucas R. Pascual Street"],["platform",121.00705,14.66659,"Quirino–Baesa"],["platform",121.00388,14.66488,"Maximina Drive"],["platform",121.00234,14.66368,"S. Gonzales Drive"],["platform",120.99984,14.66108,"NLEX"],["platform",120.99898,14.65534,"Ayala Malls Cloverleaf"],["platform",120.99619,14.64986,"Marvex Street"],["platform",120.99549,14.64827,"Selecta Drive"],["platform",120.99406,14.64487,"C-3–A. Bonifacio"],["platform",120.9932,14.643,"C-3–A. Bonifacio"],["platform",120.99212,14.63959,"A. Bonifacio & Mauban"],["platform",120.99309,14.63791,"A. Bonifacio & Del Monte"],["platform",120.99309,14.63651,"A. Bonifacio Market"],["platform",120.99271,14.63529,"Manila North Cemetery"],["platform",120.99223,14.63393,"A. Bonifacio & Magnas"],["platform",120.9915,14.63164,"A. Bonifacio & Lunas"],["platform",120.99076,14.62948,"A. Bonifacio & Labo"],["platform",120.9902,14.62763,"A. Bonifacio & Mariveles"],["platform",120.98977,14.62643,"A. Bonifacio & Blumentritt"],["platform",120.98868,14.62602,"Chinese General Hospital"],["platform_exit_only",120.98682,14.62409,"Leonor Rivera"]],
+  "line": [[121.03964,14.72108],[121.04031,14.71695],[121.04046,14.71538],[121.03974,14.7116],[121.03898,14.7083],[121.03886,14.70824],[121.03855,14.70684],[121.03855,14.70654],[121.03778,14.70485],[121.03651,14.70289],[121.03507,14.70103],[121.0343,14.69963],[121.03107,14.69448],[121.02987,14.69292],[121.02481,14.68714],[121.02434,14.68648],[121.02359,14.68509],[121.0224,14.68426],[121.0155,14.6761],[121.01225,14.67215],[121.00737,14.66681],[121.00667,14.66615],[121.00485,14.66508],[121.00447,14.66492],[121.00376,14.66477],[121.00323,14.66452],[121.00142,14.66276],[121,14.66217],[120.9998,14.66196],[120.99971,14.66172],[120.99972,14.66143],[121.00003,14.6609],[121.00011,14.66056],[121.00009,14.65721],[121.00001,14.65669],[120.99979,14.6562],[120.99856,14.65462],[120.99852,14.65442],[120.99719,14.65203],[120.99214,14.64031],[120.99209,14.64006],[120.99215,14.63971],[120.99325,14.63764],[120.9933,14.63704],[120.98972,14.62619],[120.98973,14.62605],[120.98881,14.62598],[120.98667,14.62479],[120.98659,14.62473],[120.98659,14.62415],[120.98683,14.62414]]
+}

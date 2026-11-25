@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 19424125,
+  "kind": "jeepney",
+  "ref": "",
+  "name": "Wilson E-trike System Route: Wilson → Greenhills",
+  "from": "Wilson",
+  "to": "Greenhills Shopping Center",
+  "network": "",
+  "operator": "",
+  "version": 2,
+  "last_edit": "2025-08-04",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["stop",121.04007,14.59404,"PUP-San Juan"],["stop",121.03976,14.59745,"G-Square"],["stop",121.04535,14.59826,"Cardinal Santos Medical Center"],["stop",121.0485,14.60358,"Unimart Greenhills"]],
+  "line": [[121.03991,14.59397],[121.04069,14.59428],[121.03969,14.59584],[121.03918,14.59706],[121.03913,14.59743],[121.03934,14.59748],[121.04355,14.59729],[121.04409,14.59737],[121.04456,14.59758],[121.04632,14.59914],[121.04779,14.60093],[121.0479,14.60112],[121.04688,14.60189],[121.04796,14.60323],[121.0485,14.60358]]
+}

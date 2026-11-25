@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 14253666,
+  "kind": "jeepney",
+  "ref": "",
+  "name": "Central Mall–SaveMore San Marino",
+  "from": "Central Mall Dasmariñas",
+  "to": "SaveMore San Marino",
+  "network": "LTFRB Region IV-A",
+  "operator": "",
+  "version": 21,
+  "last_edit": "2026-09-04",
+  "clipped": false,
+  "provenance": {"fixme":"ref"},
+  "gaps": [],
+  "stops": [["stop",120.94049,14.35059,"Salitran Church"],["stop",120.94204,14.35066,"ISCAG"],["stop",120.94468,14.35145,"Summerwind 2-3"],["stop",120.95218,14.35177,"Garden Grove"],["stop",120.95592,14.35135,"Andreaville Executive Homes"],["stop",120.96228,14.35051,"Orchard Golf and Country Club"],["stop",120.96839,14.34982,"Orchard East"],["stop",120.98085,14.35064,"Savemore Salawag"],["stop",120.98191,14.34459,"Salawag Proper"],["stop",120.98414,14.34084,"Salawag Depot"],["stop",120.98593,14.33541,"Armstrong Village"],["stop",120.98781,14.33085,"Avida Sta. Cecilia"],["stop_exit_only",120.98451,14.32438,"Savemore San Marino"]],
+  "line": [[120.93825,14.35029],[120.93788,14.35021],[120.93781,14.34904],[120.93765,14.34905],[120.93774,14.35021],[120.93786,14.35038],[120.93893,14.35055],[120.94236,14.35069],[120.94377,14.3514],[120.94494,14.35152],[120.94522,14.3517],[120.94575,14.35222],[120.94781,14.35224],[120.95418,14.35157],[120.9644,14.35026],[120.96924,14.34972],[120.97043,14.34966],[120.97167,14.34984],[120.97228,14.35003],[120.98048,14.35339],[120.98119,14.35384],[120.98081,14.35019],[120.98097,14.34898],[120.9818,14.34483],[120.98218,14.34415],[120.98363,14.3425],[120.98389,14.34134],[120.98414,14.34084],[120.98504,14.33994],[120.98524,14.33966],[120.98582,14.33762],[120.98595,14.33501],[120.98605,14.33457],[120.98618,14.33424],[120.98724,14.33256],[120.9878,14.3312],[120.98782,14.33038],[120.98749,14.32989],[120.98561,14.32799],[120.98521,14.3274],[120.985,14.32676],[120.98462,14.32457],[120.98455,14.32458],[120.98449,14.32426],[120.98458,14.32425]]
+}

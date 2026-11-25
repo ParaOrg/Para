@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 8202648,
+  "kind": "jeepney",
+  "ref": "111",
+  "name": "Commonwealth–SM Fairview via Regalado",
+  "from": "Commonwealth",
+  "to": "SM City Fairview",
+  "network": "LTFRB National Capital Region",
+  "operator": "",
+  "version": 27,
+  "last_edit": "2026-08-06",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [[26,71]],
+  "stops": [["platform",121.08647,14.70212,"Litex"]],
+  "line": [[121.08716,14.69796],[121.08715,14.69106],[121.08711,14.68888],[121.08701,14.68775],[121.08704,14.68762],[121.08717,14.68757],[121.08731,14.68773],[121.08742,14.68913],[121.08753,14.69802],[121.08744,14.69918],[121.08704,14.70058],[121.08642,14.70189],[121.08562,14.70298],[121.08477,14.7038],[121.08415,14.70425],[121.0834,14.70466],[121.08182,14.70509],[121.07513,14.70519],[121.07379,14.70546],[121.07045,14.70654],[121.0656,14.70658],[121.06495,14.70667],[121.06447,14.70687],[121.06399,14.70721],[121.06124,14.71048],[121.06125,14.72985],[121.06115,14.72975],[121.06114,14.73039],[121.06114,14.73384],[121.061,14.73384],[121.06095,14.73505],[121.06074,14.7351],[121.06068,14.7352],[121.05814,14.73517],[121.05811,14.73526],[121.05798,14.73525],[121.05584,14.73461],[121.0557,14.73448],[121.05564,14.7343],[121.0557,14.73389],[121.05558,14.73297],[121.05569,14.73268],[121.05552,14.73242]]
+}

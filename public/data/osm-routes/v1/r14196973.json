@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 14196973,
+  "kind": "jeepney",
+  "ref": "",
+  "name": "MEX Jeep Minibus: Vista Mall Imus → NOMO",
+  "from": "Vista Mall Imus",
+  "to": "NOMO",
+  "network": "PH:PUVMP",
+  "operator": "MetroExpress Connect, Inc.",
+  "version": 1,
+  "last_edit": "2022-05-30",
+  "clipped": false,
+  "provenance": {"note":"incomplete"},
+  "gaps": [],
+  "stops": [["stop_entry_only",120.94671,14.43188,""]],
+  "line": [[120.9467,14.43185],[120.94669,14.43201],[120.94684,14.43208],[120.94937,14.43227],[120.95081,14.43251],[120.95201,14.43246],[120.95289,14.43258],[120.95332,14.43252],[120.95379,14.43263],[120.95444,14.43238],[120.95491,14.43205],[120.95523,14.43192],[120.95705,14.43188],[120.95812,14.43148],[120.96013,14.43139],[120.96097,14.43146],[120.96208,14.43123],[120.9627,14.43118],[120.96449,14.43146],[120.96502,14.43137],[120.96613,14.43089],[120.96696,14.43091],[120.96719,14.431],[120.96735,14.43116],[120.96743,14.43138],[120.96744,14.43195],[120.96752,14.43206],[120.96843,14.43208],[120.96859,14.43219],[120.96866,14.43242],[120.96869,14.43351],[120.96957,14.43507],[120.97041,14.43605]]
+}

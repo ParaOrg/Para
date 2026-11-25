@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 11246067,
+  "kind": "jeepney",
+  "ref": "389",
+  "name": "Divisoria–Gasak via H. Lopez",
+  "from": "Gasak",
+  "to": "Divisoria",
+  "network": "LTFRB National Capital Region",
+  "operator": "Divisoria-Monumento-Navotas-Recto Inc.;Malabon Jeepney Transport Service Cooperative",
+  "version": 38,
+  "last_edit": "2026-09-12",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",120.94215,14.67612,"Hulong Duhat Plaza"],["platform",120.94314,14.67301,"Naval"],["platform",120.94418,14.67096,"Borja Street"],["platform",120.94537,14.66946,"C. Arellano/Eusebio"],["platform",120.94684,14.66758,"Paez"],["platform",120.94816,14.66552,"E. Jacinto"],["platform",120.94897,14.66358,"Vidal"],["platform",120.94966,14.66189,"Colonel Camus Integrated School"],["platform",120.95052,14.66026,"Sigwa"],["platform",120.95073,14.65902,"San Bartolome Cemetery"],["platform",120.95126,14.65662,"Malabon Market (F. Sevilla)"],["platform",120.9509,14.65593,"Malabon Market (Estrella)"],["platform",120.94915,14.65474,"Navotas East"],["platform",120.95008,14.65188,"Bagumbayan"],["platform",120.95082,14.64982,"Bangculasi"],["platform",120.9514,14.64781,"North Bay Boulevard North"],["platform",120.95263,14.64593,"North Bay–Lapu-Lapu"],["platform",120.9541,14.64402,"Agora Market"],["platform",120.95673,14.64054,"C-3–North Bay Boulevard"],["platform",120.96199,14.63545,"Westminster High School"],["platform",120.96371,14.63169,"Balut"],["platform",120.96466,14.62958,"Rodriguez"],["platform",120.96567,14.62739,"Guidote"],["platform",120.96746,14.62446,"Immaculate Conception Academy"],["platform",120.96981,14.62316,"PSAC Container Yard"],["platform",120.97174,14.62086,"Raxabago"],["platform",120.97183,14.62217,"Petron H. Lopez"],["platform",120.97105,14.61907,"Puregold Pritil"],["platform",120.97051,14.61755,"Pritil Market"],["platform",120.96933,14.61429,"Peñalosa"],["platform",120.968,14.61042,"Concha"],["platform",120.96732,14.60844,"Isabelo delos Reyes Elementary School"],["platform",120.96672,14.60746,"Plaza Amado V. Hernandez"],["platform_exit_only",120.96899,14.60604,"Ilaya Turning Point"]],
+  "line": [[120.94248,14.67618],[120.94185,14.67593],[120.94221,14.67522],[120.94352,14.67321],[120.94279,14.67275],[120.94467,14.67046],[120.94724,14.66715],[120.94784,14.66627],[120.94858,14.66485],[120.94932,14.66264],[120.94995,14.66135],[120.95114,14.65922],[120.9504,14.65872],[120.95071,14.65794],[120.95067,14.65769],[120.95083,14.65749],[120.951,14.65743],[120.95149,14.65617],[120.94909,14.65501],[120.94985,14.65301],[120.9492,14.65276],[120.94934,14.65243],[120.94983,14.65247],[120.95033,14.65147],[120.9509,14.64976],[120.9512,14.64851],[120.95164,14.64747],[120.95229,14.64646],[120.95767,14.63942],[120.9585,14.63864],[120.96155,14.63626],[120.96181,14.63599],[120.9661,14.62666],[120.96763,14.6244],[120.96805,14.62412],[120.97223,14.62206],[120.96966,14.61513],[120.96737,14.60835],[120.96677,14.60767],[120.96688,14.60727],[120.9672,14.60726],[120.96865,14.60592],[120.96898,14.60607]]
+}

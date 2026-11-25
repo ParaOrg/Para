@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 11288344,
+  "kind": "jeepney",
+  "ref": "T305",
+  "name": "Ayala–Mantrade via Pasong Tamo",
+  "from": "Ayala",
+  "to": "Mantrade",
+  "network": "LTFRB National Capital Region",
+  "operator": "Makati City Unified Transport Service Cooperative",
+  "version": 20,
+  "last_edit": "2026-08-31",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",121.02586,14.54926,"Park Square"],["platform",121.02296,14.5504,"Makati Avenue"],["platform",121.02035,14.55092,"Greenbelt"],["platform",121.01833,14.55112,"Paseo de Roxas"],["platform",121.01549,14.55187,"Arnaiz–Amorsolo"],["platform",121.01514,14.55363,"Gamboa–Amorsolo"],["platform",121.01428,14.55521,"Rufino–Amorsolo"],["platform",121.01366,14.55289,"Makati Central Square"],["platform",121.01268,14.5516,"WalterMart Makati"],["platform",121.01245,14.54958,"PNR Pasay Road Station"],["platform",121.01472,14.54771,"Don Bosco Intersection"],["platform",121.01683,14.5438,"Sabio"],["platform_exit_only",121.01881,14.54071,"League One Southgate Mall"]],
+  "line": [[121.02602,14.54924],[121.02543,14.54874],[121.02553,14.54867],[121.02527,14.54843],[121.0246,14.54914],[121.02387,14.54973],[121.02295,14.55031],[121.02222,14.55063],[121.01586,14.55132],[121.01565,14.5514],[121.0155,14.55155],[121.01478,14.55524],[121.0136,14.55501],[121.01379,14.55393],[121.01362,14.55156],[121.01234,14.55157],[121.01235,14.55146],[121.01153,14.55131],[121.0135,14.54772],[121.01451,14.54821],[121.01813,14.54154],[121.01817,14.54144],[121.01776,14.54115],[121.01783,14.54098],[121.01804,14.54081],[121.01838,14.541],[121.01869,14.54043],[121.01885,14.54052],[121.01869,14.54082]]
+}

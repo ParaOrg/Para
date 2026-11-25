@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 11122214,
+  "kind": "jeepney",
+  "ref": "217",
+  "name": "Ayala–Pateros via J.P. Rizal",
+  "from": "Ayala",
+  "to": "Pateros",
+  "network": "LTFRB National Capital Region",
+  "operator": "Makati City Unified Transport Service Cooperative",
+  "version": 41,
+  "last_edit": "2026-08-31",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",121.02586,14.54926,"Park Square"],["platform",121.02336,14.55238,"Landmark"],["platform",121.02516,14.55593,"Manila Peninsula Hotel"],["platform",121.02878,14.56326,"Hercules"],["platform",121.03054,14.56676,"Valdez"],["platform",121.03105,14.56754,"Makati Poblacion Intersection"],["platform",121.03315,14.5673,"Hulo Tatawid"],["platform",121.03485,14.56684,"Villena"],["platform",121.03694,14.5667,"Rockwell"],["platform",121.03936,14.5674,"Camia"],["platform",121.04178,14.56736,"Carballo"]],
+  "line": [[121.02602,14.54924],[121.02543,14.54874],[121.02553,14.54867],[121.02527,14.54843],[121.02408,14.54957],[121.02335,14.55008],[121.02272,14.55043],[121.0226,14.55067],[121.02257,14.55098],[121.02317,14.55219],[121.02326,14.55223],[121.02341,14.55254],[121.02339,14.55264],[121.02781,14.56129],[121.02846,14.56282],[121.03048,14.56679],[121.03072,14.56741],[121.03073,14.5677],[121.03176,14.56739],[121.03256,14.56755],[121.03293,14.56754],[121.03358,14.56699],[121.03388,14.56688],[121.03459,14.56692],[121.03669,14.56672],[121.03956,14.56751],[121.04214,14.56744],[121.04397,14.56809],[121.04438,14.56817],[121.04534,14.56813],[121.04684,14.56778],[121.04988,14.56806],[121.05034,14.56795],[121.05149,14.56723],[121.05259,14.56671],[121.0534,14.566],[121.05421,14.56497],[121.05463,14.56459],[121.05731,14.56419],[121.05776,14.56404],[121.06034,14.56267],[121.06304,14.56039],[121.06502,14.56],[121.06539,14.55985],[121.06563,14.5596],[121.0662,14.55853],[121.06619,14.55802],[121.06451,14.55518],[121.06363,14.55342],[121.06325,14.5523],[121.06323,14.55188],[121.06431,14.54669],[121.06448,14.54637],[121.06473,14.54613],[121.06523,14.54584],[121.0658,14.54538],[121.06646,14.54512]]
+}

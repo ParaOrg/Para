@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 15093999,
+  "kind": "jeepney",
+  "ref": "423",
+  "name": "Baclaran–Sucat (WalterMart) via B. Aquino",
+  "from": "Baclaran",
+  "to": "WalterMart Sucat",
+  "network": "LTFRB National Capital Region",
+  "operator": "San Dionisio Transport Service Cooperative",
+  "version": 29,
+  "last_edit": "2026-09-06",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",120.99147,14.5102,"PITX"],["platform",120.99676,14.51693,"Tambo Crossing"],["platform",121.00165,14.51642,"Domestic Road Intersection"],["platform",121.00369,14.51433,"MIA Chapel"],["platform",121.00299,14.5123,"Baltao"],["platform",121.00185,14.50901,"Rivera Village"],["platform",121.00115,14.50705,"Pascor"],["platform",120.99827,14.50205,"Duty Free"],["platform",120.99465,14.49914,"LRT Ninoy Aquino Station"],["platform",120.99254,14.49655,"Irasan"],["platform",120.99198,14.49279,"Airport Citymall"],["platform",120.99116,14.48767,"Amvel City"],["platform",120.99143,14.48567,"LRT Dr. Santos Station"],["platform",120.99241,14.48491,"SM Sucat Building B"],["platform",120.99363,14.48463,"SM Sucat Building A"],["platform",120.99606,14.48181,"St. Peter Chapels Parañaque"],["platform",120.99747,14.47973,"Olivarez Colleges"],["platform",120.99827,14.47849,"Parañaque National High School"],["platform",121.00052,14.47559,"Evacom"],["platform",121.00533,14.47243,"PATTS"],["platform",121.00748,14.47109,"WalterMart Sucat"],["platform",121.00961,14.46982,"Westmount Village"],["platform",121.01095,14.46904,"SM Hypermarket Sucat-Lopez"],["platform",121.0124,14.46817,"N. Lopez"],["platform",121.01447,14.46712,"Greenheights"],["platform",121.02032,14.46436,"San Antonio Intersection"],["platform",121.02337,14.46289,"Meliton Espiritu"],["platform",121.02606,14.46154,"Manila Memorial Park"],["platform",121.02812,14.46053,"Fourth Estate Subdivision"],["platform",121.0301,14.45951,"San Antonio National High School"],["platform",121.03302,14.45784,"SM BF"],["platform",121.03485,14.45681,"Santana Grove"],["platform",121.03765,14.45581,"Loyola Memorial Park"],["platform",121.04458,14.45359,"Sucat Exit"],["platform",121.0451,14.45157,"Water Fun"]],
+  "line": [[120.9915,14.5102],[120.99124,14.50916],[120.99137,14.50902],[120.9909,14.50734],[120.98865,14.50809],[120.98917,14.50951],[120.99021,14.51301],[120.9907,14.51692],[120.99111,14.51723],[120.99232,14.51745],[120.99274,14.51745],[120.99713,14.51693],[121.00049,14.51686],[121.00151,14.51657],[121.0035,14.5156],[121.00382,14.51517],[121.00385,14.51467],[121.0023,14.51035],[121.00207,14.50944],[121.00082,14.50601],[120.99776,14.50105],[120.99708,14.50021],[120.99601,14.49948],[120.99518,14.49921],[120.99292,14.49871],[120.99269,14.49857],[120.9925,14.49832],[120.99246,14.49788],[120.99259,14.49645],[120.99254,14.49583],[120.99142,14.48915],[120.99113,14.48676],[120.99124,14.48611],[120.99156,14.48557],[120.99185,14.48528],[120.9922,14.48507],[120.99267,14.48491],[120.9934,14.48482],[120.99334,14.4847],[120.99346,14.48467],[120.99403,14.48465],[120.99419,14.48451],[120.99687,14.48076],[120.99914,14.47725],[121.00024,14.47596],[121.00112,14.47517],[121.00245,14.47423],[121.01134,14.46889],[121.01354,14.4677],[121.01974,14.46476],[121.02937,14.45997],[121.03555,14.45651],[121.03654,14.45617],[121.04156,14.45484],[121.04461,14.45389],[121.04498,14.45275],[121.04514,14.4518],[121.04515,14.44829],[121.04496,14.44826],[121.04496,14.44776]]
+}

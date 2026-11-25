@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 21475187,
+  "kind": "jeepney",
+  "ref": "3221",
+  "name": "Recto–Retiro",
+  "from": "Recto",
+  "to": "Retiro",
+  "network": "LTFRB National Capital Region",
+  "operator": "Asian Utility Vehicle Operators SM Fairview",
+  "version": 1,
+  "last_edit": "2026-10-03",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",120.98467,14.60047,"Quiapo"],["platform",120.98591,14.60679,"Central Market"],["platform",120.9862,14.60938,"A. Mendoza & Dapitan"],["platform",120.98634,14.61132,"A. Mendoza & Laon Laan"],["platform",120.98786,14.61307,"Laon Laan & Concepcion"],["platform",120.98888,14.61484,"Dangwa"],["platform",120.98901,14.61856,"Dimasalang Overpass"],["platform",120.99132,14.6259,"Amoranto & Calavite"],["platform",120.99286,14.62726,"Amoranto & Iba"],["platform",120.99517,14.62936,"Amoranto & Ipo"],["platform",120.99679,14.63041,"Our Lady of Lourdes Shrine"],["platform",120.99948,14.63162,"Amoranto & D. Tuazon"],["platform",121.00133,14.63248,"Amoranto & Banawe"],["platform",121.00398,14.63368,"Amoranto & Biak na Bato"],["platform_exit_only",121.00639,14.63476,"Amoranto & Santo Domingo"]],
+  "line": [[120.98455,14.60049],[120.98591,14.60722],[120.98631,14.61158],[120.98676,14.61215],[120.98879,14.61398],[120.98913,14.62388],[120.9905,14.62509],[120.99055,14.62514],[120.99048,14.62521],[120.99104,14.62574],[120.99583,14.63004],[121.00637,14.63481]]
+}

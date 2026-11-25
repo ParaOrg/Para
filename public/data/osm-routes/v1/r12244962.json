@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 12244962,
+  "kind": "jeepney",
+  "ref": "",
+  "name": "Cogeo–Marikina",
+  "from": "Cogeo",
+  "to": "Marikina",
+  "network": "LTFRB National Capital Region",
+  "operator": "Lungsod Silangan Transport Service and Multi-Purpose Cooperative",
+  "version": 27,
+  "last_edit": "2026-10-02",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",121.16854,14.62141,"Cogeo Gate 2"],["platform",121.12308,14.62534,"Masinag"],["platform",121.10097,14.6207,"LRT Marikina-Pasig Station 1"]],
+  "line": [[121.16947,14.62087],[121.16903,14.62102],[121.16848,14.62132],[121.16732,14.62218],[121.16712,14.62215],[121.16671,14.62231],[121.16554,14.62254],[121.16529,14.62276],[121.16484,14.6235],[121.16459,14.62376],[121.16349,14.62421],[121.16315,14.62424],[121.16273,14.62416],[121.16203,14.62369],[121.16155,14.62355],[121.15993,14.62358],[121.15845,14.62288],[121.15787,14.62289],[121.15464,14.62343],[121.15281,14.62392],[121.14957,14.6239],[121.14919,14.62394],[121.14538,14.62564],[121.14467,14.62584],[121.14187,14.62561],[121.13693,14.62459],[121.13483,14.62436],[121.13388,14.62436],[121.1339,14.62449],[121.13314,14.6245],[121.13307,14.62437],[121.13293,14.62432],[121.1314,14.62444],[121.12447,14.62551],[121.12103,14.62481],[121.12083,14.62493],[121.12026,14.62481],[121.12013,14.62471],[121.12013,14.62463],[121.09773,14.61991],[121.09718,14.6214],[121.09607,14.62398],[121.09691,14.6245],[121.09717,14.62487],[121.09745,14.62559],[121.09774,14.62697],[121.09774,14.6281],[121.09766,14.6288],[121.09665,14.63271],[121.09774,14.63285],[121.09738,14.63568]]
+}

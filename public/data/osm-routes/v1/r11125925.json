@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 11125925,
+  "kind": "jeepney",
+  "ref": "LP02",
+  "name": "Mataasnakahoy–Lipa City Palengke",
+  "from": "Lipa City",
+  "to": "Mataasnakahoy",
+  "network": "LTFRB PUJ",
+  "operator": "",
+  "version": 14,
+  "last_edit": "2025-10-04",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [[25,199]],
+  "stops": [["platform",121.1482,13.94155,"De La Salle Lipa"],["platform",121.14178,13.94057,"Tambo Railroad Crossing"],["platform",121.13435,13.9437,"Tambo"],["platform",121.12821,13.94426,"Fernando Air Base"],["platform",121.12237,13.93914,"Mataasnakahoy Junction"],["platform",121.12034,13.94572,"Batangas College of Arts and Sciences"]],
+  "line": [[121.16064,13.94064],[121.16146,13.93844],[121.16194,13.93862],[121.16118,13.94079],[121.16041,13.94059],[121.15984,13.94057],[121.15904,13.94072],[121.15771,13.94114],[121.15238,13.9414],[121.15185,13.94147],[121.15158,13.94167],[121.15106,13.94153],[121.14544,13.94142],[121.14478,13.94129],[121.14237,13.94058],[121.14167,13.94051],[121.14104,13.9407],[121.13645,13.94261],[121.13121,13.94502],[121.13069,13.94519],[121.12998,13.94524],[121.12945,13.94508],[121.12801,13.94399],[121.12291,13.93952],[121.1227,13.9398],[121.11619,13.95543],[121.11551,13.95709],[121.1155,13.9572],[121.11314,13.95652],[121.11284,13.95768],[121.11227,13.95911],[121.11129,13.96063],[121.10977,13.96236],[121.10905,13.96298],[121.10845,13.96332],[121.10815,13.9636],[121.10665,13.96601],[121.10462,13.9682],[121.10374,13.96901],[121.10331,13.97003],[121.10272,13.97199],[121.10248,13.9731],[121.102,13.97405],[121.10041,13.9757],[121.09987,13.97612],[121.09931,13.97703],[121.0988,13.97754],[121.09785,13.9782]]
+}

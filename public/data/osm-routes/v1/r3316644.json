@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 3316644,
+  "kind": "jeepney",
+  "ref": "404",
+  "name": "Alabang–Zapote",
+  "from": "Zapote",
+  "to": "Alabang",
+  "network": "LTFRB National Capital Region",
+  "operator": "Alabang Transport Service Cooperative",
+  "version": 152,
+  "last_edit": "2026-08-24",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",120.96824,14.46502,"Zapote Ilalim"],["platform",120.96896,14.46321,"Tramo"],["platform",120.9694,14.46165,"R. Castillo"],["platform",120.96992,14.45971,"Pamplona"],["platform",120.97555,14.45321,"Doña Manuela"],["platform",120.97992,14.4506,"Starmall Las Piñas"],["platform",120.98542,14.44785,"Perpetual Las Piñas"],["platform",120.98975,14.44646,"Uniwide Metromall"],["platform",120.99121,14.44597,"SM Hypermart"],["platform",120.99329,14.44488,"Crossing Casimiro"],["platform",120.99776,14.44188,"Robinson Place Las Piñas"],["platform",121.00087,14.44001,"Admiral"],["platform",121.00213,14.43933,"Parish of the Five Wounds of the Lord"],["platform",121.00339,14.43866,"Talon"],["platform",121.00644,14.437,"Moonwalk"],["platform",121.00828,14.43602,"IPI"],["platform",121.0116,14.43412,"SM Southmall"],["platform",121.01369,14.43236,"Almanza Elementary School"],["platform",121.01563,14.43027,"Almanza"],["platform",121.01762,14.42858,"T. S. Cruz"],["platform",121.01984,14.42826,"Concha Cruz"],["platform",121.02576,14.42686,"Alabang Hills Intersection"],["platform",121.02786,14.4261,"Molito"],["platform",121.03209,14.42423,"Alabang Town Center"],["platform",121.03405,14.42353,"Westgate Center"],["platform",121.03722,14.42263,"Filinvest Avenue"],["platform_exit_only",121.04278,14.42132,"South Station"]],
+  "line": [[120.96809,14.46547],[120.96874,14.46391],[120.9689,14.46369],[120.96988,14.4601],[120.97067,14.45768],[120.97128,14.45628],[120.9715,14.45607],[120.97737,14.45205],[120.98063,14.45006],[120.98074,14.44983],[120.98111,14.44963],[120.98132,14.44966],[120.98802,14.44688],[120.99074,14.44634],[120.99094,14.44627],[120.99091,14.44617],[120.99132,14.44595],[120.99139,14.44593],[120.99149,14.44602],[120.9925,14.44545],[120.99657,14.44288],[120.99848,14.44144],[121.00111,14.43996],[121.01091,14.4347],[121.01114,14.43449],[121.01279,14.43342],[121.01685,14.42905],[121.01731,14.42875],[121.02205,14.42797],[121.02616,14.4268],[121.02876,14.42583],[121.03175,14.4244],[121.03603,14.42293],[121.03624,14.42295],[121.03743,14.42263],[121.03862,14.42246],[121.042,14.42244],[121.04222,14.42239],[121.04234,14.4223],[121.04233,14.42137],[121.04279,14.42137]]
+}

@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 11246064,
+  "kind": "jeepney",
+  "ref": "3131",
+  "name": "Hulong Duhat–Recto via Dagat-Dagatan",
+  "from": "Hulong Duhat",
+  "to": "Recto",
+  "network": "LTFRB National Capital Region",
+  "operator": "Daanghari Modern Jeepney Transport Service Cooperative;Malabon Jeepney Transport Service Cooperative",
+  "version": 40,
+  "last_edit": "2026-09-12",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",120.94213,14.67764,"Hulong Duhat Intersection"],["platform",120.94215,14.67612,"Hulong Duhat Plaza"],["platform",120.94314,14.67301,"Naval"],["platform",120.94418,14.67096,"Borja Street"],["platform",120.94537,14.66946,"C. Arellano/Eusebio"],["platform",120.94684,14.66758,"Paez"],["platform",120.94816,14.66552,"E. Jacinto"],["platform",120.94897,14.66358,"Vidal"],["platform",120.94966,14.66189,"Colonel Camus Integrated School"],["platform",120.95052,14.66026,"Sigwa"],["platform",120.95073,14.65902,"San Bartolome Cemetery"],["platform",120.95156,14.65803,"Malabon City Hall"],["platform",120.95485,14.6539,"Manapat"],["platform",120.95737,14.65548,"P. Borromeo"],["platform",120.96178,14.65697,"C-4–Dagat-Dagatan"],["platform",120.96291,14.65527,"Maya-Maya"],["platform",120.96455,14.65354,"Alamang"],["platform",120.96644,14.65148,"Langaray"],["platform",120.96795,14.64763,"Tanigue"],["platform",120.96844,14.64495,"C-3–Dagat-Dagatan"],["platform",120.97439,14.64474,"Kaunlaran"],["platform",120.97821,14.64453,"Baltazar"],["platform",120.98172,14.6444,"A. del Mundo"],["platform",120.98312,14.64432,"LRT 5th Avenue Station (C-3)"],["platform",120.98342,14.64337,"4th Avenue"],["platform",120.98338,14.64195,"3rd Avenue"],["platform",120.98299,14.63787,"Petron Rizal Extension"],["platform",120.98209,14.63581,"LRT R. Papa Station"],["platform",120.98072,14.63293,"Avenida & Abad Santos"],["platform",120.98002,14.63097,"Petron Abad Santos"],["platform",120.97945,14.62941,"Nissan J. Abad Santos"],["platform",120.97876,14.62742,"Abad Santos & Solis"],["platform",120.97921,14.62563,"Ospital ng Tondo"],["platform",120.98055,14.62479,"Severino Reyes"],["platform",120.98193,14.62369,"Mariano Ponce Elementary School"],["platform",120.98187,14.62161,"T. Mapua & Laguna"],["platform",120.98183,14.61951,"T. Mapua & Yuseco"],["platform",120.98408,14.61902,"C. Apostol Elementary School"],["platform",120.98465,14.61667,"F. Huertas & Tayuman"],["platform",120.98447,14.61402,"F. Huertas & San Lazaro"],["platform",120.98436,14.61278,"Oroquieta & Quiricada"],["platform",120.98423,14.61105,"F. Huertas & Bambang"],["platform",120.98401,14.60836,"F. Huertas & Mayhaligue"],["platform",120.98565,14.60697,"Central Market"],["platform",120.98496,14.6036,"Quezon Underpass"],["platform_exit_only",120.98314,14.6037,"LRT Recto Station"]],
+  "line": [[120.94216,14.67765],[120.94253,14.6762],[120.94185,14.67593],[120.94221,14.67522],[120.94352,14.67321],[120.94279,14.67275],[120.94467,14.67046],[120.94724,14.66715],[120.94784,14.66627],[120.94858,14.66485],[120.94932,14.66264],[120.94995,14.66135],[120.95114,14.65922],[120.95041,14.65875],[120.95071,14.65794],[120.95065,14.65779],[120.95072,14.6576],[120.95089,14.65745],[120.95108,14.65746],[120.95124,14.65791],[120.95175,14.65823],[120.95452,14.65373],[120.9556,14.65459],[120.95662,14.65523],[120.96165,14.6575],[120.96187,14.65687],[120.96222,14.65624],[120.96268,14.65562],[120.96713,14.65087],[120.96763,14.65007],[120.96795,14.64905],[120.96804,14.64812],[120.96778,14.64506],[120.97721,14.64473],[120.97805,14.64458],[120.98351,14.64436],[120.98334,14.63907],[120.98324,14.63836],[120.98292,14.63752],[120.98074,14.63284],[120.9787,14.62705],[120.9785,14.62593],[120.97861,14.62575],[120.97979,14.62563],[120.9811,14.62429],[120.98201,14.62428],[120.98186,14.61939],[120.98369,14.61934],[120.98429,14.6189],[120.98477,14.61833],[120.98463,14.6155],[120.98403,14.60764],[120.98544,14.60754],[120.98567,14.60739],[120.98578,14.60716],[120.98498,14.60339],[120.98483,14.60331],[120.98313,14.60362]]
+}

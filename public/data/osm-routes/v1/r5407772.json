@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 5407772,
+  "kind": "jeepney",
+  "ref": "295",
+  "name": "Pantranco–Project 2 & 3 via Timog, Kamuning",
+  "from": "Pantranco",
+  "to": "Project 2 & 3",
+  "network": "LTFRB National Capital Region",
+  "operator": "TRIBE Operators, Transport Service & Multi-purpose Cooperative;New Kamuning Transport Cooperative Service",
+  "version": 43,
+  "last_edit": "2026-08-06",
+  "clipped": false,
+  "provenance": {"source:ref":"LTFRB Memorandum Circular 2020-026"},
+  "gaps": [],
+  "stops": [["platform",121.02064,14.63353,"Fisher Mall"],["platform",121.0223,14.6346,"Scout Magbanua"],["platform",121.02495,14.63615,"Delta Intersection"],["platform",121.02705,14.6366,"Delta Intersection"],["platform",121.02986,14.636,"Mother Ignacia Avenue"],["platform",121.03174,14.63555,"Scout Tobias Street"],["platform",121.0338,14.63512,"Scout Tuason Street"],["platform",121.03504,14.63369,"Scout Limbaga Street"],["platform",121.03451,14.63139,"Scout De Guia Street"],["platform",121.03365,14.62796,"Marathon Extension"],["platform",121.03686,14.6281,"T. Gener Street"],["platform",121.03909,14.62872,"Judge Jimenez Street"],["platform",121.04145,14.62942,"11th Jamboree Street"],["platform",121.04527,14.63051,"EDSA–Kamuning"],["platform",121.04712,14.63105,"Colonel Salgado Street"],["platform",121.05033,14.63199,"Maliksi Street"],["platform",121.052,14.63247,"K-I Street"],["platform",121.05501,14.63334,"Kalayaan Avenue"],["platform",121.05691,14.63389,"Kasing-kasing Street"],["platform",121.05845,14.63433,"Anonas Street"],["platform",121.05949,14.63295,"K-10th Street"],["platform",121.06036,14.63211,"Chico Street"],["platform",121.06124,14.63059,"Marang Street"],["platform",121.06171,14.62975,"Tampoy Street"],["platform",121.0634,14.62862,"Molave Street"],["platform",121.06789,14.62966,"Lauan Street"],["platform_exit_only",121.06955,14.63045,"Yakal Street"]],
+  "line": [[121.02057,14.63363],[121.02571,14.6368],[121.02638,14.63678],[121.02801,14.63648],[121.03483,14.63499],[121.03521,14.63469],[121.03524,14.63429],[121.03357,14.62733],[121.03375,14.62726],[121.05885,14.63451],[121.05926,14.63329],[121.06053,14.63199],[121.06176,14.62976],[121.06276,14.62899],[121.06305,14.62858],[121.06706,14.62931],[121.06953,14.63049]]
+}

@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 11192395,
+  "kind": "bus",
+  "ref": "NR",
+  "name": "BGC Bus NR: Night Route (Market! Market! → EDSA-Ayala)",
+  "from": "Market! Market!",
+  "to": "EDSA-Ayala",
+  "network": "BGC Bus",
+  "operator": "Bonifacio Transport Corporation",
+  "version": 22,
+  "last_edit": "2026-05-01",
+  "clipped": false,
+  "provenance": {"note":"Intricate relation - do not auto-sort"},
+  "gaps": [],
+  "stops": [["stop_entry_only",121.05643,14.54885,"C-5/Market! Market!"]],
+  "line": [[121.05677,14.54948],[121.05643,14.54885],[121.05646,14.54868],[121.05623,14.54748],[121.05599,14.54712],[121.05558,14.54684],[121.05503,14.54725],[121.05462,14.54742],[121.05421,14.54749],[121.05324,14.54734],[121.05238,14.54736],[121.04696,14.54905],[121.04755,14.55075],[121.04808,14.55058],[121.04872,14.55015],[121.0527,14.54887],[121.05222,14.54741],[121.04724,14.54897],[121.04685,14.54902],[121.04514,14.54955],[121.0467,14.55421],[121.04663,14.55436],[121.04647,14.5544],[121.04609,14.55403],[121.04403,14.55472],[121.04374,14.55388],[121.04559,14.55329],[121.04522,14.55243],[121.045,14.5517],[121.04493,14.55088],[121.04498,14.55007],[121.04503,14.54974],[121.04514,14.54955],[121.04603,14.54928],[121.04564,14.54814],[121.04627,14.54736],[121.04576,14.54579],[121.0457,14.54518],[121.04478,14.54497]]
+}

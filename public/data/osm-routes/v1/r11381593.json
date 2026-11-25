@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 11381593,
+  "kind": "jeepney",
+  "ref": "412",
+  "name": "Las Piñas (Bamboo Organ)–SM Southmall",
+  "from": "Las Piñas/Bamboo Organ Church",
+  "to": "SM Southmall",
+  "network": "LTFRB National Capital Region",
+  "operator": "Great Power Movers Transportation Corporation",
+  "version": 28,
+  "last_edit": "2026-08-18",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [[42,5886]],
+  "stops": [["platform_entry_only",120.98123,14.48066,"Bamboo Organ Church"],["platform",120.97927,14.47874,"Elias Aldana"],["platform",120.97769,14.47661,"Casa de Sequoia"],["platform",120.97821,14.47546,"Las Piñas Elementary School"],["platform",120.97667,14.47286,"Pulang Lupa"],["platform",120.97776,14.47087,"San Urbano Arcade"],["platform",120.97927,14.46958,"Mapayapa Village"],["platform",120.98151,14.46774,"Veraville 1/Aurora Drive"],["platform",120.98301,14.46612,"Doña Julita"],["platform",120.98471,14.46489,"River Drive"],["platform",120.98899,14.46311,"St. Joseph/Puregold"],["platform",120.99154,14.46201,"Emerald"],["platform",120.99461,14.45998,"CAA"],["platform",120.9944,14.45558,"Southville International School/Las Piñas Doctors/CAA High School"],["platform",120.99369,14.45418,"Belisario/O.B. Montessori"],["platform",120.99337,14.45196,"Villa Miranda"],["platform",120.99413,14.45039,"Casimiro Village/Dow Chemical"],["platform",120.99405,14.4486,"Francisco Motors"],["platform",120.99395,14.44681,"Emapalico/Zarate Hospital"],["platform",120.99329,14.44488,"Crossing Casimiro"],["platform",120.99776,14.44188,"Robinson Place Las Piñas"],["platform",121.00087,14.44001,"Admiral"],["platform",121.00339,14.43866,"Talon"],["platform",121.00644,14.437,"Moonwalk"],["platform",121.00828,14.43602,"IPI"],["platform_exit_only",121.0116,14.43412,"SM Southmall"]],
+  "line": [[120.98285,14.48229],[120.98187,14.48117],[120.97993,14.47928],[120.97749,14.47723],[120.97749,14.47701],[120.97821,14.47577],[120.97828,14.47524],[120.97821,14.47437],[120.97814,14.47423],[120.97653,14.4732],[120.97724,14.47147],[120.97745,14.47115],[120.97867,14.47023],[120.97962,14.46929],[120.98004,14.46898],[120.98072,14.46822],[120.98106,14.46798],[120.98174,14.46766],[120.98225,14.46719],[120.98292,14.46647],[120.98318,14.4658],[120.98342,14.46555],[120.98463,14.46497],[120.99055,14.4625],[120.99341,14.46122],[120.99383,14.46114],[120.99434,14.46071],[120.99475,14.46069],[120.99448,14.45545],[120.99401,14.45441],[120.99335,14.45367],[120.99317,14.45299],[120.99323,14.45241],[120.99411,14.45096],[120.9942,14.45061],[120.99402,14.44618],[120.99386,14.44461],[120.99679,14.44273],[120.99833,14.44153],[121.00111,14.43996],[121.01091,14.4347],[121.01114,14.43449],[121.01279,14.43342],[120.97772,14.47395],[120.97787,14.47404]]
+}

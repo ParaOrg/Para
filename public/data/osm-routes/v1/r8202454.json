@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 8202454,
+  "kind": "jeepney",
+  "ref": "",
+  "name": "Central Mall–DBB-G",
+  "from": "",
+  "to": "",
+  "network": "LTFRB Region IV-A",
+  "operator": "New Dasmariñas Transport Service Cooperative",
+  "version": 20,
+  "last_edit": "2026-07-31",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform",120.93776,14.34938,"Salitran/Central Mall"],["platform",120.93835,14.35041,"Salitran/Central Mall"],["platform",120.94475,14.34981,"Summer Meadows"],["platform",120.94542,14.34793,"St. Anthony Village North"],["platform",120.94738,14.34319,"Molino Homes 2"],["platform_exit_only",120.94891,14.34052,"DBB-G"]],
+  "line": [[120.93906,14.34885],[120.93763,14.3486],[120.93769,14.34982],[120.93779,14.35033],[120.93856,14.35052],[120.94229,14.35067],[120.94382,14.3514],[120.94418,14.3514],[120.94458,14.35109],[120.94483,14.35068],[120.94474,14.34998],[120.94498,14.3491],[120.94816,14.34131],[120.94856,14.34039],[120.94896,14.34056]]
+}

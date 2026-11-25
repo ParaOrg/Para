@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 9732599,
+  "kind": "bus",
+  "ref": "",
+  "name": "Solaire Shuttle: PITX → Solaire Resort and Casino",
+  "from": "Parañaque Integrated Terminal Exchange",
+  "to": "Solaire Resort and Casino",
+  "network": "",
+  "operator": "",
+  "version": 31,
+  "last_edit": "2026-05-06",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["stop_entry_only",120.99166,14.51081,"PITX"],["stop_exit_only",120.98131,14.52377,"Solaire Resort and Casino"]],
+  "line": [[120.99166,14.51081],[120.99124,14.50916],[120.99137,14.50902],[120.9909,14.50734],[120.98865,14.50809],[120.98917,14.50951],[120.99021,14.51301],[120.99072,14.51707],[120.99089,14.51778],[120.99095,14.52093],[120.9904,14.52527],[120.98027,14.5242],[120.97986,14.52421],[120.97968,14.52408],[120.97971,14.52397],[120.97981,14.52391],[120.98055,14.52398],[120.98073,14.52371],[120.98131,14.52377]]
+}

@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 11375478,
+  "kind": "jeepney",
+  "ref": "304",
+  "name": "A. Rivera–Raon via Severino Reyes",
+  "from": "A. Rivera",
+  "to": "Raon",
+  "network": "LTFRB National Capital Region",
+  "operator": "",
+  "version": 20,
+  "last_edit": "2026-10-03",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",120.97671,14.61676,"Novo Department Store Tayuman"],["platform",120.97677,14.61497,"Abad Santos & Villaruel"],["platform",120.97636,14.61327,"Abad Santos & Quiricada"],["platform",120.97699,14.6124,"Bambang & Abad Santos"],["platform",120.97869,14.61171,"Bambang & Yakal"],["platform",120.98105,14.61102,"Bambang & Severino Reyes"],["platform",120.98125,14.60954,"T. Mapua & Remigio"],["platform",120.98114,14.60855,"T. Mapua & Mayhaligue"],["platform",120.98108,14.60754,"T. Mapua & Fugoso"],["platform",120.98098,14.60635,"T. Mapua & Lope de Vega"],["platform",120.98072,14.60497,"T. Mapua & Doroteo Jose"],["platform",120.98014,14.60253,"T. Mapua & Soler"],["platform",120.98032,14.6011,"F. Torres & Gonzalo Puyat"],["platform",120.97951,14.60522,"T. Alonzo & Doroteo Jose"],["platform",120.98049,14.60692,"Severino Reyes & Lope de Vega"],["platform",120.98057,14.60813,"Severino Reyes & Fugoso"],["platform",120.98064,14.60909,"Severino Reyes & Mayhaligue"],["platform",120.98082,14.61127,"Severino Reyes & Bambang"],["platform",120.97977,14.61333,"San Lazaro Hospital"],["platform",120.9785,14.61344,"Quiricada & Yakal"],["platform",120.97715,14.61378,"Quiricada & Abad Santos"],["platform",120.97533,14.61444,"A. Rivera & Quiricada"],["platform_exit_only",120.97671,14.61676,"Novo Department Store Tayuman"]],
+  "line": [[120.9752,14.61423],[120.97569,14.61547],[120.9761,14.61689],[120.97726,14.61676],[120.97627,14.61262],[120.9777,14.61228],[120.98022,14.61096],[120.9814,14.61108],[120.98106,14.60661],[120.98062,14.60398],[120.98032,14.6028],[120.97957,14.60121],[120.97981,14.60099],[120.97997,14.60069],[120.9804,14.60089],[120.98022,14.60133],[120.98075,14.6026],[120.97903,14.6032],[120.97943,14.60425],[120.97939,14.60438],[120.9793,14.60442],[120.97949,14.60545],[120.98022,14.60532],[120.98042,14.60667],[120.98084,14.61226],[120.9801,14.61232],[120.9801,14.61327],[120.97874,14.61334],[120.9752,14.61423]]
+}

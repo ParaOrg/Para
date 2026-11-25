@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 9279638,
+  "kind": "jeepney",
+  "ref": "3207",
+  "name": "PITX–Lawton",
+  "from": "PITX",
+  "to": "Lawton",
+  "network": "LTFRB National Capital Region",
+  "operator": "EcoDyip, Inc.",
+  "version": 98,
+  "last_edit": "2026-09-11",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",120.99147,14.5102,"PITX"],["platform",120.98807,14.55722,"R. Layug"],["platform",120.98554,14.56403,"Ospital ng Maynila"],["platform",120.98665,14.56561,"Mabini & Quirino"],["platform",120.98544,14.5684,"Mabini & San Andres"],["platform",120.98469,14.57023,"Mabini & Remedios"],["platform",120.98291,14.57432,"Mabini & Pedro Gil"],["platform",120.98222,14.57553,"R. Salas"],["platform",120.98114,14.578,"Mabini & Padre Faura"],["platform",120.98041,14.57969,"Mabini & United Nations"],["platform",120.98299,14.58277,"National Museum of Natural History"],["platform_exit_only",120.97943,14.59501,"Plaza Lawton"]],
+  "line": [[120.9915,14.5102],[120.99124,14.50916],[120.99137,14.50902],[120.9909,14.50734],[120.98865,14.50809],[120.98917,14.50951],[120.99021,14.51301],[120.9907,14.51692],[120.99111,14.51723],[120.99189,14.51738],[120.99254,14.51745],[120.99333,14.5174],[120.99356,14.51866],[120.9938,14.52227],[120.99382,14.52627],[120.99214,14.54075],[120.99136,14.54497],[120.98972,14.55173],[120.9877,14.55821],[120.98567,14.56298],[120.9859,14.56308],[120.98532,14.56436],[120.98687,14.56504],[120.98657,14.56561],[120.98364,14.57266],[120.98189,14.57614],[120.97975,14.58105],[120.98329,14.58304],[120.9841,14.58362],[120.98152,14.58827],[120.98052,14.59126],[120.97962,14.59341],[120.97932,14.59377],[120.97824,14.59456],[120.9783,14.59475],[120.97942,14.59504]]
+}

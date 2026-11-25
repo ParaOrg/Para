@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 10664496,
+  "kind": "bus",
+  "ref": "Kenneth",
+  "name": "Pasig Transport: City Hall → Kenneth",
+  "from": "City Hall",
+  "to": "Kenneth",
+  "network": "Pasig Transport",
+  "operator": "City of Pasig",
+  "version": 27,
+  "last_edit": "2026-08-29",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [],
+  "line": [[121.0836,14.55968],[121.08095,14.56067],[121.08052,14.55948],[121.08045,14.55908],[121.09169,14.55492],[121.09336,14.55646],[121.09352,14.55631],[121.09646,14.55832],[121.09761,14.55583],[121.09679,14.55391],[121.09682,14.55355],[121.09701,14.55321],[121.09766,14.55268],[121.10314,14.54932],[121.10428,14.54846],[121.10439,14.54818],[121.10436,14.5479],[121.10329,14.54634],[121.10325,14.5459],[121.10428,14.54482],[121.10653,14.54356]]
+}

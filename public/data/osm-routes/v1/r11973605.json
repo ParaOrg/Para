@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 11973605,
+  "kind": "bus",
+  "ref": "QC5",
+  "name": "QMC–Mindanao Avenue (northbound)",
+  "from": "Quezon Memorial Circle",
+  "to": "Mindanao Avenue",
+  "network": "QCityBus",
+  "operator": "Five Star Bus Company",
+  "version": 32,
+  "last_edit": "2026-05-11",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["stop_entry_only",121.05204,14.65086,"QMC Interchange"]],
+  "line": [[121.05204,14.65086],[121.05193,14.6517],[121.05163,14.65249],[121.05124,14.65307],[121.05053,14.65376],[121.04992,14.65413],[121.04929,14.65433],[121.04861,14.65438],[121.048,14.65428],[121.04755,14.65432],[121.04746,14.65439],[121.04619,14.65629],[121.04528,14.65813],[121.04486,14.65942],[121.04324,14.66641],[121.04349,14.67204],[121.03913,14.67105],[121.03768,14.67059],[121.03677,14.67015],[121.03573,14.66952],[121.03405,14.66818],[121.0339,14.66818],[121.03375,14.66827],[121.03304,14.6692],[121.03261,14.67011],[121.03237,14.67126],[121.03234,14.67229],[121.03244,14.67298],[121.03236,14.67641],[121.0322,14.6772],[121.03204,14.68351],[121.03193,14.68512],[121.03155,14.68731],[121.03124,14.68786],[121.03077,14.68838],[121.03026,14.68879],[121.02892,14.68964],[121.02815,14.6905]]
+}

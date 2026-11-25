@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 20589671,
+  "kind": "jeepney",
+  "ref": "3191",
+  "name": "Paco–SM City Santa Mesa via Nagtahan",
+  "from": "Santa Mesa Rotonda",
+  "to": "Paco",
+  "network": "LTFRB National Capital Region",
+  "operator": "On-Us Solutions",
+  "version": 10,
+  "last_edit": "2026-09-01",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",121.018,14.6052,"SM City Santa Mesa"],["platform",121.01666,14.60386,"LRT V. Mapa Station"],["platform",121.01515,14.60276,"V. Mapa"],["platform",121.00981,14.60236,"Altura"],["platform",121.00572,14.6019,"LRT Pureza Station"],["platform",121.00378,14.60169,"Civil Registration Central Outlet"],["platform",121.0011,14.60147,"Nagtahan Interchange"],["platform",120.99929,14.60152,"Nagtahan Interchange"],["platform",120.99998,14.59952,"Nagtahan Interchange"],["platform",121.00094,14.59281,"Malacañang Park"],["platform",120.99874,14.59127,"Malayan High School of Science"],["platform",120.9967,14.58892,"Mitsubishi Otis"],["platform",120.99574,14.58782,"Robinsons Place Otis"],["platform",120.99417,14.58509,"Unilever"],["platform",120.99717,14.58199,"Quirino Extension–Zamora"],["platform_exit_only",120.99519,14.57965,"Paco Church"]],
+  "line": [[121.01805,14.60514],[121.01596,14.60307],[121.01558,14.60285],[121.01496,14.60268],[121.00838,14.60214],[121.00656,14.60191],[121.00157,14.60147],[121.00032,14.60132],[120.99967,14.60104],[120.99948,14.6011],[120.99888,14.60227],[120.99869,14.60219],[120.99946,14.60078],[121.00057,14.59847],[121.00087,14.59809],[121.00119,14.59742],[121.00132,14.59675],[121.00156,14.59285],[121.00038,14.59272],[120.9998,14.59241],[120.99414,14.58587],[120.99373,14.58553],[120.99719,14.58265],[120.99724,14.58171],[120.99572,14.58148],[120.99589,14.57944],[120.99518,14.57942],[120.99515,14.57964]]
+}

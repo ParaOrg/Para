@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 15021432,
+  "kind": "jeepney",
+  "ref": "2117",
+  "name": "Pasig–Quiapo",
+  "from": "Pasig",
+  "to": "Quiapo",
+  "network": "LTFRB National Capital Region",
+  "operator": "Pasig-Mandaluyong-Quiapo Operators and Drivers Association;Trusted and Fair Services Transport Cooperative",
+  "version": 42,
+  "last_edit": "2026-08-31",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",121.08495,14.55814,"Pasig City Public Market"],["platform",121.0828,14.56003,"Sabater Hospital"],["platform",121.08144,14.56055,"City Hall"],["platform",121.07793,14.56093,"Pasig Cathedral"],["platform",121.07674,14.56236,"Landbank Pasig"],["platform",121.07658,14.56422,"Meralco"],["platform",121.07637,14.56485,"Dr. Pilapil"],["platform",121.07142,14.56642,"M. San Buenaventura"],["platform",121.06935,14.56406,"Bagong Ilog"],["platform",121.06566,14.56469,"Rizal Medical Center"],["platform",121.06645,14.56935,"Lumiere"],["platform",121.06491,14.57169,"Danny Floro"],["platform",121.0615,14.57476,"Capitol Commons"],["platform",121.05996,14.57596,"77 Freemont Arcade"],["platform",121.05227,14.5826,"Starmall EDSA-Shaw"],["platform",121.04817,14.58593,"Governor's Place"],["platform",121.04694,14.58693,"Old Wack Wack"],["platform",121.0451,14.58799,"SM Cherry Foodarama"],["platform",121.04231,14.58907,"Puregold Shaw"],["platform",121.03834,14.58956,"Luna Mencias"],["platform",121.03518,14.58966,"Acacia Lane"],["platform",121.0345,14.59021,"Araullo"],["platform",121.03038,14.59212,"Armand B. Fabella"],["platform",121.02759,14.59358,"Crossing Kalentong"],["platform",121.02475,14.59459,"Bagumbayan"],["platform",121.02235,14.59547,"Our Lady of Lourdes Hospital"],["platform",121.02094,14.59605,"Don Bosco Manila"],["platform",121.01794,14.59745,"Puregold Santa Mesa"],["platform",121.01699,14.59974,"Old Santa Mesa"],["platform",121.01515,14.60276,"V. Mapa"],["platform",121.00981,14.60236,"Altura"],["platform",121.00572,14.6019,"LRT Pureza Station"],["platform",121.00378,14.60169,"Civil Registration Central Outlet"],["platform",121.0011,14.60147,"Nagtahan Interchange"],["platform",120.99539,14.60084,"M. Jhocson"],["platform",120.99314,14.60156,"LRT Legarda Station"],["platform",120.98963,14.59794,"National Teachers College"],["platform",120.98757,14.59684,"Barangay 387 Daycare Center"],["platform",120.98449,14.59761,"Quiapo (Barbosa) Turning Point"]],
+  "line": [[121.08488,14.55816],[121.08525,14.55909],[121.08095,14.56067],[121.08065,14.55983],[121.07756,14.56097],[121.0774,14.56075],[121.07663,14.56086],[121.07673,14.56192],[121.07658,14.56327],[121.07655,14.56451],[121.07599,14.56525],[121.07664,14.56552],[121.07701,14.56579],[121.07766,14.56612],[121.07712,14.56624],[121.07614,14.56609],[121.07115,14.56637],[121.07047,14.56611],[121.07027,14.56611],[121.06998,14.56512],[121.06964,14.5644],[121.06906,14.56348],[121.06862,14.56316],[121.06811,14.56297],[121.06752,14.56286],[121.06663,14.56296],[121.06559,14.56331],[121.06547,14.5635],[121.06546,14.56374],[121.06654,14.56995],[121.06647,14.57034],[121.06297,14.5733],[121.06178,14.57436],[121.06164,14.57462],[121.06138,14.57481],[121.06123,14.57483],[121.05797,14.57759],[121.05322,14.58178],[121.04651,14.58722],[121.04499,14.58799],[121.04403,14.58836],[121.04217,14.58904],[121.04043,14.58948],[121.03983,14.58956],[121.03538,14.58943],[121.03468,14.59001],[121.03395,14.59045],[121.02996,14.59224],[121.02813,14.59326],[121.02702,14.59375],[121.02563,14.59417],[121.02057,14.59614],[121.02041,14.59616],[121.0199,14.59594],[121.01762,14.59761],[121.01681,14.60015],[121.01681,14.60029],[121.01588,14.60301],[121.01538,14.60278],[121.01496,14.60268],[121.00838,14.60214],[121.00656,14.60191],[121.0005,14.60135],[120.9999,14.60117],[120.99939,14.60091],[120.99858,14.60118],[120.99735,14.60096],[120.99618,14.60059],[120.99356,14.60142],[120.99276,14.6016],[120.99161,14.601],[120.99081,14.60028],[120.98953,14.59764],[120.98948,14.59653],[120.98439,14.5973],[120.98445,14.59762]]
+}

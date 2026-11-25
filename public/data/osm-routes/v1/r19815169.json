@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 19815169,
+  "kind": "jeepney",
+  "ref": "T114",
+  "name": "Quirino Highway–Santa Lucia",
+  "from": "Quirino Highway",
+  "to": "Santa Lucia",
+  "network": "LTFRB National Capital Region",
+  "operator": "Santa Lucia Transport Service Cooperative",
+  "version": 3,
+  "last_edit": "2026-08-06",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",121.03973,14.7086,"Susana Jeepney Terminal"],["platform",121.04217,14.70864,"San Juan Street"],["platform",121.04272,14.7073,"Nenita Street"],["platform",121.04548,14.70546,"Luz Street"],["platform",121.04621,14.70484,"Sumilang Street"],["platform",121.04949,14.70432,"Santa Lucia High School"],["platform",121.05479,14.70506,"R. Humabon Street"],["platform",121.05646,14.70514,"Jose Abad Santos Street"],["platform",121.05532,14.70681,"J. Basa Street"],["platform",121.05423,14.70818,"J.P. Rizal Street"],["platform_exit_only",121.0522,14.70761,"Santa Lucia Senior High School"]],
+  "line": [[121.03971,14.7086],[121.03971,14.70868],[121.04262,14.70867],[121.04274,14.70786],[121.04274,14.70542],[121.04607,14.70551],[121.0461,14.70511],[121.0463,14.70473],[121.04652,14.7044],[121.04674,14.7043],[121.04696,14.70428],[121.0473,14.70443],[121.04795,14.70444],[121.04849,14.70434],[121.05051,14.70441],[121.05231,14.70502],[121.05315,14.70621],[121.05448,14.7051],[121.05635,14.70509],[121.05652,14.70527],[121.05596,14.70573],[121.05549,14.70636],[121.05535,14.70658],[121.05515,14.70733],[121.05451,14.70806],[121.0524,14.70849],[121.05222,14.70781],[121.05224,14.70762]]
+}

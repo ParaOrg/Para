@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 21041536,
+  "kind": "jeepney",
+  "ref": "149",
+  "name": "EDSA/SM North–UP",
+  "from": "SM North EDSA",
+  "to": "UP Campus",
+  "network": "LTFRB National Capital Region",
+  "operator": "Aguila Transport Service Cooperative",
+  "version": 2,
+  "last_edit": "2026-08-06",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_exit_only",121.07316,14.65573,"School of Economics"],["platform",121.0728,14.65679,"Romulo Hall"],["platform",121.07177,14.65948,"F. Agoncillo Street"],["platform",121.07023,14.65947,"UP Shopping Center 1"],["platform",121.06887,14.65949,"UP Shopping Center 2"],["platform",121.06849,14.65886,"Kalayaan Residence Hall"],["platform",121.06853,14.65771,"Molave Residence Hall"],["platform",121.06706,14.65617,"UP Film Hall"],["platform",121.06587,14.65614,"Villamor Hall"],["platform",121.06203,14.65503,"UP Checkpoint"],["platform",121.0529,14.65409,"Philcoa"],["platform",121.05055,14.65388,"Department of Agrarian Reform"],["platform",121.04859,14.65456,"Department of Agriculture"],["platform",121.04338,14.6529,"Sugar Regulatory Administration"],["platform",121.03794,14.65403,"Occupational Safety & Health Center"],["platform",121.03462,14.65477,"TriNoma North Entrance"],["platform_exit_only",121.03206,14.6554,"SM North EDSA"]],
+  "line": [[121.07308,14.65571],[121.07276,14.65616],[121.07272,14.65945],[121.06867,14.65942],[121.06854,14.65942],[121.06854,14.65926],[121.06859,14.65613],[121.06492,14.6561],[121.06475,14.65593],[121.06431,14.655],[121.05665,14.65488],[121.05599,14.65489],[121.05575,14.65497],[121.05569,14.65513],[121.05576,14.6553],[121.05759,14.65651],[121.058,14.65692],[121.05804,14.65709],[121.05787,14.65718],[121.05768,14.65713],[121.05423,14.65492],[121.05266,14.65373],[121.05185,14.65321],[121.0515,14.65312],[121.05116,14.65315],[121.05039,14.65386],[121.04956,14.65426],[121.04885,14.65438],[121.04825,14.65433],[121.04761,14.65412],[121.04718,14.65378],[121.04676,14.65325],[121.0464,14.65243],[121.04626,14.65225],[121.04614,14.65221],[121.03203,14.65529]]
+}

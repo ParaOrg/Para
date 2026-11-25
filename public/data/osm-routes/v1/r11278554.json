@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 11278554,
+  "kind": "bus",
+  "ref": "BP-02",
+  "name": "Batangas–Pier (via Cuta Road)",
+  "from": "Pier",
+  "to": "Batangas Pier",
+  "network": "LTFRB Region IV-A",
+  "operator": "",
+  "version": 11,
+  "last_edit": "2026-05-07",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["stop",121.04381,13.75257,"Batangas Pier"],["stop",121.04498,13.75368,""]],
+  "line": [[121.04385,13.75321],[121.0444,13.75222],[121.04413,13.75207],[121.04381,13.75257],[121.04363,13.753],[121.044,13.75334],[121.04474,13.75385],[121.05485,13.75579],[121.05463,13.7573],[121.05599,13.75749],[121.05649,13.75746],[121.05692,13.75381],[121.05589,13.75326],[121.05529,13.75253],[121.05665,13.75113],[121.05683,13.75061],[121.05585,13.75034],[121.05483,13.74972],[121.05393,13.74962],[121.05349,13.75018],[121.05113,13.74702],[121.04999,13.74661],[121.04943,13.74653],[121.0491,13.74658],[121.04888,13.74668],[121.04863,13.74694],[121.04811,13.74813],[121.04714,13.74929],[121.04491,13.75386]]
+}

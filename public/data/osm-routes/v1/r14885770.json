@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 14885770,
+  "kind": "jeepney",
+  "ref": "372",
+  "name": "Cubao–Divisoria via Santa Mesa, Aurora",
+  "from": "Divisoria",
+  "to": "Cubao",
+  "network": "LTFRB National Capital Region",
+  "operator": "On-Us Solutions;Quezon City Transport Service Cooperative Inc.",
+  "version": 43,
+  "last_edit": "2026-09-12",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",120.96872,14.60381,"Santo Cristo"],["platform",120.97007,14.6053,"Recto–Ylaya"],["platform",120.97174,14.60607,"Tutuban Mall"],["platform",120.97384,14.60635,"999 Mall"],["platform",120.97568,14.60565,"Palomar"],["platform",120.97716,14.60508,"Recto & Masangkay"],["platform",120.97883,14.60445,"Recto & T. Alonzo"],["platform",120.98253,14.60353,"LRT Recto Station"],["platform",120.98572,14.60273,"Cartimar Shopping Center"],["platform",120.98693,14.60218,"Nicanor Reyes"],["platform",120.99323,14.60139,"LRT Legarda Station"],["platform",120.99547,14.60064,"M. Jhocson"],["platform",120.9989,14.60097,"Nagtahan Interchange"],["platform",121.00584,14.60166,"LRT Pureza Station"],["platform",121.00963,14.60194,"Altura"],["platform",121.01107,14.60212,"Stop n' Shop"],["platform",121.01541,14.60258,"V. Mapa"],["platform",121.01696,14.60381,"LRT V. Mapa Station"],["platform",121.01964,14.60637,"Central Colleges of the Philippines"],["platform",121.02097,14.60771,"UE Ramon Magsaysay Campus"],["platform",121.02255,14.60925,"A. Luna Street"],["platform",121.02497,14.61012,"S. Veloso Street"],["platform",121.02686,14.61073,"LRT J. Ruiz Station"],["platform",121.03186,14.61238,"Broadway Avenue"],["platform",121.03441,14.61358,"LRT Gilmore Station"],["platform",121.03674,14.61493,"St. Paul University"],["platform",121.03805,14.61569,"Robinsons Magnolia"],["platform",121.04008,14.61689,"Balete Drive"],["platform",121.04289,14.61857,"LRT Betty Go-Belmonte Station"],["platform",121.04677,14.62016,"Aurora–N. Domingo"],["platform",121.05286,14.62265,"LRT Araneta Center-Cubao Station"],["platform",121.05452,14.62349,"Manhattan Parkway"],["platform",121.05521,14.62452,"Cubao–Yale Intersection"]],
+  "line": [[120.96768,14.6028],[120.97033,14.60568],[120.97103,14.60595],[120.97338,14.60651],[120.97359,14.60648],[120.97484,14.60603],[120.98024,14.60393],[120.98463,14.60327],[120.99096,14.60031],[120.99165,14.60095],[120.99278,14.60153],[120.99353,14.60136],[120.99562,14.60063],[120.99619,14.6005],[120.99712,14.60078],[120.99753,14.60078],[120.9986,14.60105],[120.9989,14.60102],[120.99946,14.60078],[121.00025,14.60112],[121.00226,14.60137],[121.00886,14.60194],[121.01176,14.60227],[121.01449,14.60249],[121.01541,14.60264],[121.01586,14.6028],[121.01616,14.60305],[121.02205,14.6089],[121.02261,14.60932],[121.03294,14.6128],[121.03739,14.61535],[121.04413,14.61936],[121.04912,14.62102],[121.05029,14.6216],[121.05233,14.62249],[121.05241,14.62246],[121.05288,14.62268],[121.05288,14.62276],[121.05544,14.62399],[121.05517,14.6245]]
+}

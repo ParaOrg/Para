@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 11142889,
+  "kind": "jeepney",
+  "ref": "3154",
+  "name": "Libertad–PRC",
+  "from": "Philippine Racing Club",
+  "to": "Libertad",
+  "network": "LTFRB National Capital Region",
+  "operator": "Makati City Unified Transport Service Cooperative",
+  "version": 26,
+  "last_edit": "2026-08-31",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [[19,44]],
+  "stops": [["platform_entry_only",121.01539,14.57071,"PRC-Libertad Jeepney Terminal"],["platform",121.01454,14.56988,"Ponte"],["platform",121.01341,14.56776,"Shopwise Chino Roces"],["platform",121.01227,14.56558,"Kamagong"],["platform",121.01088,14.56213,"Pryce Center"],["platform",121.01125,14.55982,"Chino Roces"],["platform",121.00528,14.55679,"Fillmore"],["platform",120.99508,14.55381,"Gil Puyat & Leveriza"],["platform",120.99479,14.55301,"Leveriza"],["platform",120.99527,14.55092,"Cartimar"],["platform",120.99817,14.54751,"Victory Pasay Mall"],["platform_exit_only",121.00061,14.54847,"St. Mary's Academy Pasay"]],
+  "line": [[121.01538,14.57069],[121.01515,14.5709],[121.01107,14.5631],[121.01094,14.56231],[121.011,14.56158],[121.01172,14.55998],[121.00458,14.55635],[121.00301,14.55574],[120.99702,14.55411],[120.99535,14.55376],[120.99277,14.5534],[120.9885,14.55214],[120.98835,14.55204],[120.98835,14.55191],[120.9885,14.55185],[120.99248,14.55307],[120.99319,14.55323],[120.99476,14.55341],[120.99619,14.54691],[120.99815,14.54756],[120.99854,14.54768],[121.00064,14.54801],[121.00044,14.54955]]
+}

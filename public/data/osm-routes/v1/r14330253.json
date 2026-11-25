@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 14330253,
+  "kind": "bus",
+  "ref": "DC1",
+  "name": "DCBus 1: Old City Hall → Dasmariñas Arena",
+  "from": "",
+  "to": "",
+  "network": "DCBus",
+  "operator": "City of Dasmariñas",
+  "version": 22,
+  "last_edit": "2025-01-02",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [[29,16]],
+  "stops": [["stop_entry_only",120.93613,14.32644,"Old City Hall"],["stop_exit_only",120.9538,14.33173,"Dasmariñas Arena"]],
+  "line": [[120.93619,14.32648],[120.93597,14.32635],[120.93666,14.32526],[120.93878,14.32645],[120.9403,14.32675],[120.94721,14.32683],[120.95071,14.32727],[120.9501,14.32815],[120.9497,14.32905],[120.94891,14.32959],[120.94865,14.33087],[120.94801,14.33169],[120.94762,14.33245],[120.94584,14.33432],[120.9458,14.33446],[120.94667,14.33511],[120.94784,14.33558],[120.94809,14.33562],[120.94834,14.33553],[120.94919,14.33478],[120.94989,14.3344],[120.9503,14.33374],[120.95025,14.33361],[120.95036,14.33351],[120.95035,14.33337],[120.95104,14.33209],[120.95279,14.33265],[120.95291,14.3326],[120.95318,14.33195],[120.95339,14.33204],[120.95345,14.33191],[120.9537,14.33174],[120.9539,14.33174],[120.95408,14.33183],[120.95422,14.33209],[120.95415,14.33237],[120.954,14.3325],[120.9538,14.33255],[120.95352,14.33245],[120.95338,14.33219],[120.95345,14.33191]]
+}

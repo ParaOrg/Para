@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 13803170,
+  "kind": "rail",
+  "ref": "",
+  "name": "PNR Inter-Provincial Commuter: San Pablo → Lucena",
+  "from": "San Pablo",
+  "to": "Lucena",
+  "network": "PNR Interprovincial Commuter",
+  "operator": "Philippine National Railways",
+  "version": 3,
+  "last_edit": "2023-05-10",
+  "clipped": true,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["stop",121.42527,13.9257,"Candelaria"]],
+  "line": [[121.32092,14.07],[121.32148,14.06784],[121.32165,14.06686],[121.32147,14.0661],[121.32054,14.06419],[121.32035,14.0633],[121.32039,14.06223],[121.32063,14.06125],[121.32218,14.05714],[121.32242,14.05613],[121.32334,14.04124],[121.3246,14.02334],[121.32608,13.99953],[121.32647,13.99446],[121.32666,13.99029],[121.32852,13.96226],[121.3287,13.96142],[121.32894,13.96092],[121.3292,13.96052],[121.32972,13.96],[121.33043,13.95948],[121.3359,13.95735],[121.36804,13.9451],[121.3705,13.94422],[121.38202,13.93974],[121.39814,13.93363],[121.40244,13.9319],[121.40376,13.93147],[121.41578,13.92682],[121.41713,13.92642],[121.41921,13.9262],[121.42983,13.92534],[121.43593,13.92466],[121.45776,13.92199],[121.51582,13.91509]]
+}

@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 21109106,
+  "kind": "jeepney",
+  "ref": "3001",
+  "name": "A. Bonifacio-A. Mabini via 10th Avenue",
+  "from": "A. Bonifacio",
+  "to": "A. Mabini",
+  "network": "LTFRB National Capital Region",
+  "operator": "Navotas Transport Service Cooperative;AM-10th Avenue-AB New City Hall Transport Service Cooperative",
+  "version": 3,
+  "last_edit": "2026-08-06",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",120.99489,14.65235,"Kamantigue-11th Turning Point"],["platform",120.99458,14.65127,"Kamantigue"],["platform",120.99221,14.65134,"11th Street"],["platform",120.98986,14.65142,"8th Street"],["platform",120.98853,14.65147,"5th Street–10th Avenue"],["platform",120.98575,14.65155,"2nd Street"],["platform",120.98328,14.65165,"Rizal Extension"],["platform",120.98177,14.65167,"Caloocan High School"],["platform",120.9799,14.65174,"P. Sevilla"],["platform",120.97844,14.6518,"L. Nadurata"],["platform",120.97711,14.65184,"Heroes del '96"],["platform",120.97514,14.65148,"10th Avenue Railroad Crossing"],["platform",120.97332,14.65105,"La Consolacion College (10th Avenue)"],["platform_exit_only",120.97194,14.65093,"999 Shopping Mall"]],
+  "line": [[120.99491,14.65235],[120.99488,14.65123],[120.97648,14.65181],[120.97607,14.65174],[120.97496,14.65138],[120.97259,14.65084],[120.97235,14.65178],[120.97196,14.65171],[120.97182,14.65162],[120.97197,14.65093]]
+}

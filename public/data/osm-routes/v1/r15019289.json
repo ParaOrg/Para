@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 15019289,
+  "kind": "bus",
+  "ref": "47",
+  "name": "Route 47: Navotas–PITX",
+  "from": "PITX",
+  "to": "LRT Gil Puyat Station",
+  "network": "LTFRB National Capital Region",
+  "operator": "Metro Link Group;Mega Manila Consortium Corporation",
+  "version": 22,
+  "last_edit": "2026-09-01",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",120.99163,14.51082,"PITX"],["platform",120.99381,14.52014,"MIA Road"],["platform",120.99358,14.53163,"Baclaran"],["platform",120.99119,14.54611,"Arnaiz Avenue"],["platform",120.98984,14.55176,"Gil Puyat Overpass"],["platform",120.99044,14.55236,"Gil Puyat Overpass"],["platform",120.99181,14.55283,"Gil Puyat & Harrison"],["platform_exit_only",120.99526,14.5534,"Gil Puyat & Leveriza"],["platform_exit_only",120.99846,14.5542,"Gil Puyat & F. Fernando"]],
+  "line": [[120.99166,14.51081],[120.99124,14.50916],[120.99137,14.50902],[120.9909,14.50734],[120.98865,14.50809],[120.98917,14.50951],[120.99021,14.51301],[120.9907,14.51692],[120.99111,14.51723],[120.99189,14.51738],[120.99254,14.51745],[120.99333,14.5174],[120.99356,14.51866],[120.9938,14.52227],[120.99382,14.52627],[120.99359,14.52837],[120.99368,14.52914],[120.99341,14.53213],[120.99323,14.53222],[120.9931,14.53239],[120.99215,14.54063],[120.99163,14.54361],[120.99005,14.55068],[120.98964,14.55221],[120.99282,14.55316],[120.99524,14.55348],[120.99873,14.55435]]
+}
