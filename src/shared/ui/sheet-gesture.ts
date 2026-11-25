@@ -255,17 +255,6 @@ export function snapFor(
 }
 
 /**
- * Where a sheet with two rests lets go (the explore cards, the owner's rule of 2026-11-25): Low or
- * full, never between. A flick (FLICK) goes its own way; slower, it goes to the nearer of the two.
- * `shown` and `velocity` (upwards, px/ms) as snapFor reads them.
- */
-export function twoRestFor(shown: number, velocity: number, heights: SheetHeights): 'low' | 'full' {
-  if (velocity >= FLICK) return 'full';
-  if (velocity <= -FLICK) return 'low';
-  return shown - heights.low < heights.full - shown ? 'low' : 'full';
-}
-
-/**
  * A tap on the handle, Enter on it, or a wheel's push (never from Low): a third of the map up
  * or down. `up` says which way; at either end the step turns round (BottomSheet keeps the
  * way). Stepping down to within LOW_MAGNET_PX of Low lands on Low.

@@ -7,7 +7,10 @@ import {
 } from 'react';
 
 import { ROUTE_SHEET_SHAPE } from '@/features/routes/cards/route-sheet-shape';
-import { DRAG_PX, follow, swallowTheTapsClick, twoRestFor } from '@/shared/ui/sheet-gesture';
+import { DRAG_PX, follow, swallowTheTapsClick } from '@/shared/ui/sheet-gesture';
+import { twoRestFor } from '@/shared/ui/two-rest';
+
+import { followersOf, isAlongBottom, place } from './explore-sheet-place';
 
 /** Where the explore cards rest: open, both cards whole, or Low, as a route's sheet shows it. */
 export type ExploreRest = 'open' | 'low';
@@ -27,32 +30,6 @@ const LOW_PX = ROUTE_SHEET_SHAPE.lowPx;
 /** Low's slide and its foot: 80 above a phone's home bar, as the route sheets' Low. */
 const LOW_Y = `calc(100% - ${LOW_PX}px - env(safe-area-inset-bottom))`;
 const LOW_FOOT = `calc(${LOW_PX}px + env(safe-area-inset-bottom))`;
-
-/** Whether `cards` lie along the map's bottom, as wide as it: a phone's layout, not floating. */
-function isAlongBottom(cards: HTMLElement, host: HTMLElement) {
-  return cards.offsetWidth >= host.clientWidth;
-}
-
-/** What rides on the cards' top (`data-dock-follower`): the locate-me column. */
-function followersOf(host: HTMLElement) {
-  return [...host.querySelectorAll<HTMLElement>('[data-dock-follower]')];
-}
-
-/** The cards slid `y` down, the foot `foot` tall: on the host at rest, and on what follows. */
-function place(
-  cards: HTMLElement,
-  host: HTMLElement,
-  y: string,
-  foot: string | null,
-  followers = followersOf(host),
-  isMove = false,
-) {
-  cards.style.setProperty('--explore-y', y);
-  for (const el of isMove ? followers : [host, ...followers]) {
-    if (foot === null) el.style.removeProperty('--dock-foot');
-    else el.style.setProperty('--dock-foot', foot);
-  }
-}
 
 /**
  * The explore cards as a sheet with two rests (Figma FirstCard, 4885:40725 and 4885:41191; the

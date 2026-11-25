@@ -2,7 +2,8 @@
 // between; a flick goes its own way, slower the nearer of the two wins.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { FLICK, twoRestFor } from '../../src/shared/ui/sheet-gesture.ts';
+import { FLICK } from '../../src/shared/ui/sheet-gesture.ts';
+import { twoRestFor } from '../../src/shared/ui/two-rest.ts';
 
 // Low 80, the cards 279 tall open (Figma 4885:40725, 4885:41191).
 const heights = { low: 80, full: 279 };
