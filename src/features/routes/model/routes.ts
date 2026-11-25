@@ -1,6 +1,7 @@
 import type { LngLat, Segment } from '@/shared/utils/geo';
 import { haversine, joinSegments } from '@/shared/utils/geo';
 
+import { BUSWAY_LINES, BUSWAY_MODES, lineOfMode } from './busway';
 import type { Direction, RouteRow, TransportMode, UnnamedDirectionRow } from './direction-schema';
 import { hotspotLabel, type Hotspot } from './hotspots';
 
@@ -24,13 +25,13 @@ export const MODES: { value: TransportMode; label: string }[] = [
   { value: 'lrt', label: 'LRT' },
   { value: 'mrt', label: 'MRT' },
   { value: 'ferry', label: 'Ferry' },
+  { value: 'busway', label: 'EDSA Carousel' },
 ];
 
 /**
- * The train lines (0011): LRT-1, LRT-2 and MRT-3, each a route whose
- * `routeCode` names its line. A train runs on its own track and stops only at
- * its own stations, so everything that asks which hintuans a line passes asks
- * `servedBy` too.
+ * The train lines (0011): LRT-1, LRT-2 and MRT-3, each a route whose `routeCode` names its line. A
+ * train runs on its own track and stops only at its own stations, so everything that asks which
+ * hintuans a line passes asks `servedBy` too.
  */
 const RAIL_MODES: readonly TransportMode[] = ['lrt', 'mrt'];
 
@@ -50,17 +51,16 @@ export const isRail = (mode: TransportMode | null | undefined): boolean =>
   !!mode && RAIL_MODES.includes(mode);
 
 /**
- * The ferry lines (0012): the Pasig River Ferry, PRFS. A ferry runs on the
- * river as a train on its track, stopping only at its own stations, so it is
- * a line as a train is.
+ * The ferry lines (0012): the Pasig River Ferry, PRFS. A ferry runs on the river as a train on its
+ * track, stopping only at its own stations, so it is a line as a train is.
  */
 export const FERRY_MODES: readonly TransportMode[] = ['ferry'];
 export const FERRY_LINES = ['PRFS'] as const;
 
-/** Every mode that runs on a line of its own: the trains and the ferry. */
-export const LINE_MODES: readonly TransportMode[] = [...RAIL_MODES, ...FERRY_MODES];
-/** Every line a routeCode or a station's `line` may name; 0011 and 0012 hold `hotspot.line` to them. */
-export const LINES: readonly string[] = [...RAIL_LINES, ...FERRY_LINES];
+/** Every mode that runs on a line of its own: the trains, the ferry and the busway. */
+export const LINE_MODES = [...RAIL_MODES, ...FERRY_MODES, ...BUSWAY_MODES] as const;
+/** Every line a routeCode or a station's `line` may name; 0011, 0012 and edsa_carousel hold `hotspot.line` to them. */
+export const LINES: readonly string[] = [...RAIL_LINES, ...FERRY_LINES, ...BUSWAY_LINES];
 
 export const isLineMode = (mode: TransportMode | null | undefined): boolean =>
   !!mode && LINE_MODES.includes(mode);
@@ -110,16 +110,16 @@ export function isLoop(v: { route?: { isLoop?: boolean } | null }): boolean {
 }
 
 /**
- * Whether a direction of this route stops at this hintuan, beyond passing
- * within reach of its box. A line — a train, the ferry — stops only at its
- * own stations; a jeep at every hintuan that is not a station — the owner's
- * default, open to change. A line with none named stops nowhere, so it can
- * never pick up the jeep hintuans under its track or along its river.
+ * Whether a direction of this route stops at this hintuan, beyond passing within reach of its box.
+ * A line — a train, the ferry, the Carousel — stops only at its own stations; a jeep at every
+ * hintuan that is not a station — the owner's default, open to change. A train or ferry names its
+ * line in its routeCode, the Carousel by its mode (lineOfMode); a line with none stops nowhere, so
+ * it can never pick up the jeep hintuans under its track, along its river or its busway.
  */
 export function servedBy(hotspot: { line?: string | null }, route: ServedRoute): boolean {
   const line = hotspot.line ?? null;
   if (!isLineMode(route.mode)) return line === null;
-  return line !== null && line === (route.routeCode ?? null);
+  return line !== null && line === (route.routeCode ?? lineOfMode(route.mode));
 }
 
 /** Spaced en dash. R3: applied by the app, never typed, so it cannot vary. */

@@ -1,6 +1,6 @@
 import { TRANSPORT_MODE_LABEL } from './route-modes';
 import { railBound } from '../model/rail-codes';
-import { railLineOf, type Direction } from '../model/routes';
+import type { Direction } from '../model/routes';
 import { estimateTravel, type TravelEstimate } from '../model/travel-time';
 import { vehicleOf } from '../model/vehicles';
 
@@ -10,7 +10,7 @@ export interface RideFacts {
   transportMode: string;
   /** The whole ride's estimated minutes, for the Estimated Time Arrival tile. */
   estimate: TravelEstimate;
-  /** A train's bound, "Southbound", for its Direction row; undefined off the rails or unknown. */
+  /** A train's or the Carousel's bound, "Southbound", for its Direction row; undefined off a line or unknown. */
   bound?: string;
 }
 
@@ -25,6 +25,6 @@ export function rideFactsOf(direction: Direction, metres: number, stops: number)
     transportMode: TRANSPORT_MODE_LABEL[vehicle],
     estimate: estimateTravel(vehicle, metres, stops),
   };
-  const bound = railLineOf(direction) ? railBound(direction) : null;
+  const bound = railBound(direction);
   return bound ? { ...facts, bound } : facts;
 }

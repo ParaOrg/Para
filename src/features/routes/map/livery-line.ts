@@ -58,6 +58,11 @@ export const LIVERY_LINE = {
     arrow: MAP_COLOURS['Map/RouteLine/Arrow/Rest'],
     pale: MAP_COLOURS['Map/Ferry/surface-pale'],
   },
+  'edsa-carousel': {
+    line: MODE_COLOURS['Card/Red/Red-surface'],
+    arrow: WHITE_ARROW,
+    pale: MODE_COLOURS['Card/Red/Red-surface-pale'],
+  },
 } satisfies Record<Livery, LineLook>;
 
 /**
@@ -89,6 +94,7 @@ export const LINE_SURFACE = {
   'light-rail-way-two': 'bg-map-rail-light-rail-way-two-surface',
   'metro-rail-way-three': 'bg-map-rail-metro-rail-way-three-surface',
   ferry: 'bg-map-ferry-surface',
+  'edsa-carousel': 'bg-card-red-surface',
   selected: 'bg-map-route-line-surface-selected',
 } satisfies Record<LineColour, string>;
 
@@ -102,6 +108,7 @@ export const LINE_FILL = {
   'light-rail-way-two': 'fill-map-rail-light-rail-way-two-surface',
   'metro-rail-way-three': 'fill-map-rail-metro-rail-way-three-surface',
   ferry: 'fill-map-ferry-surface',
+  'edsa-carousel': 'fill-card-red-surface',
   selected: 'fill-map-route-line-surface-selected',
 } satisfies Record<LineColour, string>;
 
@@ -119,5 +126,6 @@ export const LINE_WORDS = {
   'light-rail-way-two': 'text-content-inverse',
   'metro-rail-way-three': 'text-map-route-line-arrow-inverse',
   ferry: 'text-content-inverse',
+  'edsa-carousel': 'text-content-inverse',
   selected: 'text-content-inverse',
 } satisfies Record<LineColour, string>;
