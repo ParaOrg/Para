@@ -1545,7 +1545,7 @@ const tripChecks = async () => {
     );
 
   // The stops are reached at full height, as a person reaches them: at Low the sheet shows its
-  // top 133 px, and raised a third (its top near 430 of 844) its stops sit at y 847–1,027, below
+  // top 80 px, and raised a third (its top near 430 of 844) its stops sit at y 847–1,027, below
   // the screen. The sheet is translated, not scrolled, so nothing but its handle brings them up.
   // Pulled to full by the handle when a stop is below the screen (a trip opened from the list at
   // 95% shows them all already), then let down again as it opened when the trip is done with.
@@ -2846,6 +2846,7 @@ const endClearsFooter = async (sel) => {
  * there within `ms`: a sheet that never does is a failure, not a skip.
  */
 const handleTo = async (target, ms = 30000) => {
+  if (await isNotchless()) return dragSheetTo(target);
   const by = Date.now() + ms;
   for (;;) {
     const was = await sheetState();
@@ -2877,8 +2878,48 @@ const dragTo = async (from, to) => {
  */
 const toRaised = async () => {
   if (!(await handleTo('low'))) return false;
-  await buttonTap(handle(), async () => (await sheetState()) !== 'low');
+  if (await isNotchless()) {
+    const h = await card()
+      .first()
+      .evaluate((el) => el.offsetHeight);
+    await dragSheet(-Math.round(h / 3));
+  } else await buttonTap(handle(), async () => (await sheetState()) !== 'low');
   return (await until(sheetState, (state) => state === 'free', 5000)) === 'free';
+};
+/**
+ * Whether the card's handle draws no notch (BottomSheet's `handle="hidden"`, a trip's and the
+ * route list's): nothing there for a finger, which moves the sheet itself instead.
+ */
+const isNotchless = async () => {
+  if ((await handle().count()) === 0) return false;
+  const box = await handle().first().boundingBox();
+  return !box || box.width <= 1 || box.height <= 1;
+};
+/** A finger 24 in from the sheet's top-left, moved `dy` and held before it lifts: no throw. */
+const dragSheet = async (dy) => {
+  const box = await card().first().boundingBox();
+  if (!box) return;
+  await fingerPan(box.x + 24, Math.max(box.y, 0) + 24, 0, dy);
+  await cardsSettled(page);
+};
+/**
+ * A notchless sheet brought to rest at `target` by a finger, as a person does: past the top for
+ * full, and down to within Low's magnet for Low (its `data-low-px`). Whether it got there.
+ */
+const dragSheetTo = async (target) => {
+  for (let i = 0; i < 3 && (await sheetState()) !== target; i++) {
+    if ((await sheetState()) === null) return false;
+    if (target === 'full') {
+      const h = await card()
+        .first()
+        .evaluate((el) => el.offsetHeight);
+      await dragSheet(-h);
+    } else {
+      const low = Number(await card().first().getAttribute('data-low-px'));
+      await dragSheet((await shownOf(card())) - low - 20);
+    }
+  }
+  return (await sheetState()) === target;
 };
 /**
  * A trip, or the route list, left as a commuter leaves it, with no ‹ or ✕ (the owner, 2026-11-21):
@@ -3891,9 +3932,9 @@ if (runsPart(3)) {
     const cardsTall = has ? (await cardsNow()).tall : 0;
     const screenFull = has ? await chooser.first().evaluate((el) => el.offsetHeight) : 0;
     const listFull = Math.max(listLow, Math.min(screenFull, cardsTall));
-    // A short list, its highest barely above Low, is thrown up once, then flicked back down from
-    // there on its own check below.
-    const isShort = listFull - listLow < 120;
+    // A short list, its highest too near Low for a gentle throw (200 px) to stop short of it, is
+    // thrown up once, then flicked back down from there on its own check below.
+    const isShort = listFull - listLow < 320;
     const gentle = has && !isShort ? await listThrown(12, 30) : null;
     const hard = has ? await listThrown(4, 16, !isShort) : null;
     // Raised, its names drawn whole may stand taller than at Low: its highest is its cards then.
@@ -4066,6 +4107,16 @@ if (runsPart(3)) {
     const isPicked = async () =>
       (await wanted.count()) > 0 && (await wantedCard.getAttribute('data-state')) === 'selected';
     const wantedName = wantedCard.locator('[data-testid="chooser-select"]');
+    // At Low the list shows its first card's top alone (80, 4884:38931): a card further down is
+    // brought into reach as a person does, a finger raising the list until it shows, held, no throw.
+    const reachInList = async (target) => {
+      const box = await target.first().boundingBox();
+      const vh = page.viewportSize()?.height ?? 844;
+      const list = await chooser.first().boundingBox();
+      if (!box || !list || box.y + box.height <= vh - 8) return;
+      await fingerPan(list.x + 24, list.y + 24, 0, -(box.y + box.height - vh + 120));
+      await cardsSettled(page);
+    };
     // At Low a tap on a card opens its trip straight away, as it would higher up (the owner,
     // 2026-11-22); elsewhere on the list it raises it a third.
     const listAt = async () => chooser.first().getAttribute('data-snap');
@@ -4076,7 +4127,7 @@ if (runsPart(3)) {
       // comes with no touch before it, as a keyboard's does, and a keyboard's click picks at Low
       // by design.
       const topCard = chooser.first().locator('[data-testid="chooser-origin"]').first();
-      // What Low shows of it, above the list's foot: its header, its place and its first row,
+      // What Low shows of it: its header and its place, its rows below Low's 80;
       // each what a finger at its centre touches.
       const lowShows = await topCard.evaluate((card) => {
         // `within`: what a finger touches there is `el`, or, for the header, which the place's
@@ -4094,8 +4145,8 @@ if (runsPart(3)) {
         };
       });
       check(
-        "  at Low, the first card's header, place and first row show above the list's foot",
-        lowShows.header && lowShows.place && lowShows.firstRow,
+        "  at Low, the first card's header and place show (Figma's Low, 4884:38931)",
+        lowShows.header && lowShows.place,
         JSON.stringify(lowShows),
       );
       await touchTap(
@@ -4116,6 +4167,7 @@ if (runsPart(3)) {
     const firstRowId = (await wanted.count())
       ? await firstRow.getAttribute('data-direction')
       : null;
+    await reachInList(wantedName);
     await buttonTap(wantedName, async () => (await trip().count()) > 0);
     const litOpened = (await litIds(page)) ?? [];
     check(
@@ -4128,6 +4180,7 @@ if (runsPart(3)) {
     );
     await leaveTrip(listShown);
     // A row opens its own trip; leaving it brings the list back at rest.
+    await reachInList(wanted);
     await buttonTap(wanted, async () => (await trip().count()) > 0);
     // The trip card takes the list's place, and the list stays behind it,
     // hidden, for the trip's ‹ (the owner's frames, 2026-09-28).

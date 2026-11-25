@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 20736748,
+  "kind": "jeepney",
+  "ref": "316",
+  "name": "Ayala–Washington",
+  "from": "Washington Street",
+  "to": "Ayala",
+  "network": "LTFRB National Capital Region",
+  "operator": "Makati City Unified Transport Service Cooperative",
+  "version": 3,
+  "last_edit": "2026-08-31",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",121.01038,14.55851,"Washington Turning Point"],["platform",121.01151,14.55963,"Chino Roces"],["platform",121.0127,14.56022,"Chino Roces"],["platform",121.01387,14.56076,"Urban Avenue"],["platform",121.01747,14.55901,"Salcedo Village"],["platform",121.02034,14.55713,"Paseo de Roxas"],["platform",121.02235,14.55583,"Makati Stock Exchange"],["platform",121.02669,14.5528,"Ayala Center"],["platform_exit_only",121.02818,14.55097,"One Ayala"]],
+  "line": [[121.01009,14.55833],[121.00984,14.55889],[121.01355,14.56074],[121.01452,14.56107],[121.01494,14.56114],[121.0152,14.56108],[121.01549,14.56086],[121.01591,14.56024],[121.01687,14.55949],[121.02566,14.55374],[121.0273,14.55234],[121.02888,14.55066],[121.02862,14.55043],[121.02816,14.55096]]
+}

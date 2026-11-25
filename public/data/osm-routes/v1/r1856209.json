@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 1856209,
+  "kind": "jeepney",
+  "ref": "Calamba-UPLB",
+  "name": "PUJ: Calamba → UP Los Baños",
+  "from": "Calamba",
+  "to": "UP Los Baños",
+  "network": "PH:PUJ:Laguna",
+  "operator": "",
+  "version": 42,
+  "last_edit": "2026-10-28",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform",121.16165,14.19799,"St. John and Paul Colleges"],["platform",121.16314,14.1962,"Chipeco Avenue"],["platform",121.16691,14.19184,"Letran Calamba"],["platform",121.1702,14.18796,"Bucal Bypass Road"],["platform",121.18379,14.17821,"Pansol"],["platform",121.18751,14.17629,"Miramonte Village"],["platform",121.19975,14.17308,"Bagong Kalsada"],["platform",121.2074,14.17071,"Park Merced"],["platform",121.21355,14.17303,"Eldridge"],["platform",121.21487,14.17302,"Purok Dampalit"],["platform",121.22205,14.17738,"PCAARRD"],["platform",121.22253,14.17809,"Los Baños Central School"],["platform",121.22472,14.18081,"Los Baños"],["platform",121.23953,14.17883,"Olivarez"],["platform",121.2426,14.17668,"El Danda"],["platform",121.24295,14.17532,"BPI Family Savings Bank"],["platform",121.24311,14.17477,""],["platform",121.24317,14.17311,"CDLB"],["platform",121.24317,14.17247,"Agapita"],["platform",121.24349,14.17095,"LBDH"],["platform",121.24375,14.17041,"LB Centtro"],["platform",121.24428,14.16898,"Demarses/LB Square"],["platform",121.24403,14.16855,"Grove"],["platform",121.24374,14.16814,"Vega"],["platform",121.24324,14.17414,"Lopez Elementary School"]],
+  "line": [[121.1557,14.20598],[121.16168,14.19802],[121.16767,14.19102],[121.16958,14.18889],[121.17094,14.18721],[121.17167,14.18617],[121.17198,14.18551],[121.17227,14.18515],[121.17412,14.18401],[121.17981,14.1803],[121.18755,14.17636],[121.19165,14.17341],[121.19201,14.17327],[121.19245,14.17326],[121.19567,14.17368],[121.19745,14.17374],[121.20001,14.17309],[121.20145,14.17204],[121.20392,14.17149],[121.20595,14.17057],[121.20639,14.17054],[121.20794,14.17089],[121.20871,14.17079],[121.20903,14.17083],[121.20969,14.17106],[121.20993,14.17123],[121.21066,14.17284],[121.2111,14.1732],[121.21148,14.17325],[121.21228,14.17321],[121.21453,14.17298],[121.2149,14.17308],[121.21813,14.17446],[121.21842,14.1748],[121.21948,14.17648],[121.21983,14.17685],[121.22309,14.17774],[121.22372,14.17812],[121.2242,14.17873],[121.22479,14.18052],[121.22513,14.18101],[121.22561,14.18119],[121.22616,14.18129],[121.23018,14.18142],[121.23246,14.18138],[121.23291,14.18126],[121.2353,14.17998],[121.23728,14.17927],[121.23803,14.17909],[121.24068,14.17875],[121.24221,14.17841],[121.24323,14.17441],[121.2433,14.17151],[121.24436,14.1692],[121.24431,14.16897],[121.24332,14.16739]]
+}

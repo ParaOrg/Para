@@ -5,15 +5,16 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  TRADITIONAL,
+  CAROUSEL,
   fareFor,
   fareForKm,
   manilaDate,
-  peso,
-  pesoRange,
   rideFare,
   ruleOn,
+  rulesFor,
+  TRADITIONAL,
 } from '../../src/features/routes/model/fares.ts';
+import { peso, pesoRange } from '../../src/features/routes/model/peso.ts';
 import { kmLabel } from '../../src/shared/utils/geo.ts';
 
 const [y2023, y2026] = TRADITIONAL;
@@ -119,4 +120,25 @@ test('the Distance tile: to a tenth, no space', () => {
   assert.equal(kmLabel(940), '0.9km');
   assert.equal(kmLabel(960), '1.0km');
   assert.equal(kmLabel(3_000), '3.0km');
+});
+
+// The EDSA Carousel (LTFRB, effective 2026-09-28): ₱18.00 for the first 5 km and ₱2.98 for each
+// km after; discounted 20% off, ₱14.40 + ₱2.38, rounded to the 25 centavos.
+test('the EDSA Carousel: ₱18 for the first 5 km, discounted ₱14.50 as LTFRB prints it', () => {
+  const { rule } = ruleOn('2026-11-25', CAROUSEL);
+  assert.deepEqual(fareForKm(0, rule), { regular: 1800, discounted: 1450 });
+  assert.deepEqual(fareForKm(5, rule), { regular: 1800, discounted: 1450 });
+  // 6 km: 18.00 + 2.98 = 20.98, to the quarter 21.00; discounted 16.784, to 16.75.
+  assert.deepEqual(fareForKm(6, rule), { regular: 2100, discounted: 1675 });
+  // 10 km: 18.00 + 5 × 2.98 = 32.90, to 33.00; discounted 26.32, to 26.25.
+  assert.deepEqual(fareForKm(10, rule), { regular: 3300, discounted: 2625 });
+});
+
+test('the Carousel is priced by its own rule, a jeep by the jeepney guide, a bus by none', () => {
+  assert.equal(rulesFor('busway'), CAROUSEL);
+  assert.equal(rulesFor('jeepney'), TRADITIONAL);
+  assert.equal(rulesFor('bus'), null);
+  assert.equal(rideFare('busway', 3000, '2026-11-25'), '₱18');
+  assert.equal(rideFare('busway', 3000, '2026-11-25', 'discounted'), '₱14–15');
+  assert.equal(rideFare('busway', 3000, '2026-09-27'), undefined);
 });

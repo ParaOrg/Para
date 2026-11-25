@@ -81,6 +81,7 @@ import { AssembleError, assembleMap, publishedAtOf, sourceRevisionsOf } from './
 import { databaseConfig, databaseReader } from './read-database.mjs';
 import { boardsNamed, sortBoards } from './signboard-files.mjs';
 import { dataPaths, readPrevious, writeBoards, writeLines, writeMapFiles } from './write-files.mjs';
+import { BUSWAY, withoutLines } from './without-lines.mjs';
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 
 /** Says why, sets the exit code and stops. Not process.exit(): on Windows, Node 24 asserts when that runs with a fetch timeout still pending. */
@@ -156,7 +157,16 @@ try {
   if (e instanceof AssembleError) fail(e.message);
   throw e;
 }
-const { variants, stops, links, overviews, stats } = assembled;
+const { overviews, stats } = assembled;
+// The EDSA Carousel stays out of every file, its lines and its stations too, until a shape is made
+// for it (without-lines.mjs, BUSWAY): no installed app's schema knows its mode.
+const shown = withoutLines(assembled, BUSWAY);
+const { variants, stops, links } = shown;
+if (shown.ids.variants.size || shown.ids.stops.size) {
+  console.log(
+    `Left out of every file (EDSA Carousel): ${shown.ids.variants.size} direction(s), ${shown.ids.stops.size} station(s).`,
+  );
+}
 
 // The old shapes, for installed apps, without what they do not know
 // (shapes.mjs, without-lines.mjs): an app from before servedBy would paint a
@@ -177,7 +187,10 @@ if (!FORCE) {
   if (refusals.length) fail(refusals.map((r) => `FAIL  ${r}`).join('\n'));
 }
 
-const sourceRevisions = sourceRevisionsOf(directionRows, hotspotRows);
+const sourceRevisions = sourceRevisionsOf(
+  directionRows.filter((row) => !shown.ids.variants.has(row.id)),
+  hotspotRows.filter((row) => !shown.ids.stops.has(row.id)),
+);
 const indexContext = { overviews, boardsOf, sourceRevisions };
 const published_at = publishedAtOf({
   prior: previous.v5 ?? previous.v4,

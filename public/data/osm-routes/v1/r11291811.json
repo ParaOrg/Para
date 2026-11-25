@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 11291811,
+  "kind": "jeepney",
+  "ref": "3140",
+  "name": "Lealtad–Quiapo (Barbosa) via Lepanto",
+  "from": "Lealtad",
+  "to": "Quiapo",
+  "network": "LTFRB National Capital Region",
+  "operator": "FEJODAP Transport Service Corporation",
+  "version": 18,
+  "last_edit": "2026-09-12",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",121.00067,14.6135,"Plaza Noli"],["platform",121.00005,14.61214,"Matimyas"],["platform",120.99878,14.61108,"E. Quintos"],["platform",120.99615,14.6087,"Maria Cristina"],["platform",120.9944,14.60712,"Extremadura"],["platform",120.99243,14.60731,"F. Cayco"],["platform",120.99028,14.60536,"P. Noval"],["platform",120.98889,14.60325,"University of the East"],["platform",120.98659,14.59858,"Manuel L. Quezon University"],["platform_exit_only",120.98449,14.59761,"Quiapo (Barbosa) Turning Point"]],
+  "line": [[121.00071,14.61346],[121.00058,14.6132],[121.00056,14.61287],[121.00071,14.61236],[120.99983,14.61199],[120.99375,14.60645],[120.99272,14.60751],[120.98948,14.60458],[120.98918,14.60374],[120.98744,14.60048],[120.9888,14.59949],[120.9887,14.59937],[120.98489,14.59783],[120.98478,14.59724],[120.98439,14.5973],[120.98445,14.59762]]
+}

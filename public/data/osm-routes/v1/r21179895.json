@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 21179895,
+  "kind": "jeepney",
+  "ref": "386",
+  "name": "Del Pan–Guadalupe Ibabaw via Mabini",
+  "from": "Del Pan",
+  "to": "Guadalupe",
+  "network": "LTFRB National Capital Region",
+  "operator": "A. Francisco-Puregold-Hulo Tatawid-Guadalupe Transport Service Cooperative",
+  "version": 3,
+  "last_edit": "2026-09-12",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",121.01258,14.57437,"Puregold Makati Terminal"],["platform",121.01381,14.57165,"Kalayaan & Pasong Tirad"],["platform",121.01656,14.56935,"Zapote"],["platform",121.01845,14.56849,"South Avenue"],["platform",121.02031,14.5678,"J. B. Roxas"],["platform",121.02208,14.56715,"Pililia"],["platform",121.02377,14.56701,"Kalayaan–N. Garcia"],["platform",121.02428,14.56848,"Asuncion"],["platform",121.02575,14.57122,"Hormiga"],["platform",121.02764,14.57124,"Angono"],["platform",121.02944,14.5698,"E. Zobel"],["platform",121.03105,14.56897,"Makati-Mandaluyong Bridge"],["platform",121.03315,14.5673,"Hulo Tatawid"],["platform",121.03485,14.56684,"Villena"],["platform",121.03694,14.5667,"Rockwell"],["platform",121.03936,14.5674,"Camia"],["platform",121.04178,14.56736,"Carballo"],["platform",121.04409,14.56807,"Guadalupe Cloverleaf"],["platform",121.04448,14.56563,"Guadalupe Ibabaw MRT Terminal"]],
+  "line": [[121.01253,14.57437],[121.01262,14.57447],[121.01287,14.57416],[121.01356,14.57283],[121.01392,14.5725],[121.0136,14.57191],[121.01503,14.57056],[121.01601,14.56975],[121.01674,14.56929],[121.01756,14.56888],[121.02358,14.56665],[121.02476,14.57004],[121.02652,14.57223],[121.02965,14.56968],[121.02997,14.57],[121.03256,14.56755],[121.03293,14.56754],[121.03367,14.56694],[121.03388,14.56688],[121.03459,14.56692],[121.03669,14.56672],[121.03956,14.56751],[121.04214,14.56744],[121.04397,14.56809],[121.04438,14.56817],[121.04463,14.56802],[121.04487,14.56761],[121.04533,14.56743],[121.04546,14.56724],[121.04503,14.56564],[121.04475,14.56567],[121.04447,14.56559]]
+}

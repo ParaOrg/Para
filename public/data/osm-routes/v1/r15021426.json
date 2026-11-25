@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 15021426,
+  "kind": "jeepney",
+  "ref": "T259",
+  "name": "Balara–Philcoa via Tandang Sora",
+  "from": "Balara",
+  "to": "Philcoa",
+  "network": "LTFRB National Capital Region",
+  "operator": "",
+  "version": 7,
+  "last_edit": "2026-08-06",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",121.07465,14.65154,"UP Town Center"],["platform",121.0746,14.65703,"Magsaysay Avenue"],["platform",121.07606,14.66047,"Capitol Hills"],["platform",121.07329,14.66398,"Luzon Avenue Flyover South"],["platform",121.07634,14.66901,"Diliman Doctors Hospital"],["platform",121.07543,14.66909,"Diliman Doctors Hospital"],["platform",121.07093,14.66612,"Luzon Avenue"],["platform",121.06874,14.66467,"Tandang Sora Avenue"],["platform",121.06354,14.66117,"Central Avenue"],["platform",121.0578,14.65737,"UP Ayala Techno Hub"],["platform",121.05282,14.65411,"Philcoa"]],
+  "line": [[121.07447,14.65078],[121.07461,14.65091],[121.0746,14.65261],[121.07451,14.65339],[121.07459,14.65469],[121.07453,14.65766],[121.07482,14.65803],[121.07608,14.65914],[121.07627,14.65946],[121.07623,14.65992],[121.07504,14.66243],[121.07447,14.66314],[121.07369,14.66372],[121.0719,14.66466],[121.07089,14.66501],[121.0708,14.66494],[121.07086,14.66479],[121.07145,14.66459],[121.07145,14.66444],[121.06961,14.66394],[121.06886,14.66395],[121.07097,14.66546],[121.07502,14.66818],[121.07659,14.6694],[121.07871,14.67142],[121.08019,14.67306],[121.0817,14.67508],[121.08222,14.67603],[121.08215,14.67614],[121.08207,14.67612],[121.08174,14.67559],[121.08155,14.67546],[121.08023,14.67361],[121.07905,14.67222],[121.07758,14.67073],[121.07577,14.66919],[121.07183,14.66649],[121.07036,14.66555],[121.06998,14.66542],[121.06877,14.66463],[121.06673,14.66321],[121.06643,14.66292],[121.06489,14.66189],[121.0641,14.66152],[121.06366,14.66123],[121.06308,14.66067],[121.05889,14.65791],[121.05834,14.65771],[121.05781,14.65736],[121.05735,14.65691],[121.05382,14.65461],[121.05283,14.65409],[121.05264,14.6539]]
+}

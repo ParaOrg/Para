@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 10183828,
+  "kind": "bus",
+  "ref": "33",
+  "name": "Route 33: Starmall SJDM–North EDSA",
+  "from": "Fairview",
+  "to": "North EDSA",
+  "network": "LTFRB National Capital Region",
+  "operator": "Pascual Liner",
+  "version": 99,
+  "last_edit": "2026-09-01",
+  "clipped": false,
+  "provenance": {"source:ref":"LTFRB Memorandum Circular 2022-067","source:ref:2020":"LTFRB Memorandum Circular 2020-019"},
+  "gaps": [],
+  "stops": [["platform_entry_only",121.05466,14.7345,"Novaliches Public Terminal"],["platform",121.04027,14.71663,"Novaliches Elementary School"],["platform",121.03866,14.70752,"SM City Novaliches"],["platform",121.0325,14.69681,"T. Carreon Street"],["platform",121.0285,14.68966,"Quirino–Mindanao Avenue"],["platform",121.03119,14.6875,"Old Sauyo Road"],["platform",121.03185,14.68159,"D. Muñoz Street"],["platform",121.03196,14.67755,"Tandang Sora Intersection"],["platform",121.03212,14.6715,"Road 20"],["platform",121.03278,14.66916,"Dr. Montano Hospital"],["platform",121.03504,14.66643,"Puregold Mindanao Avenue"],["platform",121.03526,14.65595,"Road 1"],["platform_entry_only",121.02899,14.65622,"SM City North EDSA"]],
+  "line": [[121.05462,14.73478],[121.05474,14.73438],[121.05413,14.73411],[121.05084,14.73308],[121.05047,14.73289],[121.04816,14.73126],[121.04774,14.73114],[121.04508,14.7307],[121.04182,14.72843],[121.04139,14.72686],[121.0412,14.72584],[121.04145,14.72326],[121.04167,14.72226],[121.04134,14.72204],[121.03954,14.7218],[121.04031,14.71695],[121.04046,14.71538],[121.03974,14.7116],[121.03898,14.7083],[121.03886,14.70824],[121.03855,14.70684],[121.03855,14.70654],[121.03778,14.70485],[121.03651,14.70289],[121.03507,14.70103],[121.0343,14.69963],[121.03107,14.69448],[121.02987,14.69292],[121.02771,14.69046],[121.02881,14.68945],[121.03008,14.68871],[121.03074,14.68819],[121.0312,14.68765],[121.03138,14.68725],[121.03174,14.6852],[121.03186,14.68363],[121.03204,14.67721],[121.03195,14.67649],[121.03204,14.673],[121.03217,14.67245],[121.03228,14.67067],[121.03259,14.66971],[121.03301,14.66893],[121.03342,14.66838],[121.03508,14.66653],[121.03582,14.66541],[121.03627,14.66442],[121.03652,14.66332],[121.0366,14.66243],[121.03656,14.6615],[121.03641,14.66053],[121.03509,14.65462],[121.03081,14.65556],[121.03013,14.65587],[121.02971,14.65581],[121.02899,14.65597],[121.02896,14.65629]]
+}

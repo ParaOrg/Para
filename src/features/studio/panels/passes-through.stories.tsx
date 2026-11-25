@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { expect, within } from 'storybook/test';
+import { expect, fn, userEvent, within } from 'storybook/test';
 
 import { groupBySignboard, type ListedDirection } from './hotspot-checks';
 import { PassesThrough } from './passes-through';
@@ -56,6 +56,39 @@ export const Empty: Story = {
     await expect(
       within(canvasElement).getByText(/No saved route passes under this outline yet/),
     ).toBeVisible();
+  },
+};
+
+/**
+ * A plain hintuan, with the choice to mark it an EDSA Carousel station: ticked, only the Carousel's
+ * routes pass under it (servedBy), and no jeep.
+ */
+export const CarouselStationChoice: Story = {
+  args: { station: null, onStationChange: fn() },
+  play: async ({ args, canvasElement }) => {
+    const box = within(canvasElement).getByRole('checkbox', { name: /EDSA Carousel station/ });
+    await expect(box).not.toBeChecked();
+    await userEvent.click(box);
+    await expect(args.onStationChange).toHaveBeenCalledWith('EDSA-C');
+  },
+};
+
+/** Marked an EDSA Carousel station: unticking it makes it a plain hintuan again. */
+export const CarouselStation: Story = {
+  args: { station: 'EDSA-C', onStationChange: fn() },
+  play: async ({ args, canvasElement }) => {
+    const box = within(canvasElement).getByRole('checkbox', { name: /EDSA Carousel station/ });
+    await expect(box).toBeChecked();
+    await userEvent.click(box);
+    await expect(args.onStationChange).toHaveBeenCalledWith(null);
+  },
+};
+
+/** A train's station: its line came with its import, so there is no Carousel choice. */
+export const TrainStation: Story = {
+  args: { station: 'MRT-3', onStationChange: fn() },
+  play: async ({ canvasElement }) => {
+    await expect(within(canvasElement).queryByRole('checkbox')).toBeNull();
   },
 };
 

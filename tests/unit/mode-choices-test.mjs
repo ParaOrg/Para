@@ -8,11 +8,11 @@ import { modeChoices } from '../../src/features/studio/panels/mode-choices.ts';
 
 const values = (current) => modeChoices(current).map((m) => m.value);
 
-test('a new or ordinary route is offered no P2P, no train and no ferry', () => {
+test('a new or ordinary route is offered no P2P, no train and no ferry, but the EDSA Carousel', () => {
   const offered = values('jeepney');
   assert.ok(!offered.includes('p2p'));
   for (const line of ['lrt', 'mrt', 'ferry']) assert.ok(!offered.includes(line), line);
-  assert.deepEqual(offered, ['jeepney', 'e_jeepney', 'uv_express', 'bus', 'tricycle']);
+  assert.deepEqual(offered, ['jeepney', 'e_jeepney', 'uv_express', 'bus', 'tricycle', 'busway']);
 });
 
 test('a route already saved as P2P still shows it, beside Bus to switch to', () => {

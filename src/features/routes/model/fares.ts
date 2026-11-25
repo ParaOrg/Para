@@ -1,3 +1,4 @@
+import { pesoRange } from './peso';
 import type { TransportMode } from './routes';
 
 /**
@@ -43,6 +44,22 @@ export const TRADITIONAL: FareRule[] = [
   },
 ];
 
+/**
+ * The EDSA Carousel (the busway), newest last: LTFRB's matrix effective 2026-09-28, ₱18.00 for
+ * the first 5 km and ₱2.98 for each km after; discounted ₱14.40 + ₱2.38, the same 20% off, so the
+ * add-on method above prices it. Rounded to the 25 centavos, the discounted minimum is ₱14.50, as
+ * LTFRB's published grid prints it. Sources: PTV News, 28 Sep 2026; DZRH, 30 Sep 2026.
+ */
+export const CAROUSEL: FareRule[] = [
+  {
+    from: '2026-09-28',
+    minimum: 1800,
+    minimumKm: 5,
+    perKm: 298,
+    source: 'LTFRB EDSA Carousel fare matrix effective 28 Sep 2026',
+  },
+];
+
 const DISCOUNT = 0.2;
 const ROUND_TO = 25;
 /** How long after a change the card warns that some jeeps still charge the old fare (§1.6). */
@@ -85,25 +102,19 @@ export function fareFor(metres: number, rule: FareRule) {
   return { low, high };
 }
 
-/** The modes this rule prices. An e-jeepney's class depends on its aircon, which the route does not record. */
-export function hasFareRule(mode: TransportMode | undefined): boolean {
-  return mode === 'jeepney';
-}
-
-/** `₱14`, `₱18.50`. */
-export function peso(centavos: number): string {
-  return centavos % 100 === 0 ? `₱${centavos / 100}` : `₱${(centavos / 100).toFixed(2)}`;
-}
-
 /**
- * `₱26` or `₱26–28`, in whole pesos: the low end rounded down, the high end
- * up, so the range still holds the fare — a discounted ₱19.25–20.75 is
- * `₱19–21`: the cards never show decimals (the owner's rule).
+ * The fare rules that price a mode: the traditional jeepney's, the EDSA Carousel's; none for the
+ * rest. An e-jeepney's class depends on its aircon, which the route does not record.
  */
-export function pesoRange(low: number, high: number): string {
-  const lo = Math.floor(low / 100);
-  const hi = Math.ceil(high / 100);
-  return lo === hi ? `₱${lo}` : `₱${lo}–${hi}`;
+export function rulesFor(mode: TransportMode | undefined): FareRule[] | null {
+  if (mode === 'jeepney') return TRADITIONAL;
+  if (mode === 'busway') return CAROUSEL;
+  return null;
+}
+
+/** Whether a fare rule prices the mode. */
+export function hasFareRule(mode: TransportMode | undefined): boolean {
+  return rulesFor(mode) !== null;
 }
 
 /**
@@ -123,8 +134,9 @@ export function rideFare(
   date = manilaDate(),
   kind: 'regular' | 'discounted' = 'regular',
 ): string | undefined {
-  const today = ruleOn(date);
-  if (!today || !hasFareRule(mode)) return undefined;
+  const rules = rulesFor(mode);
+  const today = rules && ruleOn(date, rules);
+  if (!today) return undefined;
   const { low, high } = fareFor(metres, today.rule);
   return pesoRange(low[kind], high[kind]);
 }

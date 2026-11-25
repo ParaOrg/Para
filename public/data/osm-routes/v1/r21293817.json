@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 21293817,
+  "kind": "jeepney",
+  "ref": "327",
+  "name": "Baclaran–Divisoria via Mabini",
+  "from": "Blumentritt",
+  "to": "PITX",
+  "network": "LTFRB National Capital Region",
+  "operator": "Alabang Transport Service Cooperative;Bacoor Transport Service & Multipurpose Cooperative",
+  "version": 5,
+  "last_edit": "2026-11-19",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",120.97305,14.60125,"Plaza Lorenzo Ruiz"],["platform",120.97432,14.59894,"Rentas"],["platform",120.97521,14.59744,"Dasmariñas"],["platform",120.97872,14.59339,"Anda"],["platform",120.98067,14.5891,"Manila City Hall"],["platform",120.9797,14.58556,"Padre Burgos & General Luna"],["platform",120.97828,14.58535,"Juan Luna Monument"],["platform",120.97927,14.58466,"Maria Orosa & Padre Burgos"],["platform",120.98027,14.58342,"Luneta (Ma. Orosa)"],["platform",120.97899,14.57993,"M.H. del Pilar & T.M. Kalaw"],["platform",120.97982,14.57817,"Ermita Shrine"],["platform",120.98026,14.57729,"M.H. del Pilar & Padre Faura"],["platform",120.98133,14.5751,"M.H. del Pilar & R. Salas"],["platform",120.98186,14.57399,"Pedro Gil Park"],["platform",120.98332,14.57102,"M.H. del Pilar & Sinagoga"],["platform",120.9839,14.5698,"M.H. del Pilar & Remedios"],["platform",120.98479,14.56804,"M.H. del Pilar & San Andres"],["platform",120.98613,14.56528,"M.H. del Pilar & Quirino"],["platform",120.98828,14.56224,"Bangko Sentral ng Pilpinas"],["platform",120.98965,14.55959,"Mabini & P. Ocampo"],["platform",120.99087,14.55652,"Harrison & Sinciego"],["platform",120.99177,14.55359,"Harrison & Gil Puyat"],["platform",120.99267,14.55054,"Harrison & M. Santos"],["platform",120.99429,14.54431,"Pasay City Hall"],["platform",120.99491,14.54165,"School of the Deaf"],["platform",120.99539,14.53937,"Harrison & Ignacio"],["platform",120.99566,14.53801,"Harrison & EDSA"],["platform",120.99018,14.52338,"Ayala Malls Manila Bay"],["platform_exit_only",120.99074,14.50931,"PITX"]],
+  "line": [[120.97299,14.60121],[120.97152,14.6036],[120.97033,14.60568],[120.97103,14.60595],[120.97446,14.60468],[120.97417,14.60348],[120.97402,14.60244],[120.97368,14.60109],[120.97338,14.60083],[120.97338,14.60065],[120.97562,14.59681],[120.9764,14.59706],[120.97672,14.59676],[120.97826,14.59406],[120.97879,14.59341],[120.97964,14.59262],[120.98005,14.59206],[120.98018,14.59176],[120.98061,14.5904],[120.98068,14.58952],[120.98092,14.58859],[120.98037,14.58647],[120.98023,14.58609],[120.97998,14.58572],[120.97934,14.58527],[120.97841,14.58581],[120.97828,14.58571],[120.97841,14.58492],[120.97855,14.58484],[120.97928,14.5847],[120.9797,14.58443],[120.98115,14.58201],[120.97867,14.58062],[120.9841,14.56948],[120.98493,14.5679],[120.98636,14.5648],[120.98687,14.56504],[120.98944,14.56019],[120.99047,14.55775],[120.99104,14.55613],[120.99194,14.55317],[120.9903,14.55266],[120.99023,14.55251],[120.99035,14.55241],[120.99202,14.55293],[120.99255,14.55121],[120.99421,14.54481],[120.99514,14.54078],[120.99573,14.53787],[120.99421,14.53761],[120.98885,14.53636],[120.98941,14.53246],[120.99038,14.52408],[120.99012,14.52405],[120.99027,14.52272],[120.9906,14.52249],[120.99077,14.52093],[120.99062,14.51739],[120.99016,14.5137],[120.99005,14.51304],[120.98943,14.51099],[120.991,14.51059],[120.99119,14.51124],[120.9913,14.51231],[120.99156,14.51235],[120.99207,14.5122],[120.99215,14.51208],[120.9909,14.50734],[120.99017,14.50759],[120.99072,14.50931]]
+}

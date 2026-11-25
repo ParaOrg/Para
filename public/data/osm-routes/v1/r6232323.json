@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 6232323,
+  "kind": "jeepney",
+  "ref": "3113",
+  "name": "EDSA Shaw–Kalentong/JRC",
+  "from": "JRU / JRC",
+  "to": "Starmall",
+  "network": "LTFRB National Capital Region",
+  "operator": "Mandaluyong Transport Service Cooperative",
+  "version": 38,
+  "last_edit": "2026-09-01",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",121.02898,14.59298,"JRU"],["platform",121.03028,14.59203,"Armand B. Fabella"],["platform",121.03406,14.59032,"Araullo"],["platform",121.0348,14.58979,"Acacia Lane"],["platform",121.0384,14.58946,"Luna Mencias"],["platform",121.04254,14.58883,"Puregold Shaw"],["platform",121.04527,14.58776,"SM Cherry Foodarama"],["platform",121.04685,14.58681,"Old Wack Wack"],["platform",121.04805,14.58585,"Governor's Place"],["platform_exit_only",121.05197,14.58251,"Starmall EDSA-Shaw"]],
+  "line": [[121.02901,14.59298],[121.02904,14.59278],[121.02988,14.59229],[121.03432,14.59025],[121.03538,14.58943],[121.04011,14.58953],[121.04217,14.58904],[121.04499,14.58799],[121.04643,14.58729],[121.04936,14.58488],[121.05198,14.58252]]
+}

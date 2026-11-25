@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 2721967,
+  "kind": "jeepney",
+  "ref": "",
+  "name": "MACAJEDAI PUJ: Canlubang → Calamba",
+  "from": "Canlubang",
+  "to": "Calamba",
+  "network": "PH:PUJ:Laguna",
+  "operator": "MACAJEDAI",
+  "version": 15,
+  "last_edit": "2025-12-08",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [[25,79]],
+  "stops": [],
+  "line": [[121.11122,14.21334],[121.11422,14.21233],[121.1156,14.21215],[121.11828,14.21126],[121.11883,14.21129],[121.12088,14.21166],[121.12372,14.21148],[121.12792,14.21199],[121.13056,14.2119],[121.13303,14.21194],[121.13406,14.21214],[121.13482,14.21244],[121.1375,14.21431],[121.138,14.21471],[121.14104,14.218],[121.14148,14.21821],[121.15001,14.21431],[121.15086,14.2138],[121.15183,14.21281],[121.15365,14.21073],[121.15394,14.21029],[121.15413,14.20958],[121.15455,14.20671],[121.15466,14.20686],[121.15483,14.20687],[121.15446,14.20741],[121.15455,14.20671],[121.15459,14.20632]]
+}

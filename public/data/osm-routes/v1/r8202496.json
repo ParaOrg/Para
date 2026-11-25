@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 8202496,
+  "kind": "jeepney",
+  "ref": "412",
+  "name": "Las Piñas (Bamboo Organ)–SM Southmall",
+  "from": "SM Southmall",
+  "to": "Las Piñas/Bamboo Organ Church",
+  "network": "LTFRB National Capital Region",
+  "operator": "Great Power Movers Transportation Corporation",
+  "version": 21,
+  "last_edit": "2026-08-18",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform",121.00843,14.43614,"IPI"],["platform",121.00629,14.43725,"Moonwalk"],["platform",121.00463,14.43823,"Puregold Las Piñas"],["platform",121.00362,14.4387,"Talon"],["platform",121.00038,14.44047,"Admiral"],["platform",120.99799,14.44189,"Robinson Place Las Piñas"],["platform",120.994,14.44509,"Crossing Casimiro"],["platform",120.99412,14.44688,"Emapalico/Zarate Hospital"],["platform",120.99422,14.44868,"Francisco Motors"],["platform",120.99429,14.45047,"Casimiro Village/Dow Chemical"],["platform",120.99349,14.45207,"Villa Miranda"],["platform",120.99394,14.45422,"Belisario/O.B. Montessori"],["platform",120.99461,14.45653,"Southville International School/Las Piñas Doctors/CAA High School"],["platform",120.99477,14.46017,"CAA"],["platform",120.99099,14.46234,"Emerald"],["platform",120.98841,14.46344,"Saint Joseph/Puregold"],["platform",120.9845,14.46508,"River Drive"],["platform",120.98304,14.46632,"Doña Julita"],["platform",120.9814,14.46787,"Veraville 1/Aurora Drive"],["platform",120.97921,14.46977,"Mapayapa Village"],["platform",120.9778,14.47094,"San Urbano Arcade"],["platform",120.97865,14.47361,"C-5 Extension"],["platform",120.97831,14.47546,"Las Piñas Elementary School"],["platform",120.97773,14.47673,"Casa de Sequoia"],["platform",120.97966,14.47896,"Elias Aldana"],["platform_entry_only",120.98138,14.48064,"Bamboo Organ Church"]],
+  "line": [[121.01279,14.43342],[121.01222,14.43395],[121.0112,14.4346],[121.01057,14.43488],[121.00254,14.43919],[120.99833,14.44153],[120.99679,14.44273],[120.99386,14.44461],[120.99402,14.44618],[120.9942,14.45061],[120.99411,14.45096],[120.99323,14.45241],[120.99317,14.45299],[120.99335,14.45367],[120.99401,14.45441],[120.99448,14.45545],[120.99475,14.46069],[120.99434,14.46071],[120.99383,14.46114],[120.99341,14.46122],[120.99055,14.4625],[120.98463,14.46497],[120.98342,14.46555],[120.98318,14.4658],[120.98292,14.46647],[120.9818,14.46761],[120.98082,14.46814],[120.98004,14.46898],[120.97962,14.46929],[120.97887,14.47006],[120.97745,14.47115],[120.97873,14.47387],[120.97841,14.47399],[120.97821,14.47419],[120.97828,14.47524],[120.97823,14.47571],[120.97749,14.47701],[120.97749,14.47723],[120.97944,14.47883],[120.98156,14.48089]]
+}

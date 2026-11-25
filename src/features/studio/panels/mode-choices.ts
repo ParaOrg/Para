@@ -1,3 +1,4 @@
+import { lineOfMode } from '@/features/routes/model/busway';
 import { isLineMode, MODES, type TransportMode } from '@/features/routes/model/routes';
 
 /**
@@ -8,13 +9,14 @@ import { isLineMode, MODES, type TransportMode } from '@/features/routes/model/r
 const RETIRED_MODES: readonly TransportMode[] = ['p2p'];
 
 /**
- * The Transportation mode picker's choices for a route whose mode is `current`. A line, a
- * train's or the ferry's, comes in by its import, with its line named: one drawn here would
- * have none and stop nowhere. A retired mode is not offered. Either stays listed for the route
- * that already has it.
+ * The Transportation mode picker's choices for a route whose mode is `current`. A train's or the
+ * ferry's line comes in by its import, with its line named: one drawn here would have none and
+ * stop nowhere. The EDSA Carousel is drawn here, since its mode names its line (lineOfMode). A
+ * retired mode is not offered. Either stays listed for the route that already has it.
  */
 export function modeChoices(current: TransportMode): { value: TransportMode; label: string }[] {
-  return MODES.filter(
-    (m) => m.value === current || (!isLineMode(m.value) && !RETIRED_MODES.includes(m.value)),
-  );
+  return MODES.filter((m) => m.value === current || (isDrawable(m.value) && !isRetired(m.value)));
 }
+
+const isDrawable = (mode: TransportMode) => !isLineMode(mode) || lineOfMode(mode) !== null;
+const isRetired = (mode: TransportMode) => RETIRED_MODES.includes(mode);

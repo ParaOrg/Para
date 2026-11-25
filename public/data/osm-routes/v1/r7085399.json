@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 7085399,
+  "kind": "jeepney",
+  "ref": "3200",
+  "name": "Pantranco–UP",
+  "from": "UP Campus",
+  "to": "Pantranco",
+  "network": "LTFRB National Capital Region",
+  "operator": "Aguila Transport Service Cooperative",
+  "version": 59,
+  "last_edit": "2026-08-06",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",121.07316,14.65573,"School of Economics"],["platform",121.0728,14.65679,"Romulo Hall"],["platform",121.07177,14.65948,"F. Agoncillo Street"],["platform",121.07023,14.65947,"UP Shopping Center 1"],["platform",121.06849,14.65886,"Kalayaan Residence Hall"],["platform",121.06501,14.65767,"Ylanan Street"],["platform",121.06246,14.65776,"School of Urban and Regional Planning"],["platform",121.06203,14.65503,"UP Checkpoint"],["platform",121.05282,14.65411,"Philcoa"],["platform",121.05055,14.65388,"Department of Agrarian Reform"],["platform",121.04859,14.65456,"Department of Agriculture"],["platform",121.04541,14.64937,"Lung Center of the Philippines"],["platform",121.04178,14.64709,"Philippine Children's Medical Center"],["platform",121.03639,14.64369,"EDSA–Quezon Avenue"],["platform",121.03225,14.64121,"Examiner Street"],["platform",121.02963,14.63956,"Scout Borromeo Street"],["platform",121.02664,14.6377,"Delta Intersection"],["platform",121.02506,14.63676,"Delta Intersection"],["platform",121.0219,14.63478,"Scout Magbanua"],["platform_exit_only",121.02031,14.63378,"Fisher Mall"]],
+  "line": [[121.07308,14.65571],[121.07276,14.65616],[121.07272,14.65945],[121.06854,14.65942],[121.06857,14.65755],[121.0648,14.65758],[121.06373,14.65768],[121.06236,14.65769],[121.06233,14.65496],[121.05665,14.65488],[121.05599,14.65489],[121.05575,14.65497],[121.05569,14.65513],[121.05576,14.6553],[121.05759,14.65651],[121.058,14.65692],[121.05804,14.65709],[121.05791,14.65719],[121.05768,14.65713],[121.05382,14.65461],[121.05283,14.65409],[121.05264,14.6539],[121.05266,14.65373],[121.05167,14.65315],[121.05116,14.65315],[121.05039,14.65386],[121.04956,14.65426],[121.04873,14.65438],[121.04787,14.65424],[121.0475,14.65405],[121.04718,14.65378],[121.04676,14.65325],[121.04661,14.65292],[121.04652,14.65244],[121.04652,14.65176],[121.04663,14.65119],[121.04681,14.65069],[121.04666,14.65021],[121.0465,14.64997],[121.03455,14.64247],[121.02015,14.63362]]
+}

@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 21109625,
+  "kind": "jeepney",
+  "ref": "",
+  "name": "MCU–Navotas via P. Aquino",
+  "from": "MCU",
+  "to": "Navotas",
+  "network": "LTFRB National Capital Region",
+  "operator": "Daanghari Modern Jeepney Transport Service Cooperative",
+  "version": 2,
+  "last_edit": "2026-08-06",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform",120.98587,14.65739,"MCU (EDSA)"],["platform",120.98199,14.65723,"Lapu-Lapu"],["platform",120.97989,14.65725,"Heroes del '96"],["platform",120.97801,14.65749,"Gomburza Elementary School"],["platform",120.97585,14.6578,"University of the East"],["platform",120.97396,14.65759,"PNR Caloocan Station"],["platform",120.97226,14.65784,"SM Center Sangandaan"],["platform",120.97051,14.65816,"Sangandaan Police Sub-Station 4"],["platform",120.96794,14.65859,"Buklod ng Nayon"],["platform",120.96332,14.65934,"Malabon City Landmark (P. Aquino)"],["platform",120.96112,14.65969,"P. Aquino–Dagat-Dagatan"],["platform",120.95894,14.66003,"Our Lady of Lourdes Memorial Park"],["platform",120.95629,14.66028,"Sanciangko"],["platform",120.95406,14.65935,"Magsaysay"],["platform",120.95141,14.65809,"Malabon City Hall"],["platform",120.95126,14.65662,"Malabon Market (F. Sevilla)"],["platform",120.9509,14.65593,"Malabon Market (Estrella)"],["platform",120.94864,14.6551,"Navotas East"],["platform",120.94778,14.65732,"Navotas City Police"],["platform",120.94754,14.6581,"Navotas City Hall"],["platform",120.94703,14.65916,"Puregold Navotas"],["platform",120.9463,14.66071,"Navotas City Hospital"],["platform",120.94529,14.66315,"San Jose de Navotas Parish"],["platform",120.94485,14.66425,"Governor Pascual High School"],["platform",120.94424,14.66684,"T. Gonzales"],["platform",120.94303,14.66853,"Ignacio"],["platform",120.94198,14.67,"Daang Hari"],["platform",120.93989,14.67153,"Navotas Shipyard"],["platform",120.93763,14.67219,"San Roque Parish"],["platform_exit_only",120.93511,14.67321,"Tangos"]],
+  "line": [[120.98587,14.6573],[120.98448,14.65729],[120.9843,14.65732],[120.98414,14.65746],[120.98397,14.65749],[120.98376,14.65742],[120.98344,14.65716],[120.98039,14.65717],[120.97872,14.65731],[120.97684,14.65759],[120.97617,14.65777],[120.97447,14.6575],[120.9729,14.65761],[120.97132,14.65798],[120.9674,14.65863],[120.95661,14.66032],[120.95249,14.65865],[120.95124,14.65791],[120.95071,14.65794],[120.95067,14.65769],[120.95083,14.65749],[120.951,14.65743],[120.95149,14.65617],[120.94872,14.65486],[120.94824,14.65589],[120.94727,14.65854],[120.94612,14.66101],[120.9448,14.66427],[120.94468,14.66468],[120.94469,14.66605],[120.94463,14.66625],[120.94343,14.66777],[120.94213,14.6698],[120.94148,14.67038],[120.94075,14.67087],[120.94021,14.67138],[120.93916,14.67179],[120.93723,14.67228],[120.9351,14.67319]]
+}

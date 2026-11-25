@@ -21,6 +21,7 @@ export const RAILWAY_LIVERY = {
   'LRT-2': 'light-rail-way-two',
   'MRT-3': 'metro-rail-way-three',
   Ferry: 'ferry',
+  'EDSA Carousel': 'edsa-carousel',
 } as const satisfies Record<RailwayVehicle, string>;
 type RailwayLivery = (typeof RAILWAY_LIVERY)[RailwayVehicle];
 

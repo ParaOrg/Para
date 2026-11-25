@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 9552779,
+  "kind": "bus",
+  "ref": "33",
+  "name": "Route 33: Starmall SJDM–North EDSA",
+  "from": "North EDSA",
+  "to": "Starmall SJDM",
+  "network": "LTFRB National Capital Region",
+  "operator": "Mega Manila Consortium Corporation",
+  "version": 132,
+  "last_edit": "2026-09-01",
+  "clipped": false,
+  "provenance": {"source:ref":"LTFRB Memorandum Circular 2022-067","source:ref:2020":"LTFRB Memorandum Circular 2020-019"},
+  "gaps": [],
+  "stops": [["platform_entry_only",121.02899,14.65622,"SM City North EDSA"],["platform",121.01999,14.65937,"Abra Street"],["platform",121.02258,14.66355,"Shorthorn Street"],["platform",121.02957,14.66526,"Senatorial Drive"],["platform",121.03314,14.66915,"Metro North Medical Center and Hospital"],["platform",121.03226,14.67753,"Tandang Sora Intersection"],["platform",121.03215,14.68202,"D. Muñoz Street"],["platform",121.03051,14.68869,"Old Sauyo Road"],["platform",121.02835,14.69102,"Quirino–Mindanao Avenue"],["platform",121.03013,14.69306,"Don Julio Gregorio Street"],["platform",121.03278,14.69696,"T. Carreon Street"],["platform",121.03555,14.70154,"Rockville Avenue"],["platform",121.03883,14.70718,"SM City Novaliches"],["platform",121.0404,14.71671,"Novaliches Elementary School"],["platform",121.04032,14.72182,"Novaliches Plaza Mall"],["platform",121.04289,14.72911,"Greenfield Subdivision"],["platform",121.04921,14.73191,"Zabarte–Sacred Heart Intersection"],["platform_exit_only",121.0556,14.73378,"Landers Fairview"],["platform_exit_only",121.0586,14.72714,"Toyota Fairview"],["platform_exit_only",121.05661,14.73497,"SM City Fairview"]],
+  "line": [[121.02899,14.65597],[121.02896,14.65629],[121.02874,14.65634],[121.02857,14.65628],[121.02852,14.65608],[121.02185,14.65754],[121.01995,14.65778],[121.01985,14.65789],[121.01983,14.65821],[121.02025,14.66215],[121.02046,14.66262],[121.02093,14.66309],[121.02157,14.66337],[121.02641,14.6646],[121.02912,14.66522],[121.03177,14.66598],[121.03221,14.66619],[121.0329,14.66667],[121.03404,14.66794],[121.03328,14.66884],[121.03281,14.66962],[121.03254,14.67033],[121.03237,14.67126],[121.03234,14.67229],[121.03244,14.67298],[121.03236,14.67641],[121.0322,14.6772],[121.03204,14.68351],[121.03193,14.68512],[121.03155,14.68731],[121.03124,14.68786],[121.03077,14.68838],[121.03026,14.68879],[121.02892,14.68964],[121.02815,14.6905],[121.0281,14.6907],[121.02818,14.69086],[121.03006,14.69304],[121.03121,14.69455],[121.03387,14.6988],[121.03507,14.70103],[121.03651,14.70289],[121.03778,14.70485],[121.03854,14.70644],[121.03974,14.7116],[121.04046,14.71538],[121.04031,14.71695],[121.03954,14.7218],[121.04134,14.72204],[121.04167,14.72226],[121.04145,14.72326],[121.0412,14.72584],[121.04139,14.72686],[121.04182,14.72843],[121.04508,14.7307],[121.04809,14.73123],[121.04849,14.73146],[121.05047,14.73289],[121.05084,14.73308],[121.05413,14.73411],[121.05474,14.73438],[121.05533,14.73447],[121.05557,14.73432],[121.0557,14.734],[121.05548,14.73206],[121.05546,14.73059],[121.05552,14.73032],[121.05803,14.72671],[121.06125,14.72967],[121.06127,14.73453],[121.06121,14.73533],[121.05811,14.73526],[121.05636,14.73478]]
+}

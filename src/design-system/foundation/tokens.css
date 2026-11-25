@@ -707,6 +707,7 @@
  *   card/LRTOne/fill               --card-lrt-one-fill
  *   card/LRTTwo/fill               --card-lrt-two-fill
  *   card/MRTThree/fill             --card-mrt-three-fill
+ *   card/EDSACarousel/fill         --card-edsa-carousel-fill
  */
 @theme {
   --color-neutral-1: #fcfcfc;
@@ -878,6 +879,7 @@
   --card-uv-express-fill: var(--color-neutral-5);
   --card-bus-fill: var(--color-orange-11);
   --card-ferry-fill: var(--color-ferry-9);
+  --card-edsa-carousel-fill: var(--color-red-11);
   --card-lrt-one-fill: var(--color-light-rail-way-one-9);
   --card-lrt-two-fill: var(--color-light-rail-way-two-9);
   --card-mrt-three-fill: var(--color-metro-rail-way-three-9);
@@ -912,6 +914,7 @@
   --color-card-uv-express-fill: var(--card-uv-express-fill);
   --color-card-bus-fill: var(--card-bus-fill);
   --color-card-ferry-fill: var(--card-ferry-fill);
+  --color-card-edsa-carousel-fill: var(--card-edsa-carousel-fill);
   --color-card-lrt-one-fill: var(--card-lrt-one-fill);
   --color-card-lrt-two-fill: var(--card-lrt-two-fill);
   --color-card-mrt-three-fill: var(--card-mrt-three-fill);

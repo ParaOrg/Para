@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 21385927,
+  "kind": "jeepney",
+  "ref": "324",
+  "name": "Baclaran–Dapitan via Mabini",
+  "from": "PITX",
+  "to": "Dapitan",
+  "network": "LTFRB National Capital Region",
+  "operator": "Metrowide Transport Cooperative",
+  "version": 2,
+  "last_edit": "2026-11-19",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [[52,254],[56,689]],
+  "stops": [["platform_entry_only",120.99179,14.51175,"PITX"],["platform",120.99381,14.52014,"MIA Road"],["platform",120.99358,14.53163,"Baclaran"],["platform",120.99342,14.53594,"Courtyard Hotel"],["platform",120.99568,14.53623,"Harrison"],["platform",120.99569,14.53825,"Harrison & EDSA"],["platform",120.99547,14.53951,"Harrison & Ignacio"],["platform",120.99503,14.54147,"School of the Deaf"],["platform",120.99448,14.54388,"Pasay City Hall"],["platform",120.99399,14.54598,"Harrison & Arnaiz"],["platform",120.99338,14.54819,"Harrison & Williams"],["platform",120.99282,14.55033,"Harrison & M. Santos"],["platform",120.99224,14.55235,"Harrison & Villaruel"],["platform",120.99096,14.55659,"Harrison & Sinciego"],["platform",120.98966,14.55981,"Mabini & P. Ocampo"],["platform",120.98853,14.56198,"Bangko Sentral ng Pilpinas"],["platform",120.98665,14.56561,"Mabini & Quirino"],["platform",120.98544,14.5684,"Mabini & San Andres"],["platform",120.98469,14.57023,"Mabini & Remedios"],["platform",120.98408,14.5718,"Mabini & Alonzo"],["platform",120.98291,14.57432,"Mabini & Pedro Gil"],["platform",120.98222,14.57553,"R. Salas"],["platform",120.98114,14.578,"Mabini & Padre Faura"],["platform",120.98041,14.57969,"Mabini & United Nations"],["platform",120.98099,14.58255,"Seafarers Center"],["platform",120.98002,14.58448,"Luneta (Maria Orosa)"],["platform",120.98076,14.58715,"National Museum"],["platform",120.9808,14.59107,"Liwasang Bonifacio"],["platform",120.9802,14.59321,"Plaza Lawton"],["platform",120.98467,14.60047,"Quiapo"],["platform",120.98591,14.60679,"Central Market"],["platform",120.9862,14.60938,"A. Mendoza & Dapitan"],["platform",120.98634,14.61132,"A. Mendoza & Laon Laan"],["platform",120.98786,14.61307,"Laon Laan & Concepcion"],["platform",120.9892,14.61442,"Dangwa"],["platform",120.99276,14.61763,"E. Quintos"],["platform",120.99429,14.61903,"Maceda"],["platform",120.9959,14.6205,"Laon Laan Elementary School"],["platform",120.99809,14.6225,"N. Roxas & Dr. Alejos"],["platform_exit_only",120.9992,14.62291,"Suki Market"]],
+  "line": [[120.99172,14.51177],[120.99176,14.5119],[120.99133,14.51199],[120.99142,14.51229],[120.99201,14.51214],[120.99209,14.51203],[120.99153,14.50965],[120.9909,14.50734],[120.98865,14.50809],[120.98917,14.50951],[120.99021,14.51301],[120.9907,14.51692],[120.99111,14.51723],[120.99189,14.51738],[120.99254,14.51745],[120.99333,14.5174],[120.99348,14.51813],[120.99379,14.52208],[120.99383,14.52604],[120.99359,14.52837],[120.99368,14.52914],[120.99304,14.53591],[120.99596,14.53632],[120.99577,14.53762],[120.99732,14.53765],[120.99742,14.53773],[120.99743,14.53787],[120.99573,14.53787],[120.99514,14.54078],[120.99421,14.54481],[120.99255,14.55121],[120.99202,14.55293],[120.99282,14.55316],[120.99393,14.5533],[120.99404,14.55338],[120.99403,14.5535],[120.9939,14.55357],[120.99309,14.55346],[120.99194,14.55317],[120.99069,14.55717],[120.98944,14.56019],[120.98657,14.56561],[120.98364,14.57266],[120.98189,14.57614],[120.97975,14.58105],[120.98122,14.58188],[120.98112,14.58221],[120.97969,14.5848],[120.97966,14.58498],[120.9797,14.58529],[120.98018,14.58574],[120.98045,14.5862],[120.98123,14.58909],[120.98052,14.59126],[120.97957,14.59351],[120.97932,14.59377],[120.97824,14.59456],[120.98123,14.58909],[120.98018,14.59246],[120.9802,14.5928],[120.97996,14.59395],[120.98014,14.59426],[120.98365,14.59655],[120.98381,14.59679],[120.98591,14.60722],[120.98631,14.61158],[120.98676,14.61215],[120.98879,14.61398],[120.98881,14.61409],[120.98929,14.61458],[120.99901,14.6234],[120.99923,14.62295]]
+}

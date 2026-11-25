@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 21273265,
+  "kind": "jeepney",
+  "ref": "T436",
+  "name": "Baclaran–Sucat/SSH via B. Aquino",
+  "from": "Sucat",
+  "to": "Baclaran",
+  "network": "LTFRB National Capital Region",
+  "operator": "San Dionisio Transport Service Cooperative",
+  "version": 2,
+  "last_edit": "2026-09-05",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",121.04861,14.45313,"Sucat Tatawid Terminal"],["platform",121.04396,14.45432,"Sucat Exit"],["platform",121.04124,14.45512,"Goodwill 2 Subdivision"],["platform",121.03814,14.45594,"Loyola Memorial Park"],["platform",121.03493,14.45705,"Santana Grove"],["platform",121.03279,14.45825,"SM BF"],["platform",121.03133,14.45909,"Presidents Avenue"],["platform",121.02922,14.46026,"San Antonio National High School"],["platform",121.02707,14.46135,"Fourth Estate Subdivision"],["platform",121.02475,14.46246,"Manila Memorial Park"],["platform",121.02289,14.46336,"Meliton Espiritu"],["platform",121.0195,14.46504,"San Antonio Intersection"],["platform",121.01379,14.46775,"Greenheights"],["platform",121.01234,14.46849,"N. Lopez"],["platform",121.01101,14.46928,"SM Hypermarket Sucat-Lopez"],["platform",121.00991,14.46993,"Westmount Village"],["platform",121.00742,14.47146,"WalterMart Sucat"],["platform",121.00487,14.47298,"PATTS"],["platform",121.0006,14.47585,"Evacom"],["platform",120.99824,14.47892,"Parañaque National High School"],["platform",120.99734,14.48034,"Olivarez Colleges"],["platform",120.99593,14.48235,"St. Peter Chapels Parañaque"],["platform",120.99376,14.48493,"SM City Sucat"],["platform",120.99153,14.48594,"LRT Dr. Santos Station"],["platform",120.99142,14.48767,"Amvel City"],["platform",120.99179,14.48998,"Kabihasnan"],["platform",120.99226,14.49293,"Airport Citymall"],["platform",120.99278,14.49625,"Irasan"],["platform",120.99484,14.49894,"LRT Ninoy Aquino Station"],["platform",120.99711,14.50002,"Multinational Avenue"],["platform",120.99857,14.50204,"Duty Free"],["platform",121.00145,14.50725,"Pascor"],["platform",121.00214,14.50912,"Rivera Village"],["platform",121.00343,14.51264,"Baltao"],["platform_exit_only",120.99131,14.50929,"PITX LRT Station"],["platform_exit_only",120.99074,14.50931,"PITX"]],
+  "line": [[121.04865,14.45311],[121.0485,14.45291],[121.04772,14.45313],[121.04748,14.45327],[121.04509,14.45386],[121.04394,14.45428],[121.04168,14.45497],[121.03782,14.45593],[121.03559,14.45661],[121.02875,14.46041],[121.01979,14.46487],[121.01628,14.46648],[121.01194,14.46865],[121.00226,14.47448],[121.00123,14.47521],[121.00039,14.47596],[120.99923,14.47732],[120.99711,14.48062],[120.99428,14.48459],[120.99377,14.48489],[120.99269,14.48504],[120.99226,14.48517],[120.99165,14.48565],[120.99141,14.486],[120.99127,14.4865],[120.99132,14.48748],[120.99263,14.4956],[120.99272,14.49645],[120.99258,14.49793],[120.99263,14.49826],[120.99277,14.49847],[120.99315,14.49866],[120.99521,14.49907],[120.99607,14.49935],[120.99692,14.49991],[120.99739,14.50034],[120.99774,14.50079],[121.00079,14.50565],[121.0015,14.50754],[121.00193,14.50845],[121.00254,14.51044],[121.00435,14.51536],[121.00177,14.51665],[121.00111,14.51691],[121.00069,14.51699],[120.99728,14.51706],[120.99276,14.51764],[120.9923,14.51764],[120.99062,14.51739],[120.99011,14.51338],[120.98943,14.51099],[120.991,14.51059],[120.99119,14.51124],[120.9913,14.51231],[120.99156,14.51235],[120.99207,14.5122],[120.99215,14.51206],[120.9909,14.50734],[120.99017,14.50759],[120.99072,14.50931]]
+}

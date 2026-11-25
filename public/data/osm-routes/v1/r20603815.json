@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 20603815,
+  "kind": "jeepney",
+  "ref": "3128",
+  "name": "Guadalupe–L. Guinto via Pedro Gil",
+  "from": "L. Guinto",
+  "to": "Guadalupe",
+  "network": "LTFRB National Capital Region",
+  "operator": "Guadalupe-Pedro Gil Transport Service Cooperative",
+  "version": 6,
+  "last_edit": "2026-09-12",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["stop_exit_only",121.04647,14.56638,"Guadalupe Jeepney Terminal"]],
+  "line": [[120.98926,14.57617],[120.98911,14.57644],[120.99327,14.5782],[120.99489,14.57868],[120.99661,14.57885],[120.9991,14.57868],[121.00145,14.57877],[121.00743,14.58014],[121.00749,14.57996],[121.01106,14.57706],[121.01158,14.57631],[121.01188,14.57536],[121.01293,14.57407],[121.01356,14.57283],[121.01392,14.5725],[121.0136,14.57191],[121.01557,14.57009],[121.01639,14.5695],[121.01756,14.56888],[121.02358,14.56665],[121.02476,14.57004],[121.02652,14.57223],[121.02931,14.57],[121.03078,14.56859],[121.03065,14.56828],[121.03064,14.56773],[121.03146,14.56744],[121.03189,14.5674],[121.03284,14.56756],[121.03358,14.56699],[121.03388,14.56688],[121.03459,14.56692],[121.03669,14.56672],[121.03956,14.56751],[121.04202,14.56742],[121.04397,14.56809],[121.04438,14.56817],[121.04518,14.56815],[121.04684,14.56778],[121.04698,14.56683],[121.04731,14.5662],[121.04743,14.56547],[121.04624,14.56532],[121.04614,14.56607],[121.04682,14.56622],[121.04679,14.56633],[121.04643,14.56639]]
+}

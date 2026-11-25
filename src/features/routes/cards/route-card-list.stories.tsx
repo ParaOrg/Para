@@ -347,12 +347,12 @@ export const SheetFull: Story = {
   },
 };
 
-/** Low, where it opens: the first card's mode and name above the Controller, 240 tall. */
+/** Low, where it opens: the first card's mode and the top of its name, 80 tall (4884:38931). */
 export const SheetLow: Story = {
   play: async ({ canvasElement }) => {
     const sheet = within(canvasElement).getByTestId('chooser');
     await expect(sheet).toHaveAttribute('data-snap', 'low');
-    await expect(sheet).toHaveAttribute('data-low-px', '240');
+    await expect(sheet).toHaveAttribute('data-low-px', '80');
   },
 };
 
@@ -425,16 +425,6 @@ export const SheetLowLongName: Story = {
   play: async ({ canvasElement }) => {
     const name = within(canvasElement).getByText(LONG);
     await waitFor(() => expect(name.getBoundingClientRect().height).toBe(32));
-  },
-};
-
-/** Low with a long place, in a list whose cards fit within Low: all of it, as nothing is cut. */
-export const SheetLowLongNameFits: Story = {
-  args: { routes: longName },
-  play: async ({ canvasElement }) => {
-    const name = within(canvasElement).getByText(LONG);
-    await waitFor(() => expect(name.getBoundingClientRect().height).toBeGreaterThan(32));
-    await expect(within(canvasElement).getByTestId('chooser')).toHaveAttribute('data-snap', 'low');
   },
 };
 

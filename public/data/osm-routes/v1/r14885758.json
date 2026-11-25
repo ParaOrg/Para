@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 14885758,
+  "kind": "jeepney",
+  "ref": "3147",
+  "name": "Libertad–MCU via Mabini",
+  "from": "Libertad",
+  "to": "Manila Central University",
+  "network": "LTFRB National Capital Region",
+  "operator": "Double A Transport Corporation",
+  "version": 26,
+  "last_edit": "2026-11-19",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",120.99429,14.54631,"Arnaiz & Harrison"],["platform",120.99282,14.55033,"Harrison & M. Santos"],["platform",120.99224,14.55235,"Harrison & Villaruel"],["platform",120.99096,14.55659,"Harrison & Sinciego"],["platform",120.98966,14.55981,"Mabini & P. Ocampo"],["platform",120.98853,14.56198,"Bangko Sentral ng Pilpinas"],["platform",120.98665,14.56561,"Mabini & Quirino"],["platform",120.98544,14.5684,"Mabini & San Andres"],["platform",120.98469,14.57023,"Mabini & Remedios"],["platform",120.98408,14.5718,"Mabini & Alonzo"],["platform",120.98291,14.57432,"Mabini & Pedro Gil"],["platform",120.98222,14.57553,"R. Salas"],["platform",120.98114,14.578,"Mabini & Padre Faura"],["platform",120.98041,14.57969,"Mabini & United Nations"],["platform",120.98099,14.58255,"Seafarers Center"],["platform",120.98002,14.58448,"Luneta (Maria Orosa)"],["platform",120.98076,14.58715,"National Museum"],["platform",120.9808,14.59107,"Liwasang Bonifacio"],["platform",120.98005,14.59298,"Plaza Lawton"],["platform",120.98143,14.59932,"LRT Carriedo Station"],["platform",120.98177,14.6012,"Gonzalo Puyat"],["platform",120.98205,14.603,"Recto"],["platform",120.98214,14.60552,"LRT Doroteo Jose Station"],["platform",120.98236,14.60838,"Avenida & Fugoso"],["platform",120.98259,14.61161,"LRT Bambang Station"],["platform",120.98273,14.61395,"San Lazaro Hospital"],["platform",120.9828,14.61639,"LRT Tayuman Station"],["platform",120.98287,14.61834,"Herrera"],["platform",120.98294,14.62123,"A. Lorenzo Jr."],["platform",120.98298,14.62231,"LRT Blumentritt Station"],["platform",120.98303,14.62383,"Avenida & Cavite"],["platform",120.98312,14.62698,"Avenida & Bulacan"],["platform",120.98311,14.62862,"Avenida & Pampanga"],["platform",120.9824,14.62971,"Avenida & Aurora Boulevard"],["platform",120.98125,14.63092,"LRT Abad Santos Station"],["platform",120.98102,14.6331,"Avenida & Abad Santos"],["platform",120.98147,14.63407,"Manila North Cemetery"],["platform",120.9824,14.63598,"LRT R. Papa Station"],["platform",120.98323,14.63776,"Petron Rizal Extension"],["platform",120.98352,14.64028,"2nd Avenue"],["platform",120.98359,14.6422,"3rd Avenue"],["platform",120.98363,14.64339,"4th Avenue"],["platform",120.98369,14.64515,"LRT 5th Avenue Station (Rizal Extension)"],["platform",120.98374,14.64635,"N. Carpio Street"],["platform",120.98377,14.64782,"7th Avenue"],["platform",120.98383,14.64918,"8th Avenue"],["platform",120.98392,14.65219,"10th Avenue"],["platform",120.98398,14.65375,"LRT Monumento Station"],["platform",120.98402,14.65546,"SM City Grand Central"],["platform_exit_only",120.9854,14.65767,"MCU (General R. Simon)"]],
+  "line": [[120.9943,14.54627],[120.99387,14.54613],[120.99255,14.55121],[120.99202,14.55293],[120.99282,14.55316],[120.99393,14.5533],[120.99404,14.55338],[120.99403,14.5535],[120.9939,14.55357],[120.99309,14.55346],[120.99194,14.55317],[120.99069,14.55717],[120.98944,14.56019],[120.98657,14.56561],[120.98364,14.57266],[120.98189,14.57614],[120.97975,14.58105],[120.98122,14.58188],[120.98112,14.58221],[120.97966,14.58493],[120.9797,14.58529],[120.98004,14.58557],[120.98042,14.58612],[120.98123,14.58895],[120.9804,14.59181],[120.98004,14.59275],[120.97983,14.59367],[120.98022,14.59542],[120.98077,14.59881],[120.98089,14.59895],[120.98134,14.59902],[120.9819,14.60235],[120.98199,14.60433],[120.98265,14.61295],[120.9831,14.62801],[120.98305,14.62866],[120.98285,14.62917],[120.98097,14.63126],[120.98077,14.63176],[120.98074,14.63239],[120.98083,14.63279],[120.98304,14.63746],[120.98329,14.63812],[120.98341,14.63868],[120.98401,14.65651],[120.9841,14.65675],[120.98431,14.65698],[120.98435,14.65715],[120.98405,14.65763],[120.98408,14.65872],[120.98543,14.65872],[120.98544,14.65767]]
+}

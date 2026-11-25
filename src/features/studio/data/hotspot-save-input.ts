@@ -27,6 +27,8 @@ export interface SaveHotspotInput {
   directionIds?: string[];
   /** Every saved direction — needed to compute hintuan links and sequences. */
   directions: DirectionRow[];
+  /** Its station line, as the panel set it (an EDSA Carousel station's); absent keeps the one it has. */
+  line?: string | null;
 }
 
 /**

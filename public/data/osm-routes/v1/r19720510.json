@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 19720510,
+  "kind": "bus",
+  "ref": "",
+  "name": "Bustos Tricycle: Bustos → Baliwag",
+  "from": "Bustos",
+  "to": "Baliwag",
+  "network": "",
+  "operator": "ONE BU TODA",
+  "version": 1,
+  "last_edit": "2025-10-16",
+  "clipped": false,
+  "provenance": {"fixme":"Route type"},
+  "gaps": [],
+  "stops": [],
+  "line": [[120.91739,14.95235],[120.91161,14.95478],[120.90956,14.95574],[120.90522,14.95728],[120.9049,14.95748],[120.90517,14.95774],[120.90524,14.95911],[120.90483,14.95914],[120.90442,14.95837],[120.90375,14.95753],[120.90102,14.95517],[120.90111,14.95498],[120.90108,14.95462],[120.90101,14.9545],[120.90082,14.95455],[120.90062,14.95444],[120.90057,14.95426],[120.90063,14.95411]]
+}

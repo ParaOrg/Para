@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 4515957,
+  "kind": "jeepney",
+  "ref": "269",
+  "name": "Katipunan/LRT–North EDSA",
+  "from": "Katipunan Flyover",
+  "to": "SM City North EDSA",
+  "network": "LTFRB National Capital Region",
+  "operator": "Global Electric Transportation Services Cooperative",
+  "version": 71,
+  "last_edit": "2026-10-26",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",121.07425,14.63265,"Katipunan Flyover"],["platform",121.07461,14.63706,"ADMU Gate 2"],["platform",121.0749,14.64315,"Miriam College"],["platform",121.07479,14.64448,"Miriam College"],["platform",121.07457,14.64697,"Santa Maria della Strada Parish"],["platform",121.07456,14.6497,"UP Town Center"],["platform",121.07606,14.66047,"Capitol Hills"],["platform",121.07329,14.66398,"Luzon Avenue Flyover South"],["platform",121.0746,14.65703,"Magsaysay Avenue"],["platform",121.06801,14.672,"Luzon Avenue"],["platform",121.06173,14.67283,"BDO Congressional"],["platform",121.04824,14.6732,"Tandang Sora Avenue"],["platform",121.05324,14.674,"Tierra Verde Subdivision"],["platform",121.03992,14.67129,"Congressional Town Center"],["platform",121.04205,14.67179,"Visayas Avenue"],["platform",121.03504,14.66643,"Puregold Mindanao Avenue"],["platform",121.03646,14.66332,"Road 16"],["platform",121.03526,14.65595,"Road 1"],["platform",121.03462,14.65477,"TriNoma North Entrance"],["platform_entry_only",121.03161,14.65552,"SM North EDSA Transport Terminal"]],
+  "line": [[121.07425,14.63272],[121.07438,14.63282],[121.07456,14.63579],[121.07465,14.64053],[121.07482,14.64334],[121.07447,14.64668],[121.07446,14.65293],[121.07459,14.65469],[121.07451,14.65757],[121.07457,14.65774],[121.07482,14.65803],[121.07608,14.65914],[121.07627,14.65946],[121.07629,14.65969],[121.07504,14.66243],[121.07447,14.66314],[121.07383,14.66364],[121.07222,14.66447],[121.07076,14.66502],[121.0701,14.66565],[121.06895,14.66786],[121.06867,14.66854],[121.06856,14.67191],[121.06719,14.67195],[121.05525,14.67376],[121.05391,14.67392],[121.05274,14.67394],[121.05158,14.67384],[121.05004,14.67352],[121.04901,14.67339],[121.04791,14.67302],[121.03913,14.67105],[121.03738,14.67045],[121.03677,14.67015],[121.03537,14.66927],[121.03469,14.66873],[121.03384,14.6679],[121.03508,14.66653],[121.03582,14.66541],[121.03627,14.66442],[121.03658,14.66273],[121.03659,14.66181],[121.03641,14.66053],[121.03509,14.65462],[121.03258,14.65518],[121.03297,14.65691],[121.03282,14.65708],[121.03205,14.65724],[121.03163,14.65538]]
+}

@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 3316669,
+  "kind": "jeepney",
+  "ref": "404",
+  "name": "Alabang–Zapote",
+  "from": "Alabang",
+  "to": "Zapote",
+  "network": "LTFRB National Capital Region",
+  "operator": "Alabang Transport Service Cooperative",
+  "version": 128,
+  "last_edit": "2026-09-06",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",121.04359,14.41994,"South Station"],["platform",121.03861,14.42277,"Northgate Cyberzone"],["platform",121.03442,14.42377,"Westgate Center"],["platform",121.03127,14.42479,"Alabang Town Center"],["platform",121.02706,14.42661,"Molito"],["platform",121.02462,14.42736,"Alabang Hills Intersection"],["platform",121.01984,14.42839,"Concha Cruz"],["platform",121.01765,14.42873,"T. S. Cruz"],["platform",121.01581,14.43029,"Almanza"],["platform",121.01336,14.43292,"Almanza Elementary School"],["platform",121.01103,14.43473,"SM Southmall"],["platform",121.00843,14.43614,"IPI"],["platform",121.00629,14.43725,"Moonwalk"],["platform",121.00362,14.4387,"Talon"],["platform",121.00221,14.43945,"Parish of the Five Wounds of the Lord"],["platform",121.00038,14.44047,"Admiral"],["platform",120.99799,14.44189,"Robinson Place Las Piñas"],["platform",120.99252,14.44551,"Crossing Casimiro"],["platform",120.98443,14.44844,"Perpetual Las Piñas"],["platform",120.97992,14.4506,"Starmall Las Piñas"],["platform",120.97001,14.4599,"Pamplona"],["platform",120.97543,14.45345,"Doña Manuela"],["platform",120.9695,14.46182,"R. Castillo"],["platform",120.96911,14.46331,"Tramo"],["platform_exit_only",120.96833,14.46558,"Zapote Ilalim"]],
+  "line": [[121.04361,14.41992],[121.04336,14.41979],[121.04202,14.42083],[121.04092,14.42144],[121.04019,14.42166],[121.03952,14.42167],[121.03947,14.42266],[121.03679,14.42298],[121.03623,14.4231],[121.036,14.42324],[121.03391,14.42391],[121.03379,14.42388],[121.03292,14.4241],[121.0317,14.42453],[121.02941,14.42562],[121.02742,14.42645],[121.02602,14.42692],[121.02322,14.42772],[121.02252,14.42791],[121.01764,14.42865],[121.01713,14.42883],[121.01663,14.42928],[121.0126,14.43364],[121.01207,14.43406],[121.0112,14.4346],[121.01057,14.43488],[121.00478,14.43799],[121.00484,14.4381],[121.00454,14.43826],[121.00448,14.43815],[120.99855,14.4414],[120.99679,14.44273],[120.99579,14.44339],[120.99294,14.44519],[120.99134,14.4461],[120.99047,14.44641],[120.98802,14.44688],[120.98161,14.4495],[120.97938,14.45082],[120.97705,14.45226],[120.9715,14.45607],[120.97128,14.45628],[120.97067,14.45768],[120.96988,14.4601],[120.96893,14.46382],[120.96893,14.46401],[120.96826,14.46564]]
+}

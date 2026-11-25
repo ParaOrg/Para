@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 15094013,
+  "kind": "jeepney",
+  "ref": "T434",
+  "name": "Almanza–Baclaran",
+  "from": "Almanza",
+  "to": "Baclaran",
+  "network": "LTFRB National Capital Region",
+  "operator": "Alabang Transport Service Cooperative",
+  "version": 12,
+  "last_edit": "2026-08-24",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",121.01278,14.4332,"SM Southmall"],["platform",121.00843,14.43614,"IPI"],["platform",121.00629,14.43725,"Moonwalk"],["platform",121.00362,14.4387,"Talon"],["platform",121.00221,14.43945,"Parish of the Five Wounds of the Lord"],["platform",121.00038,14.44047,"Admiral"],["platform",120.99799,14.44189,"Robinson Place Las Piñas"],["platform",120.99252,14.44551,"Crossing Casimiro"],["platform",120.98923,14.44675,"Uniwide Metromall"],["platform",120.98443,14.44844,"Perpetual Las Piñas"],["platform",120.98232,14.4493,"Las Piñas City Hall"],["platform",120.97992,14.4506,"Starmall Las Piñas"],["platform",120.97543,14.45345,"Doña Manuela"],["platform",120.97001,14.4599,"Pamplona"],["platform",120.9695,14.46182,"R. Castillo"],["platform",120.96911,14.46331,"Tramo"],["platform",120.96833,14.46558,"Zapote Ilalim"],["platform",120.97015,14.4687,"Maricielo Villas"],["platform",120.97105,14.46965,"Jeannette 1 Gardens"],["platform",120.97265,14.47077,"Bernardo College"],["platform",120.97411,14.47151,"LPGH"],["platform",120.97585,14.47261,"Puregold Pulang Lupa"],["platform",120.97688,14.47339,"Pulang Lupa"],["platform",120.97831,14.47546,"Las Piñas Elementary School"],["platform",120.97773,14.47673,"Casa de Sequoia"],["platform",120.97966,14.47896,"Elias Aldana"],["platform",120.98138,14.48064,"Bamboo Organ Church"],["platform",120.98215,14.48141,"St. Joseph's School"],["platform",120.98395,14.48347,"Manuyo Uno"],["platform",120.98481,14.48485,"INC Lokal ng Manuyo"],["platform",120.98774,14.49184,"Kabihasnan"],["platform",120.98936,14.49583,"San Dionisio Chapel"],["platform",120.9903,14.49801,"Escuelahan de San Dionisio"],["platform",120.9915,14.50024,"Parañaque Public Market"],["platform",120.99263,14.50163,"La Huerta"],["platform",120.99379,14.50487,"Quirino & J. P. Rizal"],["platform",120.99406,14.50612,"Quirino & J. Gabriel"],["platform",120.99446,14.50785,"Divi Mall"],["platform",120.995,14.51019,"Villamar Subdivision"],["platform",120.99568,14.51311,"Meralco Parañaque"],["platform",120.99591,14.51458,"Quirino & C. Santos"],["platform",120.99621,14.51645,"PLDT Parañaque"],["platform_exit_only",120.99131,14.50929,"PITX LRT Station"],["platform_exit_only",120.99074,14.50931,"PITX"]],
+  "line": [[121.01261,14.4332],[121.01279,14.43342],[121.01232,14.43388],[121.01162,14.43436],[121.00165,14.43967],[120.99855,14.4414],[120.99679,14.44273],[120.99579,14.44339],[120.99294,14.44519],[120.99149,14.44602],[120.99047,14.44641],[120.98802,14.44688],[120.98161,14.4495],[120.97737,14.45205],[120.9715,14.45607],[120.97116,14.45647],[120.97061,14.45784],[120.96988,14.4601],[120.96893,14.46382],[120.96893,14.46401],[120.96816,14.46589],[120.96973,14.46794],[120.97022,14.46894],[120.97121,14.46986],[120.9725,14.47074],[120.97517,14.47216],[120.97682,14.47342],[120.97814,14.47423],[120.97821,14.47437],[120.97828,14.47524],[120.97823,14.47571],[120.97749,14.47701],[120.97753,14.47731],[120.97944,14.47883],[120.98187,14.48117],[120.98375,14.48332],[120.98466,14.48463],[120.98679,14.48914],[120.98764,14.49175],[120.98822,14.49323],[120.98923,14.49551],[120.98968,14.49693],[120.99143,14.50008],[120.99135,14.50083],[120.99251,14.50151],[120.99338,14.50365],[120.99364,14.50451],[120.99549,14.51254],[120.99627,14.5172],[120.99276,14.51764],[120.9923,14.51764],[120.99062,14.51739],[120.99011,14.51338],[120.98943,14.51099],[120.991,14.51059],[120.99119,14.51124],[120.9913,14.51231],[120.99156,14.51235],[120.99207,14.5122],[120.99215,14.51206],[120.9909,14.50734],[120.99017,14.50759],[120.99072,14.50931]]
+}

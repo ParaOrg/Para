@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 11533207,
+  "kind": "jeepney",
+  "ref": "375",
+  "name": "Cubao (Diamond)–Roces Super Palengke",
+  "from": "Roces Super Palengke",
+  "to": "Cubao (Diamond)",
+  "network": "LTFRB National Capital Region",
+  "operator": "Pasang Masda",
+  "version": 24,
+  "last_edit": "2026-09-12",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",121.0225,14.63109,"South AA Street"],["platform",121.02585,14.63037,"Scout Reyes Street"],["platform",121.03081,14.62928,"Don Alejandro Roces, Sr. Science and Technology High School"],["platform",121.03365,14.62796,"Marathon Extension"],["platform",121.03438,14.62706,"Kamuning Road"],["platform",121.03487,14.62608,"K-3rd Street"],["platform",121.03651,14.62591,"Tomas Morato Elementary School"],["platform",121.0369,14.6272,"K-1st Street"],["platform",121.03878,14.62772,"Judge D. Jimenez Street"],["platform",121.03926,14.62655,"K-5th Street"],["platform",121.03969,14.62533,"Ermin Garcia Street"],["platform",121.04208,14.62452,"Victory Liner Motorpool"],["platform",121.04545,14.62285,"E. Rodriguez–New York"],["platform",121.04771,14.62168,"Monte de Piedad Street"]],
+  "line": [[121.02251,14.63113],[121.03369,14.62871],[121.03385,14.62847],[121.03357,14.62733],[121.0338,14.62726],[121.03431,14.62743],[121.03469,14.62627],[121.03565,14.62571],[121.03697,14.62611],[121.03665,14.62718],[121.03891,14.62781],[121.03957,14.62567],[121.04008,14.62465],[121.04133,14.6247],[121.04208,14.62458],[121.04256,14.6244],[121.04815,14.62155],[121.04863,14.62116],[121.04888,14.62105],[121.04952,14.62122],[121.05288,14.62268]]
+}
