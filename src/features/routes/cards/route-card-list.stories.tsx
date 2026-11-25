@@ -347,12 +347,12 @@ export const SheetFull: Story = {
   },
 };
 
-/** Low, where it opens: the first card's mode and name above the Controller, 240 tall. */
+/** Low, where it opens: the first card's mode and the top of its name, 80 tall (4884:38931). */
 export const SheetLow: Story = {
   play: async ({ canvasElement }) => {
     const sheet = within(canvasElement).getByTestId('chooser');
     await expect(sheet).toHaveAttribute('data-snap', 'low');
-    await expect(sheet).toHaveAttribute('data-low-px', '240');
+    await expect(sheet).toHaveAttribute('data-low-px', '80');
   },
 };
 

@@ -3,6 +3,7 @@ import type { ReactNode, Ref } from 'react';
 import { BottomSheet, type SheetHeight } from '@/shared/ui/bottom-sheet';
 
 import { RouteListController } from './route-list-controller';
+import { ROUTE_SHEET_SHAPE } from './route-sheet-shape';
 import { TripDetail, type TripDetailProps } from './trip-detail';
 import { TripEndsCard } from './trip-ends-card';
 import { TripMoreRoutes, type OtherRoute } from './trip-more-routes';
@@ -76,8 +77,9 @@ export function TimelineRouteDetailCard({
       onClose={onClose}
       // Docked the map's whole height on the left on a wide screen, as the list is (Figma 4796:33161).
       floats="dock"
-      // Figma draws no notch on the trip's sheet; kept as its one drag cue, the owner to confirm.
-      handle="shown"
+      shape={ROUTE_SHEET_SHAPE}
+      // No notch drawn, as Figma draws none (4885:42925); the handle stays for the keyboard.
+      handle="hidden"
       header={null}
       footer={
         hasController && (
