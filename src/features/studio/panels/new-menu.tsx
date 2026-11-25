@@ -9,7 +9,7 @@ import { AddIcon, RouteLetterIcon } from './new-menu-icons';
 import { useNewMenu } from './use-new-menu';
 import type { HotspotKind } from '../drawing/drawing-types';
 
-type NewChoice = 'route' | HotspotKind;
+type NewChoice = 'route' | 'osm' | HotspotKind;
 
 interface Choice {
   choice: NewChoice;
@@ -27,6 +27,13 @@ const CHOICES: Choice[] = [
     description: 'Lines you can ride by jeep, e-jeep, UV Express or bus.',
     icon: <RouteLetterIcon />,
     // No token holds the route letter's blue yet.
+    iconClassName: 'text-blue-700',
+  },
+  {
+    choice: 'osm',
+    title: 'Route from OSM',
+    description: 'Start a route from an OpenStreetMap route’s line. A placeholder look.',
+    icon: <RouteLetterIcon />,
     iconClassName: 'text-blue-700',
   },
   {
@@ -59,6 +66,8 @@ interface NewMenuProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
   onNewRoute: () => void;
+  /** Start from an OSM route (.scratch/osm-route-start); without it, the choice is not offered. */
+  onNewFromOsm?: () => void;
   onNewHotspot: (kind: HotspotKind) => void;
 }
 
@@ -67,13 +76,21 @@ interface NewMenuProps {
  * a Brand + under the locator's controls that opens LineSelection
  * (4304:21611) beside it — a route, a terminal or a hintuan. Disabled until the map is there to draw on.
  */
-export function NewMenu({ isReady, isOpen, onOpenChange, onNewRoute, onNewHotspot }: NewMenuProps) {
+export function NewMenu({
+  isReady,
+  isOpen,
+  onOpenChange,
+  onNewRoute,
+  onNewFromOsm,
+  onNewHotspot,
+}: NewMenuProps) {
   const menuId = useId();
   const { rootRef, triggerRef, menuRef, handleMenuKeyDown } = useNewMenu(isOpen, onOpenChange);
 
   const handleChoose = (choice: NewChoice) => {
     onOpenChange(false);
     if (choice === 'route') onNewRoute();
+    else if (choice === 'osm') onNewFromOsm?.();
     else onNewHotspot(choice);
   };
 
@@ -92,24 +109,26 @@ export function NewMenu({ isReady, isOpen, onOpenChange, onNewRoute, onNewHotspo
           onKeyDown={handleMenuKeyDown}
           className="flex w-80 max-w-[calc(100cqw-5.25rem)] flex-col gap-1 rounded-2xl bg-surface p-1.5 shadow-sm"
         >
-          {CHOICES.map(({ choice, title, description, icon, iconClassName }) => (
-            <button
-              key={choice}
-              type="button"
-              role="menuitem"
-              tabIndex={-1}
-              onClick={() => handleChoose(choice)}
-              className="flex w-full flex-col rounded-xl p-2 text-left font-sn-pro text-sm/5 hover:bg-surface-secondary focus-visible:bg-surface-secondary"
-            >
-              <span className="flex w-full items-center gap-1">
-                <span aria-hidden className={cn('size-5 shrink-0 *:size-full', iconClassName)}>
-                  {icon}
+          {CHOICES.filter(({ choice }) => choice !== 'osm' || onNewFromOsm).map(
+            ({ choice, title, description, icon, iconClassName }) => (
+              <button
+                key={choice}
+                type="button"
+                role="menuitem"
+                tabIndex={-1}
+                onClick={() => handleChoose(choice)}
+                className="flex w-full flex-col rounded-xl p-2 text-left font-sn-pro text-sm/5 hover:bg-surface-secondary focus-visible:bg-surface-secondary"
+              >
+                <span className="flex w-full items-center gap-1">
+                  <span aria-hidden className={cn('size-5 shrink-0 *:size-full', iconClassName)}>
+                    {icon}
+                  </span>
+                  <span className="flex-1 font-semibold text-content-primary">{title}</span>
                 </span>
-                <span className="flex-1 font-semibold text-content-primary">{title}</span>
-              </span>
-              <span className="text-content-tertiary">{description}</span>
-            </button>
-          ))}
+                <span className="text-content-tertiary">{description}</span>
+              </button>
+            ),
+          )}
         </div>
       )}
       <IconButton

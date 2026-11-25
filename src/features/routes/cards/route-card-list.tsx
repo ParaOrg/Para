@@ -1,7 +1,6 @@
 import type { ComponentProps } from 'react';
 
 import { BottomSheet, type SheetHeight } from '@/shared/ui/bottom-sheet';
-import type { SheetShape } from '@/shared/ui/sheet-gesture';
 import { cn } from '@/shared/utils/cn';
 
 import { listWay } from './list-way';
@@ -9,6 +8,7 @@ import { ModeFilterEmpty } from './mode-filter-empty';
 import { RouteCardStack } from './route-card-stack';
 import { RouteListController } from './route-list-controller';
 import { RouteListHotspotRows } from './route-list-hotspot-rows';
+import { ROUTE_SHEET_SHAPE } from './route-sheet-shape';
 import { listedDepartures, routeCards, type Listing } from '../model/departures';
 import type { Hotspot } from '../model/hotspots';
 import type { Livery } from '../model/liveries';
@@ -53,12 +53,6 @@ interface Props {
    */
   hasController?: boolean;
 }
-
-/**
- * The route list's own Low, its first card's mode and name clear above the Controller (16 + 28 +
- * 8 + 32 over 78, with room to spare), and Max, the whole screen (Figma 4633:25575).
- */
-const LIST_SHAPE: SheetShape = { lowPx: 240, isMaxFull: true };
 
 /**
  * Everything under a tap that hit more than one thing (Figma 4633:25516 on a phone, 4633:22034 on
@@ -127,7 +121,7 @@ export function RouteCardList({
       hidden={hidden}
       height={height}
       floats="dock"
-      shape={LIST_SHAPE}
+      shape={ROUTE_SHEET_SHAPE}
       // At most as tall as its cards: a short list rises no higher than its last card, and only a
       // list taller than the screen scrolls (the owner, 2026-11-23).
       fits

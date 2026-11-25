@@ -388,8 +388,9 @@ try {
     'map-file cache holds /data/index.v6.json',
     !!mapFile && caches[mapFile].some((u) => u.endsWith('/data/index.v6.json')),
   );
-  // OpenFreeMap's style names a TileJSON; Para's own server writes the tiles into the style and
-  // serves the sprite and glyphs under /assets.
+  // OpenFreeMap's style names a TileJSON (/planet, or /backup_planet while it serves from its
+  // backup); Para's own server writes the tiles into the style and serves the sprite and glyphs
+  // under /assets.
   check(
     isOwnTiles
       ? `basemap-meta holds the style and its assets from ${basemapHost}`
@@ -397,7 +398,7 @@ try {
     !!meta &&
       caches[meta].some((u) => u.endsWith('/styles/positron')) &&
       caches[meta].some((u) =>
-        isOwnTiles ? u.startsWith(`${basemapHost}/assets/`) : u.endsWith('/planet'),
+        isOwnTiles ? u.startsWith(`${basemapHost}/assets/`) : /\/(backup_)?planet$/.test(u),
       ),
   );
   const tilesKept = tiles ? caches[tiles].length : 0;
