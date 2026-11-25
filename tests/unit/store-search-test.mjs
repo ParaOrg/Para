@@ -180,22 +180,20 @@ test('over the real files, the read and a search stay quick', async () => {
     assert.ok(stores.length > 100_000, `${stores.length} stores`);
     // Generous for a loaded CI runner; a laptop reads in about a second.
     assert.ok(readMs < 8000, `read in ${Math.round(readMs)} ms`);
-    // Every keystroke of a few searches an editor types: chains, a typo, category words. Each the
-    // fastest of five runs, after one to warm up: what the search costs, not a pause of a busy
-    // runner's (CI runs the formatting check beside these).
+    // Every keystroke of a few searches an editor types: chains, a typo, category words. The
+    // median of three runs each, so one pause of the runner's does not fail it.
     const near = [121.03, 14.65];
     const typed = ['jollibee', 'mercury drug', '7-eleven', 'purgold', 'botika', 'sari-sari', 'atm'];
     let slowest = { ms: 0, query: '' };
     for (const query of typed) {
       for (let end = 1; end <= query.length; end++) {
         const prefix = query.slice(0, end);
-        searchStores(prefix, stores, near);
-        const runs = [0, 1, 2, 3, 4].map(() => {
+        const runs = [0, 1, 2].map(() => {
           const started = performance.now();
           searchStores(prefix, stores, near);
           return performance.now() - started;
         });
-        const ms = Math.min(...runs);
+        const ms = runs.sort((a, b) => a - b)[1];
         if (ms > slowest.ms) slowest = { ms, query: prefix };
       }
     }
