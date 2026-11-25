@@ -12,6 +12,7 @@
     ["o362a0ae3ba1e43e5","restaurant",121.06479,14.82016,"Tatzmania Food & Beverages"],
     ["o3b234654ed654884","restaurant",121.06539,14.81295,"Dunkin'"],
     ["o4ce80b8ce021470f","restaurant",121.0645,14.81119,"Charcoal Resort, Francisco Homes, SJDM, Bulacan"],
+    ["o5f02bf4a2b064036","restaurant",121.05418,14.8313,"Kambal M&H Resto bar"],
     ["o61c54beb0e0f4fa0","restaurant",121.06696,14.80692,"Octopops Takoyakis-Mulawin"],
     ["o69318b9e75b24677","restaurant",121.07174,14.81433,"Jollibee"],
     ["o69d61ad227ac4cf6","restaurant",121.07165,14.81368,"Kuya Jay-J's Starmall"],
@@ -64,6 +65,8 @@
     ["o4e924dfcb79f4abb","dentist",121.06218,14.80443,"Calauor Dental Clinic"],
     ["o6f3b11cbc42943cb","dentist",121.07148,14.81477,"Esgen Dental"],
     ["o7b95e4f81c8d476a","dentist",121.05418,14.83131,"Ramirez Gacayan Dental Clinic"],
+    ["o8f4f543f25d24a45","dentist",121.05826,14.81036,"Tooth aid dental clinic"],
+    ["o94e4e3b4dd504ae0","dentist",121.06712,14.80976,"Oral Glam Dental Clinic"],
     ["oa2f864032ba64ef9","dentist",121.07757,14.82629,"Calauor Dental Clinic"],
     ["oc805c0e8f0b74e63","dentist",121.06828,14.82484,"HealthTeeth by Esgen- Starmall SJDM"],
     ["od0e8474379a047f6","dentist",121.06312,14.80543,"RTV Dental Clinic"],
@@ -77,6 +80,7 @@
     ["o9b6b38f44e5a4792","school",121.09164,14.84168,"Minuyan National High School"],
     ["oa36a518a670e43a7","school",121.0786,14.82626,"DepEd Sto. Cristo Elementary School - 107151"],
     ["oab2fa6ca91194d24","school",121.0574,14.84983,"Bagong Buhay Elementary School"],
+    ["oaef76f52485f4e0f","school",121.06455,14.84777,"Citrus National High School"],
     ["ob7e1ed7d5e264185","school",121.06229,14.80068,"Paradise Farm National High School"],
     ["oc4dece7843e440e4","school",121.06387,14.80104,"Daphney Learning Center Inc."],
     ["oce4d485c070e42cb","school",121.07657,14.83103,"Sto.Cristo Elementary School"],
@@ -85,6 +89,7 @@
     ["of0f9428fb8004bb3","school",121.0616,14.80296,"Francisco Homes Elementary School"],
     ["ofb663fa42a124056","school",121.05847,14.82264,"Kaypian National High School"],
     ["o18d10629cc314694","college",121.07487,14.8198,"FCPC College of Allied Medical Sciences"],
-    ["obb2578ef2b754741","college",121.05711,14.81339,"Bulacan State University Sarmiento Campus",{"brand":"Bulacan State University-Meneses Campus"}]
+    ["obb2578ef2b754741","college",121.05711,14.81339,"Bulacan State University Sarmiento Campus",{"brand":"Bulacan State University-Meneses Campus"}],
+    ["obe493529816a4982","college",121.05516,14.8095,"FCPC College of Education"]
   ]
 }

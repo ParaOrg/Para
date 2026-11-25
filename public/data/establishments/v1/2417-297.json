@@ -4,6 +4,7 @@
   "attribution": "© OpenStreetMap contributors",
   "establishments": [
     ["n3048350542","atm",120.86749,14.88766,"RCBC"],
+    ["n14408040295","atm",120.85127,14.88428,null,{"brand":"7-Eleven"}],
     ["n597014735","bank",120.8676,14.8861,"BPI"],
     ["n2907479096","bank",120.86763,14.88748,"PSBank",{"atm":true}],
     ["n3048350539","bank",120.86768,14.88715,"China Bank Savings"],
@@ -79,6 +80,7 @@
     ["w792451620","convenience",120.85961,14.86656,"7-Eleven"],
     ["w1160715013","convenience",120.85958,14.88613,"7-Eleven"],
     ["w1160715016","convenience",120.85893,14.88556,"Alfamart"],
+    ["w1583502602","convenience",120.85088,14.88421,"7-Eleven"],
     ["n1447940883","supermarket",120.86644,14.881,"Walter Mart Supermarket"],
     ["n3052895550","supermarket",120.86652,14.88026,"Robinsons Supermarket"],
     ["n8224494523","supermarket",120.8667,14.89034,"Savemore"],

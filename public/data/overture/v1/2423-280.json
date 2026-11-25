@@ -25,6 +25,7 @@
     ["oadeb4b0873194467","restaurant",121.19344,14.0234,"Marquez 3 Kings Lomi House"],
     ["oc07522625f614387","restaurant",121.16948,14.00793,"Ipponyari Lipa"],
     ["oc22a96dccf2e47cb","restaurant",121.16431,14.01276,"MVM"],
+    ["ocb6bcfd14d45401e","restaurant",121.16983,14.00901,"Ramen Who"],
     ["odc8fa28e89414e02","restaurant",121.15711,14.04863,"Pan De Salud Malvar"],
     ["oe38363bca1774677","restaurant",121.15796,14.04543,"Mhina's Grill"],
     ["oe5fd749b12724f19","restaurant",121.16946,14.01335,"Asian Flavours"],
@@ -37,6 +38,7 @@
     ["o5503958e87f048a5","fast_food",121.16192,14.02417,"Leng's FoodHouse"],
     ["o8d58101abd3c4f68","fast_food",121.16927,14.00908,"Bellyciao House of Lechon"],
     ["o927235b39f934cd1","fast_food",121.16965,14.00839,"Gilligan's Restaurant Outlet Mall"],
+    ["o9bdbbc751e87437b","fast_food",121.15252,14.00316,"Kuya Ryan's Lomi House"],
     ["oe58fad85024f4b6c","fast_food",121.1516,14.03351,"Jollibee Drive Thru Sto. Tomas",{"brand":"Jollibee"}],
     ["o474fe47d0b554b39","cafe",121.16969,14.00866,"Cafe de Lipa"],
     ["o80f007ab7a4540b1","cafe",121.16425,14.01387,"Coffee Ground"],
@@ -50,9 +52,13 @@
     ["o8cccd34da78e4617","dentist",121.15793,14.04582,"Mariah's Dental Clinic"],
     ["o217c123cde0347c0","school",121.19721,14.02335,"San Luis Elementary School"],
     ["o2716d5219bf44473","school",121.1581,14.03863,"Luta Norte Primary School"],
+    ["o5e855fc08c10409b","school",121.17125,14.00844,"Edustria High School"],
     ["o72bd336af1134631","school",121.15599,14.00658,"Don Julio Leviste MVHS"],
     ["o83a33547e67e4212","school",121.162,14.03631,"Luta Sur Elementary School"],
     ["o92b9fd9b50684ebe","school",121.16827,14.00068,"Bugtongnapulo Elementary School"],
+    ["oaa57b2f0420d4b91","school",121.15704,14.04237,"Malvar Central School"],
+    ["ob3ad60668cc24965","school",121.1841,14.03867,"DepEd Plaridel Elementary School-Lipa City"],
+    ["oe462a83e013a4755","school",121.17667,14.02649,"Immaculate Concepcion Montessori School"],
     ["ob905b67fefad4088","college",121.15818,14.04442,"Batangas State University Malvar",{"brand":"Batangas State University"}]
   ]
 }

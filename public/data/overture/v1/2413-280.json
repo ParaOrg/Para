@@ -3,6 +3,7 @@
   "cell": "2413-280",
   "attribution": "© Overture Maps Foundation",
   "establishments": [
+    ["o473f8985323749b5","restaurant",120.65437,14.03819,"Albie's Pizza"],
     ["o80bc1952d3f743da","restaurant",120.65038,14.04338,"Elpaso Lumbangan Nasugbu Batangas"],
     ["oadf5414b76a046c5","restaurant",120.65146,14.0372,"Bochekee's Food House"],
     ["oe9c1e08213074d2b","restaurant",120.65039,14.0373,"Rax's Restaurant"],
@@ -12,6 +13,7 @@
     ["o89c42676c82742cf","school",120.67739,14.03988,"Bagong Pook Elementary School"],
     ["o9515b4dcd8ff4aab","school",120.6537,14.03682,"Saint Claire Academy"],
     ["ob90b805e082b4f28","school",120.68127,14.04953,"Bilaran Elementary School"],
+    ["obf14203369ef488b","school",120.65099,14.03636,"Lian National High School, Malaruhatan, Lian, Batangas"],
     ["od6f8420dff054e27","school",120.65085,14.03854,"Bagong Pook Elementary School"]
   ]
 }

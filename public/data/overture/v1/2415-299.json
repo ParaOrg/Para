@@ -12,6 +12,7 @@
     ["o9016e06f9b874868","restaurant",120.77009,14.95351,"Frooks Grill"],
     ["o929c697ffba64f23","restaurant",120.77544,14.9592,"Tokyo Tokyo, Marquee Mall"],
     ["o9afb64d8d8874c4c","restaurant",120.75303,14.98412,"Gasyannas seafood hub-pampanga branch"],
+    ["o9d256a94df514e46","restaurant",120.78328,14.999,"Hometown Korean Grill"],
     ["oa075bd47cb6e4aea","restaurant",120.75756,14.96773,"Kimberly Lomi House"],
     ["ob6263f4a29d14ae6","restaurant",120.75882,14.97705,"Total Gas Station"],
     ["oc0f4025348494175","restaurant",120.75896,14.97722,"Pancake House"],
@@ -48,6 +49,7 @@
     ["o6ef0b32d0b754e12","school",120.75787,14.9873,"DepEd Sta. Monica High School"],
     ["ode8470f8a1c44c1c","school",120.77374,14.95069,"Sto Rosario Elementary School"],
     ["oe385ec7302ac47de","school",120.78437,14.97484,"Cansinala National High School"],
-    ["ocdc336c70be74a75","college",120.76083,14.95945,"La Verdad Christian University"]
+    ["ocdc336c70be74a75","college",120.76083,14.95945,"La Verdad Christian University"],
+    ["of641efd267fa4665","college",120.75841,14.95905,"La Verdad Christian College"]
   ]
 }

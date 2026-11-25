@@ -5,6 +5,7 @@
   "establishments": [
     ["o0182df2a41d140bd","restaurant",121.06655,13.74819,"Samgyupado Kumintang Batangas City Branch"],
     ["o4023291005e54435","restaurant",121.07194,13.73668,"Third's Lomihan"],
+    ["o6fbcc96f3dae43ef","restaurant",121.06509,13.74811,"Inyang's Lomi"],
     ["oc321865bf43341b5","restaurant",121.0738,13.71816,"Mickey and Minnie's Eatery"],
     ["odc34e49e9226425d","fast_food",121.06517,13.71522,"Reyan' Boy Self Service Car & Motor Wash"],
     ["o4006b74bce264d9d","cafe",121.07115,13.74018,"Maribelle Julieth's Cafe"],
@@ -13,6 +14,7 @@
     ["o2c1abe316f5747a6","dentist",121.06998,13.74493,"Andaya Dental Clinic"],
     ["oc86970ac464a4fbf","dentist",121.05428,13.74972,"Mandigma's Clinic"],
     ["of2b5cfaa83ba4d4c","dentist",121.06264,13.72761,"Mandigma's Clinic"],
+    ["o06fed08d08df4304","school",121.06462,13.74334,"Libjo National High School"],
     ["o2b9611e0da6543a4","school",121.06244,13.71451,"Tabangao Integrated School"],
     ["o46c4937543234452","school",121.06235,13.71432,"Tabangao Elementary School"],
     ["ob9a39de3b321482b","school",121.06223,13.71466,"Tabangao National High School"],

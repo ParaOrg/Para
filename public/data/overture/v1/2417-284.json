@@ -6,6 +6,8 @@
     ["o32f3de956150494c","restaurant",120.88818,14.24292,"Classic filipino restaurant"],
     ["ob236d3efca1a45a2","restaurant",120.87737,14.21301,"Greenwich"],
     ["of6eb4855db984191","restaurant",120.8905,14.20162,"Papcy's Tapsihan at Paresan"],
+    ["o6050efaf746948a8","cafe",120.87666,14.21829,"Grey Garage Cafe’"],
+    ["o889c003ec3d24909","cafe",120.87666,14.21829,"Kape Bancod"],
     ["oafb0a47c71334496","cafe",120.86235,14.21829,"Bike n Bake"],
     ["o0503c9d5f9a94dc5","clinic",120.85367,14.2315,"Indang Laboratory & Diagnostic Center"],
     ["o1bca802818714001","clinic",120.8665,14.21075,"Doc Jo - An Lying - in Clinic"],
@@ -17,6 +19,8 @@
     ["of27e81462f2a404b","school",120.87385,14.20123,"DepEd Indang Integrated National High School-Senior High School"],
     ["o35a31c2a3ec54ea0","college",120.88168,14.20257,"College of Veterinary Medicine and Biomedical Sciences"],
     ["o56374200272b48cd","college",120.87431,14.20581,"Cavite State University"],
-    ["o8b73f8e04a314e5d","college",120.88192,14.20118,"SM rolle hall CvSU main Campus"]
+    ["o62d5b87cc6ef4ba1","college",120.87666,14.21829,"Cavite State University - College of Criminal Justice"],
+    ["o8b73f8e04a314e5d","college",120.88192,14.20118,"SM rolle hall CvSU main Campus"],
+    ["oa7224f30768b48f5","college",120.87666,14.2183,"Cvsu Main Campus Indang Cavite"]
   ]
 }
