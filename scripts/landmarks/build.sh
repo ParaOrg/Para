@@ -101,3 +101,11 @@ osmium export --overwrite "$work/roads.osm.pbf" -f geojsonseq -o "$work/roads.ge
   "$work/overture.ndjson" "$work/roads.geojsonseq" public/data/overture/v1)
 node --experimental-strip-types "$root/scripts/overture/check.mjs" \
   "$root/public/data/overture/v1" "$root/public/data/establishments/v1"
+
+# The studio's search files (scripts/search/): every Overture store and eatery, drawn or not, from
+# the same release, and the named OSM establishments just written, one file each by licence. The
+# writer checks each and fails the build on a broken one.
+release="$(node -e "console.log(JSON.parse(require('fs').readFileSync('$root/public/data/overture/v1/index.json','utf8')).release)")"
+"${OVERTURE_PYTHON:-python3}" -I "$root/scripts/search/pull-search.py" "$box" "$work/search.ndjson" "$release"
+(cd "$root" && node --experimental-strip-types scripts/search/search-file.mjs \
+  "$work/search.ndjson" public/data/search/v1)

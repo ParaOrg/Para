@@ -4,7 +4,8 @@
 # scripts/landmarks/build.sh rebuilds public/data/landmarks.v1.json,
 # public/data/footbridges.v1.json and public/data/establishments/v1/ (an index and a file per area
 # cell) from the OpenStreetMap Philippines extract, cut to the map's panning box, and
-# public/data/overture/v1/ from Overture's latest Places release. The extract comes from Para's own
+# public/data/overture/v1/ from Overture's latest Places release, with the studio's search files,
+# public/data/search/v1/ (scripts/search/). The extract comes from Para's own
 # copy at osm.para-commute.org (osm-mirror.yml fills it weekly), or from Geofabrik or
 # openstreetmap.fr when the copy fails (scripts/osm-mirror/fetch-extract.sh). When any file
 # changed, the run opens one pull request into staging with the count of each kind, and of
@@ -43,6 +44,7 @@ on:
       - scripts/footbridges/**
       - scripts/establishments/**
       - scripts/overture/**
+      - scripts/search/**
       - src/features/routes/published/establishment-cells.ts
 
 permissions:
@@ -106,13 +108,13 @@ jobs:
           node --experimental-strip-types scripts/establishments/compare.mjs "$RUNNER_TEMP/overture-before" public/data/overture/v1 'Overture places' >> "$RUNNER_TEMP/counts.md"
           # In the log too, so the counts can be read without the run's page.
           tee -a "$GITHUB_STEP_SUMMARY" < "$RUNNER_TEMP/counts.md"
-          git add -N public/data/footbridges.v1.json public/data/establishments public/data/overture
-          if git diff --quiet -- public/data/landmarks.v1.json public/data/footbridges.v1.json public/data/establishments public/data/overture; then
+          git add -N public/data/footbridges.v1.json public/data/establishments public/data/overture public/data/search
+          if git diff --quiet -- public/data/landmarks.v1.json public/data/footbridges.v1.json public/data/establishments public/data/overture public/data/search; then
             echo "The files are unchanged: nothing to open." >> "$GITHUB_STEP_SUMMARY"
           else
             mkdir -p "$RUNNER_TEMP/refresh"
             cp public/data/landmarks.v1.json public/data/footbridges.v1.json "$RUNNER_TEMP/counts.md" "$RUNNER_TEMP/refresh/"
-            cp -r public/data/establishments public/data/overture "$RUNNER_TEMP/refresh/"
+            cp -r public/data/establishments public/data/overture public/data/search "$RUNNER_TEMP/refresh/"
           fi
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         if: github.event_name != 'pull_request'
@@ -156,12 +158,14 @@ jobs:
           cp -r "$RUNNER_TEMP/refresh/establishments" public/data/establishments
           rm -rf public/data/overture
           cp -r "$RUNNER_TEMP/refresh/overture" public/data/overture
+          rm -rf public/data/search
+          cp -r "$RUNNER_TEMP/refresh/search" public/data/search
           extract_at="$(node -e "console.log(JSON.parse(require('fs').readFileSync('public/data/landmarks.v1.json','utf8')).extract_at)")"
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git switch -c "$branch"
           git add public/data/landmarks.v1.json public/data/footbridges.v1.json
-          git add -A public/data/establishments public/data/overture
+          git add -A public/data/establishments public/data/overture public/data/search
           release="$(node -e "console.log(JSON.parse(require('fs').readFileSync('public/data/overture/v1/index.json','utf8')).release)")"
           git commit -m "Landmark, footbridge and establishment files: the OpenStreetMap extract of $extract_at, Overture $release" \
             -m "The monthly refresh (.github/workflows/landmarks.yml), run $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID."
