@@ -2,9 +2,10 @@ import { useId, useRef } from 'react';
 
 import { Button } from '@/design-system/primitives/button';
 import blob from '@/features/routes/cards/route-card-blob-primary.svg';
+import { cn } from '@/shared/utils/cn';
 
 import { LocationIcon, NavigationOffArt, RouteIcon } from './explore-cards-icons';
-import { useDockFoot } from './use-dock-foot';
+import { useExploreSheet } from './use-explore-sheet';
 
 interface ExploreCardsProps {
   /** "Turn on location…" tapped: locate, or bring the camera back (CommuterLocationHandle). */
@@ -14,19 +15,41 @@ interface ExploreCardsProps {
 /**
  * What the public map shows while no route list, place or trip is open (Figma "Show These if no
  * route lists is shown", 4852:35066): Ways to explore our app, then Help make Para better. Along
- * the bottom on a phone (FirstTime, 4848:33680), the locate-me column standing 16 over them; in the
- * top-left corner where the cards float (`@float:`, Desktop RouteCard 4852:35445), 384 wide as the
- * route list's panel. They have no ✕: they go when a card opens and come back when it closes.
+ * the bottom on a phone (FirstCard, 4885:40725 and 4885:41191) they open whole and a drag takes
+ * them to Low and back, resting at one or the other (useExploreSheet), the locate-me column
+ * standing 16 over them; in the top-left corner where the cards float (`@float:`, Desktop
+ * 4879:36258), 384 wide as the route list's panel, still. They have no ✕ and never hide while no
+ * card is open: they go when one opens and come back when it closes.
  */
 export function ExploreCards({ onLocate }: ExploreCardsProps) {
   const own = useRef<HTMLDivElement>(null);
-  useDockFoot(own);
+  const sheet = useExploreSheet(own);
+  const isOpen = sheet.rest === 'open';
   return (
     <div
       ref={own}
       data-testid="explore-cards"
-      className="absolute inset-x-0 bottom-0 z-10 flex flex-col text-text-on-fill @float:top-0 @float:right-auto @float:bottom-auto @float:w-96"
+      data-rest={sheet.rest}
+      onPointerDown={sheet.onPointerDown}
+      onFocus={sheet.onFocus}
+      className={cn(
+        'absolute inset-x-0 bottom-0 z-10 flex touch-none flex-col text-text-on-fill',
+        'translate-y-(--explore-y) motion-reduce:transition-none',
+        !sheet.isDragging && 'transition-[translate] duration-sheet ease-enter',
+        'has-[[data-explore-toggle]:focus-visible]:ring-2 has-[[data-explore-toggle]:focus-visible]:ring-content-inverse has-[[data-explore-toggle]:focus-visible]:ring-inset',
+        '@float:top-0 @float:right-auto @float:bottom-auto @float:w-96 @float:translate-none! @float:touch-auto',
+      )}
     >
+      {/* No notch is drawn (Figma draws none): the keyboard's way to Low and back. */}
+      <button
+        type="button"
+        data-explore-toggle
+        aria-expanded={isOpen}
+        onClick={sheet.toggle}
+        className="sr-only @float:hidden"
+      >
+        {isOpen ? 'Lower these cards' : 'Raise these cards'}
+      </button>
       <WaysToExplore onLocate={onLocate} />
       <DonationCard />
     </div>

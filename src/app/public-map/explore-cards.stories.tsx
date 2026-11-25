@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { expect, fn, within } from 'storybook/test';
+import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
 import { ExploreCards } from './explore-cards';
 
@@ -35,6 +35,30 @@ export const OnPhone: Story = {
     await expect(canvas.getByRole('button', { name: 'Donate' })).toBeDisabled();
     await expect(canvas.getByRole('heading', { name: 'Ways to explore our app' })).toBeVisible();
     await expect(canvas.getByRole('heading', { name: 'Help make Para better' })).toBeVisible();
+  },
+};
+
+/**
+ * Lowered (FirstCard, 4885:40725): 80 of them show, the first card's heading and its first way in,
+ * by a drag or by the keyboard's hidden toggle; the toggle brings them back whole.
+ */
+export const OnPhoneAtLow: Story = {
+  decorators: [mapOf('w-98.25')],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const cards = canvas.getByTestId('explore-cards');
+    const map = cards.parentElement;
+    await expect(cards).toHaveAttribute('data-rest', 'open');
+    await userEvent.click(canvas.getByRole('button', { name: 'Lower these cards' }));
+    await expect(cards).toHaveAttribute('data-rest', 'low');
+    await waitFor(() =>
+      expect(
+        Math.round((map?.getBoundingClientRect().bottom ?? 0) - cards.getBoundingClientRect().top),
+      ).toBe(80),
+    );
+    await expect(map?.style.getPropertyValue('--dock-foot')).toContain('80px');
+    await userEvent.click(canvas.getByRole('button', { name: 'Raise these cards' }));
+    await expect(cards).toHaveAttribute('data-rest', 'open');
   },
 };
 
