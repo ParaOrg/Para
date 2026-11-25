@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 14577543,
+  "kind": "bus",
+  "ref": "MOA-SOF",
+  "name": "MOA–Sofitel Shuttle (northbound)",
+  "from": "Sofitel Philippine Plaza",
+  "to": "Mall of Asia",
+  "network": "LTFRB National Capital Region",
+  "operator": "",
+  "version": 7,
+  "last_edit": "2026-05-14",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["stop_entry_only",120.98071,14.55308,"Sofitel Philippine Plaza"],["stop_exit_only",120.98326,14.53345,"MOA/South Wing"]],
+  "line": [[120.98071,14.55308],[120.98088,14.553],[120.98149,14.55332],[120.98193,14.55256],[120.98269,14.55161],[120.98322,14.55063],[120.98282,14.54966],[120.98213,14.54839],[120.98194,14.54764],[120.98188,14.54689],[120.98216,14.54491],[120.98258,14.54393],[120.98309,14.54196],[120.98175,14.54165],[120.98192,14.53729],[120.98313,14.53733],[120.98326,14.53345]]
+}

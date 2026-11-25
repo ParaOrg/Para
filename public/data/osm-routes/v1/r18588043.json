@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 18588043,
+  "kind": "bus",
+  "ref": "",
+  "name": "Ayala Malls Manila Bay Libreng Sakay PITX Shuttle",
+  "from": "Ayala Malls Manila Bay",
+  "to": "PITX",
+  "network": "",
+  "operator": "",
+  "version": 3,
+  "last_edit": "2026-10-16",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [[15,82]],
+  "stops": [["platform",120.99026,14.52278,"Ayala Malls Manila Bay"],["platform",120.99074,14.50931,"PITX"]],
+  "line": [[120.99017,14.52212],[120.99009,14.52228],[120.99002,14.52294],[120.98989,14.52292],[120.99005,14.52211],[120.9893,14.52204],[120.98918,14.52196],[120.98932,14.52189],[120.99066,14.52202],[120.99072,14.52152],[120.99075,14.52021],[120.99055,14.51679],[120.99011,14.51338],[120.98943,14.51099],[120.99093,14.51052],[120.99036,14.50866],[120.99072,14.50931],[120.99129,14.51126],[120.99136,14.51223],[120.99147,14.51229],[120.99203,14.51213],[120.99209,14.51203],[120.99195,14.51134],[120.99088,14.5073],[120.99006,14.50753],[120.98865,14.50809],[120.98917,14.50951],[120.99021,14.51301],[120.99072,14.51707],[120.99089,14.51778],[120.99095,14.52093],[120.99081,14.52219],[120.99017,14.52212]]
+}

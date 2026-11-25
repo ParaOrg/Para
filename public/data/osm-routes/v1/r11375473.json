@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 11375473,
+  "kind": "jeepney",
+  "ref": "355",
+  "name": "Blumentritt–North Harbor via Divisoria",
+  "from": "Blumentritt",
+  "to": "North Harbor",
+  "network": "LTFRB National Capital Region",
+  "operator": "V.G. Eusebio Transport Corporation",
+  "version": 30,
+  "last_edit": "2026-08-31",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform",120.98193,14.62369,"Mariano Ponce Elementary School"],["platform",120.98077,14.62314,"Severino Reyes"],["platform",120.97855,14.62335,"Abad Santos Railroad Crossing"],["platform",120.97782,14.62143,"Toyota Abad Santos"],["platform",120.97749,14.61896,"Abad Santos & Yuseco"],["platform",120.97726,14.61719,"Abad Santos & Tayuman"],["platform",120.97679,14.61687,"Novo Department Store Tayuman"],["platform",120.97494,14.61717,"Manila Cathedral School"],["platform",120.97343,14.61748,"Tayuman & Dagupan"],["platform",120.97153,14.61788,"Pritil"],["platform",120.97051,14.61755,"Pritil Market"],["platform",120.96933,14.61429,"Peñalosa"],["platform",120.968,14.61042,"Concha"],["platform",120.96732,14.60844,"Isabelo delos Reyes Elementary School"],["platform",120.96672,14.60746,"Plaza Amado V. Hernandez"],["platform",120.96939,14.60528,"Recto–Ylaya"],["platform",120.96846,14.60402,"Santo Cristo"],["platform",120.96693,14.60208,"Asuncion"],["platform",120.9648,14.60034,"M. Lopez Flyover"],["platform",120.96405,14.60295,"Del Pan"],["platform",120.96176,14.60336,"Pier 4"]],
+  "line": [[120.98199,14.62369],[120.98197,14.62297],[120.97814,14.62333],[120.97726,14.61676],[120.9761,14.61689],[120.97457,14.61719],[120.97104,14.61793],[120.97076,14.61809],[120.96958,14.61491],[120.96737,14.60835],[120.96676,14.60761],[120.96688,14.60727],[120.9672,14.60726],[120.96865,14.60592],[120.96963,14.60517],[120.96754,14.60289],[120.9675,14.6025],[120.96486,14.60002],[120.96472,14.60019],[120.96466,14.60078],[120.96451,14.60077],[120.96446,14.6014],[120.9646,14.60142],[120.96445,14.60288],[120.96169,14.60267],[120.96115,14.60943]]
+}

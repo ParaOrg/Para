@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 21302026,
+  "kind": "bus",
+  "ref": "PT1",
+  "name": "Pasig Transport 1: SPED → City Hall",
+  "from": "Caruncho-SPED",
+  "to": "Temporary Pasig City Hall",
+  "network": "Pasig Transport",
+  "operator": "City of Pasig",
+  "version": 1,
+  "last_edit": "2026-08-31",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",121.08144,14.56055,"City Hall"],["platform_exit_only",121.08656,14.59238,"Temporary Pasig City Hall"]],
+  "line": [[121.0836,14.55968],[121.08095,14.56067],[121.08065,14.55983],[121.07756,14.56097],[121.0774,14.56075],[121.07663,14.56086],[121.07673,14.56192],[121.07658,14.56327],[121.07655,14.56451],[121.07599,14.56525],[121.07664,14.56552],[121.07701,14.56579],[121.07766,14.56612],[121.07702,14.56624],[121.07614,14.56609],[121.07663,14.56931],[121.07688,14.57011],[121.0772,14.57094],[121.07918,14.57481],[121.08216,14.57903],[121.08317,14.58074],[121.08381,14.58259],[121.0839,14.58485],[121.08439,14.5863],[121.08493,14.58615],[121.0856,14.58609],[121.08835,14.58558],[121.0888,14.58758],[121.08955,14.59033],[121.09071,14.59023],[121.09093,14.59011],[121.09223,14.58992],[121.0921,14.59041],[121.09102,14.59043],[121.09077,14.59033],[121.08608,14.59072],[121.08606,14.59086],[121.08624,14.59129],[121.08693,14.59251],[121.08658,14.59269],[121.08661,14.59227],[121.08674,14.59218]]
+}

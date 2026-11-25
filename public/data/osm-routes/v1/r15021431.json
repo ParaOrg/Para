@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 15021431,
+  "kind": "jeepney",
+  "ref": "110",
+  "name": "Quirino Highway–UP Town Center",
+  "from": "Quirino Highway",
+  "to": "UP Town Center",
+  "network": "LTFRB National Capital Region",
+  "operator": "Tolfetano Corporation",
+  "version": 15,
+  "last_edit": "2026-08-06",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",121.07465,14.65154,"UP Town Center"],["platform",121.0746,14.65703,"Magsaysay Avenue"],["platform",121.07606,14.66047,"Capitol Hills"],["platform",121.07329,14.66398,"Luzon Avenue Flyover South"],["platform",121.07123,14.66629,"Luzon Avenue"],["platform",121.07634,14.66901,"Diliman Doctors Hospital"],["platform",121.07543,14.66909,"Diliman Doctors Hospital"],["platform",121.07191,14.66588,"Luzon Avenue"],["platform",121.06765,14.66449,"Jollibee Tandang Sora"],["platform",121.06186,14.66662,"Tierra Pura Homes Gate 1"],["platform",121.05819,14.66761,"New Era Elementary School"],["platform",121.05622,14.66804,"Culiat High School"],["platform",121.05006,14.67248,"Cenacle Drive"],["platform",121.0498,14.6733,"Tandang Sora Avenue"],["platform",121.05324,14.674,"Tierra Verde Subdivision"],["platform",121.04841,14.67379,"Philand Intersection"],["platform",121.04716,14.67439,"Pasong Tamo Elementary School"],["platform",121.04569,14.67538,"RMR Square"],["platform",121.04418,14.67604,"Savemore Market Visayas Avenue"],["platform",121.04234,14.67649,"New Yellow Hat Construction Supply"],["platform",121.03752,14.67655,"Gremville"],["platform",121.03492,14.6768,"Banlat Road"],["platform",121.03226,14.67753,"Tandang Sora Intersection"],["platform",121.03196,14.67755,"Tandang Sora Intersection"],["platform",121.0314,14.67744,"Tandang Sora Intersection"],["platform",121.02546,14.67898,"General Avenue"],["platform",121.02314,14.67956,"Magnolia Place"],["platform",121.02137,14.67973,"Dr. Carlos Lanting College"],["platform_exit_only",121.01948,14.68005,"Crossroad Park"]],
+  "line": [[121.0746,14.65154],[121.0746,14.65261],[121.07451,14.65339],[121.07459,14.65469],[121.07453,14.65766],[121.07482,14.65803],[121.07608,14.65914],[121.07627,14.65946],[121.07627,14.65977],[121.07504,14.66243],[121.07447,14.66314],[121.07383,14.66364],[121.07119,14.66497],[121.07094,14.66517],[121.07093,14.66536],[121.07097,14.66546],[121.07536,14.66844],[121.07659,14.6694],[121.07821,14.67093],[121.07954,14.67231],[121.08081,14.67384],[121.0817,14.67508],[121.08222,14.67603],[121.08218,14.67613],[121.08207,14.67612],[121.08174,14.67559],[121.08155,14.67546],[121.08028,14.67368],[121.07905,14.67222],[121.07758,14.67073],[121.0764,14.6697],[121.07394,14.66789],[121.07036,14.66555],[121.06998,14.66542],[121.06799,14.66405],[121.06742,14.66458],[121.06643,14.66511],[121.0654,14.66552],[121.06465,14.66567],[121.06397,14.66555],[121.06375,14.66558],[121.06266,14.6663],[121.06231,14.66643],[121.05992,14.6672],[121.05642,14.66794],[121.05548,14.66825],[121.05312,14.66974],[121.05123,14.67144],[121.04997,14.67245],[121.0491,14.67331],[121.05006,14.67339],[121.05198,14.67375],[121.05298,14.67382],[121.05413,14.67378],[121.05414,14.6739],[121.0533,14.67395],[121.05213,14.6739],[121.04989,14.67349],[121.049,14.67346],[121.04726,14.67429],[121.04506,14.67572],[121.04314,14.67626],[121.04153,14.67661],[121.03981,14.6769],[121.03929,14.67684],[121.03783,14.67648],[121.03575,14.6767],[121.03275,14.67685],[121.03221,14.67704],[121.03213,14.6796],[121.03195,14.6796],[121.03204,14.67712],[121.02895,14.6784],[121.0253,14.67896],[121.02348,14.67946],[121.0217,14.67964],[121.01947,14.68001]]
+}

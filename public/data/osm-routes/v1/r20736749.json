@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 20736749,
+  "kind": "jeepney",
+  "ref": "316",
+  "name": "Ayala–Washington",
+  "from": "Ayala",
+  "to": "Washington",
+  "network": "LTFRB National Capital Region",
+  "operator": "",
+  "version": 3,
+  "last_edit": "2026-08-31",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",121.02818,14.55097,"One Ayala"],["platform",121.02704,14.55286,"Ayala Center"],["platform",121.02305,14.55572,"Makati Stock Exchange"],["platform",121.02032,14.55749,"Paseo de Roxas"],["platform",121.01706,14.55961,"Salcedo Village"],["platform",121.01517,14.56304,"Makati Police Station"],["platform",121.0117,14.5619,"Eton Westend Square"],["platform_exit_only",121.01038,14.55851,"Washington Turning Point"]],
+  "line": [[121.02816,14.55096],[121.02776,14.55141],[121.02812,14.55173],[121.02702,14.55281],[121.02576,14.55385],[121.01697,14.55959],[121.01628,14.56011],[121.01581,14.56065],[121.01566,14.56094],[121.01553,14.56149],[121.01549,14.56212],[121.01574,14.5629],[121.01533,14.56298],[121.01494,14.56296],[121.01389,14.56271],[121.01254,14.56222],[121.01104,14.56148],[121.01145,14.56053],[121.01209,14.55932],[121.01039,14.55848]]
+}

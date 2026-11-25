@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 9453755,
+  "kind": "bus",
+  "ref": "1",
+  "name": "Route 1: EDSA Carousel",
+  "from": "PITX",
+  "to": "Monumento",
+  "network": "LTFRB National Capital Region",
+  "operator": "Mega Manila Consortium Corporation;Jell Transport Inc.",
+  "version": 152,
+  "last_edit": "2026-07-30",
+  "clipped": false,
+  "provenance": {"source:ref":"LTFRB Memorandum Circular 2022-067","source:ref:2020":"LTFRB Memorandum Circular 2020-019"},
+  "gaps": [],
+  "stops": [["stop_entry_only",120.99175,14.51116,"PITX"],["stop",120.99193,14.53693,"Roxas Boulevard"],["stop",120.99945,14.53755,"Taft Avenue"],["stop",121.03528,14.55516,"Buendia"],["stop",121.04603,14.5685,"Guadalupe"],["stop",121.05618,14.5861,"Ortigas"],["stop",121.05609,14.60875,"Santolan"],["stop",121.0537,14.61391,"Main Avenue"],["stop",121.04692,14.62866,"Nepa Q-Mart"],["stop",121.04244,14.63674,"GMA Kamuning"],["stop",121.03923,14.64166,"Quezon Avenue"],["stop",121.03542,14.64751,"Philam QC"],["stop",121.03289,14.65145,"North Avenue"],["stop",121.02813,14.6561,"SM City North EDSA"],["stop",121.01996,14.65771,"Roosevelt"],["stop",121.00515,14.6575,"Balintawak"],["stop",121.01118,14.65759,"Kaingin"],["stop",120.99726,14.65739,"Bagong Barrio"],["stop_exit_only",120.98613,14.65722,"Monumento/MCU"]],
+  "line": [[120.99175,14.51116],[120.99179,14.51068],[120.9909,14.50734],[120.98865,14.50809],[120.98917,14.50951],[120.99021,14.51301],[120.99072,14.51707],[120.99089,14.51778],[120.99095,14.51936],[120.9909,14.51959],[120.9909,14.52154],[120.99042,14.5251],[120.98953,14.53293],[120.98905,14.5362],[120.98914,14.5363],[120.99542,14.53769],[120.99744,14.53773],[121.00007,14.53751],[121.00056,14.5374],[121.00121,14.53742],[121.00313,14.53767],[121.00381,14.53785],[121.01183,14.53889],[121.01361,14.5392],[121.01438,14.53941],[121.01566,14.53989],[121.01802,14.54096],[121.01918,14.54172],[121.02076,14.54294],[121.02638,14.54766],[121.02941,14.55007],[121.03449,14.5545],[121.03711,14.55663],[121.0425,14.56126],[121.04378,14.56261],[121.04464,14.56404],[121.04504,14.56505],[121.0467,14.57096],[121.04702,14.57176],[121.0475,14.57269],[121.0544,14.58233],[121.05538,14.58398],[121.05713,14.58878],[121.05938,14.59577],[121.05972,14.59738],[121.0598,14.5989],[121.05971,14.59994],[121.05956,14.60074],[121.05906,14.60228],[121.04503,14.63275],[121.03289,14.65145],[121.03033,14.65532],[121.03002,14.65563],[121.02973,14.65576],[121.02185,14.6575],[121.01996,14.65771],[120.98613,14.65722]]
+}

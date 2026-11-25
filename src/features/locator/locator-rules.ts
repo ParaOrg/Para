@@ -93,6 +93,8 @@ interface CommuterCameraInput {
   fix: Fix;
   /** The way the phone faces, for the compass view; null with none. */
   turn: number | null;
+  /** The tilt the tracked view keeps: the map's own (2D's 0 or 3D's, view-mode.ts). 0 if not given. */
+  restPitch?: number;
   /** TrackedLocation's zoom, kept through the compass view and back. */
   keptZoom: number;
   /** The map's bearing now: the compass view with no turn to go by stays as it is. */
@@ -118,11 +120,12 @@ export function commuterCamera({
   keptZoom,
   mapBearing,
   tapped,
+  restPitch = 0,
 }: CommuterCameraInput): CommuterCamera {
   return {
     center: fix.at,
     zoom: camera === 'compass' ? zoomForScale(COMPASS_SCALE_M, fix.at[1]) : keptZoom,
-    pitch: camera === 'compass' ? COMPASS_PITCH : 0,
+    pitch: camera === 'compass' ? COMPASS_PITCH : restPitch,
     bearing: camera === 'compass' ? (turn ?? mapBearing) : 0,
     duration: tapped ? 800 : 400,
   };

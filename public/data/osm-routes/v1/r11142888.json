@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 11142888,
+  "kind": "jeepney",
+  "ref": "3137",
+  "name": "Kayamanan C–PRC via Pasong Tamo",
+  "from": "Kayamanan C",
+  "to": "Philippine Racing Club",
+  "network": "LTFRB National Capital Region",
+  "operator": "Makati City Unified Transport Service Cooperative",
+  "version": 26,
+  "last_edit": "2026-09-12",
+  "clipped": false,
+  "provenance": {"note":"Original route ends: Philippine Racing Club office, Pasong Tamo Extension at Taguig. Present terminals since route rationalization."},
+  "gaps": [],
+  "stops": [["platform",121.01881,14.54071,"League One Southgate Mall"],["platform",121.0165,14.54467,"Sabio"],["platform",121.01435,14.54863,"Don Bosco Intersection"],["platform",121.01365,14.55105,"Don Bosco Makati"],["platform",121.0138,14.55308,"Makati Central Square"],["platform",121.01357,14.55547,"Rufino"],["platform",121.01297,14.55793,"Dela Rosa"],["platform",121.01264,14.55855,"Dela Rosa"],["platform",121.011,14.56222,"Pryce Center"],["platform",121.01244,14.56567,"Kamagong"],["platform",121.01348,14.56768,"Shopwise Chino Roces"],["platform",121.01469,14.56995,"Ponte"],["platform_exit_only",121.01614,14.57395,"PRC-Mantrade/Kayamanan C Jeepney Terminal"]],
+  "line": [[121.01885,14.54052],[121.01869,14.54082],[121.01859,14.54076],[121.01805,14.54167],[121.01361,14.5499],[121.01351,14.55042],[121.01379,14.55401],[121.01317,14.55721],[121.01272,14.55831],[121.01121,14.56104],[121.011,14.56158],[121.01094,14.56205],[121.01098,14.56278],[121.01123,14.56348],[121.01539,14.57135],[121.01587,14.57203],[121.01661,14.57464],[121.01645,14.57471],[121.01617,14.57373]]
+}

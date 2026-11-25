@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 3862141,
+  "kind": "jeepney",
+  "ref": "T209",
+  "name": "Marikina–Pasig",
+  "from": "Marikina",
+  "to": "Pasig",
+  "network": "LTFRB National Capital Region",
+  "operator": "Marikina–Pasig–Pateros Jeepney Operators and Drivers Association",
+  "version": 40,
+  "last_edit": "2026-08-29",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [[35,155]],
+  "stops": [["platform_entry_only",121.09766,14.63396,"Marikina Sports Park"],["platform",121.09642,14.62955,"Museo ng Sapatos"],["platform",121.09581,14.62441,"E. dela Paz"],["platform",121.09318,14.62338,"J.P. Rizal"],["platform",121.09264,14.62133,"Pasig-Marikina Boundary"],["platform",121.09249,14.61938,"Ayala Malls Feliz"],["platform",121.09241,14.61797,"Crossing Ligaya"],["platform",121.09226,14.6152,"Dunwoody Academy"],["platform",121.09203,14.61175,"St. Camillus Medical Center"],["platform",121.09199,14.60899,"Crossing Santolan"],["platform",121.09218,14.60709,"Pasig Green Park Village"],["platform",121.09199,14.60508,"Acacia Escalades"],["platform",121.09215,14.60288,"Santa Lucia Church"],["platform",121.092,14.60111,"Pasig Doctors Medical Center"],["platform",121.09157,14.59974,"Circulo Verde"],["platform",121.08928,14.59658,"Daan Pasig Bridge"],["platform",121.08793,14.59434,"Bridgetowne"],["platform",121.08697,14.59267,"Temporary Pasig City Hall"],["platform",121.08597,14.59101,"Rosario Junction"],["platform",121.08486,14.59006,"Rosario Junction"],["platform",121.085,14.58834,"F. Andres"],["platform",121.08452,14.5868,"Rosario Health Center"],["platform",121.08384,14.58471,"Rosario Elementary School"],["platform",121.08367,14.58228,"Suarez Ville"],["platform",121.08277,14.58013,"Capri Oasis"],["platform",121.08135,14.57793,"Maybunga"],["platform",121.08017,14.57628,"Pasig Central SDA Church"],["platform",121.07775,14.57219,"Kalinangan"],["platform",121.07663,14.56948,"Tatlong Bayani"],["platform",121.07621,14.56695,"Rizal High School"],["platform",121.07581,14.56482,"Mariposa Arcade"],["platform",121.0758,14.56396,"Mercury Drug"],["platform",121.07621,14.56202,"Lumang Palengke"],["platform",121.0781,14.56058,"Pasig Cathedral"],["platform",121.08134,14.55867,"City Hall"],["platform_exit_only",121.08379,14.55777,"Pasig City Public Market"]],
+  "line": [[121.09758,14.63395],[121.09738,14.63568],[121.09443,14.63591],[121.09437,14.63514],[121.09492,14.63434],[121.09499,14.63354],[121.09531,14.63187],[121.09565,14.63089],[121.09616,14.62991],[121.09664,14.6292],[121.09694,14.62829],[121.09703,14.62725],[121.09643,14.62551],[121.09571,14.62482],[121.09571,14.62468],[121.09607,14.62398],[121.09548,14.62364],[121.09473,14.62342],[121.09281,14.62334],[121.09252,14.61884],[121.0918,14.61871],[121.09102,14.61871],[121.09098,14.61851],[121.09153,14.61848],[121.09233,14.6186],[121.0925,14.61841],[121.09196,14.6095],[121.09231,14.60807],[121.09203,14.60445],[121.09224,14.60242],[121.09223,14.60183],[121.09183,14.60018],[121.09129,14.59911],[121.09003,14.59735],[121.08936,14.59658],[121.08693,14.59251],[121.08624,14.59129],[121.08581,14.59073],[121.08457,14.59066],[121.08402,14.59053],[121.08406,14.59034],[121.0847,14.59044],[121.08481,14.59054],[121.08502,14.58931],[121.08505,14.58858],[121.08491,14.5878],[121.08395,14.58509],[121.08383,14.58404],[121.08384,14.58278],[121.08367,14.58212],[121.08317,14.58074],[121.08243,14.57943],[121.0804,14.57649],[121.07936,14.57511],[121.07708,14.57068],[121.07663,14.56931],[121.07615,14.56615],[121.0758,14.56436],[121.07608,14.56255],[121.07653,14.56141],[121.07656,14.56079],[121.07733,14.56066],[121.07754,14.56072],[121.0776,14.56082],[121.08061,14.55973],[121.08045,14.55908],[121.08053,14.55903],[121.08382,14.55783]]
+}

@@ -207,12 +207,17 @@ export const mapIdle = async (page, ms = 10000) => {
     ([ms, flowing]) =>
       new Promise((resolve) => {
         const m = window.__map;
-        const sources = Object.entries(m.getStyle()?.sources ?? {})
-          .filter(([id, source]) => source.type === 'geojson' && !flowing.includes(id))
-          .map(([id]) => id);
+        // Read again each frame: a source the page takes away during the wait is not loading,
+        // and asked about once gone, MapLibre would say it is not loaded on every frame after.
+        const sources = () =>
+          Object.entries(m.getStyle()?.sources ?? {})
+            .filter(([id, source]) => source.type === 'geojson' && !flowing.includes(id))
+            .map(([id]) => id);
         const notAtRest = () => [
           ...(m.isMoving() ? ['the camera moving'] : []),
-          ...sources.filter((id) => !m.isSourceLoaded(id)).map((id) => `source ${id} loading`),
+          ...sources()
+            .filter((id) => !m.isSourceLoaded(id))
+            .map((id) => `source ${id} loading`),
         ];
         let frames = 0;
         let done = false;

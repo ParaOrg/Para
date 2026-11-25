@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 21196726,
+  "kind": "bus",
+  "ref": "SNS1",
+  "name": "Solaire North Shuttle Route 1",
+  "from": "",
+  "to": "",
+  "network": "",
+  "operator": "",
+  "version": 1,
+  "last_edit": "2026-08-06",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["stop_exit_only",121.03494,14.65004,"Solaire North"]],
+  "line": [[121.05519,14.61891],[121.05475,14.61979],[121.05568,14.62024],[121.0565,14.61853],[121.05513,14.61759],[121.05507,14.61744],[121.05377,14.61655],[121.0534,14.61643],[121.05265,14.61645],[121.04507,14.63277],[121.03496,14.64833],[121.03362,14.6505],[121.03441,14.65101],[121.03511,14.65413],[121.03554,14.65434],[121.03685,14.65405],[121.0363,14.65109],[121.03502,14.65086],[121.03503,14.65065],[121.03484,14.65019],[121.03494,14.65004]]
+}

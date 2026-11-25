@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 18040027,
+  "kind": "bus",
+  "ref": "EC",
+  "name": "Eastwood City Shuttle Loop",
+  "from": "",
+  "to": "",
+  "network": "LTFRB National Capital Region",
+  "operator": "Eastwood City Estate Association",
+  "version": 28,
+  "last_edit": "2026-09-14",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform",121.07978,14.60774,"IBM Tower"],["platform",121.07997,14.6088,"McDonald's Eastwood"],["platform",121.08067,14.60992,"Citywalk - Showroom"],["platform",121.08002,14.61113,"ICITE"],["platform",121.07889,14.61071,"One Orchard Road"],["platform",121.07885,14.60997,"Grand Eastwood Palazzo"],["platform",121.07945,14.60915,"The Eastwood Lafayette"],["platform",121.07952,14.60782,"One Eastwood Avenue Tower"]],
+  "line": [[121.07953,14.60779],[121.07957,14.60771],[121.08029,14.6081],[121.08035,14.60834],[121.08031,14.60847],[121.0799,14.60883],[121.07988,14.60898],[121.08052,14.60967],[121.0807,14.6101],[121.08068,14.61043],[121.08051,14.61077],[121.0802,14.61103],[121.07989,14.61113],[121.07954,14.61109],[121.07925,14.61095],[121.07864,14.61036],[121.07862,14.61027],[121.07864,14.61019],[121.07907,14.60982],[121.07936,14.60929],[121.08024,14.60844],[121.08026,14.60828],[121.08016,14.6081],[121.07953,14.60779]]
+}

@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 19257070,
+  "kind": "jeepney",
+  "ref": "209",
+  "name": "Route 209: Cubao–Rosario",
+  "from": "Cubao",
+  "to": "Rosario",
+  "network": "LTFRB National Capital Region",
+  "operator": "Cubao-Bagumbayan-Rosario Transport Service Cooperative",
+  "version": 10,
+  "last_edit": "2026-09-14",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["stop_entry_only",121.05538,14.621,"Araneta City Bus Station"]],
+  "line": [[121.05538,14.621],[121.05489,14.62219],[121.05464,14.62233],[121.05413,14.62285],[121.05391,14.62327],[121.0572,14.62484],[121.05832,14.62254],[121.06161,14.62405],[121.06297,14.62119],[121.06634,14.61352],[121.07049,14.61456],[121.07072,14.61454],[121.07128,14.61434],[121.07263,14.61457],[121.07304,14.61481],[121.07361,14.61538],[121.07411,14.61609],[121.07431,14.61615],[121.07447,14.61607],[121.07512,14.61303],[121.07577,14.61054],[121.07616,14.60993],[121.07831,14.6076],[121.07864,14.60701],[121.07891,14.60622],[121.07901,14.60551],[121.07922,14.60183],[121.07983,14.58973],[121.08085,14.58979],[121.08481,14.59054],[121.08609,14.59065],[121.09688,14.58967],[121.10113,14.58936],[121.1025,14.58915],[121.1042,14.58878],[121.10426,14.5886],[121.10534,14.58834]]
+}

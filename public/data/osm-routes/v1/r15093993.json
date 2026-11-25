@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 15093993,
+  "kind": "jeepney",
+  "ref": "342",
+  "name": "Balintawak–Frisco",
+  "from": "Frisco",
+  "to": "Balintawak",
+  "network": "LTFRB National Capital Region",
+  "operator": "",
+  "version": 11,
+  "last_edit": "2026-09-12",
+  "clipped": false,
+  "provenance": {"source:ref":"LTFRB MC 2020-026"},
+  "gaps": [],
+  "stops": [],
+  "line": [[121.01455,14.6399],[121.0142,14.6401],[121.00975,14.63952],[121.00953,14.64084],[121.00891,14.64182],[121.00857,14.64284],[121.00852,14.64349],[121.00858,14.64417],[121.00891,14.64511],[121.00819,14.64526],[121.00821,14.64538],[121.00864,14.64662],[121.00935,14.64788],[121.00974,14.64884],[121.00966,14.65098],[121.01004,14.65263],[121.01068,14.65406],[121.01117,14.65462],[121.01149,14.65523],[121.01155,14.65552],[121.01066,14.65584],[121.00973,14.65605],[121.00873,14.65643],[121.00432,14.65667]]
+}

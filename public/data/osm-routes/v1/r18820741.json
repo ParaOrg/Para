@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 18820741,
+  "kind": "jeepney",
+  "ref": "108",
+  "name": "Blumentritt–Santa Quiteria",
+  "from": "Blumentritt",
+  "to": "Santa Quiteria",
+  "network": "LTFRB National Capital Region",
+  "operator": "The New Santa Quiteria Transport Service & Multipurpose Cooperative",
+  "version": 11,
+  "last_edit": "2026-11-17",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["stop",120.99682,14.65076,"Marvex Street"]],
+  "line": [[120.9831,14.62294],[120.98575,14.6241],[120.9874,14.62521],[120.98891,14.6239],[120.98904,14.62386],[120.98924,14.62395],[120.99055,14.62514],[120.98977,14.62577],[120.98971,14.62599],[120.98993,14.62638],[120.99279,14.63506],[120.9935,14.63713],[120.9936,14.63719],[120.99234,14.63958],[120.99222,14.63994],[120.99222,14.64016],[120.99746,14.65233],[120.99779,14.65276],[120.99892,14.6547],[120.99934,14.65525],[120.99938,14.65546],[120.99953,14.65564],[120.99962,14.65558],[121.00016,14.65642],[121.00028,14.65718],[121.00021,14.65795],[121.00024,14.66079],[121.00032,14.66141],[121.00332,14.66456],[121.00376,14.66477],[121.00447,14.66492],[121.00487,14.66509],[121.00667,14.66615],[121.00742,14.66686],[121.00446,14.67485],[121.00429,14.67537],[121.00422,14.67589],[121.00459,14.67645],[121.0051,14.67687],[121.00549,14.67748],[121.00654,14.67834],[121.00696,14.6788],[121.00802,14.67918],[121.0086,14.67949],[121.00986,14.68135]]
+}

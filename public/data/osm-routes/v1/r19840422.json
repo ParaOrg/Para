@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 19840422,
+  "kind": "jeepney",
+  "ref": "3108",
+  "name": "Divisoria–Velasquez",
+  "from": "Divisoria",
+  "to": "Velasquez",
+  "network": "LTFRB National Capital Region",
+  "operator": "Velasquez Jeepney Transport Cooperative",
+  "version": 6,
+  "last_edit": "2026-09-12",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",120.96225,14.62673,"Vitas Slaughterhouse"],["platform",120.96295,14.6249,"Urban Deca Homes"],["platform",120.96473,14.62304,"Trinidad"],["platform",120.96519,14.62133,"Nepomuceno"],["platform",120.96532,14.62064,"Lallana"],["platform",120.9655,14.61977,"Emilio Jacinto Elementary School"],["platform",120.96569,14.61889,"Navarro"],["platform",120.96758,14.61811,"Trinidad Rizal"],["platform",120.969,14.61755,"Herbosa–Pritil Market"],["platform",120.96933,14.61429,"Peñalosa"],["platform",120.968,14.61042,"Concha"],["platform",120.96732,14.60844,"Isabelo delos Reyes Elementary School"],["platform",120.96672,14.60746,"Plaza Amado V. Hernandez"],["platform_exit_only",120.96899,14.60604,"Ilaya Turning Point"]],
+  "line": [[120.96228,14.62674],[120.96294,14.62533],[120.96302,14.62465],[120.96348,14.62323],[120.96464,14.62354],[120.96519,14.62151],[120.96576,14.61864],[120.96908,14.61774],[120.96889,14.61686],[120.97015,14.61647],[120.96737,14.60835],[120.96676,14.60761],[120.96688,14.60727],[120.9672,14.60726],[120.96865,14.60592],[120.96898,14.60607]]
+}

@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 14885757,
+  "kind": "jeepney",
+  "ref": "310",
+  "name": "Arroceros–Project 7 via España",
+  "from": "Arroceros",
+  "to": "Project 7",
+  "network": "LTFRB National Capital Region",
+  "operator": "New GSIS Transport Service Cooperative",
+  "version": 29,
+  "last_edit": "2026-09-06",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",120.98156,14.59155,"Universidad de Manila"],["platform",120.9802,14.59321,"Plaza Lawton"],["platform",120.98467,14.60047,"Quiapo"],["platform",120.98873,14.60582,"P. Campa"],["platform",120.99162,14.60845,"UST"],["platform",120.99317,14.6099,"España–Lacson"],["platform",120.99535,14.61181,"Vicente Cruz"],["platform",120.99778,14.61405,"Maceda"],["platform",120.99996,14.61606,"Josefina"],["platform",121.00287,14.61864,"Welcome Rotonda"],["platform",121.00475,14.62035,"Quezon Avenue & D. Tuazon"],["platform",121.00905,14.62426,"Quezon Avenue & BMA"],["platform",121.01059,14.62562,"Santo Domingo Church"],["platform",121.01812,14.63201,"FPJ Avenue"],["platform",121.01844,14.63319,"Fisher Mall"],["platform",121.01811,14.63491,"Santa Cruz Barangay Hall"],["platform",121.01836,14.63682,"F. Bautista Street"],["platform",121.01713,14.63881,"Chinabank San Francisco del Monte"],["platform",121.01652,14.64096,"FPJ–Frisco"],["platform",121.01685,14.64288,"Watchtower Compound"],["platform",121.01718,14.64478,"Baler Street"],["platform",121.01751,14.64698,"Christian Gospel Center"],["platform",121.01783,14.64909,"Coca-Cola Distribution Center"],["platform",121.01817,14.65129,"Metrobank Roosevelt"],["platform",121.01849,14.6534,"M.H. del Pilar Street"],["platform",121.01891,14.6554,"Mangga Street"],["platform_exit_only",121.01967,14.65633,"Muñoz Turning Point"]],
+  "line": [[120.98187,14.59148],[120.98049,14.59147],[120.98018,14.59246],[120.9802,14.5928],[120.97996,14.59375],[120.97998,14.59402],[120.98014,14.59426],[120.98365,14.59655],[120.98377,14.5967],[120.98539,14.6046],[120.98561,14.60475],[120.98802,14.6053],[121.00011,14.61626],[121.00155,14.61751],[121.00182,14.61763],[121.00203,14.61799],[121.01482,14.62965],[121.01581,14.63051],[121.01701,14.6314],[121.02171,14.63435],[121.02166,14.63449],[121.02154,14.6345],[121.01869,14.63272],[121.01813,14.63355],[121.018,14.63402],[121.01802,14.63465],[121.01831,14.63649],[121.01821,14.63717],[121.01798,14.6376],[121.01667,14.63925],[121.01645,14.63981],[121.01642,14.64042],[121.01648,14.64104],[121.01861,14.65459],[121.01881,14.65535],[121.01938,14.65677],[121.01984,14.65668],[121.01964,14.65612]]
+}

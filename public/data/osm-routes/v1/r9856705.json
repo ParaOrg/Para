@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 9856705,
+  "kind": "jeepney",
+  "ref": "3216",
+  "name": "Punta–Quiapo via Santa Mesa",
+  "from": "Punta",
+  "to": "Quiapo",
+  "network": "LTFRB National Capital Region",
+  "operator": "Libra Transport Cooperative;Communal Conveyance Cooperative",
+  "version": 38,
+  "last_edit": "2026-11-11",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",121.0107,14.58471,"Punta Terminal"],["platform",121.01253,14.58645,"Jaime Cardinal Sin Village"],["platform",121.01421,14.58709,"Phimco Industries"],["platform",121.01699,14.58751,"INC Museum"],["platform",121.01826,14.58751,"Lambingan Ferry Station"],["platform",121.02158,14.5883,"Puregold Kalentong"],["platform",121.02288,14.58937,"Aglipay"],["platform",121.02616,14.59212,"Mandaluyong Public Market"],["platform",121.02475,14.59459,"Bagumbayan"],["platform",121.02235,14.59547,"Our Lady of Lourdes Hospital"],["platform",121.02094,14.59605,"Don Bosco Manila"],["platform",121.01794,14.59745,"Puregold Santa Mesa"],["platform",121.01749,14.59824,"Valenzuela Extension"],["platform",121.01699,14.59974,"Old Santa Mesa"],["platform",121.01515,14.60276,"V. Mapa"],["platform",121.00981,14.60236,"Altura"],["platform",121.00378,14.60169,"Civil Registration Central Outlet"],["platform",120.99539,14.60084,"M. Jhocson"],["platform",120.99314,14.60156,"LRT Legarda Station"],["platform",120.9906,14.59997,"Mendiola Bridge"],["platform",120.98963,14.59794,"National Teachers College"],["platform",120.98757,14.59684,"Barangay 387 Daycare Center"],["platform",120.98449,14.59761,"Quiapo (Barbosa) Turning Point"]],
+  "line": [[121.0107,14.58475],[121.01083,14.58478],[121.01072,14.58513],[121.01008,14.58543],[121.01177,14.58601],[121.01337,14.58702],[121.01396,14.58719],[121.01434,14.58709],[121.01473,14.58735],[121.01575,14.5877],[121.01588,14.58771],[121.0162,14.58753],[121.02015,14.58755],[121.02082,14.58734],[121.02272,14.58931],[121.02587,14.59187],[121.02702,14.59375],[121.02563,14.59417],[121.02057,14.59614],[121.02041,14.59616],[121.0199,14.59594],[121.01765,14.59757],[121.01588,14.60301],[121.01538,14.60278],[121.01496,14.60268],[121.008,14.6021],[121.00038,14.60126],[120.99864,14.60114],[120.99709,14.60086],[120.99618,14.60059],[120.99356,14.60142],[120.99276,14.6016],[120.99161,14.601],[120.99081,14.60028],[120.98953,14.59764],[120.98948,14.59653],[120.98439,14.5973],[120.98445,14.59762]]
+}

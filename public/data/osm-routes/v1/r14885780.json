@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 14885780,
+  "kind": "jeepney",
+  "ref": "160",
+  "name": "Lagro–Rizal Avenue via A. Bonifacio",
+  "from": "Rizal Avenue",
+  "to": "Lagro",
+  "network": "LTFRB National Capital Region",
+  "operator": "Lagro Transport Service Cooperative",
+  "version": 26,
+  "last_edit": "2026-11-17",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform",120.98682,14.62409,"Leonor Rivera"],["platform",120.99003,14.62657,"A. Bonifacio & Blumentritt"],["platform",120.99039,14.62768,"A. Bonifacio & Mariveles"],["platform",120.99103,14.62954,"A. Bonifacio & Labo"],["platform",120.99173,14.63172,"A. Bonifacio & Lunas"],["platform",120.99247,14.634,"A. Bonifacio & Magnas"],["platform",120.99295,14.63536,"Manila North Cemetery"],["platform",120.99332,14.63645,"A. Bonifacio Market"],["platform",120.99306,14.63836,"A. Bonifacio & Del Monte"],["platform",120.9924,14.64045,"A. Bonifacio & Mauban"],["platform",120.99359,14.64322,"C-3–A. Bonifacio"],["platform",120.99412,14.64447,"C-3–A. Bonifacio"],["platform",120.99582,14.64839,"Selecta Drive"],["platform",120.99682,14.65076,"Marvex Street"],["platform",120.99981,14.65574,"Ayala Malls Cloverleaf"],["platform",121.00256,14.66369,"S. Gonzales Drive"],["platform",121.00417,14.66478,"Maximina Drive"],["platform",121.00774,14.66706,"Quirino–Baesa"],["platform",121.00989,14.66949,"Lucas R. Pascual Street"],["platform",121.0117,14.67144,"Masagana Street"],["platform",121.0132,14.67317,"Baesa Town Center"],["platform",121.01532,14.67576,"Rodriguez Drive"],["platform",121.01663,14.67732,"INC Lokal ng Baesa"],["platform",121.01828,14.67927,"Production Street"],["platform",121.01946,14.68063,"Chowking Sangandaan"],["platform",121.02103,14.68251,"SM Hypermarket Sangandaan"],["platform",121.02321,14.68463,"WalterMart Quirino"],["platform",121.02522,14.68748,"Talipapa"],["platform",121.02632,14.6887,"Piko Street"],["platform",121.02876,14.68942,"Quirino Highway & Mindanao Avenue"],["platform",121.03119,14.6875,"Old Sauyo Road"],["platform",121.03051,14.68869,"Old Sauyo Road"],["platform",121.02835,14.69102,"Quirino–Mindanao Avenue"],["platform",121.03013,14.69306,"Don Julio Gregorio Street"],["platform",121.03278,14.69696,"T. Carreon Street"],["platform",121.03465,14.70013,"QC University"],["platform",121.03724,14.70388,"E. Evangelista Drive"],["platform",121.03814,14.70547,"St. John of Beverly"],["platform",121.03883,14.70718,"SM City Novaliches"],["platform",121.03995,14.71229,"Villaflor Avenue"],["platform",121.04042,14.7148,"Villareal Street"],["platform",121.0404,14.71671,"Novaliches Elementary School"],["platform",121.03988,14.72009,"Sarmiento Street"],["platform_exit_only",121.04032,14.72182,"Novaliches Plaza Mall"]],
+  "line": [[120.98683,14.62414],[120.98853,14.62409],[120.98864,14.62414],[120.9889,14.62397],[120.98911,14.62407],[120.98917,14.62604],[120.98973,14.62605],[120.98993,14.62638],[120.99279,14.63506],[120.9935,14.63713],[120.9936,14.63719],[120.99227,14.63974],[120.99221,14.64006],[120.99226,14.64028],[120.99746,14.65233],[120.99779,14.65276],[120.99892,14.6547],[120.99934,14.65525],[120.99938,14.65546],[120.99953,14.65564],[120.99962,14.65558],[121.00016,14.65642],[121.00028,14.65718],[121.00021,14.65795],[121.00025,14.6611],[121.00037,14.6615],[121.00332,14.66456],[121.00376,14.66477],[121.00447,14.66492],[121.00487,14.66509],[121.00667,14.66615],[121.00752,14.66692],[121.01225,14.67215],[121.01456,14.67484],[121.0155,14.6761],[121.0224,14.68426],[121.02359,14.68509],[121.02422,14.68619],[121.02506,14.68735],[121.02777,14.69041],[121.02881,14.68945],[121.03008,14.68871],[121.03074,14.68819],[121.03105,14.68786],[121.03131,14.68744],[121.0315,14.68665],[121.03168,14.6867],[121.03148,14.68749],[121.031,14.68815],[121.03026,14.68879],[121.02957,14.6892],[121.02866,14.68987],[121.02813,14.69053],[121.0281,14.6907],[121.02818,14.69086],[121.02996,14.69284],[121.03121,14.69455],[121.03387,14.6988],[121.03507,14.70103],[121.03651,14.70289],[121.03778,14.70485],[121.03854,14.70644],[121.03974,14.7116],[121.04045,14.7153],[121.04046,14.71586],[121.04031,14.71695],[121.03954,14.7218],[121.04031,14.7219]]
+}

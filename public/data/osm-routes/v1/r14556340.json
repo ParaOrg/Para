@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 14556340,
+  "kind": "jeepney",
+  "ref": "422/T403",
+  "name": "Baclaran–NAIA Loop",
+  "from": "",
+  "to": "",
+  "network": "LTFRB National Capital Region",
+  "operator": "San Dionisio Transport Service Cooperative",
+  "version": 17,
+  "last_edit": "2026-08-24",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",120.99702,14.52628,"Quirino & Tomas Claudio"],["platform",120.9966,14.52108,"Pearl Plaza"],["platform",120.99676,14.51693,"Tambo Crossing"],["platform",121.00165,14.51642,"Domestic Road Intersection"],["platform",121.00562,14.51446,"CAAP"],["platform",121.00943,14.51,"MIAA Complex"],["platform",121.00453,14.50808,"NAIA Terminal 1"],["platform",121.00343,14.51264,"Baltao"],["platform",121.00392,14.51566,"MIA Chapel"],["platform",121.00116,14.51758,"Domestic Road Intersection"],["platform",121.00103,14.52079,"Airlink International Aviation College"],["platform",121.00092,14.52319,"Salem Complex"],["platform",120.99911,14.52741,"Petron Rotonda"],["platform_exit_only",120.99702,14.52628,"Quirino & Tomas Claudio"]],
+  "line": [[120.99624,14.51703],[120.99724,14.51693],[121.00031,14.51688],[121.00099,14.51674],[121.00172,14.51647],[121.00562,14.51456],[121.00652,14.51387],[121.0071,14.51323],[121.0093,14.51016],[121.00989,14.50985],[121.01061,14.50926],[121.01075,14.50897],[121.01073,14.50874],[121.00779,14.50708],[121.00763,14.50707],[121.00503,14.50733],[121.00483,14.50751],[121.00419,14.50847],[121.00385,14.50859],[121.0032,14.50866],[121.00287,14.50901],[121.00253,14.50965],[121.00254,14.51044],[121.00435,14.51536],[121.00124,14.51686],[121.00111,14.51705],[121.00082,14.52419],[120.99978,14.527],[120.99978,14.52723],[120.99969,14.52732],[120.9993,14.52735],[120.99716,14.52724],[120.99685,14.52269],[120.99624,14.51703]]
+}

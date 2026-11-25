@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 4515958,
+  "kind": "jeepney",
+  "ref": "269",
+  "name": "Katipunan/LRT–North EDSA",
+  "from": "SM City North EDSA",
+  "to": "Katipunan",
+  "network": "LTFRB National Capital Region",
+  "operator": "Global Electric Transportation Services Cooperative",
+  "version": 62,
+  "last_edit": "2026-10-26",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",121.03161,14.65552,"SM North EDSA Transport Terminal"],["platform",121.03561,14.65588,"VMMC Golf Course"],["platform",121.03641,14.66462,"Road 16"],["platform",121.03499,14.66877,"Mindanao Avenue"],["platform",121.03895,14.67079,"SM Center Congressional"],["platform",121.04411,14.67201,"Visayas Avenue"],["platform",121.0498,14.6733,"Tandang Sora Avenue"],["platform",121.05414,14.6737,"UP Professor's Village"],["platform",121.06203,14.67253,"BDO Congressional"],["platform",121.06804,14.67176,"Luzon Avenue"],["platform",121.07319,14.66374,"Luzon Avenue Flyover South"],["platform",121.07415,14.65697,"Magsaysay Avenue"],["platform",121.0742,14.64705,"Santa Maria della Strada Parish"],["platform",121.07444,14.64151,"ADMU Gate 3.5"],["platform",121.07419,14.63686,"ADMU Gate 2"],["platform_exit_only",121.07425,14.63265,"Katipunan Flyover"]],
+  "line": [[121.03165,14.65546],[121.03163,14.65538],[121.03081,14.65556],[121.03071,14.6555],[121.0308,14.65541],[121.0352,14.65448],[121.03654,14.66032],[121.03671,14.66164],[121.03671,14.66274],[121.03649,14.66405],[121.0361,14.66512],[121.03531,14.66646],[121.03425,14.66771],[121.03418,14.668],[121.03446,14.66838],[121.03554,14.66926],[121.03653,14.66989],[121.03743,14.67034],[121.03924,14.67097],[121.04794,14.67291],[121.0491,14.67331],[121.05006,14.67339],[121.05151,14.67369],[121.05275,14.67381],[121.05413,14.67378],[121.06718,14.67184],[121.06844,14.67179],[121.06859,14.66848],[121.06877,14.66798],[121.07,14.66566],[121.07027,14.66532],[121.07071,14.66497],[121.07188,14.66452],[121.07376,14.66353],[121.07405,14.66331],[121.07495,14.66216],[121.07614,14.65959],[121.0761,14.65941],[121.07597,14.65924],[121.07444,14.65792],[121.07422,14.65757],[121.0743,14.65261],[121.07427,14.6466],[121.07463,14.64344],[121.07431,14.63554],[121.07418,14.63486],[121.0741,14.63282],[121.07418,14.63486],[121.07431,14.63554],[121.07418,14.63486],[121.0741,14.63282],[121.07425,14.63272]]
+}

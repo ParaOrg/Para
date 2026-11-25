@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 17957240,
+  "kind": "jeepney",
+  "ref": "BN",
+  "name": "Jeepney Route BN: Nuvali/Santo Domingo → Balibago",
+  "from": "Santo Domingo",
+  "to": "Target Mall",
+  "network": "LTFRB Region IV-A",
+  "operator": "",
+  "version": 2,
+  "last_edit": "2026-03-19",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["stop_entry_only",121.04788,14.22729,"Sto. Domingo"],["stop",121.07812,14.26711,"Walter Mart Santa Rosa Bel-Air"],["stop",121.08334,14.27732,"Pulong Santa Cruz"],["stop",121.08686,14.28286,"Coca-Cola"],["stop",121.09391,14.28883,"Walter Mart Santa Rosa"],["stop",121.10013,14.29305,"Monde Nissin"]],
+  "line": [[121.04727,14.22696],[121.05029,14.22864],[121.05163,14.23127],[121.05298,14.23439],[121.05481,14.23682],[121.05512,14.23769],[121.05636,14.23934],[121.05681,14.24025],[121.05752,14.24123],[121.05796,14.24172],[121.05863,14.24284],[121.0633,14.24911],[121.06856,14.25632],[121.07008,14.25851],[121.07509,14.26446],[121.08069,14.26933],[121.08096,14.26963],[121.08122,14.27012],[121.08138,14.2707],[121.0815,14.27294],[121.08192,14.27397],[121.08265,14.27533],[121.08334,14.27732],[121.08656,14.28246],[121.08966,14.28626],[121.09218,14.28783],[121.09848,14.29152],[121.10143,14.29427],[121.10201,14.29461],[121.10257,14.29408],[121.10294,14.29347],[121.10224,14.2933],[121.10221,14.29321],[121.1025,14.29225],[121.10344,14.29242],[121.10473,14.29277],[121.10476,14.29345],[121.10447,14.29432],[121.10408,14.29518],[121.10369,14.29497],[121.10411,14.29396],[121.10384,14.29392]]
+}

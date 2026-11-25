@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 20947800,
+  "kind": "jeepney",
+  "ref": "238",
+  "name": "Crame-Cubao via Murphy",
+  "from": "Crame",
+  "to": "Cubao",
+  "network": "LTFRB National Capital Region",
+  "operator": "Guardians Transport Service Cooperative",
+  "version": 3,
+  "last_edit": "2026-09-01",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",121.05162,14.60563,"Camp Crame Elementary School"],["platform",121.05098,14.60732,"Camp Crame Gate 4"],["platform",121.05057,14.60977,"Camp Crame Gate 3"],["platform",121.0527,14.61025,"Camp Crame Gate 2"],["platform",121.05451,14.61067,"EDSA–Santolan Intersection"],["platform",121.05851,14.6116,"Across from 9th Avenue"],["platform",121.06236,14.61252,"Camp Aguinaldo Gate 1"],["platform",121.06433,14.61375,"18th Avenue"],["platform",121.06358,14.61546,"9th Avenue"],["platform",121.06159,14.61546,"Murphy Market"],["platform",121.0601,14.61452,"Liberty Avenue"],["platform",121.05898,14.6159,"Main–15th Avenue"],["platform",121.05617,14.61949,"Ali Mall 2"],["platform",121.05445,14.61775,"Araneta City Jeepney Terminal"]],
+  "line": [[121.0516,14.60562],[121.05005,14.60969],[121.06455,14.61309],[121.06311,14.61648],[121.06148,14.61584],[121.06184,14.61496],[121.06016,14.6143],[121.05936,14.61602],[121.05854,14.61567],[121.05707,14.61882],[121.05702,14.61888],[121.05655,14.61856],[121.05573,14.62036],[121.05464,14.61983],[121.0553,14.61848],[121.05534,14.61822],[121.05515,14.61779],[121.05482,14.61782],[121.05463,14.61795],[121.05418,14.61763],[121.05418,14.61754],[121.05426,14.61752],[121.05447,14.61772]]
+}

@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 21273269,
+  "kind": "jeepney",
+  "ref": "401",
+  "name": "Filinvest City Loop",
+  "from": "",
+  "to": "",
+  "network": "LTFRB National Capital Region",
+  "operator": "Electric Vehicle Expansion Enterprises",
+  "version": 1,
+  "last_edit": "2026-08-24",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",121.04337,14.41699,"Landmark Alabang"],["platform",121.04305,14.41453,"Asian Hospital and Medical Center"],["platform",121.04069,14.41541,"Festival Alabang South Wing"],["platform",121.03583,14.41366,"Spectrum Midway"],["platform",121.0341,14.42089,"Westgate Center"],["platform",121.03091,14.42169,"Theater Drive"],["platform",121.02867,14.42225,"Alabang Town Center"],["platform",121.03209,14.42423,"Alabang Town Center"],["platform",121.03405,14.42353,"Westgate Center"],["platform",121.03709,14.42534,"The Haven National Center for Women"],["platform",121.03955,14.42714,"Plaza Building E"],["platform",121.03942,14.42074,"Vivere Suites"],["platform",121.04023,14.41937,"Bridgeway Avenue"],["platform_exit_only",121.04337,14.41699,"Landmark Alabang"]],
+  "line": [[121.04344,14.417],[121.04354,14.41608],[121.04341,14.41528],[121.04294,14.41422],[121.04245,14.41374],[121.04202,14.4136],[121.04153,14.41361],[121.04082,14.41393],[121.04103,14.41446],[121.04089,14.41541],[121.04076,14.41541],[121.04069,14.41527],[121.04022,14.41513],[121.03977,14.41508],[121.03913,14.41532],[121.03885,14.41559],[121.03829,14.41528],[121.03531,14.41322],[121.03503,14.41325],[121.03484,14.4134],[121.03435,14.41432],[121.03396,14.41581],[121.03392,14.41656],[121.03397,14.41753],[121.03414,14.41844],[121.03453,14.41957],[121.03495,14.42039],[121.03378,14.42093],[121.02737,14.42257],[121.0272,14.42278],[121.02715,14.42305],[121.02828,14.42602],[121.02938,14.42556],[121.03175,14.4244],[121.03468,14.42337],[121.0347,14.42344],[121.03675,14.42281],[121.03692,14.42396],[121.03706,14.42538],[121.03702,14.42552],[121.03709,14.42565],[121.03737,14.42582],[121.03856,14.42584],[121.0386,14.42663],[121.03892,14.42703],[121.03929,14.42719],[121.03989,14.42719],[121.04013,14.42712],[121.04046,14.42686],[121.04058,14.42664],[121.04061,14.42584],[121.03933,14.42584],[121.03939,14.42146],[121.03953,14.42045],[121.03981,14.4193],[121.04141,14.41971],[121.04164,14.41971],[121.04189,14.4196],[121.04276,14.41857],[121.0433,14.41748],[121.04344,14.417]]
+}

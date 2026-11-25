@@ -3,6 +3,7 @@ import { haversine, type LngLat } from '@/shared/utils/geo';
 import { hotspotLabel, type Hotspot } from './hotspots';
 import { placeKey } from './places';
 import type { Direction } from './routes';
+import { typosToWordStart } from './typo-table';
 import { VEHICLES, vehicleOf, type Vehicle } from './vehicles';
 
 /*
@@ -142,40 +143,6 @@ export function matchFolded(
   const limit = typosAllowed(foldedQuery.length);
   if (limit === 0 || missingLetters(foldedQuery, nameLetters) > limit) return null;
   return typosToWordStart(foldedQuery, folded, limit) <= limit ? 'typo' : null;
-}
-
-/**
- * The fewest edits (insert, delete, change, swap two neighbours) between the query and a stretch
- * of the name that starts at a word's start, any length; limit + 1 once past it. One table over
- * the whole name: row 0 costs the letters skipped since the last word's start, and the last row's
- * smallest cell is the best stretch's end.
- */
-export function typosToWordStart(query: string, name: string, limit: number): number {
-  const width = name.length + 1;
-  let twoBack = new Int32Array(width);
-  let previous = new Int32Array(width);
-  let current = new Int32Array(width);
-  let sinceWordStart = 0;
-  for (let j = 0; j < width; j++) {
-    previous[j] = sinceWordStart;
-    sinceWordStart = name[j] === ' ' ? 0 : sinceWordStart + 1;
-  }
-  for (let i = 1; i <= query.length; i++) {
-    current[0] = i;
-    let rowBest = i;
-    for (let j = 1; j < width; j++) {
-      const cost = query[i - 1] === name[j - 1] ? 0 : 1;
-      let value = Math.min(previous[j] + 1, current[j - 1] + 1, previous[j - 1] + cost);
-      if (i > 1 && j > 1 && query[i - 1] === name[j - 2] && query[i - 2] === name[j - 1]) {
-        value = Math.min(value, twoBack[j - 2] + 1);
-      }
-      current[j] = value;
-      if (value < rowBest) rowBest = value;
-    }
-    if (rowBest > limit) return limit + 1;
-    [twoBack, previous, current] = [previous, current, twoBack];
-  }
-  return Math.min(...previous);
 }
 
 /** A match quality's place in the order, 0 the best: what both place and landmark ranking sort by. */

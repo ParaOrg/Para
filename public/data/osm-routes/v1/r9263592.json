@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 9263592,
+  "kind": "bus",
+  "ref": "",
+  "name": "Pasig Transport: Ligaya → City Hall via PCGH",
+  "from": "Ligaya",
+  "to": "City Hall",
+  "network": "PH:PUB:Pasig",
+  "operator": "City Government of Pasig",
+  "version": 42,
+  "last_edit": "2026-08-29",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [[8,11],[12,82]],
+  "stops": [],
+  "line": [[121.09233,14.6186],[121.0925,14.61841],[121.0925,14.61818],[121.09196,14.6095],[121.09231,14.60807],[121.09203,14.60445],[121.09226,14.60209],[121.09183,14.60018],[121.09124,14.59902],[121.09118,14.59894],[121.09124,14.59826],[121.09189,14.59535],[121.09311,14.591],[121.0933,14.59029],[121.09411,14.58759],[121.09446,14.5867],[121.09502,14.58557],[121.1008,14.57726],[121.09851,14.57556],[121.10027,14.57295],[121.09859,14.57111],[121.09733,14.57136],[121.09385,14.57112],[121.09377,14.57513],[121.08961,14.57542],[121.08853,14.57324],[121.08598,14.56853],[121.0856,14.56556],[121.08508,14.5645],[121.08464,14.56253],[121.0836,14.55968],[121.08095,14.56067]]
+}

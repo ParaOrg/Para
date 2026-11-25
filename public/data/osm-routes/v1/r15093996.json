@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 15093996,
+  "kind": "jeepney",
+  "ref": "3162",
+  "name": "Malanday–Divisoria via M.H. del Pilar",
+  "from": "Divisoria",
+  "to": "Malanday",
+  "network": "LTFRB National Capital Region",
+  "operator": "Metro Valenzuela Transport Service Cooperative",
+  "version": 21,
+  "last_edit": "2026-09-12",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",120.97218,14.60646,"Tutuban Mall"],["platform",120.96984,14.60679,"Padre Rada"],["platform",120.96925,14.60809,"Padre Herrera Street"],["platform",120.96932,14.61049,"INC Lokal ng Tondo"],["platform",120.97012,14.6146,"Jose Corazon de Jesus Elementary School"],["platform",120.97036,14.61577,"Corcuera"],["platform",120.97114,14.61874,"Puregold Pritil"],["platform",120.97185,14.62084,"Raxabago"],["platform",120.97248,14.62267,"Puregold Gagalangin"],["platform",120.97301,14.62489,"Lakan Dula High School"],["platform",120.97354,14.62706,"Florentino Torres High School"],["platform",120.97415,14.62955,"Saint Joseph School"],["platform",120.97485,14.63303,"Hermosa Street"],["platform",120.97568,14.63827,"Maypajo"],["platform",120.97572,14.63948,"L. Lupa"],["platform",120.97569,14.64171,"WalterMart Caloocan"],["platform",120.97522,14.64341,"Laon Laan"],["platform",120.97436,14.64555,"Kaunlaran"],["platform",120.97326,14.64853,"Caloocan City Medical Center South"],["platform",120.97279,14.65028,"BDO A. Mabini"],["platform",120.97229,14.6522,"La Consolacion College (A. Mabini)"],["platform",120.97205,14.6537,"Lakas ng Mahihirap"],["platform",120.97184,14.65548,"Geronimo"],["platform",120.9715,14.65745,"BDO Sangandaan"],["platform",120.9709,14.6595,"Sangandaan Cemetery"]],
+  "line": [[120.97218,14.60634],[120.97087,14.60603],[120.97025,14.60582],[120.96923,14.60787],[120.9691,14.60962],[120.97065,14.61752],[120.9725,14.62287],[120.9744,14.63098],[120.97526,14.63542],[120.9755,14.63715],[120.97568,14.63934],[120.97559,14.64179],[120.97527,14.64313],[120.97353,14.64752],[120.973,14.64921],[120.9721,14.65281],[120.97186,14.65515],[120.9714,14.65768],[120.971,14.6591],[120.97027,14.66095],[120.97,14.66146],[120.96935,14.66205],[120.96677,14.66528],[120.96553,14.66866],[120.96498,14.6699],[120.96398,14.67178],[120.96326,14.67265],[120.96303,14.67305],[120.96291,14.67362],[120.96333,14.67457],[120.96336,14.67486],[120.96312,14.67567],[120.96261,14.67694],[120.96131,14.67978],[120.96002,14.68174],[120.95918,14.68322],[120.95843,14.68491],[120.95776,14.68667],[120.95983,14.68768],[120.96104,14.68866],[120.96297,14.69064],[120.96376,14.69157],[120.96392,14.69186],[120.96413,14.69274],[120.96428,14.69286],[120.96411,14.69327],[120.96415,14.69401],[120.9641,14.69411],[120.96421,14.69538],[120.96414,14.69586],[120.95718,14.71759],[120.95715,14.71795],[120.95733,14.71863],[120.95827,14.72033]]
+}

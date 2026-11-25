@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 6232324,
+  "kind": "jeepney",
+  "ref": "3113",
+  "name": "EDSA Shaw–Kalentong/JRC",
+  "from": "Starmall",
+  "to": "JRU",
+  "network": "LTFRB National Capital Region",
+  "operator": "Mandaluyong Transport Service Cooperative",
+  "version": 38,
+  "last_edit": "2026-09-01",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",121.05267,14.58248,"Starmall EDSA-Shaw"],["platform",121.04817,14.58593,"Governor's Place"],["platform",121.0451,14.58799,"SM Cherry Foodarama"],["platform",121.04231,14.58907,"Puregold Shaw"],["platform",121.03834,14.58956,"Luna Mencias"],["platform",121.03518,14.58966,"Acacia Lane"],["platform",121.0345,14.59021,"Araullo"],["platform",121.03038,14.59212,"Armand B. Fabella"],["platform_exit_only",121.02898,14.59298,"JRU"]],
+  "line": [[121.05265,14.58246],[121.05257,14.58252],[121.05246,14.58241],[121.05097,14.58356],[121.04643,14.58729],[121.04492,14.58803],[121.04217,14.58904],[121.04011,14.58953],[121.03538,14.58943],[121.03468,14.59001],[121.03395,14.59045],[121.0295,14.59251],[121.02988,14.59318],[121.02866,14.59382],[121.02904,14.59278]]
+}

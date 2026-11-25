@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 10755762,
+  "kind": "jeepney",
+  "ref": "BW-02",
+  "name": "Jeepney BW-02: Bauan → Batangas (Grand Terminal)",
+  "from": "",
+  "to": "",
+  "network": "PH:PUJ:Batangas",
+  "operator": "",
+  "version": 17,
+  "last_edit": "2023-07-20",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform",121.04082,13.77815,"Santa Rita Elementary School"],["platform",121.04471,13.77556,"Provincial Sports Complex"],["platform",121.05119,13.7715,"Crossing Bolbok"],["platform",121.05706,13.78273,"St. Camillus de Lellis Hospitak"],["platform",121.05898,13.78578,"Crossing Banaba West"],["platform_exit_only",121.06085,13.78988,"Batangas City Grand Terminal"],["platform_exit_only",121.06266,13.78912,"Batangas City Grand Terminal"]],
+  "line": [[121.00754,13.79015],[121.00952,13.79063],[121.01019,13.79071],[121.01886,13.78876],[121.02039,13.7882],[121.02171,13.78749],[121.02955,13.78287],[121.03071,13.78241],[121.03513,13.78089],[121.0374,13.77997],[121.04117,13.77803],[121.04309,13.77683],[121.04851,13.77298],[121.05086,13.77116],[121.05158,13.77204],[121.05219,13.77309],[121.0531,13.77524],[121.05358,13.776],[121.0536,13.77734],[121.05396,13.77866],[121.05756,13.78359],[121.059,13.78597],[121.05932,13.78654],[121.06053,13.78946],[121.0611,13.7906],[121.0621,13.79011],[121.06189,13.78959],[121.06301,13.78901]]
+}

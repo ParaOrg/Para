@@ -86,6 +86,16 @@ osmium export --overwrite "$work/terminals.osm.pbf" -f geojsonseq --add-unique-i
 node "$root/scripts/terminals/terminals.mjs" "$work/terminals.geojsonseq" "$extract_at" \
   "$root/public/data/terminals.v1.json"
 
+# The studio's OSM route files (.scratch/osm-route-start): OSM's jeepney, UV, bus and rail route
+# relations that reach the box, an index and a file per route (osm-route-file.mjs). From the
+# whole download, not the box's cut, so a route's ways outside the box are there to chain; the
+# writer clips each line to the box itself, checks the files and fails the build on a bad one.
+osmium tags-filter --overwrite "$download" \
+  $(node "$root/scripts/osm-routes/osm-routes.mjs" --filter) -o "$work/osm-routes.osm.pbf"
+osmium cat --overwrite -f opl "$work/osm-routes.osm.pbf" -o "$work/osm-routes.opl"
+node "$root/scripts/osm-routes/osm-routes.mjs" "$work/osm-routes.opl" "$extract_at" \
+  "$root/public/data/osm-routes/v1"
+
 # The establishments from the same download (.scratch/establishments, step E3a): the shops,
 # banks, ATMs, eateries and the like, an index and a file per area cell (establishments.mjs).
 osmium tags-filter --overwrite "$extract" \

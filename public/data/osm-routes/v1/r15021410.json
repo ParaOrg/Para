@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 15021410,
+  "kind": "jeepney",
+  "ref": "T209",
+  "name": "Marikina–Pasig",
+  "from": "Pasig",
+  "to": "Marikina",
+  "network": "LTFRB National Capital Region",
+  "operator": "Marikina–Pasig–Pateros Jeepney Operators and Drivers Association",
+  "version": 23,
+  "last_edit": "2026-08-29",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",121.08379,14.55777,"Pasig City Public Market"],["platform",121.0828,14.56003,"Sabater Hospital"],["platform",121.08144,14.56055,"City Hall"],["platform",121.08137,14.56169,"Pasig TPMO"],["platform",121.08082,14.56334,"Monico Lane"],["platform",121.07997,14.56622,"Sagad High School"],["platform",121.07636,14.56735,"Rizal High School"],["platform",121.07676,14.5696,"Tatlong Bayani"],["platform",121.07892,14.57419,"Liwayway"],["platform",121.08032,14.57633,"Pasig Central SDA Church"],["platform",121.08151,14.578,"Maybunga"],["platform",121.083,14.58032,"Capri Oasis"],["platform",121.08382,14.5825,"Suarez Ville"],["platform",121.08394,14.58482,"Rosario Elementary School"],["platform",121.08485,14.58613,"Rosario Barangay Hall"],["platform",121.08783,14.58564,"Caltex Rosario"],["platform",121.08922,14.58895,"Eusebio High School"],["platform",121.09188,14.58991,"Westbank Road"],["platform",121.0919,14.59129,"DPWH Metro Manila 1st Engineering District Office"],["platform",121.09095,14.59477,"Agapito Subdivision"],["platform",121.09007,14.59687,"Daan Pasig Bridge"],["platform",121.09204,14.60077,"Pasig Doctors Medical Center"],["platform",121.09222,14.60317,"Santa Lucia Church"],["platform",121.09214,14.60511,"Acacia Escalades"],["platform",121.09229,14.60707,"Pasig Green Park Village"],["platform",121.09206,14.6101,"Crossing Santolan"],["platform",121.09221,14.61249,"St. Camillus Medical Center"],["platform",121.09237,14.6152,"Dunwoody Academy"],["platform",121.09257,14.61814,"Crossing Ligaya"],["platform",121.0926,14.61942,"Ayala Malls Feliz"],["platform",121.093,14.62154,"Pasig-Marikina Boundary"],["platform",121.09611,14.62188,"Katipunan"],["platform",121.09661,14.62287,"San Roque Elementary School"],["platform",121.09618,14.62386,"E. dela Paz"],["platform",121.09746,14.62553,"Santa Ana"],["platform",121.09849,14.62744,"H. Roxas"],["platform",121.09834,14.62871,"San Roque Barangay Hall"],["platform",121.09808,14.63073,"Marikina Science High School"],["platform_exit_only",121.09766,14.63396,"Marikina Sports Park"]],
+  "line": [[121.08382,14.55783],[121.08464,14.55752],[121.08525,14.55909],[121.08095,14.56067],[121.08183,14.56303],[121.0808,14.56332],[121.08069,14.56341],[121.08028,14.56483],[121.08003,14.56608],[121.07926,14.56678],[121.07766,14.56612],[121.07702,14.56624],[121.07614,14.56609],[121.07663,14.56931],[121.0772,14.57094],[121.07918,14.57481],[121.08216,14.57903],[121.08317,14.58074],[121.08381,14.58259],[121.0839,14.58485],[121.08439,14.5863],[121.08493,14.58615],[121.0856,14.58609],[121.08835,14.58558],[121.0888,14.58758],[121.08955,14.59033],[121.09071,14.59023],[121.09093,14.59011],[121.09223,14.58992],[121.09047,14.5963],[121.09024,14.59672],[121.08975,14.59704],[121.09143,14.59935],[121.09191,14.60041],[121.09223,14.60183],[121.09223,14.60283],[121.09203,14.60445],[121.09231,14.60807],[121.09196,14.6095],[121.09249,14.61864],[121.09431,14.61902],[121.09426,14.61921],[121.09252,14.61884],[121.0927,14.62159],[121.09472,14.62148],[121.09591,14.62182],[121.09682,14.62224],[121.09607,14.62398],[121.09691,14.6245],[121.09717,14.62487],[121.0976,14.62617],[121.09775,14.62723],[121.09848,14.6272],[121.09758,14.63395]]
+}
