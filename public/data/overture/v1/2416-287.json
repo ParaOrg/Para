@@ -39,6 +39,12 @@
     ["of0a3c72450374e66","school",120.83848,14.381,"Kids Champs Learning Center"],
     ["o65f3f7e484a9424d","college",120.82793,14.37636,"Southern Institute Of Maritime Studies",{"brand":"Southern Institute of Maritime Studies,Inc."}],
     ["o66426ffde27d40c0","college",120.82812,14.36324,"Southern Institute Of Maritime Studies",{"brand":"Southern Institute of Maritime Studies,Inc."}],
-    ["o77ad7b4590ef41b4","college",120.83464,14.37922,"Deo Roma College Of Tanza"]
+    ["o77ad7b4590ef41b4","college",120.83464,14.37922,"Deo Roma College Of Tanza"],
+    ["o65a3d889d6964fee","convenience",120.82888,14.37474,"AllenOne Tanza"],
+    ["o723fa160e3734596","supermarket",120.82795,14.36861,"Mama Bing's (Tanza)",{"brand":"Mama Bing's"}],
+    ["o83a74deb2cdb47f5","supermarket",120.84364,14.38566,"Emilus Mart"],
+    ["o5e6d92c370e54118","laundry",120.83543,14.37968,"TurboWash and Clean Laundromat"],
+    ["odedb910543d04537","laundry",120.83398,14.3783,"Bubble Wave Laundry Main"],
+    ["oe48eb6da256149f1","laundry",120.83099,14.38513,"ABRICLEAN Laundry Shop"]
   ]
 }

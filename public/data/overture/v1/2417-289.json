@@ -61,6 +61,16 @@
     ["oe54293c2c9594497","school",120.89649,14.47557,"Caridad Elementary School"],
     ["of5ee710ed9a9407b","school",120.89495,14.4833,"Cavite National High School - Senior High School"],
     ["o0dca38a2158b468b","college",120.89462,14.48843,"PNPA"],
-    ["oe1922e19b2f44aed","college",120.89915,14.48158,"San Sebastian Cavite Canacao Campus"]
+    ["oe1922e19b2f44aed","college",120.89915,14.48158,"San Sebastian Cavite Canacao Campus"],
+    ["o524a1b915a7d45a0","convenience",120.88474,14.46404,"Ruby Store"],
+    ["o9added5fcd844606","convenience",120.89796,14.47964,"CLiQQ"],
+    ["o1ba0bf3d96bf4903","supermarket",120.88036,14.45793,"Novelita cavite"],
+    ["o433ed4502acb47c0","supermarket",120.89886,14.47796,"Danilo M. Garcia Variety Store"],
+    ["o4720de417a5c40a6","supermarket",120.89919,14.4775,"Pulido's Variety Store"],
+    ["o70470810199d43c7","supermarket",120.89562,14.48425,"Laftrip Fresh Fruit Juice"],
+    ["o1ce4be978dbd432d","pharmacy",120.89783,14.47956,"Bautista Pharmacy"],
+    ["o3b1798bd267b4ec0","pharmacy",120.89867,14.48206,"Mercury Drug"],
+    ["o79a08393c7484200","pharmacy",120.89377,14.47369,"Bautista Pharmacy"],
+    ["o8a478442383a46fe","laundry",120.89622,14.48146,"PureClean Laundry Shop"]
   ]
 }

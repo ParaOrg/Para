@@ -32,6 +32,9 @@
     ["oda2f1259c8c74e83","school",120.80881,14.90404,"Little Oasis Academy Inc."],
     ["o00d7d127c0844cc9","college",120.84506,14.92154,"Centro Escolar University Malolos"],
     ["ob63422ed82da4fa5","college",120.84254,14.90283,"Mary Chiles College of Arts and Sciences"],
-    ["od155e8acfe5c4faa","college",120.84399,14.90188,"Polytechnic University of the Philippines"]
+    ["od155e8acfe5c4faa","college",120.84399,14.90188,"Polytechnic University of the Philippines"],
+    ["o7d7e736d6d264013","convenience",120.8483,14.9025,"CLiQQ"],
+    ["of2d9c95389704bf3","supermarket",120.83919,14.90282,"DCFE Online Grocery"],
+    ["o49d213cf11dc417a","pharmacy",120.84808,14.90249,"Charvie Pharmacy",{"brand":"RiteMed: Gusto Mo Bang Gumaling?"}]
   ]
 }

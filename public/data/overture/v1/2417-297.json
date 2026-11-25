@@ -130,6 +130,21 @@
     ["ocd9336f7c8d54f41","school",120.86055,14.89051,"DepEd -Segundo Esguerra Sr. Memorial Elementary School-105022"],
     ["oe2fd24879fc4495c","school",120.85725,14.87106,"Tabang Elementary School"],
     ["oeb6a1ef3177e4dee","school",120.8652,14.8985,"Marciano Elementary School Longos,pulilan, Bulacan"],
-    ["oebca4406c1954b8d","school",120.85442,14.87795,"Agnaya High School"]
+    ["oebca4406c1954b8d","school",120.85442,14.87795,"Agnaya High School"],
+    ["o1df419c6dd474c81","convenience",120.86918,14.8879,"Alfamart Banga 2nd",{"brand":"Alfamart"}],
+    ["of1fc799c51034833","convenience",120.8619,14.8736,"Dave Canvas and Tent Trading"],
+    ["o10626a97436a4cd7","supermarket",120.86726,14.88529,"WalterMart Supermarket"],
+    ["o1406a5a0bdd944db","supermarket",120.87039,14.89908,"SM Hypermarket"],
+    ["od2718e1d38214321","supermarket",120.86775,14.88843,"Plaridel Public Market"],
+    ["ofe5024d4facb4a2f","supermarket",120.85546,14.85035,"Puregold"],
+    ["o08057704abaf4edf","pharmacy",120.86229,14.8717,"Farmacia Mera"],
+    ["o50bea1276b434bfd","pharmacy",120.86922,14.87114,"Mercury Drug"],
+    ["o883bdaf1fc564cb9","pharmacy",120.86791,14.86831,"Rocka Commercial Complex"],
+    ["o9487c1dd364f4ea7","pharmacy",120.8587,14.86011,"RGSLeoncio Pharmacy"],
+    ["o9f3df2d135904cce","pharmacy",120.86857,14.8938,"Dela Rama Pharmacy"],
+    ["oa91c487bd4bb4452","pharmacy",120.86947,14.89911,"Generika BLC Pulilan Massway"],
+    ["oc4f33f5040864ef2","pharmacy",120.86198,14.88702,"Generika Plaridel Banga 1st"],
+    ["oea5ee0c04c3d40fd","pharmacy",120.86938,14.89977,"Watsons"],
+    ["o1932965ef2204f42","laundry",120.8606,14.85182,"LOLAvandera_Guiguinto"]
   ]
 }

@@ -41,6 +41,12 @@
     ["od6103d563a68435a","school",120.73177,13.9419,"Balayan Kiddie Learning Center"],
     ["o42ec3a587dc6483e","college",120.7303,13.94543,"STI College Balayan"],
     ["o86dd0d5550b6426f","college",120.71984,13.94848,"Batangas State University Balayan Extension Campus"],
-    ["od62a3b4970344a66","college",120.72852,13.93921,"Basic Education Department ICCBI"]
+    ["od62a3b4970344a66","college",120.72852,13.93921,"Basic Education Department ICCBI"],
+    ["o4b1f4c586d414c28","supermarket",120.72923,13.93672,"Yolly's Vegetables and Grocery Store"],
+    ["o8b949c30888d45fe","supermarket",120.7296,13.93698,"Newstar Balayan Batangas - Retail"],
+    ["o9630ad78d9c04bd8","supermarket",120.72887,13.93678,"Balayan Mall-Type Public Market"],
+    ["oe84bf2c6c6334c75","supermarket",120.72904,13.94971,"Waltermart Balayan Batangas",{"brand":"Bravo Biscuits"}],
+    ["o20405e6dc27a4b77","pharmacy",120.72936,13.93711,"Mercury Drug"],
+    ["o4622ad12ff7a4662","pharmacy",120.72995,13.94931,"Watsons"]
   ]
 }

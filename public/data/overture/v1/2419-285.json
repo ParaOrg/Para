@@ -84,6 +84,22 @@
     ["ob47b0cbd3b6946d2","college",120.99859,14.27274,"Neville Learning School"],
     ["od04b32859d5d4cc2","college",120.96291,14.29127,"Philippine Christian University Dasmarinas"],
     ["odf619dc333cc4a46","college",120.96236,14.29265,"Philippine Christian University"],
-    ["ofae6d200cc274e00","college",120.9753,14.2627,"ISST Philippines"]
+    ["ofae6d200cc274e00","college",120.9753,14.2627,"ISST Philippines"],
+    ["o16367e1569ee48dd","supermarket",120.97089,14.25861,"Store De Tafalla"],
+    ["o55914195732441b5","supermarket",120.98275,14.28545,"Robinsons Supermarket"],
+    ["od439be3bf2c94cb8","supermarket",120.99406,14.28022,"Bulihan Public Market"],
+    ["oeae89e56e63647ec","supermarket",120.99802,14.28148,"SM Savemore"],
+    ["oed294d844b1040ba","supermarket",120.95031,14.29895,"Monterey Meats"],
+    ["o02df8e247f024077","pharmacy",120.96069,14.28334,"Care and Cure Pharmacy"],
+    ["o0f87689a80854a11","pharmacy",120.96988,14.26112,"Valuemed Generics Pharmacy"],
+    ["o99b8d22b29724690","pharmacy",120.9589,14.28829,"South Star Drug"],
+    ["oaaf53ed7479a4c1f","pharmacy",120.95365,14.29965,"Mercury Drug"],
+    ["ocef5d84d4aac431f","pharmacy",120.95668,14.29853,"Well Medika Pharmacy"],
+    ["ocf78c2d530144c66","pharmacy",120.9539,14.29967,"Generics Pharmacy",{"brand":"TGP The Generics Pharmacy"}],
+    ["oddf0a23135d44998","pharmacy",120.99805,14.28145,"Watson Sm Dasma"],
+    ["o1201e6bcdfff44af","laundry",120.98805,14.28057,"Yuina’s Laundry House"],
+    ["o27dd6afb152244f7","laundry",120.97769,14.28761,"Spin and Shine Laundry Hub"],
+    ["o39d4e73af41f4589","laundry",120.98067,14.28003,"Spin and Shine Laundry Hub"],
+    ["o946e79b794634a94","laundry",120.95625,14.29846,"Power Wash Laundry Shop"]
   ]
 }

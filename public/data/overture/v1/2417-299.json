@@ -121,6 +121,25 @@
     ["occe73d6a40714130","school",120.89171,14.97485,"Immanuel Grace Christian Academy"],
     ["o57fef31ca59943f1","college",120.89816,14.95271,"Baliuag University Cultural and Sports Center"],
     ["o9a486ac92d50474c","college",120.88977,14.95959,"NU Bulacan"],
-    ["of4fe75c197ff4f50","college",120.89986,14.95328,"Fernandez Colleges Main Campus"]
+    ["of4fe75c197ff4f50","college",120.89986,14.95328,"Fernandez Colleges Main Campus"],
+    ["o250bda45243b4ad4","convenience",120.89949,14.95323,"Arsenia Building"],
+    ["o72a23054b41e48a5","convenience",120.89187,14.95938,"CLiQQ"],
+    ["ocf72432bfd194e50","convenience",120.89188,14.99327,"RJG Convenience Store"],
+    ["o1db05cbf1060425f","supermarket",120.89037,14.96111,"EO Executive Optical - SM City Hypermarket Baliwag"],
+    ["o694a2c60bbb54385","supermarket",120.8921,14.96137,"SM Hypermarket"],
+    ["o805f74b8e17943d7","supermarket",120.89898,14.95884,"Baliwag Grocer Cafe"],
+    ["od25fcbe2873b4620","supermarket",120.89406,14.97564,"ron ron market"],
+    ["of41e63bc1dc74a42","supermarket",120.88936,14.95923,"Puregold"],
+    ["of47d85220bec4102","supermarket",120.89867,14.95687,"Puregold"],
+    ["o40492af9e7c542a1","pharmacy",120.89306,14.98405,"TGP Sto. Niño, Baliwag"],
+    ["o4da6ed8464d64f2b","pharmacy",120.89719,14.96253,"Mercury Drugstore - Pure Gold Baliuag"],
+    ["oa83781173b184cff","pharmacy",120.89591,14.95289,"Central Star Trading"],
+    ["ocd9c93a22502403f","pharmacy",120.89583,14.96971,"MTMC Drugmart Baliuag"],
+    ["oce2ea731a0194300","pharmacy",120.88525,14.95009,"Generika Drugstore Tarcan Baliwag Branch",{"brand":"Generika"}],
+    ["o0d832343d03d4e6d","laundry",120.88628,14.9503,"Quicklean",{"brand":"Quicklean Philippines"}],
+    ["o6c3e75e73ef04523","laundry",120.89186,14.99357,"Spin2Win Laundry Services"],
+    ["oaa0f682a0f9f4dbd","laundry",120.88744,14.95094,"Rinsetagram Laundry Hub"],
+    ["od2db7bfe2a014c01","laundry",120.89699,14.96513,"CleanZone Laundry Shop Business & Distribution"],
+    ["of21e3d812ccf4e78","laundry",120.89046,14.95911,"Wash-aholic Laundry Shop"]
   ]
 }

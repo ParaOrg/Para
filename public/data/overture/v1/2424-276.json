@@ -29,6 +29,12 @@
     ["odf4bbc0180c74364","dentist",121.20615,13.84511,"Kaz Dental Clinic"],
     ["off60aa62d60d4b35","dentist",121.2039,13.84527,"ZBL Dental Clinic"],
     ["of737deede2134c61","school",121.24509,13.83831,"Tiquiwan Elementary School"],
-    ["o5da2ac414e374c7d","college",121.20577,13.84602,"PVGMA Campus"]
+    ["o5da2ac414e374c7d","college",121.20577,13.84602,"PVGMA Campus"],
+    ["o71ab473486514b1d","supermarket",121.23908,13.84312,"RnD Supermarket"],
+    ["ob4532da715a343ab","supermarket",121.2039,13.84275,"Ultra Mega Retail"],
+    ["o06c93b9c3e464890","pharmacy",121.21136,13.84602,"Southstar Drug"],
+    ["o111bde2cc00c484b","pharmacy",121.2056,13.84521,"Generika Rosario, Ba...",{"brand":"Generika"}],
+    ["o42467aa3046849f4","pharmacy",121.20625,13.84043,"JYNLEN Pharmacy"],
+    ["o61a2a666bdfa4fdd","pharmacy",121.24323,13.84112,"Mercury Drug"]
   ]
 }

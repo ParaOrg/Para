@@ -76,6 +76,22 @@
     ["o2ceee446771d43bb","college",120.87605,14.2833,"Cavite State University Trece Martires City Campus"],
     ["o46da4a4c68c6487f","college",120.87755,14.29459,"Cavite State University (Main Campus)"],
     ["o8aab14bfa56a4f31","college",120.8766,14.25415,"Cavite State University - Main Campus"],
-    ["oa64eeff6f468422b","college",120.87315,14.27136,"Colegio De Amore Admission Office"]
+    ["oa64eeff6f468422b","college",120.87315,14.27136,"Colegio De Amore Admission Office"],
+    ["o0a61e050d242457d","supermarket",120.87685,14.25979,"Center Inocencio"],
+    ["o42156fefbd424a03","supermarket",120.88551,14.28246,"Puregold"],
+    ["o4bc5292220004594","supermarket",120.86726,14.28276,"Jhegz Vegetable Dealer/Store"],
+    ["o62fde07e890c4cba","supermarket",120.8753,14.26695,"CartSmart Minimart"],
+    ["o7f8084439f504869","supermarket",120.86259,14.28462,"Tristellar Trece Martires Warehouse"],
+    ["odff2e52b055d40c7","supermarket",120.86678,14.28231,"Trece Martires City Wet And Dry Market Annex"],
+    ["oec8eabf891244890","supermarket",120.88857,14.29963,"FJL Sari-sari Store"],
+    ["o0b6e7ceccda246c4","pharmacy",120.8689,14.27936,"Generika Dos Trece Martires"],
+    ["o4063b6caa2d949dc","pharmacy",120.87556,14.26146,"Mercury Drug Trece Martires City"],
+    ["o426b1577f2794902","pharmacy",120.8689,14.28007,"The Generics Pharmacy",{"brand":"K2 Pharmacy"}],
+    ["o56d69fff5d8e4d97","pharmacy",120.87074,14.27613,"Mother Perpetual Help Drugstore and General Merchandise"],
+    ["oc954a721ba804278","pharmacy",120.86821,14.2818,"South Star Drug"],
+    ["oda75b11165204564","pharmacy",120.86497,14.25611,"Almazan's Pharmacy & General Merchandise"],
+    ["oe133924969b64d00","pharmacy",120.88405,14.25767,"San Juan De Dios Pharmacy"],
+    ["of5eca0ed060041a8","pharmacy",120.88966,14.29432,"Lunas Farmacia"],
+    ["oab94dd5ada624ca2","laundry",120.88964,14.28365,"Project12 Laundry"]
   ]
 }

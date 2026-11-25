@@ -89,6 +89,14 @@
     ["ob875b4addc344d0c","school",121.1786,14.1799,"Eduardo Barretto Sr. National High School"],
     ["oedeeff099d4e4991","school",121.16468,14.19527,"TUON Academy - Calamba"],
     ["of458da93326b48da","school",121.15839,14.18923,"Tech-Grow Kids Development School"],
-    ["o817f5367fe104b5d","college",121.16497,14.18973,"Colegio de San Juan de Letran Calamba"]
+    ["o817f5367fe104b5d","college",121.16497,14.18973,"Colegio de San Juan de Letran Calamba"],
+    ["od9f17803842d4adf","convenience",121.15801,14.19223,"All Day"],
+    ["o631410cb44994ef6","supermarket",121.16552,14.19374,"Funhan Mart Calamba"],
+    ["o7ed8909536044189","supermarket",121.15598,14.17992,"Popoy's Kapihan"],
+    ["of046de3dce64454b","supermarket",121.1657,14.19348,"Urbanitea - Puregold Halang Calamba",{"brand":"Puregold"}],
+    ["o13af1b9cf1764ed0","pharmacy",121.16313,14.1958,"Watsons Pharmacy",{"brand":"Watsons"}],
+    ["o494ed7b860e740ad","pharmacy",121.15825,14.19082,"Unity-Med Pharmacy"],
+    ["oc8b26d5955714215","laundry",121.17584,14.18298,"Alagang Linis Laundry Service"],
+    ["of5afa294adc14603","laundry",121.16265,14.19736,"Suds Laundry and Dryclean Services"]
   ]
 }

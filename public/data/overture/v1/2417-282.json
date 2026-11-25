@@ -38,6 +38,11 @@
     ["o7891ad11a0054dd8","school",120.89125,14.1251,"Anuling Elementary School"],
     ["o93fff9cfbb4841a8","school",120.8556,14.1314,"Alfonso Integrated High School"],
     ["oaf9285ebd5414c21","school",120.86268,14.1225,"DepEd Tayo Mangas ES - Cavite Province"],
-    ["oc8323c03259b4e10","school",120.89548,14.13669,"DepEd Panungyan Elementary School"]
+    ["oc8323c03259b4e10","school",120.89548,14.13669,"DepEd Panungyan Elementary School"],
+    ["o5db111b5dda84de0","supermarket",120.85262,14.14335,"El Goel Convenience Store"],
+    ["o961f8ec875b649f2","supermarket",120.89563,14.13238,"Walter Mart Supermarket",{"brand":"WalterMart Supermarket"}],
+    ["oe3a01f58ce5f4afb","pharmacy",120.89563,14.13277,"Mercury Drug"],
+    ["o01bd3aaa5612498c","laundry",120.89342,14.12269,"Laundrylane Laundry Shop"],
+    ["ofeebc283030c4d4b","laundry",120.85243,14.13461,"Speedking Laundromat Alfonso"]
   ]
 }

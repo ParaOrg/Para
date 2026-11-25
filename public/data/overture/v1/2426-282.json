@@ -19,6 +19,9 @@
     ["o5748f41da23341a8","school",121.33099,14.10707,"Dolores Elementary and High School"],
     ["o7f6b0409d5fc4dfa","school",121.31458,14.14375,"Perez Elementary School"],
     ["o994445b051764243","school",121.3033,14.12263,"Imok Elementary School"],
-    ["oea3923776a674b23","school",121.31052,14.14194,"DepEd Masapang Elementary School - Laguna"]
+    ["oea3923776a674b23","school",121.31052,14.14194,"DepEd Masapang Elementary School - Laguna"],
+    ["o979aaf42c2624c7c","convenience",121.30508,14.13579,"Vicky's Sari Sari Store"],
+    ["o4a38ab396bfd4589","pharmacy",121.31456,14.14603,"Generika Drugstore",{"brand":"Generika"}],
+    ["o1d0b49f0619347be","laundry",121.30562,14.11625,"Bubble Chemistry"]
   ]
 }

@@ -44,6 +44,14 @@
     ["o6901e3b539fa4ad8","college",121.00235,14.28617,"University of Perpetual Help System Jonelta",{"brand":"University of Perpetual Help System Laguna"}],
     ["o75a3631fb8bc47b3","college",121.00224,14.28646,"University of Perpetual Help GMA",{"brand":"University of Perpetual Help System Laguna"}],
     ["o924c43b3372f4a3e","college",121.0425,14.26228,"De La Salle University – Laguna Campus"],
-    ["oc1ec172d8fd24678","college",121.04417,14.26257,"De La Salle Canlubang"]
+    ["oc1ec172d8fd24678","college",121.04417,14.26257,"De La Salle Canlubang"],
+    ["o6401e5759c9443e9","supermarket",121.0323,14.29689,"Shopwise"],
+    ["ob4f70d592bdf4b29","supermarket",121.04124,14.29383,"Murasamin Grocery & Snack Bar"],
+    ["ob5d2696a53d84c58","supermarket",121.00653,14.28147,"SM Savemore"],
+    ["oc6d7e6c9ee424287","supermarket",121.04611,14.28961,"The Dream Pantry"],
+    ["of6a7e2e21a2840c4","supermarket",121.00057,14.2825,"Newstar Silang Cavite - Retail"],
+    ["ofa6a0267e7c14eaa","supermarket",121.00619,14.29394,"Super8 Grocery Warehouse"],
+    ["o49b7d3a683554d34","pharmacy",121.0017,14.29366,"RPh Pharmacy"],
+    ["ofd9e62eb262f47af","laundry",121.01748,14.29608,"Bestcleaners Laundry Service"]
   ]
 }

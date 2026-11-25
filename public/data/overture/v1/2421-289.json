@@ -76,6 +76,23 @@
     ["o40d3090dc32d4422","college",121.06077,14.48873,"Taguig City University"],
     ["o51b65e164af14972","college",121.05767,14.49103,"Taguig City University",{"brand":"Taguig"}],
     ["o56051ab44ff449f6","college",121.05116,14.48881,"Polytechnic University of the Philippines Taguig Branch"],
-    ["o5776b531447a4837","college",121.05148,14.48892,"TCU Center for Guidance and Counseling Services"]
+    ["o5776b531447a4837","college",121.05148,14.48892,"TCU Center for Guidance and Counseling Services"],
+    ["o68ca398784044166","convenience",121.05679,14.47848,"Happy Seasons Mini-Mart"],
+    ["o718425514e6941f5","convenience",121.05003,14.49875,"CLiQQ"],
+    ["oe28d2d643fed4386","convenience",121.05713,14.47794,"Mahogany Place 3 Convenience Store"],
+    ["o4a500e72e76f4d07","supermarket",121.05228,14.47219,"Snow Mountain Dairy Corporation"],
+    ["o63697efbc4444db3","supermarket",121.06062,14.48772,"Taguig People's Market"],
+    ["o6c85e2f0ce4a44ef","supermarket",121.05914,14.49809,"ACJM Mini Grocery"],
+    ["od1413c5fb0004398","supermarket",121.05926,14.47471,"Bolerong Busted Airconditioning Services"],
+    ["oe550328aa4154a1a","supermarket",121.05824,14.49193,"Mr K Korean Grocery"],
+    ["oaa34557f6b1744cf","pharmacy",121.05692,14.46983,"Mercury Drug"],
+    ["ob0ec3303d1604653","pharmacy",121.05492,14.46595,"Rose Pharmacy"],
+    ["o2375c2d9d7024f5b","laundry",121.05235,14.46132,"Labadab",{"brand":"Labadab Laundry"}],
+    ["o51264a4925f94133","laundry",121.05508,14.49489,"Purely laundry shop"],
+    ["o9ce2d2a7fc884df3","laundry",121.05229,14.4794,"Suds Laundry and Dryclean Services - Grand Hamptons BGC"],
+    ["oadbc80572355473d","laundry",121.05917,14.4981,"ACJM Laundry Station"],
+    ["oadf17897393242c6","laundry",121.0544,14.49982,"Aqua benZ and Benzsayd's Laundry Shop"],
+    ["odd551ca088864265","laundry",121.05984,14.48905,"Laundry Moto"],
+    ["of74236909eb7420a","laundry",121.05171,14.49931,"Shukran Laundry Services"]
   ]
 }

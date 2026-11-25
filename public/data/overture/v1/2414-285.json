@@ -36,6 +36,8 @@
     ["od15079bac426414c","school",120.734,14.27646,"Cavite Science Integrated School"],
     ["oe23c3b14da7f4583","school",120.73576,14.27633,"DepEd Maragondon Elementary School"],
     ["oe24e6b1ff0fc4b1c","school",120.73441,14.27702,"Cavite Science Integrated School-RSHS Supreme Student Government"],
-    ["o0156b0a2a1094f1a","college",120.73457,14.27535,"Polytechnic University of the Philippines"]
+    ["o0156b0a2a1094f1a","college",120.73457,14.27535,"Polytechnic University of the Philippines"],
+    ["o9c87a87deb0d4a48","convenience",120.71063,14.28317,"Alfamart Sapang 1 Ternate",{"brand":"Alfamart"}],
+    ["oaa3ee0a4019843e4","supermarket",120.71648,14.28282,"Ternate Public Market"]
   ]
 }

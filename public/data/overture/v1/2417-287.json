@@ -150,6 +150,18 @@
     ["oba15de80a24644c6","school",120.86212,14.3904,"Santa Cruz Elementary School"],
     ["oa69146c6c0f54ad0","college",120.8805,14.38495,"Cavite State University General Trias Campus"],
     ["oaa2b634cfb224692","college",120.85278,14.39185,"FEAPITSAT Colleges Main"],
-    ["of8b95653aade4175","college",120.8713,14.3715,"LPU Cavite - College of Engineering and Architecture"]
+    ["of8b95653aade4175","college",120.8713,14.3715,"LPU Cavite - College of Engineering and Architecture"],
+    ["o637d805712b04dd5","convenience",120.88367,14.38704,"Alfamart"],
+    ["ocb1e8a31536f4387","convenience",120.89108,14.37304,"Mortein's General Merchandise"],
+    ["o6fcc53e0ab8c45a6","supermarket",120.85997,14.3517,"AllDay Supermarket Tanza"],
+    ["oabf195c856534c71","supermarket",120.89645,14.38357,"Honeyger Commercial Building"],
+    ["oc944977e0bc34a31","supermarket",120.8781,14.38725,"Gen. Trias Cavite Public Market"],
+    ["o70bf132296154c56","pharmacy",120.86586,14.38645,"Metro Tanza Drugstore and General Merchandise"],
+    ["oc9bd2b55ea164d97","pharmacy",120.8736,14.38499,"Fabs Pharmacy"],
+    ["oce2b64f53a2a4705","pharmacy",120.85271,14.39168,"Southstar Drug"],
+    ["ofb21459b4df9426e","pharmacy",120.85232,14.39253,"Generika Drugstore",{"brand":"Generika"}],
+    ["ofb893c4a72394c02","pharmacy",120.86585,14.3969,"Southstar Drug"],
+    ["o5d3e6d6f86d54006","laundry",120.85891,14.39891,"Washtopia Laundry Services"],
+    ["o758d0e05656b4368","laundry",120.88007,14.38505,"Ryouichi Laundry Shop - Navarro Branch"]
   ]
 }

@@ -77,6 +77,18 @@
     ["oc44a6ee7b660424d","school",120.64517,14.09446,"Bunducan National High School"],
     ["oe5601bb4c619411a","school",120.63728,14.07422,"Banilad Elementary School"],
     ["o634e1cddf2814453","college",120.62605,14.06666,"College of Health Sciences - Batangas State University ARASOF-Nasugbu"],
-    ["oa63fb86c3f7d4106","college",120.62624,14.06681,"Batangas State University Nasugbu Campus",{"brand":"Batangas State University"}]
+    ["oa63fb86c3f7d4106","college",120.62624,14.06681,"Batangas State University Nasugbu Campus",{"brand":"Batangas State University"}],
+    ["odcfb28a2c5a24cb3","convenience",120.63784,14.07176,"Likimza Consumer Goods Trading"],
+    ["ode189f6be2fa427a","convenience",120.63551,14.06736,"Alfamart"],
+    ["o12921f307c434d33","supermarket",120.64845,14.05414,"WalterMart Supermarket"],
+    ["o19d32ced4f7d4cc0","supermarket",120.63232,14.07222,"Goldilocks"],
+    ["o59df38bbac5f4c5e","supermarket",120.63092,14.0717,"Supermac Mart Nasugbu Branch"],
+    ["od785d69e3c6e47af","supermarket",120.63108,14.07063,"Nasugbu Public Market"],
+    ["o2e22a9851f214e9e","pharmacy",120.63438,14.07745,"Mercury Drug"],
+    ["oc8de208e6ee14e87","pharmacy",120.63913,14.05694,"Mercury Drug"],
+    ["od6fdb3112ae5415d","pharmacy",120.63087,14.06994,"La Nostra Pharmacy"],
+    ["oeb450dd496f941e8","pharmacy",120.6326,14.0722,"Watsons"],
+    ["o0ef6449dec1c4495","laundry",120.63478,14.06905,"House of Wash"],
+    ["o726709bc90b54ded","laundry",120.63516,14.07313,"Fepot's Laundry Shop"]
   ]
 }

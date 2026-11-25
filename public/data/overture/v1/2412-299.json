@@ -74,6 +74,14 @@
     ["o573e52e26d084039","college",120.61706,14.96838,"Mary the Queen College (Pampanga), Inc. - Main Campus"],
     ["o905835e78af145c2","college",120.63485,14.9661,"Guagua National Colleges"],
     ["oadbb65d3d2cc4dc0","college",120.61821,14.99942,"Santa Rita College"],
-    ["oc887e43d27c4459c","college",120.61538,14.97895,"Pri College Of Sciences"]
+    ["oc887e43d27c4459c","college",120.61538,14.97895,"Pri College Of Sciences"],
+    ["o9021b692bb4d4ae7","convenience",120.625,14.986,"Bonjour"],
+    ["o5a7b3b2f8c5e476b","supermarket",120.62849,14.96243,"Puregold Jr. Guagua",{"brand":"Puregold"}],
+    ["o833c7e652d8c4853","supermarket",120.60524,14.97088,"BuyMaxx Supermarket"],
+    ["ocfed51d3a03a449c","supermarket",120.63071,14.96443,"Chuzon Guagua, Pampanga"],
+    ["od84cdca5091c4fcf","supermarket",120.62188,14.98467,"Guagua Town Center"],
+    ["odccc920d830a4f14","supermarket",120.63238,14.96538,"Savemore Market",{"brand":"Savemore Binangonan Central Mall"}],
+    ["o6caacc4d3b0b483c","pharmacy",120.63593,14.96498,"Watsons"],
+    ["odfe50fd2c4f64330","pharmacy",120.6337,14.96214,"Mercury Drug"]
   ]
 }

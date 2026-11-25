@@ -142,6 +142,20 @@
     ["o7fe020c2ff904f6a","college",121.11665,14.31667,"Dominican College of Sta. Rosa, Laguna, Inc."],
     ["oa575e7a53e29403e","college",121.103,14.30428,"Our Lady of Fatima University",{"brand":"Our Lady of Fatima University (OLFU)"}],
     ["ob69b1c1dc8b340f7","college",121.11378,14.30473,"Ieti-Biñan"],
-    ["of14efec402074448","college",121.11665,14.31667,"Miriam College Nuvali"]
+    ["of14efec402074448","college",121.11665,14.31667,"Miriam College Nuvali"],
+    ["o008300b319b64c43","supermarket",121.11323,14.30752,"JM's Minimart"],
+    ["o2ddecd9b7f464a7a","supermarket",121.11787,14.30835,"SM Savemore"],
+    ["o491674f5b13f46a4","supermarket",121.10535,14.32067,"SM Savemore"],
+    ["o496abcc2773a420f","supermarket",121.11654,14.31177,"Savemore Market",{"brand":"Savemore Binangonan Central Mall"}],
+    ["o6ba4eea2601344be","supermarket",121.11169,14.3113,"Robinsons Supermarket, Solenad 2, Nuvali"],
+    ["o9b322105d3e248a7","supermarket",121.11626,14.31147,"Save More"],
+    ["oaff6a215aa1b42ed","supermarket",121.12118,14.30345,"G Minimart"],
+    ["o410acf04703544fe","pharmacy",121.11147,14.31066,"Mercury Drug"],
+    ["o4b2b0581bb524ed8","pharmacy",121.11221,14.31584,"Southstar Drug"],
+    ["o74e6656af4f74eeb","pharmacy",121.11551,14.30108,"TGP The Generics Pharmacy"],
+    ["o785ebe0d21bc42d8","pharmacy",121.1171,14.31633,"Mercury Drug"],
+    ["ob743325b571f48d3","pharmacy",121.12096,14.31464,"Farmacia Ni Dok Sta. Rosa Laguna"],
+    ["o7278ea6bae394491","laundry",121.11597,14.311,"Quicklean Sta Rosa"],
+    ["oafd27ddfa4af4195","laundry",121.1158,14.31108,"The Spinnery Laundromat - Sta. Rosa"]
   ]
 }

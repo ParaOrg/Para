@@ -142,6 +142,26 @@
     ["oced1a108063f4242","college",121.12724,14.74915,"Urs-Rodriguez"],
     ["oe976051365334433","college",121.13354,14.74749,"Colegio de Montalban Official"],
     ["ofe90e6a5c866446d","college",121.14523,14.73291,"Saint Joseph College Of Quezon City",{"brand":"St. Joseph's College Basic Education Department"}],
-    ["off306b784d884648","college",121.14002,14.72848,"SocMed21102025"]
+    ["off306b784d884648","college",121.14002,14.72848,"SocMed21102025"],
+    ["o357d60992fb54831","supermarket",121.13749,14.71367,"EJ Bigasan Rice Retailer"],
+    ["o459f9e621e964a27","supermarket",121.11494,14.70151,"Mister Donut"],
+    ["o4bc5d269fd8c4cd7","supermarket",121.13588,14.70945,"Evelyn Pinuela Store"],
+    ["o88c0fab3d22643a7","supermarket",121.1352,14.71297,"Robinsons Supermarket"],
+    ["ob7a50e2f30344b6d","supermarket",121.14073,14.72943,"Giyummy Meats and Korean Supermarket"],
+    ["odcdab23c145a4a86","supermarket",121.13842,14.71389,"Montaña, Rodriguez Rizal."],
+    ["oddeb9c20a19143aa","supermarket",121.1335,14.73169,"Robinsons Supermarket"],
+    ["oe542676bfb294e0e","supermarket",121.12953,14.70928,"Robinsons Supermarket"],
+    ["oee31a33eada44837","supermarket",121.13661,14.73032,"Montalban Public Market"],
+    ["of4855a791518461d","supermarket",121.12572,14.70134,"Puregold Ivory Theater",{"brand":"Puregold"}],
+    ["o4f4a5c49b3ab4f6d","pharmacy",121.14509,14.73157,"Watsons"],
+    ["o5e9c6f2a8b094c33","pharmacy",121.14776,14.73378,"Mercury Drug"],
+    ["o7c867df24ccf4e87","pharmacy",121.10605,14.70612,"Farmacia Ni Dok"],
+    ["o843ffb96d0cf4c9f","pharmacy",121.13544,14.71388,"TrueMed Medical Clinic and Pharmacy"],
+    ["od83c389719ce4605","pharmacy",121.1329,14.70988,"TGP The Generics Pharmacy"],
+    ["of662bd53157448a9","pharmacy",121.13814,14.746,"Southstar Drug"],
+    ["o58ad6bd244cc4fc9","laundry",121.14578,14.73369,"Eastwood Laundry Shop"],
+    ["o5d3c1e1ed4a748bd","laundry",121.13813,14.71821,"Kosh Kosh Laundry Services"],
+    ["o71f2b8e6b5bd4a6f","laundry",121.14982,14.73522,"IKoshKosh Laundry Services - Main Branch"],
+    ["ob2a789f268be4823","laundry",121.1396,14.72887,"Labsbadami Laundry Center"]
   ]
 }

@@ -60,6 +60,13 @@
     ["o806bb6911b6f4118","college",121.03577,14.21732,"Adventist University of the Philippines Academy"],
     ["o8a91a64bcd664c9b","college",121.04681,14.22661,"AUP Music Department"],
     ["obf4c19a5191d4826","college",121.0355,14.21762,"AUP Academy"],
-    ["oe96962892f51447c","college",121.03738,14.21504,"AUP Music Department"]
+    ["oe96962892f51447c","college",121.03738,14.21504,"AUP Music Department"],
+    ["o7f5839cffead4847","supermarket",121.0476,14.24856,"The Marketplace Westborough",{"brand":"The Marketplace"}],
+    ["o8779f20d7edb443e","supermarket",121.02324,14.20697,"SM Savemore"],
+    ["ocea6b082d73f4d10","supermarket",121.02547,14.20825,"Puting Kahoy Wet And Dry Market"],
+    ["of2961763de0c4f33","supermarket",121.02256,14.20667,"Savemore Market Meridian",{"brand":"Savemore Binangonan Central Mall"}],
+    ["obbeec95e4df64acf","pharmacy",121.01659,14.24101,"Mercury Drug"],
+    ["o0c1e2f5b906444e2","laundry",121.04681,14.22661,"Pinky's Self Service Laundry"],
+    ["od784bd8b92024cdc","laundry",121.03558,14.21647,"Laundromat"]
   ]
 }

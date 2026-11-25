@@ -22,6 +22,11 @@
     ["ob4eb863b8d454be6","clinic",120.922,14.1703,"Adem Elderly Nursing Home and Services"],
     ["o5ed816074a714c86","school",120.92377,14.16728,"Amadeo Elementary School"],
     ["o827f35cb653c49eb","school",120.92505,14.16725,"Amadeo National High School"],
-    ["obe84b1a9148d4010","school",120.92334,14.16811,"Talon Elementary School"]
+    ["obe84b1a9148d4010","school",120.92334,14.16811,"Talon Elementary School"],
+    ["oec6b2408be464113","convenience",120.92203,14.16952,"CLiQQ"],
+    ["o9eb45920c52b4d86","supermarket",120.92415,14.17161,"Savemore Amadeo",{"brand":"Savemore Binangonan Central Mall"}],
+    ["of4307997d88042e4","supermarket",120.92767,14.17287,"Amadeo Public Market"],
+    ["od6ff3513b188440f","pharmacy",120.92419,14.17113,"Mercury Drug"],
+    ["o6adff7efbb604239","laundry",120.92071,14.17401,"Chikxee Laundry House"]
   ]
 }

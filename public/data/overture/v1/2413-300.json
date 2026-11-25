@@ -198,6 +198,27 @@
     ["o2b4d0434279c406d","college",120.65379,15.00325,"DHVSU Graduate School"],
     ["o37535fd0ee8e4947","college",120.67764,15.02895,"City College of San Fernando"],
     ["o63a457f3c97f46a1","college",120.68285,15.04146,"STI College San Fernando"],
-    ["oee12cc81878145a4","college",120.68948,15.03195,"AMA Computer College"]
+    ["oee12cc81878145a4","college",120.68948,15.03195,"AMA Computer College"],
+    ["o7ca9d110d5444414","convenience",120.67715,15.03705,"Puregold Jr."],
+    ["o7ec61b3ed1eb424a","convenience",120.6956,15.0327,"CLiQQ"],
+    ["o9ec7f94c6b8941c5","convenience",120.69823,15.04908,"Ministop"],
+    ["oc7ba3a1b1287412f","convenience",120.686,15.0434,"Bonjour"],
+    ["oeb68e9976ce44a14","convenience",120.67064,15.02331,"Shell Select"],
+    ["o0b1d5a76636a46d7","supermarket",120.69302,15.02942,"AA Grocery"],
+    ["o5cde9862e6c94808","supermarket",120.68715,15.02539,"Allies Wonder Peanuts"],
+    ["o66dae5891039470d","supermarket",120.66359,15.0492,"Puregold"],
+    ["o6b55ea13a9924958","supermarket",120.69789,15.04973,"Robinsons Supermarket"],
+    ["o7b592a09f6494096","supermarket",120.69343,15.02924,"Old Public Market"],
+    ["o96c8cea66ced417c","supermarket",120.69071,15.04749,"SNR Pampanga",{"brand":"S&R Membership Shopping"}],
+    ["oaac0569dc2b743d2","supermarket",120.69073,15.04741,"S & R",{"brand":"S&R Membership Shopping"}],
+    ["ocd1396771cdf4b37","supermarket",120.68671,15.04273,"San Miguel Foods",{"brand":"San Miguel Family Foods"}],
+    ["o9b20108576e84af1","pharmacy",120.67227,15.04535,"Southstar Drug"],
+    ["obac34ebb80bb4562","pharmacy",120.69216,15.02778,"Watsons"],
+    ["obfe96e1f80e84a01","pharmacy",120.66415,15.04911,"Rose Pharmacy"],
+    ["odea91e8ecb52433c","pharmacy",120.69756,15.04982,"Mandarin Chinese Drug Center"],
+    ["oebb166dbc44d481b","pharmacy",120.66535,15.04982,"Watsons"],
+    ["of4422a89dffb46e5","pharmacy",120.69315,15.0287,"Southstar Drug San Fernando Pampanga Sto. Rosario",{"brand":"Southstar Drug - Palanginan Branch"}],
+    ["oa618d8403b9c4226","laundry",120.67689,15.02491,"The Laundry Lounge by Cassandra"],
+    ["oc0495a7df3054b7b","laundry",120.67217,15.04365,"The Lavendry Wash and Fold"]
   ]
 }

@@ -42,6 +42,11 @@
     ["od7393e894df644fa","school",120.77373,14.90426,"Caniogan Elementary School - Calumpit Bulacan"],
     ["odf3d84ba835b4129","school",120.76911,14.92266,"Dr. A. N. Santos Memorial Elementary School"],
     ["oe46edacd0cc14323","school",120.76808,14.91747,"F. Mendoza Memorial Elementary School"],
-    ["oa06dd6dc539844d3","college",120.75714,14.94123,"ACLC Apalit"]
+    ["oa06dd6dc539844d3","college",120.75714,14.94123,"ACLC Apalit"],
+    ["o304f5666ae2e489e","convenience",120.76487,14.91407,"Xyril's Store & Play Station"],
+    ["o54568b422bc34c8d","supermarket",120.76791,14.91363,"Nelly's Special Longganisa"],
+    ["o96e8f7786b4840d1","supermarket",120.75574,14.93477,"SM Savemore"],
+    ["oeb68af7b73cf4413","supermarket",120.765,14.92434,"Puregold"],
+    ["o104cc0cf5b634582","pharmacy",120.76665,14.91667,"Mercury calumpit"]
   ]
 }

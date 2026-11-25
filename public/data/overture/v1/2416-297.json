@@ -158,6 +158,25 @@
     ["ocd35847d60f5460d","college",120.81258,14.85678,"AMA Computer College Malolos"],
     ["od2637de240734802","college",120.81812,14.85137,"Bulacan State University - College of Science",{"brand":"Bulacan State University-Meneses Campus"}],
     ["of014fd51648f46c5","college",120.82182,14.85013,"ACLC"],
-    ["ofe5905d6e8084527","college",120.80853,14.86081,"Centro Escolar University Malolos"]
+    ["ofe5905d6e8084527","college",120.80853,14.86081,"Centro Escolar University Malolos"],
+    ["o4d480f21282c406d","convenience",120.81396,14.85091,"Omma Saranghae Mini Mart"],
+    ["of75a771c4c2b499c","convenience",120.80718,14.86152,"JGMD Multispecialty Clinic and Animal Bite Center"],
+    ["o5b75c9523dc1422d","supermarket",120.81199,14.85822,"SM Savemore"],
+    ["ode7f093bcb7f492b","supermarket",120.80424,14.85176,"PUREGOLD"],
+    ["of71e8df513314de8","supermarket",120.80233,14.86906,"South Supermarket Malolos"],
+    ["o5bdb83c9487a41dd","pharmacy",120.82114,14.8669,"TGP The Generics Pharmacy"],
+    ["oab84d66ea4ea44d0","pharmacy",120.82355,14.85006,"Watsons"],
+    ["oae8cae0a67944d52","pharmacy",120.82114,14.8669,"The Generics Pharmacy",{"brand":"TGP The Generics Pharmacy"}],
+    ["od0dd361eaa4a49d0","pharmacy",120.8023,14.86849,"Southstar Drug"],
+    ["oed6daa56cd6a4e17","pharmacy",120.82177,14.87387,"Peaches Pharmacy"],
+    ["ofc71b537bee049fe","pharmacy",120.80498,14.87185,"Rx Corner Pharmacy"],
+    ["o09cc9f3f40e54d7e","laundry",120.82089,14.86687,"Spin Hub"],
+    ["o5a5413883c904d4d","laundry",120.81811,14.85288,"Wash Shop Dok Laundry Services"],
+    ["o703c00b71e69403b","laundry",120.80618,14.86241,"The Lavender Coin Launderette"],
+    ["o78885a9c39e24e9c","laundry",120.8081,14.87009,"Rose Laundry Hub"],
+    ["oa02627300baf4f26","laundry",120.80949,14.86129,"Quicklean Philippines"],
+    ["oc08b46f7d44f462c","laundry",120.81677,14.85303,"AZZUL Laundry Services"],
+    ["of126e1ede16a4ea0","laundry",120.81194,14.85605,"Vita Spin Laundromat"],
+    ["ofdc93619d78c44cf","laundry",120.8242,14.86862,"Buena Lavada Laundry Services"]
   ]
 }

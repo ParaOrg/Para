@@ -145,6 +145,25 @@
     ["o2bb85b68815b4468","college",121.06168,14.35435,"San Pedro College of Business Administration"],
     ["o9ccfb1e0babf424e","college",121.05275,14.37228,"San Pedro College of Business Administration"],
     ["oceb640bc0a954e29","college",121.06208,14.35268,"Baptist Heritage Bible College (BHBC)"],
-    ["oefbafbc256e04819","college",121.05315,14.36687,"Laguna Northwestern College"]
+    ["oefbafbc256e04819","college",121.05315,14.36687,"Laguna Northwestern College"],
+    ["o55448937159948ed","convenience",121.05809,14.36057,"Family Mart Nueva San Pedro Laguna"],
+    ["o28a637a7435f4e2c","supermarket",121.05669,14.36152,"Savemore San Pedro"],
+    ["o5e7a6948ff8943de","supermarket",121.05161,14.36702,"Super8 Grocery Warehouse"],
+    ["o5fe44ee2b7224472","supermarket",121.0514,14.36678,"Shopwise"],
+    ["o67c94262df1549cb","supermarket",121.06403,14.36297,"SM Savemore"],
+    ["o6cfd7bfaf7a5402d","supermarket",121.05886,14.3576,"SM Savemore"],
+    ["o6dea1798463649e1","supermarket",121.06149,14.35249,"Robinsons Supermarket"],
+    ["o9f7643324f6c4a3c","supermarket",121.0505,14.3684,"Puregold Price Club"],
+    ["ob96479b30b7140b6","supermarket",121.05702,14.36328,"Ester Supermarket, Inc."],
+    ["oe27d3105245c440a","supermarket",121.05347,14.35444,"Shopwise"],
+    ["o42ed418109dc453b","pharmacy",121.05093,14.36219,"Mercury Drug"],
+    ["o6a3e765c540c4d59","pharmacy",121.05708,14.35486,"Mercury Drug"],
+    ["o6ac36b9f6bfb4a26","pharmacy",121.0612,14.37001,"Mercury Drug"],
+    ["o71015e9a4c834c17","pharmacy",121.0505,14.36879,"Mercury Drug"],
+    ["o96af827984e8435c","pharmacy",121.0621,14.35222,"Watsons"],
+    ["od282bb224c3d4762","pharmacy",121.05688,14.36142,"Watsons"],
+    ["od8813b0282d9417f","pharmacy",121.06221,14.35237,"Southstar Drug"],
+    ["o1389b19f9a4d4505","laundry",121.06628,14.35311,"Deep Wash Laundry Shop"],
+    ["o7bae961b95c44551","laundry",121.0529,14.36676,"Eight Clean Laundry Service"]
   ]
 }

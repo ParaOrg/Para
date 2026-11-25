@@ -87,6 +87,11 @@
     ["o9c9c830c8da84323","school",121.42433,13.92856,"San Isidro Elementary School"],
     ["oa5b4233d56e642cd","school",121.42649,13.92611,"Candelaria Elementary School Annex 1 & 2"],
     ["oa836bc90b5424939","school",121.43106,13.93008,"Sta. Catalina Norte Elementary School"],
-    ["o87ae32a05f864f27","college",121.43127,13.93052,"Manuel S. Enverga University Foundation"]
+    ["o87ae32a05f864f27","college",121.43127,13.93052,"Manuel S. Enverga University Foundation"],
+    ["o2af7175f85454859","supermarket",121.42612,13.92723,"One Stop Shop Candelaria"],
+    ["oe060c781a7c0406d","pharmacy",121.4324,13.92987,"Watsons"],
+    ["oef183275c5294121","pharmacy",121.42458,13.9307,"Southstar Drug"],
+    ["o2bfb4256d5644ff1","laundry",121.4324,13.93773,"AR Laundry Shop"],
+    ["o72cf0db7b2e449a6","laundry",121.42425,13.92922,"AR Laundry Shop"]
   ]
 }

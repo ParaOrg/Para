@@ -52,6 +52,17 @@
     ["o9df8edb247b9423e","school",121.04383,14.90766,"Norzagaray Elementary School"],
     ["oc3e4ecbb86814858","school",121.02979,14.94066,"Benito Cruz Elementary School"],
     ["od9d7ef0603bf40f3","school",121.04812,14.90579,"Padling Elementary School"],
-    ["ob4a05d2fdda1411c","college",121.04245,14.90412,"Norzagaray College"]
+    ["ob4a05d2fdda1411c","college",121.04245,14.90412,"Norzagaray College"],
+    ["o3cb95f12aee24dc1","convenience",121.02854,14.92833,"Ministop"],
+    ["oa053d16e64804f89","convenience",121.04453,14.90532,"Japok General Merchandise"],
+    ["o157137a2d96e4991","supermarket",121.02945,14.92219,"Divimart Angat"],
+    ["o9b6622dac3fc41a5","supermarket",121.03822,14.90525,"GREEN Leaftea Milktea Supply"],
+    ["oa898b4fff3244245","supermarket",121.04929,14.91131,"Fortune Market"],
+    ["oef41bac35c2d41bd","supermarket",121.04379,14.9031,"Tonga'S Sari Sari Store"],
+    ["of725dbe6e8374155","supermarket",121.02692,14.94284,"Gabe Supermarket"],
+    ["o252bf288caf34f99","pharmacy",121.01942,14.92245,"Vergel de Dios Pharmacy"],
+    ["o34f4517f14fd400a","pharmacy",121.02953,14.92799,"Farmacia Hazel"],
+    ["o4a2774c65c70490e","pharmacy",121.04729,14.90907,"BlueCross Pharmacy"],
+    ["oe24125bde2274a2c","pharmacy",121.03005,14.92824,"TGP The Generics Pharmacy"]
   ]
 }
