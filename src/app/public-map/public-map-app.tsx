@@ -460,7 +460,7 @@ export function PublicMapApp() {
         {/* With nothing open: ways to explore, and the donation card (Figma 4852:35066). */}
         {!cards.open && (
           <Suspense fallback={null}>
-            <ExploreCards onLocate={() => locator.current?.locate()} />
+            <ExploreCards onLocate={() => locator.current?.locate()} onRest={cards.setIdleSnap} />
           </Suspense>
         )}
       </div>

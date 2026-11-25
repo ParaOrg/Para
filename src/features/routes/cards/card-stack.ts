@@ -36,11 +36,13 @@ export function tripBack(
 }
 
 /**
- * The height the sheets share: a pick and ‹ keep it as it was; with nothing
- * open it goes back to Low, where every sheet opens (the owner's rule).
+ * The height the sheets share: a pick, ‹, SWITCH and Vice Versa keep it as it was. With nothing
+ * open it rests where the first card does (`idle`: the public map's explore cards, open at their
+ * own height or at Low), so the card a tap opens stays at the height before it (the owner's rule,
+ * 2026-11-25); where nothing stands there (the studio), at Low.
  */
-export function sharedSnap(snap: Snap, anyOpen: boolean): Snap {
-  return anyOpen ? snap : 'low';
+export function sharedSnap(snap: Snap, anyOpen: boolean, idle: Snap = 'low'): Snap {
+  return anyOpen ? snap : idle;
 }
 
 /**

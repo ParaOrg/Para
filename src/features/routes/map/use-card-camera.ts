@@ -6,6 +6,7 @@ import type { Snap } from '@/shared/ui/sheet-gesture';
 import type { LngLat } from '@/shared/utils/geo';
 
 import { clearOfSheet } from './sheet-room';
+import { shortTopShare } from './short-top-share';
 import { useOverview } from './use-overview';
 import { useCameraBefore, useRideOverview } from './use-overviews';
 import { useRideTo } from './use-ride-to';
@@ -60,7 +61,7 @@ interface Cards {
   choosing: boolean;
   clearOf: (dock: RefObject<HTMLElement | null>) => () => [number, number];
   openPlace: (hotspotId: string, dock: RefObject<HTMLElement | null>) => void;
-  openTrip: (v: { id: string }, livery?: Livery) => void;
+  openTrip: (v: { id: string }, livery?: Livery, startAt?: Snap | null) => void;
 }
 
 /**
@@ -165,7 +166,8 @@ export function useCardCamera<V extends Direction, S extends Hotspot>(
       map ? clearOfSheet(map.getContainer(), openSheet(), cards.snap) : [0, 0],
 
     /** A route picked on a card: its trip, the camera left where it is. */
-    openTrip: (v: { id: string }, livery?: Livery) => cards.openTrip(v, livery),
+    openTrip: (v: { id: string }, livery?: Livery) =>
+      cards.openTrip(v, livery, shortTopShare(openSheet())),
 
     /** The landmark "Go here" made the goal, while it holds: its pin stays on the map. */
     goalLandmark: goal?.landmark ?? null,
