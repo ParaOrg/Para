@@ -72,8 +72,8 @@ test('a point on a road’s centre line is found, one a few metres off it is not
   assert.equal(isOnRoad(ROADS, north(7)), true, 'a primary road keeps 8 m clear');
   assert.equal(isOnRoad(ROADS, north(12)), false);
   const lane = roadGrid([road('residential', [AT[0] - 0.001, AT[1]], [AT[0] + 0.001, AT[1]])]);
-  assert.equal(isOnRoad(lane, north(2)), true);
-  assert.equal(isOnRoad(lane, north(5)), false, 'a residential road keeps only 3 m clear');
+  assert.equal(isOnRoad(lane, north(0.5)), true);
+  assert.equal(isOnRoad(lane, north(2)), false, 'a residential road keeps only 1 m clear');
 });
 
 test('a place OSM already has, by name near it or brand a little further, is OSM’s', () => {
