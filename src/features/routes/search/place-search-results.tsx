@@ -3,6 +3,7 @@ import { kmLabel } from '@/shared/utils/geo';
 
 import { SearchRowContent } from './search-row-content';
 import { rowKey, type SearchRow } from './search-rows';
+import type { SpotSource } from './spot-source';
 import type { LandmarksState } from './use-landmarks';
 
 interface PlaceSearchResultsProps {
@@ -13,6 +14,8 @@ interface PlaceSearchResultsProps {
   activeIndex: number;
   /** Whether the landmarks are in, on their way or failed: a line under the rows says so. */
   landmarks: LandmarksState;
+  /** The caller's spots, as they load, and the credit for those listed. */
+  spots?: SpotSource;
   onPick: (row: SearchRow) => void;
   onRetry: () => void;
 }
@@ -30,10 +33,12 @@ export function PlaceSearchResults({
   rows,
   activeIndex,
   landmarks,
+  spots,
   onPick,
   onRetry,
 }: PlaceSearchResultsProps) {
   const hasLandmarkRow = rows.some((row) => row.type === 'landmark');
+  const listedSpots = rows.flatMap((row) => (row.type === 'spot' ? [row.match.spot] : []));
 
   return (
     <div className="rounded-xl bg-surface shadow-large">
@@ -85,6 +90,21 @@ export function PlaceSearchResults({
             </button>
           </p>
         )}
+        {spots?.status === 'loading' && (
+          <p className="px-4 py-2 text-sm text-content-secondary">Looking through {spots.name}…</p>
+        )}
+        {spots?.status === 'failed' && (
+          <p className="flex items-baseline gap-2 px-4 py-2 text-sm text-content-secondary">
+            The {spots.name} didn’t load.
+            <button
+              type="button"
+              onClick={spots.retry}
+              className="font-semibold text-content-primary underline"
+            >
+              Try again
+            </button>
+          </p>
+        )}
         {hasLandmarkRow && landmarks.status === 'ready' && (
           <p className="px-4 pt-1 pb-2 text-xs text-content-tertiary">
             Landmarks{' '}
@@ -98,6 +118,7 @@ export function PlaceSearchResults({
             </a>
           </p>
         )}
+        {listedSpots.length > 0 && spots?.credit(listedSpots)}
       </div>
     </div>
   );
