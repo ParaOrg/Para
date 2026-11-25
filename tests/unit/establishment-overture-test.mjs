@@ -76,6 +76,13 @@ test('every kind has an OSM marker and a family colour; eateries are food, clini
   assert.equal(familyOfGlyph(OVERTURE_KIND_GLYPH.restaurant), 'food');
   assert.equal(familyOfGlyph(OVERTURE_KIND_GLYPH.dentist), 'health');
   assert.equal(familyOfGlyph(OVERTURE_KIND_GLYPH.school), 'education');
+  // The stores take the OSM establishments' own markers: no new icon.
+  assert.equal(OVERTURE_KIND_GLYPH.convenience, 'convenience');
+  assert.equal(OVERTURE_KIND_GLYPH.supermarket, 'grocery');
+  assert.equal(OVERTURE_KIND_GLYPH.pharmacy, 'pharmacy');
+  assert.equal(OVERTURE_KIND_GLYPH.laundry, 'laundry');
+  assert.equal(familyOfGlyph(OVERTURE_KIND_GLYPH.convenience), 'shopping');
+  assert.equal(familyOfGlyph(OVERTURE_KIND_GLYPH.pharmacy), 'health');
 });
 
 test('the layer is styled as the pawnshops are, from the same zoom, under its own source', () => {

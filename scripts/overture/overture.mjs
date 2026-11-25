@@ -45,6 +45,10 @@ const SAME_PLACE_KINDS = {
   dentist: ['clinic'],
   school: ['school', 'university'],
   college: ['school', 'university'],
+  convenience: ['convenience', 'supermarket'],
+  supermarket: ['supermarket', 'convenience', 'mall'],
+  pharmacy: ['pharmacy'],
+  laundry: ['laundry'],
 };
 /** The same name within this many metres is the same place; the same brand, within more. */
 const SAME_NAME_M = 50;
