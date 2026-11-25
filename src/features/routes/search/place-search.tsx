@@ -5,6 +5,7 @@ import type { LngLat } from '@/shared/utils/geo';
 
 import { PlaceSearchResults, resultId } from './place-search-results';
 import { RoutesNearHere } from './routes-near-here';
+import type { SpotSource } from './spot-source';
 import type { LoadLandmarks } from './use-landmarks';
 import { usePlaceSearch } from './use-place-search';
 import type { Hotspot } from '../model/hotspots';
@@ -52,6 +53,8 @@ interface PlaceSearchProps {
   renderLandmarkPin?: (landmark: Landmark) => ReactNode;
   /** Rendered under the results, from what is typed. */
   renderAfterResults?: (query: string) => ReactNode;
+  /** More results after the landmarks, camera-only: the studio's stores. */
+  spots?: SpotSource;
 }
 
 const NOWHERE = () => null;
@@ -63,31 +66,13 @@ const NOWHERE = () => null;
  * map does; a landmark takes the camera there and lists the Para routes near it.
  */
 export function PlaceSearch({
-  hotspots,
-  directionsAt,
   whereNow = NOWHERE,
-  onPick,
-  onLookAt,
-  onPickLandmark,
-  onSearchRestart,
-  onGoHere,
-  noteOf,
-  loadLandmarks,
   renderLandmarkPin,
   renderAfterResults,
+  ...inputs
 }: PlaceSearchProps) {
-  const search = usePlaceSearch({
-    hotspots,
-    directionsAt,
-    whereNow,
-    onPick,
-    onLookAt,
-    onPickLandmark,
-    onSearchRestart,
-    onGoHere,
-    noteOf,
-    loadLandmarks,
-  });
+  const search = usePlaceSearch({ ...inputs, whereNow });
+  const { directionsAt, spots } = inputs;
   const { listId, query, rows, landmarks, landmark, near, isOpen, hasList, activeIndex } = search;
   const hasActive = activeIndex >= 0;
 
@@ -108,16 +93,18 @@ export function PlaceSearch({
         enterKeyHint="search"
         spellCheck={false}
       />
-      {isOpen && (hasList || landmarks.state.status !== 'ready') && (
-        <PlaceSearchResults
-          id={listId}
-          rows={rows}
-          activeIndex={activeIndex}
-          landmarks={landmarks.state}
-          onPick={search.handlePick}
-          onRetry={landmarks.retry}
-        />
-      )}
+      {isOpen &&
+        (hasList || landmarks.state.status !== 'ready' || (spots && spots.status !== 'ready')) && (
+          <PlaceSearchResults
+            id={listId}
+            rows={rows}
+            activeIndex={activeIndex}
+            landmarks={landmarks.state}
+            spots={spots}
+            onPick={search.handlePick}
+            onRetry={landmarks.retry}
+          />
+        )}
       {!isOpen && landmark && renderLandmarkPin?.(landmark)}
       {!isOpen && landmark && (
         <RoutesNearHere

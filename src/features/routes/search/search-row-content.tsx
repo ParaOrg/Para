@@ -8,7 +8,7 @@ interface SearchRowContentProps {
 /**
  * One result's words: a Para place's label, the name that matched when it is another, and the
  * vehicles that ride from it, each named for a screen reader (colour and shape are never the only
- * signal); a landmark's name, then its kind and the word "Landmark".
+ * signal); a landmark's name, then its kind and the word "Landmark"; a spot's name and its detail.
  */
 export function SearchRowContent({ row }: SearchRowContentProps) {
   if (row.type === 'place') {
@@ -36,6 +36,16 @@ export function SearchRowContent({ row }: SearchRowContentProps) {
         {matchedTerm !== place.label && (
           <span className="block truncate text-sm text-content-secondary">{matchedTerm}</span>
         )}
+      </span>
+    );
+  }
+
+  if (row.type === 'spot') {
+    const { spot } = row.match;
+    return (
+      <span className="min-w-0 flex-1">
+        <span className="block truncate font-semibold">{spot.label}</span>
+        <span className="block truncate text-sm text-content-secondary">{spot.detail}</span>
       </span>
     );
   }

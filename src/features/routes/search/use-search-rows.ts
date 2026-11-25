@@ -3,6 +3,7 @@ import { useDeferredValue, useMemo } from 'react';
 import type { LngLat } from '@/shared/utils/geo';
 
 import type { SearchRow } from './search-rows';
+import type { SpotSource } from './spot-source';
 import type { LandmarksState } from './use-landmarks';
 import type { Hotspot } from '../model/hotspots';
 import { combineResults, searchLandmarks } from '../model/landmark-search';
@@ -19,7 +20,8 @@ export const MAX_RESULTS = 8;
 
 /**
  * Place search's rows for what is typed: Para's places first, then the landmarks that are not one
- * of them, MAX_RESULTS in all (decision 9). The matching is memoised: over the landmarks it costs
+ * of them, MAX_RESULTS in all (decision 9), then the caller's spots, MAX_RESULTS more of their own
+ * (the studio's stores): the list scrolls. The matching is memoised: over the landmarks it costs
  * up to about 20 ms on a laptop and more on a phone (tests/unit/landmark-search-test.mjs), and the
  * public map renders far more often than the query changes. It is worked out for the query a
  * moment behind the typing (useDeferredValue): a key shows in the field at once, and the rows
@@ -32,6 +34,7 @@ export function useSearchRows(
   from: LngLat | null,
   directionsAt: (hotspotId: string) => readonly Direction[],
   noteOf: (place: SearchPlace) => string | null,
+  spots?: SpotSource,
 ): SearchRow[] {
   const places = useMemo(() => searchablePlaces(hotspots), [hotspots]);
   const landmarkList = landmarks.status === 'ready' ? landmarks.landmarks.landmarks : null;
@@ -45,6 +48,15 @@ export function useSearchRows(
       MAX_RESULTS,
     );
   }, [matchedQuery, places, landmarkList, from]);
+  // The source's own search, a new function once its spots are read: the memo keys on it.
+  const searchSpots = spots?.search;
+  const spotMatches = useMemo(
+    () =>
+      searchSpots && matchedQuery.trim() !== ''
+        ? searchSpots(matchedQuery, from).slice(0, MAX_RESULTS)
+        : [],
+    [searchSpots, matchedQuery, from],
+  );
   if (!matched) return [];
   return [
     ...matched.places.map((match) => ({
@@ -54,5 +66,6 @@ export function useSearchRows(
       note: noteOf(match.place),
     })),
     ...matched.landmarks.map((match) => ({ type: 'landmark' as const, match })),
+    ...spotMatches.map((match) => ({ type: 'spot' as const, match })),
   ];
 }

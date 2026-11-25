@@ -40,8 +40,10 @@ export function proveStrings(build, check) {
   // fetched only by the studio's search, never by the public page or the contributor page.
   const SEARCH_FILES = '/data/search/';
   check(
-    'public page and contribute page name no studio search file',
-    !commuter.includes(SEARCH_FILES) && !contribute.includes(SEARCH_FILES),
+    'public page and contribute page name no studio search file; the studio names them — the string search works',
+    !commuter.includes(SEARCH_FILES) &&
+      !contribute.includes(SEARCH_FILES) &&
+      studio.includes(SEARCH_FILES),
   );
 
   // Its own chunks, not the ones it shares with the public page, whose map reader
