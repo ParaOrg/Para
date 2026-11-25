@@ -28,7 +28,7 @@ Each Overture place comes from one or more of Overture's sources, under that sou
 ## What Para changed
 
 Only places inside the map's area are kept; from Overture, those with its confidence of at least
-0.7, in a store category or one the map draws, open, and whose name does not read like an address.
-Each place keeps its name, its category (Overture's primary one, or the OpenStreetMap kind), and
-its point rounded to 5 decimals: `[name, category index, lng, lat]`, the categories listed once at
-the top.
+0.7, in a store category, a lodging one (hotels, inns, resorts) or one the map draws, open, and
+whose name does not read like an address. Each place keeps its name, its category (Overture's
+primary one, or the OpenStreetMap kind), and its point rounded to 5 decimals: `[name, category
+index, lng, lat]`, the categories listed once at the top.

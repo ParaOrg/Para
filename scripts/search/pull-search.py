@@ -5,8 +5,9 @@ OSM dedupe, since a place on a road's line is still a place an editor may look f
 Reads the same release as the map's Overture files (scripts/overture/pull.py), from Overture
 Maps' public S3 bucket, anonymously, inside the panning box, at confidence >= 0.7: every basic
 category that is a store (ends in _store), the services a street shows (salons, laundries,
-shopping, malls, petrol), and the categories the map draws. The category written is the place's
-primary one (beauty_salon, hardware_store), which the search shows as its label.
+shopping, malls, petrol), hotels and other lodging, and the categories the map draws. The category
+written is the place's primary one (beauty_salon, hardware_store), which the search shows as its
+label.
 
 Needs: Python 3 and duckdb from pip, as pull.py. Never an npm dependency.
 Usage: python3 -I scripts/search/pull-search.py <west,south,east,north> <out.ndjson> <release>
@@ -24,6 +25,12 @@ STREET_SERVICES = (
     "shopping",
     "shopping_mall",
     "gas_station",
+)
+# Where to stay: hotels, inns, apartelles, resorts. Searchable only; the map draws none yet.
+LODGING = (
+    "hotel",
+    "lodging",
+    "resort",
 )
 # The map's own categories (scripts/overture/pull.py CATEGORIES): eateries, cafés, clinics, schools.
 DRAWN = (
@@ -56,7 +63,7 @@ def main():
     con = duckdb.connect()
     con.sql("INSTALL httpfs; LOAD httpfs;")
     con.sql("CREATE SECRET anonymous (TYPE s3, KEY_ID '', SECRET '', REGION 'us-west-2');")
-    kept = ", ".join(f"'{category}'" for category in STREET_SERVICES + DRAWN)
+    kept = ", ".join(f"'{category}'" for category in STREET_SERVICES + LODGING + DRAWN)
     con.sql(
         f"""
         COPY (
