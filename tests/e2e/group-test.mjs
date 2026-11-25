@@ -843,7 +843,15 @@ const tap = (x, y) => page.mouse.click(canvas.x + x, canvas.y + y);
       await page.waitForTimeout(500);
     };
     const agree = [];
-    for (const label of ['Jeep', 'E-Jeep', 'UV Express', 'Bus', 'P2P', 'LRT', 'MRT', 'Ferry']) {
+    for (const label of [
+      'Jeepney',
+      'E-Jeep',
+      'UV Express',
+      'Bus',
+      'Premium Bus / P2P',
+      'Train',
+      'Ferry',
+    ]) {
       await filterTo(label);
       const under = await read();
       agree.push({

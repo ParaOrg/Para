@@ -132,7 +132,9 @@ export const LoopsOnly: Story = {
 export const Filtered: Story = {
   args: { filter: 'jeep' },
   play: async ({ canvasElement }) => {
-    await expect(within(canvasElement).getByRole('button', { name: 'Filter: Jeep' })).toBeVisible();
+    await expect(
+      within(canvasElement).getByRole('button', { name: 'Filter: Jeepney' }),
+    ).toBeVisible();
   },
 };
 

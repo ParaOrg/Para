@@ -61,10 +61,10 @@ export const Default: Story = {
     const canvas = within(canvasElement);
     await userEvent.click(canvas.getByRole('button', { name: 'Filter' }));
     const card = within(canvasElement.ownerDocument.body).getByTestId('mode-filter');
-    await userEvent.click(within(card).getByText('Jeep'));
+    await userEvent.click(within(card).getByText('Jeepney'));
     await expect(args.onFilter).toHaveBeenCalledWith('jeep');
     await waitFor(() => expect(card).not.toBeVisible());
-    await expect(canvas.getByRole('button', { name: 'Filter: Jeep' })).toBeInTheDocument();
+    await expect(canvas.getByRole('button', { name: 'Filter: Jeepney' })).toBeInTheDocument();
     await expect(canvas.getByText('1')).toBeVisible();
   },
 };

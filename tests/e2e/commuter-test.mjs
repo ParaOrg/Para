@@ -1160,7 +1160,15 @@ if (!RUNS_ONE_OFFS) {
       };
       const before = await listedNow();
       const agree = [];
-      for (const label of ['Jeep', 'E-Jeep', 'UV Express', 'Bus', 'P2P', 'LRT', 'MRT', 'Ferry']) {
+      for (const label of [
+        'Jeepney',
+        'E-Jeep',
+        'UV Express',
+        'Bus',
+        'Premium Bus / P2P',
+        'Train',
+        'Ferry',
+      ]) {
         await filterTo(label);
         const listedUnder = await listedNow();
         const litUnder = await until(litNow, (lit) => sameIds(lit, listedUnder));
@@ -1228,7 +1236,7 @@ if (RUNS_ONE_OFFS) {
     );
   if (!mixed) {
     check(
-      'a tap where a rail line runs over a jeep road: the LRT filter lights the rail, the camera kept still',
+      'a tap where a rail line runs over a jeep road: the Train filter lights the rail, the camera kept still',
       false,
       'the map file has no such road any more: pick another two kinds of ride',
     );
@@ -1252,10 +1260,10 @@ if (RUNS_ONE_OFFS) {
       });
     const cameraWas = await camera();
     await filterButton.click();
-    await page.getByRole('radio', { name: 'LRT', exact: true }).click();
+    await page.getByRole('radio', { name: 'Train', exact: true }).click();
     await until(
       () => filterButton.getAttribute('aria-label'),
-      (l) => l === 'Filter: LRT',
+      (l) => l === 'Filter: Train',
     );
     const listed = (await cardDirections(chooser.first())).filter(Boolean);
     const lit = await until(litNow, (ids) => sameIds(ids, listed));
@@ -1267,7 +1275,7 @@ if (RUNS_ONE_OFFS) {
       Math.abs(cameraNow.lat - cameraWas.lat) > 1e-9;
     const isOverviewOffered = await page.getByRole('button', { name: 'Overview' }).isVisible();
     check(
-      'a tap where a rail line runs over a jeep road: the LRT filter lights the rail, the camera kept still',
+      'a tap where a rail line runs over a jeep road: the Train filter lights the rail, the camera kept still',
       liveries.some((l) => l?.includes('rail')) &&
         liveries.includes('jeep') &&
         listed.length > 0 &&

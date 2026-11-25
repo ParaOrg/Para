@@ -8,6 +8,7 @@ import assert from 'node:assert/strict';
 import {
   MODES,
   MODE_FILTERS,
+  MODE_FILTER_LABEL,
   modesPicked,
   passesModeFilter,
   passesModePicks,
@@ -56,8 +57,7 @@ test('each option keeps its own ride', () => {
       uv: ['uv'],
       bus: ['bus'],
       p2p: ['p2p'],
-      lrt: ['lrt1', 'lrt2'],
-      mrt: ['mrt3'],
+      train: ['lrt1', 'lrt2', 'mrt3'],
       ferry: ['ferry'],
     },
   );
@@ -68,17 +68,7 @@ test('a tricycle shows under All only', () => {
 });
 
 test("the options in the owner's order", () => {
-  assert.deepEqual(MODE_FILTERS, [
-    'all',
-    'jeep',
-    'ejeep',
-    'uv',
-    'bus',
-    'p2p',
-    'lrt',
-    'mrt',
-    'ferry',
-  ]);
+  assert.deepEqual(MODE_FILTERS, ['all', 'jeep', 'ejeep', 'uv', 'bus', 'p2p', 'train', 'ferry']);
 });
 
 test('jeep, UV Express and bus together keep those three', () => {
@@ -89,7 +79,7 @@ const keptBy = (picks) => ROUTES.filter((d) => passesModePicks(d, picks)).map((d
 
 test('several modes picked keep the routes of any of them', () => {
   assert.deepEqual(keptBy(['jeep', 'bus']), ['jeep', 'bus']);
-  assert.deepEqual(keptBy(['lrt', 'mrt', 'ferry']), ['lrt1', 'lrt2', 'mrt3', 'ferry']);
+  assert.deepEqual(keptBy(['train', 'ferry']), ['lrt1', 'lrt2', 'mrt3', 'ferry']);
 });
 
 test('none picked, or every mode picked, keeps every route: both read as All', () => {
@@ -102,7 +92,7 @@ test('none picked, or every mode picked, keeps every route: both read as All', (
 
 test('the count is how many modes are picked', () => {
   assert.equal(pickCount(['jeep']), 1);
-  assert.equal(pickCount(['jeep', 'bus', 'mrt']), 3);
+  assert.equal(pickCount(['jeep', 'bus', 'train']), 3);
 });
 
 test('a single choice is the picks of that one mode, and passes as before', () => {
@@ -119,7 +109,19 @@ test('a toggle picks or lets go, in the filter order; the last mode left out pic
   assert.deepEqual(togglePick([], 'bus'), ['bus']);
   assert.deepEqual(togglePick(['bus'], 'jeep'), ['jeep', 'bus']);
   assert.deepEqual(togglePick(['jeep', 'bus'], 'bus'), ['jeep']);
+  assert.deepEqual(togglePick(['train'], 'p2p'), ['p2p', 'train']);
   assert.deepEqual(togglePick(['jeep'], 'jeep'), []);
   const allButFerry = MODES.filter((m) => m !== 'ferry');
   assert.deepEqual(togglePick(allButFerry, 'ferry'), []);
+});
+
+test("the menu's rows, as the owner draws them", () => {
+  assert.deepEqual(
+    MODE_FILTERS.filter((f) => f !== 'all').map((f) => MODE_FILTER_LABEL[f]),
+    ['Jeepney', 'E-Jeep', 'UV Express', 'Bus', 'Premium Bus / P2P', 'Train', 'Ferry'],
+  );
+});
+
+test('Train is every rail line in one', () => {
+  assert.deepEqual(keptBy(['train']), ['lrt1', 'lrt2', 'mrt3']);
 });

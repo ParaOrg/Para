@@ -23,7 +23,7 @@ type Story = StoryObj<typeof meta>;
 export const NoJeeps: Story = {
   play: async ({ args, canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(canvas.getByText('No Jeep routes here')).toBeVisible();
+    await expect(canvas.getByText('No Jeepney routes here')).toBeVisible();
     await userEvent.click(canvas.getByRole('button', { name: 'Show all routes' }));
     await expect(args.onShowAll).toHaveBeenCalled();
   },

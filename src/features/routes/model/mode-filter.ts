@@ -1,22 +1,13 @@
 import type { Direction } from './routes';
+import { RAIL_LINES } from './routes';
 import { vehicleOf, type Vehicle } from './vehicles';
 
 /**
- * What the route list's filter can narrow it to: every route, or kinds of ride. LRT is both
- * light-rail lines, MRT the metro. In the owner's order (2026-11-25): the road from the jeep up,
- * then the rails and the water.
+ * What the route list's filter can narrow it to: every route, or kinds of ride. The owner's rows
+ * (the filter menu, 4896:42082, 2026-11-25), in order: Train is every rail line in one, LRT and MRT
+ * alike; Premium Bus / P2P is the premium buses.
  */
-export const MODE_FILTERS = [
-  'all',
-  'jeep',
-  'ejeep',
-  'uv',
-  'bus',
-  'p2p',
-  'lrt',
-  'mrt',
-  'ferry',
-] as const;
+export const MODE_FILTERS = ['all', 'jeep', 'ejeep', 'uv', 'bus', 'p2p', 'train', 'ferry'] as const;
 export type ModeFilter = (typeof MODE_FILTERS)[number];
 
 /** A filter and its setter, kept by whoever lights the map, so the map and the cards agree. */
@@ -70,13 +61,12 @@ export function togglePick(picks: ModePicks, mode: Mode): ModePicks {
 /** Each option as the filter writes it. */
 export const MODE_FILTER_LABEL = {
   all: 'All',
-  jeep: 'Jeep',
+  jeep: 'Jeepney',
   ejeep: 'E-Jeep',
   uv: 'UV Express',
   bus: 'Bus',
-  p2p: 'P2P',
-  lrt: 'LRT',
-  mrt: 'MRT',
+  p2p: 'Premium Bus / P2P',
+  train: 'Train',
   ferry: 'Ferry',
 } satisfies Record<ModeFilter, string>;
 
@@ -99,8 +89,7 @@ const KEPT = {
   uv: ridesOneOf('UV Express'),
   bus: ridesOneOf('Bus'),
   p2p: (direction) => direction.route?.mode === 'p2p',
-  lrt: ridesOneOf('LRT-1', 'LRT-2'),
-  mrt: ridesOneOf('MRT-3'),
+  train: ridesOneOf(...RAIL_LINES),
   ferry: ridesOneOf('Ferry'),
 } satisfies Record<Mode, (direction: Direction) => boolean>;
 

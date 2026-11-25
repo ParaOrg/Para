@@ -54,7 +54,7 @@ export const JeepChosen: Story = {
   args: { filter: 'jeep' },
   play: async ({ canvasElement }) => {
     const card = await open(canvasElement);
-    await expect(within(card).getByRole('radio', { name: 'Jeep' })).toBeChecked();
+    await expect(within(card).getByRole('radio', { name: 'Jeepney' })).toBeChecked();
   },
 };
 
@@ -96,9 +96,9 @@ export const SpaceOnThePicked: Story = {
   args: { filter: 'jeep' },
   play: async ({ canvasElement }) => {
     const card = await open(canvasElement);
-    within(card).getByRole('radio', { name: 'Jeep' }).focus();
+    within(card).getByRole('radio', { name: 'Jeepney' }).focus();
     await userEvent.keyboard(' ');
     await expect(card).not.toBeVisible();
-    await expect(within(card).getByRole('radio', { name: 'Jeep', hidden: true })).toBeChecked();
+    await expect(within(card).getByRole('radio', { name: 'Jeepney', hidden: true })).toBeChecked();
   },
 };
