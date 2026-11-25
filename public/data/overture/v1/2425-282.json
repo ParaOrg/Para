@@ -11,6 +11,27 @@
     ["o541fce34ac2c4530","school",121.27151,14.10981,"Perez Elementary School"],
     ["o7ed381b99fdf4ef0","school",121.27703,14.14669,"Masaya Integrated National High School"],
     ["o319abd22d7be4071","college",121.29977,14.12238,"Mater Redemptoris Collegium"],
-    ["o5e5d992279d04f9a","pharmacy",121.25481,14.11548,"TGP The Generics Pharmacy"]
+    ["o5e5d992279d04f9a","pharmacy",121.25481,14.11548,"TGP The Generics Pharmacy"],
+    ["o0b39d2ab3a344519","hotel",121.2777,14.14457,"Twin F Terrazas Resort"],
+    ["o0f88ca193b6b4de0","hotel",121.25546,14.102,"Cavenco Farm and Resort"],
+    ["o2bef18fb41e84dc8","hotel",121.27703,14.14669,"CASA REYES Resort and Events Place"],
+    ["o61daf649d1d64a7c","hotel",121.27036,14.13887,"MonteMina Resort"],
+    ["o7b59d5d3e455471e","hotel",121.27692,14.14713,"JEM Mineral Hotspring Resort"],
+    ["o8948dac9e4674caf","hotel",121.28146,14.13988,"CASA REYES Resort and Events Place"],
+    ["oa59da3e6d79f4eee","hotel",121.26932,14.11394,"AFHomes Hotspring & Ecofarm Resort"],
+    ["ob84e5d16e5504803","hotel",121.27737,14.14622,"Boss Private Pool Resort"],
+    ["oe55653a68b8f4cfa","hotel",121.27036,14.13887,"Onie Scully Resort"],
+    ["of607e2d67fa34ed5","hotel",121.27638,14.14577,"Pool Stop Private Resort"],
+    ["o0d7e4f2e292748a3","lodging",121.27144,14.13257,"Grand Villa Laguna"],
+    ["o1e21d6ec5a8e4ead","lodging",121.27129,14.13873,"Villa Belvedere Hotspring Private Resort"],
+    ["o3103eef6d32e4ada","lodging",121.27785,14.14495,"La Casa de IdeL"],
+    ["o7b7a79b408fb401c","lodging",121.27036,14.13887,"Hacienda Milagrosa"],
+    ["oa97466fcc9724195","lodging",121.27958,14.14654,"Villa Thiarra Private Resort"],
+    ["oc4a6249d8c7c4375","lodging",121.28829,14.11807,"Amil's Campsite"],
+    ["oc607fc96e1d246a7","lodging",121.27808,14.14439,"Villa Josefa Resort"],
+    ["od50c78a81b6a4ca6","lodging",121.26739,14.12771,"Villa Belvedere Hotspring Private Resort"],
+    ["od9ae654c03b541d7","lodging",121.2671,14.12949,"Villa Marciana Farm"],
+    ["oebe35f9e5ea14cb0","lodging",121.26305,14.13326,"Jardin de Julita"],
+    ["ofbff35f8d32344cb","lodging",121.2723,14.13291,"Grand Villa Resort"]
   ]
 }

@@ -67,6 +67,17 @@
     ["of2961763de0c4f33","supermarket",121.02256,14.20667,"Savemore Market Meridian",{"brand":"Savemore Binangonan Central Mall"}],
     ["obbeec95e4df64acf","pharmacy",121.01659,14.24101,"Mercury Drug"],
     ["o0c1e2f5b906444e2","laundry",121.04681,14.22661,"Pinky's Self Service Laundry"],
-    ["od784bd8b92024cdc","laundry",121.03558,14.21647,"Laundromat"]
+    ["od784bd8b92024cdc","laundry",121.03558,14.21647,"Laundromat"],
+    ["o1d6806481e294b15","hotel",121.02343,14.20517,"Whitewoods Convention and Leisure Hotel"],
+    ["o2d34762cf8d34280","hotel",121.04288,14.24063,"Destination Hotel South Forbes"],
+    ["obfc9d5e3b3114f25","hotel",121.04681,14.22661,"Greenwoods Nature Resort"],
+    ["of25676bf67f546a0","hotel",121.00048,14.24028,"Kasa Ilaya Resort and Events Place"],
+    ["o09f8ebf3e0b94054","lodging",121.03883,14.21454,"Waling-Waling"],
+    ["o5fefc4cafdb045b4","lodging",121.0405,14.24537,"Wedge Woods"],
+    ["o654fd8190c924fef","lodging",121.04448,14.24251,"Wedge Woods"],
+    ["o97b81d08a33048af","lodging",121.03883,14.20309,"Woodside Farm and Waterparks"],
+    ["oc56a0f73238d460c","lodging",121.03668,14.22087,"D&D Guest House"],
+    ["od084a93c20624e07","lodging",121.02569,14.20531,"Whitewoods Pickleball Club"],
+    ["of9ccea2a99f543e2","lodging",121.00885,14.21236,"Casa Herencia"]
   ]
 }

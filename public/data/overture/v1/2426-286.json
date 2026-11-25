@@ -3,6 +3,11 @@
   "cell": "2426-286",
   "attribution": "© Overture Maps Foundation",
   "establishments": [
-    ["o3f95b5a65ceb4ddd","supermarket",121.32341,14.34614,"Jalajala Public Market"]
+    ["o3f95b5a65ceb4ddd","supermarket",121.32341,14.34614,"Jalajala Public Market"],
+    ["o2187644a8dd448d3","hotel",121.31141,14.33232,"Grandview Lakeside Private Resort"],
+    ["o23e09acdd3894853","hotel",121.32475,14.34859,"Kaia Private Pool Resort"],
+    ["o5f2a45270e554bb4","hotel",121.31239,14.33373,"WinMar Lakeside Resort - Jalajala"],
+    ["obefa2b58ba344cda","lodging",121.33594,14.31779,"The Forest Villas by Lily"],
+    ["of4d516c35563420a","lodging",121.33831,14.31556,"Lily Vacation Farm House"]
   ]
 }

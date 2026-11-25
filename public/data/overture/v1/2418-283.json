@@ -27,6 +27,25 @@
     ["o9eb45920c52b4d86","supermarket",120.92415,14.17161,"Savemore Amadeo",{"brand":"Savemore Binangonan Central Mall"}],
     ["of4307997d88042e4","supermarket",120.92767,14.17287,"Amadeo Public Market"],
     ["od6ff3513b188440f","pharmacy",120.92419,14.17113,"Mercury Drug"],
-    ["o6adff7efbb604239","laundry",120.92071,14.17401,"Chikxee Laundry House"]
+    ["o6adff7efbb604239","laundry",120.92071,14.17401,"Chikxee Laundry House"],
+    ["o2fb178b74f554d7c","hotel",120.93098,14.18399,"Bebe's Resort & Event Place"],
+    ["o476871402bff4418","hotel",120.94299,14.16424,"Eros Pueblo Private Resort"],
+    ["o4d06b64d8783421f","hotel",120.94042,14.16161,"A&A Garden Suites"],
+    ["o538acae7c68e4be3","hotel",120.91406,14.18837,"Poniente Springs Resort Amadeo Cavite"],
+    ["o7cf2bd64f889444b","hotel",120.93949,14.1719,"Fetesio Farm and Resort"],
+    ["oc281260ac6e74bcc","hotel",120.91946,14.15592,"Rholance Resort"],
+    ["of7816cae5e294910","hotel",120.93018,14.18222,"Tibayan Private Resort"],
+    ["o046958e5d26d43c8","lodging",120.92235,14.19684,"Casa Del Sol"],
+    ["o14e6a9f405e24cd1","lodging",120.92453,14.18155,"Casa Gaerlan"],
+    ["o1858292a675c4ba8","lodging",120.93086,14.1842,"Abe’s Place"],
+    ["o7ad136b03ac141aa","lodging",120.93858,14.17581,"The Alperi Farm Amadeo"],
+    ["o920a293beab54edc","lodging",120.93,14.18227,"Alberto's"],
+    ["o95aa955311f24ae7","lodging",120.91283,14.17915,"Susana's Cabin Private resort"],
+    ["oa662eecc3b5f4e21","lodging",120.93303,14.16915,"Villa Jessica Resort"],
+    ["ob3a58f24bae94638","lodging",120.94708,14.15563,"Rosalina's Garden"],
+    ["odd0eb101145f496c","lodging",120.93787,14.15785,"The Cabin by Mezina"],
+    ["odda15eb335aa4462","lodging",120.91447,14.17794,"Jace Villas Farm & Resort"],
+    ["oe3cec3ac0eb34ca8","lodging",120.94201,14.17943,"The Family Resthouse"],
+    ["oea476dbec5e14ed5","lodging",120.92961,14.17896,"Villa Rosario Dagatan Amadeo, Cavite"]
   ]
 }

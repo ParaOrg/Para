@@ -131,6 +131,23 @@
     ["o4a84be02892c43ee","laundry",121.02404,14.34294,"Bayanbayanan Laundry Shop"],
     ["o5777650533c94986","laundry",121.03876,14.33844,"Spin-Off Self Service Laundry"],
     ["o725aabe1fdb14a9d","laundry",121.04957,14.33836,"Gigbit Laundry Shop"],
-    ["oaf842ae5eb184ba7","laundry",121.03729,14.34286,"Express Clean Laundry Cafe"]
+    ["oaf842ae5eb184ba7","laundry",121.03729,14.34286,"Express Clean Laundry Cafe"],
+    ["o43924570d83d410b","hotel",121.04705,14.34621,"MYAJ Mountain View Resort"],
+    ["o992f70ff7d834594","hotel",121.03407,14.33884,"Museo de San Pedro Events Place & resort"],
+    ["ob7a040bb2ffe41c0","hotel",121.02435,14.33311,"Nodalos Resort Laguna"],
+    ["o06727ac1bb954e5f","lodging",121.04646,14.30968,"Villa Alegre, Carmona, Cavite"],
+    ["o0ca469a95a1542cd","lodging",121.04893,14.30813,"Carmona Townhomes"],
+    ["o20ed149e13c74e52","lodging",121.03284,14.33757,"Villa San Pedro"],
+    ["o24b69714b49b40b0","lodging",121.03196,14.30977,"The ViewFort Venue"],
+    ["o45d127117e44477f","lodging",121.04286,14.34209,"Olympia Pearl"],
+    ["o4c5dfcb4fa05446c","lodging",121.01945,14.33486,"Estrella Covered Court"],
+    ["o5148b2c002424530","lodging",121.00949,14.34602,"The Glens and Parkspring"],
+    ["od194048fdfd64f47","lodging",121.04496,14.33633,"Villa Olympia 6"],
+    ["oe7cec7e5c22f4233","lodging",121.01577,14.33281,"Villa Sata Rosa San Pedro Laguna"],
+    ["oe9175445be0c4b5d","lodging",121.0277,14.3281,"Patio Del Pueblo Private Pool and Events Place"],
+    ["of37bd66999654e80","lodging",121.03223,14.30965,"ViewFort Terrace View Hill"],
+    ["of673af01ad6645b3","lodging",121.02385,14.33382,"Villa Antonio Resort"],
+    ["ofde2b90f9df54f23","lodging",121.02659,14.33617,"Bagong Silang San Pedro"],
+    ["ofef186519f8d4e0b","lodging",121.03353,14.33806,"Villa Celestina Subdivison, San Pedro Laguna"]
   ]
 }

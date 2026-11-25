@@ -5,6 +5,10 @@
   "establishments": [
     ["o3793308592cd42f8","clinic",121.14081,14.03588,"VHealth Medical Center - Malvar Batangas Labxpert"],
     ["o0f64fade72fd4389","school",121.10719,14.02223,"Balete Family Farm School"],
-    ["od7871c4251764da1","laundry",121.13789,14.036,"JJL Laundry"]
+    ["od7871c4251764da1","laundry",121.13789,14.036,"JJL Laundry"],
+    ["o10916cdcbf1f4975","hotel",121.1109,14.0441,"Mar Firing Range and Resort"],
+    ["o8a00948452aa466b","hotel",121.13354,14.00167,"Queen's Hive Resort"],
+    ["o8e008b2dc54f4032","hotel",121.1068,14.01006,"Nayomi Sanctuary Resort"],
+    ["o2e6346865f89459f","lodging",121.12868,14.00436,"Cintai Corito's Garden"]
   ]
 }

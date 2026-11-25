@@ -39,6 +39,11 @@
     ["oc45aed553a3c44fd","convenience",121.47872,14.3694,"Seven Eleven Pakil Michieda"],
     ["o74bfccf1a7984518","supermarket",121.47474,14.36297,"Althea's Minimart"],
     ["o903bb94bfd974bfc","supermarket",121.48219,14.36523,"JRE Rice Center and General Merchandise"],
-    ["o601555c0e0ce40fb","pharmacy",121.47943,14.36468,"Generika Paete"]
+    ["o601555c0e0ce40fb","pharmacy",121.47943,14.36468,"Generika Paete"],
+    ["o4c15056015054b13","hotel",121.4789,14.366,"San Juan Resort"],
+    ["oc1de601f74df4a5a","hotel",121.47982,14.38503,"Oliver Resort"],
+    ["o075f1916bb7047ce","lodging",121.48074,14.36829,"Victoria Private Pool"],
+    ["o12a46a02166f4740","lodging",121.47647,14.38328,"Villa Someros"],
+    ["obf4553051a4b418b","lodging",121.47971,14.37537,"Sun Star Moon Garden"]
   ]
 }

@@ -22,7 +22,10 @@ import {
   isAddressLike,
   isInOsm,
   isOnRoad,
+  isPlaceOnlyName,
   isSameName,
+  lodgingKindOf,
+  lodgingsFrom,
   metresToSegment,
   osmPlaceGrid,
   overturePlacesFrom,
@@ -135,7 +138,7 @@ test('the places kept: named, off the road, not OSM’s, open, in the box, in ki
     ],
     { roads: ROADS, osm: NO_OSM, box: BOX },
   );
-  assert.deepEqual(dropped, { name: 1, road: 1, osm: 0, closed: 1 });
+  assert.deepEqual(dropped, { name: 1, residential: 0, placeOnly: 0, road: 1, osm: 0, closed: 1 });
   assert.deepEqual(
     establishments.map(({ id, kind, extras }) => [id, kind, extras]),
     [
@@ -201,5 +204,63 @@ test('the guard: no Overture id in the OSM cells, no OSM id in Overture’s', ()
   assert.equal(
     mixedIdProblems(osm, new Map([['2420-291', osmCell(['o0123456789abcdef', 'n9'])]])).length,
     1,
+  );
+});
+
+test('a place to stay is a hotel by its brand or its name, else the later-drawn lodging', () => {
+  assert.equal(lodgingKindOf('Park Inn by Radisson North EDSA'), 'hotel');
+  assert.equal(lodgingKindOf('Seda Vertis North'), 'hotel', 'a big name is a hotel');
+  assert.equal(lodgingKindOf('Sofitel Philippine Plaza Manila'), 'hotel');
+  assert.equal(lodgingKindOf('Red Planet Ortigas'), 'hotel');
+  assert.equal(lodgingKindOf('Lola Seda Vertis Unit'), 'hotel', 'a big name wins over small words');
+  assert.equal(lodgingKindOf('Casa Gloriane', 'Gloriane'), 'hotel', 'a brand is a hotel');
+  assert.equal(lodgingKindOf('Hotel Sogo Cubao'), 'hotel');
+  assert.equal(lodgingKindOf('Taal Vista Resort'), 'hotel');
+  assert.equal(lodgingKindOf("EJ's Transient House"), 'lodging');
+  assert.equal(lodgingKindOf('Staycation at Pico de Loro Hotel'), 'lodging', 'small words win');
+  assert.equal(lodgingKindOf('Casa Gloriane'), 'lodging');
+  assert.equal(isPlaceOnlyName('Cainta Rizal City'), true);
+  assert.equal(isPlaceOnlyName('Talon Uno, Las Pinas Ciy'), true);
+  assert.equal(isPlaceOnlyName('Perez White Beach Calatagan Batangas'), false, 'a lodging word');
+  assert.equal(isPlaceOnlyName('Lola Transient Rooms'), false);
+  assert.equal(KIND_OF_CATEGORY.hotel, 'hotel');
+  assert.equal(KIND_OF_CATEGORY.lodging, 'hotel');
+  assert.equal(KIND_OF_CATEGORY.resort, 'hotel');
+});
+
+test('a hotel the basemap labels already (OSM tourism=hotel and kin) is the basemap’s', () => {
+  const lodgings = lodgingsFrom([
+    { geometry: { type: 'Point', coordinates: north(20) }, properties: { name: 'Icon Hotel' } },
+    { geometry: { type: 'Point', coordinates: north(20) }, properties: {} },
+  ]);
+  assert.equal(lodgings.length, 1);
+  const osm = osmPlaceGrid({ establishmentCells: [], landmarks: [], lodgings });
+  const candidate = (kind, name, metres) => ({ kind, name, point: north(metres) });
+  assert.equal(isInOsm(osm, candidate('hotel', 'Icon Hotel', 40)), true);
+  assert.equal(isInOsm(osm, candidate('lodging', 'Icon Hotel', 40)), true);
+  assert.equal(isInOsm(osm, candidate('hotel', 'Icon Hotel', 120)), false, 'past 50 m');
+  assert.equal(isInOsm(osm, candidate('restaurant', 'Icon Hotel', 40)), false, 'not a hotel');
+  const { establishments } = overturePlacesFrom(
+    [
+      { id: 'aa', name: 'Icon Hotel', category: 'hotel', lng: AT[0], lat: north(30)[1] },
+      {
+        id: 'bb',
+        name: 'Lola Transient Rooms',
+        category: 'lodging',
+        lng: AT[0],
+        lat: north(30)[1],
+      },
+      { id: 'cc', name: 'Lakeview Subd.', category: 'lodging', lng: AT[0], lat: north(30)[1] },
+      { id: 'dd', name: 'Don Antonio Heights', category: 'lodging', lng: AT[0], lat: north(30)[1] },
+      { id: 'ee', name: 'Avida Towers Condo', category: 'hotel', lng: AT[0], lat: north(30)[1] },
+    ],
+    { roads: roadGrid([]), osm, box: BOX },
+  );
+  assert.deepEqual(
+    establishments.map(({ kind, name }) => [kind, name]),
+    [
+      ['lodging', 'Lola Transient Rooms'],
+      ['lodging', 'Avida Towers Condo'],
+    ],
   );
 });

@@ -63,6 +63,11 @@
     ["o9a1fde87753d4f4b","supermarket",120.93738,14.45891,"Robinsons Easymart Alima Bacoor",{"brand":"Robinsons Easymart"}],
     ["o7cd7d51fee234417","pharmacy",120.94738,14.45159,"Mercury Drug"],
     ["oa9ffc8d155ac40ca","pharmacy",120.90258,14.48955,"Mercury Drug"],
-    ["o466e210508c34713","laundry",120.94151,14.45951,"EZ Wash"]
+    ["o466e210508c34713","laundry",120.94151,14.45951,"EZ Wash"],
+    ["o10623c478e3049fc","hotel",120.92228,14.46145,"Island Cove Hotel And Leisure Park"],
+    ["ob47524457c71482b","hotel",120.90478,14.4824,"Sunwind Resort"],
+    ["od6947910a02a408c","hotel",120.90241,14.48958,"Hide Hotel"],
+    ["o2a25d4ea9f0a4c39","lodging",120.9414,14.46015,"MZ Place by Miel Good afternoon"],
+    ["o42a0fef7a6594a00","lodging",120.94057,14.4588,"Daang Bukid Bacoor"]
   ]
 }

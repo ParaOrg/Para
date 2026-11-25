@@ -39,6 +39,14 @@
     ["ob0f6e108a5904736","supermarket",121.39779,14.25855,"SM Savemore"],
     ["oc2db73c0839649b2","supermarket",121.38967,14.25267,"Robinsons Supermarket"],
     ["odb7dc9a5449149b2","supermarket",121.39928,14.25667,"Juliana Market"],
-    ["o1a6f11f0650d47f5","laundry",121.39015,14.2558,"SCHRS Laundry Services and Water Refilling Station"]
+    ["o1a6f11f0650d47f5","laundry",121.39015,14.2558,"SCHRS Laundry Services and Water Refilling Station"],
+    ["o4b8b669120714dff","hotel",121.36908,14.25247,"Bria de Eros Resort"],
+    ["o6f66f5b223e14e7b","hotel",121.36775,14.26176,"La Blanca Private Resort"],
+    ["o8dd3b9725f104e19","hotel",121.38634,14.25517,"Chadee's Event Place and Resort"],
+    ["od02eb22565974b5c","hotel",121.39812,14.27602,"Perlieu Resort"],
+    ["od7c05ec14f6b464f","hotel",121.39825,14.25733,"Jomary and Nina's Private Resort"],
+    ["oea0562267a414a65","hotel",121.39533,14.26932,"Engkantasya Inn"],
+    ["ofc3d577f24954c29","hotel",121.38142,14.25876,"Rubarden Resort"],
+    ["oc85f4e2e4236456e","lodging",121.39806,14.26858,"Scar Hq New Town"]
   ]
 }

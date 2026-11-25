@@ -37,6 +37,7 @@ export type EstablishmentGlyph =
   | 'school'
   | 'fuel'
   | 'laundry'
+  | 'lodging'
   | 'toilet'
   | 'police'
   | 'jewelry-store'
@@ -96,6 +97,15 @@ export const EXTRA_FAMILY: EstablishmentFamily = 'money';
 export const TERMINAL_GLYPH = 'bus' satisfies EstablishmentGlyph;
 export const TERMINAL_FAMILY: EstablishmentFamily = 'transport';
 
+/**
+ * The glyphs only Overture's places use, none of the basemap's kinds: a place to stay, by Maki's
+ * lodging. Its family is a placeholder until the owner picks one.
+ */
+export const OVERTURE_ONLY_GLYPH_FAMILY: Partial<Record<EstablishmentGlyph, EstablishmentFamily>> =
+  {
+    lodging: 'services',
+  };
+
 /** Each family's marker colour, as the map paints it (tokens.css, Map/Establishment/…). */
 export const FAMILY_COLOUR: Record<EstablishmentFamily, string> = {
   food: ESTABLISHMENT_COLOURS['Map/Establishment/Food/surface'],
@@ -129,5 +139,7 @@ export function establishmentImageOf(glyph: EstablishmentGlyph): string {
 export function familyOfGlyph(glyph: EstablishmentGlyph): EstablishmentFamily | null {
   if (Object.values(EXTRA_KIND_GLYPH).some((extra) => extra === glyph)) return EXTRA_FAMILY;
   if (glyph === TERMINAL_GLYPH) return TERMINAL_FAMILY;
+  const overtureOnly = OVERTURE_ONLY_GLYPH_FAMILY[glyph];
+  if (overtureOnly) return overtureOnly;
   return ESTABLISHMENT_KINDS.find((kind) => kind.glyph === glyph)?.family ?? null;
 }

@@ -15,6 +15,7 @@ import grocery from './establishment-icons/maki/grocery.svg?raw';
 import hospital from './establishment-icons/maki/hospital.svg?raw';
 import jewelryStore from './establishment-icons/maki/jewelry-store.svg?raw';
 import laundry from './establishment-icons/maki/laundry.svg?raw';
+import lodging from './establishment-icons/maki/lodging.svg?raw';
 import pharmacy from './establishment-icons/maki/pharmacy.svg?raw';
 import police from './establishment-icons/maki/police.svg?raw';
 import restaurant from './establishment-icons/maki/restaurant.svg?raw';
@@ -50,6 +51,7 @@ const GLYPHS: Record<EstablishmentGlyph, string> = {
   school,
   fuel,
   laundry,
+  lodging,
   toilet,
   police,
   'jewelry-store': jewelryStore,

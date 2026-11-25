@@ -65,6 +65,18 @@
     ["oeb124d2fe6324496","supermarket",121.15739,14.04826,"MMC Supermarket Malvar / Manguiat"],
     ["o68bed9fb89404ab8","pharmacy",121.15766,14.04472,"Viteli Pharmacy"],
     ["oa61b29fb5c364374","pharmacy",121.16563,14.00949,"Watsons"],
-    ["oa8bb916a7ac144cc","laundry",121.16003,14.03884,"Lavandera Ko Malvar"]
+    ["oa8bb916a7ac144cc","laundry",121.16003,14.03884,"Lavandera Ko Malvar"],
+    ["o4d73314c01014e22","hotel",121.19146,14.04341,"G Leisure Resort Hotel and KTV"],
+    ["o87372d10c27348ca","hotel",121.16976,14.01331,"Hotel Lima Park"],
+    ["o8cfa1d236ea54cf3","hotel",121.1693,14.01318,"Holiday Inn & Suites Batangas Limapark by IHG"],
+    ["oa57f6f5b0aae4192","hotel",121.1693,14.01318,"Holiday Inn & Suites Batangas LimaPark",{"brand":"Holiday Inn"}],
+    ["oad46818fcd8f4cb4","hotel",121.15354,14.04677,"Winner Ville Resort"],
+    ["oc2b466f399c64f1a","hotel",121.19996,14.04713,"Triple J Farm Resort"],
+    ["o767d3822de3640e2","lodging",121.15902,14.03138,"Ohannah Cabin"],
+    ["o88ec9608711a4242","lodging",121.16348,14.00817,"C2 Dormitory Malvar"],
+    ["o98e7a1479fbe449f","lodging",121.16205,14.02993,"San Fernando Malvar"],
+    ["ob2346911bc464d90","lodging",121.16495,14.04224,"Sir JUN TV"],
+    ["oc35b0fb8cc0f4723","lodging",121.18267,14.01342,"Aquafe"],
+    ["of5a0caad2d274445","lodging",121.15034,14.00671,"San Andres Malvar Batangad"]
   ]
 }

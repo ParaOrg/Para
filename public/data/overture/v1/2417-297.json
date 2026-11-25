@@ -145,6 +145,27 @@
     ["oa91c487bd4bb4452","pharmacy",120.86947,14.89911,"Generika BLC Pulilan Massway"],
     ["oc4f33f5040864ef2","pharmacy",120.86198,14.88702,"Generika Plaridel Banga 1st"],
     ["oea5ee0c04c3d40fd","pharmacy",120.86938,14.89977,"Watsons"],
-    ["o1932965ef2204f42","laundry",120.8606,14.85182,"LOLAvandera_Guiguinto"]
+    ["o1932965ef2204f42","laundry",120.8606,14.85182,"LOLAvandera_Guiguinto"],
+    ["o0216d4aa618042b2","hotel",120.86056,14.89015,"Nature Care Resort and Farm"],
+    ["o15579d3691e54600","hotel",120.85176,14.88436,"LuzAntonio’s Private Resort"],
+    ["o1b99fe1f62484f19","hotel",120.85385,14.89238,"Saihati-Shakil Plaridel Private Resort"],
+    ["o24f96580db1548ce","hotel",120.86285,14.87578,"RedDoorz at EL Highway Hotel Bulacan"],
+    ["o283eb8c6a1774e13","hotel",120.86707,14.85397,"Genesis Mini Private Resort"],
+    ["o2e24f93264404f73","hotel",120.86292,14.86662,"Klir Waterpark Resort and Hotel"],
+    ["o3a641a309cf14ddb","hotel",120.89622,14.85899,"Esperanza de Belen Private Resort and Events Place"],
+    ["o41abe90bc87d4544","hotel",120.86343,14.89595,"Hidden Resort Longos Pulilan Bulacan"],
+    ["o4f9c27aa59c44d04","hotel",120.85275,14.88689,"La Aviona Private Resort and Events Place"],
+    ["o58c366e88fb444bc","hotel",120.89597,14.86328,"Alegria's Private Resort"],
+    ["o64bb476f77884ca3","hotel",120.87103,14.88889,"Cali KA Sun Private Resort and Events"],
+    ["o7e5dd9bb48474d3d","hotel",120.86556,14.89203,"River of Life Resort and Restaurant"],
+    ["o906de3a32258415e","hotel",120.86333,14.85414,"Amandari Private Resort"],
+    ["odbf5c62020384657","hotel",120.88451,14.89087,"Miracle Garden Private Resort Events Place"],
+    ["oefa5764ba61a4a34","hotel",120.8531,14.88656,"RedDoorz at EL Runway Hotel Bulacan"],
+    ["ofb4efa523977465e","hotel",120.87106,14.85441,"Camp Resort"],
+    ["o0ae1c4ce7f544234","lodging",120.87519,14.85082,"North Luzon Expressway-Sta. Rita Guiguinto"],
+    ["o0bc14a2b70504cf4","lodging",120.87144,14.8528,"The Camp 179"],
+    ["o8cec0b2a681e4e02","lodging",120.87106,14.85441,"Camp 179"],
+    ["o9a4e50ad03774f38","lodging",120.88474,14.88747,"The Residence Parulan"],
+    ["of061c4696a2047f0","lodging",120.85694,14.8724,"Classic Cozy Villa"]
   ]
 }

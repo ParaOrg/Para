@@ -22,6 +22,11 @@
     ["oea3923776a674b23","school",121.31052,14.14194,"DepEd Masapang Elementary School - Laguna"],
     ["o979aaf42c2624c7c","convenience",121.30508,14.13579,"Vicky's Sari Sari Store"],
     ["o4a38ab396bfd4589","pharmacy",121.31456,14.14603,"Generika Drugstore",{"brand":"Generika"}],
-    ["o1d0b49f0619347be","laundry",121.30562,14.11625,"Bubble Chemistry"]
+    ["o1d0b49f0619347be","laundry",121.30562,14.11625,"Bubble Chemistry"],
+    ["o47f9f7a424ab460e","hotel",121.31878,14.14029,"Bandian Farm and Garden Resort"],
+    ["o774f33db000d4773","hotel",121.33748,14.12287,"Starlake Resort and Hotel"],
+    ["oeb6531799dba40d3","hotel",121.31554,14.14151,"Calumbahin Resort"],
+    ["o4b93d01d39d54920","lodging",121.30681,14.13945,"Gintong Talulot Leisure Center"],
+    ["od3230e22485b4653","lodging",121.33443,14.10514,"Marilance Place"]
   ]
 }

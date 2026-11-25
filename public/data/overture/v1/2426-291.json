@@ -4,6 +4,9 @@
   "attribution": "© Overture Maps Foundation",
   "establishments": [
     ["oa4db266390564f88","fast_food",121.33398,14.57663,"McDonald's"],
-    ["ocaaef4d97b64499b","fast_food",121.3313,14.5797,"Potato Corner"]
+    ["ocaaef4d97b64499b","fast_food",121.3313,14.5797,"Potato Corner"],
+    ["o2d66010a73514008","hotel",121.34261,14.58961,"Midland Resort"],
+    ["ocd0c038710e8487b","hotel",121.33769,14.57835,"DreamRidge Resort"],
+    ["ofc4f6783aa204e64","hotel",121.34297,14.57897,"Armar Private Resort"]
   ]
 }

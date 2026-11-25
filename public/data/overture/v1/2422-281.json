@@ -91,6 +91,12 @@
     ["o6e33274771684697","pharmacy",121.14304,14.08424,"Mercury Drug"],
     ["o942376b44d1f4cc6","pharmacy",121.14701,14.08128,"Mercury Drug"],
     ["od705209464534a7d","laundry",121.14357,14.08241,"Labada Laundry House"],
-    ["oe4a01da3d2e146a0","laundry",121.14771,14.08687,"Spin And Clean Laundry Shop"]
+    ["oe4a01da3d2e146a0","laundry",121.14771,14.08687,"Spin And Clean Laundry Shop"],
+    ["o13b65d950cb04eb2","hotel",121.14737,14.09982,"Casa Miguel Resort and Country Club"],
+    ["o485c89424a75417d","hotel",121.14425,14.08104,"City Parkway Hotel"],
+    ["o7a44c90b21af47ca","hotel",121.13471,14.0598,"West Grove Resort and Hotel"],
+    ["oa06c5a33b668406f","hotel",121.13833,14.09034,"Amori Hotel"],
+    ["od5a59a2ffa674d3c","hotel",121.1498,14.08824,"AJ & Sam Resort"],
+    ["o9b87a1187afe40e9","lodging",121.10709,14.09982,"Jardin de Antonio"]
   ]
 }

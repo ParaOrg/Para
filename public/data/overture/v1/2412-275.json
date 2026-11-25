@@ -4,6 +4,32 @@
   "attribution": "© Overture Maps Foundation",
   "establishments": [
     ["o50bc2c26bbf8420f","restaurant",120.63369,13.79971,"Stilts Restaurant"],
-    ["of1d629066b9b4f22","cafe",120.64199,13.79075,"Tide and Tonic Cafe"]
+    ["of1d629066b9b4f22","cafe",120.64199,13.79075,"Tide and Tonic Cafe"],
+    ["o045f858372b04e56","hotel",120.64466,13.79118,"Passy Beach Resort in Bagong Silang Calatagan Batangas"],
+    ["o086d7bba1c7c4c11","hotel",120.64465,13.79118,"Ronco Beach Resort"],
+    ["o136bedf410844ac5","hotel",120.63391,13.79987,"Stilts Calatagan Beach Resort"],
+    ["o56d4fd26d1764f8f","hotel",120.64466,13.79118,"Bahay kubo resort"],
+    ["ob1ce9a197a974e25","hotel",120.64466,13.79118,"Solrock Private Resort"],
+    ["ob2f4f6c6860a41ed","hotel",120.64466,13.79118,"Shyville Beach Resort"],
+    ["obff4796aff524be9","hotel",120.64466,13.79118,"Calatagan Mangrove Resort"],
+    ["oc344ffac4b254458","hotel",120.64465,13.79118,"Calatagan Beach Resort"],
+    ["oe595af74e59640fe","hotel",120.64466,13.79118,"Hugot Paradise Beach Resort"],
+    ["oe68d25b88e4949e1","hotel",120.64199,13.79075,"Casa Astillero Beach Resort"],
+    ["oee9c1b46cff846e3","hotel",120.64466,13.79118,"PlayaLolita Beach Resort, Hotel and Restaurant"],
+    ["o281c73234dc14c68","lodging",120.64465,13.79118,"Villa Del Faro"],
+    ["o44b04e31d5934cc1","lodging",120.64466,13.79118,"CalaPinay Campsite & Cottages"],
+    ["o4e61480534694679","lodging",120.64465,13.79118,"Stella Marina Calatagan"],
+    ["o528f9df4cf564ea1","lodging",120.64465,13.79118,"Kuya Indo Camping Site And Cottage"],
+    ["o546cf1b8f8ce4e2c","lodging",120.6441,13.79115,"Edna's Beach and Campsite"],
+    ["o572c5dcd1c814769","lodging",120.64117,13.79619,"Aquaria Water Park (at Casobe by Landco Lifestyle Ventures)"],
+    ["o9eec127a256f44ef","lodging",120.64925,13.78036,"Villa Del Faro"],
+    ["oa43b688ba22448e6","lodging",120.63769,13.79838,"Manuel Uy Beach"],
+    ["oaec1fb413af04457","lodging",120.64466,13.79118,"Majestic Balinese Mansion"],
+    ["ob6e62d1f6d6848b1","lodging",120.64471,13.78655,"CalaPinay Campsite & Cottages"],
+    ["oc1c76a49e534473d","lodging",120.64931,13.78317,"White House Calatagan"],
+    ["occa20c557b4443d6","lodging",120.64465,13.79118,"Clipper's View beach house Calatagan, Batangas"],
+    ["od13fba73fa864b72","lodging",120.64465,13.79118,"Awo Private guest house"],
+    ["od5562d0e6439463c","lodging",120.64031,13.79477,"Crusoe Cabins"],
+    ["of1d1d1af8f40437f","lodging",120.64722,13.78342,"Stella Marina Calatagan"]
   ]
 }

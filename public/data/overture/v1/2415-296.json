@@ -36,6 +36,13 @@
     ["o8a734636027b4d55","supermarket",120.79499,14.84058,"Puregold - Paombong",{"brand":"Puregold"}],
     ["of74fd294c775469a","supermarket",120.77,14.84164,"Kanto San Agustin Hagonoy Bulacan"],
     ["o9c477336b782457f","pharmacy",120.76378,14.82488,"ABEC Pharmacy"],
-    ["o523d2cb68fa74316","laundry",120.75351,14.81643,"AGS Laundry Express"]
+    ["o523d2cb68fa74316","laundry",120.75351,14.81643,"AGS Laundry Express"],
+    ["o55ae74a0d93644f7","hotel",120.783,14.8374,"Casa Del Barrio Private Resort"],
+    ["o6b9a253d499244d9","hotel",120.79523,14.84074,"A.G. Private Resort"],
+    ["oe36a58b93a124090","hotel",120.79686,14.84977,"J and M Mendoza Manor Private Resort"],
+    ["o1fe18a40b37c4661","lodging",120.77465,14.83639,"Ciudad Gliceria Pool and Events Place"],
+    ["o3620a1fe0ab244ca","lodging",120.79989,14.8402,"Villa Benedicto Riverview Private Resort"],
+    ["ob71b23a5bf484895","lodging",120.7912,14.82604,"Villa Magdalena Pension House"],
+    ["oe3dc59e9093844f6","lodging",120.76473,14.84752,"Privado Xclusivo"]
   ]
 }

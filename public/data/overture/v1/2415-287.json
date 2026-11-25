@@ -5,6 +5,7 @@
   "establishments": [
     ["o1824b3429fbd47dc","restaurant",120.78896,14.35574,"West Capipisa"],
     ["o520e94cf39984c9e","restaurant",120.79173,14.35982,"Shang Garden"],
-    ["o10420fb6beb94588","laundry",120.79755,14.35114,"QuickSpin Laundry",{"brand":"QuickSpin Laundry Services"}]
+    ["o10420fb6beb94588","laundry",120.79755,14.35114,"QuickSpin Laundry",{"brand":"QuickSpin Laundry Services"}],
+    ["o98bc6bb8f8ad4809","hotel",120.79166,14.35991,"Tanza Oasis Hotel and Resort"]
   ]
 }

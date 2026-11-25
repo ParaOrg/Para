@@ -137,6 +137,26 @@
     ["o734f51c22d174085","laundry",120.94105,14.67566,"Three Sisters Self service Laundry"],
     ["o784c900bfb684cd0","laundry",120.9371,14.67245,"Zoey's Laundromat"],
     ["o9698a7aecbdb4b86","laundry",120.93945,14.66972,"Save5 Leongson Laundry Center",{"brand":"Save5 Masangkay Laundry Center"}],
-    ["o9e3d99ce3d934095","laundry",120.9493,14.65231,"Soapys Laundry Express"]
+    ["o9e3d99ce3d934095","laundry",120.9493,14.65231,"Soapys Laundry Express"],
+    ["o05dd43ea2510405a","hotel",120.94344,14.68405,"Wil's Resort"],
+    ["o2b5243ba27fb4e78","hotel",120.93636,14.69073,"Costiera Garden Resort"],
+    ["o2ef8e93580764a48","hotel",120.94982,14.69716,"JV Resort"],
+    ["o767f771c8d114e37","hotel",120.93682,14.66803,"Alaya Garden Resort & Hotel"],
+    ["o085e3703ebb144c9","lodging",120.94199,14.66866,"Sa Bahay Ng Mga Cute..raja Tupaz Navotas"],
+    ["o11f25dc6f3814f4a","lodging",120.93067,14.69637,"Rodriguez HOME"],
+    ["o1779a523d9be4be4","lodging",120.93784,14.67101,"Rk Sports Center"],
+    ["o1c776605f2d44170","lodging",120.94297,14.67426,"K.F.C's Resthaus"],
+    ["o45921c35d2814f15","lodging",120.94038,14.68738,"Villa Roarn private resort"],
+    ["o8adf5090ce1f4089","lodging",120.93369,14.68009,"Monlet Purified Water Station"],
+    ["o983325710a1448ae","lodging",120.94595,14.67093,"PLDT Malabon"],
+    ["o9875735b9ab445c4","lodging",120.94137,14.67965,"Bgy Hulong Duhat Malabon"],
+    ["o9ce2f2918070407d","lodging",120.93517,14.6708,"Tanglaw Ng Wawa Tangos"],
+    ["oa40ade4f2ca7463e","lodging",120.93837,14.67238,"San Roque Navotas Philippes"],
+    ["ob6e9cefc770e48a5","lodging",120.94854,14.69653,"Panghulubog"],
+    ["oc86717509ef34296","lodging",120.94476,14.68847,"Dampalit Coliseum"],
+    ["oc97cb6733a3d4029","lodging",120.94725,14.65433,"Estrella Navotas"],
+    ["od2439efdac7b4ebb","lodging",120.93639,14.67023,"Gold Rock San Roque Navotas"],
+    ["oe19771ccae5c40da","lodging",120.94064,14.67032,"Pat B. De Asis"],
+    ["oe31a654ba25e4752","lodging",120.93362,14.67254,"Bagong Kalsada Tangos Navotas"]
   ]
 }

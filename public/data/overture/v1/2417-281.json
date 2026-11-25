@@ -39,6 +39,25 @@
     ["o1c27f3efbbad4df6","school",120.85798,14.07775,"Buck Estate Elementary School"],
     ["o3be968c369584b26","school",120.88825,14.09563,"Sicat Primary School"],
     ["o6b32990fe8c242e7","pharmacy",120.85573,14.06842,"Southstar Drug"],
-    ["o9ed27625d4c943a1","laundry",120.88163,14.08798,"Jumpin Wash"]
+    ["o9ed27625d4c943a1","laundry",120.88163,14.08798,"Jumpin Wash"],
+    ["o00de0193fda54e9d","hotel",120.85768,14.06807,"Presidential Suite Twin Lakes Hotel"],
+    ["o0669e6a515bf4bee","hotel",120.89822,14.08825,"Lazuri Hotel Resort Tagaytay"],
+    ["o52e5f4f35e41483a","hotel",120.86557,14.08915,"Emperador Hotel and Resort"],
+    ["o9056dd0cc2084a3a","hotel",120.87811,14.0836,"Potter's Ridge Hotel"],
+    ["oa4a3e818422a402d","hotel",120.89424,14.09829,"Laurien's Hotel"],
+    ["obd2edf8f35b942e1","hotel",120.88591,14.08499,"Regine's Inn"],
+    ["of08a2a8ac27c48d0","hotel",120.88286,14.08608,"Vinia's Private Resort"],
+    ["of3318dde11994d1a","hotel",120.86704,14.07594,"Splendido Hotel"],
+    ["ofaffaae708c84145","hotel",120.88165,14.08695,"Casa Sophia Resort"],
+    ["o29078bb1ff544adc","lodging",120.86337,14.09132,"tagaytay rest house kubo"],
+    ["o3b74e0944fb848b8","lodging",120.89384,14.0675,"Mt Layas Eco Park"],
+    ["o488ebc0539154c14","lodging",120.87701,14.09937,"Usting Paraiso Transient House"],
+    ["o58df624225a1457c","lodging",120.89986,14.09113,"La Tierrez Bed and Breakfast"],
+    ["o6a63b68e81014aca","lodging",120.86735,14.07702,"Tagaytay Rest House Resort."],
+    ["o72dfc2c8765748fc","lodging",120.86446,14.07806,"Royale Tagaytay Villas"],
+    ["o927e3c8932ee45fa","lodging",120.88145,14.08203,"Swiss Country Home"],
+    ["oa056fa2c26b34343","lodging",120.89796,14.09581,"La Bella Boutique Hotel - Staycation at Neogan, Tagaytay"],
+    ["oca699264b5914c75","lodging",120.87685,14.08384,"Casa Bianca"],
+    ["od3929e0ca33d4b3a","lodging",120.85675,14.06849,"RK Swiss Escape Tagaytay"]
   ]
 }

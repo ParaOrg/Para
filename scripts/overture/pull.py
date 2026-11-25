@@ -19,8 +19,8 @@ BUCKET = "s3://overturemaps-us-west-2/release"
 MIN_CONFIDENCE = 0.7
 # Overture's basic categories Para draws: the owner's four kinds (README, "Answers"), food, cafés,
 # clinics and schools, and the everyday stores the OSM establishments already have a marker for:
-# convenience stores, pharmacies and laundries. overture.mjs maps each one to the kind and marker
-# the map uses.
+# convenience stores, pharmacies and laundries; and where to stay (hotels, inns, resorts).
+# overture.mjs maps each one to the kind and marker the map uses.
 CATEGORIES = (
     "restaurant",
     "fast_food_restaurant",
@@ -43,6 +43,9 @@ CATEGORIES = (
     "convenience_store",
     "pharmacy_and_drug_store",
     "laundry_service",
+    "hotel",
+    "lodging",
+    "resort",
 )
 # Overture files groceries under food_and_beverage_store, beside liquor and tobacco shops; these
 # are the kinds of it that are a grocery, kept by their primary category, which then stands as the

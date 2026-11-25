@@ -36,6 +36,18 @@
     ["o1fe96a5d231f4b18","supermarket",121.01759,14.89537,"PY Sari-Sari Store"],
     ["ofdae11276fe841ff","supermarket",121.03315,14.8994,"Norzagaray Public Market"],
     ["oa80c875b1c154b56","pharmacy",121.04924,14.85765,"Mercury Drug"],
-    ["offfe5dc03fee41e2","laundry",121.01122,14.87242,"Labanderang-Ina Laundry Shop"]
+    ["offfe5dc03fee41e2","laundry",121.01122,14.87242,"Labanderang-Ina Laundry Shop"],
+    ["o17842abe697642b2","hotel",121.04018,14.86582,"Casa Gavriel Private Resort"],
+    ["o3b65191f93e64fd4","hotel",121.00888,14.87314,"Sitio Lucia Resort Hotel and Training Center"],
+    ["o4d79aa21ef394ae6","hotel",121.0153,14.88033,"Sitio Manggahan Private Resort"],
+    ["o62e7084630c346e0","hotel",121.04716,14.89576,"Birch Hotel"],
+    ["o8aaee8585e224238","hotel",121.04214,14.88637,"Falcon Crest Resort"],
+    ["od77ccfcd843e4981","hotel",121.00655,14.85262,"The Serapio Resort"],
+    ["ofe58d44f945b4021","hotel",121.0089,14.87306,"Sitio Lucia Resort Hotel and Training Center"],
+    ["o076becb52e554eb6","lodging",121.00496,14.86235,"Casa Clarita"],
+    ["o2cc6a0364d284af1","lodging",121.01348,14.88124,"Villa rita bali bliss"],
+    ["o9994cb8748ae48fa","lodging",121.01087,14.89474,"Camp Lilim"],
+    ["ob2f46e0ae3e64616","lodging",121.00333,14.87386,"Muscoka Ville ( Perez Compound)"],
+    ["oee29738adaa649f6","lodging",121.00503,14.86374,"Gulod Pulong Buhangin"]
   ]
 }

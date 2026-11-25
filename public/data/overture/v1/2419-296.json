@@ -133,6 +133,20 @@
     ["oe9c0f90fe7c246fc","pharmacy",120.97333,14.81964,"JMC Drugcare Pharmacy"],
     ["oebb41fdf15af4850","pharmacy",120.95187,14.82501,"Farmacia Ni Dok - Poblacion Santa Maria Bulacan Branch"],
     ["ofe11edbd37814fee","pharmacy",120.97896,14.84175,"ICAH Pharmacy"],
-    ["oaa4e9edcf2b34258","laundry",120.97907,14.84991,"Bubble Club Smart Laundry"]
+    ["oaa4e9edcf2b34258","laundry",120.97907,14.84991,"Bubble Club Smart Laundry"],
+    ["o19fe8c2ea547457d","hotel",120.99583,14.80867,"El Marfin Resort And Pavillion"],
+    ["o669e7f4110a04251","hotel",120.97506,14.82534,"Wilson’s Place Private Resort"],
+    ["o770112b4949f48ec","hotel",120.97734,14.84332,"Palms N Sands Private Resort"],
+    ["o8c6b185da8ee4aff","hotel",120.98016,14.84542,"Cresen's Private Resort"],
+    ["o959a76f35f404531","hotel",120.98522,14.84859,"VFarm Garden Resort"],
+    ["o9dbc2e6389ee4078","hotel",120.96775,14.80528,"Casa Victoria Hotel"],
+    ["oa214806538be4569","hotel",120.978,14.83268,"Hotel Kimberly"],
+    ["oacd27e2196e14de2","hotel",120.99164,14.84468,"Precious Grace Farm & Resort"],
+    ["oc364d0627b674fc6","hotel",120.95111,14.82518,"Primitivo De Segunda Private Resort and Event Place"],
+    ["oe9c8c12dd9ff4046","hotel",120.99905,14.80046,"Mika and Ella Pavillion and Private Resort"],
+    ["o89d1aad85176473f","lodging",120.97852,14.80398,"Tanglaw Tumana"],
+    ["o8be07cfac6754dd7","lodging",120.95414,14.82116,"El Pueblo Sta. Maria"],
+    ["o9996161bc8c54d46","lodging",120.97036,14.80607,"Villa Priscilla Private Resort"],
+    ["oa3d69c1bb9f84b64","lodging",120.98772,14.80198,"Buenavistaville"]
   ]
 }

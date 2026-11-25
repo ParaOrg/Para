@@ -48,6 +48,20 @@
     ["o907e34115b0b4346","supermarket",121.32448,13.96855,"New Public Market Lalig Tiaong Quezon"],
     ["od7a238c3c28a4ddf","supermarket",121.3281,13.98284,"SM Savemore Market"],
     ["o1260f221a7cb4bff","pharmacy",121.32014,13.959,"Southstar Drug"],
-    ["o4f0b77550df64e55","pharmacy",121.32534,13.95697,"Southstar Drug"]
+    ["o4f0b77550df64e55","pharmacy",121.32534,13.95697,"Southstar Drug"],
+    ["o00daeebf67b84526","hotel",121.32497,13.95704,"Colland's Private Resort"],
+    ["o6f2fd18879584a02","hotel",121.33875,13.98353,"Alroa Spring Resort"],
+    ["o8254acbea0004b0f","hotel",121.32803,13.96274,"La Roma's Resort"],
+    ["o01b8e90e0913421f","lodging",121.34563,13.95918,"Calayag-Miller Farm House"],
+    ["o0c0a97f7a8d945ce","lodging",121.33909,13.95402,"Calayag-Miller Farm House"],
+    ["o0dd5eacb1f664d66","lodging",121.34685,13.9954,"Villa Escudero River Cottages"],
+    ["o176071117593440a","lodging",121.32496,13.95708,"Passiflora Rooms & Private Pool"],
+    ["o211d29a7216441f4","lodging",121.3458,13.99491,"Villa Escudero Raft Rental"],
+    ["o2468830200bd49fa","lodging",121.30856,13.99805,"Casa Elvira"],
+    ["o28e64215a3af4638","lodging",121.32214,13.96243,"Tiaong Town Plaza"],
+    ["o40923785409443b5","lodging",121.34594,13.99512,"Villa Escodero Resort Batangas"],
+    ["oa8013390766b48cf","lodging",121.3391,13.95391,"Villa Escudero Plantations and Resort"],
+    ["oea5b6b2342ca4c34","lodging",121.32877,13.98243,"Villa Escudero - Tiaong Quezon"],
+    ["ofd63574919cb4b32","lodging",121.34302,13.99564,"Villa Escudero Plantations and Resort"]
   ]
 }
