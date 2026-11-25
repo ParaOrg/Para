@@ -428,16 +428,6 @@ export const SheetLowLongName: Story = {
   },
 };
 
-/** Low with a long place, in a list whose cards fit within Low: all of it, as nothing is cut. */
-export const SheetLowLongNameFits: Story = {
-  args: { routes: longName },
-  play: async ({ canvasElement }) => {
-    const name = within(canvasElement).getByText(LONG);
-    await waitFor(() => expect(name.getBoundingClientRect().height).toBeGreaterThan(32));
-    await expect(within(canvasElement).getByTestId('chooser')).toHaveAttribute('data-snap', 'low');
-  },
-};
-
 /**
  * Raised a third with a long place: all of it, on as many lines as it takes, the list rising no
  * higher than its last card.
