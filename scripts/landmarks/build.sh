@@ -76,6 +76,16 @@ node "$root/scripts/footbridges/footbridges.mjs" "$work/footbridges.geojsonseq" 
   "$root/public/data/footbridges.v1.json"
 node "$root/scripts/footbridges/check.mjs" "$root/public/data/footbridges.v1.json"
 
+# The terminals from the same download (.scratch/terminals): OSM's jeepney, UV Express and bus
+# terminals, and the transport terminals it names but does not type, one row each
+# (terminal-file.mjs). The writer checks the file and fails the build on one not to trust.
+osmium tags-filter --overwrite "$extract" \
+  $(node "$root/scripts/terminals/terminals.mjs" --filter) -o "$work/terminals.osm.pbf"
+osmium export --overwrite "$work/terminals.osm.pbf" -f geojsonseq --add-unique-id=type_id \
+  -o "$work/terminals.geojsonseq"
+node "$root/scripts/terminals/terminals.mjs" "$work/terminals.geojsonseq" "$extract_at" \
+  "$root/public/data/terminals.v1.json"
+
 # The establishments from the same download (.scratch/establishments, step E3a): the shops,
 # banks, ATMs, eateries and the like, an index and a file per area cell (establishments.mjs).
 osmium tags-filter --overwrite "$extract" \
