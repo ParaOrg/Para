@@ -497,6 +497,16 @@ let chosenPin;
     if (/footbridges\.v1\.json/.test(r.url())) asked.push(r.url());
   });
   const errors = await open(page, '/studio/?e2e=1');
+  // The studio draws its possible terminals, never the commuter's markers: the markers drawn and
+  // then taken away at street zoom once raced a wait for the map to rest.
+  const markersAtOpen = await page.evaluate(() => {
+    window.__markersAdded = 0;
+    window.__map.on('sourcedata', (e) => {
+      if (e.sourceId === 'osm-terminals' && e.sourceDataType === 'metadata')
+        window.__markersAdded++;
+    });
+    return !!window.__map.getSource('osm-terminals');
+  });
   await settle(page, lift, 17);
   check('studio: at zoom 17 with the switch off, no footbridge file asked for', asked.length === 0);
   const drawnNow = () =>
@@ -523,6 +533,21 @@ let chosenPin;
     'studio: on once more, drawn again, the file asked for once in all',
     again > 0 && asked.length === 1,
     `${again} drawn; ${asked.length} asked`,
+  );
+  const terminals = await until(
+    () =>
+      page.evaluate(() => ({
+        dots: !!window.__map.getLayer('possible-terminals-dot'),
+        markers: !!window.__map.getSource('osm-terminals'),
+        added: window.__markersAdded,
+      })),
+    (t) => t.dots,
+    10000,
+  );
+  check(
+    "studio: the possible terminals at street zoom, and never the commuter's terminal markers",
+    terminals.dots && !terminals.markers && !markersAtOpen && terminals.added === 0,
+    JSON.stringify({ ...terminals, markersAtOpen }),
   );
   check('studio, footbridges: no page errors', errors.length === 0, errors.join('; '));
   await page.close();
