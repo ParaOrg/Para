@@ -74,6 +74,14 @@ test('the shared height stays as left while a card is open, Low once none is', (
   for (const snap of ['low', 'full', 0.7]) assert.equal(sharedSnap(snap, false), 'low');
 });
 
+test("with none open, the shared height rests at the first card's, where the next card opens", () => {
+  for (const idle of ['low', 0.33]) {
+    for (const snap of ['low', 'full', 0.7]) assert.equal(sharedSnap(snap, false, idle), idle);
+    // A card open keeps its own height, whatever the first card's.
+    assert.equal(sharedSnap(0.7, true, idle), 0.7);
+  }
+});
+
 test("a trip behind a place's card holds only while that card is open and no trip is", () => {
   assert.equal(tripBehindHolds(false, true), true);
   // A trip opened (‹, or another route picked on the card): let go.

@@ -1,15 +1,13 @@
 import type { MapLibreMap } from 'maplibre-gl';
 import { useState, type RefObject } from 'react';
 
-import type { SheetHeight } from '@/shared/ui/bottom-sheet';
-import type { Snap } from '@/shared/ui/sheet-gesture';
-
 import { useRideColours } from './direction-arrows';
 import { useLitLineColour } from './lighting';
 import { LIT_LINE, LIVERY_LINE, type LineLook } from './livery-line';
 import { clearOfSheet } from './sheet-room';
 import type { Highlight } from './use-saved-routes';
-import { isChoosing, sharedSnap, tripBack, tripBehindHolds } from '../cards/card-stack';
+import { useSharedHeight } from './use-shared-height';
+import { isChoosing, tripBack, tripBehindHolds } from '../cards/card-stack';
 import { useTripLivery } from '../cards/use-trip-livery';
 import { routeCards, sharingAnEnd, type Listing } from '../model/departures';
 import type { Livery } from '../model/liveries';
@@ -49,20 +47,16 @@ export function useCardStack<V extends Direction, S extends { id: string }>(
   saved: Routes<V>,
   hotspots: Hotspots<S>,
 ) {
-  // One tap, several things: routes, hotspots or both, in the owner's route
-  // list — the hotspots first, then the routes as RouteCards. It stays behind
-  // a trip picked from it, hidden, for the trip's ‹ — and so does a hotspot's
-  // card (the owner's call).
+  // One tap, several things: routes, hotspots or both, in the owner's route list — the hotspots
+  // first, then the routes as RouteCards. It stays behind a trip picked from it, hidden, for the
+  // trip's ‹ — and so does a hotspot's card (the owner's call).
   const choice = [...saved.candidates, ...hotspots.candidates];
   const choosing = isChoosing(saved.candidates, hotspots.candidates);
 
-  // One height for the sheets that stand in for one another: a pick and ‹
-  // keep it; with nothing open it goes back to Low (sharedSnap).
-  const [snap, setSnap] = useState<Snap>('low');
+  // One height for the sheets that stand in for one another (useSharedHeight).
   const anyOpen = !!saved.selected || !!hotspots.selected || choosing;
-  const resting = sharedSnap(snap, anyOpen);
-  if (resting !== snap) setSnap(resting);
-  const height: SheetHeight = { snap, onSnap: setSnap };
+  const shared = useSharedHeight({ trip: !!saved.selected, place: !!hotspots.selected, choosing });
+  const { snap, height } = shared;
   /** Where a point the camera glides to should sit, clear of a card at the shared height. */
   const clearOf = (dock: RefObject<HTMLElement | null>) => (): [number, number] =>
     map ? clearOfSheet(map.getContainer(), dock.current, snap) : [0, 0];
@@ -110,6 +104,7 @@ export function useCardStack<V extends Direction, S extends { id: string }>(
     choosing,
     /** Any card up: the list, a trip or a hotspot's. */
     open: anyOpen,
+    setIdleSnap: shared.setIdle, // Where the first card rests: the height the next card opens at.
     height,
     snap,
     clearOf,
@@ -126,12 +121,12 @@ export function useCardStack<V extends Direction, S extends { id: string }>(
     },
 
     /**
-     * A route picked on a card — the list's or a hotspot's — opens its trip
-     * in the colour the card wore, the card kept behind it. Over a trip a
-     * place's card stood in front of, it lets that trip and what stood
-     * behind it go: this card is what the new trip's ‹ comes back to.
+     * A route picked on a card — the list's or a hotspot's — opens its trip in the colour the card
+     * wore, the card kept behind it. Over a trip a place's card stood in front of, it lets that
+     * trip and what stood behind it go: this card is what the new trip's ‹ comes back to.
      */
     openTrip: (v: { id: string }, livery?: Livery) => {
+      shared.openTripFromList();
       setWorn(livery ? { id: v.id, livery } : null);
       if (tripBehind) hotspots.select(hotspots.selected?.id ?? null);
       saved.select(v.id, { keepList: !tripBehind });
