@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 14885756,
+  "kind": "jeepney",
+  "ref": "310",
+  "name": "Arroceros–Project 7 via España",
+  "from": "Project 7",
+  "to": "Arroceros",
+  "network": "LTFRB National Capital Region",
+  "operator": "New GSIS Transport Service Cooperative",
+  "version": 28,
+  "last_edit": "2026-09-06",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform",121.01967,14.65633,"Muñoz Turning Point"],["platform",121.01872,14.65532,"Mangga Street"],["platform",121.01835,14.6534,"M.H. del Pilar Street"],["platform",121.01806,14.65145,"Metrobank Roosevelt"],["platform",121.01776,14.64945,"Coca-Cola Distribution Center"],["platform",121.01744,14.64736,"Christian Gospel Center"],["platform",121.01714,14.64546,"Baler Street"],["platform",121.01673,14.64299,"Watchtower Compound"],["platform",121.01634,14.64071,"FPJ–Frisco"],["platform",121.01704,14.63868,"Chinabank San Francisco del Monte"],["platform",121.0181,14.63725,"F. Bautista Street"],["platform",121.01798,14.63477,"Santa Cruz Barangay Hall"],["platform",121.01837,14.63305,"Fisher Mall"],["platform",121.01796,14.63238,"FPJ Avenue"],["platform",121.01566,14.63073,"Scout Chuatoco Street"],["platform",121.01037,14.62588,"Santo Domingo Church"],["platform",121.00875,14.62443,"Quezon Avenue & BMA"],["platform",121.00459,14.62066,"Quezon Avenue & D. Tuazon"],["platform",121.00248,14.61874,"Welcome Rotonda"],["platform",120.99858,14.61518,"Blumentritt"],["platform",120.99647,14.61322,"Antipolo"],["platform",120.99525,14.61217,"Vicente Cruz"],["platform",120.99308,14.61018,"España–Lacson"],["platform",120.99154,14.60877,"UST"],["platform",120.98969,14.60706,"P. Noval"],["platform",120.98837,14.60591,"P. Campa"],["platform",120.98431,14.60034,"Quiapo"],["platform",120.98324,14.59662,"Quinta Market"],["platform",120.98661,14.59275,"P. Casal"],["platform",120.98423,14.59046,"San Marcelino"],["platform",120.98156,14.59155,"Universidad de Manila"]],
+  "line": [[121.01984,14.65668],[121.0194,14.65557],[121.01895,14.65575],[121.01861,14.65459],[121.01721,14.64545],[121.01634,14.64041],[121.01639,14.63998],[121.01662,14.63934],[121.01804,14.63751],[121.01826,14.63698],[121.01831,14.63649],[121.01799,14.63413],[121.01814,14.63348],[121.01864,14.63269],[121.0166,14.63139],[121.01494,14.62998],[121.00425,14.62019],[121.00181,14.61802],[121.00154,14.61791],[121.00133,14.61748],[120.98834,14.60573],[120.98792,14.60541],[120.98553,14.60481],[120.98536,14.60471],[120.98401,14.59827],[120.98362,14.5969],[120.98315,14.5965],[120.98407,14.59522],[120.98533,14.59373],[120.98571,14.59338],[120.9869,14.59264],[120.98696,14.59227],[120.98613,14.5907],[120.98565,14.59024],[120.98551,14.5904],[120.98538,14.59043],[120.98194,14.59039],[120.98187,14.59148],[120.98133,14.59148]]
+}

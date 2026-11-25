@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 18681296,
+  "kind": "bus",
+  "ref": "6A",
+  "name": "Route 6A: Kamuning–Fairview via East Avenue",
+  "from": "Fairview",
+  "to": "GMA Kamuning",
+  "network": "LTFRB National Capital Region",
+  "operator": "Roval Transport",
+  "version": 10,
+  "last_edit": "2026-09-01",
+  "clipped": false,
+  "provenance": {"source:ref":"LTFRB Memorandum Circular 2022-067"},
+  "gaps": [],
+  "stops": [["platform_entry_only",121.05661,14.73497,"SM City Fairview"],["platform_entry_only",121.0556,14.73378,"Landers Fairview"],["platform",121.05751,14.72646,"Toyota Fairview"],["platform",121.05234,14.7209,"Mindanao Avenue"],["platform",121.06221,14.70894,"Atherton Street"],["platform",121.07012,14.70637,"Regalado Avenue"],["platform",121.07872,14.70499,"Doña Carmen"],["platform",121.08625,14.70128,"Litex"],["platform",121.08699,14.69541,"Commonwealth Market"],["platform",121.087,14.69125,"Commission on Audit"],["platform",121.0869,14.68853,"Batasan Road"],["platform",121.08317,14.67879,"Ever Gotesco Commonwealth"],["platform",121.07123,14.66629,"Luzon Avenue"],["platform",121.06874,14.66467,"Tandang Sora Avenue"],["platform",121.06649,14.66312,"Tandang Sora Avenue"],["platform",121.06356,14.66112,"Central Avenue"],["platform",121.05782,14.65733,"UP Ayala Techno Hub"],["platform",121.0529,14.65409,"Philcoa"],["platform",121.0465,14.65119,"QMC–North Avenue"],["platform",121.04807,14.64671,"National Kidney Transplant Institute"],["platform",121.04721,14.64294,"East Avenue Medical Center"],["platform",121.04651,14.63985,"SSS Main Office"],["platform_exit_only",121.04233,14.63747,"EDSA–NIA South Road"]],
+  "line": [[121.05774,14.7352],[121.05596,14.73466],[121.05568,14.73444],[121.0557,14.73389],[121.05548,14.73206],[121.05546,14.73059],[121.05567,14.73004],[121.05795,14.72681],[121.05204,14.72136],[121.06101,14.71047],[121.06377,14.7072],[121.06431,14.70677],[121.06487,14.70653],[121.06542,14.70642],[121.07049,14.70639],[121.07385,14.7053],[121.07512,14.70506],[121.07953,14.70501],[121.08174,14.70474],[121.08322,14.70435],[121.08425,14.70381],[121.08468,14.70347],[121.08563,14.70249],[121.08638,14.70131],[121.0868,14.7003],[121.08709,14.69914],[121.08718,14.69528],[121.08714,14.69056],[121.08705,14.68813],[121.08667,14.68702],[121.0856,14.68448],[121.08538,14.68352],[121.08317,14.67847],[121.08217,14.67647],[121.08122,14.67497],[121.08003,14.67336],[121.07844,14.67157],[121.07728,14.67046],[121.07577,14.66919],[121.07394,14.66789],[121.07036,14.66555],[121.06998,14.66542],[121.06877,14.66463],[121.06673,14.66321],[121.06643,14.66292],[121.06351,14.66106],[121.06308,14.66067],[121.05889,14.65791],[121.05836,14.65767],[121.05783,14.65732],[121.05735,14.65691],[121.05412,14.65485],[121.05266,14.65373],[121.05185,14.65321],[121.0515,14.65312],[121.05116,14.65315],[121.05067,14.65364],[121.05017,14.654],[121.04956,14.65426],[121.04909,14.65436],[121.04849,14.65437],[121.048,14.65428],[121.04761,14.65412],[121.04718,14.65378],[121.04676,14.65325],[121.04659,14.65285],[121.04651,14.65216],[121.04658,14.65136],[121.04701,14.65029],[121.04751,14.64962],[121.04824,14.64896],[121.04846,14.64827],[121.04599,14.63747],[121.04565,14.63738],[121.04498,14.63759],[121.04455,14.63795],[121.04415,14.63855],[121.04238,14.63739]]
+}

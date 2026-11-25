@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 19191853,
+  "kind": "jeepney",
+  "ref": "T171",
+  "name": "Monumento–Santo Niño via Expressway",
+  "from": "Meycauayan Common Terminal",
+  "to": "Monumento",
+  "network": "LTFRB National Capital Region",
+  "operator": "Meycauayan Transport Service Cooperative",
+  "version": 11,
+  "last_edit": "2026-09-29",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [[39,6]],
+  "stops": [],
+  "line": [[120.97394,14.7487],[120.97405,14.74897],[120.97355,14.74922],[120.97316,14.74794],[120.97248,14.74664],[120.972,14.74546],[120.97194,14.74507],[120.97179,14.74489],[120.972,14.74469],[120.9725,14.74477],[120.97299,14.74473],[120.97424,14.74269],[120.98592,14.72116],[120.99062,14.71228],[120.99888,14.69704],[120.99957,14.69565],[121.00003,14.69444],[121.00035,14.69336],[121.00057,14.69216],[121.00077,14.69017],[121.0006,14.68226],[121.00047,14.68105],[121.00003,14.67969],[120.99987,14.67888],[120.9999,14.678],[121.00037,14.67601],[121.00045,14.67536],[121.0001,14.65937],[121.00002,14.65895],[120.99965,14.65849],[120.99948,14.65767],[120.99908,14.65743],[120.99402,14.65743],[120.99051,14.65731],[120.99043,14.65718],[120.99042,14.65413],[120.98681,14.65427],[120.9868,14.65435],[120.98609,14.65433],[120.98603,14.656],[120.98606,14.65595],[120.98619,14.65606]]
+}

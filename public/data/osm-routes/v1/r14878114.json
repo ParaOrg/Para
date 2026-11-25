@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 14878114,
+  "kind": "jeepney",
+  "ref": "T2114",
+  "name": "Almar–Ever Gotesco",
+  "from": "Almar",
+  "to": "Ever Gotesco Commonwealth",
+  "network": "LTFRB National Capital Region",
+  "operator": "",
+  "version": 18,
+  "last_edit": "2026-11-05",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [],
+  "line": [[121.04368,14.75607],[121.04373,14.7553],[121.04695,14.73971],[121.04871,14.73163],[121.04816,14.73126],[121.04738,14.73109],[121.04728,14.72741],[121.04744,14.72691],[121.04766,14.72656],[121.05212,14.72126],[121.06101,14.71047],[121.06361,14.70738],[121.06419,14.70685],[121.06487,14.70653],[121.06542,14.70642],[121.07049,14.70639],[121.07385,14.7053],[121.0747,14.70511],[121.0755,14.70504],[121.07958,14.70501],[121.08148,14.70478],[121.08257,14.70456],[121.08359,14.70417],[121.08459,14.70355],[121.08563,14.70249],[121.08638,14.70131],[121.0868,14.7003],[121.08713,14.69878],[121.08717,14.69284],[121.08705,14.68813],[121.08667,14.68702],[121.0856,14.68448],[121.08538,14.68352],[121.08317,14.67847],[121.08222,14.67656],[121.08213,14.67627],[121.08217,14.67617],[121.08229,14.67618],[121.08299,14.67716],[121.08329,14.67776]]
+}

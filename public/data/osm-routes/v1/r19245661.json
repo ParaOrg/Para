@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 19245661,
+  "kind": "jeepney",
+  "ref": "",
+  "name": "Santo Niño–Meycauayan Bayan",
+  "from": "Santo Niño",
+  "to": "Meycauayan Bayan",
+  "network": "LTFRB PUJ",
+  "operator": "",
+  "version": 6,
+  "last_edit": "2025-10-04",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["stop",120.9773,14.75331,"Sterling Jeepney Stop"],["stop",120.96174,14.73733,"Meycauyan - Santo Niño Terminal"]],
+  "line": [[120.99385,14.76453],[120.99366,14.76609],[120.98919,14.76552],[120.98839,14.76454],[120.98703,14.76324],[120.98511,14.76114],[120.9834,14.75956],[120.97726,14.75319],[120.97469,14.75076],[120.97403,14.75002],[120.97359,14.74935],[120.97316,14.74794],[120.97236,14.74635],[120.97199,14.74543],[120.97193,14.74504],[120.97166,14.74478],[120.9714,14.74428],[120.97021,14.74279],[120.96879,14.74173],[120.96776,14.74038],[120.96585,14.73902],[120.96352,14.73767],[120.96242,14.73733],[120.96192,14.73725],[120.96185,14.73736]]
+}

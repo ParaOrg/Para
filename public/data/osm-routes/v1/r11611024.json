@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 11611024,
+  "kind": "jeepney",
+  "ref": "3190",
+  "name": "One Ayala–Mandaluyong City Hall",
+  "from": "Mandaluyong City Hall",
+  "to": "One Ayala",
+  "network": "LTFRB National Capital Region",
+  "operator": "eSakay, Inc.",
+  "version": 29,
+  "last_edit": "2026-08-31",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform",121.03496,14.5775,"Maysilo Circle"],["platform",121.02977,14.57177,"Tivoli Garden Residences"],["platform",121.02946,14.56817,"M. L. Quezon"],["platform",121.02641,14.56911,"Old Makati City Hall"],["platform",121.02414,14.56838,"Asuncion"],["platform",121.02337,14.56622,"Kalayaan–N. Garcia"],["platform",121.02261,14.5644,"SPI Global"],["platform",121.02289,14.56286,"N. Garcia–Jupiter Intersection"],["platform",121.02488,14.5628,"Morning Star Center"],["platform",121.02683,14.56247,"Employees Compensation Commission"],["platform",121.0272,14.56047,"H. V. de la Costa"],["platform",121.02494,14.55604,"Manila Peninsula Hotel"],["platform",121.02669,14.5528,"Ayala Center"],["platform_exit_only",121.02818,14.55097,"One Ayala"]],
+  "line": [[121.0349,14.57749],[121.03464,14.57802],[121.03414,14.57835],[121.03356,14.57842],[121.03315,14.57822],[121.03288,14.57789],[121.0328,14.57754],[121.03294,14.57709],[121.03314,14.57679],[121.0289,14.57264],[121.03145,14.57029],[121.03156,14.57035],[121.03179,14.57036],[121.03205,14.57006],[121.03206,14.56989],[121.03196,14.5697],[121.03082,14.56851],[121.0307,14.56828],[121.03064,14.56773],[121.02459,14.56962],[121.02361,14.56672],[121.02228,14.56336],[121.02223,14.56307],[121.02229,14.56287],[121.02403,14.56292],[121.02529,14.56283],[121.02665,14.56258],[121.02807,14.56211],[121.02429,14.55464],[121.02633,14.55323],[121.02793,14.55172],[121.02888,14.55066],[121.02862,14.55043],[121.02816,14.55096]]
+}

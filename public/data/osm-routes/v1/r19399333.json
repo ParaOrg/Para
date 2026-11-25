@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 19399333,
+  "kind": "bus",
+  "ref": "QC2S",
+  "name": "QMC–Litex (northbound)",
+  "from": "Quezon City Hall/NHA",
+  "to": "Soliven",
+  "network": "QCityBus",
+  "operator": "Lungsod Quezon",
+  "version": 7,
+  "last_edit": "2026-05-10",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["stop_entry_only",121.05198,14.65023,"Quezon City Hall"]],
+  "line": [[121.05198,14.65023],[121.05202,14.65121],[121.05177,14.65217],[121.05181,14.65268],[121.05197,14.65296],[121.05404,14.65414],[121.06563,14.66187],[121.06886,14.66395],[121.07097,14.66546],[121.07514,14.66827],[121.07659,14.6694],[121.07899,14.67171],[121.08054,14.6735],[121.08218,14.67573],[121.08329,14.67776],[121.08624,14.68449],[121.08699,14.68638],[121.08735,14.68797],[121.08751,14.69453],[121.08753,14.69802],[121.08748,14.69891],[121.08704,14.70058],[121.08669,14.70139],[121.08615,14.7023]]
+}

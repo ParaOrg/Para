@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 11370051,
+  "kind": "jeepney",
+  "ref": "339",
+  "name": "Balic-Balic–España/M. dela Fuente",
+  "from": "Balic-Balic",
+  "to": "Espana/M. dela Fuente",
+  "network": "LTFRB National Capital Region",
+  "operator": "FEJODAP Transport Service Corporation",
+  "version": 19,
+  "last_edit": "2026-09-12",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",121.00846,14.61219,"Balic-Balic Turning Point"],["platform",121.00661,14.61226,"Blumentritt"],["platform",121.00486,14.61073,"Leyte"],["platform",121.00362,14.60847,"Masbate"],["platform",121.00285,14.60682,"Wellcome Balic-Balic"],["platform",120.99852,14.60713,"Firmeza"],["platform",120.99631,14.60945,"J. Fajardo"],["platform",120.99421,14.61165,"España"],["platform",120.99309,14.61376,"Piy Margal"],["platform_exit_only",120.99414,14.61266,"P. Florentino"]],
+  "line": [[121.00849,14.61222],[121.00859,14.61214],[121.00814,14.61159],[121.00695,14.61252],[121.0063,14.61196],[121.00546,14.61142],[121.00481,14.61062],[121.00442,14.61027],[121.00396,14.60948],[121.00333,14.60713],[121.00254,14.60657],[121.00029,14.60521],[120.99242,14.61345],[120.99296,14.61393],[120.99417,14.61269]]
+}

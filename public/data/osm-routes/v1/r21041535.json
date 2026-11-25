@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 21041535,
+  "kind": "jeepney",
+  "ref": "149",
+  "name": "EDSA/SM North–UP",
+  "from": "SM North EDSA",
+  "to": "UP Campus",
+  "network": "LTFRB National Capital Region",
+  "operator": "Aguila Transport Service Cooperative",
+  "version": 3,
+  "last_edit": "2026-10-09",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",121.03206,14.6554,"SM North EDSA"],["platform",121.03593,14.65424,"TriNoma North Entrance"],["platform",121.03846,14.65313,"Occupational Safety & Health Center"],["platform",121.03863,14.65171,"BFP National Headquarters"],["platform",121.03899,14.64993,"Philippine Science High School"],["platform",121.03995,14.64736,"Philippine Children's Medical Center"],["platform",121.04135,14.64531,"NPC Compound"],["platform",121.04275,14.64382,"NIA Road"],["platform",121.04415,14.64268,"BIR Compound"],["platform",121.04592,14.64155,"National Telecommunications Commission"],["platform",121.04734,14.6425,"East Avenue Medical Center"],["platform",121.048,14.64546,"Matalino Street"],["platform",121.04843,14.64738,"National Kidney Transplant Institute"],["platform",121.05215,14.65126,"QMC–Maharlika"],["platform",121.05382,14.65391,"Philcoa"],["platform",121.062,14.65467,"UP Checkpoint"],["platform",121.06534,14.6538,"Quezon Hall"],["platform",121.06841,14.65383,"Bulwagang Rizal"],["platform",121.07137,14.65386,"Benitez Hall"],["platform",121.07278,14.65391,"A. Maria Regidor Street"],["platform",121.0731,14.6544,"Vinzons Hall"],["platform_exit_only",121.07316,14.65573,"School of Economics"]],
+  "line": [[121.03203,14.65529],[121.03081,14.65556],[121.03071,14.6555],[121.0308,14.65541],[121.03842,14.65374],[121.03878,14.65125],[121.0392,14.64944],[121.03976,14.64795],[121.04061,14.64627],[121.04191,14.64472],[121.04353,14.6432],[121.04517,14.64202],[121.04693,14.64104],[121.04856,14.64809],[121.04883,14.64835],[121.04924,14.64853],[121.04997,14.64851],[121.05062,14.64866],[121.05112,14.64893],[121.05151,14.64931],[121.05183,14.64979],[121.05202,14.65058],[121.052,14.65137],[121.05177,14.65217],[121.05183,14.65278],[121.05197,14.65296],[121.0531,14.65364],[121.05404,14.65414],[121.05667,14.65468],[121.06233,14.6548],[121.06431,14.65482],[121.06478,14.6539],[121.06492,14.65382],[121.07266,14.65393],[121.07285,14.65405],[121.0731,14.65456],[121.07308,14.65571]]
+}

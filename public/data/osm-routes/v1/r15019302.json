@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 15019302,
+  "kind": "bus",
+  "ref": "37",
+  "name": "Route 37: Fairview–Monumento via VGC",
+  "from": "Valenzuela Gateway Complex",
+  "to": "Monumento",
+  "network": "LTFRB National Capital Region",
+  "operator": "Valenzuela Transport Service Cooperative",
+  "version": 27,
+  "last_edit": "2026-09-29",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",120.99392,14.71159,"Valenzuela Gateway Complex"],["platform",120.99898,14.65534,"Ayala Malls Cloverleaf"],["platform",120.99549,14.64827,"Selecta Drive"],["platform",120.99467,14.64638,"7th Avenue"],["platform",120.99406,14.64487,"C-3–A. Bonifacio"],["platform",120.98826,14.64444,"La Loma Cemetery"],["platform",120.98452,14.64456,"M. H. del Pilar"],["platform",120.98369,14.64515,"LRT 5th Avenue Station (Rizal Extension)"],["platform",120.98377,14.64782,"7th Avenue"],["platform",120.98383,14.64918,"8th Avenue"],["platform",120.98392,14.65219,"10th Avenue"],["platform",120.99034,14.64424,"8th Street"],["platform_exit_only",120.98398,14.65375,"LRT Monumento Station"]],
+  "line": [[120.99439,14.71185],[120.99442,14.7115],[120.99344,14.71144],[120.99326,14.71153],[120.99322,14.71184],[120.99307,14.7118],[120.99313,14.71169],[120.99277,14.7101],[120.99288,14.7094],[120.99328,14.7088],[120.9925,14.70815],[120.99388,14.70626],[120.99888,14.69704],[120.99957,14.69565],[121.00031,14.69354],[121.0007,14.69116],[121.00077,14.69017],[121.00074,14.68827],[121.00056,14.68162],[121.00047,14.68105],[121.00003,14.67969],[120.99987,14.67888],[120.9999,14.678],[121.00037,14.67601],[121.00045,14.67536],[121.00006,14.65691],[120.99979,14.6562],[120.99856,14.65462],[120.99852,14.65442],[120.99719,14.65203],[120.99369,14.64389],[120.9917,14.64387],[120.98968,14.6443],[120.98362,14.64453],[120.98394,14.65429]]
+}

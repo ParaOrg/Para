@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 15021433,
+  "kind": "jeepney",
+  "ref": "2125",
+  "name": "SSS Village–Stop n' Shop via Aurora Boulevard",
+  "from": "Stop n' Shop",
+  "to": "SSS Village",
+  "network": "LTFRB National Capital Region",
+  "operator": "SSS Marikina Associated Route Transport Cooperative;Greater Marikina Transport Service Cooperative",
+  "version": 48,
+  "last_edit": "2026-08-31",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",121.01334,14.60079,"Teresa"],["platform",121.01541,14.60258,"V. Mapa"],["platform",121.01696,14.60381,"LRT V. Mapa Station"],["platform",121.01964,14.60637,"Central Colleges of the Philippines"],["platform",121.02097,14.60771,"UE Ramon Magsaysay Campus"],["platform",121.02255,14.60925,"A. Luna Street"],["platform",121.02497,14.61012,"S. Veloso Street"],["platform",121.02686,14.61073,"LRT J. Ruiz Station"],["platform",121.03186,14.61238,"Broadway Avenue"],["platform",121.03441,14.61358,"LRT Gilmore Station"],["platform",121.03674,14.61493,"St. Paul University"],["platform",121.03805,14.61569,"Robinsons Magnolia"],["platform",121.04008,14.61689,"Balete Drive"],["platform",121.04289,14.61857,"LRT Betty Go-Belmonte Station"],["platform",121.04677,14.62016,"Aurora–N. Domingo"],["platform",121.05286,14.62265,"LRT Araneta Center-Cubao Station"],["platform",121.05452,14.62349,"Manhattan Parkway"],["platform",121.05634,14.62435,"Harvard Street"],["platform",121.05786,14.62514,"Miami Street"],["platform",121.06103,14.62668,"Techological Institute of the Philippines"],["platform",121.06505,14.62796,"LRT Anonas Station"],["platform",121.06713,14.6283,"F. Castillo Street"],["platform",121.06882,14.62902,"J. P. Rizal Street"],["platform",121.07267,14.63075,"LRT Katipunan Station"],["platform",121.07477,14.63188,"Katipunan Flyover"],["platform",121.08249,14.63275,"Riverbanks"],["platform",121.08651,14.63422,"Tañong"],["platform",121.09441,14.63657,"Marikina Bayan"],["platform",121.09415,14.64132,"Homeowners'"],["platform",121.09716,14.64787,"Golden Valley"]],
+  "line": [[121.01329,14.60076],[121.0119,14.60209],[121.01315,14.60218],[121.01335,14.60226],[121.01343,14.6024],[121.01519,14.60258],[121.01595,14.60286],[121.02205,14.6089],[121.02261,14.60932],[121.03294,14.6128],[121.03739,14.61535],[121.04413,14.61936],[121.04912,14.62102],[121.05029,14.6216],[121.05233,14.62249],[121.05241,14.62246],[121.05288,14.62268],[121.05288,14.62276],[121.06257,14.6275],[121.06324,14.62772],[121.06683,14.6283],[121.06759,14.62853],[121.07282,14.63095],[121.07611,14.63266],[121.07642,14.63268],[121.07688,14.63259],[121.07821,14.63197],[121.08006,14.63221],[121.08178,14.63259],[121.08514,14.63364],[121.09047,14.6362],[121.09431,14.63587],[121.09443,14.63591],[121.09447,14.63628],[121.09423,14.637],[121.09411,14.63804],[121.09423,14.64],[121.09411,14.64181],[121.0948,14.64268],[121.09584,14.64425],[121.09645,14.64545],[121.09699,14.64767],[121.09747,14.6486],[121.09806,14.64919],[121.09931,14.64946],[121.10072,14.64932],[121.10139,14.6494],[121.10222,14.64981],[121.10262,14.65025],[121.10284,14.65072],[121.10309,14.65071],[121.1039,14.65093],[121.1044,14.65093],[121.10583,14.65064],[121.10744,14.6507],[121.10922,14.65108],[121.11103,14.65097],[121.11183,14.65085],[121.11189,14.65077],[121.11185,14.64994],[121.11254,14.64758],[121.11266,14.64649],[121.11311,14.64553],[121.11371,14.64494],[121.11441,14.64453],[121.11512,14.64428],[121.11587,14.64415],[121.11666,14.64418],[121.11711,14.64425],[121.11801,14.64456],[121.11882,14.64502],[121.11952,14.64558],[121.12088,14.6443],[121.12167,14.64336],[121.12193,14.64273],[121.12205,14.64211],[121.12194,14.64053],[121.11908,14.6408],[121.11789,14.64062],[121.11695,14.64062]]
+}

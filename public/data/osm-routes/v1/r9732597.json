@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 9732597,
+  "kind": "bus",
+  "ref": "",
+  "name": "PITX–Okada Manila Shuttle",
+  "from": "Okada",
+  "to": "Parañaque Integrated Terminal Exchange",
+  "network": "P2P",
+  "operator": "Delta Neosolutions, Inc.",
+  "version": 35,
+  "last_edit": "2026-05-14",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [[37,32]],
+  "stops": [["stop_entry_only",120.97792,14.51311,"Okada"]],
+  "line": [[120.97792,14.51311],[120.9778,14.51245],[120.97789,14.51232],[120.97803,14.51229],[120.97822,14.51246],[120.9781,14.51296],[120.97819,14.51336],[120.97931,14.5157],[120.97997,14.51637],[120.9805,14.51671],[120.98087,14.51684],[120.98113,14.51681],[120.98219,14.516],[120.98284,14.51564],[120.98353,14.51533],[120.98387,14.51529],[120.98429,14.51539],[120.98457,14.5156],[120.98475,14.51589],[120.98509,14.51697],[120.98528,14.51722],[120.98556,14.51738],[120.98658,14.51739],[120.99025,14.5171],[120.99043,14.51699],[120.99054,14.51665],[120.99016,14.5137],[120.99005,14.51304],[120.98943,14.51099],[120.991,14.51059],[120.99119,14.51124],[120.9913,14.51231],[120.99156,14.51235],[120.99207,14.5122],[120.99215,14.51208],[120.9909,14.50734],[120.99017,14.50759],[120.99064,14.50903],[120.99072,14.50931],[120.99119,14.5109]]
+}

@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 15406730,
+  "kind": "jeepney",
+  "ref": "",
+  "name": "Jeepney: Dau SM Clark Main Gate → NLEX → SM Pam San Fernando",
+  "from": "",
+  "to": "",
+  "network": "",
+  "operator": "",
+  "version": 7,
+  "last_edit": "2026-06-06",
+  "clipped": true,
+  "provenance": {},
+  "gaps": [[7,8],[20,635],[23,218]],
+  "stops": [],
+  "line": [[120.68039,15.06999],[120.68249,15.06626],[120.68574,15.06116],[120.68875,15.05688],[120.69337,15.05095],[120.69392,15.04975],[120.69403,15.04881],[120.69397,15.04857],[120.69391,15.04852],[120.69196,15.04687],[120.6901,15.04553],[120.68483,15.04231],[120.68344,15.04135],[120.68183,15.0401],[120.68089,15.03915],[120.68091,15.03904],[120.68106,15.03902],[120.68256,15.04042],[120.68433,15.04175],[120.69116,15.04605],[120.69432,15.04866],[120.69944,15.0515],[120.69839,15.05154],[120.69796,15.05135],[120.69593,15.05123],[120.69487,15.05184],[120.69463,15.05186],[120.69394,15.0517],[120.69353,15.05176],[120.69305,15.05202],[120.69235,15.05264],[120.68996,15.05563],[120.68689,15.05983],[120.68404,15.06412],[120.68194,15.0676]]
+}

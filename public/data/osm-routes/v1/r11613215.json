@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 11613215,
+  "kind": "jeepney",
+  "ref": "3102",
+  "name": "Divisoria–Quiapo via Evangelista",
+  "from": "Quiapo",
+  "to": "Divisoria",
+  "network": "LTFRB National Capital Region",
+  "operator": "Express Public Transport Corporation",
+  "version": 19,
+  "last_edit": "2026-09-12",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",120.98431,14.60034,"Quiapo"],["platform",120.98362,14.60199,"Porvenir"],["platform",120.98314,14.6037,"LRT Recto Station"],["platform",120.97874,14.60469,"Recto & T. Alonzo"],["platform",120.97728,14.60524,"Recto & Masangkay"],["platform",120.97394,14.60653,"999 Mall"],["platform",120.97218,14.60646,"Tutuban Mall"],["platform",120.96977,14.60544,"Recto–Ylaya"],["platform_exit_only",120.96846,14.60402,"Santo Cristo"]],
+  "line": [[120.98441,14.60032],[120.98425,14.59952],[120.98345,14.59965],[120.98371,14.60353],[120.98027,14.60404],[120.9735,14.60663],[120.97125,14.60613],[120.97025,14.60582],[120.96754,14.60289]]
+}

@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 11293164,
+  "kind": "bus",
+  "ref": "MR 19",
+  "name": "DOTr Medical Route 19: Laguna Line (FCHMC→Alabang)",
+  "from": "First Cabuyao Hospital & Medical Center",
+  "to": "Biñan",
+  "network": "DOTr Medical Route",
+  "operator": "Department of Transportation",
+  "version": 38,
+  "last_edit": "2026-10-27",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",121.12699,14.26684,"FCHMC"],["platform",121.10556,14.2971,"Balibago Junction"],["platform",121.09826,14.31762,"New Sinai MDI Hospital"],["platform",121.09634,14.32231,"Tagapo"],["platform",121.08582,14.33121,"Perpetual Biñan 2"],["platform",121.07569,14.33713,"Golden City"],["platform",121.06523,14.34816,"Pacita Complex"],["platform",121.05886,14.36006,"San Francisco de Sales School"],["platform",121.04627,14.37829,"SM Center Muntinlupa"],["platform",121.04499,14.39561,"Muntinlupa BLISS"]],
+  "line": [[121.12698,14.26606],[121.12701,14.26629],[121.12689,14.26714],[121.12665,14.26775],[121.12645,14.26801],[121.11233,14.281],[121.11165,14.28172],[121.11125,14.28236],[121.10672,14.29363],[121.09706,14.32077],[121.09682,14.3214],[121.09646,14.32205],[121.09162,14.32775],[121.07419,14.33792],[121.07351,14.33844],[121.06733,14.34492],[121.06683,14.34554],[121.06469,14.34893],[121.0586,14.36043],[121.05276,14.36519],[121.05201,14.36606],[121.05172,14.36655],[121.0446,14.38172],[121.04427,14.38276],[121.04425,14.38345],[121.0445,14.38471],[121.04474,14.38562],[121.0455,14.38765],[121.04538,14.38844],[121.0446,14.39009],[121.04452,14.39039],[121.04506,14.39705],[121.0453,14.39758],[121.0462,14.39889],[121.0465,14.39946],[121.04706,14.40118],[121.04719,14.402],[121.04717,14.40281],[121.04568,14.41533],[121.04567,14.41547],[121.04602,14.41551],[121.046,14.41557]]
+}

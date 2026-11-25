@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 10015475,
+  "kind": "rail",
+  "ref": "SS",
+  "name": "PNR Shuttle Service Line: FTI → Governor Pascual",
+  "from": "FTI",
+  "to": "Governor Pascual",
+  "network": "PNR Metro Commuter",
+  "operator": "Philippine National Railways",
+  "version": 16,
+  "last_edit": "2026-05-05",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["stop_entry_only",121.03556,14.5064,"FTI"],["stop_exit_only",121.02633,14.52365,"Nichols"],["stop_exit_only",121.01204,14.55003,"Pasay Road"],["stop_exit_only",121.0029,14.56695,"Vito Cruz"],["stop_exit_only",120.99957,14.57313,"San Andres"],["stop",120.99918,14.57903,"Paco"],["stop_exit_only",121.00893,14.59047,"Pandacan"],["stop",121.01003,14.60103,"Santa Mesa"],["stop",120.99666,14.61246,"España"],["stop_exit_only",120.99287,14.61643,"Laon Laan"],["stop",120.98347,14.62268,"Blumentritt"],["stop",120.97555,14.6269,"Solis"],["stop",120.97629,14.64459,"C-3 Road"],["stop",120.97484,14.65186,"Asistio (10th) Avenue"],["stop",120.97388,14.65692,"Caloocan"],["stop_exit_only",120.97273,14.67034,"Governor Pascual"]],
+  "line": [[121.03598,14.50563],[121.02967,14.5173],[121.02613,14.52403],[121.02242,14.53075],[121.00331,14.56619],[120.99822,14.57567],[120.9981,14.57601],[120.99802,14.57662],[120.99806,14.57712],[120.99823,14.57776],[120.99843,14.57814],[121.01307,14.59534],[121.01337,14.59592],[121.01355,14.59673],[121.01352,14.59727],[121.0133,14.59796],[121.0131,14.59833],[121.01265,14.59887],[121.00824,14.60247],[121.00776,14.60276],[121.0056,14.60351],[121.00462,14.60416],[120.98758,14.6219],[120.98702,14.62222],[120.98649,14.62237],[120.97756,14.62327],[120.97703,14.62344],[120.97649,14.62378],[120.97596,14.62433],[120.97565,14.62486],[120.97546,14.62555],[120.97545,14.62619],[120.97711,14.63844],[120.97715,14.63985],[120.97696,14.64123],[120.97436,14.65419],[120.97368,14.65805],[120.97273,14.67034]]
+}

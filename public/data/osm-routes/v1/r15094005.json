@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 15094005,
+  "kind": "jeepney",
+  "ref": "2115",
+  "name": "Parang–Recto via Aurora Boulevard",
+  "from": "Parang",
+  "to": "Recto",
+  "network": "LTFRB National Capital Region",
+  "operator": "Sorraia Inc.",
+  "version": 36,
+  "last_edit": "2026-08-31",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform",121.10308,14.65252,"Tumana"],["platform",121.09699,14.64782,"Golden Valley"],["platform",121.09411,14.64071,"Homeowners'"],["platform",121.09437,14.63644,"Marikina Bayan"],["platform",121.0864,14.63428,"Tañong"],["platform",121.08322,14.63307,"Riverbanks"],["platform",121.07272,14.63117,"LRT Katipunan Station"],["platform",121.06866,14.62922,"J. P. Rizal Street"],["platform",121.06591,14.62832,"F. Castillo Street"],["platform",121.0639,14.62797,"LRT Anonas Station"],["platform",121.06083,14.62677,"Techological Institute of the Philippines"],["platform",121.05788,14.62536,"Miami Street"],["platform",121.05626,14.62453,"Harvard Street"],["platform",121.05245,14.62274,"LRT Araneta Center-Cubao Station"],["platform",121.04631,14.62022,"Aurora–N. Domingo"],["platform",121.04269,14.6187,"LRT Betty Go-Belmonte Station"],["platform",121.03988,14.617,"Balete Drive"],["platform",121.03806,14.6159,"Robinsons Magnolia"],["platform",121.03645,14.61495,"St. Paul University"],["platform",121.03414,14.61366,"LRT Gilmore Station"],["platform",121.03165,14.61249,"Broadway Avenue"],["platform",121.02666,14.61082,"LRT J. Ruiz Station"],["platform",121.02474,14.61019,"S. Veloso Street"],["platform",121.02242,14.60936,"A. Luna Street"],["platform",121.02076,14.60788,"UE Ramon Magsaysay Campus"],["platform",121.01933,14.60649,"Central Colleges of the Philippines"],["platform",121.01666,14.60386,"LRT V. Mapa Station"],["platform",121.01515,14.60276,"V. Mapa"],["platform",121.00981,14.60236,"Altura"],["platform",121.00378,14.60169,"Civil Registration Central Outlet"],["platform",121.0011,14.60147,"Nagtahan Interchange"],["platform",120.99539,14.60084,"M. Jhocson"],["platform",120.99314,14.60156,"LRT Legarda Station"],["platform",120.99061,14.60069,"Mendiola Bridge"],["platform",120.98755,14.60211,"UE Annex"],["platform",120.9857,14.60295,"Cartimar Shopping Center"],["platform_exit_only",120.98314,14.6037,"LRT Recto Station"]],
+  "line": [[121.1187,14.66018],[121.11745,14.6601],[121.11697,14.66017],[121.1164,14.66036],[121.11621,14.66034],[121.10874,14.65773],[121.10837,14.65746],[121.10677,14.65696],[121.10658,14.65662],[121.10644,14.65654],[121.10613,14.65643],[121.105,14.6563],[121.10342,14.65583],[121.10315,14.65418],[121.10307,14.65148],[121.10288,14.65082],[121.10262,14.65025],[121.10212,14.64973],[121.10139,14.6494],[121.10072,14.64932],[121.09931,14.64946],[121.09806,14.64919],[121.09781,14.64899],[121.09747,14.6486],[121.09699,14.64767],[121.09653,14.64576],[121.09632,14.64516],[121.09531,14.6434],[121.0948,14.64268],[121.09414,14.64189],[121.0941,14.64131],[121.09423,14.64],[121.09411,14.63804],[121.09423,14.637],[121.09447,14.63628],[121.09443,14.63591],[121.09219,14.63613],[121.09047,14.6362],[121.08514,14.63364],[121.08178,14.63259],[121.08006,14.63221],[121.07973,14.63226],[121.07825,14.63203],[121.07704,14.63265],[121.07656,14.63276],[121.07605,14.63274],[121.07163,14.63054],[121.0673,14.62854],[121.06326,14.62781],[121.06253,14.62758],[121.05162,14.6223],[121.04927,14.62127],[121.04883,14.62115],[121.04846,14.62091],[121.04409,14.61942],[121.03697,14.6152],[121.03282,14.61284],[121.02266,14.60945],[121.02201,14.60894],[121.01604,14.60315],[121.01558,14.60285],[121.01514,14.60271],[121.01449,14.60263],[121.00838,14.60214],[121.00656,14.60191],[121.00094,14.6014],[121.00021,14.60129],[120.99939,14.60091],[120.99858,14.60118],[120.99735,14.60096],[120.99618,14.60059],[120.99279,14.6016],[120.99161,14.601],[120.99097,14.60043],[120.98483,14.60331],[120.98253,14.60371],[120.98281,14.60511]]
+}

@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 20589670,
+  "kind": "jeepney",
+  "ref": "3191",
+  "name": "Paco–SM City Santa Mesa via Nagtahan",
+  "from": "Paco",
+  "to": "Santa Mesa Rotonda",
+  "network": "LTFRB National Capital Region",
+  "operator": "On-Us Solutions",
+  "version": 9,
+  "last_edit": "2026-09-01",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",120.99519,14.57965,"Paco Church"],["platform",120.99497,14.58197,"Paz–San Gregorio"],["platform",120.99474,14.58454,"Quirino Extension"],["platform",120.99464,14.58632,"Unilever"],["platform",120.99593,14.58779,"Robinsons Place Otis"],["platform",120.99734,14.58945,"Mitsubishi Otis"],["platform",120.99905,14.59141,"Malayan High School of Science"],["platform",121.00094,14.5927,"Malacañang Park"],["platform",121.00064,14.59889,"EARIST"],["platform",120.9999,14.60034,"Nagtahan Interchange"],["platform",121.00079,14.60114,"Nagtahan Interchange"],["platform",121.00391,14.60146,"Civil Registration Central Outlet"],["platform",121.00584,14.60166,"LRT Pureza Station"],["platform",121.00963,14.60194,"Altura"],["platform",121.01107,14.60212,"Stop n' Shop"],["platform",121.01541,14.60258,"V. Mapa"],["platform",121.01696,14.60381,"LRT V. Mapa Station"],["platform_exit_only",121.01832,14.60507,"SM City Santa Mesa"]],
+  "line": [[120.99515,14.57964],[120.99468,14.58461],[120.99476,14.58478],[120.99409,14.58536],[120.99414,14.58587],[120.99981,14.59234],[121.00029,14.59263],[121.00168,14.5928],[121.00132,14.59729],[121.00094,14.59823],[120.99974,14.60058],[120.99974,14.60074],[120.99988,14.601],[121.00028,14.60113],[121.00359,14.60151],[121.00886,14.60194],[121.01519,14.60258],[121.01574,14.60275],[121.01603,14.60293],[121.01826,14.60513]]
+}

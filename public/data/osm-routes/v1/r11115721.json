@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 11115721,
+  "kind": "bus",
+  "ref": "10",
+  "name": "Route 10: Ayala–Alabang",
+  "from": "Vista Terminal Exchange",
+  "to": "Ayala Center",
+  "network": "LTFRB National Capital Region",
+  "operator": "Mega Manila Consortium Corporation",
+  "version": 45,
+  "last_edit": "2026-09-01",
+  "clipped": false,
+  "provenance": {"source:ref":"LTFRB Memorandum Circular 2022-067","source:ref:2020":"LTFRB Memorandum Circular 2020-019"},
+  "gaps": [],
+  "stops": [["stop_entry_only",121.04655,14.41585,"VTX"],["stop",121.04517,14.48769,"Bicutan Interchange"],["stop_exit_only",121.028,14.55053,"One Ayala"]],
+  "line": [[121.04655,14.41585],[121.04597,14.41581],[121.04594,14.41609],[121.04567,14.4164],[121.04567,14.41731],[121.04558,14.41756],[121.04558,14.41893],[121.04567,14.41907],[121.04568,14.41944],[121.04566,14.42262],[121.04555,14.42325],[121.04539,14.45183],[121.0455,14.45266],[121.04579,14.45357],[121.04546,14.45497],[121.04538,14.4556],[121.04522,14.48403],[121.04525,14.48514],[121.0454,14.48619],[121.04542,14.48711],[121.04407,14.49006],[121.04234,14.49331],[121.02925,14.51761],[121.02877,14.51833],[121.02767,14.52066],[121.02629,14.52297],[121.02244,14.53025],[121.01741,14.53943],[121.01716,14.54009],[121.01653,14.54108],[121.01524,14.5436],[121.00908,14.55501],[121.00896,14.5554],[121.00775,14.55753],[121.00775,14.55771],[121.00791,14.55791],[121.0133,14.56064],[121.01452,14.56107],[121.01494,14.56114],[121.0152,14.56108],[121.01549,14.56086],[121.01591,14.56024],[121.01687,14.55949],[121.02591,14.55355],[121.02763,14.55201],[121.02919,14.55032],[121.02857,14.54989],[121.028,14.55053]]
+}

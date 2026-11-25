@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 11613221,
+  "kind": "jeepney",
+  "ref": "340",
+  "name": "Balic-Balic-Quiapo via Lepanto",
+  "from": "Quiapo",
+  "to": "Balic-Balic",
+  "network": "LTFRB National Capital Region",
+  "operator": "FEJODAP Transport Service Corporation",
+  "version": 15,
+  "last_edit": "2026-09-12",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",120.98449,14.59761,"Quiapo (Barbosa) Turning Point"],["platform",120.9868,14.59857,"Manuel L. Quezon University"],["platform",120.98762,14.60042,"Loyola"],["platform",120.98907,14.60342,"University of the East"],["platform",120.99083,14.60572,"P. Noval"],["platform",120.99292,14.60725,"F. Cayco"],["platform",120.99499,14.60511,"F. Jhocson"],["platform",120.99803,14.60336,"Lacson–G. Tuazon"],["platform",120.99826,14.60403,"Lacson–G. Tuazon"],["platform",121.00114,14.6057,"G. Tuazon–Vicente Cruz"],["platform",121.00297,14.60679,"Wellcome Balic-Balic"],["platform",121.00385,14.60902,"Masbate"],["platform",121.00498,14.61075,"Leyte"],["platform",121.00664,14.61216,"Blumentritt"],["platform_exit_only",121.00846,14.61219,"Balic-Balic Turning Point"]],
+  "line": [[120.98445,14.59762],[120.9845,14.5979],[120.98489,14.59783],[120.9887,14.59937],[120.9888,14.59949],[120.98744,14.60048],[120.98918,14.60374],[120.98948,14.60458],[120.99272,14.60751],[120.99671,14.60335],[120.99786,14.60393],[120.99797,14.60359],[120.99869,14.60219],[120.99888,14.60227],[120.99802,14.60397],[120.99968,14.60475],[121.0006,14.60542],[121.00325,14.60705],[121.0034,14.60726],[121.00384,14.60916],[121.00434,14.61017],[121.00481,14.61062],[121.00546,14.61142],[121.0063,14.61196],[121.00689,14.61245],[121.00728,14.61317],[121.00849,14.61222]]
+}

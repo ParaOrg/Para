@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 11115718,
+  "kind": "bus",
+  "ref": "45",
+  "name": "Route 45: Navotas–FTI via Ayala",
+  "from": "FTI",
+  "to": "LRT Gil Puyat Station",
+  "network": "LTFRB National Capital Region",
+  "operator": "Metro Link Group;Mega Manila Consortium Corporation",
+  "version": 56,
+  "last_edit": "2026-09-01",
+  "clipped": false,
+  "provenance": {"source:ref":"LTFRB Memorandum Circular 2022-074","note":"most buses travel only between FTI and One Ayala or LRT Gil Puyat"},
+  "gaps": [],
+  "stops": [["platform_entry_only",121.04241,14.50612,"Arca South Transport Terminal"],["platform",121.02835,14.54915,"Ayala"],["platform",121.02704,14.55286,"Ayala Center"],["platform",121.02305,14.55572,"Makati Stock Exchange"],["platform",121.02032,14.55749,"Paseo de Roxas"],["platform",121.01706,14.55961,"Salcedo Village"],["platform",121.01125,14.55982,"Chino Roces"],["platform",121.00825,14.55829,"Buendia Crossing"],["platform",121.00175,14.55545,"Bautista"],["platform_exit_only",120.99884,14.55474,"Gil Puyat & Dominga"],["platform_exit_only",120.99508,14.55381,"Gil Puyat & Leveriza"]],
+  "line": [[121.04239,14.50615],[121.04216,14.50604],[121.04192,14.5065],[121.04178,14.5066],[121.04132,14.50638],[121.04108,14.5066],[121.04076,14.50654],[121.03999,14.50611],[121.03999,14.506],[121.03974,14.50571],[121.03973,14.5056],[121.03866,14.50604],[121.0375,14.50596],[121.03677,14.50646],[121.03594,14.50648],[121.03574,14.50662],[121.0349,14.50823],[121.03459,14.50938],[121.03375,14.51094],[121.03341,14.51184],[121.03281,14.51298],[121.03178,14.51428],[121.02822,14.52092],[121.02716,14.52265],[121.02647,14.52394],[121.02584,14.52417],[121.02558,14.52438],[121.01745,14.53956],[121.01741,14.53989],[121.01749,14.54023],[121.01783,14.54073],[121.02015,14.54234],[121.02953,14.55019],[121.02775,14.55211],[121.02576,14.55385],[121.01697,14.55959],[121.01628,14.56011],[121.01591,14.56051],[121.01566,14.56094],[121.01549,14.56186],[121.01568,14.5621],[121.01693,14.56235],[121.01702,14.56163],[121.01449,14.56117],[121.01323,14.56073],[121.00719,14.55772],[121.00577,14.55695],[121.0039,14.55607],[121.00245,14.55556],[120.99702,14.55411],[120.99535,14.55376],[120.99423,14.55361]]
+}

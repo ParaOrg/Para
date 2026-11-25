@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 9298952,
+  "kind": "jeepney",
+  "ref": "205",
+  "name": "Eastwood City–Capitol Commons",
+  "from": "Eastwood",
+  "to": "Capitol Commons",
+  "network": "LTFRB National Capital Region",
+  "operator": "EcoDyip, Inc.",
+  "version": 38,
+  "last_edit": "2026-08-06",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["stop",121.0793,14.60043,""],["stop_exit_only",121.06148,14.57474,"Capitol Commons"]],
+  "line": [[121.08197,14.60721],[121.08193,14.60543],[121.07901,14.60551],[121.07983,14.58964],[121.07968,14.58833],[121.0792,14.58662],[121.07849,14.5852],[121.07338,14.57768],[121.07142,14.57931],[121.07117,14.57961],[121.07093,14.57955],[121.07015,14.57969],[121.06952,14.57965],[121.069,14.57941],[121.06865,14.57915],[121.06808,14.57855],[121.06769,14.57802],[121.06682,14.57728],[121.06652,14.57711],[121.06579,14.5769],[121.06541,14.5764],[121.06501,14.57624],[121.06419,14.57642],[121.06372,14.57632],[121.06334,14.57599],[121.0631,14.57527],[121.06298,14.57522],[121.06298,14.57513],[121.06245,14.57481],[121.06213,14.57447],[121.06183,14.57445],[121.06138,14.57481]]
+}

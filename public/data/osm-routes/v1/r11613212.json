@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 11613212,
+  "kind": "jeepney",
+  "ref": "398",
+  "name": "Divisoria–Pier North via Moriones",
+  "from": "Don Bosco",
+  "to": "Divisoria",
+  "network": "LTFRB National Capital Region",
+  "operator": "New Don Bosco Jeepney Operators and Drivers Association, Inc.",
+  "version": 17,
+  "last_edit": "2026-09-12",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",120.95985,14.61741,"Herbosa"],["platform",120.96003,14.61505,"Don Bosco Tondo"],["platform",120.96171,14.60944,"Pier 12"],["platform",120.96363,14.60957,"Abad Santos"],["platform",120.96687,14.60983,"Plaza Morga"],["platform",120.96972,14.60954,"Juan Luna"],["platform",120.97194,14.60891,"Dagupan & Moriones"],["platform_exit_only",120.97124,14.60643,"Dragon 8 Mall"]],
+  "line": [[120.9599,14.61741],[120.96033,14.61243],[120.96092,14.60942],[120.96652,14.60992],[120.97063,14.60949],[120.97202,14.60924],[120.97207,14.60922],[120.97125,14.60613],[120.97087,14.60603]]
+}

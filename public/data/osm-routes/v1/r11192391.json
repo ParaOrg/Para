@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 11192391,
+  "kind": "bus",
+  "ref": "AX",
+  "name": "BGC Bus AX: Ayala Avenue Express",
+  "from": "EDSA-Ayala",
+  "to": "Glorietta 5",
+  "network": "BGC Bus",
+  "operator": "Bonifacio Transport Corporation",
+  "version": 21,
+  "last_edit": "2024-12-11",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [[31,549],[35,36],[43,53]],
+  "stops": [["platform_entry_only",121.0291,14.54927,"Ayala Terminal"],["platform_exit_only",121.02704,14.55286,"Ayala Center"],["platform_entry_only",121.02305,14.55572,"Makati Stock Exchange"],["platform_exit_only",121.02032,14.55749,"Paseo de Roxas"],["platform",121.01454,14.56124,"Ayala Avenue"],["platform",121.01622,14.55122,"Arnaiz–Amorsolo"],["platform_entry_only",121.01747,14.55901,"Salcedo Village"],["platform_exit_only",121.02034,14.55713,"Paseo de Roxas"],["platform_entry_only",121.02235,14.55583,"Makati Stock Exchange"]],
+  "line": [[121.02804,14.55182],[121.02702,14.55281],[121.02576,14.55385],[121.01697,14.55959],[121.01628,14.56011],[121.01591,14.56051],[121.01566,14.56094],[121.01549,14.56186],[121.01568,14.5621],[121.01693,14.56235],[121.01702,14.56163],[121.01512,14.5613],[121.01404,14.56104],[121.01383,14.56161],[121.01501,14.56193],[121.01525,14.56188],[121.01537,14.56173],[121.01556,14.56076],[121.01581,14.56036],[121.01627,14.55992],[121.01587,14.55943],[121.01559,14.55889],[121.01405,14.55864],[121.01466,14.55511],[121.01542,14.55134],[121.01919,14.55099],[121.01954,14.55423],[121.01979,14.55473],[121.02048,14.55574],[121.01563,14.55887],[121.01591,14.55938],[121.01633,14.55987],[121.02054,14.5571],[121.02566,14.55374],[121.0273,14.55234],[121.02866,14.55089],[121.02888,14.55066],[121.02973,14.54974],[121.0301,14.54949],[121.02987,14.54917],[121.02955,14.54906],[121.02927,14.54912],[121.0288,14.54947],[121.02867,14.54947],[121.0291,14.54922],[121.02885,14.54951],[121.02885,14.54961],[121.02953,14.55019],[121.02804,14.55182]]
+}

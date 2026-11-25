@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 19971683,
+  "kind": "bus",
+  "ref": "",
+  "name": "Baliwag Tricycle: Bayan → Seriya",
+  "from": "Plaza Naning",
+  "to": "Seriya",
+  "network": "",
+  "operator": "H-TODA",
+  "version": 2,
+  "last_edit": "2026-07-03",
+  "clipped": false,
+  "provenance": {"fixme":"Route type"},
+  "gaps": [],
+  "stops": [],
+  "line": [[120.90057,14.95426],[120.90063,14.95411],[120.90076,14.95403],[120.9009,14.95402],[120.90111,14.95418],[120.90111,14.95437],[120.90101,14.9545],[120.90112,14.95484],[120.90105,14.95529],[120.89814,14.96056],[120.89788,14.96119],[120.89493,14.97253],[120.8941,14.9762],[120.89357,14.9789],[120.89296,14.98341],[120.89187,14.99662],[120.89065,15.00866],[120.89102,15.0088]]
+}

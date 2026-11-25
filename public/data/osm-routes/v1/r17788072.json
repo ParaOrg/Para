@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 17788072,
+  "kind": "jeepney",
+  "ref": "",
+  "name": "Robinsons-Unitop",
+  "from": "Unitop Mall Dasmariñas",
+  "to": "Robinsons Place Dasmariñas",
+  "network": "LTFRB Region IV-A",
+  "operator": "Zapote-Imus-Dasmariñas-General Mariano Alvarez-Pala-Pala-Paliparan Transport Cooperative",
+  "version": 11,
+  "last_edit": "2026-07-31",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["stop_entry_only",120.98792,14.28757,"Unitop Mall Dasmariñas"],["stop_exit_only",120.95775,14.30008,"SM City Dasmariñas Transport Terminal"]],
+  "line": [[120.98795,14.28756],[120.98778,14.28763],[120.98778,14.28777],[120.98897,14.28728],[120.98889,14.28743],[120.9812,14.29054],[120.97554,14.29063],[120.97504,14.29067],[120.97438,14.29085],[120.97363,14.29123],[120.97331,14.29149],[120.9721,14.29327],[120.97173,14.29349],[120.96906,14.29335],[120.96855,14.29345],[120.96813,14.29384],[120.96485,14.29944],[120.96463,14.29974],[120.96441,14.29989],[120.96391,14.29992],[120.95908,14.29913],[120.95853,14.29922],[120.95782,14.29962],[120.95801,14.29988],[120.95769,14.30012],[120.95735,14.29974],[120.9584,14.29918],[120.95843,14.29896],[120.95532,14.29842],[120.95488,14.29933],[120.95464,14.29928],[120.95427,14.30013]]
+}

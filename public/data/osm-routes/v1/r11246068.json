@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 11246068,
+  "kind": "jeepney",
+  "ref": "3216",
+  "name": "Punta–Quiapo via Santa Mesa",
+  "from": "Quiapo",
+  "to": "Punta",
+  "network": "LTFRB National Capital Region",
+  "operator": "Libra Transport Cooperative;Communal Conveyance Cooperative",
+  "version": 36,
+  "last_edit": "2026-11-11",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",120.98449,14.59761,"Quiapo (Barbosa) Turning Point"],["platform",120.98755,14.59676,"Barangay 387 Daycare Center"],["platform",120.98984,14.5981,"National Teachers College"],["platform",120.99142,14.60069,"Mendiola Bridge"],["platform",120.99323,14.60139,"LRT Legarda Station"],["platform",120.99547,14.60064,"M. Jhocson"],["platform",121.00391,14.60146,"Civil Registration Central Outlet"],["platform",121.00584,14.60166,"LRT Pureza Station"],["platform",121.00963,14.60194,"Altura"],["platform",121.01107,14.60212,"Stop n' Shop"],["platform",121.01541,14.60258,"V. Mapa"],["platform",121.0165,14.60079,"Old Santa Mesa"],["platform",121.01796,14.5972,"Amaia Skies Santa Mesa"],["platform",121.02092,14.59593,"Don Bosco Manila"],["platform",121.02234,14.59538,"Our Lady of Lourdes Hospital"],["platform",121.02472,14.59445,"Bagumbayan"],["platform",121.02673,14.59339,"Crossing Kalentong"],["platform",121.02559,14.59172,"Mandaluyong Public Market"],["platform",121.02266,14.58934,"Aglipay"],["platform",121.02158,14.5883,"Puregold Kalentong"],["platform",121.01825,14.58758,"Lambingan Ferry Station"],["platform",121.01698,14.58756,"INC Museum"],["platform",121.01411,14.5872,"Phimco Industries"],["platform",121.01242,14.58646,"Jaime Cardinal Sin Village"],["platform_exit_only",121.01073,14.58478,"Punta Terminal"]],
+  "line": [[120.98445,14.59762],[120.9845,14.5979],[120.98489,14.59783],[120.98478,14.59724],[120.98957,14.59652],[120.98962,14.59676],[120.98959,14.5976],[120.99085,14.60017],[120.99165,14.60095],[120.99275,14.60152],[120.99353,14.60136],[120.99562,14.60063],[120.99619,14.6005],[120.99712,14.60078],[120.99865,14.60107],[121.00886,14.60194],[121.01176,14.60227],[121.01449,14.60249],[121.01569,14.60268],[121.01595,14.60254],[121.01671,14.60026],[121.01681,14.60015],[121.01597,14.59987],[121.01673,14.59749],[121.0176,14.59766],[121.0199,14.59594],[121.02041,14.59616],[121.02057,14.59614],[121.02569,14.59411],[121.02696,14.59367],[121.02587,14.59187],[121.02272,14.58931],[121.02073,14.58738],[121.02015,14.58755],[121.0162,14.58753],[121.01588,14.58771],[121.01575,14.5877],[121.01473,14.58735],[121.01434,14.58709],[121.01396,14.58719],[121.01337,14.58702],[121.01177,14.58601],[121.01008,14.58543],[121.01072,14.58513],[121.01083,14.58478],[121.0107,14.58475],[121.01058,14.58496],[121.01034,14.58507]]
+}
