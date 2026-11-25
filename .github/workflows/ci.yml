@@ -6,8 +6,8 @@
 #   1. Only what a change can reach. `changes` reads the files a pull request
 #      touches: docs and Markdown alone run nothing. Files only the build job
 #      reads run the build job alone, no suite: docs/architecture.md (its
-#      architecture step), tests/unit/ (its unit checks) and the scripts it
-#      alone runs (scripts/checks/check-build.mjs, build-weight.mjs and build/,
+#      architecture step), tests/unit/ (the unit job's checks) and the scripts it
+#      or the unit job alone runs (scripts/checks/check-build.mjs, build-weight.mjs and build/,
 #      scripts/docs/, scripts/node/ts-resolve*.mjs). src/app/studio/,
 #      src/features/studio/ and the studio's suites alone skip the public
 #      suites; src/app/public-map/, src/features/published-map/, public/ and
@@ -16,12 +16,16 @@
 #      build and the contributor page's suites only. Anything else — shared code
 #      (Turnstile and the locator among it), the build, the lockfile, this
 #      file — runs both. A push to main
-#      or staging, the nightly run and "Run workflow" run everything.
-#   2. Every suite at once. Each suite is its own job, so the run takes as
-#      long as the slowest suite, not the sum of them all. commuter-test, the
-#      slowest by far, runs as three parts (COMMUTER_PART, see its top). What
-#      every job repeats is made once: the build job makes the preview builds
-#      the built-app suites run, and Playwright's Chromium is kept between runs.
+#      or staging, a merge queue's run, the nightly run and "Run workflow" run everything.
+#      A pull request into a branch that has a merge queue runs the build and unit jobs alone: the
+#      queue runs every suite on the commit the merge would make, before the branch moves.
+#   2. Every suite at once, in jobs sized by measured time, so the run takes as
+#      long as the slowest job, not the sum of them all. The suites under a
+#      minute or so share a job, since each job repeats its setup and waits for
+#      one of the free plan's ~20 runners; commuter-test runs as two parts
+#      (COMMUTER_PART, see its top), phone-test as three, the
+#      drawing suites as two, and the built-app suites share one job that makes its own builds.
+#      What every job repeats is kept between runs: Playwright's Chromium and node_modules.
 #   3. The drawing suites only where they are needed. group, regression-
 #      gestures, hotspot, snap, extend and studio-phone draw through the public OSRM demo
 #      router (about one request a second, shared with the world) and read
@@ -29,8 +33,9 @@
 #      push to main or staging (so a merge that breaks them is red on the
 #      branch within minutes), nightly on the default branch, on demand, and
 #      on a pull request that changes the editor (src/app/studio,
-#      src/features/studio), the routes' geometry rules (src/features/routes/geo)
-#      or the suites themselves, so a break is caught before it merges. A suite
+#      src/features/studio), the map it draws on (src/features/routes/map), the
+#      routes' geometry rules (src/features/routes/geo), the suites themselves or
+#      the test helpers they load, so a break is caught before it merges. A suite
 #      that fails is run once more after a minute, as tests/e2e/README.md tells
 #      a person to do; a second failure is real.
 #
@@ -56,6 +61,10 @@ on:
     paths-ignore:
       - 'public/data/**'
   pull_request:
+  # A pull request in staging's or main's merge queue: GitHub runs this on the commit the merge
+  # would make, and the three summary checks below must report on it, or the queue waits for
+  # them until it gives up. Every suite runs (the `changes` job selects only on a pull request).
+  merge_group:
   workflow_dispatch:
   schedule:
     # 05:00 in Manila (UTC+8): after the map's nightly publish at 04:00.
@@ -72,6 +81,15 @@ concurrency:
 permissions:
   contents: read
 
+# The suites' outside services: live on main and staging pushes, the nightly run and a run by
+# hand; on a pull request and in a merge queue, the suites' stand-ins (recorded answers, fake
+# services), so neither reaches a host off the runner: what decides whether a change may land
+# does not hang on the shared router's mood. Read by tests/e2e (lib/harness.mjs and the
+# stand-ins) as set or unset. A stand-in gone stale shows as a live run failing where its PR
+# run passed.
+env:
+  PARA_LIVE_SERVICES: ${{ github.event_name != 'pull_request' && github.event_name != 'merge_group' && '1' || '' }}
+
 jobs:
   # What the change can reach. Outputs 'true' or 'false'.
   changes:
@@ -86,8 +104,10 @@ jobs:
       build: ${{ steps.scope.outputs.build }}
       drawing: ${{ steps.scope.outputs.drawing }}
       preview: ${{ steps.scope.outputs.preview }}
+      # Storybook plays: on with the build job, except where a merge queue runs it instead.
+      storybook: ${{ steps.scope.outputs.storybook }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           fetch-depth: 0
 
@@ -96,10 +116,14 @@ jobs:
           EVENT: ${{ github.event_name }}
           BASE: ${{ github.event.pull_request.base.sha }}
           HEAD: ${{ github.event.pull_request.head.sha }}
+          # The branch the pull request would merge into, and what reads GitHub's rules for it.
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+          REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           # The suites that run on a build (preview-suite): every one for the public map, the
           # contributor page's own alone for the contributor page.
-          ALL_PREVIEWS='[{"suite":"pwa-test","basemap":"openfreemap"},{"suite":"pwa-test","basemap":"own-tiles"},{"suite":"handover-test","basemap":"openfreemap"},{"suite":"contribute-offline-test","basemap":"openfreemap"}]'
+          ALL_PREVIEWS='[{"suite":"pwa-test","basemap":"openfreemap"},{"suite":"pwa-test","basemap":"own-tiles"},{"suite":"handover-test","basemap":"openfreemap"},{"suite":"retire-pwa-test","basemap":"openfreemap"},{"suite":"contribute-offline-test","basemap":"openfreemap"}]'
           CONTRIBUTE_PREVIEWS='[{"suite":"contribute-offline-test","basemap":"openfreemap"}]'
           if [ "$EVENT" != "pull_request" ]; then
             echo "public=true" >> "$GITHUB_OUTPUT"
@@ -108,6 +132,7 @@ jobs:
             echo "build=true" >> "$GITHUB_OUTPUT"
             echo "drawing=true" >> "$GITHUB_OUTPUT"
             echo "preview=$ALL_PREVIEWS" >> "$GITHUB_OUTPUT"
+            echo "storybook=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
           files=$(git diff --name-only "$BASE...$HEAD")
@@ -115,20 +140,34 @@ jobs:
           public=false; studio=false; contribute=false; build=false; drawing=false
           while IFS= read -r f; do
             [ -z "$f" ] && continue
-            # The drawing suites, for a change to the editor, the routes' geometry rules or the
-            # suites themselves: what they draw with.
+            # The suites' shared helpers and fixtures (the harness, the stand-ins, the recorded
+            # answers): every suite may load them, so a change to one runs them all.
             case "$f" in
-              src/app/studio/*|src/features/studio/*|src/features/routes/geo/*|tests/e2e/group-test.mjs|tests/e2e/regression-gestures.mjs|tests/e2e/hotspot-test.mjs|tests/e2e/snap-test.mjs|tests/e2e/extend-test.mjs|tests/e2e/studio-phone-test.mjs)
+              tests/e2e/lib/*|tests/e2e/fixtures/*)
+                public=true; studio=true; contribute=true; drawing=true
+                continue ;;
+            esac
+            # The drawing suites, for a change to the editor, the map it draws on, the routes'
+            # geometry rules, the suites themselves or the helpers they load (lib/studio.mjs is
+            # theirs alone): what they draw with. Shared code (src/shared, the design system, the
+            # build's config) does not select them; a push to staging runs them, which catches it.
+            case "$f" in
+              src/app/studio/*|src/features/studio/*|src/features/routes/geo/*|src/features/routes/map/*|tests/e2e/group-test.mjs|tests/e2e/regression-gestures.mjs|tests/e2e/hotspot-test.mjs|tests/e2e/snap-test.mjs|tests/e2e/extend-test.mjs|tests/e2e/studio-phone-test.mjs|tests/e2e/lib/studio.mjs|tests/e2e/lib/harness.mjs|tests/e2e/lib/looks.mjs|tests/e2e/lib/fake-studio-db.mjs)
                 drawing=true ;;
             esac
+            # The published map file: the public suites read it, and so does the studio's Public
+            # map (studio-public-view-test checks it against this file).
             case "$f" in
-              # Read by the build job alone: its architecture step, its unit checks, its guards.
+              public/data/*) studio=true ;;
+            esac
+            case "$f" in
+              # Read by the build and unit jobs alone: the architecture step, the unit checks, the guards.
               docs/architecture.md|tests/unit/*|scripts/checks/check-build.mjs|scripts/checks/build-weight.mjs|scripts/checks/build/*|scripts/docs/*|scripts/node/ts-resolve.mjs|scripts/node/ts-resolve-hook.mjs)
                 build=true ;;
               docs/*|*.md) ;;
               src/app/studio/*|src/features/studio/*|tests/e2e/turnstile-test.mjs|tests/e2e/studio-scale-test.mjs|tests/e2e/studio-contributors-test.mjs|tests/e2e/studio-public-view-test.mjs|tests/e2e/studio-two-editors-test.mjs|tests/e2e/save-test.mjs|tests/e2e/save-ikot-test.mjs|tests/e2e/save-edit-test.mjs|tests/e2e/save-drafts-test.mjs|tests/e2e/group-test.mjs|tests/e2e/regression-gestures.mjs|tests/e2e/hotspot-test.mjs|tests/e2e/snap-test.mjs|tests/e2e/extend-test.mjs|tests/e2e/studio-phone-test.mjs)
                 studio=true ;;
-              src/app/public-map/*|src/features/published-map/*|public/*|tests/e2e/commuter-test.mjs|tests/e2e/phone-test.mjs|tests/e2e/where-test.mjs|tests/e2e/scale-test.mjs|tests/e2e/pwa-test.mjs|tests/e2e/own-tiles-stand-in.mjs|tests/e2e/handover-test.mjs|tests/e2e/fixtures/*|tests/e2e/gate-test.mjs|tests/e2e/loop-test.mjs|tests/e2e/back-test.mjs|tests/e2e/map-pins-test.mjs)
+              src/app/public-map/*|src/features/published-map/*|public/*|tests/e2e/commuter-test.mjs|tests/e2e/phone-test.mjs|tests/e2e/where-test.mjs|tests/e2e/scale-test.mjs|tests/e2e/pwa-test.mjs|tests/e2e/own-tiles-stand-in.mjs|tests/e2e/handover-test.mjs|tests/e2e/retire-pwa-test.mjs|tests/e2e/fixtures/*|tests/e2e/gate-test.mjs|tests/e2e/loop-test.mjs|tests/e2e/back-test.mjs|tests/e2e/map-pins-test.mjs)
                 public=true ;;
               src/app/contribute/*|src/features/contribute/*|tests/e2e/contribute-test.mjs|tests/e2e/contribute-offline-test.mjs|tests/e2e/upload-test.mjs|tests/e2e/account-test.mjs|tests/e2e/profile-test.mjs|tests/e2e/claim-test.mjs)
                 contribute=true ;;
@@ -142,13 +181,31 @@ jobs:
           preview='[]'
           [ "$contribute" = true ] && preview=$CONTRIBUTE_PREVIEWS
           [ "$public" = true ] && preview=$ALL_PREVIEWS
+          storybook=$build
+          # A pull request into a branch with a merge queue (docs/agents/staging-protection.md):
+          # the queue runs every suite on the commit the merge would make, before the branch
+          # moves, so the pull request itself runs the build and unit jobs alone and answers in
+          # about a minute. Whether the branch has a queue is read from GitHub's own rules for
+          # it, so nothing here has to be switched when a queue is turned on or off. If the rules
+          # cannot be read, this run knows of no queue, and every suite selected above runs here.
+          queue=false
+          if gh api "repos/$REPO/rules/branches/$BASE_REF" --jq '.[].type' 2> /dev/null | grep -qx merge_queue; then
+            queue=true
+          fi
+          if [ "$queue" = true ]; then
+            echo "$BASE_REF has a merge queue: the browser suites and Storybook run there, not here"
+            public=false; studio=false; contribute=false; drawing=false; storybook=false; preview='[]'
+          else
+            echo "$BASE_REF has no merge queue: every suite this change selects runs here"
+          fi
           echo "public=$public" >> "$GITHUB_OUTPUT"
           echo "studio=$studio" >> "$GITHUB_OUTPUT"
           echo "contribute=$contribute" >> "$GITHUB_OUTPUT"
           echo "build=$build" >> "$GITHUB_OUTPUT"
           echo "drawing=$drawing" >> "$GITHUB_OUTPUT"
           echo "preview=$preview" >> "$GITHUB_OUTPUT"
-          echo "public=$public studio=$studio contribute=$contribute build=$build drawing=$drawing"
+          echo "storybook=$storybook" >> "$GITHUB_OUTPUT"
+          echo "public=$public studio=$studio contribute=$contribute build=$build drawing=$drawing storybook=$storybook"
 
       # Which areas of Para the pull request touches (areas.json): a warning, never a failure,
       # when it spans more than one.
@@ -166,109 +223,143 @@ jobs:
         run: node scripts/checks/glossary.mjs
 
   build:
-    name: Build and unit checks
+    name: Build and lint
     needs: changes
     if: needs.changes.outputs.build == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - id: node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: 22
-          cache: npm
-      - run: npm ci
-      # Prettier, as .prettierrc asks: a file left unformatted fails here.
-      - name: Formatting
-        run: npm run format:check
-      # ESLint: the rules the standards name are errors (eslint.config.js).
-      - name: Lint
-        run: npm run lint
-      # No new source file over 150 lines; the long ones already there are held to their length,
-      # and on a pull request the list of them may only shrink (scripts/checks/long-files.mjs).
-      - name: Long files
+      # node_modules itself, kept between runs. `npm ci` unpacks about 690 packages every time, even
+      # from npm's download cache: 38 s at the median, in every job. The key is the lockfile, the
+      # Node that ran any install script, and the runner's system and chip, so a change to any of
+      # them installs afresh; there is no fallback key, so what is restored is never another
+      # lockfile's packages. It is saved straight after `npm ci`, before anything else writes
+      # into node_modules (Vite's and Storybook's own caches), so every job restores the same files.
+      - id: modules
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        with:
+          path: node_modules
+          key: node-modules-${{ runner.os }}-${{ runner.arch }}-${{ steps.node.outputs.node-version }}-${{ hashFiles('package-lock.json') }}
+      - if: steps.modules.outputs.cache-hit != 'true'
+        run: npm ci
+      - if: steps.modules.outputs.cache-hit != 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        with:
+          path: node_modules
+          key: ${{ steps.modules.outputs.cache-primary-key }}
+      # The base's list of long files, for the long-files check below: on a pull request, and in
+      # a merge queue, the list may only shrink against it (scripts/checks/long-files.mjs).
+      - name: The base's list of long files
         env:
-          BASE: ${{ github.event.pull_request.base.sha }}
+          BASE: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha }}
         run: |
           if [ -n "$BASE" ] && git fetch --quiet --no-tags --depth=1 origin "$BASE"; then
             git show "$BASE:scripts/checks/long-files-baseline.json" > "$RUNNER_TEMP/long-files-base.json" 2> /dev/null || true
           fi
-          node scripts/checks/long-files.mjs --base "$RUNNER_TEMP/long-files-base.json"
-      # docs/architecture.md is generated from src/: a change to the structure
-      # that did not regenerate it fails here (`npm run docs:architecture`).
-      - name: Architecture page
-        run: npm run docs:architecture:check
-      # Import boundaries, no editor code on /, the installable app's files.
-      - name: Build, with the boundary and build checks
-        run: npm run build
-      # Node's own test runner, no browser: every tests/unit/*-test.mjs.
-      - name: The unit checks
-        run: npm run test:unit
+      # The job's four checks, started together and each run to its end, so one failure never
+      # hides another: every check's output is printed under its verdict, and every failure is
+      # named (scripts/checks/side-by-side.mjs). Lint is the long one and sets the job's length;
+      # what slowed it on the same runner has its own job: the unit checks, which fill every
+      # core, and formatting, which took lint from 31 s to 56 s beside it (pull request 1120).
+      #   Lint: ESLint, the rules the standards name as errors (eslint.config.js). Its usual
+      #     report, and the run's counts kept in ESLINT_JSON for Code health below
+      #     (scripts/checks/eslint-formatter.mjs).
+      #   Long files: no new source file over 150 lines; the long ones already there are held to
+      #     their length. With the base commit fetched above, a file git saw moved keeps its limit
+      #     at its new path (--base-ref); on a push there is no base, and nothing counts as a move.
+      #   Architecture page: docs/architecture.md is generated from src/; a change to the
+      #     structure that did not regenerate it fails (`npm run docs:architecture`).
+      #   Build: import boundaries, no editor code on /, the installable app's files.
+      - name: Lint, long files, the architecture page and the build
+        env:
+          ESLINT_JSON: ${{ runner.temp }}/eslint.json
+          BASE: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha }}
+        run: |
+          node scripts/checks/side-by-side.mjs \
+            "Lint::npm run lint -- --format ./scripts/checks/eslint-formatter.mjs" \
+            "Long files::node scripts/checks/long-files.mjs --base \"$RUNNER_TEMP/long-files-base.json\" --base-ref \"$BASE\"" \
+            "Architecture page::npm run docs:architecture:check" \
+            "Build, with the boundary and build checks::npm run build"
       # The code-health page: `npm run health` (long files, comments, stories, the build's
-      # weights) on the run's summary, so every run shows it. It measures and never fails.
+      # weights) on the run's summary, so every run shows it. It measures and never fails. Its
+      # ESLint lines come from the Lint check's run above; where it did not run, from one of its own.
       - name: Code health
         if: always()
-        run: npm run --silent health >> "$GITHUB_STEP_SUMMARY" || true
-      # The builds pwa-test, handover-test and contribute-offline-test run in `vite preview`, made
-      # once here for preview-suite. Each reads the suites' .env.local as well as .env.production
-      # (a build reads both, the latter winning), so it is the build those suites would make.
-      # OpenFreeMap is named for all but pwa-test's own-tiles run, which is built for a stand-in
-      # of the tiles server on 127.0.0.1 (tests/e2e/own-tiles-stand-in.mjs), never the real one.
-      # The own-tiles build only for a public change: pwa-test's own-tiles run is a public suite.
-      - name: The preview builds
-        if: needs.changes.outputs.preview != '[]'
         env:
-          OWN_TILES: ${{ needs.changes.outputs.public }}
-        run: |
-          cp .env.production .env.local
-          echo VITE_BASEMAP_HOST=https://tiles.openfreemap.org >> .env.local
-          echo VITE_TURNSTILE_SITE_KEY=1x00000000000000000000AA >> .env.local
-          echo VITE_CONTRIBUTIONS=0 >> .env.local
-          VITE_BASEMAP_HOST=https://tiles.openfreemap.org npm run build
-          mv dist preview-openfreemap
-          if [ "$OWN_TILES" = true ]; then
-            VITE_BASEMAP_HOST=http://127.0.0.1:4390 npm run build
-            mv dist preview-own-tiles
-          fi
-          rm .env.local
-      - name: Keep the OpenFreeMap preview build
-        if: needs.changes.outputs.preview != '[]'
-        uses: actions/upload-artifact@v7
-        with:
-          name: preview-openfreemap
-          path: preview-openfreemap
-          include-hidden-files: true
-          retention-days: 1
-      # Made only for a public change (The preview builds, above).
-      - name: Keep the own-tiles preview build
-        if: needs.changes.outputs.public == 'true'
-        uses: actions/upload-artifact@v7
-        with:
-          name: preview-own-tiles
-          path: preview-own-tiles
-          include-hidden-files: true
-          retention-days: 1
+          ESLINT_JSON: ${{ runner.temp }}/eslint.json
+        run: npm run --silent health >> "$GITHUB_STEP_SUMMARY" || true
 
-  # The public map's pages, one job a suite, against the dev server. Each needs only the published
-  # map file and OpenFreeMap's tiles; gate-test opens /studio/'s sign-in door.
+  # The unit checks and formatting, on a runner apart from the build job's. The unit checks are
+  # Node's test runner, no browser, every tests/unit/*-test.mjs; the runner spreads the files
+  # over every core, and so does the type check in the build job, so side by side on one
+  # runner's four cores each took more than twice what it takes alone (pull request 1116's
+  # numbers). Formatting is Prettier, as .prettierrc asks; a file left unformatted fails. Both
+  # run to their end, and every failure is named (scripts/checks/side-by-side.mjs). The two jobs
+  # run at once; node_modules comes from the same cache as the build job's.
+  unit:
+    name: Formatting and the unit checks
+    needs: changes
+    if: needs.changes.outputs.build == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - id: node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 22
+      - id: modules
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        with:
+          path: node_modules
+          key: node-modules-${{ runner.os }}-${{ runner.arch }}-${{ steps.node.outputs.node-version }}-${{ hashFiles('package-lock.json') }}
+      - if: steps.modules.outputs.cache-hit != 'true'
+        run: npm ci
+      - if: steps.modules.outputs.cache-hit != 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        with:
+          path: node_modules
+          key: ${{ steps.modules.outputs.cache-primary-key }}
+      - name: Formatting and the unit checks
+        run: |
+          node scripts/checks/side-by-side.mjs \
+            "Formatting::npm run format:check" \
+            "The unit checks::npm run test:unit"
+
+  # The public map's pages against the dev server. Each needs only the published map file and
+  # OpenFreeMap's tiles; gate-test opens /studio/'s sign-in door. A job runs its `suites` one after
+  # another, so the short ones share a runner's setup and a place in the queue (the free plan runs
+  # about 20 jobs at once, across every run): gate, scale, map-pins, back, where and loop take
+  # about 4 minutes together. commuter-test runs in two parts (COMMUTER_PART, see its top): with
+  # hotspot taps off (VITE_HOTSPOT_TAPS unset) the whole suite is about 4 minutes, and each part
+  # repeats the opening sections, so more parts cost runners and setup for no time. phone-test
+  # runs in three (PHONE_PART, see its top).
   public-suite:
-    name: ${{ matrix.suite }}${{ matrix.part && format(' ({0} of 3)', matrix.part) || '' }}
+    name: ${{ matrix.name }}
     needs: changes
     if: needs.changes.outputs.public == 'true'
     runs-on: ubuntu-latest
-    # commuter-test's first part takes close to 20 minutes, and grows with the
-    # map; 30 leaves it room. phone-test's suite runs about 15 minutes; 40 is its margin.
-    timeout-minutes: ${{ matrix.suite == 'phone-test' && 40 || 30 }}
+    # The longest, a commuter part or a phone-test part, runs about 9 minutes; 30 is the margin.
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
-        suite: [gate-test, phone-test, where-test, scale-test, loop-test, back-test, map-pins-test]
         include:
-          - { suite: commuter-test, part: 1 }
-          - { suite: commuter-test, part: 2 }
-          - { suite: commuter-test, part: 3 }
+          - { name: phone-test (1 of 3), slug: phone-1, suites: phone-test, phone: 1/3 }
+          - { name: phone-test (2 of 3), slug: phone-2, suites: phone-test, phone: 2/3 }
+          - { name: phone-test (3 of 3), slug: phone-3, suites: phone-test, phone: 3/3 }
+          - name: The short public suites
+            slug: short-public
+            suites: gate-test scale-test map-pins-test back-test where-test loop-test
+          - { name: commuter-test (1 of 2), slug: commuter-1, suites: commuter-test, part: 1/2 }
+          - { name: commuter-test (2 of 2), slug: commuter-2, suites: commuter-test, part: 2/2 }
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       # Node, npm ci, and Playwright's Chromium with its system packages, from the caches every
       # browser suite shares (the action's own comments).
       - uses: ./.github/actions/prepare-browser-suite
@@ -290,41 +381,107 @@ jobs:
             sleep 1
           done
           echo "The dev server did not answer in 60 s"; cat vite.log; exit 1
-      - name: ${{ matrix.suite }}
-        run: node tests/e2e/${{ matrix.suite }}.mjs
+      # Every suite of the job runs, and each one that fails is named; the job fails if any did.
+      - name: ${{ matrix.suites }}
         env:
-          COMMUTER_PART: ${{ matrix.part && format('{0}/3', matrix.part) || '' }}
+          SUITES: ${{ matrix.suites }}
+          COMMUTER_PART: ${{ matrix.part }}
+          PHONE_PART: ${{ matrix.phone }}
+        run: |
+          status=0
+          for suite in $SUITES; do
+            echo "::group::$suite"
+            node "tests/e2e/$suite.mjs" || { echo "::error::$suite failed"; status=1; }
+            echo "::endgroup::"
+          done
+          exit $status
       - name: Keep the screenshots and the dev server log
         if: failure()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
-          name: ${{ matrix.suite }}${{ matrix.part && format('-{0}', matrix.part) || '' }}-screenshots
+          name: ${{ matrix.slug }}-screenshots
           path: |
             *.png
             vite.log
           if-no-files-found: ignore
 
-  # The contributor page, one job a suite, against the dev server.
+  # commuter-test with hotspot taps on (VITE_HOTSPOT_TAPS=1), on pushes to staging only. The
+  # public map hides those taps for now, so every other run skips the per-hotspot sequence; this
+  # keeps it checked for when they come back. Six parts, as the sequence takes about 7 minutes a
+  # part with taps on. A part fails if the log says the taps were off, so it cannot pass by
+  # skipping what it is here for.
+  taps-on:
+    name: commuter-test, hotspot taps on (${{ matrix.part }})
+    needs: changes
+    if: github.event_name == 'push' && github.ref == 'refs/heads/staging'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        part: [1/6, 2/6, 3/6, 4/6, 5/6, 6/6]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      # Node, npm ci, and Playwright's Chromium with its system packages, from the caches every
+      # browser suite shares (the action's own comments).
+      - uses: ./.github/actions/prepare-browser-suite
+      - name: Give the dev server the public database address and key, taps on
+        run: |
+          cp .env.production .env.local
+          echo VITE_BASEMAP_HOST=https://tiles.openfreemap.org >> .env.local
+          echo VITE_TURNSTILE_SITE_KEY=1x00000000000000000000AA >> .env.local
+          echo VITE_CONTRIBUTIONS=0 >> .env.local
+          echo VITE_HOTSPOT_TAPS=1 >> .env.local
+      - name: Start the dev server
+        run: |
+          npx vite --port 5173 --strictPort > vite.log 2>&1 &
+          for i in $(seq 1 60); do
+            curl -sf -o /dev/null http://localhost:5173/ && exit 0
+            sleep 1
+          done
+          echo "The dev server did not answer in 60 s"; cat vite.log; exit 1
+      - name: commuter-test, hotspot taps on
+        env:
+          COMMUTER_PART: ${{ matrix.part }}
+        run: |
+          set -o pipefail
+          node tests/e2e/commuter-test.mjs | tee commuter.log
+          if grep -q 'hotspot taps are off' commuter.log; then
+            echo "::error::the build had hotspot taps off: the per-hotspot sequence did not run"
+            exit 1
+          fi
+      - name: Keep the screenshots and the dev server log
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: commuter-taps-on-${{ strategy.job-index }}-screenshots
+          path: |
+            *.png
+            vite.log
+          if-no-files-found: ignore
+
+  # The contributor page, against the dev server.
   contribute-suite:
-    name: ${{ matrix.suite }}
+    name: ${{ matrix.name }}
     needs: changes
     if: needs.changes.outputs.contribute == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     strategy:
       fail-fast: false
+      # A job runs its `suites` one after another, as public-suite's do: the three under a minute
+      # share a runner. All but contribute-test run with uploads on.
       matrix:
-        suite:
-          [
-            contribute-test,
-            upload-test,
-            account-test,
-            forgot-password-test,
-            claim-test,
-            profile-test,
-          ]
+        include:
+          - { name: contribute-test, slug: contribute-test, suites: contribute-test }
+          - { name: upload-test, slug: upload-test, suites: upload-test, uploads: true }
+          - { name: profile-test, slug: profile-test, suites: profile-test, uploads: true }
+          - name: account-test, forgot-password-test, claim-test
+            slug: account-flows
+            suites: account-test forgot-password-test claim-test
+            uploads: true
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       # Node, npm ci, and Playwright's Chromium with its system packages, from the caches every
       # browser suite shares (the action's own comments).
       - uses: ./.github/actions/prepare-browser-suite
@@ -341,7 +498,7 @@ jobs:
       # upload-test, account-test, forgot-password-test, claim-test and profile-test turn uploads back on for their own dev server, against a
       # stand-in for Supabase.
       - name: Turn uploads on, for upload-test, account-test, forgot-password-test, claim-test and profile-test
-        if: matrix.suite != 'contribute-test'
+        if: matrix.uploads
         run: |
           echo VITE_CONTRIBUTIONS=1 >> .env.local
           echo VITE_TURNSTILE_SITE_KEY=1x00000000000000000000AA >> .env.local
@@ -353,52 +510,90 @@ jobs:
             sleep 1
           done
           echo "The dev server did not answer in 60 s"; cat vite.log; exit 1
-      - name: ${{ matrix.suite }}
-        run: node tests/e2e/${{ matrix.suite }}.mjs
+      # Every suite of the job runs, and each one that fails is named; the job fails if any did.
+      - name: ${{ matrix.suites }}
         env:
-          PARA_TURNSTILE: ${{ matrix.suite != 'contribute-test' && '1' || '' }}
+          SUITES: ${{ matrix.suites }}
+          PARA_TURNSTILE: ${{ matrix.uploads && '1' || '' }}
+        run: |
+          status=0
+          for suite in $SUITES; do
+            echo "::group::$suite"
+            node "tests/e2e/$suite.mjs" || { echo "::error::$suite failed"; status=1; }
+            echo "::endgroup::"
+          done
+          exit $status
       - name: Keep the screenshots and the dev server log
         if: failure()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
-          name: ${{ matrix.suite }}-screenshots
+          name: ${{ matrix.slug }}-screenshots
           path: |
             *.png
             vite.log
           if-no-files-found: ignore
 
-  # The built app: pwa-test and handover-test (:4173) and contribute-offline-test (:4174) start
-  # and stop their own `vite preview` on the build job's preview builds. pwa-test runs a second
-  # time for Para's own tiles server, against a stand-in for it (tests/e2e/own-tiles-stand-in.mjs).
-  # Which of them run is the changes job's `preview`.
+  # The built app's suites, one job: pwa-test, handover-test and retire-pwa-test (:4173, and
+  # :4175 in front of it) and contribute-offline-test (:4174) start and stop their own
+  # `vite preview` on the build this job makes, one suite after another. Each step runs whatever
+  # the steps before it gave, so one red suite does not hide another, and the job fails if any
+  # did. pwa-test runs a second time for Para's own tiles server, on a build made for a stand-in
+  # of it on 127.0.0.1 (tests/e2e/own-tiles-stand-in.mjs), never the real one. Which suites run
+  # is the changes job's `preview`. One job rather than one each: the four or five took a runner
+  # and a setup apiece for under a minute of work, and waited on the build job for its builds.
   preview-suite:
-    name: ${{ matrix.suite }}${{ matrix.basemap == 'own-tiles' && ' (own tiles)' || '' }}
-    needs: [changes, build]
+    name: The built app
+    needs: changes
     if: needs.changes.outputs.preview != '[]'
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    strategy:
-      fail-fast: false
-      matrix:
-        include: ${{ fromJSON(needs.changes.outputs.preview) }}
+    env:
+      PREVIEW: ${{ needs.changes.outputs.preview }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       # Node, npm ci, and Playwright's Chromium with its system packages, from the caches every
       # browser suite shares (the action's own comments).
       - uses: ./.github/actions/prepare-browser-suite
-      # The build was made in the build job; `vite preview` serves it as it is.
-      - name: The preview build
-        uses: actions/download-artifact@v8
-        with:
-          name: preview-${{ matrix.basemap }}
-          path: dist
-      - name: ${{ matrix.suite }}
-        run: node tests/e2e/${{ matrix.suite }}.mjs
+      # The builds those suites would make: their .env.local as well as .env.production (a build
+      # reads both, the latter winning), for OpenFreeMap, and for the own-tiles stand-in when
+      # pwa-test's own-tiles run is on. The suites then run without that .env.local, as before.
+      - name: The builds
+        env:
+          OWN_TILES: ${{ contains(needs.changes.outputs.preview, '"basemap":"own-tiles"') }}
+        run: |
+          cp .env.production .env.local
+          echo VITE_BASEMAP_HOST=https://tiles.openfreemap.org >> .env.local
+          echo VITE_TURNSTILE_SITE_KEY=1x00000000000000000000AA >> .env.local
+          echo VITE_CONTRIBUTIONS=0 >> .env.local
+          if [ "$OWN_TILES" = true ]; then
+            VITE_BASEMAP_HOST=http://127.0.0.1:4390 npm run build
+            mv dist preview-own-tiles
+          fi
+          VITE_BASEMAP_HOST=https://tiles.openfreemap.org npm run build
+          rm .env.local
+      - name: pwa-test
+        if: ${{ !cancelled() && contains(env.PREVIEW, '"suite":"pwa-test","basemap":"openfreemap"') }}
+        run: node tests/e2e/pwa-test.mjs
+      - name: handover-test
+        if: ${{ !cancelled() && contains(env.PREVIEW, '"suite":"handover-test"') }}
+        run: node tests/e2e/handover-test.mjs
+      - name: retire-pwa-test
+        if: ${{ !cancelled() && contains(env.PREVIEW, '"suite":"retire-pwa-test"') }}
+        run: node tests/e2e/retire-pwa-test.mjs
+      - name: contribute-offline-test
+        if: ${{ !cancelled() && contains(env.PREVIEW, '"suite":"contribute-offline-test"') }}
+        run: node tests/e2e/contribute-offline-test.mjs
+      - name: The own-tiles build in dist/
+        if: ${{ !cancelled() && contains(env.PREVIEW, '"basemap":"own-tiles"') }}
+        run: rm -rf dist && mv preview-own-tiles dist
+      - name: pwa-test (own tiles)
+        if: ${{ !cancelled() && contains(env.PREVIEW, '"suite":"pwa-test","basemap":"own-tiles"') }}
+        run: node tests/e2e/pwa-test.mjs
       - name: Keep the screenshots
         if: failure()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
-          name: ${{ matrix.suite }}${{ matrix.basemap == 'own-tiles' && '-own-tiles' || '' }}-screenshots
+          name: built-app-screenshots
           path: '*.png'
           if-no-files-found: ignore
 
@@ -410,7 +605,7 @@ jobs:
   # (save-drafts, studio-two-editors, studio-public-view, on lib/fake-studio-db.mjs)
   # and studio-contributors (the Contributors map's actions). No retry needed.
   studio-suite:
-    name: ${{ matrix.suite }}
+    name: ${{ matrix.name }}
     needs: changes
     if: needs.changes.outputs.studio == 'true'
     runs-on: ubuntu-latest
@@ -420,21 +615,23 @@ jobs:
     timeout-minutes: 40
     strategy:
       fail-fast: false
+      # A job runs its `suites` one after another, as public-suite's do: the ones under a minute
+      # share a runner, grouped by the uploads setting their dev server needs.
       matrix:
-        suite:
-          [
-            studio-scale-test,
-            studio-contributors-test,
-            save-test,
-            save-ikot-test,
-            save-edit-test,
-            turnstile-test,
-            studio-public-view-test,
-            studio-two-editors-test,
-            save-drafts-test,
-          ]
+        include:
+          - name: studio-scale-test, studio-contributors-test
+            slug: studio-uploads
+            suites: studio-scale-test studio-contributors-test
+            uploads: true
+          - name: turnstile-test, studio-public-view-test, studio-two-editors-test
+            slug: studio-review
+            suites: turnstile-test studio-public-view-test studio-two-editors-test
+          - { name: save-test, slug: save-test, suites: save-test }
+          - { name: save-ikot-test, slug: save-ikot-test, suites: save-ikot-test }
+          - { name: save-edit-test, slug: save-edit-test, suites: save-edit-test }
+          - { name: save-drafts-test, slug: save-drafts-test, suites: save-drafts-test }
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       # Node, npm ci, and Playwright's Chromium with its system packages, from the caches every
       # browser suite shares (the action's own comments).
       - uses: ./.github/actions/prepare-browser-suite
@@ -451,11 +648,11 @@ jobs:
       # The two suites that open the Contributors map read uploads from their
       # own stand-in, so they run with uploads on.
       - name: Turn uploads on, for the Contributors map's suites
-        if: matrix.suite == 'studio-scale-test' || matrix.suite == 'studio-contributors-test'
+        if: matrix.uploads
         run: echo VITE_CONTRIBUTIONS=1 >> .env.local
       # Cloudflare's always-pass test key: turnstile-test stands in for its script.
       - name: Give turnstile-test a Turnstile site key
-        if: matrix.suite == 'turnstile-test'
+        if: contains(matrix.suites, 'turnstile-test')
         run: echo VITE_TURNSTILE_SITE_KEY=1x00000000000000000000AA >> .env.local
       - name: Start the dev server
         run: |
@@ -465,29 +662,41 @@ jobs:
             sleep 1
           done
           echo "The dev server did not answer in 60 s"; cat vite.log; exit 1
-      - name: ${{ matrix.suite }}
-        run: node tests/e2e/${{ matrix.suite }}.mjs
-      - name: Keep the screenshots and the dev server log
+      # Every suite of the job runs, and each one that fails is named; the job fails if any did.
+      - name: ${{ matrix.suites }}
+        env:
+          SUITES: ${{ matrix.suites }}
+        run: |
+          status=0
+          for suite in $SUITES; do
+            echo "::group::$suite"
+            node "tests/e2e/$suite.mjs" || { echo "::error::$suite failed"; status=1; }
+            echo "::endgroup::"
+          done
+          exit $status
+      - name: Keep the screenshots, the save suites' traces and the dev server log
         if: failure()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
-          name: ${{ matrix.suite }}-screenshots
+          name: ${{ matrix.slug }}-screenshots
           path: |
             *.png
+            *-trace.zip
             vite.log
           if-no-files-found: ignore
 
   # Every story renders and its play passes (scripts/checks/storybook-play.mjs), against the
   # built Storybook; the stories that failed when the check came in are listed, by area, in
-  # storybook-play-baseline.json, which may only shrink.
+  # storybook-play-baseline.json, which may only shrink. Under "Build and the public map": a
+  # story that stops rendering fails that check, so it holds a merge as a failed suite does.
   storybook:
     name: Storybook plays
     needs: changes
-    if: needs.changes.outputs.build == 'true'
+    if: needs.changes.outputs.storybook == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       # Node, npm ci, and Playwright's Chromium with its system packages, from the caches every
       # browser suite shares (the action's own comments).
       - uses: ./.github/actions/prepare-browser-suite
@@ -497,16 +706,27 @@ jobs:
         run: node scripts/checks/storybook-play.mjs storybook-static
 
   # The drawing suites, against /studio/?e2e=1, the public router and the live
-  # tables. On a pull request only for the editor's own code (see the top of this file). One at a time —
-  # the router is shared — and once more after a minute if it was busy.
+  # tables. On a pull request only for the editor's own code (see the top of this file). In two
+  # jobs of about 5 minutes each, by measured time (studio-phone-test alone takes about as long as
+  # the other five); within a job one at a time, and once more after a minute if the router was busy.
   drawing:
-    name: The drawing suites
+    name: The drawing suites (${{ matrix.part }})
     needs: changes
     if: needs.changes.outputs.drawing == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {
+              part: 1 of 2,
+              slug: 1,
+              suites: group-test regression-gestures hotspot-test snap-test extend-test,
+            }
+          - { part: 2 of 2, slug: 2, suites: studio-phone-test }
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       # Node, npm ci, and Playwright's Chromium with its system packages, from the caches every
       # browser suite shares (the action's own comments).
       - uses: ./.github/actions/prepare-browser-suite
@@ -529,15 +749,26 @@ jobs:
           done
           echo "The dev server did not answer in 60 s"; cat vite.log; exit 1
       - name: The drawing suites
+        env:
+          SUITES: ${{ matrix.suites }}
         run: |
           set +e
           status=0
-          for suite in group-test regression-gestures hotspot-test snap-test extend-test studio-phone-test; do
+          for suite in $SUITES; do
             echo "::group::$suite"
             if node "tests/e2e/$suite.mjs"; then
               echo "::endgroup::"
               continue
             fi
+            # The one retry is for the live router, busy now and then. A PR run's router is a
+            # recording once tests/e2e/fixtures/osrm/ exists, and then a failure is the code's.
+            if [ -z "$PARA_LIVE_SERVICES" ] && [ -d tests/e2e/fixtures/osrm ]; then
+              echo "::endgroup::"
+              echo "::error::$suite failed"
+              status=1
+              continue
+            fi
+            echo "::warning::$suite needed the router retry"
             echo "$suite failed; waiting a minute for the router, then once more"
             sleep 60
             if node "tests/e2e/$suite.mjs"; then
@@ -551,9 +782,9 @@ jobs:
           exit $status
       - name: Keep the screenshots and the dev server log
         if: failure()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
-          name: drawing-screenshots
+          name: drawing-${{ matrix.slug }}-screenshots
           path: |
             *.png
             vite.log
@@ -566,34 +797,34 @@ jobs:
   # for a result fails it.
   public:
     name: Build and the public map
-    needs: [changes, build, public-suite, contribute-suite, preview-suite]
+    needs: [changes, build, unit, public-suite, contribute-suite, preview-suite, storybook, taps-on]
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
       - env:
-          RESULTS: ${{ needs.changes.result }} ${{ needs.build.result }} ${{ needs.public-suite.result }} ${{ needs.contribute-suite.result }} ${{ needs.preview-suite.result }}
+          RESULTS: ${{ needs.changes.result }} ${{ needs.build.result }} ${{ needs.unit.result }} ${{ needs.public-suite.result }} ${{ needs.contribute-suite.result }} ${{ needs.preview-suite.result }} ${{ needs.storybook.result }} ${{ needs.taps-on.result }}
         run: |
-          echo "changes, build, public suites, contributor suites, preview suites: $RESULTS"
+          echo "changes, build, unit checks, public suites, contributor suites, preview suites, Storybook plays, commuter with hotspot taps on: $RESULTS"
           read -ra results <<< "$RESULTS"
-          if [ "${#results[@]}" -ne 5 ] || [ "${results[0]}" != success ]; then exit 1; fi
+          if [ "${#results[@]}" -ne 8 ] || [ "${results[0]}" != success ]; then exit 1; fi
           for result in "${results[@]}"; do
             case "$result" in success | skipped) ;; *) exit 1 ;; esac
           done
 
   studio:
     name: The editor
-    needs: [changes, build, studio-suite, drawing]
+    needs: [changes, build, unit, studio-suite, drawing]
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
       - env:
-          RESULTS: ${{ needs.changes.result }} ${{ needs.build.result }} ${{ needs.studio-suite.result }} ${{ needs.drawing.result }}
+          RESULTS: ${{ needs.changes.result }} ${{ needs.build.result }} ${{ needs.unit.result }} ${{ needs.studio-suite.result }} ${{ needs.drawing.result }}
         run: |
-          echo "changes, build, studio suites, drawing suites: $RESULTS"
+          echo "changes, build, unit checks, studio suites, drawing suites: $RESULTS"
           read -ra results <<< "$RESULTS"
-          if [ "${#results[@]}" -ne 4 ] || [ "${results[0]}" != success ]; then exit 1; fi
+          if [ "${#results[@]}" -ne 5 ] || [ "${results[0]}" != success ]; then exit 1; fi
           for result in "${results[@]}"; do
             case "$result" in success | skipped) ;; *) exit 1 ;; esac
           done

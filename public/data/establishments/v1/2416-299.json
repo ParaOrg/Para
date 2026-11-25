@@ -1,0 +1,10 @@
+{
+  "schema": 1,
+  "cell": "2416-299",
+  "attribution": "© OpenStreetMap contributors",
+  "establishments": [
+    ["n12300565379","bank",120.83977,14.95307,"PNB"],
+    ["n12887833542","bank",120.84007,14.95313,"Metrobank"],
+    ["n13329559601","cafe",120.80039,14.96098,"Balucuc Boundary Bikers Tambayan"]
+  ]
+}

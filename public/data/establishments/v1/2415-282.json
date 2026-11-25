@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "cell": "2415-282",
+  "attribution": "© OpenStreetMap contributors",
+  "establishments": [
+    ["n11158219805","convenience",120.78202,14.10622,"Rosalina Magbuhos"],
+    ["n11158257805","convenience",120.78225,14.10859,"Dang Store"],
+    ["n11158258005","convenience",120.78226,14.11001,"Bernadeth Store"],
+    ["n11158280605","convenience",120.78271,14.10798,"Myra Store"],
+    ["n11158290105","convenience",120.78294,14.10736,"D' Share Store"],
+    ["n11158294305","convenience",120.78285,14.10755,"Shiela Store"],
+    ["n11158319305","convenience",120.78272,14.10955,"Alice Store"],
+    ["n11294780569","supermarket",120.79069,14.13937,"Alfamart"],
+    ["w409673913","fuel",120.79146,14.1392,"gas station"]
+  ]
+}

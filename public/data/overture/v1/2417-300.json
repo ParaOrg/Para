@@ -1,0 +1,14 @@
+{
+  "schema": 1,
+  "cell": "2417-300",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["oaad5fe2f6ef144b1","restaurant",120.86862,15.01784,"Mang Kulas Restaurant"],
+    ["oa16c2be473e4480d","fast_food",120.87882,15.03111,"Jollibee"],
+    ["oc7b03106d8164af9","cafe",120.88959,15.01479,"Alexa's kitchen"],
+    ["o745de6dbefb440b1","school",120.87251,15.03594,"DepEd Bahay Pare Elementary School - Candaba"],
+    ["o92ca211876de4f19","school",120.87717,15.0461,"Paligui Elementary School"],
+    ["oc84cc53fdfcb456d","school",120.88452,15.02379,"Pulong Palazan Elementary School"],
+    ["oee3ab0ba72b64127","school",120.87963,15.03392,"DepEd Tayo - Bahay Pare High School"]
+  ]
+}

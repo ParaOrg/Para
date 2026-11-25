@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "cell": "2416-285",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o60196c62409a4cd3","restaurant",120.8247,14.29881,"KrispyPapi Tanza Daang Amaya I"],
+    ["o0d2a220e4c6f47f2","cafe",120.84929,14.28244,"Kanlungan Cafe"],
+    ["o383518a60c6a46ba","cafe",120.83208,14.29147,"Lito’s Cafe"],
+    ["oa977a1453efc48e0","cafe",120.80108,14.29268,"Coffee IV Drip Cafe"],
+    ["o8a3b3aa17a6d4b57","clinic",120.80703,14.29133,"NAIC RHU Annex - Halang"],
+    ["o4578d3eead994ddf","school",120.84737,14.27992,"Grace Christian Academy of Cavite Inc."],
+    ["o4e1b7d39e69a4af6","school",120.84502,14.26877,"MCI Annex"],
+    ["oc614a387eac145b6","school",120.84737,14.27992,"Kanggahan Elementary School"],
+    ["ocb2cb4d37b0949b3","school",120.81041,14.28395,"Palangue Central Elementary School"]
+  ]
+}

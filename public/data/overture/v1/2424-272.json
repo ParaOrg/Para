@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "cell": "2424-272",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o1b2113c5460e47fc","restaurant",121.20919,13.64721,"Topstar Grill and Resto Bar"],
+    ["o4719645e85bb42ff","restaurant",121.23254,13.62849,"Checosey's Events and Resto-bar"],
+    ["o96041b34fca94e6e","restaurant",121.22652,13.64468,"Ginga Kitchen X Cafe"],
+    ["o3adc197e516b4cd3","fast_food",121.20998,13.64737,"Potato Corner"],
+    ["o65b4e886d4c74b00","cafe",121.21046,13.64702,"Von Cafe"],
+    ["of0593a97a54b4d91","cafe",121.21054,13.64786,"Pasalobong Souvenir and Cafe"],
+    ["o7d61ceec26bf429a","dentist",121.20976,13.64992,"Gayeta-Geron Dental Clinic"],
+    ["o9b81e504dcce4343","school",121.20872,13.64968,"Lobo Senior High School"],
+    ["ob0190ae86a434d08","school",121.2077,13.64534,"Lord Immanuel Institute Foundation"]
+  ]
+}

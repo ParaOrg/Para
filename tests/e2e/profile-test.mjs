@@ -72,7 +72,7 @@ database.users.set(EDITOR_ID, {
  * A phone signed in to the account, on the shared database; `signedIn: false` has no session,
  * and `userId` signs in as another user (the editor).
  */
-async function phone({ signedIn = true, userId = ACCOUNT_ID } = {}) {
+async function phone({ signedIn = true, userId = ACCOUNT_ID, search = '' } = {}) {
   const context = await browser.newContext({
     viewport: { width: 393, height: 852 },
     deviceScaleFactor: 2,
@@ -99,7 +99,7 @@ async function phone({ signedIn = true, userId = ACCOUNT_ID } = {}) {
   );
   const errors = [];
   page.on('pageerror', (e) => errors.push(String(e)));
-  await page.goto(`${BASE}/contribute/`, { waitUntil: 'load' });
+  await page.goto(`${BASE}/contribute/${search}`, { waitUntil: 'load' });
   return { page, fake, errors };
 }
 
@@ -508,24 +508,38 @@ async function seed(page, id, name, upload) {
   await start(page).waitFor();
   await page.waitForTimeout(600);
 
-  /** What is moving 60 ms into a move: the view transition's parts and the toolbar's pill. */
+  /**
+   * What is moving once a move has begun: the view transition's parts and the toolbar's pill. The
+   * look waits for the transition's first frame rather than a fixed time after the tap, since on a
+   * busy machine the move starts later (32–36 ms after the tap alone, 44–55 ms beside another suite).
+   * A move that never starts is read after two seconds, as it stands, and its checks fail.
+   */
   const midMove = async (tap) => {
     await tap.click();
-    await page.waitForTimeout(60);
-    return page.evaluate(() => ({
-      direction: document.documentElement.dataset.tabMotion ?? null,
-      parts: document
-        .getAnimations()
-        .map((a) => a.effect?.pseudoElement)
-        .filter(Boolean),
-      pill: document
-        .getAnimations()
-        .some(
-          (a) =>
-            a.effect?.target?.getAttribute?.('aria-hidden') === 'true' &&
-            a.effect.target.parentElement?.classList.contains('tab-toolbar'),
-        ),
-    }));
+    return page.evaluate(
+      () =>
+        new Promise((resolve) => {
+          const since = performance.now();
+          const look = () => {
+            const animations = document.getAnimations();
+            const parts = animations.map((a) => a.effect?.pseudoElement).filter(Boolean);
+            if (parts.length === 0 && performance.now() - since < 2000) {
+              requestAnimationFrame(look);
+              return;
+            }
+            resolve({
+              direction: document.documentElement.dataset.tabMotion ?? null,
+              parts,
+              pill: animations.some(
+                (a) =>
+                  a.effect?.target?.getAttribute?.('aria-hidden') === 'true' &&
+                  a.effect.target.parentElement?.classList.contains('tab-toolbar'),
+              ),
+            });
+          };
+          look();
+        }),
+    );
   };
   const toHistory = await midMove(historyTab(page));
   check(
@@ -1429,9 +1443,17 @@ async function seed(page, id, name, upload) {
       (event) => {
         if (event.target.closest('[data-tab]')?.dataset.tab !== 'record') return;
         const pill = toolbar.querySelector(':scope > span[aria-hidden]');
+        const history = toolbar.querySelector('[data-tab="history"]');
+        const xOf = (keyframe) => Number(/translateX\(([-\d.]+)px\)/.exec(keyframe.transform)?.[1]);
+        // How far the glide to History has gone, by its own clock: the check's premise.
+        const toHistory = pill
+          .getAnimations()
+          .find((glide) => xOf(glide.effect.getKeyframes().at(-1)) === history.offsetLeft);
+        const timing = toHistory?.effect.getComputedTiming();
         window.pillAtRecordTap = {
           x: pill.getBoundingClientRect().left - toolbar.getBoundingClientRect().left,
           isGliding: pill.getAnimations().some((glide) => glide.playState === 'running'),
+          progress: timing ? Number(timing.localTime) / Number(timing.duration) : null,
         };
       },
       true,
@@ -1444,7 +1466,9 @@ async function seed(page, id, name, upload) {
       touchPoints: [{ x: at.x, y: at.y, id: 1 }],
     });
     await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
-    if (name === 'history') await page.waitForTimeout(120);
+    // A quarter of the way, and well short of History: a slow runner's delay still leaves it
+    // mid-glide. (At 120 ms the pill is already 87% there on --ease-pill, and arrives ~40 ms later.)
+    if (name === 'history') await page.waitForTimeout(30);
   }
   const turn = await page
     .waitForFunction(
@@ -1473,9 +1497,15 @@ async function seed(page, id, name, upload) {
     .catch(() => null);
   const atTap = await page.evaluate(() => window.pillAtRecordTap ?? null);
   await start(page).waitFor();
+  // The premise: Record is tapped while the glide to History is well short of it. Past 60% the
+  // spring is near History and soon over it; a tap that late says nothing of a turn mid-glide, so
+  // it fails as itself, never as the turn.
+  const PREMISE_PROGRESS = 0.6;
+  const isPremiseMet = typeof atTap?.progress === 'number' && atTap.progress <= PREMISE_PROGRESS;
   check(
     '  a burst, History then Record mid-glide: the pill turns to Record from where it is, the glide to History let go',
-    !!atTap &&
+    isPremiseMet &&
+      !!atTap &&
       atTap.isGliding &&
       !!turn &&
       // From where it was, give or take the frame before the screen is drawn; never from History,
@@ -1483,7 +1513,9 @@ async function seed(page, id, name, upload) {
       Math.abs(turn.from - atTap.x) <= 6 &&
       turn.from < turn.history &&
       turn.others === 0,
-    JSON.stringify({ atTap, turn }),
+    isPremiseMet
+      ? JSON.stringify({ atTap, turn })
+      : `premise not met: Record tapped at ${atTap?.progress == null ? 'no' : Math.round(atTap.progress * 100) + '%'} of the glide to History  ${JSON.stringify({ atTap, turn })}`,
   );
   check('  no page errors', errors.length === 0, errors.join(' | '));
   await page.context().close();
@@ -2889,6 +2921,87 @@ uploadedRow('dddddddd-0000-4000-8000-000000000003', 3, 'Here and there');
     );
     check('  no page errors', errors.length === 0, errors.join(' | '));
   }
+}
+
+// --------------------------- the phone's Back on Account's questions (the Android app)
+// Back on a question before something that cannot be undone is its safe answer: nothing done,
+// and focus back where it was. Back as BackPlugin.java hands it to the page, through a
+// development build's `?e2e` hook (navigation/use-android-back.ts).
+{
+  const BACK_ID = 'ffffffff-0000-4000-8000-000000000004';
+  database.users.set(BACK_ID, {
+    email: 'back@example.com',
+    password: 'hunter2hunter2',
+    isAccount: true,
+    profile: { name: 'Back', phone: '+639170000004' },
+  });
+  const { page, fake, errors } = await phone({ userId: BACK_ID, search: '?e2e=1' });
+  await start(page).waitFor({ timeout: 30000 });
+  await page.waitForFunction(() => typeof window.__paraBack === 'function', null, {
+    timeout: 10000,
+  });
+  /** Back, as Android sends it; then the page's next frame. */
+  const back = async () => {
+    await page.evaluate(() => window.__paraBack());
+    await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => setTimeout(r, 0))));
+  };
+  const focused = () => page.evaluate(() => document.activeElement?.textContent);
+  const isSignedIn = () => page.evaluate((key) => localStorage.getItem(key) !== null, AUTH_KEY);
+  const gone = (locator) =>
+    locator.waitFor({ state: 'detached', timeout: 5000 }).then(
+      () => true,
+      () => false,
+    );
+
+  await accountTab(page).click();
+  await button(page, 'Logout').click();
+  const logoutSheet = logoutQuestion(page);
+  await logoutSheet.waitFor();
+  await back();
+  check(
+    "the phone's Back on Logout's question is Cancel: still signed in, focus back on Logout",
+    (await gone(logoutSheet)) &&
+      fake.logouts.length === 0 &&
+      (await isSignedIn()) &&
+      (await focused()) === 'Logout' &&
+      (await page.evaluate(() => window.__paraLeaves)) === 0,
+    `${fake.logouts.length} logout(s); focus on ${await focused()}`,
+  );
+
+  await button(page, 'Account settings').click();
+  await page.getByRole('heading', { level: 1, name: 'Account settings' }).waitFor();
+  // The countdown runs on the suite's clock, not the runner's speed.
+  await page.clock.install();
+  await button(page, 'Delete account').click();
+  const deleteScreen = page.getByRole('heading', { level: 1, name: 'Delete account' });
+  await deleteScreen.waitFor();
+  await page.clock.fastForward(5000);
+  await button(page, 'Delete account').waitFor({ timeout: 8000 });
+  await button(page, 'Delete account').click();
+  const deleteSheet = page.getByRole('alertdialog', {
+    name: 'Do you want to delete your account?',
+  });
+  await deleteSheet.waitFor();
+  await back();
+  check(
+    "the phone's Back on Delete account's question is No, I change my mind: nothing deleted, the account there, focus back on Delete account",
+    (await gone(deleteSheet)) &&
+      fake.deleteAccountRequests === 0 &&
+      database.users.has(BACK_ID) &&
+      (await isSignedIn()) &&
+      (await deleteScreen.count()) === 1 &&
+      (await focused()) === 'Delete account',
+    `${fake.deleteAccountRequests} request(s); focus on ${await focused()}`,
+  );
+  await back();
+  check(
+    "  the next Back is the screen's back arrow, to Account settings, still signed in",
+    (await gone(deleteScreen)) &&
+      (await page.getByRole('heading', { level: 1, name: 'Account settings' }).count()) === 1 &&
+      (await isSignedIn()),
+  );
+  check('  no page errors', errors.length === 0, errors.join(' | '));
+  await page.context().close();
 }
 
 await browser.close();

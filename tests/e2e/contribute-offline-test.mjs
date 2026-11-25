@@ -13,6 +13,8 @@
 //     with its name; offline with no account, the page shows Sign in, not a broken page
 //   - an update (a changed worker) found with a recording open waits, and the page is not
 //     reloaded; once the recording is saved it takes over and the page reloads once
+//   - the studio, which no other suite opens on a build: its sign-in, and an editor's map in
+//     Terrain and Satellite; and /app/'s waitlist form, sent: each for its content policy
 //
 // A stand-in GPS is fed with Playwright's setGeolocation, the way the browser reports it.
 // Each check prints PASS/FAIL and the script exits non-zero on any failure.
@@ -22,6 +24,13 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { fakeContributions, session } from './lib/fake-contributions.mjs';
 import { harness, until } from './lib/harness.mjs';
+import { fakeStudioDb } from './lib/fake-studio-db.mjs';
+import { checkPolicies, watchPolicies } from './lib/policy.mjs';
+import { applyStandIns } from './lib/stand-ins.mjs';
+import { signInAsEditor } from './lib/studio-session.mjs';
+
+/** Cloudflare's always-pass Turnstile site key, for testing on any domain. */
+const TURNSTILE_TEST_KEY = '1x00000000000000000000AA';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const require = createRequire(join(root, 'package.json'));
@@ -112,6 +121,7 @@ const phone = {
 
 try {
   const context = await browser.newContext(phone);
+  const flagged = await watchPolicies(context);
   await context.addInitScript(
     ([key, signedIn]) => {
       // Once only: the end of the suite signs the phone out, and a reload must not sign it back in.
@@ -436,7 +446,130 @@ try {
     errors.slice(0, 3).join(' | '),
   );
 
+  // ------------------------------------------------ the studio's content policy
+  // The studio's policy is the longest (the database, the bot check, the router, the satellite
+  // and terrain pictures) and no other suite on a build opens the studio. On a context of its
+  // own, watched with the rest: its sign-in, which loads the bot check's script, then as an
+  // editor its map in Terrain and in Satellite. Satellite's pictures are refused here: a policy
+  // judges a request before any answer comes.
+  const studio = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+  await watchPolicies(studio, { into: flagged });
+  await applyStandIns(studio);
+  await studio.route(/server\.arcgisonline\.com/, (route) => route.abort());
+  const signIn = await studio.newPage();
+  signIn.on('pageerror', (e) => errors.push(String(e)));
+  const studioPage = await signIn.goto(`${base}/studio/`, { waitUntil: 'load' });
+  // Sent the studio's own policy, so "nothing flagged" below is about it.
+  const studioPolicy = (await studioPage?.allHeaders())?.['content-security-policy-report-only'];
+  const hasStudioPolicy = !!studioPolicy?.includes('https://challenges.cloudflare.com');
+  const isSignInShown = await signIn
+    .getByRole('button', { name: 'Sign in' })
+    .waitFor({ timeout: 20000 })
+    .then(
+      () => true,
+      () => false,
+    );
+  await signIn.close();
+  const editor = await studio.newPage();
+  editor.on('pageerror', (e) => errors.push(String(e)));
+  await signInAsEditor(editor);
+  await fakeStudioDb(editor);
+  await editor.goto(`${base}/studio/`, { waitUntil: 'load' });
+  const basemapButton = editor.getByTestId('basemap');
+  const isMapShown = await basemapButton.waitFor({ timeout: 30000 }).then(
+    () => true,
+    () => false,
+  );
+  const picked = [];
+  // The Map Style card stays open after a pick: opened once, both picked from it.
+  if (isMapShown) await basemapButton.click();
+  for (const name of ['Terrain', 'Satellite']) {
+    if (!isMapShown) break;
+    await editor.getByRole('button', { name, exact: true }).click();
+    // A build hands out no map to read: the switch is done once its requests are.
+    await editor.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {});
+    picked.push(name);
+  }
+  check(
+    "the studio on a build, sent its own policy: its sign-in, then an editor's map in Terrain and Satellite",
+    hasStudioPolicy && isSignInShown && isMapShown && picked.join() === 'Terrain,Satellite',
+    `its policy sent ${hasStudioPolicy}; sign-in ${isSignInShown}; map ${isMapShown}; picked ${picked.join(', ') || 'none'}`,
+  );
+
+  // The app's page, on the same watched context: the waitlist's form focused, which loads
+  // Turnstile's script (stood in, or Cloudflare's own on a live run), then sent to a stand-in for
+  // the database's waitlist function, so each source its policy names is reached.
+  const app = await studio.newPage();
+  app.on('pageerror', (e) => errors.push(String(e)));
+  // The page carries the production site key, which Cloudflare refuses off Para's domain: no
+  // token, and its challenge frame flags its own policy. Served instead with Cloudflare's
+  // always-pass test key, the one the other builds get in CI; the page's hashes don't cover it.
+  let hasTestKey = false;
+  await app.route(/\/app\/$/, async (route) => {
+    const response = await route.fetch();
+    const page = await response.text();
+    const testKeyPage = page.replace(
+      /data-sitekey="[^"]+"/,
+      `data-sitekey="${TURNSTILE_TEST_KEY}"`,
+    );
+    hasTestKey = testKeyPage !== page;
+    return route.fulfill({ response, body: testKeyPage });
+  });
+  // No request from this page reaches the database, live run or not: no test address may land
+  // in the real waitlist. Anything else for its host is cut off and counted; the waitlist's post,
+  // routed after it, is asked first and stood in.
+  let databaseCutOff = 0;
+  await app.route(/^https:\/\/[a-z0-9]+\.supabase\.co\//, (route) => {
+    databaseCutOff += 1;
+    return route.abort();
+  });
+  let waitlistPosts = 0;
+  await app.route(/\/functions\/v1\/waitlist$/, (route) => {
+    waitlistPosts += 1;
+    return route.fulfill({ status: 200, contentType: 'application/json', body: '{}' });
+  });
+  const appPage = await app.goto(`${base}/app/`, { waitUntil: 'load' });
+  const appPolicy = (await appPage?.allHeaders())?.['content-security-policy-report-only'];
+  const hasAppPolicy = !!appPolicy?.includes('https://challenges.cloudflare.com');
+  const email = app.getByRole('textbox', { name: /email/i });
+  await email.fill('tester@example.com');
+  // Sent once Turnstile has passed: its hidden input holds a token.
+  const hasToken = await app
+    .waitForFunction(
+      () => document.querySelector('input[name="cf-turnstile-response"]')?.value,
+      undefined,
+      { timeout: 15000 },
+    )
+    .then(
+      () => true,
+      () => false,
+    );
+  await app
+    .getByRole('button', { name: /notify|tell|join|sign/i })
+    .first()
+    .click();
+  const isOnList = await app
+    .getByText("You're on the list.", { exact: false })
+    .waitFor({ timeout: 10000 })
+    .then(
+      () => true,
+      () => false,
+    );
+  const said = await app.locator('#waitlist-said').textContent();
+  check(
+    "/app/ on a build, sent its own policy: the waitlist's form, Turnstile's check and the post",
+    hasAppPolicy &&
+      hasTestKey &&
+      hasToken &&
+      isOnList &&
+      waitlistPosts === 1 &&
+      databaseCutOff === 0,
+    `its policy sent ${hasAppPolicy}; test key ${hasTestKey}; token ${hasToken}; on the list ${isOnList} ("${said}"); ${waitlistPosts} post(s) stood in; ${databaseCutOff} other database request(s) cut off`,
+  );
+  await studio.close();
+
   check('no page errors', errors.length === 0, errors.slice(0, 3).join(' | '));
+  checkPolicies(check, flagged);
   await context.close();
 } finally {
   writeFileSync(workerFile, workerSource);

@@ -71,18 +71,6 @@ export const CARD_TEXT = {
   ferry: 'text-content-inverse',
 } satisfies Record<Livery, string>;
 
-// Drawn over the card, as Figma lays it: above the Blob and the words.
-export const CARD_SHADOW = {
-  jeep: 'shadow-route-card-primary',
-  'uv-express': 'shadow-route-card-inverse',
-  ejeep: 'shadow-route-card-inverse',
-  bus: 'shadow-route-card-primary',
-  'light-rail-way-one': 'shadow-route-card-primary',
-  'light-rail-way-two': 'shadow-route-card-primary',
-  'metro-rail-way-three': 'shadow-route-card-primary',
-  ferry: 'shadow-route-card-primary',
-} satisfies Record<Livery, string>;
-
 // A RouteCard's State=Selected: pressed in, and nothing else changes — the
 // fill, the words, the Blob stay the Rest card's.
 export const CARD_SHADOW_SELECTED = {
@@ -157,26 +145,6 @@ export const ROW_PRESSED = {
   'metro-rail-way-three':
     'active:bg-map-rail-metro-rail-way-three-timeline-surface [-webkit-tap-highlight-color:transparent]',
   ferry: 'active:bg-map-ferry-timeline-surface [-webkit-tap-highlight-color:transparent]',
-} satisfies Record<Livery, string>;
-
-/**
- * A picked hintuan's pill, with the pesos to it (Figma's Timeline
- * State=Selected, 3769:2847): the card's own colour on Content/inverse, and on
- * the light UV Express and E-Jeep cards the other way round, on-surface under
- * the card's colour. A train's pill is white
- * too, on every line, its words in the line's Timeline/surface, not its
- * surface: Figma's three train frames draw it so, MRT-3's dark words
- * included.
- */
-export const TIMELINE_PILL = {
-  jeep: 'bg-content-inverse text-card-jeep-surface',
-  'uv-express': 'bg-card-uv-express-on-surface text-card-uv-express-surface',
-  ejeep: 'bg-card-ejeep-on-surface text-card-ejeep-surface',
-  bus: 'bg-content-inverse text-card-bus-surface',
-  'light-rail-way-one': 'bg-content-inverse text-map-rail-light-rail-way-one-timeline-surface',
-  'light-rail-way-two': 'bg-content-inverse text-map-rail-light-rail-way-two-timeline-surface',
-  'metro-rail-way-three': 'bg-content-inverse text-map-rail-metro-rail-way-three-timeline-surface',
-  ferry: 'bg-content-inverse text-map-ferry-timeline-surface',
 } satisfies Record<Livery, string>;
 
 /**

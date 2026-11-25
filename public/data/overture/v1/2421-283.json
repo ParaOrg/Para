@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "cell": "2421-283",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o5797e78ae7004d16","restaurant",121.09914,14.19241,"Pizza Hut"],
+    ["o6c42686b649c4448","restaurant",121.05486,14.15119,"Bistro Saratoga"],
+    ["o97aafa83312f45c6","restaurant",121.05598,14.177,"Greenwich"],
+    ["oa56ca18c03f14e8b","restaurant",121.06705,14.15723,"Ariel's Lomi House"],
+    ["oce2114c91d164c3e","restaurant",121.0586,14.15546,"Studio Plantmaed"],
+    ["o041be9303701447f","school",121.08998,14.17384,"LAGUERTA Elementary Schoool"],
+    ["oce747829810942c8","school",121.09491,14.16866,"Lumbini Institute of Cavite Inc"],
+    ["od0e787659ff449eb","school",121.07321,14.17921,"Miriam College Nuvali"]
+  ]
+}

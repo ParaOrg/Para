@@ -14,6 +14,8 @@ import { chunkModules } from './scripts/node/vite-plugins/chunk-modules.ts';
 import { mapFileEarly } from './scripts/node/vite-plugins/map-file-early.ts';
 import { maplibreWorkerWithThePage } from './scripts/node/vite-plugins/maplibre-worker.ts';
 import { onlyTheMapHasAManifest } from './scripts/node/vite-plugins/only-the-map-has-a-manifest.ts';
+import { previewPolicies } from './scripts/node/vite-plugins/preview-policies.ts';
+import { servedSource } from './scripts/node/vite-plugins/served-source.ts';
 import { stylesheetsFirst } from './scripts/node/vite-plugins/stylesheets-first.ts';
 import { parseBasemapHost } from './src/shared/config/basemap-host.ts';
 
@@ -46,6 +48,10 @@ export default defineConfig({
     stylesheetsFirst(),
     // The contributor page's own worker, apart from the one above: dist/contribute/sw.js.
     contributeWorker(),
+    // `vite preview` only: the content policies of the build's _headers, as Cloudflare sends them.
+    previewPolicies(),
+    // Under `npm run dev` only: which folder and commit this server serves, for the browser suites.
+    servedSource(),
   ],
   resolve: {
     // `@/x` is src/x, for any import that leaves its own folder. tsconfig.json

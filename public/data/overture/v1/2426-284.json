@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "cell": "2426-284",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o0806034d80cb448a","restaurant",121.32655,14.22378,"Zensdiner | Victoria"],
+    ["o113462530c9747dc","restaurant",121.32983,14.23049,"Hakuna Matata-ba"],
+    ["o5155e38bff314ba1","restaurant",121.34052,14.21526,"The Aviary Asian Fusion & Cafe"],
+    ["o534e680f57534da6","restaurant",121.34948,14.2061,"Carlos Bulalo and Grill"],
+    ["o55a6dd73a3644ce2","restaurant",121.3242,14.24415,"Mading and Nena's Restaurant"],
+    ["od9b0150adadb4c14","restaurant",121.34965,14.20794,"The Aviary Asian Fusion & Cafe"],
+    ["o0170f74853e94322","school",121.34985,14.23398,"Pook Elementary School"],
+    ["o4f02cb2086664707","school",121.33936,14.21546,"JESUS the Only Messiah School of Wisdom Inc."],
+    ["o666142b6d5f441d4","school",121.32827,14.22588,"Victoria Elementary School"],
+    ["o93f64df0b3a044a6","school",121.32787,14.22859,"Missionary Oratorians of Jesus College, Inc."],
+    ["ocbe7fee3faef4c5b","school",121.32813,14.22746,"High school nanhaya national high school"],
+    ["od0f02fabe6504bcc","school",121.33485,14.2056,"San Felix Elementary School"],
+    ["odb4176de5de94e64","school",121.33121,14.22887,"G. Herradura Elementary School (Nanhaya Elementary School)"],
+    ["off3d41a36f624ec9","school",121.32877,14.22703,"Victoria senior high school"]
+  ]
+}

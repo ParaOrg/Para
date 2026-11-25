@@ -1,6 +1,7 @@
 import { useState } from 'react';
 
 import { Button } from '@/design-system/primitives/button';
+import { useFocusHeading } from '@/shared/hooks/use-focus-heading';
 import { cn } from '@/shared/utils/cn';
 
 import { HISTORY_HEADING_ID } from './card-status';
@@ -10,7 +11,6 @@ import { HistorySkeleton } from './history-skeleton';
 import type { HistoryItems } from './use-history-items';
 import { useIsOnline } from './use-is-online';
 import { SCREEN_HASH_ATTR } from '../common/data-attributes';
-import { useFocusHeading } from '../common/use-focus-heading';
 import { useIsSlowLoad } from '../common/use-is-slow-load';
 import { useScreenEntry } from '../motion/use-screen-entry';
 import { SCREENS } from '../navigation/screen-routes';
@@ -60,7 +60,7 @@ export function HistoryScreen({ items, pictures, onOpenRecord, onOpenRide }: His
           id={HISTORY_HEADING_ID}
           ref={headingRef}
           tabIndex={-1}
-          className="text-3xl/9 font-extrabold focus:outline-none"
+          className="text-3xl/9 font-bold focus:outline-none"
         >
           History
         </h1>

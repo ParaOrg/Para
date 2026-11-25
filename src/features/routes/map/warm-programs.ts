@@ -5,6 +5,8 @@ import type {
   MapLibreMap,
 } from 'maplibre-gl';
 
+import { BROWSER_IDLE, type Idle } from './browser-idle';
+
 /**
  * The GL programs a tap would compile, compiled while the map is idle
  * instead.
@@ -143,6 +145,7 @@ export function warmPrograms(map: WarmMap, twins: readonly Twin[]): boolean {
   for (const twin of twins) {
     while (map.getLayer(twinId(n))) n++;
     map.addLayer(
+      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- a Twin spread is no AddLayerObject to TypeScript: .scratch/type-assertions/issues/04-maplibre-twin-specs.md
       {
         ...twin,
         id: twinId(n),
@@ -167,13 +170,6 @@ export function warmPrograms(map: WarmMap, twins: readonly Twin[]): boolean {
 /** How long a warm-up waits for the browser to have a moment, at most, once the map is idle. */
 const IDLE_WAIT_MS = 2000;
 
-interface Idle {
-  requestIdleCallback?: (run: () => void, options?: { timeout: number }) => number;
-  cancelIdleCallback?: (handle: number) => void;
-  setTimeout: (run: () => void, ms: number) => unknown;
-  clearTimeout: (timer: never) => void;
-}
-
 /**
  * Runs `then` after the map's next 'idle', once the browser has a moment
  * to spare (requestIdleCallback, or a timer where there is none: Safari),
@@ -184,7 +180,7 @@ interface Idle {
 export function afterIdle(
   map: Pick<MapLibreMap, 'once' | 'off' | 'style'>,
   then: () => void,
-  browser: Idle = globalThis as unknown as Idle,
+  browser: Idle = BROWSER_IDLE,
 ): () => void {
   let handle: number | null = null;
   let timer: unknown = null;
@@ -202,7 +198,7 @@ export function afterIdle(
   return () => {
     map.off('idle', onIdle);
     if (handle !== null) browser.cancelIdleCallback?.(handle);
-    if (timer !== null) browser.clearTimeout(timer as never);
+    if (timer !== null) browser.clearTimeout(timer);
   };
 }
 
@@ -224,7 +220,7 @@ const batches = new WeakMap<object, { providers: Set<Provider>; cancel: () => vo
 export function warmSoon(
   map: WarmMap & Pick<MapLibreMap, 'off' | 'style'>,
   provider: Provider,
-  browser: Idle = globalThis as unknown as Idle,
+  browser: Idle = BROWSER_IDLE,
 ): () => void {
   let batch = batches.get(map);
   if (!batch) {

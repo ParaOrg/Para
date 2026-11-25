@@ -18,7 +18,7 @@ export type RailwayVehicle = (typeof RAILWAY_VEHICLES)[number];
 export type RoadVehicle = Exclude<Vehicle, RailwayVehicle>;
 
 export const isRailwayVehicle = (word: string): word is RailwayVehicle =>
-  (RAILWAY_VEHICLES as readonly string[]).includes(word);
+  RAILWAY_VEHICLES.some((vehicle) => vehicle === word);
 
 /** A direction's train line, or Ferry; null for a road vehicle's. */
 export function railwayOf(direction: Direction): RailwayVehicle | null {

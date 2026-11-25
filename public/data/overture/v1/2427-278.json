@@ -1,0 +1,20 @@
+{
+  "schema": 1,
+  "cell": "2427-278",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o9f8746bfb7824c28","restaurant",121.36668,13.94445,"Earthkeepers' Garden and Restaurant"],
+    ["o9ffcf6539fd9408d","restaurant",121.37804,13.94028,"Dada and Nene Lutong Bahay"],
+    ["oacc3d028bd9a46a4","restaurant",121.37937,13.94122,"Johanna's Chicken Processing Center, Tiaong, Quezon"],
+    ["oc4bb8b89a7bb409e","restaurant",121.38017,13.93862,"Bruno's Garden Restobar"],
+    ["odede9f6088f44d0e","restaurant",121.35187,13.94931,"T.M. Lomi House"],
+    ["o44a6744b49b3460f","cafe",121.36776,13.93836,"Starbucks"],
+    ["o46d30081606c4216","cafe",121.36311,13.94559,"Coffee Beer Cafe"],
+    ["o5128695b0a8243d1","cafe",121.39631,13.93346,"Mr. Tea Bubble Milktea"],
+    ["o594facab43ca4efa","cafe",121.38934,13.93606,"Mr. Fields Coffee"],
+    ["of40a162ecb594893","cafe",121.35669,13.94792,"But First, Coffee (BFC) - Tiaong"],
+    ["o18f6fd04cdac4ad2","clinic",121.38629,13.93713,"IVAX Animal Bite and Vaccination Center - Candelaria"],
+    ["oa2a9e0c554694c49","school",121.35663,13.94193,"DepEd Lagalag Elementary School - Tiaong, Quezon"],
+    ["ofcccf8ee9c7d43dc","school",121.35561,13.92116,"Paiisa National High School"]
+  ]
+}

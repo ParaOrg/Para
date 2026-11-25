@@ -41,7 +41,7 @@ function namesShow(map: MapLibreMap): boolean {
  * picked circle pops (rowStops; the owner's call), so a pick replaces the dot
  * in its spot. Each is Figma's HintuanLabel, Hintuan (4068:4791): the
  * timeline's own TimelineDot at rest and beside it the name, the Label's
- * Default, in the line's colour, SN Pro 14/20, drawn flat. The dot is ringed
+ * Default, in the line's colour, Livvic 14/20, drawn flat. The dot is ringed
  * in the lit line's colour, the card's surface, so the dot and its name are
  * one colour. Past a picked hintuan the line is drawn in the card's
  * surface-pale (useRideRest), and the dots along that rest ring in the same
@@ -62,9 +62,9 @@ function namesShow(map: MapLibreMap): boolean {
  * Once the scale bar reads 3 km only the dots show, smaller. That 3 km is the
  * owner's call for stations a kilometre or two apart; a jeepney's hintuans sit
  * a few hundred metres apart, so at the bar's 2 km their names overlap — kept
- * at 3 km until the owner says otherwise. Given `onPick`, the dot and its name
- * are one button that hands it the row's id, as the row's tap on the card does
- * (useRideTo's pick): the public map and the studio both pick it. A long
+ * at 3 km until the owner says otherwise. Given `onPick` (the studio always, the public map where
+ * picking is on), the dot and its name are one button that hands it the row's id, as the row's
+ * tap on the card does (useRideTo's pick); without it, plain, no control. A long
  * jeepney trip is thirty or forty of these markers, each a button MapLibre
  * re-projects at every move — the one place a trip puts dozens of DOM markers
  * on the map, as many as the end titles at their most. TODO: count them in

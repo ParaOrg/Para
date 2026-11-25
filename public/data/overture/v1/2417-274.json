@@ -1,0 +1,10 @@
+{
+  "schema": 1,
+  "cell": "2417-274",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o1d9562f14dab402a","restaurant",120.89515,13.71912,"Mister Donut"],
+    ["o91e19e1ebf7c4dfc","restaurant",120.88599,13.72894,"Greeka"],
+    ["o438816f2382346c4","school",120.88181,13.7192,"Bagalangit Elementary School"]
+  ]
+}

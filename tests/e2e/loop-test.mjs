@@ -14,12 +14,15 @@
 // and the place whose card it was opened from; its top and bottom row are the
 // tip; the tiles show the whole loop and then the ride from the tip to a row;
 // a start and an end above it wrap the ride, one fold between, and either end
-// row rides on round to the tip; × Remove as start lets the ride go. And on a
+// row rides on round to the tip; × Remove as start lets the ride go (the picks
+// only in a build with ride picking, VITE_RIDE_PICKS; skipped without). And on a
 // wide screen, with a place's card open beside place search: Escape in the
-// field is the field's, and the card stays open.
+// field is the field's, and the card stays open. A place's card is opened by a
+// tap on its box only in a build with VITE_HOTSPOT_TAPS; without, that tap opens
+// the loop's line under it, and what needs the card skips.
 import { chromium } from 'playwright';
 import { readFileSync } from 'node:fs';
-import { BASE, bareStyle, harness } from './lib/harness.mjs';
+import { BASE, bareStyle, emptyMapPoint, harness } from './lib/harness.mjs';
 
 const NO_TILES = !!process.env.PARA_NO_TILES;
 const { check, tally } = harness();
@@ -191,7 +194,9 @@ const screenOf = (page, [lng, lat]) =>
 const showBlock = async (page) => {
   // The map's own first framing of the routes may still be settling: wait it out.
   await page.waitForTimeout(1500);
-  await page.evaluate(() => window.__map.jumpTo({ center: [121.074, 14.653], zoom: 14.3 }));
+  await page.evaluate(() => {
+    window.__map.jumpTo({ center: [121.074, 14.653], zoom: 14.3 });
+  });
   await page.waitForFunction(() => !window.__map.isMoving(), null, { timeout: 15000 });
 };
 
@@ -255,12 +260,6 @@ const toFull = async (page) => {
     await page.waitForTimeout(400);
   }
 };
-const openFold = async (page) => {
-  await toFull(page);
-  const fold = page.locator('[data-testid="trip-view-more"][aria-expanded="false"]');
-  if ((await fold.count()) > 0) await fold.first().click();
-  await page.waitForTimeout(300);
-};
 const pickRow = (page, name) =>
   page.locator('[data-testid="trip-hintuan-pick"]', { hasText: name }).first().tap();
 /** What a ride of `metres` reads as on the tile, one decimal of a kilometre. */
@@ -280,14 +279,19 @@ const bareCircles = (page) =>
 const near = (value, metres) => Math.abs(value - metres / 1000) <= 0.16;
 /** A click on a row the sheet has scrolled out of the screen: the button's own handler, as a tap would reach it. */
 const press = (locator) => locator.evaluate((el) => el.click());
-// The trip card's own ✕: a toast on the page (the locator's note, say) has a Close of its own.
+// The trip closed as a commuter closes it: it has no ✕ (the owner, 2026-11-21), so a finger on the
+// empty map, until nothing it was opened over (a list of the routes sharing its end) is left.
 const closeTrip = async (page) => {
-  await page
-    .locator('[data-testid="card"]', { has: page.locator('[data-testid="trip"]') })
-    .getByRole('button', { name: 'Close' })
-    .first()
-    .tap();
-  await page.waitForTimeout(400);
+  const open = page.locator(
+    '[data-testid="card"]:not([hidden]), [data-testid="chooser"]:not([hidden])',
+  );
+  for (let i = 0; i < 3 && (await open.count()) > 0; i++) {
+    // At full height no map shows to tap: Escape then, which leaves a trip as the empty map does.
+    const at = await emptyMapPoint(page);
+    if (at) await page.touchscreen.tap(at.x, at.y);
+    else await page.keyboard.press('Escape');
+    await page.waitForTimeout(400);
+  }
 };
 
 // ---------------------------------------------------- 1. no location: the first place
@@ -296,14 +300,23 @@ const closeTrip = async (page) => {
   await openTrip(page);
   const card = page.locator('[data-testid="card"]').first();
   check(
-    "a loop's trip has no SWITCH",
-    (await page.locator('[data-testid="card-switch"]').count()) === 0,
+    "a loop's trip has no ⇅ to turn it round",
+    (await page.locator('[data-testid="trip-ends-switch"]').count()) === 0 &&
+      (await page.locator('[data-testid="trip-ends"]').count()) === 1,
   );
-  const header = await page.locator('[data-testid="trip-detail-header"]').innerText();
+  // The Transport mode tile says what the loop rides, as any trip's does: its name is the ends card's.
+  const mode = (await card.locator('[data-testid="trip-mode"]').innerText()).trim();
   check(
-    '  and names the loop as a badge, with no Papunta or Pabalik',
-    /Ikot/.test(header) && !/Papunta|Pabalik/.test(header) && header.includes('UP – Ikot'),
-    header.replace(/\n/g, ' | '),
+    '  and its Transport mode tile says what it rides, no Papunta or Pabalik',
+    mode === 'Jeep',
+    mode,
+  );
+  // Its ends card is Figma's Ikot variant: the loop's name alone, under the Ikot pill.
+  const ends = (await card.locator('[data-testid="trip-ends"]').innerText()).trim();
+  check(
+    '  and its ends card names the loop under Ikot, with no Start or End',
+    ends.startsWith('Ikot') && ends.includes('UP – Ikot') && !/\b(Start|End)\b/.test(ends),
+    ends,
   );
   check(
     '  nothing in the card says Papunta or Pabalik',
@@ -315,7 +328,7 @@ const closeTrip = async (page) => {
       (await destinationLabel(page)).includes(PALMA.name),
     `${await originLabel(page)} / ${await destinationLabel(page)}`,
   );
-  await openFold(page);
+  await toFull(page);
   const rows = await rowNames(page);
   check(
     '  the rows between follow going round: Quezon Hall, Sunken Garden, Engineering, Math Building',
@@ -334,85 +347,93 @@ const closeTrip = async (page) => {
     JSON.stringify(await endLabels(page)),
   );
 
-  // A row tapped: the ride goes from the tip forward to it.
-  await pickRow(page, ENGINEERING.name);
-  await page.waitForTimeout(400);
-  const toEngineering = (ENGINEERING.metres - PALMA.metres + LOOP_METRES) % LOOP_METRES;
-  check(
-    'a row tapped: the Distance is the ride forward from the tip to it',
-    near(await km(page), toEngineering),
-    `${await km(page)} km, expected ${asTile(toEngineering)} km`,
-  );
-  await pickRow(page, ENGINEERING.name);
+  // A build without ride picking (VITE_RIDE_PICKS) lists the stops as plain rows, with no button
+  // to pick one: the rides below need a pick, and are skipped.
+  if ((await page.locator('[data-testid="trip-hintuan-pick"]').count()) === 0) {
+    console.log(
+      'SKIP  a row, a start and the end rows picked on the loop: picking is off in this build (VITE_RIDE_PICKS)',
+    );
+  } else {
+    // A row tapped: the ride goes from the tip forward to it.
+    await pickRow(page, ENGINEERING.name);
+    await page.waitForTimeout(400);
+    const toEngineering = (ENGINEERING.metres - PALMA.metres + LOOP_METRES) % LOOP_METRES;
+    check(
+      'a row tapped: the Distance is the ride forward from the tip to it',
+      near(await km(page), toEngineering),
+      `${await km(page)} km, expected ${asTile(toEngineering)} km`,
+    );
+    await pickRow(page, ENGINEERING.name);
 
-  // Set as start on Math Building, then a row above it: the ride wraps.
-  await pickRow(page, MATH.name);
-  await press(page.getByRole('button', { name: 'Set as start' }));
-  await page.waitForTimeout(300);
-  await pickRow(page, QUEZON.name);
-  await page.waitForTimeout(500);
-  const wrapped = (QUEZON.metres - MATH.metres + LOOP_METRES) % LOOP_METRES;
-  check(
-    'a start, then a row above it: the ride wraps across the seam, round to that row',
-    near(await km(page), wrapped),
-    `${await km(page)} km, expected ${asTile(wrapped)} km`,
-  );
-  check(
-    '  the tip is passed through: a bare circle on the map, no Start over it',
-    !(await endLabels(page)).some((l) => l.includes(PALMA.name)) &&
-      (await bareCircles(page)).includes(PALMA.name),
-    `${JSON.stringify(await endLabels(page))} / ${JSON.stringify(await bareCircles(page))}`,
-  );
-  // The rows between the end and the start stand alone, outside the ride (the owner, T4).
-  const between = await page
-    .locator('[data-testid="trip-hintuan"] [data-rail]')
-    .evaluateAll((els) => els.map((e) => e.getAttribute('data-rail')));
-  check(
-    '  the rows between the end and the start stand alone, off the rail',
-    between.includes('disconnected'),
-    between.join(),
-  );
+    // Set as start on Math Building, then a row above it: the ride wraps.
+    await pickRow(page, MATH.name);
+    await press(page.getByRole('button', { name: 'Set as start' }));
+    await page.waitForTimeout(300);
+    await pickRow(page, QUEZON.name);
+    await page.waitForTimeout(500);
+    const wrapped = (QUEZON.metres - MATH.metres + LOOP_METRES) % LOOP_METRES;
+    check(
+      'a start, then a row above it: the ride wraps across the seam, round to that row',
+      near(await km(page), wrapped),
+      `${await km(page)} km, expected ${asTile(wrapped)} km`,
+    );
+    check(
+      '  the tip is passed through: a bare circle on the map, no Start over it',
+      !(await endLabels(page)).some((l) => l.includes(PALMA.name)) &&
+        (await bareCircles(page)).includes(PALMA.name),
+      `${JSON.stringify(await endLabels(page))} / ${JSON.stringify(await bareCircles(page))}`,
+    );
+    // The rows between the end and the start stand alone, outside the ride (the owner, T4).
+    const between = await page
+      .locator('[data-testid="trip-hintuan"] [data-rail]')
+      .evaluateAll((els) => els.map((e) => e.getAttribute('data-rail')));
+    check(
+      '  the rows between the end and the start stand alone, off the rail',
+      between.includes('disconnected'),
+      between.join(),
+    );
 
-  // An end row with the start kept: either end is the tip, the ride goes on round to it.
-  await press(page.locator('[data-testid="trip-destination"] button').first());
-  await page.waitForTimeout(500);
-  check(
-    'the ride ending at the tip: the map marks it End, not Start',
-    (await endLabels(page)).some((l) => l === `End, ${PALMA.name}`) &&
-      !(await endLabels(page)).some((l) => l === `Start, ${PALMA.name}`),
-    JSON.stringify(await endLabels(page)),
-  );
-  const toTip = (PALMA.metres - MATH.metres + LOOP_METRES) % LOOP_METRES;
-  check(
-    'the bottom row with a start: the ride runs from the start round to the tip',
-    near(await km(page), toTip),
-    `${await km(page)} km, expected ${asTile(toTip)} km`,
-  );
-  // The two rows are the one end: the top row, tapped with the bottom's ride picked, lets it go...
-  await press(page.locator('[data-testid="trip-origin"] button').first());
-  await page.waitForTimeout(500);
-  check(
-    '  the top row is the same end: tapped after the bottom row, it lets the ride go',
-    near(await km(page), LOOP_METRES),
-    `${await km(page)} km`,
-  );
-  // ...and tapped alone, it rides on round to the tip too.
-  await press(page.locator('[data-testid="trip-origin"] button').first());
-  await page.waitForTimeout(500);
-  check(
-    '  tapped again, it rides from the start round to the tip',
-    near(await km(page), toTip),
-    `${await km(page)} km, expected ${asTile(toTip)} km`,
-  );
+    // An end row with the start kept: either end is the tip, the ride goes on round to it.
+    await press(page.locator('[data-testid="trip-destination"] button').first());
+    await page.waitForTimeout(500);
+    check(
+      'the ride ending at the tip: the map marks it End, not Start',
+      (await endLabels(page)).some((l) => l === `End, ${PALMA.name}`) &&
+        !(await endLabels(page)).some((l) => l === `Start, ${PALMA.name}`),
+      JSON.stringify(await endLabels(page)),
+    );
+    const toTip = (PALMA.metres - MATH.metres + LOOP_METRES) % LOOP_METRES;
+    check(
+      'the bottom row with a start: the ride runs from the start round to the tip',
+      near(await km(page), toTip),
+      `${await km(page)} km, expected ${asTile(toTip)} km`,
+    );
+    // The two rows are the one end: the top row, tapped with the bottom's ride picked, lets it go...
+    await press(page.locator('[data-testid="trip-origin"] button').first());
+    await page.waitForTimeout(500);
+    check(
+      '  the top row is the same end: tapped after the bottom row, it lets the ride go',
+      near(await km(page), LOOP_METRES),
+      `${await km(page)} km`,
+    );
+    // ...and tapped alone, it rides on round to the tip too.
+    await press(page.locator('[data-testid="trip-origin"] button').first());
+    await page.waitForTimeout(500);
+    check(
+      '  tapped again, it rides from the start round to the tip',
+      near(await km(page), toTip),
+      `${await km(page)} km, expected ${asTile(toTip)} km`,
+    );
 
-  // × Remove as start: the ride lets go, the whole loop's again.
-  await press(page.getByRole('button', { name: 'Remove as start' }));
-  await page.waitForTimeout(500);
-  check(
-    '× Remove as start: the tiles are the whole loop again',
-    near(await km(page), LOOP_METRES),
-    `${await km(page)} km`,
-  );
+    // × Remove as start: the ride lets go, the whole loop's again.
+    await press(page.getByRole('button', { name: 'Remove as start' }));
+    await page.waitForTimeout(500);
+    check(
+      '× Remove as start: the tiles are the whole loop again',
+      near(await km(page), LOOP_METRES),
+      `${await km(page)} km`,
+    );
+  }
   check('no page errors', errors.length === 0, errors.join('; '));
   await context.close();
 }
@@ -438,7 +459,7 @@ const closeTrip = async (page) => {
     (await originLabel(page)).includes(SUNKEN.name),
     await originLabel(page),
   );
-  await openFold(page);
+  await toFull(page);
   const rows = await rowNames(page);
   check(
     '  and the rows wrap: Engineering, Math Building, Palma Hall, Quezon Hall',
@@ -577,29 +598,51 @@ const closeTrip = async (page) => {
   const { context, page, errors } = await phone();
   await showBlock(page);
   await page.waitForTimeout(400);
+  // A build without hotspot taps (VITE_HOTSPOT_TAPS) takes none on a box: the loop's line under
+  // Engineering's is what the tap opens, and no place's card leads to a trip.
+  const isHotspotTapOn = (await page.locator('[data-hotspot-taps="on"]').count()) > 0;
   // A tap inside Engineering's box opens its card.
   const at = await screenOf(page, ENGINEERING.at);
   await boxDrawnAt(page, at);
   await page.touchscreen.tap(at.x, at.y);
-  await page.locator('[data-testid="card"]').first().waitFor({ timeout: 15000 });
-  await page.waitForTimeout(500);
-  const row = (await page.locator('[data-testid="card-item"]').first().innerText()).trim();
-  check("the place's card lists the loop with Ikot where its way goes", row === 'Ikot', row);
-  check(
-    '  and has no SWITCH over loops alone',
-    (await page.locator('[data-testid="card-flip"]').count()) === 0,
-  );
-  // The card opens at Low, where a tap on a row only raises it: the handle raises it first.
-  await page.locator('[data-testid="card"]').first().getByTestId('dock-handle').click();
-  await page.waitForTimeout(400);
-  await page.locator('[data-testid="card-item"]').first().tap();
-  await page.locator('[data-testid="trip"]').waitFor({ timeout: 15000 });
-  await page.waitForTimeout(400);
-  check(
-    "a trip opened from box 4's card starts at 4",
-    (await originLabel(page)).includes(ENGINEERING.name),
-    await originLabel(page),
-  );
+  if (!isHotspotTapOn) {
+    console.log(
+      "SKIP  a trip opened from a hintuan's card: hotspot taps are off in this build (VITE_HOTSPOT_TAPS)",
+    );
+    // The loop's trip, or the list where another route shares its road there.
+    const isRoute = await page
+      .locator('[data-testid="trip"], [data-testid="chooser"]')
+      .first()
+      .waitFor({ timeout: 15000 })
+      .then(
+        () => true,
+        () => false,
+      );
+    check(
+      "hotspot taps off: a tap inside Engineering's box opens the loop's line under it, no place's card",
+      isRoute && (await page.locator('[data-testid="card-place"]').count()) === 0,
+    );
+  } else {
+    await page.locator('[data-testid="card"]').first().waitFor({ timeout: 15000 });
+    await page.waitForTimeout(500);
+    const row = (await page.locator('[data-testid="card-item"]').first().innerText()).trim();
+    check("the place's card lists the loop with Ikot where its way goes", row === 'Ikot', row);
+    check(
+      '  and has no SWITCH over loops alone',
+      (await page.locator('[data-testid="card-flip"]').count()) === 0,
+    );
+    // The card opens at Low, where a tap on a row only raises it: the handle raises it first.
+    await page.locator('[data-testid="card"]').first().getByTestId('dock-handle').click();
+    await page.waitForTimeout(400);
+    await page.locator('[data-testid="card-item"]').first().tap();
+    await page.locator('[data-testid="trip"]').waitFor({ timeout: 15000 });
+    await page.waitForTimeout(400);
+    check(
+      "a trip opened from box 4's card starts at 4",
+      (await originLabel(page)).includes(ENGINEERING.name),
+      await originLabel(page),
+    );
+  }
   check('no page errors', errors.length === 0, errors.join('; '));
   await context.close();
 }
@@ -624,32 +667,49 @@ const closeTrip = async (page) => {
   );
   await showBlock(page);
   await page.waitForTimeout(400);
-  const at = await screenOf(page, ENGINEERING.at);
-  await boxDrawnAt(page, at);
-  await page.mouse.click(at.x, at.y);
-  const card = page.locator('[data-testid="card"]:not([hidden])');
-  await card.first().waitFor({ timeout: 15000 });
-  await page.waitForTimeout(500);
 
   const field = page.getByRole('combobox', { name: 'Search places' });
-  await field.click();
-  await field.pressSequentially('Palma');
-  await page.getByRole('option').first().waitFor({ timeout: 10000 });
-  await page.keyboard.press('Escape');
-  await page.waitForTimeout(300);
-  check('Escape in place search clears what was typed', (await field.inputValue()) === '');
-  check('  and the card behind the field stays open', (await card.count()) === 1);
-  await page.keyboard.press('Escape');
-  await page.waitForTimeout(300);
-  check(
-    '  a second Escape in the empty field leaves the card open too',
-    (await card.count()) === 1,
-  );
+  const card = page.locator('[data-testid="card"]:not([hidden])');
+  // The place's card is opened by a tap on its box, which a build without hotspot taps
+  // (VITE_HOTSPOT_TAPS) does not take.
+  const isHotspotTapOn = (await page.locator('[data-hotspot-taps="on"]').count()) > 0;
+  // A build without place search (VITE_PLACE_SEARCH) has no field: nothing here to check. Read
+  // from the build's flag on the page, not the field: the bar is fetched after the map
+  // (public-map-app.tsx), so a build with search on may not have drawn it yet.
+  const isPlaceSearchShown = (await page.locator('[data-place-search="on"]').count()) > 0;
+  if (!isPlaceSearchShown) {
+    console.log('SKIP  Escape in place search: hidden in this build (VITE_PLACE_SEARCH)');
+  } else if (!isHotspotTapOn) {
+    console.log(
+      "SKIP  Escape in place search over a place's card: hotspot taps are off in this build (VITE_HOTSPOT_TAPS)",
+    );
+  } else {
+    await field.waitFor({ timeout: 10000 });
+    const at = await screenOf(page, ENGINEERING.at);
+    await boxDrawnAt(page, at);
+    await page.mouse.click(at.x, at.y);
+    await card.first().waitFor({ timeout: 15000 });
+    await page.waitForTimeout(500);
 
-  await field.evaluate((el) => el.blur());
-  await page.keyboard.press('Escape');
-  await page.waitForTimeout(500);
-  check('out of the field, Escape closes the card as before', (await card.count()) === 0);
+    await field.click();
+    await field.pressSequentially('Palma');
+    await page.getByRole('option').first().waitFor({ timeout: 10000 });
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(300);
+    check('Escape in place search clears what was typed', (await field.inputValue()) === '');
+    check('  and the card behind the field stays open', (await card.count()) === 1);
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(300);
+    check(
+      '  a second Escape in the empty field leaves the card open too',
+      (await card.count()) === 1,
+    );
+
+    await field.evaluate((el) => el.blur());
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(500);
+    check('out of the field, Escape closes the card as before', (await card.count()) === 0);
+  }
   check('no page errors', errors.length === 0, errors.join('; '));
   await context.close();
 }

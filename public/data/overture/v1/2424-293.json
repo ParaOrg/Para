@@ -1,0 +1,12 @@
+{
+  "schema": 1,
+  "cell": "2424-293",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["ocb4a17786ac540a0","restaurant",121.21011,14.67801,"Caza Peregrine Resort and Restaurant"],
+    ["o24dae36060fb48bc","fast_food",121.20196,14.65797,"KFC"],
+    ["of27856477ad6447e","fast_food",121.21025,14.65703,"KFC"],
+    ["of7e7d8e94e564ee3","fast_food",121.20276,14.67966,"KFC"],
+    ["ob2c1fe22676a41f9","school",121.24925,14.65173,"Kaysakat Elementary School"]
+  ]
+}

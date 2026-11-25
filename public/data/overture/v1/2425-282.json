@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "cell": "2425-282",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o75f2ad80d97a46ab","restaurant",121.26339,14.13097,"Aventino's Pizza House - Bay, Laguna"],
+    ["oe2ce757d1f434a5b","restaurant",121.27213,14.14357,"Popoy's Food Hub"],
+    ["o1455e325dfc0446c","fast_food",121.2506,14.14823,"Mighty Wings Campo Branch"],
+    ["oe643b6d01ebe4d4f","clinic",121.258,14.14836,"Pascual Pharma Corp. Core R&D Laboratory"],
+    ["o03815a24b9df4ecf","school",121.29122,14.13737,"Mabacan Elementary School"],
+    ["o541fce34ac2c4530","school",121.27151,14.10981,"Perez Elementary School"],
+    ["o7ed381b99fdf4ef0","school",121.27703,14.14669,"Masaya Integrated National High School"],
+    ["o319abd22d7be4071","college",121.29977,14.12238,"Mater Redemptoris Collegium"]
+  ]
+}

@@ -83,7 +83,20 @@ function commentShare(files) {
   ];
 }
 
-function eslintReport() {
+/**
+ * Every file's ESLint result: the ones CI's Lint step kept (ESLINT_JSON, written by
+ * eslint-formatter.mjs in the same job), so the page costs no second ESLint run there;
+ * otherwise a run of its own. Null when neither gave a report.
+ */
+function lintResults() {
+  const keptFile = process.env.ESLINT_JSON;
+  if (keptFile && existsSync(keptFile)) {
+    try {
+      return JSON.parse(readFileSync(keptFile, 'utf8'));
+    } catch {
+      // An unreadable file is no report: fall through to a run of our own.
+    }
+  }
   const run = spawnSync('npx', ['--no-install', 'eslint', '.', '-f', 'json'], {
     cwd: root,
     encoding: 'utf8',
@@ -91,12 +104,16 @@ function eslintReport() {
     shell: process.platform === 'win32',
     maxBuffer: 256 * 1024 * 1024,
   });
-  let results;
   try {
-    results = JSON.parse(run.stdout);
+    return JSON.parse(run.stdout);
   } catch {
-    return ['- **ESLint:** no report (eslint did not print JSON; run `npm run lint`)'];
+    return null;
   }
+}
+
+/** The page's ESLint lines for a run's results: the totals, then each rule by how often it fired. */
+export function eslintLines(results) {
+  if (!results) return ['- **ESLint:** no report (eslint did not print JSON; run `npm run lint`)'];
   const errors = results.reduce((n, r) => n + r.errorCount, 0);
   const warnings = results.reduce((n, r) => n + r.warningCount, 0);
   const byRule = new Map();
@@ -191,7 +208,7 @@ function main() {
     '',
     ...longFiles(files),
     ...commentShare(files),
-    ...eslintReport(),
+    ...eslintLines(lintResults()),
     ...buildSize(),
     ...publishedIndex(),
     ...testCounts(),

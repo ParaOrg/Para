@@ -5041,20 +5041,6 @@ ALTER TABLE public.point_batch_default ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.route ENABLE ROW LEVEL SECURITY;
 
 --
--- Name: route route_delete; Type: POLICY; Schema: public; Owner: -
---
-
-CREATE POLICY route_delete ON public.route FOR DELETE TO authenticated USING (( SELECT private.is_editor() AS is_editor));
-
-
---
--- Name: route route_insert; Type: POLICY; Schema: public; Owner: -
---
-
-CREATE POLICY route_insert ON public.route FOR INSERT TO authenticated WITH CHECK (((( SELECT auth.uid() AS uid) = owner_id) AND ( SELECT private.is_editor() AS is_editor)));
-
-
---
 -- Name: route route_read_approved; Type: POLICY; Schema: public; Owner: -
 --
 
@@ -5073,20 +5059,6 @@ CREATE POLICY route_read_editor ON public.route FOR SELECT TO authenticated USIN
 --
 
 ALTER TABLE public.route_stop ENABLE ROW LEVEL SECURITY;
-
---
--- Name: route_stop route_stop_delete; Type: POLICY; Schema: public; Owner: -
---
-
-CREATE POLICY route_stop_delete ON public.route_stop FOR DELETE TO authenticated USING (( SELECT private.is_editor() AS is_editor));
-
-
---
--- Name: route_stop route_stop_insert; Type: POLICY; Schema: public; Owner: -
---
-
-CREATE POLICY route_stop_insert ON public.route_stop FOR INSERT TO authenticated WITH CHECK (( SELECT private.is_editor() AS is_editor));
-
 
 --
 -- Name: route_stop route_stop_read_approved; Type: POLICY; Schema: public; Owner: -
@@ -5108,38 +5080,10 @@ CREATE POLICY route_stop_read_editor ON public.route_stop FOR SELECT TO authenti
 
 
 --
--- Name: route_stop route_stop_update; Type: POLICY; Schema: public; Owner: -
---
-
-CREATE POLICY route_stop_update ON public.route_stop FOR UPDATE TO authenticated USING (( SELECT private.is_editor() AS is_editor)) WITH CHECK (( SELECT private.is_editor() AS is_editor));
-
-
---
--- Name: route route_update; Type: POLICY; Schema: public; Owner: -
---
-
-CREATE POLICY route_update ON public.route FOR UPDATE TO authenticated USING (( SELECT private.is_editor() AS is_editor)) WITH CHECK (( SELECT private.is_editor() AS is_editor));
-
-
---
 -- Name: route_variant; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
 ALTER TABLE public.route_variant ENABLE ROW LEVEL SECURITY;
-
---
--- Name: route_variant route_variant_delete; Type: POLICY; Schema: public; Owner: -
---
-
-CREATE POLICY route_variant_delete ON public.route_variant FOR DELETE TO authenticated USING (( SELECT private.is_editor() AS is_editor));
-
-
---
--- Name: route_variant route_variant_insert; Type: POLICY; Schema: public; Owner: -
---
-
-CREATE POLICY route_variant_insert ON public.route_variant FOR INSERT TO authenticated WITH CHECK (((( SELECT auth.uid() AS uid) = owner_id) AND ( SELECT private.is_editor() AS is_editor)));
-
 
 --
 -- Name: route_variant route_variant_read_approved; Type: POLICY; Schema: public; Owner: -
@@ -5158,31 +5102,10 @@ CREATE POLICY route_variant_read_editor ON public.route_variant FOR SELECT TO au
 
 
 --
--- Name: route_variant route_variant_update; Type: POLICY; Schema: public; Owner: -
---
-
-CREATE POLICY route_variant_update ON public.route_variant FOR UPDATE TO authenticated USING (( SELECT private.is_editor() AS is_editor)) WITH CHECK (( SELECT private.is_editor() AS is_editor));
-
-
---
 -- Name: stop; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
 ALTER TABLE public.stop ENABLE ROW LEVEL SECURITY;
-
---
--- Name: stop stop_delete; Type: POLICY; Schema: public; Owner: -
---
-
-CREATE POLICY stop_delete ON public.stop FOR DELETE TO authenticated USING (( SELECT private.is_editor() AS is_editor));
-
-
---
--- Name: stop stop_insert; Type: POLICY; Schema: public; Owner: -
---
-
-CREATE POLICY stop_insert ON public.stop FOR INSERT TO authenticated WITH CHECK (((( SELECT auth.uid() AS uid) = owner_id) AND ( SELECT private.is_editor() AS is_editor)));
-
 
 --
 -- Name: stop stop_read_approved; Type: POLICY; Schema: public; Owner: -
@@ -5196,13 +5119,6 @@ CREATE POLICY stop_read_approved ON public.stop FOR SELECT TO anon, authenticate
 --
 
 CREATE POLICY stop_read_editor ON public.stop FOR SELECT TO authenticated USING (( SELECT private.is_editor() AS is_editor));
-
-
---
--- Name: stop stop_update; Type: POLICY; Schema: public; Owner: -
---
-
-CREATE POLICY stop_update ON public.stop FOR UPDATE TO authenticated USING (( SELECT private.is_editor() AS is_editor)) WITH CHECK (( SELECT private.is_editor() AS is_editor));
 
 
 --
@@ -5519,6 +5435,7 @@ REVOKE ALL ON FUNCTION private.uuid_ok(v jsonb) FROM PUBLIC;
 
 REVOKE ALL ON FUNCTION public.am_i_editor() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.am_i_editor() TO authenticated;
+GRANT ALL ON FUNCTION public.am_i_editor() TO service_role;
 
 
 --
@@ -5527,6 +5444,7 @@ GRANT ALL ON FUNCTION public.am_i_editor() TO authenticated;
 
 REVOKE ALL ON FUNCTION public.begin_claim() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.begin_claim() TO authenticated;
+GRANT ALL ON FUNCTION public.begin_claim() TO service_role;
 
 
 --
@@ -5535,6 +5453,7 @@ GRANT ALL ON FUNCTION public.begin_claim() TO authenticated;
 
 REVOKE ALL ON FUNCTION public.block_contributor(target uuid, note text) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.block_contributor(target uuid, note text) TO authenticated;
+GRANT ALL ON FUNCTION public.block_contributor(target uuid, note text) TO service_role;
 
 
 --
@@ -5543,6 +5462,7 @@ GRANT ALL ON FUNCTION public.block_contributor(target uuid, note text) TO authen
 
 REVOKE ALL ON FUNCTION public.claim_draft(p_kind text, p_subject_id uuid, p_is_new boolean, p_base_revision bigint, p_payload jsonb, p_note text) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.claim_draft(p_kind text, p_subject_id uuid, p_is_new boolean, p_base_revision bigint, p_payload jsonb, p_note text) TO authenticated;
+GRANT ALL ON FUNCTION public.claim_draft(p_kind text, p_subject_id uuid, p_is_new boolean, p_base_revision bigint, p_payload jsonb, p_note text) TO service_role;
 
 
 --
@@ -5551,6 +5471,7 @@ GRANT ALL ON FUNCTION public.claim_draft(p_kind text, p_subject_id uuid, p_is_ne
 
 REVOKE ALL ON FUNCTION public.delete_my_account(delete_uploads boolean) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.delete_my_account(delete_uploads boolean) TO authenticated;
+GRANT ALL ON FUNCTION public.delete_my_account(delete_uploads boolean) TO service_role;
 
 
 --
@@ -5559,6 +5480,7 @@ GRANT ALL ON FUNCTION public.delete_my_account(delete_uploads boolean) TO authen
 
 REVOKE ALL ON FUNCTION public.discard_draft(p_draft uuid, p_revision integer) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.discard_draft(p_draft uuid, p_revision integer) TO authenticated;
+GRANT ALL ON FUNCTION public.discard_draft(p_draft uuid, p_revision integer) TO service_role;
 
 
 --
@@ -5567,6 +5489,7 @@ GRANT ALL ON FUNCTION public.discard_draft(p_draft uuid, p_revision integer) TO 
 
 REVOKE ALL ON FUNCTION public.finish_claim(token uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.finish_claim(token uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.finish_claim(token uuid) TO service_role;
 
 
 --
@@ -5575,6 +5498,7 @@ GRANT ALL ON FUNCTION public.finish_claim(token uuid) TO authenticated;
 
 REVOKE ALL ON FUNCTION public.get_my_stats() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.get_my_stats() TO authenticated;
+GRANT ALL ON FUNCTION public.get_my_stats() TO service_role;
 
 
 --
@@ -5583,6 +5507,7 @@ GRANT ALL ON FUNCTION public.get_my_stats() TO authenticated;
 
 REVOKE ALL ON FUNCTION public.get_my_uses() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.get_my_uses() TO authenticated;
+GRANT ALL ON FUNCTION public.get_my_uses() TO service_role;
 
 
 --
@@ -5591,6 +5516,7 @@ GRANT ALL ON FUNCTION public.get_my_uses() TO authenticated;
 
 REVOKE ALL ON FUNCTION public.get_profile() FROM PUBLIC;
 GRANT ALL ON FUNCTION public.get_profile() TO authenticated;
+GRANT ALL ON FUNCTION public.get_profile() TO service_role;
 
 
 --
@@ -5599,6 +5525,7 @@ GRANT ALL ON FUNCTION public.get_profile() TO authenticated;
 
 REVOKE ALL ON FUNCTION public.publish_draft(p_draft uuid, p_revision integer) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.publish_draft(p_draft uuid, p_revision integer) TO authenticated;
+GRANT ALL ON FUNCTION public.publish_draft(p_draft uuid, p_revision integer) TO service_role;
 
 
 --
@@ -5607,6 +5534,7 @@ GRANT ALL ON FUNCTION public.publish_draft(p_draft uuid, p_revision integer) TO 
 
 REVOKE ALL ON FUNCTION public.put_back(p_kind text, p_subject_id uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.put_back(p_kind text, p_subject_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.put_back(p_kind text, p_subject_id uuid) TO service_role;
 
 
 --
@@ -5615,6 +5543,7 @@ GRANT ALL ON FUNCTION public.put_back(p_kind text, p_subject_id uuid) TO authent
 
 REVOKE ALL ON FUNCTION public.refresh_draft_base(p_draft uuid, p_revision integer, p_base_revision bigint) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.refresh_draft_base(p_draft uuid, p_revision integer, p_base_revision bigint) TO authenticated;
+GRANT ALL ON FUNCTION public.refresh_draft_base(p_draft uuid, p_revision integer, p_base_revision bigint) TO service_role;
 
 
 --
@@ -5623,6 +5552,7 @@ GRANT ALL ON FUNCTION public.refresh_draft_base(p_draft uuid, p_revision integer
 
 REVOKE ALL ON FUNCTION public.save_contribution(recording jsonb) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.save_contribution(recording jsonb) TO authenticated;
+GRANT ALL ON FUNCTION public.save_contribution(recording jsonb) TO service_role;
 
 
 --
@@ -5631,6 +5561,7 @@ GRANT ALL ON FUNCTION public.save_contribution(recording jsonb) TO authenticated
 
 REVOKE ALL ON FUNCTION public.save_draft(p_draft uuid, p_revision integer, p_payload jsonb) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.save_draft(p_draft uuid, p_revision integer, p_payload jsonb) TO authenticated;
+GRANT ALL ON FUNCTION public.save_draft(p_draft uuid, p_revision integer, p_payload jsonb) TO service_role;
 
 
 --
@@ -5639,6 +5570,7 @@ GRANT ALL ON FUNCTION public.save_draft(p_draft uuid, p_revision integer, p_payl
 
 REVOKE ALL ON FUNCTION public.set_profile(name text, phone text) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.set_profile(name text, phone text) TO authenticated;
+GRANT ALL ON FUNCTION public.set_profile(name text, phone text) TO service_role;
 
 
 --
@@ -5647,6 +5579,16 @@ GRANT ALL ON FUNCTION public.set_profile(name text, phone text) TO authenticated
 
 REVOKE ALL ON FUNCTION public.take_down(p_kind text, p_subject_id uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.take_down(p_kind text, p_subject_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.take_down(p_kind text, p_subject_id uuid) TO service_role;
+
+
+--
+-- Name: FUNCTION touch_updated_at(); Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON FUNCTION public.touch_updated_at() TO anon;
+GRANT ALL ON FUNCTION public.touch_updated_at() TO authenticated;
+GRANT ALL ON FUNCTION public.touch_updated_at() TO service_role;
 
 
 --
@@ -5655,6 +5597,7 @@ GRANT ALL ON FUNCTION public.take_down(p_kind text, p_subject_id uuid) TO authen
 
 REVOKE ALL ON FUNCTION public.unblock_contributor(target uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.unblock_contributor(target uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.unblock_contributor(target uuid) TO service_role;
 
 
 --
@@ -5663,6 +5606,7 @@ GRANT ALL ON FUNCTION public.unblock_contributor(target uuid) TO authenticated;
 
 REVOKE ALL ON FUNCTION public.unpublish(p_kind text, p_subject_id uuid) FROM PUBLIC;
 GRANT ALL ON FUNCTION public.unpublish(p_kind text, p_subject_id uuid) TO authenticated;
+GRANT ALL ON FUNCTION public.unpublish(p_kind text, p_subject_id uuid) TO service_role;
 
 
 --
@@ -5835,6 +5779,15 @@ GRANT SELECT(taken_down_at) ON TABLE public.takedown TO anon;
 --
 
 GRANT SELECT(put_back_at) ON TABLE public.takedown TO anon;
+
+
+--
+-- Name: DEFAULT PRIVILEGES FOR FUNCTIONS; Type: DEFAULT ACL; Schema: public; Owner: -
+--
+
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON FUNCTIONS TO anon;
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON FUNCTIONS TO authenticated;
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON FUNCTIONS TO service_role;
 
 
 --

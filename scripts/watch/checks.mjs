@@ -44,15 +44,25 @@ function defaultSleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-/** The site answers 200 with the app's page, and the bare domain redirects to it. */
+// The production site answers / with Coming soon in the map's place (workers/site/src/coming-soon.ts,
+// public/coming-soon/index.html); every Preview keeps the map. Either page is the site working.
+const APP_PAGE_MARKER = '<div id="root">';
+const COMING_SOON_MARKER = '<title>Para is coming soon</title>';
+
+/** The site answers 200 with the app's page or Coming soon, and the bare domain redirects to it. */
 export async function checkSite(fetchImpl, site = SITE, bareDomain = BARE_DOMAIN) {
   const page = await fetchImpl(`${site}/`, { redirect: 'manual' });
   const html = await page.text();
   if (page.status !== 200) return { ok: false, answer: `${site}/ answered ${page.status}` };
-  if (!html.includes('<div id="root">')) {
+  const shown = html.includes(APP_PAGE_MARKER)
+    ? 'the app'
+    : html.includes(COMING_SOON_MARKER)
+      ? 'Coming soon'
+      : undefined;
+  if (!shown) {
     return {
       ok: false,
-      answer: `${site}/ answered 200 without the app's page: ${html.slice(0, 200)}`,
+      answer: `${site}/ answered 200 without the app's page or Coming soon: ${html.slice(0, 200)}`,
     };
   }
   const bare = await fetchImpl(`${bareDomain}/`, { redirect: 'manual' });
@@ -64,7 +74,10 @@ export async function checkSite(fetchImpl, site = SITE, bareDomain = BARE_DOMAIN
       answer: `${bareDomain}/ answered ${bare.status}${location ? ` to ${location}` : ''}, not a redirect to ${site}`,
     };
   }
-  return { ok: true, answer: `${site}/ 200, ${bareDomain}/ ${bare.status} to ${location}` };
+  return {
+    ok: true,
+    answer: `${site}/ 200 (${shown}), ${bareDomain}/ ${bare.status} to ${location}`,
+  };
 }
 
 /** The published map's index answers 200, parses, and carries a published_at. */

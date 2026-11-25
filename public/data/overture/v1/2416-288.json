@@ -1,0 +1,12 @@
+{
+  "schema": 1,
+  "cell": "2416-288",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o6691d962576d462b","restaurant",120.84736,14.41506,"Mr. Bob's resto bar"],
+    ["o76aeaf471d45471f","restaurant",120.84685,14.41358,"Erlyns"],
+    ["oef1e0e8bed1a43f2","restaurant",120.84531,14.40551,"SureBowl Tapsihan"],
+    ["o093af12355804712","school",120.84644,14.40457,"Julugan Elementary School"],
+    ["obee2ad48873c46cd","college",120.84992,14.41742,"Imus Computer College Rosario Branch"]
+  ]
+}

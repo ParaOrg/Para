@@ -9,13 +9,7 @@ import { dirname, join, resolve } from 'node:path';
 
 import { transformWithOxc, type Plugin } from 'vite';
 
-interface ManifestChunk {
-  file: string;
-  css?: string[];
-  assets?: string[];
-  imports?: string[];
-  dynamicImports?: string[];
-}
+import { readManifest, type Manifest } from './vite-manifest.ts';
 
 const PAGE_URL = '/contribute/';
 const ENTRY_KEY = 'contribute/index.html';
@@ -25,7 +19,7 @@ const ICON_URL = '/icons/favicon.png';
 const MAP_WORKER = /^assets\/maplibre-gl-worker-[\w-]+\.js$/;
 
 /** The paths the contributor page needs offline: the page first, the rest sorted. */
-export function contributePrecache(manifest: Record<string, ManifestChunk>): string[] {
+export function contributePrecache(manifest: Manifest): string[] {
   if (!manifest[ENTRY_KEY]) throw new Error(`the manifest has no entry "${ENTRY_KEY}"`);
   const keep = new Set<string>();
   const seen = new Set<string>();
@@ -60,10 +54,7 @@ export function contributeWorker(): Plugin {
       if (!existsSync(manifestPath)) {
         throw new Error(`${manifestPath} is missing: the contributor worker has no precache`);
       }
-      const manifest = JSON.parse(readFileSync(manifestPath, 'utf8')) as Record<
-        string,
-        ManifestChunk
-      >;
+      const manifest = readManifest(manifestPath);
       const urls = contributePrecache(manifest);
       const version = createHash('sha256')
         .update(urls.join('\n'))

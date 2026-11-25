@@ -11,6 +11,7 @@ import { NOTE_ADDED_MESSAGE } from './note-added';
 import type { PageProblem, PageProblemIcon } from './page-problem';
 import { pointsLostWords, routeRecordedWords, type RouteRecordedGiven } from './route-recorded';
 import { SCREEN_AWAKE_PROBLEM } from './screen-awake-problem';
+import { STOP_NOTES_FAILED_MESSAGE } from './stop-notes-failed';
 import { CheckIcon } from '../common/history-icons';
 
 const ICONS = {
@@ -27,6 +28,8 @@ export interface PageToastsProps {
   mapNote: MapNoteGiven | null;
   /** How many stops' notes have been saved from their card: each one more says so. */
   notesAdded: number;
+  /** How many times a stop's card or Stops notes could not be fetched: each one more says so. */
+  stopNotesFailures: number;
   /** The last route saved, in words, and how many have been: each one more says them. */
   routeRecorded: RouteRecordedGiven | null;
   /** The just-saved route's upload failing, as it stands: said until it goes, or ✕. */
@@ -58,6 +61,7 @@ export function PageToasts({
   isScreenFreeToSleep,
   mapNote,
   notesAdded,
+  stopNotesFailures,
   routeRecorded,
   uploadProblem,
 }: PageToastsProps) {
@@ -76,9 +80,9 @@ export function PageToasts({
   const pointsLost = routeRecorded && pointsLostWords(routeRecorded.failedFixWrites);
   return (
     <ToastHost>
-      <ProblemsSaid problems={problems} />
-      {/* Compact, as Figma's Note successfully added (4716:9216): its words alone, no ✕. */}
-      <NewsSaid message={NOTE_ADDED_MESSAGE} times={notesAdded} isQuiet={problems.length > 0} />
+      {/* The save's news before the problems: mounted with both at once (the toasts' code was
+          fetched by this save, and its upload refused meanwhile), "Route recorded" is said first
+          and the refusal waits its turn behind it. Effects run in this order. */}
       {routeRecorded && (
         <>
           <NewsSaid
@@ -104,6 +108,11 @@ export function PageToasts({
           )}
         </>
       )}
+      <ProblemsSaid problems={problems} />
+      {/* Compact, as Figma's Note successfully added (4716:9216): its words alone, no ✕. */}
+      <NewsSaid message={NOTE_ADDED_MESSAGE} times={notesAdded} isQuiet={problems.length > 0} />
+      {/* Until ✕: the ride records on, and opening them again asks for their code again. */}
+      <NewsSaid message={STOP_NOTES_FAILED_MESSAGE} times={stopNotesFailures} />
     </ToastHost>
   );
 }

@@ -1,68 +1,56 @@
-import { EndIcon, StartIcon } from '@/shared/ui/route-icons';
+import type { ReactNode } from 'react';
+
+import { EndIcon, IkotIcon, StartIcon } from '@/shared/ui/route-icons';
 import { cn } from '@/shared/utils/cn';
 
-import type { Livery } from '../model/liveries';
+import { LOOP_WORD } from '../model/routes';
 
-export type RouteStopSignKind = 'start' | 'end';
+export type RouteStopSignKind = 'start' | 'end' | 'ikot';
 
 interface RouteStopSignProps {
   kind: RouteStopSignKind;
-  /** The card it sits on: a light card's sign is dark, as its badges are. */
-  livery: Livery;
 }
 
-/** The disc behind the letter: white on a dark card, Background/surface-inverse on a light one. */
-const DISC = {
-  jeep: 'bg-content-inverse',
-  'uv-express': 'bg-surface-inverse',
-  ejeep: 'bg-surface-inverse',
-  bus: 'bg-content-inverse',
-  'light-rail-way-one': 'bg-content-inverse',
-  'light-rail-way-two': 'bg-content-inverse',
-  'metro-rail-way-three': 'bg-surface-inverse',
-  ferry: 'bg-content-inverse',
-} satisfies Record<Livery, string>;
+/**
+ * Start's green and End's red (direction/start and direction/end), and a loop's grey Ikot
+ * (bg/surface/surface-secondary, text/primary): the pill, and its icon and word.
+ */
+const LOOK = {
+  start: 'bg-direction-start-surface text-direction-start-fill',
+  end: 'bg-direction-end-surface text-direction-end-fill',
+  ikot: 'bg-bg-surface-secondary text-text-primary',
+} satisfies Record<RouteStopSignKind, string>;
 
-/** Start's green and End's red; on a dark disc their lighter shades, which read there. */
-const LETTER = {
-  start: {
-    jeep: 'text-trip-start',
-    'uv-express': 'text-card-green-surface-light',
-    ejeep: 'text-card-green-surface-light',
-    bus: 'text-trip-start',
-    'light-rail-way-one': 'text-trip-start',
-    'light-rail-way-two': 'text-trip-start',
-    'metro-rail-way-three': 'text-card-green-surface-light',
-    ferry: 'text-trip-start',
-  },
-  end: {
-    jeep: 'text-trip-end',
-    'uv-express': 'text-card-red-surface-light',
-    ejeep: 'text-card-red-surface-light',
-    bus: 'text-trip-end',
-    'light-rail-way-one': 'text-trip-end',
-    'light-rail-way-two': 'text-trip-end',
-    'metro-rail-way-three': 'text-card-red-surface-light',
-    ferry: 'text-trip-end',
-  },
-} satisfies Record<RouteStopSignKind, Record<Livery, string>>;
+const ICON = {
+  start: <StartIcon />,
+  end: <EndIcon />,
+  ikot: <IkotIcon />,
+} satisfies Record<RouteStopSignKind, ReactNode>;
+
+const WORD = {
+  start: 'Start',
+  end: 'End',
+  ikot: LOOP_WORD,
+} satisfies Record<RouteStopSignKind, string>;
 
 /**
- * Where a ride starts and ends, in a stop's slot (RouteStopsCard, 4681:29138): Start's S or End's
- * E, 20, on a disc in the card's colours. For the eye: its row says "start" or "end" in words.
+ * Where a trip or a ride starts and ends (Figma's Start and End, 4822:46013 and 4822:46019), under
+ * a stop's name and over the ends card's places, and a loop's Ikot over its name (4825:49053): S or E, 16, and the word, SemiBold 14/20, on a
+ * round pill, 4 in before the sign and 6 after the word. The word is real text, so a screen reader
+ * hears it with the place.
  */
-export function RouteStopSign({ kind, livery }: RouteStopSignProps) {
+export function RouteStopSign({ kind }: RouteStopSignProps) {
   return (
     <span
-      aria-hidden
-      data-part={kind}
       className={cn(
-        'flex size-5 shrink-0 rounded-full *:size-full',
-        DISC[livery],
-        LETTER[kind][livery],
+        'flex w-fit shrink-0 items-center gap-1 rounded-full py-0.5 pr-1.5 pl-1 text-sm/5 font-semibold',
+        LOOK[kind],
       )}
     >
-      {kind === 'start' ? <StartIcon /> : <EndIcon />}
+      <span aria-hidden data-part={kind} className="flex size-4 shrink-0 *:size-full">
+        {ICON[kind]}
+      </span>
+      {WORD[kind]}
     </span>
   );
 }

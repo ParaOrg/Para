@@ -1,0 +1,28 @@
+{
+  "schema": 1,
+  "cell": "2427-291",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o1be29e49fa8f4886","restaurant",121.37028,14.56851,"BNK Cafe & Resto"],
+    ["o2868d00019794028","restaurant",121.36849,14.56633,"Kabsat Grill and Restaurant"],
+    ["o2aaaba3462274034","restaurant",121.36758,14.55624,"Chops & Brew Café"],
+    ["o35dfe3af51714928","restaurant",121.36474,14.55023,"Annyeong Cafe"],
+    ["o7d159b9ed6ca4e48","restaurant",121.39528,14.55315,"Hilary's Resto and Event Center"],
+    ["o8fb60de7f25d46ad","restaurant",121.35636,14.58729,"Tambikers Diner"],
+    ["o9afb0b3189db4b8e","restaurant",121.3688,14.57858,"Gillan Marie Restaurant and Cafe"],
+    ["oa33da79c670e4978","restaurant",121.36967,14.57205,"Paseo Rizal Mayagay"],
+    ["oa6ee0c01a004412f","restaurant",121.36827,14.56165,"Yeyi's Pizzeria & Café"],
+    ["oab12dcac9bed476b","restaurant",121.37502,14.59458,"SileCafe Camp Daraitan"],
+    ["oc9b0b24230c64263","restaurant",121.39528,14.55315,"The Milktea Project - Sampaloc Tanay Rizal"],
+    ["od1430db84da84988","restaurant",121.3698,14.57647,"Ricardo's Vista Del Cielo"],
+    ["od2537573489f4df9","restaurant",121.36894,14.57837,"La Franco's Veranda"],
+    ["of424062d3ab0455b","restaurant",121.36901,14.57565,"Tanay Viewpoint Garden Cafe and Restaurant"],
+    ["o95b058974cd847bb","fast_food",121.3639,14.56559,"KFC"],
+    ["o9761bee459b14c17","fast_food",121.39528,14.55315,"TAPZ Town"],
+    ["o214825aaa2e34f2d","cafe",121.36802,14.57979,"Dean And Deluca"],
+    ["oc30e236860f84a19","cafe",121.35286,14.58879,"Kamala Cafe"],
+    ["of91bc457fc5b4907","dentist",121.39528,14.55315,"CFPM Dental Clinic"],
+    ["o03e881a287174e69","school",121.37502,14.59458,"DepEd Alas-Asin Elementary School"],
+    ["of7380254bbba4fa9","school",121.36501,14.55218,"Highland Park Christian School"]
+  ]
+}

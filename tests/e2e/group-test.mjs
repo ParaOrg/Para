@@ -117,7 +117,9 @@ if (!spot) throw new Error('no two routes share a road in the made-up tables');
 const canvas = await page.locator('canvas.maplibregl-canvas').boundingBox();
 const tap = (x, y) => page.mouse.click(canvas.x + x, canvas.y + y);
 {
-  await page.evaluate((c) => window.__map.jumpTo({ center: c, zoom: 17 }), spot);
+  await page.evaluate((c) => {
+    window.__map.jumpTo({ center: c, zoom: 17 });
+  }, spot);
   await page.waitForTimeout(900);
   const [x, y] = await page.evaluate((c) => {
     const q = window.__map.project(c);
@@ -525,11 +527,6 @@ const tap = (x, y) => page.mouse.click(canvas.x + x, canvas.y + y);
         'no hintuan on this direction',
       );
     } else {
-      const fold = cardEl.locator('button[data-testid="trip-view-more"]');
-      if ((await fold.count()) > 0) {
-        await fold.first().click();
-        await page.waitForTimeout(450);
-      }
       const pickedIndex = Math.floor(((await hintuanRows.count()) - 1) / 2);
       const hintuanRow = hintuanRows.nth(pickedIndex);
       const pick = hintuanRow.locator('button[data-testid="trip-hintuan-pick"]');
@@ -553,6 +550,12 @@ const tap = (x, y) => page.mouse.click(canvas.x + x, canvas.y + y);
               : 'var(--map-route-line-surface-default)';
           document.body.append(probe);
           const cardPale = getComputedStyle(probe).backgroundColor;
+          // The line's colour is a card's surface in the trip's livery (livery-line.ts): read off
+          // CARD_SURFACE's classes, the colour the map draws the trip's line in.
+          const { CARD_SURFACE } = await import('/src/features/routes/cards/livery-card.ts');
+          probe.style.backgroundColor = '';
+          probe.className = CARD_SURFACE[livery] ?? '';
+          const lineColour = getComputedStyle(probe).backgroundColor;
           probe.remove();
           return {
             lit: ((await window.__lit('saved-routes')) ?? []).length,
@@ -565,8 +568,7 @@ const tap = (x, y) => page.mouse.click(canvas.x + x, canvas.y + y);
               ring: getComputedStyle(e.querySelector('.station-label-tap > span:first-child'))
                 .backgroundColor,
             })),
-            // The line's colour is the card's surface (livery-line.ts): the card's own background.
-            line: trip ? getComputedStyle(trip).backgroundColor : null,
+            line: lineColour,
             pale: cardPale,
           };
         });
@@ -626,7 +628,9 @@ const tap = (x, y) => page.mouse.click(canvas.x + x, canvas.y + y);
    * `shown`).
    */
   const reopen = async (wantBack) => {
-    await page.evaluate((c) => window.__map.jumpTo({ center: c, zoom: 17 }), spot);
+    await page.evaluate((c) => {
+      window.__map.jumpTo({ center: c, zoom: 17 });
+    }, spot);
     await page.waitForTimeout(700);
     await tap(x, y);
     await page.waitForTimeout(700);
@@ -643,7 +647,9 @@ const tap = (x, y) => page.mouse.click(canvas.x + x, canvas.y + y);
    */
   const findSpot = async (coords, ok) => {
     for (const c of coords.filter((_, i) => i % Math.max(1, Math.floor(coords.length / 8)) === 0)) {
-      await page.evaluate((c) => window.__map.jumpTo({ center: c, zoom: 17 }), c);
+      await page.evaluate((c) => {
+        window.__map.jumpTo({ center: c, zoom: 17 });
+      }, c);
       await page.waitForTimeout(600);
       const p = await page.evaluate((c) => {
         const m = window.__map;
@@ -673,7 +679,9 @@ const tap = (x, y) => page.mouse.click(canvas.x + x, canvas.y + y);
    * routes, as on the public map (2026-10-01), and leaves the spot elsewhere.
    */
   const clickAt = async (p) => {
-    await page.evaluate((c) => window.__map.jumpTo({ center: c, zoom: 17 }), p.at);
+    await page.evaluate((c) => {
+      window.__map.jumpTo({ center: c, zoom: 17 });
+    }, p.at);
     await page.waitForTimeout(600);
     await tap(p.x, p.y);
     await page.waitForTimeout(700);

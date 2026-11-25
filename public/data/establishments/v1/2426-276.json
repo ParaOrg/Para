@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "cell": "2426-276",
+  "attribution": "© OpenStreetMap contributors",
+  "establishments": [
+    ["n7838261987","convenience",121.31209,13.84376,"Jumbo"],
+    ["n7838261988","convenience",121.32638,13.83712,"Margie Store Bantayin"],
+    ["n7838262285","convenience",121.30869,13.84511,"Cathy"],
+    ["n7838262286","convenience",121.33085,13.82791,"Lalabs"],
+    ["n7838262287","convenience",121.34196,13.82731,"Minex"],
+    ["n7838262288","convenience",121.34216,13.82863,"Glenda"],
+    ["n7838262289","convenience",121.34617,13.82802,"Prince"],
+    ["w1295128199","restaurant",121.31212,13.8429,"Matteo's Lomi and Restaurant"],
+    ["w1295128192","toilets",121.30567,13.84209],
+    ["w1295128195","toilets",121.31684,13.84338]
+  ]
+}

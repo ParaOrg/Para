@@ -1,0 +1,14 @@
+{
+  "schema": 1,
+  "cell": "2421-299",
+  "attribution": "© OpenStreetMap contributors",
+  "establishments": [
+    ["w312178848","bank",121.06499,14.97131,"Dona Remedios Trinidad Rural Bank"],
+    ["n11467772488","pharmacy",121.06384,14.97109,"TGP"],
+    ["n10122884217","convenience",121.05363,14.9543,"Inang at Amang Store"],
+    ["n12200890201","convenience",121.06503,14.97145,"7-Eleven"],
+    ["n1541844994","fuel",121.06533,14.97206,"Petron"],
+    ["n1541844984","clinic",121.06171,14.96169,"Doña Remedios Trinidad Rural Health Unit"],
+    ["n1541844992","clinic",121.06811,14.97755,"Health Center"]
+  ]
+}

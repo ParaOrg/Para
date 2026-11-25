@@ -152,10 +152,10 @@ export const Jeepney: Story = {};
 /** Raised to full height: every hintuan on the way in sight. */
 export const JeepneyFull: Story = { args: { height: { snap: 'full', onSnap: fn() } } };
 
-/** PAPUNTA turns it round: the way back is drawn, so the card asks for that direction. */
+/** ⇅ on the ends card turns it round: the way back is drawn, so the card asks for that direction. */
 export const TurnsRound: Story = {
   play: async ({ args, canvasElement }) => {
-    const turn = within(canvasElement).getByTestId('card-switch');
+    const turn = within(canvasElement).getByTestId('trip-ends-switch');
     await userEvent.click(turn);
     turn.blur();
     await expect(args.onSwitch).toHaveBeenCalledWith(novalichesToTala);
@@ -170,20 +170,21 @@ export const TheWayBack: Story = {
   },
 };
 
-/** The way back still a slot: PAPUNTA rests disabled, and a tap asks for nothing. */
+/** The way back still a slot: ⇅ rests disabled, and a tap asks for nothing. */
 export const NoWayBack: Story = {
   args: { directions: [talaToNovaliches, { ...novalichesToTala, shape: null }] },
   play: async ({ args, canvasElement }) => {
-    const turn = within(canvasElement).getByTestId('card-switch');
+    const turn = within(canvasElement).getByTestId('trip-ends-switch');
     await expect(turn).toBeDisabled();
     await userEvent.click(turn);
     await expect(args.onSwitch).not.toHaveBeenCalled();
   },
 };
 
-/** In the studio, the way back still a slot: PAPUNTA is open, and a tap starts drawing it. */
+/** In the studio, the way back still a slot: its PAPUNTA is open, and a tap starts drawing it. */
 export const DrawTheWayBack: Story = {
   args: {
+    hasController: true,
     directions: [talaToNovaliches, { ...novalichesToTala, shape: null }],
     onDrawOtherWay: fn(),
   },
@@ -196,17 +197,17 @@ export const DrawTheWayBack: Story = {
   },
 };
 
-/** Opened from a hotspot's card, not the list: no ‹ back to it. */
+/** The studio's, opened from a hotspot's card, not the list: no ‹ back to it on its Controller. */
 export const NoList: Story = {
+  args: { hasController: true },
   render: (args) => <Keeping {...args} onBackToList={null} />,
 };
 
-/** A hintuan picked: the pick opens the stops, and its pill prices the ride from Tala to there. */
+/** A hintuan picked: its pill prices the ride from Tala to there. */
 export const PickedHintuan: Story = {
   args: { picked: 'amparo', pickedMetres: 7_300, height: { snap: 'full', onSnap: fn() } },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(canvas.getByTestId('trip-view-more')).toHaveAttribute('aria-expanded', 'true');
     const amparo = canvasElement.querySelector(
       '[data-testid="trip-hintuan"][data-hintuan="amparo"]',
     );
@@ -219,7 +220,7 @@ export const PickedHintuan: Story = {
 /** The far end's row picked: the whole ride, that end on the map. */
 export const EndPicked: Story = { args: { endPicked: 'to' } };
 
-/** Another route leaves from the same place: "Other routes" lists it, and a tap opens it in this one's place. */
+/** Another route leaves from the same place: "View 1 more destination" opens it, and a tap opens its trip in this one's place. */
 export const OtherRoutes: Story = {
   args: {
     directions: [talaToNovaliches, novalichesToTala, talaToFairview],
@@ -227,6 +228,7 @@ export const OtherRoutes: Story = {
     height: { snap: 'full', onSnap: fn() },
   },
   play: async ({ args, canvasElement }) => {
+    await userEvent.click(within(canvasElement).getByTestId('trip-more-routes'));
     const other = within(canvasElement).getByTestId('trip-other-route');
     await userEvent.click(other);
     other.blur();
@@ -234,7 +236,7 @@ export const OtherRoutes: Story = {
   },
 };
 
-/** A train: priced by its stations, not its metres, in its line's colours; its line and bound at the top (LRT-1 Southbound); the picked station's code in its pill. */
+/** A train: priced by its stations, not its metres, in its line's colours; its line in the Transport mode tile (LRT Line 1) and its bound in the Direction row (Southbound); the picked station's code in its pill. */
 export const Train: Story = {
   args: {
     direction: direction('lrt1', 'Fernando Poe Jr.', 'Baclaran', {
@@ -253,11 +255,15 @@ export const Train: Story = {
     pickedCode: 'CAR',
     height: { snap: 'full', onSnap: fn() },
   },
-  // Carriedo picked: the stations before it on the ride, EDSA the one after
-  // it, shown as it is, so nothing folds.
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByTestId('trip-mode')).toHaveTextContent('LRT Line 1');
+    await expect(canvas.getByTestId('trip-bound')).toHaveTextContent('Southbound');
+    await expect(canvas.getByTestId('trip-hintuan-fare')).toHaveTextContent('CAR');
+  },
 };
 
-/** MRT-3 Northbound: its header's words black on the white halves, not its yellow. */
+/** MRT-3 Northbound: the line in the Transport mode tile, its bound in the Direction row. */
 export const TrainMrt3: Story = {
   args: {
     direction: direction('mrt3', 'Taft Avenue', 'North Avenue', {
@@ -268,10 +274,15 @@ export const TrainMrt3: Story = {
     timeline: timelineOf('Taft Avenue', 'North Avenue', ['Magallanes', 'Ayala', 'Cubao']),
     livery: 'metro-rail-way-three',
   },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByTestId('trip-mode')).toHaveTextContent('MRT Line 3');
+    await expect(canvas.getByTestId('trip-bound')).toHaveTextContent('Northbound');
+  },
 };
 
 /**
- * A train whose end the line's table does not know: no bound, so the header shows the line alone,
+ * A train whose end the line's table does not know: no bound, so no Direction row,
  * and PAPUNTA falls back to Pabalik and Papunta, as over a mixed list (wayWord). TODO: what
  * PAPUNTA should say for a train with no known bound is not designed yet.
  */
@@ -284,6 +295,11 @@ export const TrainNoBound: Story = {
     directions: [],
     timeline: timelineOf('Fernando Poe Jr.', 'Nowhere', ['Balintawak', 'Monumento']),
     livery: 'light-rail-way-one',
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByTestId('trip-mode').textContent).toBe('LRT Line 1');
+    await expect(canvas.queryByTestId('trip-bound')).toBeNull();
   },
 };
 
@@ -388,23 +404,27 @@ const ikotTimeline: Timeline = {
 };
 
 /**
- * A loop's trip (UP – Ikot): its name a badge after the mode's, the tip at the top
- * and again at the bottom, the tiles the whole loop's, and no PAPUNTA.
+ * A loop's trip (UP – Ikot): the tip at the top and again at the bottom, the tiles the whole
+ * loop's, and no PAPUNTA. Its name is the sheet's, for a screen reader.
  */
 export const Loop: Story = {
   args: { direction: ikot, directions: [ikot], timeline: ikotTimeline, livery: 'bus' },
   play: async ({ canvasElement }) => {
     const card = within(canvasElement);
-    await expect(card.queryByTestId('card-switch')).toBeNull();
-    await expect(card.getByText('UP – Ikot')).toBeVisible();
+    await expect(card.queryByTestId('trip-ends-switch')).toBeNull();
+    await expect(
+      card.getByRole('heading', { level: 2, name: 'UP – Ikot (Ikot)' }),
+    ).toBeInTheDocument();
   },
 };
 
-/** A loop with no name of its own: its badge says Ikot. */
+/** A loop with no name of its own: the sheet is named by its tip, Oblation (Ikot). */
 export const LoopNoName: Story = {
   args: { ...Loop.args, direction: { ...ikot, name: null } },
   play: async ({ canvasElement }) => {
-    await expect(within(canvasElement).getByText('Ikot')).toBeVisible();
+    await expect(
+      within(canvasElement).getByRole('heading', { level: 2, name: 'Oblation (Ikot)' }),
+    ).toBeInTheDocument();
   },
 };
 

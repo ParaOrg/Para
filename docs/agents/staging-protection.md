@@ -76,6 +76,48 @@ Do these once, the same day the ruleset goes on.
 
 If step 2 fails with "Staging could not be updated", the deploy key is missing from the bypass list: turn the ruleset off (**Enforcement status** → Disabled), fix the list, turn it on again.
 
+## A later step: the merge queue
+
+With the ruleset on, a pull request still merges on the checks of its own branch, which may be behind `staging`. A merge queue closes that: GitHub makes the commit the merge would make, runs CI on it, and only then moves `staging`. CI runs on that commit since `ci.yml` took the `merge_group` trigger: every suite, against the suites' stand-ins, as on a pull request.
+
+**Turn it on only after the ruleset above has been on and proven.** A queue with no `merge_group` run to wait for would hold every pull request until it gave up.
+
+Add this rule to the ruleset's `rules` and send the whole ruleset again (`gh api -X PUT repos/ParaOrg/Para/rulesets/<id> --input staging-ruleset.json`), or in **Settings** → **Rules** → **Rulesets** → the staging ruleset, tick **Require merge queue** and set the same values:
+
+```json
+{
+  "type": "merge_queue",
+  "parameters": {
+    "merge_method": "MERGE",
+    "grouping_strategy": "ALLGREEN",
+    "max_entries_to_build": 2,
+    "min_entries_to_merge": 1,
+    "max_entries_to_merge": 5,
+    "min_entries_to_merge_wait_minutes": 1,
+    "check_response_timeout_minutes": 60
+  }
+}
+```
+
+What each value is for:
+
+- `MERGE`: a merge commit per pull request, as `staging` has today.
+- `ALLGREEN`: every pull request in a group must pass on its own. One red pull request is put out of the queue; it never rides in behind a green one.
+- `max_entries_to_build: 2`: CI runs for the first two in the queue at once, the second on top of the first. More than two would outrun the free plan's 20 jobs at a time (a full run is about 29).
+- `min_entries_to_merge: 1` and `min_entries_to_merge_wait_minutes: 1`: a pull request alone in the queue does not wait for company.
+- `check_response_timeout_minutes: 60`: a full run takes about 13 minutes, 25 at the slow end. An hour without an answer is a failure.
+
+Once it is on:
+
+- A session merges with `gh pr merge <number>`, which now adds the pull request to the queue. It lands when the queue's run is green, about 13 minutes later, and is put out of the queue with its checks red if not.
+- A pull request into `staging` runs the build job and the unit job alone and answers in about a minute; the browser suites and Storybook run in the queue. CI reads the branch's rules itself to know a queue is there (`ci.yml`, the `changes` job), so nothing is switched by hand: take the queue rule away, and pull requests run their suites again from their next push.
+- The nightly **Publish map** still pushes `public/data/` straight to `staging` with the deploy key, which bypasses the ruleset. The queue rebuilds on the new tip.
+
+**How to prove it,** the same day:
+
+1. **A green pull request lands through the queue.** Merge any small pull request. Its page says "Queued to merge", a run named for `gh-readonly-queue/staging/…` appears under Actions, and the pull request shows as merged once the run passes.
+2. **A pull request that only fails once merged is put out.** Open two pull requests that each pass alone and fail together: the first changes what a small function returns, with its unit check; the second adds a unit check, in a file of its own, that expects the old value. Queue the first, then the second. The first lands; the second leaves the queue red, though its own page was green. Close it, delete both branches, and put the function back.
+
 ## A later step: the secrets scan
 
 After the ruleset has been on for a few days with no trouble, add a fourth required check, "No secrets in the history" (`.github/workflows/security.yml`). It is left out of the first step so that a new rule and a new check don't arrive together.

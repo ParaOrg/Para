@@ -1,0 +1,27 @@
+{
+  "schema": 1,
+  "cell": "2417-295",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o21e608b752014674","restaurant",120.87842,14.79601,"Sachon Asian Cuisine Bulakan"],
+    ["o3bd8a985afb046c9","restaurant",120.87943,14.79117,"Goldilocks"],
+    ["ob31b7916e36441db","restaurant",120.87769,14.79682,"Garjie's Grill"],
+    ["ob6749d07ac7e4a1e","restaurant",120.87877,14.77984,"Hiraya Restaurant"],
+    ["of09b24182e334a33","restaurant",120.87967,14.77871,"Lugaw Republic(Ang Pambansang Lugaw ng Pilipinas)"],
+    ["ofd6d59cd60e5441a","restaurant",120.87939,14.79281,"Big Boss Hotdogs - Main"],
+    ["o41ae56fcbd244cd0","cafe",120.87482,14.79876,"Irj Pantig Pavillion"],
+    ["o9d81a670c6ef4cda","cafe",120.87865,14.79571,"Aali Vivi tea and Coffee"],
+    ["o4510819511a64dbc","clinic",120.87875,14.79477,"Kiddie Clinic"],
+    ["o6b4b15c48ccc4b4b","clinic",120.87736,14.79664,"LM Medical Laboratory, X-Ray and Drug Testing Center"],
+    ["od6485f2a5a8144a4","clinic",120.87253,14.79174,"Assumption Optical Clinic"],
+    ["od9f00b54cb1c4e07","clinic",120.879,14.79261,"First Care Adult Clinic Bulakan"],
+    ["of146d76bff7042f7","clinic",120.87625,14.78898,"Assumption Optical Clinic"],
+    ["of2ba490c70fa4fd9","clinic",120.88007,14.79258,"Angel's Light"],
+    ["off100409a00e4c27","clinic",120.89355,14.77488,"PerfectSight Eye Center"],
+    ["o3c1cbe738c584426","dentist",120.8776,14.79669,"Assumption Dental Clinic"],
+    ["obb2127f5cd1e4ce8","dentist",120.87742,14.79544,"iSmile Dental Clinic"],
+    ["o7d6208ffa5554312","school",120.87862,14.78893,"Bagumbayan Elementary School"],
+    ["oa6ff9e8b2cd744e6","school",120.88044,14.78231,"DepEd Tayo - Bunlo Elementary School - 104765"],
+    ["o73082bd1cb9f42cd","college",120.87913,14.79497,"STI college Baliuag"]
+  ]
+}

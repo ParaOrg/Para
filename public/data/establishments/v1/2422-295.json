@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "cell": "2422-295",
+  "attribution": "© OpenStreetMap contributors",
+  "establishments": [
+    ["n12640024814","convenience",121.14042,14.7523,"7-Eleven"],
+    ["n12728429103","convenience",121.13428,14.75696,"7-Eleven"],
+    ["n12728429104","convenience",121.13488,14.7566,"Dali"],
+    ["n12191952601","restaurant",121.13896,14.79134,"Suejhor Hideout"],
+    ["w872386420","fuel",121.14,14.7617,"Filoil"],
+    ["n12640024811","clinic",121.14035,14.75235,"Abalos Medical Clinic"]
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "schema": 1,
+  "cell": "2424-292",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o0ade01f588934ad3","restaurant",121.24287,14.62579,"Mamangs Bulaluhan"],
+    ["o2ff1390eb2664774","restaurant",121.23125,14.62423,"Tm Ee&Jjj Bulaluhan Papaitan"],
+    ["o5ef194c288204d95","restaurant",121.23101,14.62464,"Trop’s Samgyupsal House"],
+    ["o6dc4ba76570f4d01","restaurant",121.23226,14.63229,"Mang Inasar Chicken Inasal - Boso-Boso"],
+    ["o86e004e2959d4bd5","restaurant",121.23092,14.6246,"RMJ Kitchenette"],
+    ["ob0f39131ec194388","restaurant",121.23726,14.63526,"KFC"],
+    ["ofe135a4adefc4300","fast_food",121.20735,14.62368,"Boss M"],
+    ["o0e2c6e05a5284f41","cafe",121.24606,14.62528,"Patio De Calawis"],
+    ["o3370512f2fe84c64","cafe",121.23439,14.62871,"Cafe Cristina"],
+    ["o4de759cf077b4e03","cafe",121.22593,14.62967,"Kapehan sa kampo"],
+    ["o345ab2bd2d224cba","school",121.21732,14.62466,"Inuman Elementary School"],
+    ["oc61381491a9d413f","school",121.23525,14.62149,"Tanza Elementary School"],
+    ["o2891cab9c10043cd","college",121.22521,14.62942,"Antipolo Institute of Technology"]
+  ]
+}

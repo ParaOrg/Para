@@ -1,0 +1,24 @@
+{
+  "schema": 1,
+  "cell": "2423-294",
+  "attribution": "© OpenStreetMap contributors",
+  "establishments": [
+    ["n13111312722","atm",121.15912,14.73432,null,{"brand":"7-Eleven"}],
+    ["n2810283478","convenience",121.15401,14.73551,"Uncle John's"],
+    ["n6312008285","convenience",121.17954,14.71042,"Jimmy Sonio Store"],
+    ["n6501249386","convenience",121.15877,14.73438,"7-Eleven"],
+    ["n6502878685","convenience",121.15219,14.73505,"7-Eleven"],
+    ["n12728400141","convenience",121.15294,14.73402,"Alfamart"],
+    ["n12728400142","convenience",121.15115,14.73998,"Alfamart"],
+    ["n12728400143","convenience",121.15923,14.7339,"Alfamart"],
+    ["n12728400146","convenience",121.15363,14.73547,"Dali"],
+    ["w281999459","convenience",121.15478,14.73557,"7-Eleven"],
+    ["w871374855","convenience",121.15567,14.74,"Alfamart"],
+    ["w873450589","convenience",121.16184,14.74132,"7-Eleven"],
+    ["w1426309199","convenience",121.1588,14.73427,"7-Eleven"],
+    ["n2611781853","supermarket",121.15417,14.73596,"Puregold"],
+    ["w282017334","fuel",121.15364,14.73536,"F8 Fuel"],
+    ["n3224694030","clinic",121.18482,14.73053,"Rodriguez RHU 4"],
+    ["w881074501","police",121.15479,14.73682,"Community Police Assistance Center"]
+  ]
+}

@@ -14,7 +14,9 @@ const HINTS = {
   'tiles.yml':
     'Open the run and read the failed step. The live tiles stay the last build\'s until a run uploads, so nothing is broken for commuters yet. Press "Run workflow" with "upload" ticked on staging once it is fixed.',
   'landmarks.yml':
-    'Open the run and read the failed step: a download from openstreetmap.fr, the file\'s check, or a shrink of more than 20% (tick "allow shrink" on "Run workflow" if it is real). The app keeps the committed landmark file meanwhile, so place search still works.',
+    'Open the run and read the failed step: a download from Geofabrik, the file\'s check, or a shrink of more than 20% (tick "allow shrink" on "Run workflow" if it is real). The app keeps the committed landmark file meanwhile, so place search still works.',
+  'osm-mirror.yml':
+    'Open the run and read the failed step: a missing secret in the `osm-mirror` environment is named there; "No source gave the Philippines extract" means Geofabrik and openstreetmap.fr both failed or stalled. The builds keep reading last week\'s copy at osm.para-commute.org meanwhile, so nothing is stale yet. Press "Run workflow" on staging later.',
   'database.yml':
     'Open the run and see which job failed. Nothing here touches the live database: it builds a throwaway copy from the migrations and checks its rules. A failure with no change to the SQL is usually a download or a container that did not start: press "Re-run failed jobs" once. If it fails again, the last change under supabase/ or the studio\'s data code broke a rule: tell the hub before anything else is applied live.',
   'security.yml':
@@ -28,6 +30,7 @@ const RUNBOOKS = {
   'backup.yml': runbookLink('a-backup-failed'),
   'tiles.yml': runbookLink('the-tiles-build-failed'),
   'landmarks.yml': runbookLink('the-landmark-refresh-failed'),
+  'osm-mirror.yml': runbookLink('the-osm-mirror-failed'),
   'database.yml': runbookLink('the-database-check-failed'),
   'security.yml': runbookLink('a-secret-or-a-vulnerable-package-was-found'),
   'codeql.yml': runbookLink('a-secret-or-a-vulnerable-package-was-found'),

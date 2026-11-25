@@ -1,0 +1,12 @@
+{
+  "schema": 1,
+  "cell": "2415-300",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["oe72ca1fe025d495a","restaurant",120.77763,15.02151,"San Pedro, San Simon, Pampanga"],
+    ["o5855633b88d04459","cafe",120.79053,15.04249,"Yugto Coffee"],
+    ["oa10f0009816c49b6","dentist",120.78903,15.04296,"Laxamana Dental Clinic"],
+    ["o14f8a70ad46d4a86","school",120.75858,15.0422,"San Carlos Elementary School"],
+    ["o704b2d02e72f4996","school",120.77691,15.02214,"DepEd San Pedro Elementary School"]
+  ]
+}

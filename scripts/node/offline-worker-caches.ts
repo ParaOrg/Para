@@ -156,6 +156,37 @@ export function runtimeCaches(basemapRules: BasemapCacheRules): RuntimeCaching {
       },
     },
     {
+      // The establishment files and Overture's (.scratch/establishments, steps E3a to E3c):
+      // the index and the cells the map has looked at, read once the map
+      // reaches street level with Location Labels on, then served from the
+      // copy kept at once and refreshed behind it, as the landmarks are. A
+      // cell is some 10 kB over the wire; the index names each cell's hash,
+      // so a changed cell is read again. Offline before the first read, the
+      // map simply draws none.
+      urlPattern: ({ url, request }) =>
+        request.method === 'GET' &&
+        url.origin === self.location.origin &&
+        (url.pathname.startsWith('/data/establishments/v1/') ||
+          url.pathname.startsWith('/data/overture/v1/')) &&
+        url.pathname.endsWith('.json'),
+      handler: 'StaleWhileRevalidate',
+      options: {
+        cacheName: 'establishments',
+        cacheableResponse: { statuses: [200] },
+        // Two folders' indexes and the cells looked at in each.
+        expiration: { maxEntries: 120, purgeOnQuotaError: true },
+        plugins: [
+          {
+            // Only JSON: a file not there is the map's page, 200.
+            cacheWillUpdate: async ({ response }) =>
+              (response.headers.get('content-type') ?? '').startsWith('application/json')
+                ? response
+                : null,
+          },
+        ],
+      },
+    },
+    {
       // The map's OpenStreetMap footbridges (.scratch/footbridges): read the
       // first time the map reaches street level, then served from the copy
       // kept at once and refreshed behind it, as the landmarks are. The file

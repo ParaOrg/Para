@@ -51,7 +51,7 @@ export function litOf<T extends Direction>(
 
 /**
  * What a tap where directions overlap keeps to: what is lit — but with a card
- * picked, everything shown, so the taps (route-taps.ts) keep to the way round
+ * picked, everything shown, so the taps (use-route-taps.ts) keep to the way round
  * the list shows.
  */
 export function shownOf(

@@ -1,0 +1,20 @@
+{
+  "schema": 1,
+  "cell": "2421-277",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o38ade53e1689427a","restaurant",121.05091,13.87004,"Kusina ni Atet"],
+    ["ocfc94b8a8fd44008","restaurant",121.05091,13.89967,"Black 奶茶 Boba Milktea Shop"],
+    ["oeea3b60a530c4122","restaurant",121.09915,13.87626,"King Ef's Diner"],
+    ["o12ed5d9b8747420f","fast_food",121.098,13.8653,"Potato Corner"],
+    ["o8ae9eac38a7f48ed","cafe",121.05598,13.89949,"Estratto Cafe"],
+    ["ob685ef3052db40a6","cafe",121.06694,13.88866,"Ungkutan Cafe"],
+    ["oe1331bb18ae246d6","cafe",121.09981,13.85101,"Alicia's"],
+    ["of39d913fdf264db7","cafe",121.09789,13.89106,"Aretha Cafe"],
+    ["o71ea44ac128e43af","dentist",121.05103,13.89853,"Dra. Gina Gavino-Aquino's Dental Clinic"],
+    ["o33f6bcf66e5d4373","school",121.05409,13.87266,"Briccio Pantas Elementary School"],
+    ["o3a04cbc9b0f0479b","school",121.09856,13.88358,"DepEd Taysan San Jose Integrated NHS"],
+    ["o5223f1ec2a9d41fe","school",121.07787,13.86311,"Dr Bonifacio Masilungan National High School"],
+    ["o9ecc54de9da442a5","school",121.05843,13.89827,"Labac Elementary School"]
+  ]
+}

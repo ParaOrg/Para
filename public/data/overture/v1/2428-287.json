@@ -1,0 +1,11 @@
+{
+  "schema": 1,
+  "cell": "2428-287",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o3e51da28e61a423f","restaurant",121.41073,14.39584,"Asufre Pangil Laguna"],
+    ["ob8e9511800814758","restaurant",121.40189,14.37388,"Samgyup Garage Grill"],
+    ["o01a83e6c126f4835","fast_food",121.40175,14.37119,"Portside Unliwings"],
+    ["ob427048e4d594436","school",121.4067,14.3975,"Dambo Elementary School"]
+  ]
+}

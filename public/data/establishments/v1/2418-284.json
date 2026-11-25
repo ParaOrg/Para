@@ -1,0 +1,19 @@
+{
+  "schema": 1,
+  "cell": "2418-284",
+  "attribution": "© OpenStreetMap contributors",
+  "establishments": [
+    ["n9477178978","pharmacy",120.93534,14.2023,"TGP",{"brand":"The Generics Pharmacy"}],
+    ["n915274560","convenience",120.90692,14.20057,"Steph & Ella Store"],
+    ["n4885445763","convenience",120.93549,14.20226,"Alfamart"],
+    ["n12679927942","convenience",120.92562,14.2244,"Dali"],
+    ["n12679927943","convenience",120.92084,14.20276,"Dali"],
+    ["n12679927944","convenience",120.93515,14.20323,"Dali"],
+    ["n13316058727","fast_food",120.93543,14.20251,"Baliwag"],
+    ["w893891670","cafe",120.93359,14.20642,"CaKe's Coffee and Tea"],
+    ["n12679927941","fuel",120.93485,14.20391,"Oiland"],
+    ["w239923660","fuel",120.92632,14.22199,"Phoenix"],
+    ["w1451916448","fuel",120.93501,14.2004,"Superbees"],
+    ["n2399223526","toilets",120.92223,14.21092]
+  ]
+}

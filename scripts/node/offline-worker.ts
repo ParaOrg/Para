@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
 import type { Plugin } from 'vite';
@@ -6,6 +6,7 @@ import { VitePWA } from 'vite-plugin-pwa';
 
 import type { BasemapCacheRules } from './basemap-offline.ts';
 import { runtimeCaches } from './offline-worker-caches.ts';
+import { readManifest } from './vite-manifest.ts';
 
 /**
  * The brand purple, the design token --color-parabrand-900 (design-system/foundation/tokens.css)
@@ -95,16 +96,7 @@ export function offlineWorker(basemapRules: BasemapCacheRules): Plugin[] {
                 `${manifestPath} is missing: the precache cannot be limited to the public page`,
               );
             }
-            const manifest = JSON.parse(readFileSync(manifestPath, 'utf8')) as Record<
-              string,
-              {
-                file: string;
-                css?: string[];
-                assets?: string[];
-                imports?: string[];
-                dynamicImports?: string[];
-              }
-            >;
+            const manifest = readManifest(manifestPath);
             const keep = new Set<string>();
             const visit = (key: string) => {
               const chunk = manifest[key];

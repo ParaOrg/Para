@@ -1,0 +1,10 @@
+{
+  "schema": 1,
+  "cell": "2418-276",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o63f18221576e4683","restaurant",120.91653,13.84078,"Sunset Restobar"],
+    ["ocb9556fbdfe1405c","restaurant",120.91865,13.83863,"Chowking"],
+    ["o83e8691b61034ef8","cafe",120.92442,13.83299,"Café Stefania"]
+  ]
+}

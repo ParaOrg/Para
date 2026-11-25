@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "cell": "2418-274",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o47d98501705147b0","restaurant",120.94026,13.74749,"Nik-Nik Restaurant"],
+    ["o4b26d7357906428c","restaurant",120.93676,13.7485,"Tapsilangan"],
+    ["o9382e7d7c8ae406d","restaurant",120.92474,13.71774,"Temy's"],
+    ["oc49a9447d73a4a92","restaurant",120.93595,13.73515,"Global Balikbayan Box"],
+    ["ocb5cf78761a343db","restaurant",120.93941,13.74772,"Hungry Pio Snack Bar & Restaurant"],
+    ["ofee10c69d2364bba","restaurant",120.93123,13.72977,"Rizalian Mabini Batangas"],
+    ["ofbca4426fb9f4040","fast_food",120.9404,13.74996,"McDonald's Mabini Batangas",{"brand":"McDonald's"}],
+    ["o544a83aa8181493e","dentist",120.93951,13.74579,"R.C. Hernandez Dental Clinic"],
+    ["o5abf8e0b9e474a4c","dentist",120.94048,13.74849,"Mark Dental Clinic"],
+    ["ob0e1ee7dacc1407f","dentist",120.94053,13.74833,"Sawali Dental Clinic"],
+    ["ocd3fcf6e1849426a","dentist",120.94116,13.74772,"JMC Dental Clinic"],
+    ["o6486f2f0b77b40c5","school",120.938,13.7438,"Anselmo Sandoval Memorial National High School"],
+    ["obffd4292ff274731","school",120.92867,13.73783,"Sta. Mesa Elementary School"],
+    ["od4f25292dcae4b31","school",120.92805,13.74299,"Sta. Mesa Elementary School"]
+  ]
+}

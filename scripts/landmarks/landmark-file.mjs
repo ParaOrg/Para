@@ -21,8 +21,14 @@ export const LANDMARK_KINDS = [
   'barangay',
   'street',
 ];
+/**
+ * Where the Philippines extract build.sh cuts to the map's panning box came from: the origin
+ * scripts/osm-mirror/fetch-extract.sh names in EXTRACT_SOURCE (Geofabrik, or openstreetmap.fr when
+ * Geofabrik failed), Geofabrik when none is named.
+ */
 export const LANDMARK_SOURCE =
-  'https://download.openstreetmap.fr/extracts/asia/philippines/metro_manila.osm.pbf';
+  process.env.EXTRACT_SOURCE ||
+  'https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf';
 const LICENSE = 'ODbL-1.0';
 const ATTRIBUTION = '© OpenStreetMap contributors';
 const LICENSE_NOTE =

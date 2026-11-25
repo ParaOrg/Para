@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "cell": "2416-283",
+  "attribution": "© OpenStreetMap contributors",
+  "establishments": [
+    ["n931621489","pharmacy",120.84479,14.18953,"Daine 2 Botikang Barangay"],
+    ["n12684421023","convenience",120.84556,14.1849,"Dali"],
+    ["n7007901739","restaurant",120.84847,14.15098,"Mon's Restaurant"],
+    ["n924883106","fuel",120.81221,14.16946,"Texxon"],
+    ["w1453269201","fuel",120.83544,14.19186,"Sadati Gas"],
+    ["w1019867127","toilets",120.84818,14.19659]
+  ]
+}

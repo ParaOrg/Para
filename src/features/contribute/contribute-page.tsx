@@ -1,6 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { Activity, Suspense, useEffect, useRef, useState, type ComponentProps } from 'react';
 
+import { useBackLayer } from '@/shared/hooks/use-back-layer';
 import { ErrorBoundary } from '@/shared/ui/error-boundary';
 
 import { useAccountGate } from './account/use-account-gate';
@@ -18,7 +19,6 @@ import {
   RecordingScreen,
   SaveForm,
   StopNotePill,
-  StopNotesView,
   StopRecordingScreen,
   TrackRoutesOffer,
   Tutorial,
@@ -35,6 +35,7 @@ import { useStartMorph } from './motion/use-start-morph';
 import { isNativeApp } from './native-bridge/native-app';
 import { hasSeenPermissionsScreen } from './native-bridge/permissions-screen-flag';
 import { SCREENS } from './navigation/screen-routes';
+import { useAndroidBack } from './navigation/use-android-back';
 import { useRideView, useScreenView } from './navigation/use-screen-view';
 import { pageLayout, pageScreens } from './page-layout';
 import { useRecording } from './recorder/use-recording';
@@ -152,6 +153,7 @@ export function ContributePage({ locator }: ContributePageProps) {
     onRouteRecorded: () => setOpenedTab('save'),
     onFlagged: stopNotes.showPill,
     notesAdded: stopNotes.notesAdded,
+    stopNotesFailures: stopNotes.viewFailures,
   });
   // History and Account are tabs on Ready; a build with no accounts has History alone.
   const hasAccount = canUpload();
@@ -238,6 +240,17 @@ export function ContributePage({ locator }: ContributePageProps) {
   };
   // Record, from History, goes to Start wherever History was opened from.
   const openRecordFromHistory = () => history.replaceWith(SCREENS.record.hash);
+
+  // The phone's Back closes what shows on top, as its own control does (use-back-layer.ts): ✕'s
+  // question with Keep recording, the tutorial with its close, a ride back to History, History
+  // and Account back to Record. With nothing over Record, it leaves the app.
+  useAndroidBack();
+  useBackLayer(stopQuestion.isShown, stopQuestion.keep);
+  useBackLayer(tutorial.isOfferShown, tutorial.closeOffer);
+  useBackLayer(tutorial.isShown, tutorial.close);
+  useBackLayer(ride.rideId !== null, () => ride.closeTo(SCREENS.history.hash));
+  useBackLayer(history.isOpen, openRecordFromHistory);
+  useBackLayer(profile.isOpen, profile.close);
 
   const historyTabRef = useRef<HTMLButtonElement>(null);
   const accountTabRef = useRef<HTMLButtonElement>(null);
@@ -493,13 +506,15 @@ export function ContributePage({ locator }: ContributePageProps) {
             </Suspense>
           )}
           {stopNotes.view && (
-            <Suspense fallback={null}>
-              <StopNotesView
-                view={stopNotes.view}
-                stopNotes={stopNotes.data}
-                onClose={stopNotes.close}
-              />
-            </Suspense>
+            <ErrorBoundary fallback={null} onCatch={stopNotes.failView}>
+              <Suspense fallback={null}>
+                <lazyScreens.stopNotes
+                  view={stopNotes.view}
+                  stopNotes={stopNotes.data}
+                  onClose={stopNotes.close}
+                />
+              </Suspense>
+            </ErrorBoundary>
           )}
           {layout.isFormShown && figures && (
             <Suspense fallback={null}>

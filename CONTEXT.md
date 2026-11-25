@@ -10,7 +10,8 @@ they cannot change: the R2 bucket `parapo-tiles` (a bucket cannot be renamed)
 and the tile archives in it (`tiles/parapo-*.pmtiles`, which the live
 `current.json` names), the weekly backups (`parapo-*.sql.gz.gpg`), the
 contributor app's signing key with its secret `PARAPO_KEY_PASSPHRASE`, and the
-old site's addresses on `villaralvorovic2.workers.dev`.
+old site's addresses on `villaralvorovic2.workers.dev`, retired: the owner deleted their
+Workers on 2026-11-23, so they answer 404 (`docs/operations/retire-old-site.md`).
 
 ## Language
 
@@ -143,6 +144,12 @@ _Avoid_: nickname, alias (an alias is something else)
 **Alias**:
 Another way people say the same place — "Fairview", "SM City Fairview" — kept
 so a search can match it. Never shown as the place's name.
+
+**Establishment**:
+A shop, bank, ATM, pharmacy, eatery or the like that the map draws from
+OpenStreetMap, as a round marker in its family's colour, while Location Labels
+show. Not a place: no route ends at one, and Para never draws one itself.
+_Avoid_: POI, point of interest (the tiles' word), business
 
 ### A direction and its places
 

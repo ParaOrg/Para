@@ -1,0 +1,32 @@
+{
+  "schema": 1,
+  "cell": "2421-297",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o2f77442b185d48e5","restaurant",121.09905,14.87104,"Gutes Essen Restaurant"],
+    ["o5aa85da7fc1f4fa7","restaurant",121.05839,14.85262,"Mariner Resto Grill"],
+    ["o5d3f4adc03e34c1c","restaurant",121.05735,14.85862,"Mateo's FOOD HOUSE PAGE"],
+    ["oea083095e4a64659","restaurant",121.08068,14.86691,"Sir Arman Restaurant"],
+    ["ofab4e99586ff4d64","restaurant",121.05254,14.85924,"The Chopsteaks"],
+    ["ofb8b6b7f58204a54","restaurant",121.0808,14.86712,"Chill Out Grill and Restaurant"],
+    ["o806bd65b399f4443","fast_food",121.05287,14.85085,"The Crunch"],
+    ["ob06e6ca115f045c4","fast_food",121.0574,14.85868,"McDonalds Sampol Bulacan"],
+    ["oc6ee05fcfa1a474c","fast_food",121.05569,14.85485,"Mang Inasal",{"brand":"Mang Cochinero"}],
+    ["o3460272c3bc14b19","cafe",121.05201,14.85013,"Tea Back Cafe - Sapang Palay Branch"],
+    ["o1e3ab9f5bf7d4430","clinic",121.05946,14.86111,"Emeterio Multispecialty Medical Clinic and Laboratory"],
+    ["of9e42b99a0234c42","clinic",121.05727,14.85425,"LN Laboratory Clinic Sapang Palay Branch"],
+    ["o3f373d3eaa8b425f","dentist",121.05735,14.85862,"Richel Dental Clinic"],
+    ["o558e886d4da24999","dentist",121.05369,14.8523,"Dental Clinic Dr. Liza Guevan de Leon"],
+    ["o5a2255124a7b4110","dentist",121.05801,14.85318,"Barrientos Dental Clinic"],
+    ["obf4352a9de55406d","dentist",121.05373,14.85192,"Lustrous Smiles Dental Clinic"],
+    ["ofd6d5e08877244d9","dentist",121.07222,14.85433,"Dra. Ethel Salazar-Placido, DMD"],
+    ["offd8a570ec0d496d","dentist",121.08534,14.85743,"Smile Spectrum Dental Center - Norzagaray"],
+    ["o0c63b455aa2740d0","school",121.05186,14.85585,"DepEd Sta. Cruz BBD Elementary School"],
+    ["o2146eef61e7149d9","school",121.08146,14.86499,"Shepherd Staff Christian School, Inc."],
+    ["o5afac00c865d435d","school",121.0583,14.85505,"Bagong Buhay B Elementary School"],
+    ["o60d5ff9b73284963","school",121.06512,14.86329,"Alan Holganza Memorial School"],
+    ["ob9bbbaded4d94045","school",121.05035,14.87644,"North Hills Village Elementary School"],
+    ["oe2e715bfb1b04e98","school",121.08157,14.87839,"Sapang Kawayan Elementary School"],
+    ["oee0aa0b58f174054","school",121.0844,14.86002,"Timoteo Policarpio Memorial Elementary School"]
+  ]
+}

@@ -155,10 +155,9 @@ export const Default: Story = {
 export const Typing: Story = {
   play: async ({ canvasElement }) => {
     await userEvent.type(field(canvasElement), 'cub');
-    await expect(optionTexts(canvasElement)).toEqual([
-      'CubaoJeepneyBus',
-      'Gateway CubaoCubao Gateway',
-    ]);
+    await waitFor(() =>
+      expect(optionTexts(canvasElement)).toEqual(['CubaoJeepneyBus', 'Gateway CubaoCubao Gateway']),
+    );
   },
 };
 
@@ -167,7 +166,9 @@ export const Results: Story = {
   play: async ({ args, canvasElement }) => {
     const input = field(canvasElement);
     await userEvent.type(input, 'fairveiw');
-    await expect(within(canvasElement).getAllByRole('option')[0]).toHaveTextContent('SM Fairview');
+    await waitFor(() =>
+      expect(within(canvasElement).getAllByRole('option')[0]).toHaveTextContent('SM Fairview'),
+    );
     await userEvent.keyboard('{ArrowDown}');
     await expect(within(canvasElement).getAllByRole('option')[0]).toHaveAttribute(
       'aria-selected',
@@ -183,6 +184,7 @@ export const Results: Story = {
 export const ResultActive: Story = {
   play: async ({ canvasElement }) => {
     await userEvent.type(field(canvasElement), 'cubao');
+    await waitFor(() => expect(optionTexts(canvasElement)[0]).toMatch(/^Cubao/));
     await userEvent.keyboard('{ArrowDown}');
     const [first] = within(canvasElement).getAllByRole('option');
     await expect(first).toHaveAttribute('aria-selected', 'true');
@@ -212,7 +214,9 @@ export const Located: Story = {
   args: { whereNow: () => [121.0531, 14.6211] },
   play: async ({ canvasElement }) => {
     await userEvent.type(field(canvasElement), 'cubao');
-    await expect(within(canvasElement).getAllByRole('option')[0]).toHaveTextContent('km');
+    await waitFor(() =>
+      expect(within(canvasElement).getAllByRole('option')[0]).toHaveTextContent('km'),
+    );
   },
 };
 
@@ -226,7 +230,7 @@ export const LoadingLandmarks: Story = {
   },
   play: async ({ canvasElement }) => {
     await userEvent.type(field(canvasElement), 'quiapo');
-    await expect(optionTexts(canvasElement)).toEqual(['Quiapo']);
+    await waitFor(() => expect(optionTexts(canvasElement)).toEqual(['Quiapo']));
     await expect(within(canvasElement).getByText('Looking through landmarks…')).toBeVisible();
   },
 };
@@ -237,7 +241,7 @@ export const LandmarksFailed: Story = {
   play: async ({ args, canvasElement }) => {
     await userEvent.type(field(canvasElement), 'quiapo');
     const retry = await within(canvasElement).findByRole('button', { name: 'Try again' });
-    await expect(optionTexts(canvasElement)).toEqual(['Quiapo']);
+    await waitFor(() => expect(optionTexts(canvasElement)).toEqual(['Quiapo']));
     await userEvent.click(retry);
     await expect(args.loadLandmarks).toHaveBeenCalledTimes(2);
   },
@@ -399,7 +403,7 @@ export const LongNames: Story = {
   args: { hotspots: LONG_NAMES, whereNow: () => [121.0, 14.6] },
   play: async ({ canvasElement }) => {
     await userEvent.type(field(canvasElement), 'pu');
-    await expect(within(canvasElement).getAllByRole('option')).toHaveLength(2);
+    await waitFor(() => expect(within(canvasElement).getAllByRole('option')).toHaveLength(2));
   },
 };
 
@@ -417,6 +421,6 @@ export const LongNamesOnPhone: Story = {
   ],
   play: async ({ canvasElement }) => {
     await userEvent.type(field(canvasElement), 'pu');
-    await expect(within(canvasElement).getAllByRole('option')).toHaveLength(2);
+    await waitFor(() => expect(within(canvasElement).getAllByRole('option')).toHaveLength(2));
   },
 };

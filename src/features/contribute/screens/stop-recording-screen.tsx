@@ -2,6 +2,7 @@ import { useEffect, useId, useRef } from 'react';
 
 import { Button } from '@/design-system/primitives/button';
 import { useEscape } from '@/shared/hooks/use-escape';
+import { useTabLoop } from '@/shared/hooks/use-tab-loop';
 import { cn } from '@/shared/utils/cn';
 
 import stopHand from './stop-hand.svg';
@@ -47,25 +48,9 @@ export function StopRecordingScreen({
 
   // Focus on the safe answer as it opens, and Tab round inside.
   useEffect(() => {
-    const screen = screenRef.current;
-    if (!screen) return;
-    screen.querySelector('button')?.focus();
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key !== 'Tab') return;
-      const buttons = [...screen.querySelectorAll('button')];
-      const first = buttons.at(0);
-      const last = buttons.at(-1);
-      if (e.shiftKey && document.activeElement === first) {
-        e.preventDefault();
-        last?.focus();
-      } else if (!e.shiftKey && document.activeElement === last) {
-        e.preventDefault();
-        first?.focus();
-      }
-    };
-    screen.addEventListener('keydown', handleKeyDown);
-    return () => screen.removeEventListener('keydown', handleKeyDown);
+    screenRef.current?.querySelector('button')?.focus();
   }, []);
+  useTabLoop(screenRef, 'button');
 
   const distance = distanceFigure(figures.distanceM);
 

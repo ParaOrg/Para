@@ -1,15 +1,16 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { expect, fn, userEvent, within } from 'storybook/test';
+import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
-import { RouteCard, type RouteCardEndPoint, type RouteCardRide } from './route-card';
+import { RouteCard } from './route-card';
+import type { RouteCardEndPoint, RouteCardRide } from './route-card-ride';
 
 /** Rows to the given places, with no station codes. */
 const roadRows = (places: readonly string[]): RouteCardEndPoint[] =>
-  places.map((place, i) => ({ id: String(i), routeDirection: place, stationCode: null }));
+  places.map((place, i) => ({ id: String(i), destination: place, via: null, stationCode: null }));
 
 /** One train row, to a station and its code. */
 const trainRow = (place: string, code: string | null): RouteCardEndPoint[] => [
-  { id: 'a', routeDirection: place, stationCode: code },
+  { id: 'a', destination: place, via: null, stationCode: code },
 ];
 
 const meta = {
@@ -27,10 +28,8 @@ const meta = {
   ],
   args: {
     ride: { kind: 'road', livery: 'jeep', vehicle: 'Jeepney' },
-    state: 'rest',
     routeOrigin: 'Tala',
     endPoints: roadRows(['SM Fairview', 'Novaliches']),
-    onSelect: fn(),
     onPick: fn(),
     testId: 'chooser',
   },
@@ -40,24 +39,55 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /**
- * Property 1=Default, Jeep: Card/Jeep under Route/RouteCardPrimary and the Primary Blob; its badge
- * Card/Jeep/surface on Card/Bus/on-surface. The place in SN Pro Bold 24/32, the rows Medium 17/24.
+ * Variatns=Jeep: Card/jeep/fill, white words, the jeep alone at the top; the place in Bold 28/32,
+ * each row Figma's Destinationn, 36 tall. The list keeps the mode's name in words.
  */
 export const Jeep: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const place = getComputedStyle(canvas.getByTestId('chooser-select'));
-    await expect(place.fontSize).toBe('24px');
+    await expect(place.fontSize).toBe('28px');
     await expect(place.lineHeight).toBe('32px');
     await expect(place.fontWeight).toBe('700');
-    await expect(canvas.getByText('Jeep')).toBeVisible();
-    // Each row is 32 tall (Figma's RouteEndPointBar inside RouteCard).
+    await expect(canvas.queryByText('Jeep')).toBeNull();
+    await expect(canvas.getByRole('list', { name: 'Jeep' })).toBeVisible();
     const [row] = canvas.getAllByTestId('chooser-item');
-    await expect(row?.getBoundingClientRect().height).toBe(32);
+    await expect(row?.getBoundingClientRect().height).toBe(36);
+    // Destinationn: the place in SemiBold 16/24 after a 16 arrow, 4 under the origin.
+    const words = row ? getComputedStyle(within(row).getByText('SM Fairview')) : null;
+    await expect(words?.fontSize).toBe('16px');
+    await expect(words?.lineHeight).toBe('24px');
+    await expect(words?.fontWeight).toBe('600');
+    await expect(row?.querySelector('svg')?.getBoundingClientRect().width).toBe(16);
+    const origin = canvas.getByTestId('chooser-select').getBoundingClientRect();
+    await expect((row?.getBoundingClientRect().top ?? 0) - origin.bottom).toBe(4);
+    await expect(canvasElement.querySelector('img')).not.toBeNull();
   },
 };
 
-/** Property 1=Variant2, UV Express: a light card, dark words, under Route/RouteCardInverse; a dark badge. */
+/**
+ * Bagong Silang Phase 5's card in Figma's RouteCardStackedList (4633:19780): two routes to each
+ * place told apart by their vias, each under its place.
+ */
+export const WithVias: Story = {
+  args: {
+    routeOrigin: 'Bagong Silang Phase 5',
+    endPoints: [
+      { id: 'a', destination: 'SM Fairview', via: 'Maligaya', stationCode: null },
+      { id: 'b', destination: 'SM Fairview', via: 'Almar', stationCode: null },
+      { id: 'c', destination: 'Philcoa', via: 'Maligaya', stationCode: null },
+      { id: 'd', destination: 'Philcoa', via: 'Almar', stationCode: null },
+      { id: 'e', destination: 'Novaliches (Bayan)', via: null, stationCode: null },
+    ],
+  },
+  play: async ({ canvasElement }) => {
+    const rows = within(canvasElement).getAllByTestId('chooser-item');
+    await expect(rows[0]?.textContent).toBe('SM Fairview, Via Maligaya');
+    await expect(rows[0]?.getBoundingClientRect().height).toBe(56);
+  },
+};
+
+/** Variatns=UV Express: a light card, Text/primary words, under the inverse card's inner shadow. */
 export const UvExpress: Story = {
   args: {
     ride: { kind: 'road', livery: 'uv-express', vehicle: 'UV Express' },
@@ -66,16 +96,26 @@ export const UvExpress: Story = {
   },
 };
 
-/** Property 1=Variant3, E-Jeep: as UV Express, in Card/Ejeep. */
+/**
+ * Variatns=E Jeep: as UV Express, on E-jeep's own surface (no new fill yet), with no Blob and its
+ * rows flush under the origin, as Figma draws it.
+ */
 export const Ejeep: Story = {
   args: {
     ride: { kind: 'road', livery: 'ejeep', vehicle: 'E-Jeep' },
     routeOrigin: 'Palmer',
     endPoints: roadRows(['SM Fairview', 'Novaliches', 'Philcoa', 'Cubao']),
   },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvasElement.querySelector('img')).toBeNull();
+    const origin = canvas.getByTestId('chooser-select').getBoundingClientRect();
+    const [row] = canvas.getAllByTestId('chooser-item');
+    await expect((row?.getBoundingClientRect().top ?? 0) - origin.bottom).toBe(0);
+  },
 };
 
-/** Property 1=Bus: Card/Bus under Route/RouteCardPrimary. */
+/** Variatns=Bus: Card/bus/fill, white words. */
 export const Bus: Story = {
   args: {
     ride: { kind: 'road', livery: 'bus', vehicle: 'Bus' },
@@ -140,15 +180,23 @@ export const Ferry: Story = {
   },
 };
 
-/** Selected: pressed in under Route/RouteCardPrimarySelected; nothing else changes. */
-export const Selected: Story = { args: { state: 'selected' } };
+/** The studio's (its editors keep Selected): a card Selected, or let go, by a tap off its rows. */
+const studio = (state: 'rest' | 'selected') => ({ selection: { state, onSelect: fn() } });
+
+/**
+ * In the studio, Selected: pressed in under Route/RouteCardPrimarySelected; nothing else changes.
+ * On the public map a card wears it only while a finger is down on it.
+ */
+export const Selected: Story = { args: { ...studio('selected') } };
 
 /** Selected, on a light card: pressed in under Route/RouteCardInverseSelected. */
-export const UvExpressSelected: Story = { args: { ...UvExpress.args, state: 'selected' } };
+export const UvExpressSelected: Story = {
+  args: { ...UvExpress.args, ...studio('selected') },
+};
 
 /** Selected, a train: as Jeep. */
 export const LightRailWayOneSelected: Story = {
-  args: { ...LightRailWayOne.args, state: 'selected' },
+  args: { ...LightRailWayOne.args, ...studio('selected') },
 };
 
 /** Every destination is listed, however many: the card grows, and nothing is cut to "+N more". */
@@ -217,7 +265,7 @@ export const NoMode: Story = {
 
 /**
  * A row opens its direction straight away; a tap anywhere else on the card — its name, the room
- * around its rows — selects it.
+ * around its rows — opens its first row's, the card one button named for its place and that row.
  */
 export const ARowOpens: Story = {
   play: async ({ args, canvasElement }) => {
@@ -229,26 +277,44 @@ export const ARowOpens: Story = {
     const under = doc.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2);
     await expect(under?.closest('[data-testid]')?.getAttribute('data-testid')).toBe('chooser-item');
     await userEvent.click(row);
-    await expect(args.onPick).toHaveBeenCalledWith('1');
-    await expect(args.onSelect).not.toHaveBeenCalled();
-    // Below the last row, the card's own room is the name's.
+    await expect(args.onPick).toHaveBeenLastCalledWith('1');
+    // Below the last row, the card's own room is the name's: it opens the first row's direction.
     const card = canvas.getByTestId('chooser-origin').getBoundingClientRect();
     const room = doc.elementFromPoint(card.x + card.width / 2, card.bottom - 3);
     await expect(room?.getAttribute('data-testid')).toBe('chooser-select');
+    await expect(room).toHaveAccessibleName('Tala, to SM Fairview');
+    await expect(room).not.toHaveAttribute('aria-pressed');
     if (room) await userEvent.click(room);
-    await expect(args.onSelect).toHaveBeenCalledTimes(1);
+    await expect(args.onPick).toHaveBeenLastCalledWith('0');
   },
 };
 
-/** Selected, a row still opens its direction; a tap on the card lets it go. */
+/**
+ * Pressed, on the public map: while a finger is down on the card off its rows, it is pressed in
+ * under the Selected shadow (`data-pressed`); let go, it rests again. It is never Selected.
+ */
+export const Pressed: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const card = canvas.getByTestId('chooser-origin');
+    const target = canvas.getByTestId('chooser-select');
+    target.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+    await waitFor(() => expect(card).toHaveAttribute('data-pressed', 'true'));
+    await expect(card).toHaveAttribute('data-state', 'rest');
+    target.dispatchEvent(new PointerEvent('pointerup', { bubbles: true }));
+    await waitFor(() => expect(card).not.toHaveAttribute('data-pressed'));
+  },
+};
+
+/** In the studio, Selected, a row still opens its direction; a tap on the card lets it go. */
 export const SelectedRowsOpen: Story = {
-  args: { state: 'selected' },
+  args: studio('selected'),
   play: async ({ args, canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.click(canvas.getByText('Novaliches'));
     await expect(args.onPick).toHaveBeenCalledWith('1');
     await userEvent.click(canvas.getByRole('button', { name: 'Tala', pressed: true }));
-    await expect(args.onSelect).toHaveBeenCalledTimes(1);
+    await expect(args.selection?.onSelect).toHaveBeenCalledTimes(1);
   },
 };
 

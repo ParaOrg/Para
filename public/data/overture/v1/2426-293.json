@@ -1,0 +1,10 @@
+{
+  "schema": 1,
+  "cell": "2426-293",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o2681295c52af4fe2","fast_food",121.32458,14.65333,"KFC"],
+    ["o370ecf3e07fe43e7","fast_food",121.34376,14.66793,"KFC"],
+    ["o95000bbc36e94038","fast_food",121.3354,14.65245,"KFC"]
+  ]
+}

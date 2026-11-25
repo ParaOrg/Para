@@ -15,6 +15,7 @@ import { directionEndHotspots, directionEnds, isLoop, type Direction } from '../
 
 /** No stretch drawn pale: one array, so the rest's source is not set afresh each render. */
 const NOTHING_PALE: readonly (readonly LngLat[])[] = [];
+const NO_DIRECTIONS: readonly Direction[] = []; // No ride with no trip open (`isTripOnly`).
 
 /**
  * What a lit route wears on the map, in both apps: its green stretches
@@ -55,6 +56,8 @@ export function useLitRides(
    * has no ends to circle.
    */
   tipId: string | null = null,
+  /** Only an open trip wears chevrons and its ends (the public map's): else the lit line alone. */
+  isTripOnly = false,
 ): Ride[] {
   // Where a lit direction passes a hintuan, the line turns green for that
   // stretch: worked out on the full lines read — a lit direction's is asked
@@ -72,9 +75,10 @@ export function useLitRides(
   // circle with its place's name and, where the route says, its hotspot.
   const selectedId = saved.selected?.id ?? null;
   const unmarkedId = startId !== null && ridden === null ? selectedId : null;
+  const riding = isTripOnly && !saved.selected ? NO_DIRECTIONS : saved.litDirections;
   const rides = useMemo(
     () =>
-      saved.litDirections.map((v): Ride => {
+      riding.map((v): Ride => {
         if (isLoop(v))
           return loopRide(v, hotspots, selectedId === v.id ? tipId : null, ridden, unmarkedId);
         const line = travelLine(v, hotspots);
@@ -91,7 +95,7 @@ export function useLitRides(
           routeCode: v.route?.routeCode ?? null,
         };
       }),
-    [saved.litDirections, selectedId, hotspots, ridden, unmarkedId, tipId],
+    [riding, selectedId, hotspots, ridden, unmarkedId, tipId],
   );
   useDirectionArrows(map, rides);
   // Outside the ride, the trip's line in its card's pale, over the lit line

@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "cell": "2425-291",
+  "attribution": "© OpenStreetMap contributors",
+  "establishments": [
+    ["n12306494305","convenience",121.26718,14.59173,"Lorna Store"],
+    ["n12306500671","convenience",121.26265,14.59885,"Alforte Store"],
+    ["n12306504561","convenience",121.26741,14.59105,"Alamo's Convenience Store"],
+    ["n12334727429","convenience",121.26746,14.59079,"O! Save"],
+    ["n8067284163","cafe",121.26708,14.59071,"25th Hill Café"],
+    ["w1195395042","cafe",121.25155,14.58297,"Corner Coffee"],
+    ["n11094566672","toilets",121.25105,14.58506],
+    ["n11094566702","toilets",121.25146,14.58261],
+    ["w1195395050","toilets",121.25193,14.58464]
+  ]
+}

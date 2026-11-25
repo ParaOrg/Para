@@ -10,18 +10,22 @@
 # once a second.
 #
 #   0:00  the app starts on the screen
-#   0:20  the font size changes, and at 0:35 changes back: Android rebuilds the activity each time, in
-#         the same process (font scale is not among the manifest's configChanges), as a phone does
-#         on a settings change; the page reloads and imports the fixes the service kept
-#   1:00  the screen goes off
+#   0:20  the font size changes, and once the rebuilt page has imported, changes back: Android
+#         rebuilds the activity each time, in the same process (font scale is not among the
+#         manifest's configChanges), as a phone does on a settings change; the page reloads and
+#         imports the fixes the service kept
+#   ~1:00 the screen goes off, 25 s after the second import
 #   15:00 the app's process is killed (kill -9: what Android's low-memory killer does), and the
 #         app is opened again; the page imports the fixes the foreground service kept
 #   ~16:00 the screen goes off again; at 20:00 it comes on
+#   20:40 the phone's Back on Record, nothing over it: the app goes to the back as Home sends it,
+#         and the ride goes on (BackPlugin.java)
 #
 # It passes when the ride started once; each rebuilt activity found every fix the service had kept;
 # the service and its notice stayed up with the screen off; fixes arrived at about a second apart;
 # every fix the service had kept at the kill is in the ride after reopening; the ride goes on
-# afterwards; and no fix is twice in it or out of order.
+# afterwards; and no fix is twice in it or out of order. Back then leaves the app for the back,
+# its process and the service alive, and the ride records on.
 #
 # The test marks its own steps in logcat (tag PARA_RIDE_TEST), so the checker knows which of the
 # page's imports followed the rebuilds and which followed the kill.
@@ -81,6 +85,20 @@ for permission in ACCESS_FINE_LOCATION ACCESS_COARSE_LOCATION ACCESS_BACKGROUND_
 done
 adb shell dumpsys battery unplug || true   # on the battery, as a phone on a ride is
 
+# For the host list (contributor-app.yml, scripts/apk/hosts-in-capture.mjs): plain DNS, so the
+# names the phone looks up can be read in the capture, then one lookup the list must show or call
+# the capture incomplete. Under example.com (reserved for examples), not .invalid: a resolver
+# answers .invalid itself and sends nothing (RFC 6761). Both are printed, so the log shows them.
+adb shell settings put global private_dns_mode off || echo "could not turn Private DNS off"
+# Wi-Fi off too: with it up the phone sends its traffic that way, around the NIC the capture
+# records, so the capture holds only what went before Wi-Fi came up. The next line names the
+# network the phone is left with.
+adb shell svc wifi disable || echo "could not turn Wi-Fi off"
+sleep 5
+echo "active network: $(adb shell dumpsys connectivity | tr -d '\r' | grep -m1 -E 'Active default network|NetworkAgentInfo' | cut -c1-160)"
+echo "Private DNS: $(adb shell settings get global private_dns_mode | tr -d '\r')"
+echo "control lookup: $(adb shell ping -c 1 -W 2 capture-check.example.com 2>&1 | head -1 | tr -d '\r')"
+
 adb logcat -c
 adb logcat -v time > "$OUT/logcat.txt" &
 LOGCAT_PID=$!
@@ -94,12 +112,27 @@ FEED_PID=$!
 # A step of the test's own, marked in logcat for the checker.
 mark() { adb shell log -t PARA_RIDE_TEST "$1"; }
 
+# The page's imports so far: each rebuilt page logs one once it has read the service's fixes.
+imports() { grep -c "PARA_RIDE imported" "$OUT/logcat.txt"; }
+# Changes the font size, which rebuilds the activity, then waits for the rebuilt page's import
+# before going on: a slow emulator has taken over 17 s to import, so a fixed wait could rebuild
+# the page again before it had. A page that never imports is named here, and the checker fails.
+rebuild_with_font() {
+  local before
+  before=$(imports)
+  adb shell settings put system font_scale "$1"
+  for _ in $(seq 60); do
+    sleep 1
+    [ "$(imports)" -gt "$before" ] && return
+  done
+  echo "FAIL: the page rebuilt at font size $1 imported nothing within 60 s"
+}
+
 adb shell am start -n "$PKG/$ACTIVITY"
 sleep 20
 mark rebuild
-adb shell settings put system font_scale 1.15
-sleep 15
-adb shell settings put system font_scale 1.0
+rebuild_with_font 1.15
+rebuild_with_font 1.0
 sleep $((OFF_AFTER - 35))
 adb exec-out screencap -p > "$OUT/screen-before.png"
 adb shell input keyevent KEYCODE_SLEEP
@@ -135,11 +168,24 @@ adb shell input keyevent KEYCODE_WAKEUP
 adb shell wm dismiss-keyguard
 sleep 40   # one more report with the screen on
 adb exec-out screencap -p > "$OUT/screen-after.png"
+
+# Back on Record mid-ride: nothing is over it, so the page asks to leave (use-android-back.ts).
+mark back
+adb shell input keyevent KEYCODE_BACK
+sleep 3
+adb shell dumpsys activity activities | grep -m1 -E "mResumedActivity|topResumedActivity" | tee "$OUT/resumed-after-back.txt"
+PID_AFTER_BACK=$(adb shell pidof "$PKG" | tr -d '\r')
+adb shell dumpsys activity services "$PKG" > "$OUT/services-after-back.txt"
+# The service's own count: with the app in the back the page may be frozen, as with the screen off.
+FIXES_AT_BACK=$(native_fixes)
+sleep 30
+FIXES_AFTER_BACK=$(native_fixes)
 kill "$FEED_PID" "$LOGCAT_PID" 2> /dev/null
 
-python3 - "$OUT" "$KEPT_AT_KILL" "${PID_BEFORE:-}" "${PID_AFTER_KILL:-}" << 'PY'
+python3 - "$OUT" "$KEPT_AT_KILL" "${PID_BEFORE:-}" "${PID_AFTER_KILL:-}" "${PID_AFTER_BACK:-}" "$PKG" "$FIXES_AT_BACK" "$FIXES_AFTER_BACK" << 'PY'
 import re, sys
-out, kept_at_kill, pid_before, pid_after = sys.argv[1:5]
+out, kept_at_kill, pid_before, pid_after, pid_after_back, pkg = sys.argv[1:7]
+fixes_at_back, fixes_after_back = int(sys.argv[7] or 0), int(sys.argv[8] or 0)
 kept_at_kill = int(kept_at_kill)
 log = open(f"{out}/logcat.txt", errors="replace").read().splitlines()
 # The page's lines, each with where it is in the log, and the test's own marks.
@@ -163,6 +209,9 @@ ours = [f for i, f in imports if rebuild_at < i < kill_at]
 androids = [f for i, f in imports if i < rebuild_at]
 imported = [f for i, f in imports if i > kill_at]
 reports = [fields(r) for i, r in ride if r.startswith("report ")]
+back_at = marks.get("back", len(log))
+resumed_after_back = open(f"{out}/resumed-after-back.txt", errors="replace").read()
+services_after_back = open(f"{out}/services-after-back.txt", errors="replace").read()
 ride = [r for _, r in ride]
 services = open(f"{out}/services.txt", errors="replace").read()
 notification = open(f"{out}/notification.txt", errors="replace").read()
@@ -200,6 +249,14 @@ checks = {
     # (basemap-cache.ts), as a phone's must to draw it with no signal.
     f"the map kept its basemap tiles and files on the phone ({last_kept})": last_kept_tiles > 0
     and last_kept_meta > 0,
+    # Back on Record, nothing over it: the task to the back as Home sends it, never the activity ended.
+    f"Back on Record mid-ride left the app for the back ({resumed_after_back.strip()[:80]})": back_at < len(log)
+    and bool(resumed_after_back.strip())
+    and pkg not in resumed_after_back,
+    "the app's process lived on after Back": bool(pid_after_back),
+    "the service stayed in the foreground after Back": "isForeground=true" in services_after_back,
+    f"the service recorded on after Back ({fixes_at_back} then {fixes_after_back} fixes kept)": fixes_after_back
+    >= fixes_at_back + 15,
 }
 lines = [f"{'PASS' if ok else 'FAIL'}: {name}" for name, ok in checks.items()]
 lines.append("")

@@ -1,0 +1,33 @@
+{
+  "schema": 1,
+  "cell": "2422-276",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o1efdbe41c62e4406","restaurant",121.13042,13.83154,"Arcem Food Products"],
+    ["o2c82e7bf014c4848","restaurant",121.14685,13.82523,"Great Taste Inasal"],
+    ["o4cd65c3ab515446b","restaurant",121.13162,13.82886,"American Ribs and Wings - Palindan, Ibaan, Batangas"],
+    ["o6709750735424f2c","restaurant",121.13154,13.82404,"Yumgyupsarap Ibaan Batangas Unlimited Korean BBQ"],
+    ["o7061c0b2d1094142","restaurant",121.13387,13.81965,"Andok's"],
+    ["o787e430db28040f8","restaurant",121.13107,13.81664,"Alessandro Resto and Carwash"],
+    ["o792a5822b73244e7","restaurant",121.14058,13.82241,"Lomihan Sa Baryo"],
+    ["obc1f84ffc475462a","restaurant",121.13771,13.83451,"GogiJib Korean Grill House"],
+    ["ocddd268c9cf842f0","restaurant",121.13088,13.83069,"Arche Goto and Lomi House"],
+    ["oee9559d2c28d4ec1","restaurant",121.1238,13.83861,"Riverside"],
+    ["of474275ffa8b4619","restaurant",121.13499,13.82559,"Leonila's Bistro by Sanito"],
+    ["o02698478ec67435a","fast_food",121.12199,13.83938,"Edna's Lomi Haus"],
+    ["o6c0a92db69c64f6b","fast_food",121.13298,13.81834,"TEAtoy"],
+    ["o7dfc490bd06b4d35","fast_food",121.11121,13.81814,"Potato Corner"],
+    ["o198a1c0645fa48d9","cafe",121.12233,13.83913,"Spill the Beans Cafe"],
+    ["of9b2f0327edf4120","cafe",121.14838,13.80935,"Tabla Bar and Cafe"],
+    ["ofbf7a13a660c44c2","cafe",121.13982,13.83843,"Cafe Rativa x Kambal Inasal"],
+    ["o48e227855d7b4a91","clinic",121.13458,13.82372,"God Almighty Clinical Laboratory"],
+    ["o8b7ef2fd87ca446a","clinic",121.13358,13.82026,"Amberspecs Optical Clinic"],
+    ["o585d4a76ec9e49ec","dentist",121.13345,13.8182,"Madlangbayan Family Dental Clinic"],
+    ["o91ade7a062d14793","dentist",121.13351,13.81995,"SmileFort Dental Clinic"],
+    ["oab06586921bd4ddd","dentist",121.13392,13.8196,"SubidoDentals Main - Ibaan, Batangas"],
+    ["o51feddefa5704b2d","school",121.13581,13.8293,"Dr. Juan A. Pastor Intergrated National High School"],
+    ["obb709a5f80c04085","school",121.10177,13.8494,"DepEd Dagatan ES"],
+    ["oe3b190cdf2294d6b","school",121.13305,13.82791,"Procopio Memorial Elementary School"],
+    ["ofda531e3bd874dff","school",121.11543,13.84064,"Malainin Elementary School Malainin Ibaan Batangas"]
+  ]
+}

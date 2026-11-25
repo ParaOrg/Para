@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "cell": "2423-285",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o6c092136509c4184","restaurant",121.15258,14.2739,"Samgyupsalawa"],
+    ["oef440a9a68f544e5","restaurant",121.15646,14.25273,"Tatay Charlie Meals on Wheels"],
+    ["o2770fee640354e78","fast_food",121.15908,14.26807,"Goto Hell Pares - Cabuyao Marinig Branch"],
+    ["o6b496d02c87e4c74","cafe",121.16353,14.25514,"Caratsells Cafe"],
+    ["ob09eead1c50845cd","cafe",121.15105,14.2594,"Oester's Cafe and Resto"],
+    ["ofca8ba80e35d4b1a","cafe",121.15404,14.26013,"Le Prince Cafe"],
+    ["o472e480415a94b9e","school",121.16321,14.26299,"Gulod National High School"],
+    ["o966af99dae894e49","school",121.15932,14.2674,"Well of Wisdom Preparatory and Grade School"],
+    ["od8cc45d37a154772","school",121.15087,14.25977,"Jezreel Valley Academy Inc."],
+    ["oeafde2eb6c5941c5","school",121.16798,14.25393,"Gulod National HIGH School (GNHS)"],
+    ["ofb1653025bdb4441","school",121.15642,14.26813,"Academia de San Jose"]
+  ]
+}

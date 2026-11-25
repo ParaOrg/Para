@@ -1,12 +1,14 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import type { ComponentType } from 'react';
 
+import * as mapControlIcons from './map-control-icons';
 import * as routeIcons from './route-icons';
 
-/** Every icon the file draws, by the name it is exported as: read off the module, so a new one shows here too. */
-const ICONS: readonly { name: string; Icon: ComponentType }[] = Object.entries(routeIcons).map(
-  ([name, Icon]) => ({ name, Icon }),
-);
+/** Every icon the sprite's files draw, by the name each is exported as: read off the modules, so a new one shows here too. */
+const ICONS: readonly { name: string; Icon: ComponentType }[] = Object.entries({
+  ...routeIcons,
+  ...mapControlIcons,
+}).map(([name, Icon]) => ({ name, Icon }));
 
 type Ground = 'primary' | 'inverse';
 /** The two inks Figma draws them in, each on a ground it is read against. */

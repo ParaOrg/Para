@@ -336,6 +336,17 @@
   --map-ferry-surface-pale: var(--color-ferry-200);
   --map-ferry-border-primary: var(--color-ferry-700);
   --map-ferry-timeline-surface: var(--color-ferry-800);
+  /* Provisional, not in Figma yet: an establishment's marker on the map (establishment-kinds.ts),
+     one colour per family, after Apple Maps' pattern. Each passes 3:1 against Monochrome's and
+     Coloured's ground and carries a white glyph at 4.5:1; on Dark, the marker's white rim does. */
+  --map-establishment-food-surface: var(--color-orange-700);
+  --map-establishment-shopping-surface: var(--color-yellow-700);
+  --map-establishment-money-surface: var(--color-teal-700);
+  --map-establishment-health-surface: var(--color-red-600);
+  --map-establishment-education-surface: var(--color-amber-800);
+  --map-establishment-transport-surface: var(--color-cyan-700);
+  --map-establishment-services-surface: var(--color-slate-600);
+  --map-establishment-safety-surface: var(--color-blue-900);
 }
 
 /* The semantics as utilities: text-content-primary, bg-surface, border-border-primary… */
@@ -468,6 +479,14 @@
   --color-map-ferry-surface-pale: var(--map-ferry-surface-pale);
   --color-map-ferry-border-primary: var(--map-ferry-border-primary);
   --color-map-ferry-timeline-surface: var(--map-ferry-timeline-surface);
+  --color-map-establishment-food-surface: var(--map-establishment-food-surface);
+  --color-map-establishment-shopping-surface: var(--map-establishment-shopping-surface);
+  --color-map-establishment-money-surface: var(--map-establishment-money-surface);
+  --color-map-establishment-health-surface: var(--map-establishment-health-surface);
+  --color-map-establishment-education-surface: var(--map-establishment-education-surface);
+  --color-map-establishment-transport-surface: var(--map-establishment-transport-surface);
+  --color-map-establishment-services-surface: var(--map-establishment-services-surface);
+  --color-map-establishment-safety-surface: var(--map-establishment-safety-surface);
 }
 
 /*
@@ -568,6 +587,11 @@
     inset 0 -2px 4px 0 rgb(0 0 0 / 0.24), inset 0 2px 4px 0 rgb(255 255 255 / 0.24);
   --shadow-route-card-inverse:
     inset 0 -4px 8px 0 rgb(0 0 0 / 0.08), inset 0 3px 8px 0 rgb(255 255 255 / 0.64);
+  /* The redesign's darker RouteCards at rest: Figma's Route/RouteCardPrimary as it now stands
+   * (RouteCard, 4629:22776), softer than --shadow-route-card-primary, which keeps the style's
+   * earlier values for the boxes and buttons that share it until they are restyled. */
+  --shadow-route-card-fill:
+    inset 0 -2px 4px 0 rgb(0 0 0 / 0.12), inset 0 1px 4px 0 rgb(255 255 255 / 0.12);
 
   /* A bottom sheet, lifted off the map (BottomSheet/TopShadow, 3817:6007; its Figma
    * effect style is named BottomToolbar/TopShadow). */
@@ -630,4 +654,263 @@
     inset -2px -2px 4px 0 rgb(18 18 18 / 0.16), inset 3px 3px 8px 0 rgb(12 12 12 / 0.56);
   --shadow-route-card-inverse-selected:
     inset 2.5px 2.5px 8px 0 rgb(47 47 47 / 0.72), inset -1px -1px 2px 0 rgb(0 0 0 / 0.32);
+
+  /* A tab on a panel's top edge: a trip's "View less" (Figma's effect style ExperimentInverse,
+   * 4796:30411). Its "View more", under the ends card, wears shadow-sm. */
+  --shadow-tab-inverse: 0 -2px 8px 0 rgb(43 43 43 / 0.1);
+
+  /* The panel under a trip's open list of other routes, lifted over the list (BottomContent,
+   * 4796:30411). Figma's is unnamed. */
+  --shadow-trip-band-inverse: 0 -2px 4px 0 rgb(43 43 43 / 0.1);
+
+  /* A trip's signboards, sunk into the sheet (Figma's effect style Signboard, 4822:43834). */
+  --shadow-signboard:
+    inset 3px 3px 4px 0 rgb(0 0 0 / 0.32), inset 4px 4px 32px 0 rgb(140 140 140 / 0.32),
+    inset -12px -12px 8px 0 rgb(255 255 255 / 0.8);
+}
+
+/*
+ * The redesign's tokens: the Figma file's new "Semantics" collection and the
+ * 15-step primitives it aliases. The semantics above are Figma's
+ * "Semantics(Depreciated)": they stay, so the code that uses them keeps its
+ * look, while new and restyled components use only these. The primitives'
+ * steps are numbered 1 to 15, as in Figma, so they never meet Tailwind's
+ * 50 to 950 under the same name. Only the families these semantics use are
+ * here; the rest wait until a semantic needs them.
+ *
+ * Some Figma names are misspelt, mix their case or repeat a word, and two
+ * (Border/secondary, Border/tertiary) are taken by the deprecated set. The
+ * code uses the names Figma will take once it is renamed; until then,
+ * /sync-tokens maps:
+ *   Figma                          code
+ *   text/quarternnary              --text-quaternary
+ *   text/on-text                   --text-on-fill
+ *   bg/surface/surface             --bg-surface
+ *   bg/surface/surface-secondary   --bg-surface-secondary
+ *   bg/fill/fill                   --bg-fill
+ *   bg/fill/fill-secondary         --bg-fill-secondary
+ *   border/border                  --stroke-default
+ *   border/border-light            --stroke-light
+ *   border/border-secondary        --stroke-secondary
+ *   border/border-tertiary         --stroke-tertiary
+ *   border/border-quarternary      --stroke-quaternary
+ *   border/border-dark             --stroke-dark
+ *   card/UVExpress/fill            --card-uv-express-fill
+ *   card/Bus/fill                  --card-bus-fill
+ *   card/LRTOne/fill               --card-lrt-one-fill
+ *   card/LRTTwo/fill               --card-lrt-two-fill
+ *   card/MRTThree/fill             --card-mrt-three-fill
+ */
+@theme {
+  --color-neutral-1: #fcfcfc;
+  --color-neutral-2: #fafafa;
+  --color-neutral-3: #f5f5f5;
+  --color-neutral-4: #f0f0f0;
+  --color-neutral-5: #e5e5e5;
+  --color-neutral-6: #d4d4d4;
+  --color-neutral-7: #a1a1a1;
+  --color-neutral-8: #737373;
+  --color-neutral-9: #525252;
+  --color-neutral-10: #404040;
+  --color-neutral-11: #262626;
+  --color-neutral-12: #1e1e1e;
+  --color-neutral-13: #171717;
+  --color-neutral-14: #0a0a0a;
+  --color-neutral-15: #050505;
+
+  --color-red-1: #fef8f8;
+  --color-red-2: #fef2f2;
+  --color-red-3: #ffe2e2;
+  --color-red-4: #ffd6d6;
+  --color-red-5: #ffc9c9;
+  --color-red-6: #ffa2a2;
+  --color-red-7: #ff6467;
+  --color-red-8: #fb2c36;
+  --color-red-9: #e7000b;
+  --color-red-10: #c10007;
+  --color-red-11: #9f0712;
+  --color-red-12: #901217;
+  --color-red-13: #82181a;
+  --color-red-14: #460809;
+  --color-red-15: #2c0505;
+
+  --color-orange-1: #fffbf5;
+  --color-orange-2: #fff7ed;
+  --color-orange-3: #ffedd4;
+  --color-orange-4: #ffe2be;
+  --color-orange-5: #ffd6a8;
+  --color-orange-6: #ffb86a;
+  --color-orange-7: #ff8904;
+  --color-orange-8: #ff6900;
+  --color-orange-9: #f54a00;
+  --color-orange-10: #ca3500;
+  --color-orange-11: #9f2d00;
+  --color-orange-12: #8e2c07;
+  --color-orange-13: #7e2a0c;
+  --color-orange-14: #441306;
+  --color-orange-15: #2b0b04;
+
+  --color-green-1: #f7fef9;
+  --color-green-2: #f0fdf4;
+  --color-green-3: #dcfce7;
+  --color-green-4: #cbfadb;
+  --color-green-5: #b9f8cf;
+  --color-green-6: #7bf1a8;
+  --color-green-7: #05df72;
+  --color-green-8: #00c951;
+  --color-green-9: #00a63e;
+  --color-green-10: #008236;
+  --color-green-11: #016630;
+  --color-green-12: #085d2e;
+  --color-green-13: #0d542b;
+  --color-green-14: #052e16;
+  --color-green-15: #051e0e;
+
+  --color-blue-1: #f6faff;
+  --color-blue-2: #eff6ff;
+  --color-blue-3: #dbeafe;
+  --color-blue-4: #cde2ff;
+  --color-blue-5: #bedbff;
+  --color-blue-6: #8ec5ff;
+  --color-blue-7: #51a2ff;
+  --color-blue-8: #2b7fff;
+  --color-blue-9: #155dfc;
+  --color-blue-10: #1447e6;
+  --color-blue-11: #193cb8;
+  --color-blue-12: #1a3ba3;
+  --color-blue-13: #1c398e;
+  --color-blue-14: #162456;
+  --color-blue-15: #111c3d;
+
+  --color-light-rail-way-one-1: #f7fdf8;
+  --color-light-rail-way-one-2: #f0fcf3;
+  --color-light-rail-way-one-3: #dbfbe4;
+  --color-light-rail-way-one-4: #c9f8d7;
+  --color-light-rail-way-one-5: #b7f5ca;
+  --color-light-rail-way-one-6: #79e69e;
+  --color-light-rail-way-one-7: #2dc76d;
+  --color-light-rail-way-one-8: #0ea651;
+  --color-light-rail-way-one-9: #1d7739;
+  --color-light-rail-way-one-10: #12612a;
+  --color-light-rail-way-one-11: #0c5924;
+  --color-light-rail-way-one-12: #105022;
+  --color-light-rail-way-one-13: #124820;
+  --color-light-rail-way-one-14: #06270e;
+  --color-light-rail-way-one-15: #051909;
+
+  --color-light-rail-way-two-1: #f7f4ff;
+  --color-light-rail-way-two-2: #f1ebff;
+  --color-light-rail-way-two-3: #e5dafe;
+  --color-light-rail-way-two-4: #dacaff;
+  --color-light-rail-way-two-5: #d0b9ff;
+  --color-light-rail-way-two-6: #b48efa;
+  --color-light-rail-way-two-7: #8c60d5;
+  --color-light-rail-way-two-8: #66459e;
+  --color-light-rail-way-two-9: #4a3a6b;
+  --color-light-rail-way-two-10: #382859;
+  --color-light-rail-way-two-11: #372b4f;
+  --color-light-rail-way-two-12: #312747;
+  --color-light-rail-way-two-13: #2c2340;
+  --color-light-rail-way-two-14: #1a1428;
+  --color-light-rail-way-two-15: #120e1c;
+
+  --color-metro-rail-way-three-1: #fefdf7;
+  --color-metro-rail-way-three-2: #fefcf1;
+  --color-metro-rail-way-three-3: #fff8dd;
+  --color-metro-rail-way-three-4: #fff5cb;
+  --color-metro-rail-way-three-5: #fff1b8;
+  --color-metro-rail-way-three-6: #ffea99;
+  --color-metro-rail-way-three-7: #ffe16d;
+  --color-metro-rail-way-three-8: #fad751;
+  --color-metro-rail-way-three-9: #edc319;
+  --color-metro-rail-way-three-10: #ac8b0b;
+  --color-metro-rail-way-three-11: #967906;
+  --color-metro-rail-way-three-12: #896f0f;
+  --color-metro-rail-way-three-13: #7d6614;
+  --color-metro-rail-way-three-14: #483a05;
+  --color-metro-rail-way-three-15: #312808;
+
+  --color-ferry-1: #f6f8ff;
+  --color-ferry-2: #eef3ff;
+  --color-ferry-3: #d9e3fe;
+  --color-ferry-4: #cbd9ff;
+  --color-ferry-5: #bccfff;
+  --color-ferry-6: #8dacf7;
+  --color-ferry-7: #537cdd;
+  --color-ferry-8: #2655bf;
+  --color-ferry-9: #003399;
+  --color-ferry-10: #002a80;
+  --color-ferry-11: #002366;
+  --color-ferry-12: #03215a;
+  --color-ferry-13: #061f4e;
+  --color-ferry-14: #05122d;
+  --color-ferry-15: #040c1e;
+}
+
+:root {
+  --text-primary: var(--color-neutral-13);
+  --text-secondary: var(--color-neutral-10);
+  --text-tertiary: var(--color-neutral-9);
+  --text-quaternary: var(--color-neutral-7);
+  --text-on-fill: var(--color-white);
+  --bg-surface: var(--color-white);
+  --bg-surface-secondary: var(--color-neutral-4);
+  --bg-fill: var(--bg-surface);
+  --bg-fill-secondary: var(--color-neutral-4);
+  --stroke-light: var(--color-white);
+  --stroke-default: var(--color-neutral-4);
+  --stroke-secondary: var(--color-neutral-5);
+  --stroke-tertiary: var(--color-neutral-6);
+  --stroke-quaternary: var(--color-neutral-7);
+  --stroke-dark: var(--color-neutral-13);
+  --direction-start-fill: var(--color-green-10);
+  --direction-start-surface: var(--color-green-3);
+  --direction-end-fill: var(--color-red-10);
+  --direction-end-surface: var(--color-red-3);
+  --card-jeep-fill: var(--color-blue-11);
+  --card-uv-express-fill: var(--color-neutral-5);
+  --card-bus-fill: var(--color-orange-11);
+  --card-ferry-fill: var(--color-ferry-9);
+  --card-lrt-one-fill: var(--color-light-rail-way-one-9);
+  --card-lrt-two-fill: var(--color-light-rail-way-two-9);
+  --card-mrt-three-fill: var(--color-metro-rail-way-three-9);
+  --special-fill: var(--color-white);
+  --special-green-fill: var(--color-green-11);
+  --special-green-surface: var(--color-green-3);
+  --special-orange-fill: var(--color-orange-11);
+  --special-orange-surface: var(--color-orange-3);
+}
+
+@theme inline {
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-tertiary: var(--text-tertiary);
+  --color-text-quaternary: var(--text-quaternary);
+  --color-text-on-fill: var(--text-on-fill);
+  --color-bg-surface: var(--bg-surface);
+  --color-bg-surface-secondary: var(--bg-surface-secondary);
+  --color-bg-fill: var(--bg-fill);
+  --color-bg-fill-secondary: var(--bg-fill-secondary);
+  --color-stroke-light: var(--stroke-light);
+  --color-stroke-default: var(--stroke-default);
+  --color-stroke-secondary: var(--stroke-secondary);
+  --color-stroke-tertiary: var(--stroke-tertiary);
+  --color-stroke-quaternary: var(--stroke-quaternary);
+  --color-stroke-dark: var(--stroke-dark);
+  --color-direction-start-fill: var(--direction-start-fill);
+  --color-direction-start-surface: var(--direction-start-surface);
+  --color-direction-end-fill: var(--direction-end-fill);
+  --color-direction-end-surface: var(--direction-end-surface);
+  --color-card-jeep-fill: var(--card-jeep-fill);
+  --color-card-uv-express-fill: var(--card-uv-express-fill);
+  --color-card-bus-fill: var(--card-bus-fill);
+  --color-card-ferry-fill: var(--card-ferry-fill);
+  --color-card-lrt-one-fill: var(--card-lrt-one-fill);
+  --color-card-lrt-two-fill: var(--card-lrt-two-fill);
+  --color-card-mrt-three-fill: var(--card-mrt-three-fill);
+  --color-special-fill: var(--special-fill);
+  --color-special-green-fill: var(--special-green-fill);
+  --color-special-green-surface: var(--special-green-surface);
+  --color-special-orange-fill: var(--special-orange-fill);
+  --color-special-orange-surface: var(--special-orange-surface);
 }
