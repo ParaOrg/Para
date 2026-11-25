@@ -6,6 +6,7 @@
 //      Draw the return trip
 //      .supabase.co              the database's address: commuters read the
 //                                published map and never call it
+//    and the studio's search files (/data/search/), which only the studio fetches.
 
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -34,6 +35,14 @@ export function proveStrings(build, check) {
 
   const leaked = EDITOR_ONLY.filter((s) => commuter.includes(s));
   check('public page contains no editor-only string', leaked.length === 0, leaked.join(', '));
+
+  // The studio's search files (scripts/search/search-file.mjs, about 1.7 MB gzipped together):
+  // fetched only by the studio's search, never by the public page or the contributor page.
+  const SEARCH_FILES = '/data/search/';
+  check(
+    'public page and contribute page name no studio search file',
+    !commuter.includes(SEARCH_FILES) && !contribute.includes(SEARCH_FILES),
+  );
 
   // Its own chunks, not the ones it shares with the public page, whose map reader
   // names route_variant in the published file's fields.
