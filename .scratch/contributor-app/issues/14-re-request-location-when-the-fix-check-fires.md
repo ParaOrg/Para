@@ -1,6 +1,6 @@
 # 14: Re-request location when the 2-minute fix check fires
 
-Status: ready-for-agent
+Status: resolved
 Type: task, a robustness fix with no visible change
 Who: an agent, after app-v0.4.0 is out
 Source: the emulator-notification failure on #912's merge head (d6e02e87), run 43108343937, job 130817463108
@@ -84,3 +84,7 @@ these and say which:
 
 - Changing the swipe-away step or its 30 s wait. That step was right to fail on a real gap.
 - Moving off the fused provider to `LocationManager`'s GPS provider.
+
+## Answer
+
+Option 1. `RideMachine.check` gives a new effect, `REQUEST_LOCATION`, on the move to `TROUBLE_NO_FIX` and on every check after it while the trouble holds. The move also writes "no fix for N s, asked for location again" to the diagnostics log. The checks after it ask quietly. `RideService` runs the effect through `requestLocation()`, the block `onStartCommand` already used, so a missing permission pauses the ride as before. A paused, finished or location-off ride never asks. `RideMachineTest` covers both. The emulator step isn't added, since forcing Play services to stop isn't known to run reliably in CI.

@@ -139,12 +139,18 @@ public final class RideMachine {
             .then(Effect.POST_CARD).diagnose("location switched on again").done();
     }
 
-    /** The fix check, run as the card ticks: no fix for FIX_LIMIT_MS is said, never faked. */
+    /**
+     * The fix check, run as the card ticks: no fix for FIX_LIMIT_MS is said, never faked. While no
+     * fix comes, each check asks for location again, since Play services may have dropped the request.
+     */
     public static RideStep check(Ride ride, long now) {
-        if (!ride.isRecordingLive() || !Ride.TROUBLE_NONE.equals(ride.trouble)) return RideStep.same(ride);
+        if (!ride.isRecordingLive()) return RideStep.same(ride);
+        if (Ride.TROUBLE_NO_FIX.equals(ride.trouble)) return RideStep.to(ride).then(Effect.REQUEST_LOCATION).done();
+        if (!Ride.TROUBLE_NONE.equals(ride.trouble)) return RideStep.same(ride);
         if (now - ride.lastFixAt <= FIX_LIMIT_MS) return RideStep.same(ride);
         return RideStep.to(ride.withTrouble(Ride.TROUBLE_NO_FIX))
-            .then(Effect.POST_CARD).diagnose("no fix for " + ((now - ride.lastFixAt) / 1000) + " s").done();
+            .then(Effect.POST_CARD).then(Effect.REQUEST_LOCATION)
+            .diagnose("no fix for " + ((now - ride.lastFixAt) / 1000) + " s, asked for location again").done();
     }
 
     /** Android refused the recording (`why`): paused where it stands, and said. */
