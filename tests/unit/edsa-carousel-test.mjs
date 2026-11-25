@@ -79,7 +79,7 @@ test('the studio offers the Carousel to a route drawn there, but never a train o
   assert.ok(modeChoices('ferry').some((m) => m.value === 'ferry'));
 });
 
-test('every published shape leaves the Carousel, its stations and their links out', async () => {
+test('shape 6 holds the Carousel; every older shape leaves it, its stations and their links out', async () => {
   const { shapesOf } = await import('../../scripts/publish/shapes.mjs');
   const rows = {
     variants: [
@@ -98,7 +98,9 @@ test('every published shape leaves the Carousel, its stations and their links ou
       { route_variant_id: 'carousel', stop_id: 'st' },
     ],
   };
-  for (const [name, shape] of Object.entries(shapesOf(rows))) {
+  const { v6, ...older } = shapesOf(rows);
+  assert.equal(v6, rows);
+  for (const [name, shape] of Object.entries(older)) {
     assert.deepEqual(
       shape.variants.map((v) => v.id),
       ['jeep'],

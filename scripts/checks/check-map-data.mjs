@@ -1,6 +1,6 @@
 // The published map against itself: do its lines, links and ends agree?
 //
-//   npm run check:data                          public/data/index.v5.json and its lines/
+//   npm run check:data                          public/data/index.v6.json and its lines/
 //   node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs scripts/checks/check-map-data.mjs [file] [--markdown out.md]
 //
 // The file is the index (schema 2 since 2026-09-29; 3, the train lines in,
@@ -34,7 +34,7 @@
 // else to), are a problem. Stretches under another key, or unreadable, the
 // app does not take: it works them out itself, on the phone, as before
 // step 13. Against the index the app reads (MAP_FILE_SCHEMA's,
-// index.v5.json) that is a warning, so the owner's issue opens (the owner's
+// index.v6.json) that is a warning, so the owner's issue opens (the owner's
 // answer to question T of the cheap-phone report, 2026-10-06): the publish
 // writes every line file against that very index, so in its run only a
 // fault in the publish can make them differ; on the committed map (npm run
@@ -66,6 +66,11 @@ import { distanceToRingM } from '../../src/features/routes/geo/ring.ts';
 import { firstNearIndex } from '../../src/features/routes/geo/pass.ts';
 import { linePass, passBoxes, readablePass } from '../../src/features/routes/model/line-pass.ts';
 import { MAP_FILE_SCHEMA } from '../../src/features/routes/published/map-file.ts';
+import { isBusway } from '../../src/features/routes/model/busway.ts';
+
+/** The first shape whose readers take a loop (0021), and the first that take the EDSA Carousel. */
+const LOOP_SCHEMA = 5;
+const BUSWAY_SCHEMA = 6;
 import {
   indexOutlineSchema,
   indexSchema,
@@ -241,12 +246,17 @@ export function checkMapData(file) {
   for (const v of variants) {
     const name = `${v.route?.name ?? v.routeId} · ${v.name ?? v.id}`;
     const loop = isLoop(v);
+    // An app reading a shape before 6 does not know the busway's mode, and refuses the whole index.
+    if (isBusway(v.route?.mode) && typeof file.schema === 'number' && file.schema < BUSWAY_SCHEMA)
+      problems.push(
+        `${name}: an EDSA Carousel route in a shape-${file.schema} file, which an app reading it would refuse whole`,
+      );
     const head = hotspotById.get(v.route?.headHotspotId);
     const tail = hotspotById.get(v.route?.tailHotspotId);
     if (loop) {
       // A loop has neither end, one direction and a line that ends where it began (0021).
-      // An app reading an older shape refuses the whole index for the row.
-      if (typeof file.schema === 'number' && file.schema < MAP_FILE_SCHEMA)
+      // An app reading a shape before 5 refuses the whole index for the row.
+      if (typeof file.schema === 'number' && file.schema < LOOP_SCHEMA)
         problems.push(
           `${name}: a loop in a shape-${file.schema} file, which an app reading it would refuse whole`,
         );
@@ -464,7 +474,7 @@ export function contributorFieldsIn(value, at = '') {
  */
 export function readPublished(path) {
   const file = JSON.parse(readFileSync(path, 'utf8'));
-  if (![2, 3, 4, 5].includes(file.schema)) return { file, problems: [] };
+  if (![2, 3, 4, 5, 6].includes(file.schema)) return { file, problems: [] };
   const problems = [];
   for (const where of contributorFieldsIn(file).slice(0, 5))
     problems.push(`contributor data in a published file: ${where}`);
@@ -515,7 +525,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   const mdPath = mdAt >= 0 ? args[mdAt + 1] : null;
   const path =
     args.filter((a, i) => a !== '--markdown' && !(mdAt >= 0 && i === mdAt + 1))[0] ??
-    'public/data/index.v5.json';
+    'public/data/index.v6.json';
   let file;
   let reading = [];
   try {

@@ -18,7 +18,7 @@
  */
 
 /** No hash in the name, so it keeps revalidating headers; never make it immutable. */
-export const MAP_FILE_URL = '/data/index.v5.json';
+export const MAP_FILE_URL = '/data/index.v6.json';
 /** A direction's full line: `${LINES_URL}${id}.json`. The worker keeps every one seen. */
 export const LINES_URL = '/data/lines/';
 
@@ -50,13 +50,17 @@ export const LINES_URL = '/data/lines/';
  *     every jeep hintuan by the river. Shape 5, `/data/index.v5.json`, is
  *     shape 4 with loops in: a loop's route has no head or tail, which the
  *     shape-4 schema refuses, and one such row makes an installed app refuse
- *     the whole map. The publish writes shape 4 without the loops, shape 3
- *     without the ferry too and shapes 1 and 2 without any line
+ *     the whole map. Shape 6, `/data/index.v6.json`, is shape 5 with the EDSA
+ *     Carousel in: its mode, 'busway', is one the shape-5 schema does not
+ *     know, and one such row makes an installed app refuse the whole map.
+ *     The publish writes shape 5 without the Carousel, shape 4 without the
+ *     loops too, shape 3 without the ferry too and shapes 1 and 2 without
+ *     any line
  *     (scripts/publish/shapes.mjs, without-lines.mjs), each a month at least
  *     after the next ships. The line files under `/data/lines/` are the
  *     same for all.
  */
-export const MAP_FILE_SCHEMA = 5;
+export const MAP_FILE_SCHEMA = 6;
 
 /** The load error for a file of a shape this app does not know. The banner reads it. */
 export const MAP_FILE_TOO_NEW = 'This map was published for a newer version of the app.';
@@ -70,14 +74,15 @@ export const MAP_FILE_TOO_NEW = 'This map was published for a newer version of t
 export const SERVED_FROM_HEADER = 'x-para-served-from';
 
 /**
- * The older indexes, newest first: shape 4, without the loops, shape 3,
- * without the ferry, and shape 2, without any line. An app updated from one
+ * The older indexes, newest first: shape 5, without the EDSA Carousel, shape 4,
+ * without the loops, shape 3, without the ferry, and shape 2, without any line. An app updated from one
  * kept its last copy in the worker's store (the map-file rule matched that
  * path then), and has no copy of the new one until it reaches the network:
  * offline, that copy is the map, not the load error. Each older shape is a
  * newer one with fewer routes, so it reads as is.
  */
 export const STORED_OLD = [
+  { url: '/data/index.v5.json', schema: 5 },
   { url: '/data/index.v4.json', schema: 4 },
   { url: '/data/index.v3.json', schema: 3 },
   { url: '/data/index.json', schema: 2 },

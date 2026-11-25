@@ -162,7 +162,7 @@ function buildSize() {
 
 /** The published index as committed: what every phone downloads again after a changed publish. */
 function publishedIndex() {
-  const path = 'public/data/index.v5.json';
+  const path = 'public/data/index.v6.json';
   if (!existsSync(join(root, path))) return [`- **Published index:** \`${path}\` is missing`];
   const weight = indexWeight(read(path));
   const share = (part) => `${(part * 100).toFixed(0)}%`;

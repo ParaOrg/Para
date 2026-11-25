@@ -29,7 +29,7 @@ export function publishedPositions() {
   const positions = [];
   const walk = (coords) =>
     typeof coords[0] === 'number' ? positions.push(coords) : coords.forEach(walk);
-  const index = JSON.parse(readFileSync(new URL('index.v5.json', DATA), 'utf8'));
+  const index = JSON.parse(readFileSync(new URL('index.v6.json', DATA), 'utf8'));
   for (const v of index.variants) if (v.overview) walk(v.overview.coordinates);
   for (const s of index.stops) walk(s.point.coordinates);
   for (const f of readdirSync(new URL('lines/', DATA))) {

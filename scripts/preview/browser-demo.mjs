@@ -184,7 +184,7 @@ export function installReviewDemo(seed, session) {
       location.href,
     );
     const state = load();
-    if (url.origin === location.origin && url.pathname === '/data/index.v5.json')
+    if (url.origin === location.origin && url.pathname === '/data/index.v6.json')
       return response(state.published);
     if (url.origin === location.origin && url.pathname.startsWith('/data/lines/'))
       return response(

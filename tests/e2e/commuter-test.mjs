@@ -1,4 +1,4 @@
-// The public map at /, on whatever the published index (public/data/index.v5.json)
+// The public map at /, on whatever the published index (public/data/index.v6.json)
 // holds today. The dev server serves that file straight from the working
 // tree, committed or not — so a passing run here says nothing about whether
 // the file was committed; `git status` does.
@@ -14,7 +14,7 @@
 // failing. Covers: the read-only public page carries none of the studio's
 // buttons or sign-in text, ships no draw-* (editor) layers, writes nothing
 // to localStorage, never calls the OSRM route snapper or the database (it
-// reads the published /data/index.v5.json, once), and tapping a route vs. a
+// reads the published /data/index.v6.json, once), and tapping a route vs. a
 // hotspot — including one hotspot with a route drawn through it — opens the
 // right card with the right content (a hotspot's only in a build with
 // VITE_HOTSPOT_TAPS; without, a tap on a box opens no place's card); and,
@@ -219,7 +219,7 @@ page.on('request', (req) => {
 // Responses, not requests: a 404 is a request too, and would count as a load.
 // The pick checks read the file again for their sums, marked so as not to count.
 page.on('response', (res) => {
-  if (/\/data\/index\.v5\.json/.test(res.url()) && !res.request().headers()['x-para-test'])
+  if (/\/data\/index\.v6\.json/.test(res.url()) && !res.request().headers()['x-para-test'])
     mapFileStatuses.push(res.status());
 });
 
@@ -1212,7 +1212,7 @@ if (!RUNS_ONE_OFFS) {
 // Overview offered to take the rail in. The last part's, with 4a.
 if (RUNS_ONE_OFFS) {
   const modeOf = new Map(
-    JSON.parse(readFileSync('public/data/index.v5.json', 'utf8')).variants.map((v) => [
+    JSON.parse(readFileSync('public/data/index.v6.json', 'utf8')).variants.map((v) => [
       v.route_id,
       v.route.mode,
     ]),
@@ -1959,7 +1959,7 @@ check('no request to router.project-osrm.org', !osrmHit);
 // Since step 5 the public map is one published map; the database is never asked.
 check('no request to the database (*.supabase.co)', !supabaseHit);
 check(
-  'the map came from /data/index.v5.json, fetched once and served',
+  'the map came from /data/index.v6.json, fetched once and served',
   mapFileStatuses.length === 1 && (mapFileStatuses[0] === 200 || mapFileStatuses[0] === 304),
   `${mapFileStatuses.length} response(s): ${mapFileStatuses.join(', ') || 'none'}`,
 );
@@ -1996,7 +1996,7 @@ if (RUNS_ONE_OFFS) {
   await nodeFetch(p);
   p.on('pageerror', (e) => errors.push(String(e)));
   let isFailing = true;
-  await p.route(/\/data\/index\.v5\.json/, (route) =>
+  await p.route(/\/data\/index\.v6\.json/, (route) =>
     isFailing ? route.abort('internetdisconnected') : route.continue(),
   );
   await p.goto(`${BASE}/`, { waitUntil: 'load' });

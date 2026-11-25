@@ -380,7 +380,7 @@ await page.addInitScript(earlyFileRecorder);
 const mapFileAsks = [];
 let pageLoads = 0;
 page.on('request', (req) => {
-  if (/\/data\/index\.v5\.json/.test(req.url()) && !req.headers()['x-para-test'])
+  if (/\/data\/index\.v6\.json/.test(req.url()) && !req.headers()['x-para-test'])
     mapFileAsks.push({ req, end: 'no answer yet' });
 });
 page.on('requestfinished', async (req) => {
@@ -1017,7 +1017,7 @@ if (runsPart(3)) {
     await p.addInitScript(liftRecorder);
     let release;
     const held = new Promise((r) => (release = r));
-    await p.route(/\/data\/index\.v5\.json/, async (route) => {
+    await p.route(/\/data\/index\.v6\.json/, async (route) => {
       await held;
       await route.fallback();
     });

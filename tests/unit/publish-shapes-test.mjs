@@ -30,7 +30,7 @@ const text = (name) => readFileSync(dataPath(name), 'utf8');
  * (full lines as `shape`, the overviews and signboards beside).
  */
 function committedRows() {
-  const index = JSON.parse(text('index.v5.json'));
+  const index = JSON.parse(text('index.v6.json'));
   const overviews = new Map();
   const boardsOf = new Map();
   const variants = index.variants.map(({ overview, signboards, metres, ...v }) => {
@@ -114,6 +114,7 @@ function withALoop({ index, all, context }) {
 test('the committed map, put through the publish, is the committed files byte for byte', () => {
   const { index, all, context } = committedRows();
   const files = buildFiles(all, index.published_at, context);
+  assert.equal(files.v6, text('index.v6.json'));
   assert.equal(files.v5, text('index.v5.json'));
   assert.equal(files.v4, text('index.v4.json'));
   assert.equal(files.v3, text('index.v3.json'));
@@ -131,13 +132,13 @@ test('a saved loop reaches shape 5 only: shapes 1 to 4 stay byte for byte what t
   const v5 = JSON.parse(files.v5);
   assert.equal(v5.schema, 5);
   // The committed map may carry loops of its own; the one added here is the extra one.
-  const committedLoops = JSON.parse(text('index.v5.json')).variants.filter(
+  const committedLoops = JSON.parse(text('index.v6.json')).variants.filter(
     (v) => v.route.is_loop === true,
   ).length;
   assert.equal(v5.variants.filter((v) => v.route.is_loop === true).length, committedLoops + 1);
   const loops = v5.variants.filter((v) => v.id === 'loop-direction');
-  assert.equal(v5.variants.length, JSON.parse(text('index.v5.json')).variants.length + 1);
-  assert.equal(v5.links.length, JSON.parse(text('index.v5.json')).links.length + 2);
+  assert.equal(v5.variants.length, JSON.parse(text('index.v6.json')).variants.length + 1);
+  assert.equal(v5.links.length, JSON.parse(text('index.v6.json')).links.length + 2);
   // A loop's route has no ends, and is_loop comes last; every other row has no such key.
   assert.equal(loops[0].route.head_stop_id, null);
   assert.equal(loops[0].route.tail_stop_id, null);
@@ -170,7 +171,8 @@ test('a route with no ends is a loop to the publish even without its flag, and i
   const unflagged = structuredClone(all);
   delete unflagged.variants.at(-1).route.is_loop;
   assert.equal(isLoopRow(unflagged.variants.at(-1)), true);
-  for (const rows of Object.values(shapesOf(unflagged)).slice(1)) {
+  // Shapes 6 and 5 hold loops; 4 and older never do.
+  for (const rows of Object.values(shapesOf(unflagged)).slice(2)) {
     assert.equal(rows.variants.some(isLoopRow), false);
   }
 });

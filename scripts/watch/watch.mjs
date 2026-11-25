@@ -45,7 +45,7 @@ const checks = [
   {
     key: 'published-map',
     title: 'Alert: the published map is missing',
-    hint: 'The site answers but its map file does not. Open https://www.para-commute.org/data/index.v5.json; if it is missing, the last deploy of the site left it out.',
+    hint: 'The site answers but its map file does not. Open https://www.para-commute.org/data/index.v6.json; if it is missing, the last deploy of the site left it out.',
     runbook: runbookLink('the-map-is-blank'),
     run: () => checkPublishedMap(fetch),
   },
