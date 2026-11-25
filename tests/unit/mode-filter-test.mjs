@@ -37,6 +37,7 @@ const ROUTES = [
   direction('lrt2', 'lrt', 'LRT-2'),
   direction('mrt3', 'mrt', 'MRT-3'),
   direction('ferry', 'ferry', 'PRFS'),
+  direction('carousel', 'busway'),
 ];
 
 const kept = (filter) => ROUTES.filter((d) => passesModeFilter(d, filter)).map((d) => d.id);
@@ -56,7 +57,7 @@ test('each option keeps its own ride', () => {
       ejeep: ['ejeep'],
       uv: ['uv'],
       bus: ['bus'],
-      p2p: ['p2p'],
+      p2p: ['p2p', 'carousel'],
       train: ['lrt1', 'lrt2', 'mrt3'],
       ferry: ['ferry'],
     },

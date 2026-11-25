@@ -81,14 +81,14 @@ const ridesOneOf =
 /**
  * What each option keeps. By vehicle, not by card colour: a tricycle wears Jeep's colours but is
  * no jeep, so it shows under All only. P2P has no vehicle of its own (vehicleOf), so it is kept by
- * its route's mode.
+ * its route's mode; the EDSA Carousel rides under it too (the owner's rule).
  */
 const KEPT = {
   jeep: ridesOneOf('Jeepney'),
   ejeep: ridesOneOf('E-Jeep'),
   uv: ridesOneOf('UV Express'),
   bus: ridesOneOf('Bus'),
-  p2p: (direction) => direction.route?.mode === 'p2p',
+  p2p: (direction) => direction.route?.mode === 'p2p' || ridesOneOf('EDSA Carousel')(direction),
   train: ridesOneOf(...RAIL_LINES),
   ferry: ridesOneOf('Ferry'),
 } satisfies Record<Mode, (direction: Direction) => boolean>;
