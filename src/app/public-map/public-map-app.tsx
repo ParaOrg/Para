@@ -77,10 +77,11 @@ const TOAST_UNDER_FULL_CARD =
 /**
  * While a trip stands at full height, filling the screen with no strip of map, the toast sits 12
  * under the ends card's ⇅ so the ⇅ stays in reach: its foot is 128.5 down (12 above the card;
- * Start's part 12 + 24 + 2 + 28 + 12; ⇅ 40 centred on the hairline), with a one-line origin.
+ * Start's part 12 + 24 + 2 + 28 + 12; ⇅ 40 centred on the hairline), with a one-line origin. A
+ * trip is the one `card` that docks: a :has() inside the group's :has() is no valid selector.
  */
 const TOAST_UNDER_FULL_TRIP =
-  '@max-float:group-has-[[data-testid=card][data-snap=full]:not([hidden]):has([data-testid=trip])]/map:[--toast-top:calc(env(safe-area-inset-top)+--spacing(35.125))]';
+  '@max-float:group-has-[[data-testid=card][data-floats=dock][data-snap=full]:not([hidden])]/map:[--toast-top:calc(env(safe-area-inset-top)+--spacing(35.125))]';
 
 /** The ⓘ hides at full height on a phone, no map to credit and the card under it, until lowered. */
 const CREDITS_HIDDEN_AT_FULL =
