@@ -401,6 +401,10 @@ const closeByBadge = async () => {
 const slotId = draftDirections.find((v) => v.shape === null)?.id;
 const BACK_MID = at(0, -0.0015);
 await openCard(OUT[1]);
+check(
+  'the outbound\'s card offers "Draw the return trip" while the way back is a slot',
+  await page.getByRole('button', { name: 'Draw the return trip' }).isVisible(),
+);
 await page.getByTestId('card-switch').click();
 await page.waitForTimeout(400);
 check(
