@@ -227,14 +227,14 @@ export const Walked: Story = {
   },
 };
 
-/** Never sendable (longer than 6 hours): its reason in red, no icon and no retry. */
+/** Never sendable (longer than 24 hours): its reason in red, no icon and no retry. */
 export const TooLong: Story = {
-  args: { ride: { ...ride, status: { tone: 'problem', words: 'Longer than 6 hours' } } },
+  args: { ride: { ...ride, status: { tone: 'problem', words: 'Longer than 24 hours' } } },
   play: async ({ canvasElement }) => {
     await openSheet(canvasElement);
     const canvas = within(canvasElement);
-    await expect(canvas.getByText('Longer than 6 hours')).toBeInTheDocument();
-    await expect(canvas.queryByRole('button', { name: /^Longer than 6 hours/ })).toBeNull();
+    await expect(canvas.getByText('Longer than 24 hours')).toBeInTheDocument();
+    await expect(canvas.queryByRole('button', { name: /^Longer than 24 hours/ })).toBeNull();
   },
 };
 

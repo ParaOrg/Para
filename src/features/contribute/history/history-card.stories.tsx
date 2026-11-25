@@ -216,13 +216,13 @@ export const NoPicture: Story = {
   },
 };
 
-/** Longer than 6 hours: never sendable, so red with its reason and no retry. */
+/** Longer than 24 hours: never sendable, so red with its reason and no retry. */
 export const TooLong: Story = {
   args: {
     status: {
       state: 'failed',
-      message: 'Longer than 6 hours, so it cannot be uploaded. It stays on this phone.',
-      brief: 'Longer than 6 hours',
+      message: 'Longer than 24 hours, so it cannot be uploaded. It stays on this phone.',
+      brief: 'Longer than 24 hours',
       willRetry: false,
     },
   },

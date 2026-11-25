@@ -52,8 +52,8 @@ export const FAILED: Record<UploadProblem | PackRefusal, UploadFailure> = {
     willRetry: true,
   },
   'too-long': {
-    message: 'Longer than 6 hours, so it cannot be uploaded. It stays on this phone.',
-    brief: 'Longer than 6 hours',
+    message: 'Longer than 24 hours, so it cannot be uploaded. It stays on this phone.',
+    brief: 'Longer than 24 hours',
     willRetry: false,
   },
   'line-too-large': {

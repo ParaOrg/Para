@@ -81,7 +81,7 @@ const FAILED_CARDS = {
   blocked: ['retry', 'Tap retry upload'],
   'check-failed': ['retry', 'Tap retry upload'],
   unavailable: ['retry', 'Tap retry upload'],
-  'too-long': ['problem', 'Longer than 6 hours'],
+  'too-long': ['problem', 'Longer than 24 hours'],
   'line-too-large': ['problem', 'Too large to upload'],
 };
 for (const [reason, card] of Object.entries(FAILED_CARDS)) {

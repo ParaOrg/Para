@@ -123,4 +123,5 @@ PSQL="$PSQL" PG_DUMP="$PG_DUMP" bash drop-dead-weight.sh
 PSQL="$PSQL" PG_DUMP="$PG_DUMP" bash retire-review-steps.sh
 PSQL="$PSQL" PG_DUMP="$PG_DUMP" bash drop-inert-write-policies.sh
 PSQL="$PSQL" PG_DUMP="$PG_DUMP" bash waitlist.sh
+PSQL="$PSQL" PG_DUMP="$PG_DUMP" bash longer-contributions.sh
 PSQL="$PSQL" PG_DUMP="$PG_DUMP" bash schema-snapshot.sh

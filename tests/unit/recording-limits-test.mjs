@@ -12,6 +12,10 @@ const MIGRATION = readFileSync(
   new URL('../../supabase/migrations/20261019125900_contributions.sql', import.meta.url),
   'utf8',
 );
+const LENGTH_MIGRATION = readFileSync(
+  new URL('../../supabase/migrations/20261115150000_longer_contributions.sql', import.meta.url),
+  'utf8',
+);
 
 /** The number the first match of `pattern` captures; fails when the migration no longer says it. */
 function numberIn(pattern, what) {
@@ -57,7 +61,9 @@ test('the recordings a phone may send in 24 hours are the database cap', () => {
 });
 
 test('the recording length, the list sizes, the text lengths and the line size are the database caps', () => {
-  assert.equal(numberIn(/started_at \+ interval '(\d+) hours'/, 'the length'), UPLOAD_LIMITS.hours);
+  const length = LENGTH_MIGRATION.match(/started_at \+ interval '(\d+) hours'/);
+  assert.ok(length, 'the length migration no longer states the length');
+  assert.equal(Number(length[1]), UPLOAD_LIMITS.hours);
   assert.equal(
     numberIn(
       /events jsonb not null check \(.*jsonb_array_length\(events\) <= (\d+)\)/,
