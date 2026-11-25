@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { fn } from 'storybook/test';
+import { expect, fn, within } from 'storybook/test';
 
 import { Button } from './button';
 import type { CardFill } from './button-look';
@@ -57,6 +57,46 @@ export const Special: Story = {};
 
 /** Special's surface and shadows in Livvic Medium: the quieter of a pair, beside a Primary (3732:2512). */
 export const Secondary: Story = { args: { variant: 'secondary' } };
+
+/**
+ * Secondary's Large, 48 tall (Vice Versa, 4885:42130): 20 across and 12 above and below 16/24
+ * Medium words, a 20px icon. The commuter map's floating pills.
+ */
+export const SecondaryLarge: Story = {
+  args: { variant: 'secondary', size: 'large', label: 'Vice Versa', firstIcon: undefined },
+  play: async ({ canvasElement }) => {
+    const button = within(canvasElement).getByRole('button', { name: 'Vice Versa' });
+    const { height } = button.getBoundingClientRect();
+    const { fontSize, lineHeight, paddingLeft } = getComputedStyle(button);
+    await expect({ height, fontSize, lineHeight, paddingLeft }).toEqual({
+      height: 48,
+      fontSize: '16px',
+      lineHeight: '24px',
+      paddingLeft: '20px',
+    });
+  },
+};
+
+/** Secondary Large disabled: its Rest look at opacity/60. */
+export const SecondaryLargeDisabled: Story = {
+  args: {
+    variant: 'secondary',
+    size: 'large',
+    label: 'Vice Versa',
+    firstIcon: undefined,
+    disabled: true,
+  },
+};
+
+/** Secondary Large with a long label: one line, the pill grows to hold it. */
+export const SecondaryLargeLongLabel: Story = {
+  args: {
+    variant: 'secondary',
+    size: 'large',
+    label: 'Papunta at Pabalik sa Novaliches Bayan',
+    firstIcon: undefined,
+  },
+};
 
 /** Brand blue, Livvic Medium, bevelled. Hover lights it from the top; press darkens and sinks it. */
 export const Primary: Story = { args: { variant: 'primary' } };
