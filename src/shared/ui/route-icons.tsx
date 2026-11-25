@@ -68,7 +68,7 @@ export function EndIcon() {
   return <RouteSpriteIcon id="end" />;
 }
 
-/** Figma's switch-vertical (4831:51875), 24 across: the ⇅ on a trip's ends card, turning it round. */
+/** Figma's switch-vertical (4831:51875): the ⇅ on a trip's ends card at 24, and after Vice Versa's word at 20 (4831:51276). */
 export function SwitchVerticalIcon() {
   return <RouteSpriteIcon id="switch-vertical" />;
 }
