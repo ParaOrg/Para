@@ -315,6 +315,7 @@ flowchart TD
   features_studio --> features_studio_data
   features_studio --> features_studio_drawing
   features_studio --> features_studio_maps
+  features_studio --> features_studio_osm_routes
   features_studio --> features_studio_panels
   features_studio --> features_studio_public_view
   features_studio_auth --> design_system_primitives
@@ -347,7 +348,10 @@ flowchart TD
   features_studio_maps --> features_studio_data
   features_studio_maps --> features_studio_panels
   features_studio_maps --> shared_utils
+  features_studio_osm_routes --> design_system_primitives
+  features_studio_osm_routes --> features_routes_map
   features_studio_osm_routes --> features_routes_model
+  features_studio_osm_routes --> features_studio_drawing
   features_studio_osm_routes --> shared_utils
   features_studio_panels --> design_system_primitives
   features_studio_panels --> features_routes_cards
@@ -404,13 +408,13 @@ flowchart TD
 | `features/routes/model` | `features/routes/geo`, `features/routes/published`, `shared/utils` |
 | `features/routes/published` | `features/routes/model` |
 | `features/routes/search` | `design-system/primitives`, `features/routes/cards`, `features/routes/model`, `features/routes/published`, `shared/ui`, `shared/utils` |
-| `features/studio` | `features/studio/auth`, `features/studio/contributors`, `features/studio/data`, `features/studio/drawing`, `features/studio/maps`, `features/studio/panels`, `features/studio/public-view` |
+| `features/studio` | `features/studio/auth`, `features/studio/contributors`, `features/studio/data`, `features/studio/drawing`, `features/studio/maps`, `features/studio/osm-routes`, `features/studio/panels`, `features/studio/public-view` |
 | `features/studio/auth` | `design-system/primitives`, `features/routes/map`, `features/studio/data`, `shared/lib`, `shared/ui` |
 | `features/studio/contributors` | `design-system/foundation`, `design-system/primitives`, `features/studio/data`, `features/studio/drawing`, `shared/lib`, `shared/utils` |
 | `features/studio/data` | `features/routes/geo`, `features/routes/model`, `features/routes/published`, `features/studio/auth`, `shared/types`, `shared/utils` |
 | `features/studio/drawing` | `design-system/foundation`, `features/routes/map`, `features/routes/model`, `features/studio/data`, `shared/utils` |
 | `features/studio/maps` | `design-system/foundation`, `design-system/primitives`, `features/routes/map`, `features/routes/model`, `features/routes/search`, `features/studio/data`, `features/studio/panels`, `shared/utils` |
-| `features/studio/osm-routes` | `features/routes/model`, `shared/utils` |
+| `features/studio/osm-routes` | `design-system/primitives`, `features/routes/map`, `features/routes/model`, `features/studio/drawing`, `shared/utils` |
 | `features/studio/panels` | `design-system/primitives`, `features/routes/cards`, `features/routes/geo`, `features/routes/map`, `features/routes/model`, `features/studio/auth`, `features/studio/data`, `features/studio/drawing`, `shared/ui`, `shared/utils` |
 | `features/studio/public-view` | `design-system/primitives`, `features/studio/data` |
 | `shared/config` | — |
@@ -439,7 +443,7 @@ A feature's `index.ts` is the only door into it for code outside the feature. Wh
 
 ### `features/studio`
 
-`AuthDialogs`, `NotEditor`, `SignIn`, `skipSignInForTests`, `useAuthFlow`, `usePasswordRecovery`, `StudioSessionProvider`, `useEditorSession`, `loadHotspotsFromSupabase`, `lineOf`, `listDirections`, `getSupabase`, `setSupabase`, `supabaseConfig`, `supabaseConfigError`, `DrawToolbar`, `STUDIO_BASEMAPS`, `STUDIO_BASEMAP_THUMBNAILS`, `useDrawing`, `useFollow`, `useLoopClosing`, `FootbridgesSwitch`, `MapPlaceholder`, `MapSwitch`, `StudioDrafts`, `StudioSearch`, `useStudioMap`, `useWheelNavigation`, `AccountPill`, `NEW_MENU_DOCK_FOOT`, `NewMenu`, `SaveToasts`, `StudioHotspotCard`, `StudioSaveSheets`, `StudioTripCard`, `useDeleteActions`, `useDraftOnly`, `useOpenDraft`, `useSaveFlow`, `useSaveTarget`, `useIsWideScreen`, `useStudioTrip`, `StudioPublicView`, `StudioContributors`, `ContributionHint`, `useContributionStart`, `ContributionStart`, `CONTRIBUTIONS`
+`AuthDialogs`, `NotEditor`, `SignIn`, `skipSignInForTests`, `useAuthFlow`, `usePasswordRecovery`, `StudioSessionProvider`, `useEditorSession`, `loadHotspotsFromSupabase`, `lineOf`, `listDirections`, `getSupabase`, `setSupabase`, `supabaseConfig`, `supabaseConfigError`, `DrawToolbar`, `STUDIO_BASEMAPS`, `STUDIO_BASEMAP_THUMBNAILS`, `useDrawing`, `useFollow`, `useLoopClosing`, `FootbridgesSwitch`, `MapPlaceholder`, `MapSwitch`, `StudioDrafts`, `StudioSearch`, `useStudioMap`, `useWheelNavigation`, `AccountPill`, `NEW_MENU_DOCK_FOOT`, `NewMenu`, `SaveToasts`, `StudioHotspotCard`, `StudioSaveSheets`, `StudioTripCard`, `useDeleteActions`, `useDraftOnly`, `useOpenDraft`, `useSaveFlow`, `useSaveTarget`, `useIsWideScreen`, `useStudioTrip`, `StudioPublicView`, `StudioContributors`, `ContributionHint`, `useContributionStart`, `ContributionStart`, `CONTRIBUTIONS`, `OsmRouteStartTools`, `useOsmRouteStart`
 
 ## Entry points
 

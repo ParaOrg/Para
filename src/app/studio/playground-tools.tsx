@@ -15,6 +15,8 @@ import {
   SaveToasts,
   StudioDrafts,
   ContributionHint,
+  OsmRouteStartTools,
+  useOsmRouteStart,
   type useAuthFlow,
   type useContributionStart,
   type useDrawing,
@@ -66,7 +68,8 @@ export function PlaygroundTools({
   onOpenDraft,
 }: PlaygroundToolsProps) {
   const { isSignedIn, isAccountDialogOpen, openSignIn, openPasswordChange } = auth;
-  const { isSaving, toast, setToast } = saveFlow;
+  const { isSaving, toast, setToast, setNotice } = saveFlow;
+  const osmStart = useOsmRouteStart({ map, draw, setNotice });
 
   return (
     <>
@@ -94,6 +97,8 @@ export function PlaygroundTools({
         <ContributionHint start={contribution.start} onForget={contribution.forget} />
       )}
 
+      <OsmRouteStartTools map={map} osmStart={osmStart} isDrawing={draw.drawing} />
+
       <SaveToasts toast={toast} onDismiss={() => setToast(null)} />
 
       {draw.drawing ? (
@@ -115,6 +120,7 @@ export function PlaygroundTools({
           isOpen={isNewMenuOpen}
           onOpenChange={onNewMenuOpenChange}
           onNewRoute={() => draw.start()}
+          onNewFromOsm={osmStart.openPicker}
           onNewHotspot={(kind) => draw.startArea(kind)}
         />
       )}
