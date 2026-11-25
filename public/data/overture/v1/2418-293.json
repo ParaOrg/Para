@@ -123,6 +123,20 @@
     ["od35ee865d5f54cc3","school",120.94957,14.66753,"Concepcion Elementary School"],
     ["od8aa5d2a44854697","school",120.93259,14.67387,"Tangos 1 Elementary School"],
     ["of1811c4903244183","school",120.94801,14.65757,"Navotas National High School"],
-    ["ocd23d81bb9374a5e","college",120.94473,14.66375,"Governor Andres Pascual College"]
+    ["ocd23d81bb9374a5e","college",120.94473,14.66375,"Governor Andres Pascual College"],
+    ["o62bf9c3aca4b4e5b","convenience",120.93873,14.68748,"Lory's Store"],
+    ["o7b8b67a49be047e2","convenience",120.94926,14.67021,"Alfamart"],
+    ["o156f359f378445f4","supermarket",120.93503,14.67168,"Edmar and marietta korean food mart"],
+    ["oa5ba684834fe4550","supermarket",120.93414,14.67362,"PUREGOLD"],
+    ["o08a3eadeb13a47ac","pharmacy",120.94588,14.65586,"DMC Drugstore"],
+    ["o4600b500e162477c","pharmacy",120.94922,14.65649,"Mercury Drug"],
+    ["o8ad142d3922d4991","pharmacy",120.94816,14.66664,"TGP The Generics Pharmacy"],
+    ["ob87e7640ee1d434a","pharmacy",120.94985,14.66439,"Mercury Drug"],
+    ["o218ee9edc20443fe","laundry",120.94376,14.66116,"Cassy's Self Service Laundry"],
+    ["o5f35a79c850b4501","laundry",120.94456,14.66617,"EMS Laundry Shop"],
+    ["o734f51c22d174085","laundry",120.94105,14.67566,"Three Sisters Self service Laundry"],
+    ["o784c900bfb684cd0","laundry",120.9371,14.67245,"Zoey's Laundromat"],
+    ["o9698a7aecbdb4b86","laundry",120.93945,14.66972,"Save5 Leongson Laundry Center",{"brand":"Save5 Masangkay Laundry Center"}],
+    ["o9e3d99ce3d934095","laundry",120.9493,14.65231,"Soapys Laundry Express"]
   ]
 }

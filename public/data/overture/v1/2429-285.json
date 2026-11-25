@@ -40,6 +40,11 @@
     ["obeb0ff27c029482f","school",121.45325,14.27516,"Francisco Benitez Memorial School"],
     ["odbc8949fe7244c22","school",121.45533,14.26962,"DepEd Maulawin ES - Pagsanjan, Laguna"],
     ["oe425364cd5bc4f1d","school",121.46114,14.29851,"Sto Nino Elementary School"],
-    ["oecd224caeb034aac","school",121.45,14.26667,"Liceo De Pagsanjan"]
+    ["oecd224caeb034aac","school",121.45,14.26667,"Liceo De Pagsanjan"],
+    ["o5f25ff4284fb4c0d","convenience",121.4551,14.2731,"R.O. Shell Shop",{"brand":"Shell"}],
+    ["oa9279f9c6f334fba","supermarket",121.46259,14.29884,"Lumban Public Market"],
+    ["oad1d461d0ce54ddb","supermarket",121.45392,14.27351,"Red Cup Express Convenience Store"],
+    ["o8e4cfc25cba14b7f","pharmacy",121.46082,14.29589,"Mercury Drug"],
+    ["o820873daee594bfd","laundry",121.4525,14.27336,"Angles Kleen Laundry Shop and Dry Clean"]
   ]
 }

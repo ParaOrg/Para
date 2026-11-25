@@ -33,6 +33,11 @@
     ["obb8f122b1eb946ec","school",121.14406,13.96025,"TIBIG Elementary School-Care Center"],
     ["obefe4f7ef11a41bc","school",121.13358,13.95309,"Fernando Airbase Elementary School"],
     ["oc8a5a6d2316f42bc","school",121.10416,13.96926,"Bayorbor Elementary School"],
-    ["od7bb9c010b5a4adb","school",121.13345,13.95681,"Fernando Airbase Elementary School"]
+    ["od7bb9c010b5a4adb","school",121.13345,13.95681,"Fernando Airbase Elementary School"],
+    ["o19f8eb60390a499c","supermarket",121.13505,13.95202,"Coop Supermart Sampaguita"],
+    ["od32fcc43ffb14544","pharmacy",121.13782,13.95919,"Mariah Pharmacy"],
+    ["ofba9fafd7d644406","pharmacy",121.11239,13.9586,"TGP The Generics Pharmacy (Mataas Na Kahoy)",{"brand":"TGP The Generics Pharmacy"}],
+    ["o407749de496243ad","laundry",121.11485,13.95636,"Christemar"],
+    ["oc244afe5ecf94ee3","laundry",121.11604,13.95609,"LN Laundromat - Mataas Na Kahoy"]
   ]
 }

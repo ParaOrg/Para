@@ -12,6 +12,9 @@
     ["o59f543ee785544a1","dentist",121.15304,14.66061,"Daug Dental Clinic"],
     ["o7a8938df711f490b","school",121.18404,14.65022,"PAREF Northfield School for Boys"],
     ["oaa51b517f32d4fde","school",121.1636,14.67963,"Manila Waldorf School"],
-    ["oc0b89866657740b1","school",121.15372,14.66354,"Nazarene Ville Elementary School- NDEP"]
+    ["oc0b89866657740b1","school",121.15372,14.66354,"Nazarene Ville Elementary School- NDEP"],
+    ["o4b9ce7ed82c8484c","pharmacy",121.19279,14.6941,"Generika Drugstore- RZL Antipolo Cogeo Branch",{"brand":"Generika"}],
+    ["o9886cc037d1147b2","pharmacy",121.15205,14.65758,"TGP The Generics Pharmacy"],
+    ["oc726d2a83e524d0c","laundry",121.15029,14.65827,"Lance Wholesale And Refilling Station"]
   ]
 }

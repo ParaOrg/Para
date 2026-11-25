@@ -29,6 +29,9 @@
     ["o51feddefa5704b2d","school",121.13581,13.8293,"Dr. Juan A. Pastor Intergrated National High School"],
     ["obb709a5f80c04085","school",121.10177,13.8494,"DepEd Dagatan ES"],
     ["oe3b190cdf2294d6b","school",121.13305,13.82791,"Procopio Memorial Elementary School"],
-    ["ofda531e3bd874dff","school",121.11543,13.84064,"Malainin Elementary School Malainin Ibaan Batangas"]
+    ["ofda531e3bd874dff","school",121.11543,13.84064,"Malainin Elementary School Malainin Ibaan Batangas"],
+    ["o30e6de50d71c4281","supermarket",121.13329,13.8201,"Torre Rice Trading"],
+    ["oe7b301722e1f4b4b","supermarket",121.13556,13.82523,"Ibaan Public Market"],
+    ["oc8abfbbd8b17417d","pharmacy",121.11775,13.84234,"TGP The Generics Pharmacy (Malainin, Ibaan)",{"brand":"TGP The Generics Pharmacy"}]
   ]
 }

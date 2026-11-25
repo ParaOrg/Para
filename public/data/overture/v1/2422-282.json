@@ -84,6 +84,18 @@
     ["od715f384f8f24883","school",121.14077,14.11819,"Christian School of Janopol"],
     ["o17c1656b0cb845cc","college",121.1365,14.1451,"Lpu-Culinary Institute Laguna"],
     ["oa8c7976e668f44fa","college",121.14465,14.10869,"LPU Cabrini College of Optometry"],
-    ["od62be8df6aad4d01","college",121.13387,14.13733,"FIRST College"]
+    ["od62be8df6aad4d01","college",121.13387,14.13733,"FIRST College"],
+    ["o5b22384066bc4682","convenience",121.13857,14.13159,"Dats Convenience Store"],
+    ["o71094376f33e49d5","convenience",121.13669,14.13266,"CHart Convenience Store"],
+    ["o7a947eec52e44697","convenience",121.14758,14.1065,"Lianas Supermarket"],
+    ["ob5381d066cb64205","convenience",121.13922,14.12253,"CHart Convenience Store"],
+    ["o122706b8e94b475e","supermarket",121.1331,14.11934,"Citimart Supermarket Tanauan"],
+    ["o82f43c83b5a946bc","supermarket",121.14616,14.10816,"Santo Tomas Public Market"],
+    ["of385b14eae9a43e0","supermarket",121.14663,14.10749,"SM Savemore"],
+    ["obe4f9e39a4764a8c","pharmacy",121.1476,14.10494,"Mercury Drug"],
+    ["ofa6c8676f53b4d2d","pharmacy",121.14355,14.10504,"TGP The Generics Pharmacy - Pob. 4, Sto. Tomas"],
+    ["o409b2d139f1542e0","laundry",121.13927,14.12247,"Chique Matic Laundry Service"],
+    ["oa71ffcbecbd94bbb","laundry",121.13979,14.1216,"Bubble Buddy"],
+    ["oe989a3c1c7e34c95","laundry",121.13698,14.13314,"Wasche DIY Laundry Shoppe"]
   ]
 }

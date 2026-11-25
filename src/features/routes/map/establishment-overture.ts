@@ -12,11 +12,12 @@ import { overtureFiles } from '../published/fetch-establishments';
 import type { OvertureCell, OvertureKind } from '../published/overture-file-schema';
 
 /*
- * Overture's eateries, cafés, clinics and schools (.scratch/establishments, step E3c), from Para's
- * Overture place files: the places OpenStreetMap lacks, with the markers and names OSM's have
- * (the owner's answer 3), under them, so OSM's win where both would show. Their credit,
- * "© Overture Maps Foundation", rides on the source: MapLibre's attribution control shows it in
- * the map's corner while the layer is drawn, at no cost to the page's opening code.
+ * Overture's eateries, cafés, clinics, schools and everyday stores (.scratch/establishments, step
+ * E3c), from Para's Overture place files: the places OpenStreetMap lacks, with the markers and
+ * names OSM's have (the owner's answer 3), under them, so OSM's win where both would show. Their
+ * credit, "© Overture Maps Foundation", rides on the source, so MapLibre's attribution control
+ * shows it in the map's corner while the layer is drawn; where the corner steps aside for a page's
+ * own ⓘ, the Map Data Source sheet names it (data-source-credits.ts).
  */
 
 export const OVERTURE_SOURCE = 'establishments-overture';
@@ -31,6 +32,10 @@ export const OVERTURE_KIND_GLYPH: Record<OvertureKind, EstablishmentGlyph> = {
   dentist: 'dentist',
   school: 'school',
   college: 'college',
+  convenience: 'convenience',
+  supermarket: 'grocery',
+  pharmacy: 'pharmacy',
+  laundry: 'laundry',
 };
 
 /** A cell's places as map points, by kind and name. */

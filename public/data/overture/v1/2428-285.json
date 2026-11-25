@@ -101,6 +101,22 @@
     ["o53a1ce0c07b34b94","college",121.40388,14.26347,"College of Business, Administration, and Accountancy - LSPU SCC"],
     ["o6a831329b1d94959","college",121.42592,14.26809,"Get Better Learning Center"],
     ["oc87c7e73a0124866","college",121.41169,14.27879,"LSPU - College of Engineering"],
-    ["occ4955922f9c4c4a","college",121.41644,14.28109,"Phinma-Union College ROTCU"]
+    ["occ4955922f9c4c4a","college",121.41644,14.28109,"Phinma-Union College ROTCU"],
+    ["o0870f423f7bf49ef","supermarket",121.4394,14.26441,"Pagsanjan Public Market"],
+    ["o1bdb365188034b6e","supermarket",121.4161,14.28213,"TEAKiM Sta.cruz Laguna PH"],
+    ["o2308b18e0e444961","supermarket",121.41612,14.28264,"Ya Chingu KMart"],
+    ["o64c7d5155bf046aa","supermarket",121.41205,14.28573,"Goodwill Supermarket"],
+    ["o8fbc4a6206cf42ff","supermarket",121.4118,14.28714,"Sta. Cruz Public Market"],
+    ["od9465ccdd5494b56","supermarket",121.42326,14.26935,"SM Savemore"],
+    ["o2046d92343a74581","pharmacy",121.4281,14.27066,"Mercury Drug"],
+    ["o277687610d9346a8","pharmacy",121.41383,14.28565,"The Generics Pharmacy"],
+    ["o3ee3eef0c9c9487c","pharmacy",121.41341,14.28617,"Generika Drugstore",{"brand":"Generika"}],
+    ["o581fa4d32edd426e","pharmacy",121.41244,14.28598,"Marcelina Drugstore"],
+    ["o5a86c8db3ab04b90","pharmacy",121.41878,14.26772,"Delta Pharmacy"],
+    ["ob84937f485e84088","pharmacy",121.41615,14.28194,"Mercury Drug"],
+    ["od9b858cd69bc4d81","pharmacy",121.41891,14.27372,"Watsons"],
+    ["oe80578ea7f8648cb","pharmacy",121.41479,14.27527,"Watsons"],
+    ["o85fac450e4474670","laundry",121.40543,14.27417,"Wash and Dry Laundry Services"],
+    ["oc97271f968f84082","laundry",121.42779,14.26539,"Cielo's Wash Dry Fold"]
   ]
 }

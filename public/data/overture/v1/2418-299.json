@@ -98,6 +98,23 @@
     ["o1164d4a2a6834e41","college",120.90102,14.9678,"NU Baliwag School of Engineering and Technology"],
     ["o4c70b13d1c224d08","college",120.93236,14.96874,"Hebron Christian College"],
     ["o9ada59ccfbf042e7","college",120.91097,14.95448,"Bulacan State University"],
-    ["ofd553d96c72941c6","college",120.90726,14.96184,"Marian College Elementary Department"]
+    ["ofd553d96c72941c6","college",120.90726,14.96184,"Marian College Elementary Department"],
+    ["of17cdb4b96dd48bd","convenience",120.9182,14.95343,"All Day"],
+    ["o072ae3df557146f8","supermarket",120.90007,14.9548,"SM Savemore",{"brand":"SM Savemore Nagtahan"}],
+    ["o1d538f54c865435f","supermarket",120.90339,14.96686,"Waltermart Baliwag",{"brand":"Bravo Biscuits"}],
+    ["o3f606c0dbf164158","supermarket",120.905,14.95916,"Saning Store"],
+    ["o45cb89871d854218","supermarket",120.90219,14.95455,"Super8 Baliuag Bulacan"],
+    ["o6cd3876fc2334a21","supermarket",120.9007,14.96535,"DAEGU Korean SuperMarket"],
+    ["o7f15bd5410884fac","supermarket",120.90121,14.95472,"SM Hypermarket"],
+    ["o9b276287a91a494c","supermarket",120.91718,14.95175,"Bustos Public Market"],
+    ["od8d5c1532b1343ab","supermarket",120.90126,14.95293,"Baliwag Public Market"],
+    ["o38efa0ab390f48fc","pharmacy",120.90115,14.95289,"Vizconde Pharmacy and General Merchandise"],
+    ["o662854b0a5494769","pharmacy",120.90099,14.95441,"Mercury Drug"],
+    ["o97e8ae24a97c4752","pharmacy",120.94353,14.95829,"Unihealth Pharmacy"],
+    ["ob49cbefddfb441c7","pharmacy",120.91724,14.96748,"MSK Pharmacy"],
+    ["oeacfb5cd95e84956","pharmacy",120.9,14.95457,"Southstar Drug"],
+    ["o3fed5c8a2e814b64","laundry",120.9274,14.98312,"Dirty Treats Laundry Shop - Cruz Na Daan"],
+    ["o49a783bab6794fe0","laundry",120.92909,14.99451,"LJ Laundry Shop"],
+    ["o80454c5ec38a42c1","laundry",120.90549,14.96136,"CleanZone Laundry Shop Business & Distribution"]
   ]
 }

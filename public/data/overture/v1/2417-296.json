@@ -101,6 +101,21 @@
     ["oe6255d4bb14e4483","school",120.88293,14.82708,"Panginay Unida Christian School, Inc."],
     ["of6b57529052541c0","school",120.85067,14.81042,"DepEd Taal Elementary School - City of Malolos"],
     ["o73265193f88747e5","college",120.89301,14.81724,"Bulsu OSOA-Main Campus"],
-    ["od637a54b1deb4b90","college",120.8538,14.84766,"AMA Computer College Malolos"]
+    ["od637a54b1deb4b90","college",120.8538,14.84766,"AMA Computer College Malolos"],
+    ["o2f6f2d5251c5425d","convenience",120.89551,14.84924,"JapKor Mart"],
+    ["o412f5f5f3e044f1d","supermarket",120.88425,14.82653,"Guiguinto Public Market"],
+    ["oe74b866adbac4442","supermarket",120.88353,14.8319,"Golden Market-Cruz Guiguinto, Bulacan"],
+    ["o6cfa183e16b04185","pharmacy",120.85867,14.8393,"Mercury Drug"],
+    ["o96800e122b204a9a","pharmacy",120.8594,14.84438,"Farmacia ni Dok - Sta.Cruz, Guiguinto Branch"],
+    ["oafdd86f875984ab8","pharmacy",120.85972,14.84546,"RGSLeoncio Pharmacy"],
+    ["obb5fa25e95404a64","pharmacy",120.89432,14.82292,"Mercury Drug"],
+    ["o36058b0c79ee4b23","laundry",120.8594,14.84438,"Regina's Laundry"],
+    ["o41fbfd0c13254edc","laundry",120.85885,14.8075,"Save5 Pitpitan Laundry Center",{"brand":"Save5 Masangkay Laundry Center"}],
+    ["o4275738be8c34b48","laundry",120.89272,14.82723,"Annemazing Laundry Shop"],
+    ["o646caf56358542cf","laundry",120.86001,14.83927,"Suds Laundry Dryclean"],
+    ["oa94942a5b3214dae","laundry",120.86774,14.8138,"Ali Rasheed Laundry Shop"],
+    ["ob5d8ffb6be474234","laundry",120.8594,14.84438,"Quicklean Philippines"],
+    ["oc128d0eef7084884","laundry",120.85934,14.84726,"Wash Bar Laundry Express",{"brand":"Skylar Laundromat"}],
+    ["oe88016f4e4374623","laundry",120.87172,14.83441,"OXY Bubbles Laundry"]
   ]
 }

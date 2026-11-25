@@ -90,6 +90,20 @@
     ["ofb663fa42a124056","school",121.05847,14.82264,"Kaypian National High School"],
     ["o18d10629cc314694","college",121.07487,14.8198,"FCPC College of Allied Medical Sciences"],
     ["obb2578ef2b754741","college",121.05711,14.81339,"Bulacan State University Sarmiento Campus",{"brand":"Bulacan State University-Meneses Campus"}],
-    ["obe493529816a4982","college",121.05516,14.8095,"FCPC College of Education"]
+    ["obe493529816a4982","college",121.05516,14.8095,"FCPC College of Education"],
+    ["o54a81cbcc4aa44af","convenience",121.07364,14.81423,"All Day"],
+    ["o7cda81639f3e4b59","convenience",121.06461,14.81965,"All Day"],
+    ["o61593119841648a5","supermarket",121.05292,14.82514,"Choizhel Rice Store"],
+    ["o8853a249211c4f0b","supermarket",121.06,14.8148,"Puregold"],
+    ["oa803851cfd654da8","supermarket",121.06864,14.81348,"July Grocers"],
+    ["o0ccd1c07c8e14cd3","pharmacy",121.05595,14.80698,"Mercury Drug"],
+    ["oa07de04c1e4348c3","pharmacy",121.07122,14.84186,"Watsons"],
+    ["ob0cac030fc2a49b9","pharmacy",121.0722,14.8141,"Watsons Starmall Bulacan",{"brand":"Watsons"}],
+    ["ob50e6702a69c48ca","pharmacy",121.0683,14.80598,"MedExpress Drugstore"],
+    ["oc8cd68b5dda54b0f","pharmacy",121.07133,14.81346,"Mercury Drug StarMall Sjdm Bulacan",{"brand":"Mercury Drug- Lucena Puregold"}],
+    ["oda90f3582ab143af","pharmacy",121.06875,14.81354,"Health corner pharmacy"],
+    ["oe191e22fa87a4ac6","pharmacy",121.06862,14.8202,"Watsons"],
+    ["o19ef3d29a3854525","laundry",121.08373,14.83643,"Priviet Laundry"],
+    ["o1a32ec0ef2b0414e","laundry",121.06145,14.82381,"Spin & Dry Self Service Laundry Station"]
   ]
 }

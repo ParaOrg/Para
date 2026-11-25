@@ -199,6 +199,19 @@
     ["o4f9747c3e6b54673","college",121.33982,14.06373,"PLSP - Office of the Registrar"],
     ["o502c4bd703ad4492","college",121.31264,14.08295,"Laguna State Polytechnic University"],
     ["o7159e859b5674a25","college",121.32238,14.06981,"Laguna College"],
-    ["o83e41eb99b264ae5","college",121.32435,14.07111,"DLSP School Of Business Administration"]
+    ["o83e41eb99b264ae5","college",121.32435,14.07111,"DLSP School Of Business Administration"],
+    ["o5af972df3b994424","convenience",121.31229,14.06957,"Lynderson Arcade"],
+    ["o8c18a82b81af4abd","convenience",121.32903,14.06923,"H2O Life Water Refilling Station"],
+    ["o22eeab2d511f4c39","supermarket",121.32811,14.07175,"Puregold"],
+    ["o2714606064614cb4","supermarket",121.32206,14.06845,"Jackpot 888 Enterprises"],
+    ["o2c6ea93262eb4c92","supermarket",121.31834,14.0709,"Ultimart Supermarket"],
+    ["o3803d35793224297","supermarket",121.33918,14.05744,"Puregold"],
+    ["o60120ec3db00470b","supermarket",121.32059,14.07359,"ChinVan Variety Store"],
+    ["oa0f594d8db174a99","supermarket",121.31956,14.05944,"Sarang Mart Korean Grocery"],
+    ["of530980b4e494335","supermarket",121.32361,14.06811,"San Pablo City Public Market"],
+    ["oae10da3d02ab4f75","pharmacy",121.33472,14.05689,"Mercury Drug"],
+    ["oed5570c759414058","pharmacy",121.32364,14.06866,"Sofi-Lex Pharmacy"],
+    ["o7d28c1a8f2cd436e","laundry",121.33176,14.05701,"Daily Laundry Shop"],
+    ["of0c3b821503f4e35","laundry",121.32908,14.06893,"Bubble Chemistry"]
   ]
 }

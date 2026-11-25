@@ -67,6 +67,17 @@
     ["o1997152605e9400d","college",121.13705,14.15883,"Culinary Building"],
     ["ob9595000d64b45f1","college",121.13737,14.15902,"Lyceum of the Philippines University Laguna"],
     ["oc5a25ac5accf4845","college",121.13589,14.17814,"NU Laguna"],
-    ["of92b50dd5e304d2b","college",121.12147,14.17979,"PHINMA-Rizal College of Laguna",{"brand":"PHINMA"}]
+    ["of92b50dd5e304d2b","college",121.12147,14.17979,"PHINMA-Rizal College of Laguna",{"brand":"PHINMA"}],
+    ["o4d05d9bdd4694cd1","convenience",121.13799,14.1652,"Bonjour"],
+    ["o79700e3f98964c7c","supermarket",121.13791,14.16253,"Waltermart Supermarket"],
+    ["oa730dc54340a4f95","supermarket",121.13815,14.16247,"Chefs & Cook"],
+    ["ob6eca1440dac45ad","supermarket",121.13852,14.16149,"Annyeong Sayo Korean Mart"],
+    ["o3357afa7e58e45fe","pharmacy",121.13905,14.16038,"Mercury Drug"],
+    ["o38b8610acd434e06","pharmacy",121.13859,14.16055,"Watsons"],
+    ["o9b2f5d2ec21648bd","pharmacy",121.13652,14.16027,"Mercury Drug"],
+    ["o251452a180ad4222","laundry",121.10973,14.17483,"Love2 Laundry House"],
+    ["o6bbeb1664cd74a45","laundry",121.12434,14.19353,"Double M Laundry Shop"],
+    ["oeb40b69de4944904","laundry",121.11935,14.18363,"Spintacular Laundry Hub - Canlubang"],
+    ["ofa52102ce0a542f4","laundry",121.13799,14.1977,"Rinse N' Dry"]
   ]
 }

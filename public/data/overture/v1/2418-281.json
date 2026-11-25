@@ -65,6 +65,13 @@
     ["oe66a1f0b98a44f28","cafe",120.93331,14.09694,"Marj's Cafe"],
     ["oe904bed0aec34ec2","cafe",120.94377,14.09792,"Celina's Cafe And Restaurant"],
     ["o7e6fa1f7fdff45b5","school",120.93141,14.05562,"Wenceslao Trinidad Memorial National High School"],
-    ["obeb3553536994f8e","school",120.93155,14.05534,"Laurel Central School"]
+    ["obeb3553536994f8e","school",120.93155,14.05534,"Laurel Central School"],
+    ["o4250e1c3e17e4f3d","supermarket",120.91936,14.09656,"Puregold"],
+    ["o4ff77c1a71cc4b6a","supermarket",120.93663,14.09562,"WalterMart Supermarket"],
+    ["ofb63b15018a64a87","supermarket",120.93768,14.09521,"Altura"],
+    ["o359c00ec32ee453e","pharmacy",120.94218,14.09639,"Southstar Drug"],
+    ["o4a0b2c2001e24ca2","pharmacy",120.92451,14.09765,"Watsons"],
+    ["o6813b07c817a45cc","pharmacy",120.9337,14.05016,"Benj Pharmacy"],
+    ["oc01f692c80aa43b4","pharmacy",120.94452,14.08263,"Mercury Drug"]
   ]
 }

@@ -118,6 +118,21 @@
     ["o4c382b90c26444d9","college",120.9793,14.8361,"Bulacan Agricultural State College-Santa Maria Campus"],
     ["o698a728abb9c4e5c","college",120.96246,14.81783,"ICI College Guidance and Counseling"],
     ["o703ac4b6623945b1","college",120.95972,14.82134,"STI College Sta. Maria"],
-    ["of779df1766e94b39","college",120.97327,14.84434,"STI College Sta. Maria"]
+    ["of779df1766e94b39","college",120.97327,14.84434,"STI College Sta. Maria"],
+    ["o5f0941a287ed41a1","supermarket",120.96004,14.82187,"Sta. Maria Public Market"],
+    ["o619ae8f96a3a4a33","supermarket",120.979,14.84695,"Mini Stop"],
+    ["o7e6ac11d5ba04799","supermarket",120.96185,14.82194,"SM Savemore"],
+    ["oc6a3a2506dd1497b","supermarket",120.96159,14.82271,"Super 8 Sta. Maria"],
+    ["oc7cf5e177f2a46d6","supermarket",120.98306,14.82137,"SM Savemore"],
+    ["oe92c0171e85d4c5a","supermarket",120.95776,14.81834,"Puregold"],
+    ["o016d0d56a2124e58","pharmacy",120.95496,14.82269,"Watsons"],
+    ["o104724b1bde843d0","pharmacy",120.97227,14.82414,"Rovenan Pharma and Medical Supplies Distribution"],
+    ["o4477581cc8f9456f","pharmacy",120.97502,14.83377,"Pharxmaco Drugstore - Patag Branch"],
+    ["o86c720bfda814be6","pharmacy",120.964,14.8208,"Rovenan Pharma and Medical Supplies Distribution"],
+    ["o8bbd2410851540cf","pharmacy",120.95424,14.82241,"Mercury Drug",{"brand":"Mercury Drug- Lucena Puregold"}],
+    ["oe9c0f90fe7c246fc","pharmacy",120.97333,14.81964,"JMC Drugcare Pharmacy"],
+    ["oebb41fdf15af4850","pharmacy",120.95187,14.82501,"Farmacia Ni Dok - Poblacion Santa Maria Bulacan Branch"],
+    ["ofe11edbd37814fee","pharmacy",120.97896,14.84175,"ICAH Pharmacy"],
+    ["oaa4e9edcf2b34258","laundry",120.97907,14.84991,"Bubble Club Smart Laundry"]
   ]
 }

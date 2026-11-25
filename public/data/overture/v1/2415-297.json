@@ -58,6 +58,12 @@
     ["od1c1746594dd4fb9","school",120.76143,14.87784,"DepEd Iba Elementary School"],
     ["of8af8d638e3f425c","school",120.78378,14.86029,"Kapitangan National High School"],
     ["o2a50b79489b94799","college",120.78135,14.89855,"Colegio De Calumpit"],
-    ["od8261262b776427b","college",120.76655,14.8659,"BulSU Hagonoy Campus Library"]
+    ["od8261262b776427b","college",120.76655,14.8659,"BulSU Hagonoy Campus Library"],
+    ["o7de26b67ad2541e9","supermarket",120.7783,14.88984,"Robinson Supermarket Graceland  Mall Malolos"],
+    ["oe6eec891de8048c1","supermarket",120.79342,14.87744,"Arcane - Longos, Malolos Branch"],
+    ["o27040253b0034331","pharmacy",120.7962,14.87478,"TGP The Generics Pharmacy"],
+    ["od6bf3734038646a8","pharmacy",120.79704,14.87532,"Watsons"],
+    ["od5962eb9e73a4282","laundry",120.78292,14.89354,"Quicklean",{"brand":"Quicklean Philippines"}],
+    ["of5a6c166fb754497","laundry",120.79977,14.86041,"Mr Clean Laundry"]
   ]
 }

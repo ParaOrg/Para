@@ -4,6 +4,7 @@
 // OSM and Overture files never hold each other's ids.
 //
 //   node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs tests/unit/overture-file-test.mjs
+import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
@@ -96,6 +97,30 @@ test('a place OSM already has, by name near it or brand a little further, is OSM
   assert.equal(isInOsm(osm, candidate('restaurant', 'Kusina ni Aling Nena', 30)), false);
 });
 
+test('a store OSM already has is OSM’s too: a 7-Eleven in both is one marker', () => {
+  const cell = JSON.stringify({
+    establishments: [
+      ['n1', 'convenience', AT[0], north(30)[1], '7-Eleven', { brand: '7-Eleven' }],
+      ['n2', 'pharmacy', AT[0], north(30)[1], 'Mercury Drug'],
+      ['n3', 'supermarket', AT[0], north(30)[1], 'Puregold'],
+      ['n4', 'laundry', AT[0], north(30)[1], 'Suds Laundry'],
+    ],
+  });
+  const osm = osmPlaceGrid({ establishmentCells: [cell], landmarks: [] });
+  const candidate = (kind, name, metres, brand) => ({ kind, name, point: north(metres), brand });
+  assert.equal(isInOsm(osm, candidate('convenience', '7-Eleven', 60)), true);
+  assert.equal(isInOsm(osm, candidate('convenience', '7 Eleven Aurora', 120, '7-Eleven')), true);
+  assert.equal(isInOsm(osm, candidate('pharmacy', 'Mercury Drug', 40)), true);
+  assert.equal(isInOsm(osm, candidate('supermarket', 'Puregold', 40)), true);
+  assert.equal(isInOsm(osm, candidate('laundry', 'Suds Laundry', 40)), true);
+  assert.equal(
+    isInOsm(osm, candidate('laundry', 'Mercury Drug', 30)),
+    false,
+    'not a laundry’s kind',
+  );
+  assert.equal(isInOsm(osm, candidate('convenience', 'Aling Nena Sari-Sari', 30)), false);
+});
+
 test('the places kept: named, off the road, not OSM’s, open, in the box, in kind order', () => {
   const { establishments, dropped } = overturePlacesFrom(
     [
@@ -123,6 +148,17 @@ test('the places kept: named, off the road, not OSM’s, open, in the box, in ki
 
 test('every category pull.py keeps has a kind, and every kind is one the map can draw', () => {
   for (const kind of Object.values(KIND_OF_CATEGORY)) assert.ok(OVERTURE_KINDS.includes(kind));
+  const pull = readFileSync(new URL('../../scripts/overture/pull.py', import.meta.url), 'utf8');
+  const quoted = (name) =>
+    [...pull.match(new RegExp(`^${name} = \\(([^)]*)\\)`, 'm'))[1].matchAll(/"([a-z_]+)"/g)].map(
+      ([, category]) => category,
+    );
+  for (const category of [...quoted('CATEGORIES'), ...quoted('GROCERIES')])
+    assert.ok(KIND_OF_CATEGORY[category], `${category} has a kind`);
+  assert.equal(KIND_OF_CATEGORY.convenience_store, 'convenience');
+  assert.equal(KIND_OF_CATEGORY.grocery_store, 'supermarket');
+  assert.equal(KIND_OF_CATEGORY.pharmacy_and_drug_store, 'pharmacy');
+  assert.equal(KIND_OF_CATEGORY.laundry_service, 'laundry');
   assert.equal(overtureIdOf('08F2A-BC4d-0000-1111-2222'), 'o08f2abc4d0000111');
   assert.match(overtureIdOf('0a1b2c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d'), OVERTURE_FILES.idPattern);
 });

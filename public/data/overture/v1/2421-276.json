@@ -12,6 +12,10 @@
     ["o15f296ec588e4d2f","school",121.08365,13.83177,"Navera Memorial National High School"],
     ["o7fd97aa0acbf45da","school",121.05444,13.80543,"Banaba West National High School"],
     ["o8c9e59dfdf694413","school",121.06176,13.80773,"Banaba Center Elementary School"],
-    ["od4b22dcd5e83472e","school",121.05445,13.80494,"Banaba West Elementary School"]
+    ["od4b22dcd5e83472e","school",121.05445,13.80494,"Banaba West Elementary School"],
+    ["o16b757f29c384974","convenience",121.06856,13.80868,"AllenOne Grocery & Payment - Balagtas  Batangas Branch"],
+    ["of8a50b22a5224e55","convenience",121.08376,13.83527,"Lucky Mart Concepcion",{"brand":"Lucky Mart"}],
+    ["oe5c966e7a58c4093","supermarket",121.08755,13.84308,"Baryo Supermart & Restaurant"],
+    ["o6c23fa2b28d44700","laundry",121.08911,13.8163,"Mamay Lavandero Laundry Shop"]
   ]
 }

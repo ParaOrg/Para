@@ -197,6 +197,17 @@
     ["o971a56188bad4a25","school",120.99625,14.12034,"Tagaytay City Science National High School"],
     ["od978b53156c5499f","school",120.95057,14.1258,"Pater Noster Montessori School"],
     ["o5d05e38fdbd0435f","college",120.95631,14.14906,"Rogationist College"],
-    ["oa92044c549d041ad","college",120.99516,14.1257,"Development Academy of the Philippines"]
+    ["oa92044c549d041ad","college",120.99516,14.1257,"Development Academy of the Philippines"],
+    ["o2c3b1afc7bce4769","convenience",120.96194,14.11629,"Shell"],
+    ["o176103d608324693","supermarket",120.98711,14.13737,"Bahay Pastulan Store"],
+    ["o8516a59f0eff4315","supermarket",120.95967,14.12244,"Lucky Mart"],
+    ["oa0f9b8a7a1bd41b3","supermarket",120.95902,14.12671,"Oscor Mart Amadeo"],
+    ["ob4aff42c50934891","supermarket",120.98341,14.13229,"Shopwise"],
+    ["od34e81fe27cc46f3","supermarket",120.98022,14.12799,"Palengkeville, Tagaytay City"],
+    ["of27fd67ffbf94c2c","supermarket",120.98438,14.12466,"Bahay Pastulan Store"],
+    ["of579b96610734621","supermarket",120.9621,14.11567,"PUREGOLD"],
+    ["oa01e50cd145c44cc","pharmacy",120.9798,14.12764,"Extra Care Pharmacy"],
+    ["o2bf7c8719f9e4243","laundry",120.95825,14.11169,"WashingPanda Laundry Services"],
+    ["o39376a55d70045d1","laundry",120.95558,14.14146,"Marjoy Laundry Shop"]
   ]
 }

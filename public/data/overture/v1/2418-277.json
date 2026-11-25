@@ -76,6 +76,15 @@
     ["oa2eecbc3bc064cc5","school",120.91579,13.88183,"Lemery Pilot Elementary School"],
     ["obbb0ea007ba546da","school",120.91313,13.87541,"R. Venturanza Central School"],
     ["o0cb09355827941ba","college",120.91853,13.87534,"BSIT NISU Lemery Campus"],
-    ["oac7f650c08704402","college",120.92249,13.87979,"Rizal College of Taal"]
+    ["oac7f650c08704402","college",120.92249,13.87979,"Rizal College of Taal"],
+    ["o0c7d2f46438f4eb1","supermarket",120.91219,13.88107,"Newstar Lemery Batangas - Retail"],
+    ["o8801802dbc7e4456","supermarket",120.9125,13.88703,"SM Center Lemery Supermarket"],
+    ["ob2590712dfff442c","supermarket",120.91782,13.8807,"Citimart Supermarket Lemery"],
+    ["obe630dada93c418f","supermarket",120.92228,13.87924,"Taal Public Market"],
+    ["o3bc01f78272a404c","pharmacy",120.91771,13.88047,"Southstar Drug"],
+    ["o8189ce0827e84808","pharmacy",120.91164,13.88009,"RS Abante Pharmacy"],
+    ["od0fe8e59aca04d51","pharmacy",120.9053,13.89618,"Watsons"],
+    ["od40f7631b46243ab","pharmacy",120.90238,13.89879,"Savemore Drugstore & General merchandise"],
+    ["o8beddffc2b824908","laundry",120.9166,13.87953,"Washville Express Laundry"]
   ]
 }

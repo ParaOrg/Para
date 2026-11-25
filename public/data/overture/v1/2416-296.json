@@ -94,6 +94,23 @@
     ["of7b8187f38cd4ac3","school",120.81329,14.84375,"Central Malolos Integrated School"],
     ["o1806d714b061435c","college",120.8132,14.84671,"La Consolacion University Philippines"],
     ["o4373c4a10bad4bf9","college",120.84076,14.84367,"BulSU College of Information and Communications Technology"],
-    ["oc0fff9d4fba64139","college",120.84076,14.84367,"BULSU OSOA - Main Campus"]
+    ["oc0fff9d4fba64139","college",120.84076,14.84367,"BULSU OSOA - Main Campus"],
+    ["o3411bd3616064db2","convenience",120.81266,14.83958,"CLiQQ"],
+    ["o54347064896249a5","convenience",120.84055,14.81367,"Puregold Jr."],
+    ["o700915ee1e0d4c17","supermarket",120.81178,14.84445,"Shopwise Express"],
+    ["ob6ec98ae7a014154","supermarket",120.81251,14.84321,"SM Savemore"],
+    ["oe2b6e0c1757949cd","supermarket",120.81343,14.8438,"Palengae Outdoor Market"],
+    ["o1ac80be40abd4f2d","pharmacy",120.82689,14.8405,"Watsons"],
+    ["o44476f209e334942","pharmacy",120.81405,14.84778,"Centria Pharmacy and Medical Supplies"],
+    ["o447c07e22e324df0","pharmacy",120.80276,14.84947,"South Star Drug",{"brand":"Southstar Drug"}],
+    ["o502cb01abdf741cb","pharmacy",120.81352,14.84389,"Mercury Drug Malolos Bayan",{"brand":"Mercury Drug- Lucena Puregold"}],
+    ["o83f2dca9ea474364","pharmacy",120.81928,14.83152,"Drug Central Pharmacy"],
+    ["o8e92bc6fa1e04a71","pharmacy",120.82375,14.84976,"Mercury Drug"],
+    ["o0747bd5c15eb40db","laundry",120.83698,14.84005,"Labada Express Laundry House"],
+    ["o75a9f3202e074ea5","laundry",120.83908,14.81451,"i Wash Here Laundry Shop"],
+    ["o8fbe35ab687b4e62","laundry",120.812,14.8419,"The Lavender Coin Launderette"],
+    ["oad1d2fdf124b4763","laundry",120.81096,14.84568,"S/M Laundrynet"],
+    ["ocfe3aa9b243a46d9","laundry",120.83394,14.84447,"Basket Bula Laundry Station"],
+    ["oec1697c54fee4300","laundry",120.81181,14.84161,"Goodbye Labada - Luvadami Luvango"]
   ]
 }

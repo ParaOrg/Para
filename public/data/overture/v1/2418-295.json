@@ -97,6 +97,22 @@
     ["o8a909eaea6ea4314","college",120.92431,14.79066,"Bulacan Polytechnic College - Bocaue Campus"],
     ["o9af30b2187c34733","college",120.93148,14.78675,"Jesus Is Lord Colleges Foundation, Inc."],
     ["oe8bf49d1c7a64f61","college",120.93736,14.77477,"CSL College of Criminology"],
-    ["of0c4bc582acf412d","college",120.94046,14.77051,"PDM - School Clinic"]
+    ["of0c4bc582acf412d","college",120.94046,14.77051,"PDM - School Clinic"],
+    ["o2a3e608f2a0446fb","convenience",120.9471,14.75863,"GT7 Convenience Store"],
+    ["o01939b047fe04264","supermarket",120.9313,14.79369,"Puregold"],
+    ["o364a21bbe7924fe7","supermarket",120.92693,14.79799,"Bocaue Public Market"],
+    ["o845766cd24654b76","supermarket",120.93486,14.78204,"Nim-Han Tres Korean Mart"],
+    ["o9626c22ebc594ca9","supermarket",120.93748,14.77519,"MFJ Store and General Merchandise"],
+    ["oc8c1558c8c674b31","supermarket",120.93538,14.7814,"Joners Supermart"],
+    ["od3303237cac34b4a","supermarket",120.92332,14.79632,"Garahe ni Kend"],
+    ["o218687a2041a4efc","pharmacy",120.92418,14.79597,"Mercury Drug"],
+    ["o3b9ae4d9cc6e406b","pharmacy",120.9359,14.7816,"Farmacia Ni Dok"],
+    ["o438e103ab2d04c26","pharmacy",120.92255,14.79762,"Mercury Drug"],
+    ["o57bc959e10334e75","pharmacy",120.93243,14.7918,"Watsons"],
+    ["o8bc30cc084564004","pharmacy",120.92525,14.79669,"MGL Drugstore"],
+    ["ocb5c5bbb73cf4d77","pharmacy",120.93304,14.77945,"Ka-Botika Pharmacy"],
+    ["ocf7de47f243b49d5","pharmacy",120.93453,14.77725,"Fabros Pharmacy"],
+    ["o3f42455b738e4c05","laundry",120.948,14.7578,"Laundress Hub Prenza Branch"],
+    ["o788168e3f3e94db5","laundry",120.9485,14.75697,"Jing's Laundry House"]
   ]
 }

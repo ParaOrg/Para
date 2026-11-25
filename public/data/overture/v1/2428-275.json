@@ -4,6 +4,7 @@
   "attribution": "© Overture Maps Foundation",
   "establishments": [
     ["oa8c8ade6f7864ec5","restaurant",121.41222,13.77524,"Johnny's Restaurant"],
-    ["od90829a376f446a1","school",121.41211,13.79111,"Buhay na Sapa National High School"]
+    ["od90829a376f446a1","school",121.41211,13.79111,"Buhay na Sapa National High School"],
+    ["oe570dee25e174065","pharmacy",121.40514,13.79669,"TGP The Generics Pharmacy (Buhay na Sapa, San Juan)",{"brand":"TGP The Generics Pharmacy"}]
   ]
 }

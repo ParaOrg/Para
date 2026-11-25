@@ -244,6 +244,25 @@
     ["od0623feff800422e","college",121.05942,13.76384,"UB College of Engineering"],
     ["od79e381d9ece4193","college",121.05905,13.76383,"University of Batangas"],
     ["oe7cd903313ee4284","college",121.05784,13.75936,"Kumon"],
-    ["of3bb76cc6b134acb","college",121.06276,13.76332,"Patio cafe university of batangas"]
+    ["of3bb76cc6b134acb","college",121.06276,13.76332,"Patio cafe university of batangas"],
+    ["o7082afc83c734034","convenience",121.06827,13.79222,"AllenOne Grocery & Payment - Balagtas  Batangas Branch"],
+    ["oe7b5379401684515","convenience",121.05847,13.75621,"Ministop"],
+    ["o1881f2ccef1e4941","supermarket",121.05136,13.79505,"Puregold"],
+    ["o28ce081f93e64d4c","supermarket",121.06616,13.77305,"MONTEREY Meatshop plus",{"brand":"Monterey Meats"}],
+    ["o4897de84df624906","supermarket",121.05918,13.75935,"Sabon Station Batangas City  Main"],
+    ["o55c931792c01481d","supermarket",121.05531,13.75708,"Public Market"],
+    ["o5b8b4a2be09f4b0e","supermarket",121.05592,13.757,"Peter & Ester Rest."],
+    ["o64409078c49e4030","supermarket",121.05721,13.76031,"Citimart Supermarket"],
+    ["o64cddc72c05042b1","supermarket",121.05479,13.76227,"Citimart Plaza"],
+    ["o64d3a6529895486d","supermarket",121.06888,13.75508,"SM Supermarket"],
+    ["o980c018bf9f34add","supermarket",121.05096,13.78357,"Shopwise"],
+    ["o9d154fb6ad0f43be","supermarket",121.05761,13.75855,"Robinsons Supermarket"],
+    ["odc201433c1a74ffa","supermarket",121.06154,13.78911,"SM Savemore"],
+    ["o27c4347731704cd9","pharmacy",121.06018,13.7669,"Mercury Drug"],
+    ["o424ba8821d84434b","pharmacy",121.07143,13.76199,"The Generics Pharmacy"],
+    ["o6e7b1fa9d9d0462b","pharmacy",121.07032,13.79496,"Watsons"],
+    ["ob6c56e9832a64acf","pharmacy",121.06734,13.77344,"Mercury Drug"],
+    ["odd24988ae95a42e3","pharmacy",121.06643,13.7751,"Southstar Drug"],
+    ["of05315aa8846423a","pharmacy",121.05121,13.76855,"Mercury Drug"]
   ]
 }

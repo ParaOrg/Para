@@ -115,6 +115,15 @@
     ["oc388880e5633418f","college",120.96911,14.21203,"Cavite State University Silang Campus"],
     ["od280cc6a2f014e02","college",120.96104,14.23718,"Far Eastern University"],
     ["oe25deffd9b2c433d","college",120.9609,14.23707,"FEU Cavite"],
-    ["ofc05a5f31a284d66","college",120.9672,14.20217,"Adventist International Institute of Advanced Studies"]
+    ["ofc05a5f31a284d66","college",120.9672,14.20217,"Adventist International Institute of Advanced Studies"],
+    ["oc6fed14c017f4a0b","convenience",120.97384,14.22284,"Ministop"],
+    ["o5396f13e3be74703","supermarket",120.97084,14.22413,"Needs Value Mart"],
+    ["o7bcbf2d0ac2d4726","supermarket",120.97292,14.23325,"Puregold"],
+    ["oa1e916b8915a4c51","supermarket",120.96304,14.22522,"Taddy's Store"],
+    ["of9b7d4b6d78d4fcf","supermarket",120.99632,14.20667,"SM Savemore"],
+    ["o02f15871b90d40a6","pharmacy",120.95325,14.209,"Watsons"],
+    ["o71f078163e5d4b04","laundry",120.97437,14.22369,"Laversavon Laundry Shop"],
+    ["o79966446f0af43fe","laundry",120.97392,14.22978,"Laversavon Laundry Shop"],
+    ["o84d323010e6e471a","laundry",120.97365,14.22979,"Suds Laundry & Dryclean Services - Silang"]
   ]
 }

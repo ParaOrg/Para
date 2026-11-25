@@ -153,6 +153,24 @@
     ["oa80a62ac3a884b55","school",121.15895,14.52347,"Throne Of Wisdom"],
     ["obd129659ab394e8c","school",121.18739,14.50705,"Vicente Madrigal Integrated School"],
     ["od13760b5b1d04526","school",121.19958,14.50788,"Francisco P. Felix Unit 1 Elementary School"],
-    ["of159ca3a80d544d3","school",121.18456,14.54942,"Duraville II Playschool"]
+    ["of159ca3a80d544d3","school",121.18456,14.54942,"Duraville II Playschool"],
+    ["o1cc01cb374574841","supermarket",121.16152,14.52966,"SM Savemore"],
+    ["o2d3a0f11bd93414c","supermarket",121.16164,14.51859,"New Binangonan Public Market"],
+    ["o388a9ba081234f40","supermarket",121.17342,14.53899,"Puregold"],
+    ["o3a40271ac1694c9e","supermarket",121.15288,14.52645,"Happy Minimart"],
+    ["o877f44bdddba4795","supermarket",121.15446,14.54016,"SM Savemore"],
+    ["o96a15544adc24b86","supermarket",121.15455,14.53065,"SM Hypermarket"],
+    ["ob9613ca27bf842ef","supermarket",121.16801,14.50917,"New Binangonan Public Market"],
+    ["oc0033d3a03ed4bb0","supermarket",121.15362,14.52338,"Angono Public Market"],
+    ["od7893e9630cd4b1d","supermarket",121.15366,14.53974,"Manalo Cafe & Restaubar"],
+    ["o02f60233fc25400d","pharmacy",121.18456,14.54942,"Farmacia de Regina Rica"],
+    ["o4c490a5aa8ff45f6","pharmacy",121.15476,14.5238,"The Generics Pharmacy",{"brand":"TGP The Generics Pharmacy"}],
+    ["o880390ac62ba4348","pharmacy",121.16151,14.53342,"Mercury Drug"],
+    ["oe5d4eeee0b4c4dd8","pharmacy",121.16051,14.54436,"Mercury Drugstore Angono Rizal"],
+    ["oe6542a6048dd4716","pharmacy",121.16383,14.53016,"Mercury Drug"],
+    ["oee146ddd4698487d","pharmacy",121.16497,14.53075,"Watsons"],
+    ["o853790ddf2fa48d3","laundry",121.16353,14.53098,"Whirlo-Dry Laundromat"],
+    ["ob716348b35e64207","laundry",121.15049,14.53714,"Alexandra's Laundromat"],
+    ["od3000404a55d4874","laundry",121.1584,14.53963,"iLaba"]
   ]
 }

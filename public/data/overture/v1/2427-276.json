@@ -46,6 +46,13 @@
     ["o0e90de8085144795","school",121.39739,13.82481,"Deped Tayo San Juan West Central School"],
     ["o2150c1ac4d5c400d","school",121.39092,13.80863,"Talahiban 1st Elementary School"],
     ["o818df6c2117e4101","school",121.3773,13.82796,"Marcal Elementary School"],
-    ["obff7d40e554440e2","school",121.36466,13.81304,"Escribano Elementary School"]
+    ["obff7d40e554440e2","school",121.36466,13.81304,"Escribano Elementary School"],
+    ["oa39df1c0ccdc49ee","convenience",121.38653,13.82609,"Woonmart - San Juan, Batangas"],
+    ["o63ca5c5bdf014eda","supermarket",121.39222,13.82511,"Bul•Go•Gy Unlimited Korean Barbeque - San Juan, Batangas"],
+    ["o86e0ada5cf4f4beb","supermarket",121.39409,13.82479,"Manalo's Minimart"],
+    ["ocf75194df31447bb","supermarket",121.39329,13.8242,"San Juan Public Market"],
+    ["of9d3d6380772485f","supermarket",121.39315,13.8263,"Puregold Junior",{"brand":"Puregold"}],
+    ["o221f0c06f6c0407c","pharmacy",121.39585,13.82739,"Generika Drugstore",{"brand":"Generika"}],
+    ["o64f17ce044724ce7","pharmacy",121.39432,13.82478,"TGP The Generics Pharmacy"]
   ]
 }

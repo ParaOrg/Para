@@ -87,6 +87,16 @@
     ["ocd2f9f45a95444ad","school",120.9439,14.1388,"Talon National High School"],
     ["oe643d12072534170","school",120.91392,14.10546,"Tagaytay Montessori School"],
     ["o3bf8b5f8729f4792","college",120.90971,14.1164,"Guang Ming College Tagaytay"],
-    ["o4c36cdef65c145b8","college",120.933,14.1031,"STI College Tagaytay"]
+    ["o4c36cdef65c145b8","college",120.933,14.1031,"STI College Tagaytay"],
+    ["o372d36cd6a464922","supermarket",120.94604,14.10118,"SM Hypermarket Tagaytay"],
+    ["o6725caf7b8404fba","supermarket",120.9061,14.12804,"The Metro Stores"],
+    ["od2f094d6a35d450e","supermarket",120.93707,14.11712,"Tagaytay Tropic Delights"],
+    ["o1983022272b44f6e","pharmacy",120.9035,14.14157,"Farmacia Ni Dok- Mendez Cavite"],
+    ["o569bf15fc6e74f55","pharmacy",120.90894,14.12059,"Generika Mendez Bayan"],
+    ["oa91f503cf9734420","pharmacy",120.94633,14.10133,"Watsons"],
+    ["o9b54d91f251a4dc2","laundry",120.93441,14.125,"Springwash Laundry"],
+    ["ob66a0743e4b549d6","laundry",120.93729,14.10284,"Greenbubbles"],
+    ["of7bf847720fc4cb0","laundry",120.94485,14.10215,"Save5 Cool Suites Laundry Center",{"brand":"Save5 Masangkay Laundry Center"}],
+    ["ofe74a85812474f4a","laundry",120.91042,14.11174,"Fairy Laundry"]
   ]
 }

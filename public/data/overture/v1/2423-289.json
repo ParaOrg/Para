@@ -54,6 +54,11 @@
     ["o9fc5f4b5ca144852","school",121.17317,14.49979,"Guronasyon Foundation National High School"],
     ["oe33a3426c8244173","school",121.18014,14.49485,"Dona Susana Madrigal Memorial School"],
     ["o3ae919835a5342c7","college",121.19592,14.47564,"Sta Ursula Subd. Batingan Binangonan Rizal"],
-    ["oe365efd24a80477d","college",121.18748,14.48302,"URS Binangonan Rizal"]
+    ["oe365efd24a80477d","college",121.18748,14.48302,"URS Binangonan Rizal"],
+    ["o4ae1afc900d24030","convenience",121.18787,14.47925,"Lucky Mart Binangonan",{"brand":"Lucky Mart"}],
+    ["o1918d37fbde345ab","supermarket",121.19311,14.46651,"Super8 Grocery Warehouse"],
+    ["o19f64783850446f5","supermarket",121.19859,14.47359,"Cherrys Store"],
+    ["o39da5cba0cd0439c","pharmacy",121.18072,14.49424,"Watsons"],
+    ["ocfd141e39d824ccd","pharmacy",121.18428,14.49039,"Pharma chic drugstore"]
   ]
 }
