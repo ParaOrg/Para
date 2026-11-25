@@ -19,8 +19,8 @@ interface PlaceSearchProps {
   /** The directions that stop at a hotspot: what rides from a place, and its routes near a landmark. */
   directionsAt: (hotspotId: string) => readonly Direction[];
   /**
-   * Where the commuter is now, when location is on, read as they type (the page keeps the fix in a
-   * ref so a fix renders nothing): equal matches list nearest first.
+   * Where the commuter is now, when location is on, or the studio's map centre, read as they type
+   * (the page keeps the fix in a ref so a fix renders nothing): equal matches list nearest first.
    */
   whereNow?: () => LngLat | null;
   /** A Para place or a hintuan near a landmark chosen: the box to open, as a tap on it does. */

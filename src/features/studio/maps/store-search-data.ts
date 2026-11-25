@@ -1,14 +1,11 @@
-import {
-  foldForSearch,
-  lettersOf,
-  matchFolded,
-  qualityRank,
-  type MatchQuality,
-} from '@/features/routes/model/place-search';
+import { foldForSearch, lettersOf, type MatchQuality } from '@/features/routes/model/place-search';
 import type { Spot, SpotMatch } from '@/features/routes/search/spot-source';
+import { MAX_RESULTS } from '@/features/routes/search/use-search-rows';
 import { haversine, type LngLat } from '@/shared/utils/geo';
 
+import { categoryOfQuery } from './store-categories';
 import { STORE_FILES, storeFileSchema, type StoreFile, type StoreSource } from './store-files';
+import { PLAIN_QUALITIES, nearest, plainMatch, typoTest } from './store-matching';
 
 /*
  * The studio's store search (the owner's call, 2026-11-25: the studio's search only; the public
@@ -22,6 +19,8 @@ interface SearchStore {
   spot: Spot;
   folded: string;
   letters: number;
+  /** Its file's category: Overture's primary one, or the OpenStreetMap kind. */
+  category: string;
 }
 
 /** The stores ready to search, and the credit each source's licence asks for. */
@@ -100,6 +99,7 @@ export function storesFrom(files: Record<StoreSource, StoreFile>): Stores {
         },
         folded,
         letters: lettersOf(folded),
+        category: file.categories[category] ?? '',
       });
     });
   }
@@ -109,7 +109,14 @@ export function storesFrom(files: Record<StoreSource, StoreFile>): Stores {
   };
 }
 
-/** The stores the query matches, ranked as landmarks are: match, distance, name. */
+/**
+ * The stores the query matches, best first: the whole name, then its start, a word's start, inside
+ * it, then a typo; equal matches nearest `from` (the studio passes the map's centre), so a chain
+ * lists its nearest branches. A query that is a category word ("botika", "sari-sari", "hotel",
+ * store-categories.ts) lists that category's places nearest `from` instead, whatever their names.
+ * At most MAX_RESULTS, what the search shows: once the better matches fill them, the worse are
+ * never measured, and the typo pass, the costly one, runs only when the plain matches are fewer.
+ */
 export function searchStores(
   query: string,
   stores: readonly SearchStore[],
@@ -117,21 +124,27 @@ export function searchStores(
 ): SpotMatch[] {
   const foldedQuery = foldForSearch(query);
   if (foldedQuery === '') return [];
-  const matches: { match: SpotMatch; quality: MatchQuality }[] = [];
-  for (const { spot, folded, letters } of stores) {
-    const quality = matchFolded(foldedQuery, folded, letters);
-    if (!quality) continue;
-    matches.push({
-      match: { spot, distanceM: from ? haversine(from, spot.point) : null },
-      quality,
-    });
+  const inCategory = categoryOfQuery(foldedQuery);
+  if (inCategory) {
+    const found = stores.filter((store) => inCategory(store.category));
+    return nearest(found, from, MAX_RESULTS);
   }
-  return matches
-    .sort(
-      (a, b) =>
-        qualityRank(a.quality) - qualityRank(b.quality) ||
-        (a.match.distanceM ?? 0) - (b.match.distanceM ?? 0) ||
-        a.match.spot.label.localeCompare(b.match.spot.label),
-    )
-    .map(({ match }) => match);
+  const byQuality = new Map<MatchQuality, SearchStore[]>(
+    PLAIN_QUALITIES.map((quality) => [quality, []]),
+  );
+  const misses: SearchStore[] = [];
+  for (const store of stores) {
+    const quality = plainMatch(foldedQuery, store.folded);
+    if (quality) byQuality.get(quality)?.push(store);
+    else misses.push(store);
+  }
+  const found: SpotMatch[] = [];
+  for (const quality of PLAIN_QUALITIES) {
+    const left = MAX_RESULTS - found.length;
+    if (left <= 0) return found;
+    found.push(...nearest(byQuality.get(quality) ?? [], from, left));
+  }
+  if (found.length === MAX_RESULTS) return found;
+  const typos = misses.filter(typoTest(foldedQuery));
+  return [...found, ...nearest(typos, from, MAX_RESULTS - found.length)];
 }
