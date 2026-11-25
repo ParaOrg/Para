@@ -71,11 +71,11 @@ function DonationCard() {
     >
       <Blob />
       <NavigationOffArt />
-      <div className="flex flex-col gap-0.5">
-        <h2 id={headingId} className="text-base-lower/6 font-bold">
+      <div className="flex flex-col gap-1">
+        <h2 id={headingId} className="text-lg/6.5 font-bold">
           Help make Para better
         </h2>
-        <p className="text-xs/4">Your donation helps us keep improving Para for every commuter.</p>
+        <p className="text-sm/5">Your donation helps us keep improving Para for every commuter.</p>
       </div>
       {/* TODO: link to the donation page once it has an address; no destination exists yet. */}
       <Button variant="secondary" size="small" label="Donate" disabled />

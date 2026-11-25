@@ -22,7 +22,6 @@ const ROUTE_SPRITE_VIEW_BOX = {
   'filter-large': '0 0 28 28',
   'circle-arrow-right': '0 0 24 24',
   filter: '0 0 24 24',
-  'switch-horizontal': '0 0 20 20',
   overview: '0 0 20 20',
 } as const;
 
