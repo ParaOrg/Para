@@ -81,3 +81,12 @@ body,
   syntax: '*';
   inherits: false;
 }
+
+/*
+ * Where the public map's explore cards slide to (useExploreSheet): not passed down either, as a
+ * drag writes it each frame.
+ */
+@property --explore-y {
+  syntax: '*';
+  inherits: false;
+}

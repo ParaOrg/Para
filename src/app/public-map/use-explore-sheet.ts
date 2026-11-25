@@ -33,16 +33,21 @@ function isAlongBottom(cards: HTMLElement, host: HTMLElement) {
   return cards.offsetWidth >= host.clientWidth;
 }
 
+/** What rides on the cards' top (`data-dock-follower`): the locate-me column. */
+function followersOf(host: HTMLElement) {
+  return [...host.querySelectorAll<HTMLElement>('[data-dock-follower]')];
+}
+
 /** The cards slid `y` down, the foot `foot` tall: on the host at rest, and on what follows. */
 function place(
   cards: HTMLElement,
   host: HTMLElement,
   y: string,
   foot: string | null,
+  followers = followersOf(host),
   isMove = false,
 ) {
   cards.style.setProperty('--explore-y', y);
-  const followers = [...host.querySelectorAll<HTMLElement>('[data-dock-follower]')];
   for (const el of isMove ? followers : [host, ...followers]) {
     if (foot === null) el.style.removeProperty('--dock-foot');
     else el.style.setProperty('--dock-foot', foot);
@@ -94,6 +99,8 @@ export function useExploreSheet(own: RefObject<HTMLDivElement | null>): ExploreS
     const from = host.getBoundingClientRect().bottom - cards.getBoundingClientRect().top;
     const heights = { low: Math.min(from, LOW_PX), full: openPx };
     const track = follow(e.clientY, e.timeStamp, from, host.clientHeight, heights);
+    // Read once, not on every move: a drag writes styles, never reads the page.
+    const followers = followersOf(host);
     const id = e.pointerId;
     const startY = e.clientY;
     let isHeld = false;
@@ -106,7 +113,7 @@ export function useExploreSheet(own: RefObject<HTMLDivElement | null>): ExploreS
         host.toggleAttribute('data-dock-dragging', true);
       }
       const shown = track.move(ev.clientY, ev.timeStamp);
-      place(cards, host, `${openPx - shown}px`, `${shown}px`, true);
+      place(cards, host, `${openPx - shown}px`, `${shown}px`, followers, true);
     };
     const up = (ev: PointerEvent) => {
       if (ev.pointerId !== id) return;

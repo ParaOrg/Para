@@ -34,7 +34,9 @@ export function ExploreCards({ onLocate }: ExploreCardsProps) {
       onFocus={sheet.onFocus}
       className={cn(
         'absolute inset-x-0 bottom-0 z-10 flex touch-none flex-col text-text-on-fill',
-        'translate-y-(--explore-y) motion-reduce:transition-none',
+        // Its own layer, as BottomSheet's: a move is the compositor's alone, never a repaint of the
+        // cards' blurred glows, which a finger on a phone feels as lag.
+        'translate-y-(--explore-y) will-change-[translate] motion-reduce:transition-none',
         !sheet.isDragging && 'transition-[translate] duration-sheet ease-enter',
         'has-[[data-explore-toggle]:focus-visible]:ring-2 has-[[data-explore-toggle]:focus-visible]:ring-content-inverse has-[[data-explore-toggle]:focus-visible]:ring-inset',
         '@float:top-0 @float:right-auto @float:bottom-auto @float:w-96 @float:translate-none! @float:touch-auto',
