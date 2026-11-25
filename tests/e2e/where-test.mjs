@@ -780,21 +780,21 @@ check(
     }
   }
   // The trip has no ‹ or ✕ (the owner, 2026-11-21): its first control below the handle, ⇅ on the
-  // ends card where it has one, is what the toast must stay clear of.
+  // ends card where it has one, is what the toast must stay clear of. At full height the trip fills
+  // the screen, no strip of map above it, so the toast sits 12 under the ⇅ (the owner, 2026-11-25).
   const way = card.locator('button:not([data-testid="dock-handle"])').first();
   const placed = (await trip.count())
     ? {
         snap: await card.getAttribute('data-snap'),
         wayTop: await way.evaluate((e) => e.getBoundingClientRect().top),
+        wayBottom: await way.evaluate((e) => e.getBoundingClientRect().bottom),
         toastTop: await toast2.evaluate((e) => e.getBoundingClientRect().top),
         toastBottom: await toast2.evaluate((e) => e.getBoundingClientRect().bottom),
       }
     : null;
   check(
-    "  over a trip's card at full height it stays 12 from the top, clear of the trip's first control",
-    placed?.snap === 'full' &&
-      Math.abs(placed.toastTop - 12) <= 1 &&
-      placed.toastBottom < placed.wayTop,
+    "  over a trip's card at full height it sits 12 under the trip's first control, clear of it",
+    placed?.snap === 'full' && Math.abs(placed.toastTop - placed.wayBottom - 12) <= 1,
     placed ? JSON.stringify(placed) : 'no trip opened from a route line',
   );
 }
