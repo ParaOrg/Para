@@ -628,7 +628,9 @@ jobs:
             suites: turnstile-test studio-public-view-test studio-two-editors-test
           - { name: save-test, slug: save-test, suites: save-test }
           - { name: save-ikot-test, slug: save-ikot-test, suites: save-ikot-test }
-          - { name: studio-osm-start-test, slug: studio-osm-start-test, suites: studio-osm-start-test }
+          - name: studio-osm-start-test
+            slug: studio-osm-start-test
+            suites: studio-osm-start-test
           - { name: save-edit-test, slug: save-edit-test, suites: save-edit-test }
           - { name: save-drafts-test, slug: save-drafts-test, suites: save-drafts-test }
     steps:
