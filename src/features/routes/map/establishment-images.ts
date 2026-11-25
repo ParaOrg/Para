@@ -3,6 +3,7 @@ import type { MapLibreMap } from 'maplibre-gl';
 import { MAP_PAINT } from '@/design-system/foundation/map-colours';
 
 import bank from './establishment-icons/maki/bank.svg?raw';
+import bus from './establishment-icons/maki/bus.svg?raw';
 import cafe from './establishment-icons/maki/cafe.svg?raw';
 import college from './establishment-icons/maki/college.svg?raw';
 import convenience from './establishment-icons/maki/convenience.svg?raw';
@@ -53,6 +54,7 @@ const GLYPHS: Record<EstablishmentGlyph, string> = {
   police,
   'jewelry-store': jewelryStore,
   'money-hand': moneyHand,
+  bus,
 };
 
 /** The marker's size in CSS pixels: the disc with its rim, and the glyph inside it. */

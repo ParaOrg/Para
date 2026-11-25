@@ -8,6 +8,8 @@ import {
   ESTABLISHMENT_KINDS,
   EXTRA_FAMILY,
   EXTRA_KIND_GLYPH,
+  TERMINAL_FAMILY,
+  TERMINAL_GLYPH,
   TIER_ZOOM,
   type EstablishmentGlyph,
 } from './establishment-kinds';
@@ -65,6 +67,14 @@ function EstablishmentLegend() {
           </span>
         </li>
       ))}
+      <li className="flex items-center gap-3">
+        <Marker glyph={TERMINAL_GLYPH} />
+        <span>
+          {TERMINAL_GLYPH}: OpenStreetMap&apos;s jeepney, UV and bus terminals, {TERMINAL_FAMILY}, a
+          shade smaller, the marker from zoom {TIER_ZOOM[2].marker}, its name from{' '}
+          {TIER_ZOOM[2].name}
+        </span>
+      </li>
     </ul>
   );
 }
@@ -79,9 +89,11 @@ type Story = StoryObj<typeof meta>;
 
 export const Legend: Story = {
   play: async ({ canvasElement }) => {
-    await expect(canvasElement.querySelectorAll('li')).toHaveLength(GLYPHS.length + EXTRAS.length);
+    await expect(canvasElement.querySelectorAll('li')).toHaveLength(
+      GLYPHS.length + EXTRAS.length + 1,
+    );
     await expect(canvasElement.querySelectorAll('canvas')).toHaveLength(
-      GLYPHS.length + EXTRAS.length,
+      GLYPHS.length + EXTRAS.length + 1,
     );
   },
 };
