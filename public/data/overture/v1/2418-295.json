@@ -113,6 +113,21 @@
     ["ocb5c5bbb73cf4d77","pharmacy",120.93304,14.77945,"Ka-Botika Pharmacy"],
     ["ocf7de47f243b49d5","pharmacy",120.93453,14.77725,"Fabros Pharmacy"],
     ["o3f42455b738e4c05","laundry",120.948,14.7578,"Laundress Hub Prenza Branch"],
-    ["o788168e3f3e94db5","laundry",120.9485,14.75697,"Jing's Laundry House"]
+    ["o788168e3f3e94db5","laundry",120.9485,14.75697,"Jing's Laundry House"],
+    ["o13ac1bb024744278","hotel",120.94727,14.76733,"Buena Vida Private Pool Resort"],
+    ["o67bd0a42d8334d9b","hotel",120.92045,14.79845,"S'Bali Private Resort"],
+    ["o981e9c9ad9534d14","hotel",120.94865,14.78897,"Gitna Ng Nayon Resort and Pavilion"],
+    ["obeb7eb6af7e24cbf","hotel",120.93927,14.77321,"Beverly Place Suites"],
+    ["oe3cc088fe7bc421d","hotel",120.93743,14.7668,"Four Kings Hotel and Restaurant"],
+    ["o0f93b546e95f43b7","lodging",120.9426,14.76458,"Villa Consuelo Abangan Sur"],
+    ["o34486d4a73624926","lodging",120.93204,14.7804,"Campo Potrero Lolomboy Bocaue Bulacan"],
+    ["o685a1f294b314f1c","lodging",120.93906,14.7768,"Lolomboy, Bocaue, Bulacan"],
+    ["o7422bc43fc5c4425","lodging",120.92754,14.79448,"Bambang, Bocaue, Bulacan"],
+    ["oa25a527b104648a7","lodging",120.94747,14.76001,"Villa Melita, Marllao, Bulacan"],
+    ["od9f24cf8fbfa4efe","lodging",120.93279,14.76976,"Villa Erlinda Resort and Pavilion"],
+    ["oe2613ee06da24839","lodging",120.92243,14.79624,"ASP Villa"],
+    ["oe34cf925fdde40b7","lodging",120.9341,14.77763,"Lolomboy Bocaue Bulacan"],
+    ["oe8d3973c292148be","lodging",120.94833,14.76073,"Poblacion 2, Marilao, Bulacan"],
+    ["of7c55608c8f14fe6","lodging",120.92974,14.79003,"Bambang, Bocaue, Bulacan"]
   ]
 }

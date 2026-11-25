@@ -10,6 +10,13 @@
     ["oe1861a466ab74d72","restaurant",121.34283,14.04677,"Heavenly Brew Tea and Coffee"],
     ["oa8dc3a9726b84f71","fast_food",121.34276,14.04205,"McDonald's San Ignacio San Pablo City",{"brand":"McDonald's"}],
     ["o6b301e6ed2fb45eb","clinic",121.32003,14.04656,"DepEd Tayo San Pablo Central ES - San Pablo City"],
-    ["ob3a9a2941582491a","school",121.33829,14.01487,"San Vicente National High School"]
+    ["ob3a9a2941582491a","school",121.33829,14.01487,"San Vicente National High School"],
+    ["o424b25a061fd4fd6","hotel",121.33599,14.01081,"Tierra De Oro Resort - Hotel"],
+    ["oc88f1b20eb024bec","hotel",121.31438,14.03984,"Cj Resort Soledad San Pablo City"],
+    ["ocfbb3a4bf8864645","hotel",121.34235,14.01742,"Sitio De Amor Farm Resort"],
+    ["oe706169f68bd4d9a","hotel",121.33242,14.03443,"Dioko Resort and Ecotourism Park"],
+    ["o50a67cc803af44b8","lodging",121.34322,14.04635,"San Ignacio, San Pablo City"],
+    ["oa287623d8a4e44fe","lodging",121.34355,14.04413,"Villa Escudero Plantations and Resort"],
+    ["of75064bb62224df7","lodging",121.33784,14.01144,"San Antonio 1 San Pablo City"]
   ]
 }

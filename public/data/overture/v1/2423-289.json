@@ -59,6 +59,24 @@
     ["o1918d37fbde345ab","supermarket",121.19311,14.46651,"Super8 Grocery Warehouse"],
     ["o19f64783850446f5","supermarket",121.19859,14.47359,"Cherrys Store"],
     ["o39da5cba0cd0439c","pharmacy",121.18072,14.49424,"Watsons"],
-    ["ocfd141e39d824ccd","pharmacy",121.18428,14.49039,"Pharma chic drugstore"]
+    ["ocfd141e39d824ccd","pharmacy",121.18428,14.49039,"Pharma chic drugstore"],
+    ["o369afd923f614444","hotel",121.18354,14.48828,"PhilCan Oasis - Private Resort"],
+    ["o47c0292c238840d2","hotel",121.19043,14.49502,"Overview Resort"],
+    ["o8bded76b0d884a72","hotel",121.19618,14.47516,"GCL Private Resort"],
+    ["oa81f58225a2e49f5","hotel",121.18594,14.48806,"Cafe Aurora Resort"],
+    ["o404d901e2ed04d1b","lodging",121.185,14.49807,"San Roque, Pantok, Binangonan Rizal"],
+    ["o45ffc81518484f06","lodging",121.17979,14.49357,"Villa. Cequena"],
+    ["o47ec4eafa8944170","lodging",121.18504,14.46023,"Windy Hills by Green tag Property"],
+    ["o76d9d15a46214677","lodging",121.18891,14.48755,"Fuentes Compound, Darangan, Binangonan, Rizal"],
+    ["o8be209843ebc4cf5","lodging",121.17432,14.49842,"Centro Itaas Bilibiran Rizal"],
+    ["o932ef779720d4365","lodging",121.18697,14.48549,"Sanjuan Calumpang Binangonan Rizal"],
+    ["o9e26c3b5b9964a89","lodging",121.18395,14.49507,"San Valentin Pantok Binangonan, Rizal"],
+    ["oad7a190c15c34382","lodging",121.19121,14.46539,"Libis, Binangonan, Rizal"],
+    ["oe3371c0bf1454a46","lodging",121.17686,14.49452,"Villa De Castro Resort"],
+    ["oea39e84f003c48c7","lodging",121.19287,14.48998,"Rotaryville"],
+    ["oee3a40a7b6484338","lodging",121.19024,14.46754,"Adelfa Comp. Layunan Binangonan, Rizal"],
+    ["of0655e6abde24603","lodging",121.19439,14.46559,"Munting Bundok Binangonan Rizal"],
+    ["of5fc77415fcc4c2f","lodging",121.18056,14.49256,"Benjie's Apartelle and Garden Events Center"],
+    ["ofa2dc70ff9dc4a69","lodging",121.19044,14.4784,"Katipunan Cableway Calumpang Binangonan Rizal"]
   ]
 }

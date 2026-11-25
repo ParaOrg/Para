@@ -36,6 +36,23 @@
     ["o8a734636027b4d55","supermarket",120.79499,14.84058,"Puregold - Paombong",{"brand":"Puregold"}],
     ["of74fd294c775469a","supermarket",120.77,14.84164,"Kanto San Agustin Hagonoy Bulacan"],
     ["o9c477336b782457f","pharmacy",120.76378,14.82488,"ABEC Pharmacy"],
-    ["o523d2cb68fa74316","laundry",120.75351,14.81643,"AGS Laundry Express"]
+    ["o523d2cb68fa74316","laundry",120.75351,14.81643,"AGS Laundry Express"],
+    ["o55ae74a0d93644f7","hotel",120.783,14.8374,"Casa Del Barrio Private Resort"],
+    ["o6b9a253d499244d9","hotel",120.79523,14.84074,"A.G. Private Resort"],
+    ["oe36a58b93a124090","hotel",120.79686,14.84977,"J and M Mendoza Manor Private Resort"],
+    ["o05738985684044dc","lodging",120.7866,14.8356,"San Isidro 1 Paombong, Bulacan"],
+    ["o1140e6b0f7004cb8","lodging",120.78058,14.83864,"Pulo, San Isidro 1st, Paombong, Bulacan"],
+    ["o13146c3bd86a4d1c","lodging",120.78706,14.83718,"Calizon Sto. Rosario Paombong Bulacan"],
+    ["o14147c0783f54bfc","lodging",120.78863,14.83421,"Poblacion Paombong Bulacan"],
+    ["o1fe18a40b37c4661","lodging",120.77465,14.83639,"Ciudad Gliceria Pool and Events Place"],
+    ["o26823a2cf8954597","lodging",120.75794,14.8448,"Abulalas Hagonoy Bulacan"],
+    ["o3620a1fe0ab244ca","lodging",120.79989,14.8402,"Villa Benedicto Riverview Private Resort"],
+    ["o6804d0bbece94be2","lodging",120.76299,14.84092,"San Pedro Hagonoy, Bulacan"],
+    ["o889b7c2d34d64622","lodging",120.76159,14.84518,"Hangga San Pedro Hagonoy Bulacan"],
+    ["o93353efe7e9b4289","lodging",120.77165,14.83607,"San Isidro II, Paombong, Bulacan"],
+    ["o93a489c031254b66","lodging",120.78339,14.83977,"Sitio Gusi Sto. Rosario Paombong Bulacan"],
+    ["ob2895b048e0743b6","lodging",120.75382,14.83143,"Laot, San Pablo, Hagonoy, Bulacan"],
+    ["ob71b23a5bf484895","lodging",120.7912,14.82604,"Villa Magdalena Pension House"],
+    ["oe3dc59e9093844f6","lodging",120.76473,14.84752,"Privado Xclusivo"]
   ]
 }

@@ -23,6 +23,19 @@
     ["o40dcdebdec894f42","supermarket",121.05654,13.74993,"Julian Pastor Memorial Market"],
     ["o484a4048500a49db","supermarket",121.0572,13.7488,"BudgetLane SulitMarket"],
     ["o4f2f1dabbef44ef2","supermarket",121.07531,13.7166,"Mangyan Store"],
-    ["o9a5cb62ff3364a5a","pharmacy",121.07579,13.73081,"Mercury Drug"]
+    ["o9a5cb62ff3364a5a","pharmacy",121.07579,13.73081,"Mercury Drug"],
+    ["o01031af380324696","hotel",121.07967,13.74303,"Golden Grande Resort"],
+    ["o1b3471b47b77438d","hotel",121.05414,13.7391,"Ocean Bliss Resort"],
+    ["o57c2d1873f5b4769","hotel",121.08301,13.74323,"Tabing Batis Resort"],
+    ["oaacab661d482490a","hotel",121.0527,13.74746,"Aqua Farm Beach Resort"],
+    ["o03eb5862111a479b","lodging",121.08556,13.71848,"San Isidro Labac"],
+    ["o1538e9762192418e","lodging",121.07266,13.74377,"New San Vicente, Libjo Batangas City"],
+    ["o6e383b12b44f4dd7","lodging",121.05776,13.7479,"Calero Duluhan Batangas City"],
+    ["o76dcbb59944f4afe","lodging",121.06951,13.73258,"Old San Vicente Libjo Batangas."],
+    ["oa5dd6d096bb446ce","lodging",121.05086,13.74615,"Cuta Maligaya Batangas City"],
+    ["oc45d5b8f67f347c0","lodging",121.06683,13.72665,"San Isidro,batangas City"],
+    ["od7218ad38a964f05","lodging",121.0592,13.70601,"Tabangao White Stone Site, Tabangao Batangas City"],
+    ["of121ac8743ed40ab","lodging",121.0759,13.73192,"San Isidro Batangas City Philippines"],
+    ["of3dba92e1f154ce0","lodging",121.07614,13.72358,"San Isidro,batangas City"]
   ]
 }

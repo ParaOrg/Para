@@ -20,6 +20,8 @@ export const OVERTURE_KINDS = [
   'supermarket',
   'pharmacy',
   'laundry',
+  'hotel',
+  'lodging',
 ];
 
 /**
@@ -53,6 +55,10 @@ export const KIND_OF_CATEGORY = {
   food_and_beverage_store: 'supermarket',
   pharmacy_and_drug_store: 'pharmacy',
   laundry_service: 'laundry',
+  // Where to stay: a hotel, or the smaller lodging overture.mjs tells apart by name (lodgingKindOf).
+  hotel: 'hotel',
+  lodging: 'hotel',
+  resort: 'hotel',
 };
 
 export const OVERTURE_ATTRIBUTION = '© Overture Maps Foundation';

@@ -3,6 +3,9 @@
   "cell": "2417-279",
   "attribution": "© Overture Maps Foundation",
   "establishments": [
-    ["o4ff4c9f08d494078","restaurant",120.8838,13.95174,"Ka Panza's Bahay Kainan"]
+    ["o4ff4c9f08d494078","restaurant",120.8838,13.95174,"Ka Panza's Bahay Kainan"],
+    ["o89d907c1fcb14bbe","hotel",120.88612,13.96419,"Ilawoods Resort & Sanctuary"],
+    ["o94fe7fa3fce14a44","hotel",120.88763,13.97935,"Nanay Nhes Beach Resort"],
+    ["of867a820801a4b7d","lodging",120.87176,13.95296,"Tubuan Lemery Batangas"]
   ]
 }

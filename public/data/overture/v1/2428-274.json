@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "cell": "2428-274",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o0606bc7bc9484579","hotel",121.43412,13.73565,"Allahbiga Beach Resort"],
+    ["o1c2c22eb5a3f4567","hotel",121.41451,13.74624,"Bigang Munti BeachResort"],
+    ["o20b1739d463345f7","hotel",121.43739,13.73783,"RBM Beach Resort"],
+    ["o2589d8fcafb541a1","hotel",121.43412,13.73565,"Laiya San Juan Batangas Beach Resort"],
+    ["o6af0196ca54b4798","hotel",121.41709,13.74998,"Calubcub Bay Resort and Recreation"],
+    ["ob030d584c85d49bd","hotel",121.4331,13.72721,"CJ LongBeach Resort"],
+    ["obb2597ed174b4554","hotel",121.43412,13.73565,"CJ LongBeach Resort"],
+    ["oe2084c9d2c364fda","hotel",121.43406,13.73564,"Infinity White Beach Resort - Laiya Batangas"],
+    ["o1d7e08e9af20496f","lodging",121.4363,13.73948,"Kathleen Ferrer of Seafront Residences"],
+    ["o96b9513aa91743e3","lodging",121.42831,13.74082,"Kathleen Ferrer of Seafront Residences"],
+    ["o96e2a468765f4bc7","lodging",121.4446,13.70879,"Larz Bagalawis - Seafront Residences"]
+  ]
+}

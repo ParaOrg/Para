@@ -11,6 +11,11 @@
     ["ob0bee1a1a2734a5d","dentist",121.02063,14.95638,"ReySan Dental Clinic"],
     ["oc92cbe115e20441d","school",121.02242,14.95105,"Baybay Elementary School"],
     ["oeceefd41d6fe4ac5","school",121.02476,14.9503,"Binagbag Elementary School"],
-    ["oeb7a50dfdc474122","supermarket",121.01408,14.95186,"CG Mart"]
+    ["oeb7a50dfdc474122","supermarket",121.01408,14.95186,"CG Mart"],
+    ["o05f5dda910b84db2","hotel",121.01408,14.95186,"Gel-Lyn's Private Resort"],
+    ["o45d545808e5e487a","hotel",121.03956,14.98485,"Millennium Water Park Resort"],
+    ["o7db27e3d3bfb436e","hotel",121.01408,14.95186,"D’ Thomas and Magdalene Private Resort"],
+    ["o13d169c3a8584093","lodging",121.02364,14.95153,"Villa Cristina Resort & Events Place"],
+    ["ob8a9efa5ff8c4ce6","lodging",121.01437,14.9547,"Countryside Bernardo and Hagen Farm"]
   ]
 }

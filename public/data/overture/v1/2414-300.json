@@ -33,6 +33,26 @@
     ["oac8d78843aae43d3","pharmacy",120.70733,15.00223,"Mercury Drug"],
     ["o66b7b8362f684f8f","laundry",120.7278,15.03303,"Tara, Mamipi Tana Mexico Pampanga"],
     ["ob636aeaec4374101","laundry",120.70267,15.01693,"Puraw Laundry House"],
-    ["of5210506c19b453c","laundry",120.74826,15.01641,"Suds Go San Simon"]
+    ["of5210506c19b453c","laundry",120.74826,15.01641,"Suds Go San Simon"],
+    ["o1eee0933f70d4320","hotel",120.70164,15.0364,"Poracay Resort, Porac Pampanga"],
+    ["o5c998a8b26854885","hotel",120.70089,15.03415,"Elysian Private Resort"],
+    ["oa6378a96fca740e5","hotel",120.70306,15.03893,"Casa Jadon Private Resort"],
+    ["ob3815a82d14e49d9","hotel",120.70542,15.00992,"EL Bernardino Resort"],
+    ["oc5ac632831844fc7","hotel",120.72758,15.03306,"CasaNueve Private Resort"],
+    ["oc8cf3fbc12674662","hotel",120.71474,15.00455,"Sanrise Private Resort"],
+    ["of47c8a6bc3604247","hotel",120.7079,15.01468,"Maharlika Hostel"],
+    ["o3ccdcd98fa3f442e","lodging",120.74937,15.03554,"Dolores Piring, Mexico Pampanga"],
+    ["o5b6edd9546024be3","lodging",120.74872,15.02423,"San Simon Villas"],
+    ["o6ded0bcb615a451a","lodging",120.7065,15.03751,"LK Azure Staycation"],
+    ["o799e12f086f34ef8","lodging",120.70687,15.00212,"Grand villa"],
+    ["o7fc0f16e61db46de","lodging",120.70664,15.03784,"Azure North Beach San Fernando, Pampanga, Philippines"],
+    ["o8c708c5a1cb04b0c","lodging",120.70717,15.00364,"Mula de Victoria"],
+    ["o94481017c1c54b13","lodging",120.70367,15.04272,"San Jose Panlumacan CSFP"],
+    ["oaf2acf49a60e4ef6","lodging",120.7243,15.02808,"Cozy Grounds"],
+    ["ob331cc5b5c0140eb","lodging",120.70053,15.01364,"San Nicolas Bedspace"],
+    ["ob52cf23b95914484","lodging",120.71007,15.03791,"San Felipe City of San Fernando Pampanga"],
+    ["oda9a7f8b0e6249ff","lodging",120.70164,15.01879,"Barbalite Transient"],
+    ["oe15a29d68f3b4f63","lodging",120.70171,15.00226,"Northville, San Vicente, Sto. Tomas. Pampanga"],
+    ["oe3cfd284e14c4cfd","lodging",120.72427,15.02715,"Pandaras"]
   ]
 }

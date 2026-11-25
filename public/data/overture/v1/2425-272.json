@@ -1,0 +1,12 @@
+{
+  "schema": 1,
+  "cell": "2425-272",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o0da335ddf1d24365","hotel",121.25826,13.6014,"Seaside View Beach Resort"],
+    ["o34da6c86e35c48db","hotel",121.28428,13.63085,"Labienda's Beach Resort"],
+    ["od60c209c40ae4946","hotel",121.25824,13.60251,"Serenidad Beach Resort"],
+    ["ofa93e1f4e5a746c2","lodging",121.25803,13.60302,"Mercedes Home Stay"],
+    ["ofcf37db3bee8488b","lodging",121.25087,13.60992,"Casa Talia: Your Seaside Sanctuary"]
+  ]
+}

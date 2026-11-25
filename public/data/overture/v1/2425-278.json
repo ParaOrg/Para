@@ -3,6 +3,9 @@
   "cell": "2425-278",
   "attribution": "© Overture Maps Foundation",
   "establishments": [
-    ["o8293d8a5060946db","school",121.26603,13.90961,"Arawan Elementary School"]
+    ["o8293d8a5060946db","school",121.26603,13.90961,"Arawan Elementary School"],
+    ["o6a108f4ce8634763","hotel",121.28381,13.90761,"Kasa Garden and Private Resort"],
+    ["o865e258680fd4abf","lodging",121.28322,13.90361,"Niing San Antonio Quezon"],
+    ["oc48866ba2a444a51","lodging",121.28857,13.90884,"Bagong Niing San Antonio, Quezon"]
   ]
 }

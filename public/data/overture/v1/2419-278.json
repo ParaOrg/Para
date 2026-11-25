@@ -7,6 +7,10 @@
     ["o1b3558b84f3840ff","restaurant",120.95188,13.92797,"Garage 241"],
     ["oc1c8a890c47b471e","restaurant",120.95208,13.92988,"San Nicolas Lakefront"],
     ["o466b6d535a2643e5","school",120.96371,13.90406,"Maabud Elementary School"],
-    ["oefc531b1bf464513","school",120.95026,13.90479,"Bethel Vessels of Wisdom Christian School of Taal"]
+    ["oefc531b1bf464513","school",120.95026,13.90479,"Bethel Vessels of Wisdom Christian School of Taal"],
+    ["o7acff1a96ca94b53","hotel",120.98207,13.90718,"Placidah Lake Resort"],
+    ["obcd79a381b864662","hotel",120.97839,13.91324,"Piccolo Paradiso Hotel and Beach Resort"],
+    ["o0409a28169e94502","lodging",120.95161,13.92787,"Poblacion, San Nicolas, Batangas"],
+    ["ode2d2b3613314837","lodging",120.97858,13.91366,"Taal Viewpoint Floating Cottage"]
   ]
 }

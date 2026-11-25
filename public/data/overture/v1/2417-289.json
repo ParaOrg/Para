@@ -71,6 +71,25 @@
     ["o1ce4be978dbd432d","pharmacy",120.89783,14.47956,"Bautista Pharmacy"],
     ["o3b1798bd267b4ec0","pharmacy",120.89867,14.48206,"Mercury Drug"],
     ["o79a08393c7484200","pharmacy",120.89377,14.47369,"Bautista Pharmacy"],
-    ["o8a478442383a46fe","laundry",120.89622,14.48146,"PureClean Laundry Shop"]
+    ["o8a478442383a46fe","laundry",120.89622,14.48146,"PureClean Laundry Shop"],
+    ["o2176a8e78b9f4fb5","hotel",120.89304,14.47099,"Norbet's Hotel and Casino"],
+    ["o2e772fa294984747","hotel",120.87991,14.4569,"C. Castillo Resort"],
+    ["o4e59b33356f743e9","hotel",120.89785,14.48968,"Alphabet Ville Private Resort"],
+    ["oac3468d419c34472","hotel",120.89999,14.4833,"RedDoorz Hotel Cavite"],
+    ["ob576dfdba16d466a","hotel",120.88046,14.45432,"El Palacio Hotel and Resort"],
+    ["od5a5a42fb1794785","hotel",120.8937,14.47135,"Thrizzia Resort, Cavite City"],
+    ["o0a09419ee51c4cab","lodging",120.8971,14.48744,"Casa Estrella"],
+    ["o0b3fc70ff57e45dd","lodging",120.88844,14.47677,"Ronquillo, Cavite City"],
+    ["o156923b223504897","lodging",120.89999,14.4833,"Alexandras Guest House"],
+    ["o4105214ba7f74dc3","lodging",120.88525,14.46877,"Juan Tomas, Sta.cruz, Cavite City"],
+    ["o8ca1fd81299f4e5b","lodging",120.89406,14.47569,"Casa Daisy"],
+    ["o8e109c643cec49a8","lodging",120.89168,14.4833,"Novero Cavite City"],
+    ["oaca949d091e14e06","lodging",120.89236,14.47058,"Ariston Sison Drive, Cavite City"],
+    ["od0c93141163c428d","lodging",120.87905,14.45424,"Global Pool"],
+    ["od22437b4d18441ae","lodging",120.89858,14.48121,"Lopezjaena Cavite City"],
+    ["od23cbbafdc0e4f7e","lodging",120.89327,14.48804,"Bagong Pook Cavite City"],
+    ["od3187036b09e44e9","lodging",120.88628,14.46789,"Lonely Valley"],
+    ["oe266e88239ff4038","lodging",120.88745,14.46941,"Sta Cruz Cavite City"],
+    ["ofc4458827444445f","lodging",120.88982,14.47362,"BZ Tish Apartelle"]
   ]
 }

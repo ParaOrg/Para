@@ -5,6 +5,10 @@
   "establishments": [
     ["oa10b3af69cc049c1","restaurant",121.07966,14.95717,"Bukal Spring"],
     ["odf55549dfe3c4d9c","restaurant",121.07174,14.95652,"Bukal Spring"],
-    ["o899e2481782f4a90","school",121.0735,14.98285,"Camachile Elementary School, Camachile, D.R.T, Bulacan"]
+    ["o899e2481782f4a90","school",121.0735,14.98285,"Camachile Elementary School, Camachile, D.R.T, Bulacan"],
+    ["o57608764e0dc4e11","hotel",121.07107,14.96583,"Carribean Resort"],
+    ["o6c21f40ef9194c40","hotel",121.06976,14.97866,"Mountain View Resort"],
+    ["o6ef1a79310f14041","lodging",121.07169,14.96559,"DRT Balay Nato Staycation Private Resort"],
+    ["od8810431d2cd49f4","lodging",121.07088,14.96531,"Caribbean Premiere"]
   ]
 }

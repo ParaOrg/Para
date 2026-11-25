@@ -4,6 +4,16 @@
   "attribution": "© Overture Maps Foundation",
   "establishments": [
     ["o6b7f645db8ed4dde","school",120.65422,13.87066,"Angelita Zobel Elementary School"],
-    ["oc0e396d1f8334427","school",120.66531,13.87218,"Enrique Zobel Elementary School"]
+    ["oc0e396d1f8334427","school",120.66531,13.87218,"Enrique Zobel Elementary School"],
+    ["o701a7b6bb7334df9","hotel",120.65197,13.85883,"Avionna's Paradise Resort"],
+    ["oce2077ebf1d04752","hotel",120.65532,13.85667,"Punta Baluarte Resort"],
+    ["odc3ee3f3eced44f6","hotel",120.69234,13.85287,"Little Angel Beach Resort"],
+    ["o78ebbbcba89c450f","lodging",120.66789,13.86134,"Bucal Calatagan Batangas"],
+    ["o79bde48288164403","lodging",120.68635,13.85654,"Camp Palo Bandera"],
+    ["o7e56337c9a5040f3","lodging",120.67601,13.85931,"The Beach Calatagan Mediterraneo"],
+    ["o93d774c7af9d461a","lodging",120.68272,13.85471,"Reymundo's Beach House"],
+    ["obe745ed4847d47f6","lodging",120.66113,13.88276,"Casa Bianca Transient Calatagan Batangas"],
+    ["od89fb4978fff4229","lodging",120.68806,13.85359,"Pamana Beach House/El Mariano"],
+    ["oe5db7199f15c4fa1","lodging",120.68429,13.8549,"The Beach Calatagan Mediterraneo"]
   ]
 }

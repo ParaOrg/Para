@@ -5,6 +5,18 @@
   "establishments": [
     ["od5432aeeb23a4011","restaurant",120.8372,14.96331,"E.M.R. Bakery"],
     ["o4e7387087e8342bd","school",120.83315,14.97004,"Balucuc Elementary School Special Education"],
-    ["o64200ce20c2a4e15","school",120.84927,14.96767,"Creative Haven Learning School"]
+    ["o64200ce20c2a4e15","school",120.84927,14.96767,"Creative Haven Learning School"],
+    ["o0b3a79fe283a4879","hotel",120.80814,14.95276,"Casa De Consuelo Private Resort"],
+    ["o107919e8d7754f64","hotel",120.84856,14.98956,"Arizona Private Resort and Event Place"],
+    ["o6cfd0e73840f4936","hotel",120.84253,14.95162,"Pugpog Resort"],
+    ["od0e29fc9c6f540e1","hotel",120.8483,14.99069,"CK Resort & Events Place"],
+    ["o21ffbfa99ae7484d","lodging",120.82825,14.9586,"Caingin Balucuc Apalit Pampanga"],
+    ["o442ea3dbd0194fd5","lodging",120.82172,14.95186,"Batasan, Inaon, Pulilan, Bulacan"],
+    ["o4cbb4eccbc03499c","lodging",120.83964,14.95689,"Villa Belen"],
+    ["o4cd561ed92d6435a","lodging",120.81425,14.96741,"Casa Melisa"],
+    ["o6894690d1e024a57","lodging",120.82409,14.96764,"San Jose, San Luis Pampanga"],
+    ["o99a141d263fd4a21","lodging",120.82452,14.96284,"Villa Belen"],
+    ["ob186a9b777c84777","lodging",120.84807,14.98691,"Purico's Cabin Resort"],
+    ["of1b6f10b3ebd458d","lodging",120.84592,14.96257,"Tilapayong, Baliwag, Bulacan"]
   ]
 }

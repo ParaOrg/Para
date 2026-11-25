@@ -3,6 +3,9 @@
   "cell": "2428-279",
   "attribution": "© Overture Maps Foundation",
   "establishments": [
-    ["oe87780f985084ceb","school",121.41315,13.98908,"Antonino Elementary School"]
+    ["oe87780f985084ceb","school",121.41315,13.98908,"Antonino Elementary School"],
+    ["o8f1148a85e014b25","hotel",121.42789,13.95042,"Greenridge Resort"],
+    ["o46ad7a6e165f4d66","lodging",121.44723,13.96606,"Casa De Guztala"],
+    ["oab2bb4dd3eff45db","lodging",121.40991,13.99704,"JRFG Segunda Matteo Natural River Park"]
   ]
 }

@@ -21,6 +21,21 @@
     ["o7724064976ea4e09","cafe",121.01689,14.09107,"Red Egg Deli"],
     ["o925ab72d41894723","cafe",121.01635,14.09103,"Terraza at Balai Isabel"],
     ["od7c7a00e37984290","school",121.02151,14.09486,"Venancio Trinidad Sr. Memorial Elementary School"],
-    ["ofe38007a7ba2418e","college",121.01577,14.0927,"Talisay Polytechnic Institute"]
+    ["ofe38007a7ba2418e","college",121.01577,14.0927,"Talisay Polytechnic Institute"],
+    ["o0590b7ad800642a7","hotel",121.02538,14.08943,"Anson Resort and Event Center"],
+    ["o1a4e0809df8845ee","hotel",121.00536,14.08703,"Talisay Green Lake Resort"],
+    ["o227fb58e455f4d14","hotel",121.00803,14.08817,"Wakim Lake Resort OPC"],
+    ["o4800d717451c4282","hotel",121.01748,14.09064,"Club Balai Hotel & Resort in Talisay, Batangas"],
+    ["o5c1406adc1e34e75","hotel",121.03945,14.09059,"Aya Del Sol Beach Resort"],
+    ["o648c44fe77b44a68","hotel",121.01709,14.0939,"Blue Topaz Resort"],
+    ["o6d2c884d36a14b0b","hotel",121.01571,14.09239,"Leonida's Resort and Restaurant"],
+    ["o96a8262c529243b7","hotel",121.04049,14.09259,"NDN Resort And Events Place"],
+    ["o97f45e2644924373","hotel",121.00105,14.08376,"Crater Lake resort"],
+    ["oe989081f1bfc4cc1","hotel",121.03545,14.09105,"JazKimRonan Resort"],
+    ["oed6f8922d6794b8d","hotel",121.00298,14.08482,"Manila Tagaytay Tropical Resort Restaurant"],
+    ["of6a2ed1eed134e64","hotel",121.01147,14.08952,"Mango Tree Talisay Resort"],
+    ["o6f7a5f262eba402f","lodging",121.0163,14.09097,"Lakefront Suite"],
+    ["od38b7481a7b94285","lodging",121.00471,14.0859,"Villa Mendoza Resort"],
+    ["oe345671df25e4a7a","lodging",121.01679,14.09187,"Club Balai Isabel"]
   ]
 }

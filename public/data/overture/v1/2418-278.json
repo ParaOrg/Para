@@ -14,6 +14,17 @@
     ["oce5350ed96a84103","college",120.92884,13.93494,"Agoncillo College Inc."],
     ["o6f6ee611d17b42bb","convenience",120.94598,13.92742,"Black Coco"],
     ["o661a92b0a16a4e99","supermarket",120.92838,13.93328,"Agoncillo Public Market"],
-    ["o81e731d8cbca445f","laundry",120.9283,13.93089,"SpinLoader Laundry Shop"]
+    ["o81e731d8cbca445f","laundry",120.9283,13.93089,"SpinLoader Laundry Shop"],
+    ["o1040b2c409794775","hotel",120.94665,13.93633,"Bonbon Beach Resort"],
+    ["o7cd629b737044903","hotel",120.91311,13.90997,"Ethan Garden Resort and Event Place"],
+    ["o510ac3022306446c","lodging",120.93503,13.90511,"Sinturisan, Sanicolas Batangas"],
+    ["oa834e1fc59f84fbd","lodging",120.9375,13.90862,"Sinturisan, Sanicolas Batangas"],
+    ["ob0521cd4bc214e1c","lodging",120.94607,13.92047,"Talang, San Nicolas, Batangas"],
+    ["obf30070896714967","lodging",120.94699,13.91339,"Villa Cabreras"],
+    ["obff82179cfb8497a","lodging",120.91897,13.91325,"Villa Jovita Resort"],
+    ["ocbcddf7000f14bcd","lodging",120.93237,13.90294,"Halang Taal Batangas"],
+    ["occ410e925cb446b7","lodging",120.93122,13.90039,"Halang Taal Batangas"],
+    ["odb636abcc05d46d1","lodging",120.9163,13.91829,"Balangon, Agoncillo, Batangas"],
+    ["oe9baf8d5f80d49f9","lodging",120.94499,13.93495,"San Teodoro Agoncillo Batangas"]
   ]
 }

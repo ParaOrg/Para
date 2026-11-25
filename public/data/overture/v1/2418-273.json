@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "cell": "2418-273",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["ob01c7c71f55d4f32","hotel",120.9012,13.69099,"Hanmig Beach Resort"],
+    ["o33bf609880d0480d","lodging",120.90961,13.69617,"Tanaw sa Anilao"],
+    ["o4ec3d1a2eabb4ad3","lodging",120.90984,13.69591,"Paradiso Rito"],
+    ["o58c1f9ffc4334860","lodging",120.90176,13.69123,"Sisid Anilao"],
+    ["o5f9f28df0a5a4e4e","lodging",120.91257,13.6971,"Ysabellamabels Beach House"],
+    ["ofe0e377cdb3d4a0d","lodging",120.91003,13.65399,"Masasa Beach- Tita Precy's Homestay"]
+  ]
+}

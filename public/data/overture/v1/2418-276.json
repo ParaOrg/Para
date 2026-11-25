@@ -6,6 +6,21 @@
     ["o63f18221576e4683","restaurant",120.91653,13.84078,"Sunset Restobar"],
     ["ocb9556fbdfe1405c","restaurant",120.91865,13.83863,"Chowking"],
     ["o83e8691b61034ef8","cafe",120.92442,13.83299,"Café Stefania"],
-    ["oc1bb1b2f856d497e","school",120.92516,13.80635,"DepEd San Pablo ES Batangas"]
+    ["oc1bb1b2f856d497e","school",120.92516,13.80635,"DepEd San Pablo ES Batangas"],
+    ["o0b1a1c7b57fd41c0","hotel",120.90386,13.82168,"Starboard Diving Resort"],
+    ["o18326e1fe4f2408b","hotel",120.91204,13.80491,"Cove 88 Dive Resort"],
+    ["o4740fb9213c84c40","hotel",120.90908,13.81444,"Portulano Dive Resort"],
+    ["o4d887b117c2947a4","hotel",120.91634,13.83662,"Andante Beach Resort Batangas"],
+    ["o8ca8de58cf5e442b","hotel",120.91228,13.80363,"Binukbok View Point Resort"],
+    ["ob6aaf9ec5a41484d","hotel",120.91779,13.83692,"BalaiDeClaro Beach Resort"],
+    ["oc3e58918ba244d69","hotel",120.91632,13.83667,"Oceanarra Beach Hotel and Resort Inc"],
+    ["odc7ea46313974747","hotel",120.92384,13.83359,"The Malibiran Farm and Resort"],
+    ["off219208c7484507","hotel",120.92516,13.80635,"Utopia Island Resort"],
+    ["o11e4a2f9f91b49cd","lodging",120.90294,13.8217,"Puerto de Ligpo"],
+    ["o33efdb7bd69d4fdf","lodging",120.91219,13.80293,"Dive and Trek"],
+    ["o3a1cbeb745ff414e","lodging",120.91207,13.80256,"Prisha’s Place Binukbok"],
+    ["o4eb31d93a5aa4a93","lodging",120.91595,13.82351,"Summer Cruise"],
+    ["oe0b41b8668734e14","lodging",120.91221,13.80231,"Searenity Freediving"],
+    ["oe9e95e6ac19f4535","lodging",120.90199,13.82172,"Divers Sanctuary"]
   ]
 }

@@ -13,6 +13,7 @@ import {
   OVERTURE_ATTRIBUTION,
   OVERTURE_GLYPHS,
   OVERTURE_KIND_GLYPH,
+  SMALL_LODGING_ZOOM,
   OVERTURE_LAYER,
   OVERTURE_SOURCE,
   overtureFeatures,
@@ -83,6 +84,19 @@ test('every kind has an OSM marker and a family colour; eateries are food, clini
   assert.equal(OVERTURE_KIND_GLYPH.laundry, 'laundry');
   assert.equal(familyOfGlyph(OVERTURE_KIND_GLYPH.convenience), 'shopping');
   assert.equal(familyOfGlyph(OVERTURE_KIND_GLYPH.pharmacy), 'health');
+  // Where to stay: Maki's lodging glyph, a services marker for now.
+  assert.equal(OVERTURE_KIND_GLYPH.hotel, 'lodging');
+  assert.equal(OVERTURE_KIND_GLYPH.lodging, 'lodging');
+  assert.equal(familyOfGlyph('lodging'), 'services');
+});
+
+test('the small places to stay show a zoom after the hotels; every other kind at the layer’s zoom', () => {
+  assert.equal(SMALL_LODGING_ZOOM, OVERTURE_LAYER.minzoom + 1);
+  assert.deepEqual(OVERTURE_LAYER.filter, [
+    'any',
+    ['!=', ['get', 'kind'], 'lodging'],
+    ['>=', ['zoom'], SMALL_LODGING_ZOOM],
+  ]);
 });
 
 test('the layer is styled as the pawnshops are, from the same zoom, under its own source', () => {

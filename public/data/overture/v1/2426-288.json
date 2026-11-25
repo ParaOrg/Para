@@ -7,6 +7,11 @@
     ["o320151c8b95b44db","restaurant",121.34099,14.40893,"CRUZina - Cruz Kusina"],
     ["o3a4c67a364ab45ef","restaurant",121.33961,14.40171,"Lehance food corner"],
     ["o73d1a33bf5e346d2","fast_food",121.33424,14.44038,"Bayugo Jalajala Rizal"],
-    ["o8902acefb6ef414a","cafe",121.33961,14.40088,"Kairos Cafe"]
+    ["o8902acefb6ef414a","cafe",121.33961,14.40088,"Kairos Cafe"],
+    ["o10fbffc930bc487d","hotel",121.3351,14.43537,"Charles & Kristine Resort"],
+    ["obd3b3297afbc4725","hotel",121.33621,14.44563,"Quisao Nature Private Resort"],
+    ["of62c6fcf33e044ad","hotel",121.34476,14.402,"Ace-Deo Country Resort"],
+    ["od24a4e54f14e4091","lodging",121.33517,14.43631,"Quisao, Pililla, Rizal"],
+    ["od3f95917c30f4b8c","lodging",121.33234,14.44794,"Yakat Pililla Rizal"]
   ]
 }

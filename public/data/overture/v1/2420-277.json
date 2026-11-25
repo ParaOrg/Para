@@ -24,6 +24,20 @@
     ["oa124e060c1964eb9","supermarket",121.04549,13.89473,"Al Azizia Mini Mart"],
     ["o2b8b4efe6b3449fa","pharmacy",121.005,13.865,"T.O.Pharmacy"],
     ["oc057a5ec640048f5","pharmacy",121.04149,13.88944,"Airene's Pharmacy"],
-    ["oe50377968a1e4872","pharmacy",121.0463,13.89618,"Generika Drugstore Cuenca Batangas"]
+    ["oe50377968a1e4872","pharmacy",121.0463,13.89618,"Generika Drugstore Cuenca Batangas"],
+    ["o390eee652b4f493a","hotel",121.0374,13.88695,"Stellar Ivory Resort and Events Place"],
+    ["o410985c4bfe040dc","hotel",121.0463,13.89618,"The Lakeside, by TJM Resorts Group"],
+    ["o4e1d41c5c0484086","hotel",121.04284,13.89446,"Delfin Family Resort"],
+    ["o60131183d9e343c6","hotel",121.01431,13.88343,"Noni's Resort"],
+    ["o856ba952b0854cd0","hotel",121.0463,13.89618,"Carandang private resort"],
+    ["o9765b399764044d3","hotel",121.00674,13.86304,"Mangyanan Resort"],
+    ["obb17b1f86b1e47fe","hotel",121.03614,13.8922,"TJM Tropical Resort"],
+    ["o1ae340f3dd894519","lodging",121.04247,13.89036,"Villa Maria Private Pool"],
+    ["o3217a20b844b4201","lodging",121.02091,13.86809,"Pinagkurusan Alitagtag Bata"],
+    ["o371901f4addc41c3","lodging",121.00714,13.8866,"Alitagtag Nature Retreat"],
+    ["o498ea7ba6c094b1a","lodging",121.04321,13.88983,"San Felipe, Cuenca, Batangas"],
+    ["o580f839bbe3544f8","lodging",121.046,13.8989,"Endaya Cove"],
+    ["oacdeab4737f14b22","lodging",121.0463,13.89618,"HALII"],
+    ["ofd5a0a2370d04741","lodging",121.0308,13.89327,"Endaya Cove"]
   ]
 }

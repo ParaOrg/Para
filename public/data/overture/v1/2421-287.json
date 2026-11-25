@@ -164,6 +164,25 @@
     ["od282bb224c3d4762","pharmacy",121.05688,14.36142,"Watsons"],
     ["od8813b0282d9417f","pharmacy",121.06221,14.35237,"Southstar Drug"],
     ["o1389b19f9a4d4505","laundry",121.06628,14.35311,"Deep Wash Laundry Shop"],
-    ["o7bae961b95c44551","laundry",121.0529,14.36676,"Eight Clean Laundry Service"]
+    ["o7bae961b95c44551","laundry",121.0529,14.36676,"Eight Clean Laundry Service"],
+    ["o7dcff90386754806","hotel",121.05653,14.36247,"Daddy J Resort & Events Place"],
+    ["o8cae3fc01d524d53","hotel",121.06164,14.37245,"Casa Catalla Resort"],
+    ["o8f56976dce1c4c94","hotel",121.05892,14.35816,"San Pedro Rest Inn"],
+    ["oc6f4fecc534a4de3","hotel",121.06116,14.35527,"Daddy J Resort & Events Place"],
+    ["od5c3585d05cf476a","hotel",121.05065,14.36759,"Hotel Sogo"],
+    ["o07f34571c34c4c47","lodging",121.05059,14.35297,"Pacita 2B Covered court"],
+    ["o121b24777dea4ce7","lodging",121.08833,14.35035,"Wawa Malaban Binan Laguna"],
+    ["o1496f1db6bb74224","lodging",121.06183,14.35936,"Cataquiz 3, San Pedro, Laguna"],
+    ["o48646b0770eb48e9","lodging",121.0502,14.38013,"Tunasan, Muntinlupa City"],
+    ["o619809cd599d40fc","lodging",121.05588,14.36246,"Aviles Commercial Center"],
+    ["o6938b88cf3814a6f","lodging",121.0507,14.3929,"Villa Reyes Resort"],
+    ["o6ac1ab2f5cda4834","lodging",121.06136,14.35592,"J&S Rest Inn - Rooms for Rent"],
+    ["ob4957ab714b243a2","lodging",121.05132,14.37328,"Sikatvillie Tunasan Muntinlupa City"],
+    ["ob91087e6fc344ea0","lodging",121.05177,14.3667,"Maclane Center"],
+    ["oc2ec3362b1cc4ee5","lodging",121.0661,14.35442,"City of San Pedro Laguna Philipines."],
+    ["oe5e912501984421f","lodging",121.06374,14.35972,"Tamuro Landayan San Pedro Laguna"],
+    ["oe7697d34480c4718","lodging",121.05874,14.36993,"Putol Cuyab San Pedro Laguna"],
+    ["of99fe33086624ac3","lodging",121.08382,14.35006,"Almoro Compound Delapaz Biñan Laguna"],
+    ["of9aba12197e042e0","lodging",121.05125,14.38646,"Espeleta-Pantalan Poblacion, Muntinlupa City"]
   ]
 }

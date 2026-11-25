@@ -80,6 +80,24 @@
     ["o4e40382ffd684d6d","laundry",120.94845,14.70395,"Startup"],
     ["o7a754e4e9a5743fd","laundry",120.94703,14.71998,"Agatob's Laundry"],
     ["o7f29f3c5c8c74ac9","laundry",120.94666,14.70631,"Laundries Laundromat"],
-    ["oe6dc5321cdaf4a80","laundry",120.94283,14.71617,"Metawash"]
+    ["oe6dc5321cdaf4a80","laundry",120.94283,14.71617,"Metawash"],
+    ["o314c54eed03b41f2","hotel",120.94176,14.72954,"Vienna Resort"],
+    ["o40a549dc8bef4b2c","hotel",120.94962,14.71443,"Pisces Resort and Hotel Valenzuela"],
+    ["o66f321c0edd84b4c","hotel",120.94334,14.71543,"La Casa Antigo Resort"],
+    ["o680f70620a7549b1","hotel",120.94364,14.71151,"Le Rinell Resort"],
+    ["o7c06bcc9e5674143","hotel",120.93509,14.72966,"Dory’s/Doyie’s Fishing Resort"],
+    ["o8e0eefb78e0d4f28","hotel",120.94137,14.71145,"The Family Resort & Events Place"],
+    ["od992bed9bb1245d2","hotel",120.92163,14.73277,"Bliss Hotel Dau"],
+    ["o0df548637d524f72","lodging",120.93741,14.72543,"Tagalag, Valenzuela"],
+    ["o124db80733cc4871","lodging",120.94717,14.72278,"Aling  Nene's Pond"],
+    ["o2753a78510f14f39","lodging",120.93402,14.71323,"Paliwas, Obando, Bulacan"],
+    ["o2fe0b47211de4e6c","lodging",120.94421,14.7119,"Hulo Balangkas Valenzuela"],
+    ["o6829c59fb23a4f28","lodging",120.94043,14.70655,"Catangalan Obando Bulacan"],
+    ["o883943b09b7b4b4e","lodging",120.94278,14.72808,"San Miguel Coloong 1"],
+    ["o88f6955516164bae","lodging",120.92997,14.73209,"Wawang Pulo Valenzuela"],
+    ["oaf634fc053ae4539","lodging",120.94635,14.7187,"Valenzuela, Coloong"],
+    ["od5ca8f80182c4088","lodging",120.94315,14.70612,"Parancillio Villa Valenzuela City"],
+    ["of921564bdd4443ef","lodging",120.92725,14.72171,"Hulo, Obando, Bulacan"],
+    ["ofee39bbe76b048ce","lodging",120.92288,14.73487,"pala-pala paco obando bulacan"]
   ]
 }

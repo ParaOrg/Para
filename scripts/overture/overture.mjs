@@ -49,7 +49,34 @@ const SAME_PLACE_KINDS = {
   supermarket: ['supermarket', 'convenience', 'mall'],
   pharmacy: ['pharmacy'],
   laundry: ['laundry'],
+  // OSM's tourism=hotel, guest_house, hostel, motel and apartment: the basemap's 'lodging' labels.
+  hotel: ['hotel'],
+  lodging: ['hotel'],
 };
+
+/** What osmium takes from the extract for the dedupe: the places the basemap labels as lodging. */
+export const LODGING_FILTER = 'nwr/tourism=hotel,guest_house,hostel,motel,apartment';
+/**
+ * A name of a subdivision or village, which Overture files under lodging too: never a place to
+ * stay. Serviced and staycation condos (Residences, Condo, Tower) are, so they stay.
+ */
+const RESIDENTIAL_NAME = /\bsubd\b\.?|subdivision|heights|village|\bhomes\b|\bphase\b|association/i;
+/** A name that says hotel; the small words below win over it. */
+const HOTEL_NAME = /hotel|resort|suites|\binn\b|hostel|motel|lodge/i;
+/** A name of the many small places to stay: drawn a zoom later than the hotels. */
+const SMALL_LODGING_NAME =
+  /transient|staycation|apartelle|airbnb|condo|\broom|bed ?space|dorm|pension|home ?stay|cottage|cabin|villa|\bhouse\b|\bunit\b|studio/i;
+
+/**
+ * A place to stay's kind: a hotel (drawn with the other places) when it has a brand or its name
+ * says hotel, resort, suites, inn, hostel, motel or lodge and none of the small words; otherwise
+ * lodging, the many small inns, apartelles and transient houses, drawn a zoom later. Overture's own
+ * category cannot tell them apart: plenty of its "hotel" rows are staycation condos.
+ */
+export function lodgingKindOf(name, brand) {
+  if (brand) return 'hotel';
+  return HOTEL_NAME.test(name) && !SMALL_LODGING_NAME.test(name) ? 'hotel' : 'lodging';
+}
 /** The same name within this many metres is the same place; the same brand, within more. */
 const SAME_NAME_M = 50;
 const SAME_BRAND_M = 150;
@@ -151,7 +178,7 @@ export function isOnRoad(grid, point) {
 }
 
 /** OSM's places (the establishment cells and the landmark file) in a grid, folded for matching. */
-export function osmPlaceGrid({ establishmentCells, landmarks }) {
+export function osmPlaceGrid({ establishmentCells, landmarks, lodgings = [] }) {
   const grid = new Grid();
   const add = (kind, [lng, lat], name, brand) =>
     grid.add(lng, lat, {
@@ -165,6 +192,7 @@ export function osmPlaceGrid({ establishmentCells, landmarks }) {
       add(kind, [lng, lat], name, extras?.brand);
   }
   for (const { kind, point, name } of landmarks) add(kind, point, name);
+  for (const { point, name } of lodgings) add('hotel', point, name);
   return grid;
 }
 
@@ -182,6 +210,29 @@ export function isInOsm(grid, { kind, point, name, brand }) {
 }
 
 const round = (value) => Math.round(value * 1e5) / 1e5;
+
+/** OSM's named places to stay (LODGING_FILTER's export), each at its outline's mean point. */
+export function lodgingsFrom(features) {
+  const lodgings = [];
+  for (const { geometry, properties } of features) {
+    const name = properties?.name?.trim();
+    if (!name || !geometry) continue;
+    const ring =
+      geometry.type === 'Point'
+        ? [geometry.coordinates]
+        : geometry.type === 'Polygon'
+          ? geometry.coordinates[0]
+          : geometry.type === 'MultiPolygon'
+            ? geometry.coordinates[0][0]
+            : geometry.type === 'LineString'
+              ? geometry.coordinates
+              : [];
+    if (ring.length === 0) continue;
+    const [lng, lat] = ring.reduce(([x, y], [a, b]) => [x + a, y + b], [0, 0]);
+    lodgings.push({ name, point: [lng / ring.length, lat / ring.length] });
+  }
+  return lodgings;
+}
 const isInside = (box, [lng, lat]) =>
   lng >= box.west && lng <= box.east && lat >= box.south && lat <= box.north;
 
@@ -190,7 +241,7 @@ const isInside = (box, [lng, lat]) =>
  * `places` are pull.py's rows; `roads` a road grid; `osm` an OSM place grid.
  */
 export function overturePlacesFrom(places, { roads, osm, box }) {
-  const dropped = { name: 0, road: 0, osm: 0, closed: 0 };
+  const dropped = { name: 0, residential: 0, road: 0, osm: 0, closed: 0 };
   const byId = new Map();
   for (const place of places) {
     const kind = KIND_OF_CATEGORY[place.category];
@@ -205,8 +256,18 @@ export function overturePlacesFrom(places, { roads, osm, box }) {
       dropped.name++;
       continue;
     }
+    if (kind === 'hotel' && RESIDENTIAL_NAME.test(name)) {
+      dropped.residential++;
+      continue;
+    }
     const brand = place.brand?.trim();
-    const candidate = { id: overtureIdOf(place.id), kind, point, name, brand };
+    const candidate = {
+      id: overtureIdOf(place.id),
+      kind: kind === 'hotel' ? lodgingKindOf(name, brand) : kind,
+      point,
+      name,
+      brand,
+    };
     if (isOnRoad(roads, point)) {
       dropped.road++;
       continue;
@@ -218,7 +279,7 @@ export function overturePlacesFrom(places, { roads, osm, box }) {
     if (byId.has(candidate.id)) continue;
     byId.set(candidate.id, {
       id: candidate.id,
-      kind,
+      kind: candidate.kind,
       name,
       point,
       extras: brand && folded(brand) !== folded(name) ? { brand } : {},
@@ -242,14 +303,18 @@ async function readLines(path) {
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
-  const [placesPath, roadsPath, outDir] = process.argv.slice(2);
+  const [placesPath, roadsPath, outDir, lodgingPath] = process.argv.slice(2);
   if (placesPath === '--roads') {
     console.log(ROAD_FILTER);
     process.exit(0);
   }
+  if (placesPath === '--lodging') {
+    console.log(LODGING_FILTER);
+    process.exit(0);
+  }
   if (!placesPath || !roadsPath || !outDir) {
     console.error(
-      'Usage: node --experimental-strip-types scripts/overture/overture.mjs <places.ndjson> <roads.geojsonseq> <out dir>',
+      'Usage: node --experimental-strip-types scripts/overture/overture.mjs <places.ndjson> <roads.geojsonseq> <out dir> [lodging.geojsonseq]',
     );
     process.exit(2);
   }
@@ -262,6 +327,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const osm = osmPlaceGrid({
     establishmentCells: [...readEstablishmentFiles('public/data/establishments/v1').cells.values()],
     landmarks: JSON.parse(readFileSync('public/data/landmarks.v1.json', 'utf8')).landmarks,
+    lodgings: lodgingPath ? lodgingsFrom(await readLines(lodgingPath)) : [],
   });
   const { establishments, dropped } = overturePlacesFrom(places, {
     roads: roadGrid(await readLines(roadsPath)),
@@ -272,6 +338,6 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   writeEstablishmentFiles(outDir, files);
   console.error(
     `Overture ${release}: wrote ${establishments.length} places in ${files.cells.size} cells to ${outDir}; ` +
-      `dropped ${dropped.name} for their names, ${dropped.road} on a road, ${dropped.osm} OSM has, ${dropped.closed} closed.`,
+      `dropped ${dropped.name} for their names, ${dropped.residential} places to stay named as homes, ${dropped.road} on a road, ${dropped.osm} OSM has, ${dropped.closed} closed.`,
   );
 }

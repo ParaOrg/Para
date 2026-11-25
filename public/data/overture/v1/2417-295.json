@@ -31,6 +31,17 @@
     ["odbf48e144af54417","supermarket",120.87904,14.77961,"Dongyi's Store, Bambang Bulakan, Bulacan"],
     ["of2b34a1d594a4e14","supermarket",120.86211,14.78109,"Puregold"],
     ["o2c80ca04920244a4","pharmacy",120.87706,14.78351,"Generika Bulakan"],
-    ["o4d61bd94a5ba4b53","pharmacy",120.88259,14.77536,"Generika Bulakan"]
+    ["o4d61bd94a5ba4b53","pharmacy",120.88259,14.77536,"Generika Bulakan"],
+    ["o6102744f419c4ac6","hotel",120.86988,14.79345,"Anselmo’s Events and Resort"],
+    ["oca86ba74b53a4498","hotel",120.878,14.7811,"Shekinah Gold Private Resort"],
+    ["of1ae567448eb4f6c","hotel",120.88155,14.79468,"Resorts World Malusak"],
+    ["o1dc675a521994128","lodging",120.87746,14.78102,"Baluarte De Santos"],
+    ["o2fe04cd9c8c04036","lodging",120.86745,14.79741,"San Nicolas Bulacan Bulacan"],
+    ["o5b6c87e662ed4c28","lodging",120.88329,14.78604,"Sta Ana, Bulacan, Bulacan"],
+    ["o7a5fe6a694f74e63","lodging",120.88048,14.7945,"Malusak bulakan"],
+    ["o96117245584f44e8","lodging",120.87775,14.78027,"Bambang Bulakan Bulacan"],
+    ["oaee18fc99d934b01","lodging",120.88165,14.78525,"Sta.ines Bulakan,bulacan"],
+    ["ob6c309746e204086","lodging",120.88538,14.78446,"Lungos, Dulo, Sta.Ana Bulacan,Bulacan"],
+    ["od8f9fa27e4e14428","lodging",120.88161,14.7905,"Sitio Sadsaran Sta Ana Bulakan Bulacan"]
   ]
 }

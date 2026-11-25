@@ -51,6 +51,21 @@
     ["o5a94670e02364e2c","supermarket",121.26054,14.52334,"Dali Everyday Grocery - Baras - Santiago"],
     ["oa27dafc7c33b489e","supermarket",121.26469,14.5226,"SM Savemore"],
     ["oadc9e3d71c77463a","supermarket",121.28944,14.50261,"Eastern Tanay Supermarket"],
-    ["oc3cc12d8cfe840d7","pharmacy",121.26599,14.52389,"Mercury Drug"]
+    ["oc3cc12d8cfe840d7","pharmacy",121.26599,14.52389,"Mercury Drug"],
+    ["o11aaa8ebd7e14aac","hotel",121.26024,14.52357,"NBH Resort"],
+    ["o132be61fb3964d6e","hotel",121.2905,14.50898,"Hiraya Private Resort"],
+    ["o44703ec25b464a19","hotel",121.26382,14.52309,"El Avuelo Campsite & Resort"],
+    ["o49aadefea7044e44","hotel",121.27335,14.53504,"Dheynold's Porto Verde Resort"],
+    ["o6a53572ebdac4b1b","hotel",121.28945,14.50473,"Landers Private resort"],
+    ["o6d17646f05074643","hotel",121.29724,14.50397,"Balai ni Bathala Private Resort and Events Place"],
+    ["o9189e23f71554ceb","hotel",121.27044,14.52902,"Evergreen Resort and Events Place"],
+    ["oc34358442e724c31","hotel",121.27142,14.52784,"Jarowe Lodge"],
+    ["ocfdd54d39c6e4293","hotel",121.26024,14.52357,"YAPAK Nature Resort"],
+    ["o38cfb2e5e9b34062","lodging",121.25007,14.52647,"Calero Morong, Rizal"],
+    ["o5d1a963617d141fc","lodging",121.29782,14.50344,"Lovescape Oasis"],
+    ["o7ce76730616b4859","lodging",121.26802,14.54284,"Reina EcoFarm"],
+    ["odbfcd86f4c0a43ff","lodging",121.28181,14.50971,"Jares Refiller Enterprises Inc.."],
+    ["odd4018453ec24422","lodging",121.29154,14.50514,"Little Paradise Hoa Tanay, Rizal"],
+    ["ofc1e126b6db34528","lodging",121.25021,14.5268,"Orelac City"]
   ]
 }

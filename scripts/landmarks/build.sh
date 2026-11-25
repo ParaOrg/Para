@@ -106,9 +106,16 @@ osmium tags-filter --overwrite "$extract" \
   $(node --experimental-strip-types "$root/scripts/overture/overture.mjs" --roads) \
   -o "$work/roads.osm.pbf"
 osmium export --overwrite "$work/roads.osm.pbf" -f geojsonseq -o "$work/roads.geojsonseq"
+# The places to stay the basemap already labels (OSM's tourism=hotel and kin): an Overture hotel
+# of the same name near one is left to the basemap's label.
+osmium tags-filter --overwrite "$extract" \
+  $(node --experimental-strip-types "$root/scripts/overture/overture.mjs" --lodging) \
+  -o "$work/lodging.osm.pbf"
+osmium export --overwrite "$work/lodging.osm.pbf" -f geojsonseq -o "$work/lodging.geojsonseq"
 "${OVERTURE_PYTHON:-python3}" -I "$root/scripts/overture/pull.py" "$box" "$work/overture.ndjson"
 (cd "$root" && node --experimental-strip-types scripts/overture/overture.mjs \
-  "$work/overture.ndjson" "$work/roads.geojsonseq" public/data/overture/v1)
+  "$work/overture.ndjson" "$work/roads.geojsonseq" public/data/overture/v1 \
+  "$work/lodging.geojsonseq")
 node --experimental-strip-types "$root/scripts/overture/check.mjs" \
   "$root/public/data/overture/v1" "$root/public/data/establishments/v1"
 
