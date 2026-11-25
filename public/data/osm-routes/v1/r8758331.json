@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 8758331,
+  "kind": "jeepney",
+  "ref": "",
+  "name": "Bayan–Paliparan Site",
+  "from": "Dasmariñas",
+  "to": "Paliparan Site",
+  "network": "LTFRB Region IV-A",
+  "operator": "Paliparan Site Jeepney Operators and Drivers Association, Inc.;Metro Paliparan Transport Cooperative;Zapote-Imus-Dasmariñas-General Mariano Alvarez-Pala-Pala-Paliparan Transport Cooperative",
+  "version": 57,
+  "last_edit": "2026-08-17",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [[20,6],[33,137],[36,137],[43,9],[63,2836]],
+  "stops": [["stop_entry_only",120.9364,14.33016,"STI Dasma"],["stop",120.93511,14.32633,"Francisco E. Barzaga Memorial School"],["stop",120.93648,14.32516,"Campos-Mangubat"],["stop",120.94378,14.32673,"DLSUMC"],["stop",120.94604,14.32676,"Emilio Aguinaldo College"],["stop",120.9482,14.3269,"Villa Isabel"],["stop",120.95166,14.3264,"Colegio De La Estrella"],["stop",120.95412,14.32308,"Summerwind 4"],["stop",120.95619,14.3225,"Santa Maria West"],["stop",120.958,14.31837,"San Antonio de Padua"],["stop",120.96954,14.31015,"Helping"],["stop",120.97159,14.31264,"Bautista"],["stop",120.97659,14.31537,"Victoria Reyes"],["stop",120.98049,14.31989,"Paliparan Site"],["stop",120.9502,14.32716,"Burol Main"]],
+  "line": [[120.93818,14.33141],[120.93777,14.33074],[120.93741,14.33053],[120.93498,14.32959],[120.93343,14.3288],[120.93294,14.32845],[120.93435,14.32728],[120.93606,14.32499],[120.93648,14.32516],[120.93878,14.32645],[120.9403,14.32675],[120.94088,14.32669],[120.94721,14.32678],[120.95069,14.32722],[120.9511,14.32656],[120.95203,14.3263],[120.95248,14.32563],[120.95317,14.32516],[120.95428,14.32276],[120.95439,14.32272],[120.95614,14.3229],[120.95619,14.3229],[120.95623,14.32221],[120.95643,14.32173],[120.95775,14.32024],[120.958,14.31974],[120.95797,14.31568],[120.95768,14.31441],[120.9577,14.31405],[120.95809,14.31261],[120.95836,14.31225],[120.95879,14.31205],[120.95993,14.31175],[120.9614,14.31168],[120.96263,14.31199],[120.96191,14.31171],[120.9614,14.31168],[120.96263,14.31199],[120.96396,14.31252],[120.96559,14.31251],[120.96642,14.31277],[120.96717,14.31103],[120.96846,14.30936],[120.96997,14.31048],[120.97004,14.31054],[120.97086,14.31259],[120.97569,14.3129],[120.97601,14.31296],[120.97616,14.31307],[120.97627,14.31329],[120.97659,14.31537],[120.97624,14.31921],[120.97756,14.31936],[120.97831,14.31971],[120.97882,14.32008],[120.97924,14.32019],[120.97942,14.32019],[120.98015,14.31961],[120.98063,14.32],[120.98112,14.31946],[120.98134,14.31977],[120.98173,14.32007],[120.98242,14.32039],[120.98232,14.3206],[120.95614,14.3229],[120.95619,14.3229]]
+}

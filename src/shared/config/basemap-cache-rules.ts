@@ -16,15 +16,18 @@ export interface BasemapCacheRules {
  * copies a `urlPattern` function into the worker as text, where a host could not reach
  * it, but a regular expression carries its host in its source. A pattern on another
  * origin must match the whole address from its start, so each begins with the origin.
- * OpenFreeMap keeps its files under /planet and /natural_earth; ours has its tiles at
- * the root and its other files under /styles and /assets (workers/tiles).
+ * OpenFreeMap keeps its files under /planet and /natural_earth, and its styles point at
+ * /backup_planet instead while it serves from its backup; ours has its tiles at the root
+ * and its other files under /styles and /assets (workers/tiles).
  */
 export function basemapCacheRules(host: string): BasemapCacheRules {
   const origin = escaped(host);
   if (host === OPENFREEMAP_HOST) {
     return {
-      meta: new RegExp(`^${origin}/((styles|sprites|fonts)/|planet(\\?.*)?$)`),
-      tiles: new RegExp(`^${origin}/(planet|natural_earth)/.+/\\d+/\\d+/\\d+\\.(pbf|png)(\\?.*)?$`),
+      meta: new RegExp(`^${origin}/((styles|sprites|fonts)/|(backup_)?planet(\\?.*)?$)`),
+      tiles: new RegExp(
+        `^${origin}/((backup_)?planet|natural_earth)/.+/\\d+/\\d+/\\d+\\.(pbf|png)(\\?.*)?$`,
+      ),
     };
   }
   return {

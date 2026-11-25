@@ -6,7 +6,8 @@
 //      Draw the return trip
 //      .supabase.co              the database's address: commuters read the
 //                                published map and never call it
-//    and the studio's search files (/data/search/), which only the studio fetches.
+//    and the studio's search files (/data/search/) and OSM route files (/data/osm-routes/),
+//    which only the studio fetches.
 
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -44,6 +45,16 @@ export function proveStrings(build, check) {
     !commuter.includes(SEARCH_FILES) &&
       !contribute.includes(SEARCH_FILES) &&
       studio.includes(SEARCH_FILES),
+  );
+
+  // The studio's OSM route files (scripts/osm-routes/, .scratch/osm-route-start): read only by
+  // "Start from OSM route", never by the public page or the contributor page.
+  const OSM_ROUTE_FILES = '/data/osm-routes/';
+  check(
+    'public page and contribute page name no OSM route file; the studio names them — the string search works',
+    !commuter.includes(OSM_ROUTE_FILES) &&
+      !contribute.includes(OSM_ROUTE_FILES) &&
+      studio.includes(OSM_ROUTE_FILES),
   );
 
   // Its own chunks, not the ones it shares with the public page, whose map reader

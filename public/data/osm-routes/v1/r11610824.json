@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 11610824,
+  "kind": "jeepney",
+  "ref": "T223",
+  "name": "Cubao/Arayat–V. Luna via Ybardolaza",
+  "from": "V. Luna",
+  "to": "New Arayat Market",
+  "network": "LTFRB National Capital Region",
+  "operator": "Pinyahan-Arayat, Cubao Jeepney Operators and Drivers Association",
+  "version": 27,
+  "last_edit": "2026-08-06",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",121.05231,14.63674,"AFP Medical Center"],["platform",121.04956,14.63733,"Mabilis Street"],["platform",121.0467,14.63795,"East Avenue"],["platform",121.04574,14.63658,"SSS Main Extension Office"],["platform",121.04519,14.63421,"EDSA–East Avenue"],["platform",121.04387,14.63307,"GMA Network Center"],["platform",121.03943,14.63357,"Timog–Scout Ybardolaza"],["platform",121.03898,14.63155,"Sacred Heart Parish"],["platform",121.0387,14.62836,"Kamuning Road"],["platform",121.03926,14.62655,"K-5th Street"],["platform",121.04208,14.62452,"Victory Liner Motorpool"],["platform",121.04482,14.62295,"E. Rodriguez–New York"],["platform",121.04406,14.62206,"Cubao Cathedral"],["platform",121.04562,14.61951,"Aurora–N. Domingo"]],
+  "line": [[121.0523,14.63668],[121.04612,14.63802],[121.04513,14.63376],[121.04499,14.63342],[121.04428,14.63302],[121.04392,14.63302],[121.03957,14.63393],[121.03862,14.62985],[121.03853,14.62906],[121.03957,14.62567],[121.04008,14.62465],[121.04115,14.62471],[121.04208,14.62458],[121.04284,14.62427],[121.04508,14.62312],[121.04385,14.62213],[121.04464,14.62199],[121.04553,14.62158],[121.04679,14.62037],[121.04592,14.62003],[121.04589,14.61975],[121.0452,14.61896],[121.04476,14.61769],[121.04761,14.61595],[121.04868,14.61754],[121.04899,14.61871],[121.04901,14.6191],[121.0486,14.61927]]
+}

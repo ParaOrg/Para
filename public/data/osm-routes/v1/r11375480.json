@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 11375480,
+  "kind": "jeepney",
+  "ref": "343",
+  "name": "Balut–Blumentritt",
+  "from": "Balut",
+  "to": "Blumentritt",
+  "network": "LTFRB National Capital Region",
+  "operator": "V.G. Eusebio Transport Corporation",
+  "version": 20,
+  "last_edit": "2026-09-12",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform",120.96781,14.63113,"T. Paez Elementary School"],["platform",120.96466,14.62958,"Rodriguez"],["platform",120.96567,14.62739,"Guidote"],["platform",120.96693,14.626,"H. Lopez"],["platform",120.96957,14.62761,"T. Earnshaw"],["platform",120.97386,14.62654,"F. Benitez Elementary School"],["platform",120.97574,14.62673,"Solis Railroad Crossing"],["platform",120.97921,14.62563,"Ospital ng Tondo"],["platform",120.98193,14.62369,"Mariano Ponce Elementary School"]],
+  "line": [[120.96773,14.63124],[120.96461,14.6299],[120.9661,14.62666],[120.96662,14.62584],[120.96941,14.62791],[120.96977,14.62747],[120.97012,14.62726],[120.97011,14.62713],[120.97022,14.62703],[120.9704,14.6271],[120.97081,14.62692],[120.97334,14.62656],[120.97338,14.6267],[120.97431,14.62648],[120.97599,14.62678],[120.97632,14.62668],[120.97677,14.62665],[120.9787,14.62705],[120.9785,14.62593],[120.97856,14.62578],[120.97979,14.62563],[120.9811,14.62429],[120.98201,14.62428],[120.98199,14.62369]]
+}

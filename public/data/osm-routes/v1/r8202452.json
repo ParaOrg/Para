@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 8202452,
+  "kind": "bus",
+  "ref": "211",
+  "name": "Rosario–Pinagbuhatan",
+  "from": "Pinagbuhatan",
+  "to": "Rosario",
+  "network": "LTFRB National Capital Region",
+  "operator": "Pasig-Mandaluyong-Quiapo Operators and Drivers Association",
+  "version": 20,
+  "last_edit": "2026-08-06",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [],
+  "line": [[121.09164,14.55493],[121.09176,14.55492],[121.09336,14.55646],[121.09352,14.55631],[121.09646,14.55832],[121.09492,14.56015],[121.09416,14.56174],[121.09384,14.5637],[121.09425,14.56709],[121.08937,14.56753],[121.08817,14.56775],[121.08657,14.56823],[121.08198,14.57017],[121.08667,14.57948],[121.08849,14.58604],[121.08897,14.58819],[121.08963,14.5889],[121.08997,14.58915],[121.09067,14.58948],[121.09144,14.58963],[121.09235,14.58952],[121.0921,14.59041],[121.09102,14.59043],[121.09077,14.59033],[121.08581,14.59073],[121.08453,14.59059],[121.08241,14.59018],[121.08001,14.5899],[121.07995,14.59135],[121.07974,14.59139],[121.07983,14.58973],[121.08085,14.58979],[121.08481,14.59054],[121.08582,14.59065],[121.08908,14.59036],[121.08949,14.59011]]
+}

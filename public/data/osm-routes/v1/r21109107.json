@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 21109107,
+  "kind": "jeepney",
+  "ref": "3001",
+  "name": "A. Bonifacio-A. Mabini via 10th Avenue",
+  "from": "A. Mabini",
+  "to": "A. Bonifacio",
+  "network": "LTFRB National Capital Region",
+  "operator": "Navotas Transport Service Cooperative;AM-10th Avenue-AB New City Hall Transport Service Cooperative",
+  "version": 3,
+  "last_edit": "2026-08-06",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",120.97194,14.65093,"999 Shopping Mall"],["platform",120.9735,14.651,"La Consolacion College (10th Avenue)"],["platform",120.97531,14.65142,"10th Avenue Railroad Crossing"],["platform",120.97714,14.65172,"Heroes del '96"],["platform",120.9786,14.65169,"L. Nadurata"],["platform",120.98,14.65163,"P. Sevilla"],["platform",120.98198,14.65156,"Caloocan High School"],["platform",120.98342,14.65152,"Rizal Extension"],["platform",120.9859,14.65145,"2nd Street"],["platform",120.98778,14.65139,"5th Street–10th Avenue"],["platform",120.98997,14.65132,"8th Street"],["platform",120.99247,14.65124,"11th Street"],["platform",120.99381,14.65261,"Sampaguita"],["platform_exit_only",120.99489,14.65235,"Kamantigue-11th Turning Point"]],
+  "line": [[120.97197,14.65093],[120.97203,14.65081],[120.97257,14.65091],[120.97259,14.65084],[120.97496,14.65138],[120.97607,14.65174],[120.97648,14.65181],[120.99295,14.65129],[120.99327,14.65266],[120.99492,14.6526],[120.99491,14.65235]]
+}

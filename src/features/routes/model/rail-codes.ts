@@ -1,3 +1,4 @@
+import { carouselStationIndex, isBusway } from './busway';
 import type { Direction } from './direction-schema';
 import { stationIndex } from './rail-fares';
 import { directionEnds, railLineOf, type RailLine } from './routes';
@@ -56,11 +57,17 @@ const BOUNDS: Record<RailLine, { towardLower: Bound; towardHigher: Bound }> = {
 };
 
 /**
- * A train direction's bound, from its two ends' numbers: North Avenue YL01
- * → Taft Avenue YL13 is Southbound. Null for any other direction, or an end
- * the line's table does not know.
+ * A train's or the EDSA Carousel's direction's bound, from its two ends' places on the line: North
+ * Avenue YL01 → Taft Avenue YL13 is Southbound, Monumento → PITX too. Null for any other
+ * direction, or an end the line's table does not know.
  */
 export function railBound(v: Direction): Bound | null {
+  if (isBusway(v.route?.mode)) {
+    const { from, to } = directionEnds(v);
+    const [start, end] = [carouselStationIndex(from), carouselStationIndex(to)];
+    if (start < 0 || end < 0 || start === end) return null;
+    return end > start ? 'Southbound' : 'Northbound';
+  }
   const line = railLineOf(v);
   if (!line) return null;
   const { from, to } = directionEnds(v);

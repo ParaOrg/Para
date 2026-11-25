@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 21475186,
+  "kind": "jeepney",
+  "ref": "3221",
+  "name": "Recto–Retiro",
+  "from": "Retiro",
+  "to": "Recto",
+  "network": "LTFRB National Capital Region",
+  "operator": "Asian Utility Vehicle Operators SM Fairview",
+  "version": 1,
+  "last_edit": "2026-10-03",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",121.00619,14.63478,"Amoranto & Santo Domingo"],["platform",121.00388,14.63376,"Amoranto & Biak na Bato"],["platform",121.00127,14.63257,"Amoranto & Banawe"],["platform",120.99927,14.63164,"Amoranto & D. Tuazon"],["platform",120.99672,14.63051,"Our Lady of Lourdes Shrine"],["platform",120.99508,14.62944,"Amoranto & Ipo"],["platform",120.99264,14.62719,"Amoranto & Iba"],["platform",120.9911,14.62586,"Amoranto & Calavite"],["platform",120.98868,14.62602,"Chinese General Hospital"],["platform",120.98802,14.62458,"Chinese General Hospital"],["platform",120.98899,14.62301,"Dimasalang & Aurora"],["platform",120.98887,14.61866,"Dimasalang Overpass"],["platform",120.98871,14.61467,"Dangwa"],["platform",120.98763,14.61312,"Laon Laan & Concepcion"],["platform",120.98616,14.61129,"A. Mendoza & Laon Laan"],["platform",120.98599,14.60912,"A. Mendoza & Dapitan"],["platform",120.98565,14.60697,"Central Market"],["platform_exit_only",120.98431,14.60034,"Quiapo"]],
+  "line": [[121.00621,14.63474],[120.99583,14.63004],[120.99104,14.62574],[120.99023,14.62598],[120.98903,14.62604],[120.98881,14.62598],[120.9874,14.62521],[120.98881,14.62399],[120.98905,14.62347],[120.98872,14.61406],[120.98633,14.61186],[120.98624,14.61185],[120.98588,14.60773],[120.98539,14.60498],[120.98441,14.60032]]
+}

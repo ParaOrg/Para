@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 10783282,
+  "kind": "bus",
+  "ref": "",
+  "name": "City Bus: Puregold Carmona → San Lazaro",
+  "from": "",
+  "to": "",
+  "network": "",
+  "operator": "",
+  "version": 20,
+  "last_edit": "2025-03-25",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["stop_entry_only",121.0548,14.31596,""],["stop_exit_only",121.03473,14.29734,"San Lazaro Leisure and Business Park"]],
+  "line": [[121.0548,14.31596],[121.06069,14.31814],[121.06162,14.31867],[121.0618,14.31865],[121.06185,14.31885],[121.06165,14.3189],[121.06116,14.31848],[121.06033,14.31804],[121.04069,14.31067],[121.03989,14.31052],[121.03712,14.31058],[121.03728,14.30906],[121.03739,14.30896],[121.03757,14.30592],[121.03719,14.30507],[121.03681,14.30231],[121.03557,14.29894],[121.03527,14.29861],[121.03424,14.29832],[121.03436,14.29755],[121.03429,14.29704],[121.03457,14.29706],[121.03473,14.29734]]
+}

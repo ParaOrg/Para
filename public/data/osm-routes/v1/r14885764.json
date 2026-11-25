@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 14885764,
+  "kind": "jeepney",
+  "ref": "371",
+  "name": "CCP Complex–Vito Cruz/Taft",
+  "from": "Vito Cruz/Taft",
+  "to": "CCP Complex",
+  "network": "LTFRB National Capital Region",
+  "operator": "Senate Employees Transport Service Cooperative",
+  "version": 11,
+  "last_edit": "2026-08-31",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [],
+  "line": [[120.99484,14.5632],[120.9951,14.5626],[120.99481,14.56245],[120.99435,14.56176],[120.99373,14.56127],[120.98701,14.55961],[120.98748,14.55845],[120.98549,14.55736]]
+}

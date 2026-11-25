@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 14885766,
+  "kind": "jeepney",
+  "ref": "T452",
+  "name": "Alabang–Nichols via West Service Road",
+  "from": "Nichols",
+  "to": "Alabang",
+  "network": "LTFRB National Capital Region",
+  "operator": "",
+  "version": 20,
+  "last_edit": "2026-09-05",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [],
+  "line": [[121.02462,14.52409],[121.0246,14.52419],[121.02441,14.52426],[121.02447,14.52391],[121.02486,14.52336],[121.02499,14.52332],[121.02513,14.52339],[121.02533,14.52332],[121.02592,14.52296],[121.0261,14.52272],[121.0269,14.52083],[121.02818,14.51837],[121.02954,14.51653],[121.03062,14.51441],[121.0313,14.51265],[121.03172,14.51186],[121.03491,14.5066],[121.0424,14.49269],[121.04416,14.48907],[121.04418,14.4882],[121.04446,14.48652],[121.04471,14.48585],[121.04487,14.48562],[121.04501,14.48511],[121.04512,14.45567],[121.04466,14.45425],[121.04461,14.45389],[121.04498,14.45275],[121.04514,14.4518],[121.0452,14.44079],[121.04514,14.43762],[121.04523,14.43564],[121.0453,14.42334],[121.0452,14.42294],[121.04493,14.42279],[121.03935,14.42266],[121.03939,14.42146],[121.04002,14.42151],[121.04062,14.42139],[121.04122,14.42112],[121.04226,14.42048],[121.04233,14.42137],[121.04279,14.42137]]
+}

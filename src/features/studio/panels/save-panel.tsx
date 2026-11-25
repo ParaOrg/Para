@@ -1,7 +1,7 @@
 import { useId, useState, type FormEvent } from 'react';
 
 import { hotspotLabel } from '@/features/routes/model/hotspots';
-import { LOOP_WORD } from '@/features/routes/model/routes';
+import { isLineMode, LOOP_WORD } from '@/features/routes/model/routes';
 
 import { DraftAlert } from './draft-alert';
 import { DraftBadge } from './draft-badge';
@@ -61,6 +61,7 @@ export function SavePanel({
   const { draw, existing, directions = [] } = options;
   const panel = useSavePanel(options);
   const { ends, facts, isLoop, routeLocked } = panel;
+  const modeLocked = routeLocked || isLineMode(existing?.route.mode); // a saved line stays one
   const { hotspots, head, tail } = ends;
   const { reversed, direction } = facts;
   const isBeside = !onCancel;
@@ -160,7 +161,7 @@ export function SavePanel({
             isLocked={routeLocked}
             onChange={panel.setVia}
           />
-          <ModeField mode={panel.mode} isLocked={routeLocked} onChange={panel.setMode} />
+          <ModeField mode={panel.mode} isLocked={modeLocked} onChange={panel.setMode} />
         </section>
 
         {(isLoop || (head && tail)) && (

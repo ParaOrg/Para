@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 8992805,
+  "kind": "jeepney",
+  "ref": "T101",
+  "name": "Bagong Silang–Novaliches",
+  "from": "Novaliches",
+  "to": "Bagong Silang",
+  "network": "LTFRB National Capital Region",
+  "operator": "Bagong Silang Transport Service Cooperative",
+  "version": 32,
+  "last_edit": "2026-08-06",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [],
+  "line": [[121.0391,14.71943],[121.03989,14.71952],[121.03918,14.72406],[121.03872,14.72621],[121.03856,14.72664],[121.03277,14.73684],[121.03241,14.7382],[121.03242,14.73938],[121.03266,14.74039],[121.03301,14.74121],[121.04043,14.75459],[121.04097,14.75522],[121.04165,14.7557],[121.04252,14.75596],[121.04368,14.75607],[121.04378,14.76027],[121.04381,14.76761],[121.04398,14.76937],[121.04484,14.77516],[121.04585,14.77499],[121.04604,14.7756],[121.04624,14.77685]]
+}

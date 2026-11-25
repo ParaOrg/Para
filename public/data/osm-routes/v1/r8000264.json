@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 8000264,
+  "kind": "rail",
+  "ref": "2",
+  "name": "LRT Line 2: Recto to Antipolo",
+  "from": "Recto",
+  "to": "Antipolo",
+  "network": "Manila LRT",
+  "operator": "Light Rail Transit Authority",
+  "version": 50,
+  "last_edit": "2026-07-22",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["stop_entry_only",120.98398,14.60347,"Recto"],["stop",120.99249,14.60083,"Legarda"],["stop",121.00504,14.60168,"Pureza"],["stop",121.01705,14.604,"V. Mapa"],["stop",121.02607,14.61054,"J. Ruiz"],["stop",121.03408,14.61348,"Gilmore"],["stop",121.04275,14.61858,"Betty Go-Belmonte"],["stop",121.05304,14.62289,"Araneta Center - Cubao"],["stop",121.0652,14.62808,"Anonas"],["stop",121.07329,14.63126,"Katipunan"],["stop",121.08631,14.62169,"Santolan"],["stop",121.10063,14.62044,"Marikina-Pasig"],["stop_exit_only",121.12138,14.62477,"Antipolo"]],
+  "line": [[120.98398,14.60347],[120.98491,14.60321],[120.9903,14.60067],[120.99094,14.60049],[120.99142,14.60051],[120.9938,14.60118],[120.9945,14.60108],[120.99584,14.60058],[120.99633,14.60056],[120.99764,14.60085],[120.99852,14.60064],[120.99901,14.60063],[120.99938,14.60069],[121.00031,14.60105],[121.00346,14.60154],[121.01457,14.60255],[121.01551,14.60272],[121.01613,14.6031],[121.02213,14.60899],[121.02277,14.60945],[121.03308,14.6129],[121.04417,14.6194],[121.04848,14.62087],[121.0518,14.6223],[121.0625,14.62751],[121.06337,14.62777],[121.06678,14.6283],[121.06742,14.62849],[121.07115,14.63021],[121.07496,14.63208],[121.07598,14.63243],[121.07645,14.63246],[121.07705,14.63229],[121.07787,14.63166],[121.07849,14.63092],[121.08107,14.62717],[121.08287,14.62499],[121.08674,14.62128],[121.08962,14.61909],[121.09013,14.61883],[121.09081,14.61864],[121.09152,14.61859],[121.09239,14.61871],[121.12138,14.62477]]
+}

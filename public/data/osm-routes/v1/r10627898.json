@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 10627898,
+  "kind": "jeepney",
+  "ref": "",
+  "name": "MTSC: Patindig Araw → Lancaster New City",
+  "from": "South Supermarket Imus",
+  "to": "Lancaster New City",
+  "network": "PH:PUJ:Imus",
+  "operator": "Multivan Transport Service Cooperative",
+  "version": 20,
+  "last_edit": "2026-05-16",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["stop_exit_only",120.90411,14.40456,"Lancaster Filcab Station"],["stop_entry_only",120.94043,14.40885,"South Supermarket Filcab Station"]],
+  "line": [[120.94043,14.40885],[120.93913,14.40887],[120.93913,14.4088],[120.94055,14.40877],[120.94043,14.40658],[120.9325,14.40639],[120.92801,14.40586],[120.92589,14.40552],[120.92426,14.4054],[120.92224,14.40538],[120.92094,14.40548],[120.9201,14.40538],[120.91967,14.40549],[120.91807,14.40551],[120.91798,14.40572],[120.91775,14.4058],[120.91758,14.40573],[120.91749,14.40553],[120.91753,14.40538],[120.91774,14.40515],[120.9177,14.4038],[120.91602,14.40394],[120.91606,14.40489],[120.91601,14.40498],[120.91455,14.40489],[120.91458,14.40407],[120.91219,14.40434],[120.90974,14.40482],[120.90717,14.40429],[120.90696,14.40432],[120.90471,14.40378],[120.9045,14.4038],[120.90246,14.40948],[120.90199,14.41127],[120.9007,14.4144],[120.89982,14.4169],[120.8998,14.4168],[120.90063,14.41432],[120.90196,14.41103],[120.90234,14.40947],[120.90334,14.40689],[120.90431,14.40396]]
+}

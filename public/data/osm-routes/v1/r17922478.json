@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 17922478,
+  "kind": "jeepney",
+  "ref": "",
+  "name": "Jeepney Route: SM Bacoor → SM Molino via Mambog",
+  "from": "SM City Bacoor",
+  "to": "SM City Molino",
+  "network": "",
+  "operator": "",
+  "version": 5,
+  "last_edit": "2025-11-29",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["stop_entry_only",120.95219,14.44502,"SM Bacoor Transport Terminal"],["stop_exit_only",120.97802,14.38395,"SM City Molino"]],
+  "line": [[120.95219,14.44502],[120.95231,14.44498],[120.95229,14.44481],[120.95263,14.44481],[120.95232,14.44407],[120.94446,14.42748],[120.94529,14.42729],[120.94584,14.42639],[120.94589,14.42611],[120.94578,14.4249],[120.94828,14.42452],[120.95126,14.42391],[120.95329,14.42392],[120.95416,14.42384],[120.95818,14.42271],[120.9587,14.42266],[120.96239,14.42283],[120.96575,14.42381],[120.9658,14.42318],[120.96593,14.42271],[120.96699,14.4203],[120.9672,14.41957],[120.96725,14.41809],[120.96705,14.41595],[120.96713,14.4154],[120.96773,14.41322],[120.96932,14.40974],[120.96968,14.4093],[120.97088,14.4083],[120.97122,14.40806],[120.97173,14.40784],[120.97475,14.40679],[120.97765,14.40666],[120.97763,14.40603],[120.97706,14.40473],[120.97695,14.404],[120.97709,14.40264],[120.97709,14.40164],[120.9778,14.39823],[120.97753,14.38764],[120.97807,14.38423],[120.97799,14.38413],[120.97802,14.38395]]
+}

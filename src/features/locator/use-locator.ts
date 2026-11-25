@@ -9,15 +9,14 @@ import { fixFrom, type Sample } from './locator-motion';
 import {
   QUIET_MS,
   afterTap,
-  commuterCamera,
   modeFor,
-  trackedZoom,
   type Camera,
   type Fix,
   type LocatorStatus,
 } from './locator-rules';
 import { useCameraLetGo } from './use-camera-let-go';
 import { askForCompass, useCompass } from './use-compass';
+import { useFollowCamera } from './use-follow-camera';
 
 export interface Locator {
   status: LocatorStatus;
@@ -181,43 +180,8 @@ export function useLocator(
 
   useCameraLetGo(map, setCamera);
 
-  // The camera on the commuter: each fix, each turn of the phone, each tap.
-  // The whole view every time, not only the centre: a fix arriving mid-glide
-  // would otherwise hotspot the zoom halfway. A finger zooming lets go first,
-  // so the zoom is the one the tap chose.
-  const lastTaps = useRef(taps);
-  // The heading turns only the compass view: north stays up otherwise. And
-  // the card's height: the commuter stays clear of it as it moves.
-  const turn = camera === 'compass' ? heading : null;
-  const lastSnap = useRef(snap);
-  useEffect(() => {
-    const follow = () => {
-      if (!map || !fix || camera === 'free') return;
-      const tapped = lastTaps.current !== taps || lastSnap.current !== snap;
-      lastTaps.current = taps;
-      lastSnap.current = snap;
-      trackedZoomRef.current ??= trackedZoom(map.getZoom(), fix.at[1]);
-      map.easeTo({
-        ...commuterCamera({
-          camera,
-          fix,
-          turn,
-          keptZoom: trackedZoomRef.current,
-          mapBearing: map.getBearing(),
-          tapped,
-        }),
-        offset: offsetRef.current(),
-      });
-    };
-    // The card's height changed: the camera following the commuter keeps
-    // them clear of it, taking over from any overview the page starts in this
-    // same commit.
-    // The turn of the render this effect is from: a new one comes with each
-    // render of the page, and is no reason to move the camera.
-    if (cameraTurn) cameraTurn(follow);
-    else follow();
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- cameraTurn is the render's turn, new every render, and no reason to move the camera
-  }, [map, fix, camera, turn, taps, snap]);
+  // The camera on the commuter: each fix, each turn of the phone, each tap (use-follow-camera.ts).
+  useFollowCamera({ map, fix, camera, heading, taps, snap, offsetRef, trackedZoomRef, cameraTurn });
 
   useEffect(
     () => () => {

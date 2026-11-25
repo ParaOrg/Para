@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 14885763,
+  "kind": "jeepney",
+  "ref": "396",
+  "name": "Divisoria–Murphy via Legarda, Aurora Boulevard",
+  "from": "Divisoria",
+  "to": "Murphy",
+  "network": "LTFRB National Capital Region",
+  "operator": "",
+  "version": 29,
+  "last_edit": "2026-09-12",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",120.97386,14.60825,"A. Rivera"],["platform",120.97525,14.60767,"Philippine Cultural College"],["platform",120.97568,14.60565,"Palomar"],["platform",120.97716,14.60508,"Recto & Masangkay"],["platform",120.97883,14.60445,"Recto & T. Alonzo"],["platform",120.98253,14.60353,"LRT Recto Station"],["platform",120.98572,14.60273,"Cartimar Shopping Center"],["platform",120.98693,14.60218,"Nicanor Reyes"],["platform",120.99323,14.60139,"LRT Legarda Station"],["platform",120.99547,14.60064,"M. Jhocson"],["platform",121.00079,14.60114,"Nagtahan Interchange"],["platform",121.00584,14.60166,"LRT Pureza Station"],["platform",121.00963,14.60194,"Altura"],["platform",121.01107,14.60212,"Stop n' Shop"],["platform",121.01541,14.60258,"V. Mapa"],["platform",121.01696,14.60381,"LRT V. Mapa Station"],["platform",121.01964,14.60637,"Central Colleges of the Philippines"],["platform",121.02097,14.60771,"UE Ramon Magsaysay Campus"],["platform",121.02255,14.60925,"A. Luna Street"],["platform",121.02497,14.61012,"S. Veloso Street"],["platform",121.02686,14.61073,"LRT J. Ruiz Station"],["platform",121.03186,14.61238,"Broadway Avenue"],["platform",121.03441,14.61358,"LRT Gilmore Station"],["platform",121.03674,14.61493,"St. Paul University"],["platform",121.03805,14.61569,"Robinsons Magnolia"],["platform",121.04008,14.61689,"Balete Drive"],["platform",121.04289,14.61857,"LRT Betty Go-Belmonte Station"],["platform",121.04677,14.62016,"Aurora–N. Domingo"]],
+  "line": [[120.97359,14.60829],[120.97548,14.60821],[120.97488,14.60637],[120.97484,14.60603],[120.98024,14.60393],[120.98463,14.60327],[120.98902,14.60123],[120.98916,14.60123],[120.99057,14.6006],[120.99096,14.60031],[120.99165,14.60095],[120.99278,14.60153],[120.99353,14.60136],[120.99562,14.60063],[120.99619,14.6005],[120.99712,14.60078],[120.99753,14.60078],[120.9986,14.60105],[120.9989,14.60102],[120.99946,14.60078],[121.00025,14.60112],[121.00226,14.60137],[121.01507,14.60256],[121.01554,14.60267],[121.01603,14.60293],[121.02205,14.6089],[121.02261,14.60932],[121.03294,14.6128],[121.03739,14.61535],[121.04413,14.61936],[121.04912,14.62102],[121.05029,14.6216],[121.05233,14.62249],[121.05241,14.62246],[121.05288,14.62268],[121.05288,14.62276]]
+}

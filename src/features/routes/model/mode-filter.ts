@@ -14,6 +14,11 @@ export interface ModeFilterControl {
   onFilter: (filter: ModeFilter) => void;
 }
 
+/** How many modes a filter has picked, for its button's count: one, or none under All. */
+export function modesPicked(filter: ModeFilter): number {
+  return filter === 'all' ? 0 : 1;
+}
+
 /** Each option as the filter writes it. */
 export const MODE_FILTER_LABEL = {
   all: 'All',

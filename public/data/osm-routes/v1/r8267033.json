@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 8267033,
+  "kind": "bus",
+  "ref": "QC3",
+  "name": "Katipunan–Welcome Rotonda",
+  "from": "Welcome Rotonda",
+  "to": "Katipunan",
+  "network": "Quezon City Bus Service",
+  "operator": "Lungsod Quezon",
+  "version": 22,
+  "last_edit": "2026-07-13",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["stop_entry_only",121.00306,14.6179,"Welcome Rotonda"],["stop_exit_only",121.07276,14.6311,""]],
+  "line": [[121.00306,14.6179],[121.015,14.61883],[121.01559,14.61908],[121.03119,14.62394],[121.03296,14.6241],[121.03364,14.62726],[121.0339,14.62728],[121.05885,14.63451],[121.05926,14.63329],[121.06053,14.63199],[121.06176,14.62976],[121.06276,14.62899],[121.06293,14.62877],[121.06309,14.62848],[121.06324,14.62772],[121.06683,14.6283],[121.06735,14.62844],[121.07118,14.63016],[121.07347,14.63128],[121.07375,14.63131],[121.07391,14.63122],[121.07399,14.63108],[121.07402,14.63056],[121.07424,14.6305],[121.07432,14.63059],[121.07433,14.6319],[121.07276,14.6311]]
+}

@@ -79,3 +79,8 @@ export const Ferry: Story = {
   args: { vehicle: 'Ferry' },
   play: async ({ canvasElement }) => expectDrawn(canvasElement, 'ferry'),
 };
+
+/** The EDSA Carousel: the bus, as its card draws it. */
+export const EdsaCarousel: Story = {
+  args: { vehicle: 'EDSA Carousel' },
+};

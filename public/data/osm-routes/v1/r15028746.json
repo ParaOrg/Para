@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 15028746,
+  "kind": "jeepney",
+  "ref": "",
+  "name": "Evangelista–Libertad",
+  "from": "Evangelista",
+  "to": "Libertad",
+  "network": "LTFRB National Capital Region",
+  "operator": "Makati City Unified Transport Service Cooperative",
+  "version": 12,
+  "last_edit": "2026-09-12",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",121.012,14.54009,"Evangelista–General Belarmino Turning Point"],["platform",121.01197,14.54155,"General Capinpin"],["platform",121.01171,14.54316,"General Hizon"],["platform",121.01136,14.54521,"General Luna"],["platform",121.01103,14.54717,"INC Lokal ng Evangelista"],["platform",121.01068,14.54929,"Calhoun"],["platform",121.0097,14.55039,"M. Reyes"],["platform",121.00839,14.55066,"P. Binay"],["platform",121.00451,14.54947,"Pasay City Cockpit"],["platform",121.00061,14.54847,"St. Mary's Academy Pasay"],["platform",121.00021,14.5506,"South Western College"],["platform",120.99988,14.55234,"G. Villanueva Street"],["platform",120.99927,14.55425,"Gil Puyat–Dominga"],["platform",120.99884,14.55474,"Gil Puyat & Dominga"],["platform",120.99508,14.55381,"Gil Puyat & Leveriza"],["platform",120.99479,14.55301,"Leveriza"],["platform",120.99527,14.55092,"Cartimar"],["platform",120.99817,14.54751,"Victory Pasay Mall"]],
+  "line": [[121.01199,14.54012],[121.01212,14.54014],[121.01199,14.54104],[121.01042,14.55052],[121.00955,14.55031],[121.0094,14.55085],[121.00631,14.55011],[121.00512,14.54978],[121.00477,14.54961],[121.00449,14.54937],[121.00388,14.54852],[121.00363,14.54831],[121.00255,14.54814],[121.00064,14.54801],[121.0004,14.54974],[121.0001,14.55096],[120.99994,14.55206],[120.99955,14.55291],[120.99917,14.55446],[120.99979,14.55461],[120.99973,14.55486],[120.99702,14.55411],[120.99418,14.55359],[120.99412,14.55346],[120.99421,14.55336],[120.99476,14.55341],[120.99619,14.54691],[120.99815,14.54756]]
+}

@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 14885762,
+  "kind": "jeepney",
+  "ref": "396",
+  "name": "Divisoria–Murphy via Legarda, Aurora Boulevard",
+  "from": "Murphy",
+  "to": "Divisoria",
+  "network": "LTFRB National Capital Region",
+  "operator": "",
+  "version": 25,
+  "last_edit": "2026-09-12",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",121.05245,14.62274,"LRT Araneta Center-Cubao Station"],["platform",121.04631,14.62022,"Aurora–N. Domingo"],["platform",121.04269,14.6187,"LRT Betty Go-Belmonte Station"],["platform",121.03988,14.617,"Balete Drive"],["platform",121.03806,14.6159,"Robinsons Magnolia"],["platform",121.03645,14.61495,"St. Paul University"],["platform",121.03414,14.61366,"LRT Gilmore Station"],["platform",121.03165,14.61249,"Broadway Avenue"],["platform",121.02666,14.61082,"LRT J. Ruiz Station"],["platform",121.02474,14.61019,"S. Veloso Street"],["platform",121.02242,14.60936,"A. Luna Street"],["platform",121.02076,14.60788,"UE Ramon Magsaysay Campus"],["platform",121.018,14.6052,"SM City Santa Mesa"],["platform",121.01666,14.60386,"LRT V. Mapa Station"],["platform",121.01515,14.60276,"V. Mapa"],["platform",121.00981,14.60236,"Altura"],["platform",121.00378,14.60169,"Civil Registration Central Outlet"],["platform",121.0011,14.60147,"Nagtahan Interchange"],["platform",120.99539,14.60084,"M. Jhocson"],["platform",120.99314,14.60156,"LRT Legarda Station"],["platform",120.99061,14.60069,"Mendiola Bridge"],["platform",120.98755,14.60211,"UE Annex"],["platform",120.9857,14.60295,"Cartimar Shopping Center"],["platform",120.98314,14.6037,"LRT Recto Station"],["platform",120.97874,14.60469,"Recto & T. Alonzo"],["platform",120.97728,14.60524,"Recto & Masangkay"],["platform",120.97394,14.60653,"999 Mall"],["platform_exit_only",120.97386,14.60825,"A. Rivera"]],
+  "line": [[121.05247,14.62269],[121.04927,14.62127],[121.04883,14.62115],[121.04846,14.62091],[121.04409,14.61942],[121.03697,14.6152],[121.03282,14.61284],[121.02266,14.60945],[121.02201,14.60894],[121.01604,14.60315],[121.01567,14.60289],[121.01514,14.60271],[121.00838,14.60214],[121.00656,14.60191],[121.00094,14.6014],[121.00021,14.60129],[120.99939,14.60091],[120.99858,14.60118],[120.99735,14.60096],[120.99618,14.60059],[120.99279,14.6016],[120.99161,14.601],[120.99097,14.60043],[120.98483,14.60331],[120.98239,14.60376],[120.98027,14.60404],[120.9735,14.60663],[120.97359,14.60829],[120.97408,14.60829]]
+}

@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 11288343,
+  "kind": "jeepney",
+  "ref": "",
+  "name": "Ayala–Mantrade via Pasong Tamo",
+  "from": "Mantrade",
+  "to": "Ayala",
+  "network": "LTFRB National Capital Region",
+  "operator": "Makati City Unified Transport Service Cooperative",
+  "version": 21,
+  "last_edit": "2026-08-31",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",121.01881,14.54071,"League One Southgate Mall"],["platform",121.0165,14.54467,"Sabio"],["platform",121.01435,14.54863,"Don Bosco Intersection"],["platform",121.01365,14.55105,"Don Bosco Makati"],["platform",121.01622,14.55122,"Arnaiz–Amorsolo"],["platform",121.01864,14.55097,"Paseo de Roxas"],["platform",121.02049,14.55079,"Greenbelt"],["platform",121.02285,14.55028,"Makati Avenue"],["platform_entry_only",121.02525,14.54922,"Park Square"]],
+  "line": [[121.01885,14.54052],[121.01869,14.54082],[121.01859,14.54076],[121.01805,14.54167],[121.01367,14.54978],[121.01352,14.5503],[121.01361,14.55148],[121.01553,14.55136],[121.02193,14.5507],[121.02257,14.5505],[121.02335,14.55008],[121.02408,14.54957],[121.02484,14.54891],[121.02523,14.54925]]
+}

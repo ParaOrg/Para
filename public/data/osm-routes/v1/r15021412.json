@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 15021412,
+  "kind": "jeepney",
+  "ref": "3144",
+  "name": "L. Guinto–Santa Ana",
+  "from": "Leon Guinto Street",
+  "to": "Santa Ana",
+  "network": "LTFRB National Capital Region",
+  "operator": "Santa Ana Transport Service Cooperative",
+  "version": 15,
+  "last_edit": "2026-09-12",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform",120.9893,14.5762,"Pedro Gil"],["platform",120.99354,14.57826,"Paco Market"],["platform",120.99685,14.57878,"Union"],["platform",120.99924,14.57863,"PNR Paco Station"],["platform",121.00339,14.57914,"Concordia College"],["platform",121.00644,14.57986,"Felix"],["platform",121.01005,14.5808,"O.B. Montessori Center Santa Ana"],["platform",121.01356,14.58221,"Santa Ana Church"],["platform",121.01812,14.58491,"Lamayan"],["platform",121.02143,14.58786,"Puregold Kalentong"]],
+  "line": [[120.98926,14.57617],[120.98911,14.57644],[120.99327,14.5782],[120.99489,14.57868],[120.99661,14.57885],[120.9991,14.57868],[121.00161,14.57879],[121.0082,14.58033],[121.01328,14.58179],[121.01329,14.58203],[121.01342,14.58218],[121.01686,14.5841],[121.01785,14.58475],[121.02043,14.58695],[121.02188,14.58846]]
+}

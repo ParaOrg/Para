@@ -1,9 +1,17 @@
+import { BUSWAY_LINES, BUSWAY_MODES } from '../../src/features/routes/model/busway.ts';
 import {
   FERRY_LINES,
   FERRY_MODES,
   LINE_MODES,
   LINES,
 } from '../../src/features/routes/model/routes.ts';
+
+/**
+ * Every shape's leave-out for now: the EDSA Carousel, whose mode ('busway') no installed app's
+ * schema knows, so one of its rows would make that app refuse the whole map. It goes into a shape
+ * of its own once one is made for it.
+ */
+export const BUSWAY = { modes: BUSWAY_MODES, lines: BUSWAY_LINES };
 
 /** Shape 3's leave-out: the ferry (0012), which an app reading shape 3 would take for a jeep. */
 export const FERRY = { modes: FERRY_MODES, lines: FERRY_LINES };

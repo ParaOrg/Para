@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 18491716,
+  "kind": "jeepney",
+  "ref": "",
+  "name": "Shuttle Route: Cloverleaf (southbound)",
+  "from": "",
+  "to": "",
+  "network": "",
+  "operator": "",
+  "version": 2,
+  "last_edit": "2025-01-03",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["stop_entry_only",121.00432,14.65644,"Balintawak"],["stop_exit_only",121.00141,14.65492,"Ayala Malls Cloverleaf"]],
+  "line": [[121.00432,14.65667],[121.00437,14.65593],[121.00444,14.65582],[121.00468,14.65575],[121.00472,14.65554],[121.00438,14.65499],[121.00388,14.65442],[121.00362,14.6545],[121.00313,14.65526],[121.00171,14.65496],[121.00161,14.65526],[121.0015,14.65528],[121.00139,14.65562],[121.00116,14.65584],[121.00141,14.65492]]
+}

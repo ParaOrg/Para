@@ -27,4 +27,5 @@ export const WIDE_BAR = {
   'metro-rail-way-three':
     'sheet-floating:bg-map-rail-metro-rail-way-three-surface sheet-floating:shadow-route-card-primary',
   ferry: 'sheet-floating:bg-map-ferry-surface sheet-floating:shadow-route-card-primary',
+  'edsa-carousel': 'sheet-floating:bg-card-red-surface sheet-floating:shadow-route-card-primary',
 } satisfies Record<Livery | 'list', string>;

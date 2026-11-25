@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 8595667,
+  "kind": "jeepney",
+  "ref": "",
+  "name": "Central Mall–SaveMore San Marino",
+  "from": "SaveMore San Marino",
+  "to": "Central Mall Dasmariñas",
+  "network": "LTFRB Region IV-A",
+  "operator": "",
+  "version": 25,
+  "last_edit": "2026-09-04",
+  "clipped": false,
+  "provenance": {"fixme":"ref"},
+  "gaps": [],
+  "stops": [["stop_entry_only",120.98451,14.32438,"Savemore San Marino"],["stop",120.98788,14.33105,"Avida Sta. Cecilia"],["stop",120.98594,14.33718,"Viva Homes"],["stop",120.98449,14.34055,"Salawag Depot"],["stop",120.9817,14.34571,"Salawag Proper"],["stop",120.98115,14.35273,"Salawag Elementary School"],["stop",120.9684,14.34996,"Orchard East"],["stop",120.96229,14.35063,"Orchard Golf and Country Club"],["stop",120.95594,14.35143,"Andreaville Executive Homes"],["stop",120.95218,14.35184,"Garden Grove"],["stop",120.94518,14.35175,"Summerwind 2-3"],["stop",120.94335,14.35125,"Salitran Bridge"],["stop",120.94203,14.35074,"ISCAG"],["stop",120.94034,14.35067,"Salitran Church"]],
+  "line": [[120.98462,14.32457],[120.98455,14.32458],[120.98449,14.32426],[120.98458,14.32425],[120.9845,14.32346],[120.98456,14.32294],[120.98464,14.32299],[120.98523,14.32436],[120.98609,14.32558],[120.9869,14.32646],[120.98785,14.32722],[120.98809,14.32752],[120.98815,14.32796],[120.98792,14.32952],[120.98787,14.3312],[120.9873,14.33259],[120.98612,14.33457],[120.98601,14.33513],[120.9859,14.33763],[120.98537,14.33954],[120.9852,14.33985],[120.98449,14.34055],[120.98412,14.34105],[120.98392,14.34162],[120.98378,14.34237],[120.98361,14.3427],[120.98224,14.3442],[120.98188,14.34486],[120.98091,14.34994],[120.98129,14.35396],[120.98045,14.35346],[120.97222,14.35009],[120.97165,14.34991],[120.97035,14.34974],[120.96448,14.35036],[120.95385,14.35168],[120.94804,14.3523],[120.94639,14.35233],[120.94572,14.35229],[120.94518,14.35175],[120.9449,14.35158],[120.94375,14.35146],[120.94233,14.35077],[120.93841,14.35059],[120.93842,14.3503],[120.93788,14.35021],[120.93784,14.34968]]
+}

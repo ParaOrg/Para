@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 11246066,
+  "kind": "jeepney",
+  "ref": "389",
+  "name": "Divisoria–Gasak via H. Lopez",
+  "from": "Divisoria",
+  "to": "Gasak",
+  "network": "LTFRB National Capital Region",
+  "operator": "Divisoria-Monumento-Navotas-Recto Inc.;Malabon Jeepney Transport Service Cooperative",
+  "version": 44,
+  "last_edit": "2026-09-12",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",120.96899,14.60604,"Ilaya Turning Point"],["platform",120.96984,14.60679,"Padre Rada"],["platform",120.96925,14.60809,"Padre Herrera Street"],["platform",120.96932,14.61049,"INC Lokal ng Tondo"],["platform",120.97012,14.6146,"Jose Corazon de Jesus Elementary School"],["platform",120.97036,14.61577,"Corcuera"],["platform",120.97114,14.61874,"Puregold Pritil"],["platform",120.97185,14.62084,"Raxabago"],["platform",120.9717,14.62241,"Petron H. Lopez"],["platform",120.9698,14.62335,"PSAC Container Yard"],["platform",120.96756,14.62461,"Immaculate Conception Academy"],["platform",120.96585,14.62742,"Guidote"],["platform",120.96477,14.62974,"Rodriguez"],["platform",120.96386,14.63175,"Balut"],["platform",120.9621,14.63557,"Westminster High School"],["platform",120.95655,14.64098,"C-3–North Bay Boulevard"],["platform",120.95409,14.64421,"Agora Market"],["platform",120.95268,14.64605,"North Bay–Lapu-Lapu"],["platform",120.95146,14.64798,"North Bay Boulevard North"],["platform",120.95086,14.65,"Bangculasi"],["platform",120.95008,14.65207,"Bagumbayan"],["platform",120.94897,14.65492,"Navotas East"],["platform",120.9508,14.65579,"Malabon Market (Estrella)"],["platform",120.9513,14.65683,"Malabon Market (F. Sevilla)"],["platform",120.95156,14.65803,"Malabon City Hall"],["platform",120.95229,14.65906,"St. James Academy"],["platform",120.95134,14.66067,"INC Lokal ng Malabon"],["platform",120.95022,14.66237,"Malabon United Methodist Church"],["platform",120.94966,14.66391,"Esporlas"],["platform",120.94871,14.66602,"E. Jacinto"],["platform",120.94752,14.66818,"Paez"],["platform",120.94635,14.67039,"Bernardo"],["platform",120.94561,14.67206,"Borja Street"],["platform",120.94498,14.67387,"A. Bonifacio"],["platform",120.94397,14.67698,"Malabon SDA Church"],["platform",120.94213,14.67764,"Hulong Duhat Intersection"],["platform_exit_only",120.94215,14.67612,"Hulong Duhat Plaza"]],
+  "line": [[120.96898,14.60607],[120.96992,14.6065],[120.96923,14.60787],[120.9691,14.60962],[120.97065,14.61752],[120.97223,14.62206],[120.96805,14.62412],[120.96763,14.6244],[120.9661,14.62666],[120.96181,14.63599],[120.96155,14.63626],[120.9585,14.63864],[120.95767,14.63942],[120.95229,14.64646],[120.95164,14.64747],[120.9512,14.64851],[120.9509,14.64976],[120.95033,14.65147],[120.94872,14.65486],[120.95149,14.65617],[120.951,14.65743],[120.95114,14.65754],[120.95124,14.65791],[120.95249,14.65865],[120.95127,14.66069],[120.95028,14.66215],[120.94908,14.66532],[120.94801,14.66717],[120.94588,14.67125],[120.94478,14.67432],[120.94373,14.67756],[120.94355,14.6778],[120.94309,14.67815],[120.94263,14.67817],[120.94206,14.678],[120.94253,14.6762],[120.94185,14.67593]]
+}

@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 10600896,
+  "kind": "jeepney",
+  "ref": "",
+  "name": "Jeepney Route: The District Imus → The District Dasmariñas",
+  "from": "The District Imus",
+  "to": "The District Dasmariñas",
+  "network": "LTFRB Region IV-A",
+  "operator": "",
+  "version": 29,
+  "last_edit": "2026-06-05",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["stop_entry_only",120.93886,14.37098,"The District Imus"],["stop",120.95998,14.38478,"Ayala Malls Vermosa"],["stop",120.97802,14.38395,"SM City Molino"],["stop_exit_only",120.9821,14.36054,"The District Dasmariñas"]],
+  "line": [[120.93886,14.37098],[120.93885,14.37113],[120.93875,14.37118],[120.93877,14.37156],[120.94087,14.37295],[120.94144,14.3731],[120.94278,14.37313],[120.9434,14.37326],[120.94389,14.37352],[120.94572,14.37502],[120.94632,14.3754],[120.95268,14.37773],[120.95351,14.37817],[120.95551,14.37987],[120.9575,14.3817],[120.95873,14.3834],[120.95893,14.38343],[120.95939,14.38409],[120.95967,14.3843],[120.96044,14.38546],[120.96082,14.38586],[120.96063,14.38604],[120.96114,14.38643],[120.96373,14.38769],[120.96507,14.38824],[120.96699,14.38872],[120.96849,14.38872],[120.9698,14.38835],[120.97056,14.38787],[120.97085,14.38776],[120.9739,14.3869],[120.97473,14.38678],[120.97705,14.38612],[120.9778,14.386],[120.97807,14.38423],[120.97799,14.38413],[120.97803,14.38387],[120.97814,14.38378],[120.97844,14.38188],[120.97863,14.38128],[120.97934,14.37658],[120.97989,14.37408],[120.98163,14.36702],[120.98165,14.35857],[120.98244,14.35857],[120.98245,14.3605],[120.9821,14.36054]]
+}

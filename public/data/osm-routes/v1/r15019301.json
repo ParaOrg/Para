@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 15019301,
+  "kind": "bus",
+  "ref": "37",
+  "name": "Route 37: Fairview–Monumento via VGC",
+  "from": "Monumento",
+  "to": "Fairview",
+  "network": "LTFRB National Capital Region",
+  "operator": "Valenzuela Transport Service Cooperative",
+  "version": 34,
+  "last_edit": "2026-09-01",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",120.98398,14.65375,"LRT Monumento Station"],["platform_entry_only",120.98604,14.65697,"MCU (EDSA)"],["platform_entry_only",120.98877,14.65701,"Bonny Serrano"],["platform",120.99844,14.65717,"Bagong Barrio"],["platform_exit_only",120.99389,14.71199,"Valenzuela Gateway Complex"]],
+  "line": [[120.9839,14.65297],[120.98402,14.65657],[120.98415,14.65682],[120.98441,14.657],[120.99886,14.65725],[120.99943,14.6572],[121.00051,14.65722],[121.00076,14.65703],[121.00078,14.65668],[121.00065,14.65642],[121.00045,14.65635],[121.0003,14.65643],[121.00021,14.6567],[121.00031,14.65747],[121.00037,14.66435],[121.00063,14.67651],[121.0006,14.67841],[121.00095,14.68938],[121.00083,14.69167],[121.0004,14.69377],[120.99946,14.69629],[120.99393,14.70655],[120.99323,14.70864],[120.99333,14.70871],[120.99288,14.7094],[120.99277,14.71024],[120.99313,14.71169],[120.99324,14.71175],[120.99319,14.71185],[120.99324,14.71199],[120.99337,14.71206],[120.99437,14.71212],[120.99439,14.71185]]
+}

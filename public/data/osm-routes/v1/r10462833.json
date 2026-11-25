@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 10462833,
+  "kind": "bus",
+  "ref": "2",
+  "name": "Route 2: Angono–Quiapo via Ortigas",
+  "from": "Quiapo",
+  "to": "SM City Taytay",
+  "network": "LTFRB National Capital Region",
+  "operator": "Mega Manila Consortium Corporation",
+  "version": 135,
+  "last_edit": "2026-09-14",
+  "clipped": false,
+  "provenance": {"source:ref":"LTFRB Memorandum Circular 2022-074"},
+  "gaps": [],
+  "stops": [["platform_entry_only",120.98467,14.60047,"Quiapo"],["platform",120.98572,14.60273,"Cartimar Shopping Center"],["platform",120.98693,14.60218,"Nicanor Reyes"],["platform",120.99323,14.60139,"LRT Legarda Station"],["platform",120.99547,14.60064,"M. Jhocson"],["platform",121.00391,14.60146,"Civil Registration Central Outlet"],["platform",121.00584,14.60166,"LRT Pureza Station"],["platform",121.01107,14.60212,"Stop n' Shop"],["platform",121.01541,14.60258,"V. Mapa"],["platform",121.01696,14.60381,"LRT V. Mapa Station"],["platform",121.01832,14.60507,"SM City Santa Mesa"],["platform",121.02308,14.60539,"Agora Public Market"],["platform",121.02651,14.60738,"H. Lozada Street"],["platform",121.03626,14.6109,"Castilla Street"],["platform",121.03964,14.60712,"Ortigas–Santolan"],["platform",121.04288,14.60462,"Madison Street"],["platform",121.04428,14.60356,"Roosevelt Street"],["platform",121.0463,14.602,"Club Filipino Drive"],["platform",121.04829,14.6004,"Greenhills Shopping Center"],["platform",121.05429,14.59612,"La Salle Green Hills"],["platform",121.05949,14.59219,"Robinsons Galleria"],["platform",121.06256,14.58958,"Meralco"],["platform",121.06761,14.58885,"Rockwell Business Center"],["platform",121.07038,14.58902,"The Medical City"],["platform",121.07904,14.58961,"C-5–Ortigas"],["platform",121.08097,14.58975,"C-5–Ortigas"],["platform",121.08835,14.59034,"C. Raymundo Avenue"],["platform",121.09129,14.59013,"Westbank Road"],["platform",121.09678,14.58963,"Choice Market Ortigas 1"],["platform",121.10532,14.58847,"SM City East Ortigas"],["platform",121.11348,14.58672,"Robinsons Place Cainta"],["platform",121.11607,14.58603,"Cainta Junction"],["platform",121.12465,14.58337,"Sunset Drive"],["platform",121.12844,14.58218,"Don C. Tuason Intersection"],["platform",121.13408,14.5804,"Panasonic Manufacturing Plant"],["platform",121.13825,14.57909,"WalterMart Taytay"],["platform",121.14242,14.57777,"Kaytikling Junction"],["platform",121.14318,14.57658,"Kaytikling Junction"],["platform_exit_only",121.14021,14.56555,"SM City Taytay"]],
+  "line": [[120.98455,14.60049],[120.98513,14.60285],[120.9853,14.60298],[120.98902,14.60123],[120.98916,14.60123],[120.99057,14.6006],[120.99096,14.60031],[120.99165,14.60095],[120.99278,14.60153],[120.99353,14.60136],[120.99562,14.60063],[120.99619,14.6005],[120.99712,14.60078],[120.99865,14.60107],[121.00886,14.60194],[121.01519,14.60258],[121.01574,14.60275],[121.01603,14.60293],[121.01868,14.60555],[121.01964,14.60466],[121.02159,14.60349],[121.02335,14.60587],[121.02361,14.60614],[121.0243,14.6065],[121.02581,14.60697],[121.02613,14.60714],[121.02698,14.60782],[121.02796,14.60825],[121.03106,14.61062],[121.03141,14.61079],[121.03257,14.61085],[121.03462,14.61158],[121.03591,14.61178],[121.0368,14.61008],[121.03762,14.60899],[121.03824,14.60832],[121.03926,14.60745],[121.04774,14.60097],[121.05861,14.59304],[121.06327,14.58907],[121.06392,14.58874],[121.06444,14.58866],[121.08056,14.58976],[121.08481,14.59054],[121.08582,14.59065],[121.10154,14.58931],[121.1042,14.58878],[121.10914,14.58758],[121.1148,14.58652],[121.14033,14.57853],[121.14297,14.57764],[121.14308,14.57755],[121.14409,14.5722],[121.14406,14.57113],[121.14379,14.57038],[121.14357,14.57004],[121.1401,14.56526]]
+}

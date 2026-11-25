@@ -100,7 +100,11 @@ const modeCssName = (figma) => {
 };
 
 test('each mode colour is the primitive its Card/<Mode>/… token aliases', () => {
-  assert.equal(Object.keys(MODE_COLOURS).length, 4, 'Jeep, UV Express, E-Jeep and Bus');
+  assert.equal(
+    Object.keys(MODE_COLOURS).length,
+    6,
+    'Jeep, UV Express, E-Jeep, Bus and the Carousel’s two',
+  );
   for (const [figma, hex] of Object.entries(MODE_COLOURS)) {
     const css = modeCssName(figma);
     const primitive = tokens.match(

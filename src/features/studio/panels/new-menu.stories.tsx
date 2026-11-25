@@ -48,6 +48,18 @@ export const Closed: Story = {
   },
 };
 
+/** With "Start from OSM route" offered (.scratch/osm-route-start): a fourth choice, a placeholder until designed. */
+export const WithOsmRoute: Story = {
+  args: { isOpen: true, onNewFromOsm: fn() },
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getAllByRole('menuitem')).toHaveLength(4);
+    await userEvent.click(canvas.getByRole('menuitem', { name: /Route from OSM/ }));
+    await expect(args.onNewFromOsm).toHaveBeenCalled();
+    await expect(args.onNewRoute).not.toHaveBeenCalled();
+  },
+};
+
 /** Open, as Figma 4300:20889 draws it: Routes, Terminal and Hintuan beside the +. */
 export const Open: Story = {
   args: { isOpen: true },
