@@ -29,8 +29,11 @@ import {
 /** osmium reads the roads from this filter (build.sh): every road a pin may wrongly sit on. */
 export const ROAD_FILTER =
   'w/highway=motorway,motorway_link,trunk,trunk_link,primary,primary_link,secondary,secondary_link,tertiary,tertiary_link,unclassified,residential,living_street,service,pedestrian';
-/** How near a road's centre line a point may not be, in metres: wider for the wider roads. */
-const ROAD_CLEARANCE_M = { major: 8, minor: 3 };
+/**
+ * How near a road's centre line a point may not be, in metres: wider for the wider roads. A minor
+ * road keeps only 1 m, since shops front narrow streets 2 to 5 m from the line.
+ */
+const ROAD_CLEARANCE_M = { major: 8, minor: 1 };
 const MAJOR_ROADS = new Set(['motorway', 'trunk', 'primary', 'secondary', 'tertiary']);
 
 /** OSM's kinds (and the landmark file's) a place of each Overture kind may already be. */
