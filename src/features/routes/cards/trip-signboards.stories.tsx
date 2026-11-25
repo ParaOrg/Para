@@ -34,7 +34,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /**
- * One signboard, 32 tall, under the "Signboard" heading and where the trip is going. Its alt text
+ * One signboard, 40 tall, under the "Signboard" heading and where the trip is going. Its alt text
  * reads "Signboard".
  */
 export const OneSignboard: Story = {
@@ -43,7 +43,7 @@ export const OneSignboard: Story = {
     await expect(canvas.getByRole('heading', { name: 'Signboard' })).toBeVisible();
     await expect(canvas.getByText('Going to SM Fairview via Maligaya')).toBeVisible();
     const board = canvas.getByRole('img', { name: 'Signboard' });
-    await waitFor(() => expect(board.getBoundingClientRect().height).toBe(32));
+    await waitFor(() => expect(board.getBoundingClientRect().height).toBe(40));
   },
 };
 
