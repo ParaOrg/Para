@@ -812,7 +812,7 @@ check(
   'no zoom buttons on a touch screen',
   (await page.locator('.maplibregl-ctrl-zoom-in').count()) === 0,
 );
-// The map's credits: its own ⓘ in the map's top-left corner (the owner, 2026-11-22; the studio and
+// The map's credits: its own ⓘ in the map's top-left corner (the owner, 4885:44809; the studio and
 // the contributor page keep theirs at the bottom left), MapLibre's corner credits stepped aside; the ⓘ opens them as the Map Data Source sheet
 // (4494:10177), so the licences' credit is always a tap away. Checked by mouse and keys (Escape, Enter) on a
 // phone of its own: the shared one is touched by finger alone (guardTouchOnly).
@@ -823,11 +823,11 @@ check(
   const sheet = keysPage.getByRole('dialog', { name: 'Map Data Source' });
   const infoBox = await info.boundingBox();
   check(
-    "the map's ⓘ sits in the top-left corner, 12 in from each side, 32 across, and MapLibre's corner credits are gone",
+    "the map's ⓘ sits in the top-left corner, 16 in and 24 down, 28 across (4885:44809), and MapLibre's corner credits are gone",
     !!infoBox &&
-      Math.abs(infoBox.x - 12) < 1 &&
-      Math.abs(infoBox.width - 32) < 1 &&
-      Math.abs(infoBox.y - 12) < 1 &&
+      Math.abs(infoBox.x - 16) < 1 &&
+      Math.abs(infoBox.width - 28) < 1 &&
+      Math.abs(infoBox.y - 24) < 1 &&
       !(await keysPage.locator('.maplibregl-ctrl-attrib').isVisible()),
     JSON.stringify(infoBox),
   );
@@ -3660,8 +3660,8 @@ if (runsPart(1)) {
         return info ? { x: Math.round(info.left), y: Math.round(info.top) } : null;
       });
       check(
-        "  with a card open the map's ⓘ stays in the top-left corner, 12 in",
-        corner !== null && Math.abs(corner.x - 12) < 2 && Math.abs(corner.y - 12) < 2,
+        "  with a card open the map's ⓘ stays in the top-left corner, 16 in and 24 down",
+        corner !== null && Math.abs(corner.x - 16) < 2 && Math.abs(corner.y - 24) < 2,
         JSON.stringify(corner),
       );
 

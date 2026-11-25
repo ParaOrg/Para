@@ -223,14 +223,9 @@ export function PublicMapApp() {
       {/* Out of reach under the credits, the map and every card alike. */}
       <div inert={credits.state === 'open'} className="contents">
         {/*
-        No count of routes and hotspots in a corner, and no +, − or compass:
-        the owner leaves them off as clutter for commuters.
-      */}
-        {/*
-        Opened framed on the routes, and handed over to draw them as soon as
-        its style is in (`openOn`). MapLibre's corner credits step aside: the
-        map's own ⓘ (MapCreditsDock) opens them as the Map Data Source sheet,
-        always a tap away, as the licences need.
+        No count of routes and hotspots, no +, − or compass: clutter for commuters (the owner).
+        Opened framed on the routes, drawn once its style is in (`openOn`). MapLibre's corner
+        credits step aside: the map's ⓘ (MapCreditsDock) opens them as the Map Data Source sheet.
       */}
         <MapView
           onReady={setMap}

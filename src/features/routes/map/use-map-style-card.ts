@@ -5,25 +5,10 @@ import { prefersReducedMotion } from '@/shared/utils/motion';
 
 import { applyBasemap, rememberBasemap, type Basemap } from './basemap';
 import { readLocationLabels, rememberLocationLabels, type LabelsPlace } from './location-labels';
-
-/**
- * Which way the card opens from its button: down from the top-right corner
- * (BasemapControl), up from LocationAndMap, which sits on the card's sheet.
- */
-export type MapStyleDirection = 'down' | 'up';
-
-/**
- * Down from a button in the map's top half, up from one in its foot: the public map's pill, at the
- * top right on a phone and over the LocatorButton where the card floats (MapViewPill).
- */
-type MapStyleOpening = MapStyleDirection | 'auto';
+import { cardOpening, type MapStyleDirection, type MapStyleOpening } from './map-style-opening';
 
 /** Closing is the card on its way out, still drawn while its leaving plays. */
 type CardState = 'closed' | 'open' | 'closing';
-
-/** Between the button and the card (gap-2), and kept clear past the card, as the corner's margin. */
-const CARD_GAP_PX = 8;
-const CARD_EDGE_PX = 10;
 
 /**
  * Where a close goes: the card plays its leaving (map-style.css) before it
@@ -90,20 +75,14 @@ export function useMapStyleCard(
   // is then: under the open credits on a phone, or on the sheet, the top of
   // the pill. From the button, not the root: a card still leaving is in it.
   const open = () => {
-    const button = toggleButton()?.getBoundingClientRect();
     const edges = map?.getContainer().getBoundingClientRect();
-    const way =
-      opening !== 'auto'
-        ? opening
-        : button && edges && button.top - edges.top > edges.bottom - button.bottom
-          ? 'up'
-          : 'down';
+    const { direction: way, room } = cardOpening(
+      opening,
+      toggleButton()?.getBoundingClientRect(),
+      edges,
+    );
     setDirection(way);
-    const room =
-      way === 'down'
-        ? edges && button && edges.bottom - button.bottom
-        : edges && button && button.top - edges.top;
-    setCardRoom(room === undefined ? undefined : room - CARD_GAP_PX - CARD_EDGE_PX);
+    setCardRoom(room);
     setCard('open');
   };
 

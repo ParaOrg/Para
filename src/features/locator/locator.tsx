@@ -53,21 +53,15 @@ const LABEL = {
 } as const;
 
 /**
- * LocationAndMap (4245:1966), the map-style button over the LocatorButton,
- * placed as ScreenLocationBehavior draws the LocatorButton (Figma
- * 3870:5941): at the map's right edge, 12 above the card's sheet, following
- * it down to Low; up past the framed height (FRAMED_SHARE) it stays there,
- * and the sheet covers it (unless `dockCap` is `top`, over a fitted sheet,
- * where it rides higher, up to DOCK_TOP_CSS). With no card open it sits at the map's foot. Where
- * the card floats in the corner (`@float:`), which the frame does not show, it
- * sits at the bottom right, clear of the credit line.
- * BottomSheet says where its top is as `--dock-y`: on the page at rest, and on this layer
- * itself (`data-dock-follower`) as a finger drags it; this layer slides the same way, by the same
- * length.
+ * LocationAndMap (4245:1966), the map-style button over the LocatorButton (or the LocatorButton
+ * alone), placed as ScreenLocationBehavior draws it (3870:5941): at the map's right edge, over the
+ * card's sheet, following it down to Low; up past the framed height (FRAMED_SHARE) it stays and
+ * the sheet covers it (unless `dockCap` is `top`: up to DOCK_TOP_CSS). With no card open, at the
+ * map's foot; where the card floats (`@float:`), at the bottom right. BottomSheet says where its
+ * top is as `--dock-y`, on the page at rest and on this layer (`data-dock-follower`) as a finger
+ * drags it; this layer slides the same way.
  *
- * Denied, unavailable or no fix yet: it tells the page (onNote), and the
- * button stays as it was, to try again once the browser's setting is changed.
- */
+ * Denied, unavailable or no fix yet: it tells the page (onNote); the button stays as it was. */
 export function Locator({
   locator,
   map,
