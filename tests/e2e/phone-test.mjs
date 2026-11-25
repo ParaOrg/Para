@@ -6064,6 +6064,8 @@ if (runsPart(3)) {
       `list ${listPx} px; trip ${tripPx} px, the middle ${wantPx} px`,
     );
     await leaveTrip(async () => (await chooser.count()) > 0);
+    // Back from hidden, the list slides into place: read it at rest, as every height here is.
+    await cardsSettled(page).catch(() => {});
     const backPx = (await chooser.count()) ? await shownOf(chooser) : null;
     check(
       '  ‹ gives the list back at its own height from before the tap',
