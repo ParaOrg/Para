@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 10775524,
+  "kind": "jeepney",
+  "ref": "421",
+  "name": "Alabang–Tunasan",
+  "from": "Vista Terminal Exchange",
+  "to": "Pacwood Compound",
+  "network": "LTFRB National Capital Region",
+  "operator": "Great Power Movers Transportation Corporation",
+  "version": 53,
+  "last_edit": "2026-09-01",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["stop_entry_only",121.0464,14.41539,"VTX"]],
+  "line": [[121.0464,14.41539],[121.04607,14.41538],[121.04594,14.41609],[121.04567,14.4164],[121.04567,14.41731],[121.04558,14.41756],[121.04556,14.42018],[121.04543,14.42029],[121.04534,14.42017],[121.04535,14.41921],[121.04433,14.41921],[121.04417,14.41904],[121.04444,14.4186],[121.04502,14.41795],[121.04537,14.4173],[121.0453,14.41544],[121.04503,14.41439],[121.04491,14.4143],[121.04527,14.41416],[121.04569,14.41439],[121.04717,14.40281],[121.04719,14.402],[121.04706,14.40118],[121.0465,14.39946],[121.0462,14.39889],[121.0453,14.39758],[121.04506,14.39705],[121.04452,14.39039],[121.0446,14.39009],[121.04538,14.38844],[121.0455,14.38765],[121.04469,14.38546],[121.04429,14.38374],[121.04424,14.383],[121.04449,14.38196],[121.0463,14.37806],[121.04623,14.37796],[121.04631,14.37773],[121.04649,14.37767],[121.05043,14.36919]]
+}

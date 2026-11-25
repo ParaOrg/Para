@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 8283903,
+  "kind": "bus",
+  "ref": "P3",
+  "name": "Route P3: Robinsons Place Dasmariñas–Paliparan Site",
+  "from": "Paliparan Site",
+  "to": "Robinsons Place Dasmariñas",
+  "network": "LTFRB Region IV-A",
+  "operator": "Kaagapay Multi-Purpose and Transport Service Cooperative",
+  "version": 108,
+  "last_edit": "2026-09-04",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [[44,12]],
+  "stops": [["stop_entry_only",120.98349,14.32114,"Paliparan-KMPTSC"],["stop",120.98862,14.30983,"Island Park North"],["stop",120.98704,14.28819,"Nyugan"],["stop",120.9855,14.28879,""],["stop",120.9727,14.29253,"Manila Memorial Park Dasmariñas"],["stop",120.96965,14.29339,""],["stop",120.96558,14.29822,""],["stop",120.96457,14.29979,""],["stop",120.96166,14.29955,""],["stop_exit_only",120.95761,14.2999,"SM City Dasmariñas Transport Terminal"],["stop_exit_only",120.95419,14.30029,"Robinsons Place Dasmariñas"]],
+  "line": [[120.98349,14.32114],[120.98344,14.32128],[120.98312,14.32117],[120.98334,14.32074],[120.98407,14.32097],[120.98425,14.32087],[120.98444,14.32056],[120.98458,14.32051],[120.98478,14.32057],[120.98563,14.31861],[120.98592,14.3178],[120.98646,14.3155],[120.9873,14.31386],[120.98766,14.31324],[120.98781,14.31311],[120.98763,14.31165],[120.98776,14.31108],[120.98862,14.30983],[120.98964,14.30853],[120.98999,14.3083],[120.99103,14.30801],[120.99171,14.3075],[120.99235,14.30626],[120.99254,14.30562],[120.99248,14.30257],[120.99226,14.30137],[120.98805,14.28777],[120.9812,14.29054],[120.97554,14.29063],[120.97504,14.29067],[120.97438,14.29085],[120.97363,14.29123],[120.97331,14.29149],[120.9721,14.29327],[120.97173,14.29349],[120.96906,14.29335],[120.96855,14.29345],[120.96813,14.29384],[120.96485,14.29944],[120.96463,14.29974],[120.96441,14.29989],[120.96391,14.29992],[120.95924,14.29913],[120.95858,14.2992],[120.95782,14.29962],[120.95789,14.29971],[120.95755,14.29994],[120.95735,14.29974],[120.9584,14.29918],[120.95843,14.29896],[120.95532,14.29842],[120.95488,14.29933],[120.95464,14.29928],[120.95412,14.30044]]
+}

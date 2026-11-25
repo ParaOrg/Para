@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 11613219,
+  "kind": "jeepney",
+  "ref": "339",
+  "name": "Balic-Balic–España/M. dela Fuente",
+  "from": "España/M. dela Fuente",
+  "to": "Balic-Balic",
+  "network": "LTFRB National Capital Region",
+  "operator": "FEJODAP Transport Service Corporation",
+  "version": 10,
+  "last_edit": "2026-09-12",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",120.99414,14.61266,"P. Florentino"],["platform",120.99541,14.61133,"España–Vicente Cruz"],["platform",120.9983,14.6083,"Sobriedad"],["platform",121.00114,14.6057,"G. Tuazon–Vicente Cruz"],["platform",121.00297,14.60679,"Wellcome Balic-Balic"],["platform",121.00385,14.60902,"Masbate"],["platform",121.00498,14.61075,"Leyte"],["platform",121.00664,14.61216,"Blumentritt"],["platform_exit_only",121.00846,14.61219,"Balic-Balic Turning Point"]],
+  "line": [[120.99417,14.61269],[121.00092,14.60562],[121.00254,14.60657],[121.00333,14.60713],[121.00384,14.60916],[121.00434,14.61017],[121.00481,14.61062],[121.00546,14.61142],[121.0063,14.61196],[121.00689,14.61245],[121.00728,14.61317],[121.00849,14.61222]]
+}

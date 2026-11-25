@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 15093997,
+  "kind": "jeepney",
+  "ref": "3162",
+  "name": "Malanday–Divisoria via M.H. del Pilar",
+  "from": "Malanday",
+  "to": "Divisoria",
+  "network": "LTFRB National Capital Region",
+  "operator": "Metro Valenzuela Transport Service Cooperative",
+  "version": 22,
+  "last_edit": "2026-09-12",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform",120.97086,14.65931,"Sangandaan Cemetery"],["platform",120.97142,14.65733,"BDO Sangandaan"],["platform",120.97178,14.65536,"Geronimo"],["platform",120.97197,14.6535,"Lakas ng Mahihirap"],["platform",120.97227,14.65191,"La Consolacion College (A. Mabini)"],["platform",120.9727,14.65024,"BDO A. Mabini"],["platform",120.97331,14.64797,"Caloocan City Medical Center South"],["platform",120.97481,14.64414,"Kaunlaran"],["platform",120.9753,14.64281,"Laon Laan"],["platform",120.97557,14.64134,"WalterMart Caloocan"],["platform",120.9756,14.63919,"L. Lupa"],["platform",120.9755,14.63759,"Maypajo"],["platform",120.9746,14.63234,"Hermosa Street"],["platform",120.97402,14.62959,"Saint Joseph School"],["platform",120.97339,14.62696,"Florentino Torres High School"],["platform",120.97287,14.62475,"Lakan Dula High School"],["platform",120.97233,14.62253,"Puregold Gagalangin"],["platform",120.97174,14.62086,"Raxabago"],["platform",120.9728,14.62,"Barangay 160 Hall"],["platform",120.97427,14.61961,"Yuseco Railroad Crossing"],["platform",120.97372,14.6167,"Dagupan & Arqueros"],["platform",120.97289,14.61298,"Dagupan & Almario"],["platform",120.97251,14.61126,"PNR Tutuban Station"],["platform",120.97396,14.61003,"Meralco Tutuban Substation"],["platform",120.97386,14.60825,"A. Rivera"],["platform",120.97525,14.60767,"Philippine Cultural College"],["platform",120.97394,14.60653,"999 Mall"],["platform",120.97218,14.60646,"Tutuban Mall"]],
+  "line": [[120.95827,14.72033],[120.95733,14.71863],[120.95715,14.71795],[120.95718,14.71759],[120.96414,14.69586],[120.96421,14.69538],[120.96397,14.6933],[120.96418,14.69278],[120.96392,14.69186],[120.96376,14.69157],[120.96297,14.69064],[120.96104,14.68866],[120.95983,14.68768],[120.95776,14.68667],[120.95843,14.68491],[120.95918,14.68322],[120.96002,14.68174],[120.96131,14.67978],[120.96261,14.67694],[120.96312,14.67567],[120.96336,14.67486],[120.96333,14.67457],[120.96291,14.67362],[120.96303,14.67305],[120.96326,14.67265],[120.96398,14.67178],[120.96498,14.6699],[120.96553,14.66866],[120.96677,14.66528],[120.96935,14.66205],[120.97,14.66146],[120.97027,14.66095],[120.971,14.6591],[120.9714,14.65768],[120.97186,14.65515],[120.9721,14.65281],[120.973,14.64921],[120.97353,14.64752],[120.97527,14.64313],[120.97559,14.64179],[120.97567,14.6406],[120.97565,14.63887],[120.97526,14.63542],[120.9743,14.6305],[120.97251,14.6229],[120.97158,14.62026],[120.9726,14.62009],[120.97438,14.62002],[120.97391,14.61733],[120.97246,14.61082],[120.97412,14.61045],[120.97359,14.60829],[120.97548,14.60821],[120.97488,14.60637],[120.97488,14.60612],[120.9735,14.60663],[120.97218,14.60634]]
+}

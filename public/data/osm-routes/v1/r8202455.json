@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 8202455,
+  "kind": "jeepney",
+  "ref": "",
+  "name": "Central Mall–DBB-G",
+  "from": "",
+  "to": "",
+  "network": "LTFRB PUJ",
+  "operator": "New Dasmariñas Transport Service Cooperative",
+  "version": 24,
+  "last_edit": "2026-07-31",
+  "clipped": false,
+  "provenance": {"note":"May be replaced by buses at anytime due to ongoing PUV Modernisation Programme"},
+  "gaps": [],
+  "stops": [["stop",120.94335,14.35125,"Salitran Bridge"]],
+  "line": [[120.94896,14.34056],[120.94862,14.34041],[120.94816,14.3414],[120.94498,14.3491],[120.94474,14.34998],[120.94481,14.35076],[120.94458,14.35109],[120.94422,14.35132],[120.94418,14.35147],[120.94375,14.35146],[120.94228,14.35076],[120.93855,14.35061],[120.93766,14.35044],[120.93755,14.3486],[120.93906,14.34885]]
+}

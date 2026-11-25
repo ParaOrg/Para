@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 8248479,
+  "kind": "bus",
+  "ref": "P3",
+  "name": "Route P3: Robinsons Place Dasmariñas–Paliparan Site",
+  "from": "Robinsons Place Dasmariñas",
+  "to": "Paliparan Site",
+  "network": "LTFRB Region IV-A",
+  "operator": "Kaagapay Multi-Purpose and Transport Service Cooperative",
+  "version": 106,
+  "last_edit": "2026-09-04",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["stop_entry_only",120.95419,14.30029,"Robinsons Place Dasmariñas"],["stop",120.99245,14.30191,"Paliparan Elementary School"],["stop_exit_only",120.98524,14.31965,"Mabuhay City"],["stop_exit_only",120.98355,14.32101,"Paliparan-KMPTSC"]],
+  "line": [[120.95412,14.30044],[120.95464,14.29928],[120.95479,14.29934],[120.95525,14.2984],[120.95535,14.29836],[120.9566,14.29863],[120.96222,14.29958],[120.96408,14.29987],[120.96438,14.29982],[120.96458,14.29969],[120.96477,14.29944],[120.96805,14.29379],[120.96851,14.29338],[120.96896,14.29327],[120.97169,14.29339],[120.97211,14.29308],[120.97325,14.29141],[120.9737,14.29108],[120.97436,14.29078],[120.97495,14.29062],[120.97554,14.29056],[120.97898,14.29054],[120.97998,14.29045],[120.98119,14.29045],[120.98801,14.28767],[120.99251,14.30214],[120.99264,14.30467],[120.99262,14.30562],[120.99236,14.30641],[120.99149,14.30791],[120.99074,14.30899],[120.98954,14.31034],[120.98923,14.31078],[120.98691,14.31472],[120.98648,14.31567],[120.98589,14.31822],[120.98476,14.32064],[120.98449,14.32061],[120.98429,14.32092],[120.98415,14.32102],[120.98361,14.3209],[120.98355,14.32101]]
+}

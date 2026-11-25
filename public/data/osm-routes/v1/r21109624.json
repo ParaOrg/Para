@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 21109624,
+  "kind": "jeepney",
+  "ref": "",
+  "name": "MCU–Navotas via P. Aquino",
+  "from": "Navotas",
+  "to": "MCU",
+  "network": "LTFRB National Capital Region",
+  "operator": "Daanghari Modern Jeepney Transport Service Cooperative",
+  "version": 2,
+  "last_edit": "2026-08-06",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",120.93511,14.67321,"Tangos"],["platform",120.93539,14.67188,"F. Pascual"],["platform",120.93747,14.67149,"San Roque Parish"],["platform",120.93872,14.66983,"San Roque National High School"],["platform",120.93992,14.66783,"Daang Hari"],["platform",120.94095,14.66606,"Daang Hari Elementary School"],["platform",120.9422,14.66395,"Immaculate Memorial Garden"],["platform",120.9434,14.66189,"Los Martires"],["platform",120.94431,14.66027,"E. Tuazon"],["platform",120.94534,14.65845,"P. Gabriel"],["platform",120.94675,14.65568,"P. de Vera"],["platform",120.94788,14.65479,"Davila"],["platform",120.94897,14.65492,"Navotas East"],["platform",120.9508,14.65579,"Malabon Market (Estrella)"],["platform",120.9513,14.65683,"Malabon Market (F. Sevilla)"],["platform",120.95156,14.65803,"Malabon City Hall"],["platform",120.95397,14.65922,"Magsaysay"],["platform",120.9569,14.66024,"Sanciangko"],["platform",120.95923,14.65989,"Our Lady of Lourdes Memorial Park"],["platform",120.96127,14.65954,"P. Aquino–Dagat-Dagatan"],["platform",120.96347,14.65919,"Malabon City Landmark (P. Aquino)"],["platform",120.96799,14.65846,"Buklod ng Nayon"],["platform",120.97077,14.658,"Sangandaan Police Sub-Station 4"],["platform",120.97206,14.65775,"SM Center Sangandaan"],["platform",120.97416,14.65745,"PNR Caloocan Station"],["platform",120.97601,14.65768,"University of the East"],["platform",120.97797,14.65735,"Gomburza Elementary School"],["platform",120.97983,14.65713,"Heroes del '96"],["platform",120.98273,14.657,"Puregold Monumento"],["platform_exit_only",120.98604,14.65697,"MCU (EDSA)"]],
+  "line": [[120.9351,14.67319],[120.93502,14.67322],[120.93498,14.67275],[120.93509,14.67195],[120.93755,14.6715],[120.938,14.67106],[120.94346,14.66183],[120.94563,14.658],[120.94684,14.65554],[120.94696,14.65545],[120.94756,14.65558],[120.94799,14.6546],[120.94942,14.65515],[120.95149,14.65617],[120.951,14.65743],[120.95113,14.65752],[120.95119,14.65782],[120.95133,14.65797],[120.95249,14.65865],[120.95661,14.66032],[120.96461,14.65909],[120.96465,14.65879],[120.9648,14.65868],[120.96655,14.6586],[120.96679,14.65872],[120.96718,14.65867],[120.97132,14.65798],[120.9729,14.65761],[120.97447,14.6575],[120.97617,14.65777],[120.97684,14.65759],[120.97951,14.65722],[120.98341,14.65709],[120.98363,14.65701],[120.98381,14.65682],[120.98398,14.65678],[120.98415,14.65682],[120.98431,14.65698],[120.98452,14.65702],[120.98604,14.65706]]
+}

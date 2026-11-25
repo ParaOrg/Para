@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 19840425,
+  "kind": "jeepney",
+  "ref": "3130",
+  "name": "Herbosa/Pritil–Tayuman/LRT",
+  "from": "Tayuman/LRT",
+  "to": "Pritil",
+  "network": "LTFRB National Capital Region",
+  "operator": "Express Public Transport Corporation",
+  "version": 7,
+  "last_edit": "2026-09-12",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",120.98346,14.61815,"Herrera"],["platform",120.98177,14.61782,"T. Mapua"],["platform",120.98027,14.61667,"Dr. Jose Fabella Memorial Hospital"],["platform",120.97679,14.61687,"Novo Department Store Tayuman"],["platform",120.97931,14.61663,"A. Bonifacio Elementary School"],["platform",120.97494,14.61717,"Manila Cathedral School"],["platform",120.97343,14.61748,"Tayuman & Dagupan"],["platform_exit_only",120.97051,14.61755,"Pritil Market"]],
+  "line": [[120.98346,14.61811],[120.98184,14.61814],[120.98178,14.61674],[120.98087,14.61664],[120.97913,14.61657],[120.9761,14.61689],[120.97104,14.61793],[120.97076,14.61809],[120.97056,14.61753]]
+}

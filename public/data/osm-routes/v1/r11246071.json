@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 11246071,
+  "kind": "jeepney",
+  "ref": "3206",
+  "name": "Pinatubo Terminal–Nagtahan U-Turn",
+  "from": "Nagtahan",
+  "to": "Pinatubo Street",
+  "network": "LTFRB National Capital Region",
+  "operator": "Mandaluyong Transport Service Cooperative",
+  "version": 40,
+  "last_edit": "2026-08-30",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",121.00079,14.60114,"Nagtahan Interchange"],["platform",121.00391,14.60146,"Civil Registration Central Outlet"],["platform",121.00584,14.60166,"LRT Pureza Station"],["platform",121.00963,14.60194,"Altura"],["platform",121.01107,14.60212,"Stop n' Shop"],["platform",121.01541,14.60258,"V. Mapa"],["platform",121.01796,14.5972,"Amaia Skies Santa Mesa"],["platform",121.02092,14.59593,"Don Bosco Manila"],["platform",121.02234,14.59538,"Our Lady of Lourdes Hospital"],["platform",121.02472,14.59445,"Bagumbayan"],["platform",121.02799,14.59322,"Crossing Kalentong"],["platform",121.03028,14.59203,"Armand B. Fabella"],["platform",121.03406,14.59032,"Araullo"],["platform",121.0348,14.58979,"Acacia Lane"],["platform",121.03486,14.587,"Welfareville"],["platform",121.0321,14.58625,"F. Ortigas - Primo Cruz"],["platform",121.03053,14.58367,"Ballesteros"],["platform",121.02953,14.5811,"Primo Cruz"],["platform",121.03273,14.5783,"Santo Rosario"],["platform",121.03491,14.57632,"Boni - Maysilo"],["platform",121.04082,14.57589,"Barangka Drive"],["platform",121.04416,14.57371,"M. Vicente"],["platform",121.04759,14.57408,"Pinatubo Terminal"]],
+  "line": [[121.00079,14.60118],[121.00359,14.60151],[121.01449,14.60249],[121.01562,14.60268],[121.01583,14.60263],[121.01595,14.60254],[121.01671,14.60026],[121.01681,14.60015],[121.01597,14.59987],[121.01673,14.59749],[121.0176,14.59766],[121.0199,14.59594],[121.02041,14.59616],[121.02057,14.59614],[121.02569,14.59411],[121.02696,14.59367],[121.0271,14.59368],[121.02813,14.59326],[121.02996,14.59224],[121.03395,14.59045],[121.03468,14.59001],[121.03528,14.58948],[121.03552,14.58852],[121.03526,14.58699],[121.03317,14.58667],[121.03194,14.58614],[121.02931,14.58136],[121.03295,14.57817],[121.03302,14.57807],[121.03284,14.57778],[121.03282,14.57744],[121.03294,14.57709],[121.0332,14.57673],[121.03365,14.57647],[121.03398,14.57641],[121.03431,14.57647],[121.0347,14.57672],[121.03528,14.57605],[121.03565,14.57579],[121.03595,14.57573],[121.03934,14.57653],[121.03985,14.57654],[121.04051,14.57617],[121.04392,14.57383],[121.04613,14.5731],[121.04687,14.57267],[121.04697,14.57275],[121.04687,14.57285],[121.04631,14.57315],[121.04608,14.57318],[121.04616,14.57332],[121.04641,14.57348],[121.04687,14.57356],[121.04713,14.57353],[121.04753,14.57411]]
+}

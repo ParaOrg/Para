@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 21363659,
+  "kind": "jeepney",
+  "ref": "384",
+  "name": "Del Monte–Kanlaon via Mayon",
+  "from": "Del Monte",
+  "to": "Kanlaon",
+  "network": "LTFRB National Capital Region",
+  "operator": "Del Monte - Mayon - Rotonda Transport Cooperative",
+  "version": 2,
+  "last_edit": "2026-09-12",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",120.99401,14.6363,"A. Bonifacio Market"],["platform",120.99425,14.63479,"Mayon & Santa Catalina"],["platform",120.9949,14.6327,"E. Rodriguez Jr. High School"],["platform",120.99601,14.62954,"Mayon & Amoranto"],["platform",120.99693,14.62762,"Mayon & Calamba"],["platform",120.99777,14.62582,"Mayon & Simoun"],["platform",120.99841,14.62449,"Mayon & Maria Clara"],["platform",120.9992,14.62291,"Suki Market"],["platform",121.00013,14.62091,"Santa Teresita Parish Church"],["platform",121.00143,14.62137,"M. Cuenco & Apo"],["platform",121.00257,14.61952,"Ford Quezon Avenue"],["platform",121.002,14.61886,"Welcome Rotonda"]],
+  "line": [[120.99402,14.63626],[120.99387,14.63622],[120.99583,14.63004],[121.00032,14.62064],[121.00086,14.62114],[121.00164,14.62152],[121.00287,14.61896],[121.0022,14.61836],[121.00196,14.61884]]
+}

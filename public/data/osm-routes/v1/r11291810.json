@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 11291810,
+  "kind": "jeepney",
+  "ref": "3139",
+  "name": "Lardizabal–Rizal Avenue via M. dela Fuente",
+  "from": "Lardizabal",
+  "to": "Rizal Avenue",
+  "network": "LTFRB National Capital Region",
+  "operator": "Rizal Avenue-Lardizabal Operators and Drivers Association Transport Cooperative",
+  "version": 28,
+  "last_edit": "2026-09-12",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",121.00151,14.60306,"Lardizabal Turning Point"],["platform",121.00037,14.60509,"G. Tuazon"],["platform",120.99852,14.60713,"Firmeza"],["platform",120.99631,14.60945,"J. Fajardo"],["platform",120.99421,14.61165,"España"],["platform",120.99113,14.61234,"Dos Castillas"],["platform",120.98936,14.61351,"Dapitan"],["platform",120.98716,14.61574,"A. Mendoza"],["platform",120.98534,14.6179,"SM City San Lazaro"]],
+  "line": [[121.00179,14.6031],[121.0011,14.60288],[121.00029,14.60521],[120.99242,14.61345],[120.99074,14.61196],[120.98582,14.61711],[120.98569,14.61726],[120.98568,14.61749],[120.98531,14.61787]]
+}

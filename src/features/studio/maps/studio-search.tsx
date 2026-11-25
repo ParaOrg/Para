@@ -73,6 +73,14 @@ export function StudioSearch({
 
   const showMark = (at: LngLat) => setMark((last) => ({ at, id: (last?.id ?? 0) + 1 }));
 
+  // Equal matches list nearest the map's centre, read as the editor types: a chain's nearest
+  // branches first, and a category word's nearest places.
+  const mapCentre = (): LngLat | null => {
+    if (!map) return null;
+    const { lng, lat } = map.getCenter();
+    return [lng, lat];
+  };
+
   // The stores and establishments, after the hotspots and landmarks: camera-only, as a landmark.
   const stores = useStores(loadStores);
   const { attribution } = stores;
@@ -117,6 +125,7 @@ export function StudioSearch({
         <PlaceSearch
           hotspots={searchable.hotspots}
           directionsAt={directionsAt}
+          whereNow={mapCentre}
           onPick={handlePick}
           onLookAt={(point) => lookAt(map, point)}
           onPickLandmark={(landmark) => showMark(landmark.point)}

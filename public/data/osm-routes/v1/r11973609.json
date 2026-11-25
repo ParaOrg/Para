@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 11973609,
+  "kind": "bus",
+  "ref": "QC2",
+  "name": "QMC–Litex (northbound)",
+  "from": "Quezon Memorial Circle",
+  "to": "Litex",
+  "network": "QCityBus",
+  "operator": "Philtranco",
+  "version": 31,
+  "last_edit": "2026-05-10",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["stop_entry_only",121.05198,14.65023,"Quezon City Hall"]],
+  "line": [[121.05198,14.65023],[121.05202,14.65121],[121.05177,14.65217],[121.05181,14.65268],[121.05197,14.65296],[121.05404,14.65414],[121.06563,14.66187],[121.06886,14.66395],[121.07097,14.66546],[121.07502,14.66818],[121.07659,14.6694],[121.07871,14.67142],[121.07981,14.67261],[121.08107,14.67418],[121.0825,14.67625],[121.08336,14.67791],[121.08624,14.68449],[121.08709,14.68672],[121.08752,14.68678],[121.08951,14.68628],[121.0903,14.68637],[121.09083,14.68652],[121.09159,14.68708],[121.09625,14.69158],[121.09639,14.69195],[121.09642,14.69297],[121.09642,14.69476],[121.09627,14.69521],[121.09557,14.69587],[121.09529,14.696],[121.09137,14.6998],[121.09109,14.7],[121.09058,14.70026],[121.09011,14.70036],[121.08958,14.70036],[121.08893,14.70022],[121.08876,14.70034],[121.08821,14.70019]]
+}

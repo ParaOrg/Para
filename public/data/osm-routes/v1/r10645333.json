@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 10645333,
+  "kind": "bus",
+  "ref": "P24",
+  "name": "Vista Mall Lakefront–Glorietta 3 P2P (outbound)",
+  "from": "Glorietta 3",
+  "to": "Vista Mall Lakefront",
+  "network": "P2P",
+  "operator": "Delta Neosolutions, Inc.",
+  "version": 25,
+  "last_edit": "2026-08-22",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [[1,64],[38,6]],
+  "stops": [["stop_entry_only",121.02511,14.55229,"Glorietta 3"],["stop_exit_only",121.04641,14.45643,"Vista Mall Lakefront"]],
+  "line": [[121.02511,14.55229],[121.02521,14.55232],[121.02572,14.55262],[121.02514,14.553],[121.02474,14.5529],[121.02388,14.55133],[121.02285,14.55183],[121.02226,14.55062],[121.02335,14.55008],[121.02408,14.54957],[121.02484,14.54891],[121.02597,14.54764],[121.02148,14.5438],[121.01963,14.5423],[121.01775,14.54115],[121.01747,14.54108],[121.01686,14.54116],[121.01666,14.54112],[121.01643,14.54088],[121.0164,14.54056],[121.01668,14.54002],[121.0176,14.53877],[121.02566,14.52398],[121.02634,14.52257],[121.02702,14.52082],[121.02832,14.51831],[121.02934,14.51697],[121.03,14.51595],[121.04383,14.49023],[121.04455,14.48855],[121.04489,14.48718],[121.04508,14.48479],[121.0452,14.45593],[121.04516,14.45542],[121.04481,14.45383],[121.04598,14.45352],[121.0455,14.45529],[121.04546,14.45628],[121.04597,14.4563],[121.04597,14.45625],[121.04596,14.45641],[121.04641,14.45643]]
+}

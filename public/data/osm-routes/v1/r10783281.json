@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 10783281,
+  "kind": "bus",
+  "ref": "LB3",
+  "name": "Ortigas–Eastwood",
+  "from": "Eastwood Mall",
+  "to": "",
+  "network": "Love Bus",
+  "operator": "MMDA",
+  "version": 16,
+  "last_edit": "2026-09-14",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",121.07976,14.61105,"Eastwood Mall"],["platform",121.07625,14.6097,"Richmond Drive"],["platform",121.07944,14.59614,"Green Meadows Gate 6"],["platform_exit_only",121.05949,14.59219,"Robinsons Galleria"]],
+  "line": [[121.07979,14.61113],[121.07925,14.61095],[121.07817,14.60993],[121.07769,14.61026],[121.07697,14.60965],[121.07661,14.60967],[121.07608,14.61029],[121.07584,14.61078],[121.07502,14.61451],[121.0748,14.61445],[121.07559,14.61107],[121.07583,14.61041],[121.07629,14.60978],[121.07839,14.60749],[121.07883,14.6065],[121.07901,14.60551],[121.0797,14.59368],[121.07989,14.58875],[121.07974,14.58787],[121.07917,14.58637],[121.07849,14.5852],[121.07684,14.58278],[121.07519,14.58382],[121.07471,14.58403],[121.07383,14.58424],[121.06308,14.58441],[121.06312,14.58778],[121.06305,14.5882],[121.06291,14.58854],[121.06084,14.59032],[121.06021,14.5897],[121.05824,14.5914],[121.05836,14.5917],[121.05871,14.59207],[121.05917,14.59241],[121.06073,14.5911]]
+}

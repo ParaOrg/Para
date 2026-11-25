@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 9687312,
+  "kind": "jeepney",
+  "ref": "T2114",
+  "name": "Almar–Ever Gotesco",
+  "from": "Doña Carmen",
+  "to": "Bagong Silang",
+  "network": "LTFRB–National Capital Region",
+  "operator": "",
+  "version": 28,
+  "last_edit": "2026-11-05",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [],
+  "line": [[121.07828,14.70517],[121.0755,14.70517],[121.07468,14.70524],[121.07379,14.70546],[121.07045,14.70654],[121.06531,14.7066],[121.06467,14.70677],[121.06421,14.70702],[121.0638,14.70741],[121.0627,14.70871],[121.04769,14.72681],[121.04748,14.72723],[121.04744,14.72751],[121.04751,14.73091],[121.04768,14.7311],[121.04826,14.73131],[121.04871,14.73163],[121.04695,14.73971],[121.04373,14.7553],[121.04368,14.75607]]
+}

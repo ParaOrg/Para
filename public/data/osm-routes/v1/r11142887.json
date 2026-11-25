@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 11142887,
+  "kind": "jeepney",
+  "ref": "3137",
+  "name": "Kayamanan C–PRC via Pasong Tamo",
+  "from": "Philippine Racing Club",
+  "to": "Kayamanan C",
+  "network": "LTFRB National Capital Region",
+  "operator": "Makati City Unified Transport Service Cooperative",
+  "version": 25,
+  "last_edit": "2026-09-12",
+  "clipped": false,
+  "provenance": {"note":"Original route ends: Philippine Racing Club office, Pasong Tamo Extension at Taguig. Present terminals since route rationalization."},
+  "gaps": [],
+  "stops": [["platform_entry_only",121.01614,14.57395,"PRC-Mantrade/Kayamanan C Jeepney Terminal"],["platform",121.01543,14.57153,"J. P. Rizal"],["platform",121.01454,14.56988,"Ponte"],["platform",121.01341,14.56776,"Shopwise Chino Roces"],["platform",121.01227,14.56558,"Kamagong"],["platform",121.01088,14.56213,"Pryce Center"],["platform",121.01286,14.55778,"Dela Rosa"],["platform",121.01347,14.55532,"Rufino"],["platform",121.01366,14.55289,"Makati Central Square"],["platform",121.01268,14.5516,"WalterMart Makati"],["platform",121.01245,14.54958,"PNR Pasay Road Station"],["platform",121.01472,14.54771,"Don Bosco Intersection"],["platform",121.01683,14.5438,"Sabio"],["platform",121.01881,14.54071,"League One Southgate Mall"]],
+  "line": [[121.01638,14.57448],[121.01566,14.57177],[121.01123,14.56348],[121.01098,14.56278],[121.01095,14.56191],[121.01116,14.56117],[121.01172,14.55998],[121.01312,14.55742],[121.01379,14.55401],[121.01362,14.55156],[121.01234,14.55157],[121.01235,14.55146],[121.01153,14.55131],[121.0135,14.54772],[121.01451,14.54821],[121.01813,14.54154],[121.01817,14.54144],[121.01776,14.54115],[121.01783,14.54098],[121.01804,14.54081],[121.01838,14.541],[121.01869,14.54043],[121.01885,14.54052],[121.01869,14.54082]]
+}

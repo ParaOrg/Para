@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 14885769,
+  "kind": "jeepney",
+  "ref": "T3216",
+  "name": "Monumento-Muñoz via Roosevelt",
+  "from": "Monumento",
+  "to": "Muñoz",
+  "network": "LTFRB National Capital Region",
+  "operator": "",
+  "version": 23,
+  "last_edit": "2026-08-06",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [],
+  "line": [[120.98548,14.65602],[120.984,14.65601],[120.98402,14.65657],[120.98431,14.65698],[120.98434,14.65721],[120.98426,14.65736],[120.98408,14.65748],[120.98385,14.65747],[120.98369,14.65736],[120.98362,14.65705],[120.98381,14.65682],[120.98389,14.65651],[120.98351,14.64454],[120.98208,14.64459],[120.98207,14.64444],[120.98418,14.64433],[120.98662,14.64432],[120.98966,14.64415],[120.9916,14.64373],[120.99233,14.64368],[120.99543,14.64385],[120.99597,14.64381],[120.9989,14.64393],[121.00381,14.64475],[121.00454,14.64476],[121.00527,14.64451],[121.00566,14.64404],[121.00577,14.64367],[121.00587,14.6423],[121.00646,14.63978],[121.0066,14.63936],[121.0067,14.63934],[121.00684,14.63915],[121.01303,14.63991],[121.01591,14.64029],[121.01642,14.64042],[121.01861,14.65459],[121.01881,14.65535],[121.01938,14.65677],[121.01984,14.65668],[121.01964,14.65612]]
+}

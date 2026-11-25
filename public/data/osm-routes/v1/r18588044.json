@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 18588044,
+  "kind": "bus",
+  "ref": "",
+  "name": "Ayala Malls Manila Bay Libreng Sakay Metro Point Mall Shuttle",
+  "from": "Ayala Malls Manila Bay",
+  "to": "Metro Point Mall",
+  "network": "",
+  "operator": "",
+  "version": 3,
+  "last_edit": "2026-08-29",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [[11,4],[21,96]],
+  "stops": [["platform",120.98989,14.52259,"Ayala Malls Manila Bay Transport Terminal (Shuttle)"],["platform",121.0008,14.53823,"LRT EDSA Station"]],
+  "line": [[120.99017,14.52212],[120.9893,14.52204],[120.98918,14.52196],[120.98932,14.52189],[120.99083,14.52204],[120.98953,14.53293],[120.98905,14.5362],[120.99551,14.5376],[120.99732,14.53765],[121.00068,14.5374],[121.00078,14.53823],[121.00043,14.5398],[121.00039,14.53979],[121.00067,14.53824],[121.00062,14.5378],[121.00049,14.53766],[120.99696,14.5379],[120.99573,14.53787],[120.99421,14.53761],[120.98885,14.53636],[120.98941,14.53246],[120.99038,14.52408],[120.9905,14.52322],[120.99064,14.52217],[120.99017,14.52212]]
+}

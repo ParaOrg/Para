@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 9165727,
+  "kind": "rail",
+  "ref": "MNC",
+  "name": "PNR Metro North Commuter Line: Tutuban → Governor Pascual",
+  "from": "Tutuban",
+  "to": "Governor Pascual",
+  "network": "PNR Metro Commuter",
+  "operator": "Philippine National Railways",
+  "version": 14,
+  "last_edit": "2026-04-04",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["stop",120.97329,14.61203,"Tutuban"],["stop",120.97555,14.6269,"Solis"],["stop",120.97629,14.64459,"C-3 Road"],["stop",120.97484,14.65186,"Asistio (10th) Avenue"],["stop",120.97388,14.65692,"Caloocan"],["stop_exit_only",120.97273,14.67034,"Governor Pascual"]],
+  "line": [[120.97319,14.6116],[120.97404,14.61551],[120.97711,14.63844],[120.97716,14.63957],[120.97696,14.64123],[120.97436,14.65419],[120.97368,14.65805],[120.97273,14.67034]]
+}

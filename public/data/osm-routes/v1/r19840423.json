@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 19840423,
+  "kind": "jeepney",
+  "ref": "3108",
+  "name": "Divisoria–Velasquez",
+  "from": "Divisoria",
+  "to": "Velasquez",
+  "network": "LTFRB National Capital Region",
+  "operator": "Velasquez Jeepney Transport Cooperative",
+  "version": 7,
+  "last_edit": "2026-09-12",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",120.96899,14.60604,"Ilaya Turning Point"],["platform",120.96932,14.61049,"INC Lokal ng Tondo"],["platform",120.97012,14.6146,"Jose Corazon de Jesus Elementary School"],["platform",120.96984,14.60679,"Padre Rada"],["platform",120.96925,14.60809,"Padre Herrera Street"],["platform",120.96846,14.6163,"Teodoro R. Yangco Elementary School"],["platform",120.96749,14.61822,"Trinidad Rizal"],["platform",120.96568,14.61923,"Navarro"],["platform",120.9655,14.62012,"Emilio Jacinto Elementary School"],["platform",120.96534,14.62099,"Lallana"],["platform",120.96518,14.62168,"Nepomuceno"],["platform",120.9648,14.62308,"Trinidad"],["platform",120.963,14.62498,"Urban Deca Homes"],["platform_exit_only",120.96203,14.62736,"Vitas Slaughterhouse"]],
+  "line": [[120.96898,14.60607],[120.96992,14.6065],[120.96923,14.60787],[120.9691,14.60954],[120.97031,14.61584],[120.96995,14.61593],[120.96991,14.61583],[120.96729,14.61662],[120.96777,14.61809],[120.96576,14.61864],[120.96519,14.62151],[120.96464,14.62354],[120.96348,14.62323],[120.96302,14.62465],[120.96294,14.62533],[120.962,14.62735]]
+}

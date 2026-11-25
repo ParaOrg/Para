@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 10316636,
+  "kind": "jeepney",
+  "ref": "",
+  "name": "Jeepney Route: SM Molino → WalterMart Dasmariñas",
+  "from": "SM City Molino",
+  "to": "WalterMart Dasmariñas",
+  "network": "LTFRB PUJ",
+  "operator": "Magnificat Transport Cooperative",
+  "version": 47,
+  "last_edit": "2024-12-09",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [],
+  "line": [[120.97802,14.38395],[120.97814,14.38378],[120.97844,14.38188],[120.97863,14.38128],[120.97874,14.38053],[120.98013,14.38067],[120.9803,14.3809],[120.98114,14.38131],[120.98064,14.3826],[120.98042,14.3838],[120.97986,14.38534],[120.97969,14.38562],[120.97936,14.38585],[120.97731,14.38618],[120.97475,14.38689],[120.97393,14.38701],[120.97086,14.38784],[120.97059,14.38795],[120.96984,14.38844],[120.96846,14.38883],[120.96701,14.38883],[120.96507,14.38837],[120.96365,14.38778],[120.96132,14.38668],[120.96075,14.38632],[120.95999,14.38549],[120.958,14.38253],[120.95741,14.38177],[120.9555,14.37999],[120.95341,14.37825],[120.95259,14.37781],[120.94624,14.37549],[120.94566,14.37512],[120.94443,14.37411],[120.94336,14.37336],[120.94292,14.37324],[120.94145,14.37318],[120.94057,14.37297],[120.9387,14.37178],[120.93708,14.33837],[120.93726,14.33734],[120.94103,14.32419],[120.94158,14.32433],[120.94147,14.32472],[120.94141,14.32471]]
+}

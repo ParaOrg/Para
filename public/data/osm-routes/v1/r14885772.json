@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 14885772,
+  "kind": "jeepney",
+  "ref": "T450",
+  "name": "Roxas Boulevard (McDonald's)–SM Mall of Asia via Taft Avenue",
+  "from": "SM Mall of Asia",
+  "to": "Roxas Boulevard (McDonald's)",
+  "network": "LTFRB National Capital Region",
+  "operator": "Senate Employees Transport Service Cooperative",
+  "version": 26,
+  "last_edit": "2026-08-29",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",120.98354,14.53482,"SM Mall of Asia"],["platform",120.98422,14.53777,"Ecom Center Station 4"],["platform",120.98325,14.54238,"Seaside Boulevard"],["platform",120.9822,14.54631,"GSIS Complex"],["platform",120.98332,14.55021,"Manila Film Center"],["platform",120.98526,14.55108,"Macapagal–World Trade Center"],["platform",120.99044,14.55236,"Gil Puyat Overpass"],["platform",120.99181,14.55283,"Gil Puyat & Harrison"],["platform",120.99526,14.5534,"Gil Puyat & Leveriza"],["platform",120.99778,14.55107,"Cartimar"],["platform",120.99866,14.54722,"LRT Libertad Station"],["platform",120.99981,14.54221,"Taft & Protacio"],["platform",121.00029,14.54007,"Taft & Vergel"],["platform",121.00063,14.53832,"LRT EDSA Station"],["platform",120.99946,14.53585,"Two Shopping Center"],["platform",120.99801,14.53399,"LRT Baclaran Station"],["platform",120.99728,14.533,"Baclaran Rotonda"],["platform_exit_only",120.99337,14.53395,"McDonald's Roxas Boulevard"]],
+  "line": [[120.9836,14.53487],[120.98386,14.53464],[120.98444,14.53466],[120.98478,14.53487],[120.98491,14.53523],[120.98479,14.53559],[120.98444,14.53582],[120.98428,14.53603],[120.98408,14.53831],[120.98383,14.53971],[120.98278,14.54396],[120.98235,14.54495],[120.98212,14.5465],[120.9821,14.54735],[120.98233,14.54833],[120.9832,14.55001],[120.98335,14.55055],[120.98742,14.55177],[120.9885,14.55185],[120.99282,14.55316],[120.99524,14.55348],[120.99715,14.55394],[121.00039,14.53979],[121.00066,14.53836],[121.00064,14.53766],[121.0005,14.53726],[121.00025,14.53684],[120.99799,14.53388],[120.99693,14.53264],[120.99664,14.53273],[120.99642,14.53402],[120.99328,14.53364]]
+}

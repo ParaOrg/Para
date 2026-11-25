@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 109159,
+  "kind": "rail",
+  "ref": "3",
+  "name": "MRT Line 3: North Avenue → Taft Avenue",
+  "from": "North Avenue",
+  "to": "Taft Avenue",
+  "network": "Manila MRT",
+  "operator": "Metro Rail Transit Corporation",
+  "version": 90,
+  "last_edit": "2026-07-22",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["stop_entry_only",121.03263,14.65169,"North Avenue"],["stop",121.03864,14.64245,"Quezon Avenue"],["stop",121.04327,14.63533,"GMA Kamuning"],["stop",121.05106,14.61948,"Araneta Center - Cubao"],["stop",121.05657,14.60754,"Santolan-Annapolis"],["stop",121.05652,14.58734,"Ortigas"],["stop",121.05341,14.5811,"Shaw Boulevard"],["stop",121.04764,14.57309,"Boni"],["stop",121.04544,14.56672,"Guadalupe"],["stop",121.03368,14.55395,"Buendia"],["stop",121.02754,14.54876,"Ayala"],["stop",121.01905,14.54174,"Magallanes"],["stop_exit_only",121.00189,14.5376,"Taft Avenue"]],
+  "line": [[121.03048,14.65496],[121.04496,14.63272],[121.05913,14.6019],[121.05948,14.60072],[121.05971,14.59918],[121.0597,14.59787],[121.05953,14.59668],[121.05903,14.59548],[121.05795,14.59232],[121.05753,14.59094],[121.05718,14.58927],[121.05534,14.58399],[121.0549,14.58323],[121.05202,14.57904],[121.04742,14.57274],[121.04694,14.5718],[121.04664,14.57098],[121.04573,14.56767],[121.04473,14.56444],[121.04405,14.56316],[121.04301,14.56185],[121.03553,14.55544],[121.03462,14.55474],[121.02071,14.54299],[121.0189,14.54163],[121.01784,14.54102],[121.0163,14.54026],[121.01436,14.53952],[121.01327,14.53921],[121.01137,14.53887],[121.00379,14.53791],[121.00189,14.5376]]
+}

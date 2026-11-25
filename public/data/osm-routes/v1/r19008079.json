@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 19008079,
+  "kind": "bus",
+  "ref": "",
+  "name": "Baliwag Tricycle: Hinukay → SM",
+  "from": "Hinukay",
+  "to": "SM",
+  "network": "",
+  "operator": "H-TODA",
+  "version": 6,
+  "last_edit": "2026-10-25",
+  "clipped": false,
+  "provenance": {"fixme":"Route type"},
+  "gaps": [],
+  "stops": [],
+  "line": [[120.88318,15.00953],[120.88278,15.00847],[120.88155,15.00756],[120.88178,15.00662],[120.88194,15.00527],[120.88229,15.00392],[120.8822,15.0032],[120.88224,15.00299],[120.88301,15.00092],[120.88338,15.00051],[120.88373,14.99989],[120.88552,14.99847],[120.88636,14.99736],[120.88689,14.99587],[120.88689,14.99566],[120.88666,14.99508],[120.89116,14.99603],[120.8919,14.99614],[120.89296,14.98341],[120.89357,14.9789],[120.8941,14.9762],[120.89493,14.97253],[120.89728,14.96351],[120.89134,14.95986],[120.89111,14.95984],[120.89079,14.95964],[120.89065,14.95943]]
+}

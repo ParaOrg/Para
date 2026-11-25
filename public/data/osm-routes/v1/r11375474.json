@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 11375474,
+  "kind": "jeepney",
+  "ref": "3106",
+  "name": "Divisoria–Santa Cruz via San Nicolas",
+  "from": "Divisoria",
+  "to": "Santa Cruz",
+  "network": "LTFRB National Capital Region",
+  "operator": "Express Public Transport Corporation",
+  "version": 21,
+  "last_edit": "2026-09-12",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform",120.96811,14.60076,"Camba Turning Point"],["platform",120.96847,14.5997,"Lavezares"],["platform",120.96957,14.59824,"Lara"],["platform",120.97078,14.59645,"Madrid"],["platform",120.97332,14.59612,"Four Seasons Riviera"],["platform",120.97642,14.59606,"Juan Luna Street"],["platform",120.97727,14.59684,"Commercial Bank and Trust Company Building"],["platform",120.97876,14.59798,"Tomas Pinpin"],["platform",120.98019,14.5997,"Plaza Santa Cruz"]],
+  "line": [[120.96813,14.60074],[120.96791,14.60054],[120.97041,14.5972],[120.9705,14.59663],[120.9706,14.59653],[120.97459,14.59599],[120.9757,14.59593],[120.9768,14.59618],[120.97717,14.59635],[120.97695,14.59675],[120.9774,14.59693],[120.9779,14.59726],[120.97969,14.5989],[120.98014,14.59919],[120.97989,14.59963],[120.97999,14.59972],[120.98043,14.59981]]
+}

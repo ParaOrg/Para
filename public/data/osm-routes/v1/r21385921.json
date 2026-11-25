@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 21385921,
+  "kind": "jeepney",
+  "ref": "322",
+  "name": "Baclaran–Blumentritt via MOA, Taft, Quiapo",
+  "from": "Baclaran",
+  "to": "Blumentritt",
+  "network": "LTFRB National Capital Region",
+  "operator": "FEJODAP Transport Service Corporation",
+  "version": 1,
+  "last_edit": "2026-09-12",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",120.99179,14.51175,"PITX"],["platform",120.99066,14.52384,"City of Dreams"],["platform",120.98986,14.53066,"DFA"],["platform",120.98921,14.53557,"Double Dragon Plaza"],["platform",121.0008,14.53823,"LRT EDSA Station"],["platform",121.00054,14.53965,"Taft & Vergel"],["platform",120.99992,14.54239,"Taft & Protacio"],["platform",120.99881,14.54731,"LRT Libertad Station"],["platform",120.99793,14.55109,"Cartimar"],["platform",120.997,14.55528,"LRT Gil Puyat Station"],["platform",120.99503,14.56324,"LRT Vito Cruz Station"],["platform",120.99418,14.56505,"De La Salle University"],["platform",120.99312,14.56732,"Taft & Castro"],["platform",120.99187,14.56995,"LRT Quirino Station"],["platform",120.99136,14.57097,"LRT Quirino Station"],["platform",120.98896,14.57521,"Philippine Christian University"],["platform",120.98802,14.5769,"LRT Pedro Gil Station"],["platform",120.98707,14.57847,"PGH"],["platform",120.98945,14.57432,"Philippine Women's University"],["platform",120.98579,14.58074,"Taft & Padre Faura"],["platform",120.98497,14.58216,"LRT United Nations Station"],["platform",120.98436,14.58328,"Taft & T.M. Kalaw"],["platform",120.98367,14.58459,"Luneta"],["platform",120.98303,14.58571,"Santa Isabel College"],["platform",120.9824,14.58685,"Taft & Ayala Boulevard"],["platform",120.9808,14.59107,"Liwasang Bonifacio"],["platform",120.98467,14.60047,"Quiapo"],["platform",120.98591,14.60679,"Central Market"],["platform",120.9862,14.60938,"A. Mendoza & Dapitan"],["platform",120.98634,14.61132,"A. Mendoza & Laon Laan"],["platform",120.98786,14.61307,"Laon Laan & Concepcion"],["platform",120.98888,14.61484,"Dangwa"],["platform",120.98901,14.61856,"Dimasalang Overpass"],["platform",120.98917,14.6245,"Dimasalang & Aurora"],["platform",120.98868,14.62602,"Chinese General Hospital"],["platform_exit_only",120.98802,14.62458,"Chinese General Hospital"]],
+  "line": [[120.99172,14.51177],[120.99176,14.5119],[120.99133,14.51199],[120.99142,14.51229],[120.99201,14.51214],[120.99209,14.51203],[120.99153,14.50965],[120.9909,14.50734],[120.98865,14.50809],[120.98917,14.50951],[120.99021,14.51301],[120.99072,14.51707],[120.99089,14.51778],[120.99095,14.51936],[120.9909,14.51959],[120.9909,14.52154],[120.99042,14.5251],[120.98953,14.53293],[120.98905,14.5362],[120.99551,14.5376],[120.99732,14.53765],[121.00068,14.5374],[121.00078,14.53823],[121.00032,14.5405],[120.99722,14.55396],[120.99979,14.55461],[120.99973,14.55486],[120.99768,14.55432],[120.9973,14.55429],[120.99712,14.55442],[120.99521,14.56267],[120.99472,14.5638],[120.99137,14.57074],[120.98152,14.58827],[120.98052,14.59126],[120.98018,14.59246],[120.9802,14.5928],[120.97996,14.59379],[120.97999,14.59407],[120.9801,14.59423],[120.98365,14.59655],[120.98381,14.59679],[120.98591,14.60722],[120.98631,14.61158],[120.98676,14.61215],[120.98879,14.61398],[120.98917,14.62604],[120.98881,14.62598],[120.9874,14.62521],[120.98807,14.62464]]
+}
