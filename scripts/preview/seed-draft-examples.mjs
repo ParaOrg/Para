@@ -1,7 +1,7 @@
 // Add review examples only to the disposable preview database after seeding.
 import { readFileSync } from 'node:fs';
 import { PREVIEW_USER_ID } from './review-fixture.mjs';
-const index = JSON.parse(readFileSync('public/data/index.v5.json', 'utf8'));
+const index = JSON.parse(readFileSync('public/data/index.v6.json', 'utf8'));
 const routes = [
   ...new Map(index.variants.map((direction) => [direction.route.id, direction.route])).values(),
 ];

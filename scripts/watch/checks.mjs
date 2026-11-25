@@ -82,7 +82,7 @@ export async function checkSite(fetchImpl, site = SITE, bareDomain = BARE_DOMAIN
 
 /** The published map's index answers 200, parses, and carries a published_at. */
 export async function checkPublishedMap(fetchImpl, site = SITE) {
-  const url = `${site}/data/index.v5.json`;
+  const url = `${site}/data/index.v6.json`;
   const response = await fetchImpl(url);
   const text = await response.text();
   if (response.status !== 200) return { ok: false, answer: `${url} answered ${response.status}` };
@@ -113,7 +113,7 @@ export async function checkDeployedMap(fetchImpl, github, now, site = SITE) {
     const why = error instanceof Error ? error.message : String(error);
     return { ok: true, answer: `main's map could not be read, so nothing was compared: ${why}` };
   }
-  const url = `${site}/data/index.v5.json`;
+  const url = `${site}/data/index.v6.json`;
   let live;
   try {
     const response = await fetchImpl(url);

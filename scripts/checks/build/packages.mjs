@@ -1,5 +1,5 @@
 // 3. No Supabase client: the public page reads the published file
-//    (/data/index.v5.json and the lines), so no module from @supabase may
+//    (/data/index.v6.json and the lines), so no module from @supabase may
 //    reach it: tens of kB gzipped a commuter does not download, and a
 //    database the public never touches. The live-table readers live in src/features/studio/data (live.ts and hotspots-read.ts), which
 //    ESLint (import-x/no-restricted-paths) keeps out of the public shell and its features by

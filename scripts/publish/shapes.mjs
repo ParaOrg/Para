@@ -17,8 +17,10 @@ export const INDEX_V2_SCHEMA = 2;
 export const INDEX_V3_SCHEMA = 3;
 /** The index with every line but no loops: fixed. */
 export const INDEX_V4_SCHEMA = 4;
-/** The index the app reads now, loops in: its own MAP_FILE_SCHEMA. */
-export const INDEX_V5_SCHEMA = MAP_FILE_SCHEMA;
+/** The index with every line but the EDSA Carousel, loops in: fixed. */
+export const INDEX_V5_SCHEMA = 5;
+/** The index the app reads now, the EDSA Carousel in: its own MAP_FILE_SCHEMA. */
+export const INDEX_V6_SCHEMA = MAP_FILE_SCHEMA;
 
 /** Says why a file cannot be published. The publish prints it and stops. */
 export class ShapeError extends Error {}
@@ -49,14 +51,15 @@ export function withoutLoops({ variants, stops, links }) {
   };
 }
 
-/** Whether a published direction or stop is the EDSA Carousel's, which no shape holds yet (BUSWAY). */
+/** Whether a published direction or stop is the EDSA Carousel's, which shapes 1 to 5 never hold (BUSWAY). */
 const isBuswayRow = (row) =>
   BUSWAY.modes.includes(row.route?.mode) || BUSWAY.lines.includes(row.line);
 
 /**
- * Every shape's rows from the whole map, the EDSA Carousel left out of all of them (BUSWAY).
- * Throws if any of shapes 1 to 4 would still hold a loop, or any shape the Carousel: an installed
- * app reading one would refuse the whole map (the same row, in a file it has no schema for).
+ * Every shape's rows from the whole map: shape 6 all of it, shape 5 without the EDSA Carousel
+ * (BUSWAY), shape 4 without the loops too. Throws if any of shapes 1 to 4 would still hold a loop,
+ * or any of shapes 1 to 5 the Carousel: an installed app reading one would refuse the whole map
+ * (the same row, in a file it has no schema for).
  */
 export function shapesOf(all) {
   const v5 = withoutLines(all, BUSWAY);
@@ -82,7 +85,7 @@ export function shapesOf(all) {
       );
     }
   }
-  return { v5, v4, v3, old };
+  return { v6: all, v5, v4, v3, old };
 }
 
 /**
@@ -140,17 +143,18 @@ export function stampFile(schema, publishedAt, rows) {
  * later shape leaves the earlier files as they were.
  */
 export function buildFiles(all, publishedAt, indexContext) {
-  const { v5, v4, v3, old } = shapesOf(all);
+  const { v6, v5, v4, v3, old } = shapesOf(all);
   const body = { variants: old.variants, stops: old.stops, links: old.links };
+  const revisions = indexContext?.sourceRevisions
+    ? { source_revisions: indexContext.sourceRevisions }
+    : {};
   return {
-    left: { v4, v3, old },
+    left: { v5, v4, v3, old },
     map: stampFile(MAP_SCHEMA, publishedAt, body),
     v2: stampFile(INDEX_V2_SCHEMA, publishedAt, indexRowsOf(old, indexContext)),
     v3: stampFile(INDEX_V3_SCHEMA, publishedAt, indexRowsOf(v3, indexContext)),
     v4: stampFile(INDEX_V4_SCHEMA, publishedAt, indexRowsOf(v4, indexContext)),
-    v5: stampFile(INDEX_V5_SCHEMA, publishedAt, {
-      ...indexRowsOf(v5, indexContext),
-      ...(indexContext?.sourceRevisions ? { source_revisions: indexContext.sourceRevisions } : {}),
-    }),
+    v5: stampFile(INDEX_V5_SCHEMA, publishedAt, { ...indexRowsOf(v5, indexContext), ...revisions }),
+    v6: stampFile(INDEX_V6_SCHEMA, publishedAt, { ...indexRowsOf(v6, indexContext), ...revisions }),
   };
 }

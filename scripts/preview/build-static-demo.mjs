@@ -12,7 +12,7 @@ for (const table of ['route', 'route_variant', 'route_stop', 'stop', 'draft']) {
   seed[table] = await response.json();
 }
 seed.published = JSON.parse(
-  readFileSync('/tmp/para-review-publish/public/data/index.v5.json', 'utf8'),
+  readFileSync('/tmp/para-review-publish/public/data/index.v6.json', 'utf8'),
 );
 seed.publishedLines = Object.fromEntries(
   seed.published.variants.map((direction) => [

@@ -22,8 +22,8 @@ Ground-truthed jeepney routes for Metro Manila, on a map anyone can open.
 ## Three pages, one published map
 
 **`/` is the public map.** It never asks the database: it reads the published
-map, `public/data/index.v5.json` — every route (loops too) and hotspot, the train lines
-and the ferry with their stations, each line as an overview — and a direction's full line from `public/data/lines/` when it is
+map, `public/data/index.v6.json` — every route (loops too) and hotspot, the train lines,
+the ferry and the EDSA Carousel with their stations, each line as an overview — and a direction's full line from `public/data/lines/` when it is
 lit, all published from the live tables and committed here, and draws every direction of every route, the hotspots (terminals and
 hintuans, where people board), and where a direction passes a hintuan its
 line turns orange for that stretch. A tap on a line or a box opens a card; a
@@ -170,7 +170,7 @@ OFL 1.1. The map keeps "© OpenMapTiles" and "© OpenStreetMap contributors".
 | `src/shared/` | what knows no feature: `ui/` (the bottom sheet, its gesture, the icons), `hooks/` (dialog focus, escape, a child's turn), `utils/` (coordinate maths), `lib/` (the TanStack Query client), `config/` (the basemap host) and `types/` (the database types Supabase generates) |
 | `src/styles/` | `global.css`, the one stylesheet: Tailwind, then the design system's tokens and fonts |
 | `src/design-system/` | the tokens, fonts and primitives (foundation ← primitives) |
-| `public/data/` | the published map, every version kept in history: `index.v5.json` (what the app reads), a line per direction in `lines/` (with its orange stretches, worked out as it is published), and for apps not yet updated `index.v4.json` (without loops), `index.v3.json` (without the ferry either), `index.json` and the older single file `map.json` (without any line) |
+| `public/data/` | the published map, every version kept in history: `index.v6.json` (what the app reads), a line per direction in `lines/` (with its orange stretches, worked out as it is published), and for apps not yet updated `index.v5.json` (without the EDSA Carousel), `index.v4.json` (without loops either), `index.v3.json` (without the ferry either), `index.json` and the older single file `map.json` (without any line) |
 | `supabase/migrations/` | the schema and its policies, in order |
 | `supabase/functions/` | Edge Functions, which hold the secrets a page must not: `waitlist` saves an email from `/app/` and sends its confirmation through Resend |
 | `scripts/` | tools: the build guards and the data check (`checks/`), the publish (`publish/`), Node's TypeScript hook (`node/`), the monthly map-tiles build (`tiles/`), the research screenshots and the cheap-phone timer, `phone-speed.mjs` with its parts, and the load test of the map and its tiles, `load-test.mjs`, run by hand only (`research/`), the icons' lossless PNG recompressor, `recompress-png.mjs` (`assets/`) |

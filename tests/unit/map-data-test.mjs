@@ -25,7 +25,7 @@ import { fileURLToPath } from 'node:url';
  */
 const published = () => {
   const { file, problems } = readPublished(
-    fileURLToPath(new URL('../../public/data/index.v5.json', import.meta.url)),
+    fileURLToPath(new URL('../../public/data/index.v6.json', import.meta.url)),
   );
   assert.deepEqual(problems, []);
   return file;
@@ -463,7 +463,7 @@ test('step 13: a line file without stretches is checked as before', () => {
 });
 
 // The owner's answer to question T of the cheap-phone report (2026-10-06):
-// against the index the app reads (MAP_FILE_SCHEMA's, index.v5.json), which
+// against the index the app reads (MAP_FILE_SCHEMA's, index.v6.json), which
 // the publish writes every line file's stretches against, stretches the app
 // will not take — under another key, a stale or a tampered one, or
 // unreadable — are a warning, so the nightly run opens the owner's issue
@@ -560,11 +560,11 @@ test("T: the report lists the publish's warning under a heading of its own, the 
 
 test("T: the committed map gives no warning of its line files' stretches", () => {
   // They carried none when this was written (2026-10-06); the next publish
-  // writes them against index.v5.json's own hintuans, as the next test does.
+  // writes them against index.v6.json's own hintuans, as the next test does.
   // A change that bumps PASS_RULE (src/features/routes/model/line-pass.ts) once they
   // carry some keys them all anew: until the nightly publish writes them
   // again, the app works their stretches out itself, and this says so.
-  for (const name of ['index.v5.json', 'index.v4.json', 'index.v3.json', 'index.json']) {
+  for (const name of ['index.v6.json', 'index.v4.json', 'index.v3.json', 'index.json']) {
     const { file, problems } = readPublished(
       fileURLToPath(new URL(`../../public/data/${name}`, import.meta.url)),
     );
@@ -587,8 +587,8 @@ test('T: a copy of public/data written as the next publish writes it gives no wa
       return file;
     };
     const check = (name) => checkMapData(read(name));
-    const index = read('index.v5.json');
-    assert.equal(index.schema, MAP_FILE_SCHEMA, 'index.v5.json is the index the app reads');
+    const index = read('index.v6.json');
+    assert.equal(index.schema, MAP_FILE_SCHEMA, 'index.v6.json is the index the app reads');
     const drawn = index.directions.filter((v) => v.shape);
     const writeAll = (boxes) => {
       for (const v of drawn)
@@ -598,11 +598,11 @@ test('T: a copy of public/data written as the next publish writes it gives no wa
     const boxes = passBoxes(index.hotspots);
     writeAll(boxes);
     assert.ok(
-      read('index.v5.json')
+      read('index.v6.json')
         .directions.filter((v) => v.shape)
         .every((v) => typeof v.passKey === 'string' && Array.isArray(v.pass)),
     );
-    const fresh = check('index.v5.json');
+    const fresh = check('index.v6.json');
     assert.deepEqual(fresh.problems, []);
     assert.deepEqual(passWarning(fresh), []);
     assert.deepEqual(passNote(fresh), []);
@@ -617,7 +617,7 @@ test('T: a copy of public/data written as the next publish writes it gives no wa
     const path = join(dir, 'lines', `${one.id}.json`);
     const written = readFileSync(path, 'utf8');
     writeFileSync(path, JSON.stringify({ ...JSON.parse(written), passKey: 'tampered' }) + '\n');
-    const tampered = check('index.v5.json');
+    const tampered = check('index.v6.json');
     assert.deepEqual(tampered.problems, []);
     assert.equal(passWarning(tampered).length, 1);
     assert.match(
@@ -631,7 +631,7 @@ test('T: a copy of public/data written as the next publish writes it gives no wa
     assert.deepEqual(passWarning(olderTampered), []);
     assert.equal(passNote(olderTampered).length, 1, 'against shape 3, a note');
     writeFileSync(path, written);
-    assert.deepEqual(passWarning(check('index.v5.json')), []);
+    assert.deepEqual(passWarning(check('index.v6.json')), []);
 
     // Stale: every line file kept from a publish before a hintuan that line reaches moved 3 m east.
     const hintuan = boxesReached(one, one.shape.coordinates, boxes)[0].hotspot;
@@ -650,7 +650,7 @@ test('T: a copy of public/data written as the next publish writes it gives no wa
       'its key is another',
     );
     writeAll(beforeBoxes);
-    const stale = check('index.v5.json');
+    const stale = check('index.v6.json');
     assert.deepEqual(stale.problems, []);
     assert.equal(passWarning(stale).length, 1);
     assert.match(
@@ -720,6 +720,22 @@ test('a loop in a file older than shape 5 is a problem; the older indexes must b
       `shape ${schema}: ${r.problems.join(' | ')}`,
     );
   }
+});
+
+test('a loop in shape 5 is no problem: shape 5 still holds the loops beside shape 6', () => {
+  assert.deepEqual(checkMapData(loopMap({ schema: 5 })).problems, []);
+});
+
+test('an EDSA Carousel route in a file older than shape 6 is a problem; in shape 6 it is not', () => {
+  const carousel = (schema) =>
+    checkMapData({
+      ...good(),
+      schema,
+      variants: good().variants.map((v) => ({ ...v, route: { ...v.route, mode: 'busway' } })),
+    }).problems.filter((p) => /EDSA Carousel route in a shape/.test(p));
+  for (const schema of [2, 3, 4, 5])
+    assert.equal(carousel(schema).length > 0, true, `shape ${schema}`);
+  assert.deepEqual(carousel(6), []);
 });
 
 test('a loop with a way back, or a second direction, is a problem; one with a single place is a warning', () => {

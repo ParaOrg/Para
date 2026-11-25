@@ -2,7 +2,7 @@
 // (directionRowName, src/features/routes/model/row-name.ts), and the route cards
 // list their rows by it (departures, src/features/routes/model/departures.ts).
 // The two parts come apart too (directionRowParts), and joined they read the
-// same words, for every direction in the published map (public/data/index.v5.json).
+// same words, for every direction in the published map (public/data/index.v6.json).
 //
 //   node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs tests/unit/direction-row-name-test.mjs
 import { test } from 'node:test';
@@ -109,7 +109,7 @@ test('the place and the via come apart: no via, a blank one and a loop give null
 });
 
 test('joined, the parts read as the rows did, for every published direction', () => {
-  const url = new URL('../../public/data/index.v5.json', import.meta.url);
+  const url = new URL('../../public/data/index.v6.json', import.meta.url);
   const { directions } = readIndexFile(JSON.parse(readFileSync(url, 'utf8')), url.href);
   assert.ok(directions.length > 0, 'the published map has directions');
   // The row's words as they were before the parts came apart.

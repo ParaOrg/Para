@@ -59,7 +59,7 @@ Each says what you'd see, the first check, and the fix. When the alert workflow 
 ### The map is blank
 
 - **You'd see:** `www.para-commute.org` loads with no map, or no page at all.
-- **First check:** the `para` Worker in Cloudflare (Workers & Pages → `para` → Deployments): did the last deploy fail? Then open `https://www.para-commute.org/data/index.v5.json`: JSON, or the page's HTML?
+- **First check:** the `para` Worker in Cloudflare (Workers & Pages → `para` → Deployments): did the last deploy fail? Then open `https://www.para-commute.org/data/index.v6.json`: JSON, or the page's HTML?
 - **Fix:** a bad deploy: roll back to the previous version under Deployments. A missing or broken index: see "A publish failed". A Workers route gone: the zone's Workers Routes must list `www.para-commute.org/*` → `para`.
 
 ### The street map is blank but routes show (the tiles)
@@ -71,7 +71,7 @@ Each says what you'd see, the first check, and the fix. When the alert workflow 
 ### The published map is stale
 
 - **You'd see:** an approved change isn't on the map the next day; the map shows "Not refreshed" (`features/published-map/notices.tsx`).
-- **First check:** `published_at` in `https://www.para-commute.org/data/index.v5.json`, then the Publish map runs in GitHub Actions and the open issue "The map needs a look".
+- **First check:** `published_at` in `https://www.para-commute.org/data/index.v6.json`, then the Publish map runs in GitHub Actions and the open issue "The map needs a look".
 - **Fix:** if the schedule was turned off (60 days without commits), turn it back on in Actions. If runs fail, see "A publish failed". If runs pass with "The map is unchanged", the change was not approved yet (ADR 0003).
 
 ### A publish failed
@@ -83,7 +83,7 @@ Each says what you'd see, the first check, and the fix. When the alert workflow 
 ### A publish didn't deploy
 
 - **You'd see:** the issue "Alert: a publish did not reach the live site". The nightly publish pushed a new map to `main` over 2 hours ago, and `www.para-commute.org` still serves the one before. The Publish map run itself is green: its job ends at the push.
-- **First check:** Cloudflare → Workers & Pages → `para` → Deployments. Is the latest build for `main` failed, or missing? Compare `published_at` in `https://www.para-commute.org/data/index.v5.json` with the same file on `main` in GitHub.
+- **First check:** Cloudflare → Workers & Pages → `para` → Deployments. Is the latest build for `main` failed, or missing? Compare `published_at` in `https://www.para-commute.org/data/index.v6.json` with the same file on `main` in GitHub.
 - **Fix:** a failed build: read its log, then Retry deployment. No build at all: check that Workers Builds is still connected to the repository (Settings → Builds). Commuters keep the earlier map meanwhile, so nothing is lost; the issue closes itself once the live map matches `main`.
 
 ### A backup failed

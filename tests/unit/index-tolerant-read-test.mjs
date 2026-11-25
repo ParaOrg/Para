@@ -14,9 +14,9 @@ import { MAP_FILE_SCHEMA } from '../../src/features/routes/published/map-file.ts
 import { parseIndex } from '../../src/features/routes/published/parse-index.ts';
 
 const published = JSON.parse(
-  readFileSync(new URL('../../public/data/index.v5.json', import.meta.url), 'utf8'),
+  readFileSync(new URL('../../public/data/index.v6.json', import.meta.url), 'utf8'),
 );
-const URL_ = '/data/index.v5.json';
+const URL_ = '/data/index.v6.json';
 const read = (file) => parseIndex(file, URL_, MAP_FILE_SCHEMA, 'skip');
 /** As a copy kept from an earlier visit is read: one unreadable row refuses it. */
 const readStored = (file) => parseIndex(file, URL_, MAP_FILE_SCHEMA);

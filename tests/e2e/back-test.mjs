@@ -23,7 +23,7 @@ const NO_TILES = !!process.env.PARA_NO_TILES;
 const { check, tally } = harness();
 
 // ------------------------------------------------------------------ the fixture
-const published = JSON.parse(readFileSync('public/data/index.v5.json', 'utf8'));
+const published = JSON.parse(readFileSync('public/data/index.v6.json', 'utf8'));
 const SCHEMA = Number(
   /MAP_FILE_SCHEMA = (\d+);/.exec(
     readFileSync('src/features/routes/published/map-file.ts', 'utf8'),

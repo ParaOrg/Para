@@ -71,7 +71,7 @@ test('the site fails on an error, on another page, or on a lost redirect', async
 });
 
 test('the published map passes when its index answers and parses, whatever its age', async () => {
-  const url = 'https://www.para-commute.org/data/index.v5.json';
+  const url = 'https://www.para-commute.org/data/index.v6.json';
   const old = fakeFetch({ [url]: { body: '{"published_at":"2026-10-01T00:00:00Z"}' } });
   assert.equal((await checkPublishedMap(old.fetchImpl)).ok, true);
   const html = fakeFetch({ [url]: { body: '<html>' } });
@@ -192,7 +192,7 @@ test("the watch's own last run: on time under 45 minutes, a gap over it, nothing
 });
 
 // -------------------------------------------------- a publish that did not deploy
-const LIVE_INDEX = 'https://www.para-commute.org/data/index.v5.json';
+const LIVE_INDEX = 'https://www.para-commute.org/data/index.v6.json';
 const liveAt = (publishedAt) =>
   fakeFetch({ [LIVE_INDEX]: { body: JSON.stringify({ published_at: publishedAt }) } });
 /** GitHub as the watch asks it: main's index, and when main last took a commit to it. */

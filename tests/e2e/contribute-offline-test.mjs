@@ -295,7 +295,7 @@ try {
     await page.evaluate(
       async () =>
         !!navigator.serviceWorker.controller &&
-        (await fetch('/data/index.v5.json').then(
+        (await fetch('/data/index.v6.json').then(
           () => false,
           () => true,
         )),

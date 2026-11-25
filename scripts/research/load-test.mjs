@@ -18,7 +18,7 @@
 // in a cloud container; on a home connection leave it out.
 //
 // Each visit fetches what a first visit fetches: the page, the scripts and
-// styles it names, /data/index.v5.json and two or three line files from the
+// styles it names, /data/index.v6.json and two or three line files from the
 // site; then the positron style (the default basemap) and 29 tiles around one
 // hotspot from the published index, 2×2 at zoom 12, 3×3 at 13 and 4×4 at 14, from
 // the tiles host, at the address the style gives. The archive stops at zoom 14
@@ -183,7 +183,7 @@ function pageFiles(html) {
 async function loadIndex() {
   // Read once before the clock starts, and kept out of the visits' numbers.
   const page = await timedGet('setup', `${site}/`);
-  const index = await timedGet('setup', `${site}/data/index.v5.json`);
+  const index = await timedGet('setup', `${site}/data/index.v6.json`);
   if (!page?.response.ok || !index?.response.ok) {
     throw new Error(`The site did not serve its page and index: ${site}`);
   }
@@ -210,7 +210,7 @@ async function visit({ files, spots, directionIds, tiles }) {
   const siteUrls = [
     `${site}/`,
     ...files,
-    `${site}/data/index.v5.json`,
+    `${site}/data/index.v6.json`,
     ...lines.map((id) => `${site}/data/lines/${id}.json`),
   ];
   await inBatches(siteUrls, (url) => timedGet('site', url));

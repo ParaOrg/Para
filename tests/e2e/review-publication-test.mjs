@@ -43,7 +43,7 @@ assert.equal(
 const publish = async () =>
   assert.ok((await fetch(`${BASE}/preview-admin/publish`, { method: 'POST' })).ok);
 const snapshot = async () =>
-  indexSchema.parse(await (await fetch(`${BASE}/data/index.v5.json`)).json());
+  indexSchema.parse(await (await fetch(`${BASE}/data/index.v6.json`)).json());
 const subject = async () => {
   const [row] = await api(`stop?id=eq.${id}`);
   return {

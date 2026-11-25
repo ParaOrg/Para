@@ -45,7 +45,7 @@ const LAYER = {
   routesHit: 'saved-routes-hit',
 };
 
-const index = JSON.parse(readFileSync('public/data/index.v5.json', 'utf8'));
+const index = JSON.parse(readFileSync('public/data/index.v6.json', 'utf8'));
 
 const browser = await chromium.launch();
 

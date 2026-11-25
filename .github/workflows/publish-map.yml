@@ -3,10 +3,10 @@
 #
 # Runs scripts/publish/publish-map.mjs, which reads the public tables with the
 # publishable key committed in .env.production and writes public/data/: the
-# index the public map reads (index.v5.json, with the trains, the ferry and
-# the loops), the indexes older installed apps read (index.v4.json without
-# the loops, index.v3.json without the ferry too, index.json without any
-# line), a line file per direction, and, for one release after the index
+# index the public map reads (index.v6.json, with the trains, the ferry, the
+# loops and the EDSA Carousel), the indexes older installed apps read
+# (index.v5.json without the Carousel, index.v4.json without the loops too,
+# index.v3.json without the ferry too, index.json without any line), a line file per direction, and, for one release after the index
 # shipped, the old single file map.json, without any line too.
 # Then scripts/checks/check-map-data.mjs reads the indexes back: a problem the app
 # could not show honestly (a link to a hotspot that is not there, a route
@@ -145,14 +145,15 @@ jobs:
       - name: Check the map data
         run: node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs scripts/checks/check-map-data.mjs --markdown "$RUNNER_TEMP/data.md" 2>&1 | tee "$RUNNER_TEMP/check.log"
 
-      # The indexes older installed apps still read, without the loops
-      # (shape 4), the ferry too (shape 3) or any line (shape 2): their
-      # problems fail the run too (a route ending at a station would lose its
-      # end, a loop in shape 4 would blank every installed app). Their
-      # warnings are the new index's, already reported above.
+      # The indexes older installed apps still read, without the EDSA
+      # Carousel (shape 5), the loops too (shape 4), the ferry too (shape 3)
+      # or any line (shape 2): their problems fail the run too (a route ending
+      # at a station would lose its end, a loop in shape 4 or the Carousel in
+      # shape 5 would blank every installed app). Their warnings are the new
+      # index's, already reported above.
       - name: Check the older indexes
         run: |
-          for f in public/data/index.v4.json public/data/index.v3.json public/data/index.json; do
+          for f in public/data/index.v5.json public/data/index.v4.json public/data/index.v3.json public/data/index.json; do
             node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs scripts/checks/check-map-data.mjs "$f" 2>&1 | tee -a "$RUNNER_TEMP/check.log"
           done
 
@@ -212,7 +213,7 @@ jobs:
           # Staging's ruleset (docs/agents/staging-protection.md), once on,
           # must list the deploy key as a bypass actor, as main's does, or
           # this push is refused.
-          published_paths=(public/data/map.json public/data/index.json public/data/index.v3.json public/data/index.v4.json public/data/index.v5.json public/data/lines public/data/signboards)
+          published_paths=(public/data/map.json public/data/index.json public/data/index.v3.json public/data/index.v4.json public/data/index.v5.json public/data/index.v6.json public/data/lines public/data/signboards)
           published="$(git rev-parse HEAD)"
           removed="$(git diff --name-only --diff-filter=D HEAD~1 HEAD -- "${published_paths[@]}" 2>/dev/null || true)"
           [ "$is_changed" = true ] || removed=""
