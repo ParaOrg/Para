@@ -27,6 +27,8 @@ interface TripCardExtrasProps {
   onEdit: () => void;
   /** Extend, offered only for a drawn direction. */
   onExtend?: () => void;
+  /** "Draw the return trip", offered only while the other way is an undrawn slot. */
+  onDrawOtherWay?: () => void;
   onDelete: () => void;
   onSignboardsChanged: () => void;
 }
@@ -44,6 +46,7 @@ export function TripCardExtras({
   notice,
   onEdit,
   onExtend,
+  onDrawOtherWay,
   onDelete,
   onSignboardsChanged,
 }: TripCardExtrasProps) {
@@ -58,6 +61,7 @@ export function TripCardExtras({
               onEdit={onEdit}
               onDelete={onDelete}
               onExtend={onExtend}
+              onDrawOtherWay={onDrawOtherWay}
             />
           ) : (
             notice

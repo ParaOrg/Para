@@ -108,6 +108,21 @@ export const EditorDrawn: Story = {
     await expect(args.onEdit).toHaveBeenCalled();
     await expect(canvas.getByRole('button', { name: /Extend/ })).toBeVisible();
     await expect(canvas.getByRole('button', { name: /Delete/ })).toBeVisible();
+    await expect(canvas.queryByRole('button', { name: 'Draw the return trip' })).toBeNull();
+  },
+};
+
+/**
+ * An editor on a drawn direction whose way back is not drawn yet: "Draw the return trip" beside
+ * Edit, Extend and Delete, starting the drawing ⇅ on the ends card starts too.
+ */
+export const EditorOtherWayUndrawn: Story = {
+  args: { onDrawOtherWay: fn() },
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole('button', { name: 'Draw the return trip' }));
+    await expect(args.onDrawOtherWay).toHaveBeenCalledOnce();
+    await expect(canvas.getByRole('button', { name: /Extend/ })).toBeVisible();
   },
 };
 

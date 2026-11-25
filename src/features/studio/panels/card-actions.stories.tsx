@@ -48,6 +48,19 @@ export const DrawnRoute: Story = {
   },
 };
 
+/**
+ * A drawn direction whose other way is still an undrawn slot: "Draw the return trip" too, in
+ * Secondary as Extend is, the row wrapping when the four do not fit.
+ */
+export const OtherWayUndrawn: Story = {
+  args: { onDrawOtherWay: fn() },
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole('button', { name: 'Draw the return trip' }));
+    await expect(args.onDrawOtherWay).toHaveBeenCalledOnce();
+  },
+};
+
 /** A slot, a direction with no line yet: nothing to extend, so no Extend. */
 export const Slot: Story = {
   args: { onExtend: undefined },

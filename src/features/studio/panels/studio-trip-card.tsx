@@ -1,4 +1,5 @@
 import { TripCard } from '@/features/routes/cards/trip-card';
+import { tripFacts } from '@/features/routes/cards/trip-facts';
 import type { useCardCamera } from '@/features/routes/map/use-card-camera';
 import type { useSavedHotspots } from '@/features/routes/map/use-saved-hotspots';
 import type { useSavedRoutes } from '@/features/routes/map/use-saved-routes';
@@ -71,6 +72,9 @@ export function StudioTripCard({
   // Another editor's draft of this route: it can be looked at, not changed.
   const { lock, retry } = useDraftLock('route', direction.routeId);
   const isEditable = canEdit && !lock;
+  // The other way still an undrawn slot: a button says so, as well as ⇅ on the ends card.
+  const canDrawOtherWay =
+    isEditable && tripFacts(direction, saved.directions, timeline).isOtherWayUndrawn;
   return (
     <TripCard
       hasController
@@ -134,6 +138,7 @@ export function StudioTripCard({
                 }
               : undefined
           }
+          onDrawOtherWay={canDrawOtherWay ? onDrawOtherWay : undefined}
           onSignboardsChanged={() => void saved.reload()}
         />
       }
