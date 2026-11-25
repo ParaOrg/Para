@@ -7,23 +7,25 @@ not in it, so a few rows here may already be drafted. Check the studio before dr
 Each row is a jeepney or UV Express terminal that OpenStreetMap has and Para does not: no Para
 terminal hotspot within **300 m** of its point. That is about one long city block. A terminal's OSM
 point can sit on the far side of its block or mall from where Para's box is drawn; past 300 m it is
-plausibly a different terminal. The rule barely changes the count (162 at 150 m, 162 at 300 m, 160
-at 500 m), since Para publishes so few terminals yet. Each row is a likely missing route.
+plausibly a different terminal. The rule barely changes the count, since Para publishes so few
+terminals yet. Each row is a likely missing route.
 
-**How it was made** (read-only, 2026-11-25, `.scratch/terminals` plan as approved):
+**How it was made** (2026-11-25, `.scratch/terminals` plan as approved): from
+`public/data/terminals.v1.json`, whose rules are `scripts/terminals/terminal-file.mjs`:
 - **Source:** Para's copy of the OpenStreetMap Philippines extract of 2026-11-23, cut to the map's
   panning box. © OpenStreetMap contributors, ODbL.
-- **Candidates:** every `amenity=bus_station`, `public_transport=station` (not rail, subway or
-  ferry), or name with "Terminal".
+- **Candidates:** every `amenity=bus_station` or `jeepney_station`, `public_transport=station`
+  (not rail, subway or ferry), or name with "Terminal".
 - **Dropped:** `amenity=taxi`, `highway=bus_stop`, and names with tricycle, TODA, pedicab, taxi,
-  ferry, boat, airport, cargo, truck, school bus, parking, depot, garage or motor pool.
+  ferry, boat, airport, cargo, truck, school bus, parking, depot, garage, motor pool or stop.
 - **Jeepney:** a name with jeep, jeepney, e-jeep or PUJ, or the tags `jeepney=yes`, `bus=jeep`,
   `amenity=jeepney_station` or `share_taxi=yes`.
-- **UV Express:** a name with UV, U.V., UV Express, FX or "passenger van", or `minibus=yes`.
+- **UV Express:** a name with UV, U.V., UV Express, FX or "passenger van", or `minibus=yes`. A
+  terminal named for both is listed as a jeepney terminal.
 - **Duplicates:** a terminal mapped twice (a node and a way, same name within 150 m) is one row.
 - **Area:** the nearest barangay in Para's landmark file, to group rows. It is not an address.
 
-162 terminals: 116 jeepney, 48 UV Express (2 are both).
+167 terminals: 121 jeepney, 46 UV Express.
 
 | Area (nearest barangay) | Name | Kind | Lat, lng | OSM |
 | --- | --- | --- | --- | --- |
@@ -33,9 +35,10 @@ at 500 m), since Para publishes so few terminals yet. Each row is a likely missi
 | Alabang | South Station Jeepney/Multicab Terminal | Jeepney | 14.41995, 121.04366 | [w791937370](https://www.openstreetmap.org/way/791937370) |
 | Alabang | UV Express | UV Express | 14.41799, 121.04191 | [n5132486689](https://www.openstreetmap.org/node/5132486689) |
 | Alabang | UV Express Terminal | UV Express | 14.42112, 121.04349 | [w791937372](https://www.openstreetmap.org/way/791937372) |
-| Alangilan | Jeepney/UV Express Terminal | Jeepney + UV Express | 13.78954, 121.06144 | [w776662537](https://www.openstreetmap.org/way/776662537) |
+| Alangilan | Jeepney/UV Express Terminal | Jeepney | 13.78954, 121.06144 | [w776662537](https://www.openstreetmap.org/way/776662537) |
 | Almanza Dos | North Springville Yellow Multicab Terminal | UV Express | 14.39213, 120.99507 | [w1340478604](https://www.openstreetmap.org/way/1340478604) |
 | Almanza Uno | SM Transport Terminal | Jeepney | 14.43324, 121.01262 | [w632555192](https://www.openstreetmap.org/way/632555192) |
+| Almanza Uno | Southmall to Molino Jeepney Station | Jeepney | 14.43521, 121.01083 | [n2562838812](https://www.openstreetmap.org/node/2562838812) |
 | Apolonio Samson | Balintawak Cloverleaf Jeepney Station | Jeepney | 14.65632, 121.00472 | [w121783517](https://www.openstreetmap.org/way/121783517) |
 | Aranan Creek | Centris UV Express FX Terminal | UV Express | 14.64414, 121.03891 | [w773124869](https://www.openstreetmap.org/way/773124869) |
 | Bagong Pag-asa | Trinoma PUJ Terminal | Jeepney | 14.65451, 121.03359 | [w1573396831](https://www.openstreetmap.org/way/1573396831) |
@@ -51,6 +54,8 @@ at 500 m), since Para publishes so few terminals yet. Each row is a likely missi
 | Barangay 159 | PUC-Blumentritt Jeepney Terminal | Jeepney | 14.68047, 121.00951 | [n4271992789](https://www.openstreetmap.org/node/4271992789) |
 | Barangay 172 | Vicas UV Terminal | UV Express | 14.74485, 121.03484 | [n4954893423](https://www.openstreetmap.org/node/4954893423) |
 | Barangay 176-C | Tungko - Licao Licao Jeepney station | Jeepney | 14.78979, 121.07536 | [n4800807748](https://www.openstreetmap.org/node/4800807748) |
+| Barangay 176-C | Tungko - San Jose Jeepney Station | Jeepney | 14.78908, 121.07523 | [n3189049330](https://www.openstreetmap.org/node/3189049330) |
+| Barangay 176-C | Tungko to Muzon Terminal | Jeepney | 14.78938, 121.07383 | [n3604176376](https://www.openstreetmap.org/node/3604176376) |
 | Barangay 176-D | Francisco Homes Jeepney Terminal | Jeepney | 14.80892, 121.05866 | [n4218561789](https://www.openstreetmap.org/node/4218561789) |
 | Barangay 176-E | Muzon-Santa Maria Jeepney Terminal | Jeepney | 14.80290, 121.03288 | [n2091205724](https://www.openstreetmap.org/node/2091205724) |
 | Barangay 176-E | Muzon-Tungko Jeepney Terminal | Jeepney | 14.80086, 121.03620 | [n6237417988](https://www.openstreetmap.org/node/6237417988) |
@@ -141,10 +146,12 @@ at 500 m), since Para publishes so few terminals yet. Each row is a likely missi
 | Poblacion Barangay 1 | Uptown UV Express Terminal | UV Express | 13.94265, 121.15346 | [w901823403](https://www.openstreetmap.org/way/901823403) |
 | Rosario | UV Exp - Market Market | UV Express | 14.58984, 121.09714 | [n3914069658](https://www.openstreetmap.org/node/3914069658) |
 | Sabang | Malabanan Jeepney Terminal | Jeepney | 13.97053, 121.16571 | [n4082512105](https://www.openstreetmap.org/node/4082512105) |
-| Sagad | UV Expresss Terminal | UV Express | 14.56015, 121.08064 | [n2043116606](https://www.openstreetmap.org/node/2043116606) |
+| Sagad | UV Expresss Terminal | UV Express | 14.56016, 121.08064 | [n2043116606](https://www.openstreetmap.org/node/2043116606) |
 | Sambong | Jeepney Terminal | Jeepney | 14.05184, 120.93322 | [n9941691481](https://www.openstreetmap.org/node/9941691481) |
 | San Agustin 1 | DVDOTSC Pala-Pala Modern Jeepney Terminal | Jeepney | 14.30174, 120.95391 | [n5580317585](https://www.openstreetmap.org/node/5580317585) |
 | San Agustin 1 | PERJODA Pala-pala Modern Jeepney Terminal | Jeepney | 14.30160, 120.95394 | [n13921530724](https://www.openstreetmap.org/node/13921530724) |
+| San Antonio | Floridablanca Terminal | Jeepney | 14.97067, 120.60377 | [n2521902909](https://www.openstreetmap.org/node/2521902909) |
+| San Antonio | SM City Pampanga- Golangco Terminal | Jeepney | 14.97014, 120.60547 | [n2521919787](https://www.openstreetmap.org/node/2521919787) |
 | San Antonio | UV Express (Pasig-Quiapo) | UV Express | 14.57705, 121.05881 | [n3969690833](https://www.openstreetmap.org/node/3969690833) |
 | San Cristobal | Jeepney Station (bound for San Pablo City) | Jeepney | 14.01619, 121.40101 | [n4760968124](https://www.openstreetmap.org/node/4760968124) |
 | San Cristobal | Jeepney Station (bound for Tiaong, Quezon) | Jeepney | 14.01610, 121.40106 | [n4760964536](https://www.openstreetmap.org/node/4760964536) |
@@ -157,9 +164,9 @@ at 500 m), since Para publishes so few terminals yet. Each row is a likely missi
 | San Juan I | Naic Jeepney Terminal | Jeepney | 14.32186, 120.77060 | [n8528036518](https://www.openstreetmap.org/node/8528036518) |
 | San Lorenzo | UV Express South Bound | UV Express | 14.54915, 121.02553 | [n3267463745](https://www.openstreetmap.org/node/3267463745) |
 | San Lorenzo | UV Express Terminal | UV Express | 14.54937, 121.02555 | [n6227553885](https://www.openstreetmap.org/node/6227553885) |
-| San Martin de Porres | Jeepney Terminal | Jeepney | 14.48603, 121.04112 | [n4691938889](https://www.openstreetmap.org/node/4691938889) |
 | San Martin de Porres | Jeepney Terminal | Jeepney | 14.49322, 121.04067 | [n13685887035](https://www.openstreetmap.org/node/13685887035) |
-| San Martin de Porres | SM Bicutan UV & Jeepney Terminal | Jeepney + UV Express | 14.48817, 121.04367 | [w1149354831](https://www.openstreetmap.org/way/1149354831) |
+| San Martin de Porres | Jeepney Terminal | Jeepney | 14.48603, 121.04112 | [n4691938889](https://www.openstreetmap.org/node/4691938889) |
+| San Martin de Porres | SM Bicutan UV & Jeepney Terminal | Jeepney | 14.48817, 121.04367 | [w1149354831](https://www.openstreetmap.org/way/1149354831) |
 | San Martin de Porres | UV Express | UV Express | 14.48830, 121.04394 | [n3769923291](https://www.openstreetmap.org/node/3769923291) |
 | Santa Clara | Batangas Port Jeepney Terminal | Jeepney | 13.75269, 121.04402 | [n721035147](https://www.openstreetmap.org/node/721035147) |
 | Santa Clara | Jeep Terminal | Jeepney | 14.82284, 120.95368 | [w348076596](https://www.openstreetmap.org/way/348076596) |
