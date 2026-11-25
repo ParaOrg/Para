@@ -1,6 +1,6 @@
 // The route list's filter (src/features/routes/model/mode-filter.ts): All keeps every route; each
-// other option keeps one kind of ride, by vehicle, so a tricycle, P2P and UV Express show under
-// All only.
+// other option keeps one kind of ride (P2P by its route's mode, the rest by vehicle), so a
+// tricycle shows under All only.
 //
 //   node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs tests/unit/mode-filter-test.mjs
 import { test } from 'node:test';
@@ -53,7 +53,9 @@ test('each option keeps its own ride', () => {
     {
       jeep: ['jeep'],
       ejeep: ['ejeep'],
+      uv: ['uv'],
       bus: ['bus'],
+      p2p: ['p2p'],
       lrt: ['lrt1', 'lrt2'],
       mrt: ['mrt3'],
       ferry: ['ferry'],
@@ -61,10 +63,26 @@ test('each option keeps its own ride', () => {
   );
 });
 
-test('a tricycle, P2P and UV Express show under All only', () => {
-  for (const id of ['trike', 'p2p', 'uv'])
-    for (const f of MODE_FILTERS)
-      assert.equal(kept(f).includes(id), f === 'all', `${id} under ${f}`);
+test('a tricycle shows under All only', () => {
+  for (const f of MODE_FILTERS) assert.equal(kept(f).includes('trike'), f === 'all', f);
+});
+
+test("the options in the owner's order", () => {
+  assert.deepEqual(MODE_FILTERS, [
+    'all',
+    'jeep',
+    'ejeep',
+    'uv',
+    'bus',
+    'p2p',
+    'lrt',
+    'mrt',
+    'ferry',
+  ]);
+});
+
+test('jeep, UV Express and bus together keep those three', () => {
+  assert.deepEqual(keptBy(['jeep', 'uv', 'bus']), ['jeep', 'bus', 'uv']);
 });
 
 const keptBy = (picks) => ROUTES.filter((d) => passesModePicks(d, picks)).map((d) => d.id);

@@ -1160,7 +1160,7 @@ if (!RUNS_ONE_OFFS) {
       };
       const before = await listedNow();
       const agree = [];
-      for (const label of ['Jeep', 'E-Jeep', 'Bus', 'LRT', 'MRT', 'Ferry']) {
+      for (const label of ['Jeep', 'E-Jeep', 'UV Express', 'Bus', 'P2P', 'LRT', 'MRT', 'Ferry']) {
         await filterTo(label);
         const listedUnder = await listedNow();
         const litUnder = await until(litNow, (lit) => sameIds(lit, listedUnder));

@@ -2,10 +2,21 @@ import type { Direction } from './routes';
 import { vehicleOf, type Vehicle } from './vehicles';
 
 /**
- * What the route list's filter can narrow it to: every route, or one kind of ride. LRT is both
- * light-rail lines, MRT the metro.
+ * What the route list's filter can narrow it to: every route, or kinds of ride. LRT is both
+ * light-rail lines, MRT the metro. In the owner's order (2026-11-25): the road from the jeep up,
+ * then the rails and the water.
  */
-export const MODE_FILTERS = ['all', 'jeep', 'ejeep', 'bus', 'lrt', 'mrt', 'ferry'] as const;
+export const MODE_FILTERS = [
+  'all',
+  'jeep',
+  'ejeep',
+  'uv',
+  'bus',
+  'p2p',
+  'lrt',
+  'mrt',
+  'ferry',
+] as const;
 export type ModeFilter = (typeof MODE_FILTERS)[number];
 
 /** A filter and its setter, kept by whoever lights the map, so the map and the cards agree. */
@@ -61,30 +72,41 @@ export const MODE_FILTER_LABEL = {
   all: 'All',
   jeep: 'Jeep',
   ejeep: 'E-Jeep',
+  uv: 'UV Express',
   bus: 'Bus',
+  p2p: 'P2P',
   lrt: 'LRT',
   mrt: 'MRT',
   ferry: 'Ferry',
 } satisfies Record<ModeFilter, string>;
 
+/** A direction rides one of these vehicles (vehicleOf). */
+const ridesOneOf =
+  (...kept: readonly Vehicle[]) =>
+  (direction: Direction): boolean => {
+    const vehicle = vehicleOf(direction);
+    return vehicle !== null && kept.includes(vehicle);
+  };
+
 /**
- * The vehicles each option keeps. By vehicle, not by card colour: a tricycle wears Jeep's colours
- * and P2P UV Express's, but neither is a jeep, so they and UV Express show under All only.
+ * What each option keeps. By vehicle, not by card colour: a tricycle wears Jeep's colours but is
+ * no jeep, so it shows under All only. P2P has no vehicle of its own (vehicleOf), so it is kept by
+ * its route's mode.
  */
-const KEPT_VEHICLES = {
-  jeep: ['Jeepney'],
-  ejeep: ['E-Jeep'],
-  bus: ['Bus'],
-  lrt: ['LRT-1', 'LRT-2'],
-  mrt: ['MRT-3'],
-  ferry: ['Ferry'],
-} satisfies Record<Mode, readonly Vehicle[]>;
+const KEPT = {
+  jeep: ridesOneOf('Jeepney'),
+  ejeep: ridesOneOf('E-Jeep'),
+  uv: ridesOneOf('UV Express'),
+  bus: ridesOneOf('Bus'),
+  p2p: (direction) => direction.route?.mode === 'p2p',
+  lrt: ridesOneOf('LRT-1', 'LRT-2'),
+  mrt: ridesOneOf('MRT-3'),
+  ferry: ridesOneOf('Ferry'),
+} satisfies Record<Mode, (direction: Direction) => boolean>;
 
 /** Whether a direction stays listed under these picks: it is a ride of any mode picked. */
 export function passesModePicks(direction: Direction, picks: ModePicks): boolean {
-  if (!isNarrowed(picks)) return true;
-  const vehicle = vehicleOf(direction);
-  return vehicle !== null && picks.some((mode) => KEPT_VEHICLES[mode].some((v) => v === vehicle));
+  return !isNarrowed(picks) || picks.some((mode) => KEPT[mode](direction));
 }
 
 /** Whether a direction stays listed under a filter: a single choice's picks (picksOf). */

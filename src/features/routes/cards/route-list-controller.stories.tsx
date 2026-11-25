@@ -4,7 +4,7 @@ import { expect, fn, userEvent, within } from 'storybook/test';
 
 import { RouteListController } from './route-list-controller';
 import { LIVERIES } from '../model/liveries';
-import type { ModeFilter } from '../model/mode-filter';
+import { MODE_FILTERS, type ModeFilter } from '../model/mode-filter';
 
 interface FilteringProps extends Omit<ComponentProps<typeof RouteListController>, 'modeFilter'> {
   /** The filter it starts on; null: the caller keeps none, so no sliders. */
@@ -146,7 +146,7 @@ export const PickAFilter: Story = {
     await userEvent.click(canvas.getByRole('button', { name: 'Filter' }));
     const card = canvas.getByTestId('mode-filter');
     await expect(card).toBeVisible();
-    await expect(within(card).getAllByRole('radio')).toHaveLength(7);
+    await expect(within(card).getAllByRole('radio')).toHaveLength(MODE_FILTERS.length);
     await userEvent.click(within(card).getByRole('radio', { name: 'Bus' }));
     await expect(args.onFilter).toHaveBeenCalledWith('bus');
     await expect(card).not.toBeVisible();
