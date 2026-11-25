@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 10600924,
+  "kind": "jeepney",
+  "ref": "",
+  "name": "Jeepney Route: The District Dasmariñas → The District Imus",
+  "from": "The District Dasmariñas",
+  "to": "The District Imus",
+  "network": "LTFRB Region IV-A",
+  "operator": "",
+  "version": 27,
+  "last_edit": "2026-06-05",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["stop_entry_only",120.9821,14.36054,"The District Dasmariñas"],["stop",120.9806,14.37167,"Molino Town Center"],["stop_exit_only",120.93886,14.37098,"The District Imus"]],
+  "line": [[120.9821,14.36054],[120.98172,14.36054],[120.98163,14.36702],[120.97957,14.37545],[120.97934,14.37658],[120.97874,14.38053],[120.98013,14.38067],[120.9803,14.3809],[120.98114,14.38131],[120.98064,14.3826],[120.98042,14.3838],[120.9798,14.38546],[120.97953,14.38575],[120.97926,14.38588],[120.97731,14.38618],[120.97475,14.38689],[120.97393,14.38701],[120.97086,14.38784],[120.97059,14.38795],[120.96984,14.38844],[120.96867,14.38879],[120.96823,14.38885],[120.96714,14.38884],[120.96507,14.38837],[120.96365,14.38778],[120.96102,14.38651],[120.96055,14.38613],[120.9601,14.38563],[120.958,14.38253],[120.95741,14.38177],[120.9555,14.37999],[120.95341,14.37825],[120.95259,14.37781],[120.94624,14.37549],[120.94566,14.37512],[120.94443,14.37411],[120.94336,14.37336],[120.94292,14.37324],[120.94145,14.37318],[120.94057,14.37297],[120.9387,14.37178],[120.93863,14.37043],[120.93882,14.37042],[120.93886,14.37052],[120.93886,14.37098]]
+}

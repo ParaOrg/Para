@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 9263595,
+  "kind": "jeepney",
+  "ref": "405",
+  "name": "Nichols–PITX",
+  "from": "Newport City",
+  "to": "PITX",
+  "network": "LTFRB National Capital Region",
+  "operator": "Baclaran Nichols Transport Service Cooperative",
+  "version": 62,
+  "last_edit": "2026-08-06",
+  "clipped": false,
+  "provenance": {"fixme":"incomplete (missing stops)"},
+  "gaps": [],
+  "stops": [["platform",121.013,14.52412,"Plaza 66"]],
+  "line": [[121.01576,14.52214],[121.01464,14.5232],[121.01402,14.52323],[121.0137,14.52339],[121.01265,14.52449],[121.01265,14.52465],[121.01255,14.52484],[121.01173,14.52514],[121.0109,14.52635],[121.01059,14.52669],[121.01036,14.52687],[121.00977,14.52712],[121.00226,14.52836],[121.00169,14.52831],[121.00047,14.52755],[120.99983,14.52741],[120.99594,14.52713],[120.99522,14.52742],[120.99371,14.52733],[120.99359,14.52837],[120.99368,14.52914],[120.99341,14.53213],[120.99323,14.53222],[120.9931,14.53239],[120.99259,14.53724],[120.98885,14.53636],[120.98941,14.53246],[120.99038,14.52408],[120.99012,14.52405],[120.99027,14.52272],[120.9906,14.52249],[120.99077,14.52093],[120.99062,14.51739],[120.99016,14.5137],[120.99005,14.51304],[120.98943,14.51099],[120.991,14.51059],[120.9912,14.51131],[120.99127,14.51225],[120.99143,14.51237],[120.99205,14.5122],[120.99214,14.51213],[120.99192,14.51121]]
+}

@@ -236,6 +236,20 @@ test('the tracked camera: on the fix at the kept zoom, flat, north up', () => {
   assert.equal(view.bearing, 0);
 });
 
+test('the tracked camera keeps the tilt it is given: 3D stays tilted', () => {
+  const view = commuterCamera({
+    camera: 'tracked',
+    fix: locatedAt,
+    turn: null,
+    keptZoom: 16.5,
+    mapBearing: 0,
+    tapped: false,
+    restPitch: 55,
+  });
+  assert.equal(view.pitch, 55);
+  assert.equal(view.bearing, 0);
+});
+
 test('the compass camera: 200 m on the scale bar, tilted, turned the way the phone faces, else as the map is', () => {
   const turned = commuterCamera({
     camera: 'compass',

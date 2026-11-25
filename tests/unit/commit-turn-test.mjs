@@ -162,6 +162,7 @@ function standInMap(log) {
       ),
     getZoom: () => 12,
     getBearing: () => 0,
+    getPitch: () => 0,
     easeTo: (o, e) => {
       log.push(`easeTo ${o.center ? 'commuter' : 'elsewhere'} ${o.duration}`);
       fire('movestart', e);

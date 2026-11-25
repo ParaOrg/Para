@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 11477843,
+  "kind": "jeepney",
+  "ref": "110",
+  "name": "Quirino Highway–UP Town Center",
+  "from": "Quirino Highway",
+  "to": "UP Town Center",
+  "network": "LTFRB National Capital Region",
+  "operator": "Tolfetano Corporation",
+  "version": 41,
+  "last_edit": "2026-08-06",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",121.01979,14.67992,"Crossroad Park"],["platform",121.02148,14.67964,"Dr. Carlos Lanting College"],["platform",121.02368,14.67937,"Magnolia Place"],["platform",121.02614,14.67877,"General Avenue"],["platform",121.02931,14.67824,"Capitol Homesite"],["platform",121.03212,14.6715,"Road 20"],["platform",121.03261,14.67686,"Tandang Sora Intersection"],["platform",121.0353,14.67668,"Banlat Road"],["platform",121.03833,14.67654,"Gremville"],["platform",121.04256,14.67633,"New Yellow Hat Construction Supply"],["platform",121.04453,14.67582,"Savemore Market Visayas Avenue"],["platform",121.04586,14.67518,"RMR Square"],["platform",121.04733,14.67421,"Pasong Tamo Elementary School"],["platform",121.04869,14.67356,"Philand Intersection"],["platform",121.0493,14.67299,"Congressional Avenue"],["platform",121.05062,14.67185,"Cenacle Drive"],["platform",121.05681,14.66778,"Culiat High School"],["platform",121.05799,14.66749,"New Era Elementary School"],["platform",121.06254,14.66629,"Tierra Pura Homes Gate 1"],["platform",121.06649,14.66312,"Tandang Sora Avenue"],["platform",121.06354,14.66117,"Central Avenue"],["platform",121.06375,14.66041,"Central Avenue"],["platform",121.06729,14.66275,"Tandang Sora Avenue"],["platform",121.07319,14.66374,"Luzon Avenue Flyover South"],["platform",121.07577,14.66033,"Capitol Hills"],["platform",121.07415,14.65697,"Magsaysay Avenue"],["platform_exit_only",121.07424,14.6504,"UP Town Center"]],
+  "line": [[121.0198,14.67996],[121.0217,14.67964],[121.02348,14.67946],[121.0253,14.67896],[121.02895,14.6784],[121.03204,14.67712],[121.03195,14.67649],[121.03204,14.673],[121.03217,14.67245],[121.03223,14.67104],[121.03238,14.67029],[121.03254,14.67033],[121.03235,14.67162],[121.03234,14.67236],[121.03244,14.6729],[121.0324,14.67471],[121.03236,14.67641],[121.03221,14.67704],[121.03291,14.67682],[121.03543,14.67672],[121.03783,14.67648],[121.03943,14.67687],[121.03992,14.6769],[121.04049,14.67681],[121.04314,14.67626],[121.04481,14.67581],[121.04524,14.67562],[121.04726,14.67429],[121.04891,14.67349],[121.04886,14.67335],[121.04791,14.67302],[121.04794,14.67291],[121.0491,14.67331],[121.04997,14.67245],[121.05123,14.67144],[121.05312,14.66974],[121.05548,14.66825],[121.05642,14.66794],[121.05992,14.6672],[121.06231,14.66643],[121.06266,14.6663],[121.06375,14.66558],[121.06397,14.66555],[121.06465,14.66567],[121.0654,14.66552],[121.06643,14.66511],[121.06742,14.66458],[121.06799,14.66405],[121.06673,14.66321],[121.06643,14.66292],[121.06351,14.66106],[121.06308,14.66067],[121.0582,14.65744],[121.05821,14.65727],[121.05833,14.65718],[121.05869,14.65726],[121.05914,14.65754],[121.06563,14.66187],[121.06886,14.66395],[121.06961,14.66394],[121.07125,14.66441],[121.07158,14.66444],[121.07266,14.66408],[121.07376,14.66353],[121.07415,14.66319],[121.07492,14.66221],[121.07614,14.65959],[121.0761,14.65941],[121.07597,14.65924],[121.07444,14.65792],[121.07423,14.65762],[121.0743,14.6504]]
+}

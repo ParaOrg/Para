@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 20681582,
+  "kind": "jeepney",
+  "ref": "385",
+  "name": "Del Monte–Quezon Avenue via Banawe",
+  "from": "Del Monte",
+  "to": "Quezon Avenue",
+  "network": "LTFRB National Capital Region",
+  "operator": "Asian Utility Vehicle Operators SM Fairview",
+  "version": 4,
+  "last_edit": "2026-09-12",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",121.00102,14.63741,"Banawe & Linaw"],["platform",121.00125,14.63568,"Banawe & Scout Alcaraz"],["platform",121.00148,14.63398,"Banawe & Malaya"],["platform",121.00215,14.63169,"Banawe & Don Manuel Agregado"],["platform",121.0028,14.63033,"Banawe & Calamba"],["platform",121.0034,14.62907,"Philippine Orthopedic Hospital"],["platform",121.00404,14.62773,"Banawe & Maria Clara"],["platform",121.00456,14.62703,"Banawe & Nicanor Roxas"],["platform",121.00741,14.6246,"NLRC"],["platform_exit_only",121.00766,14.62398,"Banawe & Quezon Avenue"]],
+  "line": [[121.00107,14.63742],[121.00173,14.63271],[121.00425,14.62746],[121.00712,14.62444],[121.00895,14.6261],[121.00978,14.62524],[121.00796,14.62358],[121.00761,14.62394]]
+}

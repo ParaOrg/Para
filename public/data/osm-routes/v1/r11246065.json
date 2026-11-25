@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 11246065,
+  "kind": "jeepney",
+  "ref": "3193",
+  "name": "Pandacan–L. Guinto",
+  "from": "Leon Guinto",
+  "to": "Pandacan",
+  "network": "LTFRB National Capital Region",
+  "operator": "Pandacan Transport Service and Multi-Purpose Cooperative",
+  "version": 24,
+  "last_edit": "2026-08-31",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["stop_entry_only",121.01365,14.59098,"Pandacan Terminal"]],
+  "line": [[120.98849,14.57775],[120.98839,14.5777],[120.98763,14.5791],[120.98891,14.57978],[120.99188,14.58088],[120.99724,14.58171],[120.99722,14.58274],[120.99813,14.58334],[120.99895,14.58419],[121.00212,14.58635],[121.00198,14.58814],[121.00301,14.58959],[121.00391,14.59285],[121.00447,14.59268],[121.00509,14.59213],[121.00559,14.5909],[121.00712,14.59111],[121.00886,14.5911],[121.00962,14.59102],[121.01045,14.59064],[121.01312,14.59114],[121.01352,14.59132],[121.01386,14.59053]]
+}

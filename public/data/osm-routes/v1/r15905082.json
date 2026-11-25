@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 15905082,
+  "kind": "jeepney",
+  "ref": "328",
+  "name": "P. Victorino–Kalentong/JRU",
+  "from": "Hulo PUJ & Tricycle Terminal",
+  "to": "Hulo PUJ & Tricycle Terminal",
+  "network": "LTFRB National Capital Region",
+  "operator": "Mandaluyong Transport Service Cooperative",
+  "version": 12,
+  "last_edit": "2026-08-30",
+  "clipped": false,
+  "provenance": {"source":"survey;maxar","note":"I know the official data says P Victorino to Kalentong JRU, but physical reality on the ground is the jeeps are parked at Hulo - wait there, start their round from there and end their round there."},
+  "gaps": [],
+  "stops": [["stop",121.03197,14.56981,"Hulo PUJ & Tricycle Terminal"]],
+  "line": [[121.03197,14.56981],[121.02899,14.57256],[121.02786,14.57344],[121.02806,14.57439],[121.02807,14.57474],[121.02704,14.5773],[121.02935,14.58144],[121.02728,14.58488],[121.02683,14.5853],[121.02591,14.58598],[121.02518,14.5871],[121.02428,14.5882],[121.02347,14.58936],[121.02424,14.58983],[121.02551,14.59142],[121.02551,14.59157],[121.02595,14.59196],[121.02648,14.59285],[121.02803,14.59219],[121.02895,14.5921],[121.02918,14.59195],[121.0295,14.59251],[121.03432,14.59025],[121.03528,14.58948],[121.0353,14.58925],[121.03551,14.5887],[121.0355,14.58824],[121.03526,14.58699],[121.03317,14.58667],[121.03194,14.58614],[121.02704,14.5773],[121.02807,14.57474],[121.02806,14.57439],[121.02786,14.57344],[121.02905,14.57251],[121.0337,14.56812],[121.0354,14.56987],[121.0362,14.56972],[121.03912,14.56965],[121.03892,14.56987],[121.03851,14.57012],[121.0383,14.57041],[121.03795,14.5703],[121.03761,14.56982],[121.03761,14.56969],[121.0362,14.56972],[121.0354,14.56987],[121.0337,14.56812],[121.03197,14.56981]]
+}

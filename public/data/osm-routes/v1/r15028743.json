@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 15028743,
+  "kind": "jeepney",
+  "ref": "3167",
+  "name": "Malibay–Libertad",
+  "from": "Malibay",
+  "to": "Libertad",
+  "network": "LTFRB National Capital Region",
+  "operator": "Pasay City Transport Service Cooperative Inc.",
+  "version": 14,
+  "last_edit": "2026-09-12",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",121.00828,14.53225,"Malibay"],["platform",121.00863,14.52989,"St. Francis"],["platform",121.00828,14.52771,"St. Peter at Andrews"],["platform",121.00629,14.52776,"PAL Gate 1"],["platform",121.00405,14.52811,"Tramo"],["platform",120.99911,14.52741,"Petron Rotonda"],["platform",120.99728,14.52817,"Quirino & 4 de Julio"],["platform",120.99723,14.52923,"Quirino & Pinaglabanan"],["platform",120.99693,14.53194,"Baclaran Rotonda"],["platform",120.99811,14.53383,"LRT Baclaran Station"],["platform",120.99945,14.53557,"Two Shopping Center"],["platform",121.0008,14.53823,"LRT EDSA Station"],["platform",121.00054,14.53965,"Taft & Vergel"],["platform",120.99992,14.54239,"Taft & Protacio"],["platform",120.99881,14.54731,"LRT Libertad Station"],["platform",120.99791,14.54753,"Victory Pasay Mall"]],
+  "line": [[121.00806,14.53248],[121.00853,14.53206],[121.00916,14.53283],[121.00953,14.53375],[121.00904,14.53404],[121.00864,14.53326],[121.00806,14.53248],[121.00769,14.53205],[121.00705,14.53173],[121.00695,14.53159],[121.00701,14.53134],[121.00846,14.53086],[121.00877,14.53061],[121.00826,14.52739],[121.00259,14.52831],[121.00195,14.52836],[121.00148,14.52822],[121.00047,14.52755],[121.00025,14.52748],[120.9993,14.52735],[120.99716,14.52724],[120.99724,14.52873],[120.9969,14.53153],[120.99689,14.53232],[121.00062,14.53719],[121.00078,14.53798],[121.00073,14.53866],[120.99868,14.5477]]
+}

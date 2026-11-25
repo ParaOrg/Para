@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 337590,
+  "kind": "jeepney",
+  "ref": "",
+  "name": "PUJ: UP Los Baños Kanan",
+  "from": "",
+  "to": "",
+  "network": "PH:PUJ:Laguna",
+  "operator": "",
+  "version": 57,
+  "last_edit": "2025-09-06",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["stop",121.24301,14.16759,"UP Gate"],["stop",121.2414,14.16764,""],["stop",121.2402,14.16712,""],["stop",121.23876,14.16652,""],["stop",121.23858,14.16546,""],["stop",121.23994,14.16369,""],["stop",121.2409,14.16166,""],["stop",121.24091,14.16125,""],["stop",121.24224,14.16143,""],["stop",121.24463,14.16026,""],["stop",121.24501,14.16089,""],["stop",121.24383,14.16267,""],["stop",121.24457,14.16508,""],["stop",121.24369,14.16699,""]],
+  "line": [[121.24332,14.16739],[121.24229,14.168],[121.23862,14.16646],[121.23852,14.16427],[121.23963,14.16415],[121.23974,14.16407],[121.24101,14.16144],[121.24091,14.16125],[121.24096,14.16108],[121.24122,14.16102],[121.2413,14.16086],[121.24241,14.16153],[121.24317,14.16036],[121.24354,14.15988],[121.24368,14.15981],[121.2452,14.16056],[121.24344,14.16337],[121.245,14.16415],[121.24365,14.16713],[121.24332,14.16739]]
+}

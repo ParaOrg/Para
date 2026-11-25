@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 21179894,
+  "kind": "jeepney",
+  "ref": "386",
+  "name": "Del Pan–Guadalupe Ibabaw via Mabini",
+  "from": "Guadalupe Ibabaw",
+  "to": "Del Pan",
+  "network": "LTFRB National Capital Region",
+  "operator": "A. Francisco-Puregold-Hulo Tatawid-Guadalupe Transport Service Cooperative",
+  "version": 3,
+  "last_edit": "2026-09-12",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",121.04438,14.56564,"Guadalupe Ibabaw MRT Terminal"],["platform",121.0422,14.56656,"Bernardino"],["platform",121.04171,14.56745,"Carballo"],["platform",121.03888,14.5674,"Camia"],["platform",121.03715,14.56685,"Rockwell"],["platform",121.0349,14.5669,"Villena"],["platform",121.03312,14.56743,"Hulo Tatawid"],["platform",121.03118,14.5676,"Makati Poblacion Intersection"],["platform",121.02946,14.56817,"M. L. Quezon"],["platform",121.02641,14.56911,"Old Makati City Hall"],["platform",121.02295,14.57018,"Pililia"],["platform",121.02127,14.57071,"Hondradez"],["platform",121.01838,14.57133,"Kakarong"],["platform",121.01583,14.57275,"Philippine Racing Club"],["platform",121.01531,14.57187,"A. Reyes"],["platform",121.01375,14.57268,"J.P. Rizal & Pasong Tirad"],["platform",121.01265,14.57426,"Puregold Makati Terminal"]],
+  "line": [[121.04442,14.56566],[121.04447,14.56559],[121.04403,14.56542],[121.04369,14.5654],[121.0428,14.56605],[121.04204,14.56637],[121.04239,14.56692],[121.04291,14.56726],[121.04275,14.56766],[121.0419,14.56741],[121.03982,14.5676],[121.03669,14.56672],[121.03459,14.56692],[121.03388,14.56688],[121.03358,14.56699],[121.03287,14.5676],[121.03277,14.56762],[121.03189,14.5674],[121.03146,14.56744],[121.02969,14.56804],[121.02057,14.57085],[121.0158,14.57175],[121.01619,14.5732],[121.01604,14.57324],[121.01566,14.57177],[121.01481,14.57197],[121.01399,14.57245],[121.01363,14.57275],[121.01293,14.57407],[121.01275,14.5743],[121.01263,14.57418]]
+}

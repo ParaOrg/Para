@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 15019295,
+  "kind": "bus",
+  "ref": "41",
+  "name": "Route 41: Fairview–FTI via C-5",
+  "from": "Fairview",
+  "to": "FTI",
+  "network": "LTFRB National Capital Region",
+  "operator": "Metro Link Group;Mega Manila Consortium Corporation",
+  "version": 54,
+  "last_edit": "2026-10-15",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",121.05536,14.54725,"Market Market Transport Hub"],["platform",121.05356,14.54516,"SM Aura"],["platform",121.05583,14.54017,"Upper McKinley"],["platform",121.0574,14.5345,"Palar"],["platform",121.05411,14.5225,"Pinagsama Phases 1-2"],["platform",121.05161,14.51902,"Bayani Interchange"],["platform_exit_only",121.04241,14.50612,"Arca South Transport Terminal"]],
+  "line": [[121.05542,14.54725],[121.05569,14.54711],[121.05579,14.54713],[121.05591,14.54729],[121.05619,14.54815],[121.05638,14.54818],[121.05633,14.54755],[121.05616,14.54719],[121.05588,14.54691],[121.05403,14.54562],[121.05349,14.54495],[121.05317,14.54416],[121.0531,14.54314],[121.05358,14.54193],[121.0538,14.54159],[121.05436,14.54111],[121.05597,14.54014],[121.05641,14.53979],[121.0568,14.53932],[121.05729,14.53828],[121.05762,14.53219],[121.05748,14.53114],[121.05731,14.53056],[121.05556,14.52594],[121.05389,14.52189],[121.05307,14.52056],[121.05261,14.51993],[121.0516,14.51907],[121.05149,14.51879],[121.05114,14.51851],[121.05002,14.51776],[121.04833,14.51698],[121.0469,14.51663],[121.04552,14.51643],[121.03806,14.51629],[121.03702,14.51613],[121.036,14.51571],[121.03445,14.51489],[121.03372,14.51423],[121.03276,14.5129],[121.03335,14.5118],[121.03389,14.51052],[121.03453,14.50935],[121.03498,14.50789],[121.03697,14.50416],[121.03923,14.50501],[121.03993,14.50516],[121.03983,14.50567],[121.03999,14.50611],[121.04078,14.5065],[121.04116,14.50657],[121.04132,14.50638],[121.04178,14.5066],[121.04192,14.5065],[121.04216,14.50604],[121.04239,14.50615]]
+}

@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 11521406,
+  "kind": "jeepney",
+  "ref": "T404",
+  "name": "Alabang–Signal Village via SLEX",
+  "from": "FTI",
+  "to": "Vista Terminal Exchange",
+  "network": "LTFRB National Capital Region",
+  "operator": "Philippine Air Force Servicemen and Employees Jeepney Operators and Drivers Association Inc.",
+  "version": 30,
+  "last_edit": "2026-08-24",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",121.04201,14.50623,"Arca South Transport Terminal"],["platform",121.03745,14.50318,"Rizza Diergos"],["platform",121.03814,14.5019,"United Hills"],["platform",121.04058,14.49735,"KM 13 East Service Road"],["platform",121.04133,14.49595,"Bayswater Subdivision"],["platform",121.04223,14.49424,"San Martin de Porres"],["platform",121.04688,14.48856,"Bicutan Rotonda"],["platform_exit_only",121.04681,14.41638,"Vista Terminal Exchange"]],
+  "line": [[121.04205,14.50625],[121.04192,14.5065],[121.04178,14.5066],[121.04132,14.50638],[121.04108,14.5066],[121.04076,14.50654],[121.03999,14.50611],[121.03999,14.506],[121.03973,14.50566],[121.03983,14.50525],[121.0395,14.5052],[121.03905,14.50492],[121.03697,14.50416],[121.03688,14.50393],[121.03779,14.50222],[121.03805,14.50214],[121.04472,14.48973],[121.04489,14.48958],[121.04679,14.48936],[121.04697,14.4892],[121.04703,14.48903],[121.04662,14.4876],[121.04462,14.48683],[121.04504,14.48541],[121.04508,14.48479],[121.04522,14.44931],[121.04541,14.42378],[121.04539,14.4162],[121.04533,14.41545],[121.04501,14.4142],[121.04428,14.41289],[121.04408,14.41277],[121.04338,14.41171],[121.04318,14.41151],[121.04268,14.41143],[121.04082,14.41217],[121.03935,14.41237],[121.03911,14.41252],[121.03904,14.41353],[121.03912,14.41373],[121.0393,14.41389],[121.04026,14.414],[121.04061,14.41389],[121.04133,14.4135],[121.04182,14.41344],[121.04249,14.41357],[121.04303,14.41405],[121.0435,14.41499],[121.04371,14.41615],[121.04364,14.41689],[121.04346,14.41754],[121.04294,14.41861],[121.04373,14.41927],[121.0449,14.41811],[121.04537,14.4173],[121.04531,14.41574],[121.04491,14.4143],[121.04527,14.41416],[121.04553,14.41434],[121.0458,14.41441],[121.04567,14.41547],[121.04602,14.41551],[121.04597,14.41581],[121.04721,14.41591],[121.04727,14.41615],[121.04691,14.41624],[121.04689,14.41638]]
+}

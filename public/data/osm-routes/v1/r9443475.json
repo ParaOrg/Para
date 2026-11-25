@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 9443475,
+  "kind": "jeepney",
+  "ref": "",
+  "name": "WalterMart–DBB-C",
+  "from": "Dasmariñas City/DBB-C Loop",
+  "to": "WalterMart Dasmariñas",
+  "network": "LTFRB Region IV-A",
+  "operator": "New Dasmariñas Transport Service Cooperative",
+  "version": 55,
+  "last_edit": "2026-07-31",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["stop",120.96449,14.31777,"Fatima"],["stop",120.96401,14.31999,"Santa Fe"],["stop",120.96382,14.3215,"DLSU-D Gate 1"],["stop",120.96273,14.32429,"DASCA"],["stop",120.96129,14.32594,"Dasmariñas Integrated High School"],["stop",120.95942,14.32809,"SM Marketmall Dasmariñas"],["stop",120.95709,14.3285,"DLSU-D Gate 3"],["stop",120.95011,14.32734,"Burol Main"],["stop",120.94847,14.32712,"Villa Isabel"],["stop",120.94616,14.32695,"Emilio Aguinaldo College"]],
+  "line": [[120.97137,14.31882],[120.97101,14.31909],[120.96988,14.31926],[120.96922,14.31954],[120.96771,14.32158],[120.96666,14.32221],[120.96647,14.3225],[120.9664,14.32293],[120.96661,14.3234],[120.96741,14.32421],[120.96834,14.32455],[120.96872,14.32452],[120.97013,14.32399],[120.97034,14.32374],[120.97079,14.32267],[120.97111,14.32238],[120.97168,14.32208],[120.97198,14.32175],[120.97217,14.32143],[120.97238,14.32077],[120.97212,14.31958],[120.97174,14.3191],[120.97111,14.31861],[120.97101,14.31812],[120.96696,14.31839],[120.96466,14.31752],[120.96455,14.31756],[120.96414,14.31867],[120.96369,14.32276],[120.96349,14.3234],[120.95844,14.32921],[120.95756,14.32865],[120.95618,14.32822],[120.95511,14.32801],[120.94743,14.32699],[120.94525,14.32695],[120.94548,14.3253],[120.94549,14.32475],[120.94529,14.32397],[120.94446,14.32364],[120.94443,14.3235],[120.94453,14.32303],[120.94372,14.3228],[120.94163,14.32239],[120.9411,14.32421],[120.94158,14.32433],[120.94147,14.32472],[120.94141,14.32471]]
+}

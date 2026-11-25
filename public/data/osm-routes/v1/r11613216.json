@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 11613216,
+  "kind": "jeepney",
+  "ref": "390",
+  "name": "Divisoria–Gastambide via Morayta",
+  "from": "Gastambide",
+  "to": "Divisoria",
+  "network": "LTFRB National Capital Region",
+  "operator": "FEJODAP Transport Service Corporation",
+  "version": 20,
+  "last_edit": "2026-09-12",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",120.98774,14.60475,"P. Paredes Street"],["platform",120.98745,14.60366,"FEU"],["platform",120.9857,14.60295,"Cartimar Shopping Center"],["platform",120.98314,14.6037,"LRT Recto Station"],["platform",120.97874,14.60469,"Recto & T. Alonzo"],["platform",120.97728,14.60524,"Recto & Masangkay"],["platform",120.97556,14.60783,"Philippine Cultural College"],["platform",120.97522,14.61038,"Balintawak"],["platform",120.97489,14.61268,"Bambang"],["platform_exit_only",120.97601,14.6115,"General M. Hizon Elementary School"]],
+  "line": [[120.98791,14.60527],[120.98713,14.60224],[120.98462,14.60337],[120.98239,14.60376],[120.98027,14.60404],[120.97488,14.60612],[120.97498,14.60623],[120.97561,14.60821],[120.97596,14.61022],[120.97412,14.61045],[120.97492,14.61291],[120.97627,14.61262],[120.97605,14.61149]]
+}

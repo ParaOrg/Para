@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 10775523,
+  "kind": "jeepney",
+  "ref": "421",
+  "name": "Alabang–Tunasan",
+  "from": "Pacwood Compound",
+  "to": "Vista Terminal Exchange",
+  "network": "LTFRB National Capital Region",
+  "operator": "Great Power Movers Transportation Corporation",
+  "version": 41,
+  "last_edit": "2026-09-01",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform",121.04965,14.37106,"Villa Carolina I"],["platform",121.04829,14.37395,"Lyceum of Alabang 2"],["platform",121.04704,14.37666,"Tunasan Intersection"],["platform",121.04627,14.37829,"SM Center Muntinlupa"],["platform",121.04471,14.38163,"Santo Niño Village"],["platform",121.04453,14.38457,"Planas Compound"],["platform",121.04487,14.38575,"Muntinlupa City Hall of Justice"],["platform",121.04561,14.38776,"Muntinlupa City Police"],["platform",121.04484,14.38983,"Muntinlupa Poblacion"],["platform",121.04463,14.39125,"Country Homes"],["platform",121.04486,14.394,"Landbank Putatan"],["platform",121.04499,14.39561,"Muntinlupa BLISS"],["platform",121.04527,14.3974,"Puregold Agro"],["platform",121.04629,14.39889,"Soldiers Hills Intersection"],["platform",121.04717,14.40326,"INC Lokal ng Putatan"],["platform",121.04694,14.40514,"Summitville"],["platform",121.04668,14.40723,"Nav's Building"],["platform",121.04638,14.40951,"Bayanan"],["platform",121.04614,14.41172,"Ayala Malls South Park"],["platform_exit_only",121.04681,14.41638,"Vista Terminal Exchange"]],
+  "line": [[121.04981,14.37055],[121.04449,14.38196],[121.04424,14.383],[121.04429,14.38374],[121.04469,14.38546],[121.04503,14.38637],[121.04543,14.38715],[121.04551,14.38753],[121.04549,14.38805],[121.0453,14.38873],[121.04466,14.39012],[121.04452,14.39067],[121.04506,14.39705],[121.0453,14.39758],[121.0462,14.39889],[121.0465,14.39946],[121.04706,14.40118],[121.04719,14.402],[121.04717,14.40281],[121.04568,14.41533],[121.04567,14.41547],[121.04602,14.41551],[121.04594,14.41609],[121.04567,14.4164],[121.04567,14.41731]]
+}

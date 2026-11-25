@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 20947798,
+  "kind": "jeepney",
+  "ref": "239",
+  "name": "Crame-Q Mart via P. Tuazon, Murphy",
+  "from": "Crame",
+  "to": "Q Mart",
+  "network": "LTFRB National Capital Region",
+  "operator": "Guardians Transport Service Cooperative",
+  "version": 3,
+  "last_edit": "2026-09-01",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",121.05162,14.60563,"Camp Crame Elementary School"],["platform",121.05098,14.60732,"Camp Crame Gate 4"],["platform",121.05057,14.60977,"Camp Crame Gate 3"],["platform",121.0527,14.61025,"Camp Crame Gate 2"],["platform",121.05451,14.61067,"EDSA–Santolan Intersection"],["platform",121.05851,14.6116,"Across from 9th Avenue"],["platform",121.06236,14.61252,"Camp Aguinaldo Gate 1"],["platform",121.06433,14.61375,"18th Avenue"],["platform",121.06358,14.61546,"9th Avenue"],["platform",121.06287,14.61711,"Aguinaldo Elementary School"],["platform",121.06208,14.62082,"Isetann P. Tuazon"],["platform",121.06148,14.62451,"20th Avenue–Mirasol"],["platform",121.06083,14.62677,"Techological Institute of the Philippines"],["platform",121.05826,14.62574,"Albany Street"],["platform",121.05734,14.62767,"Ermin Garcia Street"],["platform",121.0557,14.62864,"15th Avenue–Ermin Garcia"],["platform",121.05387,14.62818,"Stanford Street"],["platform",121.05174,14.62725,"New York–Cambridge"],["platform_exit_only",121.04851,14.62782,"Nepa Q-Mart"]],
+  "line": [[121.0516,14.60562],[121.05005,14.60969],[121.06455,14.61309],[121.0613,14.62066],[121.06297,14.62119],[121.0604,14.62654],[121.05832,14.62551],[121.05668,14.62895],[121.05659,14.62899],[121.05517,14.62837],[121.05487,14.62836],[121.05474,14.62851],[121.04908,14.62604],[121.04828,14.62777],[121.0485,14.62786]]
+}

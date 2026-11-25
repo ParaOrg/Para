@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 8202528,
+  "kind": "jeepney",
+  "ref": "",
+  "name": "Vista Mall Dasmariñas–Villa Isabel",
+  "from": "",
+  "to": "",
+  "network": "LTFRB PUJ",
+  "operator": "MetroExpress Connect, Inc.",
+  "version": 12,
+  "last_edit": "2026-07-31",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [],
+  "line": [[120.94483,14.31763],[120.9454,14.31782],[120.94537,14.31806],[120.94606,14.31827],[120.94615,14.31848],[120.94607,14.31914],[120.94596,14.31939],[120.946,14.31947],[120.9481,14.32065],[120.94822,14.32117],[120.94941,14.32158],[120.95027,14.32179],[120.94981,14.3233],[120.94969,14.3245],[120.94976,14.32463],[120.94952,14.32561],[120.9494,14.32584],[120.94902,14.3262],[120.94882,14.32629],[120.94862,14.32629],[120.94852,14.32694]]
+}

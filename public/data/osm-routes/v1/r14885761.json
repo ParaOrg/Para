@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 14885761,
+  "kind": "jeepney",
+  "ref": "3151",
+  "name": "Libertad–Monumento via Taft",
+  "from": "Libertad",
+  "to": "Monumento",
+  "network": "LTFRB National Capital Region",
+  "operator": "Double A Transport Corporation",
+  "version": 25,
+  "last_edit": "2026-11-21",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",120.99817,14.54751,"Victory Pasay Mall"],["platform",120.99793,14.55109,"Cartimar"],["platform",120.99737,14.55357,"LRT Gil Puyat Station"],["platform",120.997,14.55528,"LRT Gil Puyat Station"],["platform",120.99503,14.56324,"LRT Vito Cruz Station"],["platform",120.99312,14.56732,"Taft & Castro"],["platform",120.99136,14.57097,"LRT Quirino Station"],["platform",120.98945,14.57432,"Philippine Women's University"],["platform",120.98977,14.57538,"General Malvar"],["platform",120.9893,14.5762,"Pedro Gil"],["platform",120.98739,14.57903,"Apacible & L. Guinto"],["platform",120.98579,14.58074,"Taft & Padre Faura"],["platform",120.98497,14.58216,"LRT United Nations Station"],["platform",120.98436,14.58328,"Taft & T.M. Kalaw"],["platform",120.98367,14.58459,"Luneta"],["platform",120.9824,14.58685,"Taft & Ayala Boulevard"],["platform",120.9808,14.59107,"Liwasang Bonifacio"],["platform",120.98005,14.59298,"Plaza Lawton"],["platform",120.98143,14.59932,"LRT Carriedo Station"],["platform",120.98177,14.6012,"Gonzalo Puyat"],["platform",120.98205,14.603,"Recto"],["platform",120.98214,14.60552,"LRT Doroteo Jose Station"],["platform",120.98236,14.60838,"Avenida & Fugoso"],["platform",120.98259,14.61161,"LRT Bambang Station"],["platform",120.98273,14.61395,"San Lazaro Hospital"],["platform",120.9828,14.61639,"LRT Tayuman Station"],["platform",120.98287,14.61834,"Herrera"],["platform",120.98294,14.62123,"A. Lorenzo Jr."],["platform",120.98298,14.62231,"LRT Blumentritt Station"],["platform",120.98303,14.62383,"Avenida & Cavite"],["platform",120.98312,14.62698,"Avenida & Bulacan"],["platform",120.98311,14.62862,"Avenida & Pampanga"],["platform",120.9824,14.62971,"Avenida & Aurora Boulevard"],["platform",120.98125,14.63092,"LRT Abad Santos Station"],["platform",120.98102,14.6331,"Avenida & Abad Santos"],["platform",120.98147,14.63407,"Manila North Cemetery"],["platform",120.9824,14.63598,"LRT R. Papa Station"],["platform",120.98323,14.63776,"Petron Rizal Extension"],["platform",120.98352,14.64028,"2nd Avenue"],["platform",120.98359,14.6422,"3rd Avenue"],["platform",120.98363,14.64339,"4th Avenue"],["platform",120.98369,14.64515,"LRT 5th Avenue Station (Rizal Extension)"],["platform",120.98374,14.64635,"N. Carpio Street"],["platform",120.98377,14.64782,"7th Avenue"],["platform",120.98383,14.64918,"8th Avenue"],["platform",120.98392,14.65219,"10th Avenue"],["platform",120.98398,14.65375,"LRT Monumento Station"],["platform_exit_only",120.98402,14.65546,"SM City Grand Central"]],
+  "line": [[120.99815,14.54756],[120.99854,14.54768],[121.00064,14.54801],[121.00049,14.54908],[120.99844,14.54874],[120.99722,14.55396],[120.99979,14.55461],[120.99973,14.55486],[120.99768,14.55432],[120.9973,14.55429],[120.99712,14.55442],[120.99521,14.56267],[120.99182,14.56988],[120.98911,14.57477],[120.98983,14.57516],[120.98763,14.5791],[120.98687,14.57871],[120.9821,14.58716],[120.98147,14.58838],[120.97983,14.5935],[120.98022,14.59542],[120.98077,14.59881],[120.98089,14.59895],[120.98134,14.59902],[120.9819,14.60235],[120.98199,14.60433],[120.98265,14.61295],[120.9831,14.62801],[120.98305,14.62866],[120.98285,14.62917],[120.98097,14.63126],[120.98077,14.63176],[120.98074,14.63239],[120.98083,14.63279],[120.98304,14.63746],[120.98329,14.63812],[120.98341,14.63868],[120.984,14.65601]]
+}

@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 5267228,
+  "kind": "bus",
+  "ref": "BP-02",
+  "name": "Batangas–Pier",
+  "from": "Pier",
+  "to": "Batangas Pier",
+  "network": "LTFRB Region IV-A",
+  "operator": "Batangas Transport Service Cooperative",
+  "version": 28,
+  "last_edit": "2026-06-01",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["stop",121.04381,13.75257,"Batangas Pier"]],
+  "line": [[121.04385,13.75321],[121.0444,13.75222],[121.04413,13.75207],[121.04381,13.75257],[121.04363,13.753],[121.044,13.75334],[121.04474,13.75385],[121.05485,13.75579],[121.05463,13.7573],[121.05599,13.75749],[121.05649,13.75746],[121.05692,13.75381],[121.05589,13.75326],[121.05529,13.75253],[121.05665,13.75113],[121.05683,13.75061],[121.05585,13.75034],[121.05483,13.74972],[121.05393,13.74962],[121.0536,13.7501],[121.05306,13.75057],[121.05293,13.75083],[121.05196,13.75525],[121.04491,13.75386]]
+}

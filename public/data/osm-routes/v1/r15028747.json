@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 15028747,
+  "kind": "jeepney",
+  "ref": "",
+  "name": "Evangelista–Libertad",
+  "from": "Libertad",
+  "to": "Evangelista",
+  "network": "LTFRB National Capital Region",
+  "operator": "Makati City Unified Transport Service Cooperative",
+  "version": 10,
+  "last_edit": "2026-09-12",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform",120.99817,14.54751,"Victory Pasay Mall"],["platform",121.00021,14.5479,"Security Bank Libertad"],["platform",121.00474,14.5495,"Pasay City Cockpit"],["platform",121.00856,14.5506,"P. Binay"],["platform",121.01009,14.55096,"San Ildefonso Parish Church"],["platform",121.01058,14.5491,"Calhoun"],["platform",121.01092,14.54702,"INC Lokal ng Evangelista"],["platform",121.01124,14.54503,"General Luna"],["platform",121.01158,14.54301,"General Hizon"],["platform",121.01189,14.54114,"General Capinpin"],["platform_exit_only",121.012,14.54009,"Evangelista–General Belarmino Turning Point"]],
+  "line": [[120.99815,14.54756],[120.99854,14.54768],[121.00064,14.54801],[121.00255,14.54814],[121.00355,14.54829],[121.00381,14.54844],[121.00456,14.54944],[121.005,14.54973],[121.01033,14.55109],[121.01205,14.54058],[121.01189,14.54055],[121.01182,14.54009],[121.01199,14.54012]]
+}

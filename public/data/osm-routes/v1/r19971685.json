@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 19971685,
+  "kind": "bus",
+  "ref": "",
+  "name": "Baliwag Tricycle: SM → Seriya",
+  "from": "SM",
+  "to": "Seriya",
+  "network": "",
+  "operator": "H-TODA",
+  "version": 3,
+  "last_edit": "2026-10-25",
+  "clipped": false,
+  "provenance": {"fixme":"Route type"},
+  "gaps": [],
+  "stops": [],
+  "line": [[120.89134,14.95986],[120.89111,14.95984],[120.89079,14.95964],[120.89065,14.95943],[120.89575,14.96252],[120.89597,14.96259],[120.8973,14.96338],[120.89493,14.97253],[120.8941,14.9762],[120.89342,14.9798],[120.89296,14.98341],[120.89187,14.99662],[120.89065,15.00866],[120.89102,15.0088]]
+}

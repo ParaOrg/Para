@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 11524306,
+  "kind": "jeepney",
+  "ref": "T226",
+  "name": "FTI–Kayamanan C",
+  "from": "FTI",
+  "to": "Kayamanan C",
+  "network": "LTFRB National Capital Region",
+  "operator": "",
+  "version": 19,
+  "last_edit": "2026-08-06",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["stop_entry_only",121.04205,14.50625,"Arca South Transport Terminal"],["stop_exit_only",121.01876,14.54069,"League One Southgate Mall"]],
+  "line": [[121.04205,14.50625],[121.04192,14.5065],[121.04178,14.5066],[121.04132,14.50638],[121.04108,14.5066],[121.04076,14.50654],[121.03999,14.50611],[121.0397,14.50663],[121.03938,14.5069],[121.03872,14.50815],[121.03556,14.50693],[121.0349,14.50823],[121.03459,14.50938],[121.03375,14.51094],[121.03324,14.51219],[121.0326,14.51331],[121.03178,14.51428],[121.02822,14.52092],[121.02716,14.52265],[121.02647,14.52394],[121.02675,14.52465],[121.0267,14.52485],[121.02648,14.5251],[121.02734,14.52578],[121.02664,14.52655],[121.0265,14.52683],[121.02646,14.52735],[121.0266,14.52854],[121.02648,14.52904],[121.02471,14.53219],[121.0244,14.53233],[121.02346,14.53191],[121.02324,14.53206],[121.01878,14.54034],[121.01875,14.54046],[121.01885,14.54052],[121.01869,14.54082]]
+}

@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 11142890,
+  "kind": "jeepney",
+  "ref": "3154",
+  "name": "Libertad–PRC",
+  "from": "Libertad",
+  "to": "Philippine Racing Club",
+  "network": "LTFRB National Capital Region",
+  "operator": "Makati City Unified Transport Service Cooperative",
+  "version": 26,
+  "last_edit": "2026-08-31",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",121.00061,14.54847,"St. Mary's Academy Pasay"],["platform",121.00021,14.5506,"South Western College"],["platform",120.99927,14.55425,"Gil Puyat–Dominga"],["platform",121.00272,14.55488,"Bautista Street"],["platform",121.00629,14.55638,"Batangas"],["platform",121.009,14.55714,"Cityland Makati Executive Towers"],["platform",121.01264,14.55855,"Dela Rosa"],["platform",121.011,14.56222,"Pryce Center"],["platform",121.01244,14.56567,"Kamagong"],["platform",121.01348,14.56768,"Shopwise Chino Roces"],["platform",121.01469,14.56995,"Ponte"],["platform_exit_only",121.01539,14.57071,"PRC-Libertad Jeepney Terminal"]],
+  "line": [[121.00064,14.54801],[121.0004,14.54974],[121.0001,14.55096],[120.99994,14.55206],[120.99955,14.55291],[120.99917,14.55446],[121.00004,14.55468],[121.00092,14.55502],[121.00139,14.55501],[121.00187,14.55469],[121.00272,14.55492],[121.00503,14.5558],[121.00766,14.55711],[121.00785,14.55697],[121.00828,14.55696],[121.01269,14.55835],[121.01116,14.56117],[121.01095,14.56191],[121.01098,14.56278],[121.01123,14.56348],[121.01518,14.57095],[121.01594,14.5708],[121.01573,14.57038],[121.01538,14.57069]]
+}

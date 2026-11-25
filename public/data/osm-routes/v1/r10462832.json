@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 10462832,
+  "kind": "jeepney",
+  "ref": "3160",
+  "name": "LRT V. Mapa Station–SM City East Ortigas via Pinaglabanan",
+  "from": "SM City East Ortigas",
+  "to": "LRT V. Mapa Station",
+  "network": "LTFRB National Capital Region",
+  "operator": "San Juan-Rosario Transport Service Cooperative",
+  "version": 58,
+  "last_edit": "2026-09-12",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",121.10533,14.58828,"SM City East Ortigas"],["platform",121.10073,14.5895,"Urban Deca Homes Ortigas 1"],["platform",121.09769,14.58973,"De Castro Intersection"],["platform",121.09573,14.58991,"Choice Market Ortigas 2"],["platform",121.0913,14.59031,"Westbank Road"],["platform",121.08889,14.59059,"C. Raymundo Avenue"],["platform",121.08706,14.59074,"Rosario Junction"],["platform",121.0808,14.59003,"C-5–Ortigas"],["platform",121.07024,14.58923,"The Medical City"],["platform",121.06614,14.58897,"Rockwell Business Center"],["platform",121.06316,14.5894,"Meralco"],["platform",121.06017,14.59197,"Robinsons Galleria"],["platform",121.0534,14.59705,"La Salle Green Hills"],["platform",121.04868,14.60062,"Greenhills Shopping Center"],["platform",121.0477,14.60136,"Wilson Street"],["platform",121.0465,14.60216,"Club Filipino Drive"],["platform",121.04444,14.60369,"Roosevelt Street"],["platform",121.04241,14.60525,"Madison Street"],["platform",121.03846,14.60703,"Ortigas–Santolan"],["platform",121.03648,14.60511,"Jose Abad Santos Street"],["platform",121.0328,14.60471,"Filoil EcoOil Centre"],["platform",121.03004,14.60427,"Pinaglabanan Shrine"],["platform",121.02837,14.6052,"Pinaglabanan Church"],["platform",121.02606,14.60716,"H. Lozada Street"],["platform",121.02474,14.60672,"D. Santiago Street"],["platform",121.02291,14.60538,"Agora Public Market"],["platform",121.0212,14.60398,"N. Domingo–Araneta"],["platform",121.018,14.6052,"SM City Santa Mesa"],["platform_exit_only",121.01666,14.60386,"LRT V. Mapa Station"]],
+  "line": [[121.10534,14.58834],[121.10599,14.58821],[121.10614,14.58838],[121.10267,14.58912],[121.10113,14.58936],[121.09753,14.58965],[121.09738,14.58972],[121.09123,14.5903],[121.08581,14.59073],[121.08476,14.59063],[121.08241,14.59018],[121.08055,14.58993],[121.06459,14.58877],[121.06395,14.58886],[121.06328,14.58925],[121.05866,14.59318],[121.04974,14.59964],[121.04943,14.60001],[121.04721,14.60163],[121.04694,14.60174],[121.04621,14.60227],[121.0392,14.60762],[121.03694,14.60562],[121.03643,14.60499],[121.03595,14.60491],[121.03337,14.60515],[121.03242,14.60435],[121.03161,14.604],[121.03079,14.6038],[121.03048,14.60382],[121.03044,14.60392],[121.02978,14.60442],[121.02948,14.60451],[121.02818,14.60531],[121.02788,14.60569],[121.02771,14.60707],[121.02687,14.60776],[121.02632,14.60727],[121.02584,14.60698],[121.0243,14.6065],[121.02361,14.60614],[121.02335,14.60587],[121.02168,14.60361],[121.01989,14.60462],[121.01872,14.6058],[121.01671,14.60381]]
+}

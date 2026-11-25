@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 9279677,
+  "kind": "jeepney",
+  "ref": "3207",
+  "name": "PITX–Lawton",
+  "from": "Lawton",
+  "to": "PITX",
+  "network": "LTFRB National Capital Region",
+  "operator": "EcoDyip, Inc.",
+  "version": 84,
+  "last_edit": "2026-09-11",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",120.97943,14.59501,"Plaza Lawton"],["platform",120.98301,14.58311,"National Museum of Natural History"],["platform",120.97928,14.57605,"U.S. Embassy"],["platform",120.98747,14.5519,"World Trade Center (Gil Puyat)"],["platform",120.98606,14.55029,"World Trade Center (Macapagal)"],["platform",120.98668,14.54771,"PNB Main Office"],["platform",120.98738,14.54502,"Dampa sa Pasay"],["platform",120.98773,14.54358,"Seaside Boulevard"],["platform",120.98827,14.53996,"Manila Tytana College"],["platform",120.98928,14.53247,"W.Mall"],["platform",120.98958,14.5299,"DFA"],["platform",120.99018,14.52338,"Ayala Malls Manila Bay"],["platform",120.9907,14.52105,"Aseana Square"],["platform_exit_only",120.99074,14.50931,"PITX"]],
+  "line": [[120.97942,14.59504],[120.97987,14.59517],[120.98006,14.5951],[120.97973,14.59432],[120.97911,14.59412],[120.97898,14.594],[120.97891,14.59373],[120.97896,14.5935],[120.97952,14.59286],[120.98005,14.59206],[120.98061,14.5904],[120.98103,14.58875],[120.98394,14.5836],[120.97968,14.58118],[120.97748,14.57998],[120.97714,14.57987],[120.97922,14.57631],[120.98098,14.57297],[120.98296,14.56878],[120.98439,14.56555],[120.98748,14.55845],[120.98761,14.55774],[120.98933,14.55236],[120.986,14.55143],[120.98592,14.5511],[120.9878,14.54349],[120.98946,14.53204],[120.99038,14.52408],[120.99012,14.52405],[120.99027,14.52272],[120.9906,14.52249],[120.99072,14.52152],[120.99075,14.52021],[120.99055,14.51679],[120.99011,14.51338],[120.98943,14.51099],[120.991,14.51059],[120.99119,14.51124],[120.9913,14.51231],[120.99156,14.51235],[120.99207,14.5122],[120.99215,14.51208],[120.9909,14.50734],[120.99017,14.50759],[120.99072,14.50931]]
+}

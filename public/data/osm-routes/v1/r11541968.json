@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 11541968,
+  "kind": "jeepney",
+  "ref": "321",
+  "name": "Baclaran–Blumentritt via Mabini, Santa Cruz",
+  "from": "Baclaran",
+  "to": "Blumentritt",
+  "network": "LTFRB National Capital Region",
+  "operator": "Monumento-Blumentritt-Baclaran Transport Cooperative",
+  "version": 68,
+  "last_edit": "2026-11-19",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",120.99321,14.53552,"Baclaran (Heritage) Terminal"],["platform",120.99505,14.53744,"Harrison"],["platform",120.99547,14.53951,"Harrison & Ignacio"],["platform",120.99503,14.54147,"School of the Deaf"],["platform",120.99448,14.54388,"Pasay City Hall"],["platform",120.99399,14.54598,"Harrison & Arnaiz"],["platform",120.99338,14.54819,"Harrison & Williams"],["platform",120.99282,14.55033,"Harrison & M. Santos"],["platform",120.99096,14.55659,"Harrison & Sinciego"],["platform",120.98966,14.55981,"Mabini & P. Ocampo"],["platform",120.98853,14.56198,"Bangko Sentral ng Pilpinas"],["platform",120.98665,14.56561,"Mabini & Quirino"],["platform",120.98544,14.5684,"Mabini & San Andres"],["platform",120.98408,14.5718,"Mabini & Alonzo"],["platform",120.98291,14.57432,"Mabini & Pedro Gil"],["platform",120.98222,14.57553,"R. Salas"],["platform",120.98114,14.578,"Mabini & Padre Faura"],["platform",120.98041,14.57969,"Mabini & United Nations"],["platform",120.98099,14.58255,"Seafarers Center"],["platform",120.98002,14.58448,"Luneta (Maria Orosa)"],["platform",120.9808,14.59107,"Liwasang Bonifacio"],["platform",120.98005,14.59298,"Plaza Lawton"],["platform",120.98143,14.59932,"LRT Carriedo Station"],["platform",120.98177,14.6012,"Gonzalo Puyat"],["platform",120.98205,14.603,"Recto"],["platform",120.98214,14.60552,"LRT Doroteo Jose Station"],["platform",120.98339,14.61121,"Oroquieta & Bambang"],["platform",120.98346,14.61227,"Oroquieta & Alvarez"],["platform",120.98362,14.61417,"Oroquieta & San Lazaro"],["platform",120.98386,14.61795,"Oroquieta & Herrera"],["platform",120.98394,14.62043,"Oroquieta & A. Lorenzo Jr."],["platform",120.98303,14.62383,"Avenida & Cavite"],["platform_exit_only",120.98312,14.62698,"Avenida & Bulacan"]],
+  "line": [[120.99309,14.53551],[120.99291,14.53705],[120.99521,14.53757],[120.99732,14.53765],[120.99742,14.53773],[120.99743,14.53787],[120.99573,14.53787],[120.99514,14.54078],[120.99421,14.54481],[120.99255,14.55121],[120.99202,14.55293],[120.99282,14.55316],[120.99393,14.5533],[120.99405,14.55344],[120.9939,14.55357],[120.99356,14.55353],[120.99194,14.55317],[120.99069,14.55717],[120.98944,14.56019],[120.98657,14.56561],[120.98364,14.57266],[120.98189,14.57614],[120.97975,14.58105],[120.98122,14.58188],[120.98112,14.58221],[120.97966,14.58493],[120.9797,14.58529],[120.98004,14.58557],[120.98042,14.58612],[120.98123,14.58895],[120.9804,14.59181],[120.98004,14.59275],[120.97983,14.59367],[120.98022,14.59542],[120.98077,14.59881],[120.98089,14.59895],[120.98134,14.59902],[120.98156,14.60054],[120.98169,14.60093],[120.9819,14.60235],[120.98199,14.60433],[120.9825,14.611],[120.98331,14.61095],[120.98367,14.61556],[120.98392,14.62185],[120.98291,14.62187],[120.98307,14.62698]]
+}

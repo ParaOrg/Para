@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 10704229,
+  "kind": "jeepney",
+  "ref": "",
+  "name": "Jeepney Route: Intra-DBB Route (D→G Anticlockwise Loop)",
+  "from": "DBB-D",
+  "to": "DBB-G",
+  "network": "LTFRB PUJ",
+  "operator": "New Dasmariñas Transport Service Cooperative",
+  "version": 20,
+  "last_edit": "2026-10-21",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [[15,8],[17,8]],
+  "stops": [["stop_entry_only",120.96982,14.30906,"Nazareno"],["stop",120.96449,14.31777,"Fatima"],["stop",120.96401,14.31999,"Santa Fe"],["stop",120.96382,14.3215,"DLSU-D Gate 1"],["stop",120.96273,14.32429,"DASCA"],["stop",120.96129,14.32594,"Dasmariñas Integrated High School"],["stop",120.95942,14.32809,"SM Marketmall Dasmariñas"],["stop",120.95656,14.33134,"H-2"],["stop",120.95376,14.33453,"Jollibee DBB-1"],["stop",120.95215,14.33636,"Santa Lucia West"],["stop",120.95004,14.33865,"San Miguel Elementary School"],["stop",120.95075,14.33785,"San Miguel"],["stop",120.95399,14.33401,"Dasmariñas Arena"],["stop",120.96031,14.32694,"Dasmariñas 2 Central School"],["stop",120.96139,14.3257,"Dasmariñas Integrated High School"],["stop",120.9625,14.32444,"DASCA"],["stop",120.96331,14.32354,"Saint Paul Medical Center"],["stop",120.96362,14.32182,"DLSU-D Gate 1"],["stop",120.9687,14.30906,"Plainview Academy"],["stop_exit_only",120.96982,14.30906,"Nazareno"]],
+  "line": [[120.96982,14.30906],[120.97,14.30919],[120.97073,14.30823],[120.97064,14.30808],[120.96997,14.30757],[120.96719,14.31116],[120.96417,14.31855],[120.96369,14.32276],[120.96364,14.32303],[120.96345,14.32346],[120.95197,14.33657],[120.95263,14.33711],[120.95269,14.33741],[120.95021,14.34097],[120.95004,14.34101],[120.94862,14.34041],[120.94856,14.34039],[120.94862,14.34041],[120.94856,14.34039],[120.95339,14.33486],[120.95393,14.33421],[120.95394,14.33407],[120.95419,14.33379],[120.95425,14.33386],[120.9634,14.32342],[120.96349,14.32314],[120.96402,14.3185],[120.96712,14.31113],[120.96913,14.30853],[120.96982,14.30906]]
+}
