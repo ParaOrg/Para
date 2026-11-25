@@ -4,7 +4,8 @@
 # same on demand.
 #
 # A pull request opened with GITHUB_TOKEN starts no workflow, so CI and the contributor app's
-# workflow are started on the branch here (workflow_dispatch, which GITHUB_TOKEN may start).
+# workflow are started on the branch here (workflow_dispatch, which GITHUB_TOKEN may start). The
+# contributor app's workflow is left out when `main` holds the same files as `staging`.
 name: Back-merge
 
 on:
@@ -45,8 +46,24 @@ jobs:
           echo "count=$count" >> "$GITHUB_OUTPUT"
           echo "main has $count commits staging does not."
 
+      # After a release, `main` holds exactly `staging`'s files: the back-merge carries only the
+      # merge commit, and every file in it was tested on `staging` and on the release pull request.
+      - name: Does main hold any file staging does not?
+        id: files
+        if: steps.behind.outputs.count != '0'
+        run: |
+          if git diff --quiet origin/staging origin/main; then
+            echo "same=true" >> "$GITHUB_OUTPUT"
+            echo "main and staging hold the same files."
+          else
+            echo "same=false" >> "$GITHUB_OUTPUT"
+            git diff --stat origin/staging origin/main | tail -1
+          fi
+
       - name: Open or update the back-merge pull request, and start its checks
         if: steps.behind.outputs.count != '0'
+        env:
+          SAME_FILES: ${{ steps.files.outputs.same }}
         run: |
           git push --force origin "origin/main:refs/heads/$BRANCH"
           if [ -z "$(gh pr list --head "$BRANCH" --base staging --state open --json number --jq '.[].number')" ]; then
@@ -54,5 +71,12 @@ jobs:
               --title "Back-merge: main into staging" \
               --body "main has ${{ steps.behind.outputs.count }} commits staging does not: the nightly publish, or a release. Merge once its checks pass (docs/agents/release-rhythm.md)."
           fi
+          # CI always runs: it reports the three checks staging's ruleset requires.
           gh workflow run ci.yml --ref "$BRANCH"
-          gh workflow run contributor-app.yml --ref "$BRANCH"
+          # The contributor app's emulator runs take about 25 minutes. With the same files as
+          # staging there is nothing new for them to test, so they run only when a file differs.
+          if [ "$SAME_FILES" = 'true' ]; then
+            echo "Same files as staging: the contributor app's workflow is not started."
+          else
+            gh workflow run contributor-app.yml --ref "$BRANCH"
+          fi
