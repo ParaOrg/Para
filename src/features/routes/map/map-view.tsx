@@ -125,9 +125,8 @@ interface Props {
   isExposed?: boolean;
   /**
    * MapLibre's +, − and compass, top right, for a mouse (never a finger:
-   * `coarse`). The studio keeps them; the public map has none (the owner's
-   * call: they were annoying for commuters), as the wheel, a double click and
-   * the keys zoom it. Read once, as the map is made.
+   * `coarse`). No page of Para's shows them now (the owner's call): a pinch, the
+   * wheel, a double click and the keys zoom the map. Read once, as the map is made.
    */
   zoomButtons?: boolean;
   /**

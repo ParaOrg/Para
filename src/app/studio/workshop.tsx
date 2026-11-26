@@ -275,6 +275,7 @@ export function Workshop({ session, recovery }: WorkshopProps) {
               <MapView
                 onReady={setMap}
                 onLoadedChange={setIsMapLoaded}
+                zoomButtons={false}
                 foldCredits
                 basemaps={STUDIO_BASEMAPS}
                 basemapThumbnails={STUDIO_BASEMAP_THUMBNAILS}

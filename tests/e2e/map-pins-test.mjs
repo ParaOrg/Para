@@ -20,7 +20,15 @@ import { mkdirSync, readFileSync } from 'node:fs';
 import { chromium } from 'playwright';
 import { fakeContributions } from './lib/fake-contributions.mjs';
 import { fakeStudioDb } from './lib/fake-studio-db.mjs';
-import { BASE, bareStyle, harness, mapIdle, until, waitForSource } from './lib/harness.mjs';
+import {
+  BASE,
+  bareStyle,
+  emptyMapPoint,
+  harness,
+  mapIdle,
+  until,
+  waitForSource,
+} from './lib/harness.mjs';
 import { signInAsEditor } from './lib/studio-session.mjs';
 
 const { check, tally } = harness();
@@ -431,6 +439,60 @@ async function pinToTap(page, alone) {
   );
   check('public map: zoomed out to 14, no footbridge drawn', outOfZoom === 0, `${outOfZoom}`);
   check('public map, footbridges: no page errors', errors.length === 0, errors.join('; '));
+  await page.close();
+}
+
+// ------------------------------------------------------------ the studio's zoom
+// No +, − or compass on the studio's map (the owner's call), and the map still zooms: by the + and
+// − keys, Ctrl plus the wheel (a trackpad's pinch arrives as one) and a double click.
+{
+  const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
+  await signInAsEditor(page);
+  await fakeStudioDb(page, {});
+  const errors = await open(page, '/studio/?e2e=1');
+  await mapIdle(page);
+  check(
+    'studio: no zoom or compass buttons on the map',
+    (await page
+      .locator('.maplibregl-ctrl-zoom-in, .maplibregl-ctrl-zoom-out, .maplibregl-ctrl-compass')
+      .count()) === 0,
+  );
+  const zoomNow = () => page.evaluate(() => window.__map.getZoom());
+  /** Whether `act` moves the zoom by a tenth or more the way `sign` says, once at rest again. */
+  const zooms = async (act, sign) => {
+    await page.evaluate(() => {
+      window.__map.jumpTo({ zoom: 14 });
+    });
+    await mapIdle(page);
+    const before = await zoomNow();
+    await act();
+    await until(zoomNow, (z) => z !== before, 5000);
+    await mapIdle(page);
+    const after = await zoomNow();
+    return {
+      ok: (after - before) * sign >= 0.1,
+      said: `${before.toFixed(2)} → ${after.toFixed(2)}`,
+    };
+  };
+  await page.evaluate(() => window.__map.getCanvas().focus());
+  const keyIn = await zooms(() => page.keyboard.press('Equal'), 1);
+  check('studio: the + key zooms in', keyIn.ok, keyIn.said);
+  const keyOut = await zooms(() => page.keyboard.press('Minus'), -1);
+  check('studio: the − key zooms out', keyOut.ok, keyOut.said);
+  const empty = await emptyMapPoint(page);
+  check('studio: an empty point on the map to zoom at', !!empty);
+  if (empty) {
+    const wheel = await zooms(async () => {
+      await page.mouse.move(empty.x, empty.y);
+      await page.keyboard.down('Control');
+      await page.mouse.wheel(0, -300);
+      await page.keyboard.up('Control');
+    }, 1);
+    check('studio: Ctrl and the wheel (a pinch) zoom in', wheel.ok, wheel.said);
+    const double = await zooms(() => page.mouse.dblclick(empty.x, empty.y), 1);
+    check('studio: a double click zooms in', double.ok, double.said);
+  }
+  check('studio, zoom: no page errors', errors.length === 0, errors.join('; '));
   await page.close();
 }
 
