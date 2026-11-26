@@ -1,6 +1,7 @@
 import {
   useLayoutEffect,
   useState,
+  type CSSProperties,
   type FocusEvent,
   type PointerEvent as ReactPointerEvent,
   type RefObject,
@@ -17,6 +18,8 @@ export type ExploreRest = 'open' | 'low';
 
 interface ExploreSheet {
   rest: ExploreRest;
+  /** Where they are first drawn: their rest from the start, so they never glide to it. */
+  opensAt: CSSProperties;
   /** On while a finger or a mouse holds the cards: they follow it, no glide. */
   isDragging: boolean;
   /** The keyboard's way: open to Low and back. */
@@ -38,7 +41,8 @@ const LOW_FOOT = `calc(${LOW_PX}px + env(safe-area-inset-bottom))`;
  * the foot the locate-me column stands on (`--dock-foot`, locator.tsx), at rest and as a finger
  * moves them; floating in the corner they are still and leave the foot alone. Where they rest goes
  * to `onRest` as the height a sheet opening over them takes: open, theirs as a share of the map;
- * at Low or floating, Low. They come back as they were left (`startsAt`; the owner, 2026-11-25).
+ * at Low or floating, Low. They start where the page says (`startsAt`): whole on a first visit, at
+ * Low as a card closes (the owner, 2026-11-26).
  */
 export function useExploreSheet(
   own: RefObject<HTMLDivElement | null>,
@@ -46,6 +50,11 @@ export function useExploreSheet(
   startsAt: ExploreRest = 'open',
 ): ExploreSheet {
   const [rest, setRest] = useState<ExploreRest>(startsAt);
+  // Never changed after: the moves write --explore-y themselves (place). Without it they would be
+  // drawn whole as the layout effect below measures them, and glide from there down to Low.
+  const [opensAt] = useState<CSSProperties>(() => ({
+    '--explore-y': startsAt === 'low' ? LOW_Y : '0px',
+  }));
   const [isDragging, setDragging] = useState(false);
 
   useLayoutEffect(() => {
@@ -131,6 +140,7 @@ export function useExploreSheet(
 
   return {
     rest,
+    opensAt,
     isDragging,
     toggle: () => setRest((r) => (r === 'open' ? 'low' : 'open')),
     onPointerDown,

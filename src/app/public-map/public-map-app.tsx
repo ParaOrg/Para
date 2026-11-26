@@ -135,7 +135,8 @@ export function PublicMapApp() {
   // The route list, a hotspot's card and the trip opened from either: which
   // is up, what stands behind what, their height and colours (useCardStack).
   const cards = useCardStack(map, saved, hotspots);
-  const [exploreRest, setExploreRest] = useState<ExploreRest>('open'); // As they were left.
+  const [exploreRest, setExploreRest] = useState<ExploreRest>('open'); // Whole, then Low once a card opened.
+  if (cards.open && exploreRest === 'open') setExploreRest('low'); // Back from a card: Low (the owner).
   // The camera with the cards: a hintuan picked on the trip, gliding there; a trip, a picked
   // RouteCard and SWITCH taken in whole, again as the sheet settles; the camera from before a
   // hotspot's card was picked, back as it is let go (useCardCamera).
@@ -462,10 +463,7 @@ export function PublicMapApp() {
             <ExploreCards
               onLocate={() => locator.current?.locate()}
               startsAt={exploreRest}
-              onRest={(snap, rest) => {
-                cards.setIdleSnap(snap);
-                setExploreRest(rest);
-              }}
+              onRest={(snap) => cards.setIdleSnap(snap)}
             />
           </Suspense>
         )}
