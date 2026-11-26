@@ -17,6 +17,8 @@ import { retryingLazy } from '@/shared/lib/retrying-lazy';
 import type { StandingToast } from '@/shared/ui/standing-toasts';
 import { retryingImport } from '@/shared/utils/retrying-import';
 
+import { HAS_POSSIBLE_TERMINALS } from './studio-map-marks';
+
 interface WorkshopLocationProps {
   map: MapLibreMap | null;
   isMapLoaded: boolean;
@@ -62,8 +64,9 @@ export function WorkshopLocation({
   hasCredits,
 }: WorkshopLocationProps) {
   const { ride, clearOfOpen } = camera;
-  // OpenStreetMap's terminals as faint dots, for an editor placing Para's own (.scratch/terminals).
-  useTerminalDots(map);
+  // OpenStreetMap's terminals as faint dots, for an editor placing Para's own (.scratch/terminals),
+  // when HAS_POSSIBLE_TERMINALS is on.
+  useTerminalDots(HAS_POSSIBLE_TERMINALS ? map : null);
   // What the locator last said, and how many times (Locator's onNote).
   const [said, setSaid] = useState<SaidNote | null>(null);
   const handleNote = (note: LocatorNote | null) => {

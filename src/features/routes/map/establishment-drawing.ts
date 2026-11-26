@@ -3,6 +3,7 @@ import type { MapLibreMap } from 'maplibre-gl';
 import { drawEstablishmentExtras } from './establishment-extra';
 import { addEstablishmentImage } from './establishment-images';
 import { EXTRA_KIND_GLYPH, establishmentImageOf } from './establishment-kinds';
+import type { EstablishmentsDrawn } from './establishment-loader';
 import { OVERTURE_GLYPHS, drawOverturePlaces } from './establishment-overture';
 import { addEstablishmentLayers as addBasemapEstablishments } from './establishments';
 import { drawTerminals } from './terminal-markers';
@@ -17,13 +18,14 @@ export { addEstablishmentImage };
  * Everything a style that wants the establishments gets: the basemap's own places as markers
  * (establishments.ts), the places its tiles lack, from Para's files (establishment-extra.ts), and
  * Overture's under them (establishment-overture.ts), and OpenStreetMap's terminals over them all
- * (terminal-markers.ts). The cell layers' markers go on the map before their layers do.
+ * (terminal-markers.ts) where `drawn` asks for them. The cell layers' markers go on the map before
+ * their layers do.
  */
-export function addEstablishmentLayers(map: MapLibreMap): void {
+export function addEstablishmentLayers(map: MapLibreMap, drawn: EstablishmentsDrawn): void {
   addBasemapEstablishments(map);
   for (const glyph of [...Object.values(EXTRA_KIND_GLYPH), ...OVERTURE_GLYPHS])
     addEstablishmentImage(map, establishmentImageOf(glyph));
   drawEstablishmentExtras(map);
   drawOverturePlaces(map);
-  drawTerminals(map);
+  if (drawn.hasTerminalMarkers) drawTerminals(map);
 }

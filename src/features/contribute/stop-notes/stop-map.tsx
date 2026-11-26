@@ -53,6 +53,7 @@ export function StopMap({ trail, at }: StopMapProps) {
       onReady={handleReady}
       isExposed={false}
       zoomButtons={false}
+      hasTerminalMarkers={false}
       hasMapStyleButton={false}
       foldCredits
       makeStyle={MAKE_STYLE}
