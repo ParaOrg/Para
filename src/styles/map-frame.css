@@ -73,6 +73,28 @@ body,
 }
 
 /*
+ * The public map's scale bar stands directly under its ⓘ (MapCreditsDock's top-left corner: 16 in,
+ * 24 down, 28 across; at the top right where the card floats) and is drawn over every sheet, so
+ * none ever covers it: the map's own corner is in the page's stacking, under no layer of its own.
+ */
+[data-scale-under-credits] .maplibregl-ctrl-bottom-left {
+  /* The ⓘ's 24 down and 28 across, and 4 under it. */
+  top: calc(var(--map-safe-top, env(safe-area-inset-top)) + var(--spacing) * 14);
+  bottom: auto;
+  left: calc(env(safe-area-inset-left) + var(--spacing) * 4);
+  z-index: 30;
+}
+[data-scale-under-credits] .maplibregl-ctrl-bottom-left .maplibregl-ctrl {
+  margin: 0;
+}
+@container (width >= 64rem) {
+  [data-scale-under-credits] .maplibregl-ctrl-bottom-left {
+    right: calc(env(safe-area-inset-right) + var(--spacing) * 4);
+    left: auto;
+  }
+}
+
+/*
  * Where a docked sheet slides to (BottomSheet). Not passed down: a drag writes it each frame, and
  * an inherited property would restyle everything the sheet holds each time. Its footer, the one
  * part that reads it, has it written on it as well.
