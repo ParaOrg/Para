@@ -68,6 +68,13 @@ test('the site fails on an error, on another page, or on a lost redirect', async
     'https://para-commute.org/': { body: page },
   });
   assert.match((await checkSite(noRedirect.fetchImpl)).answer, /not a redirect/);
+  for (const elsewhere of ['https://www.para-commute.org.example.com/', '/relative', 'not a url']) {
+    const away = fakeFetch({
+      'https://www.para-commute.org/': { body: page },
+      'https://para-commute.org/': { status: 301, location: elsewhere },
+    });
+    assert.match((await checkSite(away.fetchImpl)).answer, /not a redirect/, elsewhere);
+  }
 });
 
 test('the published map passes when its index answers and parses, whatever its age', async () => {

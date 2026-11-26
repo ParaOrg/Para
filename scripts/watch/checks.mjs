@@ -68,7 +68,9 @@ export async function checkSite(fetchImpl, site = SITE, bareDomain = BARE_DOMAIN
   const bare = await fetchImpl(`${bareDomain}/`, { redirect: 'manual' });
   await bare.body?.cancel();
   const location = bare.headers.get('location') ?? '';
-  if (bare.status < 300 || bare.status > 399 || !location.startsWith(site)) {
+  // The whole origin, not a prefix: a redirect elsewhere is not the site.
+  const target = URL.canParse(location) ? new URL(location).origin : null;
+  if (bare.status < 300 || bare.status > 399 || target !== new URL(site).origin) {
     return {
       ok: false,
       answer: `${bareDomain}/ answered ${bare.status}${location ? ` to ${location}` : ''}, not a redirect to ${site}`,
