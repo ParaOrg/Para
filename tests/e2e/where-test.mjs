@@ -16,9 +16,9 @@
 // a circle the size of its accuracy, and brings the camera to it 200 m on the scale bar
 // across, north up (TrackedLocation); a walk turns the beam its way and the
 // camera follows; a drag lets go (TrackOwnLocation) and a tap comes back; the
-// next tap tilts the camera, 200 m on the bar, turned the way the compass says
-// (TracksTheMapBasedOnCompassFacing), and turns with it; the next puts north
-// up again, and the next tilts again; an app camera move lets go; a route
+// next tap turns the camera the way the compass says, 200 m on the bar, at the
+// chosen view's tilt (TracksTheMapBasedOnCompassFacing), and turns with it; the
+// next puts north up again, and the next turns it again; an app camera move lets go; a route
 // tapped draws the dot's gaze, and the card it opened set to another height
 // while the camera follows keeps the camera on the commuter; a browser
 // that refuses says so in one toast, however often tapped, and ✕ closes it;
@@ -466,10 +466,10 @@ await mapIdle(page);
 cam = await camera(page);
 const compassZoom = await zoomFor(page, 200);
 check(
-  'the next tap tilts the camera, 200 m on the scale bar, turned the way the phone faces',
+  "the next tap turns the camera the way the phone faces, 200 m on the scale bar, at the view's tilt: flat in 2D",
   (await mode()) === 'TracksTheMapBasedOnCompassFacing' &&
     Math.abs(cam.zoom - compassZoom) < 0.05 &&
-    Math.abs(cam.pitch - 45) < 0.5 &&
+    cam.pitch < 0.5 &&
     apart(cam.bearing, 120) < 1,
   `${await mode()}, zoom ${cam.zoom.toFixed(2)} for ${compassZoom.toFixed(2)}, pitch ${cam.pitch.toFixed(1)}, bearing ${cam.bearing.toFixed(1)}`,
 );
@@ -529,9 +529,8 @@ await button.click();
 await until(async () => (await mode()) === 'TracksTheMapBasedOnCompassFacing', 3000);
 await mapIdle(page);
 check(
-  '  and the next tilts again',
-  (await mode()) === 'TracksTheMapBasedOnCompassFacing' &&
-    Math.abs((await camera(page)).pitch - 45) < 0.5,
+  '  and the next turns it again',
+  (await mode()) === 'TracksTheMapBasedOnCompassFacing' && (await camera(page)).pitch < 0.5,
   `${await mode()}`,
 );
 
@@ -1089,11 +1088,29 @@ await mapIdle(page7);
 await view7.click();
 await face(page7, 160);
 await mapIdle(page7);
+await face(page7, 200);
+await mapIdle(page7);
+check(
+  '3D picked in the compass view: the map tilts to 3D and holds it as the phone turns',
+  Math.abs((await pitch7()) - want3d) < 0.5,
+  `pitch ${(await pitch7()).toFixed(1)}`,
+);
+await view7.click();
+await face(page7, 240);
+await mapIdle(page7);
+check(
+  '  2D picked: flat, as the phone turns',
+  (await pitch7()) < 0.5,
+  `pitch ${(await pitch7()).toFixed(1)}`,
+);
+await view7.click();
+await face(page7, 120);
+await mapIdle(page7);
 await where7.click();
 await until(async () => (await where7.getAttribute('data-mode')) === 'TrackedLocation', 3000);
 await mapIdle(page7);
 check(
-  '3D picked in the compass view: back on TrackedLocation the map is in 3D, as the button says',
+  '  3D again, back on TrackedLocation: the map is in 3D, as the button says',
   Math.abs((await pitch7()) - want3d) < 0.5 &&
     (await view7.getAttribute('aria-label')) === 'Switch to 2D view',
   `pitch ${(await pitch7()).toFixed(1)}; ${await view7.getAttribute('aria-label')}`,

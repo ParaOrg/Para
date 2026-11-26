@@ -76,7 +76,7 @@ interface Options {
  *    200 m (trackedZoom).
  *  - TrackedLocation, the camera on them, north up, following each fix. A
  *    tap turns on the compass.
- *  - TracksTheMapBasedOnCompassFacing, the camera tilted, 200 m on the bar,
+ *  - TracksTheMapBasedOnCompassFacing, the camera at the chosen view's tilt, 200 m on the bar,
  *    turned the way the phone faces. A tap goes back to TrackedLocation's
  *    view, at its zoom, and the next to this again.
  *

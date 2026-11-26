@@ -28,8 +28,8 @@ interface LocatorOnMapProps {
  * The overlay at the commuter's fix, as a DOM marker, not a map layer: it
  * costs the map nothing to move (an animated layer keeps MapLibre repainting
  * the whole map). It lies on the ground and turns with the map
- * (MapLibre's `map` alignments), as Google Maps' does: tilted, in the
- * compass view, the circle and the dot go oval with the street; and its
+ * (MapLibre's `map` alignments), as Google Maps' does: tilted, in 3D,
+ * the circle and the dot go oval with the street; and its
  * beam points the way they face, from north.
  */
 export function LocatorOnMap({
