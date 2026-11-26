@@ -28,7 +28,7 @@ export function TerminalChecklist({ groups, ticked, onToggle }: TerminalChecklis
       ) : (
         <ul className="mt-2 max-h-56 space-y-2 overflow-y-auto pr-1">
           {groups.map((g) => (
-            <li key={g.signboard}>
+            <li key={g.routeId}>
               <p className="text-sm font-medium text-neutral-900">{g.signboard}</p>
               <ul className="mt-1 space-y-1">
                 {g.directions.map((v) => (

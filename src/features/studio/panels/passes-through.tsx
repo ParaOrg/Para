@@ -31,7 +31,7 @@ export function PassesThrough({ groups, station = null, onStationChange }: Passe
       ) : (
         <ul className="mt-2 max-h-56 space-y-1.5 overflow-y-auto pr-1 text-sm">
           {groups.map((g) => (
-            <li key={g.signboard} className="text-neutral-700">
+            <li key={g.routeId} className="text-neutral-700">
               <span className="font-medium text-neutral-900">{g.signboard}</span>
               <span className="text-neutral-500">
                 {' '}
