@@ -37,7 +37,7 @@ export const TrackedLocationTurned: Story = {
   args: { mode: 'TrackedLocation', heading: 60, 'aria-label': 'Turn the map the way I face' },
 };
 
-/** The camera tilted and turned with the phone: a tap puts north up again. */
+/** The camera turned with the phone: a tap puts north up again. */
 export const TracksTheMapBasedOnCompassFacing: Story = {
   args: { mode: 'TracksTheMapBasedOnCompassFacing', 'aria-label': 'Put north up' },
 };
