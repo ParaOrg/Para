@@ -50,6 +50,13 @@ import { PlaygroundSaveSheets } from './playground-save-sheets';
 import { PlaygroundTools } from './playground-tools';
 import { WorkshopLocation } from './workshop-location';
 
+/**
+ * The hotspots' marks on the studio's map, off for now (the owner's call): no pin zoomed in and no
+ * dot zoomed out, for a terminal or a hintuan. The boxes and names stay, and a tap on a box or a
+ * search still opens it. Without this line the pins and dots come back.
+ */
+const HOTSPOT_MARKS = { shouldShowPins: false, dotKinds: [] } as const;
+
 interface WorkshopProps {
   session: Session | null;
   recovery: ReturnType<typeof usePasswordRecovery>;
@@ -101,6 +108,7 @@ export function Workshop({ session, recovery }: WorkshopProps) {
     hiddenHotspotId: draw.area?.hotspotId ?? null,
     // While a trip is open, the map lights only the trip, as on the public map.
     muted: !!saved.selected,
+    ...HOTSPOT_MARKS,
   });
   // The save panels and the toast, one at a time, the newest: a save's, or a
   // problem (useSaveFlow).

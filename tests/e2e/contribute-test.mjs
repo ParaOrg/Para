@@ -3576,9 +3576,9 @@ const REFUSING_LOCATION = () => {
   await page.reload({ waitUntil: 'load' });
   await page.getByRole('button', { name: 'Start Tracking' }).waitFor({ timeout: 20000 });
   await waitForMap(page);
-  // The published hotspots, names and pins, come once the map settles: in before the labels are
+  // The published hotspots and their names come once the map settles: in before the labels are
   // read, so "ours" is the same list at the start as after each switch.
-  await page.waitForFunction(() => !!window.__map.getLayer('saved-stops-pin'), null, {
+  await page.waitForFunction(() => !!window.__map.getLayer('saved-stops-label-hintuan'), null, {
     timeout: 30000,
   });
   await checkLocationLabels(page, { check, prefix: 'contributor page', waitForMap });

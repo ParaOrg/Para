@@ -9,16 +9,30 @@ import {
   removeSavedHotspots,
 } from '@/features/routes/map/saved-hotspots-layers';
 import { maskStations } from '@/features/routes/map/station-mask';
+import type { HotspotKind } from '@/features/routes/model/hotspots';
 
 import { PUBLISHED_CASING, layerToGoUnder } from './published-routes-layers';
 import { readPublishedIndex } from './published-source';
 
 /*
- * The published hotspots behind a recording: every box on the published map, its pin and its
- * name, drawn as the public map draws them at rest, so a contributor sees the terminals and
- * hintuans Para already has. Only a picture: nothing here listens for a tap, so a box, a pin or a
+ * The published hotspots behind a recording: every box on the published map and its name (its
+ * pin and dot as HOTSPOT_MARKS says), drawn as the public map draws them at rest, so a
+ * contributor sees the terminals and hintuans Para already has. Only a picture: nothing here listens for a tap, so a box, a pin or a
  * dot does nothing when touched.
  */
+
+/**
+ * The hotspots' marks behind a recording, off for now (the owner's call): no pin and no dot, for a
+ * terminal or a hintuan; the boxes and names stay. `shouldShowPins: true` and no `dotKinds` bring
+ * them back.
+ */
+const HOTSPOT_MARKS: HotspotMarks = { shouldShowPins: false, dotKinds: [] };
+
+interface HotspotMarks {
+  shouldShowPins: boolean;
+  /** The kinds whose dots are drawn zoomed out; every kind when not given (addSavedHotspots). */
+  dotKinds?: readonly HotspotKind[];
+}
 
 /** The trail's first layer: the pins and names go under it, so the rider's line stays on top. */
 function trailLayer(map: MapLibreMap): string | undefined {
@@ -36,11 +50,16 @@ export async function drawPublishedHotspots(map: MapLibreMap): Promise<() => voi
   if (map.getSource(SRC)) return () => undefined;
 
   const marksUnder = trailLayer(map);
-  addSavedHotspots(map, hotspots, {
-    boxesUnder: map.getLayer(PUBLISHED_CASING) ? PUBLISHED_CASING : layerToGoUnder(map),
-    marksUnder,
-  });
-  addPinLayer(map);
+  addSavedHotspots(
+    map,
+    hotspots,
+    {
+      boxesUnder: map.getLayer(PUBLISHED_CASING) ? PUBLISHED_CASING : layerToGoUnder(map),
+      marksUnder,
+    },
+    HOTSPOT_MARKS.dotKinds,
+  );
+  if (HOTSPOT_MARKS.shouldShowPins) addPinLayer(map);
   // The basemap's stations beside ours, hidden, as on the public map (station-mask.ts).
   maskStations(map, hotspots);
 
