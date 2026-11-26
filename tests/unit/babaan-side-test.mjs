@@ -5,6 +5,7 @@
 //   node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs tests/unit/babaan-side-test.mjs
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { isDeepStrictEqual } from 'node:util';
 import { rightOfLine } from '../../src/features/routes/geo/right-of-line.ts';
 import { hintuansAlong } from '../../src/features/routes/model/timeline.ts';
 import { hotspotRing } from '../../src/features/routes/model/hotspots.ts';
@@ -35,6 +36,14 @@ const area = (r) => {
 };
 const close = (x, y) => assert.ok(Math.abs(x - y) < 1e-9, `${x} is not ${y}`);
 const ys = (r) => r.map((p) => p[1]);
+/**
+ * Whether a line's two directions' halves of a box make the box, as test 74 holds the committed
+ * map to (to a millionth of its area); a box neither direction cuts makes it too.
+ */
+const halvesMakeBox = (ring, forward, backward) =>
+  forward && backward
+    ? Math.abs(area(forward) + area(backward) - area(ring)) < area(ring) * 1e-6
+    : forward === backward;
 
 test('eastbound, the right is the south half', () => {
   const half = rightOfLine(square, [
@@ -166,6 +175,24 @@ test('a line ending in the box on a repeated point still cuts it', () => {
   close(area(start), 0.5);
 });
 
+test('a line that starts in the box and passes it again is cut along its start, both ways', () => {
+  // From inside, east and out, round, and back west across the box higher up: two passes.
+  const line = [
+    [0.5, 0.2],
+    [2, 0.2],
+    [2, 0.8],
+    [-1, 0.8],
+  ];
+  const forward = rightOfLine(square, line);
+  const backward = rightOfLine(square, [...line].reverse());
+  assert.ok(forward && backward);
+  // Cut along y = 0.2 (the start pass) both ways: east, the right is the strip below it.
+  close(Math.max(...ys(forward)), 0.2);
+  close(area(forward), 0.2);
+  close(area(backward), 0.8);
+  assert.ok(halvesMakeBox(square, forward, backward));
+});
+
 // The cheap-phone plan, step 8 (2026-10-04): rightOfLine walks the line from
 // each end instead of copying it twice, skips the segments that do not reach
 // the box, and the babaan sides cut first and place only the boxes they cut.
@@ -286,33 +313,73 @@ test('step 8: every line of the committed map against every hintuan, both ways, 
   );
   let pairs = 0;
   let cut = 0;
+  let mended = 0;
   for (const forward of lines) {
-    for (const line of [forward, [...forward].reverse()]) {
-      for (const ring of boxes) {
+    const backward = [...forward].reverse();
+    for (const ring of boxes) {
+      // Where the code before step 8 cut a box so that its two halves made it, the cut is held to
+      // it exactly. Where they did not (a line through the box twice), the cut may only be mended:
+      // the same as before, or halves that make the box, as test 74 asks of the committed map.
+      const wasOk = halvesMakeBox(
+        ring,
+        oldRightOfLine(ring, forward),
+        oldRightOfLine(ring, backward),
+      );
+      const nowOk = halvesMakeBox(ring, rightOfLine(ring, forward), rightOfLine(ring, backward));
+      for (const line of [forward, backward]) {
         const was = oldRightOfLine(ring, line);
-        assert.deepStrictEqual(rightOfLine(ring, line), was);
+        const now = rightOfLine(ring, line);
+        if (wasOk) assert.deepStrictEqual(now, was);
+        else if (!isDeepStrictEqual(now, was)) {
+          assert.ok(nowOk, 'a changed cut whose halves do not make the box');
+          mended++;
+        }
         pairs++;
         if (was) cut++;
       }
     }
   }
   assert.ok(cut > 50, `only ${cut} cut`);
-  console.log(`  ${pairs} line–box pairs, ${cut} cut, all as before`);
+  console.log(`  ${pairs} line–box pairs, ${cut} cut, ${mended} mended, the rest as before`);
 });
 
 test("step 8: every direction's babaan sides, either way round, the same features in the same order", () => {
   const file = published();
   let features = 0;
+  let mended = 0;
   for (const v of file.directions.filter((v) => v.shape)) {
     for (const chosen of [v, { ...v, reversed: !v.reversed }]) {
       const was = oldBabaanFeatures(chosen, file.hotspots);
-      assert.deepStrictEqual(babaanSideFeatures(chosen, file.hotspots), was, `${v.name}`);
+      const now = babaanSideFeatures(chosen, file.hotspots);
+      // The same boxes in the same order; each side as before, unless the box was one the code
+      // before step 8 cut badly (its two halves not the box), and then halves that make it.
+      assert.deepStrictEqual(
+        now.map((f) => f.properties.id),
+        was.map((f) => f.properties.id),
+        `${v.name}`,
+      );
+      const line = oldTravelLine(chosen, file.hotspots);
+      for (const [i, feature] of now.entries()) {
+        if (isDeepStrictEqual(feature, was[i])) continue;
+        mended++;
+        const stop = file.hotspots.find((s) => s.id === feature.properties.id);
+        const ring = hotspotRing(stop);
+        const back = [...line].reverse();
+        assert.ok(
+          !halvesMakeBox(ring, oldRightOfLine(ring, line), oldRightOfLine(ring, back)),
+          `${v.name}: ${stop.name} changed, though it was cut well before`,
+        );
+        assert.ok(
+          halvesMakeBox(ring, rightOfLine(ring, line), rightOfLine(ring, back)),
+          `${v.name}: ${stop.name} changed, and its halves do not make it`,
+        );
+      }
       features += was.length;
     }
   }
   assert.ok(features > 20, `only ${features} sides`);
   assert.deepStrictEqual(babaanSideFeatures(null, file.hotspots), []);
-  console.log(`  ${features} babaan sides, all as before`);
+  console.log(`  ${features} babaan sides, ${mended} mended, the rest as before`);
 });
 
 test('step 8: made-up lines, ends repeated, starting and ending inside, grazing corners: cut as before', () => {
@@ -359,7 +426,15 @@ test('step 8: made-up lines, ends repeated, starting and ending inside, grazing 
       else line.push([coord(w, e), coord(s, nn)]);
     }
     const was = oldRightOfLine(ring, line);
-    assert.deepStrictEqual(rightOfLine(ring, line), was, JSON.stringify({ ring, line }));
+    const now = rightOfLine(ring, line);
+    const back = [...line].reverse();
+    if (halvesMakeBox(ring, was, oldRightOfLine(ring, back)))
+      assert.deepStrictEqual(now, was, JSON.stringify({ ring, line }));
+    else if (!isDeepStrictEqual(now, was))
+      assert.ok(
+        halvesMakeBox(ring, now, rightOfLine(ring, back)),
+        `a changed cut whose halves do not make the box: ${JSON.stringify({ ring, line })}`,
+      );
     if (was) cut++;
   }
   assert.ok(cut > 500, `only ${cut} cut`);
