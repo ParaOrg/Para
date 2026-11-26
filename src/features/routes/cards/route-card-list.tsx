@@ -77,8 +77,8 @@ interface Props {
  * direction, under the place that leaves from (chooserDepartures). PAPUNTA rests disabled when the
  * other way round has nothing drawn, and is not there when only loops show.
  *
- * The filter (ModeFilterCard), where the caller keeps one, narrows the cards to one kind of ride,
- * the caller the map's lights to match; one with nothing to show says so, with a way back to All
+ * The filter (ModeFilterMenu), where the caller keeps one, narrows the cards to the kinds of ride
+ * picked, the caller the map's lights to match; one with nothing to show says so, with a way back to All
  * (ModeFilterEmpty).
  *
  * The hotspots under the tap come first: a box is small and deliberate. They are plain rows, a

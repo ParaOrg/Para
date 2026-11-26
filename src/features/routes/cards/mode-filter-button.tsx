@@ -47,6 +47,8 @@ export function ModeFilterButton({
   const buttonRef = useRef<HTMLButtonElement>(null);
   const { picks, onPicks, routeCount } = modeFilter;
   const count = pickCount(picks);
+  // The dialog, closed, has handed the focus back already; this keeps it here should the
+  // browser not, as an older one may not.
   const handleClose = () => {
     setIsOpen(false);
     buttonRef.current?.focus();
@@ -61,7 +63,6 @@ export function ModeFilterButton({
         label={count > 0 ? `Filter: ${picksNamed(picks)}` : 'Filter'}
         tooltip={tooltip}
         aria-haspopup="dialog"
-        aria-expanded={isOpen}
         data-testid={testId}
         onClick={() => setIsOpen(true)}
       />

@@ -36,15 +36,18 @@ export function ModeFilterMenu({ picks, onPicks, routeCount, onClose }: ModeFilt
     const dialog = ref.current;
     if (dialog && !dialog.open) dialog.showModal();
   }, []);
+  // Every way out closes the dialog itself first: the page is no longer inert, the browser hands
+  // the focus back to the button that opened it, and its `close` tells the caller.
+  const close = () => ref.current?.close();
   // Its own Escape, taken here: prevented, the route list behind it keeps open (isEscapeToClose).
   const handleKeyDown = (event: KeyboardEvent<HTMLDialogElement>) => {
     if (event.key !== 'Escape') return;
     event.preventDefault();
-    onClose();
+    close();
   };
   // A tap on the scrim lands on the dialog itself; one on the sheet lands inside it.
   const handleClick = (event: MouseEvent<HTMLDialogElement>) => {
-    if (event.target === event.currentTarget) onClose();
+    if (event.target === event.currentTarget) close();
   };
   const handleToggle = (mode: Mode) => onPicks(togglePick(picks, mode));
 
@@ -58,7 +61,8 @@ export function ModeFilterMenu({ picks, onPicks, routeCount, onClose }: ModeFilt
       onKeyDown={handleKeyDown}
       onClick={handleClick}
       onClose={onClose}
-      className="mx-0 mt-auto mb-0 w-full max-w-none overflow-clip rounded-t-4xl bg-surface p-0 font-sn-pro text-content-primary shadow-bottom-sheet-top-shadow backdrop:bg-surface-transparent lg:m-auto lg:w-[calc(100%-2rem)] lg:max-w-120 lg:rounded-4xl"
+      // Shown only while open (`open:flex`), so the rows can scroll on a short screen.
+      className="mx-0 mt-auto mb-0 w-full max-w-none flex-col overflow-clip rounded-t-4xl bg-bg-surface p-0 font-sn-pro text-text-primary shadow-bottom-sheet-top-shadow backdrop:bg-surface-transparent open:flex lg:m-auto lg:w-[calc(100%-2rem)] lg:max-w-120 lg:rounded-4xl"
     >
       <div className="flex items-center justify-between px-5 pt-5 pb-2">
         <h2 id={titleId} className="text-lg/7 font-semibold">
@@ -69,10 +73,10 @@ export function ModeFilterMenu({ picks, onPicks, routeCount, onClose }: ModeFilt
           icon={<CloseIcon />}
           label="Close"
           tooltip="left"
-          onClick={onClose}
+          onClick={close}
         />
       </div>
-      <ul className="flex flex-col px-5 pt-2 pb-4">
+      <ul className="flex min-h-0 flex-col overflow-y-auto px-5 pt-2 pb-4">
         {MODES.map((mode) => (
           <ModeRow
             key={mode}
@@ -82,12 +86,13 @@ export function ModeFilterMenu({ picks, onPicks, routeCount, onClose }: ModeFilt
           />
         ))}
       </ul>
-      <div className="flex items-center justify-between border-t-0-6 border-border-tertiary px-5 py-4">
+      {/* Clear of a phone's home indicator at the foot of the screen; the wide card floats. */}
+      <div className="flex items-center justify-between border-t-0-6 border-stroke-tertiary px-5 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))] lg:pb-4">
         <Button variant="plain" label="Clear all" onClick={() => onPicks([])} />
         <Button
           variant="primary"
           label={`Show ${routeCount} ${routeCount === 1 ? 'route' : 'routes'}`}
-          onClick={onClose}
+          onClick={close}
         />
       </div>
     </dialog>

@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useState } from 'react';
-import { expect, fn, userEvent, within } from 'storybook/test';
+import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
 import { ModeFilterMenu } from './mode-filter-menu';
 import type { ModePicks } from '../model/mode-filter';
@@ -40,6 +40,10 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+/** The menu once open: it shows itself as a modal after its first paint. */
+const openMenu = async (canvasElement: HTMLElement) =>
+  within(await within(canvasElement.ownerDocument.body).findByRole('dialog', { name: 'Filter' }));
+
 /** Nothing picked: every switch off, every route listed. */
 export const Default: Story = {};
 
@@ -54,7 +58,7 @@ export const SeveralPicked: Story = {
  */
 export const Tapped: Story = {
   play: async ({ args, canvasElement }) => {
-    const menu = within(canvasElement.ownerDocument.body);
+    const menu = await openMenu(canvasElement);
     await userEvent.click(menu.getByRole('switch', { name: 'Jeepney' }));
     await expect(args.onPicks).toHaveBeenLastCalledWith(['jeep']);
     await userEvent.click(menu.getByRole('switch', { name: 'Train' }));
@@ -74,7 +78,7 @@ export const Tapped: Story = {
       { once: true },
     );
     await userEvent.keyboard('{Escape}');
-    await expect(args.onClose).toHaveBeenCalled();
+    await waitFor(() => expect(args.onClose).toHaveBeenCalled());
     await expect(isEscapeLeftToTheList).toBe(false);
   },
 };
@@ -89,13 +93,14 @@ export const NoRoutes: Story = { args: { picks: ['ferry'], routeCount: 0 } };
 export const ScrimTapCloses: Story = {
   play: async ({ args, canvasElement }) => {
     // The scrim is the dialog's backdrop: a tap there lands on the dialog itself, not inside it.
+    await openMenu(canvasElement);
     const dialog = within(canvasElement.ownerDocument.body).getByTestId('mode-filter');
     await userEvent.pointer({
       keys: '[MouseLeft]',
       target: dialog,
       coords: { clientX: 4, clientY: 4 },
     });
-    await expect(args.onClose).toHaveBeenCalled();
+    await waitFor(() => expect(args.onClose).toHaveBeenCalled());
   },
 };
 
@@ -106,4 +111,33 @@ export const ScrimTapCloses: Story = {
 export const OnPhone: Story = {
   args: { picks: ['jeep', 'ejeep', 'uv', 'bus', 'p2p'] },
   globals: { viewport: { value: 'mobile1', isRotated: false } },
+};
+
+/** On a wide screen: the card in the middle, rounded all round, at most 480 wide (4896:43309). */
+export const Wide: Story = {
+  args: { picks: ['jeep', 'ejeep', 'uv', 'bus', 'p2p'] },
+  globals: { viewport: { value: 'desktop', isRotated: false } },
+};
+
+/** A phone on its side: too short for every row, the rows scroll and the buttons stay in reach. */
+export const ShortScreen: Story = {
+  args: { picks: ['jeep', 'bus'] },
+  globals: { viewport: { value: 'mobile1', isRotated: true } },
+  play: async ({ canvasElement }) => {
+    const menu = await openMenu(canvasElement);
+    await expect(menu.getByRole('button', { name: 'Show 36 routes' })).toBeVisible();
+  },
+};
+
+/**
+ * Six on and the seventh tapped: every mode picked reads as All (#1234's rule), so every switch
+ * goes off and every route is listed.
+ */
+export const SeventhTapped: Story = {
+  args: { picks: ['jeep', 'ejeep', 'uv', 'bus', 'p2p', 'train'] },
+  play: async ({ args, canvasElement }) => {
+    const menu = await openMenu(canvasElement);
+    await userEvent.click(menu.getByRole('switch', { name: 'Ferry' }));
+    await expect(args.onPicks).toHaveBeenLastCalledWith([]);
+  },
 };

@@ -391,7 +391,9 @@ export const FilterWithNoMatch: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.click(canvas.getByRole('button', { name: 'Filter' }));
-    const menu = within(await within(canvasElement.ownerDocument.body).findByTestId('mode-filter'));
+    const menu = within(
+      await within(canvasElement.ownerDocument.body).findByRole('dialog', { name: 'Filter' }),
+    );
     await userEvent.click(menu.getByRole('switch', { name: 'Ferry' }));
     await expect(canvas.getByText('No Ferry routes here')).toBeVisible();
     await userEvent.click(menu.getByRole('button', { name: 'Close' }));

@@ -1,6 +1,6 @@
 import type { Decorator, Meta, StoryObj } from '@storybook/react-vite';
 import { useState, type ComponentProps } from 'react';
-import { expect, fn, userEvent, within } from 'storybook/test';
+import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
 import { RouteListController } from './route-list-controller';
 import { LIVERIES } from '../model/liveries';
@@ -147,13 +147,13 @@ export const PickAFilter: Story = {
   play: async ({ args, canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.click(canvas.getByRole('button', { name: 'Filter' }));
-    const card = await canvas.findByTestId('mode-filter');
+    const card = await canvas.findByRole('dialog', { name: 'Filter' });
     await expect(card).toBeVisible();
     await expect(within(card).getAllByRole('switch')).toHaveLength(MODES.length);
     await userEvent.click(within(card).getByRole('switch', { name: 'Bus' }));
     await expect(args.onPicks).toHaveBeenCalledWith(['bus']);
     await userEvent.click(within(card).getByRole('button', { name: 'Show 4 routes' }));
-    await expect(canvas.queryByTestId('mode-filter')).toBeNull();
+    await waitFor(() => expect(canvas.queryByTestId('mode-filter')).toBeNull());
     await expect(canvas.getByRole('button', { name: 'Filter: Bus' })).toBeVisible();
   },
 };

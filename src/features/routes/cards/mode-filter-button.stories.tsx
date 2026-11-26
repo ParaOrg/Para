@@ -64,7 +64,9 @@ export const Default: Story = {
   play: async ({ args, canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.click(canvas.getByRole('button', { name: 'Filter' }));
-    const menu = within(await within(canvasElement.ownerDocument.body).findByTestId('mode-filter'));
+    const menu = within(
+      await within(canvasElement.ownerDocument.body).findByRole('dialog', { name: 'Filter' }),
+    );
     await userEvent.click(menu.getByRole('switch', { name: 'Jeepney' }));
     await expect(args.onPicks).toHaveBeenLastCalledWith(['jeep']);
     await userEvent.click(menu.getByRole('switch', { name: 'Bus' }));
