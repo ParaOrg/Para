@@ -334,6 +334,15 @@ check(
     (await panel.isVisible()) &&
       (await page.getByRole('form', { name: 'Route Information' }).isVisible()),
   );
+  const [side, bar] = await Promise.all([
+    panel.boundingBox(),
+    page.getByTestId('studio-top-bar').boundingBox(),
+  ]);
+  check(
+    '  the left panel runs the full height, and the top bar starts at its right edge, over the map only',
+    !!side && !!bar && side.y === 0 && Math.abs(bar.x - (side.x + side.width)) < 1 && bar.y === 0,
+    JSON.stringify({ side, bar }),
+  );
   check(
     '  the map beside it is live, and the toolbar has no Done: Save is Done',
     !(await page.locator('[data-map-box]').evaluate((e) => e.inert)) &&

@@ -19,7 +19,6 @@ import {
   listDirections,
   loadHotspotsFromSupabase,
   supabaseConfigError,
-  MapSwitch,
   NEW_MENU_DOCK_FOOT,
   STUDIO_BASEMAPS,
   STUDIO_BASEMAP_THUMBNAILS,
@@ -49,6 +48,7 @@ import { PlaygroundCards } from './playground-cards';
 import { PlaygroundSaveSheets } from './playground-save-sheets';
 import { PlaygroundTools } from './playground-tools';
 import { HOTSPOT_MARKS, STUDIO_MAP_VIEW } from './studio-map-marks';
+import { StudioTopBar } from './studio-top-bar';
 import { WorkshopLocation } from './workshop-location';
 
 interface WorkshopProps {
@@ -243,13 +243,8 @@ export function Workshop({ session, recovery }: WorkshopProps) {
   return (
     <div className="relative flex h-full w-full flex-col">
       <div inert={credits.state === 'open'} className="contents">
-        {/* The studio's top bar: everything on the map starts below it. Provisional until the owner's Figma frame. */}
-        <div className="relative flex h-[calc(3rem+env(safe-area-inset-top))] shrink-0 items-center justify-center border-b border-border-primary bg-surface px-4 pt-[env(safe-area-inset-top)]">
-          <MapSwitch ref={switchRef} value={studioMap} onChange={chooseStudioMap} />
-        </div>
-        {/* The route's form left of the map while a line is drawn on a computer, and the map. */}
         <div className="flex min-h-0 flex-1">
-          {/* Outside the map's box, so a full-screen panel covers the band too; on a computer, before the map in this row: the form is read first, left of the map. */}
+          {/* On a computer the left panel area, the full height, read first; outside the map's column, so a phone's full-screen panel covers the top bar too. */}
           <PlaygroundSaveSheets
             isPlayground={isPlayground}
             isBeside={isBeside}
@@ -261,120 +256,123 @@ export function Workshop({ session, recovery }: WorkshopProps) {
             contribution={contribution}
             draftHotspots={draftOnly.hotspots}
           />
-          {/* `data-dock-host`: the open card's sheet says where its top is here at rest, and on what follows it (`data-dock-follower`) as a finger drags it (BottomSheet); the New + says what it stands in the corner. */}
-          <div
-            ref={root}
-            data-map-box
-            data-dock-host
-            inert={isSheetOpen}
-            className={
-              '@container relative min-w-0 flex-1 overflow-clip' +
-              (!draw.drawing && !choosing ? ' ' + NEW_MENU_DOCK_FOOT : '')
-            }
-          >
-            {/* Inert on the other maps, so a keyboard cannot pan the camera that waits there. */}
-            <div inert={!isPlayground && !isContributors} className="contents">
-              <MapView
-                onReady={setMap}
-                onLoadedChange={setIsMapLoaded}
-                {...STUDIO_MAP_VIEW}
-                showsDiagnostics
-                basemaps={STUDIO_BASEMAPS}
-                basemapThumbnails={STUDIO_BASEMAP_THUMBNAILS}
-                areCreditsShown={credits.isSheetMissing}
-              />
-              {/* The public map's ⓘ, in its place at the map's bottom left; MapLibre's corner credits step aside. */}
-              {!credits.isSheetMissing && (
-                <MapCreditsDock
-                  isDocked={cards.open}
-                  onOpen={credits.open}
-                  buttonRef={credits.buttonRef}
+          <div className="flex min-w-0 flex-1 flex-col">
+            <StudioTopBar ref={switchRef} value={studioMap} onChange={chooseStudioMap} />
+            {/* `data-dock-host`: the open card's sheet says where its top is here at rest, and on what follows it (`data-dock-follower`) as a finger drags it (BottomSheet); the New + says what it stands in the corner. */}
+            <div
+              ref={root}
+              data-map-box
+              data-dock-host
+              inert={isSheetOpen}
+              className={
+                '@container relative min-h-0 min-w-0 flex-1 overflow-clip' +
+                (!draw.drawing && !choosing ? ' ' + NEW_MENU_DOCK_FOOT : '')
+              }
+            >
+              {/* Inert on the other maps, so a keyboard cannot pan the camera that waits there. */}
+              <div inert={!isPlayground && !isContributors} className="contents">
+                <MapView
+                  onReady={setMap}
+                  onLoadedChange={setIsMapLoaded}
+                  {...STUDIO_MAP_VIEW}
+                  showsDiagnostics
+                  basemaps={STUDIO_BASEMAPS}
+                  basemapThumbnails={STUDIO_BASEMAP_THUMBNAILS}
+                  areCreditsShown={credits.isSheetMissing}
                 />
-              )}
-              <WorkshopLocation
-                map={map}
-                isMapLoaded={isMapLoaded}
-                saved={saved}
-                hotspots={hotspots}
-                cards={cards}
-                camera={camera}
-                cameraTurn={locatorTurn}
-                hushedAt={hushedAt}
-                hasCredits={!credits.isSheetMissing}
-              />
-            </div>
-
-            {/* A config or load problem is a banner, never a blank page. */}
-            {(supabaseConfigError || saved.error || hotspots.error) && (
-              <div className="absolute top-[calc(1rem+var(--map-safe-top))] left-1/2 z-20 w-max max-w-[calc(100%-2rem)] -translate-x-1/2 rounded-lg bg-amber-50 px-4 py-2 text-xs text-amber-900 shadow ring-1 ring-amber-200">
-                {supabaseConfigError ??
-                  `Couldn't load saved routes: ${saved.error ?? hotspots.error}`}
+                {/* The public map's ⓘ, in its place at the map's bottom left; MapLibre's corner credits step aside. */}
+                {!credits.isSheetMissing && (
+                  <MapCreditsDock
+                    isDocked={cards.open}
+                    onOpen={credits.open}
+                    buttonRef={credits.buttonRef}
+                  />
+                )}
+                <WorkshopLocation
+                  map={map}
+                  isMapLoaded={isMapLoaded}
+                  saved={saved}
+                  hotspots={hotspots}
+                  cards={cards}
+                  camera={camera}
+                  cameraTurn={locatorTurn}
+                  hushedAt={hushedAt}
+                  hasCredits={!credits.isSheetMissing}
+                />
               </div>
-            )}
 
-            <OtherMaps
-              studioMap={studioMap}
-              isContributors={isContributors}
-              map={map}
-              userId={session?.user.id}
-              isSignedIn={isSignedIn}
-              hasLine={draw.drawing}
-              onSignIn={openSignIn}
-              onOpenPlayground={handleOpenPlayground}
-              onContributionStart={handleContributionStart}
-            />
+              {/* A config or load problem is a banner, never a blank page. */}
+              {(supabaseConfigError || saved.error || hotspots.error) && (
+                <div className="absolute top-[calc(1rem+var(--map-safe-top))] left-1/2 z-20 w-max max-w-[calc(100%-2rem)] -translate-x-1/2 rounded-lg bg-amber-50 px-4 py-2 text-xs text-amber-900 shadow ring-1 ring-amber-200">
+                  {supabaseConfigError ??
+                    `Couldn't load saved routes: ${saved.error ?? hotspots.error}`}
+                </div>
+              )}
 
-            {/*
+              <OtherMaps
+                studioMap={studioMap}
+                isContributors={isContributors}
+                map={map}
+                userId={session?.user.id}
+                isSignedIn={isSignedIn}
+                hasLine={draw.drawing}
+                onSignIn={openSignIn}
+                onOpenPlayground={handleOpenPlayground}
+                onContributionStart={handleContributionStart}
+              />
+
+              {/*
               Place search (ticket 05) on the workshop and the Contributors map; the Public map's
               own search serves that view. A card opens only in the workshop.
             */}
-            {(isPlayground || isContributors) && (
-              <StudioSearch
-                map={map}
-                hotspots={hotspots.hotspots}
-                isSignedIn={isSignedIn}
-                directionsAt={directionsAtHotspots(saved.directions, hotspots.linkedDirectionIds)}
-                isDrawing={draw.drawing}
-                onOpenHotspot={isPlayground ? camera.openPlace : undefined}
-                onSubjectChanged={isPlayground ? reloadMap : undefined}
-              />
-            )}
+              {(isPlayground || isContributors) && (
+                <StudioSearch
+                  map={map}
+                  hotspots={hotspots.hotspots}
+                  isSignedIn={isSignedIn}
+                  directionsAt={directionsAtHotspots(saved.directions, hotspots.linkedDirectionIds)}
+                  isDrawing={draw.drawing}
+                  onOpenHotspot={isPlayground ? camera.openPlace : undefined}
+                  onSubjectChanged={isPlayground ? reloadMap : undefined}
+                />
+              )}
 
-            {/* Out of the page's reach, not unmounted, on the other maps. */}
-            <div inert={!isPlayground} className={isPlayground ? 'contents' : 'hidden'}>
-              <PlaygroundCards
-                map={map}
-                draw={draw}
-                saved={saved}
-                hotspots={hotspots}
-                cards={cards}
-                camera={camera}
-                trip={trip}
-                canEdit={canEdit}
-                isWideScreen={isWideScreen}
-                opening={opening}
-                deletes={deletes}
-                hush={hush}
-                onDrawReturnTrip={startReturnTrip}
-              />
-              <PlaygroundTools
-                map={map}
-                onOpenDraft={handleOpenDraft}
-                session={session}
-                auth={auth}
-                draw={draw}
-                saved={saved}
-                hotspots={hotspots}
-                routeCount={trip.routeCount}
-                saveFlow={saveFlow}
-                contribution={contribution}
-                extendEnds={extendEnds}
-                isPlayground={isPlayground}
-                isChoosing={choosing}
-                isNewMenuOpen={isNewMenuOpen}
-                onNewMenuOpenChange={setIsNewMenuOpen}
-                onDone={isBeside ? undefined : onDone}
-              />
+              {/* Out of the page's reach, not unmounted, on the other maps. */}
+              <div inert={!isPlayground} className={isPlayground ? 'contents' : 'hidden'}>
+                <PlaygroundCards
+                  map={map}
+                  draw={draw}
+                  saved={saved}
+                  hotspots={hotspots}
+                  cards={cards}
+                  camera={camera}
+                  trip={trip}
+                  canEdit={canEdit}
+                  isWideScreen={isWideScreen}
+                  opening={opening}
+                  deletes={deletes}
+                  hush={hush}
+                  onDrawReturnTrip={startReturnTrip}
+                />
+                <PlaygroundTools
+                  map={map}
+                  onOpenDraft={handleOpenDraft}
+                  session={session}
+                  auth={auth}
+                  draw={draw}
+                  saved={saved}
+                  hotspots={hotspots}
+                  routeCount={trip.routeCount}
+                  saveFlow={saveFlow}
+                  contribution={contribution}
+                  extendEnds={extendEnds}
+                  isPlayground={isPlayground}
+                  isChoosing={choosing}
+                  isNewMenuOpen={isNewMenuOpen}
+                  onNewMenuOpenChange={setIsNewMenuOpen}
+                  onDone={isBeside ? undefined : onDone}
+                />
+              </div>
             </div>
           </div>
         </div>
