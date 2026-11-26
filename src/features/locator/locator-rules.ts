@@ -42,8 +42,6 @@ export const ACCURACY_MAX_M = 80;
  * starts a new one. A phone with location on gives one about every second.
  */
 export const QUIET_MS = 10_000;
-/** How far the compass view tilts: "slightly ... diagonally", as Google's does. */
-const COMPASS_PITCH = 45;
 
 /**
  * How big the dot and its beam are drawn at `zoom`. Like Google Maps', they
@@ -93,7 +91,10 @@ interface CommuterCameraInput {
   fix: Fix;
   /** The way the phone faces, for the compass view; null with none. */
   turn: number | null;
-  /** The tilt the tracked view rests at: the chosen view's (2D's 0 or 3D's, restingPitch). 0 if not given. */
+  /**
+   * The tilt the camera rests at, tracked or turned by the compass: the chosen view's (2D's 0 or
+   * 3D's, restingPitch; the owner, 2026-11-26). 0 if not given.
+   */
   restPitch?: number;
   /** TrackedLocation's zoom, kept through the compass view and back. */
   keptZoom: number;
@@ -125,7 +126,7 @@ export function commuterCamera({
   return {
     center: fix.at,
     zoom: camera === 'compass' ? zoomForScale(COMPASS_SCALE_M, fix.at[1]) : keptZoom,
-    pitch: camera === 'compass' ? COMPASS_PITCH : restPitch,
+    pitch: restPitch,
     bearing: camera === 'compass' ? (turn ?? mapBearing) : 0,
     duration: tapped ? 800 : 400,
   };
