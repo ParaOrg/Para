@@ -6,6 +6,7 @@ import { bboxOf, type LngLat } from '@/shared/utils/geo';
 
 import { APP_MOVE } from './map-view';
 import { roomBeside } from './sheet-room';
+import { restingPitch } from './view-mode';
 
 /*
  * The camera taking in routes whole — the Overview button (useOverview), an end
@@ -71,11 +72,11 @@ export function useRideOverview(
   }, [map, picks]);
 }
 
+/** A kept camera: where it was, not its tilt, which comes back as the view chosen now (restingPitch). */
 interface Camera {
   center: LngLat;
   zoom: number;
   bearing: number;
-  pitch: number;
 }
 
 /**
@@ -97,7 +98,6 @@ export function useCameraBefore(map: MapLibreMap | null) {
           center: [c.lng, c.lat],
           zoom: map.getZoom(),
           bearing: map.getBearing(),
-          pitch: map.getPitch(),
         };
       },
       /** What is kept, if anything. */
@@ -105,7 +105,7 @@ export function useCameraBefore(map: MapLibreMap | null) {
       back: () => {
         const was = kept.current;
         kept.current = null;
-        if (map && was) map.easeTo({ ...was, duration: 700 }, APP_MOVE);
+        if (map && was) map.easeTo({ ...was, pitch: restingPitch(), duration: 700 }, APP_MOVE);
       },
       /** Let it go, the camera staying where it is. */
       forget: () => {
