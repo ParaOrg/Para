@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 
+import { FRAMED_SHARE, slide } from '@/shared/ui/sheet-gesture';
 import { cn } from '@/shared/utils/cn';
 
 interface MapControlsDockProps {
@@ -7,14 +8,12 @@ interface MapControlsDockProps {
   children: ReactNode;
 }
 
-/** The highest it rides: just under the status bar, over the sheet below. */
-const HIGHEST = 'calc(var(--map-safe-top, env(safe-area-inset-top)) + 2.75rem)';
-
 /**
  * Where the controls of the cards on show float on the public map (4885:41761, 4886:47571): the
  * route list's Vice Versa and Overview, a trip's Overview. On a phone they stand at the map's
- * bottom left, 16 in and `--dock-gap` over the card's sheet, following it at every height as the
- * locate-me column does, a column from the sheet up, 12 apart. Where the card docks on the left of
+ * bottom left, 16 in and `--dock-gap` over the card's sheet, a column from the sheet up, 12 apart.
+ * They follow it up to the middle (FRAMED_SHARE) and stay there, the sheet sliding over them
+ * higher, as the locate-me column does (4885:41761, "The Button Stays in the middle"). Where the card docks on the left of
  * a wide map (`@float:`), they stand in a row at the map's top, 16 down and 16 right of the card.
  */
 export function MapControlsDock({ children }: MapControlsDockProps) {
@@ -26,7 +25,7 @@ export function MapControlsDock({ children }: MapControlsDockProps) {
         'transition-[translate] duration-sheet ease-enter in-data-dock-dragging:transition-none motion-reduce:transition-none ' +
         '@float:translate-none!'
       }
-      style={{ translate: `0 max(var(--dock-y, 100%), ${HIGHEST})` }}
+      style={{ translate: `0 max(var(--dock-y, 100%), ${slide(FRAMED_SHARE)})` }}
     >
       <div
         data-testid="map-controls"

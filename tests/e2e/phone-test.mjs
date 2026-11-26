@@ -6063,6 +6063,44 @@ if (runsPart(3)) {
       near(tripPx, wantPx),
       `list ${listPx} px; trip ${tripPx} px, the middle ${wantPx} px`,
     );
+    // Raised past the middle, the controls stay 16 over it, the sheet sliding over them (4885:41761,
+    // "The Button Stays in the middle"): the trip's Overview at the left (the camera moved off its
+    // route, so it shows) and locate-me at the right.
+    if (await trip().count()) {
+      await dragTop(card(), -300);
+      const was = await page.evaluate(() => {
+        const m = window.__map;
+        const at = { center: m.getCenter(), zoom: m.getZoom(), pitch: m.getPitch() };
+        m.jumpTo({ center: [121.1, 14.75], zoom: 13 });
+        return at;
+      });
+      await cardsSettled(page).catch(() => {});
+      const stays = await page.evaluate(() => {
+        const map = window.__map.getContainer().getBoundingClientRect();
+        const top = (sel) => document.querySelector(sel)?.getBoundingClientRect();
+        const sheet = top('[data-testid="card"]:not([hidden])');
+        const bottomOf = (sel) => Math.round(top(sel)?.bottom ?? NaN);
+        return {
+          sheetTop: Math.round(sheet?.top ?? NaN),
+          middle: Math.round(map.bottom - map.height * 0.55),
+          overview: bottomOf('[data-testid="overview"]:not([hidden]) button'),
+          where: bottomOf('[data-testid="where"]'),
+        };
+      });
+      const want = stays.middle - 16;
+      check(
+        '  raised past the middle, the Overview and locate-me stay 16 over it, the sheet over them',
+        stays.sheetTop < stays.middle &&
+          Math.abs(stays.where - want) <= 2 &&
+          Math.abs(stays.overview - want) <= 2,
+        JSON.stringify({ ...stays, want }),
+      );
+      // The camera back where the taps after this were found.
+      await page.evaluate((at) => {
+        window.__map.jumpTo(at);
+      }, was);
+      await mapIdle(page);
+    }
     await leaveTrip(async () => (await chooser.count()) > 0);
     // Back from hidden, the list slides into place: read it at rest, as every height here is.
     await cardsSettled(page).catch(() => {});
