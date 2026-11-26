@@ -1,7 +1,7 @@
-// The hotspots' pins and dots (src/features/routes/map/hotspot-pins.ts), off for now on every
-// page (the owner's call): the public map's HOTSPOT_MARKS in public-map-app.tsx, the studio's in
-// workshop.tsx and the contributor page's in published-hotspots.ts. The boxes and their names
-// stay, from the studio's stand-in database and the committed map file.
+// The hotspots' pins and dots (src/features/routes/map/hotspot-pins.ts), off on every page for
+// now: the public map's HOTSPOT_MARKS in public-map-app.tsx, the studio's in studio-map-marks.ts
+// and the contributor page's in published-hotspots.ts. The boxes and their names stay, from the
+// studio's stand-in database and the committed map file.
 //
 //   npm run dev                          (in another terminal)
 //   node tests/e2e/map-pins-test.mjs
@@ -332,6 +332,14 @@ async function checkNames(page, where, hotspot) {
     pinChunks.length === 0,
     pinChunks.join(', '),
   );
+  check(
+    "public map, unchanged: OpenStreetMap's terminals among its places",
+    await until(
+      () => page.evaluate(() => !!window.__map.getLayer('osm-terminals')),
+      (v) => v,
+      10000,
+    ),
+  );
   check('public map: no page errors', errors.length === 0, errors.join('; '));
   await page.close();
 }
@@ -398,7 +406,7 @@ async function checkNames(page, where, hotspot) {
 }
 
 // ------------------------------------------------------------ the studio's zoom
-// No +, − or compass on the studio's map (the owner's call), and the map still zooms: by the + and
+// No +, − or compass on the studio's map for now, and the map still zooms: by the + and
 // − keys, Ctrl plus the wheel (a trackpad's pinch arrives as one) and a double click.
 {
   const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
@@ -528,8 +536,8 @@ let looked;
     if (/footbridges\.v1\.json/.test(r.url())) asked.push(r.url());
   });
   const errors = await open(page, '/studio/?e2e=1');
-  // The studio draws its possible terminals, never the commuter's markers: the markers drawn and
-  // then taken away at street zoom once raced a wait for the map to rest.
+  // The studio draws neither OpenStreetMap's terminals as possible ones nor the commuter's
+  // markers of them, for now: HAS_POSSIBLE_TERMINALS and hasTerminalMarkers.
   const markersAtOpen = await page.evaluate(() => {
     window.__markersAdded = 0;
     window.__map.on('sourcedata', (e) => {
@@ -565,19 +573,17 @@ let looked;
     again > 0 && asked.length === 1,
     `${again} drawn; ${asked.length} asked`,
   );
-  const terminals = await until(
-    () =>
-      page.evaluate(() => ({
-        dots: !!window.__map.getLayer('possible-terminals-dot'),
-        markers: !!window.__map.getSource('osm-terminals'),
-        added: window.__markersAdded,
-      })),
-    (t) => t.dots,
-    10000,
-  );
+  // A moment at street zoom for anything that would come: the dots wait for zoom 13.
+  await settle(page, lift, 17);
+  await page.waitForTimeout(1500);
+  const terminals = await page.evaluate(() => ({
+    dots: !!window.__map.getSource('possible-terminals'),
+    markers: !!window.__map.getSource('osm-terminals'),
+    added: window.__markersAdded,
+  }));
   check(
-    "studio: the possible terminals at street zoom, and never the commuter's terminal markers",
-    terminals.dots && !terminals.markers && !markersAtOpen && terminals.added === 0,
+    "studio: at street zoom, no possible terminals and no commuter's terminal markers",
+    !terminals.dots && !terminals.markers && !markersAtOpen && terminals.added === 0,
     JSON.stringify({ ...terminals, markersAtOpen }),
   );
   check('studio, footbridges: no page errors', errors.length === 0, errors.join('; '));
@@ -633,6 +639,10 @@ let looked;
   );
   await checkNoMarks(page, 'contributor page', looked);
   await checkNames(page, 'contributor page', looked.hintuan);
+  check(
+    "contributor page: no OpenStreetMap terminals' markers",
+    !(await page.evaluate(() => !!window.__map.getSource('osm-terminals'))),
+  );
   // A box is display-only: a tap on it reaches the map and marks nothing.
   const { id } = looked.hintuan.properties;
   const at = looked.hintuan.geometry.coordinates;

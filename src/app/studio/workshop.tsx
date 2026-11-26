@@ -48,14 +48,8 @@ import { OtherMaps } from './other-maps';
 import { PlaygroundCards } from './playground-cards';
 import { PlaygroundSaveSheets } from './playground-save-sheets';
 import { PlaygroundTools } from './playground-tools';
+import { HOTSPOT_MARKS, STUDIO_MAP_VIEW } from './studio-map-marks';
 import { WorkshopLocation } from './workshop-location';
-
-/**
- * The hotspots' marks on the studio's map, off for now (the owner's call): no pin zoomed in and no
- * dot zoomed out, for a terminal or a hintuan. The boxes and names stay, and a tap on a box or a
- * search still opens it. Without this line the pins and dots come back.
- */
-const HOTSPOT_MARKS = { shouldShowPins: false, dotKinds: [] } as const;
 
 interface WorkshopProps {
   session: Session | null;
@@ -283,13 +277,10 @@ export function Workshop({ session, recovery }: WorkshopProps) {
               <MapView
                 onReady={setMap}
                 onLoadedChange={setIsMapLoaded}
-                zoomButtons={false}
-                foldCredits
+                {...STUDIO_MAP_VIEW}
+                showsDiagnostics
                 basemaps={STUDIO_BASEMAPS}
                 basemapThumbnails={STUDIO_BASEMAP_THUMBNAILS}
-                hasMapStyleButton={false}
-                showsDiagnostics
-                labelsPlace="studio"
                 areCreditsShown={credits.isSheetMissing}
               />
               {/* The public map's ⓘ, in its place at the map's bottom left; MapLibre's corner credits step aside. */}

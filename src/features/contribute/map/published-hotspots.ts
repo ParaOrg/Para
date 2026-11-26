@@ -17,12 +17,12 @@ import { readPublishedIndex } from './published-source';
 /*
  * The published hotspots behind a recording: every box on the published map and its name (its
  * pin and dot as HOTSPOT_MARKS says), drawn as the public map draws them at rest, so a
- * contributor sees the terminals and hintuans Para already has. Only a picture: nothing here listens for a tap, so a box, a pin or a
- * dot does nothing when touched.
+ * contributor sees the terminals and hintuans Para already has. Only a picture: nothing here
+ * listens for a tap, so a box, a pin or a dot does nothing when touched.
  */
 
 /**
- * The hotspots' marks behind a recording, off for now (the owner's call): no pin and no dot, for a
+ * The hotspots' marks behind a recording, off for now: no pin and no dot, for a
  * terminal or a hintuan; the boxes and names stay. `shouldShowPins: true` and no `dotKinds` bring
  * them back.
  */

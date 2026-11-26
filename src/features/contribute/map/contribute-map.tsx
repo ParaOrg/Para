@@ -182,6 +182,7 @@ export function ContributeMap({
         onReady={setMap}
         onLoadedChange={setIsMapLoaded}
         zoomButtons={false}
+        hasTerminalMarkers={false}
         hasMapStyleButton={false}
         creditsAtBottom
         areCreditsShown={areCreditsShown}

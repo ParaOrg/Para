@@ -3581,7 +3581,8 @@ const REFUSING_LOCATION = () => {
   await page.waitForFunction(() => !!window.__map.getLayer('saved-stops-label-hintuan'), null, {
     timeout: 30000,
   });
-  await checkLocationLabels(page, { check, prefix: 'contributor page', waitForMap });
+  // No OpenStreetMap terminals among the places for now (hasTerminalMarkers): two GeoJSON layers.
+  await checkLocationLabels(page, { check, prefix: 'contributor page', waitForMap, extras: 2 });
   check('  no page errors', errors.length === 0, errors.join('; '));
   await page.context().close();
 }
