@@ -827,7 +827,7 @@ message. To take someone off: `delete from public.waitlist where email = '…';`
 
 # Applying edsa_carousel to the live project
 
-**Applied live** by the owner on 2026-11-26 (ledger `20261126014035`). Do not reapply. The EDSA
+**Applied live** by the owner on 2026-11-26 (ledger `20261126014035`); its check passed, 4 rows all `t`. Do not reapply. The EDSA
 Carousel is drawn in the studio as a line: a route whose mode is `busway` ("EDSA Carousel" in the
 studio's mode picker) and hintuans marked as its stations (line `EDSA-C`). Before it was applied,
 Publish refused either one. Rows already saved were valid before and after.
