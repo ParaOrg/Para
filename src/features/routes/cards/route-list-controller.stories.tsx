@@ -1,20 +1,20 @@
 import type { Decorator, Meta, StoryObj } from '@storybook/react-vite';
 import { useState, type ComponentProps } from 'react';
-import { expect, fn, userEvent, within } from 'storybook/test';
+import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
 import { RouteListController } from './route-list-controller';
 import { LIVERIES } from '../model/liveries';
-import { MODE_FILTERS, type ModeFilter } from '../model/mode-filter';
+import { MODES, type ModePicks } from '../model/mode-filter';
 
 interface FilteringProps extends Omit<ComponentProps<typeof RouteListController>, 'modeFilter'> {
-  /** The filter it starts on; null: the caller keeps none, so no sliders. */
-  filter: ModeFilter | null;
-  onFilter: (filter: ModeFilter) => void;
+  /** The picks it starts on; null: the caller keeps none, so no sliders. */
+  picks: ModePicks | null;
+  onPicks: (picks: ModePicks) => void;
 }
 
 /** Keeps the filter as the apps do, so a story can be tapped through. */
-function Filtering({ filter: startsOn, onFilter, ...props }: FilteringProps) {
-  const [filter, setFilter] = useState(startsOn ?? 'all');
+function Filtering({ picks: startsOn, onPicks, ...props }: FilteringProps) {
+  const [picks, setPicks] = useState(startsOn ?? []);
   return (
     <RouteListController
       {...props}
@@ -22,11 +22,12 @@ function Filtering({ filter: startsOn, onFilter, ...props }: FilteringProps) {
         startsOn === null
           ? undefined
           : {
-              filter,
-              onFilter: (next) => {
-                onFilter(next);
-                setFilter(next);
+              picks,
+              onPicks: (next) => {
+                onPicks(next);
+                setPicks(next);
               },
+              routeCount: 4,
             }
       }
     />
@@ -43,8 +44,8 @@ const meta = {
     isSwitchable: true,
     isBack: false,
     onSwitch: fn(),
-    filter: 'all',
-    onFilter: fn(),
+    picks: [],
+    onPicks: fn(),
     onClose: fn(),
   },
   parameters: { layout: 'fullscreen' },
@@ -86,7 +87,7 @@ export const Phone: Story = {
 
 /** A trip on a phone: ‹, for something is behind it, and no ✕; the slot after PAPUNTA empty. */
 export const TripPhone: Story = {
-  args: { owner: 'card', filter: null, onBack: fn() },
+  args: { owner: 'card', picks: null, onBack: fn() },
   play: async ({ args, canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(canvas.queryByRole('button', { name: 'Close' })).toBeNull();
@@ -100,7 +101,7 @@ export const TripPhone: Story = {
 export const ExtraSlot: Story = {
   args: {
     owner: 'card',
-    filter: null,
+    picks: null,
     onBack: fn(),
     extra: <span className="size-10 rounded-full bg-surface-tertiary" />,
   },
@@ -130,7 +131,7 @@ export const LoopsOnly: Story = {
 
 /** A filter on: a dot on the sliders, and its name says which. */
 export const Filtered: Story = {
-  args: { filter: 'jeep' },
+  args: { picks: ['jeep'] },
   play: async ({ canvasElement }) => {
     await expect(
       within(canvasElement).getByRole('button', { name: 'Filter: Jeepney' }),
@@ -139,25 +140,26 @@ export const Filtered: Story = {
 };
 
 /**
- * Tapped through: the sliders open the filter, a choice applies and closes it, and the button's
- * name says which.
+ * Tapped through: the sliders open the filter menu, a switch applies as it is tapped, "Show 4
+ * routes" closes it, and the button's name says which.
  */
 export const PickAFilter: Story = {
   play: async ({ args, canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.click(canvas.getByRole('button', { name: 'Filter' }));
-    const card = canvas.getByTestId('mode-filter');
+    const card = await canvas.findByRole('dialog', { name: 'Filter' });
     await expect(card).toBeVisible();
-    await expect(within(card).getAllByRole('radio')).toHaveLength(MODE_FILTERS.length);
-    await userEvent.click(within(card).getByRole('radio', { name: 'Bus' }));
-    await expect(args.onFilter).toHaveBeenCalledWith('bus');
-    await expect(card).not.toBeVisible();
+    await expect(within(card).getAllByRole('switch')).toHaveLength(MODES.length);
+    await userEvent.click(within(card).getByRole('switch', { name: 'Bus' }));
+    await expect(args.onPicks).toHaveBeenCalledWith(['bus']);
+    await userEvent.click(within(card).getByRole('button', { name: 'Show 4 routes' }));
+    await waitFor(() => expect(canvas.queryByTestId('mode-filter')).toBeNull());
     await expect(canvas.getByRole('button', { name: 'Filter: Bus' })).toBeVisible();
   },
 };
 
 /** No filter kept by the caller: no sliders, ✕ and PAPUNTA alone. */
-export const NoFilter: Story = { args: { filter: null } };
+export const NoFilter: Story = { args: { picks: null } };
 
 /** Where the sheet floats (a map 64rem wide), only the bar's first 384 shown, as the list's. */
 const wide: Decorator[] = [
@@ -195,7 +197,7 @@ export const Wide: Story = {
 
 /** A trip on a wide screen: the bar in the trip's colour, ‹ at the right. */
 export const WideTrip: Story = {
-  args: { owner: 'card', filter: null, livery: 'bus', onBack: fn() },
+  args: { owner: 'card', picks: null, livery: 'bus', onBack: fn() },
   decorators: wide,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -210,14 +212,14 @@ export const WideTrip: Story = {
 export const WideNotSwitchable: Story = { args: { isSwitchable: false }, decorators: wide };
 
 /** A filter on, on the wide bar: the dot on the sliders. */
-export const WideFiltered: Story = { args: { filter: 'bus' }, decorators: wide };
+export const WideFiltered: Story = { args: { picks: ['bus'] }, decorators: wide };
 
 /** The extra slot on the wide bar, after PAPUNTA. */
 export const WideExtraSlot: Story = { args: { ...ExtraSlot.args }, decorators: wide };
 
 /** Every livery's bar, as a trip wears it. */
 export const WideLiveries: Story = {
-  args: { owner: 'card', filter: null },
+  args: { owner: 'card', picks: null },
   decorators: wide,
   render: (args) => (
     <div className="flex flex-col gap-2">

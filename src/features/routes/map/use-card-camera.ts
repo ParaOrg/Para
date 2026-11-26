@@ -15,7 +15,7 @@ import type { PickedPlace } from '../cards/route-card-stack';
 import type { Hotspot } from '../model/hotspots';
 import { nearestStopOn, walkToLandmark, type HintuanNearHere } from '../model/landmark-goal';
 import type { Livery } from '../model/liveries';
-import type { ModeFilter } from '../model/mode-filter';
+import type { ModePicks } from '../model/mode-filter';
 import { routeTimeline } from '../model/ride';
 import { directionLine, type Direction } from '../model/routes';
 import { rowOfBox } from '../model/timeline';
@@ -38,7 +38,7 @@ interface Routes<V extends Direction> {
   litDirections: readonly V[];
   select: (id: string | null, opts?: { keepList?: boolean }) => void;
   flip: () => void;
-  filterModes: (filter: ModeFilter) => void;
+  filterModes: (picks: ModePicks) => void;
   highlightCard: (h: Highlight | null) => void;
 }
 
@@ -252,7 +252,7 @@ export function useCardCamera<V extends Direction, S extends Hotspot>(
     flipList: () => saved.flip(),
 
     /** The route list's filter, "Show all routes" among its choices, the camera left where it is. */
-    filterList: (filter: ModeFilter) => saved.filterModes(filter),
+    filterList: (picks: ModePicks) => saved.filterModes(picks),
 
     /**
      * A trip's "Other routes": that route's trip in this one's place, the

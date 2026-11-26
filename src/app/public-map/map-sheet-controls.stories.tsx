@@ -56,7 +56,7 @@ const listOf = (candidates: readonly Direction[]) => ({
   candidates,
   back: false,
   listing: 'every-line' as const,
-  modeFilter: 'all' as const,
+  modePicks: [],
 });
 
 /**
@@ -150,7 +150,7 @@ export const Floating: Story = {
   args: {
     floats: true,
     overview: { isShown: true, go: fn() },
-    list: { ...listOf(talaRoutes), modeFilter: 'jeep' },
+    list: { ...listOf(talaRoutes), modePicks: ['jeep'] },
   },
   decorators: [
     (Story) => (

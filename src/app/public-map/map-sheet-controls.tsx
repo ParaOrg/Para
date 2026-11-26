@@ -1,13 +1,13 @@
 import type { MapLibreMap } from 'maplibre-gl';
 
 import type { TooltipPosition } from '@/design-system/primitives/icon-button';
-import { listWay } from '@/features/routes/cards/list-way';
+import { listWay, listedRouteCount } from '@/features/routes/cards/list-way';
 import { ModeFilterButton } from '@/features/routes/cards/mode-filter-button';
 import { ViceVersaButton } from '@/features/routes/cards/vice-versa-button';
 import { MapControlsDock } from '@/features/routes/map/map-controls-dock';
 import { OverviewPill } from '@/features/routes/map/overview-pill';
 import type { Listing } from '@/features/routes/model/departures';
-import type { ModeFilter } from '@/features/routes/model/mode-filter';
+import type { ModePicks } from '@/features/routes/model/mode-filter';
 import type { Direction } from '@/features/routes/model/routes';
 import { FilterIcon } from '@/shared/ui/map-control-icons';
 import { FRAMED_SHARE, type Snap } from '@/shared/ui/sheet-gesture';
@@ -23,7 +23,7 @@ interface MapSheetControlsProps {
     candidates: readonly Direction[];
     back: boolean;
     listing: Listing;
-    modeFilter: ModeFilter;
+    modePicks: ModePicks;
   } | null;
   /** The cards float (useMapFloats): the filter stands in this row, not over locate-me. */
   floats: boolean;
@@ -31,8 +31,8 @@ interface MapSheetControlsProps {
   onFlip: () => void;
   /** The sheets' shared height (useCardStack): the bar's ⌄ sets the list at the middle. */
   onSnap: (snap: Snap) => void;
-  /** A choice in the filter the sliders open. */
-  onFilter: (filter: ModeFilter) => void;
+  /** The modes picked in the filter the sliders open. */
+  onFilter: (picks: ModePicks) => void;
 }
 
 /**
@@ -53,7 +53,7 @@ export function MapSheetControls({
   onSnap,
   onFilter,
 }: MapSheetControlsProps) {
-  const way = list && listWay(list.candidates, list.back, list.listing, list.modeFilter);
+  const way = list && listWay(list.candidates, list.back, list.listing, list.modePicks);
   return (
     <>
       {list && way && (
@@ -84,8 +84,8 @@ export function MapSheetControls({
 }
 
 interface ListFilterProps {
-  list: { modeFilter: ModeFilter };
-  onFilter: (filter: ModeFilter) => void;
+  list: NonNullable<MapSheetControlsProps['list']>;
+  onFilter: (picks: ModePicks) => void;
   /** Where its tooltip points from: beside locate-me on a phone, along the map's top floating. */
   tooltip: TooltipPosition;
 }
@@ -95,7 +95,11 @@ export function ListFilter({ list, onFilter, tooltip }: ListFilterProps) {
   return (
     <span className="flex rounded-full shadow-sm">
       <ModeFilterButton
-        modeFilter={{ filter: list.modeFilter, onFilter }}
+        modeFilter={{
+          picks: list.modePicks,
+          onPicks: onFilter,
+          routeCount: listedRouteCount(list.candidates, list.back, list.listing, list.modePicks),
+        }}
         icon={<FilterIcon />}
         size="large"
         tooltip={tooltip}

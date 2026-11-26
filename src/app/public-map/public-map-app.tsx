@@ -452,7 +452,7 @@ export function PublicMapApp() {
             back={saved.back}
             listing={saved.listing}
             onFlip={flipList}
-            modeFilter={{ filter: saved.modeFilter, onFilter: filterList }}
+            modeFilter={{ picks: saved.modePicks, onPicks: filterList }}
             onRoute={openTrip}
             onHotspot={(s) => cards.openHotspot(s.id)}
             onClose={cards.closeAll}

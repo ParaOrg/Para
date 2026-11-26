@@ -5,10 +5,9 @@ import { ChevronLeftLargeIcon, CloseLargeIcon, FilterLargeIcon } from '@/shared/
 import { cn } from '@/shared/utils/cn';
 
 import { WAY_TEST_ID, WIDE_BAR, type ControllerOwner } from './controller-look';
-import { ModeFilterButton } from './mode-filter-button';
+import { ModeFilterButton, type ListModeFilter } from './mode-filter-button';
 import { WayButton } from './way-button';
 import type { Livery } from '../model/liveries';
-import type { ModeFilterControl } from '../model/mode-filter';
 
 interface RouteListControllerProps {
   owner: ControllerOwner;
@@ -24,7 +23,7 @@ interface RouteListControllerProps {
   /** The wide bar's colour: the trip's livery. None: the list's. */
   livery?: Livery;
   /** The filter the sliders open, kept by the caller, who lights the map to match; none, no sliders. */
-  modeFilter?: ModeFilterControl;
+  modeFilter?: ListModeFilter;
   /** Figma's extra slot after PAPUNTA, for what is to come there (the report flag). */
   extra?: ReactNode;
   /** ‹: back to what this was opened from. Null or none: nothing behind, so ✕ stands there. */

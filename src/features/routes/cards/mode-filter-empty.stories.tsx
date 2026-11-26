@@ -6,7 +6,7 @@ import { ModeFilterEmpty } from './mode-filter-empty';
 const meta = {
   title: 'Features/Routes/ModeFilterEmpty',
   component: ModeFilterEmpty,
-  args: { filter: 'jeep', onShowAll: fn() },
+  args: { picks: ['jeep'], onShowAll: fn() },
   decorators: [
     (Story) => (
       <div className="w-98 bg-surface">
@@ -30,4 +30,15 @@ export const NoJeeps: Story = {
 };
 
 /** The longest option's words. */
-export const NoEJeeps: Story = { args: { filter: 'ejeep' } };
+export const NoEJeeps: Story = { args: { picks: ['ejeep'] } };
+
+/** Several modes picked, none of them here: either one named. */
+export const NoJeepsOrBuses: Story = {
+  args: { picks: ['jeep', 'bus'] },
+  play: async ({ canvasElement }) => {
+    await expect(within(canvasElement).getByText('No Jeepney or Bus routes here')).toBeVisible();
+  },
+};
+
+/** Three picked, the longest words. */
+export const NoneOfThree: Story = { args: { picks: ['ejeep', 'p2p', 'ferry'] } };

@@ -13,6 +13,8 @@ import {
   passesModeFilter,
   passesModePicks,
   pickCount,
+  picksEither,
+  picksNamed,
   picksOf,
   togglePick,
 } from '../../src/features/routes/model/mode-filter.ts';
@@ -125,4 +127,15 @@ test("the menu's rows, as the owner draws them", () => {
 
 test('Train is every rail line in one', () => {
   assert.deepEqual(keptBy(['train']), ['lrt1', 'lrt2', 'mrt3']);
+});
+
+test("the button's name lists the picks in the filter's order", () => {
+  assert.equal(picksNamed(['jeep', 'bus']), 'Jeepney, Bus');
+  assert.equal(picksNamed(['ferry']), 'Ferry');
+});
+
+test('an empty list names the picks as either one', () => {
+  assert.equal(picksEither(['jeep']), 'Jeepney');
+  assert.equal(picksEither(['jeep', 'bus']), 'Jeepney or Bus');
+  assert.equal(picksEither(['jeep', 'bus', 'train']), 'Jeepney, Bus or Train');
 });

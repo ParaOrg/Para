@@ -34,7 +34,7 @@ function Dock({ shows, ...props }: DockProps) {
       {isList && (
         <span className="flex rounded-full shadow-sm">
           <ModeFilterButton
-            modeFilter={{ filter: 'all', onFilter: fn() }}
+            modeFilter={{ picks: [], onPicks: fn(), routeCount: 4 }}
             icon={<FilterIcon />}
             tooltip="left"
             testId="chooser-filter"

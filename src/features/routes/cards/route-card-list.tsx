@@ -12,7 +12,7 @@ import { ROUTE_SHEET_SHAPE } from './route-sheet-shape';
 import { listedDepartures, routeCards, type Listing } from '../model/departures';
 import type { Hotspot } from '../model/hotspots';
 import type { Livery } from '../model/liveries';
-import { passesModeFilter, type ModeFilterControl } from '../model/mode-filter';
+import { isNarrowed, passesModePicks, type ModeFilterControl } from '../model/mode-filter';
 import { hotspotCount } from '../model/places';
 import type { Direction } from '../model/routes';
 
@@ -43,7 +43,7 @@ interface Props {
   /** Its height, shared with the trip opened from it (BottomSheet). */
   height?: SheetHeight;
   /**
-   * The filter, kept by the caller so the map lights what the cards show (passesModeFilter); the
+   * The filter, kept by the caller so the map lights what the cards show (passesModePicks); the
    * cards follow it. Without one, every route is listed and the Controller has no sliders.
    */
   modeFilter?: ModeFilterControl;
@@ -77,8 +77,8 @@ interface Props {
  * direction, under the place that leaves from (chooserDepartures). PAPUNTA rests disabled when the
  * other way round has nothing drawn, and is not there when only loops show.
  *
- * The filter (ModeFilterCard), where the caller keeps one, narrows the cards to one kind of ride,
- * the caller the map's lights to match; one with nothing to show says so, with a way back to All
+ * The filter (ModeFilterMenu), where the caller keeps one, narrows the cards to the kinds of ride
+ * picked, the caller the map's lights to match; one with nothing to show says so, with a way back to All
  * (ModeFilterEmpty).
  *
  * The hotspots under the tap come first: a box is small and deliberate. They are plain rows, a
@@ -103,10 +103,10 @@ export function RouteCardList({
   hasController = false,
   end,
 }: Props) {
-  const filter = modeFilter?.filter ?? 'all';
-  const filtered = routes.filter((v) => passesModeFilter(v, filter));
+  const picks = modeFilter?.picks ?? [];
+  const filtered = routes.filter((v) => passesModePicks(v, picks));
   const places = listedDepartures(filtered, back, listing);
-  const { way, wayTo, isSwitchable } = listWay(routes, back, listing, filter);
+  const { way, wayTo, isSwitchable } = listWay(routes, back, listing, picks);
   const hotspotTotal = hotspotCount(hotspots);
   // A RouteCard each, as RouteCardStack lays them out: a place and mode, so a place that jeeps
   // and a train both leave from counts twice.
@@ -139,7 +139,7 @@ export function RouteCardList({
             isSwitchable={isSwitchable}
             isBack={back}
             onSwitch={onFlip}
-            modeFilter={modeFilter}
+            modeFilter={modeFilter && { ...modeFilter, routeCount: cardTotal }}
             onClose={onClose}
           />
         )
@@ -157,8 +157,8 @@ export function RouteCardList({
         {/* The list's heading, for a screen reader to move to; nothing is drawn. */}
         <h2 className="sr-only">Routes here</h2>
         <RouteListHotspotRows hotspots={hotspots} onHotspot={onHotspot} />
-        {modeFilter && filter !== 'all' && places.length === 0 && (
-          <ModeFilterEmpty filter={filter} onShowAll={() => modeFilter.onFilter('all')} />
+        {modeFilter && isNarrowed(picks) && places.length === 0 && (
+          <ModeFilterEmpty picks={picks} onShowAll={() => modeFilter.onPicks([])} />
         )}
         <RouteCardStack
           routes={filtered}
