@@ -13,7 +13,7 @@ interface ExploreCardsProps {
   onLocate: () => void;
   /** Where they rest, as the height the card a tap opens over them takes (useCardStack). */
   onRest?: (snap: Snap, rest: ExploreRest) => void;
-  /** Where they stand as they come back: as they were left. */
+  /** Where they stand as they come: whole on a first visit, Low as a card closes. */
   startsAt?: ExploreRest;
 }
 
@@ -35,6 +35,7 @@ export function ExploreCards({ onLocate, onRest, startsAt }: ExploreCardsProps) 
       ref={own}
       data-testid="explore-cards"
       data-rest={sheet.rest}
+      style={sheet.opensAt}
       onPointerDown={sheet.onPointerDown}
       onFocus={sheet.onFocus}
       className={cn(

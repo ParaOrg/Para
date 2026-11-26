@@ -5974,7 +5974,8 @@ if (runsPart(2) && isPlaceSearchShown) {
 // The owner's rules of 2026-11-25, in px (±2): the first card open, the list a tap opens stands at
 // its height, and at Low at Low; a trip a tap opens, on a RouteCard or on a line of one route,
 // opens at the middle (TRIP_OPENS_AT); ⇅ keeps the trip's height; ‹ gives the list back at its own
-// height from before the tap; the first card comes back as it was left.
+// height from before the tap; the first card comes back at Low, whole or Low as it was left (the
+// owner, 2026-11-26), drawn there from its first frame.
 if (runsPart(3)) {
   await page.goto(`${BASE}/`, { waitUntil: 'load' });
   await page.waitForFunction(() => window.__map && window.__map.loaded(), null, { timeout: 30000 });
@@ -6129,8 +6130,32 @@ if (runsPart(3)) {
         `${raisedPx} px before; ${flippedPx} px after`,
       );
     }
+    // Where the first card is drawn as it comes back, read as it is put on the page.
+    await page.evaluate(() => {
+      window.__exploreBack = null;
+      const watch = new MutationObserver(() => {
+        const e = document.querySelector('[data-testid="explore-cards"]');
+        if (!e) return;
+        window.__exploreBack = Math.round(innerHeight - e.getBoundingClientRect().top);
+        watch.disconnect();
+      });
+      watch.observe(document.body, { childList: true, subtree: true });
+    });
     await leaveTrip(async () => (await chooser.count()) > 0);
     await leaveTrip(allClosed);
+    await explore.waitFor({ state: 'visible', timeout: 5000 }).catch(() => {});
+    await cardsSettled(page).catch(() => {});
+    const backAt = await page.evaluate(() => window.__exploreBack);
+    const restsAt = await exploreShown();
+    check(
+      '  left whole, the first card comes back at Low, drawn there from the start: no drop from whole',
+      (await explore.getAttribute('data-rest').catch(() => null)) === 'low' &&
+        near(backAt, restsAt) &&
+        restsAt !== null &&
+        openPx !== null &&
+        restsAt < openPx,
+      `drawn at ${backAt} px, rests at ${restsAt} px; whole ${openPx} px`,
+    );
   }
 
   // At Low, the first card lets the list open at Low, and comes back at Low once it closes.
@@ -6150,7 +6175,7 @@ if (runsPart(3)) {
   await leaveTrip(allClosed);
   await explore.waitFor({ state: 'visible', timeout: 5000 }).catch(() => {});
   check(
-    '  and the first card comes back as it was left, at Low',
+    '  and the first card comes back at Low',
     (await explore.getAttribute('data-rest').catch(() => null)) === 'low',
     `${await explore.getAttribute('data-rest').catch(() => null)}`,
   );
