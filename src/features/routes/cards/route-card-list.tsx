@@ -1,4 +1,4 @@
-import type { ComponentProps } from 'react';
+import type { ComponentProps, ReactNode } from 'react';
 
 import { BottomSheet, type SheetHeight } from '@/shared/ui/bottom-sheet';
 import { cn } from '@/shared/utils/cn';
@@ -52,6 +52,8 @@ interface Props {
    * PAPUNTA and filter float on the map instead (Vice Versa and the sliders, MapControlsDock).
    */
   hasController?: boolean;
+  /** After the last card: the public map's DonationCard (4885:42554). */
+  end?: ReactNode;
 }
 
 /**
@@ -99,6 +101,7 @@ export function RouteCardList({
   height,
   modeFilter,
   hasController = false,
+  end,
 }: Props) {
   const filter = modeFilter?.filter ?? 'all';
   const filtered = routes.filter((v) => passesModeFilter(v, filter));
@@ -165,6 +168,7 @@ export function RouteCardList({
           onRoute={onRoute}
           testId="chooser"
         />
+        {end}
       </div>
     </BottomSheet>
   );

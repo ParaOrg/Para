@@ -3949,11 +3949,12 @@ if (runsPart(3)) {
       if (back && isBack) await throwFrom(back[0], back[1], 150, 3, 16);
       return rest;
     };
-    // How tall its content stands, from the sheet's top to its last card's foot, and whether every
-    // place name is drawn whole (at Low they are cut to a line; raised, never).
+    // How tall its content stands, from the sheet's top to its last card's foot (the DonationCard
+    // ends the public map's list, 4885:42554), and whether every place name is drawn whole (at Low
+    // they are cut to a line; raised, never).
     const cardsNow = () =>
       chooser.first().evaluate((el) => {
-        const cards = el.querySelectorAll('[data-testid="chooser-origin"]');
+        const cards = el.querySelectorAll('[data-testid="chooser-origin"], section');
         const last = cards[cards.length - 1];
         const tall = last
           ? Math.round(last.getBoundingClientRect().bottom - el.getBoundingClientRect().top)
@@ -6138,6 +6139,35 @@ if (runsPart(3)) {
       near(backPx, listPx),
       `list ${listPx} px before; ${backPx} px back`,
     );
+    // At the top, filling the map, the list shows its bar (4885:42122): Vice Versa and ⌄, over the
+    // DonationCard, its last card; ⌄ takes it down to the middle (FRAMED_SHARE).
+    const listHandle = chooser.first().locator('[data-testid="dock-handle"]');
+    for (let i = 0; i < 4 && (await chooser.first().getAttribute('data-snap')) !== 'full'; i++) {
+      await listHandle.focus();
+      await page.keyboard.press('Enter');
+      await cardsSettled(page).catch(() => {});
+    }
+    if (await chooser.first().getAttribute('data-reaches-top')) {
+      const bar = page.locator('[data-testid="list-top-bar"]');
+      const lastCard = await chooser
+        .first()
+        .evaluate((el) => [...el.querySelectorAll('section h2')].at(-1)?.textContent ?? '');
+      const isBarShown = await bar.isVisible();
+      await page.locator('[data-testid="list-to-middle"]').click();
+      await cardsSettled(page).catch(() => {});
+      const downPx = await shownOf(chooser);
+      const listMiddle = Math.round(
+        middle * (await chooser.first().evaluate((e) => e.offsetHeight)),
+      );
+      check(
+        '  the list at the top shows Vice Versa and ⌄ over its DonationCard; ⌄ sets it at the middle',
+        isBarShown &&
+          /Help make Para better/.test(lastCard) &&
+          !(await bar.isVisible()) &&
+          near(downPx, listMiddle),
+        `bar ${isBarShown}; last card "${lastCard}"; down ${downPx} px, the middle ${listMiddle} px`,
+      );
+    }
     // ⇅ on a trip of its own: it turns the list behind round too, to its other cards.
     await touchTap(
       chooser.locator('[data-testid="chooser-select"]').first(),

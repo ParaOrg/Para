@@ -54,6 +54,7 @@ import { isHotspotTapOn, isPlaceSearchShown, isRidePickingOn } from '@/shared/co
 import { useTurn } from '@/shared/hooks/commit-turn';
 import { cn } from '@/shared/utils/cn';
 
+import { DonationCard } from './donation-card';
 import { ExploreCards, PageToasts, PlaceSearchBar } from './lazy-parts';
 import { ListFilter, MapSheetControls } from './map-sheet-controls';
 import { MapViewCorner } from './map-view-corner';
@@ -199,14 +200,11 @@ export function PublicMapApp() {
   const listUp = cards.choosing && !saved.selected && !cards.tripBehind ? saved : null;
 
   return (
-    // `data-directions`, `data-hotspot-taps` and `data-place-search`: how many the index brought,
-    // whether a box takes a tap (isHotspotTapOn) and whether search is shown (isPlaceSearchShown),
-    // for the suites on a production build, the map out of their reach.
-    // `data-dock-host`: the open card's sheet says where its top is here
-    // at rest, and on what follows it (`data-dock-follower`, the LocatorButton,
-    // the map's ⓘ) as a finger drags it (BottomSheet). While "Update Para!"
-    // waits, a toast sits 12 under it rather than over it: the button's 24
-    // from the top and its 40 tall (Notices), `--toast-top` (ToastHost).
+    // `data-directions`, `data-hotspot-taps`, `data-place-search`: for the suites on a production
+    // build (the index's count; isHotspotTapOn; isPlaceSearchShown). `data-dock-host`: the open
+    // card's sheet says where its top is here, and on what follows it (`data-dock-follower`) as a
+    // finger drags it (BottomSheet). While "Update Para!" waits, a toast sits 12 under it (Notices,
+    // `--toast-top`, ToastHost).
     <div
       ref={root}
       data-dock-host
@@ -256,6 +254,7 @@ export function PublicMapApp() {
           list={listUp}
           floats={floats}
           onFlip={flipList}
+          onSnap={height.onSnap}
           onFilter={filterList}
         />
         {/* The commuter's position and the camera with them, clear of the card; the dot's gaze. */}
@@ -454,6 +453,7 @@ export function PublicMapApp() {
             onRoute={openTrip}
             onHotspot={(s) => cards.openHotspot(s.id)}
             onClose={cards.closeAll}
+            end={<DonationCard isListEnd />}
           />
         )}
         {/* With nothing open: ways to explore, and the donation card (Figma 4852:35066). */}
