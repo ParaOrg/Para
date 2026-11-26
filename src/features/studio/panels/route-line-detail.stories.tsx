@@ -236,21 +236,6 @@ export const ExportFailed: Story = {
   },
 };
 
-/**
- * An editor's: the signboard editor at the foot, under Route Stops, until Add signboard moves into
- * Edit Route. A stand-in here: the real one reads the editor's draft.
- */
-export const WithSignboardEditor: Story = {
-  args: {
-    footer: (
-      <section className="flex w-full flex-col gap-2 text-sm/5 text-content-tertiary">
-        <p>Signboard · Papunta</p>
-        <p>No signboard yet for this way.</p>
-      </section>
-    ),
-  },
-};
-
 /** Long names and many stops: the names wrap and the panel scrolls on its own. */
 export const LongContent: Story = {
   args: {

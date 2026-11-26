@@ -85,10 +85,14 @@ const routed = (streets?: Segment['streets']): Segment => ({
   streets,
 });
 
-/** A query client, holding the route's stored draft when there is one. */
-function clientWith(draft: DraftRow | undefined) {
+/**
+ * A query client, holding the route's stored draft when there is one, or the read of a route that
+ * has none (`noDraftOf`, its id), so the signboards beside the map show without a request.
+ */
+function clientWith(draft: DraftRow | undefined, noDraftOf: string | undefined) {
   const client = createQueryClient();
   if (draft) client.setQueryData(reviewKeys.draftOf('route', draft.subject_id), draft);
+  if (noDraftOf) client.setQueryData(reviewKeys.draftOf('route', noDraftOf), null);
   return client;
 }
 
@@ -105,7 +109,9 @@ const meta = {
   // `storedDraft` parameter puts a draft of the route in it, as Edit route's read leaves one.
   decorators: [
     (Story, ctx) => (
-      <QueryClientProvider client={clientWith(ctx.parameters.storedDraft)}>
+      <QueryClientProvider
+        client={clientWith(ctx.parameters.storedDraft, ctx.parameters.noDraftOf)}
+      >
         <Story />
       </QueryClientProvider>
     ),
@@ -350,7 +356,7 @@ export const EditRoute: Story = {
  * footer offers Unpublish, until the line or a field changes: then Not saved, with the saves.
  */
 export const EditRoutePublished: Story = {
-  parameters: { beside: true },
+  parameters: { beside: true, noDraftOf: 'sample-route' },
   args: { ...EditRoute.args, isPublished: true, onCancel: undefined, saveBlocked: null },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -359,6 +365,21 @@ export const EditRoutePublished: Story = {
     await userEvent.type(canvas.getByLabelText('Via (if applicable)'), 'Zabarte');
     await expect(canvas.getByTestId('line-detail')).toHaveTextContent('StatusNot saved');
     await expect(canvas.getByRole('button', { name: 'Save as draft' })).toBeVisible();
+  },
+};
+
+/**
+ * Add signboard in Edit Route, beside the map: the direction's boards under Route Information, a
+ * placeholder until the owner draws it. On a phone the trip card keeps its own.
+ */
+export const EditRouteSignboards: Story = {
+  parameters: { beside: true, noDraftOf: 'sample-route' },
+  args: { ...EditRoute.args, onCancel: undefined, saveBlocked: null },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const editor = canvas.getByTestId('signboard-editor');
+    await expect(editor).toHaveTextContent('Signboard · Papunta');
+    await expect(within(editor).getByText('Add SVG')).toBeVisible();
   },
 };
 
@@ -400,7 +421,7 @@ export const EditRouteWithDraft: Story = {
  * alert the screen reader announces.
  */
 export const EditRoutePublishedUnpublishRefused: Story = {
-  parameters: { beside: true },
+  parameters: { beside: true, noDraftOf: 'sample-route' },
   args: { ...EditRoute.args, isPublished: true, onCancel: undefined, saveBlocked: null },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);

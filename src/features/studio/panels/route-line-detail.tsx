@@ -30,8 +30,6 @@ interface RouteLineDetailProps {
   signboards: readonly string[];
   stops: readonly TimelineRow[];
   onStop: (id: string) => void;
-  /** At the foot, for now: the editor's signboards, until Add signboard moves into Edit Route. */
-  footer?: ReactNode;
 }
 
 /**
@@ -53,7 +51,6 @@ export function RouteLineDetail({
   signboards,
   stops,
   onStop,
-  footer,
 }: RouteLineDetailProps) {
   const panelId = useId();
   const hasTabs = tabs.length > 0;
@@ -84,7 +81,6 @@ export function RouteLineDetail({
         <OtherDestinations destinations={destinations} onOpen={onOpenDestination} />
         <RouteSignboardsSection signboards={signboards} />
         <RouteStopsSection stops={stops} onStop={onStop} />
-        {footer}
       </div>
     </section>
   );

@@ -9,7 +9,8 @@ import { useDraftSignboardsQuery } from '../data/use-draft-signboards-query';
 
 interface DraftSignboardsProps {
   direction: DirectionRow;
-  onChanged: () => void;
+  /** A board added, moved or removed; the drafted list is read again either way. */
+  onChanged?: () => void;
 }
 
 /**
@@ -26,7 +27,7 @@ export function DraftSignboards({ direction, onChanged }: DraftSignboardsProps) 
     return <DraftSignboardsNotice state="error" onRetry={() => void drafted.refetch()} />;
   const handleChanged = () => {
     void client.invalidateQueries({ queryKey: reviewKeys.draftOf('route', direction.routeId) });
-    onChanged();
+    onChanged?.();
   };
   return (
     <SignboardEditor
