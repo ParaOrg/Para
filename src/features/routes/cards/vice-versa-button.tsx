@@ -36,6 +36,7 @@ export function ViceVersaButton({
     <span className="flex rounded-full shadow-sm">
       <Button
         variant="secondary"
+        size="large"
         label="Vice Versa"
         lastIcon={<SwitchVerticalIcon />}
         aria-describedby={hintId}

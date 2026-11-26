@@ -1,5 +1,5 @@
 import type { MapLibreMap } from 'maplibre-gl';
-import { useEffect, useImperativeHandle, useRef, type Ref } from 'react';
+import { useEffect, useImperativeHandle, useRef, type ReactNode, type Ref } from 'react';
 
 import { BASEMAPS, type Basemap } from '@/features/routes/map/basemap';
 import { BASEMAP_THUMBNAILS } from '@/features/routes/map/basemap-thumbnails';
@@ -37,14 +37,12 @@ interface Props {
   basemapThumbnails?: Readonly<Record<string, string>>;
   /** Whose Location Labels choice the card keeps: the public map's by default, the studio's its own. */
   labelsPlace?: LabelsPlace;
-  /** A card is open: the button sits on its sheet. */
-  docked: boolean;
+  docked: boolean; // A card is open: the button sits on its sheet.
   /** The map-style button over the LocatorButton (the studio), or the LocatorButton alone (Locator). */
   hasMapStyle?: boolean;
-  /** The page's turn for the camera (commit-turn.ts): after the cards' camera. */
-  cameraTurn: Turn;
-  /** What was just picked, for the dot to gaze at; and when ‹ or ✕ last went back (useGazeHush). */
-  picks: Picks;
+  above?: ReactNode; // 12 over the LocatorButton alone (Locator's): the public map's list filter.
+  cameraTurn: Turn; // The page's turn for the camera (commit-turn.ts): after the cards'.
+  picks: Picks; // What was just picked, for the dot's gaze; and when ‹ or ✕ last went back.
   hushedAt: { readonly current: number };
   /**
    * Where the commuter is, said at the first fix and then only when it matters (shouldTell), so
@@ -77,6 +75,7 @@ export function CommuterLocation({
   offset,
   docked,
   hasMapStyle = true,
+  above,
   cameraTurn,
   picks,
   hushedAt,
@@ -128,6 +127,7 @@ export function CommuterLocation({
           labelsPlace={labelsPlace}
           docked={docked}
           hasMapStyle={hasMapStyle}
+          above={above}
           onNote={onNote}
         />
       )}

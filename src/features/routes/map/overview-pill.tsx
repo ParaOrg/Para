@@ -1,6 +1,7 @@
 import type { MapLibreMap } from 'maplibre-gl';
 
 import { Button } from '@/design-system/primitives/button';
+import { IconButton } from '@/design-system/primitives/icon-button';
 import { OverviewIcon } from '@/shared/ui/map-control-icons';
 
 import { useFocusMapOnHide } from './use-focus-map-on-hide';
@@ -12,6 +13,8 @@ interface OverviewPillProps {
   go: () => void;
   /** The map, whose canvas takes focus if the pill hides while it has it. */
   map: MapLibreMap | null;
+  /** Its drawing alone, a 48 IconButton, over the route list (4885:41761); its word too on a trip. */
+  isIconOnly?: boolean;
 }
 
 /**
@@ -20,12 +23,22 @@ interface OverviewPillProps {
  * onto the open trip's route, or the picked cards' routes; it shows only while the camera is off
  * them, so at the overview it is hidden, and out of the keyboard's way.
  */
-export function OverviewPill({ isShown, go, map }: OverviewPillProps) {
+export function OverviewPill({ isShown, go, map, isIconOnly = false }: OverviewPillProps) {
   const ref = useFocusMapOnHide(isShown, map);
   return (
     // Figma's shadow-sm under it, as under every control floating on the map.
     <div ref={ref} hidden={!isShown} data-testid="overview" className="flex rounded-full shadow-sm">
-      <Button variant="secondary" label="Overview" lastIcon={<OverviewIcon />} onClick={go} />
+      {isIconOnly ? (
+        <IconButton
+          size="large"
+          icon={<OverviewIcon />}
+          label="Overview"
+          tooltip="left"
+          onClick={go}
+        />
+      ) : (
+        <Button variant="secondary" label="Overview" lastIcon={<OverviewIcon />} onClick={go} />
+      )}
     </div>
   );
 }

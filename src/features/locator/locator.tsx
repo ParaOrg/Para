@@ -24,23 +24,18 @@ interface Props {
   /** A card is open: the button sits on its sheet rather than at the map's foot. */
   docked: boolean;
   /**
-   * Docked, it follows the sheet up to the framed height (FRAMED_SHARE) and stays there, the sheet
-   * covering it above (`framed`, the public map's). A fitted sheet's open height is its content's, the map in sight
-   * above it, so the button rides on it up to just under the status bar (`top`, the contributor's
-   * ride: DOCK_TOP_CSS), the sheet covering it only when its content fills the screen.
+   * Docked, it follows the sheet up to the framed height (FRAMED_SHARE), the sheet covering it
+   * above (`framed`), or rides a fitted sheet up to just under the status bar (`top`: DOCK_TOP_CSS).
    */
   dockCap?: 'framed' | 'top';
-  /** Stands directly above the pill, hidden while the Map Style card is open; the contributor's mark button. */
+  /**
+   * Over the pill, hidden while the Map Style card is open (the contributor's mark button); or 12
+   * over the LocatorButton alone (the public map's list filter, 4885:41761).
+   */
   above?: ReactNode;
-  /**
-   * The map-style button over the LocatorButton, as one pill (the studio's, the contributor's), or
-   * the LocatorButton alone, round (the public map's: its map-style button is in MapViewPill).
-   */
+  /** The map-style button over the LocatorButton (the studio's), or it alone (the public map's). */
   hasMapStyle?: boolean;
-  /**
-   * What the locator has to say, for the page to show as a problem toast: said as the browser
-   * refuses or gives no fix, again at each tap while it still does, and null once a fix comes.
-   */
+  /** What the locator has to say, for the page's problem toast, at each refused tap; null at a fix. */
   onNote?: (note: LocatorNote | null) => void;
 }
 
@@ -142,7 +137,10 @@ export function Locator({
             {button}
           </LocationAndMapControl>
         ) : (
-          button
+          <div className="flex flex-col items-end gap-3">
+            {above}
+            {button}
+          </div>
         )}
       </div>
     </div>
