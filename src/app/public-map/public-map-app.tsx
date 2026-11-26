@@ -55,13 +55,14 @@ import { useTurn } from '@/shared/hooks/commit-turn';
 import { cn } from '@/shared/utils/cn';
 
 import { ExploreCards, PageToasts, PlaceSearchBar } from './lazy-parts';
-import { MapSheetControls } from './map-sheet-controls';
+import { ListFilter, MapSheetControls } from './map-sheet-controls';
 import { MapViewCorner } from './map-view-corner';
 import type { SaidNote } from './page-toasts';
 import { sheetTopUnderSearch } from './sheet-top-under-search';
 import { useStatusBarColour } from './status-bar';
 import { TOAST_UNDER_FULL_CARD, TOAST_UNDER_FULL_TRIP } from './toast-under-full';
 import type { ExploreRest } from './use-explore-sheet';
+import { useMapFloats } from './use-map-floats';
 
 /**
  * The hotspots on the commuter map, the owner's calls for now: no pins zoomed in, no dots zoomed
@@ -194,6 +195,8 @@ export function PublicMapApp() {
   // The map's credits, the Map Data Source sheet, opened by the ⓘ: the map and the cards under it
   // are out of reach while it is open.
   const credits = useMapCredits(root);
+  const floats = useMapFloats(root);
+  const listUp = cards.choosing && !saved.selected && !cards.tripBehind ? saved : null;
 
   return (
     // `data-directions`, `data-hotspot-taps` and `data-place-search`: how many the index brought,
@@ -250,14 +253,12 @@ export function PublicMapApp() {
         <MapSheetControls
           map={map}
           overview={overviewButton}
-          list={cards.choosing && !saved.selected && !cards.tripBehind ? saved : null}
+          list={listUp}
+          floats={floats}
           onFlip={flipList}
           onFilter={filterList}
         />
-        {/*
-        The commuter's own position, and the camera with them, kept clear of
-        the card on show; the dot gazes at what was just picked.
-      */}
+        {/* The commuter's position and the camera with them, clear of the card; the dot's gaze. */}
         <CommuterLocation
           ref={locator}
           map={map}
@@ -266,6 +267,9 @@ export function PublicMapApp() {
           offset={clearOfOpen}
           docked={cards.open}
           hasMapStyle={false}
+          above={
+            listUp && !floats && <ListFilter list={listUp} onFilter={filterList} tooltip="right" />
+          }
           cameraTurn={locatorTurn}
           picks={{
             pickedId: ride.pickedId,
@@ -280,10 +284,7 @@ export function PublicMapApp() {
           onWhere={handleWhere}
           onNote={handleLocatorNote}
         />
-        {/*
-        Each lit ride's ends, named over their circles; with no trip open, a
-        tail opens its ride's.
-      */}
+        {/* Each lit ride's ends, named over their circles; with no trip open, a tail opens its. */}
         {map && <EndTitles map={map} rides={rides} livery={litLivery} onPick={openPlace} />}
         {/*
         The open trip's hintuans along its line, a train's stations and a
@@ -306,9 +307,8 @@ export function PublicMapApp() {
           />
         )}
         {/*
-        Keyed on the pick: another hintuan pops a fresh circle. Its name,
-        tapped, lets the pick go and takes the camera back where it was, as
-        its row tapped again does.
+        Keyed on the pick: another hintuan pops a fresh circle. Its name, tapped, lets the pick go
+        and takes the camera back where it was, as its row tapped again does.
       */}
         {map && ride.pinAt && tripLivery && (
           <HintuanPin
