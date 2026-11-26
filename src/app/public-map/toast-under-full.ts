@@ -4,9 +4,11 @@
 /**
  * While a place's card stands docked at full height, the toast sits 12 under its ✕ (map strip 24,
  * handle 18, ✕ 40), so the ✕ stays in reach; a trip has no ✕, and a floating card none there.
+ * The trip is told apart by its docking, not by what it holds: a :has() inside the group's :has()
+ * is no valid selector, and the browser empties it to one that matches nothing.
  */
 export const TOAST_UNDER_FULL_CARD =
-  '@max-float:group-has-[[data-testid=card][data-snap=full]:not([hidden]):not(:has([data-testid=trip]))]/map:[--toast-top:calc(env(safe-area-inset-top)+--spacing(23.5))]';
+  '@max-float:group-has-[[data-testid=card][data-snap=full]:not([hidden]):not([data-floats=dock])]/map:[--toast-top:calc(env(safe-area-inset-top)+--spacing(23.5))]';
 
 /**
  * While a trip stands at full height, filling the screen with no strip of map, the toast sits 12

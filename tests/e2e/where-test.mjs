@@ -797,6 +797,35 @@ check(
     placed ? JSON.stringify(placed) : 'no trip opened from a route line',
   );
 }
+// The toast's places under a full card (toast-under-full.ts), read from the page's own styles.
+// Tailwind wraps a group's selector in a forgiving :is(), so an invalid one (a :has() inside the
+// group's :has()) is not dropped but emptied to `:has(:is())`, which matches nothing: a rule kept
+// whole still names `[data-snap="full"]` as parsed. The place card's rule is checked so because
+// builds keep hotspot taps off, and no test can open a place's card to see the toast moved.
+{
+  const toastTops = await page2.evaluate(() => {
+    const found = [];
+    const walk = (rules) => {
+      for (const rule of rules) {
+        if (rule.cssRules) walk(rule.cssRules);
+        const value = rule.style?.getPropertyValue('--toast-top');
+        if (value && rule.selectorText?.includes('[data-snap="full"]')) found.push(value);
+      }
+    };
+    for (const sheet of document.styleSheets) walk(sheet.cssRules);
+    return found;
+  });
+  check(
+    "  the toast's place under a full place card is a rule the browser keeps",
+    toastTops.some((value) => value.includes('23.5')),
+    JSON.stringify(toastTops),
+  );
+  check(
+    "  the toast's place under a full trip is a rule the browser keeps",
+    toastTops.some((value) => value.includes('35.125')),
+    JSON.stringify(toastTops),
+  );
+}
 await ctx2.close();
 
 // ---------------------------------------------------------- no fix, ever
