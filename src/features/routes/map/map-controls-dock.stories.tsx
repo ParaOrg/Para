@@ -111,8 +111,8 @@ function WideFrame({ children }: WideFrameProps) {
 }
 
 /**
- * A desktop's map (Figma 4831:53545, 64rem and over): at the map's top, 8 right of the docked
- * list, Vice Versa first and the sliders under it. Not following the sheet.
+ * A desktop's map (4886:47571, 64rem and over): a row at the map's top, 16 right of the docked
+ * list, Vice Versa first and the filter 12 right of it. Not following the sheet.
  */
 export const Desktop: Story = {
   parameters: { ownFrame: true },
@@ -127,9 +127,9 @@ export const Desktop: Story = {
     const canvas = within(canvasElement);
     const viceVersa = canvas.getByRole('button', { name: 'Vice Versa' });
     const filter = canvas.getByRole('button', { name: 'Filter' });
-    await expect(viceVersa.getBoundingClientRect().bottom).toBeLessThan(
-      filter.getBoundingClientRect().top,
-    );
+    const [a, b] = [viceVersa.getBoundingClientRect(), filter.getBoundingClientRect()];
+    await expect(Math.round(b.left - a.right)).toBe(12);
+    await expect(Math.abs(b.top - a.top)).toBeLessThan(1);
   },
 };
 
