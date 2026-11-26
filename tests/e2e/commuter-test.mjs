@@ -1150,9 +1150,13 @@ if (!RUNS_ONE_OFFS) {
       // the whole list again (README decision 14). The
       // camera's framing is 4a′'s, where a tap lists more than one kind of ride.
       const filterButton = page.locator('[data-testid="chooser-filter"]');
+      // The menu's switches apply as they are tapped: Clear all, then the one kind on, then ✕.
+      const menu = page.getByTestId('mode-filter');
       const filterTo = async (label) => {
         await filterButton.click();
-        await page.getByRole('radio', { name: label, exact: true }).click();
+        await menu.getByRole('button', { name: 'Clear all' }).click();
+        if (label !== 'All') await menu.getByRole('switch', { name: label, exact: true }).click();
+        await menu.getByRole('button', { name: 'Close' }).click();
         await until(
           () => filterButton.getAttribute('aria-label'),
           (l) => l === (label === 'All' ? 'Filter' : `Filter: ${label}`),
@@ -1196,6 +1200,29 @@ if (!RUNS_ONE_OFFS) {
         sameIds(allAgain, before),
         `${allAgain.length} lit, ${before.length} listed`,
       );
+      // Several kinds at once: the button names them, and the map lights what both leave listed.
+      // Escape closes the menu alone, the list kept behind it, and the focus is the button's again.
+      await filterButton.click();
+      await menu.getByRole('switch', { name: 'Jeepney', exact: true }).click();
+      await menu.getByRole('switch', { name: 'Bus', exact: true }).click();
+      await page.keyboard.press('Escape');
+      const named = await until(
+        () => filterButton.getAttribute('aria-label'),
+        (l) => l === 'Filter: Jeepney, Bus',
+      );
+      const listedBoth = await listedNow();
+      const litBoth = await until(litNow, (lit) => sameIds(lit, listedBoth));
+      const isFocusBack = await filterButton.evaluate((el) => el === document.activeElement);
+      check(
+        '  two kinds at once: named on the button, lit as listed; Escape closes the menu alone, focus back',
+        named === 'Filter: Jeepney, Bus' &&
+          sameIds(litBoth, listedBoth) &&
+          (await menu.count()) === 0 &&
+          (await chooser.count()) > 0 &&
+          isFocusBack,
+        `"${named}"; ${litBoth.length} lit, ${listedBoth.length} listed; menu ${await menu.count()}, list ${await chooser.count()}, focus back ${isFocusBack}`,
+      );
+      await filterTo('All');
       // Left on one kind of ride, the next list starts at All.
       await filterTo('Ferry');
       await closeCard();
@@ -1260,7 +1287,9 @@ if (RUNS_ONE_OFFS) {
       });
     const cameraWas = await camera();
     await filterButton.click();
-    await page.getByRole('radio', { name: 'Train', exact: true }).click();
+    const menu = page.getByTestId('mode-filter');
+    await menu.getByRole('switch', { name: 'Train', exact: true }).click();
+    await menu.getByRole('button', { name: 'Close' }).click();
     await until(
       () => filterButton.getAttribute('aria-label'),
       (l) => l === 'Filter: Train',

@@ -837,9 +837,13 @@ const tap = (x, y) => page.mouse.click(canvas.x + x, canvas.y + y);
   {
     const all = await reopen(false);
     const filterButton = chooser.locator('[data-testid="chooser-filter"]');
+    // The menu's switches apply as they are tapped: Clear all, then the one kind on, then ✕.
     const filterTo = async (label) => {
+      const menu = page.getByTestId('mode-filter');
       await filterButton.click();
-      await page.getByRole('radio', { name: label, exact: true }).click();
+      await menu.getByRole('button', { name: 'Clear all' }).click();
+      if (label !== 'All') await menu.getByRole('switch', { name: label, exact: true }).click();
+      await menu.getByRole('button', { name: 'Close' }).click();
       await page.waitForTimeout(500);
     };
     const agree = [];

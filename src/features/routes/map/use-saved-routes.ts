@@ -11,7 +11,7 @@ import { useRouteTaps } from './use-route-taps';
 import { useSavedRoutesLayers } from './use-saved-routes-layers';
 import type { Listing } from '../model/departures';
 import type { Livery } from '../model/liveries';
-import { passesModeFilter, type ModeFilter } from '../model/mode-filter';
+import { NO_PICKS, passesModePicks, type ModePicks } from '../model/mode-filter';
 import { directionLine, type LineStringGeoJSON, type Direction } from '../model/routes';
 
 /**
@@ -113,15 +113,15 @@ export function useSavedRoutes<T extends Direction>(
    */
   const [listing, setListing] = useState<Listing>('every-line');
   /**
-   * The kind of ride the list narrows to (ModeFilterCard), All again with each new list (the
-   * owner's call). The map lights what passes it, as the cards show; a hotspot's own card does
-   * not follow it.
+   * The kinds of ride the list narrows to (ModeFilterMenu), several at once, none picked being All
+   * again with each new list (the owner's call). The map lights what passes them, as the cards
+   * show; a hotspot's own card does not follow them.
    */
-  const [modeFilter, setModeFilter] = useState<ModeFilter>('all');
+  const [modePicks, setModePicks] = useState<ModePicks>(NO_PICKS);
   /** A new list under a tap: every kind of ride again. */
   const listRoutes = useCallback((c: T[]) => {
     setCandidates(c);
-    setModeFilter('all');
+    setModePicks(NO_PICKS);
   }, []);
   /**
    * The Selected RouteCard, whose directions alone are lit while no trip is
@@ -141,8 +141,8 @@ export function useSavedRoutes<T extends Direction>(
     setHighlight(null);
   }, []);
   /** The filter changed: a Selected card is let go, as PAPUNTA lets it go (the owner's call). */
-  const filterModes = useCallback((filter: ModeFilter) => {
-    setModeFilter(filter);
+  const filterModes = useCallback((picks: ModePicks) => {
+    setModePicks(picks);
     setHighlight(null);
   }, []);
 
@@ -169,7 +169,7 @@ export function useSavedRoutes<T extends Direction>(
   const openList = useCallback((directions: readonly T[], way: boolean) => {
     setSelectedId(null);
     setCandidates([...directions]);
-    setModeFilter('all');
+    setModePicks(NO_PICKS);
     setBack(way);
     setListing('way-round');
     setHighlight(null);
@@ -251,13 +251,13 @@ export function useSavedRoutes<T extends Direction>(
   const showing = useMemo(
     () =>
       showingOf(
-        candidates.filter((v) => passesModeFilter(v, modeFilter)),
+        candidates.filter((v) => passesModePicks(v, modePicks)),
         back,
         listing,
         directions,
         cardShows,
       ),
-    [candidates, modeFilter, back, listing, directions, cardShows],
+    [candidates, modePicks, back, listing, directions, cardShows],
   );
   // Each kept one array while it holds the same (steady): an unrelated
   // line's arrival lights nothing new, and the chevrons flow on.
@@ -388,7 +388,7 @@ export function useSavedRoutes<T extends Direction>(
     back,
     listing,
     flip,
-    modeFilter,
+    modePicks,
     filterModes,
     highlight,
     highlightCard: setHighlight,

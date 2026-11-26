@@ -10,12 +10,6 @@ import { vehicleOf, type Vehicle } from './vehicles';
 export const MODE_FILTERS = ['all', 'jeep', 'ejeep', 'uv', 'bus', 'p2p', 'train', 'ferry'] as const;
 export type ModeFilter = (typeof MODE_FILTERS)[number];
 
-/** A filter and its setter, kept by whoever lights the map, so the map and the cards agree. */
-export interface ModeFilterControl {
-  filter: ModeFilter;
-  onFilter: (filter: ModeFilter) => void;
-}
-
 /** One kind of ride the filter can pick: every option but All. */
 export type Mode = Exclude<ModeFilter, 'all'>;
 
@@ -27,6 +21,9 @@ export const MODES = MODE_FILTERS.filter((option): option is Mode => option !== 
  * picked lists every route, and so does every mode picked: both read as All.
  */
 export type ModePicks = readonly Mode[];
+
+/** No mode picked: every route listed. One array, so a new list's reset keeps the same picks. */
+export const NO_PICKS: ModePicks = [];
 
 /** The picks a single choice makes: none under All, else that one. */
 export function picksOf(filter: ModeFilter): ModePicks {
@@ -56,6 +53,24 @@ export function togglePick(picks: ModePicks, mode: Mode): ModePicks {
   const next = picks.includes(mode) ? picks.filter((m) => m !== mode) : [...picks, mode];
   const ordered = MODES.filter((m) => next.includes(m));
   return isNarrowed(ordered) ? ordered : [];
+}
+
+/** The modes picked and their setter, kept by whoever lights the map, so the map and the cards agree. */
+export interface ModeFilterControl {
+  picks: ModePicks;
+  onPicks: (picks: ModePicks) => void;
+}
+
+/** The picks' names in the filter's order, for the filter button's name: "Jeepney, Bus". */
+export function picksNamed(picks: ModePicks): string {
+  return picks.map((mode) => MODE_FILTER_LABEL[mode]).join(', ');
+}
+
+/** The picks' names as either one, for an empty list: "Jeepney or Bus", "Jeepney, Bus or Train". */
+export function picksEither(picks: ModePicks): string {
+  const names = picks.map((mode) => MODE_FILTER_LABEL[mode]);
+  if (names.length < 2) return names.join('');
+  return `${names.slice(0, -1).join(', ')} or ${names.at(-1)}`;
 }
 
 /** Each option as the filter writes it. */

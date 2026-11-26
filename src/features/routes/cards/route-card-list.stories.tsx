@@ -5,7 +5,7 @@ import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
 import { RouteCardList } from './route-card-list';
 import type { Hotspot } from '../model/hotspots';
-import type { ModeFilter } from '../model/mode-filter';
+import type { ModePicks } from '../model/mode-filter';
 import type { Direction } from '../model/routes';
 
 /** Sample data only, shaped like the published map. Not the real map. */
@@ -140,16 +140,16 @@ function Picking(props: ComponentProps<typeof RouteCardList>) {
   const [selected, setSelected] = useState(props.selection?.selected ?? null);
   const onSelect = props.selection?.onSelect;
   const [back, setBack] = useState(props.back);
-  const [filter, setFilter] = useState<ModeFilter>(props.modeFilter?.filter ?? 'all');
+  const [picks, setPicks] = useState<ModePicks>(props.modeFilter?.picks ?? []);
   return (
     <RouteCardList
       {...props}
       modeFilter={
         props.modeFilter && {
-          filter,
-          onFilter: (next) => {
-            props.modeFilter?.onFilter(next);
-            setFilter(next);
+          picks,
+          onPicks: (next) => {
+            props.modeFilter?.onPicks(next);
+            setPicks(next);
           },
         }
       }
@@ -218,12 +218,12 @@ export const WithTheController: Story = { args: { hasController: true } };
 
 /** With a filter kept by the caller: on the studio's Controller, the sliders beside PAPUNTA. */
 export const WithAFilter: Story = {
-  args: { hasController: true, modeFilter: { filter: 'all', onFilter: fn() } },
+  args: { hasController: true, modeFilter: { picks: [], onPicks: fn() } },
 };
 
 /** A filter on, Jeep: the dot on the sliders, and only the jeeps' cards. */
 export const FilteredToJeep: Story = {
-  args: { hasController: true, modeFilter: { filter: 'jeep', onFilter: fn() } },
+  args: { hasController: true, modeFilter: { picks: ['jeep'], onPicks: fn() } },
 };
 
 /** Turned round with PAPUNTA: out of Tala both ways, one card — "1 Route". */
@@ -385,15 +385,16 @@ export const FilterWithNoMatch: Story = {
   // Raised: at Low a tap on the body raises the sheet, and Show all routes is in the body.
   args: {
     hasController: true,
-    modeFilter: { filter: 'all', onFilter: fn() },
+    modeFilter: { picks: [], onPicks: fn() },
     height: { snap: 0.55, onSnap: fn() },
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.click(canvas.getByRole('button', { name: 'Filter' }));
-    const card = within(canvasElement.ownerDocument.body).getByTestId('mode-filter');
-    await userEvent.click(within(card).getByText('Ferry'));
+    const menu = within(await within(canvasElement.ownerDocument.body).findByTestId('mode-filter'));
+    await userEvent.click(menu.getByRole('switch', { name: 'Ferry' }));
     await expect(canvas.getByText('No Ferry routes here')).toBeVisible();
+    await userEvent.click(menu.getByRole('button', { name: 'Close' }));
     await expect(canvas.getByRole('dialog', { name: '0 Routes' })).toBeInTheDocument();
     await userEvent.click(canvas.getByRole('button', { name: 'Show all routes' }));
     await expect(canvas.queryByText('No Ferry routes here')).toBeNull();
@@ -406,7 +407,7 @@ export const FilterWithNoMatch: Story = {
  */
 export const FilteredToNothing: Story = {
   args: {
-    modeFilter: { filter: 'ferry', onFilter: fn() },
+    modeFilter: { picks: ['ferry'], onPicks: fn() },
     height: { snap: 0.55, onSnap: fn() },
   },
   play: async ({ canvasElement }) => {

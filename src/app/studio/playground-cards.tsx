@@ -159,7 +159,7 @@ export function PlaygroundCards({
           back={saved.back}
           listing={saved.listing}
           onFlip={flipList}
-          modeFilter={{ filter: saved.modeFilter, onFilter: filterList }}
+          modeFilter={{ picks: saved.modePicks, onPicks: filterList }}
           selection={{
             selected: saved.highlight?.where === 'list' ? saved.highlight.card : null,
             onSelect: (p) => saved.highlightCard(p && { where: 'list', ...p }),
