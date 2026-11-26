@@ -26,8 +26,12 @@ type Props = Omit<
   | 'aria-labelledby'
   | 'title'
 > &
-  // Only the pairs the set draws: Brand comes at Large alone.
-  ({ variant?: 'special'; size?: Size } | { variant: 'brand'; size: 'large' }) & {
+  // Only the pairs the set draws: Brand comes at Large alone, Plain at Small (the studio's ⋮).
+  (
+    | { variant?: 'special'; size?: Size }
+    | { variant: 'brand'; size: 'large' }
+    | { variant: 'plain'; size: 'small' }
+  ) & {
     /** Figma's 🙏 Icon Instance: a square SVG drawing in currentColor. */
     icon: ReactNode;
     /**
@@ -57,7 +61,7 @@ type Props = Omit<
  * styles, state for state (see Button). Brand is Button's Primary the same way:
  * Brand/surface under the PrimaryButton/… effect styles. aria-disabled looks
  * disabled too, for a button that must keep its focus while it can do nothing.
- * The set draws Plain too; nothing uses it yet, so it is not here.
+ * Plain is the icon alone, with no surface or shadow, at Small: the route line detail's ⋮.
  *
  * With no words on it, its label shows as the Tooltip on hover — every
  * IconButton, so none can forget it, a disabled one too (it still says what

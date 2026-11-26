@@ -1,41 +1,44 @@
-// The hotspots' pins (src/features/routes/map/hotspot-pins.ts) in the studio and on the
-// contributor page, from the same hotspots in the studio's stand-in database and the committed map
-// file: a pin at each box's middle from the zoom where the scale bar first reads 500 m, a dot below
-// it, and the names from where the bar first reads 300 m. The public map draws no pins and no dots
-// for now (HOTSPOT_MARKS in public-map-app.tsx): its boxes and names stay, and a tap on a box
-// opens it only in a build with VITE_HOTSPOT_TAPS; without, the tap opens no card of its place.
+// The hotspots' pins and dots (src/features/routes/map/hotspot-pins.ts), off on every page for
+// now: the public map's HOTSPOT_MARKS in public-map-app.tsx, the studio's in studio-map-marks.ts
+// and the contributor page's in published-hotspots.ts. The boxes and their names stay, from the
+// studio's stand-in database and the committed map file.
 //
 //   npm run dev                          (in another terminal)
 //   node tests/e2e/map-pins-test.mjs
-//   PARA_SHOTS=dir node tests/e2e/map-pins-test.mjs   keeps each page at both zooms
+//   PARA_SHOTS=dir node tests/e2e/map-pins-test.mjs   keeps each page at each zoom
 //
-// What it proves: on the public map, no pin is drawn and its chunk is not fetched, no dot shows at
-// any zoom, a terminal's or a hintuan's, and the boxes, their names and their taps (or, with taps
-// off, none) work without either. In the studio, the pins and dots stand over the boxes
-// and the route lines and under the hotspots' names, and tapping a pin's head (off its box) or a
-// dot opens that box's card, as tapping the box does; on the contributor page the hotspots come
-// in after the map settles, in a chunk of their own, and a pin there is display-only: a tap on it
-// reaches the map and marks nothing.
+// What it proves: on the public map, unchanged, no pin is drawn and its chunk is not fetched, no
+// dot shows at any zoom, a terminal's or a hintuan's, and the boxes, their names and their taps
+// (or, with taps off, none) work without either. In the studio, the same: no pin, its chunk never
+// fetched, no dot, the boxes and names drawn, and a tap on a box opens its card; and no zoom or
+// compass buttons, the map zooming by the keys, Ctrl and the wheel and a double click. On the
+// contributor page the hotspots come in after the map settles, in a chunk of their own, with no
+// pin or dot, and a box there is display-only: a tap on it reaches the map and marks nothing.
 import { mkdirSync, readFileSync } from 'node:fs';
 import { chromium } from 'playwright';
 import { fakeContributions } from './lib/fake-contributions.mjs';
 import { fakeStudioDb } from './lib/fake-studio-db.mjs';
-import { BASE, bareStyle, harness, mapIdle, until, waitForSource } from './lib/harness.mjs';
+import {
+  BASE,
+  bareStyle,
+  emptyMapPoint,
+  harness,
+  mapIdle,
+  until,
+  waitForSource,
+} from './lib/harness.mjs';
 import { signInAsEditor } from './lib/studio-session.mjs';
 
 const { check, tally } = harness();
 const SHOTS = process.env.PARA_SHOTS;
 if (SHOTS) mkdirSync(SHOTS, { recursive: true });
 
-/** Zoomed in, well past the pins' zoom (12.89, the scale bar at 500 m), and zoomed out (dots). */
+/** Zoomed in, well past where a pin would start (12.89, the scale bar at 500 m), and zoomed out. */
 const ZOOMED_IN = 17.5;
 const ZOOMED_OUT = 12.5;
-/** Just past the pins' zoom; either side of the names' (13.89, the scale bar at 300 m). */
-const PINS_IN = 13;
+/** Either side of the names' zoom (13.89, the scale bar at 300 m). */
 const NAMES_OUT = 13.5;
 const NAMES_IN = 14.2;
-/** The middle of a pin's head from its point, in CSS px: 28 across, 48 tall, the stem at 2. */
-const HEAD = { dx: -2 + 14, dy: -48 + 14 };
 const LAYER = {
   fill: 'saved-stops-fill',
   dot: 'saved-stops-dot',
@@ -104,14 +107,6 @@ const drawn = (page, layer, id) =>
     [layer, id],
   );
 
-/** Whether `id`'s feature comes to be drawn in `layer` within 3 s: a pin fades in once placed. */
-const comesIn = (page, layer, id) =>
-  until(
-    () => drawn(page, layer, id),
-    (v) => v,
-    3000,
-  );
-
 /** A point on the screen, from a [lng, lat] and an offset in px, and what is under it. */
 const screenPoint = (page, at, [dx, dy] = [0, 0]) =>
   page.evaluate(
@@ -134,68 +129,55 @@ const screenPoint = (page, at, [dx, dy] = [0, 0]) =>
 const isChosen = (page, id) =>
   page.evaluate((id) => !!window.__map.getFeatureState({ source: 'saved-stops', id }).chosen, id);
 
-/** The layers' order: the pins and dots over the boxes and route lines, under the names. */
-async function checkOrder(page, where) {
-  // The pins' layer comes with its chunk, just after the boxes.
-  await page
-    .waitForFunction((pin) => !!window.__map.getLayer(pin), LAYER.pin, { timeout: 10000 })
-    .catch(() => undefined);
-  const order = await page.evaluate(() => window.__map.getLayersOrder());
-  const at = (id) => order.indexOf(id);
-  const above = [LAYER.fill, ...(at(LAYER.routesHit) >= 0 ? [LAYER.routesHit] : [])];
-  check(
-    `${where}: the dots and pins over the boxes${at(LAYER.routesHit) >= 0 ? ' and the route lines' : ''}, under the names`,
-    [LAYER.dot, LAYER.pin].every(
-      (id) => at(id) >= 0 && above.every((b) => at(id) > at(b)) && at(id) < at(LAYER.hintuanLabel),
-    ),
-    [LAYER.fill, LAYER.routesHit, LAYER.dot, LAYER.pin, LAYER.hintuanLabel]
-      .map((id) => `${id} ${at(id)}`)
-      .join(', '),
+/** A lone terminal and a lone hintuan among `alone`, the pins' points standing alone. */
+const lonesOf = (alone) => ({
+  terminal: alone.find((p) => p.properties.kind === 'terminal'),
+  hintuan: alone.find((p) => p.properties.kind === 'hintuan'),
+});
+
+/** How many features of `layer` are drawn on the screen now; none for a layer the map lacks. */
+const drawnIn = (page, layer) =>
+  page.evaluate(
+    (layer) =>
+      window.__map.getLayer(layer)
+        ? window.__map.queryRenderedFeatures({ layers: [layer] }).length
+        : 0,
+    layer,
   );
-}
 
 /**
- * Taps a pin's head, then (afresh) its dot, on a page whose tap opens a card, and checks each
- * opened that box. `fresh` opens the page again with nothing chosen.
+ * No pin and no dot round a lone terminal and a lone hintuan, zoomed in and out, with each box
+ * still drawn: the marks are off on this page (HOTSPOT_MARKS), the boxes stay.
  */
-async function checkTaps(page, where, pin, fresh) {
-  const { id } = pin.properties;
-  const at = pin.geometry.coordinates;
-  await settle(page, at, ZOOMED_IN);
+async function checkNoMarks(page, where, { terminal, hintuan }) {
   check(
-    `${where}: zoomed in (${ZOOMED_IN}), the box's pin, and no dot`,
-    (await comesIn(page, LAYER.pin, id)) && !(await drawn(page, LAYER.dot, id)),
+    `${where}: no pins' layer`,
+    !(await page.evaluate((pin) => !!window.__map.getLayer(pin), LAYER.pin)),
   );
-  if (SHOTS) await page.screenshot({ path: `${SHOTS}/${where}-zoomed-in.png` });
-  const head = await screenPoint(page, at, [HEAD.dx, HEAD.dy]);
-  await page.mouse.click(head.x, head.y);
-  check(
-    `${where}: a tap on the pin's head${head.onBox ? '' : ', off its box,'} opens the box's card`,
-    await until(
-      () => isChosen(page, id),
-      (v) => v,
-      3000,
-    ),
-    `head at ${Math.round(head.x)},${Math.round(head.y)}${head.onBox ? ' (over the box)' : ''}`,
-  );
-
-  await fresh();
-  await settle(page, at, ZOOMED_OUT);
-  check(
-    `${where}: zoomed out (${ZOOMED_OUT}), the box's dot, and no pin`,
-    (await comesIn(page, LAYER.dot, id)) && !(await drawn(page, LAYER.pin, id)),
-  );
-  if (SHOTS) await page.screenshot({ path: `${SHOTS}/${where}-zoomed-out.png` });
-  const dot = await screenPoint(page, at);
-  await page.mouse.click(dot.x, dot.y);
-  check(
-    `${where}: a tap on the dot opens the box's card`,
-    await until(
-      () => isChosen(page, id),
-      (v) => v,
-      3000,
-    ),
-  );
+  for (const [kind, hotspot] of [
+    ['terminal', terminal],
+    ['hintuan', hintuan],
+  ]) {
+    const { id } = hotspot.properties;
+    for (const zoom of [9, 11, ZOOMED_OUT, ZOOMED_IN]) {
+      await settle(page, hotspot.geometry.coordinates, zoom);
+      const dots = await drawnIn(page, LAYER.dot);
+      const isBoxDrawn =
+        zoom < ZOOMED_OUT ||
+        (await until(
+          () => drawn(page, LAYER.fill, id),
+          (v) => v,
+          3000,
+        ));
+      check(
+        `${where}: round a ${kind}, at zoom ${zoom}, no pin or dot${zoom < ZOOMED_OUT ? '' : '; its box drawn'}`,
+        dots === 0 && isBoxDrawn,
+        `${dots} dots`,
+      );
+      if (SHOTS && zoom >= ZOOMED_OUT)
+        await page.screenshot({ path: `${SHOTS}/${where}-${kind}-${zoom}.png` });
+    }
+  }
 }
 
 /** How many hotspot names are drawn on the screen now. */
@@ -206,18 +188,9 @@ const namesShown = (page) =>
     [LAYER.terminalLabel, LAYER.hintuanLabel],
   );
 
-/**
- * The scale bar's two thresholds around `pin`: its pin and no dot just past the pins' zoom, with
- * no name yet; then names a little past the names' zoom.
- */
-async function checkThresholds(page, where, pin) {
-  const { id } = pin.properties;
-  const at = pin.geometry.coordinates;
-  await settle(page, at, PINS_IN);
-  check(
-    `${where}: at ${PINS_IN}, just past the pins' zoom, the box's pin, and no dot`,
-    (await comesIn(page, LAYER.pin, id)) && !(await drawn(page, LAYER.dot, id)),
-  );
+/** The names round `hotspot`: none a little before the scale bar reads 300 m, some a little past. */
+async function checkNames(page, where, hotspot) {
+  const at = hotspot.geometry.coordinates;
   await settle(page, at, NAMES_OUT);
   const namesOut = await namesShown(page);
   await settle(page, at, NAMES_IN);
@@ -227,20 +200,10 @@ async function checkThresholds(page, where, pin) {
     3000,
   );
   check(
-    `${where}: no hotspot names at ${NAMES_OUT}, some at ${NAMES_IN}`,
+    `${where}: the hotspots' names still drawn: none at ${NAMES_OUT}, some at ${NAMES_IN}`,
     namesOut === 0 && namesIn > 0,
     `${namesOut} at ${NAMES_OUT}, ${namesIn} at ${NAMES_IN}`,
   );
-}
-
-/** A lone pin whose head stands off its box, to prove the pin itself takes the tap; else any lone one. */
-async function pinToTap(page, alone) {
-  for (const pin of alone.slice(0, 12)) {
-    await settle(page, pin.geometry.coordinates, ZOOMED_IN);
-    const head = await screenPoint(page, pin.geometry.coordinates, [HEAD.dx, HEAD.dy]);
-    if (!head.onBox) return pin;
-  }
-  return alone[0];
 }
 
 // ------------------------------------------------------------ the public map
@@ -369,6 +332,14 @@ async function pinToTap(page, alone) {
     pinChunks.length === 0,
     pinChunks.join(', '),
   );
+  check(
+    "public map, unchanged: OpenStreetMap's terminals among its places",
+    await until(
+      () => page.evaluate(() => !!window.__map.getLayer('osm-terminals')),
+      (v) => v,
+      10000,
+    ),
+  );
   check('public map: no page errors', errors.length === 0, errors.join('; '));
   await page.close();
 }
@@ -434,9 +405,63 @@ async function pinToTap(page, alone) {
   await page.close();
 }
 
+// ------------------------------------------------------------ the studio's zoom
+// No +, − or compass on the studio's map for now, and the map still zooms: by the + and
+// − keys, Ctrl plus the wheel (a trackpad's pinch arrives as one) and a double click.
+{
+  const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
+  await signInAsEditor(page);
+  await fakeStudioDb(page, {});
+  const errors = await open(page, '/studio/?e2e=1');
+  await mapIdle(page);
+  check(
+    'studio: no zoom or compass buttons on the map',
+    (await page
+      .locator('.maplibregl-ctrl-zoom-in, .maplibregl-ctrl-zoom-out, .maplibregl-ctrl-compass')
+      .count()) === 0,
+  );
+  const zoomNow = () => page.evaluate(() => window.__map.getZoom());
+  /** Whether `act` moves the zoom by a tenth or more the way `sign` says, once at rest again. */
+  const zooms = async (act, sign) => {
+    await page.evaluate(() => {
+      window.__map.jumpTo({ zoom: 14 });
+    });
+    await mapIdle(page);
+    const before = await zoomNow();
+    await act();
+    await until(zoomNow, (z) => z !== before, 5000);
+    await mapIdle(page);
+    const after = await zoomNow();
+    return {
+      ok: (after - before) * sign >= 0.1,
+      said: `${before.toFixed(2)} → ${after.toFixed(2)}`,
+    };
+  };
+  await page.evaluate(() => window.__map.getCanvas().focus());
+  const keyIn = await zooms(() => page.keyboard.press('Equal'), 1);
+  check('studio: the + key zooms in', keyIn.ok, keyIn.said);
+  const keyOut = await zooms(() => page.keyboard.press('Minus'), -1);
+  check('studio: the − key zooms out', keyOut.ok, keyOut.said);
+  const empty = await emptyMapPoint(page);
+  check('studio: an empty point on the map to zoom at', !!empty);
+  if (empty) {
+    const wheel = await zooms(async () => {
+      await page.mouse.move(empty.x, empty.y);
+      await page.keyboard.down('Control');
+      await page.mouse.wheel(0, -300);
+      await page.keyboard.up('Control');
+    }, 1);
+    check('studio: Ctrl and the wheel (a pinch) zoom in', wheel.ok, wheel.said);
+    const double = await zooms(() => page.mouse.dblclick(empty.x, empty.y), 1);
+    check('studio: a double click zooms in', double.ok, double.said);
+  }
+  check('studio, zoom: no page errors', errors.length === 0, errors.join('; '));
+  await page.close();
+}
+
 // ------------------------------------------------------------ the studio
-// The pin the studio taps, tapped again on the contributor page.
-let chosenPin;
+// The lone terminal and hintuan the studio looks at, looked at again on the contributor page.
+let looked;
 {
   const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
   await signInAsEditor(page);
@@ -448,26 +473,40 @@ let chosenPin;
     line: s.line ?? null,
   }));
   await fakeStudioDb(page, { stop });
+  const pinChunks = [];
+  page.on('request', (r) => {
+    if (/hotspot-pin-images/.test(r.url())) pinChunks.push(r.url());
+  });
   const errors = await open(page, '/studio/?e2e=1');
   const { count, alone } = await lonePin(page);
-  const pin = await pinToTap(page, alone);
-  chosenPin = pin;
-  console.log(`      (the pin: ${pin.properties.kind} ${pin.properties.id})`);
   check(
-    'studio: a pin point for every box',
+    'studio: a point for every box, for the boxes and their names',
     count === stop.filter((s) => s.area).length,
     `${count}`,
   );
-  await checkOrder(page, 'studio');
-  await checkThresholds(page, 'studio', pin);
-  await checkTaps(page, 'studio', pin, async () => {
-    await page.reload({ waitUntil: 'load' });
-    await page.waitForFunction(() => window.__map && window.__map.loaded(), null, {
-      timeout: 30000,
-    });
-    await waitForSource(page, 'saved-stops-pins', 30000);
-  });
-  check('studio: no page errors, no missing pin image', errors.length === 0, errors.join('; '));
+  looked = lonesOf(alone);
+  check(
+    'studio: a lone terminal and a lone hintuan to look at',
+    !!looked.terminal && !!looked.hintuan,
+  );
+  await checkNoMarks(page, 'studio', looked);
+  await checkNames(page, 'studio', looked.hintuan);
+  // A tap on the hintuan's box still opens it, with no pin or dot to tap.
+  const { id } = looked.hintuan.properties;
+  await settle(page, looked.hintuan.geometry.coordinates, ZOOMED_IN);
+  const middle = await screenPoint(page, looked.hintuan.geometry.coordinates);
+  await page.mouse.click(middle.x, middle.y);
+  check(
+    "studio: a tap on a hintuan's box opens its card",
+    await until(
+      () => isChosen(page, id),
+      (v) => v,
+      3000,
+    ),
+    `on the box: ${middle.onBox}`,
+  );
+  check("studio: the pins' chunk is never fetched", pinChunks.length === 0, pinChunks.join(', '));
+  check('studio: no page errors', errors.length === 0, errors.join('; '));
   await page.close();
 }
 
@@ -497,8 +536,8 @@ let chosenPin;
     if (/footbridges\.v1\.json/.test(r.url())) asked.push(r.url());
   });
   const errors = await open(page, '/studio/?e2e=1');
-  // The studio draws its possible terminals, never the commuter's markers: the markers drawn and
-  // then taken away at street zoom once raced a wait for the map to rest.
+  // The studio draws neither OpenStreetMap's terminals as possible ones nor the commuter's
+  // markers of them, for now: HAS_POSSIBLE_TERMINALS and hasTerminalMarkers.
   const markersAtOpen = await page.evaluate(() => {
     window.__markersAdded = 0;
     window.__map.on('sourcedata', (e) => {
@@ -534,19 +573,17 @@ let chosenPin;
     again > 0 && asked.length === 1,
     `${again} drawn; ${asked.length} asked`,
   );
-  const terminals = await until(
-    () =>
-      page.evaluate(() => ({
-        dots: !!window.__map.getLayer('possible-terminals-dot'),
-        markers: !!window.__map.getSource('osm-terminals'),
-        added: window.__markersAdded,
-      })),
-    (t) => t.dots,
-    10000,
-  );
+  // A moment at street zoom for anything that would come: the dots wait for zoom 13.
+  await settle(page, lift, 17);
+  await page.waitForTimeout(1500);
+  const terminals = await page.evaluate(() => ({
+    dots: !!window.__map.getSource('possible-terminals'),
+    markers: !!window.__map.getSource('osm-terminals'),
+    added: window.__markersAdded,
+  }));
   check(
-    "studio: the possible terminals at street zoom, and never the commuter's terminal markers",
-    terminals.dots && !terminals.markers && !markersAtOpen && terminals.added === 0,
+    "studio: at street zoom, no possible terminals and no commuter's terminal markers",
+    !terminals.dots && !terminals.markers && !markersAtOpen && terminals.added === 0,
     JSON.stringify({ ...terminals, markersAtOpen }),
   );
   check('studio, footbridges: no page errors', errors.length === 0, errors.join('; '));
@@ -583,7 +620,7 @@ let chosenPin;
   const errors = await open(page, '/contribute/');
   const { count } = await lonePin(page);
   check(
-    'contributor page: the hotspots come in after the map, a pin point for every box',
+    'contributor page: the hotspots come in after the map, a point for every box',
     count === index.stops.filter((s) => s.area).length,
     `${count}`,
   );
@@ -600,41 +637,32 @@ let chosenPin;
     chunks.length > 0 && askedAt.every((t) => t >= mapLoadedAt),
     `the map loaded at ${mapLoadedAt}; the chunk asked for at ${askedAt.join(', ') || 'never'}`,
   );
-  await checkOrder(page, 'contributor page');
-  const { id } = chosenPin.properties;
-  const at = chosenPin.geometry.coordinates;
-  await settle(page, at, ZOOMED_IN);
+  await checkNoMarks(page, 'contributor page', looked);
+  await checkNames(page, 'contributor page', looked.hintuan);
   check(
-    `contributor page: zoomed in (${ZOOMED_IN}), the box's pin, and no dot`,
-    (await comesIn(page, LAYER.pin, id)) && !(await drawn(page, LAYER.dot, id)),
+    "contributor page: no OpenStreetMap terminals' markers",
+    !(await page.evaluate(() => !!window.__map.getSource('osm-terminals'))),
   );
-  if (SHOTS) await page.screenshot({ path: `${SHOTS}/contribute-zoomed-in.png` });
-  const head = await screenPoint(page, at, [HEAD.dx, HEAD.dy]);
+  // A box is display-only: a tap on it reaches the map and marks nothing.
+  const { id } = looked.hintuan.properties;
+  const at = looked.hintuan.geometry.coordinates;
+  await settle(page, at, ZOOMED_IN);
+  const middle = await screenPoint(page, at);
   const cursorOver = async () => {
-    await page.mouse.move(head.x, head.y);
+    await page.mouse.move(middle.x, middle.y);
     return page.evaluate(() => window.__map.getCanvas().style.cursor);
   };
-  await page.touchscreen.tap(head.x, head.y);
+  await page.touchscreen.tap(middle.x, middle.y);
   await page.waitForTimeout(500);
   check(
-    '  a tap on the pin reaches the map and marks nothing: display-only',
-    head.reachesMap &&
+    '  a tap on a box reaches the map and marks nothing: display-only',
+    middle.reachesMap &&
       !(await isChosen(page, id)) &&
       (await page.locator('[data-testid="card"], [data-testid="chooser"]').count()) === 0 &&
       (await cursorOver()) === '',
-    `reaches the map: ${head.reachesMap}`,
+    `reaches the map: ${middle.reachesMap}`,
   );
-  await settle(page, at, ZOOMED_OUT);
-  check(
-    `contributor page: zoomed out (${ZOOMED_OUT}), the box's dot, and no pin`,
-    (await comesIn(page, LAYER.dot, id)) && !(await drawn(page, LAYER.pin, id)),
-  );
-  if (SHOTS) await page.screenshot({ path: `${SHOTS}/contribute-zoomed-out.png` });
-  check(
-    'contributor page: no page errors, no missing pin image',
-    errors.length === 0,
-    errors.join('; '),
-  );
+  check('contributor page: no page errors', errors.length === 0, errors.join('; '));
   await context.close();
 }
 

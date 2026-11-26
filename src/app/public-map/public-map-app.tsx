@@ -202,13 +202,15 @@ export function PublicMapApp() {
 
   return (
     // `data-directions`, `data-hotspot-taps`, `data-place-search`: for the suites on a production
-    // build (the index's count; isHotspotTapOn; isPlaceSearchShown). `data-dock-host`: the open
+    // build (the index's count; isHotspotTapOn; isPlaceSearchShown). `data-scale-under-credits`:
+    // the map's scale bar under the ⓘ, over the sheets (map-frame.css). `data-dock-host`: the open
     // card's sheet says where its top is here, and on what follows it (`data-dock-follower`) as a
     // finger drags it (BottomSheet). While "Update Para!" waits, a toast sits 12 under it (Notices,
     // `--toast-top`, ToastHost).
     <div
       ref={root}
       data-dock-host
+      data-scale-under-credits
       data-directions={saved.directions.length}
       data-hotspot-taps={isHotspotTapOn ? 'on' : 'off'}
       data-place-search={isPlaceSearchShown ? 'on' : 'off'}

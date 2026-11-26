@@ -19,6 +19,7 @@
 // under the same new route (13); no React warnings.
 import { waitFor } from './lib/harness.mjs';
 import {
+  pressDelete,
   approveAll,
   approvedWrites,
   at,
@@ -226,18 +227,24 @@ let drawn;
   // The card: no Extend, and an ikot's own words.
   await openCard(IKOT[1]);
   await waitFor(async () => (await page.getByRole('button', { name: 'Edit route' }).count()) > 0);
+  const detail = page.getByTestId('route-line-detail');
+  const stops = await detail
+    .getByTestId('route-stops')
+    .getByRole('button')
+    .allInnerTexts()
+    .catch(() => []);
   check(
-    "an ikot's card has Edit route and Delete, but no Extend: it has no end to go on from",
+    "an ikot's detail has Edit Route and Delete (⋮), but no Extend: it has no end to go on from",
     (await page.getByRole('button', { name: 'Edit route' }).count()) === 1 &&
-      (await page.getByRole('button', { name: 'Extend' }).count()) === 0 &&
-      (await page.getByTestId('facts-loop').count()) === 1 &&
-      // The trip is the ikot's: its word for the way, and no SWITCH to a way back.
-      /Ikot/.test(await body()) &&
-      !/Pabalik|Papunta/.test(await body()),
-    (await page
-      .getByTestId('facts-loop')
-      .innerText()
-      .catch(() => '')) || (await body()).slice(0, 120),
+      (await detail.getByRole('button', { name: 'More' }).count()) === 1 &&
+      (await page.getByRole('button', { name: 'Extend' }).count()) === 0,
+  );
+  check(
+    '  one direction, so no tabs; its stops name its tip once, never again at the foot',
+    (await detail.getByRole('tablist').count()) === 0 &&
+      stops.length > 0 &&
+      new Set(stops).size === stops.length,
+    stops.join(' · '),
   );
 
   // Edit: the toggle is locked on, and the update names no ends and no is_loop.
@@ -322,9 +329,9 @@ let drawn;
   // Delete: the confirm names the ikot, and emptying its only direction removes the route.
   await openCard(IKOT[1]);
   // The card reads the line before it opens, as D's trip card does: wait for it.
-  await waitFor(async () => (await page.getByRole('button', { name: 'Delete' }).count()) > 0);
+  await waitFor(async () => (await page.getByRole('button', { name: 'More' }).count()) > 0);
   n = log.length;
-  await page.getByRole('button', { name: 'Delete' }).click();
+  await pressDelete();
   // Done when the studio says so: the delete's draft is stored and approved in
   // the same press, and only then does the card close. On a slow runner that
   // takes more than a few seconds, so the wait is for that state, not for a

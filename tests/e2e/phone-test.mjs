@@ -2914,6 +2914,15 @@ const toRaised = async () => {
   } else await buttonTap(handle(), async () => (await sheetState()) !== 'low');
   return (await until(sheetState, (state) => state === 'free', 5000)) === 'free';
 };
+/** A trip's middle, where a tap opens it (TRIP_OPENS_AT), read from the page's own module. */
+const tripMiddle = () =>
+  page.evaluate(async () => {
+    try {
+      return (await import('/src/features/routes/cards/card-stack.ts')).TRIP_OPENS_AT;
+    } catch {
+      return 0.45;
+    }
+  });
 /**
  * Whether the card's handle draws no notch (BottomSheet's `handle="hidden"`, a trip's and the
  * route list's): nothing there for a finger, which moves the sheet itself instead.
@@ -3718,6 +3727,27 @@ if (runsPart(1)) {
         atFull !== null && !atFull.drawn && atFull.box === 0,
         JSON.stringify(atFull),
       );
+      // The scale bar stands 4 under the ⓘ's place (16 in, its top 56 down: the ⓘ's 24 and 28),
+      // drawn over every sheet: at full height, the card filling the screen, nothing covers it.
+      const scaleAtFull = await page.evaluate(() => {
+        const scale = document.querySelector('.maplibregl-ctrl-scale');
+        const box = scale?.getBoundingClientRect();
+        if (!scale || !box) return null;
+        const hit = document.elementFromPoint(box.left + 4, box.top + box.height / 2);
+        return {
+          x: Math.round(box.left),
+          y: Math.round(box.top),
+          isOnTop: !!hit && scale.contains(hit),
+        };
+      });
+      check(
+        "  the scale bar stands under the ⓘ's place, 16 in and 56 down, over the full card",
+        scaleAtFull !== null &&
+          Math.abs(scaleAtFull.x - 16) < 2 &&
+          Math.abs(scaleAtFull.y - 56) < 2 &&
+          scaleAtFull.isOnTop,
+        JSON.stringify(scaleAtFull),
+      );
       await toRaised();
       await cardsSettled(page);
       const grip = await handle().first().boundingBox();
@@ -4343,6 +4373,7 @@ if (runsPart(3)) {
       const listTopPx = await shownOf(chooser);
       await buttonTap(wanted, async () => (await trip().count()) > 0);
       const tripPx = (await trip().count()) ? await shownOf(card()) : null;
+      const tripShare = await tripMiddle();
       check(
         '  a trip opened from the list at its top opens at the middle (TRIP_OPENS_AT)',
         listAtFull &&
@@ -4350,7 +4381,7 @@ if (runsPart(3)) {
           Math.abs(
             tripPx -
               Math.round(
-                0.55 *
+                tripShare *
                   (await card()
                     .first()
                     .evaluate((e) => e.offsetHeight)),
@@ -6010,9 +6041,11 @@ if (runsPart(3)) {
   await page.waitForFunction(() => window.__map && window.__map.loaded(), null, { timeout: 30000 });
   await waitForSource(page, 'saved-routes');
   await mapIdle(page);
-  const middle = await page.evaluate(async () => {
+  const middle = await tripMiddle();
+  // The route list's middle, its ⌄'s (FRAMED_SHARE): a trip's is its own (TRIP_OPENS_AT).
+  const listMiddleShare = await page.evaluate(async () => {
     try {
-      return (await import('/src/features/routes/cards/card-stack.ts')).TRIP_OPENS_AT;
+      return (await import('/src/shared/ui/sheet-gesture.ts')).FRAMED_SHARE;
     } catch {
       return 0.55;
     }
@@ -6158,7 +6191,7 @@ if (runsPart(3)) {
       await cardsSettled(page).catch(() => {});
       const downPx = await shownOf(chooser);
       const listMiddle = Math.round(
-        middle * (await chooser.first().evaluate((e) => e.offsetHeight)),
+        listMiddleShare * (await chooser.first().evaluate((e) => e.offsetHeight)),
       );
       check(
         '  the list at the top shows Vice Versa and ⌄ over its DonationCard; ⌄ sets it at the middle',

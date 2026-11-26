@@ -27,7 +27,7 @@ export const labelsNow = (page) =>
     return {
       establishments: symbols.filter(isEstablishment).map((l) => l.id),
       // The GeoJSON place layers drawn: the pawnshops (E3b), Overture's places (E3c) and the
-      // terminals, 3 with the labels.
+      // terminals, 3 with the labels (2 where a page draws no terminals).
       extras: symbols.filter(isExtra).length,
       ids: style.layers.map((l) => l.id).join(','),
       basemap: basemap.map((l) => l.id),
@@ -78,11 +78,12 @@ const sameIds = (a, b) => [...a].sort().join() === [...b].sort().join();
 /**
  * The page's default, then off and on, a basemap switch, a reload, off again and another switch,
  * each read off the map. `prefix` starts each check's name; `waitForMap` waits for a reloaded
- * page's map; `isOnByDefault` and `key` are the page's own (location-labels.ts).
+ * page's map; `isOnByDefault` and `key` are the page's own (location-labels.ts); `extras` is how
+ * many GeoJSON place layers it draws with the labels: 2 on a page without OpenStreetMap's terminals.
  */
 export async function checkLocationLabels(
   page,
-  { check, prefix, waitForMap, isOnByDefault = false, key = 'para.location-labels.v1' },
+  { check, prefix, waitForMap, isOnByDefault = false, key = 'para.location-labels.v1', extras = 3 },
 ) {
   const stored = () => page.evaluate((k) => localStorage.getItem(k), key);
   // What the phone keeps for each state: nothing for the default, the choice away from it.
@@ -99,7 +100,7 @@ export async function checkLocationLabels(
       (isOnByDefault
         ? atFirst.basemapShown.length > 0 &&
           atFirst.establishments.length === 3 &&
-          atFirst.extras === 3
+          atFirst.extras === extras
         : atFirst.basemapShown.length === 0 &&
           atFirst.establishments.length === 0 &&
           atFirst.extras === 0) &&
@@ -130,7 +131,7 @@ export async function checkLocationLabels(
     (await labelsSwitch(page).getAttribute('aria-checked')) === 'true' &&
       shown.basemapShown.length > 0 &&
       shown.establishments.length === 3 &&
-      shown.extras === 3 &&
+      shown.extras === extras &&
       sameIds(shown.ours, atFirst.ours) &&
       (await stored()) === keptOn,
     `${shown.basemapShown.length} of ${shown.basemap.length} shown; ours ${shown.ours.join(', ') || 'none'}`,
@@ -141,7 +142,7 @@ export async function checkLocationLabels(
     `${prefix}: a switch to Coloured keeps them shown, with its own place icons, none of the basemap's establishments, and Para's own`,
     colour.basemapShown.length > 0 &&
       colour.establishments.length === 0 &&
-      colour.extras === 3 &&
+      colour.extras === extras &&
       sameIds(colour.ours, atFirst.ours),
     `${colour.basemapShown.length} of ${colour.basemap.length} shown`,
   );
