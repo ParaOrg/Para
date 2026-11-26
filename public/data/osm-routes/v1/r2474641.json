@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 2474641,
+  "kind": "jeepney",
+  "ref": "407",
+  "name": "Jeepney Route 407: Balibago → Biñan",
+  "from": "Balibago Complex",
+  "to": "Biñan",
+  "network": "LTFRB PUJ",
+  "operator": "",
+  "version": 47,
+  "last_edit": "2026-10-27",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [[9,135],[11,135]],
+  "stops": [["stop",121.09992,14.31269,"SM City Sta. Rosa"],["stop_exit_only",121.08209,14.33303,"Central Mall Biñan"]],
+  "line": [[121.10303,14.29349],[121.10224,14.2933],[121.10221,14.29321],[121.1025,14.29225],[121.10465,14.29271],[121.10477,14.29284],[121.10478,14.29328],[121.10447,14.29432],[121.10626,14.29491],[121.10065,14.31066],[121.10024,14.3118],[121.10065,14.31066],[121.10024,14.3118],[121.09682,14.3214],[121.09646,14.32205],[121.09446,14.32445],[121.09162,14.32775],[121.08212,14.33329],[121.08156,14.33274],[121.08171,14.33251],[121.08238,14.33291]]
+}

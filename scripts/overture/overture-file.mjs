@@ -16,9 +16,18 @@ export const OVERTURE_KINDS = [
   'dentist',
   'school',
   'college',
+  'convenience',
+  'supermarket',
+  'pharmacy',
+  'laundry',
+  'hotel',
+  'lodging',
 ];
 
-/** Overture's basic category of each place pull.py keeps, and the kind it is drawn as. */
+/**
+ * Overture's category of each place pull.py keeps (its basic category, or for a grocery its
+ * primary one), and the kind it is drawn as.
+ */
 export const KIND_OF_CATEGORY = {
   restaurant: 'restaurant',
   casual_eatery: 'restaurant',
@@ -38,6 +47,18 @@ export const KIND_OF_CATEGORY = {
   middle_school: 'school',
   preschool: 'school',
   college_university: 'college',
+  convenience_store: 'convenience',
+  grocery_store: 'supermarket',
+  produce_store: 'supermarket',
+  butcher_shop: 'supermarket',
+  fishmonger: 'supermarket',
+  food_and_beverage_store: 'supermarket',
+  pharmacy_and_drug_store: 'pharmacy',
+  laundry_service: 'laundry',
+  // Where to stay: a hotel, or the smaller lodging overture.mjs tells apart by name (lodgingKindOf).
+  hotel: 'hotel',
+  lodging: 'hotel',
+  resort: 'hotel',
 };
 
 export const OVERTURE_ATTRIBUTION = '© Overture Maps Foundation';

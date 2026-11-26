@@ -4,6 +4,11 @@
   "attribution": "© Overture Maps Foundation",
   "establishments": [
     ["od4d69f64fc284dd2","restaurant",121.35021,14.32871,"Lakescape Hot Springs Dome Glamping"],
-    ["o1d477d68bb494b50","fast_food",121.37528,14.34463,"RX Blend - Bagumbong Jalajala Rizal"]
+    ["o1d477d68bb494b50","fast_food",121.37528,14.34463,"RX Blend - Bagumbong Jalajala Rizal"],
+    ["obf776d729efe4821","pharmacy",121.377,14.34072,"PSRB Pharmacy Bagumbong Jalajala Rizal"],
+    ["o4662dc91a5744984","hotel",121.36533,14.34289,"La Luz Resort"],
+    ["o7520decdd2c04646","hotel",121.35258,14.33016,"KabinA sa Aplaya - RJFLn Resort"],
+    ["o9c79311b1e9f4177","hotel",121.35252,14.33054,"Southside Private Resort"],
+    ["ocd3a5461b0da4af6","hotel",121.35201,14.33245,"Paraiso Hills Resort and Venue Center"]
   ]
 }

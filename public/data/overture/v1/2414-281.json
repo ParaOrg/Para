@@ -3,6 +3,11 @@
   "cell": "2414-281",
   "attribution": "© Overture Maps Foundation",
   "establishments": [
-    ["o21f83bc47e364573","school",120.73598,14.0547,"Little Home Learning Center Bayudbud Tuy Batangas"]
+    ["o21f83bc47e364573","school",120.73598,14.0547,"Little Home Learning Center Bayudbud Tuy Batangas"],
+    ["o3267b2e7b23d43a2","hotel",120.707,14.07588,"Tamaraw Farm & Resort"],
+    ["o3b0b55fb65674078","hotel",120.73423,14.06762,"Osorio Garden Resort"],
+    ["ocd1fb93ca4174e6c","hotel",120.73879,14.0691,"JF Beach Resort"],
+    ["o98d9f3b2ab554185","lodging",120.73879,14.0691,"Villa Faustina Beach Resort"],
+    ["o9e8a7f75a62e4cb0","lodging",120.7148,14.08079,"Domescape"]
   ]
 }

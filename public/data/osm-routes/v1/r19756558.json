@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 19756558,
+  "kind": "jeepney",
+  "ref": "335",
+  "name": "Bacood–Stop n' Shop",
+  "from": "Bacood",
+  "to": "Stop n' Shop",
+  "network": "LTFRB National Capital Region",
+  "operator": "Libra Transport Cooperative",
+  "version": 7,
+  "last_edit": "2026-09-12",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",121.01705,14.58949,"Bacood Turning Point"],["platform",121.02023,14.59113,"Parish of the Good Shepherd"],["platform",121.01928,14.59203,"Our Lady of Fatima Parish"],["platform",121.0181,14.59309,"Meralco Lubiran"],["platform",121.01528,14.59598,"Tzu Chi"],["platform",121.01749,14.59824,"Valenzuela Extension"],["platform",121.01699,14.59974,"Old Santa Mesa"],["platform",121.01566,14.59983,"Ligaya Budget Hotel"],["platform_exit_only",121.01358,14.60025,"Teresa"]],
+  "line": [[121.01705,14.58954],[121.01772,14.5895],[121.01916,14.58965],[121.01968,14.58981],[121.02085,14.59047],[121.01511,14.59574],[121.01511,14.59588],[121.0157,14.59654],[121.01632,14.59741],[121.0176,14.59766],[121.01681,14.60015],[121.01504,14.59959],[121.01476,14.59969],[121.01355,14.60052],[121.01352,14.60046],[121.01376,14.60007]]
+}

@@ -3,15 +3,22 @@
 //   node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs scripts/publish/publish-map.mjs
 //                                                   writes public/data/
 //
-// Six things:
-//   data/index.v5.json      schema 5, what the app reads (MAP_FILE_URL): the
-//                           index below with every line and every loop in —
-//                           a loop's route has no ends and `is_loop: true`,
-//                           last in its row and on loops only.
+// Seven things:
+//   data/index.v6.json      schema 6, what the app reads (MAP_FILE_URL): the
+//                           index below with every line in, the EDSA
+//                           Carousel's too (mode 'busway', its stations'
+//                           `line` EDSA-C).
+//   data/index.v5.json      schema 5: the same without the EDSA Carousel
+//                           (without-lines.mjs), for an app whose schema does
+//                           not know its mode and would refuse the whole
+//                           index for it. Every loop in — a loop's route has
+//                           no ends and `is_loop: true`, last in its row and
+//                           on loops only. Kept a month at least after shape
+//                           6 ships.
 //   data/index.v4.json      schema 4: the same without the loops
 //                           (shapes.mjs), for an app that would refuse the
 //                           whole index for a route with no ends. Every line
-//                           in, the trains and the ferry — a line's
+//                           in but the Carousel, the trains and the ferry — a line's
 //                           `route_code`, a station's `line` — read by
 //                           servedBy (src/features/routes/model/routes.ts).
 //                           Kept a month at least after shape 5 ships.
@@ -172,7 +179,7 @@ const previous = readPrevious(paths);
 // in; until it has one, the newest older file against the whole map, which is
 // never more than the whole.
 if (!FORCE) {
-  const was = previous.v5 ?? previous.v4 ?? previous.v3 ?? previous.map;
+  const was = previous.v6 ?? previous.v5 ?? previous.v4 ?? previous.v3 ?? previous.map;
   const refusals = shrinkRefusals({ was, now: all, takenDown, maxShrink: MAX_SHRINK });
   if (refusals.length) fail(refusals.map((r) => `FAIL  ${r}`).join('\n'));
 }
@@ -180,7 +187,7 @@ if (!FORCE) {
 const sourceRevisions = sourceRevisionsOf(directionRows, hotspotRows);
 const indexContext = { overviews, boardsOf, sourceRevisions };
 const published_at = publishedAtOf({
-  prior: previous.v5 ?? previous.v4,
+  prior: previous.v6 ?? previous.v5,
   rows: indexRowsOf(all, indexContext),
   sourceRevisions,
 });
@@ -195,6 +202,7 @@ try {
   throw e;
 }
 for (const [name, cut] of [
+  ['shape 5', files.left.v5],
   ['shape 4', files.left.v4],
   ['shape 3', files.left.v3],
   ['shapes 1 and 2', files.left.old],
@@ -229,6 +237,7 @@ for (const [shape, name] of [
   ['v2', 'index.json'],
   ['v3', 'index.v3.json'],
   ['v4', 'index.v4.json'],
+  ['v5', 'index.v5.json'],
 ]) {
   console.log(
     `${before[shape] === files[shape] ? 'Unchanged' : 'Wrote'} public/data/${name}: ${files[shape].length} bytes, ${gz(files[shape])} gzipped`,
@@ -236,11 +245,11 @@ for (const [shape, name] of [
 }
 const loopCount = variants.filter((v) => v.route.is_loop === true).length;
 console.log(
-  `${before.v5 === files.v5 ? 'Unchanged' : 'Wrote'} public/data/index.v5.json: ${variants.length} direction(s) (${loopCount} loop(s)), ` +
-    `${stops.length} hotspot(s), ${links.length} link(s); ${files.v5.length} bytes, ${gz(files.v5)} gzipped; ` +
+  `${before.v6 === files.v6 ? 'Unchanged' : 'Wrote'} public/data/index.v6.json: ${variants.length} direction(s) (${loopCount} loop(s)), ` +
+    `${stops.length} hotspot(s), ${links.length} link(s); ${files.v6.length} bytes, ${gz(files.v6)} gzipped; ` +
     `lines/: ${lines.files} file(s), ${lines.written} written, ${lines.removed} removed`,
 );
-const indexWarning = indexWeightWarning(gz(files.v5));
+const indexWarning = indexWeightWarning(gz(files.v6));
 if (indexWarning) console.log(indexWarning);
 console.log(
   `signboards/: ${boards.files} file(s), ${boards.written} written, ${boards.removed} removed` +

@@ -4,6 +4,9 @@
   "attribution": "© Overture Maps Foundation",
   "establishments": [
     ["o8f94b949ae2245ec","restaurant",120.74434,14.31383,"Cafe Engracia"],
-    ["o3f1bafc6af5b4839","school",120.73661,14.31476,"Naic Coastal Integrated National High School"]
+    ["o3f1bafc6af5b4839","school",120.73661,14.31476,"Naic Coastal Integrated National High School"],
+    ["o23b43f0f24a5487c","hotel",120.74438,14.31381,"SilverGrace Resort"],
+    ["ob9cab81f9adf4de9","hotel",120.73728,14.3128,"Roberto's Resort"],
+    ["of6a119f6e70f4b0a","hotel",120.73439,14.30756,"Roberto's Resort and Pavilion"]
   ]
 }

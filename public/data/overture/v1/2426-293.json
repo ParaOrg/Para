@@ -5,6 +5,12 @@
   "establishments": [
     ["o2681295c52af4fe2","fast_food",121.32458,14.65333,"KFC"],
     ["o370ecf3e07fe43e7","fast_food",121.34376,14.66793,"KFC"],
-    ["o95000bbc36e94038","fast_food",121.3354,14.65245,"KFC"]
+    ["o95000bbc36e94038","fast_food",121.3354,14.65245,"KFC"],
+    ["ocffef25470434f4b","supermarket",121.33279,14.68767,"Woodlane Valley Farms"],
+    ["o0fe1748bb67c49b4","hotel",121.34386,14.66187,"Balay Talahib Mountain Resort"],
+    ["o435be3ed1cf84a8b","hotel",121.34131,14.66366,"Cayabu Mountains Resort Hotel"],
+    ["o4be029bc506c4196","lodging",121.34243,14.66528,"Two Rivers Teepees and Treehouse"],
+    ["o4f27d6c681f44307","lodging",121.34218,14.66509,"Hills and Stars Camp Reserve"],
+    ["oc671d464010d46c0","lodging",121.3476,14.65402,"V-HAY - Hibernature"]
   ]
 }

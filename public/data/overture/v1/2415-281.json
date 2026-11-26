@@ -4,6 +4,10 @@
   "attribution": "© Overture Maps Foundation",
   "establishments": [
     ["o94e35296e5af4f15","restaurant",120.7603,14.08073,"Olive Rose Vineyard & Farm Kitchen"],
-    ["od3723652b53e4890","restaurant",120.79475,14.0956,"Bayani's Lomi House and Restaurant"]
+    ["od3723652b53e4890","restaurant",120.79475,14.0956,"Bayani's Lomi House and Restaurant"],
+    ["oc6a32e0224684fcf","hotel",120.79954,14.08663,"New Haven At Batulao Mountain Resort"],
+    ["ofe6e457503384144","hotel",120.77031,14.08093,"Palm Hill Resort"],
+    ["oa214ee6934d14d95","lodging",120.77599,14.0885,"The Sanctuary Batulao"],
+    ["obc3bc35b78694e5e","lodging",120.79721,14.0865,"The Hideout at Batulao"]
   ]
 }

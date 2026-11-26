@@ -1,22 +1,20 @@
 import type { ReactNode } from 'react';
 
+import { FRAMED_SHARE, slide } from '@/shared/ui/sheet-gesture';
 import { cn } from '@/shared/utils/cn';
 
 interface MapControlsDockProps {
-  /** The controls, the one nearest the sheet first: on a phone the lowest, on a wide map the top. */
+  /** The controls, the one nearest the sheet first: on a phone the lowest, on a wide map the left. */
   children: ReactNode;
 }
 
-/** The highest it rides: just under the status bar, over the sheet below. */
-const HIGHEST = 'calc(var(--map-safe-top, env(safe-area-inset-top)) + 2.75rem)';
-
 /**
- * Where the controls of the cards on show float on the public map (Figma 4831:54489, 4831:54492):
- * the route list's Vice Versa and sliders, a trip's Overview. On a phone they stand at the map's
- * bottom left, `--dock-gap` over the card's sheet (16 on the public map, as the frames draw it, the
- * locate-me column alike), following it at every height as that column does, a column from the
- * sheet up at the map's left edge; the map's ⓘ is in its top-left corner. Where the card docks on the left of a wide map (`@float:`), they stand at the map's top, 8
- * right of the card, a column from the top down.
+ * Where the controls of the cards on show float on the public map (4885:41761, 4886:47571): the
+ * route list's Vice Versa and Overview, a trip's Overview. On a phone they stand at the map's
+ * bottom left, 16 in and `--dock-gap` over the card's sheet, a column from the sheet up, 12 apart.
+ * They follow it up to the middle (FRAMED_SHARE) and stay there, the sheet sliding over them
+ * higher, as the locate-me column does (4885:41761, "The Button Stays in the middle"). Where the card docks on the left of
+ * a wide map (`@float:`), they stand in a row at the map's top, 16 down and 16 right of the card.
  */
 export function MapControlsDock({ children }: MapControlsDockProps) {
   return (
@@ -27,13 +25,13 @@ export function MapControlsDock({ children }: MapControlsDockProps) {
         'transition-[translate] duration-sheet ease-enter in-data-dock-dragging:transition-none motion-reduce:transition-none ' +
         '@float:translate-none!'
       }
-      style={{ translate: `0 max(var(--dock-y, 100%), ${HIGHEST})` }}
+      style={{ translate: `0 max(var(--dock-y, 100%), ${slide(FRAMED_SHARE)})` }}
     >
       <div
         data-testid="map-controls"
         className={cn(
-          'pointer-events-auto absolute bottom-full left-[calc(0.75rem+env(safe-area-inset-left))] mb-[var(--dock-gap,0.75rem)] flex flex-col-reverse items-start gap-2',
-          '@float:top-[calc(0.5rem+env(safe-area-inset-top))] @float:bottom-auto @float:left-98 @float:mb-0 @float:flex-col',
+          'pointer-events-auto absolute bottom-full left-[calc(1rem+env(safe-area-inset-left))] mb-[var(--dock-gap,0.75rem)] flex flex-col-reverse items-start gap-3',
+          '@float:top-[calc(1rem+env(safe-area-inset-top))] @float:bottom-auto @float:left-100 @float:mb-0 @float:flex-row',
         )}
       >
         {children}

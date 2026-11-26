@@ -1,4 +1,4 @@
-// The public map at /, on whatever the published index (public/data/index.v5.json)
+// The public map at /, on whatever the published index (public/data/index.v6.json)
 // holds today. The dev server serves that file straight from the working
 // tree, committed or not — so a passing run here says nothing about whether
 // the file was committed; `git status` does.
@@ -14,7 +14,7 @@
 // failing. Covers: the read-only public page carries none of the studio's
 // buttons or sign-in text, ships no draw-* (editor) layers, writes nothing
 // to localStorage, never calls the OSRM route snapper or the database (it
-// reads the published /data/index.v5.json, once), and tapping a route vs. a
+// reads the published /data/index.v6.json, once), and tapping a route vs. a
 // hotspot — including one hotspot with a route drawn through it — opens the
 // right card with the right content (a hotspot's only in a build with
 // VITE_HOTSPOT_TAPS; without, a tap on a box opens no place's card); and,
@@ -219,7 +219,7 @@ page.on('request', (req) => {
 // Responses, not requests: a 404 is a request too, and would count as a load.
 // The pick checks read the file again for their sums, marked so as not to count.
 page.on('response', (res) => {
-  if (/\/data\/index\.v5\.json/.test(res.url()) && !res.request().headers()['x-para-test'])
+  if (/\/data\/index\.v6\.json/.test(res.url()) && !res.request().headers()['x-para-test'])
     mapFileStatuses.push(res.status());
 });
 
@@ -1160,7 +1160,15 @@ if (!RUNS_ONE_OFFS) {
       };
       const before = await listedNow();
       const agree = [];
-      for (const label of ['Jeep', 'E-Jeep', 'Bus', 'LRT', 'MRT', 'Ferry']) {
+      for (const label of [
+        'Jeepney',
+        'E-Jeep',
+        'UV Express',
+        'Bus',
+        'Premium Bus / P2P',
+        'Train',
+        'Ferry',
+      ]) {
         await filterTo(label);
         const listedUnder = await listedNow();
         const litUnder = await until(litNow, (lit) => sameIds(lit, listedUnder));
@@ -1212,7 +1220,7 @@ if (!RUNS_ONE_OFFS) {
 // Overview offered to take the rail in. The last part's, with 4a.
 if (RUNS_ONE_OFFS) {
   const modeOf = new Map(
-    JSON.parse(readFileSync('public/data/index.v5.json', 'utf8')).variants.map((v) => [
+    JSON.parse(readFileSync('public/data/index.v6.json', 'utf8')).variants.map((v) => [
       v.route_id,
       v.route.mode,
     ]),
@@ -1228,7 +1236,7 @@ if (RUNS_ONE_OFFS) {
     );
   if (!mixed) {
     check(
-      'a tap where a rail line runs over a jeep road: the LRT filter lights the rail, the camera kept still',
+      'a tap where a rail line runs over a jeep road: the Train filter lights the rail, the camera kept still',
       false,
       'the map file has no such road any more: pick another two kinds of ride',
     );
@@ -1252,10 +1260,10 @@ if (RUNS_ONE_OFFS) {
       });
     const cameraWas = await camera();
     await filterButton.click();
-    await page.getByRole('radio', { name: 'LRT', exact: true }).click();
+    await page.getByRole('radio', { name: 'Train', exact: true }).click();
     await until(
       () => filterButton.getAttribute('aria-label'),
-      (l) => l === 'Filter: LRT',
+      (l) => l === 'Filter: Train',
     );
     const listed = (await cardDirections(chooser.first())).filter(Boolean);
     const lit = await until(litNow, (ids) => sameIds(ids, listed));
@@ -1267,7 +1275,7 @@ if (RUNS_ONE_OFFS) {
       Math.abs(cameraNow.lat - cameraWas.lat) > 1e-9;
     const isOverviewOffered = await page.getByRole('button', { name: 'Overview' }).isVisible();
     check(
-      'a tap where a rail line runs over a jeep road: the LRT filter lights the rail, the camera kept still',
+      'a tap where a rail line runs over a jeep road: the Train filter lights the rail, the camera kept still',
       liveries.some((l) => l?.includes('rail')) &&
         liveries.includes('jeep') &&
         listed.length > 0 &&
@@ -1959,7 +1967,7 @@ check('no request to router.project-osrm.org', !osrmHit);
 // Since step 5 the public map is one published map; the database is never asked.
 check('no request to the database (*.supabase.co)', !supabaseHit);
 check(
-  'the map came from /data/index.v5.json, fetched once and served',
+  'the map came from /data/index.v6.json, fetched once and served',
   mapFileStatuses.length === 1 && (mapFileStatuses[0] === 200 || mapFileStatuses[0] === 304),
   `${mapFileStatuses.length} response(s): ${mapFileStatuses.join(', ') || 'none'}`,
 );
@@ -1996,7 +2004,7 @@ if (RUNS_ONE_OFFS) {
   await nodeFetch(p);
   p.on('pageerror', (e) => errors.push(String(e)));
   let isFailing = true;
-  await p.route(/\/data\/index\.v5\.json/, (route) =>
+  await p.route(/\/data\/index\.v6\.json/, (route) =>
     isFailing ? route.abort('internetdisconnected') : route.continue(),
   );
   await p.goto(`${BASE}/`, { waitUntil: 'load' });

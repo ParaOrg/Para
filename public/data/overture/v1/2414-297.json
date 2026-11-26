@@ -19,6 +19,13 @@
     ["obb619e51b8e848e1","school",120.73939,14.86739,"DepEd San Juan Elementary School 104844"],
     ["oe84618535bd54d3a","school",120.71954,14.87769,"Candelaria Elementary School"],
     ["oeb27f2bc0bee45a6","school",120.72124,14.89616,"Tacasan Elementary School Macabebe Pampanga"],
-    ["oeab85c1b299c4c7e","college",120.70503,14.88773,"Holy Cross College"]
+    ["oeab85c1b299c4c7e","college",120.70503,14.88773,"Holy Cross College"],
+    ["of17ece23575849c7","convenience",120.70428,14.89103,"CLiQQ"],
+    ["o18b697821af0407a","hotel",120.70768,14.87684,"Royal Palace Resort"],
+    ["oc931c98e7b4843c6","hotel",120.73923,14.85119,"Rev resort"],
+    ["o22c80c55ab3c4597","lodging",120.70597,14.89403,"Villa Ashley Resort"],
+    ["o8084333662c84495","lodging",120.70309,14.86772,"Casa Alejandro Private Villa"],
+    ["oed8950830d224008","lodging",120.70828,14.88055,"Bongavilla Resort"],
+    ["ofd9db218a9814868","lodging",120.70287,14.8929,"San Isidro Matua"]
   ]
 }

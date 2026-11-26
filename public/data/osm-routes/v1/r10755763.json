@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 10755763,
+  "kind": "jeepney",
+  "ref": "BW-02",
+  "name": "Jeepney BW-02: Batangas (Grand Terminal) → Bauan",
+  "from": "",
+  "to": "",
+  "network": "PH:PUJ:Batangas City",
+  "operator": "",
+  "version": 19,
+  "last_edit": "2025-12-21",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",121.0613,13.78952,"Batangas City Grand Terminal"],["platform",121.05877,13.78576,"Crossing Banaba West"],["platform",121.05613,13.78175,"St. Camillus de Lellis Hospitak"],["platform",121.05038,13.77168,"Crossing Bolbok"],["platform",121.04453,13.77585,"Provincial Sports Complex"],["platform",121.04065,13.7784,"Santa Rita Elementary School"],["platform",121.03521,13.78075,"Santa Rita Power Plant"]],
+  "line": [[121.0614,13.78966],[121.06189,13.78959],[121.06308,13.78897],[121.06317,13.789],[121.06323,13.78943],[121.06316,13.78956],[121.0621,13.79011],[121.06234,13.79059],[121.06136,13.79108],[121.06053,13.78946],[121.05945,13.78683],[121.059,13.78597],[121.05756,13.78359],[121.05396,13.77866],[121.0536,13.77734],[121.05358,13.776],[121.0531,13.77524],[121.05254,13.77396],[121.05225,13.7736],[121.05143,13.77227],[121.05068,13.77131],[121.04851,13.77298],[121.04309,13.77683],[121.04117,13.77803],[121.0374,13.77997],[121.03513,13.78089],[121.03071,13.78241],[121.02955,13.78287],[121.02171,13.78749],[121.02039,13.7882],[121.01886,13.78876],[121.01019,13.79071],[121.01014,13.79116],[121.01016,13.79322],[121.01002,13.79346],[121.0072,13.79342],[121.00698,13.79331],[121.00715,13.79311],[121.00754,13.79015]]
+}

@@ -59,6 +59,24 @@
     ["oaa57b2f0420d4b91","school",121.15704,14.04237,"Malvar Central School"],
     ["ob3ad60668cc24965","school",121.1841,14.03867,"DepEd Plaridel Elementary School-Lipa City"],
     ["oe462a83e013a4755","school",121.17667,14.02649,"Immaculate Concepcion Montessori School"],
-    ["ob905b67fefad4088","college",121.15818,14.04442,"Batangas State University Malvar",{"brand":"Batangas State University"}]
+    ["ob905b67fefad4088","college",121.15818,14.04442,"Batangas State University Malvar",{"brand":"Batangas State University"}],
+    ["o16e17db0d3a44b78","supermarket",121.16519,14.00963,"GF Event Zone"],
+    ["ob7518b9dd5704d27","supermarket",121.15523,14.04782,"Malvar Public Market"],
+    ["oeb124d2fe6324496","supermarket",121.15739,14.04826,"MMC Supermarket Malvar / Manguiat"],
+    ["o68bed9fb89404ab8","pharmacy",121.15766,14.04472,"Viteli Pharmacy"],
+    ["oa61b29fb5c364374","pharmacy",121.16563,14.00949,"Watsons"],
+    ["oa8bb916a7ac144cc","laundry",121.16003,14.03884,"Lavandera Ko Malvar"],
+    ["o4d73314c01014e22","hotel",121.19146,14.04341,"G Leisure Resort Hotel and KTV"],
+    ["o87372d10c27348ca","hotel",121.16976,14.01331,"Hotel Lima Park"],
+    ["o8cfa1d236ea54cf3","hotel",121.1693,14.01318,"Holiday Inn & Suites Batangas Limapark by IHG"],
+    ["oa57f6f5b0aae4192","hotel",121.1693,14.01318,"Holiday Inn & Suites Batangas LimaPark",{"brand":"Holiday Inn"}],
+    ["oad46818fcd8f4cb4","hotel",121.15354,14.04677,"Winner Ville Resort"],
+    ["oc2b466f399c64f1a","hotel",121.19996,14.04713,"Triple J Farm Resort"],
+    ["o767d3822de3640e2","lodging",121.15902,14.03138,"Ohannah Cabin"],
+    ["o88ec9608711a4242","lodging",121.16348,14.00817,"C2 Dormitory Malvar"],
+    ["o98e7a1479fbe449f","lodging",121.16205,14.02993,"San Fernando Malvar"],
+    ["ob2346911bc464d90","lodging",121.16495,14.04224,"Sir JUN TV"],
+    ["oc35b0fb8cc0f4723","lodging",121.18267,14.01342,"Aquafe"],
+    ["of5a0caad2d274445","lodging",121.15034,14.00671,"San Andres Malvar Batangad"]
   ]
 }

@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 21295792,
+  "kind": "jeepney",
+  "ref": "2117",
+  "name": "Pasig–Quiapo",
+  "from": "Pasig",
+  "to": "Quiapo",
+  "network": "LTFRB National Capital Region",
+  "operator": "Pasig-Mandaluyong-Quiapo Operators and Drivers Association;Trusted and Fair Services Transport Cooperative",
+  "version": 3,
+  "last_edit": "2026-08-31",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",120.98449,14.59761,"Quiapo (Barbosa) Turning Point"],["platform",120.98467,14.60047,"Quiapo"],["platform",120.98572,14.60273,"Cartimar Shopping Center"],["platform",120.98693,14.60218,"Nicanor Reyes"],["platform",120.99323,14.60139,"LRT Legarda Station"],["platform",120.99547,14.60064,"M. Jhocson"],["platform",121.00079,14.60114,"Nagtahan Interchange"],["platform",121.00391,14.60146,"Civil Registration Central Outlet"],["platform",121.00584,14.60166,"LRT Pureza Station"],["platform",121.01107,14.60212,"Stop n' Shop"],["platform",121.01541,14.60258,"V. Mapa"],["platform",121.016,14.59964,"Ligaya Budget Hotel"],["platform",121.01796,14.5972,"Amaia Skies Santa Mesa"],["platform",121.02092,14.59593,"Don Bosco Manila"],["platform",121.02234,14.59538,"Our Lady of Lourdes Hospital"],["platform",121.02472,14.59445,"Bagumbayan"],["platform",121.02799,14.59322,"Crossing Kalentong"],["platform",121.03028,14.59203,"Armand B. Fabella"],["platform",121.03406,14.59032,"Araullo"],["platform",121.0348,14.58979,"Acacia Lane"],["platform",121.0384,14.58946,"Luna Mencias"],["platform",121.04254,14.58883,"Puregold Shaw"],["platform",121.04527,14.58776,"SM Cherry Foodarama"],["platform",121.04685,14.58681,"Old Wack Wack"],["platform",121.04805,14.58585,"Governor's Place"],["platform",121.05776,14.57759,"One San Miguel Avenue"],["platform",121.06005,14.57561,"77 Freemont Arcade"],["platform",121.06268,14.57336,"Ynares Sports Arena"],["platform",121.06498,14.57141,"Danny Floro"],["platform",121.06629,14.56918,"Lumiere"],["platform",121.06538,14.56402,"Rizal Medical Center"],["platform",121.06967,14.56394,"Bagong Ilog"],["platform",121.07178,14.56624,"M. San Buenaventura"],["platform",121.07556,14.56599,"Sixto Antonio"],["platform",121.07581,14.56482,"Mariposa Arcade"],["platform",121.0758,14.56396,"Mercury Drug"],["platform",121.07621,14.56202,"Lumang Palengke"],["platform",121.0781,14.56058,"Pasig Cathedral"],["platform",121.08134,14.55867,"City Hall"],["platform_exit_only",121.08495,14.55814,"Pasig City Public Market"]],
+  "line": [[120.98445,14.59762],[120.9845,14.5979],[120.98413,14.59798],[120.98423,14.59886],[120.98469,14.60121],[120.98485,14.60159],[120.98513,14.60285],[120.98527,14.60297],[120.98902,14.60123],[120.98916,14.60123],[120.99057,14.6006],[120.99096,14.60031],[120.99165,14.60095],[120.99278,14.60153],[120.99353,14.60136],[120.99562,14.60063],[120.99619,14.6005],[120.99712,14.60078],[120.99753,14.60078],[120.9986,14.60105],[120.9989,14.60102],[120.99946,14.60078],[121.00025,14.60112],[121.00226,14.60137],[121.00886,14.60194],[121.01576,14.60266],[121.01595,14.60254],[121.01671,14.60026],[121.01681,14.60015],[121.01597,14.59987],[121.01673,14.59749],[121.0176,14.59766],[121.0199,14.59594],[121.02041,14.59616],[121.02057,14.59614],[121.02569,14.59411],[121.02696,14.59367],[121.0271,14.59368],[121.02813,14.59326],[121.02996,14.59224],[121.03395,14.59045],[121.03468,14.59001],[121.03538,14.58943],[121.03983,14.58956],[121.04043,14.58948],[121.04203,14.58908],[121.04324,14.58865],[121.0449,14.58799],[121.04627,14.58735],[121.04677,14.58698],[121.04936,14.58488],[121.05129,14.5831],[121.06638,14.5703],[121.06646,14.57013],[121.06647,14.56974],[121.06538,14.56375],[121.06538,14.56344],[121.06551,14.56324],[121.0667,14.56287],[121.06765,14.5628],[121.0688,14.56314],[121.06918,14.56337],[121.06979,14.56434],[121.07021,14.56521],[121.07045,14.56601],[121.07111,14.56628],[121.07201,14.56628],[121.07612,14.56598],[121.0758,14.56436],[121.07608,14.56255],[121.07653,14.56141],[121.07656,14.56079],[121.07733,14.56066],[121.07754,14.56072],[121.0776,14.56082],[121.08061,14.55973],[121.08045,14.55908],[121.08056,14.55901],[121.08464,14.55752],[121.08488,14.55816]]
+}

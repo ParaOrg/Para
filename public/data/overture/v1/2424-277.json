@@ -30,6 +30,17 @@
     ["oa0b1347979704682","school",121.21032,13.87705,"Magnum Opus Formation School,Inc."],
     ["ob6bff1e6af65439e","school",121.215,13.8783,"Magnum Opus Formation School,Inc."],
     ["ocfa6701f3e7c40f5","school",121.20677,13.85745,"Maalas-As Elementary School, Maalas-As Rosario, Batangas"],
-    ["of03b2a8b270c41ea","school",121.21577,13.87446,"Padre Garcia Integrated National High School"]
+    ["of03b2a8b270c41ea","school",121.21577,13.87446,"Padre Garcia Integrated National High School"],
+    ["o1875786a82e94d0d","supermarket",121.2207,13.86293,"Ma-Daming Grocery Store"],
+    ["oa2abc88a5b8e44a2","supermarket",121.21072,13.8767,"Joshua's Retail Store"],
+    ["ob765d7a952194834","supermarket",121.21304,13.87738,"Market Price Supermart"],
+    ["od4e0dc1765e94f74","supermarket",121.21394,13.87676,"Padre Garcia Public Market"],
+    ["oa67480a4d572487c","laundry",121.20683,13.86076,"SpinZone Laundry Hub"],
+    ["o53edfdc80b454d9a","hotel",121.24936,13.87663,"La Bellisima Private Resort"],
+    ["oea2c8ad090f14f0b","hotel",121.20796,13.86194,"Kawayan Leaves Resort and Hotel"],
+    ["oefd72bd2c6f24526","hotel",121.22945,13.85149,"Farmview Gardens Resort"],
+    ["of589a4feb5b5478f","hotel",121.22168,13.86114,"AnBer Garden Resort"],
+    ["ofc36cd9ac18f44ee","hotel",121.21957,13.88325,"Baylen Resort and Events Place"],
+    ["od9b1af32fdb2465a","lodging",121.21642,13.87966,"Villa Antonina Padre Garcia"]
   ]
 }

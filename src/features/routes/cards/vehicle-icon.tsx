@@ -24,6 +24,8 @@ const ICON = {
   Bus: BusIcon,
   Ferry: FerryIcon,
   'UV Express': UvExpressIcon,
+  // The Carousel's card draws the bus (4895:20963).
+  'EDSA Carousel': BusIcon,
 } satisfies Record<Vehicle, ComponentType>;
 
 /**

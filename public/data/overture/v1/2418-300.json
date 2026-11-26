@@ -28,6 +28,15 @@
     ["o9cd5bc573f374a13","school",120.9341,15.02163,"Carlos F. Gonzales High School"],
     ["oa704f259da7641ab","school",120.91436,15.03371,"Dagat Dagatan Elementary School San Rafael Bulacan"],
     ["oe6c75184d4544628","school",120.90438,15.03825,"Vizal Sto. Niño Elementary School"],
-    ["od8051bea19c34309","college",120.9304,15.00167,"Erhard Science College"]
+    ["od8051bea19c34309","college",120.9304,15.00167,"Erhard Science College"],
+    ["od5190be20030433e","convenience",120.94058,15.0134,"Kuya Jay's AltaMart"],
+    ["o0d0d8661c6e54046","supermarket",120.93207,15.02602,"San Rafael Public Market"],
+    ["of63c25d7e83e4414","supermarket",120.93332,15.02527,"Cruz na Daan Public Market"],
+    ["o600a3211359c45d7","laundry",120.93548,15.02686,"Dirty Treats Laundry"],
+    ["o97a23a3d9d3c4204","laundry",120.93378,15.02143,"Dirty Treats Laundry Shop - Capihan"],
+    ["o9fa05d273afd4836","hotel",120.91234,15.00663,"Dapond Fish and Farm Resort"],
+    ["obc003afa2ad5480d","hotel",120.92231,15.00738,"Luwasan Mi Casa Private Resort"],
+    ["o2c2ef307f0ab40bb","lodging",120.94038,15.00828,"The Camp Pad"],
+    ["o74a4a68138a54621","lodging",120.93807,15.04067,"San Ildefonso - San Rafael"]
   ]
 }

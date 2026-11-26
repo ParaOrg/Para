@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 14879890,
+  "kind": "jeepney",
+  "ref": "2066",
+  "name": "Lagro–Cubao via Kalayaan",
+  "from": "Cubao",
+  "to": "Lagro",
+  "network": "LTFRB National Capital Region",
+  "operator": "Tolfetano Corporation;Greater Lagro Transport Service Cooperative;SM Fairview-Lagro-Cubao Transport Service Cooperative",
+  "version": 29,
+  "last_edit": "2026-08-06",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",121.05519,14.62168,"Araneta Center Bus Terminal"],["platform",121.05521,14.62452,"Cubao–Yale Intersection"],["platform",121.05414,14.62596,"Yale Street"],["platform",121.05279,14.62565,"Stella Maris College"],["platform",121.05185,14.62761,"New York–Cambridge"],["platform",121.0508,14.62958,"Ermin Garcia Street"],["platform",121.05033,14.63199,"Maliksi Street"],["platform",121.052,14.63247,"K-I Street"],["platform",121.05426,14.6338,"Meralco Kamias Stockyard"],["platform",121.05484,14.63679,"V. Luna Road"],["platform",121.055,14.6397,"Matino Street"],["platform",121.05428,14.64326,"Kalayaan Plaza"],["platform",121.05283,14.6462,"Matalino Street"],["platform",121.05207,14.64739,"Mayaman Street"],["platform",121.05215,14.65126,"QMC–Maharlika"],["platform",121.05741,14.65621,"UP Ayala Techno Hub"],["platform",121.06375,14.66041,"Central Avenue"],["platform",121.07191,14.66588,"Luzon Avenue"],["platform",121.07634,14.66901,"Diliman Doctors Hospital"],["platform",121.08426,14.67952,"Ever Gotesco Commonwealth"],["platform",121.08584,14.68301,"Batasan Road"],["platform",121.08756,14.69097,"Commission on Audit"],["platform",121.08764,14.6961,"Commonwealth Market"],["platform",121.08647,14.70212,"Litex"],["platform",121.07759,14.70526,"Doña Carmen"],["platform",121.06854,14.70664,"Regalado Avenue"],["platform",121.06239,14.70919,"Atherton Street"],["platform",121.06129,14.71121,"Commonwealth–Regalado Highway"],["platform",121.06129,14.71405,"Burbank Street"],["platform",121.06128,14.7172,"Across from Our Lady of Fatima University"],["platform",121.06206,14.72007,"Maynilad Fairview Office"],["platform",121.06623,14.72008,"Flores de Mayo Street"],["platform",121.06713,14.72187,"Simbang Gabi Street"],["platform",121.06697,14.72416,"Reyna Elena Street"],["platform_exit_only",121.06576,14.72696,"Flores de Mayo Street"]],
+  "line": [[121.05509,14.62163],[121.05499,14.62198],[121.05481,14.62227],[121.05592,14.62282],[121.05544,14.62399],[121.05443,14.62604],[121.0529,14.62535],[121.05102,14.62921],[121.0509,14.62943],[121.05045,14.62983],[121.04981,14.6319],[121.05207,14.63255],[121.05223,14.63204],[121.05451,14.6327],[121.05421,14.63375],[121.05421,14.63401],[121.0547,14.63624],[121.05491,14.63758],[121.05498,14.63934],[121.05488,14.6406],[121.05469,14.64169],[121.05441,14.64279],[121.0538,14.64434],[121.0532,14.64552],[121.05113,14.6488],[121.05123,14.64903],[121.05176,14.64964],[121.05198,14.65023],[121.05203,14.65103],[121.05193,14.6517],[121.05177,14.65217],[121.05183,14.65278],[121.05211,14.65305],[121.05404,14.65414],[121.06563,14.66187],[121.06886,14.66395],[121.07097,14.66546],[121.07489,14.66809],[121.07659,14.6694],[121.07871,14.67142],[121.07981,14.67261],[121.08081,14.67384],[121.08218,14.67573],[121.08284,14.67686],[121.08329,14.67776],[121.08615,14.68429],[121.08635,14.68443],[121.08682,14.68555],[121.08679,14.68587],[121.08709,14.68672],[121.08735,14.68797],[121.08751,14.69453],[121.08753,14.69802],[121.08744,14.69918],[121.08704,14.70058],[121.08642,14.70189],[121.08562,14.70298],[121.08477,14.7038],[121.08415,14.70425],[121.0834,14.70466],[121.08182,14.70509],[121.07513,14.70519],[121.07379,14.70546],[121.07045,14.70654],[121.0656,14.70658],[121.06495,14.70667],[121.06447,14.70687],[121.06399,14.70721],[121.06124,14.71048],[121.06123,14.72014],[121.06709,14.72013],[121.06707,14.72386],[121.06662,14.72478],[121.06662,14.72602],[121.0669,14.72658],[121.06575,14.72691]]
+}

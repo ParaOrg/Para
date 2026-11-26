@@ -39,14 +39,14 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /**
- * Variatns=Jeep: Card/jeep/fill, white words, the jeep alone at the top; the place in Bold 28/32,
+ * Variatns=Jeep: Card/jeep/fill, white words, the jeep alone at the top; the place in Bold 24/32,
  * each row Figma's Destinationn, 36 tall. The list keeps the mode's name in words.
  */
 export const Jeep: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const place = getComputedStyle(canvas.getByTestId('chooser-select'));
-    await expect(place.fontSize).toBe('28px');
+    await expect(place.fontSize).toBe('24px');
     await expect(place.lineHeight).toBe('32px');
     await expect(place.fontWeight).toBe('700');
     await expect(canvas.queryByText('Jeep')).toBeNull();
@@ -177,6 +177,24 @@ export const Ferry: Story = {
     ride: { kind: 'rail', railway: 'Ferry', bound: null, originCode: null },
     routeOrigin: 'Escolta',
     endPoints: trainRow('Pinagbuhatan', null),
+  },
+};
+
+/**
+ * The EDSA Carousel (Figma 4895:21229): on Card/EDSACarousel/fill, its marker and wordmark above the
+ * mode row, then the bus and its bound, no line badge. Its stations have no codes.
+ */
+export const EdsaCarousel: Story = {
+  args: {
+    ride: { kind: 'rail', railway: 'EDSA Carousel', bound: 'Southbound', originCode: null },
+    routeOrigin: 'Monumento',
+    endPoints: trainRow('PITX', null),
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByText('Southbound')).toBeVisible();
+    await expect(canvas.getByTestId('edsa-carousel-mark')).toBeVisible();
+    await expect(canvas.getByRole('list', { name: 'EDSA Carousel' })).toBeVisible();
   },
 };
 
@@ -335,6 +353,7 @@ export const RowPressed: Story = {
         MetroRailWayThree,
         LightRailWayTwo,
         Ferry,
+        EdsaCarousel,
       ].map((story, i) => (
         <RouteCard key={i} {...args} {...story.args} />
       ))}

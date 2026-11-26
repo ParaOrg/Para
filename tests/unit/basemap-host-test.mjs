@@ -84,6 +84,20 @@ test('OpenFreeMap as the host is cached exactly as it was', () => {
   }
 });
 
+test("OpenFreeMap's backup, which its styles point at while it serves from it, is cached as its planet is", () => {
+  const rules = basemapCacheRules(OPENFREEMAP_HOST);
+  assert.ok(rules.meta.test(`${OPENFREEMAP_HOST}/backup_planet`));
+  assert.ok(
+    rules.tiles.test(`${OPENFREEMAP_HOST}/backup_planet/20261122_124456_pt/14/13700/7600.pbf`),
+  );
+  assert.ok(
+    !rules.meta.test(`${OPENFREEMAP_HOST}/backup_planet/20261122_124456_pt/14/13700/7600.pbf`),
+  );
+  assert.ok(!rules.tiles.test(`${OPENFREEMAP_HOST}/backup_planet`));
+  assert.ok(!rules.meta.test(`${OPENFREEMAP_HOST}/other_planet`));
+  assert.ok(!rules.tiles.test(`${OPENFREEMAP_HOST}/other_planet/v/14/13700/7600.pbf`));
+});
+
 test('our own host is cached from its own paths and no other origin', () => {
   const rules = basemapCacheRules(OWN);
   const meta = (href) => rules.meta.test(href);

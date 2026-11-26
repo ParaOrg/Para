@@ -16,6 +16,7 @@ export const TIMELINE_RAIL = {
   'light-rail-way-two': 'bg-card-lrt-two-fill',
   'metro-rail-way-three': 'bg-card-mrt-three-fill',
   ferry: 'bg-card-ferry-fill',
+  'edsa-carousel': 'bg-card-edsa-carousel-fill',
 } satisfies Record<Livery, string>;
 
 /**
@@ -40,6 +41,7 @@ export const TIMELINE_HEADING = {
   ejeep: 'Route Stops',
   bus: 'Route Stops',
   ferry: 'Route Stops',
+  'edsa-carousel': 'Route Stops',
   'light-rail-way-one': 'Trains Stations',
   'light-rail-way-two': 'Trains Stations',
   'metro-rail-way-three': 'Trains Stations',

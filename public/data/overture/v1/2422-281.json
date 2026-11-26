@@ -77,6 +77,26 @@
     ["ode061ed67dee4a94","school",121.12962,14.09622,"Trapiche Integrated School- DepEd Tanauan City"],
     ["ode5ab4adcbc2436d","school",121.1492,14.08941,"Tanauan North Central School (TNCS)"],
     ["o473ca269a2ce4c4a","college",121.14387,14.09026,"Tanauan Business Agency"],
-    ["o968a6c79d8ec4f38","college",121.13779,14.08471,"Nova Schola Tanauan"]
+    ["o968a6c79d8ec4f38","college",121.13779,14.08471,"Nova Schola Tanauan"],
+    ["o0e6388d70b8a4b98","convenience",121.14897,14.0848,"KNJ Seoul Mart Tanauan"],
+    ["o0c94ed8e21194877","supermarket",121.14662,14.08315,"Victory Mall and Market Tanauan"],
+    ["o34ae2312c9c6463c","supermarket",121.14371,14.08412,"Ultra Mega Supermarket",{"brand":"Ultra Mega Wholesale"}],
+    ["oa30e879f1fd44303","supermarket",121.13664,14.09003,"Wrap and Carry Superstore"],
+    ["oc3a12dd8b06c4661","supermarket",121.14738,14.08289,"Savemore Tanauan Batangas"],
+    ["ocdd16e5342e44ea2","supermarket",121.14883,14.08526,"Citimart Supermarket"],
+    ["ocf515a26dd0a4004","supermarket",121.14765,14.08193,"Wrap and Carry Supermarket"],
+    ["of51f95609b5a4664","supermarket",121.14747,14.08235,"Tanauan Public Market"],
+    ["o1b02f5f031aa4635","pharmacy",121.14612,14.08271,"Lally's Pharmacy and Medical Supply"],
+    ["o5d22b71b8d514322","pharmacy",121.14149,14.08455,"GeneRx Pharmacy"],
+    ["o6e33274771684697","pharmacy",121.14304,14.08424,"Mercury Drug"],
+    ["o942376b44d1f4cc6","pharmacy",121.14701,14.08128,"Mercury Drug"],
+    ["od705209464534a7d","laundry",121.14357,14.08241,"Labada Laundry House"],
+    ["oe4a01da3d2e146a0","laundry",121.14771,14.08687,"Spin And Clean Laundry Shop"],
+    ["o13b65d950cb04eb2","hotel",121.14737,14.09982,"Casa Miguel Resort and Country Club"],
+    ["o485c89424a75417d","hotel",121.14425,14.08104,"City Parkway Hotel"],
+    ["o7a44c90b21af47ca","hotel",121.13471,14.0598,"West Grove Resort and Hotel"],
+    ["oa06c5a33b668406f","hotel",121.13833,14.09034,"Amori Hotel"],
+    ["od5a59a2ffa674d3c","hotel",121.1498,14.08824,"AJ & Sam Resort"],
+    ["o9b87a1187afe40e9","lodging",121.10709,14.09982,"Jardin de Antonio"]
   ]
 }

@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 15019309,
+  "kind": "bus",
+  "ref": "24",
+  "name": "Route 24: Alabang–Plaza Lawton via Skyway",
+  "from": "Plaza Lawton",
+  "to": "South Station",
+  "network": "LTFRB National Capital Region",
+  "operator": "Saint Rose Transit",
+  "version": 47,
+  "last_edit": "2026-11-21",
+  "clipped": false,
+  "provenance": {"source:ref":"LTFRB Memorandum Circular 2022-067","source:ref:2020":"LTFRB Memorandum Circular 2020-019"},
+  "gaps": [],
+  "stops": [["platform_entry_only",120.97943,14.59501,"Plaza Lawton"],["platform",120.98082,14.58981,"Manila City Hall"],["platform",120.98337,14.58445,"Luneta"],["platform",120.98411,14.5831,"Taft & T.M. Kalaw"],["platform",120.98484,14.58176,"LRT United Nations Station"],["platform",120.98631,14.57935,"Taft & Padre Faura"],["platform",120.98787,14.57655,"LRT Pedro Gil Station"],["platform",120.98873,14.57511,"Philippine Christian University"],["platform",120.99185,14.56944,"LRT Quirino Station"],["platform",120.99457,14.56365,"LRT Vito Cruz Station"],["platform",120.99691,14.55482,"LRT Gil Puyat Station"],["platform",120.99846,14.5542,"Gil Puyat & F. Fernando"],["platform",121.00345,14.55581,"Dian"],["platform",121.00798,14.55648,"Dela Rosa"],["platform",121.01237,14.54839,"General Tinio Street"],["platform",121.04355,14.42074,"South Station"],["platform",121.04474,14.41812,"Alabang Rotonda"],["platform_exit_only",121.04516,14.41492,"Alabang Viaduct"]],
+  "line": [[120.97942,14.59504],[120.97987,14.59517],[120.98006,14.5951],[120.97973,14.59432],[120.97904,14.59407],[120.97894,14.59392],[120.97893,14.5936],[120.9801,14.59195],[120.98061,14.5904],[120.98072,14.5903],[120.98084,14.58996],[120.98086,14.58944],[120.98103,14.58875],[120.98481,14.58208],[120.98489,14.58179],[120.98501,14.58173],[120.98825,14.57607],[120.99174,14.56984],[120.99508,14.56268],[120.99553,14.56099],[120.9971,14.55415],[120.99535,14.55376],[120.99423,14.55361],[120.99413,14.55353],[120.99415,14.5534],[120.99429,14.55335],[120.99544,14.55352],[121.00004,14.55468],[121.00134,14.55528],[121.00245,14.55556],[121.0039,14.55607],[121.00706,14.55762],[121.00738,14.55766],[121.00863,14.55533],[121.00873,14.55533],[121.01553,14.54273],[121.01603,14.54168],[121.01632,14.54072],[121.01668,14.54002],[121.0176,14.53877],[121.02566,14.52398],[121.02634,14.52257],[121.02702,14.52082],[121.02832,14.51831],[121.02934,14.51697],[121.03,14.51595],[121.03087,14.5143],[121.03132,14.51306],[121.03187,14.51211],[121.03241,14.51145],[121.0351,14.50649],[121.04383,14.49023],[121.04455,14.48855],[121.04489,14.48718],[121.04508,14.48479],[121.04522,14.44931],[121.04541,14.42328],[121.04521,14.42266],[121.04509,14.4226],[121.04477,14.42252],[121.04321,14.42244],[121.04321,14.42136],[121.04324,14.42106],[121.04392,14.42046],[121.04325,14.41969],[121.04473,14.41829],[121.04502,14.41795],[121.04537,14.4173],[121.0453,14.41544],[121.04503,14.41439],[121.04491,14.4143]]
+}

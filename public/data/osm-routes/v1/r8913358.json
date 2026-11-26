@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 8913358,
+  "kind": "jeepney",
+  "ref": "",
+  "name": "WalterMart–DBB-C",
+  "from": "WalterMart Dasmariñas",
+  "to": "DBB-C",
+  "network": "LTFRB Region IV-A",
+  "operator": "New Dasmariñas Transport Service Cooperative",
+  "version": 66,
+  "last_edit": "2026-07-31",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["stop",120.94378,14.32673,"DLSUMC"],["stop_exit_only",120.97199,14.32175,"Dasmariñas East Integrated High School"]],
+  "line": [[120.94147,14.32472],[120.94098,14.3246],[120.94103,14.32486],[120.94094,14.32519],[120.94078,14.3253],[120.94041,14.32659],[120.94078,14.32673],[120.94088,14.32669],[120.94721,14.32678],[120.95515,14.32779],[120.95588,14.32797],[120.9562,14.32813],[120.9577,14.32861],[120.95841,14.3291],[120.96343,14.32337],[120.964,14.31859],[120.96452,14.31739],[120.96697,14.31832],[120.971,14.31807],[120.97111,14.31861],[120.97174,14.3191],[120.97212,14.31958],[120.97238,14.32077],[120.97217,14.32143],[120.97198,14.32175],[120.97168,14.32208],[120.97111,14.32238],[120.97079,14.32267],[120.97034,14.32374],[120.97013,14.32399],[120.96872,14.32452],[120.96834,14.32455],[120.96741,14.32421],[120.96661,14.3234],[120.9664,14.32293],[120.96647,14.3225],[120.96666,14.32221],[120.96771,14.32158],[120.96922,14.31954],[120.96988,14.31926],[120.97101,14.31909],[120.97137,14.31882]]
+}

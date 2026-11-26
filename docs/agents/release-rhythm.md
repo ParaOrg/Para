@@ -35,6 +35,14 @@ the map the editor and the suites see on `staging`, and the bigger the merge at 
   one up to date. It is only `public/data/` and release merges, so it merges cleanly.
 - **Its checks:** a pull request opened with the workflow's own token (`GITHUB_TOKEN`) starts no
   workflow, by GitHub's rule, so the workflow starts CI and the contributor app's workflow on the
-  back-merge branch itself (`gh workflow run`, which GitHub allows). No other secret.
-- **Merged by hand,** by the owner, once its checks pass. A red back-merge means `main` and
-  `staging` disagree, which someone should look at.
+  back-merge branch itself (`gh workflow run`, which GitHub allows). No other secret. When `main`
+  holds the same files as `staging` (`git diff --quiet origin/staging origin/main`, the usual case
+  right after a release), only CI is started: the contributor app's emulator runs, about 25
+  minutes, would test files already tested on `staging` and on the release pull request.
+- **Merged by hand,** once its checks pass. A red back-merge means `main` and `staging` disagree,
+  which someone should look at.
+- **Same files, merged on the required checks** (the owner, 2026-11-25): when the back-merge holds
+  the same files as `staging`, it merges once the three checks `staging`'s ruleset requires have
+  passed ("What changed", "Build and the public map", "The editor"), without waiting for the rest
+  of CI. Every file in it was already tested. A back-merge that changes any file, such as a
+  nightly publish, waits for every check, as any pull request does.

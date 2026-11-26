@@ -6,11 +6,14 @@ import type { Hotspot } from '@/features/routes/model/hotspots';
 import type { SearchPlace } from '@/features/routes/model/place-search';
 import type { Direction } from '@/features/routes/model/routes';
 import { PlaceSearch } from '@/features/routes/search/place-search';
+import type { Spot } from '@/features/routes/search/spot-source';
 import type { LoadLandmarks } from '@/features/routes/search/use-landmarks';
 import type { LngLat } from '@/shared/utils/geo';
 
 import { SearchMark } from './search-mark';
+import { StoreCredit } from './store-credit';
 import { SubjectStatusList } from './subject-status-list';
+import { useStores, type LoadStores } from './use-stores';
 import type { DraftRow } from '../data/review-schema';
 import { searchableHotspots } from '../data/search-hotspots';
 import { useReviewQuery } from '../data/use-review-query';
@@ -34,6 +37,8 @@ interface StudioSearchProps {
   onOpenHotspot?: (hotspotId: string) => void;
   /** Where the landmarks come from: the file unless given (stories). */
   loadLandmarks?: LoadLandmarks;
+  /** Where the stores come from: the files unless given (stories). */
+  loadStores?: LoadStores;
   /**
    * A route or place taken down or put back from the search (SubjectStatusList): the map reads
    * them again. Given on the workshop, signed in; without it the search lists none.
@@ -43,7 +48,8 @@ interface StudioSearchProps {
 
 /**
  * Place search in the studio (.scratch/place-search, ticket 05): the commuter's search over the
- * studio's own hotspots, drafts included, and the OpenStreetMap landmarks, at the top of the
+ * studio's own hotspots, drafts included, the OpenStreetMap landmarks, then the stores and
+ * establishments of Overture and OpenStreetMap (useStores), at the top of the
  * workshop and the Contributors map, on a computer only. A saved hotspot opens its card in the
  * workshop; a draft, a landmark, anything on the Contributors map or found while a line is drawn
  * only moves the camera and leaves a dot until the search starts over or another result is
@@ -57,6 +63,7 @@ export function StudioSearch({
   isDrawing,
   onOpenHotspot,
   loadLandmarks,
+  loadStores,
   onSubjectChanged,
 }: StudioSearchProps) {
   // Where the dot is, and which search put it there, so a second search on the same point shows
@@ -65,6 +72,27 @@ export function StudioSearch({
   const [mark, setMark] = useState<{ at: LngLat; id: number } | null>(null);
 
   const showMark = (at: LngLat) => setMark((last) => ({ at, id: (last?.id ?? 0) + 1 }));
+
+  // Equal matches list nearest the map's centre, read as the editor types: a chain's nearest
+  // branches first, and a category word's nearest places.
+  const mapCentre = (): LngLat | null => {
+    if (!map) return null;
+    const { lng, lat } = map.getCenter();
+    return [lng, lat];
+  };
+
+  // The stores and establishments, after the hotspots and landmarks: camera-only, as a landmark.
+  const stores = useStores(loadStores);
+  const { attribution } = stores;
+  const spots = {
+    ...stores.source,
+    credit: (listed: Parameters<typeof stores.sourcesOf>[0]) =>
+      attribution && <StoreCredit sources={stores.sourcesOf(listed)} attribution={attribution} />,
+    onPick: (spot: Spot) => {
+      lookAt(map, spot.point);
+      showMark(spot.point);
+    },
+  };
 
   // Signed out, none: a disabled query still answers with what an earlier sign-in left cached.
   const draftsRead = useReviewQuery({ isEnabled: isSignedIn }).data;
@@ -97,12 +125,14 @@ export function StudioSearch({
         <PlaceSearch
           hotspots={searchable.hotspots}
           directionsAt={directionsAt}
+          whereNow={mapCentre}
           onPick={handlePick}
           onLookAt={(point) => lookAt(map, point)}
           onPickLandmark={(landmark) => showMark(landmark.point)}
           onSearchRestart={() => setMark(null)}
           noteOf={(place) => (isDraftPlace(place) ? 'Draft' : null)}
           loadLandmarks={loadLandmarks}
+          spots={spots}
           renderAfterResults={
             isSignedIn && onSubjectChanged
               ? (query) => <SubjectStatusList query={query} onChanged={onSubjectChanged} />

@@ -4,6 +4,10 @@
   "attribution": "© Overture Maps Foundation",
   "establishments": [
     ["oe806ee911b594cc4","restaurant",120.6918,14.26988,"Hashi Mountain Resto"],
-    ["o4ac2f81ab81141db","cafe",120.69887,14.27366,"Elizabeth's Cafe & Restaurant"]
+    ["o4ac2f81ab81141db","cafe",120.69887,14.27366,"Elizabeth's Cafe & Restaurant"],
+    ["o24d544e5a1424223","hotel",120.66013,14.27838,"The Paniman Beach Resort"],
+    ["o508e2716f7c946a9","lodging",120.68628,14.28288,"Cool Waves Puerto Azul"],
+    ["ob80c5905d92641d3","lodging",120.68139,14.26585,"Miran Glasshouse"],
+    ["odd9f4c9b9f274403","lodging",120.68569,14.28263,"Ocean Villas Puerto Azul Staycation"]
   ]
 }

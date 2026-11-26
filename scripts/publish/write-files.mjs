@@ -1,6 +1,6 @@
 // Writes the published map into public/data/:
-//   index.v5.json      schema 5, what the app reads (MAP_FILE_URL)
-//   index.v4.json, index.v3.json, index.json, map.json
+//   index.v6.json      schema 6, what the app reads (MAP_FILE_URL)
+//   index.v5.json, index.v4.json, index.v3.json, index.json, map.json
 //                      the older shapes, for installed apps (publish-map.mjs's header)
 //   lines/<id>.json    each direction's full line, with its orange stretches
 //   signboards/<name>  each direction's boards
@@ -22,6 +22,7 @@ export function dataPaths(root) {
     v3: join(data, 'index.v3.json'),
     v4: join(data, 'index.v4.json'),
     v5: join(data, 'index.v5.json'),
+    v6: join(data, 'index.v6.json'),
     lines: join(data, 'lines'),
     signboards: join(data, 'signboards'),
   };
@@ -45,10 +46,11 @@ export function readPrevious(paths) {
     v3: readJson(paths.v3).json,
     v4: readJson(paths.v4).json,
     v5: readJson(paths.v5).json,
+    v6: readJson(paths.v6).json,
   };
 }
 
-/** Writes the five map files, and answers each one's text as it was before, or null. */
+/** Writes the six map files, and answers each one's text as it was before, or null. */
 export function writeMapFiles(paths, files) {
   mkdirSync(dirname(paths.map), { recursive: true });
   const before = (path) => (existsSync(path) ? readFileSync(path, 'utf8') : null);
@@ -57,12 +59,14 @@ export function writeMapFiles(paths, files) {
     v3: before(paths.v3),
     v4: before(paths.v4),
     v5: before(paths.v5),
+    v6: before(paths.v6),
   };
   writeFileSync(paths.map, files.map);
   writeFileSync(paths.v2, files.v2);
   writeFileSync(paths.v3, files.v3);
   writeFileSync(paths.v4, files.v4);
   writeFileSync(paths.v5, files.v5);
+  writeFileSync(paths.v6, files.v6);
   return previous;
 }
 

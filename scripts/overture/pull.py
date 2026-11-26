@@ -17,8 +17,10 @@ import duckdb
 
 BUCKET = "s3://overturemaps-us-west-2/release"
 MIN_CONFIDENCE = 0.7
-# Overture's basic categories Para draws, the owner's four kinds (README, "Answers"): food, cafés,
-# clinics and schools. overture.mjs maps each one to the kind and marker the map uses.
+# Overture's basic categories Para draws: the owner's four kinds (README, "Answers"), food, cafés,
+# clinics and schools, and the everyday stores the OSM establishments already have a marker for:
+# convenience stores, pharmacies and laundries; and where to stay (hotels, inns, resorts).
+# overture.mjs maps each one to the kind and marker the map uses.
 CATEGORIES = (
     "restaurant",
     "fast_food_restaurant",
@@ -38,6 +40,23 @@ CATEGORIES = (
     "middle_school",
     "preschool",
     "college_university",
+    "convenience_store",
+    "pharmacy_and_drug_store",
+    "laundry_service",
+    "hotel",
+    "lodging",
+    "resort",
+)
+# Overture files groceries under food_and_beverage_store, beside liquor and tobacco shops; these
+# are the kinds of it that are a grocery, kept by their primary category, which then stands as the
+# place's category.
+FOOD_STORE = "food_and_beverage_store"
+GROCERIES = (
+    "grocery_store",
+    "produce_store",
+    "butcher_shop",
+    "fishmonger",
+    "food_and_beverage_store",
 )
 
 
@@ -60,17 +79,23 @@ def main():
     con.sql("CREATE SECRET anonymous (TYPE s3, KEY_ID '', SECRET '', REGION 'us-west-2');")
     release = sys.argv[3] if len(sys.argv) == 4 else latest_release(con)
     categories = ", ".join(f"'{category}'" for category in CATEGORIES)
+    groceries = ", ".join(f"'{category}'" for category in GROCERIES)
     con.sql(
         f"""
         COPY (
-          SELECT id, names.primary AS name, basic_category AS category, confidence,
+          SELECT id, names.primary AS name,
+                 CASE WHEN basic_category = '{FOOD_STORE}' THEN taxonomy.primary
+                      ELSE basic_category END AS category,
+                 confidence,
                  operating_status AS status, brand.names.primary AS brand,
                  bbox.xmin AS lng, bbox.ymin AS lat,
                  list_transform(sources, lambda source: source.dataset) AS datasets,
                  '{release}' AS release
           FROM read_parquet('{BUCKET}/{release}/theme=places/type=place/*')
           WHERE bbox.xmin BETWEEN {west} AND {east} AND bbox.ymin BETWEEN {south} AND {north}
-            AND confidence >= {MIN_CONFIDENCE} AND basic_category IN ({categories})
+            AND confidence >= {MIN_CONFIDENCE}
+            AND (basic_category IN ({categories})
+                 OR (basic_category = '{FOOD_STORE}' AND taxonomy.primary IN ({groceries})))
           ORDER BY id
         ) TO '{out}' (FORMAT json)
         """

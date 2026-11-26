@@ -29,6 +29,15 @@
     ["o5f9e3921069842ae","school",121.3176,14.49241,"Hulo Elementary School"],
     ["o626eee207385493b","school",121.30511,14.48816,"Hulo National High School"],
     ["o8946c023252c48dd","school",121.30553,14.48214,"Virgilio B. Melendez Memorial Elementary School"],
-    ["o737f8db2767842d2","college",121.33195,14.48693,"University of Rizal System Pililla - OSDS"]
+    ["o737f8db2767842d2","college",121.33195,14.48693,"University of Rizal System Pililla - OSDS"],
+    ["ob1c6ee60fb534959","supermarket",121.31332,14.47573,"Pililla Public Market"],
+    ["o20c18e0a688e4a01","hotel",121.30571,14.48092,"BUMBLEBee Inn"],
+    ["o85bbc82eac714cea","hotel",121.33504,14.48712,"Stagira Resort"],
+    ["oeaffd212ce764abc","hotel",121.31319,14.47998,"Lola Leoning's Resort"],
+    ["o2ea6f9434617407a","lodging",121.3045,14.48328,"Remy's Function House And Private Pool"],
+    ["o5d7d8b9f394b454a","lodging",121.30643,14.48615,"Magdalene Private Pool"],
+    ["o805da281a5b24597","lodging",121.30148,14.49387,"Marian's Kasa"],
+    ["ob0e3400b81c74d9a","lodging",121.32377,14.46652,"Villa Lorenza Resort"],
+    ["ob777a91e7e774554","lodging",121.31038,14.48299,"Lagoña Vista Condotel and Cabanas"]
   ]
 }

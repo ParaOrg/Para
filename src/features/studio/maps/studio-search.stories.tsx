@@ -7,6 +7,7 @@ import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 import type { Hotspot } from '@/features/routes/model/hotspots';
 import type { LandmarkFileRead } from '@/features/routes/published/fetch-landmarks';
 
+import { storesFrom, type Stores } from './store-search-data';
 import { StudioSearch } from './studio-search';
 import { reviewKeys } from '../data/review-keys';
 import type { DraftRow } from '../data/review-schema';
@@ -39,6 +40,27 @@ const LANDMARKS: LandmarkFileRead = {
     },
   ],
 };
+
+/** Sample stores, one from each source, and a same-named twin Overture has 30 m away. */
+const STORES: Stores = storesFrom({
+  osm: {
+    schema: 1,
+    license: 'ODbL-1.0',
+    attribution: '© OpenStreetMap contributors',
+    categories: ['pharmacy'],
+    places: [['Mercury Drug Cubao Expo', 0, 121.0531, 14.6203]],
+  },
+  overture: {
+    schema: 1,
+    license: 'CDLA-Permissive-2.0 AND Apache-2.0 AND CC0-1.0',
+    attribution: '© Overture Maps Foundation',
+    categories: ['pharmacy', 'hotel'],
+    places: [
+      ['Mercury Drug Cubao Expo', 0, 121.0534, 14.6203],
+      ['Red Planet Hotel Aurora', 1, 121.0566, 14.6213],
+    ],
+  },
+});
 
 /** A new place still in a draft: not on the map, found by search and marked "Draft". */
 const NEW_PLACE_DRAFT: DraftRow = {
@@ -136,6 +158,7 @@ const meta = {
     isDrawing: false,
     onOpenHotspot: fn(),
     loadLandmarks: () => Promise.resolve(LANDMARKS),
+    loadStores: () => Promise.resolve(STORES),
   },
   // The studio's map box at a computer's size: the bar shows from @float up.
   decorators: [
@@ -193,6 +216,46 @@ export const Landmark: Story = {
     await userEvent.keyboard('{Enter}');
     await expect(within(canvasElement).queryByRole('region')).toBeNull();
     await expect(args.onOpenHotspot).not.toHaveBeenCalled();
+  },
+};
+
+/**
+ * Stores and establishments, after the studio's places and landmarks: each with its category and
+ * source, a same-named twin within 50 m listed once (OpenStreetMap's), and their credits under the
+ * results. Choosing one only moves the camera: no card opens.
+ */
+export const StoresAndEstablishments: Story = {
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.type(field(canvasElement), 'mercury');
+    await waitFor(() =>
+      expect(canvas.getAllByRole('option')[0]).toHaveTextContent(
+        'Mercury Drug Cubao ExpoPharmacy · OpenStreetMap',
+      ),
+    );
+    await expect(canvas.getAllByRole('option')).toHaveLength(1);
+    await expect(canvas.getByText('© OpenStreetMap contributors')).toBeVisible();
+    await userEvent.clear(field(canvasElement));
+    await userEvent.type(field(canvasElement), 'red planet');
+    await waitFor(() =>
+      expect(canvas.getAllByRole('option')[0]).toHaveTextContent('Hotel · Overture'),
+    );
+    await expect(canvas.getByText('© Overture Maps Foundation')).toBeVisible();
+    await userEvent.keyboard('{Enter}');
+    await expect(args.onOpenHotspot).not.toHaveBeenCalled();
+    await expect(field(canvasElement)).toHaveValue('');
+  },
+};
+
+/** The store files would not load: the studio's places still show, with a way to try again. */
+export const StoresFailed: Story = {
+  args: { loadStores: () => Promise.reject(new Error('offline')) },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.type(field(canvasElement), 'cubao');
+    await expect(await canvas.findByText('The stores didn’t load.')).toBeVisible();
+    await expect(canvas.getByRole('button', { name: 'Try again' })).toBeVisible();
+    await expect(canvas.getAllByRole('option')[0]).toHaveTextContent('Cubao');
   },
 };
 

@@ -1,8 +1,9 @@
-import type { ExpressionSpecification, MapLibreMap } from 'maplibre-gl';
+import type { ExpressionSpecification, MapLibreMap, SymbolLayerSpecification } from 'maplibre-gl';
 
 import { drawCellLayer, type CellFeature, type CellLayer } from './establishment-cell-layer';
 import { EXTRA_SOURCE, cellSymbolLayer } from './establishment-extra';
 import {
+  ESTABLISHMENT_FILL_ZOOM,
   FAMILY_COLOUR,
   establishmentImageOf,
   familyOfGlyph,
@@ -12,11 +13,12 @@ import { overtureFiles } from '../published/fetch-establishments';
 import type { OvertureCell, OvertureKind } from '../published/overture-file-schema';
 
 /*
- * Overture's eateries, cafés, clinics and schools (.scratch/establishments, step E3c), from Para's
- * Overture place files: the places OpenStreetMap lacks, with the markers and names OSM's have
- * (the owner's answer 3), under them, so OSM's win where both would show. Their credit,
- * "© Overture Maps Foundation", rides on the source: MapLibre's attribution control shows it in
- * the map's corner while the layer is drawn, at no cost to the page's opening code.
+ * Overture's eateries, cafés, clinics, schools and everyday stores (.scratch/establishments, step
+ * E3c), from Para's Overture place files: the places OpenStreetMap lacks, with the markers and
+ * names OSM's have (the owner's answer 3), under them, so OSM's win where both would show. Their
+ * credit, "© Overture Maps Foundation", rides on the source, so MapLibre's attribution control
+ * shows it in the map's corner while the layer is drawn; where the corner steps aside for a page's
+ * own ⓘ, the Map Data Source sheet names it (data-source-credits.ts).
  */
 
 export const OVERTURE_SOURCE = 'establishments-overture';
@@ -31,7 +33,16 @@ export const OVERTURE_KIND_GLYPH: Record<OvertureKind, EstablishmentGlyph> = {
   dentist: 'dentist',
   school: 'school',
   college: 'college',
+  convenience: 'convenience',
+  supermarket: 'grocery',
+  pharmacy: 'pharmacy',
+  laundry: 'laundry',
+  hotel: 'lodging',
+  lodging: 'lodging',
 };
+
+/** The small places to stay (kind lodging, overture.mjs's lodgingKindOf): a zoom after the rest. */
+export const SMALL_LODGING_ZOOM = ESTABLISHMENT_FILL_ZOOM + 1;
 
 /** A cell's places as map points, by kind and name. */
 export function overtureFeatures(cell: OvertureCell): CellFeature[] {
@@ -51,11 +62,14 @@ function byKind(valueOf: (glyph: EstablishmentGlyph) => string): ExpressionSpeci
   return ['match', ['get', 'kind'], first[0], valueOf(first[1]), ...pairs, fallback];
 }
 
-export const OVERTURE_LAYER = cellSymbolLayer(
-  OVERTURE_SOURCE,
-  byKind(establishmentImageOf),
-  byKind((glyph) => FAMILY_COLOUR[familyOfGlyph(glyph) ?? 'food']),
-);
+export const OVERTURE_LAYER: SymbolLayerSpecification = {
+  ...cellSymbolLayer(
+    OVERTURE_SOURCE,
+    byKind(establishmentImageOf),
+    byKind((glyph) => FAMILY_COLOUR[familyOfGlyph(glyph) ?? 'food']),
+  ),
+  filter: ['any', ['!=', ['get', 'kind'], 'lodging'], ['>=', ['zoom'], SMALL_LODGING_ZOOM]],
+};
 
 /** The glyphs the layer's markers need on the map before it is added. */
 export const OVERTURE_GLYPHS: readonly EstablishmentGlyph[] = [

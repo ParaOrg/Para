@@ -217,6 +217,13 @@
   /* Gradient/bottom-toolbar (4679:23737): the phone's Controller fades what scrolls under it
      into neutral-300. Drawn with `bg-(image:--gradient-bottom-toolbar)`. */
   --gradient-bottom-toolbar: linear-gradient(to bottom, transparent, var(--color-neutral-300));
+  /* Gradient/signboard: the Signboard card's fill (4822:43834), white into neutral-150, a fill
+     Figma draws with no variable. Drawn with `bg-(image:--gradient-signboard)`. */
+  --gradient-signboard: linear-gradient(
+    -66.06deg,
+    var(--color-white) 1.567%,
+    var(--color-neutral-150) 96.433%
+  );
 
   /* The mode cards: a RouteCard's colours by the kind of ride (RouteCard, 4629:22776).
      Figma: Card/Jeep/Jeep-surface… The leaf repeats its group, so the token drops the
@@ -700,6 +707,7 @@
  *   card/LRTOne/fill               --card-lrt-one-fill
  *   card/LRTTwo/fill               --card-lrt-two-fill
  *   card/MRTThree/fill             --card-mrt-three-fill
+ *   card/EDSACarousel/fill         --card-edsa-carousel-fill
  */
 @theme {
   --color-neutral-1: #fcfcfc;
@@ -871,6 +879,7 @@
   --card-uv-express-fill: var(--color-neutral-5);
   --card-bus-fill: var(--color-orange-11);
   --card-ferry-fill: var(--color-ferry-9);
+  --card-edsa-carousel-fill: var(--color-red-11);
   --card-lrt-one-fill: var(--color-light-rail-way-one-9);
   --card-lrt-two-fill: var(--color-light-rail-way-two-9);
   --card-mrt-three-fill: var(--color-metro-rail-way-three-9);
@@ -905,6 +914,7 @@
   --color-card-uv-express-fill: var(--card-uv-express-fill);
   --color-card-bus-fill: var(--card-bus-fill);
   --color-card-ferry-fill: var(--card-ferry-fill);
+  --color-card-edsa-carousel-fill: var(--card-edsa-carousel-fill);
   --color-card-lrt-one-fill: var(--card-lrt-one-fill);
   --color-card-lrt-two-fill: var(--card-lrt-two-fill);
   --color-card-mrt-three-fill: var(--card-mrt-three-fill);

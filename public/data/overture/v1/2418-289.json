@@ -57,6 +57,17 @@
     ["o7aa5bdcc89bc46ba","school",120.90526,14.49418,"DepEd Tayo Porta Vaga ES - Cavite City"],
     ["o8ab831088d444449","school",120.90572,14.48178,"Paaralang Elementarya ng Garita"],
     ["od42b85e7b5b546a2","school",120.93757,14.45801,"Bacoor Central School"],
-    ["of8908e65b00b492d","college",120.90147,14.47979,"SJC Cavite City"]
+    ["of8908e65b00b492d","college",120.90147,14.47979,"SJC Cavite City"],
+    ["o572a641661fa4a0b","convenience",120.9407,14.45949,"Ministop"],
+    ["o070835f40ee04424","supermarket",120.93018,14.45916,"Sineguelasan Seafood Terminal"],
+    ["o9a1fde87753d4f4b","supermarket",120.93738,14.45891,"Robinsons Easymart Alima Bacoor",{"brand":"Robinsons Easymart"}],
+    ["o7cd7d51fee234417","pharmacy",120.94738,14.45159,"Mercury Drug"],
+    ["oa9ffc8d155ac40ca","pharmacy",120.90258,14.48955,"Mercury Drug"],
+    ["o466e210508c34713","laundry",120.94151,14.45951,"EZ Wash"],
+    ["o10623c478e3049fc","hotel",120.92228,14.46145,"Island Cove Hotel And Leisure Park"],
+    ["ob47524457c71482b","hotel",120.90478,14.4824,"Sunwind Resort"],
+    ["od6947910a02a408c","hotel",120.90241,14.48958,"Hide Hotel"],
+    ["o2a25d4ea9f0a4c39","lodging",120.9414,14.46015,"MZ Place by Miel Good afternoon"],
+    ["o42a0fef7a6594a00","lodging",120.94057,14.4588,"Daang Bukid Bacoor"]
   ]
 }

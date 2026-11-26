@@ -79,8 +79,10 @@ async function main() {
   const checks = process.argv.slice(2).map(parseCheck);
   if (checks.length === 0) throw new Error('give at least one name::command');
   const results = await runAll(checks);
+  // exitCode, not process.exit(): on a pipe (a runner's log) stdout may be written in the
+  // background, and exiting at once would cut the report off before its failures.
+  process.exitCode = results.some((result) => result.code !== 0) ? 1 : 0;
   console.log(report(results));
-  process.exit(results.some((result) => result.code !== 0) ? 1 : 0);
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) await main();

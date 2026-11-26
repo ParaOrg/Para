@@ -76,6 +76,26 @@ node "$root/scripts/footbridges/footbridges.mjs" "$work/footbridges.geojsonseq" 
   "$root/public/data/footbridges.v1.json"
 node "$root/scripts/footbridges/check.mjs" "$root/public/data/footbridges.v1.json"
 
+# The terminals from the same download (.scratch/terminals): OSM's jeepney, UV Express and bus
+# terminals, and the transport terminals it names but does not type, one row each
+# (terminal-file.mjs). The writer checks the file and fails the build on one not to trust.
+osmium tags-filter --overwrite "$extract" \
+  $(node "$root/scripts/terminals/terminals.mjs" --filter) -o "$work/terminals.osm.pbf"
+osmium export --overwrite "$work/terminals.osm.pbf" -f geojsonseq --add-unique-id=type_id \
+  -o "$work/terminals.geojsonseq"
+node "$root/scripts/terminals/terminals.mjs" "$work/terminals.geojsonseq" "$extract_at" \
+  "$root/public/data/terminals.v1.json"
+
+# The studio's OSM route files (.scratch/osm-route-start): OSM's jeepney, UV, bus and rail route
+# relations that reach the box, an index and a file per route (osm-route-file.mjs). From the
+# whole download, not the box's cut, so a route's ways outside the box are there to chain; the
+# writer clips each line to the box itself, checks the files and fails the build on a bad one.
+osmium tags-filter --overwrite "$download" \
+  $(node "$root/scripts/osm-routes/osm-routes.mjs" --filter) -o "$work/osm-routes.osm.pbf"
+osmium cat --overwrite -f opl "$work/osm-routes.osm.pbf" -o "$work/osm-routes.opl"
+node "$root/scripts/osm-routes/osm-routes.mjs" "$work/osm-routes.opl" "$extract_at" \
+  "$root/public/data/osm-routes/v1"
+
 # The establishments from the same download (.scratch/establishments, step E3a): the shops,
 # banks, ATMs, eateries and the like, an index and a file per area cell (establishments.mjs).
 osmium tags-filter --overwrite "$extract" \
@@ -96,8 +116,23 @@ osmium tags-filter --overwrite "$extract" \
   $(node --experimental-strip-types "$root/scripts/overture/overture.mjs" --roads) \
   -o "$work/roads.osm.pbf"
 osmium export --overwrite "$work/roads.osm.pbf" -f geojsonseq -o "$work/roads.geojsonseq"
+# The places to stay the basemap already labels (OSM's tourism=hotel and kin): an Overture hotel
+# of the same name near one is left to the basemap's label.
+osmium tags-filter --overwrite "$extract" \
+  $(node --experimental-strip-types "$root/scripts/overture/overture.mjs" --lodging) \
+  -o "$work/lodging.osm.pbf"
+osmium export --overwrite "$work/lodging.osm.pbf" -f geojsonseq -o "$work/lodging.geojsonseq"
 "${OVERTURE_PYTHON:-python3}" -I "$root/scripts/overture/pull.py" "$box" "$work/overture.ndjson"
 (cd "$root" && node --experimental-strip-types scripts/overture/overture.mjs \
-  "$work/overture.ndjson" "$work/roads.geojsonseq" public/data/overture/v1)
+  "$work/overture.ndjson" "$work/roads.geojsonseq" public/data/overture/v1 \
+  "$work/lodging.geojsonseq")
 node --experimental-strip-types "$root/scripts/overture/check.mjs" \
   "$root/public/data/overture/v1" "$root/public/data/establishments/v1"
+
+# The studio's search files (scripts/search/): every Overture store and eatery, drawn or not, from
+# the same release, and the named OSM establishments just written, one file each by licence. The
+# writer checks each and fails the build on a broken one.
+release="$(node -e "console.log(JSON.parse(require('fs').readFileSync('$root/public/data/overture/v1/index.json','utf8')).release)")"
+"${OVERTURE_PYTHON:-python3}" -I "$root/scripts/search/pull-search.py" "$box" "$work/search.ndjson" "$release"
+(cd "$root" && node --experimental-strip-types scripts/search/search-file.mjs \
+  "$work/search.ndjson" public/data/search/v1)

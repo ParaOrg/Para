@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 9058385,
+  "kind": "jeepney",
+  "ref": "",
+  "name": "Dasmariñas–GMA",
+  "from": "General Mariano Alvarez",
+  "to": "Robinsons Place Dasmariñas",
+  "network": "LTFRB Region IV-A",
+  "operator": "Zapote-Imus-Dasmariñas-General Mariano Alvarez-Pala-Pala-Paliparan Transport Cooperative",
+  "version": 87,
+  "last_edit": "2026-07-31",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["stop_entry_only",121.00006,14.28722,"General Mariano Alvarez Departures"],["stop_exit_only",120.95775,14.30008,"SM City Dasmariñas Transport Terminal"]],
+  "line": [[121.00006,14.28722],[120.99995,14.28706],[121.0002,14.28689],[120.99869,14.28447],[120.99696,14.28518],[120.99657,14.28429],[120.98136,14.29049],[120.98094,14.29057],[120.97574,14.29063],[120.97496,14.29069],[120.97438,14.29085],[120.97339,14.29141],[120.9721,14.29327],[120.97182,14.29345],[120.97152,14.29351],[120.96906,14.29335],[120.96855,14.29345],[120.96813,14.29384],[120.96485,14.29944],[120.96463,14.29974],[120.96441,14.29989],[120.96391,14.29992],[120.95908,14.29913],[120.95853,14.29922],[120.95782,14.29962],[120.95801,14.29988],[120.95769,14.30012],[120.95735,14.29974],[120.9584,14.29918],[120.95843,14.29896],[120.95532,14.29842],[120.95488,14.29933],[120.95464,14.29928],[120.95427,14.30013]]
+}

@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 19815168,
+  "kind": "jeepney",
+  "ref": "T114",
+  "name": "Quirino Highway–Santa Lucia",
+  "from": "Quirino Highway",
+  "to": "Santa Lucia",
+  "network": "LTFRB National Capital Region",
+  "operator": "Santa Lucia Transport Service Cooperative",
+  "version": 3,
+  "last_edit": "2026-08-06",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",121.05279,14.7058,"Santa Lucia Jeepney Terminal"],["platform",121.05084,14.70455,"E. Aguinaldo Street"],["platform",121.04932,14.7044,"Santa Lucia High School"],["platform",121.04612,14.70523,"Sumilang Street"],["platform",121.04503,14.70549,"Luz Street"],["platform",121.04277,14.70772,"Nenita Street"],["platform",121.04174,14.7087,"San Juan Street"],["platform_exit_only",121.03973,14.7086,"Susana Jeepney Terminal"]],
+  "line": [[121.05282,14.70584],[121.05286,14.70582],[121.05231,14.70502],[121.05051,14.70441],[121.04849,14.70434],[121.04795,14.70444],[121.0473,14.70443],[121.04696,14.70428],[121.04674,14.7043],[121.04652,14.7044],[121.0463,14.70473],[121.0461,14.70511],[121.04607,14.70551],[121.04274,14.70542],[121.04274,14.70786],[121.04262,14.70867],[121.04154,14.70867],[121.04154,14.70828],[121.04041,14.70828],[121.04018,14.70838],[121.03971,14.70843],[121.03971,14.7086]]
+}

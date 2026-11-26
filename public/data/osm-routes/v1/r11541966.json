@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 11541966,
+  "kind": "jeepney",
+  "ref": "321",
+  "name": "Baclaran–Blumentritt via Mabini, Santa Cruz",
+  "from": "Blumentritt",
+  "to": "Baclaran",
+  "network": "LTFRB National Capital Region",
+  "operator": "Monumento-Blumentritt-Baclaran Transport Cooperative",
+  "version": 64,
+  "last_edit": "2026-11-19",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",120.98312,14.62698,"Avenida & Bulacan"],["platform",120.98285,14.62366,"Avenida & Cavite"],["platform",120.98475,14.62033,"F. Huertas & A. Lorenzo Jr."],["platform",120.98469,14.61778,"SM City San Lazaro"],["platform",120.98465,14.61667,"F. Huertas & Tayuman"],["platform",120.98447,14.61402,"F. Huertas & San Lazaro"],["platform",120.98436,14.61278,"Oroquieta & Quiricada"],["platform",120.98423,14.61105,"F. Huertas & Bambang"],["platform",120.98401,14.60836,"F. Huertas & Mayhaligue"],["platform",120.98195,14.60532,"LRT Doroteo Jose Station"],["platform",120.98158,14.60116,"Gonzalo Puyat"],["platform",120.98052,14.60025,"Plaza Santa Cruz"],["platform",120.98032,14.59874,"Escolta"],["platform",120.98067,14.5891,"Manila City Hall"],["platform",120.9797,14.58556,"Padre Burgos & General Luna"],["platform",120.97828,14.58535,"Juan Luna Monument"],["platform",120.97927,14.58466,"Maria Orosa & Padre Burgos"],["platform",120.98027,14.58342,"Luneta (Ma. Orosa)"],["platform",120.98085,14.58229,"Seafarers Center"],["platform",120.97899,14.57993,"M.H. del Pilar & T.M. Kalaw"],["platform",120.98026,14.57729,"M.H. del Pilar & Padre Faura"],["platform",120.97982,14.57817,"Ermita Shrine"],["platform",120.98186,14.57399,"Pedro Gil Park"],["platform",120.9839,14.5698,"M.H. del Pilar & Remedios"],["platform",120.98479,14.56804,"M.H. del Pilar & San Andres"],["platform",120.98613,14.56528,"M.H. del Pilar & Quirino"],["platform",120.98828,14.56224,"Bangko Sentral ng Pilpinas"],["platform",120.98965,14.55959,"Mabini & P. Ocampo"],["platform",120.99087,14.55652,"Harrison & Sinciego"],["platform",120.99181,14.55283,"Gil Puyat & Harrison"],["platform",120.99267,14.55054,"Harrison & M. Santos"],["platform",120.99331,14.5481,"Harrison & Williams"],["platform",120.99402,14.54536,"Pasay City Sports Complex"],["platform",120.99429,14.54431,"Pasay City Hall"],["platform",120.99491,14.54165,"School of the Deaf"],["platform",120.99539,14.53937,"Harrison & Ignacio"],["platform",120.99566,14.53801,"Harrison & EDSA"],["platform_exit_only",120.993,14.5355,"Baclaran (Heritage) Terminal"]],
+  "line": [[120.98307,14.62698],[120.9831,14.62801],[120.98425,14.62796],[120.98502,14.62729],[120.98494,14.62421],[120.9829,14.62425],[120.98283,14.62187],[120.98194,14.62189],[120.98189,14.62064],[120.98482,14.62056],[120.98472,14.61695],[120.98403,14.60764],[120.98217,14.60778],[120.98181,14.60237],[120.98156,14.60054],[120.98069,14.60029],[120.97977,14.5997],[120.98055,14.59844],[120.98059,14.59831],[120.98049,14.59754],[120.98012,14.59534],[120.97987,14.59463],[120.97973,14.59432],[120.97904,14.59407],[120.97891,14.59373],[120.97896,14.5935],[120.97952,14.59286],[120.98005,14.59206],[120.98018,14.59176],[120.98061,14.5904],[120.98068,14.58952],[120.98091,14.5887],[120.9809,14.58839],[120.98033,14.58634],[120.97998,14.58572],[120.97934,14.58527],[120.97841,14.58581],[120.97828,14.58571],[120.97841,14.58492],[120.97855,14.58484],[120.97928,14.5847],[120.9797,14.58443],[120.98115,14.58201],[120.97867,14.58062],[120.9841,14.56948],[120.98493,14.5679],[120.98636,14.5648],[120.98687,14.56504],[120.98944,14.56019],[120.99047,14.55775],[120.99104,14.55613],[120.99194,14.55317],[120.9903,14.55266],[120.99023,14.55251],[120.99035,14.55241],[120.99202,14.55293],[120.99255,14.55121],[120.99421,14.54481],[120.99514,14.54078],[120.99573,14.53787],[120.99413,14.53759],[120.99404,14.53741],[120.99419,14.53733],[120.99521,14.53757],[120.99577,14.53762],[120.99596,14.53632],[120.99304,14.53591],[120.99309,14.53551]]
+}

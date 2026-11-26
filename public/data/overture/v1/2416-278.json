@@ -13,6 +13,15 @@
     ["o43d62335474d424a","dentist",120.81071,13.92887,"De Villa Alipis Dental Clinic"],
     ["odae3d27c88564f18","dentist",120.83762,13.91828,"FEP Belarmino Dental Center"],
     ["oe68dc183811042af","dentist",120.81104,13.92868,"De Villa Alipis Dental Clinic"],
-    ["o6b81806f8fc74cbb","school",120.80535,13.92404,"Camastilisan Elementary School"]
+    ["o6b81806f8fc74cbb","school",120.80535,13.92404,"Camastilisan Elementary School"],
+    ["occ520470d8274b8e","supermarket",120.81165,13.92937,"Calaca City New Public Market Building B"],
+    ["od117adc7c60f4a4e","supermarket",120.81144,13.92812,"BCC Minimart"],
+    ["o600db0991e3f47d1","pharmacy",120.81164,13.92792,"Mercury Drug",{"brand":"Mercury Drug- Lucena Puregold"}],
+    ["oee7844ed826d4128","pharmacy",120.81171,13.92899,"The Generics Pharmacy",{"brand":"TGP The Generics Pharmacy"}],
+    ["o6a4eaac35cc74de2","laundry",120.81368,13.92671,"Wash me Luck"],
+    ["o9f7ba6702b344f67","hotel",120.80089,13.92511,"Calaca Beach Resort"],
+    ["ocbfb4b06cb7e4490","hotel",120.81738,13.92512,"Alvez Lodge Calaca"],
+    ["od5f508e788d84536","hotel",120.81676,13.937,"Yabut River Resort"],
+    ["ofebda0e22c6c4d18","lodging",120.84972,13.91309,"Casa Corazon"]
   ]
 }

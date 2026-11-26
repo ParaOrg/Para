@@ -24,18 +24,18 @@ interface Props {
   /** A card is open: the button sits on its sheet rather than at the map's foot. */
   docked: boolean;
   /**
-   * Docked, it follows the sheet up to the framed height (FRAMED_SHARE) and stays there, the sheet
-   * covering it above (`framed`, the public map's). A fitted sheet's open height is its content's, the map in sight
-   * above it, so the button rides on it up to just under the status bar (`top`, the contributor's
-   * ride: DOCK_TOP_CSS), the sheet covering it only when its content fills the screen.
+   * Docked, it follows the sheet up to the framed height (FRAMED_SHARE), the sheet covering it
+   * above (`framed`), or rides a fitted sheet up to just under the status bar (`top`: DOCK_TOP_CSS).
    */
   dockCap?: 'framed' | 'top';
-  /** Stands directly above the pill, hidden while the Map Style card is open; the contributor's mark button. */
-  above?: ReactNode;
   /**
-   * What the locator has to say, for the page to show as a problem toast: said as the browser
-   * refuses or gives no fix, again at each tap while it still does, and null once a fix comes.
+   * Over the pill, hidden while the Map Style card is open (the contributor's mark button); or 12
+   * over the LocatorButton alone (the public map's list filter, 4885:41761).
    */
+  above?: ReactNode;
+  /** The map-style button over the LocatorButton (the studio's), or it alone (the public map's). */
+  hasMapStyle?: boolean;
+  /** What the locator has to say, for the page's problem toast, at each refused tap; null at a fix. */
   onNote?: (note: LocatorNote | null) => void;
 }
 
@@ -48,21 +48,15 @@ const LABEL = {
 } as const;
 
 /**
- * LocationAndMap (4245:1966), the map-style button over the LocatorButton,
- * placed as ScreenLocationBehavior draws the LocatorButton (Figma
- * 3870:5941): at the map's right edge, 12 above the card's sheet, following
- * it down to Low; up past the framed height (FRAMED_SHARE) it stays there,
- * and the sheet covers it (unless `dockCap` is `top`, over a fitted sheet,
- * where it rides higher, up to DOCK_TOP_CSS). With no card open it sits at the map's foot. Where
- * the card floats in the corner (`@float:`), which the frame does not show, it
- * sits at the bottom right, clear of the credit line.
- * BottomSheet says where its top is as `--dock-y`: on the page at rest, and on this layer
- * itself (`data-dock-follower`) as a finger drags it; this layer slides the same way, by the same
- * length.
+ * LocationAndMap (4245:1966), the map-style button over the LocatorButton (or the LocatorButton
+ * alone), placed as ScreenLocationBehavior draws it (3870:5941): at the map's right edge, over the
+ * card's sheet, following it down to Low; up past the framed height (FRAMED_SHARE) it stays and
+ * the sheet covers it (unless `dockCap` is `top`: up to DOCK_TOP_CSS). With no card open, at the
+ * map's foot; where the card floats (`@float:`), at the bottom right. BottomSheet says where its
+ * top is as `--dock-y`, on the page at rest and on this layer (`data-dock-follower`) as a finger
+ * drags it; this layer slides the same way.
  *
- * Denied, unavailable or no fix yet: it tells the page (onNote), and the
- * button stays as it was, to try again once the browser's setting is changed.
- */
+ * Denied, unavailable or no fix yet: it tells the page (onNote); the button stays as it was. */
 export function Locator({
   locator,
   map,
@@ -73,6 +67,7 @@ export function Locator({
   docked,
   dockCap = 'framed',
   above,
+  hasMapStyle = true,
   onNote,
 }: Props) {
   const { status, noFix, mode, heading, compass, tap, taps } = locator;
@@ -100,11 +95,24 @@ export function Locator({
   // Never above the framed height's top (FRAMED_SHARE). With no card, the map's foot: short of a
   // phone's home bar, and of what the page stands in the corner (`--dock-foot`,
   // the studio's New buttons). `--dock-gap` and `--dock-right` set the column's
-  // gap over that foot and from the right edge; the contributor page sets them,
-  // the public map keeps 0.75rem each.
+  // gap over that foot and from the right edge, 0.75rem each unless the page sets them (the
+  // contributor page, the public map). Floating, `--dock-float-bottom` is its height over the
+  // map's foot: 2.5rem, clear of the studio's credit line, unless the page sets it.
   const y = docked
     ? `max(var(--dock-y, 100%), ${dockCap === 'top' ? DOCK_TOP_CSS : slide(FRAMED_SHARE)})`
     : 'calc(100% - max(env(safe-area-inset-bottom), var(--dock-foot, 0px)))';
+  const button = (
+    <LocatorButton
+      mode={mode}
+      corners={hasMapStyle ? 'bottom' : 'all'}
+      // TrackedLocation keeps north up, so the phone's heading is the arrow's on the screen too.
+      heading={mode === 'TrackedLocation' ? heading : null}
+      onClick={tap}
+      aria-label={mode === 'TrackedLocation' && !compass ? LABEL.TrackOwnLocation : LABEL[mode]}
+      data-testid="where"
+      data-state={status}
+    />
+  );
   return (
     <div
       data-testid="locator-dock"
@@ -116,28 +124,24 @@ export function Locator({
       }
       style={{ translate: `0 ${y}` }}
     >
-      <div className="pointer-events-auto absolute right-[calc(var(--dock-right,0.75rem)+env(safe-area-inset-right))] bottom-full mb-[var(--dock-gap,0.75rem)] flex flex-col items-end gap-1 @float:right-3 @float:bottom-[max(2.5rem,calc(var(--dock-foot,0px)+0.75rem))] @float:mb-0">
-        <LocationAndMapControl
-          map={map}
-          isMapLoaded={isMapLoaded}
-          basemaps={basemaps}
-          thumbnails={basemapThumbnails}
-          labelsPlace={labelsPlace}
-          above={above}
-        >
-          <LocatorButton
-            mode={mode}
-            corners="bottom"
-            // TrackedLocation keeps north up, so the phone's heading is the arrow's on the screen too.
-            heading={mode === 'TrackedLocation' ? heading : null}
-            onClick={tap}
-            aria-label={
-              mode === 'TrackedLocation' && !compass ? LABEL.TrackOwnLocation : LABEL[mode]
-            }
-            data-testid="where"
-            data-state={status}
-          />
-        </LocationAndMapControl>
+      <div className="pointer-events-auto absolute right-[calc(var(--dock-right,0.75rem)+env(safe-area-inset-right))] bottom-full mb-[var(--dock-gap,0.75rem)] flex flex-col items-end gap-1 @float:bottom-[max(var(--dock-float-bottom,2.5rem),calc(var(--dock-foot,0px)+0.75rem))] @float:mb-0">
+        {hasMapStyle ? (
+          <LocationAndMapControl
+            map={map}
+            isMapLoaded={isMapLoaded}
+            basemaps={basemaps}
+            thumbnails={basemapThumbnails}
+            labelsPlace={labelsPlace}
+            above={above}
+          >
+            {button}
+          </LocationAndMapControl>
+        ) : (
+          <div className="flex flex-col items-end gap-3">
+            {above}
+            {button}
+          </div>
+        )}
       </div>
     </div>
   );

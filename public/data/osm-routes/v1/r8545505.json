@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 8545505,
+  "kind": "rail",
+  "ref": "SS",
+  "name": "PNR Shuttle Service Line: Governor Pascual → FTI",
+  "from": "Governor Pascual",
+  "to": "FTI",
+  "network": "PNR Metro Commuter",
+  "operator": "Philippine National Railways",
+  "version": 25,
+  "last_edit": "2026-05-05",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [[12,426],[14,426]],
+  "stops": [["stop_entry_only",120.97273,14.67034,"Governor Pascual"],["stop",120.97388,14.65692,"Caloocan"],["stop",120.97484,14.65186,"Asistio (10th) Avenue"],["stop",120.97629,14.64459,"C-3 Road"],["stop",120.97555,14.6269,"Solis"],["stop",120.98418,14.62258,"Blumentritt"],["stop_exit_only",120.99284,14.61641,"Laon Laan"],["stop",120.99719,14.61186,"España"],["stop",121.01061,14.60051,"Santa Mesa"],["stop_exit_only",121.00892,14.59049,"Pandacan"],["stop",120.99915,14.57905,"Paco"],["stop_exit_only",120.99955,14.57312,"San Andres"],["stop_exit_only",121.00287,14.56694,"Vito Cruz"],["stop_exit_only",121.01201,14.55001,"Pasay Road"],["stop_exit_only",121.02629,14.52364,"Nichols"]],
+  "line": [[120.97273,14.67034],[120.97368,14.65805],[120.97436,14.65419],[120.97696,14.64123],[120.97715,14.63985],[120.97711,14.63844],[120.97546,14.62624],[120.97546,14.62555],[120.9758,14.62456],[120.97649,14.62378],[120.97703,14.62344],[120.97756,14.62327],[120.97895,14.62308],[120.98289,14.62271],[120.97895,14.62308],[120.98289,14.62271],[120.98648,14.62234],[120.987,14.62219],[120.98775,14.62173],[121.00459,14.60415],[121.00558,14.60349],[121.00775,14.60274],[121.00822,14.60245],[121.01263,14.59885],[121.01307,14.59831],[121.01332,14.59785],[121.01349,14.59727],[121.0135,14.59646],[121.01335,14.59593],[121.01304,14.59535],[120.9984,14.57816],[120.9982,14.57777],[120.99802,14.57713],[120.99799,14.57646],[120.99809,14.57591],[121.00821,14.55702],[121.02239,14.53073],[121.02607,14.52404],[121.02964,14.51727],[121.04733,14.4845],[121.05048,14.47775],[121.0509,14.47646],[121.05097,14.47559],[121.05079,14.47069],[121.05107,14.46926],[121.05215,14.46632],[121.05233,14.46507]]
+}

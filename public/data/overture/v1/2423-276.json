@@ -15,6 +15,10 @@
     ["odc0f739d5e384adb","restaurant",121.19518,13.8444,"Fat Bob Grill and Restaurant"],
     ["of10b1cffb9fa400e","fast_food",121.19946,13.84579,"Potato Corner"],
     ["o3ad51a5d2e134f30","school",121.1832,13.80888,"Timbugan Elementary School"],
-    ["o93c8725790db40be","school",121.18467,13.83742,"Masaya Elementary School"]
+    ["o93c8725790db40be","school",121.18467,13.83742,"Masaya Elementary School"],
+    ["o66785a4ef3724a5c","pharmacy",121.19476,13.84676,"Mercury Drug"],
+    ["ob97952ba0a914222","laundry",121.19509,13.84524,"Daily Wash Laundry"],
+    ["od9601167937641af","hotel",121.18782,13.84139,"ALGO Resort and Hotel"],
+    ["o4a26d3a313a64521","lodging",121.16021,13.83477,"Villa Gracia Private Resort"]
   ]
 }

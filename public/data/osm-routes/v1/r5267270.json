@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 5267270,
+  "kind": "bus",
+  "ref": "BP-03",
+  "name": "Batangas–Capitolio–Hospital",
+  "from": "",
+  "to": "",
+  "network": "LTFRB Region IV-A",
+  "operator": "Batangas Transport Service Cooperative",
+  "version": 53,
+  "last_edit": "2026-06-01",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [[20,1200]],
+  "stops": [["platform",121.07326,13.76014,"Crossing Gulod"],["platform",121.07378,13.7621,"LPU Batangas High School"],["platform",121.06604,13.76962,"Don Ramos"],["platform",121.06497,13.77016,"Don Ramos"],["platform",121.06332,13.76774,"Telecom Road"],["platform",121.06183,13.76614,"Capitol Site"],["platform",121.05911,13.76432,"Arce Subdivision"],["platform",121.0644,13.7637,"Corner P. Herrera Street"],["platform",121.06305,13.76004,"Teachers' Conference Center"],["platform",121.05976,13.75646,"Rizal corner P. Dandan"],["platform",121.05759,13.75632,"Citimart"],["platform",121.05759,13.75632,"Citimart"],["platform",121.05603,13.75687,"Old Market East"],["platform",121.05603,13.75687,"Old Market East"],["platform",121.05683,13.75851,"Citimart Bay Mall"],["platform",121.05683,13.75851,"Citimart Bay Mall"],["platform",121.05683,13.75851,"Citimart Bay Mall"],["platform",121.05813,13.7593,"Jollibee D. Silang"],["platform",121.05906,13.76064,"Noble Street"],["platform",121.05822,13.76178,"Mabini Street"],["platform",121.05822,13.76346,"University of Batangas"],["platform",121.06101,13.76455,"Hilltop"],["platform",121.06483,13.76523,"Batangas People's Park"],["platform",121.06503,13.76654,"Crossing Regional Hospital"],["platform",121.07336,13.76361,"LPU Batangas High School"],["platform",121.07318,13.7602,"Crossing Gulod"]],
+  "line": [[121.06689,13.75497],[121.06653,13.75372],[121.0684,13.75366],[121.07029,13.75398],[121.07065,13.75495],[121.07083,13.7579],[121.07106,13.75823],[121.07372,13.76062],[121.07369,13.76255],[121.07325,13.76442],[121.07369,13.76255],[121.07372,13.76062],[121.07097,13.75812],[121.07079,13.75774],[121.07072,13.75665],[121.06744,13.7565],[121.06737,13.75629],[121.06713,13.75601],[121.06689,13.75497],[121.06703,13.75498],[121.06713,13.75543],[121.07325,13.76442],[121.07282,13.76626],[121.07263,13.76679],[121.07226,13.76751],[121.07168,13.7681],[121.07141,13.76829],[121.07065,13.76856],[121.06547,13.76967],[121.06554,13.77076],[121.06541,13.77079],[121.06411,13.76869],[121.06343,13.76772],[121.0629,13.76711],[121.06133,13.76556],[121.0602,13.76487],[121.06036,13.76477],[121.06104,13.76461],[121.06452,13.76391],[121.06412,13.76245],[121.06327,13.75998],[121.06063,13.76023],[121.06059,13.75962],[121.06077,13.75647],[121.05836,13.75638],[121.056,13.75607],[121.05599,13.75687],[121.05608,13.7574],[121.057,13.75882],[121.05765,13.75923],[121.05889,13.75942],[121.0592,13.76178],[121.0572,13.76169],[121.05711,13.76215],[121.05774,13.76306],[121.05809,13.76348],[121.05847,13.7638],[121.0602,13.76487],[121.06036,13.76477],[121.06104,13.76461],[121.06419,13.76397],[121.06442,13.76402],[121.06457,13.76419],[121.0653,13.76835],[121.06547,13.76967],[121.07065,13.76856],[121.07141,13.76829],[121.07212,13.76769],[121.07245,13.76719],[121.07282,13.76626],[121.07325,13.76442]]
+}

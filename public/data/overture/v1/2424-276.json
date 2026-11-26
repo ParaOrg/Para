@@ -29,6 +29,22 @@
     ["odf4bbc0180c74364","dentist",121.20615,13.84511,"Kaz Dental Clinic"],
     ["off60aa62d60d4b35","dentist",121.2039,13.84527,"ZBL Dental Clinic"],
     ["of737deede2134c61","school",121.24509,13.83831,"Tiquiwan Elementary School"],
-    ["o5da2ac414e374c7d","college",121.20577,13.84602,"PVGMA Campus"]
+    ["o5da2ac414e374c7d","college",121.20577,13.84602,"PVGMA Campus"],
+    ["o71ab473486514b1d","supermarket",121.23908,13.84312,"RnD Supermarket"],
+    ["ob4532da715a343ab","supermarket",121.2039,13.84275,"Ultra Mega Retail"],
+    ["o06c93b9c3e464890","pharmacy",121.21136,13.84602,"Southstar Drug"],
+    ["o111bde2cc00c484b","pharmacy",121.2056,13.84521,"Generika Rosario, Ba...",{"brand":"Generika"}],
+    ["o42467aa3046849f4","pharmacy",121.20625,13.84043,"JYNLEN Pharmacy"],
+    ["o61a2a666bdfa4fdd","pharmacy",121.24323,13.84112,"Mercury Drug"],
+    ["o05c07c327b104d3c","hotel",121.20938,13.80947,"Yellowbell Resort & Hotel"],
+    ["o07855c5625434a37","hotel",121.21027,13.81504,"Mayo-Quijano Fantasy Resort"],
+    ["o0bfde6b1361941e6","hotel",121.20938,13.80946,"Lazaro Private Resort"],
+    ["o1ec2ed74acc94147","hotel",121.20525,13.8264,"Riosa Garden Resort"],
+    ["o60c6a04e7af143a8","hotel",121.20741,13.84384,"La Consuelo Spring Resort"],
+    ["o94679568c1f74385","hotel",121.24641,13.81091,"Celeste Resort"],
+    ["o6bd46351c7294827","lodging",121.205,13.84159,"Caminho Pacific"],
+    ["o7a634ff657114fa5","lodging",121.22246,13.84094,"Triple J Swimming Pool"],
+    ["od84c30266d5f41bb","lodging",121.2234,13.84448,"New York"],
+    ["ofc5f0e69509d4af2","lodging",121.20538,13.82579,"Barcelos"]
   ]
 }

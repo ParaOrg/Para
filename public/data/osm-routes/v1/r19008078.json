@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 19008078,
+  "kind": "bus",
+  "ref": "",
+  "name": "Baliwag Tricycle: Bayan → Hinukay",
+  "from": "Plaza Naning",
+  "to": "Hinukay",
+  "network": "",
+  "operator": "H-TODA",
+  "version": 5,
+  "last_edit": "2025-10-16",
+  "clipped": false,
+  "provenance": {"fixme":"Route type"},
+  "gaps": [],
+  "stops": [],
+  "line": [[120.90057,14.95426],[120.90063,14.95411],[120.90076,14.95403],[120.9009,14.95402],[120.90111,14.95418],[120.90111,14.95437],[120.90101,14.9545],[120.90112,14.95484],[120.90105,14.95529],[120.89814,14.96056],[120.89788,14.96119],[120.89505,14.97207],[120.8941,14.9762],[120.89342,14.9798],[120.89296,14.98341],[120.8919,14.99614],[120.89116,14.99603],[120.88666,14.99508],[120.88689,14.99566],[120.88689,14.99587],[120.88636,14.99736],[120.88552,14.99847],[120.88373,14.99989],[120.88338,15.00051],[120.88301,15.00092],[120.88224,15.00299],[120.8822,15.0032],[120.88229,15.00392],[120.88194,15.00527],[120.88178,15.00662],[120.88155,15.00756],[120.88278,15.00847],[120.88318,15.00953]]
+}

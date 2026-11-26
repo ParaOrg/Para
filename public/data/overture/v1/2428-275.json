@@ -4,6 +4,18 @@
   "attribution": "© Overture Maps Foundation",
   "establishments": [
     ["oa8c8ade6f7864ec5","restaurant",121.41222,13.77524,"Johnny's Restaurant"],
-    ["od90829a376f446a1","school",121.41211,13.79111,"Buhay na Sapa National High School"]
+    ["od90829a376f446a1","school",121.41211,13.79111,"Buhay na Sapa National High School"],
+    ["oe570dee25e174065","pharmacy",121.40514,13.79669,"TGP The Generics Pharmacy (Buhay na Sapa, San Juan)",{"brand":"TGP The Generics Pharmacy"}],
+    ["o16e5becbbd6448cb","hotel",121.43319,13.78283,"Nahas Beach Resort"],
+    ["o1cbeb475e0a2419a","hotel",121.4119,13.77914,"NSC Private Resort"],
+    ["o40acddaef10b424f","hotel",121.43147,13.76753,"Balai sa San Juan Resort"],
+    ["o457e9b9588c3407e","hotel",121.41556,13.79173,"Residencia de Aracan Private Resort and Events Place"],
+    ["o52a29e3a174a454f","hotel",121.4183,13.76067,"Starksway Resort"],
+    ["o8c6d452a71fd4160","hotel",121.43466,13.77646,"Nahas Beach Resort"],
+    ["o510de51e2e5b4f7f","lodging",121.41789,13.76209,"Soledad De Laiya"],
+    ["o760709ad565e417d","lodging",121.43221,13.75715,"CMDC Private Beach House"],
+    ["o9e84158f9ed44baf","lodging",121.409,13.78723,"Porto Gualberto"],
+    ["oa74ee2a2d0744a4e","lodging",121.43512,13.77632,"Forever Tan Ag Beachside"],
+    ["ofd888e1973a54985","lodging",121.4183,13.76067,"The Seashore Beach Club"]
   ]
 }

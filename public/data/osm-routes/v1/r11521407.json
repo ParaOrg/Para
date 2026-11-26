@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 11521407,
+  "kind": "jeepney",
+  "ref": "T404",
+  "name": "Alabang–Signal Village via SLEX",
+  "from": "Vista Terminal Exchange",
+  "to": "FTI Integrated Transport Terminal",
+  "network": "LTFRB National Capital Region",
+  "operator": "Philippine Air Force Servicemen and Employees Jeepney Operators and Drivers Association Inc.",
+  "version": 36,
+  "last_edit": "2026-08-24",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",121.0468,14.41683,"Vista Terminal Exchange"],["platform",121.04709,14.48866,"Bicutan Rotonda"],["platform",121.04258,14.49383,"San Martin de Porres"],["platform",121.04131,14.49616,"Bayswater Subdivision"],["platform",121.04041,14.49783,"KM 13 East Service Road"],["platform",121.03823,14.50191,"United Hills"],["platform",121.03748,14.50332,"Rizza Diergos"],["platform_exit_only",121.04201,14.50623,"Arca South Transport Terminal"]],
+  "line": [[121.04687,14.41682],[121.04684,14.41751],[121.0467,14.41769],[121.04558,14.41762],[121.04558,14.41893],[121.04567,14.41907],[121.04568,14.41944],[121.04566,14.42262],[121.04555,14.42325],[121.04522,14.48403],[121.04525,14.48514],[121.0454,14.48619],[121.04542,14.487],[121.04702,14.48767],[121.04705,14.48784],[121.04691,14.48802],[121.04688,14.48838],[121.04703,14.48907],[121.04679,14.48936],[121.04489,14.48958],[121.04472,14.48973],[121.03697,14.50416],[121.03923,14.50501],[121.03993,14.50516],[121.03983,14.50567],[121.03999,14.50611],[121.04078,14.5065],[121.04116,14.50657],[121.04132,14.50638],[121.04178,14.5066],[121.04192,14.5065],[121.04205,14.50625]]
+}

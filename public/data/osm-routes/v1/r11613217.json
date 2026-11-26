@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 11613217,
+  "kind": "jeepney",
+  "ref": "355",
+  "name": "Blumentritt–North Harbor via Divisoria",
+  "from": "North Harbor",
+  "to": "Blumentritt",
+  "network": "LTFRB National Capital Region",
+  "operator": "V.G. Eusebio Transport Corporation",
+  "version": 19,
+  "last_edit": "2026-08-31",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",120.96176,14.60336,"Pier 4"],["platform",120.96164,14.60513,"Lakandula"],["platform",120.96171,14.60944,"Pier 12"],["platform",120.96363,14.60957,"Abad Santos"],["platform",120.96687,14.60983,"Plaza Morga"],["platform",120.96972,14.60954,"Juan Luna"],["platform",120.9722,14.60954,"Dagupan & Moriones"],["platform",120.97261,14.61133,"PNR Tutuban Station"],["platform",120.97498,14.61706,"Manila Cathedral School"],["platform",120.97671,14.61676,"Novo Department Store Tayuman"],["platform",120.97753,14.61733,"Abad Santos & Tayuman"],["platform",120.9778,14.61918,"Abad Santos & Yuseco"],["platform",120.97811,14.62162,"Toyota Abad Santos"],["platform",120.97841,14.62391,"Abad Santos Railroad Crossing"],["platform",120.97921,14.62563,"Ospital ng Tondo"],["platform",120.98055,14.62479,"Severino Reyes"],["platform_exit_only",120.98193,14.62369,"Mariano Ponce Elementary School"]],
+  "line": [[120.96169,14.60267],[120.96115,14.60943],[120.96652,14.60992],[120.97063,14.60949],[120.97207,14.60922],[120.97391,14.61733],[120.97602,14.6169],[120.97739,14.61675],[120.97861,14.62575],[120.97979,14.62563],[120.9811,14.62429],[120.98201,14.62428],[120.98199,14.62369]]
+}

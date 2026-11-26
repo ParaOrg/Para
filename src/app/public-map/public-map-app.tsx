@@ -55,10 +55,14 @@ import { useTurn } from '@/shared/hooks/commit-turn';
 import { cn } from '@/shared/utils/cn';
 
 import { ExploreCards, PageToasts, PlaceSearchBar } from './lazy-parts';
-import { MapSheetControls } from './map-sheet-controls';
+import { ListFilter, MapSheetControls } from './map-sheet-controls';
+import { MapViewCorner } from './map-view-corner';
 import type { SaidNote } from './page-toasts';
 import { sheetTopUnderSearch } from './sheet-top-under-search';
 import { useStatusBarColour } from './status-bar';
+import { TOAST_UNDER_FULL_CARD, TOAST_UNDER_FULL_TRIP } from './toast-under-full';
+import type { ExploreRest } from './use-explore-sheet';
+import { useMapFloats } from './use-map-floats';
 
 /**
  * The hotspots on the commuter map, the owner's calls for now: no pins zoomed in, no dots zoomed
@@ -66,13 +70,6 @@ import { useStatusBarColour } from './status-bar';
  * boxes and names still say where each one is. The studio keeps its pins, dots and taps.
  */
 const HOTSPOT_MARKS = { shouldShowPins: false, dotKinds: [], isTappable: isHotspotTapOn } as const;
-
-/**
- * While a place's card stands docked at full height, the toast sits 12 under its ✕ (map strip 24,
- * handle 18, ✕ 40), so the ✕ stays in reach; a trip has no ✕, and a floating card none there.
- */
-const TOAST_UNDER_FULL_CARD =
-  '@max-float:group-has-[[data-testid=card][data-snap=full]:not([hidden]):not(:has([data-testid=trip]))]/map:[--toast-top:calc(env(safe-area-inset-top)+--spacing(23.5))]';
 
 /** The ⓘ hides at full height on a phone, no map to credit and the card under it, until lowered. */
 const CREDITS_HIDDEN_AT_FULL =
@@ -137,10 +134,10 @@ export function PublicMapApp() {
   // The route list, a hotspot's card and the trip opened from either: which
   // is up, what stands behind what, their height and colours (useCardStack).
   const cards = useCardStack(map, saved, hotspots);
-  // The camera with the cards: a hintuan picked on the trip, gliding there;
-  // a trip, a picked RouteCard and SWITCH taken in whole, again as the sheet
-  // settles; the camera from before a hotspot's card was picked, back as it
-  // is let go (useCardCamera).
+  const [exploreRest, setExploreRest] = useState<ExploreRest>('open'); // As they were left.
+  // The camera with the cards: a hintuan picked on the trip, gliding there; a trip, a picked
+  // RouteCard and SWITCH taken in whole, again as the sheet settles; the camera from before a
+  // hotspot's card was picked, back as it is let go (useCardCamera).
   const {
     root,
     tripDock,
@@ -168,10 +165,9 @@ export function PublicMapApp() {
   const { ridden, startId } = ride;
   const rides = useLitRides(map, saved, hotspots.hotspots, null, ridden, startId, tipId, true);
 
-  // The commuter's own position, the dot and the camera with them live in
-  // CommuterLocation, so a fix, the phone's compass and the dot's moods
-  // render it alone. Its camera moves here, at this page's turn: after the
-  // cards' camera above, which a sheet set to another height moves in the
+  // The commuter's own position, the dot and the camera with them live in CommuterLocation, so a
+  // fix, the phone's compass and the dot's moods render it alone. Its camera moves here, at this
+  // page's turn: after the cards' camera above, which a sheet set to another height moves in the
   // same commit (commit-turn.ts).
   const locatorTurn = useTurn();
   const locator = useRef<CommuterLocationHandle>(null); // For "Turn on location" (ExploreCards).
@@ -199,6 +195,8 @@ export function PublicMapApp() {
   // The map's credits, the Map Data Source sheet, opened by the ⓘ: the map and the cards under it
   // are out of reach while it is open.
   const credits = useMapCredits(root);
+  const floats = useMapFloats(root);
+  const listUp = cards.choosing && !saved.selected && !cards.tripBehind ? saved : null;
 
   return (
     // `data-directions`, `data-hotspot-taps` and `data-place-search`: how many the index brought,
@@ -218,7 +216,8 @@ export function PublicMapApp() {
       className={cn(
         'group/map @container relative h-full w-full overflow-clip',
         needRefresh && '[--toast-top:calc(env(safe-area-inset-top)+--spacing(19))]',
-        '[--dock-gap:1rem]', // 16 over a sheet or the explore cards: controls, locate-me (4848:33680)
+        // 16 over a sheet or the explore cards, 16 in, 16 up floating: controls, locate-me (4885:44805)
+        '[--dock-float-bottom:1rem] [--dock-gap:1rem] [--dock-right:1rem]',
         sheetTopUnderSearch(needRefresh, offline || age.stale),
       )}
     >
@@ -227,14 +226,9 @@ export function PublicMapApp() {
       {/* Out of reach under the credits, the map and every card alike. */}
       <div inert={credits.state === 'open'} className="contents">
         {/*
-        No count of routes and hotspots in a corner, and no +, − or compass:
-        the owner leaves them off as clutter for commuters.
-      */}
-        {/*
-        Opened framed on the routes, and handed over to draw them as soon as
-        its style is in (`openOn`). MapLibre's corner credits step aside: the
-        map's own ⓘ (MapCreditsDock) opens them as the Map Data Source sheet,
-        always a tap away, as the licences need.
+        No count of routes and hotspots, no +, − or compass: clutter for commuters (the owner).
+        Opened framed on the routes, drawn once its style is in (`openOn`). MapLibre's corner
+        credits step aside: the map's ⓘ (MapCreditsDock) opens them as the Map Data Source sheet.
       */}
         <MapView
           onReady={setMap}
@@ -255,17 +249,16 @@ export function PublicMapApp() {
             />
           </div>
         )}
+        <MapViewCorner map={map} isMapLoaded={isMapLoaded} />
         <MapSheetControls
           map={map}
           overview={overviewButton}
-          list={cards.choosing && !saved.selected && !cards.tripBehind ? saved : null}
+          list={listUp}
+          floats={floats}
           onFlip={flipList}
           onFilter={filterList}
         />
-        {/*
-        The commuter's own position, and the camera with them, kept clear of
-        the card on show; the dot gazes at what was just picked.
-      */}
+        {/* The commuter's position and the camera with them, clear of the card; the dot's gaze. */}
         <CommuterLocation
           ref={locator}
           map={map}
@@ -273,6 +266,10 @@ export function PublicMapApp() {
           snap={cards.snap}
           offset={clearOfOpen}
           docked={cards.open}
+          hasMapStyle={false}
+          above={
+            listUp && !floats && <ListFilter list={listUp} onFilter={filterList} tooltip="right" />
+          }
           cameraTurn={locatorTurn}
           picks={{
             pickedId: ride.pickedId,
@@ -287,10 +284,7 @@ export function PublicMapApp() {
           onWhere={handleWhere}
           onNote={handleLocatorNote}
         />
-        {/*
-        Each lit ride's ends, named over their circles; with no trip open, a
-        tail opens its ride's.
-      */}
+        {/* Each lit ride's ends, named over their circles; with no trip open, a tail opens its. */}
         {map && <EndTitles map={map} rides={rides} livery={litLivery} onPick={openPlace} />}
         {/*
         The open trip's hintuans along its line, a train's stations and a
@@ -313,9 +307,8 @@ export function PublicMapApp() {
           />
         )}
         {/*
-        Keyed on the pick: another hintuan pops a fresh circle. Its name,
-        tapped, lets the pick go and takes the camera back where it was, as
-        its row tapped again does.
+        Keyed on the pick: another hintuan pops a fresh circle. Its name, tapped, lets the pick go
+        and takes the camera back where it was, as its row tapped again does.
       */}
         {map && ride.pinAt && tripLivery && (
           <HintuanPin
@@ -368,7 +361,7 @@ export function PublicMapApp() {
         <Notices offline={offline} age={age} needRefresh={needRefresh} onUpdate={reloadToUpdate} />
         {/* What went wrong, at the top: the locator's note and a failed load. */}
         {hasToasts && (
-          <div className={cn('contents', TOAST_UNDER_FULL_CARD)}>
+          <div className={cn('contents', TOAST_UNDER_FULL_CARD, TOAST_UNDER_FULL_TRIP)}>
             <Suspense fallback={null}>
               <PageToasts locatorNote={locatorNote} load={loadToast} />
             </Suspense>
@@ -466,7 +459,14 @@ export function PublicMapApp() {
         {/* With nothing open: ways to explore, and the donation card (Figma 4852:35066). */}
         {!cards.open && (
           <Suspense fallback={null}>
-            <ExploreCards onLocate={() => locator.current?.locate()} />
+            <ExploreCards
+              onLocate={() => locator.current?.locate()}
+              startsAt={exploreRest}
+              onRest={(snap, rest) => {
+                cards.setIdleSnap(snap);
+                setExploreRest(rest);
+              }}
+            />
           </Suspense>
         )}
       </div>

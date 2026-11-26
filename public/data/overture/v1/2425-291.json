@@ -8,6 +8,15 @@
     ["o39012d7d64cd4d7c","fast_food",121.2643,14.58339,"Jollibee"],
     ["oe7907c39f1fe4172","fast_food",121.27588,14.56243,"KFC"],
     ["o95c780f93aae4d7e","cafe",121.25326,14.59764,"Yuan'TEA?"],
-    ["o1ff94d7571f84e9c","clinic",121.25326,14.59764,"San Juan-Bautista Children's Clinic"]
+    ["o1ff94d7571f84e9c","clinic",121.25326,14.59764,"San Juan-Bautista Children's Clinic"],
+    ["od904bc7374a240bf","pharmacy",121.266,14.558,"Zuellig Building"],
+    ["o0f38c8b34e704ad1","hotel",121.25293,14.56058,"West Virginia Resort & Events Place"],
+    ["o42efb8b008ba4869","hotel",121.28827,14.56384,"Montana Verde Resort"],
+    ["o47e5d1f441f34675","hotel",121.25293,14.56058,"Alamaris Resort"],
+    ["o85818036eed2487c","hotel",121.25468,14.58845,"Caza Edden Resort"],
+    ["o88a01496d0ad43a1","hotel",121.27968,14.57919,"Erinsplace Resort"],
+    ["oabeb28dc7cbf4926","hotel",121.25439,14.57532,"Amanterra Private Resort"],
+    ["oee76f3d7ec2e48f7","hotel",121.27534,14.55473,"Punta de Fabian Resort, Inc."],
+    ["oec5a3a4fe4f84457","lodging",121.27968,14.57919,"Jardin de Elena"]
   ]
 }

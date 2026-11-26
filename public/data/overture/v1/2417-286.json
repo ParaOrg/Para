@@ -49,6 +49,25 @@
     ["o61fa90becf9a4c97","school",120.8977,14.30503,"Andres A. Nocon National High School"],
     ["o863b456e4db14f25","school",120.88146,14.34724,"JCBES E/S Pasong Kawayan I Gen.trias Cavite"],
     ["obadf0953e8e74611","school",120.8601,14.31864,"Tanza National Trade School"],
-    ["o9bd2483cff5c49af","college",120.8714,14.32287,"Cavite State University Trece Martires City Campus"]
+    ["o9bd2483cff5c49af","college",120.8714,14.32287,"Cavite State University Trece Martires City Campus"],
+    ["of318d71be6c24451","convenience",120.8825,14.33796,"Prime Choice Properties PH"],
+    ["o2846c9f3d09e4844","supermarket",120.87988,14.31618,"K-Seo Korean Store"],
+    ["o5c94d51c57d34ddf","supermarket",120.88268,14.3378,"MengLi Korean Store"],
+    ["o627651501d084d64","supermarket",120.85966,14.34838,"Zian Khairy Sari-Sari Store"],
+    ["o1714296ff6a04586","pharmacy",120.88007,14.31673,"Farmacia Zapanta GLCM/KAIA Branch"],
+    ["o4879d0b466844219","pharmacy",120.89827,14.3142,"Farmacia de Lucido"],
+    ["o831fc8023ce24832","pharmacy",120.87336,14.31324,"Farmacia Zapanta"],
+    ["ocae9d17f410f4b8b","laundry",120.87984,14.31618,"LabaTita"],
+    ["o011fd28d01674893","hotel",120.8933,14.32313,"AC Garden Resort"],
+    ["o46c2e09353164b37","hotel",120.86044,14.32417,"Legata Familia Resort"],
+    ["o877f7e8375b14401","hotel",120.87243,14.32319,"Puerto Azul paniman beach resort"],
+    ["od8ee7c75bb4e4782","hotel",120.89799,14.31006,"La Traviesa Hotel Resort"],
+    ["oedbeba98d4a540bb","hotel",120.86438,14.3463,"Nahara Resort"],
+    ["of09d4f1d03f243f5","hotel",120.88319,14.33155,"Regina’s Garden Resort"],
+    ["o1c673bbf24c84196","lodging",120.85241,14.33353,"Tropang Bagtas"],
+    ["o8e5c4255c8754c4e","lodging",120.89281,14.31368,"Goldengate 1 Industrial Estate"],
+    ["of05a4cfdba1b4d65","lodging",120.86159,14.32056,"Belvedere Clubhouse"],
+    ["of5d302142a514dbb","lodging",120.89362,14.31455,"Goldengate 1 Industrial Estate"],
+    ["of9a870e99dbc4376","lodging",120.85814,14.30423,"Metroland Terraces"]
   ]
 }

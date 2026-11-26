@@ -710,7 +710,7 @@ export const LongNamesPicked: Story = {
 
 /**
  * Figma's BottomSheetConfiguration (3815:5637), on a phone: the stories above sit raised (0.55, from
- * the meta), these below open at Low; a tap on the HandleNotch steps a third of the map, up to full height and back. Taps it until the
+ * the meta), these below open at Low; a press of the handle, which draws no notch, steps a third of the map, up to full height and back. Taps it until the
  * sheet is at `until`, or once with no `until`.
  */
 const tapHandle = async (canvasElement: HTMLElement, until?: 'full') => {
@@ -735,11 +735,13 @@ export const SheetFull: Story = {
   },
 };
 
-/** Low, where it opens: the header and the origin along the bottom, the map above it (3814:3976). */
+/** Low, where it opens: 80 of it, Start and the origin, the map above it (4885:42997). */
 export const SheetLow: Story = {
   args: { height: undefined },
   play: async (ctx) => {
-    await expect(within(ctx.canvasElement).getByTestId('card')).toHaveAttribute('data-snap', 'low');
+    const sheet = within(ctx.canvasElement).getByTestId('card');
+    await expect(sheet).toHaveAttribute('data-snap', 'low');
+    await expect(sheet).toHaveAttribute('data-low-px', '80');
   },
 };
 
@@ -805,7 +807,7 @@ const board = (top: string, under: string) =>
   );
 
 /**
- * The direction's boards on their own card, "Signboard" over them (4822:43834), 32 tall, 8 apart,
+ * The direction's boards on their own card, "Signboard" over them (4822:43834), 40 tall, 12 apart,
  * right above the tiles, whose first row pads itself 20 (BottomContent, 4821:40538).
  */
 export const Signboards: Story = {
@@ -814,7 +816,7 @@ export const Signboards: Story = {
     const canvas = within(canvasElement);
     const boards = canvas.getAllByTestId('trip-signboard');
     await expect(boards).toHaveLength(2);
-    await waitFor(() => expect(boards[0].getBoundingClientRect().height).toBe(32));
+    await waitFor(() => expect(boards[0].getBoundingClientRect().height).toBe(40));
     // On their own card, "Signboard" over them, right above the tiles.
     const section = canvas.getByRole('region', { name: 'Signboard' });
     const tiles = canvas.getByTestId('trip-tiles');

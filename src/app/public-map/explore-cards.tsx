@@ -2,31 +2,61 @@ import { useId, useRef } from 'react';
 
 import { Button } from '@/design-system/primitives/button';
 import blob from '@/features/routes/cards/route-card-blob-primary.svg';
+import type { Snap } from '@/shared/ui/sheet-gesture';
+import { cn } from '@/shared/utils/cn';
 
 import { LocationIcon, NavigationOffArt, RouteIcon } from './explore-cards-icons';
-import { useDockFoot } from './use-dock-foot';
+import { useExploreSheet, type ExploreRest } from './use-explore-sheet';
 
 interface ExploreCardsProps {
   /** "Turn on location…" tapped: locate, or bring the camera back (CommuterLocationHandle). */
   onLocate: () => void;
+  /** Where they rest, as the height the card a tap opens over them takes (useCardStack). */
+  onRest?: (snap: Snap, rest: ExploreRest) => void;
+  /** Where they stand as they come back: as they were left. */
+  startsAt?: ExploreRest;
 }
 
 /**
  * What the public map shows while no route list, place or trip is open (Figma "Show These if no
  * route lists is shown", 4852:35066): Ways to explore our app, then Help make Para better. Along
- * the bottom on a phone (FirstTime, 4848:33680), the locate-me column standing 16 over them; in the
- * top-left corner where the cards float (`@float:`, Desktop RouteCard 4852:35445), 384 wide as the
- * route list's panel. They have no ✕: they go when a card opens and come back when it closes.
+ * the bottom on a phone (FirstCard, 4885:40725 and 4885:41191) they open whole and a drag takes
+ * them to Low and back, resting at one or the other (useExploreSheet), the locate-me column
+ * standing 16 over them; in the top-left corner where the cards float (`@float:`, Desktop
+ * 4879:36258), 384 wide as the route list's panel, still. They have no ✕ and never hide while no
+ * card is open: they go when one opens and come back when it closes.
  */
-export function ExploreCards({ onLocate }: ExploreCardsProps) {
+export function ExploreCards({ onLocate, onRest, startsAt }: ExploreCardsProps) {
   const own = useRef<HTMLDivElement>(null);
-  useDockFoot(own);
+  const sheet = useExploreSheet(own, onRest, startsAt);
+  const isOpen = sheet.rest === 'open';
   return (
     <div
       ref={own}
       data-testid="explore-cards"
-      className="absolute inset-x-0 bottom-0 z-10 flex flex-col text-text-on-fill @float:top-0 @float:right-auto @float:bottom-auto @float:w-96"
+      data-rest={sheet.rest}
+      onPointerDown={sheet.onPointerDown}
+      onFocus={sheet.onFocus}
+      className={cn(
+        'absolute inset-x-0 bottom-0 z-10 flex touch-none flex-col text-text-on-fill',
+        // Its own layer, as BottomSheet's: a move is the compositor's alone, never a repaint of the
+        // cards' blurred glows, which a finger on a phone feels as lag.
+        'translate-y-(--explore-y) will-change-[translate] motion-reduce:transition-none',
+        !sheet.isDragging && 'transition-[translate] duration-sheet ease-enter',
+        'has-[[data-explore-toggle]:focus-visible]:ring-2 has-[[data-explore-toggle]:focus-visible]:ring-content-inverse has-[[data-explore-toggle]:focus-visible]:ring-inset',
+        '@float:top-0 @float:right-auto @float:bottom-auto @float:w-96 @float:translate-none! @float:touch-auto',
+      )}
     >
+      {/* No notch is drawn (Figma draws none): the keyboard's way to Low and back. */}
+      <button
+        type="button"
+        data-explore-toggle
+        aria-expanded={isOpen}
+        onClick={sheet.toggle}
+        className="sr-only @float:hidden"
+      >
+        {isOpen ? 'Lower these cards' : 'Raise these cards'}
+      </button>
       <WaysToExplore onLocate={onLocate} />
       <DonationCard />
     </div>
@@ -71,11 +101,11 @@ function DonationCard() {
     >
       <Blob />
       <NavigationOffArt />
-      <div className="flex flex-col gap-0.5">
-        <h2 id={headingId} className="text-base-lower/6 font-bold">
+      <div className="flex flex-col gap-1">
+        <h2 id={headingId} className="text-lg/6.5 font-bold">
           Help make Para better
         </h2>
-        <p className="text-xs/4">Your donation helps us keep improving Para for every commuter.</p>
+        <p className="text-sm/5">Your donation helps us keep improving Para for every commuter.</p>
       </div>
       {/* TODO: link to the donation page once it has an address; no destination exists yet. */}
       <Button variant="secondary" size="small" label="Donate" disabled />

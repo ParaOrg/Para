@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 11192401,
+  "kind": "bus",
+  "ref": "C",
+  "name": "BGC Bus C: Central Route",
+  "from": "Market! Market!",
+  "to": "University Parkway",
+  "network": "BGC Bus",
+  "operator": "BGC Bus",
+  "version": 27,
+  "last_edit": "2026-05-01",
+  "clipped": false,
+  "provenance": {"note":"Intricate relation - do not auto-sort"},
+  "gaps": [],
+  "stops": [["stop_entry_only",121.05643,14.54885,"C-5/Market! Market!"],["stop",121.05123,14.55172,"NutriAsia"],["stop",121.04848,14.55352,"HSBC"]],
+  "line": [[121.05677,14.54948],[121.05643,14.54885],[121.05646,14.54868],[121.05623,14.54748],[121.05599,14.54712],[121.05558,14.54684],[121.05503,14.54725],[121.05441,14.54747],[121.05287,14.54732],[121.05232,14.54738],[121.05352,14.55098],[121.04993,14.55213],[121.04871,14.54851],[121.04522,14.54952],[121.04514,14.54955],[121.04671,14.55414],[121.04669,14.55428],[121.04659,14.55439],[121.04637,14.55436],[121.04609,14.55403],[121.04403,14.55472],[121.04374,14.55388],[121.04559,14.55329],[121.04514,14.55223],[121.04498,14.55157],[121.04755,14.55075],[121.04867,14.55416],[121.05043,14.5536],[121.0492,14.54999],[121.0528,14.54884],[121.05402,14.55245],[121.0573,14.55145]]
+}

@@ -14,9 +14,9 @@ interface TripSignboardsProps {
 
 /**
  * The direction's signboards on their own card (Signboard, 4822:43834): "Signboard", Bold 16/24,
- * over where the boards say the jeep is going, Regular 12/16; then the boards, each 32 tall at its
- * own width, 8 apart, wrapping on a narrow phone. White, rounded 24, 16 in, sunk under Figma's
- * Signboard shadow. Pictures, so nothing in a file can run. None uploaded, no card.
+ * over where the boards say the jeep is going, Regular 12/16; then the boards, each 40 tall at its
+ * own width, 12 apart, wrapping on a narrow phone. White into neutral-150, rounded 24, 16 in, sunk
+ * under Figma's Signboard shadow. Pictures, so nothing in a file can run. None uploaded, no card.
  */
 export function TripSignboards({ signboards, routeDirection, via }: TripSignboardsProps) {
   const heading = useId();
@@ -25,7 +25,7 @@ export function TripSignboards({ signboards, routeDirection, via }: TripSignboar
     <section
       data-testid="trip-signboards"
       aria-labelledby={heading}
-      className="flex w-full flex-col gap-3 overflow-clip rounded-3xl bg-bg-fill p-4 font-sn-pro shadow-signboard"
+      className="flex w-full flex-col gap-3 overflow-clip rounded-3xl bg-(image:--gradient-signboard) p-4 font-sn-pro shadow-signboard"
     >
       <div className="flex w-full flex-col">
         <h3 id={heading} className="text-base-lower/6 font-bold text-text-primary">
@@ -38,7 +38,7 @@ export function TripSignboards({ signboards, routeDirection, via }: TripSignboar
           </p>
         )}
       </div>
-      <ul className="flex w-full flex-wrap gap-2">
+      <ul className="flex w-full flex-wrap gap-3">
         {signboards.map((src, i) => (
           <li key={src}>
             <img
@@ -47,7 +47,7 @@ export function TripSignboards({ signboards, routeDirection, via }: TripSignboar
               alt={
                 signboards.length > 1 ? `Signboard ${i + 1} of ${signboards.length}` : 'Signboard'
               }
-              className="block h-8 w-auto max-w-full"
+              className="block h-10 w-auto max-w-full"
               decoding="async"
             />
           </li>

@@ -50,6 +50,24 @@
     ["ode8470f8a1c44c1c","school",120.77374,14.95069,"Sto Rosario Elementary School"],
     ["oe385ec7302ac47de","school",120.78437,14.97484,"Cansinala National High School"],
     ["ocdc336c70be74a75","college",120.76083,14.95945,"La Verdad Christian University"],
-    ["of641efd267fa4665","college",120.75841,14.95905,"La Verdad Christian College"]
+    ["of641efd267fa4665","college",120.75841,14.95905,"La Verdad Christian College"],
+    ["o2738bd01f09d47f1","supermarket",120.76075,14.95914,"SM Savemore"],
+    ["o729114d833474708","supermarket",120.77902,14.9955,"Plaza San Simon Pampanga"],
+    ["ob7832fc357014d94","supermarket",120.77888,14.99514,"Plaza Public Market"],
+    ["ob7b71382a4b14ee9","supermarket",120.75871,14.95281,"Red Camia Supermarket Apalit"],
+    ["oc1361c7296fd4ef4","supermarket",120.75754,14.95338,"Palengkeni Apalit"],
+    ["ocd0cf8de1326453d","supermarket",120.77879,14.99521,"San Simon Public Market"],
+    ["o0965fc613b7a4c8b","laundry",120.76334,14.98676,"DM Bubble Laundry Shop"],
+    ["o5fabed12b30e4761","laundry",120.75403,14.97854,"Lawander Ko Laundry Shop"],
+    ["odbaf7b399c294ce0","laundry",120.76427,14.98734,"DM Bubble Laundry Shop"],
+    ["o0080946c4e1e4e40","hotel",120.76882,14.95542,"Noah's Ark Function Halls and Resort"],
+    ["o5b87db3186b94eb0","hotel",120.76028,14.98897,"Del Mar Resort"],
+    ["oecf78f31da9d44c0","hotel",120.75779,14.96446,"ADC Resort and Hotel Apalit Pampanga"],
+    ["o004ec4cf58fb4e97","lodging",120.75085,14.99242,"San Simon Pam"],
+    ["o09335b9078df4bd1","lodging",120.77312,14.95651,"Coopville"],
+    ["ob65674945f964c24","lodging",120.76205,14.97034,"Casa del Rosa"],
+    ["occfa3c22499d4a82","lodging",120.75954,14.99307,"Villa Teresa Resort, Private Pools, Function Hall & Accommodations"],
+    ["oe44ad0cfe83e41f9","lodging",120.75349,14.96095,"Casa Milagrosa"],
+    ["off782a26899f475d","lodging",120.76363,14.98846,"Casa Jameelah"]
   ]
 }

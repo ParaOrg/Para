@@ -68,7 +68,7 @@ export function EndIcon() {
   return <RouteSpriteIcon id="end" />;
 }
 
-/** Figma's switch-vertical (4831:51875), 24 across: the ⇅ on a trip's ends card, turning it round. */
+/** Figma's switch-vertical (4831:51875): the ⇅ on a trip's ends card at 24, and after Vice Versa's word at 20 (4831:51276). */
 export function SwitchVerticalIcon() {
   return <RouteSpriteIcon id="switch-vertical" />;
 }
@@ -138,7 +138,7 @@ export function ArrowLeftRightIcon() {
   return <RouteSpriteIcon id="arrow-left-right-large" />;
 }
 
-/** Figma's filter-large (4633:22015), 28 across: the Controller's sliders, opening the route list's filter. */
+/** Figma's filter at 28 (the funnel, 4885:42133): the Controller's, opening the route list's filter. */
 export function FilterLargeIcon() {
   return <RouteSpriteIcon id="filter-large" />;
 }

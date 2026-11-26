@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 10662560,
+  "kind": "jeepney",
+  "ref": "T420",
+  "name": "Alabang–Biñan via National Road",
+  "from": "Alabang",
+  "to": "Biñan",
+  "network": "LTFRB National Capital Region",
+  "operator": "Federation of Professional Jeepney Operators and Drivers Groups of Biñan",
+  "version": 50,
+  "last_edit": "2026-09-01",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform",121.04222,14.41786,"Festival Alabang"],["platform",121.04568,14.4139,"Alabang Exit South"],["platform",121.04601,14.41155,"Ayala Malls South Park"],["platform",121.04628,14.4092,"Bayanan"],["platform",121.0465,14.40741,"Nav's Building"],["platform",121.04681,14.40505,"Summitville"],["platform",121.04706,14.40307,"INC Lokal ng Putatan"],["platform",121.04604,14.39878,"Soldiers Hills Intersection"],["platform",121.04514,14.39743,"Puregold Agro"],["platform",121.04484,14.39581,"Muntinlupa BLISS"],["platform",121.04471,14.3942,"Landbank Putatan"],["platform",121.04447,14.39126,"Country Homes"],["platform",121.04512,14.38882,"Muntinlupa Poblacion"],["platform",121.04495,14.38651,"Susana Heights Exit"],["platform",121.04468,14.38566,"Muntinlupa City Hall of Justice"],["platform",121.04437,14.38447,"Planas Compound"],["platform",121.04466,14.38136,"Santo Niño Village"],["platform",121.04626,14.37775,"SM Center Muntinlupa"],["platform",121.04719,14.37602,"Tunasan Intersection"],["platform",121.04844,14.37331,"Lyceum of Alabang 1"],["platform",121.04931,14.37147,"Villa Carolina I"],["platform",121.05103,14.36773,"San Pedro Town Center"],["platform",121.05164,14.36645,"United San Pedro Subdivision"],["platform",121.05724,14.3614,"Nueva"],["platform",121.05878,14.35981,"San Francisco de Sales School"],["platform",121.06017,14.35725,"Elvinda"],["platform",121.0616,14.35461,"SPCBA"],["platform",121.06278,14.35209,"Robinsons Galleria South"],["platform",121.06368,14.35066,"Landayan"],["platform",121.06469,14.34876,"San Pedro Doctors"],["platform",121.06514,14.34793,"Pacita Complex"],["platform",121.07387,14.33871,"Halang"]],
+  "line": [[121.04245,14.41802],[121.04226,14.41799],[121.04228,14.41783],[121.04245,14.41783],[121.04289,14.41832],[121.04312,14.41788],[121.04327,14.41795],[121.04266,14.41901],[121.04198,14.41976],[121.04195,14.41998],[121.04226,14.42048],[121.04325,14.41969],[121.04444,14.4186],[121.04502,14.41795],[121.04537,14.4173],[121.04542,14.41543],[121.04564,14.41469],[121.04594,14.41282],[121.04624,14.40981],[121.04719,14.40259],[121.04711,14.4014],[121.04662,14.39974],[121.0463,14.39907],[121.0453,14.39758],[121.04506,14.39705],[121.04452,14.39039],[121.0446,14.39009],[121.04538,14.38844],[121.0455,14.38765],[121.04474,14.38562],[121.0445,14.38471],[121.04425,14.38345],[121.0443,14.38257],[121.04449,14.38196],[121.0463,14.37806],[121.04623,14.37796],[121.04631,14.37773],[121.04649,14.37767],[121.05165,14.36652],[121.05215,14.36577],[121.05272,14.36514],[121.05765,14.36119],[121.05851,14.3603],[121.05913,14.35941],[121.06247,14.35312],[121.06239,14.35281],[121.0627,14.35224],[121.06282,14.35213],[121.06303,14.35209],[121.06497,14.34844],[121.06683,14.34554],[121.06733,14.34492],[121.07327,14.3387],[121.08193,14.33893],[121.08205,14.33792],[121.08252,14.33799]]
+}

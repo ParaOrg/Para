@@ -12,12 +12,14 @@ interface KeepingProps {
   /** The filter it starts on. */
   filter: ModeFilter;
   onFilter: (filter: ModeFilter) => void;
-  /** Which sliders: the map's (Figma's filter) or the studio's Controller's (filter-large). */
+  /** Which funnel and size: the map's Large (28) or the Controller's Base with the 28 drawing. */
   isLarge: boolean;
+  /** The IconButton's size. */
+  size?: 'base' | 'large';
 }
 
 /** Keeps the filter as the apps do, so a story can be tapped through. */
-function Keeping({ filter: startsOn, onFilter, isLarge }: KeepingProps) {
+function Keeping({ filter: startsOn, onFilter, isLarge, size }: KeepingProps) {
   const [filter, setFilter] = useState(startsOn);
   return (
     <ModeFilterButton
@@ -31,11 +33,12 @@ function Keeping({ filter: startsOn, onFilter, isLarge }: KeepingProps) {
       icon={isLarge ? <FilterLargeIcon /> : <FilterIcon />}
       tooltip="left"
       testId="chooser-filter"
+      size={size}
     />
   );
 }
 
-/** The sliders on the map's grey, where they float over the route list (4831:51281). */
+/** The funnel on the map's grey, where it floats over the route list (4633:21371). */
 const meta = {
   title: 'Features/Routes/ModeFilterButton',
   component: Keeping,
@@ -52,30 +55,41 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** Every route shown: "Filter". A tap opens the card; a choice applies, closes it and dots the sliders. */
+/** Every route shown: "Filter", no badge. A tap opens the card; a choice applies, closes it and counts 1. */
 export const Default: Story = {
   play: async ({ args, canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.click(canvas.getByRole('button', { name: 'Filter' }));
     const card = within(canvasElement.ownerDocument.body).getByTestId('mode-filter');
-    await userEvent.click(within(card).getByText('Jeep'));
+    await userEvent.click(within(card).getByText('Jeepney'));
     await expect(args.onFilter).toHaveBeenCalledWith('jeep');
     await waitFor(() => expect(card).not.toBeVisible());
-    await expect(canvas.getByRole('button', { name: 'Filter: Jeep' })).toBeInTheDocument();
+    await expect(canvas.getByRole('button', { name: 'Filter: Jeepney' })).toBeInTheDocument();
+    await expect(canvas.getByText('1')).toBeVisible();
   },
 };
 
-/** A filter on: the dot on the sliders, and their name says which, so the dot is not the only sign. */
+/** A filter on: the count of modes picked, and the name says which, so the badge is not the only sign. */
 export const Filtered: Story = {
   args: { filter: 'bus' },
   play: async ({ canvasElement }) => {
-    await expect(
-      within(canvasElement).getByRole('button', { name: 'Filter: Bus' }),
-    ).toBeInTheDocument();
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole('button', { name: 'Filter: Bus' })).toBeInTheDocument();
+    await expect(canvas.getByText('1')).toBeVisible();
   },
 };
 
-/** The studio's Controller's sliders: the same button, its larger drawing. */
+/** All: no badge at all. */
+export const NoneFiltered: Story = {
+  play: async ({ canvasElement }) => {
+    await expect(within(canvasElement).queryByText('0')).toBeNull();
+  },
+};
+
+/** Large (48) with the 28 funnel, as the Figma draws the commuter map's corner (4885:42133); the page places it. */
+export const LargeFiltered: Story = { args: { filter: 'jeep', size: 'large', isLarge: true } };
+
+/** The studio's Controller's funnel: the same button, its 28 drawing. */
 export const OnTheController: Story = { args: { isLarge: true } };
 
 /** On a phone's map, 393 wide, at the bottom left over the sheet, as the public map stands them. */

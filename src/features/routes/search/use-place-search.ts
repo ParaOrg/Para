@@ -4,13 +4,14 @@ import type { LngLat } from '@/shared/utils/geo';
 
 import { resultId } from './place-search-results';
 import { announce } from './search-announcement';
-import type { SearchRow } from './search-rows';
+import { boxToOpen, type SearchRow } from './search-rows';
+import type { SpotSource } from './spot-source';
 import { useLandmarks, type LoadLandmarks } from './use-landmarks';
 import { useSearchRows } from './use-search-rows';
 import type { Hotspot } from '../model/hotspots';
 import type { HintuanNearHere } from '../model/landmark-goal';
 import { routesNearHere } from '../model/landmark-search';
-import type { PlaceMatch, SearchPlace } from '../model/place-search';
+import type { SearchPlace } from '../model/place-search';
 import type { Direction } from '../model/routes';
 import type { Landmark } from '../published/landmark-file-schema';
 
@@ -25,15 +26,11 @@ export interface PlaceSearchInputs {
   onGoHere?: (landmark: Landmark, near: readonly HintuanNearHere[], hintuan: Hotspot) => void;
   noteOf?: (place: SearchPlace) => string | null;
   loadLandmarks?: LoadLandmarks;
+  /** More results after the landmarks, camera-only (the studio's stores). */
+  spots?: SpotSource;
 }
 
 const NO_NOTE = () => null;
-
-/** The box a place opens by, as a tap on its name would: its terminal, else its first box. */
-function boxToOpen(match: PlaceMatch): Hotspot {
-  const { hotspots } = match.place;
-  return hotspots.find((h) => h.kind === 'terminal') ?? hotspots[0];
-}
 
 /**
  * Place search's state and keys (PlaceSearch draws them): what is typed, the row the arrows are
@@ -50,6 +47,7 @@ export function usePlaceSearch({
   onGoHere,
   noteOf = NO_NOTE,
   loadLandmarks,
+  spots,
 }: PlaceSearchInputs) {
   const listId = useId();
   const [query, setQuery] = useState('');
@@ -59,13 +57,13 @@ export function usePlaceSearch({
   // The landmark whose routes near here are open, after it was chosen.
   const [landmark, setLandmark] = useState<Landmark | null>(null);
   const landmarks = useLandmarks(loadLandmarks);
-  const rows = useSearchRows(query, hotspots, landmarks.state, from, directionsAt, noteOf);
+  const rows = useSearchRows(query, hotspots, landmarks.state, from, directionsAt, noteOf, spots);
   const isOpen = query.trim() !== '';
   const hasActive = activeIndex >= 0 && activeIndex < rows.length;
   const hasList = rows.length > 0;
-  const isEmpty = isOpen && !hasList && landmarks.state.status !== 'loading';
+  const isEmpty =
+    isOpen && !hasList && ![landmarks.state.status, spots?.status].includes('loading');
   const emptyMessage = isEmpty ? `No place called ‘${query.trim()}’ yet` : '';
-  const hasFailed = landmarks.state.status === 'failed';
   // The hintuans near the landmark chosen, for its panel (decision 8).
   const near = landmark
     ? routesNearHere(landmark.reach, hotspots, (id) =>
@@ -75,7 +73,7 @@ export function usePlaceSearch({
   const announcement = announce({
     isOpen,
     emptyMessage,
-    hasFailed,
+    hasFailed: landmarks.state.status === 'failed',
     landmark,
     nearCount: near.length,
   });
@@ -88,14 +86,15 @@ export function usePlaceSearch({
       setLandmark(null);
       onSearchRestart?.();
       landmarks.ask();
+      spots?.ask();
     }
   };
 
   const handlePick = (row: SearchRow) => {
     handleQueryChange('');
-    if (row.type === 'place') {
-      onPick(boxToOpen(row.match));
-    } else {
+    if (row.type === 'place') onPick(boxToOpen(row.match));
+    else if (row.type === 'spot') spots?.onPick(row.match.spot);
+    else {
       onLookAt(row.match.landmark.point);
       if (onPickLandmark) onPickLandmark(row.match.landmark);
       else setLandmark(row.match.landmark);

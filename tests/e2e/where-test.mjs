@@ -231,8 +231,8 @@ const foot = await page.evaluate(() => {
   return { overCards: cards.top - b.bottom, right: m.right - b.right };
 });
 check(
-  '  bottom right, 16 over the explore cards and 12 in',
-  Math.abs(foot.overCards - 16) <= 1 && Math.abs(foot.right - 12) <= 1,
+  '  bottom right, alone, 16 over the explore cards and 16 in (4885:44805)',
+  Math.abs(foot.overCards - 16) <= 1 && Math.abs(foot.right - 16) <= 1,
   JSON.stringify(foot),
 );
 
@@ -780,21 +780,21 @@ check(
     }
   }
   // The trip has no ‹ or ✕ (the owner, 2026-11-21): its first control below the handle, ⇅ on the
-  // ends card where it has one, is what the toast must stay clear of.
+  // ends card where it has one, is what the toast must stay clear of. At full height the trip fills
+  // the screen, no strip of map above it, so the toast sits 12 under the ⇅ (the owner, 2026-11-25).
   const way = card.locator('button:not([data-testid="dock-handle"])').first();
   const placed = (await trip.count())
     ? {
         snap: await card.getAttribute('data-snap'),
         wayTop: await way.evaluate((e) => e.getBoundingClientRect().top),
+        wayBottom: await way.evaluate((e) => e.getBoundingClientRect().bottom),
         toastTop: await toast2.evaluate((e) => e.getBoundingClientRect().top),
         toastBottom: await toast2.evaluate((e) => e.getBoundingClientRect().bottom),
       }
     : null;
   check(
-    "  over a trip's card at full height it stays 12 from the top, clear of the trip's first control",
-    placed?.snap === 'full' &&
-      Math.abs(placed.toastTop - 12) <= 1 &&
-      placed.toastBottom < placed.wayTop,
+    "  over a trip's card at full height it sits 12 under the trip's first control, clear of it",
+    placed?.snap === 'full' && Math.abs(placed.toastTop - placed.wayBottom - 12) <= 1,
     placed ? JSON.stringify(placed) : 'no trip opened from a route line',
   );
 }
@@ -956,8 +956,8 @@ const corner = await page4.evaluate(() => {
   return { below: m.bottom - b.bottom, right: m.right - b.right };
 });
 check(
-  'with a mouse: bottom right, clear of the credit line',
-  Math.abs(corner.below - 40) <= 1 && Math.abs(corner.right - 12) <= 1,
+  'with a mouse: bottom right, 16 up and 16 in (4886:47571)',
+  Math.abs(corner.below - 16) <= 1 && Math.abs(corner.right - 16) <= 1,
   JSON.stringify(corner),
 );
 await where4.click();
@@ -1017,6 +1017,49 @@ check(
   `${await where4.getAttribute('data-mode')}, pitch ${flat.toFixed(1)}`,
 );
 await ctx4.close();
+
+// ---------------------------------------------------------- the view: 2D, then 3D, kept
+// A first visit is 2D; the button offers the other view, tilts the camera to VIEW_PITCH['3d'] and
+// the device keeps the choice across a reload (view-mode.ts; the owner, 4885:44801).
+const ctx6 = await b.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true });
+const page6 = await ctx6.newPage();
+await stubTiles(page6);
+await open(page6);
+const view = page6.locator('[data-testid="map-view-pill"] button[aria-label^="Switch to"]');
+const pitchOf = () => page6.evaluate(() => window.__map.getPitch());
+const stored = () => page6.evaluate(() => localStorage.getItem('para.view-mode.v1'));
+const want3d = await page6.evaluate(
+  async () => (await import('/src/features/routes/map/view-mode.ts')).VIEW_PITCH['3d'],
+);
+check(
+  'a first visit opens flat, the button offering 3D',
+  (await pitchOf()) < 0.5 && (await view.getAttribute('aria-label')) === 'Switch to 3D view',
+  `pitch ${(await pitchOf()).toFixed(1)}; ${await view.getAttribute('aria-label')}`,
+);
+await view.click();
+const tilted = await until(async () => Math.abs((await pitchOf()) - want3d) < 0.5, 5000);
+check(
+  `  a tap tilts it to 3D (${want3d}°), kept on the device, the button offering 2D`,
+  tilted &&
+    (await stored()) === '3d' &&
+    (await view.getAttribute('aria-label')) === 'Switch to 2D view',
+  `pitch ${(await pitchOf()).toFixed(1)}; stored ${await stored()}; ${await view.getAttribute('aria-label')}`,
+);
+await open(page6); // The page again, on the same device.
+check(
+  '  after a reload it opens in 3D still',
+  Math.abs((await pitchOf()) - want3d) < 0.5 &&
+    (await view.getAttribute('aria-label')) === 'Switch to 2D view',
+  `pitch ${(await pitchOf()).toFixed(1)}; ${await view.getAttribute('aria-label')}`,
+);
+await view.click();
+const flattened = await until(async () => (await pitchOf()) < 0.5, 5000);
+check(
+  '  and a tap brings it back to 2D, kept',
+  flattened && (await stored()) === '2d',
+  `pitch ${(await pitchOf()).toFixed(1)}; stored ${await stored()}`,
+);
+await ctx6.close();
 
 await b.close();
 tally();

@@ -16,6 +16,14 @@
     ["o3400c0b246234387","clinic",121.39919,14.10882,"Triple J Maternity Clinic"],
     ["o940caf5fdd384f36","dentist",121.39305,14.10995,"Vista Dental Clinic"],
     ["obcf8d8169d514821","dentist",121.39933,14.10945,"Evaristo Dental Clinic"],
-    ["od0569df034e044f3","dentist",121.38764,14.11077,"Dentista Isleta Klinika"]
+    ["od0569df034e044f3","dentist",121.38764,14.11077,"Dentista Isleta Klinika"],
+    ["o03a5a247e6cb4c0a","pharmacy",121.38835,14.14888,"Mercury Drug"],
+    ["o7316328ada854593","hotel",121.39042,14.1071,"Tala Resort Hotel and Restaurant"],
+    ["o7843bab4635442db","hotel",121.38329,14.10979,"Featherstone Hidden Resort"],
+    ["oa9c5d5edd64542e2","hotel",121.38269,14.10952,"Zen Resort, Rizal Laguna"],
+    ["obb7f47990d844666","hotel",121.38313,14.1325,"El Crisana Javier Resort"],
+    ["of4c08f65358045a7","hotel",121.39507,14.1105,"Annette's The Resort & Events Place"],
+    ["o51978c2aec274415","lodging",121.37593,14.10624,"Don Juakeen Resort & Villa"],
+    ["odd99546258804efc","lodging",121.36848,14.12274,"Hacienda Lazaro"]
   ]
 }

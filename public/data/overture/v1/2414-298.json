@@ -16,6 +16,17 @@
     ["oedb7ced340cd4a61","dentist",120.7155,14.90675,"JR Viray Dental & Oral Maxillofacial Surgery"],
     ["o78c61f9d467f415d","school",120.7134,14.90996,"Macabebe High School"],
     ["ob70b98c99a0c4c20","school",120.73436,14.93841,"Fausto Gonzales Sioco Memorial School"],
-    ["oe4b104b25dc348d7","school",120.74287,14.91678,"DepEd San Miguel-Meysulao High School"]
+    ["oe4b104b25dc348d7","school",120.74287,14.91678,"DepEd San Miguel-Meysulao High School"],
+    ["o1a88dd9dd0a949fc","hotel",120.71715,14.90919,"Casa Palmera Resort and Events Place"],
+    ["o268c3086059f4618","hotel",120.71056,14.91094,"Ola Jabon Resort"],
+    ["o39cef20c5c734214","hotel",120.73881,14.93833,"Casa Soledad Resort"],
+    ["o6898d012af16460a","hotel",120.73384,14.93698,"Moriah Resort Leisure and Events Place"],
+    ["oc904bc0a70594325","hotel",120.70489,14.91118,"Da Siblings by Obang Private Resort and Events Place"],
+    ["od6f88ca63eff4416","hotel",120.74245,14.93165,"LIOS Resort and Events Place"],
+    ["o32cebc523c634030","lodging",120.74261,14.93263,"Mula de Familya"],
+    ["o3a6cb8715a7842d5","lodging",120.71124,14.90127,"Villa Pricila Macabebe"],
+    ["obbd28f1d000b4648","lodging",120.70504,14.913,"San Juan Macabebe Pamp"],
+    ["odc6949c8ebfa4d4d","lodging",120.7131,14.91707,"San Roque Macabebe Pampnga"],
+    ["ofb32065245aa4e48","lodging",120.71006,14.9138,"San Roque Macabebe Pampnga"]
   ]
 }

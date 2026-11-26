@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 10845737,
+  "kind": "jeepney",
+  "ref": "302",
+  "name": "Quezon Avenue–LRT 5th Avenue",
+  "from": "Quezon Avenue",
+  "to": "LRT 5th Avenue",
+  "network": "LTFRB National Capital Region",
+  "operator": "A. Roces Transport Service Cooperative, Inc.",
+  "version": 29,
+  "last_edit": "2026-08-06",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["stop",120.99033,14.64419,""]],
+  "line": [[121.01268,14.62907],[121.01253,14.62933],[121.01152,14.6303],[121.01001,14.6315],[121.00947,14.63218],[121.00929,14.63258],[121.00916,14.63315],[121.00889,14.63597],[121.0087,14.63712],[121.00831,14.63789],[121.00718,14.63886],[121.00683,14.63932],[121.00659,14.63992],[121.00606,14.64227],[121.00585,14.64407],[121.00557,14.64453],[121.00525,14.64477],[121.00482,14.64494],[121.00403,14.64497],[120.99906,14.64409],[120.99564,14.64405],[120.99521,14.64396],[120.99329,14.64388],[120.99155,14.64388],[120.99009,14.64425],[120.98935,14.64432],[120.98351,14.64454],[120.98351,14.64436],[120.98662,14.64432]]
+}

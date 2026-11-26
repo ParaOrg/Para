@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 11063186,
+  "kind": "bus",
+  "ref": "34",
+  "name": "Route 34: Montalban–PITX via Quezon Avenue",
+  "from": "PITX",
+  "to": "Montalban",
+  "network": "LTFRB National Capital Region",
+  "operator": "Mega Manila Consortium Corporation",
+  "version": 112,
+  "last_edit": "2026-09-01",
+  "clipped": false,
+  "provenance": {"source:ref":"LTFRB Memorandum Circular 2022-074"},
+  "gaps": [],
+  "stops": [["platform_entry_only",121.04233,14.63747,"EDSA–NIA South Road"],["platform",121.04618,14.64925,"Lung Center of the Philippines"],["platform",121.05382,14.65391,"Philcoa"],["platform",121.05739,14.65625,"UP Ayala Techno Hub"],["platform",121.06371,14.66045,"Central Avenue"],["platform",121.07191,14.66588,"Luzon Avenue"],["platform",121.07634,14.66901,"Diliman Doctors Hospital"],["platform",121.08426,14.67952,"Ever Gotesco Commonwealth"],["platform",121.09101,14.68653,"Filinvest 1 Road"],["platform",121.09433,14.68954,"QC University"],["platform",121.09651,14.69077,"Batasan Hills Barangay Hall"],["platform",121.09797,14.68897,"Filinvest 2"],["platform",121.10286,14.68546,"Sunnyside Heights"],["platform",121.10505,14.68395,"Northview"],["platform",121.11229,14.67839,"San Mateo Intersection"],["platform",121.11381,14.68018,"SM City San Mateo"],["platform",121.11551,14.68276,"Mayor Jose F. Diaz Avenue"],["platform",121.11621,14.68556,"San Mateo Medical Center"],["platform",121.11659,14.68793,"St. Matthew College"],["platform",121.11722,14.69213,"Pelbel Subdivision"],["platform",121.11764,14.6947,"San Mateo Town Proprr"],["platform",121.11873,14.69527,"Mercury Drug San Mateo"],["platform",121.12092,14.69704,"San Mateo Municipal College"],["platform",121.12377,14.69964,"G. Alberto Street"],["platform",121.12482,14.70099,"Dulong Bayan"],["platform",121.12669,14.70376,"Malanday"],["platform",121.12863,14.70665,"Santa Maria"],["platform",121.13102,14.70753,"Guinayang"],["platform",121.13355,14.7109,"Montalban Boundary"],["platform",121.13636,14.71547,"Montaña"],["platform",121.13914,14.71984,"Burgos Elementary School"],["platform",121.14334,14.72696,"H-Vill Hospital"],["platform",121.14236,14.72935,"XentroMall Montalban"],["platform",121.1401,14.72985,"Puregold Montalban"],["platform_exit_only",121.13838,14.73021,"Montalban Town Center"]],
+  "line": [[121.04238,14.63739],[121.04217,14.63727],[121.04143,14.6384],[121.04343,14.63968],[121.04182,14.64215],[121.04165,14.64254],[121.04164,14.64282],[121.04174,14.64315],[121.04268,14.64424],[121.04155,14.64544],[121.04108,14.64604],[121.04107,14.64622],[121.0468,14.64964],[121.04715,14.64963],[121.04773,14.64941],[121.04849,14.64887],[121.04933,14.64855],[121.05008,14.64852],[121.05049,14.64861],[121.05098,14.64883],[121.05132,14.64911],[121.05168,14.64953],[121.05198,14.65023],[121.05202,14.65121],[121.05177,14.65217],[121.05181,14.65268],[121.05197,14.65296],[121.05404,14.65414],[121.05658,14.65585],[121.05669,14.65581],[121.05752,14.65635],[121.05752,14.65647],[121.05869,14.65726],[121.06886,14.66395],[121.07097,14.66546],[121.07502,14.66818],[121.07659,14.6694],[121.07871,14.67142],[121.07981,14.67261],[121.08107,14.67418],[121.0825,14.67625],[121.08336,14.67791],[121.08624,14.68449],[121.08714,14.68674],[121.08752,14.68678],[121.08951,14.68628],[121.0903,14.68637],[121.09083,14.68652],[121.09159,14.68708],[121.09605,14.69136],[121.0991,14.68771],[121.10076,14.687],[121.10264,14.68568],[121.10377,14.68479],[121.1047,14.68433],[121.10844,14.68062],[121.11037,14.67884],[121.11178,14.67789],[121.11463,14.68135],[121.11598,14.68381],[121.11618,14.68592],[121.11771,14.69539],[121.11864,14.69534],[121.11896,14.69545],[121.12347,14.69932],[121.12452,14.70116],[121.12521,14.7009],[121.12533,14.70095],[121.12609,14.70217],[121.12651,14.70351],[121.12706,14.70458],[121.12766,14.70551],[121.12903,14.70724],[121.12927,14.70734],[121.12979,14.70724],[121.13048,14.70731],[121.13092,14.70751],[121.13149,14.70801],[121.13232,14.70939],[121.13324,14.71033],[121.13436,14.71287],[121.13496,14.71367],[121.13553,14.71413],[121.13582,14.71479],[121.1368,14.71619],[121.13786,14.71799],[121.14021,14.72155],[121.14153,14.72312],[121.1417,14.72389],[121.14225,14.72446],[121.14255,14.72516],[121.14287,14.72625],[121.14355,14.72746],[121.14412,14.72892],[121.13841,14.73015]]
+}

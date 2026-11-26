@@ -92,8 +92,8 @@ export async function signboardsDraft(
 
 /**
  * A hotspot's save, as a draft of the hotspot with all its links. A new
- * hotspot gets its id here; its station line, which the panel does not edit,
- * is carried from the draft kept for it or the approved row.
+ * hotspot gets its id here; its station line is the input's, or, when the
+ * input has none, carried from the draft kept for it or the approved row.
  */
 export async function saveHotspotDraft(
   input: SaveHotspotInput,
@@ -105,13 +105,14 @@ export async function saveHotspotDraft(
     const result = await storeDraft(
       'hotspot',
       { subjectId: hotspotId, isNew: true, baseRevision: null, draft: null },
-      hotspotPayloadOf(input, null),
+      hotspotPayloadOf(input, input.line ?? null),
     );
     return { result, hotspotId };
   }
   const hotspotId = input.hotspotId;
   const { base, line } = await hotspotDraftBase(hotspotId);
-  const result = await storeDraft('hotspot', base, hotspotPayloadOf(input, line));
+  const kept = input.line === undefined ? line : input.line;
+  const result = await storeDraft('hotspot', base, hotspotPayloadOf(input, kept));
   return { result, hotspotId };
 }
 

@@ -7,6 +7,11 @@
     ["of9e8d99b2d5041eb","clinic",121.18886,13.79786,"Taysan Super Health Center"],
     ["o1905b0c4e46f48a6","school",121.18955,13.79828,"San Isidro National High School (Taysan)"],
     ["o4ab2b0d56e6c4d5a","school",121.18962,13.79798,"Taysan Central School"],
-    ["ofd251c9924764942","school",121.18048,13.78682,"Pag-asa Elementary School"]
+    ["ofd251c9924764942","school",121.18048,13.78682,"Pag-asa Elementary School"],
+    ["o1630a436c5814a1f","supermarket",121.18941,13.79427,"Taysan Public Market"],
+    ["o18b830a4b3604afc","hotel",121.17976,13.77862,"Sueño De Orlando Resort"],
+    ["oea6ced13317d4020","hotel",121.17732,13.76932,"Las Hijas Bed and Breakfast Resort"],
+    ["obcbd181b500b414b","lodging",121.17976,13.77862,"RC Victory Farms"],
+    ["oc40ef564d47b4846","lodging",121.15205,13.75702,"Estancia Loyola"]
   ]
 }

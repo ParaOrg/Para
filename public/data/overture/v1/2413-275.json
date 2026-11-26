@@ -3,6 +3,18 @@
   "cell": "2413-275",
   "attribution": "© Overture Maps Foundation",
   "establishments": [
-    ["o049dbd55f78647df","cafe",120.66507,13.77197,"Cafe Diem Calatagan"]
+    ["o049dbd55f78647df","cafe",120.66507,13.77197,"Cafe Diem Calatagan"],
+    ["o5fdf3cb4811940c3","hotel",120.67588,13.78796,"Sunrise Cove Calatagan Beach Resort"],
+    ["obd59ed3e9a4d44be","hotel",120.67498,13.78462,"Ronco Beach Resort"],
+    ["od196d5d67e6f4b2b","hotel",120.66493,13.77335,"Gamboa's Private Resort"],
+    ["odbfdbdab3e364106","hotel",120.66274,13.77057,"RGV Beach Resort Calatagan Batangas"],
+    ["oe017c94e9cfd4b5f","hotel",120.67258,13.79817,"Calumbuyan Point Resort"],
+    ["o08073a3ca49a40ed","lodging",120.65542,13.77343,"Casa Mila Calatagan"],
+    ["o1fce29ad06c640a3","lodging",120.66,13.7699,"The Private House"],
+    ["o201e0876c12547d0","lodging",120.65075,13.78221,"Airbnb Coral shores"],
+    ["obe3494285d2d4907","lodging",120.6539,13.77793,"Mango Grove"],
+    ["oc476000c5ea44c75","lodging",120.66475,13.7709,"Barrios Kubo and campsite"],
+    ["occ20e928df2048a2","lodging",120.66182,13.77004,"Serenity Beach House"],
+    ["oe2bb6273d95b4ec4","lodging",120.67458,13.78511,"Taltarni"]
   ]
 }

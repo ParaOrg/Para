@@ -29,6 +29,17 @@
     ["o51feddefa5704b2d","school",121.13581,13.8293,"Dr. Juan A. Pastor Intergrated National High School"],
     ["obb709a5f80c04085","school",121.10177,13.8494,"DepEd Dagatan ES"],
     ["oe3b190cdf2294d6b","school",121.13305,13.82791,"Procopio Memorial Elementary School"],
-    ["ofda531e3bd874dff","school",121.11543,13.84064,"Malainin Elementary School Malainin Ibaan Batangas"]
+    ["ofda531e3bd874dff","school",121.11543,13.84064,"Malainin Elementary School Malainin Ibaan Batangas"],
+    ["o30e6de50d71c4281","supermarket",121.13329,13.8201,"Torre Rice Trading"],
+    ["oe7b301722e1f4b4b","supermarket",121.13556,13.82523,"Ibaan Public Market"],
+    ["oc8abfbbd8b17417d","pharmacy",121.11775,13.84234,"TGP The Generics Pharmacy (Malainin, Ibaan)",{"brand":"TGP The Generics Pharmacy"}],
+    ["o13e35023810949b7","hotel",121.13589,13.82537,"Capital O OYO 785 The Greenhive Hotel"],
+    ["o28e1ae342c3142d4","hotel",121.1347,13.81369,"The Palms Peak Resort"],
+    ["o8aec98d954fc4870","hotel",121.13061,13.83432,"The GreenHive Hotel"],
+    ["o9e79c920de8a4e8b","hotel",121.13947,13.84361,"Endayas Resort"],
+    ["oceb28daa8b4b4cc2","hotel",121.14973,13.82613,"Living Spring Resort"],
+    ["o535e6ec4f1bc49fb","lodging",121.11704,13.8075,"Villa Gracia Private Resort by Cocotel"],
+    ["obb94ab39d39a4241","lodging",121.13457,13.82423,"Villanueva Resort"],
+    ["od5afb9f7294e4db4","lodging",121.14661,13.8247,"El Meerador"]
   ]
 }

@@ -36,6 +36,21 @@
     ["od15079bac426414c","school",120.734,14.27646,"Cavite Science Integrated School"],
     ["oe23c3b14da7f4583","school",120.73576,14.27633,"DepEd Maragondon Elementary School"],
     ["oe24e6b1ff0fc4b1c","school",120.73441,14.27702,"Cavite Science Integrated School-RSHS Supreme Student Government"],
-    ["o0156b0a2a1094f1a","college",120.73457,14.27535,"Polytechnic University of the Philippines"]
+    ["o0156b0a2a1094f1a","college",120.73457,14.27535,"Polytechnic University of the Philippines"],
+    ["o9c87a87deb0d4a48","convenience",120.71063,14.28317,"Alfamart Sapang 1 Ternate",{"brand":"Alfamart"}],
+    ["oaa3ee0a4019843e4","supermarket",120.71648,14.28282,"Ternate Public Market"],
+    ["o2d5e6c6e1e0f4140","hotel",120.70659,14.28764,"Dalaroy Beach Resort"],
+    ["o3f7a775f7da94e72","hotel",120.72601,14.27652,"Tabing Ilog Resort - Maragondon Cavite"],
+    ["o6dc428d4f51e4d6c","hotel",120.73333,14.26667,"Ellins Resort"],
+    ["o7d1e2940c6034a71","hotel",120.71326,14.28266,"Carpenter Private Resort"],
+    ["o8b6c1050f9ac42fb","hotel",120.72794,14.27513,"Riverfront Garden Resort"],
+    ["o9a206fb1dbd64708","hotel",120.71678,14.29304,"Ranrich Beach Resort"],
+    ["od58bb9c2b2044c22","hotel",120.70957,14.29057,"Bukana Beach Resort Cavite"],
+    ["of58feaeb6083404c","hotel",120.71665,14.28333,"Bukana Beach Resort Cavite"],
+    ["o0e865e8a57e34fa2","lodging",120.71056,14.28994,"Abucana Camp"],
+    ["o920f0435d08c4b8d","lodging",120.71891,14.28314,"Puerto Azul Beach"],
+    ["oafaf4456ce144ecc","lodging",120.73841,14.27411,"Kalye Barako"],
+    ["oc563caf19c5849a1","lodging",120.72501,14.27653,"Isaiah Ville"],
+    ["of74b93422b2a4951","lodging",120.70827,14.28374,"Lloret De Mar Beach Front"]
   ]
 }

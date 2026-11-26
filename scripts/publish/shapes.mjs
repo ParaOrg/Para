@@ -1,7 +1,7 @@
 import { lineLength } from '../../src/shared/utils/geo.ts';
 import { indexSchema } from '../../src/features/routes/published/index-schema.ts';
 import { MAP_FILE_SCHEMA } from '../../src/features/routes/published/map-file.ts';
-import { EVERY_LINE, FERRY, withoutLines } from './without-lines.mjs';
+import { BUSWAY, EVERY_LINE, FERRY, withoutLines } from './without-lines.mjs';
 
 /** The data's licence, written into the file itself. See README.md, "Data and licence". */
 export const LICENSE = 'ODbL-1.0';
@@ -17,8 +17,10 @@ export const INDEX_V2_SCHEMA = 2;
 export const INDEX_V3_SCHEMA = 3;
 /** The index with every line but no loops: fixed. */
 export const INDEX_V4_SCHEMA = 4;
-/** The index the app reads now, loops in: its own MAP_FILE_SCHEMA. */
-export const INDEX_V5_SCHEMA = MAP_FILE_SCHEMA;
+/** The index with every line but the EDSA Carousel, loops in: fixed. */
+export const INDEX_V5_SCHEMA = 5;
+/** The index the app reads now, the EDSA Carousel in: its own MAP_FILE_SCHEMA. */
+export const INDEX_V6_SCHEMA = MAP_FILE_SCHEMA;
 
 /** Says why a file cannot be published. The publish prints it and stops. */
 export class ShapeError extends Error {}
@@ -49,28 +51,41 @@ export function withoutLoops({ variants, stops, links }) {
   };
 }
 
+/** Whether a published direction or stop is the EDSA Carousel's, which shapes 1 to 5 never hold (BUSWAY). */
+const isBuswayRow = (row) =>
+  BUSWAY.modes.includes(row.route?.mode) || BUSWAY.lines.includes(row.line);
+
 /**
- * Every shape's rows from the whole map. Throws if any of shapes 1 to 4
- * would still hold a loop: an installed app reading one would refuse the
- * whole map (the same row, in a file it has no schema for).
+ * Every shape's rows from the whole map: shape 6 all of it, shape 5 without the EDSA Carousel
+ * (BUSWAY), shape 4 without the loops too. Throws if any of shapes 1 to 4 would still hold a loop,
+ * or any of shapes 1 to 5 the Carousel: an installed app reading one would refuse the whole map
+ * (the same row, in a file it has no schema for).
  */
 export function shapesOf(all) {
-  const v4 = withoutLoops(all);
+  const v5 = withoutLines(all, BUSWAY);
+  const v4 = withoutLoops(v5);
   const v3 = withoutLines(v4, FERRY);
   const old = withoutLines(v4, EVERY_LINE);
-  for (const [name, rows] of [
-    ['shape 4', v4],
-    ['shape 3', v3],
-    ['shapes 1 and 2', old],
+  for (const [name, rows, hasLoops] of [
+    ['shape 5', v5, true],
+    ['shape 4', v4, false],
+    ['shape 3', v3, false],
+    ['shapes 1 and 2', old, false],
   ]) {
-    const leaked = rows.variants.filter(isLoopRow);
+    const leaked = hasLoops ? [] : rows.variants.filter(isLoopRow);
     if (leaked.length) {
       throw new ShapeError(
         `FAIL  ${name} would hold ${leaked.length} loop direction(s) (${leaked[0].id}): an installed app would refuse the whole map. Not publishing.`,
       );
     }
+    const carousel = [...rows.variants, ...rows.stops].filter(isBuswayRow);
+    if (carousel.length) {
+      throw new ShapeError(
+        `FAIL  ${name} would hold ${carousel.length} EDSA Carousel row(s) (${carousel[0].id}): an installed app would refuse the whole map. Not publishing.`,
+      );
+    }
   }
-  return { v5: all, v4, v3, old };
+  return { v6: all, v5, v4, v3, old };
 }
 
 /**
@@ -128,17 +143,18 @@ export function stampFile(schema, publishedAt, rows) {
  * later shape leaves the earlier files as they were.
  */
 export function buildFiles(all, publishedAt, indexContext) {
-  const { v4, v3, old } = shapesOf(all);
+  const { v6, v5, v4, v3, old } = shapesOf(all);
   const body = { variants: old.variants, stops: old.stops, links: old.links };
+  const revisions = indexContext?.sourceRevisions
+    ? { source_revisions: indexContext.sourceRevisions }
+    : {};
   return {
-    left: { v4, v3, old },
+    left: { v5, v4, v3, old },
     map: stampFile(MAP_SCHEMA, publishedAt, body),
     v2: stampFile(INDEX_V2_SCHEMA, publishedAt, indexRowsOf(old, indexContext)),
     v3: stampFile(INDEX_V3_SCHEMA, publishedAt, indexRowsOf(v3, indexContext)),
     v4: stampFile(INDEX_V4_SCHEMA, publishedAt, indexRowsOf(v4, indexContext)),
-    v5: stampFile(INDEX_V5_SCHEMA, publishedAt, {
-      ...indexRowsOf(all, indexContext),
-      ...(indexContext?.sourceRevisions ? { source_revisions: indexContext.sourceRevisions } : {}),
-    }),
+    v5: stampFile(INDEX_V5_SCHEMA, publishedAt, { ...indexRowsOf(v5, indexContext), ...revisions }),
+    v6: stampFile(INDEX_V6_SCHEMA, publishedAt, { ...indexRowsOf(v6, indexContext), ...revisions }),
   };
 }

@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 11192400,
+  "kind": "bus",
+  "ref": "N",
+  "name": "BGC Bus N: North Route",
+  "from": "North Station",
+  "to": "St. Michael",
+  "network": "LTFRB National Capital Region",
+  "operator": "Bonifacio Transport Corporation",
+  "version": 30,
+  "last_edit": "2026-07-23",
+  "clipped": false,
+  "provenance": {"note":"Intricate relation - do not auto-sort"},
+  "gaps": [],
+  "stops": [["stop",121.05293,14.55524,"Avida Towers Verte"],["stop",121.05123,14.55172,"NutriAsia"]],
+  "line": [[121.05691,14.55998],[121.05658,14.56016],[121.05477,14.56073],[121.05362,14.55728],[121.05824,14.55579],[121.05722,14.55434],[121.05709,14.55377],[121.05711,14.55297],[121.05692,14.55253],[121.05671,14.55229],[121.05613,14.55193],[121.05591,14.55199],[121.05521,14.55342],[121.05467,14.5542],[121.05187,14.55508],[121.05179,14.55502],[121.05139,14.55394],[121.05057,14.55402],[121.04871,14.54851],[121.04514,14.54955],[121.0467,14.55421],[121.04663,14.55436],[121.04647,14.5544],[121.04609,14.55403],[121.04403,14.55472],[121.04374,14.55388],[121.04559,14.55329],[121.04514,14.55223],[121.04498,14.55157],[121.04803,14.5506],[121.04872,14.55015],[121.05097,14.54942],[121.05169,14.55157],[121.04993,14.55213],[121.0492,14.54999],[121.05097,14.54942],[121.05477,14.56073],[121.05566,14.56042],[121.05548,14.55988]]
+}

@@ -3,6 +3,7 @@ import type { MapLibreMap } from 'maplibre-gl';
 import { MAP_PAINT } from '@/design-system/foundation/map-colours';
 
 import bank from './establishment-icons/maki/bank.svg?raw';
+import bus from './establishment-icons/maki/bus.svg?raw';
 import cafe from './establishment-icons/maki/cafe.svg?raw';
 import college from './establishment-icons/maki/college.svg?raw';
 import convenience from './establishment-icons/maki/convenience.svg?raw';
@@ -14,6 +15,7 @@ import grocery from './establishment-icons/maki/grocery.svg?raw';
 import hospital from './establishment-icons/maki/hospital.svg?raw';
 import jewelryStore from './establishment-icons/maki/jewelry-store.svg?raw';
 import laundry from './establishment-icons/maki/laundry.svg?raw';
+import lodging from './establishment-icons/maki/lodging.svg?raw';
 import pharmacy from './establishment-icons/maki/pharmacy.svg?raw';
 import police from './establishment-icons/maki/police.svg?raw';
 import restaurant from './establishment-icons/maki/restaurant.svg?raw';
@@ -49,10 +51,12 @@ const GLYPHS: Record<EstablishmentGlyph, string> = {
   school,
   fuel,
   laundry,
+  lodging,
   toilet,
   police,
   'jewelry-store': jewelryStore,
   'money-hand': moneyHand,
+  bus,
 };
 
 /** The marker's size in CSS pixels: the disc with its rim, and the glyph inside it. */

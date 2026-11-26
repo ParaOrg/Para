@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 15021413,
+  "kind": "jeepney",
+  "ref": "295",
+  "name": "Pantranco–Project 2 & 3 via Timog, Kamuning",
+  "from": "Project 2 & 3",
+  "to": "Pantranco",
+  "network": "LTFRB National Capital Region",
+  "operator": "TRIBE Operators, Transport Service & Multi-purpose Cooperative;New Kamuning Transport Cooperative Service",
+  "version": 17,
+  "last_edit": "2026-08-06",
+  "clipped": false,
+  "provenance": {"source:ref":"LTFRB Memorandum Circular 2020-026"},
+  "gaps": [],
+  "stops": [["platform_entry_only",121.06955,14.63045,"Yakal Street"],["platform",121.06914,14.63211,"Batino Alley"],["platform",121.06789,14.63284,"Tanguile Street"],["platform",121.06592,14.63209,"Aguho Street"],["platform",121.06449,14.62963,"Tindalo Street"],["platform",121.06182,14.62982,"Tampoy Street"],["platform",121.06113,14.63104,"Marang Street"],["platform",121.06031,14.63232,"Chico Street"],["platform",121.05947,14.63313,"K-10th Street"],["platform",121.05835,14.63443,"Anonas Street"],["platform",121.05674,14.63395,"Kasing-kasing Street"],["platform",121.05377,14.63312,"Kalayaan Avenue"],["platform",121.05208,14.63261,"Across from K-I Street"],["platform",121.0503,14.6321,"Maliksi Street"],["platform",121.04716,14.6312,"Across from Colonel Salgado Street"],["platform",121.04506,14.63059,"EDSA–Kamuning"],["platform",121.04134,14.62952,"11th Jamboree Street"],["platform",121.03906,14.62886,"Judge Jimenez Street"],["platform",121.03677,14.6282,"T. Gener Street"],["platform",121.03384,14.6279,"Marathon Extension"],["platform",121.03464,14.6314,"Scout De Guia Street"],["platform",121.03518,14.63375,"Scout Limbaga Street"],["platform",121.03362,14.63534,"Scout Tuason Street"],["platform",121.03156,14.6358,"Scout Tobias Street"],["platform",121.02958,14.63623,"Mother Ignacia Avenue"],["platform",121.027,14.63678,"Delta Intersection"],["platform",121.02506,14.63676,"Delta Intersection"],["platform",121.0219,14.63478,"Scout Magbanua"],["platform_exit_only",121.02031,14.63378,"Fisher Mall"]],
+  "line": [[121.06953,14.63049],[121.06986,14.63064],[121.06913,14.63206],[121.06874,14.63253],[121.06826,14.63277],[121.06787,14.63278],[121.06624,14.63224],[121.0657,14.63184],[121.0655,14.6316],[121.06472,14.62957],[121.06323,14.62972],[121.06245,14.62922],[121.06176,14.62976],[121.06053,14.63199],[121.05926,14.63329],[121.05885,14.63451],[121.03396,14.62737],[121.03379,14.62747],[121.03372,14.6276],[121.03524,14.63429],[121.0356,14.63481],[121.03559,14.63494],[121.03547,14.63507],[121.03483,14.63499],[121.02706,14.63667],[121.02644,14.63689],[121.02609,14.63726],[121.02032,14.63372]]
+}

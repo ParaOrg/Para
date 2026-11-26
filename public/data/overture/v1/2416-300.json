@@ -5,6 +5,10 @@
   "establishments": [
     ["of7626185d3254941","dentist",120.83842,15.0471,"N. M. Bautista Dental Clinic"],
     ["o8f5faaef21d24344","school",120.8199,15.02086,"DepEd San Isidro Elementary School - San Luis, Pampanga"],
-    ["o9aee87429d414c1d","school",120.83842,15.0471,"San Juan Elementary School"]
+    ["o9aee87429d414c1d","school",120.83842,15.0471,"San Juan Elementary School"],
+    ["o151ba0f235ac4a7c","hotel",120.82471,15.02582,"Lolo Caldo's Farmville Resort"],
+    ["o5d782fbd1efa4755","hotel",120.84277,15.01084,"eL Trio Private Resort"],
+    ["oa5bda25d6a7047eb","hotel",120.84772,15.02218,"G and A Private Resort & Spa"],
+    ["obddec4a60049435f","lodging",120.82934,15.02744,"San Isidro San Luis Pamp."]
   ]
 }

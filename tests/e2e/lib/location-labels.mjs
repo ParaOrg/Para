@@ -14,17 +14,20 @@ export const labelsNow = (page) =>
     const style = window.__map.getStyle();
     const isOurs = (l) => style.sources[l.source]?.type === 'geojson';
     const isShown = (l) => l.layout?.visibility !== 'none';
-    // The basemap's own places as markers (establishments-1 to -3), and the places its tiles lack,
-    // from Para's own files (establishments-extra and -overture, GeoJSON layers): all go with the labels.
+    // The basemap's own places as markers (establishments-1 to -3), the places its tiles lack,
+    // from Para's own files (establishments-extra and -overture, GeoJSON layers), and
+    // OpenStreetMap's terminals (osm-terminals, GeoJSON too): all go with the labels.
     const isEstablishment = (l) => /^establishments-\d$/.test(l.id);
-    const isExtra = (l) => l.id === 'establishments-extra' || l.id === 'establishments-overture';
+    const isExtra = (l) =>
+      ['establishments-extra', 'establishments-overture', 'osm-terminals'].includes(l.id);
     const isStation = (l) =>
       l['source-layer'] === 'poi' && l.layout?.['icon-image'] !== undefined && !isEstablishment(l);
     const symbols = style.layers.filter((l) => l.type === 'symbol');
     const basemap = symbols.filter((l) => !isOurs(l) && !isStation(l) && !isEstablishment(l));
     return {
       establishments: symbols.filter(isEstablishment).map((l) => l.id),
-      // The cell layers drawn: the pawnshops (E3b) and Overture's places (E3c), 2 with the labels.
+      // The GeoJSON place layers drawn: the pawnshops (E3b), Overture's places (E3c) and the
+      // terminals, 3 with the labels.
       extras: symbols.filter(isExtra).length,
       ids: style.layers.map((l) => l.id).join(','),
       basemap: basemap.map((l) => l.id),
@@ -96,7 +99,7 @@ export async function checkLocationLabels(
       (isOnByDefault
         ? atFirst.basemapShown.length > 0 &&
           atFirst.establishments.length === 3 &&
-          atFirst.extras === 2
+          atFirst.extras === 3
         : atFirst.basemapShown.length === 0 &&
           atFirst.establishments.length === 0 &&
           atFirst.extras === 0) &&
@@ -127,7 +130,7 @@ export async function checkLocationLabels(
     (await labelsSwitch(page).getAttribute('aria-checked')) === 'true' &&
       shown.basemapShown.length > 0 &&
       shown.establishments.length === 3 &&
-      shown.extras === 2 &&
+      shown.extras === 3 &&
       sameIds(shown.ours, atFirst.ours) &&
       (await stored()) === keptOn,
     `${shown.basemapShown.length} of ${shown.basemap.length} shown; ours ${shown.ours.join(', ') || 'none'}`,
@@ -138,7 +141,7 @@ export async function checkLocationLabels(
     `${prefix}: a switch to Coloured keeps them shown, with its own place icons, none of the basemap's establishments, and Para's own`,
     colour.basemapShown.length > 0 &&
       colour.establishments.length === 0 &&
-      colour.extras === 2 &&
+      colour.extras === 3 &&
       sameIds(colour.ours, atFirst.ours),
     `${colour.basemapShown.length} of ${colour.basemap.length} shown`,
   );

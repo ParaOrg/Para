@@ -3,6 +3,11 @@
   "cell": "2425-276",
   "attribution": "© Overture Maps Foundation",
   "establishments": [
-    ["oecccaf0dd25c46f0","restaurant",121.26333,13.83586,"Ka Umbay Goto Pares Espesyal"]
+    ["oecccaf0dd25c46f0","restaurant",121.26333,13.83586,"Ka Umbay Goto Pares Espesyal"],
+    ["o7e348423235243c1","hotel",121.27542,13.81812,"Solano Hotel & Resort - Rosario"],
+    ["odd701a5c9ffb41d0","hotel",121.29529,13.84402,"Sofia Garden Resort"],
+    ["oee5061e034194cca","hotel",121.25007,13.8481,"Matinlu Tubi Resort and Hotel"],
+    ["o5cecab4d25754255","lodging",121.2605,13.80873,"Super Lumbangan"],
+    ["o967044254e4549e0","lodging",121.26076,13.81124,"Villa Maria"]
   ]
 }

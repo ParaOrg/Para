@@ -7,8 +7,9 @@ interface MapCreditsDockProps {
   isDocked: boolean;
   /**
    * Where it stands on a phone: at the bottom left over the sheet (the studio), or in the map's
-   * top-left corner (the public map, the owner's ask, 2026-11-22). Where the card floats on a wide
-   * map (`@float:`), both stand at the map's bottom left.
+   * top-left corner, 28 across, 16 in and 24 down (the public map, 4885:44809). Where the card
+   * floats on a wide map (`@float:`), the studio's stands at the map's bottom left and the public
+   * map's at its top right, 16 in and 24 down (4886:47571).
    */
   corner?: 'bottom-left' | 'top-left';
   onOpen: () => void;
@@ -56,14 +57,15 @@ export function MapCreditsDock({
     >
       <div
         className={
-          'pointer-events-auto absolute left-[calc(0.75rem+env(safe-area-inset-left))] flex @float:top-auto @float:bottom-[max(0.75rem,env(safe-area-inset-bottom))] @float:mb-0 ' +
+          'pointer-events-auto absolute flex ' +
           (isInCorner
-            ? 'top-[calc(var(--map-safe-top,env(safe-area-inset-top))+0.75rem)]'
-            : 'bottom-full ' +
+            ? 'top-[calc(var(--map-safe-top,env(safe-area-inset-top))+1.5rem)] left-[calc(1rem+env(safe-area-inset-left))] ' +
+              '@float:right-[calc(1rem+env(safe-area-inset-right))] @float:left-auto'
+            : 'bottom-full left-[calc(0.75rem+env(safe-area-inset-left))] @float:top-auto @float:bottom-[max(0.75rem,env(safe-area-inset-bottom))] @float:mb-0 ' +
               (isDocked ? 'mb-3' : 'mb-[max(0.75rem,env(safe-area-inset-bottom))]'))
         }
       >
-        <CreditsButton ref={buttonRef} onClick={onOpen} />
+        <CreditsButton ref={buttonRef} onClick={onOpen} size={isInCorner ? 'sm' : 'md'} />
       </div>
     </div>
   );

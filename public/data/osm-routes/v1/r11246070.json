@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 11246070,
+  "kind": "jeepney",
+  "ref": "366",
+  "name": "Boni (Robinsons Complex)–Kalentong/JRC",
+  "from": "Boni",
+  "to": "Kalentong/JRC",
+  "network": "LTFRB National Capital Region",
+  "operator": "Mandaluyong Transport Service Cooperative",
+  "version": 31,
+  "last_edit": "2026-09-12",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",121.0501,14.57109,"Robinsons Cybergate"],["platform",121.04409,14.57388,"M. Vicente"],["platform",121.04077,14.57612,"Barangka Drive"],["platform",121.03498,14.57657,"Boni - Maysilo"],["platform",121.03281,14.57843,"Santo Rosario"],["platform",121.02958,14.58124,"Primo Cruz"],["platform",121.028,14.5838,"F. Ortigas"],["platform",121.02631,14.58568,"Mandaluyong Church"],["platform_exit_only",121.02266,14.58934,"Aglipay"]],
+  "line": [[121.04995,14.57122],[121.05119,14.5708],[121.05162,14.5708],[121.05459,14.5725],[121.05355,14.5741],[121.0519,14.57308],[121.05127,14.57402],[121.05101,14.57425],[121.05053,14.57375],[121.05001,14.57354],[121.05024,14.57246],[121.05019,14.57177],[121.05001,14.57129],[121.04852,14.57185],[121.0464,14.57306],[121.04396,14.57389],[121.03994,14.5766],[121.03932,14.5766],[121.03609,14.57582],[121.03564,14.57589],[121.03513,14.57628],[121.03477,14.5768],[121.03488,14.57704],[121.0349,14.57749],[121.03464,14.57802],[121.03414,14.57835],[121.03379,14.57843],[121.03346,14.5784],[121.03309,14.57815],[121.0297,14.58105],[121.02929,14.58151],[121.02728,14.58488],[121.02683,14.5853],[121.02591,14.58598],[121.02518,14.5871],[121.02428,14.5882],[121.02389,14.58883],[121.02321,14.5897],[121.02272,14.58931]]
+}

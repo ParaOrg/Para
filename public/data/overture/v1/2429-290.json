@@ -4,6 +4,9 @@
   "attribution": "© Overture Maps Foundation",
   "establishments": [
     ["o2ce52d62125b44d7","cafe",121.45936,14.54141,"Aliyah Hotel Restaurant"],
-    ["o460f469514aa4571","cafe",121.48398,14.54943,"LA View"]
+    ["o460f469514aa4571","cafe",121.48398,14.54943,"LA View"],
+    ["o4c1cce15e9d54e0a","hotel",121.46912,14.53514,"Aambon Forest Spring Resort"],
+    ["o06c36a7047d94548","lodging",121.48064,14.5395,"Juan's Place"],
+    ["odded8e7f83cd49f1","lodging",121.48672,14.539,"MAPLE Nature Camp"]
   ]
 }

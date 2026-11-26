@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 15021434,
+  "kind": "jeepney",
+  "ref": "2125",
+  "name": "SSS Village–Stop n' Shop via Aurora Boulevard",
+  "from": "SSS Village",
+  "to": "Stop n' Shop",
+  "network": "LTFRB National Capital Region",
+  "operator": "SSS Marikina Associated Route Transport Cooperative;Greater Marikina Transport Service Cooperative",
+  "version": 36,
+  "last_edit": "2026-08-31",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform",121.09699,14.64782,"Golden Valley"],["platform",121.09411,14.64071,"Homeowners'"],["platform",121.09437,14.63644,"Marikina Bayan"],["platform",121.0864,14.63428,"Tañong"],["platform",121.08322,14.63307,"Riverbanks"],["platform",121.07272,14.63117,"LRT Katipunan Station"],["platform",121.06866,14.62922,"J. P. Rizal Street"],["platform",121.06591,14.62832,"F. Castillo Street"],["platform",121.0639,14.62797,"LRT Anonas Station"],["platform",121.06083,14.62677,"Techological Institute of the Philippines"],["platform",121.05788,14.62536,"Miami Street"],["platform",121.05626,14.62453,"Harvard Street"],["platform",121.05245,14.62274,"LRT Araneta Center-Cubao Station"],["platform",121.04631,14.62022,"Aurora–N. Domingo"],["platform",121.04269,14.6187,"LRT Betty Go-Belmonte Station"],["platform",121.03988,14.617,"Balete Drive"],["platform",121.03806,14.6159,"Robinsons Magnolia"],["platform",121.03645,14.61495,"St. Paul University"],["platform",121.03414,14.61366,"LRT Gilmore Station"],["platform",121.03165,14.61249,"Broadway Avenue"],["platform",121.02666,14.61082,"LRT J. Ruiz Station"],["platform",121.02474,14.61019,"S. Veloso Street"],["platform",121.02242,14.60936,"A. Luna Street"],["platform",121.02076,14.60788,"UE Ramon Magsaysay Campus"],["platform",121.01933,14.60649,"Central Colleges of the Philippines"],["platform",121.0165,14.60079,"Old Santa Mesa"],["platform",121.01566,14.59983,"Ligaya Budget Hotel"],["platform_exit_only",121.01334,14.60079,"Teresa"]],
+  "line": [[121.12194,14.64053],[121.11908,14.6408],[121.1175,14.64059],[121.11527,14.64077],[121.11423,14.64096],[121.11062,14.64214],[121.11136,14.64412],[121.1116,14.64456],[121.11219,14.64534],[121.11286,14.64599],[121.11263,14.64661],[121.11254,14.64758],[121.11185,14.64994],[121.11184,14.65054],[121.11192,14.65088],[121.10922,14.65108],[121.10744,14.6507],[121.10583,14.65064],[121.1044,14.65093],[121.1039,14.65093],[121.10309,14.65071],[121.10284,14.65072],[121.10262,14.65025],[121.10222,14.64981],[121.10139,14.6494],[121.10072,14.64932],[121.09931,14.64946],[121.09806,14.64919],[121.09747,14.6486],[121.09699,14.64767],[121.09645,14.64545],[121.09584,14.64425],[121.0948,14.64268],[121.09411,14.64181],[121.09423,14.64],[121.09411,14.63804],[121.09423,14.637],[121.09447,14.63628],[121.09443,14.63591],[121.09219,14.63613],[121.09047,14.6362],[121.08514,14.63364],[121.08178,14.63259],[121.08006,14.63221],[121.07973,14.63226],[121.07825,14.63203],[121.07704,14.63265],[121.07656,14.63276],[121.07605,14.63274],[121.07163,14.63054],[121.0673,14.62854],[121.06326,14.62781],[121.06253,14.62758],[121.05162,14.6223],[121.04927,14.62127],[121.04883,14.62115],[121.04846,14.62091],[121.04409,14.61942],[121.03697,14.6152],[121.03282,14.61284],[121.02266,14.60945],[121.02201,14.60894],[121.0158,14.60296],[121.01671,14.60026],[121.01681,14.60015],[121.01497,14.5996],[121.01329,14.60076]]
+}

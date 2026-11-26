@@ -5,6 +5,10 @@
   "establishments": [
     ["od6f0e99ef0c24e31","restaurant",121.40085,14.64121,"KFC"],
     ["ofb5c0ca508544bce","restaurant",121.4292,14.60224,"Tinipak Lodge and Restaurant"],
-    ["o51e3902369544e33","fast_food",121.4152,14.62718,"KFC"]
+    ["o51e3902369544e33","fast_food",121.4152,14.62718,"KFC"],
+    ["o62f312fd43074a7a","lodging",121.41321,14.61646,"Mayton Farm & River Adventure"],
+    ["o951df585729d4c3d","lodging",121.42632,14.60349,"Camp Gizing"],
+    ["oeb2f0a42eb2a49b7","lodging",121.41321,14.61646,"Zen Marie"],
+    ["of9c6fec877814f00","lodging",121.42156,14.60819,"Ellsworth Cabin"]
   ]
 }

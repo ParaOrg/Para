@@ -1,5 +1,5 @@
 // The studio's route tables (route, route_variant, route_stop, stop) for the database's stand-in
-// (lib/stand-ins.mjs), built at run time from the published map in this repo: public/data/index.v5.json
+// (lib/stand-ins.mjs), built at run time from the published map in this repo: public/data/index.v6.json
 // and public/data/lines/<id>.json. Nothing is read from the database to make them, and they hold
 // no contribution, account, contributor, draft or editor row: only routes, their directions and
 // hotspots, as the public map already carries them.
@@ -65,7 +65,7 @@ const drawingOf = (coordinates) => {
 
 /** The four tables, as rows the live tables hold, keyed by table name. */
 export const buildRouteTables = () => {
-  const index = JSON.parse(readFileSync(`${DATA}index.v5.json`, 'utf8'));
+  const index = JSON.parse(readFileSync(`${DATA}index.v6.json`, 'utf8'));
   const lines = new Map(
     readdirSync(`${DATA}lines`)
       .filter((f) => f.endsWith('.json'))

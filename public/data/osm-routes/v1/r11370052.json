@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 11370052,
+  "kind": "jeepney",
+  "ref": "338",
+  "name": "Balic-Balic–Bustillos via G. Tuazon",
+  "from": "Balic-Balic",
+  "to": "Bustillos",
+  "network": "LTFRB National Capital Region",
+  "operator": "FEJODAP Transport Service Corporation",
+  "version": 25,
+  "last_edit": "2026-09-12",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",121.00846,14.61219,"Balic-Balic Turning Point"],["platform",121.00661,14.61226,"Blumentritt"],["platform",121.00486,14.61073,"Leyte"],["platform",121.00362,14.60847,"Masbate"],["platform",121.00285,14.60682,"Wellcome Balic-Balic"],["platform",121.00069,14.60552,"G. Tuazon–Vicente Cruz"],["platform",120.99776,14.60448,"Lacson–G. Tuazon"],["platform",120.9944,14.60712,"Extremadura"],["platform",120.99499,14.60511,"F. Jhocson"],["platform",120.99637,14.60324,"St. Peter Chapels Sampaloc"],["platform",120.99452,14.60256,"M. Arenas Street"],["platform",120.99288,14.60205,"Puregold Jr. Bustillos"]],
+  "line": [[121.00728,14.61317],[121.00859,14.61214],[121.00814,14.61159],[121.00695,14.61252],[121.0063,14.61196],[121.00561,14.61154],[121.00481,14.61062],[121.00442,14.61027],[121.00396,14.60948],[121.0034,14.60726],[121.00325,14.60705],[121.0006,14.60542],[120.99968,14.60475],[120.99802,14.60397],[120.99721,14.60517],[120.99495,14.60755],[120.99375,14.60645],[120.99671,14.60335],[120.99594,14.60304],[120.99469,14.60284],[120.99447,14.60234],[120.99353,14.60207],[120.99364,14.60184],[120.99278,14.60187],[120.99285,14.60206]]
+}

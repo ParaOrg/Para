@@ -1,13 +1,7 @@
 import type { ReactNode } from 'react';
 
-import {
-  hasFareRule,
-  manilaDate,
-  peso,
-  pesoRange,
-  ruleOn,
-  fareFor,
-} from '@/features/routes/model/fares';
+import { rulesFor, manilaDate, ruleOn, fareFor } from '@/features/routes/model/fares';
+import { peso, pesoRange } from '@/features/routes/model/peso';
 import {
   MODES,
   directionLine,
@@ -29,7 +23,8 @@ import { lineLength } from '@/shared/utils/geo';
 export function RouteFacts({ direction, actions }: { direction: Direction; actions?: ReactNode }) {
   const r = direction.route;
   const mode = MODES.find((m) => m.value === r?.mode)?.label ?? r?.mode ?? '';
-  const today = hasFareRule(r?.mode) ? ruleOn(manilaDate()) : null;
+  const rules = rulesFor(r?.mode);
+  const today = rules ? ruleOn(manilaDate(), rules) : null;
   // The whole ride's, as the trip card's Expected fare prices it.
   const whole =
     today && fareFor(direction.metres ?? lineLength(directionLine(direction)), today.rule);
@@ -96,7 +91,7 @@ export function RouteFacts({ direction, actions }: { direction: Direction; actio
           </>
         )}
       </dl>
-      {actions && <div className="flex gap-2">{actions}</div>}
+      {actions && <div className="flex flex-wrap gap-2">{actions}</div>}
     </div>
   );
 }

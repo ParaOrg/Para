@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 8202449,
+  "kind": "jeepney",
+  "ref": "211",
+  "name": "Rosario–Pinagbuhatan (southbound)",
+  "from": "Rosario",
+  "to": "Pinagbuhatan",
+  "network": "PUJ",
+  "operator": "Pasig-Mandaluyong-Quiapo Operators and Drivers Association",
+  "version": 13,
+  "last_edit": "2026-08-29",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [],
+  "line": [[121.08949,14.59011],[121.0888,14.58758],[121.08849,14.58604],[121.08667,14.57948],[121.08195,14.57011],[121.08569,14.5685],[121.08577,14.56842],[121.08589,14.56808],[121.0856,14.56556],[121.08508,14.5645],[121.08464,14.56253],[121.0836,14.55968],[121.08095,14.56067],[121.08052,14.55948],[121.08045,14.55908],[121.09164,14.55493]]
+}

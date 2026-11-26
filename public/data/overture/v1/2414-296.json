@@ -25,6 +25,14 @@
     ["oc380467092264f21","school",120.73687,14.84518,"Lantad Elementary School"],
     ["odc2a577507fc43c0","school",120.7333,14.83673,"Kids Lane Learning Center"],
     ["oe973d3f25c724737","school",120.72845,14.81582,"Ramona S. Trillana National High School"],
-    ["oee3152a63f424573","school",120.72115,14.81611,"Sta. Cruz Elementary School"]
+    ["oee3152a63f424573","school",120.72115,14.81611,"Sta. Cruz Elementary School"],
+    ["o81526eb7e8ad40b8","supermarket",120.74005,14.8406,"Kanto San Agustin Hagonoy Bulacan"],
+    ["o9254f8f7ed084c06","supermarket",120.73335,14.83364,"Hagonoy Public Market"],
+    ["o3f5227f5c1034e97","pharmacy",120.73323,14.83542,"Generika Hagonoy Poblacion"],
+    ["ob5d3b7b67c664c6a","pharmacy",120.73275,14.82255,"Mercury Drug"],
+    ["oe578eb5b80c942c4","pharmacy",120.73365,14.83445,"Mercury Drug Hagonoy"],
+    ["o56518bb8c93d4d1e","laundry",120.73381,14.83321,"Quick Rinse Laundry Shop"],
+    ["o0be39b3d49174f6f","lodging",120.7342,14.83647,"Villa De Sola Private Resort"],
+    ["o106d1092c7e84917","lodging",120.73668,14.83938,"Liconians"]
   ]
 }

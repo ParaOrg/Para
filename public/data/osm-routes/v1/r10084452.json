@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 10084452,
+  "kind": "jeepney",
+  "ref": "",
+  "name": "Bayan–DBB-C",
+  "from": "",
+  "to": "",
+  "network": "LTFRB Region IV-A",
+  "operator": "New Dasmariñas Transport Service Cooperative",
+  "version": 33,
+  "last_edit": "2026-07-31",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [[26,437]],
+  "stops": [["stop_entry_only",120.9364,14.33016,"STI Dasma"],["stop",120.93511,14.32633,"Francisco E. Barzaga Memorial School"],["stop",120.93648,14.32516,"Campos-Mangubat"],["stop",120.94378,14.32673,"DLSUMC"],["stop",120.94604,14.32676,"Emilio Aguinaldo College"],["stop",120.9482,14.3269,"Villa Isabel"],["stop",120.95723,14.32845,"DLSU-D Gate 3"],["stop",120.96031,14.32694,"Dasmariñas 2 Central School"],["stop",120.96139,14.3257,"Dasmariñas Integrated High School"],["stop",120.9625,14.32444,"DASCA"],["stop",120.96331,14.32354,"Saint Paul Medical Center"],["stop",120.96362,14.32182,"DLSU-D Gate 1"]],
+  "line": [[120.93818,14.33141],[120.93777,14.33074],[120.93741,14.33053],[120.93498,14.32959],[120.93343,14.3288],[120.93294,14.32845],[120.93435,14.32728],[120.93606,14.32499],[120.93648,14.32516],[120.93878,14.32645],[120.93909,14.32655],[120.93941,14.32655],[120.9403,14.32675],[120.94088,14.32669],[120.94721,14.32678],[120.95515,14.32779],[120.95588,14.32797],[120.9562,14.32813],[120.9577,14.32861],[120.95841,14.3291],[120.96343,14.32337],[120.964,14.31859],[120.96452,14.31739],[120.96697,14.31832],[120.971,14.31807],[120.97107,14.31856],[120.97137,14.31882],[120.96807,14.32111],[120.96912,14.31963],[120.96956,14.31935],[120.97101,14.31909],[120.97137,14.31882],[120.97188,14.31923],[120.97218,14.31971],[120.97238,14.32077],[120.97217,14.32143],[120.97198,14.32175],[120.97168,14.32208],[120.97111,14.32238],[120.97079,14.32267],[120.97034,14.32374],[120.97013,14.32399],[120.96856,14.32456],[120.9682,14.32452],[120.96741,14.32421],[120.96661,14.3234],[120.9664,14.32293],[120.96647,14.3225],[120.96666,14.32221],[120.96771,14.32158],[120.96807,14.32111]]
+}

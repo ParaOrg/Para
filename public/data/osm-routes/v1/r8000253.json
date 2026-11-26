@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 8000253,
+  "kind": "rail",
+  "ref": "3",
+  "name": "MRT Line 3: Taft Avenue → North Avenue)",
+  "from": "Taft Avenue",
+  "to": "North Avenue",
+  "network": "Manila MRT",
+  "operator": "Metro Rail Transit Corporation",
+  "version": 40,
+  "last_edit": "2026-10-03",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["stop",121.01993,14.54232,"Magallanes"],["stop",121.02844,14.54949,"Ayala"],["stop",121.03462,14.55464,"Buendia"],["stop",121.04576,14.56763,"Guadalupe"],["stop",121.04875,14.57456,"Boni"],["stop",121.05354,14.58102,"Shaw Boulevard"],["stop",121.05691,14.58839,"Ortigas"],["stop",121.05621,14.60841,"Santolan-Annapolis"],["stop",121.05109,14.61949,"Araneta Center - Cubao"],["stop",121.04331,14.63535,"GMA Kamuning"],["stop",121.03867,14.64247,"Quezon Avenue"],["stop_exit_only",121.03203,14.65267,"North Avenue"]],
+  "line": [[121.00189,14.5376],[121.01182,14.5389],[121.01362,14.53926],[121.01479,14.53963],[121.01634,14.54025],[121.01786,14.54099],[121.01892,14.54161],[121.02072,14.54297],[121.02586,14.54727],[121.03555,14.55541],[121.04247,14.56128],[121.04303,14.56183],[121.04409,14.56314],[121.04476,14.56442],[121.04577,14.56766],[121.04667,14.57097],[121.04698,14.57179],[121.04747,14.57271],[121.04875,14.57456],[121.05299,14.58022],[121.05453,14.58248],[121.05537,14.58398],[121.05721,14.58926],[121.05755,14.59093],[121.05803,14.59247],[121.059,14.59535],[121.05956,14.59667],[121.05976,14.59811],[121.05973,14.59945],[121.05953,14.60073],[121.05917,14.60192],[121.045,14.63274],[121.03051,14.65498]]
+}

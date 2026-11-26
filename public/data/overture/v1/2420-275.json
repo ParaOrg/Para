@@ -94,6 +94,22 @@
     ["oe580e0d74df84bae","school",121.04135,13.77937,"Sta. Rita Elementary School"],
     ["of215094d203c436c","school",121.03448,13.78049,"Good Shepherd Developmental School, Inc."],
     ["o4f9b3eaf69b84395","college",121.0442,13.75183,"College of International Tourism and Hospitality Management - LPU Batangas"],
-    ["o748e00829fdc482d","college",121.04742,13.7748,"AMA Computer College"]
+    ["o748e00829fdc482d","college",121.04742,13.7748,"AMA Computer College"],
+    ["o1b6017fa419d451c","convenience",121.04312,13.7886,"Allen One Grocery, Pharmacy & Payment Center"],
+    ["o21c8f2398bf649ca","supermarket",121.02116,13.78726,"Mary Ann Rice Store"],
+    ["o4b0b788555674875","supermarket",121.03022,13.78449,"Waltermart San Pascual",{"brand":"Combi"}],
+    ["o895d5c2b762f4a41","supermarket",121.00895,13.79146,"Connie's Store"],
+    ["od9ff28e4865c4888","supermarket",121.00475,13.78985,"Alfamart"],
+    ["off5d43e136c94204","supermarket",121.04525,13.77474,"Frozenhub Bolbok"],
+    ["o3bcdbc7a0f764ca1","pharmacy",121.0013,13.79577,"Farmacia Asilo"],
+    ["o619b054dd5ab4389","pharmacy",121.02816,13.7769,"Mercury Drug"],
+    ["o5d1dc1eaee0a4373","laundry",121.00047,13.79548,"Wash N Wear Express Laundry"],
+    ["o34d7284f689f4812","hotel",121.04402,13.75558,"The Wharf Hotel"],
+    ["o35612233261842c5","hotel",121.00754,13.7906,"The Bauan Plaza Hotel"],
+    ["o64db3bdb1c5849a5","hotel",121.00335,13.78139,"Rosana Beach Resort"],
+    ["o1201239075694e25","lodging",121.04857,13.77126,"Leynes Manor"],
+    ["o8de372ef2f8e4c60","lodging",121.04823,13.77203,"Villa Penafrancia, Bolbok, Batangas City"],
+    ["oc3e76add7bf8426b","lodging",121.03494,13.79627,"The Hillside Villa Tagaytay"],
+    ["ode8d7b9f042c44b8","lodging",121.04871,13.75963,"Sta Clara Puyo"]
   ]
 }

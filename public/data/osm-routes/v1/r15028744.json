@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 15028744,
+  "kind": "jeepney",
+  "ref": "3176",
+  "name": "M. Reyes–Libertad",
+  "from": "M. Reyes",
+  "to": "Libertad",
+  "network": "LTFRB National Capital Region",
+  "operator": "Makati City Unified Transport Service Cooperative",
+  "version": 10,
+  "last_edit": "2026-09-12",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform",121.0097,14.55039,"M. Reyes"],["platform",121.00839,14.55066,"P. Binay"],["platform",121.00451,14.54947,"Pasay City Cockpit"],["platform",121,14.54797,"Security Bank Libertad"],["platform",120.99791,14.54753,"Victory Pasay Mall"],["platform",120.99633,14.54699,"Arnaiz & Leveriza"],["platform",120.99402,14.54536,"Pasay City Sports Complex"],["platform",120.99429,14.54431,"Pasay City Hall"],["platform",120.99856,14.54243,"P. Reyes Turning Point"]],
+  "line": [[121.01042,14.55052],[121.00955,14.55031],[121.0094,14.55085],[121.00559,14.54992],[121.005,14.54973],[121.00467,14.54954],[121.00388,14.54852],[121.00363,14.54831],[121.00255,14.54814],[121.00064,14.54801],[120.99854,14.54768],[120.99387,14.54613],[120.99477,14.5424],[120.99741,14.543],[120.99757,14.54237],[120.99855,14.54246]]
+}

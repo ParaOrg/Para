@@ -17,6 +17,12 @@ export const overtureKindSchema = z.enum([
   'dentist',
   'school',
   'college',
+  'convenience',
+  'supermarket',
+  'pharmacy',
+  'laundry',
+  'hotel',
+  'lodging',
 ]);
 export type OvertureKind = z.infer<typeof overtureKindSchema>;
 

@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 8126887,
+  "kind": "bus",
+  "ref": "",
+  "name": "PCU-D School Bus: Pala-Pala Loop",
+  "from": "",
+  "to": "",
+  "network": "",
+  "operator": "",
+  "version": 63,
+  "last_edit": "2026-08-03",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [[7,12]],
+  "stops": [["stop",120.95636,14.30055,"SM City Dasmariñas"],["stop",120.95447,14.29998,""],["stop_exit_only",120.96211,14.29272,"Salakot Hall"]],
+  "line": [[120.96118,14.29223],[120.95876,14.29142],[120.95723,14.29542],[120.95535,14.29836],[120.9566,14.29863],[120.95844,14.29891],[120.95844,14.29926],[120.95782,14.29962],[120.95789,14.29971],[120.95755,14.29994],[120.95741,14.29984],[120.95723,14.29992],[120.95572,14.301],[120.95488,14.30194],[120.95446,14.30214],[120.95389,14.30215],[120.95356,14.30201],[120.95301,14.30124],[120.95263,14.30084],[120.9527,14.30077],[120.95309,14.3011],[120.95322,14.30106],[120.95342,14.30072],[120.95401,14.30096],[120.95411,14.30094],[120.95422,14.30051],[120.95525,14.2984],[120.95727,14.29516],[120.95869,14.29139],[120.96104,14.29218],[120.96138,14.2921],[120.96222,14.29239],[120.96223,14.29258],[120.96207,14.29272],[120.96127,14.29244],[120.96118,14.29223]]
+}

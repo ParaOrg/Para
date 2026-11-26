@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 10462831,
+  "kind": "bus",
+  "ref": "2",
+  "name": "Route 2: Angono–Quiapo via Ortigas",
+  "from": "SM City Taytay",
+  "to": "Quiapo",
+  "network": "LTFRB National Capital Region",
+  "operator": "Mega Manila Consortium Corporation",
+  "version": 128,
+  "last_edit": "2026-09-01",
+  "clipped": false,
+  "provenance": {"source:ref":"LTFRB Memorandum Circular 2022-074"},
+  "gaps": [],
+  "stops": [["platform_entry_only",121.14055,14.5656,"SM City Taytay"],["platform",121.14111,14.57846,"Palmera Hills"],["platform",121.13655,14.57988,"Noli Pascual Street"],["platform",121.13474,14.58044,"Panasonic Manufacturing Plant"],["platform",121.12981,14.58199,"Primark Town Center"],["platform",121.12407,14.58381,"Sunset Drive"],["platform",121.11609,14.58629,"Cainta Junction"],["platform",121.11332,14.58697,"Robinsons Place Cainta"],["platform",121.10476,14.58875,"SM City East Ortigas"],["platform",121.09573,14.58991,"Choice Market Ortigas 2"],["platform",121.0913,14.59031,"Westbank Road"],["platform",121.08889,14.59059,"C. Raymundo Avenue"],["platform",121.08706,14.59074,"Rosario Junction"],["platform",121.0808,14.59003,"C-5–Ortigas"],["platform",121.07024,14.58923,"The Medical City"],["platform",121.06614,14.58897,"Rockwell Business Center"],["platform",121.06316,14.5894,"Meralco"],["platform",121.06017,14.59197,"Robinsons Galleria"],["platform",121.0534,14.59705,"La Salle Green Hills"],["platform",121.04868,14.60062,"Greenhills Shopping Center"],["platform",121.0465,14.60216,"Club Filipino Drive"],["platform",121.04241,14.60525,"Madison Street"],["platform",121.03876,14.60801,"Ortigas–Santolan"],["platform",121.03542,14.61177,"Gilmore–N. Domingo"],["platform",121.02606,14.60716,"H. Lozada Street"],["platform",121.02291,14.60538,"Agora Public Market"],["platform",121.018,14.6052,"SM City Santa Mesa"],["platform",121.01666,14.60386,"LRT V. Mapa Station"],["platform",121.01515,14.60276,"V. Mapa"],["platform",121.00981,14.60236,"Altura"],["platform",121.00572,14.6019,"LRT Pureza Station"],["platform",121.00378,14.60169,"Civil Registration Central Outlet"],["platform",120.99539,14.60084,"M. Jhocson"],["platform",120.99314,14.60156,"LRT Legarda Station"],["platform",120.9906,14.59997,"Mendiola Bridge"],["platform",120.98963,14.59794,"National Teachers College"],["platform",120.98905,14.59586,"TIP P. Casal Campus"],["platform",120.98324,14.5869,"Philippine Normal University"],["platform",120.9808,14.59107,"Liwasang Bonifacio"],["platform",120.9802,14.59321,"Plaza Lawton"],["platform_exit_only",120.98467,14.60047,"Quiapo"]],
+  "line": [[121.1395,14.56424],[121.14366,14.56997],[121.1441,14.57084],[121.14422,14.57149],[121.1442,14.57218],[121.14327,14.57716],[121.14329,14.57763],[121.14321,14.57773],[121.11472,14.58664],[121.11024,14.58746],[121.10432,14.58879],[121.10154,14.58931],[121.09123,14.5903],[121.08581,14.59073],[121.08476,14.59063],[121.08241,14.59018],[121.08055,14.58993],[121.06459,14.58877],[121.06395,14.58886],[121.06328,14.58925],[121.05866,14.59318],[121.04974,14.59964],[121.04943,14.60001],[121.04721,14.60163],[121.04694,14.60174],[121.04621,14.60227],[121.03983,14.60718],[121.03848,14.60812],[121.03762,14.60899],[121.0368,14.61008],[121.03591,14.61178],[121.03462,14.61158],[121.03257,14.61085],[121.03141,14.61079],[121.03119,14.61069],[121.02796,14.60825],[121.02698,14.60782],[121.02613,14.60714],[121.02581,14.60697],[121.0243,14.6065],[121.02361,14.60614],[121.02335,14.60587],[121.02168,14.60361],[121.01989,14.60462],[121.01872,14.6058],[121.01596,14.60307],[121.01558,14.60285],[121.01496,14.60268],[121.008,14.6021],[121.00038,14.60126],[120.99864,14.60114],[120.99709,14.60086],[120.99618,14.60059],[120.99306,14.60156],[120.99279,14.6016],[120.99248,14.60149],[120.99161,14.601],[120.99081,14.60028],[120.98953,14.59764],[120.98948,14.59653],[120.98709,14.59252],[120.98613,14.5907],[120.98545,14.59],[120.9853,14.58969],[120.98293,14.58637],[120.98267,14.58614],[120.98147,14.58838],[120.98018,14.59246],[120.9802,14.5928],[120.97995,14.5939],[120.98014,14.59426],[120.98373,14.59663],[120.98384,14.59689],[120.98455,14.60049]]
+}

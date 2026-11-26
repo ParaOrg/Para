@@ -1,0 +1,10 @@
+{
+  "schema": 1,
+  "cell": "2424-273",
+  "attribution": "© Overture Maps Foundation",
+  "establishments": [
+    ["o09ec3897dff44a3c","hotel",121.21436,13.68204,"La Bien Haus Beach Resort"],
+    ["o7571a46d5d1a48c4","hotel",121.21342,13.68025,"AlfMont Beach Resort"],
+    ["o3039d92d902f486b","lodging",121.21436,13.68204,"Checosey’s Crib"]
+  ]
+}

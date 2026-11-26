@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "license": "ODbL-1.0",
+  "attribution": "© OpenStreetMap contributors",
+  "license_note": "Derived from OpenStreetMap data, which is available under the Open Database License (https://opendatacommons.org/licenses/odbl/1-0/). Keep the attribution with any copy or anything made from it. Built by scripts/landmarks/build.sh.",
+  "source": "https://download.geofabrik.de/asia/philippines/philippines-latest.osm.pbf",
+  "extract_at": "2026-11-23T21:21:17Z",
+  "id": 20947797,
+  "kind": "jeepney",
+  "ref": "239",
+  "name": "Crame-Q Mart via P. Tuazon, Murphy",
+  "from": "Q Mart",
+  "to": "Crame",
+  "network": "LTFRB National Capital Region",
+  "operator": "Guardians Transport Service Cooperative",
+  "version": 3,
+  "last_edit": "2026-09-01",
+  "clipped": false,
+  "provenance": {},
+  "gaps": [],
+  "stops": [["platform_entry_only",121.04851,14.62782,"Nepa Q-Mart"],["platform",121.05222,14.62737,"New York–Cambridge"],["platform",121.05431,14.62829,"Stanford Street"],["platform",121.05554,14.62827,"15th Avenue–Ermin Garcia"],["platform",121.05634,14.62657,"15th Avenue–Columbia"],["platform",121.05741,14.62432,"Aurora Boulevard"],["platform",121.0582,14.62269,"Art In Island"],["platform",121.05958,14.61974,"P. Tuazon–15th Avenue"],["platform",121.06159,14.61546,"Murphy Market"],["platform",121.06224,14.61393,"2nd Camarilla Street"],["platform",121.06215,14.61266,"Camp Aguinaldo Gate 1"],["platform",121.05828,14.61174,"9th Avenue"],["platform",121.05423,14.61078,"EDSA–Santolan Intersection"],["platform",121.05242,14.61033,"Camp Crame Gate 2"],["platform",121.05048,14.60984,"Camp Crame Gate 3"],["platform",121.05069,14.60736,"Road 2"],["platform",121.05045,14.6055,"West Crame Barangay Hall"],["platform_exit_only",121.05162,14.60563,"Camp Crame Elementary School"]],
+  "line": [[121.04888,14.62802],[121.0497,14.62631],[121.05474,14.62851],[121.05487,14.62836],[121.05501,14.62834],[121.05546,14.6285],[121.06113,14.6167],[121.06273,14.61275],[121.05005,14.60969],[121.05092,14.60739],[121.04998,14.60715],[121.05065,14.60488],[121.05171,14.60525],[121.0516,14.60562]]
+}

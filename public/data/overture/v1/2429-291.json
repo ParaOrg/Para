@@ -5,6 +5,10 @@
   "establishments": [
     ["o50727b7bccc0435a","restaurant",121.49844,14.56313,"Kuya RJ Marilaque Highway"],
     ["odadb228a20af40c5","restaurant",121.49834,14.56902,"Kuya RJ Marilaque Highway"],
-    ["o318278de1af54437","fast_food",121.45713,14.55368,"KFC"]
+    ["o318278de1af54437","fast_food",121.45713,14.55368,"KFC"],
+    ["oe8b4780e17964283","hotel",121.4555,14.56156,"Lagunay Resort"],
+    ["o87581e7f3d7f4a3a","lodging",121.46356,14.55151,"Kambal Elisa 98 Falls"],
+    ["o8d345711199c4bd3","lodging",121.49298,14.57893,"Enchanted Shores Cottages"],
+    ["oeffacb5e05ee48d4","lodging",121.48265,14.55034,"The White House: Pines and Fog Mountain Lodge"]
   ]
 }

@@ -28,7 +28,7 @@ const NO_TILES = !!process.env.PARA_NO_TILES;
 const { check, tally } = harness();
 
 // ------------------------------------------------------------------ the fixture
-const published = JSON.parse(readFileSync('public/data/index.v5.json', 'utf8'));
+const published = JSON.parse(readFileSync('public/data/index.v6.json', 'utf8'));
 const SCHEMA = Number(
   /MAP_FILE_SCHEMA = (\d+);/.exec(
     readFileSync('src/features/routes/published/map-file.ts', 'utf8'),
@@ -252,11 +252,15 @@ const rowNames = (page) =>
   page
     .locator('[data-testid="trip-hintuan"]')
     .evaluateAll((els) => els.map((e) => e.textContent?.trim() ?? ''));
-/** The trip's sheet raised to full height, its rows all in reach: it opens at Low, and each tap on its handle steps a third. */
+/**
+ * The trip's sheet raised to full height, its rows all in reach: each Enter on its handle steps a
+ * third. The trip's handle is hidden until the keyboard focuses it, so the keys raise it.
+ */
 const toFull = async (page) => {
   const card = page.locator('[data-testid="card"]', { has: page.locator('[data-testid="trip"]') });
   for (let i = 0; i < 4 && (await card.getAttribute('data-snap')) !== 'full'; i++) {
-    await card.getByTestId('dock-handle').click();
+    await card.getByTestId('dock-handle').focus();
+    await page.keyboard.press('Enter');
     await page.waitForTimeout(400);
   }
 };

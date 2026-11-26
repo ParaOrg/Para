@@ -83,7 +83,7 @@ test('a tag that is not app-v<major>.<minor>.<patch> is refused', () => {
 
 // ------------------------------------------------- the nightly publishes on main's tip
 /** A nightly publish: the published map's files alone, and no CI. */
-const publish = { files: ['public/data/index.v5.json', 'public/data/lines/a.json'], checks: {} };
+const publish = { files: ['public/data/index.v6.json', 'public/data/lines/a.json'], checks: {} };
 /** The release's own commit: code, and CI's verdict. */
 const release = (checks) => ({ files: ['src/app/contribute/main.tsx', 'package.json'], checks });
 
@@ -104,7 +104,7 @@ test('a red release under a nightly publish is still refused', () => {
 test('only a commit of the published map alone is stepped over', () => {
   // Code with no CI result is not stepped over to a green commit under it.
   assert.deepEqual(checksFor([release({}), release(green)]), {});
-  const mixed = { files: ['public/data/index.v5.json', 'src/main.ts'], checks: {} };
+  const mixed = { files: ['public/data/index.v6.json', 'src/main.ts'], checks: {} };
   assert.deepEqual(checksFor([mixed, release(green)]), {});
   // Nor is a commit that names no file at all.
   assert.deepEqual(checksFor([{ files: [], checks: {} }, release(green)]), {});
