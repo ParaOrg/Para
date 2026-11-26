@@ -1061,5 +1061,57 @@ check(
 );
 await ctx6.close();
 
+// ------------------------------------------------- the view with the camera on the commuter
+// The camera that follows the commuter rests at the chosen view's tilt (restingPitch): coming back
+// from the compass view, and as a fix lands while the camera tilts, the map and the button agree.
+const ctx7 = await b.newContext({
+  viewport: { width: 390, height: 844 },
+  isMobile: true,
+  hasTouch: true,
+  geolocation: { ...P0, accuracy: 30 },
+  permissions: ['geolocation'],
+});
+const page7 = await ctx7.newPage();
+await stubTiles(page7);
+await open(page7);
+const where7 = page7.locator('[data-testid="where"]');
+const view7 = page7.locator('[data-testid="map-view-pill"] button[aria-label^="Switch to"]');
+const pitch7 = () => page7.evaluate(() => window.__map.getPitch());
+await where7.click();
+await until(async () => (await where7.getAttribute('data-mode')) === 'TrackedLocation', 5000);
+await face(page7, 120);
+await where7.click();
+await until(
+  async () => (await where7.getAttribute('data-mode')) === 'TracksTheMapBasedOnCompassFacing',
+  3000,
+);
+await mapIdle(page7);
+await view7.click();
+await face(page7, 160);
+await mapIdle(page7);
+await where7.click();
+await until(async () => (await where7.getAttribute('data-mode')) === 'TrackedLocation', 3000);
+await mapIdle(page7);
+check(
+  '3D picked in the compass view: back on TrackedLocation the map is in 3D, as the button says',
+  Math.abs((await pitch7()) - want3d) < 0.5 &&
+    (await view7.getAttribute('aria-label')) === 'Switch to 2D view',
+  `pitch ${(await pitch7()).toFixed(1)}; ${await view7.getAttribute('aria-label')}`,
+);
+await view7.click();
+await page7.waitForTimeout(150);
+await ctx7.setGeolocation({
+  latitude: P0.latitude + 0.0002,
+  longitude: P0.longitude,
+  accuracy: 30,
+});
+await mapIdle(page7);
+check(
+  '  2D picked as a fix lands mid-tilt: the camera follows it and goes on to flat',
+  (await pitch7()) < 0.5 && (await view7.getAttribute('aria-label')) === 'Switch to 3D view',
+  `pitch ${(await pitch7()).toFixed(1)}; ${await view7.getAttribute('aria-label')}`,
+);
+await ctx7.close();
+
 await b.close();
 tally();

@@ -93,7 +93,7 @@ interface CommuterCameraInput {
   fix: Fix;
   /** The way the phone faces, for the compass view; null with none. */
   turn: number | null;
-  /** The tilt the tracked view keeps: the map's own (2D's 0 or 3D's, view-mode.ts). 0 if not given. */
+  /** The tilt the tracked view rests at: the chosen view's (2D's 0 or 3D's, restingPitch). 0 if not given. */
   restPitch?: number;
   /** TrackedLocation's zoom, kept through the compass view and back. */
   keptZoom: number;
