@@ -3718,6 +3718,27 @@ if (runsPart(1)) {
         atFull !== null && !atFull.drawn && atFull.box === 0,
         JSON.stringify(atFull),
       );
+      // The scale bar stands 4 under the ⓘ's place (16 in, its top 56 down: the ⓘ's 24 and 28),
+      // drawn over every sheet: at full height, the card filling the screen, nothing covers it.
+      const scaleAtFull = await page.evaluate(() => {
+        const scale = document.querySelector('.maplibregl-ctrl-scale');
+        const box = scale?.getBoundingClientRect();
+        if (!scale || !box) return null;
+        const hit = document.elementFromPoint(box.left + 4, box.top + box.height / 2);
+        return {
+          x: Math.round(box.left),
+          y: Math.round(box.top),
+          isOnTop: !!hit && scale.contains(hit),
+        };
+      });
+      check(
+        "  the scale bar stands under the ⓘ's place, 16 in and 56 down, over the full card",
+        scaleAtFull !== null &&
+          Math.abs(scaleAtFull.x - 16) < 2 &&
+          Math.abs(scaleAtFull.y - 56) < 2 &&
+          scaleAtFull.isOnTop,
+        JSON.stringify(scaleAtFull),
+      );
       await toRaised();
       await cardsSettled(page);
       const grip = await handle().first().boundingBox();
