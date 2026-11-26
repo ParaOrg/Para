@@ -37,8 +37,9 @@ the map the editor and the suites see on `staging`, and the bigger the merge at 
   workflow, by GitHub's rule, so the workflow starts CI and the contributor app's workflow on the
   back-merge branch itself (`gh workflow run`, which GitHub allows). No other secret. When `main`
   holds the same files as `staging` (`git diff --quiet origin/staging origin/main`, the usual case
-  right after a release), only CI is started: the contributor app's emulator runs, about 25
-  minutes, would test files already tested on `staging` and on the release pull request.
+  right after a release), only CI is started: the contributor app's workflow, with its emulator
+  runs (about 25 minutes, started by hand since they no longer run on pull requests), would test
+  files already tested on `staging` and on the release pull request.
 - **Merged by hand,** once its checks pass. A red back-merge means `main` and `staging` disagree,
   which someone should look at.
 - **Same files, merged on the required checks** (the owner, 2026-11-25): when the back-merge holds

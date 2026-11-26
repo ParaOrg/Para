@@ -118,6 +118,14 @@ Once it is on:
 1. **A green pull request lands through the queue.** Merge any small pull request. Its page says "Queued to merge", a run named for `gh-readonly-queue/staging/…` appears under Actions, and the pull request shows as merged once the run passes.
 2. **A pull request that only fails once merged is put out.** Open two pull requests that each pass alone and fail together: the first changes what a small function returns, with its unit check; the second adds a unit check, in a file of its own, that expects the old value. Queue the first, then the second. The first lands; the second leaves the queue red, though its own page was green. Close it, delete both branches, and put the function back.
 
+## Where the emulator runs
+
+The contributor app's two emulator jobs (`emulator-ride`, about 26 minutes, and `emulator-notification`, about 12) do not run on pull requests. They run on every push to `staging` that touches the app, which is after each merge, and by hand ("Run workflow" on `contributor-app.yml`). A pull request into `staging` still builds the debug APK (`apk`, about 2 minutes). The owner decided this on 2026-11-26. Nothing is checked less: every change reaches `staging` through a pull request, and the emulator run follows it there.
+
+None of the emulator jobs is a required check: the ruleset asks only for the three above, and they don't wait for the Contributor app workflow. Keep it so. A required emulator job would never report on a pull request, and the merge would hang.
+
+**If the emulator run on `staging` fails, merges freeze until the cause is named.** No pull request is queued or merged into `staging` until the run's cause is written down, in the failure ledger (`.scratch/ci-speed/failure-ledger.md`) with the run link, and either fixed or shown to be unrelated to the code (a runner or an emulator download that failed). The "Staging red" alert issue (`staging-red.yml`) opens for the failed run; it closes by itself when the next run passes. A fix to the cause is the one pull request that merges meanwhile.
+
 ## A later step: the secrets scan
 
 After the ruleset has been on for a few days with no trouble, add a fourth required check, "No secrets in the history" (`.github/workflows/security.yml`). It is left out of the first step so that a new rule and a new check don't arrive together.
