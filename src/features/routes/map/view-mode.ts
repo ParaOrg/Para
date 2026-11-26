@@ -1,10 +1,11 @@
 import * as z from 'zod/mini';
 
 /*
- * The map's view (the owner's commuter-map designs, 4885:44801): 2D looks straight down; 3D
- * tilts the camera so the designs' raised buildings (their fill-extrusion layers, e.g.
- * monochrome.ts's and Colour's building-3d) stand up. No terrain. The first visit is always 2D;
- * after that the device keeps the commuter's choice.
+ * The map's view (the owner's commuter-map designs, 4885:44801): 2D is a flat map, looking
+ * straight down, its buildings flat footprints however it is tilted by hand (the owner,
+ * 2026-11-26); 3D tilts the camera and raises the designs' buildings (their fill-extrusion layers,
+ * e.g. monochrome.ts's and Colour's building-3d; building-look.ts). No terrain. The first visit is
+ * always 2D; after that the device keeps the commuter's choice.
  */
 
 export const VIEW_MODES = ['2d', '3d'] as const;
