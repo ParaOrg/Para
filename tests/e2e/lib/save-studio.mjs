@@ -864,6 +864,25 @@ export async function openCard(ll) {
 }
 
 /**
+ * The open trip's way back, an undrawn slot, begun: "+ Add route" on a computer's route line
+ * detail, the trip card's SWITCH on a phone.
+ */
+export async function addReturnTrip() {
+  const add = page.getByTestId('route-line-detail').getByRole('button', { name: '+ Add route' });
+  if (await add.count()) await add.click();
+  else await page.getByTestId('card-switch').click();
+}
+
+/** The open trip's Delete: in the ⋮ menu on a computer's route line detail, on a phone's card. */
+export async function pressDelete() {
+  const more = page.getByTestId('route-line-detail').getByRole('button', { name: 'More' });
+  if (await more.count()) {
+    await more.click();
+    await page.getByRole('menuitem', { name: 'Delete' }).click();
+  } else await page.getByRole('button', { name: 'Delete' }).click();
+}
+
+/**
  * The ground the parts after save-test start from, made as save-test makes it
  * and with no checks: the two hintuans, and the route between them drawn both
  * ways, its return trip begun from the card's SWITCH and closed on papunta's
@@ -880,7 +899,7 @@ export async function drawTheRoute() {
   await drafted();
   await approveAll();
   await openCard(OUT[1]);
-  await page.getByTestId('card-switch').click();
+  await addReturnTrip();
   await page.waitForTimeout(400);
   await clickAt(BACK[1], 300);
   await clickAt(at(-0.002, -0.0015), 300);

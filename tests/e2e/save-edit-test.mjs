@@ -141,7 +141,7 @@ check(
 // rows of their own, and "origin → destination" is its sheet's name.
 const cardName = async () =>
   (await page
-    .locator('[data-testid="card"]')
+    .locator('[data-testid="card"], [data-testid="route-line-detail"]')
     .first()
     .getAttribute('aria-label')
     .catch(() => null)) ?? '';
@@ -235,16 +235,10 @@ await page.waitForTimeout(300);
   await openCard(OUT[1]);
   await page.waitForTimeout(500);
   check(
-    "at 1024 px the docked trip card's ‹ or ✕ is clickable, clear of the switch",
-    await reachable(
-      page
-        .locator('[data-testid="card"]')
-        .first()
-        .getByRole('button', { name: /^(Back|Close)$/ })
-        .first(),
-    ),
+    'at 1024 px the route line detail stands in the left panel, its Export clickable, clear of the switch',
+    await reachable(page.getByTestId('route-line-detail').getByRole('button', { name: 'Export' })),
   );
-  const cardOpen = async () => (await page.locator('[data-testid="card"]').count()) > 0;
+  const cardOpen = async () => await page.getByTestId('route-line-detail').isVisible();
   await page.getByRole('radio', { name: 'Playground' }).focus();
   await page.keyboard.press('ArrowRight');
   await page.waitForTimeout(300);
@@ -253,7 +247,7 @@ await page.waitForTimeout(300);
   await page.locator('label', { hasText: 'Playground' }).click();
   await page.waitForTimeout(400);
   check(
-    'Escape on another map leaves a card open in the Playground alone',
+    'Escape on another map leaves the detail open in the Playground alone',
     mapOf() === 'playground' && (await cardOpen()),
   );
   await page.keyboard.press('Escape');

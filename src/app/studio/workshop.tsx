@@ -68,6 +68,7 @@ interface WorkshopProps {
 export function Workshop({ session, recovery }: WorkshopProps) {
   const [map, setMap] = useState<MapLibreMap | null>(null);
   const [isNewMenuOpen, setIsNewMenuOpen] = useState(false);
+  const [leftPanel, setLeftPanel] = useState<HTMLDivElement | null>(null);
   // Which of the three maps is shown. Only the Playground has tools: the others
   // stay behind the one map and its state, so a switch keeps the camera, the
   // basemap and a half-drawn line.
@@ -212,8 +213,6 @@ export function Workshop({ session, recovery }: WorkshopProps) {
     else setIsSaving(true);
   };
 
-  const { choosing } = cards;
-
   // On a computer, a signed-in editor's sidebar stands beside the map the whole
   // time a route or a hotspot is drawn, and its saves are Done. Not while Extend
   // is still choosing where to leave a line: there is no line yet.
@@ -256,6 +255,7 @@ export function Workshop({ session, recovery }: WorkshopProps) {
             contribution={contribution}
             draftHotspots={draftOnly.hotspots}
           />
+          <div ref={setLeftPanel} className={isPlayground ? 'contents' : 'hidden'} />
           <div className="flex min-w-0 flex-1 flex-col">
             <StudioTopBar ref={switchRef} value={studioMap} onChange={chooseStudioMap} />
             {/* `data-dock-host`: the open card's sheet says where its top is here at rest, and on what follows it (`data-dock-follower`) as a finger drags it (BottomSheet); the New + says what it stands in the corner. */}
@@ -266,7 +266,7 @@ export function Workshop({ session, recovery }: WorkshopProps) {
               inert={isSheetOpen}
               className={
                 '@container relative min-h-0 min-w-0 flex-1 overflow-clip' +
-                (!draw.drawing && !choosing ? ' ' + NEW_MENU_DOCK_FOOT : '')
+                (!draw.drawing && !cards.choosing ? ' ' + NEW_MENU_DOCK_FOOT : '')
               }
             >
               {/* Inert on the other maps, so a keyboard cannot pan the camera that waits there. */}
@@ -349,6 +349,7 @@ export function Workshop({ session, recovery }: WorkshopProps) {
                   trip={trip}
                   canEdit={canEdit}
                   isWideScreen={isWideScreen}
+                  leftPanel={leftPanel}
                   opening={opening}
                   deletes={deletes}
                   hush={hush}
@@ -367,7 +368,7 @@ export function Workshop({ session, recovery }: WorkshopProps) {
                   contribution={contribution}
                   extendEnds={extendEnds}
                   isPlayground={isPlayground}
-                  isChoosing={choosing}
+                  isChoosing={cards.choosing}
                   isNewMenuOpen={isNewMenuOpen}
                   onNewMenuOpenChange={setIsNewMenuOpen}
                   onDone={isBeside ? undefined : onDone}

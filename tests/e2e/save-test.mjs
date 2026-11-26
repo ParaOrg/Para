@@ -33,6 +33,8 @@ import { readFileSync } from 'node:fs';
 import { routeFitted } from './lib/framing.mjs';
 import { waitFor } from './lib/harness.mjs';
 import {
+  addReturnTrip,
+  pressDelete,
   approveAll,
   approvedWrites,
   backToMap,
@@ -518,11 +520,11 @@ check(
 const outLine = outV?.shape?.coordinates ?? [];
 const slotId = directionsOf(outRoute?.id).find((v) => v.shape === null)?.id;
 await openCard(OUT[1]);
-await page.getByTestId('card-switch').click();
+await addReturnTrip();
 await page.waitForTimeout(400);
 let drawn = await drawnPoints();
 check(
-  "the card's SWITCH begins the return trip with its first point on the outbound line's end (<1 m)",
+  '"+ Add route" on the detail\'s undrawn tab begins the return trip with its first point on the outbound line\'s end (<1 m)',
   drawn.length === 1 && outLine.length > 1 && metresBetween(drawn[0], outLine.at(-1)) < 1,
   `${drawn.length} point(s), ${drawn[0] && outLine.length ? metresBetween(drawn[0], outLine.at(-1)).toFixed(2) : '?'} m`,
 );
@@ -645,9 +647,10 @@ check(
   JSON.stringify({ cameraBeforeOpen, cameraAfterOpen, isOverviewOffered }),
 );
 if (isOverviewOffered) await overview.click();
-const openFit = await routeFitted(page, outLine);
+// On a computer the detail stands in the left panel, beside the map: the whole map is the room.
+const openFit = await routeFitted(page, outLine, '[data-testid="route-line-detail"]');
 check(
-  '  the Overview takes in the whole route, in the room the card leaves',
+  '  the Overview takes in the whole route, in the map beside the detail',
   openFit.ok,
   openFit.why,
 );
@@ -880,7 +883,10 @@ await openCard(OUT[1]);
 const exported = async (label) => {
   const [download] = await Promise.all([
     page.waitForEvent('download'),
-    page.getByTestId('route-export').getByRole('button', { name: label, exact: true }).click(),
+    (async () => {
+      await page.getByTestId('route-line-detail').getByRole('button', { name: 'Export' }).click();
+      await page.getByRole('menuitem', { name: label, exact: true }).click();
+    })(),
   ]);
   const path = await download.path();
   return { name: download.suggestedFilename(), text: path ? readFileSync(path, 'utf8') : '' };
@@ -926,7 +932,7 @@ await openCard(OUT[1]);
 // A refused step — here the draft the delete is stored as — is said, not
 // swallowed (16). Delete again finishes it.
 stub.fault = (method, table) => method === 'POST' && table === 'rpc/claim_draft';
-await page.getByRole('button', { name: 'Delete' }).click();
+await pressDelete();
 await waitFor(async () => /refused this one, on purpose/.test(await body()));
 check(
   'a refused step of the delete is said, not swallowed (16)',
@@ -935,7 +941,7 @@ check(
 );
 await dismissToasts();
 n = log.length;
-await page.getByRole('button', { name: 'Delete' }).click();
+await pressDelete();
 await waitFor(async () => (await page.getByRole('button', { name: 'Edit route' }).count()) === 0);
 await page.waitForTimeout(500);
 w = writesSince(n);

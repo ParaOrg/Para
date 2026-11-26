@@ -397,18 +397,28 @@ const closeByBadge = async () => {
   await page.mouse.click(x + 4, y + 4);
 };
 
+/** "+ Add route" on the route line detail's undrawn tab, a computer's. */
+const addRoute = () =>
+  page.getByTestId('route-line-detail').getByRole('button', { name: '+ Add route' });
+
+/** The open trip's Delete, in the route line detail's ⋮ menu. */
+async function pressDelete() {
+  await page.getByTestId('route-line-detail').getByRole('button', { name: 'More' }).click();
+  await page.getByRole('menuitem', { name: 'Delete' }).click();
+}
+
 // ---- 2b. The return trip, into the slot
 const slotId = draftDirections.find((v) => v.shape === null)?.id;
 const BACK_MID = at(0, -0.0015);
 await openCard(OUT[1]);
 check(
-  'the outbound\'s card offers "Draw the return trip" while the way back is a slot',
-  await page.getByRole('button', { name: 'Draw the return trip' }).isVisible(),
+  'the outbound\'s detail offers "+ Add route" on the way back\'s tab while it is a slot',
+  await addRoute().isVisible(),
 );
-await page.getByTestId('card-switch').click();
+await addRoute().click();
 await page.waitForTimeout(400);
 check(
-  "the card's SWITCH starts the return trip on the outbound's end",
+  '"+ Add route" starts the return trip on the outbound\'s end',
   (await pointsShown()) === 1,
   `${await pointsShown()} points`,
 );
@@ -561,7 +571,7 @@ await openCard(OUT[1]);
 // The signboards wait for the route's draft to be read: a save just before dropped the cached one.
 await waitFor(async () => (await page.getByTestId('signboard-editor').count()) === 1);
 check(
-  'the trip card has a Signboard for the direction on show',
+  'the route line detail has a Signboard for the direction on show',
   (await page.getByTestId('signboard-editor').count()) === 1 && (await items().count()) === 0,
 );
 n = log.length;
@@ -617,7 +627,7 @@ check('  and leaves the file in the bucket: the approved map may still list it',
 // The signboard's draft is still the editor's, unreviewed. Approving the delete in the same
 // press would publish that draft with it, so the delete is stored in it and waits for its Approve.
 n = log.length;
-await page.getByRole('button', { name: 'Delete' }).click();
+await pressDelete();
 await waitFor(async () => (await body()).includes('Added to your draft of'));
 w = writesSince(n);
 check(
@@ -651,7 +661,7 @@ db.meanwhile = {
   },
 };
 n = log.length;
-await page.getByRole('button', { name: 'Delete' }).click();
+await pressDelete();
 await waitFor(async () => (await body()).includes(CONFLICT_SAID), 25000);
 w = writesSince(n);
 check(
@@ -671,7 +681,7 @@ await load();
 // ---- 5. Delete a direction: a draft approved in the same press
 await openCard(OUT[1]);
 n = log.length;
-await page.getByRole('button', { name: 'Delete' }).click();
+await pressDelete();
 await waitFor(async () => (await page.getByRole('button', { name: 'Edit route' }).count()) === 0);
 await page.waitForTimeout(800);
 w = writesSince(n);
@@ -705,7 +715,7 @@ check(
 // ---- 5b. Delete the other way too: the route's last line, so the route comes down
 await openCard(BACK_MID);
 n = log.length;
-await page.getByRole('button', { name: 'Delete' }).click();
+await pressDelete();
 await waitFor(async () => (await page.getByRole('button', { name: 'Edit route' }).count()) === 0);
 await page.waitForTimeout(800);
 w = writesSince(n);

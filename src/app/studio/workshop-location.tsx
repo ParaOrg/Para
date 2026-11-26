@@ -11,7 +11,12 @@ import type { useSavedRoutes } from '@/features/routes/map/use-saved-routes';
 import { useTerminalDots } from '@/features/routes/map/use-terminal-dots';
 import type { HotspotRow } from '@/features/routes/model/hotspots';
 import type { DirectionRow } from '@/features/routes/model/routes';
-import { FootbridgesSwitch, STUDIO_BASEMAPS, STUDIO_BASEMAP_THUMBNAILS } from '@/features/studio';
+import {
+  FootbridgesSwitch,
+  STUDIO_BASEMAPS,
+  STUDIO_BASEMAP_THUMBNAILS,
+  useIsWideScreen,
+} from '@/features/studio';
 import type { Turn } from '@/shared/hooks/commit-turn';
 import { retryingLazy } from '@/shared/lib/retrying-lazy';
 import type { StandingToast } from '@/shared/ui/standing-toasts';
@@ -64,6 +69,7 @@ export function WorkshopLocation({
   hasCredits,
 }: WorkshopLocationProps) {
   const { ride, clearOfOpen } = camera;
+  const isOverviewOnTop = useIsWideScreen() && (!!saved.selected || cards.choosing);
   // OpenStreetMap's terminals as faint dots, for an editor placing Para's own (.scratch/terminals),
   // when HAS_POSSIBLE_TERMINALS is on.
   useTerminalDots(HAS_POSSIBLE_TERMINALS ? map : null);
@@ -92,8 +98,13 @@ export function WorkshopLocation({
 
   return (
     <FootbridgesSwitch map={map}>
-      {/* The camera back on what the open card frames, as on the public map. */}
-      <OverviewButton {...camera.overviewButton} isBesideCredits={hasCredits} map={map} />
+      {/* The camera back on what the open card frames; a computer's trip and list have their own (PlaygroundTrip). */}
+      <OverviewButton
+        isShown={camera.overviewButton.isShown && !isOverviewOnTop}
+        go={camera.overviewButton.go}
+        isBesideCredits={hasCredits}
+        map={map}
+      />
       <CommuterLocation
         map={map}
         isMapLoaded={isMapLoaded}
