@@ -1060,6 +1060,68 @@ check(
 );
 await ctx6.close();
 
+// The owner's rule (2026-11-26): 2D is a flat map, the buildings flat footprints however the
+// map is tilted by hand; 3D raises them as the design does. In every design, and across a switch.
+{
+  const ctxB = await b.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true });
+  const pageB = await ctxB.newPage();
+  await stubTiles(pageB);
+  await open(pageB);
+  const viewB = pageB.locator('[data-testid="map-view-pill"] button[aria-label^="Switch to"]');
+  /** Every extrusion layer's height now: 0 where flat. */
+  const heights = () =>
+    pageB.evaluate(() => {
+      const m = window.__map;
+      return m
+        .getStyle()
+        .layers.filter((l) => l.type === 'fill-extrusion')
+        .map((l) => JSON.stringify(m.getPaintProperty(l.id, 'fill-extrusion-height')));
+    });
+  const isFlat = (hs) => hs.length > 0 && hs.every((h) => h === '0');
+  const isRaised = (hs) => hs.length > 0 && hs.every((h) => h !== '0' && h !== undefined);
+  /** Another design picked on the Map Style card, the map's style in. */
+  const otherDesign = async () => {
+    await pageB.getByRole('button', { name: 'Map design' }).click();
+    const other = pageB
+      .locator('[data-testid="basemap-menu"] button[aria-pressed="false"]')
+      .first();
+    await other.click();
+    await pageB.keyboard.press('Escape');
+    await mapIdle(pageB);
+  };
+  const flat2d = await heights();
+  await pageB.evaluate(() => {
+    window.__map.jumpTo({ pitch: 50 });
+  });
+  const tiltedBy2d = await heights();
+  check(
+    'in 2D the buildings lie flat, and stay flat with the map tilted by hand',
+    isFlat(flat2d) && isFlat(tiltedBy2d),
+    JSON.stringify({ flat2d, tiltedBy2d }),
+  );
+  await viewB.click();
+  await mapIdle(pageB);
+  const raised3d = await heights();
+  await otherDesign();
+  const raisedOther = await heights();
+  check(
+    '  in 3D they stand as the design raises them, and in another design picked',
+    isRaised(raised3d) && isRaised(raisedOther),
+    JSON.stringify({ raised3d, raisedOther }),
+  );
+  await viewB.click();
+  await mapIdle(pageB);
+  const flatAgain = await heights();
+  await otherDesign();
+  const flatOther = await heights();
+  check(
+    '  back to 2D they lie flat, and in another design picked in 2D',
+    isFlat(flatAgain) && isFlat(flatOther),
+    JSON.stringify({ flatAgain, flatOther }),
+  );
+  await ctxB.close();
+}
+
 // ------------------------------------------------- the view with the camera on the commuter
 // The camera that follows the commuter rests at the chosen view's tilt (restingPitch): coming back
 // from the compass view, and as a fix lands while the camera tilts, the map and the button agree.
