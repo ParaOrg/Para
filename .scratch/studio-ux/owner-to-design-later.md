@@ -33,4 +33,9 @@ Status: needs-info
   beside the map, and sits under Route Information in its old look. It shows only for a direction
   that is already saved: a new one has no boards to add until its first save. Phones keep it on
   their trip card. Code: `src/features/studio/panels/save-panel.tsx` (`DraftSignboards`).
+- **Question: full mode names.** Transit line information shows the mode labels the studio
+  already uses: Jeepney, Modern e-jeepney, UV Express, Bus, P2P bus, LRT, MRT, Ferry, EDSA
+  Carousel. LRT and MRT stay short for now, the words commuters use (the hub's call while the
+  owner was away, 2026-11-26). Should they be spelled out (Light Rail Transit, Metro Rail
+  Transit)? Code: `MODES` in `src/features/routes/model/routes.ts`.
 - **A phone layout** for the detail. Desktop comes first, so phones keep today's trip card.
