@@ -1206,6 +1206,12 @@ if (!RUNS_ONE_OFFS) {
       await menu.getByRole('switch', { name: 'Jeepney', exact: true }).click();
       await menu.getByRole('switch', { name: 'Bus', exact: true }).click();
       await page.keyboard.press('Escape');
+      // The name read already, the picks applied as tapped: wait for the menu's own close, which
+      // unmounts it on the dialog's `close` event, after the key.
+      await until(
+        () => menu.count(),
+        (n) => n === 0,
+      );
       const named = await until(
         () => filterButton.getAttribute('aria-label'),
         (l) => l === 'Filter: Jeepney, Bus',
