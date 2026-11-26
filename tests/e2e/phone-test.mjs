@@ -2010,6 +2010,34 @@ const tripChecks = async () => {
         Math.abs(camAfterLetGo.lat - camBeforePick.lat) < 1e-6,
       JSON.stringify({ camBeforePick, camAfterLetGo }),
     );
+    // The camera comes back at the view chosen now: picked in 3D, let go after 2D, it is flat. The
+    // 2D/3D button stands under the card at full height, so it is pressed by script, the camera's
+    // rule being what is read here.
+    if (pickWant) {
+      const view = (want) =>
+        page.evaluate((want) => {
+          const button = document.querySelector(
+            '[data-testid="map-view-pill"] button[aria-label^="Switch to"]',
+          );
+          if (button?.getAttribute('aria-label') === `Switch to ${want} view`) button.click();
+        }, want);
+      const pitchNow = () => page.evaluate(() => window.__map.getPitch());
+      await view('3D');
+      await mapIdle(page);
+      await buttonTap(pickButton, isPicked);
+      await cardsSettled(page);
+      const tiltedAtPick = await pitchNow();
+      await view('2D');
+      await mapIdle(page);
+      await buttonTap(pickButton, async () => !(await isPicked()));
+      await cardsSettled(page);
+      await mapIdle(page);
+      check(
+        '  picked in 3D, let go after 2D was tapped: the camera comes back flat, as the button says',
+        tiltedAtPick > 50 && (await pitchNow()) < 0.5,
+        `pitch ${tiltedAtPick.toFixed(1)} at the pick, ${(await pitchNow()).toFixed(1)} let go`,
+      );
+    }
     // Closer in than 300 m on the scale bar, a pick keeps the commuter's zoom
     // (the owner's ask, 2026-10-13: "if it's below 300m and tapped the
     // hintuan, don't zoom out, remain where the user camera was"): with the
