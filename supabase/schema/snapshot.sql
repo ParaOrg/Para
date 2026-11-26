@@ -74,7 +74,8 @@ CREATE TYPE public.transport_mode AS ENUM (
     'tricycle',
     'lrt',
     'mrt',
-    'ferry'
+    'ferry',
+    'busway'
 );
 
 
@@ -3234,7 +3235,7 @@ CREATE TABLE public.stop (
     last_saved_at timestamp with time zone,
     last_saved_by uuid,
     CONSTRAINT stop_line_hintuan CHECK (((line IS NULL) OR (kind = 'hintuan'::public.stop_kind))),
-    CONSTRAINT stop_line_named CHECK (((line IS NULL) OR (line = ANY (ARRAY['LRT-1'::text, 'LRT-2'::text, 'MRT-3'::text, 'PRFS'::text])))),
+    CONSTRAINT stop_line_named CHECK (((line IS NULL) OR (line = ANY (ARRAY['LRT-1'::text, 'LRT-2'::text, 'MRT-3'::text, 'PRFS'::text, 'EDSA-C'::text])))),
     CONSTRAINT stop_status_check CHECK ((status = ANY (ARRAY['approved'::text, 'taken_down'::text])))
 );
 
@@ -3243,7 +3244,7 @@ CREATE TABLE public.stop (
 -- Name: COLUMN stop.line; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON COLUMN public.stop.line IS 'The line this hintuan is a station of: a train''s (LRT-1, LRT-2, MRT-3) or the ferry''s (PRFS); null for every other hotspot.';
+COMMENT ON COLUMN public.stop.line IS 'The line this hintuan is a station of: a train''s (LRT-1, LRT-2, MRT-3), the ferry''s (PRFS) or the EDSA Carousel''s (EDSA-C); null for every other hotspot.';
 
 
 --
