@@ -14,6 +14,8 @@ interface ViceVersaButtonProps {
   isBack: boolean;
   /** Every route listed turned to its other way round, as the studio's PAPUNTA turns them. */
   onSwitch: () => void;
+  /** What the suites find it by: the map's, or the one in the bar a list at the top shows. */
+  testId?: string;
 }
 
 /**
@@ -28,6 +30,7 @@ export function ViceVersaButton({
   isSwitchable,
   isBack,
   onSwitch,
+  testId = 'chooser-flip',
 }: ViceVersaButtonProps) {
   const hintId = useId();
   // The hint stands beside the button, not in it, where it would join the button's name. Figma's
@@ -40,7 +43,7 @@ export function ViceVersaButton({
         label="Vice Versa"
         lastIcon={<SwitchVerticalIcon />}
         aria-describedby={hintId}
-        data-testid="chooser-flip"
+        data-testid={testId}
         data-back={isBack}
         disabled={!isSwitchable}
         onClick={onSwitch}

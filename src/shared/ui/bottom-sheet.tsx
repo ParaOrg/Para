@@ -18,6 +18,7 @@ import {
   CARD_SHAPE,
   MAX_STRIP_PX,
   fitHeightsFor,
+  heightsFor,
   measureSafeTop,
   shownAt,
   slide,
@@ -194,6 +195,7 @@ export function BottomSheet({
     fits && fit ? { heightsFor: (h) => fitHeightsFor(h, fit.contentPx, shape) } : null;
   // Content whole within Low: nothing there needs cutting short (`sheet-low:` reads it).
   const isWholeAtLow = !!fit && !!fitted && fit.contentPx <= fitted.heightsFor(fit.mapPx).low + 1;
+  const reachesTop = !fit || fit.contentPx >= heightsFor(fit.mapPx, shape).full; // Its full, the top's.
   const snap = height?.snap ?? ownSnap;
   /**
    * Where the sheet rests at `to`: a CSS length that follows the map's size, or, for a fitted
@@ -219,11 +221,9 @@ export function BottomSheet({
   }, !hidden);
 
   /**
-   * Where the sheet slides to, on it and on its footer, the one part that reads it (--sheet-y
-   * does not pass down: map-frame.css). What sits on the map above follows (ScreenLocationBehavior,
-   * Figma 3870:5941) as `--dock-y`, the same length: on the page's `[data-dock-host]` at rest, for
-   * a follower that comes later, and on the followers alone (`[data-dock-follower]`) on a finger's
-   * move, as one changed on the page's root restyles the whole page, and a drag writes one a frame.
+   * Where the sheet slides to, on it and its footer (--sheet-y does not pass down: map-frame.css).
+   * What sits on the map above follows (3870:5941) as `--dock-y`: on `[data-dock-host]` at rest, for
+   * a follower that comes later, and on the followers alone (`[data-dock-follower]`) on a move.
    */
   function at(y: string, isMove = false) {
     const sheet = own.current;
@@ -300,6 +300,7 @@ export function BottomSheet({
       data-testid={testId}
       data-snap={snapName(snap)}
       data-whole-at-low={isWholeAtLow || undefined}
+      data-reaches-top={reachesTop || undefined}
       data-floats={floats}
       data-footer={footer ? '' : undefined}
       data-low-px={shape.lowPx}

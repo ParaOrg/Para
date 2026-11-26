@@ -73,6 +73,7 @@ const meta = {
     list: listOf(talaRoutes),
     floats: false,
     onFlip: fn(),
+    onSnap: fn(),
     onFilter: fn(),
   },
   decorators: [

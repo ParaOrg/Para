@@ -10,6 +10,9 @@ import type { Listing } from '@/features/routes/model/departures';
 import type { ModeFilter } from '@/features/routes/model/mode-filter';
 import type { Direction } from '@/features/routes/model/routes';
 import { FilterIcon } from '@/shared/ui/map-control-icons';
+import { FRAMED_SHARE, type Snap } from '@/shared/ui/sheet-gesture';
+
+import { ListTopBar } from './list-top-bar';
 
 interface MapSheetControlsProps {
   map: MapLibreMap | null;
@@ -26,6 +29,8 @@ interface MapSheetControlsProps {
   floats: boolean;
   /** Vice Versa: every route listed the other way round. */
   onFlip: () => void;
+  /** The sheets' shared height (useCardStack): the bar's ⌄ sets the list at the middle. */
+  onSnap: (snap: Snap) => void;
   /** A choice in the filter the sliders open. */
   onFilter: (filter: ModeFilter) => void;
 }
@@ -45,25 +50,36 @@ export function MapSheetControls({
   list,
   floats,
   onFlip,
+  onSnap,
   onFilter,
 }: MapSheetControlsProps) {
   const way = list && listWay(list.candidates, list.back, list.listing, list.modeFilter);
   return (
-    <MapControlsDock>
-      <div className="flex flex-col-reverse items-start gap-3 @float:flex-col">
-        {list && way && way.way !== null && (
-          <ViceVersaButton
-            way={way.way}
-            wayTo={way.wayTo}
-            isSwitchable={way.isSwitchable}
-            isBack={list.back}
-            onSwitch={onFlip}
-          />
-        )}
-        <OverviewPill isShown={overview.isShown} go={overview.go} map={map} isIconOnly={!!list} />
-      </div>
-      {list && floats && <ListFilter list={list} onFilter={onFilter} tooltip="top" />}
-    </MapControlsDock>
+    <>
+      {list && way && (
+        <ListTopBar
+          way={way.way === null ? null : { ...way, way: way.way }}
+          isBack={list.back}
+          onFlip={onFlip}
+          onMiddle={() => onSnap(FRAMED_SHARE)}
+        />
+      )}
+      <MapControlsDock>
+        <div className="flex flex-col-reverse items-start gap-3 @float:flex-col">
+          {list && way && way.way !== null && (
+            <ViceVersaButton
+              way={way.way}
+              wayTo={way.wayTo}
+              isSwitchable={way.isSwitchable}
+              isBack={list.back}
+              onSwitch={onFlip}
+            />
+          )}
+          <OverviewPill isShown={overview.isShown} go={overview.go} map={map} isIconOnly={!!list} />
+        </div>
+        {list && floats && <ListFilter list={list} onFilter={onFilter} tooltip="top" />}
+      </MapControlsDock>
+    </>
   );
 }
 
