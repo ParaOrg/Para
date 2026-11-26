@@ -1,4 +1,4 @@
-import { FRAMED_SHARE, type Snap } from '@/shared/ui/sheet-gesture';
+import type { Snap } from '@/shared/ui/sheet-gesture';
 import type { LngLat } from '@/shared/utils/geo';
 
 import { sharingAnEnd } from '../model/departures';
@@ -47,10 +47,12 @@ export function sharedSnap(snap: Snap, anyOpen: boolean, idle: Snap = 'low'): Sn
 
 /**
  * Where a route's detail opens from a tap — a RouteCard in the list, or a line with one route: the
- * middle, about half the map, where the controls stop rising (the owner, 2026-11-25). ‹ gives the
- * list back at its own height; ⇅, Vice Versa and another route keep the trip's.
+ * trip's middle, 45% of the map. It is the trip's alone: the route list's middle (its ⌄), where
+ * the controls stop rising and the camera's frame stay at FRAMED_SHARE, so a trip opened stands a
+ * little below the controls. ‹ gives the list back at its own height; ⇅, Vice Versa and another
+ * route keep the trip's.
  */
-export const TRIP_OPENS_AT: Snap = FRAMED_SHARE;
+export const TRIP_OPENS_AT: Snap = 0.45;
 
 /**
  * A trip stepped behind a place's card when its name on the map was tapped:
