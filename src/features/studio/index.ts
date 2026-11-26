@@ -29,6 +29,7 @@ export { NEW_MENU_DOCK_FOOT, NewMenu } from './panels/new-menu';
 export { SaveToasts } from './panels/save-toasts';
 export { StudioHotspotCard } from './panels/studio-hotspot-card';
 export { StudioSaveSheets } from './panels/studio-save-sheets';
+export { StudioRouteLineDetail } from './panels/studio-route-line-detail';
 export { StudioTripCard } from './panels/studio-trip-card';
 export { useDeleteActions } from './panels/use-delete-actions';
 export { useDraftOnly } from './panels/use-draft-only';
