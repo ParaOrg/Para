@@ -250,7 +250,7 @@ test('the tracked camera keeps the tilt it is given: 3D stays tilted', () => {
   assert.equal(view.bearing, 0);
 });
 
-test('the compass camera: 200 m on the scale bar, tilted, turned the way the phone faces, else as the map is', () => {
+test("the compass camera: 200 m on the scale bar, at the chosen view's tilt, turned the way the phone faces, else as the map is", () => {
   const turned = commuterCamera({
     camera: 'compass',
     fix: locatedAt,
@@ -258,9 +258,10 @@ test('the compass camera: 200 m on the scale bar, tilted, turned the way the pho
     keptZoom: 16.5,
     mapBearing: 33,
     tapped: false,
+    restPitch: 55,
   });
   assert.equal(turned.zoom, zoomForScale(COMPASS_SCALE_M, 14.7));
-  assert.equal(turned.pitch, 45);
+  assert.equal(turned.pitch, 55);
   assert.equal(turned.bearing, 80);
   const unturned = commuterCamera({
     camera: 'compass',
@@ -271,6 +272,7 @@ test('the compass camera: 200 m on the scale bar, tilted, turned the way the pho
     tapped: false,
   });
   assert.equal(unturned.bearing, 33);
+  assert.equal(unturned.pitch, 0);
 });
 
 test('the camera takes 800 ms on a tap or a change of the card, 400 on a fix', () => {

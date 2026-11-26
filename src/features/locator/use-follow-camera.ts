@@ -1,6 +1,7 @@
 import type { MapLibreMap } from 'maplibre-gl';
 import { useEffect, useRef, type RefObject } from 'react';
 
+import { restingPitch } from '@/features/routes/map/view-mode';
 import type { Turn } from '@/shared/hooks/commit-turn';
 import type { Snap } from '@/shared/ui/sheet-gesture';
 
@@ -22,8 +23,9 @@ interface FollowCameraInput {
 
 /**
  * The camera with the commuter (useLocator's), the whole view on every fix, turn and tap
- * (commuterCamera). The tracked view keeps the map's tilt, 2D's flat or 3D's (view-mode.ts); the
- * compass view tilts it, and coming back puts back the tilt it had before.
+ * (commuterCamera). The tracked view rests at the tilt of the view the commuter chose, 2D's flat or
+ * 3D's (restingPitch), read on each move, so the compass view comes back to it and a tilt under way
+ * is never stopped halfway.
  */
 export function useFollowCamera({
   map,
@@ -45,18 +47,9 @@ export function useFollowCamera({
   // the card's height: the commuter stays clear of it as it moves.
   const turn = camera === 'compass' ? heading : null;
   const lastSnap = useRef(snap);
-  // The map's tilt before the compass view tilted it, so the tracked view goes back to it: 2D's
-  // flat or 3D's tilt (view-mode.ts), whichever the commuter chose.
-  const pitchBeforeCompass = useRef<number | null>(null);
   useEffect(() => {
     const follow = () => {
       if (!map || !fix || camera === 'free') return;
-      let restPitch = map.getPitch();
-      if (camera === 'compass') pitchBeforeCompass.current ??= restPitch;
-      else {
-        restPitch = pitchBeforeCompass.current ?? restPitch;
-        pitchBeforeCompass.current = null;
-      }
       const tapped = lastTaps.current !== taps || lastSnap.current !== snap;
       lastTaps.current = taps;
       lastSnap.current = snap;
@@ -69,7 +62,8 @@ export function useFollowCamera({
           keptZoom: trackedZoomRef.current,
           mapBearing: map.getBearing(),
           tapped,
-          restPitch,
+          // The view the commuter chose, read now: a tap on 2D/3D since the last fix counts.
+          restPitch: restingPitch(),
         }),
         offset: offsetRef.current(),
       });
