@@ -5,8 +5,8 @@ import { useTabLoop } from '@/shared/hooks/use-tab-loop';
 import { CloseIcon } from '@/shared/ui/route-icons';
 
 import type { Basemap } from './basemap';
+import type { MapStyleDirection } from './map-style-opening';
 import { MapStyleRows } from './map-style-rows';
-import type { MapStyleDirection } from './use-map-style-card';
 
 import './map-style.css';
 

@@ -32,7 +32,7 @@ export const AtTheMapsFoot: Story = {};
 export const OverAnOpenCard: Story = { args: { isDocked: true } };
 
 /**
- * The public map's: in the map's top-left corner, 12 in from each side, over a card's sheet even at
+ * The public map's: in the map's top-left corner, 16 in and 24 down, over a card's sheet even at
  * full height (it stays reachable), wherever the card is.
  */
 export const InTheTopLeftCorner: Story = {
@@ -42,8 +42,8 @@ export const InTheTopLeftCorner: Story = {
     const button = within(canvasElement).getByRole('button').getBoundingClientRect();
     await expect(host).toBeDefined();
     if (host) {
-      await expect(Math.round(button.left - host.left)).toBe(12);
-      await expect(Math.round(button.top - host.top)).toBe(12);
+      await expect(Math.round(button.left - host.left)).toBe(16);
+      await expect(Math.round(button.top - host.top)).toBe(24);
     }
   },
 };

@@ -56,6 +56,7 @@ import { cn } from '@/shared/utils/cn';
 
 import { ExploreCards, PageToasts, PlaceSearchBar } from './lazy-parts';
 import { MapSheetControls } from './map-sheet-controls';
+import { MapViewCorner } from './map-view-corner';
 import type { SaidNote } from './page-toasts';
 import { sheetTopUnderSearch } from './sheet-top-under-search';
 import { useStatusBarColour } from './status-bar';
@@ -212,7 +213,8 @@ export function PublicMapApp() {
       className={cn(
         'group/map @container relative h-full w-full overflow-clip',
         needRefresh && '[--toast-top:calc(env(safe-area-inset-top)+--spacing(19))]',
-        '[--dock-gap:1rem]', // 16 over a sheet or the explore cards: controls, locate-me (4848:33680)
+        // 16 over a sheet or the explore cards, 16 in, 16 up floating: controls, locate-me (4885:44805)
+        '[--dock-float-bottom:1rem] [--dock-gap:1rem] [--dock-right:1rem]',
         sheetTopUnderSearch(needRefresh, offline || age.stale),
       )}
     >
@@ -221,14 +223,9 @@ export function PublicMapApp() {
       {/* Out of reach under the credits, the map and every card alike. */}
       <div inert={credits.state === 'open'} className="contents">
         {/*
-        No count of routes and hotspots in a corner, and no +, − or compass:
-        the owner leaves them off as clutter for commuters.
-      */}
-        {/*
-        Opened framed on the routes, and handed over to draw them as soon as
-        its style is in (`openOn`). MapLibre's corner credits step aside: the
-        map's own ⓘ (MapCreditsDock) opens them as the Map Data Source sheet,
-        always a tap away, as the licences need.
+        No count of routes and hotspots, no +, − or compass: clutter for commuters (the owner).
+        Opened framed on the routes, drawn once its style is in (`openOn`). MapLibre's corner
+        credits step aside: the map's ⓘ (MapCreditsDock) opens them as the Map Data Source sheet.
       */}
         <MapView
           onReady={setMap}
@@ -249,6 +246,7 @@ export function PublicMapApp() {
             />
           </div>
         )}
+        <MapViewCorner map={map} isMapLoaded={isMapLoaded} />
         <MapSheetControls
           map={map}
           overview={overviewButton}
@@ -267,6 +265,7 @@ export function PublicMapApp() {
           snap={cards.snap}
           offset={clearOfOpen}
           docked={cards.open}
+          hasMapStyle={false}
           cameraTurn={locatorTurn}
           picks={{
             pickedId: ride.pickedId,

@@ -39,18 +39,17 @@ interface Props {
   labelsPlace?: LabelsPlace;
   /** A card is open: the button sits on its sheet. */
   docked: boolean;
+  /** The map-style button over the LocatorButton (the studio), or the LocatorButton alone (Locator). */
+  hasMapStyle?: boolean;
   /** The page's turn for the camera (commit-turn.ts): after the cards' camera. */
   cameraTurn: Turn;
   /** What was just picked, for the dot to gaze at; and when ‹ or ✕ last went back (useGazeHush). */
   picks: Picks;
   hushedAt: { readonly current: number };
   /**
-   * Where the commuter is, said at the first fix and then only when it
-   * matters (shouldTell), so the page that listens renders for a walk across
-   * town and not for every fix; null when the fix is lost, so the page does
-   * not keep choosing from a position the commuter has taken back. It never
-   * leaves this phone (ADR 0004): the page keeps it in memory to choose a
-   * loop's tip.
+   * Where the commuter is, said at the first fix and then only when it matters (shouldTell), so
+   * the page renders for a walk across town, not for every fix; null when the fix is lost. It never
+   * leaves this phone (ADR 0004): the page keeps it in memory to choose a loop's tip.
    */
   onWhere?: (where: CommuterWhere | null) => void;
   /** What the locator has to say, for the page's problem toast; null once a fix comes (Locator). */
@@ -58,10 +57,8 @@ interface Props {
 }
 
 /**
- * The commuter's own position, when they ask for it, and the camera with
- * them, kept clear of the card on show, as a picked hintuan is. The button,
- * with the map-style button on it, and the dot on the map with its moods and
- * its gaze.
+ * The commuter's own position, when they ask for it, and the camera with them, kept clear of the
+ * card on show, as a picked hintuan is. The button, and the dot on the map with its moods and gaze.
  *
  * A child of PublicMapApp, not hooks of it: a fix, a turn of the phone and the
  * dot's moods, a second apart, render this alone. As hooks of the page they
@@ -79,6 +76,7 @@ export function CommuterLocation({
   snap,
   offset,
   docked,
+  hasMapStyle = true,
   cameraTurn,
   picks,
   hushedAt,
@@ -129,6 +127,7 @@ export function CommuterLocation({
           basemapThumbnails={basemapThumbnails}
           labelsPlace={labelsPlace}
           docked={docked}
+          hasMapStyle={hasMapStyle}
           onNote={onNote}
         />
       )}

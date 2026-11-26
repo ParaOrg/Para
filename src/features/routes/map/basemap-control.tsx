@@ -5,10 +5,10 @@ import { createPortal } from 'react-dom';
 import { IconButton } from '@/design-system/primitives/icon-button';
 
 import type { Basemap } from './basemap';
+import { LayersIcon } from './layers-icon';
 import { LazyMapStyle, loadMapStyle } from './lazy-map-style';
 import type { LabelsPlace } from './location-labels';
 import { MapStyleButton } from './map-style-button';
-import { MapTypeIcon } from './map-type-icon';
 import { useMapStyleCard } from './use-map-style-card';
 
 /** The studio's round 48 px button, or Figma's 40 px IconButton at 16 px from the corner. */
@@ -100,7 +100,7 @@ export function BasemapControl({
         <IconButton
           tooltip="left"
           label="Map design"
-          icon={<MapTypeIcon />}
+          icon={<LayersIcon />}
           onClick={toggle}
           aria-expanded={isOpen}
           aria-haspopup="dialog"

@@ -1,6 +1,6 @@
 import type { ComponentPropsWithoutRef } from 'react';
 
-import { MapTypeIcon } from './map-type-icon';
+import { LayersIcon } from './layers-icon';
 
 /**
  * Round on its own (4176:10679); only its top when the LocatorButton sits
@@ -31,7 +31,7 @@ interface MapStyleButtonProps extends Omit<
 
 /**
  * The "MayLayers or Theme" button (Figma 4176:10679): a 48 px Special pill
- * holding `map-type`, that opens the Map Style card. Pressed is
+ * holding `layers`, that opens the Map Style card. Pressed is
  * InnerShadow/SpecialButtonPressed while touched, as on the LocatorButton.
  * Disabled keeps its Rest look at opacity/60, as Button and IconButton do.
  */
@@ -51,7 +51,7 @@ export function MapStyleButton({ corners = 'all', currentLabel, ...rest }: MapSt
         CORNERS[corners]
       }
     >
-      <MapTypeIcon />
+      <LayersIcon />
       {/* Figma's shadow lies over what the button holds, as on the LocatorButton. */}
       <span
         aria-hidden
