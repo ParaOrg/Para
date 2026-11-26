@@ -61,6 +61,20 @@ test('directions grouped under their route, the routes in name order, unnamed on
   );
 });
 
+test('two routes with the same name stay two groups, each with its own route id (the lists key by it)', () => {
+  const groups = groupBySignboard([
+    direction('a1', 'r1', 'Novaliches – Philcoa', 'Novaliches → Philcoa'),
+    direction('b1', 'r2', 'Novaliches – Philcoa', 'Novaliches → Philcoa'),
+  ]);
+  assert.deepEqual(
+    groups.map((g) => [g.routeId, g.signboard, g.directions.map((v) => v.id)]),
+    [
+      ['r1', 'Novaliches – Philcoa', ['a1']],
+      ['r2', 'Novaliches – Philcoa', ['b1']],
+    ],
+  );
+});
+
 test('the informal names in use: each once whatever its case, in order, the box itself left out', () => {
   const me = box('SM Fairview Ilalim', 121.0, 'hintuan', 'SM Fairview');
   const names = knownInformalNames(

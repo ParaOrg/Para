@@ -20,6 +20,8 @@ export interface ListedDirection {
 
 /** Directions under their route's generated name, the routes in name order. */
 export interface SignboardGroup<TDirection extends ListedDirection = ListedDirection> {
+  /** The route's id: two routes may share a name. */
+  routeId: string;
   signboard: string;
   directions: TDirection[];
 }
@@ -31,7 +33,11 @@ export function groupBySignboard<TDirection extends ListedDirection>(
   const groups = new Map<string, SignboardGroup<TDirection>>();
   for (const v of directions) {
     const key = v.routeId;
-    const g = groups.get(key) ?? { signboard: v.route?.name ?? '(unnamed)', directions: [] };
+    const g = groups.get(key) ?? {
+      routeId: key,
+      signboard: v.route?.name ?? '(unnamed)',
+      directions: [],
+    };
     g.directions.push(v);
     groups.set(key, g);
   }
