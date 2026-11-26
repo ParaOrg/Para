@@ -92,7 +92,11 @@ const routed = (streets?: Segment['streets']): Segment => ({
 function clientWith(draft: DraftRow | undefined, noDraftOf: string | undefined) {
   const client = createQueryClient();
   if (draft) client.setQueryData(reviewKeys.draftOf('route', draft.subject_id), draft);
-  if (noDraftOf) client.setQueryData(reviewKeys.draftOf('route', noDraftOf), null);
+  if (noDraftOf) {
+    // Fresh for good: a story has no database to read it again from on mount.
+    client.setQueryDefaults(reviewKeys.draftOf('route', noDraftOf), { staleTime: Infinity });
+    client.setQueryData(reviewKeys.draftOf('route', noDraftOf), null);
+  }
   return client;
 }
 
@@ -427,7 +431,11 @@ export const EditRoutePublishedUnpublishRefused: Story = {
     const canvas = within(canvasElement);
     window.confirm = () => true;
     await userEvent.click(canvas.getByRole('button', { name: 'Unpublish' }));
-    await expect(await canvas.findByRole('alert')).toBeVisible();
+    // The refusal makes the drafts read again, and Add signboard's read has no database here:
+    // its own notice is an alert too. The Unpublish one is the other.
+    const alerts = await canvas.findAllByRole('alert');
+    const refused = alerts.find((alert) => !/signboards/.test(alert.textContent ?? ''));
+    await expect(refused).toBeVisible();
     await expect(canvas.getByRole('button', { name: 'Unpublish' })).toBeEnabled();
   },
 };
