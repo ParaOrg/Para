@@ -29,4 +29,8 @@ Status: needs-info
   menu items. None are drawn yet, so the browser's focus ring and the menu's hover stand in.
 - **The route list on a computer.** It still floats over the map as before. The list frame shows
   it in the left panel, which is not built yet.
+- **Add signboard in Edit Route.** The signboard editor moved from the route line detail into Edit Route,
+  beside the map, and sits under Route Information in its old look. It shows only for a direction
+  that is already saved: a new one has no boards to add until its first save. Phones keep it on
+  their trip card. Code: `src/features/studio/panels/save-panel.tsx` (`DraftSignboards`).
 - **A phone layout** for the detail. Desktop comes first, so phones keep today's trip card.

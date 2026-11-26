@@ -568,10 +568,11 @@ const upload = (name, text) =>
     .getByTestId('signboard-file')
     .setInputFiles({ name, mimeType: 'image/svg+xml', buffer: Buffer.from(text) });
 await openCard(OUT[1]);
+await page.getByRole('button', { name: 'Edit route' }).click();
 // The signboards wait for the route's draft to be read: a save just before dropped the cached one.
 await waitFor(async () => (await page.getByTestId('signboard-editor').count()) === 1);
 check(
-  'the route line detail has a Signboard for the direction on show',
+  'Edit Route has a Signboard for the direction it edits',
   (await page.getByTestId('signboard-editor').count()) === 1 && (await items().count()) === 0,
 );
 n = log.length;
@@ -596,16 +597,15 @@ check(
     approvedWrites(w).length === 0,
   said(w),
 );
-// Reopened later, the card lists the draft's boards, not the approved row's empty list:
+// Reopened later, Edit Route lists the draft's boards, not the approved row's empty list:
 // a change saved on top of the draft would otherwise drop the board the draft added.
 await load();
 await openCard(OUT[1]);
-// A tap on the editor's own draft opens it into editing; Exit leaves the drawing for its card.
+// A tap on the editor's own draft opens it into editing, Add signboard with it.
 await waitFor(async () => (await pointsShown()) > 0);
-await page.getByRole('button', { name: 'Exit', exact: true }).click();
 await waitFor(async () => (await items().count()) === 1);
 check(
-  "  reopened, the card lists the editor's draft's board",
+  "  reopened, Edit Route lists the editor's draft's board",
   (await items().count()) === 1,
   `${await items().count()} boards`,
 );
@@ -622,6 +622,14 @@ check(
   said(w),
 );
 check('  and leaves the file in the bucket: the approved map may still list it', bucket.has(board));
+// Out of Edit Route and the page read again; a tap on the editor's own draft opens it, and Exit
+// from there leaves the route's detail open.
+await page.getByRole('button', { name: 'Exit', exact: true }).click();
+await load();
+await openCard(OUT[1]);
+await waitFor(async () => (await pointsShown()) > 0);
+await page.getByRole('button', { name: 'Exit', exact: true }).click();
+await page.getByTestId('route-line-detail').waitFor({ timeout: 10000 });
 
 // ---- 4a. Delete while the editor already has a draft of the route: it joins the draft
 // The signboard's draft is still the editor's, unreviewed. Approving the delete in the same

@@ -8,7 +8,6 @@ import { isDrawn, isLoop, type DirectionRow } from '@/features/routes/model/rout
 import type { Timeline } from '@/features/routes/model/timeline';
 
 import { directionTabs } from './direction-tabs';
-import { DraftSignboards } from './draft-signboards';
 import { LockedDraft } from './locked-draft';
 import { RouteLineActions } from './route-line-actions';
 import { RouteLineDetail } from './route-line-detail';
@@ -129,11 +128,6 @@ export function StudioRouteLineDetail({
       signboards={(direction.signboards ?? []).map(signboardUrl)}
       stops={routeStops(timeline, isLoop(direction))}
       onStop={handleStop}
-      footer={
-        isEditable && (
-          <DraftSignboards direction={direction} onChanged={() => void saved.reload()} />
-        )
-      }
     />
   );
 }
