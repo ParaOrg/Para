@@ -283,7 +283,7 @@ That is **about 180,700 job-minutes per 30 days at this week's rate, for $0.** T
 | CodeQL (javascript-typescript) | 148 | 2 s / 2m26s | 81 s / 96 s |
 | Security, both jobs | 149 | 2 s / 3m37s | 9 s / 18 s |
 
-**The slowest check a pull request shows is emulator-ride, at 25 minutes.** It is not required. It is 20 minutes by design: "twenty minutes with the screen off, the app's process killed at fifteen" (`contributor-app.yml`). It ran on 78 pull requests in the week and holds one of the 20 runner slots for 25 minutes each time. 24 of the 150 Contributor app runs were cancelled and 3 were re-run.
+**The slowest check a pull request shows is emulator-ride, at 25 minutes.** It is not required. It is 20 minutes by design: "twenty minutes with the screen off, the app's process killed at fifteen" (`contributor-app.yml`). It ran on 78 pull requests in the week and holds one of the 20 runner slots for 25 minutes each time. (Since 2026-11-26 it runs on pushes to `staging` only.) 24 of the 150 Contributor app runs were cancelled and 3 were re-run.
 
 ### 3.12 Local
 
@@ -351,7 +351,7 @@ All three look Windows-only; CI on Linux passes them. They matter for hooks: **a
 | Option | Waiting it should give | Monthly cost | Needs |
 | --- | --- | --- | --- |
 | The four built-app suites as one job (94 s of work in four jobs today) | a little less | $0 | one `.github/` change |
-| Keep the emulator jobs off pull requests that only touch shared code | frees up to 2 slots for 25 minutes on about 11 pull requests a day | $0 | the owner's decision: it narrows a pull-request check (the push to `staging` still runs it) |
+| **Done 2026-11-26 (the owner said yes, and wider):** the emulator jobs are off every pull request; they run on each push to `staging` and by hand | frees up to 2 slots for 25 minutes on about 11 pull requests a day | $0 | the owner's decision: it narrows a pull-request check (the push to `staging` still runs it) |
 | GitHub Team plan: 60 jobs at once | near zero most of the day **[inference]** | about $4 a seat; the org shows 6 filled seats, so about $24 (**price from memory, not checked today**) | the org owner, billing |
 | Blacksmith: no limit on jobs at once | their page: microVMs "boot in under 3 seconds" | $700 to $1,450 at today's volume | the org owner, an account, a card |
 
@@ -594,7 +594,7 @@ Status on 22 November:
 1. **Decision:** what "a pull request's result" means (section 6).
 2. **Decision:** merge queue on `main` only, or on `staging` too.
 3. **Decision:** may the queue and pushes use the recorded router, with the live one nightly only?
-4. **Decision:** may the emulator jobs stop running on pull requests that only touch shared code?
+4. **Decided 2026-11-26, yes, for every pull request:** the emulator jobs run on each push to `staging` and by hand, not on pull requests (`docs/agents/staging-protection.md`, "Where the emulator runs").
 5. **Org settings only he can change:** the `staging` ruleset, then merge queue in the rulesets.
 6. **Go-ahead for `.github/` changes:** about eight, one at a time (5 to 10, 14, 15).
 7. **Dependency approval, with `.claude/CLAUDE.md` edits:** Bun (replacing Prettier; running or replacing ESLint; replacing Node's test runner for the unit checks) and hk.

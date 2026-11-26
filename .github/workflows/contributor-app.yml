@@ -1,7 +1,13 @@
 # Builds the contributor app, the Android APK (docs/adr/0006, .scratch/contributor-app/).
 #
 #   - A pull request that touches the app, a push to `staging` that does, or "Run workflow", builds
-#     a DEBUG APK and attaches it as an artifact. These jobs never see a secret.
+#     a DEBUG APK (`apk`, about 2 minutes) and attaches it as an artifact. These jobs never see a
+#     secret.
+#   - The two emulator jobs, `emulator-ride` (about 26 minutes) and `emulator-notification` (about
+#     12), do not run on a pull request. They run on every push to `staging` that touches the app,
+#     after each merge, and by hand ("Run workflow"). A change reaches `staging` only through a
+#     pull request, so every change still gets the emulator run, once it has landed. If it fails,
+#     merges stop until the cause is named (docs/agents/staging-protection.md).
 #   - On `staging`, once that APK's emulator checks pass, `test-latest` puts it on the pre-release
 #     tagged test-latest as para-test.apk, replacing the last one, so
 #     releases/download/test-latest/para-test.apk is always the newest test build. A pre-release is
@@ -153,7 +159,7 @@ jobs:
   # off, the app's process killed at fifteen, and every fix up to the kill still in the ride. Its APK
   # is built with the ride's driver (VITE_EMULATOR_RIDE), so it is not the APK a tester installs.
   emulator-ride:
-    if: ${{ !startsWith(github.ref, 'refs/tags/app-v') && !(inputs.sign_dry_run && github.ref == 'refs/heads/main') }}
+    if: ${{ github.event_name != 'pull_request' && !startsWith(github.ref, 'refs/tags/app-v') && !(inputs.sign_dry_run && github.ref == 'refs/heads/main') }}
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
@@ -241,7 +247,7 @@ jobs:
   # does; and the ride's service in the foreground, or not, after each, as RideActionReceiver stops
   # and starts it (RideService.java). The emulator ride's APK, with its driver.
   emulator-notification:
-    if: ${{ !startsWith(github.ref, 'refs/tags/app-v') && !(inputs.sign_dry_run && github.ref == 'refs/heads/main') }}
+    if: ${{ github.event_name != 'pull_request' && !startsWith(github.ref, 'refs/tags/app-v') && !(inputs.sign_dry_run && github.ref == 'refs/heads/main') }}
     runs-on: ubuntu-latest
     timeout-minutes: 40
     steps:
