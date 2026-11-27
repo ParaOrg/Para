@@ -383,9 +383,10 @@ test('step 13: a hintuan moved, added, gone, of another id, or no longer stopped
     'a hintuan of another id in the same box': stops.map((s) =>
       s.id === 'On' ? { ...s, id: 'On2' } : s,
     ),
-    'a hintuan made a station the jeep does not stop at': stops.map((s) =>
-      s.id === 'On' ? { ...s, line: 'LRT-1' } : s,
-    ),
+    'a station added on the road, which the jeep stops at as at any hintuan': [
+      ...stops,
+      hotspot('Station', 'hintuan', 500, 0, { line: 'LRT-1' }),
+    ],
     'a hintuan made a terminal': stops.map((s) =>
       s.id === 'Beside' ? { ...s, kind: 'terminal' } : s,
     ),
@@ -411,10 +412,9 @@ test('step 13: what does not change the stretches does not change the key', () =
   const key = linePass(v, passBoxes(stops)).passKey;
   const same = {
     'a hintuan 2 km away': [...stops, hotspot('Far', 'hintuan', 3000, 2000)],
-    'a station on the road the jeep does not stop at': [
-      ...stops,
-      hotspot('Station', 'hintuan', 500, 0, { line: 'LRT-1' }),
-    ],
+    'a hintuan made a station, which the jeep stops at all the same': stops.map((s) =>
+      s.id === 'On' ? { ...s, line: 'LRT-1' } : s,
+    ),
     'a hintuan renamed': stops.map((s) =>
       s.id === 'On' ? { ...s, name: 'Renamed', informal: 'Elsewhere' } : s,
     ),
