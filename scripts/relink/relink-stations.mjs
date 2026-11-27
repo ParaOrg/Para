@@ -54,7 +54,9 @@ export function planRelink({ directionRows, hotspotRows, linkRows }) {
         add.push({
           variantId: v.id,
           routeId: v.route.id,
+          routeRevision: v.route.revision,
           stopId: l.stop_id,
+          stopRevision: stop.revision,
           sequence: l.stop_sequence,
           label,
           stop: stop.name,
@@ -82,40 +84,59 @@ const header = (what) =>
 
 /** The three files: the read-only check, the apply and the revert. */
 export function relinkSql(add) {
-  const routeIds = [...new Set(add.map((a) => a.routeId))];
-  const stopIds = [...new Set(add.map((a) => a.stopId))];
+  const uuids = (ids) => ids.map((id) => `${q(id)}::uuid`).join(', ');
+  const routes = [...new Map(add.map((a) => [a.routeId, a.routeRevision])).entries()];
+  const stops = [...new Map(add.map((a) => [a.stopId, a.stopRevision])).entries()];
+  const pairs = (rows) => rows.map(([id, rev]) => `(${q(id)}::uuid, ${Number(rev)})`).join(', ');
   const planned = `with planned(route_variant_id, stop_id, stop_sequence) as (values\n${valuesOf(add)}\n)`;
   const draftsOpen =
-    `select count(*) from public.draft d where (d.kind = 'route' and d.subject_id in (${routeIds.map((id) => `${q(id)}::uuid`).join(', ')}))` +
-    ` or (d.kind = 'hotspot' and d.subject_id in (${stopIds.map((id) => `${q(id)}::uuid`).join(', ')}))`;
+    `select count(*) from public.draft d where (d.kind = 'route' and d.subject_id in (${uuids(routes.map(([id]) => id))}))` +
+    ` or (d.kind = 'hotspot' and d.subject_id in (${uuids(stops.map(([id]) => id))}))`;
+  // A route or station saved, taken down or gone since the plan was made: its links may be stale.
+  const changed =
+    `select count(*) from (values ${pairs(routes)}) as w(id, rev) left join public.route r on r.id = w.id` +
+    ` where r.id is null or r.revision <> w.rev or r.status <> 'approved'`;
+  const changedStops =
+    `select count(*) from (values ${pairs(stops)}) as w(id, rev) left join public.stop s on s.id = w.id` +
+    ` where s.id is null or s.revision <> w.rev or s.status <> 'approved' or s.line is null`;
+  const linked = `select count(*) from planned p join public.route_stop s using (route_variant_id, stop_id)`;
   const check =
     header('read-only dry run of the station relink. Changes nothing.') +
     `${planned}\nselect * from (values\n` +
     `  ('planned links', (select count(*) from planned)),\n` +
-    `  ('already linked (0 before the apply; ${add.length} after)', (select count(*) from planned p join public.route_stop s using (route_variant_id, stop_id))),\n` +
-    `  ('direction or station gone (must be 0)', (select count(*) from planned p where not exists (select 1 from public.route_variant v where v.id = p.route_variant_id) or not exists (select 1 from public.stop s where s.id = p.stop_id and s.line is not null))),\n` +
+    `  ('already linked (0 before the apply; ${add.length} after)', (${linked})),\n` +
+    `  ('routes changed since the plan (0 before the apply)', (${changed})),\n` +
+    `  ('stations changed since the plan (0 before the apply)', (${changedStops})),\n` +
     `  ('open drafts on these routes or stations (must be 0)', (${draftsOpen})),\n` +
     `  ('route_stop rows now', (select count(*) from public.route_stop))\n` +
     `) as t(what, n);\n`;
   const apply =
     header(`the station relink: adds ${add.length} links, removes none. One transaction.`) +
-    `-- Refuses, changing nothing, while a draft is open on a route or station it touches (a link\n` +
-    `-- write bumps both revisions, which would make that draft stale), or when a planned direction or\n` +
-    `-- station is gone. Safe to run twice: a link already there is left as it is.\n` +
+    `-- Run only once the rule is on main and the studio and the publish run it (README).\n` +
+    `-- Refuses, changing nothing: while a draft is open on a route or station it touches (a link write\n` +
+    `-- bumps both revisions, which would make that draft stale); or when a route or station was saved,\n` +
+    `-- taken down or deleted since the plan was made (regenerate then). Its own inserts bump those\n` +
+    `-- revisions, so a second run, finding every planned link there, adds nothing and changes nothing.\n` +
     `begin;\ndo $$\ndeclare\n  n integer;\nbegin\n` +
     `  if (${draftsOpen}) > 0 then\n    raise exception 'relink: a draft is open on a route or station it touches. Nothing was changed.';\n  end if;\n` +
+    `  if (${linked.replace('select count(*) from planned', `${planned} select count(*) from planned`)}) = ${add.length} then\n` +
+    `    raise notice 'relink: every planned link is already there. Nothing was changed.';\n    return;\n  end if;\n` +
+    `  if (${changed}) > 0 or (${changedStops}) > 0 then\n` +
+    `    raise exception 'relink: a route or station changed since the plan was made; regenerate it (README). Nothing was changed.';\n  end if;\n` +
     `  ${planned.replace(/\n/g, '\n  ')}\n  insert into public.route_stop (route_variant_id, stop_id, stop_sequence)\n` +
     `  select p.route_variant_id, p.stop_id, p.stop_sequence from planned p\n` +
-    `  join public.route_variant v on v.id = p.route_variant_id\n` +
-    `  join public.stop s on s.id = p.stop_id and s.line is not null\n` +
     `  on conflict (route_variant_id, stop_id) do nothing;\n` +
     `  get diagnostics n = row_count;\n  raise notice 'relink: % link(s) added', n;\nend;\n$$;\ncommit;\n`;
   const revert =
     header(
-      `undo of the station relink: removes exactly the ${add.length} links it adds, whatever their sequence.`,
+      `undo of the station relink: removes the ${add.length} (direction, station) links it adds, whatever their sequence.`,
     ) +
-    `begin;\n${planned}\ndelete from public.route_stop s using planned p\n` +
-    `where s.route_variant_id = p.route_variant_id and s.stop_id = p.stop_id;\ncommit;\n`;
+    `-- Removes them even where a studio save has written the same link since: run it only to undo the\n` +
+    `-- apply straight away. Refuses while a draft is open on a route or station it touches.\n` +
+    `begin;\ndo $$\nbegin\n` +
+    `  if (${draftsOpen}) > 0 then\n    raise exception 'relink revert: a draft is open on a route or station it touches. Nothing was changed.';\n  end if;\n` +
+    `  ${planned.replace(/\n/g, '\n  ')}\n  delete from public.route_stop s using planned p\n` +
+    `  where s.route_variant_id = p.route_variant_id and s.stop_id = p.stop_id;\nend;\n$$;\ncommit;\n`;
   return { check, apply, revert };
 }
 

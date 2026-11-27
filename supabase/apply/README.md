@@ -861,23 +861,31 @@ Not a migration: no schema changes. Road routes now list the train and Carousel 
 directions saved before the rule changed lack them. These three files add exactly those links, with
 the `stop_sequence` a save would store. They were generated from the live tables on 2026-11-27 by
 `scripts/relink/relink-stations.mjs`, which reads them as the publish does (publishable key,
-published rows only) and works the links out with the studio's own save rule.
+published rows only) and works the links out with the studio's own save rule on each full stored
+line.
+
+**Run it only once the rule is live**: #1266 and the ferry follow-up merged into `main`, and the
+studio and the Publish map workflow running from it. Before that, the live studio still follows the
+old rule: a save of one of these routes or stations would delete the links again, and the publish's
+map-data check would warn about each one.
 
 | File | What it does |
 | --- | --- |
-| `20261127120000_relink_stations_check.sql` | Read-only dry run: the planned links, how many are already there, any planned direction or station gone, open drafts on the routes or stations it touches, and the `route_stop` row count. |
-| `20261127120000_relink_stations_apply.sql` | One transaction: adds 94 links on 14 directions, removes none. Refuses, changing nothing, while a draft is open on a route or station it touches (a link write bumps both revisions and would make that draft stale). A link already there is left alone, so it is safe to run twice. |
-| `20261127120000_relink_stations_revert.sql` | One transaction: removes exactly those 94 links. |
+| `20261127120000_relink_stations_check.sql` | Read-only dry run: the planned links, how many are already there, routes and stations saved, taken down or gone since the plan was made, open drafts on them, and the `route_stop` row count. |
+| `20261127120000_relink_stations_apply.sql` | One transaction: adds 94 links on 14 directions, removes none. Refuses, changing nothing, while a draft is open on a route or station it touches (a link write bumps both revisions and would make that draft stale), or when one of them changed since the plan (then regenerate). A second run finds every link there and changes nothing. |
+| `20261127120000_relink_stations_revert.sql` | One transaction: removes those 94 (direction, station) links, also where a later studio save wrote the same link, so use it only to undo the apply straight away. Refuses while a draft is open on them. |
 
 ## Steps
 
-1. Run the check. Expect: planned 94, already linked 0, gone 0, open drafts 0. If drafts are open,
-   approve or send them back first; if anything is gone, regenerate (below).
-2. Run the apply. It ends with a notice, `relink: 94 link(s) added`.
-3. Run the check again: already linked 94, and `route_stop rows now` up by 94.
-4. Run the publish (the Publish map workflow, or wait for the nightly run). The map-data check's
-   "passes … but is not linked" warnings for stations should be gone.
+1. Check the precondition above.
+2. Run the check. Expect: planned 94, already linked 0, routes changed 0, stations changed 0, open
+   drafts 0. Open drafts: approve or send them back first. Anything changed: regenerate (below).
+3. Run the apply. It ends with a notice, `relink: 94 link(s) added`.
+4. Run the check again: already linked 94, `route_stop rows now` up by 94. (The routes and stations
+   now read as changed: the links bumped their revisions, as a save does.)
+5. Run the Publish map workflow, or wait for the nightly run. The map-data check's "passes … but is
+   not linked" warnings for stations should be gone, and the Taft routes list their stations.
 
 To regenerate against the tables as they are now (after map edits, say):
 `node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs scripts/relink/relink-stations.mjs`
-prints the plan and writes nothing; add `--write` to rewrite the three files.
+prints the plan and writes nothing; add `--write` to rewrite the three files, then commit them.

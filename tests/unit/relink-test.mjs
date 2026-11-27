@@ -74,12 +74,22 @@ test('a train is owed nothing new, and a link already there is not added again',
   assert.deepEqual(add, []);
 });
 
-test('the SQL adds only, guarded by open drafts, and the revert removes the same pairs', () => {
-  const add = [{ variantId: 'v', routeId: 'r', stopId: 's', sequence: 3, label: 'v', stop: 's' }];
+test('the SQL adds only, guarded by open drafts and changed subjects, and the revert removes the same pairs', () => {
+  const add = [
+    { variantId: 'v', routeId: 'r', routeRevision: 7, stopId: 's', stopRevision: 2, sequence: 3 },
+  ];
   const { check, apply, revert } = relinkSql(add);
   assert.match(apply, /on conflict \(route_variant_id, stop_id\) do nothing/);
   assert.match(apply, /from public\.draft d/);
-  assert.doesNotMatch(apply, /delete/i);
+  assert.match(
+    apply,
+    /r\.revision <> w\.rev or r\.status <> 'approved'/,
+    'refuses a route changed since',
+  );
+  assert.match(apply, /\('r'::uuid, 7\)/);
+  assert.match(apply, /\('s'::uuid, 2\)/);
+  assert.match(revert, /from public\.draft d/);
+  assert.doesNotMatch(apply, /delete from|update public/i);
   assert.match(revert, /delete from public\.route_stop/);
-  assert.doesNotMatch(check, /insert|delete|update/i);
+  assert.doesNotMatch(check, /insert into|delete from|update public/i);
 });
