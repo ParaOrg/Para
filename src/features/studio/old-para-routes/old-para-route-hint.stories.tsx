@@ -64,3 +64,16 @@ export const NoLine: Story = {
     await expect(args.onForget).toHaveBeenCalled();
   },
 };
+
+/** No line and no end: drawn by hand, with no end to look at. */
+export const NoLineNoEnd: Story = {
+  args: {
+    start: { paraId: NO_LINE.paraId, name: NO_LINE.name, part: null, end: null },
+    spots: [],
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByText(/The old app has no line for it/)).toBeVisible();
+    await expect(canvas.queryByRole('button', { name: 'Look at its end' })).toBeNull();
+  },
+};

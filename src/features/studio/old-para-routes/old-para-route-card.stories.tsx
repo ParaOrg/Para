@@ -42,7 +42,7 @@ export const WithLine: Story = {
     const canvas = within(canvasElement);
     await expect(canvas.getByText('Jeepney · PARA-0018 · Unverified')).toBeVisible();
     await expect(canvas.getByText('End to end · both ways · 11.2 km')).toBeVisible();
-    await expect(canvas.getByText(/1 gaps in its line/)).toBeVisible();
+    await expect(canvas.getByText(/^1 gap in its line/)).toBeVisible();
     await userEvent.click(canvas.getByRole('button', { name: 'Start drawing' }));
     await expect(args.onStartFromLine).toHaveBeenCalledWith(CUBAO_FILE, CUBAO_FILE);
   },
@@ -76,6 +76,22 @@ export const NoEnds: Story = {
   args: { route: NO_ENDS },
   play: async ({ canvasElement }) => {
     await expect(within(canvasElement).getByText(/neither end known/)).toBeVisible();
+  },
+};
+
+/** No line, only its start known: placed, the rest drawn by hand. */
+export const StartOnly: Story = {
+  args: { route: { ...NO_LINE, end: null } },
+  play: async ({ canvasElement }) => {
+    await expect(within(canvasElement).getByText(/no end known/)).toBeVisible();
+  },
+};
+
+/** No line, only its end known: marked, to draw to. */
+export const EndOnly: Story = {
+  args: { route: { ...NO_LINE, start: null } },
+  play: async ({ canvasElement }) => {
+    await expect(within(canvasElement).getByText(/no start known/)).toBeVisible();
   },
 };
 

@@ -3,6 +3,7 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { expect, fn, spyOn, userEvent, within } from 'storybook/test';
 
 import { createQueryClient } from '@/shared/lib/query-client';
+import { cn } from '@/shared/utils/cn';
 
 import { oldParaRouteKeys } from './old-para-route-keys';
 import { OldParaRoutePicker } from './old-para-route-picker';
@@ -13,14 +14,14 @@ const INDEX: OldParaRouteSummary[] = [IKOT, NO_LINE, NO_ENDS];
 
 /** A client that already holds `index`, or none: the fetch stand-in then answers. */
 const withIndex =
-  (index: OldParaRouteSummary[] | null) =>
+  (index: OldParaRouteSummary[] | null, width = 'w-[24rem]') =>
   (Story: () => React.JSX.Element): React.JSX.Element => {
     const client = createQueryClient();
     client.setQueryDefaults(oldParaRouteKeys.all, { staleTime: Infinity, retry: false });
     if (index) client.setQueryData(oldParaRouteKeys.index(), index);
     return (
       <QueryClientProvider client={client}>
-        <div className="relative h-[40rem] w-[24rem] bg-surface-quaternary font-sn-pro">
+        <div className={cn('relative h-[40rem] bg-surface-quaternary font-sn-pro', width)}>
           <Story />
         </div>
       </QueryClientProvider>
@@ -73,6 +74,17 @@ export const ByParaId: Story = {
     await userEvent.type(canvas.getByLabelText(FIELD), 'para-0001');
     const list = canvas.getByRole('list', { name: 'Old Para routes' });
     await expect(within(list).getByText('Jeepney · PARA-0001 · Verified')).toBeVisible();
+  },
+};
+
+/** On a phone, 360 px wide: the panel keeps 1rem from each side. */
+export const OnAPhone: Story = {
+  decorators: [withIndex(INDEX, 'w-[360px]')],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.type(canvas.getByLabelText(FIELD), 'lagro');
+    const panel = canvas.getByRole('region', { name: 'Start from an old Para route' });
+    await expect(panel.getBoundingClientRect().width).toBeLessThanOrEqual(328);
   },
 };
 

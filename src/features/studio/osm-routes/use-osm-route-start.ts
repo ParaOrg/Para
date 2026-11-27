@@ -1,25 +1,11 @@
 import type { MapLibreMap } from 'maplibre-gl';
 import { useState } from 'react';
 
-import { bboxOf, type LngLat } from '@/shared/utils/geo';
-
 import { checkSpots } from './check-spots';
+import { fitToLine } from './fit-to-line';
 import type { OsmRoute } from './osm-route-schema';
 import { seedPoints, type RouteLine } from './seed-points';
 import type { Drawing } from '../drawing/use-drawing';
-
-/** Takes the camera, at once, to show the whole of a line a drawing starts from. */
-export function fitToLine(map: MapLibreMap | null, line: readonly LngLat[]) {
-  if (line.length === 0) return;
-  const [west, south, east, north] = bboxOf(line);
-  map?.fitBounds(
-    [
-      [west, south],
-      [east, north],
-    ],
-    { padding: 80, maxZoom: 17, duration: 0 },
-  );
-}
 
 /** The part of a drawing the start needs. */
 export type StartableDrawing = Pick<Drawing, 'drawing' | 'startWithPoints' | 'line'>;

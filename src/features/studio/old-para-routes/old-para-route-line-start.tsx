@@ -41,7 +41,10 @@ export function OldParaRouteLineStart({ paraId, onStart, back }: OldParaRouteLin
   return (
     <>
       {route.gaps.length > 0 && (
-        <p>{route.gaps.length} gaps in its line, for the router to bridge.</p>
+        <p>
+          {route.gaps.length} {route.gaps.length === 1 ? 'gap' : 'gaps'} in its line, for the router
+          to bridge.
+        </p>
       )}
       {halves ? (
         <>

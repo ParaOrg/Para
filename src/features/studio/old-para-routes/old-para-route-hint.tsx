@@ -40,7 +40,10 @@ export function OldParaRouteHint({ start, spots, onLookAt, onForget }: OldParaRo
           onClick={() => onLookAt(end)}
         />
       )}
-      <p>Fix the line, then press Done and choose its route, direction, ends and boxes.</p>
+      <p>
+        {start.part ? 'Fix the line' : 'Draw the line'}, then press Done and choose its route,
+        direction, ends and boxes.
+      </p>
       <p className="text-xs text-content-tertiary">{start.paraId}, from the old Para app.</p>
       <Button variant="secondary" label="Not from old Para" onClick={onForget} />
     </section>

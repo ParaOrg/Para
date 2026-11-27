@@ -5,8 +5,9 @@ import type { LngLat } from '@/shared/utils/geo';
 
 import type { OldParaRoute, OldParaRouteSummary } from './old-para-route-schema';
 import { checkSpots } from '../osm-routes/check-spots';
+import { fitToLine } from '../osm-routes/fit-to-line';
 import { seedPoints, type RouteLine } from '../osm-routes/seed-points';
-import { fitToLine, type StartableDrawing } from '../osm-routes/use-osm-route-start';
+import type { StartableDrawing } from '../osm-routes/use-osm-route-start';
 
 interface UseOldParaRouteStartOptions {
   map: MapLibreMap | null;
