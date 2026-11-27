@@ -10,8 +10,14 @@ interface Cards {
   backToTrip: (() => void) | null;
 }
 
-/** The page's wrap for ‹ and ✕ (the locator's useGazeHush), so Back hushes the dot as they do. */
-type Hush = (go: (() => void) | null) => (() => void) | null;
+/**
+ * The page's wrap for ‹ and ✕ (the locator's useGazeHush), typed by its shape so routes never
+ * imports the locator: a move it wraps hushes the dot's gaze, and no move stays none.
+ */
+export interface Hush {
+  (go: () => void): () => void;
+  (go: (() => void) | null): (() => void) | null;
+}
 
 /**
  * The browser's Back on the public map: the card on show's own ‹ or ✕ (backMove), a card at a
