@@ -6,6 +6,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  routeStatus,
   routeStops,
   routeSummaryFacts,
   transitLineFacts,
@@ -77,4 +78,12 @@ test('Transit line information: fare, mode as a trip names it, distance and stop
 test('a mode with no vehicle of its own keeps the studio word', () => {
   const p2p = { ...DIRECTION, route: { ...DIRECTION.route, mode: 'p2p' } };
   assert.equal(asRecord(transitLineFacts(p2p, [p2p], TIMELINE))['Transport mode'], 'P2P bus');
+});
+
+test('Status: a draft only, or a stored draft, is Draft; none is Published; unread is unknown', () => {
+  assert.equal(routeStatus(true, undefined), 'draft');
+  assert.equal(routeStatus(false, true), 'draft');
+  assert.equal(routeStatus(false, false), 'published');
+  assert.equal(routeStatus(false, undefined), 'unknown');
+  assert.equal(routeSummaryFacts(DIRECTION, [DIRECTION], TIMELINE, 'unknown').at(-1).value, '--');
 });

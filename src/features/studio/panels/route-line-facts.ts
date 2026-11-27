@@ -12,12 +12,17 @@ import { kmLabel } from '@/shared/utils/geo';
 import type { RouteSummaryFact } from './route-summary-card';
 import type { TransitLineFact } from './transit-line-info';
 
-/** Where a route stands: a draft stored for it, or what is on the map. */
-export type RouteStatus = 'draft' | 'published';
+/**
+ * Where a route stands: a draft stored for it, what is on the map, or not known yet (its draft
+ * still being read, or not readable).
+ */
+export type RouteStatus = 'draft' | 'published' | 'unknown';
 
+// Not known reads "--", as a fact not worked out yet does in Edit Route (line-detail.tsx).
 const STATUS_LABEL = {
   draft: 'Draft',
   published: 'Published',
+  unknown: '--',
 } satisfies Record<RouteStatus, string>;
 
 /**
@@ -30,6 +35,12 @@ export function routeStops(timeline: Timeline, isLoopRoute: boolean): TimelineRo
     ? [timeline.from, ...timeline.between]
     : [timeline.from, ...timeline.between, timeline.to];
   return rows.filter((row) => row !== null);
+}
+
+/** The Status of a route: a draft only is a draft; otherwise whether one is stored, once read. */
+export function routeStatus(isDraftOnly: boolean, hasDraft: boolean | undefined): RouteStatus {
+  if (isDraftOnly || hasDraft) return 'draft';
+  return hasDraft === undefined ? 'unknown' : 'published';
 }
 
 /**

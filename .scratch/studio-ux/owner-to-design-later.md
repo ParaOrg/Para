@@ -23,7 +23,9 @@ Status: needs-info
   route with no mode. A route with no via has no Via row. Code: `route-line-facts.ts`.
 - **Status on a published route.** The summary card (4915:2713) draws Status as "Draft" in
   text/text-error. A route with no draft waiting says "Published" in Content/quaternary, the word
-  Edit Route's Status already uses. Code: `route-line-facts.ts` (`routeSummaryFacts`).
+  Edit Route's Status already uses. While the route's draft is still being read, or cannot be,
+  Status reads "--", as an unknown fact does in Edit Route. Code: `route-line-facts.ts`
+  (`routeStatus`, `routeSummaryFacts`).
 - **Transport mode's words.** The frame writes "Jeep", so a road vehicle reads as a trip's
   Transport mode tile does (Jeep, E-Jeep, Bus, UV Express, Ferry, EDSA Carousel). LRT, MRT, P2P bus
   and Tricycle keep the studio's own words. Code: `route-line-facts.ts` (`modeLabel`).

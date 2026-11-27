@@ -13,6 +13,7 @@ import { RouteLineActions } from './route-line-actions';
 import { RouteLineDetail } from './route-line-detail';
 import {
   otherDestinations,
+  routeStatus,
   routeStops,
   routeSummaryFacts,
   transitLineFacts,
@@ -76,7 +77,7 @@ export function StudioRouteLineDetail({
 }: StudioRouteLineDetailProps) {
   const { lock, hasDraft, retry } = useDraftLock('route', direction.routeId);
   const isEditable = canEdit && !lock;
-  const status = isDraftOnly || hasDraft ? 'draft' : 'published';
+  const status = routeStatus(isDraftOnly, hasDraft);
   const routeDirections = saved.directions.filter((v) => v.routeId === direction.routeId);
   const exporter = useRouteExport({
     directions: routeDirections,

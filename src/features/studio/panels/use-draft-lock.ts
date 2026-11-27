@@ -10,8 +10,8 @@ import { useEditorNamesQuery } from '../data/use-editor-names-query';
 interface UseDraftLock {
   /** Null when the editor may change the subject: no draft, or their own. */
   lock: DraftLock | null;
-  /** A draft of the subject is stored, the editor's own or another's (false until read). */
-  hasDraft: boolean;
+  /** A draft of the subject is stored, the editor's own or another's; undefined until it is read. */
+  hasDraft: boolean | undefined;
   retry: () => void;
 }
 
@@ -28,7 +28,7 @@ export function useDraftRowLock(draft: DraftRow | null | undefined): UseDraftLoc
   const retry = () => {
     if (isAnothers) void names.refetch();
   };
-  const hasDraft = !!draft;
+  const hasDraft = draft === undefined ? undefined : draft !== null;
   // Not yet known whose session this is: whether the draft is another's waits on it.
   if (draft && session === undefined) return { lock: { state: 'checking' }, hasDraft, retry };
   if (!isAnothers || !draft) return { lock: null, hasDraft, retry };
@@ -58,9 +58,9 @@ export function useDraftLock(kind: DraftKind, subjectId: string): UseDraftLock {
     held.retry();
   };
   // Still restoring the session, which says whose draft is whose: checking, not open to edit.
-  if (session === undefined) return { lock: { state: 'checking' }, hasDraft: false, retry };
+  if (session === undefined) return { lock: { state: 'checking' }, hasDraft: undefined, retry };
   if (!isSignedIn) return { lock: null, hasDraft: false, retry };
-  if (draft.isError) return { lock: { state: 'unknown' }, hasDraft: false, retry };
-  if (draft.isPending) return { lock: { state: 'checking' }, hasDraft: false, retry };
+  if (draft.isError) return { lock: { state: 'unknown' }, hasDraft: undefined, retry };
+  if (draft.isPending) return { lock: { state: 'checking' }, hasDraft: undefined, retry };
   return { lock: held.lock, hasDraft: held.hasDraft, retry };
 }

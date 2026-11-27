@@ -262,7 +262,6 @@ export const ExportFailed: Story = {
   },
 };
 
-/** Long names and many stops: the names wrap and the panel scrolls on its own. */
 /**
  * A published route with no draft waiting and no via: its summary card has no Via row, and its
  * Status reads Published in Content/quaternary.
@@ -282,6 +281,18 @@ export const Published: Story = {
   },
 };
 
+/** Its draft not read yet, or not readable: Status reads "--" until it is known. */
+export const StatusUnknown: Story = {
+  args: {
+    summary: [
+      { label: 'Origin', value: 'B. Silang Kanan Ph 5' },
+      { label: 'Destination', value: 'SM Fairview' },
+      { label: 'Status', value: '--' },
+    ],
+  },
+};
+
+/** Long names and many stops: the names wrap and the panel scrolls on its own. */
 export const LongContent: Story = {
   args: {
     label: 'Bagong Silang Phase 5 → SM City Fairview Main Terminal',
