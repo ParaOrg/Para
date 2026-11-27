@@ -13,4 +13,8 @@
     // The site's workers.dev origins and localhost:5173 are built in.
     "EXTRA_ORIGINS": "https://www.para-commute.org,https://para-commute.org",
   },
+  // A branch Preview (`wrangler preview` in .github/workflows/deploy-tiles.yml)
+  // refuses to run without this block. Empty: a Preview uses the same
+  // settings as production.
+  "previews": {},
 }
