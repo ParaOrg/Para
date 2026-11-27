@@ -10,9 +10,10 @@ import type { Drawing } from '../drawing/use-drawing';
 
 /**
  * What a tap on a draft did: opened it (its sidebar or its card), found it held by another editor
- * with no card to open (the map then shows its own sheet), or could not read it (a notice says so).
+ * with no card to open (the map then shows its own sheet), could not read it (a notice says so),
+ * or, on a computer, found a place that is a draft only, for the map to show its card.
  */
-export type DraftOpening = 'opened' | 'held' | 'unreadable';
+export type DraftOpening = 'opened' | 'held' | 'unreadable' | { place: HotspotRow };
 
 /** Said when a draft's line or outline cannot be read from it. */
 export const CANNOT_OPEN = 'This draft cannot be opened: its line or outline could not be read.';
@@ -52,9 +53,9 @@ interface UseOpenDraftOptions {
  * editor's own draft. A route that is a draft only opens on a computer in the route line
  * detail from its draft (`trip`); a phone has no card for it and opens Edit Route on it. A tapped
  * line opens its own direction; a marker, which names none, the route's first drawn one. A hotspot
- * on the map opens its card, which opens its sidebar; one that is a draft only opens its outline to
- * edit. Another editor's draft of a subject with no approved row has no card: 'held', and the map
- * shows its sheet (HeldDraftSheet).
+ * on the map opens its card; one that is a draft only, on a computer, the map's DraftPlaceCard
+ * (`{ place }`), whose Edit asks again with `isToEdit` for its outline; on a phone, its outline.
+ * Another editor's other drafts with no approved row: 'held', and the map shows HeldDraftSheet.
  */
 export function useOpenDraft({
   saved,
@@ -84,13 +85,14 @@ export function useOpenDraft({
     return 'unreadable';
   };
 
-  const openHotspot = (draft: DraftRow): DraftOpening => {
+  const openHotspot = (draft: DraftRow, isToEdit: boolean): DraftOpening => {
     if (hotspots.some((s) => s.id === draft.subject_id)) {
       openPlace(draft.subject_id);
       return 'opened';
     }
     const drafted = draftHotspots.find((s) => s.id === draft.subject_id);
     if (!drafted) return cannotOpen();
+    if (isWideScreen && !isToEdit) return { place: drafted };
     if (isAnothers(draft)) return 'held';
     fetchToEdit(drafted).then(
       ({ hotspot }) => draw.loadArea(hotspot.kind, hotspot.id, hotspotRing(hotspot)),
@@ -99,8 +101,8 @@ export function useOpenDraft({
     return 'opened';
   };
 
-  const open = (draft: DraftRow, directionId?: string): DraftOpening => {
-    if (draft.kind === 'hotspot') return openHotspot(draft);
+  const open = (draft: DraftRow, directionId?: string, isToEdit = false): DraftOpening => {
+    if (draft.kind === 'hotspot') return openHotspot(draft, isToEdit);
     const isTapped = (v: DirectionRow) => directionId === undefined || v.id === directionId;
     const isDrawn = (v: DirectionRow) => v.shape !== null;
     const approvedWays = saved.directions.filter((v) => v.routeId === draft.subject_id);

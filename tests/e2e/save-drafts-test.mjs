@@ -281,16 +281,31 @@ check(
     approvedWrites(w).length === 0,
   said(w),
 );
-// ---- 1a. A hintuan that is a draft only opens in its sidebar from a tap on its mark
+// ---- 1a. A hintuan that is a draft only opens in its card from a tap on its mark, to read
+// first; its Edit hintuan opens the sidebar on the draft.
 await go(P1, 17);
 await clickAt(P1, 700);
+const placeCard = page.getByTestId('draft-place-card');
+await placeCard.waitFor({ timeout: 10000 });
+check(
+  "a tap on a new hintuan's draft opens its card, named, Status Draft, not the editor",
+  /Stand-in Head/.test(await placeCard.innerText()) &&
+    /Status\s+Draft/.test(await placeCard.innerText()) &&
+    (await page.getByTestId('hotspot-panel').count()) === 0,
+);
+await page.keyboard.press('Escape');
+await placeCard.waitFor({ state: 'detached', timeout: 5000 }).catch(() => {});
+check('  Escape closes it', (await placeCard.count()) === 0);
+await clickAt(P1, 700);
+await placeCard.getByRole('button', { name: 'Edit hintuan' }).click();
 const hotspotPanel = page.getByTestId('hotspot-panel');
 await waitFor(async () => (await hotspotPanel.count()) > 0);
 check(
-  "a tap on a new hintuan's draft opens its sidebar on the draft, with no review sheet",
+  '  its Edit hintuan opens the sidebar on the draft, with no review sheet and no card',
   (await hotspotPanel.count()) === 1 &&
     (await page.getByPlaceholder('SM Fairview Ilalim').inputValue()) === 'Stand-in Head' &&
-    (await page.locator('dialog[open]').count()) === 0,
+    (await page.locator('dialog[open]').count()) === 0 &&
+    (await placeCard.count()) === 0,
 );
 check(
   '  and offers Approve',
