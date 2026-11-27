@@ -1,8 +1,7 @@
-import { useState } from 'react';
-
 import { hotspotRing, type HotspotRow } from '@/features/routes/model/hotspots';
 import type { DirectionDrawing, DirectionRow } from '@/features/routes/model/routes';
 
+import { useDraftTrip } from './use-draft-trip';
 import { useIsWideScreen } from './use-is-wide-screen';
 import { isAnothersDraft } from '../data/draft-lock';
 import type { DraftRow } from '../data/review-schema';
@@ -17,16 +16,6 @@ export type DraftOpening = 'opened' | 'held' | 'unreadable';
 
 /** Said when a draft's line or outline cannot be read from it. */
 export const CANNOT_OPEN = 'This draft cannot be opened: its line or outline could not be read.';
-
-/** A route that is a draft only, open in the route line detail from its draft (useOpenDraft). */
-export interface DraftTrip {
-  direction: DirectionRow;
-  /** The directions of the routes that are drafts only: the detail's tabs and destinations. */
-  directions: readonly DirectionRow[];
-  /** Another of them in this one's place. */
-  show: (direction: DirectionRow) => void;
-  close: () => void;
-}
 
 interface UseOpenDraftOptions {
   /** The map's directions, approved: a draft of a route on the map opens through one of them. */
@@ -81,26 +70,12 @@ export function useOpenDraft({
 }: UseOpenDraftOptions) {
   const fetchToEdit = useFetchHotspotToEdit();
   const isWideScreen = useIsWideScreen();
-  const [tripId, setTripId] = useState<string | null>(null);
-  // A card opened over it, an approved route's or a hotspot's, takes its place for good: closing
-  // that card leaves the map, not this draft.
-  const [wasCardOpen, setWasCardOpen] = useState(cards.open);
-  if (cards.open !== wasCardOpen) {
-    setWasCardOpen(cards.open);
-    if (cards.open) setTripId(null);
-  }
-  // A drawing, or a window narrowed to a phone's, takes it off the screen for good: it does not
-  // come back after Exit or a widening, with no Escape or tap to have closed it meanwhile.
-  if (tripId !== null && (draw.drawing || !isWideScreen)) setTripId(null);
-  const tripDirection = draftDirections.find((v) => v.id === tripId);
-  const trip: DraftTrip | null = tripDirection
-    ? {
-        direction: tripDirection,
-        directions: draftDirections,
-        show: (v) => setTripId(v.id),
-        close: () => setTripId(null),
-      }
-    : null;
+  const draftTrip = useDraftTrip({
+    draftDirections,
+    isCardOpen: cards.open,
+    isDrawing: draw.drawing,
+    isWideScreen,
+  });
   const isAnothers = (draft: DraftRow) => userId !== null && isAnothersDraft(draft, userId);
 
   // A draft whose payload cannot be read says so.
@@ -131,7 +106,7 @@ export function useOpenDraft({
     const approvedWays = saved.directions.filter((v) => v.routeId === draft.subject_id);
     const approved = approvedWays.find((v) => isDrawn(v) && isTapped(v));
     if (approved) {
-      setTripId(null);
+      draftTrip.open(null);
       cards.openTrip(approved);
       return 'opened';
     }
@@ -160,9 +135,9 @@ export function useOpenDraft({
     }
     // The detail takes the left panel: an approved route's or a hotspot's card leaves it.
     cards.closeAll();
-    setTripId(direction.id);
+    draftTrip.open(direction.id);
     return 'opened';
   };
 
-  return { open, trip };
+  return { open, trip: draftTrip.trip };
 }
