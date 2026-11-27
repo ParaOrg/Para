@@ -55,8 +55,8 @@ export const toHotspot = (raw: RawHotspot) => ({
   /**
    * The line this hintuan is a station of: a train's, 'LRT-1' (0011), or the
    * ferry's, 'PRFS' (0012); null for every other hintuan and every terminal.
-   * Only that line stops here, and no jeep does (servedBy). Absent from files
-   * published before.
+   * Of the lines, only that one stops here; a road route that passes it does
+   * too (servedBy). Absent from files published before.
    */
   ...(raw.line === undefined ? {} : { line: raw.line }),
 });

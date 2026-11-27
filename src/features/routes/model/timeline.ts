@@ -16,8 +16,8 @@ import type { Ring } from '../geo/ring';
  * where along the line, which is what `route_stop.sequence` stores.
  * Terminals are not listed, since a route's ends come from the route itself,
  * except on a loop, which has no ends. Neither are the hintuans this route
- * does not stop at (`servedBy`): the jeep hintuans under a train's track, the
- * stations over a jeep's road.
+ * does not stop at (`servedBy`): the jeep hintuans under a train's track. A
+ * road route lists the stations it passes as hintuans, by their own names.
  */
 export function hintuansAlong<S extends Hotspot>(
   line: readonly LngLat[],

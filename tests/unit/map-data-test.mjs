@@ -239,9 +239,13 @@ test('a train under a jeep hintuan is owed no link, and one it has is a warning'
   assert.match(r.warnings[0], /does not stop at/);
 });
 
-test('a jeep under a station is owed no link; the train over it is', () => {
+test('a jeep passing a station is owed a link to it, as the train over it is', () => {
   const m = stationEnds(good());
   m.stops.push(stop('EDSA', 'hintuan', 700, 0, { line: 'LRT-1' }));
+  const jeep = checkMapData(m).warnings;
+  assert.equal(jeep.length, 1);
+  assert.match(jeep[0], /West – East · West → East: passes "EDSA" but is not linked/);
+  m.links.push({ route_variant_id: 'd', stop_id: 'EDSA', stop_sequence: 20 });
   assert.deepEqual(checkMapData(m).warnings, []);
   m.variants.push({ ...direction(road(0, 1000)), id: 'rail', route: train('LRT-1') });
   const r = checkMapData(m);
@@ -264,9 +268,10 @@ test('a train route with no line, or a station of no line, is a problem', () => 
 
 test('a station whose name the fare table does not know is a warning', () => {
   const m = good();
-  m.stops.push(stop('EDSA', 'hintuan', 700, 0, { line: 'LRT-1' }));
+  // Off the jeep's road, so that no link is owed and only the names are asked.
+  m.stops.push(stop('EDSA', 'hintuan', 700, 500, { line: 'LRT-1' }));
   assert.deepEqual(checkMapData(m).warnings, []);
-  m.stops.push(stop('Nowhere Station', 'hintuan', 800, 0, { line: 'LRT-1' }));
+  m.stops.push(stop('Nowhere Station', 'hintuan', 800, 500, { line: 'LRT-1' }));
   const r = checkMapData(m);
   assert.deepEqual(r.problems, []);
   assert.match(r.warnings.join('\n'), /"Nowhere Station" is not in the LRT-1 fare table/);

@@ -134,6 +134,8 @@ test('the two directions of the committed map share each box they both cut', () 
   for (const v of file.directions.filter((v) => v.shape)) {
     const line = v.shape.coordinates;
     for (const { hotspot } of hintuansAlong(line, file.hotspots, v.route)) {
+      // A station a road route passes has no babaan side (babaanSideFeatures).
+      if (hotspot.line) continue;
       const ring = hotspotRing(hotspot);
       const right = rightOfLine(ring, line);
       if (!right) continue;
@@ -295,7 +297,9 @@ function oldTravelLine(v, stops) {
 function oldBabaanFeatures(chosen, stops) {
   if (!chosen || isLineMode(chosen.route?.mode)) return [];
   const line = oldTravelLine(chosen, stops);
-  return oldHintuansAlong(line, stops, chosen.route).flatMap(({ stop }) => {
+  // Since road routes list the stations they pass, a station's box is skipped: it has no babaan side.
+  const roadside = oldHintuansAlong(line, stops, chosen.route).filter(({ stop }) => !stop.line);
+  return roadside.flatMap(({ stop }) => {
     const side = oldRightOfLine(hotspotRing(stop), line);
     return side
       ? [{ type: 'Feature', properties: { id: stop.id }, geometry: ringToPolygon(side) }]

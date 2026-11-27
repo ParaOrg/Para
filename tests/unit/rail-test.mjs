@@ -1,8 +1,7 @@
 // The lines' one rule (src/features/routes/model/routes.ts, servedBy): a train, or the
-// ferry, stops only at its own line's stations, a jeep at every hintuan but a
-// station — the owner's default of 2026-10-02, the ferry the same way since
-// 2026-10-03. Every question of which hintuans a line passes asks it: the
-// timeline, the ride-to cut, the links.
+// ferry, stops only at its own line's stations; a road route — a jeep, a bus —
+// at every hintuan it passes, a station's too. Every question of which
+// hintuans a line passes asks it: the timeline, the ride-to cut, the links.
 //
 //   node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs tests/unit/rail-test.mjs
 import { test } from 'node:test';
@@ -17,7 +16,7 @@ import {
   isRail,
   servedBy,
 } from '../../src/features/routes/model/routes.ts';
-import { hintuansAlong } from '../../src/features/routes/model/timeline.ts';
+import { hintuansAlong, timelineFor } from '../../src/features/routes/model/timeline.ts';
 import { rideCut } from '../../src/features/routes/model/ride.ts';
 import { linksThrough } from '../../src/features/studio/data/hotspots-geometry.ts';
 
@@ -25,6 +24,7 @@ const JEEP = { mode: 'jeepney', routeCode: null };
 const LRT1 = { mode: 'lrt', routeCode: 'LRT-1' };
 const MRT3 = { mode: 'mrt', routeCode: 'MRT-3' };
 const PRFS = { mode: 'ferry', routeCode: 'PRFS' };
+const BUS = { mode: 'bus', routeCode: null };
 
 test('only lrt and mrt are trains', () => {
   assert.deepEqual(
@@ -49,19 +49,22 @@ test('the ferry is a line, not a train', () => {
   assert.deepEqual([...LINES], ['LRT-1', 'LRT-2', 'MRT-3', 'PRFS', 'EDSA-C']);
 });
 
-test('the ferry stops at its own stations only, and no jeep or train at them', () => {
+test('the ferry stops at its own stations only, and no train at them; a jeep passing one does', () => {
   assert.equal(servedBy({ line: 'PRFS' }, PRFS), true);
   assert.equal(servedBy({ line: null }, PRFS), false);
   assert.equal(servedBy({ line: 'MRT-3' }, PRFS), false);
-  assert.equal(servedBy({ line: 'PRFS' }, JEEP), false);
+  assert.equal(servedBy({ line: 'PRFS' }, JEEP), true);
   assert.equal(servedBy({ line: 'PRFS' }, MRT3), false);
   assert.equal(servedBy({ line: null }, { mode: 'ferry', routeCode: null }), false);
 });
 
-test('a jeep stops at a hintuan, not at a station', () => {
-  assert.equal(servedBy({ line: null }, JEEP), true);
-  assert.equal(servedBy({}, JEEP), true, 'a hotspot from a file before 0011');
-  assert.equal(servedBy({ line: 'LRT-1' }, JEEP), false);
+test("a road route stops at every hintuan it passes, a station's too", () => {
+  for (const road of [JEEP, BUS]) {
+    assert.equal(servedBy({ line: null }, road), true);
+    assert.equal(servedBy({}, road), true, 'a hotspot from a file before 0011');
+    assert.equal(servedBy({ line: 'LRT-1' }, road), true);
+    assert.equal(servedBy({ line: 'MRT-3' }, road), true);
+  }
 });
 
 test("a train stops at its own line's stations only", () => {
@@ -119,10 +122,43 @@ const LINE = [
 ];
 const ids = (route) => hintuansAlong(LINE, HOTSPOTS, route).map((a) => a.hotspot.id);
 
-test('along the same road, each line lists only what it stops at', () => {
-  assert.deepEqual(ids(JEEP), ['jeep-buendia', 'jeep-libertad']);
+test('along the same road, a road route lists the stations it passes; a train only its own', () => {
+  const all = ['jeep-buendia', 'lrt-buendia', 'jeep-libertad', 'mrt-taft'];
+  assert.deepEqual(ids(JEEP), all);
+  assert.deepEqual(ids(BUS), all);
   assert.deepEqual(ids(LRT1), ['lrt-buendia']);
   assert.deepEqual(ids(MRT3), ['mrt-taft']);
+});
+
+test("a road route's timeline names a station by its own name, one row with a hintuan of its place", () => {
+  const along = hintuansAlong(LINE, HOTSPOTS, BUS).map((a) => a.hotspot);
+  const [head, tail] = [HOTSPOTS[0], HOTSPOTS[1]];
+  const rows = timelineFor(head, tail, false, along, LINE[0]).between;
+  assert.deepEqual(
+    rows.map((r) => [r.id, r.label]),
+    [
+      ['jeep-buendia', 'Buendia'],
+      ['jeep-libertad', 'Libertad'],
+      ['mrt-taft', 'Taft Avenue'],
+    ],
+  );
+});
+
+test("a station of the end's place is left out of the middle, as any box of it is", () => {
+  const atTail = [...HOTSPOTS, hintuan('lrt-tail', 0.0299, 'Tail', 'LRT-1')];
+  const along = hintuansAlong(LINE, atTail, BUS).map((a) => a.hotspot);
+  assert.ok(
+    along.some((s) => s.id === 'lrt-tail'),
+    'the bus passes it',
+  );
+  const rows = timelineFor(atTail[0], atTail[1], false, along, LINE[0]).between;
+  assert.ok(!rows.some((r) => r.label === 'Tail'));
+});
+
+test('a train still lists no road hintuan under its track, however near', () => {
+  const underTrack = [HOTSPOTS[0], HOTSPOTS[1], hintuan('jeep-under', 0.015, 'Under')];
+  assert.deepEqual(hintuansAlong(LINE, underTrack, LRT1), []);
+  assert.deepEqual(hintuansAlong(LINE, underTrack, MRT3), []);
 });
 
 test("the ride-to cut of a place shared by a jeep hintuan and a station keeps to the line's own", () => {
@@ -132,17 +168,18 @@ test("the ride-to cut of a place shared by a jeep hintuan and a station keeps to
     route: { ...route, headHotspotId: 'h', tailHotspotId: 't' },
     shape: { type: 'LineString', coordinates: LINE },
   });
-  // The ride ends at the line's own box whichever order the boxes are listed
-  // in: were the other line's box counted too, it could be the last dot.
+  // The train's ride ends at its own box whichever order the boxes are listed
+  // in: were the jeep's box counted too, it could be the last dot. The jeep
+  // stops at both, so its ride ends at the place's last box it passes.
   for (const boxes of [HOTSPOTS, [...HOTSPOTS].reverse()]) {
-    assert.equal(rideCut(v(JEEP), boxes, 'jeep-buendia').endHotspotId, 'jeep-buendia');
+    assert.equal(rideCut(v(JEEP), boxes, 'jeep-buendia').endHotspotId, 'lrt-buendia');
     assert.equal(rideCut(v(LRT1), boxes, 'lrt-buendia').endHotspotId, 'lrt-buendia');
   }
 });
 
 // The studio's links when a hintuan is saved (hotspots-geometry.ts, linksThrough):
 // the one place that writes a box's route list, by the same rule.
-test('a saved box is linked only to the directions that stop at it', () => {
+test('a saved box is linked only to the directions that stop at it: a station to its train and the road routes', () => {
   const dir = (id, route) => ({ id, route, shape: { type: 'LineString', coordinates: LINE } });
   const variants = [dir('jeep', JEEP), dir('lrt', LRT1), dir('mrt', MRT3)];
   const ring = ringAt(0.01).coordinates[0];
@@ -152,7 +189,7 @@ test('a saved box is linked only to the directions that stop at it', () => {
   );
   assert.deepEqual(
     linksThrough(ring, variants, 'LRT-1').map((l) => l.directionId),
-    ['lrt'],
+    ['jeep', 'lrt'],
   );
 });
 

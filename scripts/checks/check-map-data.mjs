@@ -338,7 +338,7 @@ export function checkMapData(file) {
     const reach = bboxOf(line);
     for (const { s, ring, bounds } of hintuans) {
       // A hintuan this route does not stop at — a jeep's under a train's
-      // track, a station over a jeep's road — is neither owed nor allowed a link.
+      // track — is neither owed nor allowed a link.
       if (v.route && !servedBy(s, v.route)) {
         if (linked.has(s.id))
           warnings.push(
