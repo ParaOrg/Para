@@ -3,14 +3,14 @@
 # Worker has its own workflow, deploy-tiles.yml.
 #
 #   A push to main      -> `wrangler deploy`: production, www.para-commute.org.
-#   A push to staging   -> a new version, not deployed, with the preview alias `staging`:
-#                          https://staging-para.para-ph-info.workers.dev serves it.
-#   A pull request      -> a new version with an alias from its branch, sanitised the way Workers
-#                          Builds did it (`claude/foo` -> `claude-foo`; wrangler's own rule, read
-#                          from WORKERS_CI_BRANCH), and one comment on the pull request with the
-#                          link, edited in place on every push.
+#   A push to staging   -> `wrangler preview`: the Worker Preview `staging`, at
+#                          https://staging-para.para-ph-info.workers.dev.
+#   A pull request      -> the same, a Preview named after its branch, at the address Workers
+#                          Builds gave it (`claude/foo` -> claude-foo-para…; wrangler names it from
+#                          WORKERS_CI_BRANCH), and one comment on the pull request with the link,
+#                          edited in place on every push.
 #
-# A version that is only uploaded never serves production: only `wrangler deploy` on main does.
+# A Preview never serves production: only `wrangler deploy` on main does.
 # Every run builds with `npm run build`, the same command CI runs, so the guards in
 # scripts/checks/check-build.mjs stop a deploy as they stop CI. The build reads the public VITE_
 # values from the committed .env.production, as Workers Builds did; it needs no other variable.
@@ -108,29 +108,31 @@ jobs:
             --tag "${GITHUB_SHA::7}" --message "main ${GITHUB_SHA::7}"
           echo "Deployed main at ${GITHUB_SHA::7} to production: https://www.para-commute.org" >> "$GITHUB_STEP_SUMMARY"
 
-      # wrangler writes what it uploaded to WRANGLER_OUTPUT_FILE_PATH, one JSON object a line;
-      # the `version-upload` line holds the alias's address, or only the version's own when the
-      # branch makes no valid alias.
-      - name: Upload a preview version
+      # A Worker Preview named after the branch (`wrangler preview`, what Workers Builds ran): its
+      # stable address, <branch>-para.para-ph-info.workers.dev, moves to each new push. An aliased
+      # version (`versions upload --preview-alias`) cannot take that address from a Preview that
+      # already holds it, as `staging`'s did. wrangler names the Preview from WORKERS_CI_BRANCH and
+      # writes what it made to WRANGLER_OUTPUT_FILE_PATH, one JSON object a line; the `preview`
+      # line holds the Preview's stable addresses, and the deployment's own as a fallback.
+      - name: Deploy a Preview of the branch
         id: preview
         if: steps.secrets.outputs.ready == 'true' && !(github.ref == 'refs/heads/main' && github.event_name == 'push')
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          WRANGLER_CI_GENERATE_PREVIEW_ALIAS: 'true'
           WORKERS_CI_BRANCH: ${{ github.head_ref || github.ref_name }}
           WRANGLER_OUTPUT_FILE_PATH: ${{ runner.temp }}/wrangler-output.json
           SHA: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
-          npx --yes "wrangler@$WRANGLER_VERSION" versions upload \
+          npx --yes "wrangler@$WRANGLER_VERSION" preview \
             --tag "${SHA::7}" --message "preview ${SHA::7}"
           url=$(node -e '
             const lines = require("fs").readFileSync(process.argv[1], "utf8").trim().split("\n");
-            const upload = lines.map((line) => JSON.parse(line)).find((entry) => entry.type === "version-upload");
-            process.stdout.write(upload?.preview_alias_url || upload?.preview_url || "");
+            const made = lines.map((line) => JSON.parse(line)).find((entry) => entry.type === "preview");
+            process.stdout.write(made?.preview_urls?.[0] || made?.deployment_urls?.[0] || "");
           ' "$WRANGLER_OUTPUT_FILE_PATH")
           if [ -z "$url" ]; then
-            echo "::error::wrangler uploaded no preview address (is preview_urls still true in wrangler.jsonc?)"
+            echo "::error::wrangler made a Preview with no address (are workers_dev and preview_urls still true in wrangler.jsonc?)"
             exit 1
           fi
           echo "url=$url" >> "$GITHUB_OUTPUT"
