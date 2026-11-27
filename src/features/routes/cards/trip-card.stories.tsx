@@ -275,8 +275,8 @@ export const TrainMrt3: Story = {
 
 /**
  * A train whose end the line's table does not know: no bound, so no Direction row,
- * and PAPUNTA falls back to Pabalik and Papunta, as over a mixed list (wayWord). TODO: what
- * PAPUNTA should say for a train with no known bound is not designed yet.
+ * and the way word falls back to Pabalik and Papunta, as over a mixed list (wayWord). TODO: what
+ * it should say for a train with no known bound is not designed yet.
  */
 export const TrainNoBound: Story = {
   args: {
@@ -397,7 +397,7 @@ const ikotTimeline: Timeline = {
 
 /**
  * A loop's trip (UP – Ikot): the tip at the top and again at the bottom, the tiles the whole
- * loop's, and no PAPUNTA. Its name is the sheet's, for a screen reader.
+ * loop's, and no way to turn. Its name is the sheet's, for a screen reader.
  */
 export const Loop: Story = {
   args: { direction: ikot, directions: [ikot], timeline: ikotTimeline, livery: 'bus' },

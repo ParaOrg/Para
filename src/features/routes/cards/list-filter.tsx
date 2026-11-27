@@ -36,7 +36,6 @@ export function ListFilter({ list, onFilter, tooltip }: ListFilterProps) {
           routeCount: listedRouteCount(list.candidates, list.back, list.listing, list.modePicks),
         }}
         icon={<FilterIcon />}
-        size="large"
         tooltip={tooltip}
         testId="chooser-filter"
       />

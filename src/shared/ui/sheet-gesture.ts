@@ -113,8 +113,7 @@ export function measureSafeTop(sheet: Element | null) {
 
 /**
  * A sheet's own Low and full height, where they differ from every other card's: the route list's
- * Low shows its first card above the Controller, and its full height fills the screen
- * (BottomSheet's `shape`).
+ * Low shows its first card, and its full height fills the screen (BottomSheet's `shape`).
  */
 export interface SheetShape {
   /** What Low shows, in px. */

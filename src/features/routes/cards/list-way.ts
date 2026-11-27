@@ -9,7 +9,7 @@ import {
 import { passesModePicks, type ModePicks } from '../model/mode-filter';
 import { isLoop, type Direction } from '../model/routes';
 
-/** The way round a route list shows, for the control that turns it: PAPUNTA, or Vice Versa. */
+/** The way round a route list shows, for the control that turns it: Vice Versa. */
 export interface ListWay {
   /** The way showing (wayWord), or null when only loops show: they have no way back, so no control. */
   way: string | null;

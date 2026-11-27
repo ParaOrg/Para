@@ -86,7 +86,7 @@ export function TripDetail({
           bound={ride?.bound}
         />
       </div>
-      {/* 24 at the foot: the sheet itself pads for the Controller drawn over it (BottomSheet). */}
+      {/* 24 at the foot, clear of the sheet's edge. */}
       <div className="flex w-full flex-col gap-4 pb-6">
         <TimelineRouteDetail
           {...stops}

@@ -740,8 +740,8 @@ check(
   await until(() => toastSays(page2, 'Location is off for this site'), 5000),
   `${await toast2.count()} toast(s)`,
 );
-// A trip's card raised to full height under that toast: the toast stays at the top, for the
-// trip's ‹ or ✕ is in its Controller at the card's foot, in reach and uncovered. The trip opened from a route line in sight; a list where
+// A trip's card raised to full height under that toast: the toast stays at the top. The trip
+// opened from a route line in sight; a list where
 // routes share the road takes a tap to raise it at Low, and one more to pick.
 {
   const at = await page2.evaluate(() => {
