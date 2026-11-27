@@ -11,7 +11,7 @@ Written 2026-11-27 for the owner's decision of the same day. Plan only: nothing 
 
 | Piece | Today | After |
 | --- | --- | --- |
-| The site: `/` (the public map), `/studio/`, `/contribute/`, `/app/`, `/coming-soon/`, `/data/*` (the published map) | Worker `para`, Cloudflare (`wrangler.jsonc`, `workers/site/`) | A Vercel project, `para`, on the owner's Pro team |
+| The site: `/` (the public map), `/studio/`, `/contribute/`, `/app/`, `/coming-soon/`, `/data/*` (the published map) | Worker `para`, Cloudflare (`wrangler.jsonc`, `workers/site/`) | A Vercel project, `para`, on the owner's Pro team, Room TBA OSS Program (`room-tba-oss-program`) |
 | `/api/report` (a commuter's route report) | The same Worker (`workers/site/src/report.ts`) | A Vercel Function, `api/report.ts` |
 | Tiles, styles, sprite, glyphs: `tiles.para-commute.org` | Worker `para-tiles`, R2 `parapo-tiles` (ADR 0007) | **Stays.** Tile traffic is free on Cloudflare and would be billed on Vercel past 1 TB |
 | The weekly encrypted backup | R2 (`backup.yml`) | **Stays** |
@@ -55,7 +55,7 @@ Written 2026-11-27 for the owner's decision of the same day. Plan only: nothing 
 | `.env.production` | "Cloudflare's build has no env vars" | True of Vercel's build too for `VITE_` values: they stay committed, public, one source. Vercel adds `VERCEL_*` system variables, which Vite never bakes in (no `VITE_` prefix). Only the comment changes | 11 |
 | Supabase Auth → URL Configuration | Site URL `https://www.para-commute.org`, redirect `https://www.para-commute.org/**` | Unchanged for production. Add `https://staging.para-commute.org/**`. No `*.vercel.app` redirect: branch previews are not for signing in (`docs/operations.md`, Branch previews) | 08 |
 | Turnstile widget hostnames | `www.para-commute.org`, `para-commute.org` (custom-domain 05) | A hostname covers its subdomains, so `staging.para-commute.org` passes once `para-commute.org` is listed (owner to confirm the list). No `vercel.app`: same reason as above. The studio's sign-in on a branch preview then fails the bot check, which is the rule already | 08 |
-| `workers/tiles/src/cors.ts` | The tiles answer CORS only for `www`, the bare domain, localhost and the site's `workers.dev` addresses | Add `staging.para-commute.org` and this project's own `*.vercel.app` pattern (team slug from 07), or every Vercel preview has a blank basemap. A tiles Worker change: deployed by its own build or by the owner with `wrangler deploy` | 12 |
+| `workers/tiles/src/cors.ts` | The tiles answer CORS only for `www`, the bare domain, localhost and the site's `workers.dev` addresses | Add `staging.para-commute.org` and this project's own `*.vercel.app` pattern (team `room-tba-oss-program`), or every Vercel preview has a blank basemap. A tiles Worker change: deployed by its own build or by the owner with `wrangler deploy` | 12 |
 | The waitlist Edge Function (`supabase/functions/waitlist`) | Answers `Access-Control-Allow-Origin: *` | No change | – |
 | The PWA (`scripts/node/offline-worker.ts`, scope `/`; `/contribute/sw.js`, scope `/contribute/`) | Same origin, root scope | No change: the origin `https://www.para-commute.org` stays, so installed apps keep their worker and stores. `sw.js` must keep `max-age=0` (03) | 03 |
 | The contributor app | Reads `https://www.para-commute.org/data/*` natively | No change. Vercel's Deployment Protection never applies to a custom domain; the Firewall's bot rules, if the owner turns any on, must not challenge `/data/*` | 07 |
@@ -78,9 +78,9 @@ Written 2026-11-27 for the owner's decision of the same day. Plan only: nothing 
 Production shows Coming soon throughout: on Cloudflare until the switch, on Vercel after, because the Vercel production deployment is gated from its first build (04 lands before the owner links the project).
 
 1. **Code lands on `staging`** (02–06). Nothing changes for any visitor.
-2. **The owner links the project** (07). Every PR gets `para-git-<branch>-<team>.vercel.app`; `staging` gets `staging.para-commute.org` (a CNAME at Cloudflare, DNS only).
+2. **The owner links the project** (07). Every PR gets `para-git-<branch>-room-tba-oss-program.vercel.app`; `staging` gets `staging.para-commute.org` (a CNAME at Cloudflare, DNS only).
 3. **The preview check** (09): a session runs the checklist against a PR preview and `staging.para-commute.org`; the owner looks at the screens. `main` is not touched.
-4. **`main` deploys on Vercel** when the owner next merges `staging` into `main`. Its production alias (`para-<team>.vercel.app`) answers Coming soon. 09 runs its production half there.
+4. **`main` deploys on Vercel** when the owner next merges `staging` into `main`. Its production alias (`para-room-tba-oss-program.vercel.app`) answers Coming soon. 09 runs its production half there.
 5. **DNS** (10), at a quiet hour: `www` from the proxied `AAAA 100::` (Workers route) to the `CNAME` Vercel's domain page shows, **DNS only**. The bare domain's redirect rule and `tiles` are untouched. The zone's CAA records already allow `letsencrypt.org`, which Vercel uses.
 6. **Watch 14 days.** The Worker, its route and its secrets stay as they are.
 7. **Retire** (11): delete the `www` Workers route and the `para` Worker; remove `wrangler.jsonc`; move `workers/site/src/*` beside the middleware; update the docs; ADR 0011 to Accepted.

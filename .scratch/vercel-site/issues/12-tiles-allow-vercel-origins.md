@@ -1,9 +1,9 @@
 # 12: The tiles Worker allows the Vercel origins
 
-Status: ready-for-agent (needs 07's team slug)
+Status: ready-for-agent
 Type: task
 Who: Opus for the code; the owner deploys
-Blocked by: 07
+Blocked by: none (07's first deploy confirms the address forms)
 
 ## The problem
 
@@ -11,8 +11,8 @@ Blocked by: 07
 
 ## What to build
 
-- `workers/tiles/src/cors.ts`: add `https://staging.para-commute.org` to the fixed origins, and a preview pattern for this project's Vercel addresses only: `^https://para-[a-z0-9-]+-<team-slug>\.vercel\.app$` (the branch and the unique-deployment forms both match it) and the production alias. The team slug comes from 07; no other team's `vercel.app` page may match. Keep the `workers.dev` entries until ticket 11.
-- `tests/unit/` cases for the cors check: staging, a branch preview, a unique deployment, the production alias allowed; `para-x-otherteam.vercel.app` and `evil-para-x-<team-slug>.vercel.app.example.com` refused.
+- `workers/tiles/src/cors.ts`: add `https://staging.para-commute.org` to the fixed origins, and a preview pattern for this project's Vercel addresses only: `^https://para-[a-z0-9-]+-room-tba-oss-program\.vercel\.app$` (the branch and the unique-deployment forms both match it) and the production alias. The team is the owner's Pro team, slug `room-tba-oss-program`; confirm the exact preview and production-alias forms on 07's first deploy. No other team's `vercel.app` page may match. Keep the `workers.dev` entries until ticket 11.
+- `tests/unit/` cases for the cors check: staging, a branch preview, a unique deployment, the production alias allowed; `para-x-otherteam.vercel.app` and `para-x-room-tba-oss-program.vercel.app.example.com` refused.
 - `public/_headers` and `vercel.json`'s content policies already allow `https://tiles.para-commute.org`; no change there.
 
 ## Deploy

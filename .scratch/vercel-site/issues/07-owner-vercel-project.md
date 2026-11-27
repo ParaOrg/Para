@@ -7,7 +7,7 @@ Blocked by: 02, 03, 04, 05 merged into `staging`
 
 ## What to do
 
-On the owner's Vercel Pro team. A session can't do these: they link the owner's accounts and set secrets.
+On the owner's Vercel Pro team, **Room TBA OSS Program** (slug `room-tba-oss-program`). A session can't do these: they link the owner's accounts and set secrets.
 
 1. **Import the repo:** Add New → Project → GitHub `ParaOrg/Para` (install Vercel's GitHub App on ParaOrg for this repo only). Project name `para`. Framework: Other. Root directory: `./`. Build, output and install come from `vercel.json`; leave the fields empty.
 2. **Settings → Git:** production branch `main`.
