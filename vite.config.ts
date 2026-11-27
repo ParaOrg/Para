@@ -68,8 +68,9 @@ export default defineConfig({
     strictPort: true,
     // Agents build in git worktrees inside the checkout (.claude/worktrees). Watched, each of their
     // edits and builds reloads every page this server serves, mid-suite: a browser suite then sees
-    // the page load twice (commuter-test's "fetched once" check).
-    watch: { ignored: ['**/.claude/worktrees/**'] },
+    // the page load twice (commuter-test's "fetched once" check). Only the worktrees under this
+    // checkout, by its own path: a server started inside a worktree still watches its own files.
+    watch: { ignored: [`${fileURLToPath(new URL('./.claude/worktrees', import.meta.url))}/**`] },
   },
   build: {
     // Three front doors, one build: the public map at /, the editor at /studio/
