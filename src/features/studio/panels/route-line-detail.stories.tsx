@@ -176,21 +176,21 @@ export const ReadOnly: Story = {
 };
 
 /**
- * A route that is a draft only, opened from the editor's draft: Draft above the tabs, Edit Route
- * and Extend, and no ⋮ Delete or "+ Add route", which work on approved rows.
+ * A route that is a draft only, opened from the editor's draft: Draft above the tabs, Edit Route,
+ * and no Extend, ⋮ Delete or "+ Add route", which work on approved rows.
  */
 export const DraftOnly: Story = {
   args: {
     tabs: BACK_NOT_DRAWN,
     onAddRoute: undefined,
     notice: <DraftBadge />,
-    actions: <RouteLineActions exporter={exporter} onEdit={fn()} onExtend={fn()} />,
+    actions: <RouteLineActions exporter={exporter} onEdit={fn()} />,
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(canvas.getByText('Draft', { exact: true })).toBeVisible();
     await expect(canvas.getByRole('button', { name: 'Edit Route' })).toBeVisible();
-    await expect(canvas.queryByRole('button', { name: /More|\+ Add route/ })).toBeNull();
+    await expect(canvas.queryByRole('button', { name: /Extend|More|\+ Add route/ })).toBeNull();
   },
 };
 

@@ -363,12 +363,17 @@ check(
   `${await pointsShown()} points`,
 );
 check(
-  '  with Edit Route, and no Delete or "+ Add route", which need approved rows',
+  '  with Edit Route, and no Extend, Delete or "+ Add route", which need approved rows',
   (await draftDetail.getByRole('button', { name: 'Edit route' }).isVisible()) &&
+    (await draftDetail.getByRole('button', { name: 'Extend' }).count()) === 0 &&
     (await draftDetail.getByRole('button', { name: 'More' }).count()) === 0 &&
     (await draftDetail.getByRole('button', { name: '+ Add route' }).count()) === 0,
 );
+// The dashed line tapped again is DraftLines' tap, not an empty one: the detail stays.
+await clickAt(OUT[1], 700);
+check('  a second tap on its dashed line keeps it open', (await draftDetail.count()) === 1);
 await page.keyboard.press('Escape');
+await draftDetail.waitFor({ state: 'detached', timeout: 5000 }).catch(() => {});
 check('  Escape closes it', (await draftDetail.count()) === 0);
 await openCard(OUT[1]);
 await draftDetail.getByRole('button', { name: 'Edit route' }).click();
@@ -471,6 +476,17 @@ check(
   said(w),
 );
 check('  nothing written to the approved tables', approvedWrites(w).length === 0, said(w));
+// The way back is the approved route's slot, drawn by the draft alone: a tap on its dashed line
+// opens Edit Route on the draft, not "cannot be opened". A save leaves the drawing.
+await waitFor(async () => (await pointsShown()) === 0);
+await openCard(BACK_MID);
+await waitFor(async () => (await pointsShown()) > 0);
+check(
+  "  a tap on the slot's dashed line opens the draft's way back into editing",
+  (await pointsShown()) > 0 && !(await body()).includes('This draft cannot be opened'),
+  `${await pointsShown()} points`,
+);
+await page.getByRole('button', { name: 'Exit', exact: true }).click();
 await approveAll();
 check(
   '  approved, the route is drawn both ways',
