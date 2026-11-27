@@ -38,15 +38,18 @@ interface UseOpenDraftOptions {
   draftHotspots: readonly HotspotRow[];
   /** The signed-in editor, whose own drafts open in the route line detail or their card. */
   userId: string | null;
-  draw: Pick<Drawing, 'load' | 'loadArea'>;
+  draw: Pick<Drawing, 'load' | 'loadArea' | 'drawing'>;
   /** Opens a direction's drawing to edit: the editor's own draft of it when there is one (useFollow). */
   opening: (
     v: DirectionRow,
     then: (d: DirectionDrawing) => void,
     options?: { isToEdit?: boolean },
   ) => Promise<void>;
-  /** Opens a direction's card or detail, where another editor's draft says who is changing it. */
-  cards: { open: boolean; openTrip: (v: { id: string }) => void };
+  /**
+   * Opens a direction's card or detail, where another editor's draft says who is changing it;
+   * closes them for a route that is a draft only, whose detail takes their place.
+   */
+  cards: { open: boolean; openTrip: (v: { id: string }) => void; closeAll: () => void };
   /** Opens a hotspot's card, which opens its sidebar beside the map on a computer. */
   openPlace: (hotspotId: string) => void;
   /** Says what went wrong opening it. */
@@ -56,7 +59,8 @@ interface UseOpenDraftOptions {
 /**
  * A draft tapped on the map, opened to read first: editing starts from Edit Route. A draft of a
  * route on the map opens the route's card (its route line detail on a computer), which says when
- * another editor is changing it. A route that is a draft only opens on a computer in the route line
+ * another editor is changing it; a way of it only the draft draws opens Edit Route on the
+ * editor's own draft. A route that is a draft only opens on a computer in the route line
  * detail from its draft (`trip`); a phone has no card for it and opens Edit Route on it. A tapped
  * line opens its own direction; a marker, which names none, the route's first drawn one. A hotspot
  * on the map opens its card, which opens its sidebar; one that is a draft only opens its outline to
@@ -85,6 +89,9 @@ export function useOpenDraft({
     setWasCardOpen(cards.open);
     if (cards.open) setTripId(null);
   }
+  // A drawing, or a window narrowed to a phone's, takes it off the screen for good: it does not
+  // come back after Exit or a widening, with no Escape or tap to have closed it meanwhile.
+  if (tripId !== null && (draw.drawing || !isWideScreen)) setTripId(null);
   const tripDirection = draftDirections.find((v) => v.id === tripId);
   const trip: DraftTrip | null = tripDirection
     ? {
@@ -119,21 +126,41 @@ export function useOpenDraft({
 
   const open = (draft: DraftRow, directionId?: string): DraftOpening => {
     if (draft.kind === 'hotspot') return openHotspot(draft);
-    const isDrawnOf = (v: DirectionRow) =>
-      v.routeId === draft.subject_id &&
-      v.shape !== null &&
-      (directionId === undefined || v.id === directionId);
-    const approved = saved.directions.find(isDrawnOf);
+    const isTapped = (v: DirectionRow) => directionId === undefined || v.id === directionId;
+    const isDrawn = (v: DirectionRow) => v.shape !== null;
+    const approvedWays = saved.directions.filter((v) => v.routeId === draft.subject_id);
+    const approved = approvedWays.find((v) => isDrawn(v) && isTapped(v));
     if (approved) {
       setTripId(null);
       cards.openTrip(approved);
       return 'opened';
     }
-    const direction = draftDirections.find(isDrawnOf);
+    // A way of a route on the map that only the draft draws (its slot, the return trip): there is
+    // no approved line of it to read. The editor's own opens Edit Route on the draft; another's,
+    // the route's drawn way, whose card says who is changing it.
+    const undrawn = approvedWays.find(isTapped);
+    if (undrawn) {
+      if (!isAnothers(draft)) {
+        void opening(undrawn, draw.load, { isToEdit: true });
+        return 'opened';
+      }
+      const drawn = approvedWays.find(isDrawn);
+      if (!drawn) return 'held';
+      cards.openTrip(drawn);
+      return 'opened';
+    }
+    const direction = draftDirections.find(
+      (v) => v.routeId === draft.subject_id && isDrawn(v) && isTapped(v),
+    );
     if (!direction) return cannotOpen();
     if (isAnothers(draft)) return 'held';
-    if (isWideScreen) setTripId(direction.id);
-    else void opening(direction, draw.load, { isToEdit: true });
+    if (!isWideScreen) {
+      void opening(direction, draw.load, { isToEdit: true });
+      return 'opened';
+    }
+    // The detail takes the left panel: an approved route's or a hotspot's card leaves it.
+    cards.closeAll();
+    setTripId(direction.id);
     return 'opened';
   };
 
