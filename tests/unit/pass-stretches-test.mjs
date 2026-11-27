@@ -373,7 +373,7 @@ test("step 13: a line file whose key is the index's own: its stretches are the o
   assert.deepStrictEqual(coordsOf(stretchesOf(trusted, boxes)), made.pass);
 });
 
-test('step 13: a hintuan moved, added, gone, of another id, or no longer stopped at: another key, and the stretches are worked out', () => {
+test('step 13: a hintuan moved, added, gone, of another id, or a station the road route now stops at: another key, and the stretches are worked out', () => {
   const { v, stops } = smallMap();
   const { file, v: read } = asRead(v, lineFileText(v, passBoxes(stops)));
   const changed = {
@@ -383,9 +383,10 @@ test('step 13: a hintuan moved, added, gone, of another id, or no longer stopped
     'a hintuan of another id in the same box': stops.map((s) =>
       s.id === 'On' ? { ...s, id: 'On2' } : s,
     ),
-    'a hintuan made a station the jeep does not stop at': stops.map((s) =>
-      s.id === 'On' ? { ...s, line: 'LRT-1' } : s,
-    ),
+    'a station added on the road, which the jeep stops at as at any hintuan': [
+      ...stops,
+      hotspot('Station', 'hintuan', 500, 0, { line: 'LRT-1' }),
+    ],
     'a hintuan made a terminal': stops.map((s) =>
       s.id === 'Beside' ? { ...s, kind: 'terminal' } : s,
     ),
@@ -400,8 +401,14 @@ test('step 13: a hintuan moved, added, gone, of another id, or no longer stopped
       `${what}: worked out, not the file's`,
     );
   }
-  // The route made a train: it stops at none of the jeep's hintuans.
+  // The route made a train: it stops at none of the jeep's hintuans, and a road hintuan added
+  // under its track leaves its key as it was.
   const train = { ...read, route: { ...read.route, mode: 'lrt', routeCode: 'LRT-1' } };
+  const trainKey = (boxes) => linePass(train, boxes).passKey;
+  assert.equal(
+    trainKey(passBoxes([...stops, hotspot('Under', 'hintuan', 500, 0)])),
+    trainKey(passBoxes(stops)),
+  );
   assert.equal(publishedStretches(train, passBoxes(stops)), null);
   assert.deepStrictEqual(stretchesOf(train, passBoxes(stops)), []);
 });
@@ -411,10 +418,9 @@ test('step 13: what does not change the stretches does not change the key', () =
   const key = linePass(v, passBoxes(stops)).passKey;
   const same = {
     'a hintuan 2 km away': [...stops, hotspot('Far', 'hintuan', 3000, 2000)],
-    'a station on the road the jeep does not stop at': [
-      ...stops,
-      hotspot('Station', 'hintuan', 500, 0, { line: 'LRT-1' }),
-    ],
+    'a hintuan made a station, which the jeep stops at all the same': stops.map((s) =>
+      s.id === 'On' ? { ...s, line: 'LRT-1' } : s,
+    ),
     'a hintuan renamed': stops.map((s) =>
       s.id === 'On' ? { ...s, name: 'Renamed', informal: 'Elsewhere' } : s,
     ),

@@ -111,14 +111,14 @@ export function isLoop(v: { route?: { isLoop?: boolean } | null }): boolean {
 
 /**
  * Whether a direction of this route stops at this hintuan, beyond passing within reach of its box.
- * A line — a train, the ferry, the Carousel — stops only at its own stations; a jeep at every
- * hintuan that is not a station — the owner's default, open to change. A train or ferry names its
- * line in its routeCode, the Carousel by its mode (lineOfMode); a line with none stops nowhere, so
- * it can never pick up the jeep hintuans under its track, along its river or its busway.
+ * A line — a train, the ferry, the Carousel — stops only at its own stations, so it never picks up
+ * the jeep hintuans under its track, along its river or its busway. A road route — a jeep, a bus —
+ * stops at every hintuan it passes, a train's or the Carousel's station too, never a ferry's (ADR
+ * 0010). A train or ferry names its line in its routeCode, the Carousel by its mode; none, nowhere.
  */
 export function servedBy(hotspot: { line?: string | null }, route: ServedRoute): boolean {
   const line = hotspot.line ?? null;
-  if (!isLineMode(route.mode)) return line === null;
+  if (!isLineMode(route.mode)) return line === null || !FERRY_LINES.some((f) => f === line);
   return line !== null && line === (route.routeCode ?? lineOfMode(route.mode));
 }
 

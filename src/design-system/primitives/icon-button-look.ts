@@ -5,8 +5,8 @@ export type Size = 'large' | 'base' | 'small';
 /** Tooltip's Position: the side its arrow is on, so Bottom sits above the button. */
 export type TooltipPosition = 'bottom' | 'top' | 'left' | 'right';
 
-/** The voices the set draws: Brand only at Large (icon-button.tsx's props). */
-export type Variant = 'special' | 'brand';
+/** The voices the set draws: Brand only at Large, Plain only at Small (icon-button.tsx's props). */
+export type Variant = 'special' | 'brand' | 'plain';
 
 export const VARIANT = {
   special:
@@ -19,6 +19,8 @@ export const VARIANT = {
     'bg-brand-surface text-content-inverse shadow-primary-button-rest ' +
     'enabled:not-aria-disabled:hover:shadow-primary-button-hover ' +
     'enabled:not-aria-disabled:active:shadow-primary-button-pressed',
+  // The icon alone, no fill and no shadow; the set draws no Hover or Pressed for it yet.
+  plain: 'bg-transparent text-content-primary',
 } satisfies Record<Variant, string>;
 
 // Large is 48px round (10px around a 28px icon); Base 40px (8px around 24px);

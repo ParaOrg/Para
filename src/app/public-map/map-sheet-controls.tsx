@@ -1,15 +1,18 @@
 import type { MapLibreMap } from 'maplibre-gl';
 
 import type { TooltipPosition } from '@/design-system/primitives/icon-button';
-import { listWay } from '@/features/routes/cards/list-way';
+import { listWay, listedRouteCount } from '@/features/routes/cards/list-way';
 import { ModeFilterButton } from '@/features/routes/cards/mode-filter-button';
 import { ViceVersaButton } from '@/features/routes/cards/vice-versa-button';
 import { MapControlsDock } from '@/features/routes/map/map-controls-dock';
 import { OverviewPill } from '@/features/routes/map/overview-pill';
 import type { Listing } from '@/features/routes/model/departures';
-import type { ModeFilter } from '@/features/routes/model/mode-filter';
+import type { ModePicks } from '@/features/routes/model/mode-filter';
 import type { Direction } from '@/features/routes/model/routes';
 import { FilterIcon } from '@/shared/ui/map-control-icons';
+import { FRAMED_SHARE, type Snap } from '@/shared/ui/sheet-gesture';
+
+import { ListTopBar } from './list-top-bar';
 
 interface MapSheetControlsProps {
   map: MapLibreMap | null;
@@ -20,14 +23,16 @@ interface MapSheetControlsProps {
     candidates: readonly Direction[];
     back: boolean;
     listing: Listing;
-    modeFilter: ModeFilter;
+    modePicks: ModePicks;
   } | null;
   /** The cards float (useMapFloats): the filter stands in this row, not over locate-me. */
   floats: boolean;
   /** Vice Versa: every route listed the other way round. */
   onFlip: () => void;
-  /** A choice in the filter the sliders open. */
-  onFilter: (filter: ModeFilter) => void;
+  /** The sheets' shared height (useCardStack): the bar's ⌄ sets the list at the middle. */
+  onSnap: (snap: Snap) => void;
+  /** The modes picked in the filter the sliders open. */
+  onFilter: (picks: ModePicks) => void;
 }
 
 /**
@@ -45,31 +50,42 @@ export function MapSheetControls({
   list,
   floats,
   onFlip,
+  onSnap,
   onFilter,
 }: MapSheetControlsProps) {
-  const way = list && listWay(list.candidates, list.back, list.listing, list.modeFilter);
+  const way = list && listWay(list.candidates, list.back, list.listing, list.modePicks);
   return (
-    <MapControlsDock>
-      <div className="flex flex-col-reverse items-start gap-3 @float:flex-col">
-        {list && way && way.way !== null && (
-          <ViceVersaButton
-            way={way.way}
-            wayTo={way.wayTo}
-            isSwitchable={way.isSwitchable}
-            isBack={list.back}
-            onSwitch={onFlip}
-          />
-        )}
-        <OverviewPill isShown={overview.isShown} go={overview.go} map={map} isIconOnly={!!list} />
-      </div>
-      {list && floats && <ListFilter list={list} onFilter={onFilter} tooltip="top" />}
-    </MapControlsDock>
+    <>
+      {list && way && (
+        <ListTopBar
+          way={way.way === null ? null : { ...way, way: way.way }}
+          isBack={list.back}
+          onFlip={onFlip}
+          onMiddle={() => onSnap(FRAMED_SHARE)}
+        />
+      )}
+      <MapControlsDock>
+        <div className="flex flex-col-reverse items-start gap-3 @float:flex-col">
+          {list && way && way.way !== null && (
+            <ViceVersaButton
+              way={way.way}
+              wayTo={way.wayTo}
+              isSwitchable={way.isSwitchable}
+              isBack={list.back}
+              onSwitch={onFlip}
+            />
+          )}
+          <OverviewPill isShown={overview.isShown} go={overview.go} map={map} isIconOnly={!!list} />
+        </div>
+        {list && floats && <ListFilter list={list} onFilter={onFilter} tooltip="top" />}
+      </MapControlsDock>
+    </>
   );
 }
 
 interface ListFilterProps {
-  list: { modeFilter: ModeFilter };
-  onFilter: (filter: ModeFilter) => void;
+  list: NonNullable<MapSheetControlsProps['list']>;
+  onFilter: (picks: ModePicks) => void;
   /** Where its tooltip points from: beside locate-me on a phone, along the map's top floating. */
   tooltip: TooltipPosition;
 }
@@ -79,7 +95,11 @@ export function ListFilter({ list, onFilter, tooltip }: ListFilterProps) {
   return (
     <span className="flex rounded-full shadow-sm">
       <ModeFilterButton
-        modeFilter={{ filter: list.modeFilter, onFilter }}
+        modeFilter={{
+          picks: list.modePicks,
+          onPicks: onFilter,
+          routeCount: listedRouteCount(list.candidates, list.back, list.listing, list.modePicks),
+        }}
         icon={<FilterIcon />}
         size="large"
         tooltip={tooltip}

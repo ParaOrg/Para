@@ -125,9 +125,8 @@ interface Props {
   isExposed?: boolean;
   /**
    * MapLibre's +, − and compass, top right, for a mouse (never a finger:
-   * `coarse`). The studio keeps them; the public map has none (the owner's
-   * call: they were annoying for commuters), as the wheel, a double click and
-   * the keys zoom it. Read once, as the map is made.
+   * `coarse`). Off on every page for now: a pinch, the wheel, a double click and
+   * the keys zoom the map. Read once, as the map is made.
    */
   zoomButtons?: boolean;
   /**
@@ -211,6 +210,8 @@ interface Props {
    * instead (`openOn`). Read once, as the map is made.
    */
   transformRequest?: RequestTransformFunction;
+  /** OpenStreetMap's terminals among the places (terminal-markers.ts). Read once, as it is made. */
+  hasTerminalMarkers?: boolean;
 }
 
 /**
@@ -247,6 +248,7 @@ export function MapView({
   showsDiagnostics = false,
   makeStyle = initialStyle,
   transformRequest,
+  hasTerminalMarkers = true,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   // Kept from an effect declared before the map's own: the map hands itself
@@ -406,7 +408,7 @@ export function MapView({
         credits.options.customAttribution = mapAttribution(host);
       });
       map.addControl(credits, coarse && !creditsAtBottom ? 'top-right' : 'bottom-right');
-      drawEstablishments(map);
+      drawEstablishments(map, { hasTerminalMarkers });
       // What MapLibre itself does to them on the first drag.
       if (foldCredits)
         map
@@ -477,7 +479,7 @@ export function MapView({
       setReady(null);
       map?.remove();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- the map is made once: `basemap`, `isExposed`, `zoomButtons`, `maxBounds`, `foldCredits`, `openOn`, `makeStyle` and `transformRequest` are read once, as it is made (each prop says so)
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- the map is made once: `basemap`, `isExposed`, `zoomButtons`, `maxBounds`, `foldCredits`, `openOn`, `makeStyle`, `transformRequest` and `hasTerminalMarkers` are read once, as it is made (each prop says so)
   }, []);
 
   return (

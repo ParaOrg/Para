@@ -16,9 +16,9 @@
 // a circle the size of its accuracy, and brings the camera to it 200 m on the scale bar
 // across, north up (TrackedLocation); a walk turns the beam its way and the
 // camera follows; a drag lets go (TrackOwnLocation) and a tap comes back; the
-// next tap tilts the camera, 200 m on the bar, turned the way the compass says
-// (TracksTheMapBasedOnCompassFacing), and turns with it; the next puts north
-// up again, and the next tilts again; an app camera move lets go; a route
+// next tap turns the camera the way the compass says, 200 m on the bar, at the
+// chosen view's tilt (TracksTheMapBasedOnCompassFacing), and turns with it; the
+// next puts north up again, and the next turns it again; an app camera move lets go; a route
 // tapped draws the dot's gaze, and the card it opened set to another height
 // while the camera follows keeps the camera on the commuter; a browser
 // that refuses says so in one toast, however often tapped, and ✕ closes it;
@@ -466,10 +466,10 @@ await mapIdle(page);
 cam = await camera(page);
 const compassZoom = await zoomFor(page, 200);
 check(
-  'the next tap tilts the camera, 200 m on the scale bar, turned the way the phone faces',
+  "the next tap turns the camera the way the phone faces, 200 m on the scale bar, at the view's tilt: flat in 2D",
   (await mode()) === 'TracksTheMapBasedOnCompassFacing' &&
     Math.abs(cam.zoom - compassZoom) < 0.05 &&
-    Math.abs(cam.pitch - 45) < 0.5 &&
+    cam.pitch < 0.5 &&
     apart(cam.bearing, 120) < 1,
   `${await mode()}, zoom ${cam.zoom.toFixed(2)} for ${compassZoom.toFixed(2)}, pitch ${cam.pitch.toFixed(1)}, bearing ${cam.bearing.toFixed(1)}`,
 );
@@ -529,9 +529,8 @@ await button.click();
 await until(async () => (await mode()) === 'TracksTheMapBasedOnCompassFacing', 3000);
 await mapIdle(page);
 check(
-  '  and the next tilts again',
-  (await mode()) === 'TracksTheMapBasedOnCompassFacing' &&
-    Math.abs((await camera(page)).pitch - 45) < 0.5,
+  '  and the next turns it again',
+  (await mode()) === 'TracksTheMapBasedOnCompassFacing' && (await camera(page)).pitch < 0.5,
   `${await mode()}`,
 );
 
@@ -798,6 +797,35 @@ check(
     placed ? JSON.stringify(placed) : 'no trip opened from a route line',
   );
 }
+// The toast's places under a full card (toast-under-full.ts), read from the page's own styles.
+// Tailwind wraps a group's selector in a forgiving :is(), so an invalid one (a :has() inside the
+// group's :has()) is not dropped but emptied to `:has(:is())`, which matches nothing: a rule kept
+// whole still names `[data-snap="full"]` as parsed. The place card's rule is checked so because
+// builds keep hotspot taps off, and no test can open a place's card to see the toast moved.
+{
+  const toastTops = await page2.evaluate(() => {
+    const found = [];
+    const walk = (rules) => {
+      for (const rule of rules) {
+        if (rule.cssRules) walk(rule.cssRules);
+        const value = rule.style?.getPropertyValue('--toast-top');
+        if (value && rule.selectorText?.includes('[data-snap="full"]')) found.push(value);
+      }
+    };
+    for (const sheet of document.styleSheets) walk(sheet.cssRules);
+    return found;
+  });
+  check(
+    "  the toast's place under a full place card is a rule the browser keeps",
+    toastTops.some((value) => value.includes('23.5')),
+    JSON.stringify(toastTops),
+  );
+  check(
+    "  the toast's place under a full trip is a rule the browser keeps",
+    toastTops.some((value) => value.includes('35.125')),
+    JSON.stringify(toastTops),
+  );
+}
 await ctx2.close();
 
 // ---------------------------------------------------------- no fix, ever
@@ -1060,6 +1088,138 @@ check(
   `pitch ${(await pitchOf()).toFixed(1)}; stored ${await stored()}`,
 );
 await ctx6.close();
+
+// The owner's rule (2026-11-26): 2D is a flat map, the buildings flat footprints however the
+// map is tilted by hand; 3D raises them as the design does. In every design, and across a switch.
+{
+  const ctxB = await b.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true });
+  const pageB = await ctxB.newPage();
+  await stubTiles(pageB);
+  await open(pageB);
+  const viewB = pageB.locator('[data-testid="map-view-pill"] button[aria-label^="Switch to"]');
+  /** Every extrusion layer's height now: 0 where flat. */
+  const heights = () =>
+    pageB.evaluate(() => {
+      const m = window.__map;
+      return m
+        .getStyle()
+        .layers.filter((l) => l.type === 'fill-extrusion')
+        .map((l) => JSON.stringify(m.getPaintProperty(l.id, 'fill-extrusion-height')));
+    });
+  const isFlat = (hs) => hs.length > 0 && hs.every((h) => h === '0');
+  const isRaised = (hs) => hs.length > 0 && hs.every((h) => h !== '0' && h !== undefined);
+  /** Another design picked on the Map Style card, the map's style in. */
+  const otherDesign = async () => {
+    await pageB.getByRole('button', { name: 'Map design' }).click();
+    const other = pageB
+      .locator('[data-testid="basemap-menu"] button[aria-pressed="false"]')
+      .first();
+    await other.click();
+    await pageB.keyboard.press('Escape');
+    await mapIdle(pageB);
+  };
+  const flat2d = await heights();
+  await pageB.evaluate(() => {
+    window.__map.jumpTo({ pitch: 50 });
+  });
+  const tiltedBy2d = await heights();
+  check(
+    'in 2D the buildings lie flat, and stay flat with the map tilted by hand',
+    isFlat(flat2d) && isFlat(tiltedBy2d),
+    JSON.stringify({ flat2d, tiltedBy2d }),
+  );
+  await viewB.click();
+  await mapIdle(pageB);
+  const raised3d = await heights();
+  await otherDesign();
+  const raisedOther = await heights();
+  check(
+    '  in 3D they stand as the design raises them, and in another design picked',
+    isRaised(raised3d) && isRaised(raisedOther),
+    JSON.stringify({ raised3d, raisedOther }),
+  );
+  await viewB.click();
+  await mapIdle(pageB);
+  const flatAgain = await heights();
+  await otherDesign();
+  const flatOther = await heights();
+  check(
+    '  back to 2D they lie flat, and in another design picked in 2D',
+    isFlat(flatAgain) && isFlat(flatOther),
+    JSON.stringify({ flatAgain, flatOther }),
+  );
+  await ctxB.close();
+}
+
+// ------------------------------------------------- the view with the camera on the commuter
+// The camera that follows the commuter rests at the chosen view's tilt (restingPitch): coming back
+// from the compass view, and as a fix lands while the camera tilts, the map and the button agree.
+const ctx7 = await b.newContext({
+  viewport: { width: 390, height: 844 },
+  isMobile: true,
+  hasTouch: true,
+  geolocation: { ...P0, accuracy: 30 },
+  permissions: ['geolocation'],
+});
+const page7 = await ctx7.newPage();
+await stubTiles(page7);
+await open(page7);
+const where7 = page7.locator('[data-testid="where"]');
+const view7 = page7.locator('[data-testid="map-view-pill"] button[aria-label^="Switch to"]');
+const pitch7 = () => page7.evaluate(() => window.__map.getPitch());
+await where7.click();
+await until(async () => (await where7.getAttribute('data-mode')) === 'TrackedLocation', 5000);
+await face(page7, 120);
+await where7.click();
+await until(
+  async () => (await where7.getAttribute('data-mode')) === 'TracksTheMapBasedOnCompassFacing',
+  3000,
+);
+await mapIdle(page7);
+await view7.click();
+await face(page7, 160);
+await mapIdle(page7);
+await face(page7, 200);
+await mapIdle(page7);
+check(
+  '3D picked in the compass view: the map tilts to 3D and holds it as the phone turns',
+  Math.abs((await pitch7()) - want3d) < 0.5,
+  `pitch ${(await pitch7()).toFixed(1)}`,
+);
+await view7.click();
+await face(page7, 240);
+await mapIdle(page7);
+check(
+  '  2D picked: flat, as the phone turns',
+  (await pitch7()) < 0.5,
+  `pitch ${(await pitch7()).toFixed(1)}`,
+);
+await view7.click();
+await face(page7, 120);
+await mapIdle(page7);
+await where7.click();
+await until(async () => (await where7.getAttribute('data-mode')) === 'TrackedLocation', 3000);
+await mapIdle(page7);
+check(
+  '  3D again, back on TrackedLocation: the map is in 3D, as the button says',
+  Math.abs((await pitch7()) - want3d) < 0.5 &&
+    (await view7.getAttribute('aria-label')) === 'Switch to 2D view',
+  `pitch ${(await pitch7()).toFixed(1)}; ${await view7.getAttribute('aria-label')}`,
+);
+await view7.click();
+await page7.waitForTimeout(150);
+await ctx7.setGeolocation({
+  latitude: P0.latitude + 0.0002,
+  longitude: P0.longitude,
+  accuracy: 30,
+});
+await mapIdle(page7);
+check(
+  '  2D picked as a fix lands mid-tilt: the camera follows it and goes on to flat',
+  (await pitch7()) < 0.5 && (await view7.getAttribute('aria-label')) === 'Switch to 3D view',
+  `pitch ${(await pitch7()).toFixed(1)}; ${await view7.getAttribute('aria-label')}`,
+);
+await ctx7.close();
 
 await b.close();
 tally();

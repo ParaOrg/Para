@@ -2010,6 +2010,34 @@ const tripChecks = async () => {
         Math.abs(camAfterLetGo.lat - camBeforePick.lat) < 1e-6,
       JSON.stringify({ camBeforePick, camAfterLetGo }),
     );
+    // The camera comes back at the view chosen now: picked in 3D, let go after 2D, it is flat. The
+    // 2D/3D button stands under the card at full height, so it is pressed by script, the camera's
+    // rule being what is read here.
+    if (pickWant) {
+      const view = (want) =>
+        page.evaluate((want) => {
+          const button = document.querySelector(
+            '[data-testid="map-view-pill"] button[aria-label^="Switch to"]',
+          );
+          if (button?.getAttribute('aria-label') === `Switch to ${want} view`) button.click();
+        }, want);
+      const pitchNow = () => page.evaluate(() => window.__map.getPitch());
+      await view('3D');
+      await mapIdle(page);
+      await buttonTap(pickButton, isPicked);
+      await cardsSettled(page);
+      const tiltedAtPick = await pitchNow();
+      await view('2D');
+      await mapIdle(page);
+      await buttonTap(pickButton, async () => !(await isPicked()));
+      await cardsSettled(page);
+      await mapIdle(page);
+      check(
+        '  picked in 3D, let go after 2D was tapped: the camera comes back flat, as the button says',
+        tiltedAtPick > 50 && (await pitchNow()) < 0.5,
+        `pitch ${tiltedAtPick.toFixed(1)} at the pick, ${(await pitchNow()).toFixed(1)} let go`,
+      );
+    }
     // Closer in than 300 m on the scale bar, a pick keeps the commuter's zoom
     // (the owner's ask, 2026-10-13: "if it's below 300m and tapped the
     // hintuan, don't zoom out, remain where the user camera was"): with the
@@ -2886,6 +2914,15 @@ const toRaised = async () => {
   } else await buttonTap(handle(), async () => (await sheetState()) !== 'low');
   return (await until(sheetState, (state) => state === 'free', 5000)) === 'free';
 };
+/** A trip's middle, where a tap opens it (TRIP_OPENS_AT), read from the page's own module. */
+const tripMiddle = () =>
+  page.evaluate(async () => {
+    try {
+      return (await import('/src/features/routes/cards/card-stack.ts')).TRIP_OPENS_AT;
+    } catch {
+      return 0.45;
+    }
+  });
 /**
  * Whether the card's handle draws no notch (BottomSheet's `handle="hidden"`, a trip's and the
  * route list's): nothing there for a finger, which moves the sheet itself instead.
@@ -3690,6 +3727,27 @@ if (runsPart(1)) {
         atFull !== null && !atFull.drawn && atFull.box === 0,
         JSON.stringify(atFull),
       );
+      // The scale bar stands 4 under the ⓘ's place (16 in, its top 56 down: the ⓘ's 24 and 28),
+      // drawn over every sheet: at full height, the card filling the screen, nothing covers it.
+      const scaleAtFull = await page.evaluate(() => {
+        const scale = document.querySelector('.maplibregl-ctrl-scale');
+        const box = scale?.getBoundingClientRect();
+        if (!scale || !box) return null;
+        const hit = document.elementFromPoint(box.left + 4, box.top + box.height / 2);
+        return {
+          x: Math.round(box.left),
+          y: Math.round(box.top),
+          isOnTop: !!hit && scale.contains(hit),
+        };
+      });
+      check(
+        "  the scale bar stands under the ⓘ's place, 16 in and 56 down, over the full card",
+        scaleAtFull !== null &&
+          Math.abs(scaleAtFull.x - 16) < 2 &&
+          Math.abs(scaleAtFull.y - 56) < 2 &&
+          scaleAtFull.isOnTop,
+        JSON.stringify(scaleAtFull),
+      );
       await toRaised();
       await cardsSettled(page);
       const grip = await handle().first().boundingBox();
@@ -3921,11 +3979,12 @@ if (runsPart(3)) {
       if (back && isBack) await throwFrom(back[0], back[1], 150, 3, 16);
       return rest;
     };
-    // How tall its content stands, from the sheet's top to its last card's foot, and whether every
-    // place name is drawn whole (at Low they are cut to a line; raised, never).
+    // How tall its content stands, from the sheet's top to its last card's foot (the DonationCard
+    // ends the public map's list, 4885:42554), and whether every place name is drawn whole (at Low
+    // they are cut to a line; raised, never).
     const cardsNow = () =>
       chooser.first().evaluate((el) => {
-        const cards = el.querySelectorAll('[data-testid="chooser-origin"]');
+        const cards = el.querySelectorAll('[data-testid="chooser-origin"], section');
         const last = cards[cards.length - 1];
         const tall = last
           ? Math.round(last.getBoundingClientRect().bottom - el.getBoundingClientRect().top)
@@ -4314,6 +4373,7 @@ if (runsPart(3)) {
       const listTopPx = await shownOf(chooser);
       await buttonTap(wanted, async () => (await trip().count()) > 0);
       const tripPx = (await trip().count()) ? await shownOf(card()) : null;
+      const tripShare = await tripMiddle();
       check(
         '  a trip opened from the list at its top opens at the middle (TRIP_OPENS_AT)',
         listAtFull &&
@@ -4321,7 +4381,7 @@ if (runsPart(3)) {
           Math.abs(
             tripPx -
               Math.round(
-                0.55 *
+                tripShare *
                   (await card()
                     .first()
                     .evaluate((e) => e.offsetHeight)),
@@ -5974,15 +6034,22 @@ if (runsPart(2) && isPlaceSearchShown) {
 // The owner's rules of 2026-11-25, in px (±2): the first card open, the list a tap opens stands at
 // its height, and at Low at Low; a trip a tap opens, on a RouteCard or on a line of one route,
 // opens at the middle (TRIP_OPENS_AT); ⇅ keeps the trip's height; ‹ gives the list back at its own
-// height from before the tap; the first card comes back as it was left.
+// height from before the tap; the first card comes back at Low, whole or Low as it was left (the
+// owner, 2026-11-26), drawn there from its first frame.
 if (runsPart(3)) {
+  // Run whole, the page before this one still serves 5d's made-up map (serveTwoWayMap), whose one
+  // route opens a trip where today's map opens the list. A phone of its own, as part 3 alone gives
+  // this section: not touched by finger alone, as 4f left it.
+  if (PHONE_PARTS === 1) await newPhone({ isTouchOnly: false });
   await page.goto(`${BASE}/`, { waitUntil: 'load' });
   await page.waitForFunction(() => window.__map && window.__map.loaded(), null, { timeout: 30000 });
   await waitForSource(page, 'saved-routes');
   await mapIdle(page);
-  const middle = await page.evaluate(async () => {
+  const middle = await tripMiddle();
+  // The route list's middle, its ⌄'s (FRAMED_SHARE): a trip's is its own (TRIP_OPENS_AT).
+  const listMiddleShare = await page.evaluate(async () => {
     try {
-      return (await import('/src/features/routes/cards/card-stack.ts')).TRIP_OPENS_AT;
+      return (await import('/src/shared/ui/sheet-gesture.ts')).FRAMED_SHARE;
     } catch {
       return 0.55;
     }
@@ -6110,6 +6177,35 @@ if (runsPart(3)) {
       near(backPx, listPx),
       `list ${listPx} px before; ${backPx} px back`,
     );
+    // At the top, filling the map, the list shows its bar (4885:42122): Vice Versa and ⌄, over the
+    // DonationCard, its last card; ⌄ takes it down to the middle (FRAMED_SHARE).
+    const listHandle = chooser.first().locator('[data-testid="dock-handle"]');
+    for (let i = 0; i < 4 && (await chooser.first().getAttribute('data-snap')) !== 'full'; i++) {
+      await listHandle.focus();
+      await page.keyboard.press('Enter');
+      await cardsSettled(page).catch(() => {});
+    }
+    if (await chooser.first().getAttribute('data-reaches-top')) {
+      const bar = page.locator('[data-testid="list-top-bar"]');
+      const lastCard = await chooser
+        .first()
+        .evaluate((el) => [...el.querySelectorAll('section h2')].at(-1)?.textContent ?? '');
+      const isBarShown = await bar.isVisible();
+      await page.locator('[data-testid="list-to-middle"]').click();
+      await cardsSettled(page).catch(() => {});
+      const downPx = await shownOf(chooser);
+      const listMiddle = Math.round(
+        listMiddleShare * (await chooser.first().evaluate((e) => e.offsetHeight)),
+      );
+      check(
+        '  the list at the top shows Vice Versa and ⌄ over its DonationCard; ⌄ sets it at the middle',
+        isBarShown &&
+          /Help make Para better/.test(lastCard) &&
+          !(await bar.isVisible()) &&
+          near(downPx, listMiddle),
+        `bar ${isBarShown}; last card "${lastCard}"; down ${downPx} px, the middle ${listMiddle} px`,
+      );
+    }
     // ⇅ on a trip of its own: it turns the list behind round too, to its other cards.
     await touchTap(
       chooser.locator('[data-testid="chooser-select"]').first(),
@@ -6129,8 +6225,32 @@ if (runsPart(3)) {
         `${raisedPx} px before; ${flippedPx} px after`,
       );
     }
+    // Where the first card is drawn as it comes back, read as it is put on the page.
+    await page.evaluate(() => {
+      window.__exploreBack = null;
+      const watch = new MutationObserver(() => {
+        const e = document.querySelector('[data-testid="explore-cards"]');
+        if (!e) return;
+        window.__exploreBack = Math.round(innerHeight - e.getBoundingClientRect().top);
+        watch.disconnect();
+      });
+      watch.observe(document.body, { childList: true, subtree: true });
+    });
     await leaveTrip(async () => (await chooser.count()) > 0);
     await leaveTrip(allClosed);
+    await explore.waitFor({ state: 'visible', timeout: 5000 }).catch(() => {});
+    await cardsSettled(page).catch(() => {});
+    const backAt = await page.evaluate(() => window.__exploreBack);
+    const restsAt = await exploreShown();
+    check(
+      '  left whole, the first card comes back at Low, drawn there from the start: no drop from whole',
+      (await explore.getAttribute('data-rest').catch(() => null)) === 'low' &&
+        near(backAt, restsAt) &&
+        restsAt !== null &&
+        openPx !== null &&
+        restsAt < openPx,
+      `drawn at ${backAt} px, rests at ${restsAt} px; whole ${openPx} px`,
+    );
   }
 
   // At Low, the first card lets the list open at Low, and comes back at Low once it closes.
@@ -6150,7 +6270,7 @@ if (runsPart(3)) {
   await leaveTrip(allClosed);
   await explore.waitFor({ state: 'visible', timeout: 5000 }).catch(() => {});
   check(
-    '  and the first card comes back as it was left, at Low',
+    '  and the first card comes back at Low',
     (await explore.getAttribute('data-rest').catch(() => null)) === 'low',
     `${await explore.getAttribute('data-rest').catch(() => null)}`,
   );

@@ -61,7 +61,7 @@ export const Empty: Story = {
 
 /**
  * A plain hintuan, with the choice to mark it an EDSA Carousel station: ticked, only the Carousel's
- * routes pass under it (servedBy), and no jeep.
+ * routes of the lines pass under it (servedBy); a road route passing it still lists it.
  */
 export const CarouselStationChoice: Story = {
   args: { station: null, onStationChange: fn() },

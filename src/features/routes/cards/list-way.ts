@@ -1,11 +1,12 @@
 import {
   listedDepartures,
   otherWayHasRoutes,
+  routeCards,
   switchWord,
   wayWord,
   type Listing,
 } from '../model/departures';
-import { passesModeFilter, type ModeFilter } from '../model/mode-filter';
+import { passesModePicks, type ModePicks } from '../model/mode-filter';
 import { isLoop, type Direction } from '../model/routes';
 
 /** The way round a route list shows, for the control that turns it: PAPUNTA, or Vice Versa. */
@@ -18,6 +19,20 @@ export interface ListWay {
   isSwitchable: boolean;
 }
 
+/** How many RouteCards a list shows under the picks, as RouteCardList counts them. */
+export function listedRouteCount(
+  routes: readonly Direction[],
+  back: boolean,
+  listing: Listing,
+  picks: ModePicks,
+): number {
+  return routeCards(
+    routes.filter((v) => passesModePicks(v, picks)),
+    back,
+    listing,
+  ).length;
+}
+
 /**
  * The way round of the routes a list shows, the filter applied, as RouteCardList lists them: the
  * studio's Controller and the public map's Vice Versa read the same.
@@ -26,9 +41,9 @@ export function listWay(
   routes: readonly Direction[],
   back: boolean,
   listing: Listing,
-  filter: ModeFilter,
+  picks: ModePicks,
 ): ListWay {
-  const filtered = routes.filter((v) => passesModeFilter(v, filter));
+  const filtered = routes.filter((v) => passesModePicks(v, picks));
   const shown = listedDepartures(filtered, back, listing).flatMap((p) =>
     p.directions.map((d) => d.v),
   );

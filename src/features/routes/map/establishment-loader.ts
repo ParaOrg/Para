@@ -22,18 +22,25 @@ export const ESTABLISHMENT_ANCHOR: BackgroundLayerSpecification = {
 /** The map image of an establishment's marker, drawn on demand: this, and its glyph's name. */
 export const ESTABLISHMENT_IMAGE_PREFIX = 'establishment-';
 
+/** What a map draws among its establishments beyond the places themselves. */
+export interface EstablishmentsDrawn {
+  /** OpenStreetMap's terminals as markers (terminal-markers.ts). */
+  hasTerminalMarkers: boolean;
+}
+
 /**
  * Draws the establishments once a style that wants them arrives, as the page opens or after a
  * switch, and each marker the first time the map asks for it. MapLibre lays the waiting places
  * out again once their image arrives. Once per map.
  */
-export function drawEstablishments(map: MapLibreMap): void {
+export function drawEstablishments(map: MapLibreMap, drawn: EstablishmentsDrawn): void {
   const later = (draw: (chunk: typeof Establishments) => void) =>
     import('./establishment-drawing')
       .then(draw)
       .catch((error: unknown) => console.warn('The map could not draw its places.', error));
   map.on('styledata', () => {
-    if (map.getLayer(ESTABLISHMENT_ANCHOR.id)) later((chunk) => chunk.addEstablishmentLayers(map));
+    if (map.getLayer(ESTABLISHMENT_ANCHOR.id))
+      later((chunk) => chunk.addEstablishmentLayers(map, drawn));
   });
   map.on('styleimagemissing', ({ id }: { id: string }) => {
     if (id.startsWith(ESTABLISHMENT_IMAGE_PREFIX))

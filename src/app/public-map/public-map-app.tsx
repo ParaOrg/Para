@@ -54,6 +54,7 @@ import { isHotspotTapOn, isPlaceSearchShown, isRidePickingOn } from '@/shared/co
 import { useTurn } from '@/shared/hooks/commit-turn';
 import { cn } from '@/shared/utils/cn';
 
+import { DonationCard } from './donation-card';
 import { ExploreCards, PageToasts, PlaceSearchBar } from './lazy-parts';
 import { ListFilter, MapSheetControls } from './map-sheet-controls';
 import { MapViewCorner } from './map-view-corner';
@@ -134,7 +135,8 @@ export function PublicMapApp() {
   // The route list, a hotspot's card and the trip opened from either: which
   // is up, what stands behind what, their height and colours (useCardStack).
   const cards = useCardStack(map, saved, hotspots);
-  const [exploreRest, setExploreRest] = useState<ExploreRest>('open'); // As they were left.
+  const [exploreRest, setExploreRest] = useState<ExploreRest>('open'); // Whole, then Low once a card opened.
+  if (cards.open && exploreRest === 'open') setExploreRest('low'); // Back from a card: Low (the owner).
   // The camera with the cards: a hintuan picked on the trip, gliding there; a trip, a picked
   // RouteCard and SWITCH taken in whole, again as the sheet settles; the camera from before a
   // hotspot's card was picked, back as it is let go (useCardCamera).
@@ -199,17 +201,16 @@ export function PublicMapApp() {
   const listUp = cards.choosing && !saved.selected && !cards.tripBehind ? saved : null;
 
   return (
-    // `data-directions`, `data-hotspot-taps` and `data-place-search`: how many the index brought,
-    // whether a box takes a tap (isHotspotTapOn) and whether search is shown (isPlaceSearchShown),
-    // for the suites on a production build, the map out of their reach.
-    // `data-dock-host`: the open card's sheet says where its top is here
-    // at rest, and on what follows it (`data-dock-follower`, the LocatorButton,
-    // the map's ⓘ) as a finger drags it (BottomSheet). While "Update Para!"
-    // waits, a toast sits 12 under it rather than over it: the button's 24
-    // from the top and its 40 tall (Notices), `--toast-top` (ToastHost).
+    // `data-directions`, `data-hotspot-taps`, `data-place-search`: for the suites on a production
+    // build (the index's count; isHotspotTapOn; isPlaceSearchShown). `data-scale-under-credits`:
+    // the map's scale bar under the ⓘ, over the sheets (map-frame.css). `data-dock-host`: the open
+    // card's sheet says where its top is here, and on what follows it (`data-dock-follower`) as a
+    // finger drags it (BottomSheet). While "Update Para!" waits, a toast sits 12 under it (Notices,
+    // `--toast-top`, ToastHost).
     <div
       ref={root}
       data-dock-host
+      data-scale-under-credits
       data-directions={saved.directions.length}
       data-hotspot-taps={isHotspotTapOn ? 'on' : 'off'}
       data-place-search={isPlaceSearchShown ? 'on' : 'off'}
@@ -256,6 +257,7 @@ export function PublicMapApp() {
           list={listUp}
           floats={floats}
           onFlip={flipList}
+          onSnap={height.onSnap}
           onFilter={filterList}
         />
         {/* The commuter's position and the camera with them, clear of the card; the dot's gaze. */}
@@ -450,10 +452,11 @@ export function PublicMapApp() {
             back={saved.back}
             listing={saved.listing}
             onFlip={flipList}
-            modeFilter={{ filter: saved.modeFilter, onFilter: filterList }}
+            modeFilter={{ picks: saved.modePicks, onPicks: filterList }}
             onRoute={openTrip}
             onHotspot={(s) => cards.openHotspot(s.id)}
             onClose={cards.closeAll}
+            end={<DonationCard isListEnd />}
           />
         )}
         {/* With nothing open: ways to explore, and the donation card (Figma 4852:35066). */}
@@ -462,10 +465,7 @@ export function PublicMapApp() {
             <ExploreCards
               onLocate={() => locator.current?.locate()}
               startsAt={exploreRest}
-              onRest={(snap, rest) => {
-                cards.setIdleSnap(snap);
-                setExploreRest(rest);
-              }}
+              onRest={(snap) => cards.setIdleSnap(snap)}
             />
           </Suspense>
         )}

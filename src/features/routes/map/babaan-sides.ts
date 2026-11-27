@@ -82,7 +82,10 @@ export function useBabaanSides(
  * The chosen direction's babaan sides, as the map draws them: each hintuan
  * box it passes and cuts across (hintuansAlong, rightOfLine), its half on
  * the line's right, in the order the line reaches them. None for a train or
- * the ferry, or with nothing chosen.
+ * the ferry, or with nothing chosen, and none on a station's box: a road
+ * route lists the stations it passes, but a station's babaan side is the
+ * owner's to design (ADR 0010), and a line through a platform box twice does
+ * not halve it.
  *
  * The cut is asked first, and only of the boxes the line's own box reaches (a
  * metre wider, as rightOfLine pads its own); where along the line, of only
@@ -106,7 +109,7 @@ export function babaanSideFeatures(chosen: Direction | null, hotspots: readonly 
   const reach = lineBounds(line);
   const cut: { hotspot: Hotspot; side: Ring; index: number; at: number }[] = [];
   for (const hotspot of hotspots) {
-    if (!listedAlong(hotspot, chosen.route)) continue;
+    if (hotspot.line || !listedAlong(hotspot, chosen.route)) continue;
     const ring = hotspotRing(hotspot);
     if (!bboxesOverlap(reach, bboxOf(ring, 1))) continue;
     const side = rightOfLine(ring, line);

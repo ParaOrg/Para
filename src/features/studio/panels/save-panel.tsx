@@ -1,14 +1,15 @@
 import { useId, useState, type FormEvent } from 'react';
 
 import { hotspotLabel } from '@/features/routes/model/hotspots';
-import { isLineMode, LOOP_WORD } from '@/features/routes/model/routes';
+import { isLineMode } from '@/features/routes/model/routes';
 
 import { DraftAlert } from './draft-alert';
-import { DraftBadge } from './draft-badge';
+import { DraftSignboards } from './draft-signboards';
 import { IkotNameField } from './ikot-name-field';
 import { LineDetail } from './line-detail';
 import { LoopToggle } from './loop-toggle';
 import { ModeField } from './mode-field';
+import { RouteInfoHeading } from './route-info-heading';
 import { SaveEndsFields } from './save-ends-fields';
 import { SaveFooter } from './save-footer';
 import { SaveNotices } from './save-notices';
@@ -117,18 +118,14 @@ export function SavePanel({
     >
       <div className={isBeside ? BESIDE_BODY : 'flex flex-col gap-5'}>
         <section className="flex flex-col gap-3">
-          <div className="flex items-center gap-2">
-            <h2 id={headingId} className="text-xl/7 font-semibold text-content-primary">
-              Route Information
-            </h2>
-            {stored.footer.hasDraft && <DraftBadge />}
-          </div>
-          <p className="-mt-2 text-xs text-content-quaternary">
-            {panelTitle({ isEdit: !!existing, isReturnTrip: !!options.route, isLoop })}
-            {routeLocked && ' · the ends belong to the route, so both directions share them'}
-            {existing &&
-              " · the ends, via, mode and fare note are the route's: a change here is a change to both directions"}
-          </p>
+          <RouteInfoHeading
+            id={headingId}
+            hasDraft={stored.footer.hasDraft}
+            isEdit={!!existing}
+            isReturnTrip={!!options.route}
+            isLoop={isLoop}
+            isRouteLocked={routeLocked}
+          />
           <LoopToggle isLoop={isLoop} isLocked={panel.loopLocked} onChange={panel.setIsLoop} />
           {isLoop ? (
             <IkotNameField
@@ -163,6 +160,9 @@ export function SavePanel({
           />
           <ModeField mode={panel.mode} isLocked={modeLocked} onChange={panel.setMode} />
         </section>
+
+        {/* Add signboard, beside the map on an existing direction: a placeholder until it is drawn. */}
+        {isBeside && existing && <DraftSignboards direction={existing} />}
 
         {(isLoop || (head && tail)) && (
           <SaveTimeline
@@ -225,20 +225,4 @@ export function SavePanel({
       />
     </form>
   );
-}
-
-/** What this save is, under the heading: an edit, a return trip, or a new route or ikot. */
-function panelTitle({
-  isEdit,
-  isReturnTrip,
-  isLoop,
-}: {
-  isEdit: boolean;
-  isReturnTrip: boolean;
-  isLoop: boolean;
-}): string {
-  const loopWord = LOOP_WORD.toLowerCase();
-  if (isEdit) return isLoop ? `Update this ${loopWord}` : 'Update this direction';
-  if (isReturnTrip) return 'Draw the return trip';
-  return isLoop ? `Save this ${loopWord}` : 'Save this route';
 }

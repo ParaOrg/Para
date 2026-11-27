@@ -10,7 +10,6 @@ import type { HotspotRow } from '@/features/routes/model/hotspots';
 import type { DirectionRow } from '@/features/routes/model/routes';
 import {
   StudioHotspotCard,
-  StudioTripCard,
   type useDeleteActions,
   type useDrawing,
   type useFollow,
@@ -18,6 +17,7 @@ import {
 } from '@/features/studio';
 
 import { PlaygroundMarks } from './playground-marks';
+import { PlaygroundTrip } from './playground-trip';
 
 interface PlaygroundCardsProps {
   map: MapLibreMap | null;
@@ -28,8 +28,10 @@ interface PlaygroundCardsProps {
   camera: ReturnType<typeof useCardCamera<DirectionRow, HotspotRow>>;
   trip: ReturnType<typeof useStudioTrip>;
   canEdit: boolean;
-  /** A computer's screen: a tapped hotspot opens in the sidebar (StudioHotspotCard). */
+  /** A computer's screen: a tapped hotspot opens in the sidebar, a trip in the left panel. */
   isWideScreen: boolean;
+  /** The left panel area's host for the route line detail (PlaygroundTrip). */
+  leftPanel: HTMLElement | null;
   opening: ReturnType<typeof useFollow>['opening'];
   deletes: ReturnType<typeof useDeleteActions>;
   hush: ReturnType<typeof useGazeHush>['hush'];
@@ -49,25 +51,14 @@ export function PlaygroundCards({
   trip,
   canEdit,
   isWideScreen,
+  leftPanel,
   opening,
   deletes,
   hush,
   onDrawReturnTrip,
 }: PlaygroundCardsProps) {
   const { choice, choosing, closeAll, tripLivery, litLivery, height } = cards;
-  const {
-    ride,
-    tripDock,
-    clearOfOpen,
-    switchTrip,
-    flipList,
-    filterList,
-    pickOnPlaceCard,
-    openTrip,
-    backFromTrip,
-    pickOnTrip,
-    endOnTrip,
-  } = camera;
+  const { ride, clearOfOpen, flipList, filterList, pickOnPlaceCard, openTrip, pickOnTrip } = camera;
   const { rides, timeline } = trip;
 
   return (
@@ -85,39 +76,23 @@ export function PlaygroundCards({
         onPick={pickOnTrip}
       />
 
-      {/*
-        The tapped direction as the public map's trip card, the editor's facts
-        and its Edit, Extend and Delete under its tiles. Keyed on the route,
-        unlike the public map's: SWITCH keeps the card and its colour.
-      */}
-      {!draw.drawing && saved.selected && tripLivery && timeline && (
-        <StudioTripCard
-          key={saved.selected.routeId}
-          direction={saved.selected}
-          saved={saved}
-          hotspots={hotspots}
-          draw={draw}
-          timeline={timeline}
-          livery={tripLivery}
-          ride={ride}
-          tripDock={tripDock}
-          height={height}
-          canEdit={canEdit}
-          opening={opening}
-          onDelete={deletes.onDelete}
-          onBackToList={hush(backFromTrip)}
-          onSwitch={switchTrip}
-          onDrawOtherWay={() => {
-            const routeId = saved.selected?.routeId;
-            if (!routeId) return;
-            closeAll();
-            onDrawReturnTrip(routeId);
-          }}
-          onClose={closeAll}
-          onPick={pickOnTrip}
-          onEnd={endOnTrip}
-        />
-      )}
+      {/* The open trip: the trip card on a phone, the route line detail on a computer. */}
+      <PlaygroundTrip
+        map={map}
+        draw={draw}
+        saved={saved}
+        hotspots={hotspots}
+        cards={cards}
+        camera={camera}
+        trip={trip}
+        canEdit={canEdit}
+        isWideScreen={isWideScreen}
+        leftPanel={leftPanel}
+        opening={opening}
+        deletes={deletes}
+        hush={hush}
+        onDrawReturnTrip={onDrawReturnTrip}
+      />
 
       {/*
         A hotspot's card, its routes as RouteCards; it stays behind the trip
@@ -159,7 +134,7 @@ export function PlaygroundCards({
           back={saved.back}
           listing={saved.listing}
           onFlip={flipList}
-          modeFilter={{ filter: saved.modeFilter, onFilter: filterList }}
+          modeFilter={{ picks: saved.modePicks, onPicks: filterList }}
           selection={{
             selected: saved.highlight?.where === 'list' ? saved.highlight.card : null,
             onSelect: (p) => saved.highlightCard(p && { where: 'list', ...p }),

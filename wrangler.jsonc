@@ -1,8 +1,7 @@
 // How Cloudflare serves the built site (dist/), for every branch.
 //
-// Without a config, Workers Builds works these settings out for itself when
-// it deploys main, but a branch's build fails. Written down here, main deploys
-// and every branch gets a Preview of its own at
+// Deployed from GitHub Actions (.github/workflows/deploy.yml): main deploys,
+// and staging and every pull request get a Preview of their own at
 // <branch>-para.<account>.workers.dev; the `staging` branch's is the owner's
 // staging site.
 //
@@ -56,7 +55,8 @@
   ],
   "workers_dev": true,
   "preview_urls": true,
-  // Branch builds run `wrangler preview`, which refuses to run without this
-  // block. Empty: a Preview uses the same settings as production.
+  // Branch Previews (`wrangler preview` in .github/workflows/deploy.yml)
+  // refuse to run without this block. Empty: a Preview uses the same
+  // settings as production.
   "previews": {},
 }

@@ -1,0 +1,162 @@
+# Builds the site and puts it on Cloudflare, as Cloudflare's own Workers Builds did until its free
+# build minutes ran out (2026-11-27). The Worker is `para` (wrangler.jsonc at the root). The tiles
+# Worker has its own workflow, deploy-tiles.yml.
+#
+#   A push to main      -> `wrangler deploy`: production, www.para-commute.org.
+#   A push to staging   -> `wrangler preview`: the Worker Preview `staging`, at
+#                          https://staging-para.para-ph-info.workers.dev.
+#   A pull request      -> the same, a Preview named after its branch, at the address Workers
+#                          Builds gave it (`claude/foo` -> claude-foo-para…; wrangler names it from
+#                          WORKERS_CI_BRANCH), and one comment on the pull request with the link,
+#                          edited in place on every push.
+#
+# A Preview never serves production: only `wrangler deploy` on main does.
+# Every run builds with `npm run build`, the same command CI runs, so the guards in
+# scripts/checks/check-build.mjs stop a deploy as they stop CI. The build reads the public VITE_
+# values from the committed .env.production, as Workers Builds did; it needs no other variable.
+# It runs here rather than reusing CI's build, which runs on a pull request's merge commit, uploads
+# no dist/, and is skipped for some changes; a preview is the branch itself, as Cloudflare built it.
+# Every push builds, public/data/ commits from the nightly publish included: that is how a new map
+# reaches the site.
+#
+# THE OWNER'S SETUP: a Cloudflare API token from the "Edit Cloudflare Workers" template, for the
+# Para account, and two repository secrets (Settings -> Secrets and variables -> Actions):
+#   CLOUDFLARE_API_TOKEN   the token
+#   CLOUDFLARE_ACCOUNT_ID  the Para account's id
+# Until both are there, every run says so in a notice and ends green, deploying nothing. A pull
+# request from a fork, or from Dependabot, gets no secrets and skips the same way. Only the
+# deploy step carries them; wrangler prints neither, and GitHub masks both.
+#
+# wrangler is fetched at its pinned version with npx, not added to package.json: the app never
+# imports it.
+name: Deploy
+
+on:
+  push:
+    branches: [main, staging]
+  pull_request:
+
+permissions:
+  contents: read
+
+# A newer push to a pull request cancels the run for the older one: only its newest commit needs a
+# preview. A run on main or staging that has started always finishes, so production is never left
+# half-deployed; a newer push waits for it, and takes the place of any run still waiting.
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  WRANGLER_VERSION: 4.162.0
+  WRANGLER_SEND_METRICS: 'false'
+
+jobs:
+  site:
+    name: The site on Cloudflare
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: The Cloudflare secrets are set
+        id: secrets
+        env:
+          HAS_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN != '' }}
+          HAS_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID != '' }}
+        run: |
+          if [ "$HAS_TOKEN" = true ] && [ "$HAS_ACCOUNT" = true ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::CLOUDFLARE_API_TOKEN or CLOUDFLARE_ACCOUNT_ID is not set for this run, so nothing is deployed (deploy.yml's header)."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      # A pull request's own head, not the merge commit GitHub makes: the preview is the branch.
+      - if: steps.secrets.outputs.ready == 'true'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - if: steps.secrets.outputs.ready == 'true'
+        id: node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 22
+      # CI's node_modules, by the same key (ci.yml explains it). Restored only: CI saves it.
+      - if: steps.secrets.outputs.ready == 'true'
+        id: modules
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        with:
+          path: node_modules
+          key: node-modules-${{ runner.os }}-${{ runner.arch }}-${{ steps.node.outputs.node-version }}-${{ hashFiles('package-lock.json') }}
+      - if: steps.secrets.outputs.ready == 'true' && steps.modules.outputs.cache-hit != 'true'
+        run: npm ci
+
+      - name: Build, with the boundary and build checks
+        if: steps.secrets.outputs.ready == 'true'
+        run: npm run build
+
+      - name: Deploy to production
+        if: steps.secrets.outputs.ready == 'true' && github.ref == 'refs/heads/main' && github.event_name == 'push'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          npx --yes "wrangler@$WRANGLER_VERSION" deploy \
+            --tag "${GITHUB_SHA::7}" --message "main ${GITHUB_SHA::7}"
+          echo "Deployed main at ${GITHUB_SHA::7} to production: https://www.para-commute.org" >> "$GITHUB_STEP_SUMMARY"
+
+      # A Worker Preview named after the branch (`wrangler preview`, what Workers Builds ran): its
+      # stable address, <branch>-para.para-ph-info.workers.dev, moves to each new push. An aliased
+      # version (`versions upload --preview-alias`) cannot take that address from a Preview that
+      # already holds it, as `staging`'s did. wrangler names the Preview from WORKERS_CI_BRANCH and
+      # writes what it made to WRANGLER_OUTPUT_FILE_PATH, one JSON object a line; the `preview`
+      # line holds the Preview's stable addresses, and the deployment's own as a fallback.
+      - name: Deploy a Preview of the branch
+        id: preview
+        if: steps.secrets.outputs.ready == 'true' && !(github.ref == 'refs/heads/main' && github.event_name == 'push')
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          WORKERS_CI_BRANCH: ${{ github.head_ref || github.ref_name }}
+          WRANGLER_OUTPUT_FILE_PATH: ${{ runner.temp }}/wrangler-output.json
+          SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          npx --yes "wrangler@$WRANGLER_VERSION" preview \
+            --tag "${SHA::7}" --message "preview ${SHA::7}"
+          url=$(node -e '
+            const lines = require("fs").readFileSync(process.argv[1], "utf8").trim().split("\n");
+            const made = lines.map((line) => JSON.parse(line)).find((entry) => entry.type === "preview");
+            process.stdout.write(made?.preview_urls?.[0] || made?.deployment_urls?.[0] || "");
+          ' "$WRANGLER_OUTPUT_FILE_PATH")
+          if [ -z "$url" ]; then
+            echo "::error::wrangler made a Preview with no address (are workers_dev and preview_urls still true in wrangler.jsonc?)"
+            exit 1
+          fi
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          echo "Preview of ${WORKERS_CI_BRANCH} at ${SHA::7}: $url" >> "$GITHUB_STEP_SUMMARY"
+
+      # One comment per pull request, found by its marker and edited in place.
+      - name: The preview link on the pull request
+        if: steps.preview.outputs.url != '' && github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          URL: ${{ steps.preview.outputs.url }}
+          SHA: ${{ github.event.pull_request.head.sha }}
+          NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          marker='<!-- para-deploy-preview -->'
+          body="$marker
+          **Preview:** $URL
+
+          Built from ${SHA::7}. The public map is safe to look at here. Don't sign in to the studio or the contributor page on this address: its code is unreviewed and it talks to the live database (\`docs/operations.md\`, Branch previews)."
+          id=$(gh api --paginate "repos/$GITHUB_REPOSITORY/issues/$NUMBER/comments" \
+            --jq "map(select(.user.login == \"github-actions[bot]\" and (.body | startswith(\"$marker\")))) | .[].id")
+          id=${id%%$'\n'*}
+          if [ -n "$id" ]; then
+            gh api -X PATCH "repos/$GITHUB_REPOSITORY/issues/comments/$id" -f body="$body" > /dev/null
+          else
+            gh api -X POST "repos/$GITHUB_REPOSITORY/issues/$NUMBER/comments" -f body="$body" > /dev/null
+          fi

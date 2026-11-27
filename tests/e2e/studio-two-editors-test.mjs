@@ -210,6 +210,8 @@ async function openRouteFromPlace(page) {
   const viewport = page.viewportSize();
   const close = page.getByTestId('card').getByRole('button', { name: 'Close' });
   if (await close.count()) await close.first().click();
+  // A computer's route line detail has no Close: Escape leaves it.
+  if (await page.getByTestId('route-line-detail').count()) await page.keyboard.press('Escape');
   await page.setViewportSize({ width: 900, height: 800 });
   await tapAt(page, [LINE.at(-1)[0] + 0.0003, LINE.at(-1)[1] - 0.0002], 17);
   await page.getByTestId('card-item').first().click();
@@ -254,6 +256,53 @@ check(
   'A, with no draft on the route, is offered Edit route',
   (await a.page.getByRole('button', { name: 'Edit route' }).count()) === 1,
 );
+// ---- The route line detail, on a computer, in the left panel area (Figma 4905:28656).
+{
+  const page = a.page;
+  const detail = page.getByTestId('route-line-detail');
+  const tabs = await detail.getByRole('tab').allInnerTexts();
+  check(
+    'the trip opens as the route line detail: one tab, named by its bound, and "+ Add route" for the way back',
+    (await detail.isVisible()) &&
+      tabs.join() === 'Northbound' &&
+      (await detail.getByRole('button', { name: '+ Add route' }).count()) === 1,
+    tabs.join(),
+  );
+  const text = await detail.innerText();
+  check(
+    '  Transit line information with the full mode name and no EAT row',
+    /Transport mode\s+Jeepney/.test(text) && !/\bEAT\b/.test(text),
+  );
+  await detail.getByRole('button', { name: 'Export' }).click();
+  const formats = await page.getByRole('menuitem').allInnerTexts();
+  await page.keyboard.press('Escape');
+  check(
+    '  Export is a menu of CSV, GeoJSON and JSON; Escape closes it, not the detail, and focus is back on Export',
+    formats.join() === 'CSV,GeoJSON,JSON' &&
+      (await page.getByRole('menu').count()) === 0 &&
+      (await detail.isVisible()) &&
+      (await detail
+        .getByRole('button', { name: 'Export' })
+        .evaluate((e) => e === document.activeElement)),
+    formats.join(),
+  );
+  await detail.getByRole('button', { name: 'More' }).click();
+  const more = await page.getByRole('menuitem').allInnerTexts();
+  await page.keyboard.press('Escape');
+  check('  ⋮ holds Delete alone', more.join() === 'Delete', more.join());
+  await page.getByRole('radio', { name: 'Public' }).check({ force: true });
+  const onPublic = await detail.isVisible();
+  await page.getByRole('radio', { name: 'Playground' }).check({ force: true });
+  check(
+    "  it leaves the screen on the studio's other maps, and is back on the Playground",
+    !onPublic && (await detail.isVisible()),
+  );
+  await page.keyboard.press('Escape');
+  check('  Escape leaves it', (await detail.count()) === 0);
+  await openRoute(page);
+  await detail.waitFor({ timeout: 10000 });
+}
+
 const logBeforeSave = db.log.length;
 await editAndSave(a.page);
 const approvedWrites = writesOf(db, logBeforeSave).filter((r) => APPROVED_TABLES.includes(r.table));
@@ -288,8 +337,8 @@ check(
   (await body(b.page)).includes('Being changed by Marisol. You can look at it, but not change it.'),
 );
 check(
-  '  and is offered no Edit, Extend, Delete or signboard control',
-  (await b.page.getByRole('button', { name: /^(Edit route|Extend|Delete)/ }).count()) === 0 &&
+  '  and is offered no Edit, Extend, Delete (⋮) or signboard control',
+  (await b.page.getByRole('button', { name: /^(Edit route|Extend|Delete|More)/i }).count()) === 0 &&
     (await b.page.getByTestId('signboard-editor').count()) === 0,
 );
 check(

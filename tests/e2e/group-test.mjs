@@ -26,7 +26,12 @@ import { fakeStudioDb } from './lib/fake-studio-db.mjs';
 import { BASE, harness, waitForSource } from './lib/harness.mjs';
 import { lookReaders } from './lib/looks.mjs';
 
-const { check, skip, tally } = harness({ knownSkips: [] });
+// A computer's route line detail picks no ride (its stops move the map), so the trip's pick skips.
+const { check, skip, tally } = harness({
+  knownSkips: [
+    'a hintuan row picks it: the route left whole, a circle at it, the rest past it paled over the lit line',
+  ],
+});
 
 const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
@@ -81,11 +86,17 @@ const MAP = await page.evaluate(async () => {
     return null;
   }
 });
-/** The open trip card's name, "origin → destination", or '' with none open. */
-const tripTitle = async () =>
-  (await page.locator('[data-testid="card"] [data-testid="trip"]').count())
+/**
+ * The open trip's name, "origin → destination": a computer's route line detail's, or a trip card's;
+ * '' with none open.
+ */
+const tripTitle = async () => {
+  const detail = page.getByTestId('route-line-detail');
+  if (await detail.count()) return (await detail.getAttribute('aria-label')) ?? '';
+  return (await page.locator('[data-testid="card"] [data-testid="trip"]').count())
     ? ((await page.locator('[data-testid="card"]').first().getAttribute('aria-label')) ?? '')
     : '';
+};
 {
   const p = await page.evaluate(() => window.__paint());
   const twoLooks =
@@ -521,10 +532,13 @@ const tap = (x, y) => page.mouse.click(canvas.x + x, canvas.y + y);
     // lets it go, circle, rest and all. The middle hintuan is the one checked.
     const cardEl = page.locator('[data-testid="card"]').first();
     const hintuanRows = cardEl.locator('[data-testid="trip-hintuan"]');
-    if ((await hintuanRows.count()) === 0) {
+    const isDetail = (await page.getByTestId('route-line-detail').count()) > 0;
+    if (isDetail || (await hintuanRows.count()) === 0) {
       skip(
         '  a hintuan row picks it: the route left whole, a circle at it, the rest past it paled over the lit line',
-        'no hintuan on this direction',
+        isDetail
+          ? "a computer's route line detail picks no ride: its stops move the map"
+          : 'no hintuan on this direction',
       );
     } else {
       const pickedIndex = Math.floor(((await hintuanRows.count()) - 1) / 2);
@@ -611,8 +625,18 @@ const tap = (x, y) => page.mouse.click(canvas.x + x, canvas.y + y);
         `${after.pins} circle(s), ${after.rest} stretch(es) at rest, ${after.stations.filter((s) => s.paled).length} dot(s) along it, ${after.lit} lit`,
       );
     }
-    // A trip a list's row opened closes in two steps: ‹ back to the list, then the list's ✕.
-    await page.locator('[data-testid="card"]').getByRole('button', { name: 'Back' }).click();
+    // A trip a list's row opened closes in two steps: back to the list (a computer's detail by
+    // Escape, a trip card by ‹), then the list's ✕.
+    if (await page.getByTestId('route-line-detail').count()) {
+      await page.keyboard.press('Escape');
+      await page.waitForTimeout(400);
+      check(
+        '  Escape leaves the detail for the list it was opened from',
+        (await page.getByTestId('route-line-detail').count()) === 0 && (await chooser.isVisible()),
+      );
+    } else {
+      await page.locator('[data-testid="card"]').getByRole('button', { name: 'Back' }).click();
+    }
     await chooser.getByRole('button', { name: 'Close' }).click();
     await page.waitForTimeout(400);
     const endsNone = await page.evaluate(() => window.__ends().length);
@@ -837,9 +861,13 @@ const tap = (x, y) => page.mouse.click(canvas.x + x, canvas.y + y);
   {
     const all = await reopen(false);
     const filterButton = chooser.locator('[data-testid="chooser-filter"]');
+    // The menu's switches apply as they are tapped: Clear all, then the one kind on, then ✕.
     const filterTo = async (label) => {
+      const menu = page.getByTestId('mode-filter');
       await filterButton.click();
-      await page.getByRole('radio', { name: label, exact: true }).click();
+      await menu.getByRole('button', { name: 'Clear all' }).click();
+      if (label !== 'All') await menu.getByRole('switch', { name: label, exact: true }).click();
+      await menu.getByRole('button', { name: 'Close' }).click();
       await page.waitForTimeout(500);
     };
     const agree = [];

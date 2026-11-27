@@ -138,9 +138,12 @@ test('the box is off unless ticked, and a dry run keeps no signed APK', () => {
   assert.match(upload, /name: signed-apk/);
 });
 
-test('with the debug jobs as they were for every other trigger', () => {
+test('with the debug jobs as they were for every other trigger, but no emulator on a pull request', () => {
   for (const [name, trigger] of NOT_A_RELEASE) {
-    for (const job of DEBUG_JOBS) assert.equal(runs(job, trigger), true, `${job} for ${name}`);
+    for (const job of DEBUG_JOBS) {
+      const isEmulatorOnPullRequest = job !== 'debug' && trigger.event === 'pull_request';
+      assert.equal(runs(job, trigger), !isEmulatorOnPullRequest, `${job} for ${name}`);
+    }
   }
   assert.equal(runs('test-latest', NOT_A_RELEASE[0][1]), true, 'test-latest on staging');
   assert.equal(runs('test-latest', NOT_A_RELEASE[1][1]), false, 'test-latest on a pull request');

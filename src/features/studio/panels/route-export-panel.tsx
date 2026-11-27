@@ -1,26 +1,14 @@
-import { useId, useState } from 'react';
+import { useId } from 'react';
 
 import { Button } from '@/design-system/primitives/button';
 import type { Hotspot } from '@/features/routes/model/hotspots';
-import { isDrawn, type Direction, type LineStringGeoJSON } from '@/features/routes/model/routes';
+import type { Direction } from '@/features/routes/model/routes';
 import type { LngLat } from '@/shared/utils/geo';
 
-import { lineOf } from '../data/live';
-import {
-  EXPORT_FORMATS,
-  exportFile,
-  routeExport,
-  type ExportFile,
-  type ExportFormat,
-} from '../data/route-export';
+import { useRouteExport, type RouteExportCalls } from './use-route-export';
+import { EXPORT_FORMATS } from '../data/route-export';
 
-/** What the panel reads and saves with; the live ones unless a story passes its own. */
-export interface RouteExportCalls {
-  loadLine: (directionId: string) => Promise<LineStringGeoJSON | null>;
-  save: (file: ExportFile) => void;
-}
-
-const LIVE: RouteExportCalls = { loadLine: lineOf, save: saveFile };
+export type { RouteExportCalls };
 
 interface RouteExportPanelProps {
   /** The open route's directions: its outbound and its return, drawn or a slot. */
@@ -40,34 +28,15 @@ export function RouteExportPanel({
   directions,
   hotspots,
   hotspotsAlong,
-  calls = LIVE,
+  calls,
 }: RouteExportPanelProps) {
-  const [busyFormat, setBusyFormat] = useState<ExportFormat | null>(null);
-  const [problem, setProblem] = useState<string | null>(null);
+  const { busyFormat, problem, exportAs } = useRouteExport({
+    directions,
+    hotspots,
+    hotspotsAlong,
+    calls,
+  });
   const heading = useId();
-
-  const handleExport = async (format: ExportFormat) => {
-    setBusyFormat(format);
-    setProblem(null);
-    try {
-      const withFullLines = await Promise.all(
-        directions.map(async (v) => {
-          if (!isDrawn(v)) return v;
-          const shape = await calls.loadLine(v.id);
-          // Never the overview in its place: the file would hold a thinned line as the drawn one.
-          if (!shape) throw new Error(`the line of ${v.name ?? 'a direction'} could not be read`);
-          return { ...v, shape };
-        }),
-      );
-      const data = routeExport(withFullLines, hotspots, hotspotsAlong, new Date().toISOString());
-      calls.save(exportFile(data, format));
-    } catch (e) {
-      const reason = e instanceof Error ? e.message : String(e);
-      setProblem(`Couldn't export this route (${reason}). Check your connection and try again.`);
-    } finally {
-      setBusyFormat(null);
-    }
-  };
 
   return (
     <section
@@ -86,7 +55,7 @@ export function RouteExportPanel({
             variant="secondary"
             label={busyFormat === format ? 'Exporting…' : label}
             disabled={busyFormat !== null}
-            onClick={() => void handleExport(format)}
+            onClick={() => void exportAs(format)}
           />
         ))}
       </div>
@@ -97,15 +66,4 @@ export function RouteExportPanel({
       )}
     </section>
   );
-}
-
-/** Hand the file to the browser as a download. */
-function saveFile({ fileName, mimeType, text }: ExportFile): void {
-  const url = URL.createObjectURL(new Blob([text], { type: mimeType }));
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = fileName;
-  link.click();
-  // Revoked on the next task: some browsers start the download only after the click returns.
-  setTimeout(() => URL.revokeObjectURL(url), 0);
 }

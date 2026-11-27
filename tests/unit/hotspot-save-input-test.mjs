@@ -136,7 +136,7 @@ test('a terminal with none ticked has no links', () => {
   );
 });
 
-test('a station is linked to the train of its line, not to the jeep or the other line passing under it', () => {
+test('a station is linked to the train of its line and the jeep passing it, not to the other line', () => {
   const links = linksOf(
     {
       directions: [
@@ -147,7 +147,10 @@ test('a station is linked to the train of its line, not to the jeep or the other
     },
     'LRT-1',
   );
-  assert.deepEqual(links, [{ directionId: 'v2', sequence: 1 }]);
+  assert.deepEqual(links, [
+    { directionId: 'v1', sequence: 1 },
+    { directionId: 'v2', sequence: 1 },
+  ]);
 });
 
 // ---------------------------------------------------------------- an ikot's terminals (0021)

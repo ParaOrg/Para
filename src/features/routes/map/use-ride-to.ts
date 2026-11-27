@@ -7,6 +7,7 @@ import { lineLength } from '@/shared/utils/geo';
 import { APP_MOVE } from './map-view';
 import { glideFor } from './ride-glide';
 import { useRidePicks } from './use-ride-picks';
+import { restingPitch } from './view-mode';
 import { hotspotLabel, type Hotspot } from '../model/hotspots';
 import { tipOnRide, type TipOnRide } from '../model/loop-tip';
 import { boxTheOtherWay } from '../model/places';
@@ -65,9 +66,8 @@ export function useRideTo(
   // The camera as the first hintuan or end was picked: a second tap on the
   // picked row brings it back. Another row picked meanwhile keeps the first one's;
   // another ride lets it go.
-  const before = useRef<{ center: LngLat; zoom: number; bearing: number; pitch: number } | null>(
-    null,
-  );
+  // Not its tilt: that comes back as the view chosen now (restingPitch), 2D or 3D.
+  const before = useRef<{ center: LngLat; zoom: number; bearing: number } | null>(null);
 
   // A different direction is a different ride, and so is the same one opened
   // again: its picks are let go (useRidePicks), the camera kept for a second
@@ -117,14 +117,13 @@ export function useRideTo(
       center: [c.lng, c.lat],
       zoom: map.getZoom(),
       bearing: map.getBearing(),
-      pitch: map.getPitch(),
     };
   }, [map]);
   /** The picked row again: the camera back where it was. */
   const goBack = useCallback(() => {
     const was = before.current;
     before.current = null;
-    if (map && was) map.easeTo({ ...was, duration: 700 }, APP_MOVE);
+    if (map && was) map.easeTo({ ...was, pitch: restingPitch(), duration: 700 }, APP_MOVE);
   }, [map]);
 
   /** A hintuan row picks its ride (again puts it back); an end row passes null. */

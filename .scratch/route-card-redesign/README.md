@@ -122,7 +122,7 @@ These sit in the shared sheet as opt-in props (`shape`, `handle`, `footer`, `flo
 
 The builder designed these for now, or left them out. Each waits for the owner's frames:
 
-- the filter's card (ModeFilterCard: a centred popover of radio buttons), the dot on the sliders while a filter is on, and the empty state of a filter with no matches (ModeFilterEmpty);
+- the filter's empty state, a filter with no matches (ModeFilterEmpty: "No Jeepney or Bus routes here" and Show all routes). The menu itself is the owner's now (ModeFilterMenu, 4896:42082 and 4896:43309);
 - the list's sheet at Low (240 px: the first card's mode and name above the Controller), which Figma does not draw;
 - a way to change the list sheet's height without a handle, for the keyboard (today a visually hidden button, shown as the usual notch while it has the keyboard's focus);
 - the trip and place cards' width beside the 368 list (they stay 384);

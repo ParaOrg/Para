@@ -71,6 +71,15 @@ export const BaseWithCount: Story = { args: { count: 1 } };
 /** 32px, a 20px icon. */
 export const Small: Story = { args: { size: 'small' } };
 
+/** Plain, 32px: the icon alone, no surface and no shadow (the route line detail's ⋮). */
+export const Plain: Story = {
+  args: { variant: 'plain', size: 'small', label: 'More' },
+  play: async ({ canvasElement }) => {
+    const button = within(canvasElement).getByRole('button', { name: 'More' });
+    await expect(getComputedStyle(button).backgroundColor).toBe('rgba(0, 0, 0, 0)');
+  },
+};
+
 /** Opacity/60 and truly disabled: hover and press leave the button as it is, but its tooltip still names it. */
 export const Disabled: Story = {
   render: () => (

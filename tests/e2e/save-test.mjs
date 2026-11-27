@@ -33,6 +33,9 @@ import { readFileSync } from 'node:fs';
 import { routeFitted } from './lib/framing.mjs';
 import { waitFor } from './lib/harness.mjs';
 import {
+  addReturnTrip,
+  holdAnswers,
+  pressDelete,
   approveAll,
   approvedWrites,
   backToMap,
@@ -54,7 +57,6 @@ import {
   finish,
   go,
   hintuan,
-  holdAnswers,
   idle,
   log,
   metresBetween,
@@ -334,6 +336,15 @@ check(
     (await panel.isVisible()) &&
       (await page.getByRole('form', { name: 'Route Information' }).isVisible()),
   );
+  const [side, bar] = await Promise.all([
+    panel.boundingBox(),
+    page.getByTestId('studio-top-bar').boundingBox(),
+  ]);
+  check(
+    '  the left panel runs the full height, and the top bar starts at its right edge, over the map only',
+    !!side && !!bar && side.y === 0 && Math.abs(bar.x - (side.x + side.width)) < 1 && bar.y === 0,
+    JSON.stringify({ side, bar }),
+  );
   check(
     '  the map beside it is live, and the toolbar has no Done: Save is Done',
     !(await page.locator('[data-map-box]').evaluate((e) => e.inert)) &&
@@ -509,11 +520,11 @@ check(
 const outLine = outV?.shape?.coordinates ?? [];
 const slotId = directionsOf(outRoute?.id).find((v) => v.shape === null)?.id;
 await openCard(OUT[1]);
-await page.getByTestId('card-switch').click();
+await addReturnTrip();
 await page.waitForTimeout(400);
 let drawn = await drawnPoints();
 check(
-  "the card's SWITCH begins the return trip with its first point on the outbound line's end (<1 m)",
+  '"+ Add route" on the detail\'s undrawn tab begins the return trip with its first point on the outbound line\'s end (<1 m)',
   drawn.length === 1 && outLine.length > 1 && metresBetween(drawn[0], outLine.at(-1)) < 1,
   `${drawn.length} point(s), ${drawn[0] && outLine.length ? metresBetween(drawn[0], outLine.at(-1)).toFixed(2) : '?'} m`,
 );
@@ -636,9 +647,10 @@ check(
   JSON.stringify({ cameraBeforeOpen, cameraAfterOpen, isOverviewOffered }),
 );
 if (isOverviewOffered) await overview.click();
-const openFit = await routeFitted(page, outLine);
+// On a computer the detail stands in the left panel, beside the map: the whole map is the room.
+const openFit = await routeFitted(page, outLine, '[data-testid="route-line-detail"]');
 check(
-  '  the Overview takes in the whole route, in the room the card leaves',
+  '  the Overview takes in the whole route, in the map beside the detail',
   openFit.ok,
   openFit.why,
 );
@@ -719,15 +731,35 @@ const upload = (name, text) =>
   page
     .getByTestId('signboard-file')
     .setInputFiles({ name, mimeType: 'image/svg+xml', buffer: Buffer.from(text) });
-await openCard(OUT[1]);
 const editor = page.getByTestId('signboard-editor');
-// The signboards wait for the route's draft to be read.
-await waitFor(async () => (await editor.count()) === 1);
+/** Edit Route on the outbound, where Add signboard is: its boards wait for the draft's read. */
+const openSignboards = async () => {
+  await openCard(OUT[1]);
+  await page.getByRole('button', { name: 'Edit route' }).click();
+  await waitFor(async () => (await editor.count()) === 1);
+};
+const exitEdit = async () => {
+  await page.getByTestId('sidebar').getByRole('button', { name: 'Exit' }).click();
+  await waitFor(async () => (await page.getByTestId('sidebar').count()) === 0);
+};
+/**
+ * Out of Edit Route and back on the outbound's detail. With the editor's own draft of the route
+ * (the boards'), a tap on its line opens Edit Route again; Exit from there leaves the detail open.
+ */
+const backToDetail = async () => {
+  await exitEdit();
+  await openCard(OUT[1]);
+  await waitFor(async () => (await page.getByTestId('sidebar').count()) === 1);
+  await exitEdit();
+  await page.getByTestId('route-line-detail').waitFor({ timeout: 10000 });
+};
+await openSignboards();
 check(
-  'the trip card has a Signboard for the direction on show, Papunta',
+  'Edit Route has a Signboard for the direction it edits, Papunta, and no card beside it',
   (await editor.count()) === 1 &&
     /Signboard · Papunta/.test(await editor.innerText()) &&
-    (await items().count()) === 0,
+    (await items().count()) === 0 &&
+    (await page.getByTestId('route-line-detail').count()) === 0,
 );
 n = log.length;
 await upload(
@@ -753,22 +785,24 @@ check(
     approvedWrites(writesSince(n)).length === 0,
   said(since(n)),
 );
+await backToDetail();
 check(
-  '  the card above shows only what is approved: no board yet',
+  '  out of Edit Route, the detail shows only what is approved: no board yet',
   (await page.getByTestId('trip-signboard').count()) === 0,
 );
-// Approved, the card above shows the board as commuters will see it.
+// Approved, the detail shows the board as commuters will see it.
 await approveAll();
 await openCard(OUT[1]);
 await waitFor(async () => (await page.getByTestId('trip-signboard').count()) === 1);
-await waitFor(async () => (await items().count()) === 1);
 check(
-  '  approved, the card above shows it as commuters will',
+  '  approved, the detail shows it as commuters will',
   (await page.getByTestId('trip-signboard').count()) === 1 &&
     /\/storage\/v1\/object\/public\/signboards\//.test(
       (await page.getByTestId('trip-signboard').getAttribute('src')) ?? '',
     ),
 );
+await page.getByRole('button', { name: 'Edit route' }).click();
+await waitFor(async () => (await items().count()) === 1);
 await upload(
   'second.svg',
   '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 98 40"><rect width="98" height="40" fill="#222"/></svg>',
@@ -806,19 +840,19 @@ check(
 );
 await page.getByRole('button', { name: 'Remove signboard 1' }).click();
 await waitFor(async () => (await items().count()) === 0);
+const leftInDraft = draftBoards().length;
+await backToDetail();
+await waitFor(async () => (await page.getByTestId('trip-signboard').count()) === 1);
 check(
-  '  and the last one leaves none in the draft; the card above keeps the approved board until approval',
-  draftBoards().length === 0 &&
-    (await items().count()) === 0 &&
-    (await page.getByTestId('trip-signboard').count()) === 1,
-  `${JSON.stringify(draftBoards())}; ${await page.getByTestId('trip-signboard').count()} board(s) on the card`,
+  '  and the last one leaves none in the draft; the detail keeps the approved board until approval',
+  leftInDraft === 0 && (await page.getByTestId('trip-signboard').count()) === 1,
+  `${leftInDraft} in the draft; ${await page.getByTestId('trip-signboard').count()} board(s) on the detail`,
 );
+await page.getByRole('button', { name: 'Edit route' }).click();
+await waitFor(async () => (await editor.count()) === 1);
 
-// The race the step above met on slower runners, made certain: removing the
-// last two boards reads the directions twice, and the first read, which
-// still lists a board, answers after the second. A late answer must never
-// bring a removed board back to the editor (the card above lists the approved
-// boards, which a draft leaves as they are).
+// Removing the last two boards: a list of directions read meanwhile and answering late (held
+// here, if one goes out) must never bring a removed board back into Edit Route.
 await upload(
   'third.svg',
   '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 98 40"><rect width="98" height="40" fill="#333"/></svg>',
@@ -840,28 +874,18 @@ const releaseList = holdAnswers((method, table, u) => {
   return true;
 });
 await page.getByRole('button', { name: 'Remove signboard 1' }).click();
-await waitFor(async () => isListHeld && (await items().count()) === 1);
+await waitFor(async () => (await items().count()) === 1);
 await page.getByRole('button', { name: 'Remove signboard 1' }).click();
 await waitFor(async () => (await items().count()) === 0);
-// The held read is the only list read still out: wait for its answer to be
-// delivered, then for the page to have taken it in.
-const lateAnswer = page.waitForResponse(
-  (r) =>
-    r.request().method() === 'GET' &&
-    /\/rest\/v1\/route_variant\?select=id,route_id,direction_name/.test(
-      decodeURIComponent(r.url()),
-    ),
-);
 releaseList();
-await lateAnswer;
-// Watched for 5 s after: a board shown again at any moment is the race lost.
-const shownAgain = async () => await items().count();
-const isBroughtBack = await waitFor(async () => (await shownAgain()) > 0, 5000);
+// Watched for 5 s after: a board shown again at any moment is a stale read winning.
+const isBroughtBack = await waitFor(async () => (await items().count()) > 0, 5000);
 check(
-  '  a list read that answers late, after the last is gone, never brings a board back',
-  isListHeld && !isBroughtBack && draftBoards().length === 0,
-  `held: ${isListHeld}; ${JSON.stringify(draftBoards())}; ${await items().count()} in the editor`,
+  '  removing the last two, no list read brings a board back',
+  !isBroughtBack && draftBoards().length === 0,
+  `a list read held: ${isListHeld}; ${JSON.stringify(draftBoards())}; ${await items().count()} in the editor`,
 );
+await exitEdit();
 
 // The boards' draft, empty again, approved: the map moves on as it was.
 await approveAll();
@@ -871,7 +895,10 @@ await openCard(OUT[1]);
 const exported = async (label) => {
   const [download] = await Promise.all([
     page.waitForEvent('download'),
-    page.getByTestId('route-export').getByRole('button', { name: label, exact: true }).click(),
+    (async () => {
+      await page.getByTestId('route-line-detail').getByRole('button', { name: 'Export' }).click();
+      await page.getByRole('menuitem', { name: label, exact: true }).click();
+    })(),
   ]);
   const path = await download.path();
   return { name: download.suggestedFilename(), text: path ? readFileSync(path, 'utf8') : '' };
@@ -917,7 +944,7 @@ await openCard(OUT[1]);
 // A refused step — here the draft the delete is stored as — is said, not
 // swallowed (16). Delete again finishes it.
 stub.fault = (method, table) => method === 'POST' && table === 'rpc/claim_draft';
-await page.getByRole('button', { name: 'Delete' }).click();
+await pressDelete();
 await waitFor(async () => /refused this one, on purpose/.test(await body()));
 check(
   'a refused step of the delete is said, not swallowed (16)',
@@ -926,7 +953,7 @@ check(
 );
 await dismissToasts();
 n = log.length;
-await page.getByRole('button', { name: 'Delete' }).click();
+await pressDelete();
 await waitFor(async () => (await page.getByRole('button', { name: 'Edit route' }).count()) === 0);
 await page.waitForTimeout(500);
 w = writesSince(n);
