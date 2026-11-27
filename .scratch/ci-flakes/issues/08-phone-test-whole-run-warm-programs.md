@@ -53,3 +53,31 @@ PARA_BASE=http://localhost:5291 node tests/e2e/phone-test.mjs 2>&1 | tail -8
 3. Then either fix what that section leaves behind, or have `mapIdle` skip `warm-programs`, with the reason in a comment.
 
 Not a test to skip or loosen: until then, run phone-test in its three parts, as CI does.
+
+## Found, 2026-11-27: the made-up map left on the page
+
+A whole run on `staging` fc39ddad didn't stop at `endClearsFooter`. Instead it failed 3 checks in part 3's last section, "4e. the height kept, card to card" (104 passed, 3 failed, 3 skipped):
+
+- `the first card open, the list a tap opens stands at its height`: first card 280 px; list null px
+- `a tap reaches the map at (92, 416)`: overview is over it there
+- `the first card at Low, the list opens at Low`: first card null; list null
+
+It also skipped, unexpectedly: `a trip a line of one route opens opens at the middle`.
+
+**Cause:** 5d (part 2) serves the made-up map on the page with `serveTwoWayMap(page)` and never removes it. The place search after it relies on that on purpose. 4e comes next in the file and reloads that same page, so it gets the made-up map's one route: a tap where "the most routes pass" opens a trip, not the route list.
+
+**Shown:** `PHONE_PART=3/3` alone passed (64/0/1). With `serveTwoWayMap(page)` added before 4e, it failed the same 3 checks.
+
+**Fix:** a whole run gives 4e a phone of its own (`newPhone({ isTouchOnly: false })`, `tests/e2e/phone-test.mjs`). It's not touched by finger alone, because part 3 alone reaches 4e on 4f's phone and 4e presses keys. A touch phone stops at its `page.keyboard`.
+
+After the fix, 2026-11-27, Linux, every outside request stood in:
+
+| Run | Passed | Failed | Skipped |
+| --- | --- | --- | --- |
+| Whole | 112 | 0 | 2 |
+| `1/3` | 49 | 0 | 1 |
+| `2/3` | 27 | 0 | 0 |
+| `3/3` | 64 | 0 | 1 |
+
+**`warm-programs` not seen:** 3 whole runs since (2 on fc39ddad, 1 on the fix) never stopped at `endClearsFooter` with "source warm-programs loading". The stop above is not reproduced. It stays open, and it may be gone. The next whole run that stops on it should record the commit and the source's state, as in Next step 1.
+
