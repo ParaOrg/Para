@@ -6037,6 +6037,10 @@ if (runsPart(2) && isPlaceSearchShown) {
 // height from before the tap; the first card comes back at Low, whole or Low as it was left (the
 // owner, 2026-11-26), drawn there from its first frame.
 if (runsPart(3)) {
+  // Run whole, the page before this one still serves 5d's made-up map (serveTwoWayMap), whose one
+  // route opens a trip where today's map opens the list. A phone of its own, as part 3 alone gives
+  // this section: not touched by finger alone, as 4f left it.
+  if (PHONE_PARTS === 1) await newPhone({ isTouchOnly: false });
   await page.goto(`${BASE}/`, { waitUntil: 'load' });
   await page.waitForFunction(() => window.__map && window.__map.loaded(), null, { timeout: 30000 });
   await waitForSource(page, 'saved-routes');
