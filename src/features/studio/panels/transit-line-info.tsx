@@ -7,7 +7,7 @@ export interface TransitLineFact {
 }
 
 interface TransitLineInfoProps {
-  /** In order: Origin, Destination, Via, Regular fare, Transport mode, Distance, Stops. */
+  /** In order: Regular fare, Transport mode, Distance, Stops. */
   facts: readonly TransitLineFact[];
 }
 

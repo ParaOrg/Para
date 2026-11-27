@@ -86,6 +86,7 @@ function TokensPage() {
           <p className="text-content-quaternary">Content/quaternary · text-content-quaternary</p>
           <p className="text-content-disabled">Content/disabled · text-content-disabled</p>
           <p className="text-content-error">Content/error · text-content-error</p>
+          <p className="text-text-error">text/text-error · text-text-error</p>
           <p className="text-content-success">Content/success · text-content-success</p>
           <p className="text-content-warning">
             Content/warning (provisional) · text-content-warning

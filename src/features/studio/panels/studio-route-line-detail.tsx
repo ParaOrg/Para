@@ -8,11 +8,15 @@ import { isDrawn, isLoop, type DirectionRow } from '@/features/routes/model/rout
 import type { Timeline } from '@/features/routes/model/timeline';
 
 import { directionTabs } from './direction-tabs';
-import { DraftBadge } from './draft-badge';
 import { LockedDraft } from './locked-draft';
 import { RouteLineActions } from './route-line-actions';
 import { RouteLineDetail } from './route-line-detail';
-import { otherDestinations, routeStops, transitLineFacts } from './route-line-facts';
+import {
+  otherDestinations,
+  routeStops,
+  routeSummaryFacts,
+  transitLineFacts,
+} from './route-line-facts';
 import type { useDeleteActions } from './use-delete-actions';
 import { useDraftLock } from './use-draft-lock';
 import { useRouteExport } from './use-route-export';
@@ -35,9 +39,8 @@ interface StudioRouteLineDetailProps {
   /** A signed-in editor; another editor's draft of the route still leaves it read-only. */
   canEdit: boolean;
   /**
-   * A route that is a draft only, opened from the editor's draft: Draft over its tabs (the lock's
-   * notice while it is checked or could not be), and no Delete or way to add, which work on
-   * approved rows.
+   * A route that is a draft only, opened from the editor's draft: its Status reads Draft, and it
+   * has no Delete or way to add, which work on approved rows.
    */
   isDraftOnly?: boolean;
   opening: ReturnType<typeof useFollow>['opening'];
@@ -71,8 +74,9 @@ export function StudioRouteLineDetail({
   onDrawOtherWay,
   onClose,
 }: StudioRouteLineDetailProps) {
-  const { lock, retry } = useDraftLock('route', direction.routeId);
+  const { lock, hasDraft, retry } = useDraftLock('route', direction.routeId);
   const isEditable = canEdit && !lock;
+  const status = isDraftOnly || hasDraft ? 'draft' : 'published';
   const routeDirections = saved.directions.filter((v) => v.routeId === direction.routeId);
   const exporter = useRouteExport({
     directions: routeDirections,
@@ -105,7 +109,7 @@ export function StudioRouteLineDetail({
   return (
     <RouteLineDetail
       label={direction.name ?? direction.route?.name ?? 'Route'}
-      notice={isDraftOnly && !lock ? <DraftBadge /> : lockNotice}
+      notice={lockNotice}
       tabs={directionTabs(direction, saved.directions)}
       selectedId={direction.id}
       onSelect={show}
@@ -129,6 +133,7 @@ export function StudioRouteLineDetail({
           }
         />
       }
+      summary={routeSummaryFacts(direction, saved.directions, timeline, status)}
       facts={transitLineFacts(direction, saved.directions, timeline)}
       destinations={otherDestinations(direction, saved.directions)}
       onOpenDestination={show}

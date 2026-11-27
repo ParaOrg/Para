@@ -692,6 +692,7 @@
  *   Figma                          code
  *   text/quarternnary              --text-quaternary
  *   text/on-text                   --text-on-fill
+ *   text/text-error                --text-error
  *   bg/surface/surface             --bg-surface
  *   bg/surface/surface-secondary   --bg-surface-secondary
  *   bg/fill/fill                   --bg-fill
@@ -861,6 +862,7 @@
   --text-tertiary: var(--color-neutral-9);
   --text-quaternary: var(--color-neutral-7);
   --text-on-fill: var(--color-white);
+  --text-error: var(--color-red-11);
   --bg-surface: var(--color-white);
   --bg-surface-secondary: var(--color-neutral-4);
   --bg-fill: var(--bg-surface);
@@ -896,6 +898,7 @@
   --color-text-tertiary: var(--text-tertiary);
   --color-text-quaternary: var(--text-quaternary);
   --color-text-on-fill: var(--text-on-fill);
+  --color-text-error: var(--text-error);
   --color-bg-surface: var(--bg-surface);
   --color-bg-surface-secondary: var(--bg-surface-secondary);
   --color-bg-fill: var(--bg-fill);

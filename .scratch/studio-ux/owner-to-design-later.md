@@ -21,6 +21,14 @@ Status: needs-info
   and `route-stops-section.tsx`.
 - **Missing facts.** "Not priced yet" shows for a mode with no fare rule, and "Not set yet" for a
   route with no mode. A route with no via has no Via row. Code: `route-line-facts.ts`.
+- **Status on a published route.** The summary card (4915:2713) draws Status as "Draft" in
+  text/text-error. A route with no draft waiting says "Published" in Content/quaternary, the word
+  Edit Route's Status already uses. Code: `route-line-facts.ts` (`routeSummaryFacts`).
+- **Transport mode's words.** The frame writes "Jeep", so a road vehicle reads as a trip's
+  Transport mode tile does (Jeep, E-Jeep, Bus, UV Express, Ferry, EDSA Carousel). LRT, MRT, P2P bus
+  and Tricycle keep the studio's own words. Code: `route-line-facts.ts` (`modeLabel`).
+- **EAT.** The frame has an EAT row ("30mins - 1hr"). No travel time is stored or worked out yet,
+  so the row is left out until there is one to show.
 - **Draft notice above the tabs.** Another editor's locked draft shows the existing lock notice
   above the tabs. Code: `studio-route-line-detail.tsx`.
 - **Where Overview sits.** On the map, 16 from its top left. The "Overview ↗" pill shows while the
