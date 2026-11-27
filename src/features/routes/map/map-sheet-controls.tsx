@@ -24,6 +24,8 @@ interface MapSheetControlsProps {
   onSnap: (snap: Snap) => void;
   /** The modes picked in the filter the sliders open. */
   onFilter: (picks: ModePicks) => void;
+  /** Where the controls stand (MapControlsDock's): right of the ⓘ, or at the top left. */
+  place?: { isBesideCredits: boolean; isAtTopLeft: boolean };
 }
 
 /**
@@ -43,6 +45,7 @@ export function MapSheetControls({
   onFlip,
   onSnap,
   onFilter,
+  place,
 }: MapSheetControlsProps) {
   const way = list && listWay(list.candidates, list.back, list.listing, list.modePicks);
   return (
@@ -55,7 +58,7 @@ export function MapSheetControls({
           onMiddle={() => onSnap(FRAMED_SHARE)}
         />
       )}
-      <MapControlsDock>
+      <MapControlsDock {...place}>
         <div className="flex flex-col-reverse items-start gap-3 @float:flex-col">
           {list && way && way.way !== null && (
             <ViceVersaButton
