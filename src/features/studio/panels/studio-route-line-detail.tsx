@@ -8,6 +8,7 @@ import { isDrawn, isLoop, type DirectionRow } from '@/features/routes/model/rout
 import type { Timeline } from '@/features/routes/model/timeline';
 
 import { directionTabs } from './direction-tabs';
+import { DraftBadge } from './draft-badge';
 import { LockedDraft } from './locked-draft';
 import { RouteLineActions } from './route-line-actions';
 import { RouteLineDetail } from './route-line-detail';
@@ -26,19 +27,26 @@ interface StudioRouteLineDetailProps {
   map: MapLibreMap | null;
   /** The open direction: `saved.selected`, known to be there. */
   direction: DirectionRow;
-  saved: Pick<Saved, 'directions' | 'selected' | 'reload'>;
+  saved: { directions: readonly DirectionRow[] } & Pick<Saved, 'selected' | 'reload'>;
   hotspots: Pick<Hotspots, 'hotspots' | 'hotspotsAlong'>;
   draw: Pick<Drawing, 'load' | 'startExtend'>;
   /** The open direction's stops (useStudioTrip's timeline). */
   timeline: Timeline;
   /** A signed-in editor; another editor's draft of the route still leaves it read-only. */
   canEdit: boolean;
+  /**
+   * A route that is a draft only, opened from the editor's draft: Draft over its tabs (the lock's
+   * notice while it is checked or could not be), and no Delete or way to add, which work on
+   * approved rows.
+   */
+  isDraftOnly?: boolean;
   opening: ReturnType<typeof useFollow>['opening'];
-  onDelete: ReturnType<typeof useDeleteActions>['onDelete'];
+  /** Absent on a draft only (isDraftOnly). */
+  onDelete?: ReturnType<typeof useDeleteActions>['onDelete'];
   /** Another direction of the route, or another route, in this one's place. */
   onShow: (direction: DirectionRow) => void;
-  /** Starts drawing the route's undrawn way (the return trip). */
-  onDrawOtherWay: () => void;
+  /** Starts drawing the route's undrawn way (the return trip); absent on a draft only. */
+  onDrawOtherWay?: () => void;
   /** Closes the detail: Edit Route and Extend start a drawing. */
   onClose: () => void;
 }
@@ -56,6 +64,7 @@ export function StudioRouteLineDetail({
   draw,
   timeline,
   canEdit,
+  isDraftOnly = false,
   opening,
   onDelete,
   onShow,
@@ -84,25 +93,23 @@ export function StudioRouteLineDetail({
     const v = saved.directions.find((d) => d.id === id);
     if (v) onShow(v);
   };
+  const lockNotice = canEdit && lock && (
+    <LockedDraft
+      kind="route"
+      subjectId={direction.routeId}
+      lock={lock}
+      onRetry={retry}
+      onApproved={() => void saved.reload()}
+    />
+  );
   return (
     <RouteLineDetail
       label={direction.name ?? direction.route?.name ?? 'Route'}
-      notice={
-        canEdit &&
-        lock && (
-          <LockedDraft
-            kind="route"
-            subjectId={direction.routeId}
-            lock={lock}
-            onRetry={retry}
-            onApproved={() => void saved.reload()}
-          />
-        )
-      }
+      notice={isDraftOnly && !lock ? <DraftBadge /> : lockNotice}
       tabs={directionTabs(direction, saved.directions)}
       selectedId={direction.id}
       onSelect={show}
-      onAddRoute={isEditable ? onDrawOtherWay : undefined}
+      onAddRoute={isEditable && !isDraftOnly ? onDrawOtherWay : undefined}
       actions={
         <RouteLineActions
           exporter={exporter}
@@ -114,7 +121,7 @@ export function StudioRouteLineDetail({
               : undefined
           }
           onDelete={
-            isEditable
+            isEditable && onDelete && !isDraftOnly
               ? () => {
                   if (saved.selected) void onDelete(saved.selected);
                 }

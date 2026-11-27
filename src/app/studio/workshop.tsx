@@ -183,17 +183,17 @@ export function Workshop({ session, recovery }: WorkshopProps) {
     target,
     setNotice,
   });
-  // A draft tapped on the map opens into its sidebar: Edit route on the editor's own, the card on
-  // another editor's (useOpenDraft).
-  const handleOpenDraft = useOpenDraft({
-    directions: saved.directions,
+  // A draft tapped on the map opens to read first, its route line detail on a computer; editing
+  // starts from Edit Route (useOpenDraft).
+  const drafts = useOpenDraft({
+    saved,
     draftDirections: draftOnly.directions,
     hotspots: hotspots.hotspots,
     draftHotspots: draftOnly.hotspots,
     userId: session?.user.id ?? null,
     draw,
     opening,
-    openTrip: cards.openTrip,
+    cards,
     openPlace: camera.openPlace,
     setNotice,
   });
@@ -350,6 +350,7 @@ export function Workshop({ session, recovery }: WorkshopProps) {
                   canEdit={canEdit}
                   isWideScreen={isWideScreen}
                   leftPanel={leftPanel}
+                  draftTrip={drafts.trip}
                   opening={opening}
                   deletes={deletes}
                   hush={hush}
@@ -357,7 +358,7 @@ export function Workshop({ session, recovery }: WorkshopProps) {
                 />
                 <PlaygroundTools
                   map={map}
-                  onOpenDraft={handleOpenDraft}
+                  onOpenDraft={drafts.open}
                   session={session}
                   auth={auth}
                   draw={draw}

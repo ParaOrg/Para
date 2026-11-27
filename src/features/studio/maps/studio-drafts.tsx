@@ -21,8 +21,8 @@ interface StudioDraftsProps {
 
 /**
  * Every draft on the map, signed in: a route's drawn ways dashed, a mark at each draft. A tap
- * opens it into its sidebar (useOpenDraft); another editor's new draft, which has no card, into
- * its sheet (HeldDraftSheet). The list is read again whenever a draft changes here.
+ * opens it to read first, a route's in its route line detail on a computer (useOpenDraft); another
+ * editor's new draft, which has no card, into its sheet (HeldDraftSheet). The list is read again whenever a draft changes here.
  */
 export function StudioDrafts({ map, onOpenDraft, onApproved }: StudioDraftsProps) {
   const client = useQueryClient();

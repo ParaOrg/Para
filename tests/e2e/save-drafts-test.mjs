@@ -349,11 +349,32 @@ check(
   '  the drawing kept on the device is gone',
   (await page.evaluate(() => localStorage.getItem('para.draft.v1'))) === null,
 );
-// ---- 2a. A route that is a draft only opens in its sidebar from a tap on its dashed line
+// ---- 2a. A route that is a draft only opens in the route line detail from a tap on its dashed
+// line, to read first; Edit Route opens it into its sidebar.
 await openCard(OUT[1]);
+const draftDetail = page.getByTestId('route-line-detail');
+await draftDetail.waitFor({ timeout: 10000 });
+check(
+  "a tap on a new route's draft opens its route line detail, marked Draft, not editing",
+  (await draftDetail.getByText('Draft', { exact: true }).isVisible()) &&
+    (await pointsShown()) === 0 &&
+    (await page.getByTestId('sidebar').count()) === 0 &&
+    (await page.locator('dialog[open]').count()) === 0,
+  `${await pointsShown()} points`,
+);
+check(
+  '  with Edit Route, and no Delete or "+ Add route", which need approved rows',
+  (await draftDetail.getByRole('button', { name: 'Edit route' }).isVisible()) &&
+    (await draftDetail.getByRole('button', { name: 'More' }).count()) === 0 &&
+    (await draftDetail.getByRole('button', { name: '+ Add route' }).count()) === 0,
+);
+await page.keyboard.press('Escape');
+check('  Escape closes it', (await draftDetail.count()) === 0);
+await openCard(OUT[1]);
+await draftDetail.getByRole('button', { name: 'Edit route' }).click();
 await waitFor(async () => (await pointsShown()) > 0);
 check(
-  "a tap on a new route's draft opens it into its sidebar, with no review sheet",
+  '  its Edit Route opens it into its sidebar, with no review sheet',
   (await pointsShown()) === OUT.length && (await page.locator('dialog[open]').count()) === 0,
   `${await pointsShown()} points`,
 );
@@ -517,11 +538,18 @@ check(
 // Saving builds on the draft, so opening the approved line would save it over the first edit.
 // No reload between the two: the studio's cache of the draft must not seed the second edit.
 await openCard(OUT[1]);
-// The draft's line is drawn over the approved one: a tap on it opens the editor's own draft
-// straight into Edit route on the way tapped, with no review sheet.
+// The draft's line is drawn over the approved one: a tap on it opens the route line detail to
+// read first, and its Edit Route the editor's own draft on the way tapped, with no review sheet.
+await page.getByTestId('route-line-detail').waitFor({ timeout: 10000 });
+check(
+  "a tap on the editor's own draft opens the route line detail, not editing",
+  (await pointsShown()) === 0 && (await page.getByTestId('sidebar').count()) === 0,
+  `${await pointsShown()} points`,
+);
+await page.getByTestId('route-line-detail').getByRole('button', { name: 'Edit route' }).click();
 await waitFor(async () => (await pointsShown()) > 0);
 check(
-  "a tap on the editor's own draft opens it into editing, with no review sheet",
+  "  its Edit Route opens the editor's own draft into editing, with no review sheet",
   (await pointsShown()) > 0 && (await page.locator('dialog[open]').count()) === 0,
   `${await pointsShown()} points`,
 );
@@ -607,7 +635,7 @@ check(
 // a change saved on top of the draft would otherwise drop the board the draft added.
 await load();
 await openCard(OUT[1]);
-// A tap on the editor's own draft opens it into editing, Add signboard with it.
+// The drawing kept on the device opens again into editing, Add signboard with it.
 await waitFor(async () => (await pointsShown()) > 0);
 await waitFor(async () => (await items().count()) === 1);
 check(
@@ -628,13 +656,11 @@ check(
   said(w),
 );
 check('  and leaves the file in the bucket: the approved map may still list it', bucket.has(board));
-// Out of Edit Route and the page read again; a tap on the editor's own draft opens it, and Exit
-// from there leaves the route's detail open.
+// Out of Edit Route and the page read again; a tap on the editor's own draft opens the route's
+// detail.
 await page.getByRole('button', { name: 'Exit', exact: true }).click();
 await load();
 await openCard(OUT[1]);
-await waitFor(async () => (await pointsShown()) > 0);
-await page.getByRole('button', { name: 'Exit', exact: true }).click();
 await page.getByTestId('route-line-detail').waitFor({ timeout: 10000 });
 
 // ---- 4a. Delete while the editor already has a draft of the route: confirm, discard it, delete
@@ -852,25 +878,24 @@ const nameField = () => page.getByPlaceholder('SM Fairview Ilalim');
 async function editHintuan(spot, name) {
   await go(spot, 17);
   await clickAt([spot[0] + R * 0.7, spot[1] - R * 0.7], 700);
-  // On a computer the tap opens the hintuan straight into its sidebar, with no card or Edit.
+  // The tap opens the hintuan's card to read first, on a computer too; its Edit opens the sidebar.
   const sidebar = page.getByTestId('sidebar');
-  // No card between the tap and the sidebar: the old way showed it with its Edit and waited.
-  const hadCard = (await page.getByRole('button', { name: 'Edit hintuan' }).count()) > 0;
-  // The sidebar can be a moment behind the tap on a slow runner: give it that moment before the
-  // tap is read as one that raised the chooser.
-  await sidebar.waitFor({ timeout: 3000 }).catch(() => {});
+  const edit = page.getByRole('button', { name: 'Edit hintuan' });
+  await edit.waitFor({ timeout: 3000 }).catch(() => {});
   let tookRow = false;
-  if (!(await sidebar.isVisible())) {
+  if (!(await edit.isVisible())) {
     // A row of the chooser, and nothing else by that name: once the hintuan has a draft the map
-    // carries a label with it, which goes as the sidebar opens.
+    // carries a label with it.
     const row = page.getByTestId('chooser').getByRole('button', { name: /Stand-in Tail/ });
     if (await row.count()) {
       tookRow = true;
       await row.first().click();
     }
   }
+  await edit.waitFor({ timeout: 10000 });
+  openedAsCard.push(!tookRow && (await sidebar.count()) === 0);
+  await edit.click();
   await sidebar.waitFor({ timeout: 10000 });
-  openedBeside.push(!hadCard && !tookRow);
   await done();
   // The name the form opened with: the editor's own draft's, when there is one.
   shownName = await nameField().inputValue();
@@ -882,13 +907,13 @@ async function editHintuan(spot, name) {
   return writesSince(from);
 }
 let shownName = '';
-const openedBeside = [];
+const openedAsCard = [];
 const tailRevision = tables.stop.find((x) => x.id === tail?.id)?.revision;
 w = await editHintuan(P2, 'Stand-in Tail Renamed');
 const tailDraft = draftOf('hotspot', tail?.id);
 check(
-  'on a computer a tap on a saved hintuan opens it straight in the sidebar, with no card',
-  openedBeside[0] === true,
+  'on a computer a tap on a saved hintuan opens its card, not editing; Edit opens the sidebar',
+  openedAsCard[0] === true,
 );
 check(
   "editing a saved hintuan is a draft of it, built on the stop's revision",
