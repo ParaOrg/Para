@@ -1,13 +1,10 @@
 import { TripCard } from '@/features/routes/cards/trip-card';
 import { tripFacts } from '@/features/routes/cards/trip-facts';
-import type { useCardCamera } from '@/features/routes/map/use-card-camera';
+import type { OpenTrip } from '@/features/routes/map/route-card-slots';
 import type { useSavedHotspots } from '@/features/routes/map/use-saved-hotspots';
 import type { useSavedRoutes } from '@/features/routes/map/use-saved-routes';
 import type { HotspotRow } from '@/features/routes/model/hotspots';
-import type { Livery } from '@/features/routes/model/liveries';
 import { isDrawn, isLoop, type DirectionRow } from '@/features/routes/model/routes';
-import type { Timeline } from '@/features/routes/model/timeline';
-import type { SheetHeight } from '@/shared/ui/bottom-sheet';
 
 import { LockedDraft } from './locked-draft';
 import { TripCardExtras } from './trip-card-extras';
@@ -19,56 +16,38 @@ import type { useFollow } from '../drawing/use-follow';
 
 type Saved = ReturnType<typeof useSavedRoutes<DirectionRow>>;
 type Hotspots = ReturnType<typeof useSavedHotspots<HotspotRow>>;
-type Camera = ReturnType<typeof useCardCamera<DirectionRow, HotspotRow>>;
 
 interface StudioTripCardProps {
-  /** The open trip: `saved.selected`, known to be there. */
-  direction: DirectionRow;
-  saved: Pick<Saved, 'directions' | 'selected' | 'fullIds' | 'reload'>;
+  /** The open trip, as RouteCardLayer hands it to the page. */
+  trip: OpenTrip<DirectionRow, HotspotRow>;
+  saved: Pick<Saved, 'directions' | 'selected' | 'reload'>;
   hotspots: Pick<Hotspots, 'hotspots' | 'hotspotsAlong'>;
   draw: Pick<Drawing, 'load' | 'startExtend'>;
-  timeline: Timeline;
-  livery: Livery;
-  /** The ride picked on the trip (useCardCamera's). */
-  ride: Camera['ride'];
-  tripDock: Camera['tripDock'];
-  height: SheetHeight;
   canEdit: boolean;
   opening: ReturnType<typeof useFollow>['opening'];
   onDelete: ReturnType<typeof useDeleteActions>['onDelete'];
-  onBackToList: Camera['backFromTrip'];
-  onSwitch: Camera['switchTrip'];
   /** The other way is not drawn yet: SWITCH starts drawing it, for an editor. */
   onDrawOtherWay: () => void;
-  onClose: () => void;
-  onPick: Camera['pickOnTrip'];
-  onEnd: Camera['endOnTrip'];
+  /** Closes every card: Edit and Extend start a drawing. */
+  onCloseAll: () => void;
 }
 
 /**
- * The tapped direction as the public map's trip card, the editor's facts
+ * The tapped direction as the public map's trip card, as it opens there, with the editor's facts
  * and its Edit, Extend and Delete under its tiles.
  */
 export function StudioTripCard({
-  direction,
+  trip,
   saved,
   hotspots,
   draw,
-  timeline,
-  livery,
-  ride,
-  tripDock,
-  height,
   canEdit,
   opening,
   onDelete,
-  onBackToList,
-  onSwitch,
   onDrawOtherWay,
-  onClose,
-  onPick,
-  onEnd,
+  onCloseAll,
 }: StudioTripCardProps) {
+  const { direction, timeline, ride, picking } = trip;
   // Another editor's draft of this route: it can be looked at, not changed.
   const { lock, retry } = useDraftLock('route', direction.routeId);
   const isEditable = canEdit && !lock;
@@ -77,27 +56,27 @@ export function StudioTripCard({
     isEditable && tripFacts(direction, saved.directions, timeline).isOtherWayUndrawn;
   return (
     <TripCard
-      hasController
       direction={direction}
-      directions={saved.directions}
+      directions={trip.directions}
       timeline={timeline}
-      livery={livery}
-      onBackToList={onBackToList}
-      onSwitch={onSwitch}
+      livery={trip.livery}
+      onSwitch={trip.switchTrip}
       onDrawOtherWay={isEditable ? onDrawOtherWay : undefined}
-      onClose={onClose}
+      onClose={trip.leaveTrip}
       picked={ride.pickedId}
-      pickedMetres={saved.fullIds.has(direction.id) ? ride.rideTo?.metres : undefined}
+      pickedMetres={trip.pickedMetres}
       pickedCode={ride.pickedCode}
       start={ride.startId}
       startCode={ride.startCode}
-      onSetStart={ride.setStart}
-      onRemoveStart={ride.removeStart}
-      onPick={onPick}
-      onEnd={onEnd}
+      onSetStart={picking?.setStart}
+      onRemoveStart={picking?.removeStart}
+      walk={trip.walk}
+      onPick={picking?.pick}
+      onEnd={picking?.end}
       endPicked={ride.endPicked}
-      dockRef={tripDock}
-      height={height}
+      dockRef={trip.tripDock}
+      height={trip.height}
+      onOtherRoute={trip.otherRoute}
       signboardUrl={signboardUrl}
       extras={
         <TripCardExtras
@@ -121,7 +100,7 @@ export function StudioTripCard({
           onEdit={() => {
             const v = saved.selected;
             if (!v) return;
-            onClose();
+            onCloseAll();
             void opening(v, draw.load, { isToEdit: true });
           }}
           onDelete={() => {
@@ -133,7 +112,7 @@ export function StudioTripCard({
               ? () => {
                   const v = saved.selected;
                   if (!v) return;
-                  onClose();
+                  onCloseAll();
                   void opening(v, draw.startExtend);
                 }
               : undefined

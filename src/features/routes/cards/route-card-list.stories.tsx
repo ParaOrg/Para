@@ -132,14 +132,12 @@ const FRAME = {
 const frameOf = (p: { frame?: Frame }) => FRAME[p.frame ?? 'phone'];
 
 /**
- * Keeps the way round as the apps do, the filter where a story gives one, and the Selected card
- * where it has `selection` (the studio's), so a story can be tapped through; PAPUNTA lets it go. The studio's Controller
- * (`hasController`) has sliders only where a filter is kept.
+ * Keeps the filter as the apps do, where a story gives one, and the Selected card where it has
+ * `selection` (isCardSelectable), so a story can be tapped through.
  */
 function Picking(props: ComponentProps<typeof RouteCardList>) {
   const [selected, setSelected] = useState(props.selection?.selected ?? null);
   const onSelect = props.selection?.onSelect;
-  const [back, setBack] = useState(props.back);
   const [picks, setPicks] = useState<ModePicks>(props.modeFilter?.picks ?? []);
   return (
     <RouteCardList
@@ -153,12 +151,6 @@ function Picking(props: ComponentProps<typeof RouteCardList>) {
           },
         }
       }
-      back={back}
-      onFlip={() => {
-        props.onFlip();
-        setBack((b) => !b);
-        setSelected(null);
-      }}
       selection={
         onSelect && {
           selected,
@@ -196,7 +188,6 @@ const meta = {
     routes: talaRoutes,
     back: false,
     listing: 'every-line',
-    onFlip: fn(),
     onRoute: fn(),
     onHotspot: fn(),
     onClose: fn(),
@@ -207,45 +198,27 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /**
- * On a phone, the way there, as the public map shows it (Figma 4796:34329): a card per place,
- * docked along the bottom, each in its mode's colour, and no Controller — Vice Versa and the
- * sliders float on the map (MapControlsDock).
+ * On a phone, the way there, as the public map and the studio show it (Figma 4796:34329): a card
+ * per place, docked along the bottom, each in its mode's colour, and no bar of its own — Vice
+ * Versa and the sliders float on the map (MapSheetControls).
  */
 export const Phone: Story = {};
 
-/** The studio's: the Controller at the sheet's foot, ✕ and PAPUNTA. */
-export const WithTheController: Story = { args: { hasController: true } };
-
-/** With a filter kept by the caller: on the studio's Controller, the sliders beside PAPUNTA. */
-export const WithAFilter: Story = {
-  args: { hasController: true, modeFilter: { picks: [], onPicks: fn() } },
-};
-
-/** A filter on, Jeep: the dot on the sliders, and only the jeeps' cards. */
+/** A filter on, Jeep: only the jeeps' cards. */
 export const FilteredToJeep: Story = {
-  args: { hasController: true, modeFilter: { picks: ['jeep'], onPicks: fn() } },
+  args: { modeFilter: { picks: ['jeep'], onPicks: fn() } },
 };
 
-/** Turned round with PAPUNTA: out of Tala both ways, one card — "1 Route". */
+/** Turned round with Vice Versa: out of Tala both ways, one card — "1 Route". */
 export const Switched: Story = { args: { back: true } };
 
-/** The studio's, Tala's card picked: pressed in, its routes alone lit on the map. */
-export const InTheStudioACardSelected: Story = {
-  args: {
-    back: true,
-    hasController: true,
-    selection: { selected: 'Tala|jeep', onSelect: fn() },
-  },
+/** Where cards are selectable (isCardSelectable), Tala's card picked: pressed in. */
+export const ACardSelected: Story = {
+  args: { back: true, selection: { selected: 'Tala|jeep', onSelect: fn() } },
 };
 
 /** From 1024 wide (Figma 4831:53545): docked the map's whole height on the left, 384 wide. */
 export const Floating: Story = { parameters: { frame: 'wide' } };
-
-/** The studio's from 1024 wide (Figma 4633:22034): its Controller the docked list's top bar. */
-export const FloatingWithTheController: Story = {
-  args: { hasController: true },
-  parameters: { frame: 'wide' },
-};
 
 /**
  * Figma's 640 frame: still docked, as wide as the screen — the glow runs edge
@@ -256,8 +229,8 @@ export const Tablet: Story = { parameters: { frame: 'tablet' } };
 /** Taller than the room: the cards scroll. */
 export const ManyPlaces: Story = { args: { routes: many } };
 
-/** The other way round is not drawn yet: the studio's PAPUNTA rests disabled. */
-export const NothingTheOtherWay: Story = { args: { routes: oneWay, hasController: true } };
+/** The other way round is not drawn yet: its one way's cards alone. */
+export const NothingTheOtherWay: Story = { args: { routes: oneWay } };
 
 /**
  * SM Fairview → Cubao runs on Novaliches → Tala, whose Tala → Novaliches is
@@ -308,13 +281,8 @@ export const WithAHotspotFloating: Story = {
   parameters: { frame: 'wide' },
 };
 
-/**
- * Two boxes and no line: "2 Hotspots", with no route to count, and nothing for the studio's
- * PAPUNTA to turn: it rests disabled.
- */
-export const TwoHotspots: Story = {
-  args: { routes: [], hotspots: twoBoxes, hasController: true },
-};
+/** Two boxes and no line: "2 Hotspots", with no route to count. */
+export const TwoHotspots: Story = { args: { routes: [], hotspots: twoBoxes } };
 
 /**
  * Both boxes of one hintuan and no line: a row each, and "1 Hotspot", as a
@@ -338,7 +306,7 @@ const pressHandle = async (canvasElement: HTMLElement, until?: 'full') => {
   handle.blur();
 };
 
-/** Full height (4633:25575): the whole screen, the places scrolling under the Controller. */
+/** Full height (4633:25575): the whole screen, the places scrolling. */
 export const SheetFull: Story = {
   args: { routes: many },
   play: async ({ canvasElement }) => {
@@ -366,9 +334,9 @@ export const SheetLowACardOpens: Story = {
   },
 };
 
-/** At Low, in the studio, a tap on a card raises the sheet a third, as the handle does: no pick. */
-export const SheetLowInTheStudioRaises: Story = {
-  args: { hasController: true, selection: { selected: null, onSelect: fn() } },
+/** At Low, where cards are selectable, a tap on a card raises the sheet a third, as the handle does: no pick. */
+export const SheetLowSelectableRaises: Story = {
+  args: { selection: { selected: null, onSelect: fn() } },
   play: async ({ args, canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.click(canvas.getAllByTestId('chooser-select')[0]);
@@ -380,32 +348,9 @@ export const SheetLowInTheStudioRaises: Story = {
   },
 };
 
-/** A filter with nothing to show under this tap: it says so, with a way back to All. */
-export const FilterWithNoMatch: Story = {
-  // Raised: at Low a tap on the body raises the sheet, and Show all routes is in the body.
-  args: {
-    hasController: true,
-    modeFilter: { picks: [], onPicks: fn() },
-    height: { snap: 0.55, onSnap: fn() },
-  },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await userEvent.click(canvas.getByRole('button', { name: 'Filter' }));
-    const menu = within(
-      await within(canvasElement.ownerDocument.body).findByRole('dialog', { name: 'Filter' }),
-    );
-    await userEvent.click(menu.getByRole('switch', { name: 'Ferry' }));
-    await expect(canvas.getByText('No Ferry routes here')).toBeVisible();
-    await userEvent.click(menu.getByRole('button', { name: 'Close' }));
-    await expect(canvas.getByRole('dialog', { name: '0 Routes' })).toBeInTheDocument();
-    await userEvent.click(canvas.getByRole('button', { name: 'Show all routes' }));
-    await expect(canvas.queryByText('No Ferry routes here')).toBeNull();
-  },
-};
-
 /**
- * The public map's list filtered to a kind of ride nothing here is, its sliders on the map: the
- * list says so, with a way back to All.
+ * The list filtered to a kind of ride nothing here is, its sliders on the map: the list says so,
+ * with a way back to All.
  */
 export const FilteredToNothing: Story = {
   args: {
@@ -415,7 +360,9 @@ export const FilteredToNothing: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(canvas.getByText('No Ferry routes here')).toBeVisible();
-    await expect(canvas.queryByTestId('chooser-controller')).toBeNull();
+    await expect(canvas.getByRole('dialog', { name: '0 Routes' })).toBeInTheDocument();
+    await userEvent.click(canvas.getByRole('button', { name: 'Show all routes' }));
+    await expect(canvas.queryByText('No Ferry routes here')).toBeNull();
   },
 };
 
@@ -465,5 +412,5 @@ const ikotLoop: Direction = {
 /** A loop in the list, beside Tala's routes: its row says Ikot, and it is there whichever way round the list is. */
 export const WithALoop: Story = { args: { routes: [...talaRoutes, ikotLoop] } };
 
-/** Only a loop: no way back to turn to, so the studio's Controller has no PAPUNTA. */
-export const OnlyALoop: Story = { args: { routes: [ikotLoop], hasController: true } };
+/** Only a loop: no way back to turn to. */
+export const OnlyALoop: Story = { args: { routes: [ikotLoop] } };

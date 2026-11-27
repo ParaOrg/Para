@@ -15,6 +15,7 @@
 //      public-worker.mjs      what the public page's worker stores and answers
 //   4b contribute-worker.mjs  what the contributor page's worker stores and answers
 //   5  weight.mjs             the fonts', the shared chunks' and the contributor page's budgets
+//   5b route-cards-weight.mjs the route cards' chunk, apart from `shared`, under its own cap
 //   6  stylesheet-order.mjs   stylesheets before scripts, MapLibre's corners in the safe area
 //   7  maplibre-worker.mjs    MapLibre's worker imports only MapLibre's shared code
 //   8  early-map-file.mjs     the root page asks for the map file as it is read
@@ -38,6 +39,7 @@ import { proveMaplibreWorker } from './build/maplibre-worker.mjs';
 import { proveModules } from './build/modules.mjs';
 import { provePackages } from './build/packages.mjs';
 import { provePublicWorker } from './build/public-worker.mjs';
+import { proveRouteCardsWeight } from './build/route-cards-weight.mjs';
 import { proveStrings } from './build/strings.mjs';
 import { proveStylesheetOrder } from './build/stylesheet-order.mjs';
 import { proveWeight } from './build/weight.mjs';
@@ -51,6 +53,7 @@ const PROOFS = [
   provePublicWorker,
   proveContributeWorker,
   proveWeight,
+  proveRouteCardsWeight,
   proveStylesheetOrder,
   proveMaplibreWorker,
   proveEarlyMapFile,

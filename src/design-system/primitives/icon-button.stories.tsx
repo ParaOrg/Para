@@ -65,7 +65,7 @@ export const LargeCountNone: Story = {
   },
 };
 
-/** The count on Base, as the studio's Controller draws its filter. */
+/** The count on Base: a small button with what it stands for counted. */
 export const BaseWithCount: Story = { args: { count: 1 } };
 
 /** 32px, a 20px icon. */

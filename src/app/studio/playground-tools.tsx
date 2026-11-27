@@ -35,7 +35,6 @@ interface PlaygroundToolsProps {
   draw: ReturnType<typeof useDrawing>;
   saved: ReturnType<typeof useSavedRoutes<DirectionRow>>;
   hotspots: ReturnType<typeof useSavedHotspots<HotspotRow>>;
-  routeCount: number;
   saveFlow: ReturnType<typeof useSaveFlow>;
   contribution: ReturnType<typeof useContributionStart>;
   extendEnds: ReturnType<typeof useSaveTarget>['extendEnds'];
@@ -58,7 +57,6 @@ export function PlaygroundTools({
   draw,
   saved,
   hotspots,
-  routeCount,
   saveFlow,
   contribution,
   extendEnds,
@@ -73,6 +71,9 @@ export function PlaygroundTools({
   const { isSaving, toast, setToast, setNotice } = saveFlow;
   const osmStart = useOsmRouteStart({ map, draw, setNotice });
   const oldParaStart = useOldParaRouteStart({ map, draw, setNotice });
+  // The pill counts routes, not directions: a route is two rows, one of them perhaps an empty
+  // slot, so counting rows would read five routes as "10 routes".
+  const routeCount = new Set(saved.directions.map((v) => v.routeId)).size;
 
   return (
     <>

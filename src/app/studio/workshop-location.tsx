@@ -3,20 +3,14 @@ import { Suspense, useState, type ComponentProps } from 'react';
 
 import { LocationIcon } from '@/design-system/primitives/location-icon';
 import { CommuterLocation, type LocatorNote } from '@/features/locator';
-import { OverviewButton } from '@/features/routes/map/overview-button';
-import type { useCardCamera } from '@/features/routes/map/use-card-camera';
-import type { useCardStack } from '@/features/routes/map/use-card-stack';
+import { ListFilter } from '@/features/routes/cards/list-filter';
+import type { RouteCardsState } from '@/features/routes/map/use-route-cards';
 import type { useSavedHotspots } from '@/features/routes/map/use-saved-hotspots';
 import type { useSavedRoutes } from '@/features/routes/map/use-saved-routes';
 import { useTerminalDots } from '@/features/routes/map/use-terminal-dots';
 import type { HotspotRow } from '@/features/routes/model/hotspots';
 import type { DirectionRow } from '@/features/routes/model/routes';
-import {
-  FootbridgesSwitch,
-  STUDIO_BASEMAPS,
-  STUDIO_BASEMAP_THUMBNAILS,
-  useIsWideScreen,
-} from '@/features/studio';
+import { FootbridgesSwitch, STUDIO_BASEMAPS, STUDIO_BASEMAP_THUMBNAILS } from '@/features/studio';
 import type { Turn } from '@/shared/hooks/commit-turn';
 import { retryingLazy } from '@/shared/lib/retrying-lazy';
 import type { StandingToast } from '@/shared/ui/standing-toasts';
@@ -29,13 +23,13 @@ interface WorkshopLocationProps {
   isMapLoaded: boolean;
   saved: ReturnType<typeof useSavedRoutes<DirectionRow>>;
   hotspots: ReturnType<typeof useSavedHotspots<HotspotRow>>;
-  cards: ReturnType<typeof useCardStack>;
-  camera: ReturnType<typeof useCardCamera>;
+  /** What useRouteCards keeps. */
+  routeCards: RouteCardsState<DirectionRow, HotspotRow>;
+  /** The Playground is shown: its route list's filter stands over the pill only there. */
+  isPlayground: boolean;
   /** The page's turn for the pill's camera, taken where the workshop's hooks stand. */
   cameraTurn: Turn;
   hushedAt: ComponentProps<typeof CommuterLocation>['hushedAt'];
-  /** Whether the map's ⓘ stands at the bottom left, for the Overview button to stand beside it. */
-  hasCredits: boolean;
 }
 
 /** What the locator last said, and how many times: each says it again (Locator's onNote). */
@@ -54,22 +48,21 @@ const StandingToasts = retryingLazy(() =>
 /**
  * The commuter's own position and the map's design, one pill, as on the
  * public map: the studio sees the map the way a commuter does. What the
- * locator has to say is a problem toast at the top, as there; the Overview
- * button stands at the bottom left, as there too.
+ * locator has to say is a problem toast at the top, as there; on a phone the
+ * route list's filter stands over it, as there too.
  */
 export function WorkshopLocation({
   map,
   isMapLoaded,
   saved,
   hotspots,
-  cards,
-  camera,
+  routeCards,
+  isPlayground,
   cameraTurn,
   hushedAt,
-  hasCredits,
 }: WorkshopLocationProps) {
+  const { cards, camera, listUp, floats } = routeCards;
   const { ride, clearOfOpen } = camera;
-  const isOverviewOnTop = useIsWideScreen() && (!!saved.selected || cards.choosing);
   // OpenStreetMap's terminals as faint dots, for an editor placing Para's own (.scratch/terminals),
   // when HAS_POSSIBLE_TERMINALS is on.
   useTerminalDots(HAS_POSSIBLE_TERMINALS ? map : null);
@@ -98,13 +91,6 @@ export function WorkshopLocation({
 
   return (
     <FootbridgesSwitch map={map}>
-      {/* The camera back on what the open card frames; a computer's trip and list have their own (PlaygroundTrip). */}
-      <OverviewButton
-        isShown={camera.overviewButton.isShown && !isOverviewOnTop}
-        go={camera.overviewButton.go}
-        isBesideCredits={hasCredits}
-        map={map}
-      />
       <CommuterLocation
         map={map}
         isMapLoaded={isMapLoaded}
@@ -114,6 +100,11 @@ export function WorkshopLocation({
         snap={cards.snap}
         offset={clearOfOpen}
         docked={cards.open}
+        above={
+          isPlayground &&
+          listUp &&
+          !floats && <ListFilter list={listUp} onFilter={camera.filterList} tooltip="right" />
+        }
         cameraTurn={cameraTurn}
         picks={{
           pickedId: ride.pickedId,

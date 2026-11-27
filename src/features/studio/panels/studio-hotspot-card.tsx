@@ -32,7 +32,7 @@ interface StudioHotspotCardProps {
   canEdit: boolean;
   clearOfOpen: Camera['clearOfOpen'];
   onPickOnPlaceCard: Camera['pickOnPlaceCard'];
-  onOpenTrip: Camera['openTrip'];
+  onOpenTrip: Camera['openTripFromPlace'];
   onDeleteHotspot: ReturnType<typeof useDeleteActions>['onDeleteHotspot'];
   /** Closes every card (Edit starts a drawing). */
   onCloseAll: () => void;

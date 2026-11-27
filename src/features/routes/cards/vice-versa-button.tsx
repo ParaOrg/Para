@@ -22,7 +22,7 @@ interface ViceVersaButtonProps {
  * Vice Versa (4831:51276), floating on the map over the public map's route list: the Button's
  * Secondary, its words then ⇅ (switch-vertical). A tap turns every route listed the other way
  * round. Its words never change, so a screen reader hears which way is showing and where a tap
- * leads after its name. `chooser-flip` to the suites, as the studio's PAPUNTA is.
+ * leads after its name. `chooser-flip` to the suites.
  */
 export function ViceVersaButton({
   way,
