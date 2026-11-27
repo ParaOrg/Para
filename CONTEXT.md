@@ -165,8 +165,9 @@ _Avoid_: near (without the number), serves, links to
 **Stops at** (which hintuans a direction lists):
 Of the hintuans its line passes, a direction lists those its route stops at.
 A road route — a jeep, a bus, a UV Express — stops at every hintuan it
-passes, a station's too: a bus down Taft beside LRT-1 lists Quirino, Vito
-Cruz and Gil Puyat, each row read by the station's own name. A line — a
+passes, a train's or the EDSA Carousel's station too: a bus down Taft beside
+LRT-1 lists Quirino, Vito Cruz and Gil Puyat, each row read by the station's
+own name. Never a ferry's station: it is on the river, not the road. A line — a
 train, the ferry, the EDSA Carousel — stops only at its own line's stations,
 never at the road hintuans under its track, along its river or its busway.
 The timeline, the links, a ride's start and end and the green stretch all
