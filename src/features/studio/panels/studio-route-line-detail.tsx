@@ -35,7 +35,7 @@ interface StudioRouteLineDetailProps {
   saved: { directions: readonly DirectionRow[] } & Pick<Saved, 'selected' | 'reload'>;
   hotspots: Pick<Hotspots, 'hotspots' | 'hotspotsAlong'>;
   draw: Pick<Drawing, 'load' | 'startExtend'>;
-  /** The open direction's stops (useStudioTrip's timeline). */
+  /** The open direction's stops (useTripTimeline's). */
   timeline: Timeline;
   /** A signed-in editor; another editor's draft of the route still leaves it read-only. */
   canEdit: boolean;

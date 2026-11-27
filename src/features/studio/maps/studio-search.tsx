@@ -119,8 +119,9 @@ export function StudioSearch({
       <div
         data-testid="studio-search"
         // Centred, but never over the Contributors panel at the map's left (16 in, 384 wide) or the
-        // hotspot card: its left edge stays 8 past the panel's on a narrow computer.
-        className="absolute top-4 left-[max(calc(50%-10rem),25.5rem)] z-10 hidden w-80 rounded-xl bg-surface p-3 shadow-large @float:block"
+        // hotspot card: its left edge stays 8 past the panel's on a narrow computer. Under the route
+        // list's controls (MapControlsDock's z-[5]), which share its top row beside the list.
+        className="absolute top-4 left-[max(calc(50%-10rem),25.5rem)] z-[4] hidden w-80 rounded-xl bg-surface p-3 shadow-large @float:block"
       >
         <PlaceSearch
           hotspots={searchable.hotspots}

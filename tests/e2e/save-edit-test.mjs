@@ -253,6 +253,13 @@ await page.waitForTimeout(300);
   await page.keyboard.press('Escape');
   await page.waitForTimeout(300);
   check('  and Escape in the Playground still closes it', !(await cardOpen()));
+  // Opened on its own, it goes back to its route listed with those sharing an end, as on the
+  // public map (the owner, 2026-11-27); that list closes by Escape too.
+  const chooser = page.getByTestId('chooser');
+  check('  back to its route listed with those sharing an end', await chooser.isVisible());
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(300);
+  check('  and Escape closes that list', (await chooser.count()) === 0);
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.waitForTimeout(300);
 }

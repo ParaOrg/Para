@@ -870,7 +870,7 @@ export async function openCard(ll) {
 export async function addReturnTrip() {
   const add = page.getByTestId('route-line-detail').getByRole('button', { name: '+ Add route' });
   if (await add.count()) await add.click();
-  else await page.getByTestId('card-switch').click();
+  else await page.getByTestId('trip-ends-switch').click();
 }
 
 /** The open trip's Delete: in the ⋮ menu on a computer's route line detail, on a phone's card. */
