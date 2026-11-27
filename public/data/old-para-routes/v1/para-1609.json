@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1609",
+  "old_id": "de106a83-41ef-41b9-a8c6-d8fe2d15636e",
+  "name": "Napocor Vill NIA Vill Tandang Sora",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.06693,14.66321],
+  "end": [121.04201,14.64709],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.06693,14.66321],[121.06512,14.66153],[121.06295,14.66058],[121.06105,14.65882],[121.05708,14.65618],[121.05503,14.65465],[121.05301,14.65361],[121.04901,14.65437],[121.04697,14.65353],[121.04698,14.65137],[121.046,14.6497],[121.04499,14.64891],[121.04301,14.64788],[121.04201,14.64709]]
+}

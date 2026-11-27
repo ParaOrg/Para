@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-0009",
+  "old_id": "7a9ac6c0-a23b-4c1f-be85-a68be1ac6a41",
+  "name": "MONUMENTO-MUNOZ via BALINTAWAK",
+  "mode": "jeepney",
+  "verified": true,
+  "loop": true,
+  "oneway": true,
+  "start": [121.02593,14.65645],
+  "end": [121.02593,14.65646],
+  "length_m": 9258,
+  "gaps": [],
+  "line": [[121.02593,14.65645],[121.02598,14.65665],[121.0216,14.65765],[121.02031,14.65778],[120.9845,14.65727],[120.98417,14.65728],[120.98401,14.65743],[120.98372,14.65745],[120.98352,14.65726],[120.9835,14.65713],[120.98358,14.65691],[120.98386,14.65679],[120.98405,14.65685],[120.98418,14.65702],[121.02,14.65756],[121.02115,14.65746],[121.02593,14.65646]]
+}

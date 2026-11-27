@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1728",
+  "old_id": "91335e4f-3e10-474f-8c8f-fbef52a2dd5f",
+  "name": "BF Homes Paranaque Sucat SSH",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.04496,14.45392],
+  "end": [121.03201,14.45862],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.04496,14.45392],[121.03997,14.45539],[121.03702,14.45609],[121.03399,14.45738],[121.03201,14.45862]]
+}

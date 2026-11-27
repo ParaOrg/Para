@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1396",
+  "old_id": "efcb7f1a-5afd-46cb-9ffa-58c7374be96a",
+  "name": "MARKET MARKET - NASCOR",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.07007,14.55359],
+  "end": [121.05699,14.54951],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.07007,14.55359],[121.067,14.55431],[121.06496,14.5551],[121.06401,14.55789],[121.06304,14.55598],[121.06097,14.55333],[121.05901,14.55129],[121.05699,14.54951]]
+}

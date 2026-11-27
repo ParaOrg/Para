@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1361",
+  "old_id": "dba63eda-3822-4954-b410-482a275a6550",
+  "name": "CUBAO - SAN JUAN",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.049,14.6191],
+  "end": [121.02303,14.60473],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.049,14.6191],[121.04493,14.61759],[121.03978,14.61449],[121.03397,14.61128],[121.031,14.61044],[121.02903,14.60853],[121.02507,14.60682],[121.02303,14.60473]]
+}

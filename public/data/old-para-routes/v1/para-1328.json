@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1328",
+  "old_id": "891f3769-cf2d-4885-9450-c66ae8f821a3",
+  "name": "KATIPUNAN - UP CAMPUS",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.07301,14.65384],
+  "end": [121.07403,14.63189],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.07301,14.65384],[121.073,14.65604],[121.074,14.65756],[121.07405,14.652],[121.07415,14.6487],[121.07406,14.64627],[121.07508,14.64377],[121.07499,14.64087],[121.074,14.63859],[121.07415,14.6364],[121.07415,14.63409],[121.07403,14.63189]]
+}

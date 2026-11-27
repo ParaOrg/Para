@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1624",
+  "old_id": "9090f44f-2618-4b1f-9b7f-a01abc7fec3f",
+  "name": "Pier South via Road 10",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [120.96004,14.6226],
+  "end": [120.968,14.60899],
+  "length_m": null,
+  "gaps": [],
+  "line": [[120.96004,14.6226],[120.95999,14.62035],[120.96006,14.61551],[120.96,14.61274],[120.961,14.60957],[120.96298,14.60969],[120.965,14.60991],[120.968,14.60899]]
+}

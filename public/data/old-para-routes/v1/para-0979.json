@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-0979",
+  "old_id": "dd37e0b1-f2a6-46a6-a38a-12bf9f75a9ff",
+  "name": "HULO - P. VICTORINO/KALENTONG",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.04291,14.56984],
+  "end": [121.02913,14.59184],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.04291,14.56984],[121.041,14.56956],[121.04102,14.57146],[121.038,14.56969],[121.03505,14.56996],[121.03392,14.56798],[121.031,14.5707],[121.02988,14.57233],[121.02797,14.57336],[121.02683,14.57657],[121.028,14.579],[121.02921,14.58118],[121.02796,14.58397],[121.026,14.5859],[121.02309,14.58958],[121.02601,14.59212],[121.02913,14.59184]]
+}

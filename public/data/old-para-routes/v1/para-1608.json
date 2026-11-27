@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1608",
+  "old_id": "26feafb1-4040-4363-bd9b-b09e1b13bc1b",
+  "name": "Namayan Vergara",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.02815,14.59414],
+  "end": [121.02076,14.57993],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.02815,14.59414],[121.02601,14.59212],[121.02309,14.58958],[121.02103,14.58743],[121.02076,14.57993]]
+}

@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1121",
+  "old_id": "dce5660d-d171-4d19-8472-cc8a3626d03c",
+  "name": "Divisoria - Velasquez",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [120.96201,14.6282],
+  "end": [120.96993,14.60647],
+  "length_m": null,
+  "gaps": [],
+  "line": [[120.96201,14.6282],[120.96295,14.62529],[120.96402,14.62301],[120.96501,14.62147],[120.96494,14.62089],[120.96606,14.6196],[120.96599,14.61921],[120.96703,14.61831],[120.96997,14.61749],[120.968,14.60899],[120.96704,14.60796],[120.96807,14.60672],[120.96993,14.60647]]
+}

@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1561",
+  "old_id": "03f0e1ce-8e99-493b-abde-a86463817fcd",
+  "name": "Libertad Vito Cruz via FB Harrizon",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [120.98997,14.56033],
+  "end": [120.99289,14.54819],
+  "length_m": null,
+  "gaps": [],
+  "line": [[120.98997,14.56033],[120.99199,14.55293],[120.99298,14.55049],[120.99289,14.54819]]
+}

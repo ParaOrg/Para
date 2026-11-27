@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1710",
+  "old_id": "48a4a021-ffb1-424c-9bc1-57e59a38a6be",
+  "name": "Napindan-Pasig via Nascor",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.073,14.55289],
+  "end": [121.09898,14.53677],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.073,14.55289],[121.07503,14.55138],[121.077,14.55091],[121.08201,14.55081],[121.08298,14.54943],[121.087,14.54883],[121.08793,14.54623],[121.08907,14.54231],[121.09002,14.54037],[121.09599,14.54027],[121.09898,14.53677]]
+}

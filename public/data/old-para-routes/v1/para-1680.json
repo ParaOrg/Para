@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1680",
+  "old_id": "4ce2f3d8-136e-4ac2-9ce5-772ab6e97eea",
+  "name": "Kalentong-Malinao",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.05096,14.58123],
+  "end": [121.02913,14.59184],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.05096,14.58123],[121.04975,14.58058],[121.048,14.57929],[121.04499,14.58064],[121.04408,14.58177],[121.04499,14.58443],[121.043,14.58664],[121.04095,14.58693],[121.03895,14.5876],[121.03721,14.58857],[121.03491,14.58956],[121.03403,14.59059],[121.02913,14.59184]]
+}

@@ -48,3 +48,5 @@ export type { ContributionStart } from './contributors/actions/contribution-star
 export { CONTRIBUTIONS } from './data/env';
 export { OsmRouteStartTools } from './osm-routes/osm-route-start-tools';
 export { useOsmRouteStart } from './osm-routes/use-osm-route-start';
+export { OldParaRouteStartTools } from './old-para-routes/old-para-route-start-tools';
+export { useOldParaRouteStart } from './old-para-routes/use-old-para-route-start';

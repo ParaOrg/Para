@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1337",
+  "old_id": "86761983-9180-4d35-84a1-43826b839cc0",
+  "name": "CUBAO-STOPnSHOP",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.01297,14.60107],
+  "end": [121.05298,14.62294],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.01297,14.60107],[121.015,14.60269],[121.017,14.6041],[121.019,14.6058],[121.02018,14.60769],[121.02204,14.60922],[121.03103,14.61222],[121.034,14.6135],[121.03699,14.61512],[121.03996,14.61687],[121.04201,14.61819],[121.04593,14.61983],[121.05003,14.62141],[121.05298,14.62294]]
+}

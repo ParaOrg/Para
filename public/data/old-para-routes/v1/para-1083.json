@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1083",
+  "old_id": "c5eb70df-1c9c-4d37-966c-967ead834da1",
+  "name": "CCP Complex - Taft Ave. via Vito Cruz",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [120.98197,14.5462],
+  "end": [120.996,14.563],
+  "length_m": null,
+  "gaps": [],
+  "line": [[120.98197,14.5462],[120.98297,14.54852],[120.983,14.55156],[120.98101,14.55469],[120.98196,14.55678],[120.987,14.55961],[120.98997,14.56033],[120.994,14.56147],[120.996,14.563]]
+}

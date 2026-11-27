@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1429",
+  "old_id": "03ee61d6-d8da-4bb7-800e-dd8238979002",
+  "name": "DIVISORIA - NORTH PIER via MORIONES",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [120.96812,14.60349],
+  "end": [120.96004,14.6226],
+  "length_m": null,
+  "gaps": [],
+  "line": [[120.96812,14.60349],[120.96694,14.60197],[120.96498,14.59988],[120.96394,14.60151],[120.963,14.60277],[120.962,14.6027],[120.96118,14.60462],[120.96093,14.60729],[120.961,14.60957],[120.96,14.61274],[120.96006,14.61551],[120.96,14.61771],[120.96004,14.6226]]
+}

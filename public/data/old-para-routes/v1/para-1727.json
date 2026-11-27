@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1727",
+  "old_id": "e3247126-6778-47c7-b2b1-e65b6055f493",
+  "name": "Arroceros Retiro via Dimasalang",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [120.98078,14.59074],
+  "end": [120.98899,14.62387],
+  "length_m": null,
+  "gaps": [],
+  "line": [[120.98078,14.59074],[120.98002,14.59211],[120.98002,14.59381],[120.98402,14.5974],[120.98411,14.59938],[120.98499,14.6031],[120.98507,14.60479],[120.98896,14.61625],[120.98899,14.62387]]
+}

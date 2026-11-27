@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1577",
+  "old_id": "874db232-9c76-4990-9fa3-7e233a222ebf",
+  "name": "Bacood Quiapo (Barbosa) via R Magsaysay",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.015,14.5996],
+  "end": [121.017,14.58955],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.015,14.5996],[121.01798,14.59777],[121.01494,14.59808],[121.01489,14.59639],[121.01706,14.59397],[121.02003,14.59193],[121.01994,14.58987],[121.017,14.58955]]
+}

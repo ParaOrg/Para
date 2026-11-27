@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1623",
+  "old_id": "2869913a-f933-4657-9229-6eecd7cb7c3d",
+  "name": "Pfaura San Andres via M Adriatico",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [120.98498,14.57465],
+  "end": [121.0039,14.5741],
+  "length_m": null,
+  "gaps": [],
+  "line": [[120.98498,14.57465],[120.98812,14.57586],[120.99101,14.57578],[120.99305,14.57562],[120.99499,14.57142],[121.00006,14.57263],[121.0039,14.5741]]
+}

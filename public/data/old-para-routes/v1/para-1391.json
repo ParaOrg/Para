@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1391",
+  "old_id": "75d74ac9-459f-4c61-8bc1-0f8a5863a466",
+  "name": "MURPHY 15TH AVE - STOP N SHOP",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.055,14.62389],
+  "end": [121.01297,14.60107],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.055,14.62389],[121.05298,14.62294],[121.05003,14.62141],[121.04593,14.61983],[121.04201,14.61819],[121.03996,14.61687],[121.03699,14.61512],[121.034,14.6135],[121.03103,14.61222],[121.02204,14.60922],[121.02018,14.60769],[121.019,14.6058],[121.017,14.6041],[121.01698,14.60078],[121.015,14.5996],[121.01297,14.60107]]
+}

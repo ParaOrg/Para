@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1516",
+  "old_id": "43326da7-7940-4537-bf05-5d10d95f6601",
+  "name": "GUADALUPE IBABAW - AYALA",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.02402,14.55483],
+  "end": [121.04301,14.56591],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.02402,14.55483],[121.02602,14.55833],[121.02902,14.56313],[121.02991,14.56564],[121.03196,14.56747],[121.03501,14.56685],[121.03797,14.56708],[121.041,14.5675],[121.04301,14.56591]]
+}

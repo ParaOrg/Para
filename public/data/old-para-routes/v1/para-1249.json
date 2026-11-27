@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1249",
+  "old_id": "358614ee-d19c-4d8a-b344-6ca70ad7ee12",
+  "name": "Quezon Ave. - Sta. Mesa Mkt. via Araneta Ave.",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.01394,14.62736],
+  "end": [121.01902,14.60742],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.01394,14.62736],[121.01499,14.62436],[121.015,14.6188],[121.01594,14.61731],[121.01683,14.61479],[121.01701,14.6114],[121.01703,14.6079],[121.01902,14.60742]]
+}

@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1652",
+  "old_id": "98980c49-068c-4202-8cc9-d3cf6a7c9a50",
+  "name": "Alabang Almanza",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.014,14.4317],
+  "end": [121.041,14.4196],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.014,14.4317],[121.01489,14.43041],[121.01708,14.42927],[121.01898,14.42851],[121.022,14.42798],[121.028,14.42621],[121.03097,14.42495],[121.03302,14.42398],[121.03935,14.42202],[121.03972,14.42095],[121.03996,14.41989],[121.041,14.4196]]
+}

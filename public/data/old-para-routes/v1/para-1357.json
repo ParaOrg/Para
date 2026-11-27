@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1357",
+  "old_id": "87528ebf-d772-4ab3-b6e5-f035e8231c57",
+  "name": "LIBERTAD - PASAY ROTUNDA",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [120.99902,14.5462],
+  "end": [121,14.53762],
+  "length_m": null,
+  "gaps": [],
+  "line": [[120.99902,14.5462],[120.99996,14.54284],[121.0003,14.53966],[121,14.53762]]
+}

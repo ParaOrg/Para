@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1093",
+  "old_id": "f4daf457-0fb7-4067-ae73-181b5ae84f51",
+  "name": "Dagat - Dagatan - del Pan via Rotonda",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [120.96704,14.60796],
+  "end": [120.95318,14.64578],
+  "length_m": null,
+  "gaps": [],
+  "line": [[120.96704,14.60796],[120.968,14.60899],[120.96699,14.61003],[120.961,14.60957],[120.96,14.61274],[120.96006,14.61551],[120.96,14.61771],[120.96004,14.6226],[120.95991,14.62828],[120.959,14.63001],[120.95866,14.63229],[120.95696,14.63745],[120.956,14.63934],[120.95295,14.64367],[120.95318,14.64578]]
+}

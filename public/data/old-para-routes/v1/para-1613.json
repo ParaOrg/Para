@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1613",
+  "old_id": "980e9bf2-9eab-4fe7-972b-26c632c514ae",
+  "name": "Novaliches Bignay vice versa",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.00692,14.73873],
+  "end": [121.037,14.72191],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.00692,14.73873],[121.00912,14.73648],[121.01082,14.73409],[121.01298,14.73268],[121.01414,14.7312],[121.01888,14.73056],[121.02101,14.72912],[121.02302,14.72726],[121.0251,14.72613],[121.02699,14.72431],[121.03107,14.72376],[121.033,14.72179],[121.037,14.72191]]
+}

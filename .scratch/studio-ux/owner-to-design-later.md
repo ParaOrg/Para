@@ -64,3 +64,23 @@ Status: needs-info
   The frame draws a list taller than the screen only.
 - **Hover and focus** on the cards and on Vice Versa, the filter and Overview: the public map's
   own states stand in (the browser's focus ring, the buttons' hover).
+
+## "Start from an old Para route" (.scratch/old-para-routes/spec.md, built 2026-11-27)
+
+All of it borrows the "Start from an OSM route" stand-ins, marked "Placeholder look". Code:
+`src/features/studio/old-para-routes/`.
+
+- **The + menu's "Route from old Para"** choice, with the route letter's icon, under "Route from
+  OSM". Code: `src/features/studio/panels/new-menu-choices.tsx`.
+- **The picker.** The OSM picker's panel (`osm-routes/start-picker-frame.tsx`), a field for a
+  name, a place or a Para ID, "Routes near the map's centre", and the results: each a name over a
+  line of facts, "Jeepney · PARA-0018 · Unverified · No line". Code: `old-para-route-picker.tsx`,
+  `old-para-route-results.tsx`.
+- **The chosen route's card.** Its facts, its shape and length ("Loop · one way · 5.0 km"), whether
+  the old app's reviewers verified it, then Start drawing (or the way out and the way back for a
+  loop), or, with no line, words on what is placed. Code: `old-para-route-card.tsx`,
+  `old-para-route-line-start.tsx`.
+- **The hint while drawing.** The OSM hint's look: the places to check against the old line, or,
+  with no line, "draw it by hand" and "Look at its end". Code: `old-para-route-hint.tsx`.
+- **The end of a route with no line** on the map: a white dot ringed in Content/primary. Code:
+  `end-mark.tsx`.

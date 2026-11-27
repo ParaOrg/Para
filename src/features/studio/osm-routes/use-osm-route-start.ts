@@ -1,15 +1,28 @@
 import type { MapLibreMap } from 'maplibre-gl';
 import { useState } from 'react';
 
-import { bboxOf } from '@/shared/utils/geo';
+import { bboxOf, type LngLat } from '@/shared/utils/geo';
 
 import { checkSpots } from './check-spots';
 import type { OsmRoute } from './osm-route-schema';
 import { seedPoints, type RouteLine } from './seed-points';
 import type { Drawing } from '../drawing/use-drawing';
 
+/** Takes the camera, at once, to show the whole of a line a drawing starts from. */
+export function fitToLine(map: MapLibreMap | null, line: readonly LngLat[]) {
+  if (line.length === 0) return;
+  const [west, south, east, north] = bboxOf(line);
+  map?.fitBounds(
+    [
+      [west, south],
+      [east, north],
+    ],
+    { padding: 80, maxZoom: 17, duration: 0 },
+  );
+}
+
 /** The part of a drawing the start needs. */
-type StartableDrawing = Pick<Drawing, 'drawing' | 'startWithPoints' | 'line'>;
+export type StartableDrawing = Pick<Drawing, 'drawing' | 'startWithPoints' | 'line'>;
 
 interface UseOsmRouteStartOptions {
   map: MapLibreMap | null;
@@ -41,14 +54,7 @@ export function useOsmRouteStart({ map, draw, setNotice }: UseOsmRouteStartOptio
       setNotice('Finish or cancel the drawing in progress first, then start again.');
       return;
     }
-    const [west, south, east, north] = bboxOf(part.line);
-    map?.fitBounds(
-      [
-        [west, south],
-        [east, north],
-      ],
-      { padding: 80, maxZoom: 17, duration: 0 },
-    );
+    fitToLine(map, part.line);
     setIsPickerOpen(false);
     setStart({ route, part });
     draw.startWithPoints(seedPoints(part));

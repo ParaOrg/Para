@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1298",
+  "old_id": "b87b68ae-6fd4-4d0c-8891-1d5bdea17f96",
+  "name": "PIER-DELPAN ZARAGOSA",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [120.96394,14.60151],
+  "end": [120.97088,14.58817],
+  "length_m": null,
+  "gaps": [],
+  "line": [[120.96394,14.60151],[120.96498,14.59988],[120.96498,14.59928],[120.96714,14.59609],[120.96898,14.59432],[120.96919,14.59283],[120.97099,14.59119],[120.97005,14.59025],[120.97088,14.58817]]
+}

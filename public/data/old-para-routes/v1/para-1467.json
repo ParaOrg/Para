@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1467",
+  "old_id": "3b44513e-4aff-4306-a203-67800e0a04f7",
+  "name": "BLUMENTRIT - BALUT",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [120.978,14.62332],
+  "end": [120.96494,14.63004],
+  "length_m": null,
+  "gaps": [],
+  "line": [[120.978,14.62332],[120.97404,14.62749],[120.9739,14.62882],[120.96699,14.63092],[120.96494,14.63004]]
+}

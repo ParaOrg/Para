@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1617",
+  "old_id": "20ae3309-5f7e-4e26-967d-dc537f27725a",
+  "name": "Ortigas Complex Robinsons Galleria",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.06199,14.59039],
+  "end": [121.05902,14.59237],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.06199,14.59039],[121.05902,14.59237]]
+}

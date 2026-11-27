@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1295",
+  "old_id": "f8a7a09d-1a9a-4083-a447-aba36146c6fb",
+  "name": "SAN JOAQUIN MARKET-HYPERMART PASIG",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.06994,14.56463],
+  "end": [121.07986,14.58764],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.06994,14.56463],[121.07096,14.56709],[121.07098,14.56961],[121.07201,14.57208],[121.07392,14.57751],[121.07499,14.58001],[121.077,14.5827],[121.07792,14.58166],[121.07896,14.57951],[121.07976,14.5787],[121.08099,14.58209],[121.07792,14.58166],[121.077,14.5827],[121.07892,14.58478],[121.07986,14.58764]]
+}

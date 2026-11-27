@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1630",
+  "old_id": "de85dc44-f616-4803-bf71-bd2c0f1327ee",
+  "name": "Quiapo (Barbosa) San Juan via Legarda",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.02595,14.5942],
+  "end": [120.98701,14.59688],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.02595,14.5942],[121.02296,14.59519],[121.01999,14.59593],[121.01798,14.59777],[121.01494,14.59808],[121.01297,14.60107],[120.99901,14.60119],[120.99501,14.60084],[120.99099,14.60029],[120.99017,14.59762],[120.98701,14.59688]]
+}

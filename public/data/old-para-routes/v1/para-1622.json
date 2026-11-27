@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1622",
+  "old_id": "503de008-2480-411c-a127-ac98a8129f0c",
+  "name": "Pasay RTDA Sucat via SSH",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.01199,14.53906],
+  "end": [121.04511,14.4582],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.01199,14.53906],[121.01901,14.5357],[121.02102,14.53281],[121.02399,14.52699],[121.02789,14.52025],[121.03004,14.51612],[121.03288,14.51114],[121.04493,14.48817],[121.04502,14.4833],[121.04507,14.4705],[121.045,14.46623],[121.04511,14.4582]]
+}

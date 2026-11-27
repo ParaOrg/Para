@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1355",
+  "old_id": "dbf8064e-2e24-4029-a21b-d67a092cd275",
+  "name": "LIBERTAD - PRC",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [120.99889,14.55377],
+  "end": [121.01613,14.57357],
+  "length_m": null,
+  "gaps": [],
+  "line": [[120.99889,14.55377],[120.99999,14.55493],[121.00207,14.55556],[121.00602,14.55707],[121.01004,14.55879],[121.01298,14.55841],[121.011,14.56257],[121.01286,14.56575],[121.013,14.56761],[121.01492,14.56935],[121.01602,14.57199],[121.01613,14.57357]]
+}

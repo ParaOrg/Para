@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1570",
+  "old_id": "de7aeabd-98ab-4b03-8d03-ae171c510d0f",
+  "name": "SM NORTH LAGRO",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.05301,14.65361],
+  "end": [121.08403,14.68039],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.05301,14.65361],[121.05503,14.65465],[121.05708,14.65618],[121.06105,14.65882],[121.06295,14.66058],[121.06512,14.66153],[121.06693,14.66321],[121.06997,14.66475],[121.07093,14.66591],[121.0749,14.66855],[121.077,14.6698],[121.07904,14.67144],[121.07989,14.67319],[121.08201,14.6755],[121.08307,14.67765],[121.08403,14.68039]]
+}

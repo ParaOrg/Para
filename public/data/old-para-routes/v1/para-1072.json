@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1072",
+  "old_id": "df4d8fac-06d2-4f8f-abb6-dcf4b7d5f113",
+  "name": "Boni (Robinson's Complex) - Kalentong/JRC",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.05297,14.57148],
+  "end": [121.02309,14.58958],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.05297,14.57148],[121.05,14.5712],[121.04699,14.57248],[121.04199,14.57509],[121.03999,14.57657],[121.03501,14.57631],[121.03287,14.57835],[121.02921,14.58118],[121.02796,14.58397],[121.026,14.5859],[121.02309,14.58958]]
+}

@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1278",
+  "old_id": "6235869d-d7fa-48ed-9cd4-739f599aded8",
+  "name": "Del Monte - Kanloan via Mayon",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [120.99399,14.63746],
+  "end": [121.00297,14.61905],
+  "length_m": null,
+  "gaps": [],
+  "line": [[120.99399,14.63746],[120.99599,14.63583],[120.99527,14.63418],[120.995,14.63261],[120.99633,14.6308],[120.99601,14.62881],[120.997,14.6276],[120.99881,14.62381],[120.9989,14.6225],[120.99999,14.6223],[121.00188,14.62104],[121.00297,14.61905]]
+}

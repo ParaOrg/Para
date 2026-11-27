@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1049",
+  "old_id": "f38d835c-997d-4f80-9ed3-9b0bf7efd691",
+  "name": "Balut - Divisoria",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [120.96699,14.63092],
+  "end": [120.96807,14.60672],
+  "length_m": null,
+  "gaps": [],
+  "line": [[120.96699,14.63092],[120.96494,14.63004],[120.96598,14.62715],[120.9681,14.62453],[120.97003,14.62316],[120.97203,14.62216],[120.97204,14.62056],[120.97104,14.6179],[120.968,14.60899],[120.96704,14.60796],[120.96993,14.60647],[120.96807,14.60672]]
+}

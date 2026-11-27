@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1542",
+  "old_id": "bdf08abd-9757-4d93-b6ae-5a65284113ba",
+  "name": "EDSA SHAW Guadalupe via S MAdre",
+  "mode": "bus",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.04582,14.55991],
+  "end": [121.05298,14.57748],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.04582,14.55991],[121.04582,14.56178],[121.04604,14.56331],[121.04489,14.56414],[121.04605,14.567],[121.04699,14.57248],[121.05001,14.57619],[121.05298,14.57748]]
+}

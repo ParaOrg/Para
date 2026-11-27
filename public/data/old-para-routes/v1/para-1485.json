@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1485",
+  "old_id": "6f30f1e6-30d7-401a-837e-d7396d292093",
+  "name": "AYALA - ZAPOTE RD",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.022,14.55071],
+  "end": [121.01594,14.56941],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.022,14.55071],[121.02285,14.55297],[121.02402,14.55483],[121.021,14.5568],[121.01899,14.55829],[121.01698,14.55967],[121.016,14.56132],[121.01587,14.56295],[121.01593,14.56436],[121.017,14.56651],[121.01594,14.56941]]
+}

@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1084",
+  "old_id": "93a7d762-20c9-498f-ab4b-438df7fc97c3",
+  "name": "Cielito Homes - Novaliches (TP) via Old Camarin Rd.",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.04201,14.72199],
+  "end": [121.049,14.74808],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.04201,14.72199],[121.04089,14.72459],[121.04132,14.72653],[121.04201,14.72812],[121.04402,14.72971],[121.04502,14.73067],[121.04908,14.73167],[121.048,14.73332],[121.04794,14.73738],[121.0471,14.73902],[121.047,14.74068],[121.046,14.74241],[121.046,14.74621],[121.04482,14.74807],[121.049,14.74808]]
+}

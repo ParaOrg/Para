@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-0972",
+  "old_id": "a7fbbbb8-71af-499f-b7a3-cddb2be921c0",
+  "name": "Pandacan (Beata) - Quiapo via C. Palanca",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.01099,14.59076],
+  "end": [120.98002,14.59381],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.01099,14.59076],[121.00601,14.59069],[121.00398,14.59283],[120.99986,14.59238],[120.99502,14.58718],[120.99399,14.58529],[120.99194,14.58488],[120.98997,14.58409],[120.98801,14.58516],[120.98711,14.58694],[120.987,14.58861],[120.983,14.59038],[120.981,14.59038],[120.98002,14.59381]]
+}

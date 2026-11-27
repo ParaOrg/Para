@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1257",
+  "old_id": "54e93d52-5c54-4d52-864b-2555709f9b13",
+  "name": "San Miguel - Ikot",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [120.98794,14.59997],
+  "end": [120.98179,14.59327],
+  "length_m": null,
+  "gaps": [],
+  "line": [[120.98794,14.59997],[120.99017,14.59762],[120.98897,14.59552],[120.98787,14.59338],[120.98596,14.59032],[120.984,14.59042],[120.98187,14.59149],[120.98179,14.59327]]
+}

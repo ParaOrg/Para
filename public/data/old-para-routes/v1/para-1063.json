@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1063",
+  "old_id": "c4d48084-6795-4630-bade-c7ac7e02ab08",
+  "name": "Blumentritt - North Harbor via Divisoria",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [120.983,14.62262],
+  "end": [120.97403,14.6074],
+  "length_m": null,
+  "gaps": [],
+  "line": [[120.983,14.62262],[120.982,14.62189],[120.98001,14.62194],[120.98006,14.62],[120.98,14.61819],[120.979,14.61658],[120.977,14.61679],[120.97697,14.61378],[120.97604,14.61267],[120.97603,14.6106],[120.97614,14.60888],[120.97522,14.60743],[120.97499,14.60608],[120.97403,14.6074]]
+}

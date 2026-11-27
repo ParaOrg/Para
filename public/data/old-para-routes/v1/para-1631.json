@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1631",
+  "old_id": "2ccde90a-84c8-41f3-9d43-ccde5a224516",
+  "name": "Quiapo Sangandaan via Evangelista",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [120.98295,14.60024],
+  "end": [120.97295,14.60631],
+  "length_m": null,
+  "gaps": [],
+  "line": [[120.98295,14.60024],[120.98398,14.60254],[120.98301,14.60367],[120.97901,14.60442],[120.977,14.60531],[120.97499,14.60608],[120.97295,14.60631]]
+}

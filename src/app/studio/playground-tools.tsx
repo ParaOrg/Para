@@ -17,6 +17,8 @@ import {
   ContributionHint,
   OsmRouteStartTools,
   useOsmRouteStart,
+  OldParaRouteStartTools,
+  useOldParaRouteStart,
   type useAuthFlow,
   type useContributionStart,
   type useDrawing,
@@ -70,6 +72,7 @@ export function PlaygroundTools({
   const { isSignedIn, isAccountDialogOpen, openSignIn, openPasswordChange } = auth;
   const { isSaving, toast, setToast, setNotice } = saveFlow;
   const osmStart = useOsmRouteStart({ map, draw, setNotice });
+  const oldParaStart = useOldParaRouteStart({ map, draw, setNotice });
 
   return (
     <>
@@ -98,6 +101,7 @@ export function PlaygroundTools({
       )}
 
       <OsmRouteStartTools map={map} osmStart={osmStart} isDrawing={draw.drawing} />
+      <OldParaRouteStartTools map={map} oldParaStart={oldParaStart} isDrawing={draw.drawing} />
 
       <SaveToasts toast={toast} onDismiss={() => setToast(null)} />
 
@@ -120,7 +124,14 @@ export function PlaygroundTools({
           isOpen={isNewMenuOpen}
           onOpenChange={onNewMenuOpenChange}
           onNewRoute={() => draw.start()}
-          onNewFromOsm={osmStart.openPicker}
+          onNewFromOsm={() => {
+            oldParaStart.closePicker();
+            osmStart.openPicker();
+          }}
+          onNewFromOldPara={() => {
+            osmStart.closePicker();
+            oldParaStart.openPicker();
+          }}
           onNewHotspot={(kind) => draw.startArea(kind)}
         />
       )}

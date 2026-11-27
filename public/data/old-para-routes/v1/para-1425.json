@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1425",
+  "old_id": "e82aac7d-8f7a-45df-b88b-e8cf9fa1aec7",
+  "name": "DIVISORIA - STA CRUZ via NICHOLAS",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [120.97018,14.59814],
+  "end": [120.98097,14.60039],
+  "length_m": null,
+  "gaps": [],
+  "line": [[120.97018,14.59814],[120.97099,14.59647],[120.97204,14.59639],[120.973,14.59621],[120.976,14.59599],[120.97797,14.59724],[120.97895,14.59806],[120.98097,14.60039]]
+}

@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1607",
+  "old_id": "4a322b1e-442a-48ee-b72d-3e1323cea0c2",
+  "name": "Nagtahan RTDA Pandacan",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.00181,14.59444],
+  "end": [120.99901,14.60119],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.00181,14.59444],[121.00097,14.59723],[120.99999,14.5998],[120.99901,14.60119]]
+}

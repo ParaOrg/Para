@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1140",
+  "old_id": "b4a67219-63d7-406d-923a-65179776ab86",
+  "name": "Espana - Rizal Ave. via Blumentritt",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [120.99913,14.61639],
+  "end": [120.98697,14.6242],
+  "length_m": null,
+  "gaps": [],
+  "line": [[120.99913,14.61639],[120.99786,14.61867],[120.99607,14.62073],[120.995,14.6217],[120.99502,14.62262],[120.99307,14.62319],[120.99,14.62601],[120.98701,14.6253],[120.98697,14.6242]]
+}

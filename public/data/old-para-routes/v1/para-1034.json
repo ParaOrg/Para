@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1034",
+  "old_id": "0ff27e5e-1ada-445d-9096-a663727392b4",
+  "name": "Bagumbayan (Taguig) - Sucat",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.05498,14.46291],
+  "end": [121.05103,14.4504],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.05498,14.46291],[121.05585,14.46555],[121.05328,14.45762],[121.05209,14.45308],[121.05103,14.4504],[121.04496,14.45392],[121.05103,14.4504]]
+}

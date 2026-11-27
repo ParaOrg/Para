@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1707",
+  "old_id": "e4878c48-15ee-4930-a7af-81d3c9656b83",
+  "name": "Munoz Market Pantranco",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.01715,14.64508],
+  "end": [121.01895,14.63288],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.01715,14.64508],[121.0169,14.64352],[121.01718,14.64167],[121.016,14.64037],[121.01692,14.63893],[121.01795,14.63826],[121.01802,14.6339],[121.01895,14.63288]]
+}

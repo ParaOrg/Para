@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1589",
+  "old_id": "55c288d5-ec82-43f6-9e91-d9ebb094e14e",
+  "name": "Brgy Bagong Silangan Sampaguita via Marcos Ave",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.10909,14.69707],
+  "end": [121.09609,14.6971],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.10909,14.69707],[121.108,14.69897],[121.10498,14.69949],[121.10301,14.7003],[121.1021,14.69903],[121.09998,14.69951],[121.09807,14.69919],[121.09715,14.69789],[121.09609,14.6971]]
+}

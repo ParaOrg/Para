@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1042",
+  "old_id": "4b2c0169-fc3e-4c81-8b90-3fbb77b68437",
+  "name": "Balintawak - Blumentritt",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [120.98701,14.6253],
+  "end": [121.00001,14.65559],
+  "length_m": null,
+  "gaps": [],
+  "line": [[120.98701,14.6253],[120.99,14.62601],[120.98996,14.62758],[120.99103,14.62969],[120.99297,14.63399],[120.99295,14.63552],[120.99399,14.63746],[120.99279,14.63878],[120.992,14.64007],[120.994,14.64381],[120.99403,14.64527],[120.99601,14.64784],[120.998,14.6528],[120.99912,14.65445],[121.00001,14.65559]]
+}

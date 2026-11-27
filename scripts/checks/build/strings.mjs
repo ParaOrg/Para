@@ -6,8 +6,8 @@
 //      Draw the return trip
 //      .supabase.co              the database's address: commuters read the
 //                                published map and never call it
-//    and the studio's search files (/data/search/) and OSM route files (/data/osm-routes/),
-//    which only the studio fetches.
+//    and the studio's search files (/data/search/), OSM route files (/data/osm-routes/) and
+//    old Para route files (/data/old-para-routes/), which only the studio fetches.
 
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -55,6 +55,16 @@ export function proveStrings(build, check) {
     !commuter.includes(OSM_ROUTE_FILES) &&
       !contribute.includes(OSM_ROUTE_FILES) &&
       studio.includes(OSM_ROUTE_FILES),
+  );
+
+  // The studio's old Para route files (scripts/old-para-routes/, .scratch/old-para-routes): read
+  // only by "Start from an old Para route", never by the public page or the contributor page.
+  const OLD_PARA_ROUTE_FILES = '/data/old-para-routes/';
+  check(
+    'public page and contribute page name no old Para route file; the studio names them — the string search works',
+    !commuter.includes(OLD_PARA_ROUTE_FILES) &&
+      !contribute.includes(OLD_PARA_ROUTE_FILES) &&
+      studio.includes(OLD_PARA_ROUTE_FILES),
   );
 
   // Its own chunks, not the ones it shares with the public page, whose map reader

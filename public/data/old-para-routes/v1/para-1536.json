@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1536",
+  "old_id": "0a1a6a0d-8ac4-40b2-b10d-588f9da8c6f0",
+  "name": "CUBAO DIVISORIA",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [120.97499,14.60608],
+  "end": [121.05003,14.62141],
+  "length_m": null,
+  "gaps": [],
+  "line": [[120.97499,14.60608],[120.97901,14.60442],[120.98301,14.60367],[120.98499,14.6031],[120.99501,14.60084],[120.99901,14.60119],[121.017,14.6041],[121.02409,14.60994],[121.034,14.6135],[121.04593,14.61983],[121.05003,14.62141]]
+}

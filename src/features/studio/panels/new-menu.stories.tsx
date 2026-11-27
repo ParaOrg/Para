@@ -60,6 +60,18 @@ export const WithOsmRoute: Story = {
   },
 };
 
+/** With "Start from an old Para route" offered too (.scratch/old-para-routes): a fifth choice, a placeholder. */
+export const WithOldParaRoute: Story = {
+  args: { isOpen: true, onNewFromOsm: fn(), onNewFromOldPara: fn() },
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getAllByRole('menuitem')).toHaveLength(5);
+    await userEvent.click(canvas.getByRole('menuitem', { name: /Route from old Para/ }));
+    await expect(args.onNewFromOldPara).toHaveBeenCalled();
+    await expect(args.onNewFromOsm).not.toHaveBeenCalled();
+  },
+};
+
 /** Open, as Figma 4300:20889 draws it: Routes, Terminal and Hintuan beside the +. */
 export const Open: Story = {
   args: { isOpen: true },

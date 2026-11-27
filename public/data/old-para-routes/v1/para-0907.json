@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-0907",
+  "old_id": "3cb4d152-9efc-4338-98ae-9f5d6f01b06b",
+  "name": "Pandacan Quiapo",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [120.98391,14.59502],
+  "end": [121.008,14.59108],
+  "length_m": null,
+  "gaps": [],
+  "line": [[120.98391,14.59502],[120.98587,14.59329],[120.98684,14.59178],[120.98596,14.59032],[120.98495,14.58886],[120.98477,14.587],[120.98701,14.58455],[120.98804,14.58358],[120.98997,14.58409],[120.99194,14.58488],[120.99399,14.58529],[120.99502,14.58718],[120.99704,14.58975],[120.99986,14.59238],[121.00398,14.59283],[121.00601,14.59069],[121.008,14.59108]]
+}

@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1545",
+  "old_id": "06abf388-4f47-4464-8ddc-086fb1a5e9a8",
+  "name": "Guadalupe Cartimar GilPuyat Buendia",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [120.99199,14.55293],
+  "end": [121.04601,14.56692],
+  "length_m": null,
+  "gaps": [],
+  "line": [[120.99199,14.55293],[120.99999,14.55493],[121.00207,14.55556],[121.00602,14.55707],[121.01004,14.55879],[121.01293,14.56045],[121.02001,14.5619],[121.03103,14.5597],[121.03296,14.55756],[121.04102,14.56018],[121.04299,14.56211],[121.04496,14.56462],[121.04601,14.56692]]
+}

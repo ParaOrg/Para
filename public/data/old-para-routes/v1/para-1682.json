@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1682",
+  "old_id": "19a89a43-cf25-410f-b92f-c4f332beb2f2",
+  "name": "Kalentong JRC-Namayan via P Martinez",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.02103,14.58743],
+  "end": [121.02913,14.59184],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.02103,14.58743],[121.02309,14.58958],[121.02601,14.59212],[121.02913,14.59184]]
+}

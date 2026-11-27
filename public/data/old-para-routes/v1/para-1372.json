@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1372",
+  "old_id": "6c5a15ac-5137-4f6c-b4c5-c3266fa3ebd1",
+  "name": "STOP N SHOP - BACOOD",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.017,14.58955],
+  "end": [121.01297,14.60107],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.017,14.58955],[121.01994,14.58987],[121.02003,14.59193],[121.01706,14.59397],[121.01489,14.59639],[121.01494,14.59808],[121.01297,14.60107]]
+}

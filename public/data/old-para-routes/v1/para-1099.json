@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1099",
+  "old_id": "b89823c8-f2e7-4d29-8ab7-8ab4c8470b77",
+  "name": "Del Monte - Quezon Ave. via Banaue",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.00106,14.63751],
+  "end": [121.00704,14.62436],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.00106,14.63751],[121.00126,14.63603],[121.00214,14.63442],[121.00195,14.63281],[121.00197,14.63136],[121.00392,14.62898],[121.00392,14.62754],[121.00508,14.62657],[121.00606,14.62556],[121.00704,14.62436]]
+}
