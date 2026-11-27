@@ -64,6 +64,8 @@ export function StudioDrafts({ map, onOpenDraft, onApproved }: StudioDraftsProps
     [drafts],
   );
   if (!drafts) return null;
+  // The card follows its draft as the list is read again: approved or discarded, it goes.
+  const placeDraft = place && drafts.find((d) => d.id === place.draft.id);
   return (
     <>
       <DraftLines map={map} drafts={drafts} onReview={openDraft} />
@@ -77,14 +79,14 @@ export function StudioDrafts({ map, onOpenDraft, onApproved }: StudioDraftsProps
           onClose={() => setHeld(null)}
         />
       )}
-      {place && (
+      {place && placeDraft && (
         <DraftPlaceCard
-          key={place.draft.id}
-          draft={place.draft}
+          key={placeDraft.id}
+          draft={placeDraft}
           hotspot={place.hotspot}
           onEdit={() => {
             setPlace(null);
-            onOpenDraftRef.current(place.draft, undefined, true);
+            onOpenDraftRef.current(placeDraft, undefined, true);
           }}
           onApproved={onApproved}
           onClose={() => setPlace(null)}
