@@ -135,7 +135,13 @@ const storage = async (r) => {
 // ------------------------------------------------------------ the browser
 const browser = await chromium.launch();
 const errors = [];
-const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
+// Still chevrons: their flow re-sets the drawing's arrows every frame, so while a drawing is open
+// map.loaded() is true only between frames, and a busy runner can miss every gap for the 30 s
+// load() waits (.scratch/ci-flakes/issues/09-save-drafts-map-wait.md). No check here reads the flow.
+const page = await browser.newPage({
+  viewport: { width: 1280, height: 800 },
+  reducedMotion: 'reduce',
+});
 page.on('pageerror', (e) => errors.push('pageerror: ' + String(e)));
 page.on('console', (msg) => {
   if (msg.type() === 'error' && /Warning|key/.test(msg.text()))
@@ -161,10 +167,48 @@ await page.route(/router\.project-osrm\.org|routing\.openstreetmap\.de/, (r) =>
   }),
 );
 
+/**
+ * What holds `map.loaded()` false: the style's state, the sources still loading, and how many data
+ * events the map fires in 2 s (a source updated in a loop never settles, however fast the runner).
+ */
+async function mapWaitState() {
+  return page.evaluate(async () => {
+    const map = window.__map;
+    if (!map) return 'no map on the page';
+    const events = {};
+    const count = (event) => {
+      const key = `${event.dataType}:${event.sourceId ?? ''}`;
+      events[key] = (events[key] ?? 0) + 1;
+    };
+    map.on('data', count);
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+    map.off('data', count);
+    const style = map.style;
+    const managers = style?.tileManagers ?? style?.sourceCaches ?? {};
+    const loading = Object.entries(managers)
+      .filter(([, manager]) => !manager.loaded())
+      .map(([id]) => id);
+    return JSON.stringify({
+      isStyleLoaded: map.isStyleLoaded(),
+      isMoving: map.isMoving(),
+      loading,
+      dataEventsIn2s: events,
+    });
+  });
+}
+
 /** The studio, loaded with its routes: the first time, and again after the stand-in approves. */
 async function load() {
   await page.goto(`${BASE}/studio/`, { waitUntil: 'load' });
-  await page.waitForFunction(() => window.__map && window.__map.loaded(), null, { timeout: 30000 });
+  await page
+    .waitForFunction(() => window.__map && window.__map.loaded(), null, { timeout: 30000 })
+    .catch(async (error) => {
+      // Say what the map is still waiting on, and keep the screen, before failing: a source that
+      // never settles is named (.scratch/ci-flakes/issues/09-save-drafts-map-wait.md).
+      const state = await mapWaitState().catch((stateError) => `unreadable: ${stateError}`);
+      await page.screenshot({ path: 'save-drafts-test-failure.png' }).catch(() => {});
+      throw new Error(`the map did not load in 30 s: ${state}`, { cause: error });
+    });
   if ((await waitForSource(page, 'saved-routes', 30000)).length === 0)
     throw new Error('the routes did not load in 30 s');
   await page.waitForTimeout(500);
