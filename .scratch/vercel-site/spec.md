@@ -1,3 +1,5 @@
+Paused 2026-11-27: the owner chose GitHub Actions → Cloudflare
+
 # The site moves to Vercel
 
 Written 2026-11-27 for the owner's decision of the same day. Plan only: nothing here has been created, linked or pointed anywhere yet.

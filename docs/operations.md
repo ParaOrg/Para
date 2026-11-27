@@ -8,8 +8,8 @@ Written 2026-10-28 from the repo and from what the hub checked live that day. An
 
 | Service and account | What Para keeps there | Who signs in | Where its keys and secrets are kept |
 | --- | --- | --- | --- |
-| **GitHub**, organisation `ParaOrg`, repository `Para` (public) | The code; the published map in `public/data/`, committed by the nightly publish when the map changes; the workflows; the contributor app's releases (`para-contributor.apk` and `latest.json` on GitHub Releases, ADR 0006); the backup's public key (`.github/backup/owner-public-key.asc`); the encrypted app signing key (`android/release-key.p12.enc`) | The owner (admin) (owner to confirm: any other member) | Environment `publish`, `main` only: `PUBLISH_DEPLOY_KEY` (publish-map.yml). Environment `backup`, `main` only: `BACKUP_DATABASE_URL`, `R2_ENDPOINT`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET` (backup.yml). Until the change that names these environments reaches `main`, the same values are also repository secrets; they are deleted after it (`docs/agents/main-protection.md`). Environment `tiles`: `TILES_R2_ENDPOINT`, `TILES_R2_ACCESS_KEY_ID`, `TILES_R2_SECRET_ACCESS_KEY`, `TILES_R2_BUCKET` (tiles.yml). Environment `app-release`: `PARAPO_KEY_PASSPHRASE` (contributor-app.yml, make-app-signing-key.yml). The deploy key "Nightly publish" (Settings → Deploy keys, `docs/agents/main-protection.md`) |
-| **Cloudflare, the Para account** | The zone `para-commute.org` (Free plan). The `para` Worker: the site from `dist/` (`wrangler.jsonc`), built by Workers Builds from GitHub, production branch `main`, a preview per branch. The `para-tiles` Worker (`workers/tiles/wrangler.jsonc`). The R2 bucket `parapo-tiles` (the tiles, styles, sprite and glyphs). The backup's R2 bucket (its name is the secret `R2_BUCKET`) | The owner | R2 API tokens, one per bucket (backup.yml and tiles.yml headers); their values are only in the GitHub secrets above. Workers Builds reaches GitHub through Cloudflare's GitHub App |
+| **GitHub**, organisation `ParaOrg`, repository `Para` (public) | The code; the published map in `public/data/`, committed by the nightly publish when the map changes; the workflows; the contributor app's releases (`para-contributor.apk` and `latest.json` on GitHub Releases, ADR 0006); the backup's public key (`.github/backup/owner-public-key.asc`); the encrypted app signing key (`android/release-key.p12.enc`) | The owner (admin) (owner to confirm: any other member) | Environment `publish`, `main` only: `PUBLISH_DEPLOY_KEY` (publish-map.yml). Environment `backup`, `main` only: `BACKUP_DATABASE_URL`, `R2_ENDPOINT`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET` (backup.yml). Until the change that names these environments reaches `main`, the same values are also repository secrets; they are deleted after it (`docs/agents/main-protection.md`). Environment `tiles`: `TILES_R2_ENDPOINT`, `TILES_R2_ACCESS_KEY_ID`, `TILES_R2_SECRET_ACCESS_KEY`, `TILES_R2_BUCKET` (tiles.yml). Environment `app-release`: `PARAPO_KEY_PASSPHRASE` (contributor-app.yml, make-app-signing-key.yml). Repository secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` (deploy.yml, deploy-tiles.yml; see How the site deploys). The deploy key "Nightly publish" (Settings → Deploy keys, `docs/agents/main-protection.md`) |
+| **Cloudflare, the Para account** | The zone `para-commute.org` (Free plan). The `para` Worker: the site from `dist/` (`wrangler.jsonc`), deployed from GitHub Actions (`deploy.yml`): production from `main`, a preview per pull request and for `staging`. The `para-tiles` Worker (`workers/tiles/wrangler.jsonc`), deployed by `deploy-tiles.yml` when `workers/tiles/` changes. The R2 bucket `parapo-tiles` (the tiles, styles, sprite and glyphs). The backup's R2 bucket (its name is the secret `R2_BUCKET`) | The owner | R2 API tokens, one per bucket (backup.yml and tiles.yml headers), and the Workers API token the deploys use ("Edit Cloudflare Workers"); their values are only in the GitHub secrets above. Workers Builds, which built both Workers until 2026-11-27, is to be switched off (How the site deploys) |
 | **Cloudflare, the old Villaralvorovic2 account** | The Turnstile widget (its site key is in `.env.production` and `.env.apk`), once the old `parapo` Worker too, which the owner deleted on 2026-11-23 with `parapo-studio-review-preview` (`docs/operations/retire-old-site.md`) | The owner | Turnstile's secret key is in Supabase's Auth settings and, for the waitlist form on `/app/`, the Edge Function secret `TURNSTILE_SECRET_KEY`; never in the repo |
 | **Supabase**, project in Singapore (named in the consent wording, `src/features/contribute/consent/consent-panel.tsx`; the screen is off while the owner redesigns it, ADR 0004) | The database: the route tables, drafts and review, the contributors and their rides; Auth (editors, contributors, anonymous phones); the public Storage bucket `signboards` (`features/studio/data/signboards.ts`) | The owner (owner to confirm: any other dashboard member) | The project URL and publishable key are public (`.env.production`). The `backup_reader` role's password is only inside the secret `BACKUP_DATABASE_URL`. The service and database passwords: the owner's password manager (owner to confirm) |
 | **Namecheap** | The registration of `para-commute.org`. Nameservers point at Cloudflare | The owner | The owner's password manager (owner to confirm) |
@@ -25,7 +25,7 @@ The addresses (checked live 2026-10-28):
 - `www.para-commute.org`: the `para` Worker, through a Workers route on the zone.
 - `tiles.para-commute.org`: the `para-tiles` Worker, through a Workers route.
 - `para-commute.org`: a redirect rule to `www`, 301, with Always Use HTTPS on.
-- Staging: `staging-para.para-ph-info.workers.dev` is meant to be the `para` Worker's preview of `staging`, but on 2026-10-28 it answered Cloudflare's 404 for `/` and `/data/index.v5.json`, likely (not proven) because its builds fail (the "Workers Builds: para" check, ticket ready-for-100k 07). The old account's `staging-parapo.villaralvorovic2.workers.dev` is gone: the owner deleted its Worker on 2026-11-23, and the address answers 404.
+- Staging: `staging-para.para-ph-info.workers.dev`, the `para` Worker's preview version with the alias `staging`, uploaded by `deploy.yml` on every push to `staging`. The old account's `staging-parapo.villaralvorovic2.workers.dev` is gone: the owner deleted its Worker on 2026-11-23, and the address answers 404.
 
 ## Costs and limits
 
@@ -83,8 +83,8 @@ Each says what you'd see, the first check, and the fix. When the alert workflow 
 ### A publish didn't deploy
 
 - **You'd see:** the issue "Alert: a publish did not reach the live site". The nightly publish pushed a new map to `main` over 2 hours ago, and `www.para-commute.org` still serves the one before. The Publish map run itself is green: its job ends at the push.
-- **First check:** Cloudflare → Workers & Pages → `para` → Deployments. Is the latest build for `main` failed, or missing? Compare `published_at` in `https://www.para-commute.org/data/index.v6.json` with the same file on `main` in GitHub.
-- **Fix:** a failed build: read its log, then Retry deployment. No build at all: check that Workers Builds is still connected to the repository (Settings → Builds). Commuters keep the earlier map meanwhile, so nothing is lost; the issue closes itself once the live map matches `main`.
+- **First check:** GitHub → Actions → Deploy, the run for the publish's commit on `main`. Did it fail, or say in a notice that the Cloudflare secrets are not set? Compare `published_at` in `https://www.para-commute.org/data/index.v6.json` with the same file on `main` in GitHub.
+- **Fix:** a failed run: read its log (a guard in the build, or wrangler's error), fix the cause, then Re-run jobs. A notice about the secrets: add them (How the site deploys). A revoked or expired token: make a new one (Rotating a key). No run at all: check that Actions is enabled for the repository. Commuters keep the earlier map meanwhile, so nothing is lost; the issue closes itself once the live map matches `main`.
 
 ### A backup failed
 
@@ -182,12 +182,34 @@ Where each key is made, and where its new value goes. Make the new one, put it i
 | `BACKUP_DATABASE_URL` | Supabase SQL editor: `alter role backup_reader with password '…';` | The `backup` environment's secret, with the new password percent-encoded | Run **Backup** once |
 | `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` | Cloudflare → R2 → Manage API tokens, a new token scoped to the backup bucket | The `backup` environment's two secrets | Run **Backup** once, then delete the old token |
 | `TILES_R2_ACCESS_KEY_ID`, `TILES_R2_SECRET_ACCESS_KEY` | Cloudflare → R2 → Manage API tokens, a new token scoped to `parapo-tiles` | The `tiles` environment's two secrets | Run **Tiles** once, then delete the old token |
+| `CLOUDFLARE_API_TOKEN` | Cloudflare (Para account) → My Profile → API Tokens, the "Edit Cloudflare Workers" template, as in How the site deploys | The repository secret of the same name | Re-run the latest **Deploy** run on `main`, then delete the old token |
 | `PARAPO_KEY_PASSPHRASE` | Not rotated: it unlocks the app signing key, and a new key means testers uninstall (make-app-signing-key.yml) | – | If it leaks, tell the hub before anything else |
 | The backup's GPG key | A new pair on your own computer (backup.yml step 3) | The public half: `.github/backup/owner-public-key.asc`, by pull request. The private half: your password manager and an offline copy | Keep the old private key: older backups only open with it |
 
+## How the site deploys
+
+GitHub Actions builds and deploys both Workers; Cloudflare's own Workers Builds is no longer used (its free plan's 3,000 build minutes ran out in November 2026, and Actions minutes are free for a public repository).
+
+| Workflow | When | What it does |
+| --- | --- | --- |
+| `deploy.yml` | A push to `main` | `npm run build` (every guard in `check-build.mjs`), then `wrangler deploy`: production, `www.para-commute.org` |
+| `deploy.yml` | A push to `staging` | The same build, then `wrangler versions upload` with the alias `staging`: `https://staging-para.para-ph-info.workers.dev`. Production is untouched |
+| `deploy.yml` | Every pull request from this repository | The same, with the alias from the branch name, sanitised as Workers Builds did (`claude/foo` → `claude-foo-para.para-ph-info.workers.dev`), and one comment on the pull request with the link, edited on every push. A newer push cancels the older run. A branch whose name gives no valid alias (it starts with a digit, say) gets the version's own address instead |
+| `deploy-tiles.yml` | A push to `main` or `staging` that changes `workers/tiles/`, or "Run workflow" | `wrangler deploy` of `para-tiles` from `main`; a preview version from any other branch |
+
+A deploy that has started on `main` or `staging` always finishes. Pull requests from forks and from Dependabot get no secrets and skip the deploy with a notice, green; so does every run until the secrets exist. wrangler is pinned in both files (`WRANGLER_VERSION`) and fetched with `npx`, not installed with the app.
+
+**The owner's setup, once:**
+
+1. Cloudflare (the Para account) → My Profile → API Tokens → Create Token → the **Edit Cloudflare Workers** template, account resources: the Para account, zone resources: `para-commute.org`. Copy the token.
+2. GitHub → Settings → Secrets and variables → Actions → New repository secret: `CLOUDFLARE_API_TOKEN` (the token) and `CLOUDFLARE_ACCOUNT_ID` (the Para account's id, on any Worker's overview page).
+3. After the first green Deploy run on `main` (and a preview link that works on a pull request), switch Workers Builds off, or both would deploy: Cloudflare → Workers & Pages → `para` → Settings → Build → Disconnect (or Disable builds), and the same on `para-tiles`.
+
+The token can deploy production from any branch's copy of the workflow, as Cloudflare's GitHub App could: only people with write access to the repository open pull requests that receive it.
+
 ## Branch previews
 
-Every branch gets a preview address of its own, `<branch>-para…workers.dev`, built from that branch's code.
+Every pull request gets a preview address of its own, `<branch>-para…workers.dev`, built from that branch's code (How the site deploys).
 
 **Don't sign in to the studio or the contributor page on a branch preview address.** Its code hasn't been reviewed and it talks to the live database. Test signed-in work on staging or locally.
 

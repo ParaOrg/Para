@@ -5,6 +5,8 @@ date: 2026-11-27
 
 # The site is hosted on Vercel; tiles, backup and bot check stay on Cloudflare
 
+Paused 2026-11-27: the owner chose to stay on Cloudflare and deploy from GitHub Actions instead (`docs/operations.md`, How the site deploys). This record stays Proposed.
+
 The site (the public map at `/`, the studio at `/studio/`, the contributor page at `/contribute/`, and the published map under `/data/`) was the Cloudflare Worker `para`, built by Workers Builds on the free plan. In November 2026 that plan's 3,000 build minutes ran out and builds paused until 1 December: no PR got a preview and `main` could not deploy. On 2026-11-27 the owner chose to host the site on the owner's Vercel Pro plan, with a preview for every PR and no limit on them (`.scratch/vercel-site/spec.md`).
 
 ## Decision
