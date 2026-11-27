@@ -1,6 +1,7 @@
 import { IconButton } from '@/design-system/primitives/icon-button';
-import { ViceVersaButton } from '@/features/routes/cards/vice-versa-button';
 import { ChevronDownIcon } from '@/shared/ui/route-icons';
+
+import { ViceVersaButton } from './vice-versa-button';
 
 interface ListTopBarProps {
   /** Vice Versa's words for the list's way, as the map's Vice Versa has them (listWay). */

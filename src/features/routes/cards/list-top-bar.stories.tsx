@@ -8,7 +8,7 @@ import { ListTopBar } from './list-top-bar';
  * in as a bare sheet marked as BottomSheet marks a list at its top, filling the map.
  */
 const meta = {
-  title: 'App/PublicMap/ListTopBar',
+  title: 'Features/Routes/ListTopBar',
   component: ListTopBar,
   args: {
     way: { way: 'Papunta', wayTo: 'Pabalik', isSwitchable: true },

@@ -1,14 +1,14 @@
 import type { MapLibreMap } from 'maplibre-gl';
 
-import { ListFilter, type FilteredList } from '@/features/routes/cards/list-filter';
-import { listWay } from '@/features/routes/cards/list-way';
-import { ViceVersaButton } from '@/features/routes/cards/vice-versa-button';
-import { MapControlsDock } from '@/features/routes/map/map-controls-dock';
-import { OverviewPill } from '@/features/routes/map/overview-pill';
-import type { ModePicks } from '@/features/routes/model/mode-filter';
 import { FRAMED_SHARE, type Snap } from '@/shared/ui/sheet-gesture';
 
-import { ListTopBar } from './list-top-bar';
+import { MapControlsDock } from './map-controls-dock';
+import { OverviewPill } from './overview-pill';
+import { ListFilter, type FilteredList } from '../cards/list-filter';
+import { ListTopBar } from '../cards/list-top-bar';
+import { listWay } from '../cards/list-way';
+import { ViceVersaButton } from '../cards/vice-versa-button';
+import type { ModePicks } from '../model/mode-filter';
 
 interface MapSheetControlsProps {
   map: MapLibreMap | null;

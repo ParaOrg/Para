@@ -31,6 +31,7 @@ import { LandmarkPin } from '@/features/routes/map/landmark-pin';
 import { lookAt } from '@/features/routes/map/look-at';
 import { MapCreditsDock } from '@/features/routes/map/map-credits-dock';
 import { MapCreditsSheet } from '@/features/routes/map/map-credits-sheet';
+import { MapSheetControls } from '@/features/routes/map/map-sheet-controls';
 import { METRO_MANILA, MapView } from '@/features/routes/map/map-view';
 import { openOnRoutes } from '@/features/routes/map/open-on-routes';
 import { StationLabels } from '@/features/routes/map/station-labels';
@@ -41,6 +42,7 @@ import { useFootbridges } from '@/features/routes/map/use-footbridges';
 import { useLitRides } from '@/features/routes/map/use-lit-rides';
 import { useLoopTip } from '@/features/routes/map/use-loop-tip';
 import { useMapCredits } from '@/features/routes/map/use-map-credits';
+import { useMapFloats } from '@/features/routes/map/use-map-floats';
 import { useSavedHotspots } from '@/features/routes/map/use-saved-hotspots';
 import { useSavedRoutes } from '@/features/routes/map/use-saved-routes';
 import { directionsAtHotspots } from '@/features/routes/model/directions-at';
@@ -57,14 +59,12 @@ import { cn } from '@/shared/utils/cn';
 
 import { DonationCard } from './donation-card';
 import { ExploreCards, PageToasts, PlaceSearchBar } from './lazy-parts';
-import { MapSheetControls } from './map-sheet-controls';
 import { MapViewCorner } from './map-view-corner';
 import type { SaidNote } from './page-toasts';
 import { sheetTopUnderSearch } from './sheet-top-under-search';
 import { useStatusBarColour } from './status-bar';
 import { TOAST_UNDER_FULL_CARD, TOAST_UNDER_FULL_TRIP } from './toast-under-full';
 import type { ExploreRest } from './use-explore-sheet';
-import { useMapFloats } from './use-map-floats';
 
 /**
  * The hotspots on the commuter map, the owner's calls for now: no pins zoomed in, no dots zoomed
