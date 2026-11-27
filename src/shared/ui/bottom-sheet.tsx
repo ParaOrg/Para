@@ -112,7 +112,7 @@ export interface SheetHeight {
 const FLOATS_AT = {
   corner:
     '@float:inset-auto @float:top-[var(--sheet-float-top,0px)] @float:left-0 @float:max-h-[calc(100%-var(--sheet-float-top,0px))] @float:w-96 @float:pt-0 @float:pb-0',
-  dock: '@float:inset-auto @float:top-[var(--sheet-float-top,0px)] @float:left-0 @float:max-h-[calc(100%-var(--sheet-float-top,0px))] @float:w-96 @float:overflow-visible @float:pt-0 @float:pb-0',
+  dock: '@float:inset-auto @float:top-[var(--sheet-float-top,0px)] @float:left-0 @float:h-[calc(100%-var(--sheet-float-top,0px))] @float:w-96 @float:overflow-visible @float:pt-0 @float:pb-0',
   card:
     '@wide:inset-auto @wide:top-4 @wide:left-4 @wide:w-80 @wide:max-w-[calc(100%-2rem)] @wide:max-h-[calc(100%-2rem)] ' +
     '@wide:rounded-xl @wide:shadow-xl @wide:ring-1 @wide:ring-black/10 @wide:pt-4 @wide:pb-4',
@@ -124,7 +124,8 @@ const FLOATS_AT = {
  * card alike. Only what it floats as on a wide screen differs (`floats`): the
  * list, a trip and a place flush in the top-left corner, 384 wide (Figma
  * 3750:1911), the body scrolling under the header with no scrollbar drawn,
- * the owner's pick.
+ * the owner's pick. The list and a trip (`dock`) fill the map's whole height,
+ * a left panel the one replaces the other in (4905:21658).
  *
  * On a phone it is BottomSheetConfiguration (Figma 3815:5637), square along
  * the top: a HandleNotch over the header. It opens at Low, the header and the
