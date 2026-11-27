@@ -24,7 +24,7 @@ export interface Hush {
   (go: (() => void) | null): (() => void) | null;
 }
 
-/** How a page wants the route cards to behave; each switch defaults to the public map's way. */
+/** How a page wants the route cards to behave; each optional switch defaults to the public map's way. */
 export interface RouteCardsOptions {
   /** Wraps the cards' ‹ and ✕ and Back, so going back hushes the dot's gaze (useGazeHush). */
   hush: Hush;
@@ -50,8 +50,8 @@ export interface RouteCardsOptions {
  * (useCardCamera), what the lit routes wear (useLitRides), the open trip's timeline and a loop's
  * tip, and what Back, Escape and the empty map tapped close. RouteCards draws it.
  *
- * The page calls it where these hooks stood among its own: their effects run in that order, and
- * the locator's camera, at the page's turn after it (commit-turn.ts), still moves last.
+ * The page calls it before its own useTurn: the cards' camera (useCardCamera) then moves before
+ * the locator's camera, which runs at the page's turn after it (commit-turn.ts) and so moves last.
  */
 export function useRouteCards<V extends Direction, S extends Hotspot>(
   map: MapLibreMap | null,
@@ -90,7 +90,6 @@ export function useRouteCards<V extends Direction, S extends Hotspot>(
     camera,
     rides,
     timeline,
-    tipId,
     leaveTrip,
     listUp,
     floats,
