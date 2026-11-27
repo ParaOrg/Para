@@ -49,21 +49,23 @@ test('the ferry is a line, not a train', () => {
   assert.deepEqual([...LINES], ['LRT-1', 'LRT-2', 'MRT-3', 'PRFS', 'EDSA-C']);
 });
 
-test('the ferry stops at its own stations only, and no train at them; a jeep passing one does', () => {
+test('the ferry stops at its own stations only, and no train or road route at them', () => {
   assert.equal(servedBy({ line: 'PRFS' }, PRFS), true);
   assert.equal(servedBy({ line: null }, PRFS), false);
   assert.equal(servedBy({ line: 'MRT-3' }, PRFS), false);
-  assert.equal(servedBy({ line: 'PRFS' }, JEEP), true);
+  assert.equal(servedBy({ line: 'PRFS' }, JEEP), false, 'a ferry station is on the river');
+  assert.equal(servedBy({ line: 'PRFS' }, BUS), false);
   assert.equal(servedBy({ line: 'PRFS' }, MRT3), false);
   assert.equal(servedBy({ line: null }, { mode: 'ferry', routeCode: null }), false);
 });
 
-test("a road route stops at every hintuan it passes, a station's too", () => {
+test("a road route stops at every hintuan it passes, a train's or the Carousel's station too", () => {
   for (const road of [JEEP, BUS]) {
     assert.equal(servedBy({ line: null }, road), true);
     assert.equal(servedBy({}, road), true, 'a hotspot from a file before 0011');
     assert.equal(servedBy({ line: 'LRT-1' }, road), true);
     assert.equal(servedBy({ line: 'MRT-3' }, road), true);
+    assert.equal(servedBy({ line: 'EDSA-C' }, road), true);
   }
 });
 
@@ -141,6 +143,15 @@ test("a road route's timeline names a station by its own name, one row with a hi
       ['jeep-libertad', 'Libertad'],
       ['mrt-taft', 'Taft Avenue'],
     ],
+  );
+});
+
+test('a road route passing a ferry station does not list it; the ferry does', () => {
+  const pier = [HOTSPOTS[0], HOTSPOTS[1], hintuan('pier', 0.015, 'Pier', 'PRFS')];
+  assert.deepEqual(hintuansAlong(LINE, pier, JEEP), []);
+  assert.deepEqual(
+    hintuansAlong(LINE, pier, PRFS).map((a) => a.hotspot.id),
+    ['pier'],
   );
 });
 

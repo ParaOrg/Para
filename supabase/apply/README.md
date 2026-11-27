@@ -853,3 +853,31 @@ Publish refused either one. Rows already saved were valid before and after.
 - Apply failed: nothing changed. The message names what it found.
 - Applied, and it must be withdrawn: change every `busway` route to another mode and unmark every EDSA-C
   station, then run `20261125090000_edsa_carousel_revert.sql`.
+
+# The station relink (ADR 0010)
+
+Not a migration: no schema changes. Road routes now list the train and Carousel stations they pass
+(never a ferry's), but a direction's links are written only when it or a hotspot is saved, so the
+directions saved before the rule changed lack them. These three files add exactly those links, with
+the `stop_sequence` a save would store. They were generated from the live tables on 2026-11-27 by
+`scripts/relink/relink-stations.mjs`, which reads them as the publish does (publishable key,
+published rows only) and works the links out with the studio's own save rule.
+
+| File | What it does |
+| --- | --- |
+| `20261127120000_relink_stations_check.sql` | Read-only dry run: the planned links, how many are already there, any planned direction or station gone, open drafts on the routes or stations it touches, and the `route_stop` row count. |
+| `20261127120000_relink_stations_apply.sql` | One transaction: adds 94 links on 14 directions, removes none. Refuses, changing nothing, while a draft is open on a route or station it touches (a link write bumps both revisions and would make that draft stale). A link already there is left alone, so it is safe to run twice. |
+| `20261127120000_relink_stations_revert.sql` | One transaction: removes exactly those 94 links. |
+
+## Steps
+
+1. Run the check. Expect: planned 94, already linked 0, gone 0, open drafts 0. If drafts are open,
+   approve or send them back first; if anything is gone, regenerate (below).
+2. Run the apply. It ends with a notice, `relink: 94 link(s) added`.
+3. Run the check again: already linked 94, and `route_stop rows now` up by 94.
+4. Run the publish (the Publish map workflow, or wait for the nightly run). The map-data check's
+   "passes … but is not linked" warnings for stations should be gone.
+
+To regenerate against the tables as they are now (after map edits, say):
+`node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs scripts/relink/relink-stations.mjs`
+prints the plan and writes nothing; add `--write` to rewrite the three files.
