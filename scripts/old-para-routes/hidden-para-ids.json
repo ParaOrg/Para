@@ -1,0 +1,4 @@
+{
+  "why": "Test rows the old app's health check wrote (named HEALTH_CHECK), not routes. They keep their Para IDs in the source so every other ID stays stable, but the studio's files and the PDF leave them out (the owner, 2026-11-27).",
+  "paraIds": ["PARA-1734", "PARA-1735", "PARA-1736"]
+}

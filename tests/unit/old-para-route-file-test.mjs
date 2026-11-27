@@ -8,6 +8,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { test } from 'node:test';
 
 import {
+  HIDDEN_PARA_IDS,
   OLD_PARA_SOURCE,
   ROUTE_COUNT,
   lineWithGaps,
@@ -74,4 +75,23 @@ test("a line's parts join where they meet and leave a gap where they don't", () 
     ],
     gaps: [],
   });
+});
+
+test('the hidden Para IDs are the test rows, kept in the source and left out of the build', () => {
+  const routes = oldParaRoutesFrom(source);
+  const hidden = routes.filter((route) => HIDDEN_PARA_IDS.includes(route.paraId));
+  assert.deepEqual(
+    hidden.map((route) => route.name),
+    ['HEALTH_CHECK', 'HEALTH_CHECK', 'HEALTH_CHECK'],
+  );
+  const built = oldParaRouteFiles(source);
+  const index = JSON.parse(built[0][1]);
+  assert.equal(index.routes.length, ROUTE_COUNT - HIDDEN_PARA_IDS.length);
+  assert.ok(index.routes.every((row) => !HIDDEN_PARA_IDS.includes(row[0])));
+  assert.ok(
+    index.routes.every((row) => row[2] !== 'HEALTH_CHECK'),
+    'no other test row slipped in',
+  );
+  for (const [name] of built)
+    assert.ok(!HIDDEN_PARA_IDS.some((paraId) => name === `${paraId.toLowerCase()}.json`), name);
 });
