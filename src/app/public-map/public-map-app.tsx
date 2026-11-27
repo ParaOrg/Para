@@ -28,7 +28,7 @@ import { MapCreditsDock } from '@/features/routes/map/map-credits-dock';
 import { MapCreditsSheet } from '@/features/routes/map/map-credits-sheet';
 import { METRO_MANILA, MapView } from '@/features/routes/map/map-view';
 import { openOnRoutes } from '@/features/routes/map/open-on-routes';
-import { RouteCards } from '@/features/routes/map/route-cards';
+import { RouteCardLayer } from '@/features/routes/map/route-card-layer';
 import { useFootbridges } from '@/features/routes/map/use-footbridges';
 import { useMapCredits } from '@/features/routes/map/use-map-credits';
 import { useRouteCards } from '@/features/routes/map/use-route-cards';
@@ -201,7 +201,7 @@ export function PublicMapApp() {
           </div>
         )}
         <MapViewCorner map={map} isMapLoaded={isMapLoaded} />
-        <RouteCards
+        <RouteCardLayer
           map={map}
           saved={saved}
           hotspots={hotspots}

@@ -10,7 +10,7 @@ import type { Timeline } from '../model/timeline';
 
 type Camera<V extends Direction, S extends Hotspot> = RouteCardsState<V, S>['camera'];
 
-/** What a page's trip card is handed by RouteCards: the open trip, and what its buttons do. */
+/** What a page's trip card is handed by RouteCardLayer: the open trip, and what its buttons do. */
 export interface OpenTrip<V extends Direction, S extends Hotspot> {
   direction: V;
   directions: readonly V[];
@@ -19,15 +19,21 @@ export interface OpenTrip<V extends Direction, S extends Hotspot> {
   livery: Livery;
   /** The ride on it: the picked hintuan, the start, the end (useRideTo). */
   ride: Camera<V, S>['ride'];
-  /** How far the ride to the picked hintuan runs: the full line's, none while only its overview is here. */
+  /**
+   * How far the ride to the picked hintuan runs: the full line's, none while only its overview is.
+   */
   pickedMetres: number | undefined;
-  /** The walk from the trip's end to a landmark made the goal, in words; null unless that end is picked. */
+  /**
+   * The walk from the trip's end to the landmark made the goal, in words; null unless it is picked.
+   */
   walk: Camera<V, S>['walk'];
   tripDock: Camera<V, S>['tripDock'];
   /** The sheets' shared height. */
   height: SheetHeight;
   switchTrip: Camera<V, S>['switchTrip'];
-  /** "Other routes": that route's trip in this one's place, leaving to what this one was picked from. */
+  /**
+   * "Other routes": that route's trip in this one's place, back to what this one was picked from.
+   */
   otherRoute: Camera<V, S>['otherRoute'];
   /** The trip's ‹ or ✕: back to what it was picked from, or everything closed. */
   leaveTrip: () => void;
@@ -38,10 +44,9 @@ export interface OpenTrip<V extends Direction, S extends Hotspot> {
     setStart: () => void;
     removeStart: () => void;
   } | null;
-  hasController: boolean;
 }
 
-/** What a page's hotspot card is handed by RouteCards: the place picked, and what its rows do. */
+/** What a page's hotspot card is handed by RouteCardLayer: the place picked, what its rows do. */
 export interface OpenPlace<V extends Direction, S extends Hotspot> {
   /** The box picked; another box of the place keeps the card as it is. */
   hotspot: S;
@@ -96,7 +101,6 @@ export function openTripOf<V extends Direction, S extends Hotspot>(
           removeStart: ride.removeStart,
         }
       : null,
-    hasController: options.hasController,
   };
 }
 

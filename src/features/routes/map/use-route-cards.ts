@@ -9,22 +9,15 @@ import { useLoopTip } from './use-loop-tip';
 import { useMapFloats } from './use-map-floats';
 import type { useSavedHotspots } from './use-saved-hotspots';
 import type { useSavedRoutes } from './use-saved-routes';
-import { useBackClosesCards } from '../cards/use-back-closes-cards';
+import { useBackClosesCards, type Hush } from '../cards/use-back-closes-cards';
 import { useTripTimeline } from '../cards/use-trip-timeline';
 import type { Hotspot } from '../model/hotspots';
 import type { CommuterWhere } from '../model/loop-tip';
 import type { Direction } from '../model/routes';
 
 /**
- * The page's wrap for ‹ and ✕ (the locator's useGazeHush), typed by its shape so routes never
- * imports the locator: a move it wraps hushes the dot's gaze, and no move stays none.
+ * How a page wants the route cards to behave; an optional switch defaults to the public map's way.
  */
-export interface Hush {
-  (go: () => void): () => void;
-  (go: (() => void) | null): (() => void) | null;
-}
-
-/** How a page wants the route cards to behave; each optional switch defaults to the public map's way. */
 export interface RouteCardsOptions {
   /** Wraps the cards' ‹ and ✕ and Back, so going back hushes the dot's gaze (useGazeHush). */
   hush: Hush;
@@ -35,20 +28,13 @@ export interface RouteCardsOptions {
   where?: RefObject<CommuterWhere | null> | null;
   /** A hintuan can be picked on the trip and on the map, and a ride's start set (the env flag). */
   isRidePickingOn: boolean;
-  /**
-   * A RouteCard tapped off its rows selects the card, one at a time, its directions alone lit,
-   * instead of opening its first row's trip (RouteCardStack's `selection`). Off: the public map's.
-   */
-  isCardSelectable?: boolean;
-  /** The sheets carry the Controller bar (RouteListController). Off: the public map's have none. */
-  hasController?: boolean;
 }
 
 /**
  * The route cards' shared state, for the public map and later the studio: the route list, a
  * hotspot's card and the trip opened from either (useCardStack), the camera with them
  * (useCardCamera), what the lit routes wear (useLitRides), the open trip's timeline and a loop's
- * tip, and what Back, Escape and the empty map tapped close. RouteCards draws it.
+ * tip, and what Back, Escape and the empty map tapped close. RouteCardLayer draws it.
  *
  * The page calls it before its own useTurn: the cards' camera (useCardCamera) then moves before
  * the locator's camera, which runs at the page's turn after it (commit-turn.ts) and so moves last.
@@ -57,13 +43,7 @@ export function useRouteCards<V extends Direction, S extends Hotspot>(
   map: MapLibreMap | null,
   saved: ReturnType<typeof useSavedRoutes<V>>,
   hotspots: ReturnType<typeof useSavedHotspots<S>>,
-  {
-    hush,
-    where = null,
-    isRidePickingOn,
-    isCardSelectable = false,
-    hasController = false,
-  }: RouteCardsOptions,
+  { hush, where = null, isRidePickingOn }: RouteCardsOptions,
 ) {
   // A loop's trip leaves from where the commuter is, or the place it was opened from.
   const tipId = useLoopTip(saved.selected, hotspots, { where, openedFrom: hotspots.selected });
@@ -97,7 +77,7 @@ export function useRouteCards<V extends Direction, S extends Hotspot>(
     backToTrip: hush(cards.backToTrip),
     /** A hotspot's card's ✕, hushed. */
     closePlace: hush(cards.closeHotspot),
-    options: { isRidePickingOn, isCardSelectable, hasController },
+    options: { isRidePickingOn },
   };
 }
 

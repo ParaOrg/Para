@@ -8,12 +8,11 @@ import type { RouteCardsState } from './use-route-cards';
 import type { useSavedHotspots } from './use-saved-hotspots';
 import type { useSavedRoutes } from './use-saved-routes';
 import { RouteCardList } from '../cards/route-card-list';
-import type { PickedPlace } from '../cards/route-card-stack';
 import type { Hotspot } from '../model/hotspots';
 import { placeKey } from '../model/places';
 import type { Direction } from '../model/routes';
 
-interface RouteCardsProps<V extends Direction, S extends Hotspot> {
+interface RouteCardLayerProps<V extends Direction, S extends Hotspot> {
   map: MapLibreMap | null;
   saved: ReturnType<typeof useSavedRoutes<V>>;
   hotspots: ReturnType<typeof useSavedHotspots<S>>;
@@ -40,7 +39,7 @@ interface RouteCardsProps<V extends Direction, S extends Hotspot> {
  * before the hotspot's card on purpose: the suites' first `card` is then the trip. The page
  * draws the two cards (`renderTrip`, `renderPlace`), so each app keeps its own.
  */
-export function RouteCards<V extends Direction, S extends Hotspot>({
+export function RouteCardLayer<V extends Direction, S extends Hotspot>({
   map,
   saved,
   hotspots,
@@ -50,17 +49,10 @@ export function RouteCards<V extends Direction, S extends Hotspot>({
   listEnd,
   besideControls,
   underCards,
-}: RouteCardsProps<V, S>) {
-  const { cards, camera, listUp, floats, options } = routeCards;
+}: RouteCardLayerProps<V, S>) {
+  const { cards, camera, listUp, floats } = routeCards;
   const trip = openTripOf(saved, routeCards);
   const place = openPlaceOf(saved, hotspots, routeCards);
-  // With selectable cards, a RouteCard tapped off its rows is selected, its directions alone lit.
-  const selection = options.isCardSelectable
-    ? {
-        selected: saved.highlight?.where === 'list' ? saved.highlight.card : null,
-        onSelect: (p: PickedPlace | null) => saved.highlightCard(p && { where: 'list', ...p }),
-      }
-    : undefined;
 
   return (
     <>
@@ -94,11 +86,9 @@ export function RouteCards<V extends Direction, S extends Hotspot>({
           listing={saved.listing}
           onFlip={camera.flipList}
           modeFilter={{ picks: saved.modePicks, onPicks: camera.filterList }}
-          selection={selection}
           onRoute={camera.openTrip}
           onHotspot={(s) => cards.openHotspot(s.id)}
           onClose={cards.closeAll}
-          hasController={options.hasController}
           end={listEnd}
         />
       )}
