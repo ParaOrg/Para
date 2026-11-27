@@ -26,7 +26,7 @@ import {
 
 interface PlaygroundToolsProps {
   map: MapLibreMap | null;
-  /** A draft tapped on the map, opened into its sidebar (useOpenDraft). */
+  /** A draft tapped on the map, opened to read first (useOpenDraft). */
   onOpenDraft: ComponentProps<typeof StudioDrafts>['onOpenDraft'];
   session: Session | null;
   auth: ReturnType<typeof useAuthFlow>;

@@ -1,6 +1,8 @@
 import { hotspotRing, type HotspotRow } from '@/features/routes/model/hotspots';
 import type { DirectionDrawing, DirectionRow } from '@/features/routes/model/routes';
 
+import { useDraftTrip } from './use-draft-trip';
+import { useIsWideScreen } from './use-is-wide-screen';
 import { isAnothersDraft } from '../data/draft-lock';
 import type { DraftRow } from '../data/review-schema';
 import { useFetchHotspotToEdit } from '../data/use-hotspot-to-edit-query';
@@ -17,23 +19,26 @@ export const CANNOT_OPEN = 'This draft cannot be opened: its line or outline cou
 
 interface UseOpenDraftOptions {
   /** The map's directions, approved: a draft of a route on the map opens through one of them. */
-  directions: readonly DirectionRow[];
+  saved: { directions: readonly DirectionRow[] };
   /** The directions of routes that are drafts only (useDraftOnly). */
   draftDirections: readonly DirectionRow[];
   /** The map's hotspots, approved, and those that are drafts only. */
   hotspots: readonly HotspotRow[];
   draftHotspots: readonly HotspotRow[];
-  /** The signed-in editor, whose own drafts open into editing. */
+  /** The signed-in editor, whose own drafts open in the route line detail or their card. */
   userId: string | null;
-  draw: Pick<Drawing, 'load' | 'loadArea'>;
+  draw: Pick<Drawing, 'load' | 'loadArea' | 'drawing'>;
   /** Opens a direction's drawing to edit: the editor's own draft of it when there is one (useFollow). */
   opening: (
     v: DirectionRow,
     then: (d: DirectionDrawing) => void,
     options?: { isToEdit?: boolean },
   ) => Promise<void>;
-  /** Opens a direction's card, where another editor's draft says who is changing it. */
-  openTrip: (v: { id: string }) => void;
+  /**
+   * Opens a direction's card or detail, where another editor's draft says who is changing it;
+   * closes them for a route that is a draft only, whose detail takes their place.
+   */
+  cards: { open: boolean; openTrip: (v: { id: string }) => void; closeAll: () => void };
   /** Opens a hotspot's card, which opens its sidebar beside the map on a computer. */
   openPlace: (hotspotId: string) => void;
   /** Says what went wrong opening it. */
@@ -41,26 +46,36 @@ interface UseOpenDraftOptions {
 }
 
 /**
- * A draft tapped on the map, opened into its sidebar. The editor's own draft of a route opens
- * Edit route on it, a route that is a draft only included; another editor's opens the route's
- * card, which says who is changing it. A tapped line opens its own direction; a marker, which
- * names none, the route's first drawn one. A hotspot on the map opens its card, which opens its
- * sidebar; one that is a draft only opens its outline to edit. Another editor's draft of a subject
- * with no approved row has no card: 'held', and the map shows its sheet (HeldDraftSheet).
+ * A draft tapped on the map, opened to read first: editing starts from Edit Route. A draft of a
+ * route on the map opens the route's card (its route line detail on a computer), which says when
+ * another editor is changing it; a way of it only the draft draws opens Edit Route on the
+ * editor's own draft. A route that is a draft only opens on a computer in the route line
+ * detail from its draft (`trip`); a phone has no card for it and opens Edit Route on it. A tapped
+ * line opens its own direction; a marker, which names none, the route's first drawn one. A hotspot
+ * on the map opens its card, which opens its sidebar; one that is a draft only opens its outline to
+ * edit. Another editor's draft of a subject with no approved row has no card: 'held', and the map
+ * shows its sheet (HeldDraftSheet).
  */
 export function useOpenDraft({
-  directions,
+  saved,
   draftDirections,
   hotspots,
   draftHotspots,
   userId,
   draw,
   opening,
-  openTrip,
+  cards,
   openPlace,
   setNotice,
 }: UseOpenDraftOptions) {
   const fetchToEdit = useFetchHotspotToEdit();
+  const isWideScreen = useIsWideScreen();
+  const draftTrip = useDraftTrip({
+    draftDirections,
+    isCardOpen: cards.open,
+    isDrawing: draw.drawing,
+    isWideScreen,
+  });
   const isAnothers = (draft: DraftRow) => userId !== null && isAnothersDraft(draft, userId);
 
   // A draft whose payload cannot be read says so.
@@ -84,21 +99,45 @@ export function useOpenDraft({
     return 'opened';
   };
 
-  return (draft: DraftRow, directionId?: string): DraftOpening => {
+  const open = (draft: DraftRow, directionId?: string): DraftOpening => {
     if (draft.kind === 'hotspot') return openHotspot(draft);
-    const isDrawnOf = (v: DirectionRow) =>
-      v.routeId === draft.subject_id &&
-      v.shape !== null &&
-      (directionId === undefined || v.id === directionId);
-    const approved = directions.find(isDrawnOf);
-    if (approved && isAnothers(draft)) {
-      openTrip(approved);
+    const isTapped = (v: DirectionRow) => directionId === undefined || v.id === directionId;
+    const isDrawn = (v: DirectionRow) => v.shape !== null;
+    const approvedWays = saved.directions.filter((v) => v.routeId === draft.subject_id);
+    const approved = approvedWays.find((v) => isDrawn(v) && isTapped(v));
+    if (approved) {
+      draftTrip.open(null);
+      cards.openTrip(approved);
       return 'opened';
     }
-    const direction = approved ?? draftDirections.find(isDrawnOf);
+    // A way of a route on the map that only the draft draws (its slot, the return trip): there is
+    // no approved line of it to read. The editor's own opens Edit Route on the draft; another's,
+    // the route's drawn way, whose card says who is changing it.
+    const undrawn = approvedWays.find(isTapped);
+    if (undrawn) {
+      if (!isAnothers(draft)) {
+        void opening(undrawn, draw.load, { isToEdit: true });
+        return 'opened';
+      }
+      const drawn = approvedWays.find(isDrawn);
+      if (!drawn) return 'held';
+      cards.openTrip(drawn);
+      return 'opened';
+    }
+    const direction = draftDirections.find(
+      (v) => v.routeId === draft.subject_id && isDrawn(v) && isTapped(v),
+    );
     if (!direction) return cannotOpen();
     if (isAnothers(draft)) return 'held';
-    void opening(direction, draw.load, { isToEdit: true });
+    if (!isWideScreen) {
+      void opening(direction, draw.load, { isToEdit: true });
+      return 'opened';
+    }
+    // The detail takes the left panel: an approved route's or a hotspot's card leaves it.
+    cards.closeAll();
+    draftTrip.open(direction.id);
     return 'opened';
   };
+
+  return { open, trip: draftTrip.trip };
 }

@@ -10,7 +10,9 @@ import type { DraftRow } from '../data/review-schema';
 
 const SRC = 'studio-draft-lines';
 const LINE = 'studio-draft-lines-line';
-const HIT = 'studio-draft-lines-hit';
+/** The drafts' lines as a tap finds them: a page's empty-map tap leaves them to DraftLines. */
+export const DRAFT_LINES_HIT = 'studio-draft-lines-hit';
+const HIT = DRAFT_LINES_HIT;
 
 /** Dash and gap, in line widths: what tells a draft from a saved route without colour. */
 const DRAFT_DASH = [2, 2];

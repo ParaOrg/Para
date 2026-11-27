@@ -270,8 +270,10 @@ check(
   );
   const text = await detail.innerText();
   check(
-    '  Transit line information with the full mode name and no EAT row',
-    /Transport mode\s+Jeepney/.test(text) && !/\bEAT\b/.test(text),
+    '  the summary card says Published, and Transit line information the mode as a trip names it',
+    /Status\s+Published/.test(text) &&
+      /Transport mode\s+Jeep\b/.test(text) &&
+      !/\bEAT\b/.test(text),
   );
   await detail.getByRole('button', { name: 'Export' }).click();
   const formats = await page.getByRole('menuitem').allInnerTexts();
@@ -330,6 +332,17 @@ check(
     (await b.page.getByTestId('sidebar').count()) === 0 &&
     (await b.page.getByRole('button', { name: 'Edit route' }).count()) === 0,
 );
+{
+  // On a computer that card is the route line detail, the lock's notice above its tabs.
+  const detail = b.page.getByTestId('route-line-detail');
+  const notice = await detail.getByText('Being changed by Marisol').boundingBox();
+  const tabs = await detail.getByRole('tablist').boundingBox();
+  check(
+    '  on a computer, the route line detail, with the lock notice above its tabs',
+    !!notice && !!tabs && notice.y + notice.height <= tabs.y,
+    JSON.stringify({ notice, tabs }),
+  );
+}
 await openRouteFromPlace(b.page);
 await b.page.getByText('Being changed by Marisol').waitFor({ timeout: 10000 });
 check(
@@ -363,9 +376,17 @@ check(
 );
 
 // ---- A discards from the sidebar; B can claim the route.
-// A tap on A's own dashed line opens it into Edit route, whose footer has Discard for its maker.
+// A tap on A's own dashed line opens the route line detail to read first; its Edit route opens
+// A's draft, whose footer has Discard for its maker.
 a.page.on('dialog', (dialog) => void dialog.accept());
 await openRoute(a.page);
+const aDetail = a.page.getByTestId('route-line-detail');
+await aDetail.waitFor({ timeout: 10000 });
+check(
+  "A's tap on A's own draft line opens the route line detail, not editing",
+  (await a.page.getByTestId('sidebar').count()) === 0,
+);
+await aDetail.getByRole('button', { name: 'Edit route' }).click();
 const aPanel = a.page.getByTestId('route-panel');
 await aPanel.getByRole('button', { name: 'Discard', exact: true }).waitFor({ timeout: 10000 });
 check(

@@ -51,12 +51,16 @@ const BACK_NOT_DRAWN: DirectionTab[] = [
   { direction: direction('d2', true, false), label: 'To B. Silang Kanan Ph 5', isDrawn: false },
 ];
 
-const FACTS = [
+const SUMMARY = [
   { label: 'Origin', value: 'B. Silang Kanan Ph 5' },
   { label: 'Destination', value: 'SM Fairview via Maligaya' },
   { label: 'Via', value: 'Maligaya' },
+  { label: 'Status', value: 'Draft', isAlert: true },
+];
+
+const FACTS = [
   { label: 'Regular fare', value: '₱23 - 24' },
-  { label: 'Transport mode', value: 'Jeepney' },
+  { label: 'Transport mode', value: 'Jeep' },
   { label: 'Distance', value: '11.3km' },
   { label: 'Stops', value: '5' },
 ];
@@ -97,6 +101,7 @@ const meta = {
     onSelect: fn(),
     onAddRoute: fn(),
     actions: <RouteLineActions exporter={exporter} onEdit={fn()} onExtend={fn()} onDelete={fn()} />,
+    summary: SUMMARY,
     facts: FACTS,
     destinations: [
       { id: 'o1', to: 'Philcoa', via: 'Maligaya' },
@@ -120,6 +125,9 @@ type Story = StoryObj<typeof meta>;
 export const TwoWays: Story = {
   play: async ({ args, canvasElement }) => {
     const canvas = within(canvasElement);
+    await expect(
+      within(canvas.getByTestId('route-summary')).getByText('Draft', { exact: true }),
+    ).toHaveClass('text-text-error');
     await expect(canvas.getByRole('tab', { name: 'Northbound' })).toHaveAttribute(
       'aria-selected',
       'true',
@@ -171,6 +179,24 @@ export const ReadOnly: Story = {
     await expect(canvas.getByText('Not drawn yet')).toBeVisible();
     await expect(canvas.queryByRole('button', { name: /Edit Route|Extend|More/ })).toBeNull();
     await expect(canvas.getByRole('button', { name: 'Export' })).toBeVisible();
+  },
+};
+
+/**
+ * A route that is a draft only, opened from the editor's draft: Status Draft, Edit Route, and
+ * no Extend, ⋮ Delete or "+ Add route", which work on approved rows.
+ */
+export const DraftOnly: Story = {
+  args: {
+    tabs: BACK_NOT_DRAWN,
+    onAddRoute: undefined,
+    actions: <RouteLineActions exporter={exporter} onEdit={fn()} />,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByText('Draft', { exact: true })).toBeVisible();
+    await expect(canvas.getByRole('button', { name: 'Edit Route' })).toBeVisible();
+    await expect(canvas.queryByRole('button', { name: /Extend|More|\+ Add route/ })).toBeNull();
   },
 };
 
@@ -236,10 +262,46 @@ export const ExportFailed: Story = {
   },
 };
 
+/**
+ * A published route with no draft waiting and no via: its summary card has no Via row, and its
+ * Status reads Published in Content/quaternary.
+ */
+export const Published: Story = {
+  args: {
+    summary: [
+      { label: 'Origin', value: 'B. Silang Kanan Ph 5' },
+      { label: 'Destination', value: 'SM Fairview' },
+      { label: 'Status', value: 'Published' },
+    ],
+  },
+  play: async ({ canvasElement }) => {
+    const summary = within(within(canvasElement).getByTestId('route-summary'));
+    await expect(summary.queryByText('Via')).toBeNull();
+    await expect(summary.getByText('Published')).not.toHaveClass('text-text-error');
+  },
+};
+
+/** Its draft not read yet, or not readable: Status reads "--" until it is known. */
+export const StatusUnknown: Story = {
+  args: {
+    summary: [
+      { label: 'Origin', value: 'B. Silang Kanan Ph 5' },
+      { label: 'Destination', value: 'SM Fairview' },
+      { label: 'Status', value: '--' },
+    ],
+  },
+};
+
 /** Long names and many stops: the names wrap and the panel scrolls on its own. */
 export const LongContent: Story = {
   args: {
     label: 'Bagong Silang Phase 5 → SM City Fairview Main Terminal',
+    summary: [
+      { label: 'Origin', value: 'Bagong Silang Phase 5 Kanan Barangay Hall' },
+      { label: 'Destination', value: 'SM City Fairview Main Terminal via Quirino Highway' },
+      { label: 'Via', value: 'Quirino Highway' },
+      { label: 'Status', value: 'Draft', isAlert: true },
+    ],
     stops: Array.from({ length: 18 }, (_, i) =>
       stop(`l${i}`, i % 4 === 0 ? `North Caloocan City Hall Annex Building ${i}` : `Stop ${i}`),
     ),

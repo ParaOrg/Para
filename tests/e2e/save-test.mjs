@@ -743,14 +743,12 @@ const exitEdit = async () => {
   await waitFor(async () => (await page.getByTestId('sidebar').count()) === 0);
 };
 /**
- * Out of Edit Route and back on the outbound's detail. With the editor's own draft of the route
- * (the boards'), a tap on its line opens Edit Route again; Exit from there leaves the detail open.
+ * Out of Edit Route and back on the outbound's detail: a tap on its line opens the detail, the
+ * editor's own draft of the route (the boards') included, to read before Edit Route edits it.
  */
 const backToDetail = async () => {
   await exitEdit();
   await openCard(OUT[1]);
-  await waitFor(async () => (await page.getByTestId('sidebar').count()) === 1);
-  await exitEdit();
   await page.getByTestId('route-line-detail').waitFor({ timeout: 10000 });
 };
 await openSignboards();

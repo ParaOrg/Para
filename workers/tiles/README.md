@@ -25,7 +25,7 @@ Bucket layout (written by the monthly build, `.scratch/own-tiles/issues/02-month
 
 ## Deploy
 
-1. `.github/workflows/deploy-tiles.yml` deploys the Worker from `main` whenever `workers/tiles/` changes, and uploads a preview version from `staging`; "Run workflow" on `main` deploys it by hand. It runs `npx wrangler deploy` in `workers/tiles`, with the secrets `docs/operations.md` (How the site deploys) lists.
+1. `.github/workflows/deploy-tiles.yml` deploys the Worker from `main` whenever `workers/tiles/` changes, and a Worker Preview (`wrangler preview`) from `staging`; "Run workflow" on `main` deploys it by hand. It runs `npx wrangler deploy` in `workers/tiles`, with the secrets `docs/operations.md` (How the site deploys) lists.
 2. Cloudflare's own Workers Builds, which deployed it before, is switched off for `para-tiles` (Settings → Build).
 3. The R2 binding is already in `wrangler.jsonc`: `TILES` → the bucket `parapo-tiles`. In the Worker's **Settings → Bindings** it should show as an R2 bucket. If the bucket has another name, change `bucket_name` in `wrangler.jsonc`.
 4. Open `https://para-tiles.<account>.workers.dev/health`. It answers once the first monthly build has put `tiles/current.json` in the bucket; before that it says the tiles are unavailable (`503`).

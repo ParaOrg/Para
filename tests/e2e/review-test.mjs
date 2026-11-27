@@ -28,7 +28,8 @@ const errors = [];
 page.on('pageerror', (error) => errors.push(error.message));
 await bareStyle(page);
 await page.goto(`${BASE}/studio/`);
-// Every draft has a mark on the map; a tap opens it into its sidebar (useOpenDraft).
+// Every draft has a mark on the map; a tap opens it (useOpenDraft): a route's in its route line
+// detail first, a place that is a draft only in its sidebar.
 const marks = page.getByRole('button', { name: /^Draft: / });
 await marks.first().waitFor();
 const shot = (name) => page.screenshot({ path: `${out}/${name}.png` });
@@ -130,6 +131,8 @@ let isConflictSeen = false;
 for (let tries = 0; tries < 3 && !isConflictSeen; tries++) {
   const routeMarks = page.getByRole('button', { name: /^Draft: (?!Browser-drawn)/ });
   await routeMarks.first().dispatchEvent('click');
+  // The route line detail first; its Edit Route opens the draft in its sidebar.
+  await page.getByTestId('route-line-detail').getByRole('button', { name: 'Edit route' }).click();
   await routePanel.waitFor();
   await routePanel.getByRole('button', { name: 'Approve', exact: true }).waitFor();
   await routePanel.getByRole('button', { name: 'Approve', exact: true }).click();

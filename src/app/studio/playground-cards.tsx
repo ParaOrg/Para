@@ -12,9 +12,11 @@ import {
   type useDeleteActions,
   type useDrawing,
   type useFollow,
+  type useOpenDraft,
   type useStudioTrip,
 } from '@/features/studio';
 
+import { PlaygroundDraftTrip } from './playground-draft-trip';
 import { PlaygroundList } from './playground-list';
 import { PlaygroundMarks } from './playground-marks';
 import { PlaygroundTrip } from './playground-trip';
@@ -28,10 +30,12 @@ interface PlaygroundCardsProps {
   camera: ReturnType<typeof useCardCamera<DirectionRow, HotspotRow>>;
   trip: ReturnType<typeof useStudioTrip>;
   canEdit: boolean;
-  /** A computer's screen: a tapped hotspot opens in the sidebar, a trip in the left panel. */
+  /** A computer's screen: a trip opens in the left panel. */
   isWideScreen: boolean;
   /** The left panel area's host for the route list and the route line detail. */
   leftPanel: HTMLElement | null;
+  /** A route that is a draft only, open from its draft (useOpenDraft). */
+  draftTrip: ReturnType<typeof useOpenDraft>['trip'];
   opening: ReturnType<typeof useFollow>['opening'];
   deletes: ReturnType<typeof useDeleteActions>;
   hush: ReturnType<typeof useGazeHush>['hush'];
@@ -52,6 +56,7 @@ export function PlaygroundCards({
   canEdit,
   isWideScreen,
   leftPanel,
+  draftTrip,
   opening,
   deletes,
   hush,
@@ -93,6 +98,18 @@ export function PlaygroundCards({
         hush={hush}
         onDrawReturnTrip={onDrawReturnTrip}
       />
+      {draftTrip && isWideScreen && leftPanel && !draw.drawing && (
+        <PlaygroundDraftTrip
+          map={map}
+          trip={draftTrip}
+          saved={saved}
+          hotspots={hotspots}
+          draw={draw}
+          canEdit={canEdit}
+          leftPanel={leftPanel}
+          opening={opening}
+        />
+      )}
 
       {/*
         A hotspot's card, its routes as RouteCards; it stays behind the trip
@@ -109,7 +126,6 @@ export function PlaygroundCards({
           draw={draw}
           height={height}
           canEdit={canEdit}
-          opensInSidebar={isWideScreen}
           clearOfOpen={clearOfOpen}
           onPickOnPlaceCard={pickOnPlaceCard}
           onOpenTrip={openTrip}
