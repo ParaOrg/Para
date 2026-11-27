@@ -67,20 +67,23 @@ export function useDeleteActions({
       onSignInNeeded();
       return;
     }
+    // Once the editor's own draft is discarded, a later failure must say so: it is gone.
+    let hasDiscarded = false;
     try {
       const ownDraft = await draftOf('route', v.routeId);
       await assertNotAnothersDraft(ownDraft);
-      const name = v.route?.name;
       const target = isLoop(v)
-        ? `the ${LOOP_WORD.toLowerCase()} "${name}"`
-        : `"${name}" — ${v.name}`;
-      const confirmation = ownDraft
-        ? `Delete "${name}"? Your unapproved changes to this route will be discarded.`
-        : `Delete ${target}?`;
-      if (!window.confirm(confirmation)) return;
+        ? `the ${LOOP_WORD.toLowerCase()} "${v.route?.name}"`
+        : `"${v.route?.name}" — ${v.name}`;
+      // A draft whose maker is gone is nobody's, so it is not called "your" changes.
+      const discardNote = ownDraft
+        ? ` ${ownDraft.editor_id === null ? 'Unapproved' : 'Your unapproved'} changes to this route will be discarded.`
+        : '';
+      if (!window.confirm(`Delete ${target}?${discardNote}`)) return;
       if (ownDraft) {
         const discarded = await runReviewCommand({ action: 'discard', draft: ownDraft });
         if (discarded.code !== 'discarded') throw new Error(reviewMessage(discarded));
+        hasDiscarded = true;
       }
       const stored = await deleteDirectionDraft(v);
       const refusal = draftRefusal(stored);
@@ -96,7 +99,12 @@ export function useDeleteActions({
       }
       setNotice(approved ? reviewMessage(approved) : DRAFTED);
     } catch (e) {
-      setNotice(e instanceof Error ? e.message : String(e));
+      const reason = e instanceof Error ? e.message : String(e);
+      setNotice(
+        hasDiscarded
+          ? `Your draft was discarded, but the delete did not go through: ${reason}`
+          : reason,
+      );
     }
   };
 
