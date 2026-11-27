@@ -8,6 +8,7 @@ import { OtherDestinations } from './other-destinations';
 import { RouteLineTabs, tabIdOf } from './route-line-tabs';
 import { RouteSignboardsSection } from './route-signboards-section';
 import { RouteStopsSection } from './route-stops-section';
+import { RouteSummaryCard, type RouteSummaryFact } from './route-summary-card';
 import { TransitLineInfo, type TransitLineFact } from './transit-line-info';
 
 interface RouteLineDetailProps {
@@ -24,6 +25,8 @@ interface RouteLineDetailProps {
   onAddRoute?: (directionId: string) => void;
   /** Edit Route, Extend, Export and ⋮ (RouteLineActions). */
   actions: ReactNode;
+  /** The summary card's rows (routeSummaryFacts). */
+  summary: readonly RouteSummaryFact[];
   facts: readonly TransitLineFact[];
   destinations: readonly OtherRoute[];
   onOpenDestination: (id: string) => void;
@@ -33,9 +36,10 @@ interface RouteLineDetailProps {
 }
 
 /**
- * The studio's route line detail on a computer (4905:28656), in the left panel area, 384 across
- * and the full height: the tabs along its top, then its actions and its sections, 24 apart,
- * scrolling on their own: Transit line information, Other destinations, Signboard, Route Stops.
+ * The studio's route line detail on a computer (4906:29265), in the left panel area, 384 across
+ * and the full height: the tabs along its top, then its actions, the summary card and its
+ * sections, 24 apart, scrolling on their own: Transit line information, Other destinations,
+ * Signboard, Route Stops.
  */
 export function RouteLineDetail({
   label,
@@ -45,6 +49,7 @@ export function RouteLineDetail({
   onSelect,
   onAddRoute,
   actions,
+  summary,
   facts,
   destinations,
   onOpenDestination,
@@ -77,6 +82,7 @@ export function RouteLineDetail({
         className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto px-4 pt-6 pb-4"
       >
         {actions}
+        <RouteSummaryCard facts={summary} />
         <TransitLineInfo facts={facts} />
         <OtherDestinations destinations={destinations} onOpen={onOpenDestination} />
         <RouteSignboardsSection signboards={signboards} />

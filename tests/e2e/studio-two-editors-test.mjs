@@ -270,8 +270,10 @@ check(
   );
   const text = await detail.innerText();
   check(
-    '  Transit line information with the full mode name and no EAT row',
-    /Transport mode\s+Jeepney/.test(text) && !/\bEAT\b/.test(text),
+    '  the summary card says Published, and Transit line information the mode as a trip names it',
+    /Status\s+Published/.test(text) &&
+      /Transport mode\s+Jeep\b/.test(text) &&
+      !/\bEAT\b/.test(text),
   );
   await detail.getByRole('button', { name: 'Export' }).click();
   const formats = await page.getByRole('menuitem').allInnerTexts();
