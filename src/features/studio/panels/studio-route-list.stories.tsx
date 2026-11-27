@@ -209,8 +209,8 @@ export const Hidden: Story = {
 };
 
 /**
- * Out of reach under an inert page (the map's credits open over it) or a modal dialog (an account
- * dialog): Escape is theirs, and the list stays.
+ * Out of reach under an inert page (the map's credits open over it): Escape is the credits', and
+ * the list stays. A modal account dialog leaves it out of reach the same way (isPanelReachable).
  */
 export const UnderAnInertPage: Story = {
   decorators: [
@@ -220,10 +220,9 @@ export const UnderAnInertPage: Story = {
       </div>
     ),
   ],
-  play: async ({ args, canvasElement }) => {
-    const list = within(canvasElement).getByTestId('chooser');
-    // Its Escape is listening once its focus effect has run; inert, the focus stays out.
-    await waitFor(() => expect(list).not.toHaveFocus());
+  play: async ({ args }) => {
+    // Inert, it cannot take the focus to show its effects have run: a moment lets its Escape
+    // listener attach, so the check below is a real one.
     await new Promise((settle) => setTimeout(settle, 100));
     await userEvent.keyboard('{Escape}');
     await expect(args.onClose).not.toHaveBeenCalled();
