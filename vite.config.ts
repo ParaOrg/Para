@@ -66,6 +66,10 @@ export default defineConfig({
     // silently land on the production Site URL instead. Fail loudly instead.
     port: 5173,
     strictPort: true,
+    // Agents build in git worktrees inside the checkout (.claude/worktrees). Watched, each of their
+    // edits and builds reloads every page this server serves, mid-suite: a browser suite then sees
+    // the page load twice (commuter-test's "fetched once" check).
+    watch: { ignored: ['**/.claude/worktrees/**'] },
   },
   build: {
     // Three front doors, one build: the public map at /, the editor at /studio/
