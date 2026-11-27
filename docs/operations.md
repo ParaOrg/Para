@@ -25,7 +25,7 @@ The addresses (checked live 2026-10-28):
 - `www.para-commute.org`: the `para` Worker, through a Workers route on the zone.
 - `tiles.para-commute.org`: the `para-tiles` Worker, through a Workers route.
 - `para-commute.org`: a redirect rule to `www`, 301, with Always Use HTTPS on.
-- Staging: `staging-para.para-ph-info.workers.dev`, the `para` Worker's preview version with the alias `staging`, uploaded by `deploy.yml` on every push to `staging`. The old account's `staging-parapo.villaralvorovic2.workers.dev` is gone: the owner deleted its Worker on 2026-11-23, and the address answers 404.
+- Staging: `staging-para.para-ph-info.workers.dev`, the `para` Worker's Preview named `staging` (`wrangler preview`), deployed by `deploy.yml` on every push to `staging`. The old account's `staging-parapo.villaralvorovic2.workers.dev` is gone: the owner deleted its Worker on 2026-11-23, and the address answers 404.
 
 ## Costs and limits
 
@@ -193,8 +193,8 @@ GitHub Actions builds and deploys both Workers; Cloudflare's own Workers Builds 
 | Workflow | When | What it does |
 | --- | --- | --- |
 | `deploy.yml` | A push to `main` | `npm run build` (every guard in `check-build.mjs`), then `wrangler deploy`: production, `www.para-commute.org` |
-| `deploy.yml` | A push to `staging` | The same build, then `wrangler versions upload` with the alias `staging`: `https://staging-para.para-ph-info.workers.dev`. Production is untouched |
-| `deploy.yml` | Every pull request from this repository | The same, with the alias from the branch name, sanitised as Workers Builds did (`claude/foo` → `claude-foo-para.para-ph-info.workers.dev`), and one comment on the pull request with the link, edited on every push. A newer push cancels the older run. A branch whose name gives no valid alias (it starts with a digit, say) gets the version's own address instead |
+| `deploy.yml` | A push to `staging` | The same build, then `wrangler preview`: the Worker Preview `staging`, at `https://staging-para.para-ph-info.workers.dev`. Production is untouched |
+| `deploy.yml` | Every pull request from this repository | The same, a Preview named after the branch, at the address Workers Builds gave it (`claude/foo` → `claude-foo-para.para-ph-info.workers.dev`), and one comment on the pull request with the link, edited on every push. A newer push cancels the older run. Not `wrangler versions upload --preview-alias`: an alias cannot take an address a Preview already holds, so `staging` stayed on Workers Builds' last build |
 | `deploy-tiles.yml` | A push to `main` or `staging` that changes `workers/tiles/`, or "Run workflow" | `wrangler deploy` of `para-tiles` from `main`; a preview version from any other branch |
 
 A deploy that has started on `main` or `staging` always finishes. Pull requests from forks and from Dependabot get no secrets and skip the deploy with a notice, green; so does every run until the secrets exist. wrangler is pinned in both files (`WRANGLER_VERSION`) and fetched with `npx`, not installed with the app.

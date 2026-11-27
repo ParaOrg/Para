@@ -12,7 +12,8 @@
 // saved; a new route with its slot and its links to the two hintuans; the
 // return trip from the card's SWITCH, filling the slot; Edit route on the
 // approved revision; a signboard into the route's draft and out again;
-// Delete, approved in the same press, and refused in words when another
+// Delete, approved in the same press (discarding the editor's own draft of the route after a
+// confirm, refused on another editor's), and refused in words when another
 // editor's change makes its base stale; then Delete emptying one way while
 // the route keeps the other, then the last way, which takes the route down;
 // an ikot with no ends; a
@@ -140,7 +141,12 @@ page.on('console', (msg) => {
   if (msg.type() === 'error' && /Warning|key/.test(msg.text()))
     errors.push(msg.text().slice(0, 160));
 });
-page.on('dialog', (d) => d.accept());
+let confirmAnswer = true;
+const confirms = [];
+page.on('dialog', (d) => {
+  confirms.push(d.message());
+  return confirmAnswer ? d.accept() : d.dismiss();
+});
 await bareStyle(page, '#e8e8e8');
 await signInAsEditor(page);
 const db = await fakeStudioDb(page, seed);
@@ -673,27 +679,84 @@ await load();
 await openCard(OUT[1]);
 await page.getByTestId('route-line-detail').waitFor({ timeout: 10000 });
 
-// ---- 4a. Delete while the editor already has a draft of the route: it joins the draft
-// The signboard's draft is still the editor's, unreviewed. Approving the delete in the same
-// press would publish that draft with it, so the delete is stored in it and waits for its Approve.
+// ---- 4a. Delete while the editor already has a draft of the route: confirm, discard it, delete
+// The signboard's draft is still the editor's, unreviewed. The confirm says it is discarded, so
+// the delete is the only change approved with it.
+const ownDraft = draftOf('route', route?.id);
+const OWN_CONFIRM =
+  /^Delete ".+" — .+\? Your unapproved changes to this route will be discarded\.$/;
+// A real change waits in the own draft: a board listed, which the delete must not publish.
+const keptBoard = 'kept-board.svg';
+const ownDirection = ownDraft?.payload.directions.find((v) => v.id === outV?.id);
+if (ownDirection) ownDirection.signboards = [keptBoard];
+const stateBefore = structuredClone({
+  v: tables.route_variant,
+  r: tables.route,
+  l: tables.route_stop,
+  s: tables.stop,
+});
+confirmAnswer = false;
+confirms.length = 0;
 n = log.length;
 await pressDelete();
-await waitFor(async () => (await body()).includes('Added to your draft of'));
+await page.waitForTimeout(800);
 w = writesSince(n);
 check(
-  'Delete with a draft already open joins that draft, unapproved',
-  draftOf('route', route?.id)?.id === boardDraft?.id &&
-    draftOf('route', route?.id)?.payload.directions.find((v) => v.id === outV?.id)?.shape ===
-      null &&
-    rpcs(w, 'publish_draft').length === 0 &&
-    approvedWrites(w).length === 0,
+  'Delete with an own draft, Cancel: nothing changes',
+  confirms.length === 1 &&
+    OWN_CONFIRM.test(confirms[0] ?? '') &&
+    w.length === 0 &&
+    draftOf('route', route?.id)?.id === ownDraft?.id &&
+    draftOf('route', route?.id)?.revision === ownDraft?.revision &&
+    !!tables.route_variant.find((v) => v.id === outV?.id)?.shape,
+  `${confirms.join(' | ')}; ${said(w)}`,
+);
+confirmAnswer = true;
+n = log.length;
+await pressDelete();
+await waitFor(async () => (await page.getByRole('button', { name: 'Edit route' }).count()) === 0);
+await page.waitForTimeout(800);
+w = writesSince(n);
+check(
+  'Delete with an own draft, OK: the draft is discarded, then the direction is deleted and approved',
+  rpcs(w, 'discard_draft').length === 1 &&
+    rpcs(w, 'save_draft').length === 0 &&
+    w.findIndex((x) => x.table === 'claim_draft') >
+      w.findIndex((x) => x.table === 'discard_draft') &&
+    rpcs(w, 'publish_draft').length === 1 &&
+    tables.route_variant.find((v) => v.id === outV?.id)?.signboards.length === 0 &&
+    !draftOf('route', route?.id) &&
+    tables.route_variant.find((v) => v.id === outV?.id)?.shape === null &&
+    !(await body()).includes('Added to your draft'),
   said(w),
 );
+// The stand-in restores the approved map so the next flows start with OUT drawn.
+tables.route_variant.splice(0, tables.route_variant.length, ...stateBefore.v);
+tables.route.splice(0, tables.route.length, ...stateBefore.r);
+tables.route_stop.splice(0, tables.route_stop.length, ...stateBefore.l);
+tables.stop.splice(0, tables.stop.length, ...stateBefore.s);
+tables.draft = tables.draft.filter((d) => d.subject_id !== route?.id);
+await load();
+
+// ---- 4a2. Another editor's draft still refuses the delete
+await openCard(OUT[1]);
+tables.draft.push({
+  ...ownDraft,
+  id: 'other-editors-draft',
+  editor_id: '00000000-0000-4000-8000-0000000000ee',
+});
+confirms.length = 0;
+n = log.length;
+await pressDelete();
+await waitFor(async () => (await body()).includes('This is being changed by'));
+w = writesSince(n);
 check(
-  '  and the approved direction keeps its line until the draft is approved',
-  !!tables.route_variant.find((v) => v.id === outV?.id)?.shape,
+  "Delete refuses on another editor's draft: no confirm, no write",
+  confirms.length === 0 &&
+    w.length === 0 &&
+    !!tables.route_variant.find((v) => v.id === outV?.id)?.shape,
+  said(w),
 );
-// The stand-in drops the draft so the next flow starts from the approved map with OUT drawn.
 tables.draft = tables.draft.filter((d) => d.subject_id !== route?.id);
 await load();
 
