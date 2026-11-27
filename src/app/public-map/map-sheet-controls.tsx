@@ -1,15 +1,11 @@
 import type { MapLibreMap } from 'maplibre-gl';
 
-import type { TooltipPosition } from '@/design-system/primitives/icon-button';
-import { listWay, listedRouteCount } from '@/features/routes/cards/list-way';
-import { ModeFilterButton } from '@/features/routes/cards/mode-filter-button';
+import { ListFilter, type FilteredList } from '@/features/routes/cards/list-filter';
+import { listWay } from '@/features/routes/cards/list-way';
 import { ViceVersaButton } from '@/features/routes/cards/vice-versa-button';
 import { MapControlsDock } from '@/features/routes/map/map-controls-dock';
 import { OverviewPill } from '@/features/routes/map/overview-pill';
-import type { Listing } from '@/features/routes/model/departures';
 import type { ModePicks } from '@/features/routes/model/mode-filter';
-import type { Direction } from '@/features/routes/model/routes';
-import { FilterIcon } from '@/shared/ui/map-control-icons';
 import { FRAMED_SHARE, type Snap } from '@/shared/ui/sheet-gesture';
 
 import { ListTopBar } from './list-top-bar';
@@ -19,12 +15,7 @@ interface MapSheetControlsProps {
   /** The Overview button's camera (useOverview). */
   overview: { isShown: boolean; go: () => void };
   /** The route list's routes as useSavedRoutes keeps them, while the list is the card on show. */
-  list: {
-    candidates: readonly Direction[];
-    back: boolean;
-    listing: Listing;
-    modePicks: ModePicks;
-  } | null;
+  list: FilteredList | null;
   /** The cards float (useMapFloats): the filter stands in this row, not over locate-me. */
   floats: boolean;
   /** Vice Versa: every route listed the other way round. */
@@ -80,31 +71,5 @@ export function MapSheetControls({
         {list && floats && <ListFilter list={list} onFilter={onFilter} tooltip="top" />}
       </MapControlsDock>
     </>
-  );
-}
-
-interface ListFilterProps {
-  list: NonNullable<MapSheetControlsProps['list']>;
-  onFilter: (picks: ModePicks) => void;
-  /** Where its tooltip points from: beside locate-me on a phone, along the map's top floating. */
-  tooltip: TooltipPosition;
-}
-
-/** The route list's filter (4879:37812): a 48 IconButton under shadow-sm, the modes picked counted. */
-export function ListFilter({ list, onFilter, tooltip }: ListFilterProps) {
-  return (
-    <span className="flex rounded-full shadow-sm">
-      <ModeFilterButton
-        modeFilter={{
-          picks: list.modePicks,
-          onPicks: onFilter,
-          routeCount: listedRouteCount(list.candidates, list.back, list.listing, list.modePicks),
-        }}
-        icon={<FilterIcon />}
-        size="large"
-        tooltip={tooltip}
-        testId="chooser-filter"
-      />
-    </span>
   );
 }

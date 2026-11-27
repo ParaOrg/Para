@@ -1,7 +1,6 @@
 import type { MapLibreMap } from 'maplibre-gl';
 
 import type { useGazeHush } from '@/features/locator';
-import { RouteCardList } from '@/features/routes/cards/route-card-list';
 import type { useCardCamera } from '@/features/routes/map/use-card-camera';
 import type { useCardStack } from '@/features/routes/map/use-card-stack';
 import type { useSavedHotspots } from '@/features/routes/map/use-saved-hotspots';
@@ -16,6 +15,7 @@ import {
   type useStudioTrip,
 } from '@/features/studio';
 
+import { PlaygroundList } from './playground-list';
 import { PlaygroundMarks } from './playground-marks';
 import { PlaygroundTrip } from './playground-trip';
 
@@ -30,7 +30,7 @@ interface PlaygroundCardsProps {
   canEdit: boolean;
   /** A computer's screen: a tapped hotspot opens in the sidebar, a trip in the left panel. */
   isWideScreen: boolean;
-  /** The left panel area's host for the route line detail (PlaygroundTrip). */
+  /** The left panel area's host for the route list and the route line detail. */
   leftPanel: HTMLElement | null;
   opening: ReturnType<typeof useFollow>['opening'];
   deletes: ReturnType<typeof useDeleteActions>;
@@ -57,8 +57,8 @@ export function PlaygroundCards({
   hush,
   onDrawReturnTrip,
 }: PlaygroundCardsProps) {
-  const { choice, choosing, closeAll, tripLivery, litLivery, height } = cards;
-  const { ride, clearOfOpen, flipList, filterList, pickOnPlaceCard, openTrip, pickOnTrip } = camera;
+  const { closeAll, tripLivery, litLivery, height } = cards;
+  const { ride, clearOfOpen, pickOnPlaceCard, openTrip, pickOnTrip } = camera;
   const { rides, timeline } = trip;
 
   return (
@@ -119,29 +119,15 @@ export function PlaygroundCards({
         />
       )}
 
-      {/*
-        Several saved things under one click: the public map's list, with its Controller, kept
-        hidden behind the trip picked from it. It lists only what is drawn, the owner's way.
-      */}
-      {!draw.drawing && choosing && (
-        <RouteCardList
-          hasController
-          key={choice.map((c) => c.id).join()}
-          hidden={!!saved.selected}
-          height={height}
-          routes={saved.candidates}
-          hotspots={hotspots.candidates}
-          back={saved.back}
-          listing={saved.listing}
-          onFlip={flipList}
-          modeFilter={{ picks: saved.modePicks, onPicks: filterList }}
-          selection={{
-            selected: saved.highlight?.where === 'list' ? saved.highlight.card : null,
-            onSelect: (p) => saved.highlightCard(p && { where: 'list', ...p }),
-          }}
-          onRoute={openTrip}
-          onHotspot={(s) => cards.openHotspot(s.id)}
-          onClose={closeAll}
+      {!draw.drawing && (
+        <PlaygroundList
+          map={map}
+          saved={saved}
+          hotspots={hotspots}
+          cards={cards}
+          camera={camera}
+          isWideScreen={isWideScreen}
+          leftPanel={leftPanel}
         />
       )}
     </>

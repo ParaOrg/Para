@@ -125,8 +125,12 @@ for (const a of lines) {
 if (!spot) throw new Error('no two routes share a road in the made-up tables');
 // The map's own pixels start below the studio's bar: a tap is given in the map's and
 // lands in the page's.
-const canvas = await page.locator('canvas.maplibregl-canvas').boundingBox();
-const tap = (x, y) => page.mouse.click(canvas.x + x, canvas.y + y);
+// Measured at each tap: on a computer the list fills the left panel, beside the map, so the
+// canvas moves as the list opens and closes.
+const tap = async (x, y) => {
+  const canvas = await page.locator('canvas.maplibregl-canvas').boundingBox();
+  await page.mouse.click(canvas.x + x, canvas.y + y);
+};
 {
   await page.evaluate((c) => {
     window.__map.jumpTo({ center: c, zoom: 17 });
@@ -160,7 +164,7 @@ const tap = (x, y) => page.mouse.click(canvas.x + x, canvas.y + y);
   check('a tap where routes share a road opens the list', (await chooser.count()) === 1);
   /** Whether the list shows the way back (SWITCH's data-back). */
   const showsBack = async () =>
-    (await chooser
+    (await page
       .locator('[data-testid="chooser-flip"]')
       .getAttribute('data-back', { timeout: 2000 })
       .catch(() => null)) === 'true';
@@ -387,7 +391,7 @@ const tap = (x, y) => page.mouse.click(canvas.x + x, canvas.y + y);
     `${new Set(letGo.lit).size} lit, ${letGo.listed.length} listed, ${letGo.selected} Selected`,
   );
 
-  const flip = chooser.locator('[data-testid="chooser-flip"]');
+  const flip = page.locator('[data-testid="chooser-flip"]');
   check('the list offers SWITCH', (await flip.count()) === 1 && (await flip.isEnabled()));
   // Picked again, so SWITCH has a card to let go.
   await chooser.locator('[data-testid="chooser-select"]').nth(out.at).click();
@@ -626,7 +630,7 @@ const tap = (x, y) => page.mouse.click(canvas.x + x, canvas.y + y);
       );
     }
     // A trip a list's row opened closes in two steps: back to the list (a computer's detail by
-    // Escape, a trip card by ‹), then the list's ✕.
+    // Escape, a trip card by ‹), then the list: Escape in the left panel, ✕ on a phone's sheet.
     if (await page.getByTestId('route-line-detail').count()) {
       await page.keyboard.press('Escape');
       await page.waitForTimeout(400);
@@ -637,8 +641,13 @@ const tap = (x, y) => page.mouse.click(canvas.x + x, canvas.y + y);
     } else {
       await page.locator('[data-testid="card"]').getByRole('button', { name: 'Back' }).click();
     }
-    await chooser.getByRole('button', { name: 'Close' }).click();
+    if ((await chooser.getByRole('button', { name: 'Close' }).count()) > 0) {
+      await chooser.getByRole('button', { name: 'Close' }).click();
+    } else {
+      await page.keyboard.press('Escape');
+    }
     await page.waitForTimeout(400);
+    check('  the list closes', (await chooser.count()) === 0);
     const endsNone = await page.evaluate(() => window.__ends().length);
     check('  closing it leaves no circles', endsNone === 0, `${endsNone} circle(s)`);
   }
@@ -656,10 +665,12 @@ const tap = (x, y) => page.mouse.click(canvas.x + x, canvas.y + y);
       window.__map.jumpTo({ center: c, zoom: 17 });
     }, spot);
     await page.waitForTimeout(700);
-    await tap(x, y);
+    // Projected again, as in clickAt: a card open in the left panel narrows the map.
+    const q = await page.evaluate((c) => window.__map.project(c), spot);
+    await tap(q.x, q.y);
     await page.waitForTimeout(700);
     if ((await showsBack()) !== wantBack) {
-      await chooser.locator('[data-testid="chooser-flip"]').click();
+      await page.locator('[data-testid="chooser-flip"]').click();
       await page.waitForTimeout(500);
     }
     return (await read()).listed;
@@ -707,7 +718,9 @@ const tap = (x, y) => page.mouse.click(canvas.x + x, canvas.y + y);
       window.__map.jumpTo({ center: c, zoom: 17 });
     }, p.at);
     await page.waitForTimeout(600);
-    await tap(p.x, p.y);
+    // Projected again: the map may be wider or narrower than when the spot was found.
+    const q = await page.evaluate((c) => window.__map.project(c), p.at);
+    await tap(q.x, q.y);
     await page.waitForTimeout(700);
     const now = await read();
     const shown = now.origins.length
@@ -860,7 +873,7 @@ const tap = (x, y) => page.mouse.click(canvas.x + x, canvas.y + y);
   // list starts at All. Last, as a filter moves the camera.
   {
     const all = await reopen(false);
-    const filterButton = chooser.locator('[data-testid="chooser-filter"]');
+    const filterButton = page.locator('[data-testid="chooser-filter"]');
     // The menu's switches apply as they are tapped: Clear all, then the one kind on, then ✕.
     const filterTo = async (label) => {
       const menu = page.getByTestId('mode-filter');

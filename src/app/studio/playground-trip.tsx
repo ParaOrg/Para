@@ -41,8 +41,8 @@ interface PlaygroundTripProps {
 
 /**
  * The open trip: on a phone the public map's trip card with the editor's extras; on a
- * computer the route line detail in the left panel area, with Overview over the map's top left
- * (its drawing alone over the route list). Escape, or a tap on the empty map, leaves the detail:
+ * computer the route line detail in the left panel area, with Overview over the map's top left.
+ * Escape, or a tap on the empty map, leaves the detail:
  * back to the list or the place's card it came from, else closed. Keyed on the route: switching
  * direction keeps it and its colour.
  */
@@ -84,10 +84,10 @@ export function PlaygroundTrip({
     closeAll();
     onDrawReturnTrip(routeId);
   };
-  const isListShown = isWideScreen && !draw.drawing && cards.choosing && !saved.selected;
-  const overview = (isDetail || isListShown) && (
+  // Over a list, the Overview stands among the list's controls instead (PlaygroundListControls).
+  const overview = isDetail && (
     <div className="absolute top-4 left-4 z-10">
-      <OverviewPill {...camera.overviewButton} map={map} isIconOnly={!isDetail} />
+      <OverviewPill {...camera.overviewButton} map={map} />
     </div>
   );
   if (!saved.selected || !timeline || !tripLivery || draw.drawing) return overview || null;
