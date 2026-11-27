@@ -21,33 +21,21 @@ import {
 } from '@/features/published-map';
 import { HintuanCard } from '@/features/routes/cards/hintuan-card';
 import { ListFilter } from '@/features/routes/cards/list-filter';
-import { RouteCardList } from '@/features/routes/cards/route-card-list';
 import { TripCard } from '@/features/routes/cards/trip-card';
-import { useBackClosesCards } from '@/features/routes/cards/use-back-closes-cards';
-import { useTripTimeline } from '@/features/routes/cards/use-trip-timeline';
-import { EndTitles } from '@/features/routes/map/end-titles';
-import { HintuanPin } from '@/features/routes/map/hintuan-pin';
 import { LandmarkPin } from '@/features/routes/map/landmark-pin';
 import { lookAt } from '@/features/routes/map/look-at';
 import { MapCreditsDock } from '@/features/routes/map/map-credits-dock';
 import { MapCreditsSheet } from '@/features/routes/map/map-credits-sheet';
-import { MapSheetControls } from '@/features/routes/map/map-sheet-controls';
 import { METRO_MANILA, MapView } from '@/features/routes/map/map-view';
 import { openOnRoutes } from '@/features/routes/map/open-on-routes';
-import { StationLabels } from '@/features/routes/map/station-labels';
-import { useCardCamera } from '@/features/routes/map/use-card-camera';
-import { useCardStack } from '@/features/routes/map/use-card-stack';
-import { useEmptyMapTap } from '@/features/routes/map/use-empty-map-tap';
+import { RouteCards } from '@/features/routes/map/route-cards';
 import { useFootbridges } from '@/features/routes/map/use-footbridges';
-import { useLitRides } from '@/features/routes/map/use-lit-rides';
-import { useLoopTip } from '@/features/routes/map/use-loop-tip';
 import { useMapCredits } from '@/features/routes/map/use-map-credits';
-import { useMapFloats } from '@/features/routes/map/use-map-floats';
+import { useRouteCards } from '@/features/routes/map/use-route-cards';
 import { useSavedHotspots } from '@/features/routes/map/use-saved-hotspots';
 import { useSavedRoutes } from '@/features/routes/map/use-saved-routes';
 import { directionsAtHotspots } from '@/features/routes/model/directions-at';
 import type { CommuterWhere } from '@/features/routes/model/loop-tip';
-import { placeKey } from '@/features/routes/model/places';
 import {
   loadDirectionsFromFile,
   loadHotspotsFromFile,
@@ -128,45 +116,19 @@ export function PublicMapApp() {
   // timeline leaves from, chosen once as the trip opens (useLoopTip). A ref,
   // not state: a fix renders nothing, and only the trip's opening reads it.
   const where = useRef<CommuterWhere | null>(null);
-  const tipId = useLoopTip(saved.selected, hotspots, { where, openedFrom: hotspots.selected });
   const handleWhere = (at: CommuterWhere | null) => {
     where.current = at;
   };
+  // The dot's gaze is hushed by going back: it picks nothing (dot-gaze.ts).
+  const { hush, hushedAt } = useGazeHush();
 
-  // The route list, a hotspot's card and the trip opened from either: which
-  // is up, what stands behind what, their height and colours (useCardStack).
-  const cards = useCardStack(map, saved, hotspots);
+  // The route list, a hotspot's card and the trip opened from either, the camera with them and
+  // what the lit routes wear (useRouteCards); RouteCards draws them.
+  const routeCards = useRouteCards(map, saved, hotspots, { hush, where, isRidePickingOn });
+  const { cards, camera, listUp, floats } = routeCards;
+  const { root, ride, clearOfOpen, openPlace, goHere, letGoalGo, goalLandmark } = camera;
   const [exploreRest, setExploreRest] = useState<ExploreRest>('open'); // Whole, then Low once a card opened.
   if (cards.open && exploreRest === 'open') setExploreRest('low'); // Back from a card: Low (the owner).
-  // The camera with the cards: a hintuan picked on the trip, gliding there; a trip, a picked
-  // RouteCard and SWITCH taken in whole, again as the sheet settles; the camera from before a
-  // hotspot's card was picked, back as it is let go (useCardCamera).
-  const {
-    root,
-    tripDock,
-    hotspotDock,
-    ride,
-    clearOfOpen,
-    switchTrip,
-    flipList,
-    filterList,
-    otherRoute,
-    openPlace,
-    openTripFromPlace,
-    goHere,
-    letGoalGo,
-    goalLandmark,
-    walk,
-    openTrip,
-    backFromTrip,
-    pickOnTrip,
-    endOnTrip,
-    overviewButton,
-  } = useCardCamera(map, saved, hotspots, cards, { tipId });
-  // What the lit routes wear on the map, their ends named (useLitRides): a
-  // picked hintuan's ride flowing only as far as there.
-  const { ridden, startId } = ride;
-  const rides = useLitRides(map, saved, hotspots.hotspots, null, ridden, startId, tipId, true);
 
   // The commuter's own position, the dot and the camera with them live in CommuterLocation, so a
   // fix, the phone's compass and the dot's moods render it alone. Its camera moves here, at this
@@ -174,12 +136,6 @@ export function PublicMapApp() {
   // same commit (commit-turn.ts).
   const locatorTurn = useTurn();
   const locator = useRef<CommuterLocationHandle>(null); // For "Turn on location" (ExploreCards).
-  // The dot's gaze is hushed by going back: it picks nothing (dot-gaze.ts).
-  const { hush, hushedAt } = useGazeHush();
-  useBackClosesCards(saved, hotspots, cards, backFromTrip, hush);
-  // The empty map tapped, Escape or a pull down: the trip's ‹, which it no longer draws.
-  const leaveTrip = hush(backFromTrip) ?? cards.closeAll;
-  useEmptyMapTap(map, saved.selected ? leaveTrip : null);
   const offline = useOffline();
   // The phone's status bar in the map's colour (status-bar.ts).
   useStatusBarColour(map);
@@ -190,16 +146,9 @@ export function PublicMapApp() {
   // The install prompt, once the routes are on the map (useInstallPrompt).
   const install = useInstallPrompt(saved.directions.length > 0);
 
-  const { tripLivery, litLivery, height } = cards;
-
-  // The open trip's hintuans, worked out once per trip (useTripTimeline).
-  const timeline = useTripTimeline(saved.selected, hotspots, tipId);
-
   // The map's credits, the Map Data Source sheet, opened by the ⓘ: the map and the cards under it
   // are out of reach while it is open.
   const credits = useMapCredits(root);
-  const floats = useMapFloats(root);
-  const listUp = cards.choosing && !saved.selected && !cards.tripBehind ? saved : null;
 
   return (
     // `data-directions`, `data-hotspot-taps`, `data-place-search`: for the suites on a production
@@ -252,214 +201,134 @@ export function PublicMapApp() {
           </div>
         )}
         <MapViewCorner map={map} isMapLoaded={isMapLoaded} />
-        <MapSheetControls
+        <RouteCards
           map={map}
-          overview={overviewButton}
-          list={listUp}
-          floats={floats}
-          onFlip={flipList}
-          onSnap={height.onSnap}
-          onFilter={filterList}
-        />
-        {/* The commuter's position and the camera with them, clear of the card; the dot's gaze. */}
-        <CommuterLocation
-          ref={locator}
-          map={map}
-          isMapLoaded={isMapLoaded}
-          snap={cards.snap}
-          offset={clearOfOpen}
-          docked={cards.open}
-          hasMapStyle={false}
-          above={
-            listUp && !floats && <ListFilter list={listUp} onFilter={filterList} tooltip="right" />
-          }
-          cameraTurn={locatorTurn}
-          picks={{
-            pickedId: ride.pickedId,
-            pinAt: ride.pinAt,
-            place: hotspots.selected,
-            trip: saved.selected,
-            highlight: saved.highlight,
-            candidates: saved.candidates,
-            litDirections: saved.litDirections,
-          }}
-          hushedAt={hushedAt}
-          onWhere={handleWhere}
-          onNote={handleLocatorNote}
-        />
-        {/* Each lit ride's ends, named over their circles; with no trip open, a tail opens its. */}
-        {map && <EndTitles map={map} rides={rides} livery={litLivery} onPick={openPlace} />}
-        {/*
-        The open trip's hintuans along its line, a train's stations and a
-        jeepney's hintuans alike, each named (RouteLineLabel). Where picking is
-        on (isRidePickingOn), a tap picks one as its row on the trip card does,
-        the map gliding in to it, as the studio's do.
-      */}
-        {map && saved.selected && tripLivery && timeline && (
-          <StationLabels
-            map={map}
-            selected={saved.selected}
-            hotspots={hotspots.hotspots}
-            rows={timeline.between}
-            livery={tripLivery}
-            pickedId={ride.pickedId}
-            startId={ride.startId}
-            endPicked={ride.endPicked}
-            hasRide={ride.ridden !== null}
-            onPick={isRidePickingOn ? pickOnTrip : undefined}
-          />
-        )}
-        {/*
-        Keyed on the pick: another hintuan pops a fresh circle. Its name, tapped, lets the pick go
-        and takes the camera back where it was, as its row tapped again does.
-      */}
-        {map && ride.pinAt && tripLivery && (
-          <HintuanPin
-            key={ride.pickedId}
-            map={map}
-            at={ride.pinAt}
-            label={ride.pickedLabel}
-            code={ride.pickedCode}
-            livery={tripLivery}
-            onPick={isRidePickingOn ? () => ride.pick(ride.pickedId) : undefined}
-          />
-        )}
-        {/* The ride's start, picked by Set as start: its own circle, Start's pill beside it. */}
-        {map && ride.startPinAt && tripLivery && (
-          <HintuanPin
-            key={`start:${ride.startId}`}
-            map={map}
-            at={ride.startPinAt}
-            label={ride.startLabel}
-            code={ride.startCode}
-            livery={tripLivery}
-            marks="start"
-            onPick={ride.removeStart}
-          />
-        )}
-
-        {/* The landmark "Go here" made the goal: its pin stays while the goal holds (ticket 07). */}
-        {map && goalLandmark && (
-          <LandmarkPin key={goalLandmark.id} map={map} at={goalLandmark.point} />
-        )}
-        {/* Place search: a place opens as its name tapped does; wide, the cards float under it. */}
-        {isPlaceSearchShown && (
-          <Suspense fallback={null}>
-            <PlaceSearchBar
+          saved={saved}
+          hotspots={hotspots}
+          routeCards={routeCards}
+          besideControls={
+            // The commuter's position and the camera with them, clear of the card; the dot's gaze.
+            <CommuterLocation
+              ref={locator}
               map={map}
-              hotspots={hotspots.hotspots}
-              directionsAt={directionsAtHotspots(saved.directions, hotspots.linkedDirectionIds)}
-              whereNow={() => where.current?.at ?? null}
-              onPick={(hotspot) => openPlace(hotspot.id)}
-              onLookAt={(point) => lookAt(map, point)}
-              onGoHere={(landmark, near, hintuan) => goHere(landmark, near, hintuan.id)}
-              onSearchRestart={letGoalGo}
-              isUnderUpdate={needRefresh}
-              isUnderOfflinePill={offline || age.stale}
-              isCardOpen={cards.open}
+              isMapLoaded={isMapLoaded}
+              snap={cards.snap}
+              offset={clearOfOpen}
+              docked={cards.open}
+              hasMapStyle={false}
+              above={
+                listUp &&
+                !floats && <ListFilter list={listUp} onFilter={camera.filterList} tooltip="right" />
+              }
+              cameraTurn={locatorTurn}
+              picks={{
+                pickedId: ride.pickedId,
+                pinAt: ride.pinAt,
+                place: hotspots.selected,
+                trip: saved.selected,
+                highlight: saved.highlight,
+                candidates: saved.candidates,
+                litDirections: saved.litDirections,
+              }}
+              hushedAt={hushedAt}
+              onWhere={handleWhere}
+              onNote={handleLocatorNote}
             />
-          </Suspense>
-        )}
-        {/* How old the map is, and a new version waiting. */}
-        <Notices offline={offline} age={age} needRefresh={needRefresh} onUpdate={reloadToUpdate} />
-        {/* What went wrong, at the top: the locator's note and a failed load. */}
-        {hasToasts && (
-          <div className={cn('contents', TOAST_UNDER_FULL_CARD, TOAST_UNDER_FULL_TRIP)}>
-            <Suspense fallback={null}>
-              <PageToasts locatorNote={locatorNote} load={loadToast} />
-            </Suspense>
-          </div>
-        )}
-        {/* Held while the credits are open: one dialog at a time. */}
-        {install.shouldShow && credits.state === 'shut' && (
-          <InstallPrompt onInstall={install.install} onLater={install.postpone} />
-        )}
-        {saved.selected && tripLivery && timeline && (
-          <TripCard
-            direction={saved.selected}
-            directions={saved.directions}
-            timeline={timeline}
-            livery={tripLivery}
-            onSwitch={switchTrip}
-            onClose={leaveTrip}
-            picked={ride.pickedId}
-            // The pesos to a picked hintuan: the full line's, none while only its overview is here.
-            pickedMetres={saved.fullIds.has(saved.selected.id) ? ride.rideTo?.metres : undefined}
-            pickedCode={ride.pickedCode}
-            start={ride.startId}
-            startCode={ride.startCode}
-            onSetStart={isRidePickingOn ? ride.setStart : undefined}
-            onRemoveStart={isRidePickingOn ? ride.removeStart : undefined}
-            walk={walk}
-            onPick={isRidePickingOn ? pickOnTrip : undefined}
-            onEnd={isRidePickingOn ? endOnTrip : undefined}
-            endPicked={ride.endPicked}
-            dockRef={tripDock}
-            height={height}
-            // "Other routes": that route's trip in this one's place, leaving to what this one was
-            // picked from; the camera takes it in, the sheet stays where it is.
-            onOtherRoute={otherRoute}
-          />
-        )}
-        {/*
-        A hotspot's card: HintuanCard (Figma 3854:12690), its boxes, the Selected one's routes as
-        RouteCards; hidden behind a trip picked from them, for the trip to go back to. `card` to
-        the suites too, after the trip on purpose: their first `card` is then the trip.
-      */}
-        {hotspots.selected && (
-          // Keyed by the place: another of its boxes — a row, or SWITCH moving
-          // to it — keeps the card as it is, its way round with it.
-          <HintuanCard
-            key={placeKey(hotspots.selected)}
-            routeCards={{
-              onShown: saved.showCard,
-              // The other way round, the camera kept where it is (HintuanCard's onSwitch).
-              onSwitch: (box) => box && hotspots.select(box),
-            }}
-            hidden={!!saved.selected}
-            height={height}
-            dockRef={hotspotDock}
-            hotspot={hotspots.selected}
-            hotspots={hotspots.hotspots}
-            linkedDirectionIds={hotspots.linkedDirectionIds}
-            directions={saved.directions}
-            onSelectDirection={openTripFromPlace}
-            // Its Selected row tapped again: no box is the one until a row is picked.
-            deselected={hotspots.letGone}
-            onDeselect={() => {
-              saved.highlightCard(null);
-              hotspots.letGo();
-            }}
-            // Another box: the map goes there, the box clear of the card, which keeps its height.
-            onPickBox={(id) => {
-              saved.highlightCard(null);
-              hotspots.show(id, cards.clearOf(hotspotDock));
-            }}
-            onBack={hush(cards.backToTrip)}
-            onClose={hush(cards.closeHotspot)}
-          />
-        )}
-        {/*
-        Several things under the tap: the route list, kept hidden behind the trip picked from it,
-        whole, for the trip to go back to; a hotspot's row opens its card in the list's place.
-      */}
-        {cards.choosing && (
-          <RouteCardList
-            key={cards.choice.map((c) => c.id).join()}
-            hidden={!!saved.selected || cards.tripBehind}
-            height={height}
-            routes={saved.candidates}
-            hotspots={hotspots.candidates}
-            back={saved.back}
-            listing={saved.listing}
-            onFlip={flipList}
-            modeFilter={{ picks: saved.modePicks, onPicks: filterList }}
-            onRoute={openTrip}
-            onHotspot={(s) => cards.openHotspot(s.id)}
-            onClose={cards.closeAll}
-            end={<DonationCard isListEnd />}
-          />
-        )}
+          }
+          underCards={
+            <>
+              {/* The landmark "Go here" made the goal: its pin stays while the goal holds (ticket 07). */}
+              {map && goalLandmark && (
+                <LandmarkPin key={goalLandmark.id} map={map} at={goalLandmark.point} />
+              )}
+              {/* Place search: a place opens as its name tapped does; wide, the cards float under it. */}
+              {isPlaceSearchShown && (
+                <Suspense fallback={null}>
+                  <PlaceSearchBar
+                    map={map}
+                    hotspots={hotspots.hotspots}
+                    directionsAt={directionsAtHotspots(
+                      saved.directions,
+                      hotspots.linkedDirectionIds,
+                    )}
+                    whereNow={() => where.current?.at ?? null}
+                    onPick={(hotspot) => openPlace(hotspot.id)}
+                    onLookAt={(point) => lookAt(map, point)}
+                    onGoHere={(landmark, near, hintuan) => goHere(landmark, near, hintuan.id)}
+                    onSearchRestart={letGoalGo}
+                    isUnderUpdate={needRefresh}
+                    isUnderOfflinePill={offline || age.stale}
+                    isCardOpen={cards.open}
+                  />
+                </Suspense>
+              )}
+              {/* How old the map is, and a new version waiting. */}
+              <Notices
+                offline={offline}
+                age={age}
+                needRefresh={needRefresh}
+                onUpdate={reloadToUpdate}
+              />
+              {/* What went wrong, at the top: the locator's note and a failed load. */}
+              {hasToasts && (
+                <div className={cn('contents', TOAST_UNDER_FULL_CARD, TOAST_UNDER_FULL_TRIP)}>
+                  <Suspense fallback={null}>
+                    <PageToasts locatorNote={locatorNote} load={loadToast} />
+                  </Suspense>
+                </div>
+              )}
+              {/* Held while the credits are open: one dialog at a time. */}
+              {install.shouldShow && credits.state === 'shut' && (
+                <InstallPrompt onInstall={install.install} onLater={install.postpone} />
+              )}
+            </>
+          }
+          renderTrip={(trip) => (
+            <TripCard
+              direction={trip.direction}
+              directions={trip.directions}
+              timeline={trip.timeline}
+              livery={trip.livery}
+              onSwitch={trip.switchTrip}
+              onClose={trip.leaveTrip}
+              picked={trip.ride.pickedId}
+              pickedMetres={trip.pickedMetres}
+              pickedCode={trip.ride.pickedCode}
+              start={trip.ride.startId}
+              startCode={trip.ride.startCode}
+              onSetStart={trip.picking?.setStart}
+              onRemoveStart={trip.picking?.removeStart}
+              walk={trip.walk}
+              onPick={trip.picking?.pick}
+              onEnd={trip.picking?.end}
+              endPicked={trip.ride.endPicked}
+              dockRef={trip.tripDock}
+              height={trip.height}
+              onOtherRoute={trip.otherRoute}
+            />
+          )}
+          // A hotspot's card: HintuanCard (Figma 3854:12690), its boxes, the Selected one's routes
+          // as RouteCards; hidden behind a trip picked from them, for the trip to go back to.
+          renderPlace={(place) => (
+            <HintuanCard
+              routeCards={{ onShown: place.showCard, onSwitch: place.switchBox }}
+              hidden={place.isHidden}
+              height={place.height}
+              dockRef={place.hotspotDock}
+              hotspot={place.hotspot}
+              hotspots={place.hotspots}
+              linkedDirectionIds={place.linkedDirectionIds}
+              directions={place.directions}
+              onSelectDirection={place.openTrip}
+              deselected={place.isDeselected}
+              onDeselect={place.deselect}
+              onPickBox={place.pickBox}
+              onBack={place.back}
+              onClose={place.close}
+            />
+          )}
+          listEnd={<DonationCard isListEnd />}
+        />
         {/* With nothing open: ways to explore, and the donation card (Figma 4852:35066). */}
         {!cards.open && (
           <Suspense fallback={null}>
