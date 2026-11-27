@@ -48,11 +48,14 @@ Status: needs-info
 - **Loading and empty.** The frame draws a full list only. The list opens only once a tap has
   found routes, so it never waits or opens empty. A filter that leaves nothing shows the public
   map's "No … routes here" with Show all routes, as the phone's list does. Code:
-  `src/features/studio/panels/studio-route-list.tsx`.
+  `src/app/studio/playground-list.tsx` (the public map's `RouteCardList`, docked).
 - **Closing it.** The frame has no ✕. Escape closes the list, as on the public map. Opening
   another place or a route from the map replaces it. Phones keep their ✕ and PAPUNTA.
 - **No DonationCard.** The frame ends the list with the public map's DonationCard ("Help make
   Para better"). The studio leaves it out: editors are not the ones asked to donate. Say if it
   should show here too.
+- **A short list.** It ends at its last card with the map below it, as the public map's does,
+  and grows to the map's height before it scrolls (the owner, 2026-11-27: "remove this white").
+  The frame draws a list taller than the screen only.
 - **Hover and focus** on the cards and on Vice Versa, the filter and Overview: the public map's
   own states stand in (the browser's focus ring, the buttons' hover).

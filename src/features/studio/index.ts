@@ -31,7 +31,6 @@ export { SaveToasts } from './panels/save-toasts';
 export { StudioHotspotCard } from './panels/studio-hotspot-card';
 export { StudioSaveSheets } from './panels/studio-save-sheets';
 export { StudioRouteLineDetail } from './panels/studio-route-line-detail';
-export { StudioRouteList } from './panels/studio-route-list';
 export { isPanelReachable } from './panels/is-panel-reachable';
 export { StudioTripCard } from './panels/studio-trip-card';
 export { useDeleteActions } from './panels/use-delete-actions';

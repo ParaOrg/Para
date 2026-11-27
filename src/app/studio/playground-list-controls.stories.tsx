@@ -72,7 +72,7 @@ function Controls(props: ComponentProps<typeof PlaygroundListControls>) {
 
 /**
  * The studio's route list's controls on the map on a computer (Figma 4905:21658): Vice Versa over
- * the Overview, the filter right of them, 16 from the map's top and the left panel's edge. Phones
+ * the Overview, the filter right of them, 16 from the map's top and the docked list's edge. Phones
  * keep the list's Controller (Features/Routes/RouteCardList), so there is no phone story here.
  */
 const meta = {
@@ -81,11 +81,10 @@ const meta = {
   render: (args) => <Controls {...args} />,
   decorators: [
     (Story) => (
-      <div className="flex h-120 w-300">
-        <div className="w-96 shrink-0 bg-surface shadow-bottom-sheet-top-shadow" />
-        <div className="relative flex-1 bg-surface-quaternary">
-          <Story />
-        </div>
+      <div className="relative h-120 w-300 bg-surface-quaternary">
+        {/* The docked list's place: 384 wide on the map's left, ending at its last card. */}
+        <div className="absolute top-0 left-0 h-60 w-96 bg-surface shadow-bottom-sheet-top-shadow" />
+        <Story />
       </div>
     ),
   ],
