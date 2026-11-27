@@ -165,7 +165,7 @@ jobs:
               docs/architecture.md|tests/unit/*|scripts/checks/check-build.mjs|scripts/checks/build-weight.mjs|scripts/checks/build/*|scripts/docs/*|scripts/node/ts-resolve.mjs|scripts/node/ts-resolve-hook.mjs)
                 build=true ;;
               docs/*|*.md) ;;
-              src/app/studio/*|src/features/studio/*|tests/e2e/turnstile-test.mjs|tests/e2e/studio-scale-test.mjs|tests/e2e/studio-contributors-test.mjs|tests/e2e/studio-public-view-test.mjs|tests/e2e/studio-two-editors-test.mjs|tests/e2e/save-test.mjs|tests/e2e/save-ikot-test.mjs|tests/e2e/save-edit-test.mjs|tests/e2e/save-drafts-test.mjs|tests/e2e/group-test.mjs|tests/e2e/regression-gestures.mjs|tests/e2e/hotspot-test.mjs|tests/e2e/snap-test.mjs|tests/e2e/extend-test.mjs|tests/e2e/studio-phone-test.mjs|tests/e2e/studio-osm-start-test.mjs)
+              src/app/studio/*|src/features/studio/*|tests/e2e/turnstile-test.mjs|tests/e2e/studio-scale-test.mjs|tests/e2e/studio-contributors-test.mjs|tests/e2e/studio-public-view-test.mjs|tests/e2e/studio-two-editors-test.mjs|tests/e2e/save-test.mjs|tests/e2e/save-ikot-test.mjs|tests/e2e/save-edit-test.mjs|tests/e2e/save-drafts-test.mjs|tests/e2e/group-test.mjs|tests/e2e/regression-gestures.mjs|tests/e2e/hotspot-test.mjs|tests/e2e/snap-test.mjs|tests/e2e/extend-test.mjs|tests/e2e/studio-phone-test.mjs|tests/e2e/studio-osm-start-test.mjs|tests/e2e/studio-old-para-start-test.mjs)
                 studio=true ;;
               src/app/public-map/*|src/features/published-map/*|public/*|tests/e2e/commuter-test.mjs|tests/e2e/phone-test.mjs|tests/e2e/where-test.mjs|tests/e2e/scale-test.mjs|tests/e2e/pwa-test.mjs|tests/e2e/own-tiles-stand-in.mjs|tests/e2e/handover-test.mjs|tests/e2e/retire-pwa-test.mjs|tests/e2e/fixtures/*|tests/e2e/gate-test.mjs|tests/e2e/loop-test.mjs|tests/e2e/back-test.mjs|tests/e2e/map-pins-test.mjs)
                 public=true ;;
@@ -628,9 +628,9 @@ jobs:
             suites: turnstile-test studio-public-view-test studio-two-editors-test
           - { name: save-test, slug: save-test, suites: save-test }
           - { name: save-ikot-test, slug: save-ikot-test, suites: save-ikot-test }
-          - name: studio-osm-start-test
+          - name: studio-osm-start-test, studio-old-para-start-test
             slug: studio-osm-start-test
-            suites: studio-osm-start-test
+            suites: studio-osm-start-test studio-old-para-start-test
           - { name: save-edit-test, slug: save-edit-test, suites: save-edit-test }
           - { name: save-drafts-test, slug: save-drafts-test, suites: save-drafts-test }
     steps:
