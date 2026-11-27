@@ -12,6 +12,7 @@ import type { HotspotRow } from '@/features/routes/model/hotspots';
 import type { DirectionRow } from '@/features/routes/model/routes';
 import {
   DRAFT_LINES_HIT,
+  isPanelReachable,
   StudioRouteLineDetail,
   StudioTripCard,
   type useDeleteActions,
@@ -44,8 +45,8 @@ interface PlaygroundTripProps {
 
 /**
  * The open trip: on a phone the public map's trip card with the editor's extras; on a
- * computer the route line detail in the left panel area, with Overview over the map's top left
- * (its drawing alone over the route list). Escape, or a tap on the empty map, leaves the detail:
+ * computer the route line detail in the left panel area, with Overview over the map's top left.
+ * Escape, or a tap on the empty map, leaves the detail:
  * back to the list or the place's card it came from, else closed. Keyed on the route: switching
  * direction keeps it and its colour.
  */
@@ -73,10 +74,10 @@ export function PlaygroundTrip({
   // Back to the list or the place's card the trip was opened from; opened on its own, closed.
   const isFromCard = cards.choosing || !!hotspots.selected;
   const back = hush((isFromCard ? backFromTrip : null) ?? closeAll);
-  // On the studio's other maps the host is hidden and the detail waits: their Escape and taps
-  // are theirs, as a sheet left open under an inert page leaves them (BottomSheet).
+  // On the studio's other maps the host is hidden and the detail waits, and under the credits or
+  // an account dialog it is out of reach: their Escape and taps are theirs (isPanelReachable).
   const leave = () => {
-    if (leftPanel && getComputedStyle(leftPanel).display !== 'none') back();
+    if (isPanelReachable(leftPanel)) back();
   };
   // A draft's dashed line is DraftLines' to open: a tap on it is not an empty one.
   useEmptyMapTap(map, isDetail ? leave : null, DRAFT_TAP_LAYERS);
@@ -88,10 +89,10 @@ export function PlaygroundTrip({
     closeAll();
     onDrawReturnTrip(routeId);
   };
-  const isListShown = isWideScreen && !draw.drawing && cards.choosing && !saved.selected;
-  const overview = (isDetail || isListShown) && (
+  // Over a list, the Overview stands among the list's controls instead (PlaygroundListControls).
+  const overview = isDetail && (
     <div className="absolute top-4 left-4 z-10">
-      <OverviewPill {...camera.overviewButton} map={map} isIconOnly={!isDetail} />
+      <OverviewPill {...camera.overviewButton} map={map} />
     </div>
   );
   if (!saved.selected || !timeline || !tripLivery || draw.drawing) return overview || null;

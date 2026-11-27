@@ -4,16 +4,15 @@ import { BottomSheet, type SheetHeight } from '@/shared/ui/bottom-sheet';
 import { cn } from '@/shared/utils/cn';
 
 import { listWay } from './list-way';
-import { ModeFilterEmpty } from './mode-filter-empty';
-import { RouteCardStack } from './route-card-stack';
+import type { RouteCardStack } from './route-card-stack';
+import { RouteListCards } from './route-list-cards';
 import { RouteListController } from './route-list-controller';
-import { RouteListHotspotRows } from './route-list-hotspot-rows';
+import { routeListShown } from './route-list-shown';
 import { ROUTE_SHEET_SHAPE } from './route-sheet-shape';
-import { listedDepartures, routeCards, type Listing } from '../model/departures';
+import type { Listing } from '../model/departures';
 import type { Hotspot } from '../model/hotspots';
 import type { Livery } from '../model/liveries';
-import { isNarrowed, passesModePicks, type ModeFilterControl } from '../model/mode-filter';
-import { hotspotCount } from '../model/places';
+import type { ModeFilterControl } from '../model/mode-filter';
 import type { Direction } from '../model/routes';
 
 interface Props {
@@ -65,7 +64,8 @@ interface Props {
  * On a wide screen the list docks the map's whole height on the left, 384 wide, under the
  * Controller as its top bar, in Card/Jeep. The public map's list has no Controller (Figma
  * 4796:34329): Vice Versa and the sliders float on the map instead, and an empty map tapped,
- * Back or Escape closes it.
+ * Back or Escape closes it. The studio on a computer lists the same cards in its left panel
+ * instead (StudioRouteList, 4905:21658), its controls on the map.
  *
  * The grouping is departures': one way round at a time, and PAPUNTA flips them all. The map lights
  * every direction listed, the way round it is showing them; a tap on a card off its rows narrows
@@ -83,9 +83,7 @@ interface Props {
  *
  * The hotspots under the tap come first: a box is small and deliberate. They are plain rows, a
  * row a box (TODO: the rows await the owner's hintuan design). The list's name for a screen
- * reader is its count of cards, "1 Route" for Tala with its two ways out; only with no route to
- * count does it count the hotspots, "2 Hotspots", as a rider counts them (hotspotCount): both
- * boxes of one hintuan, either side of the road, are "1 Hotspot".
+ * reader is its count of cards (routeListShown).
  */
 export function RouteCardList({
   routes,
@@ -104,21 +102,12 @@ export function RouteCardList({
   end,
 }: Props) {
   const picks = modeFilter?.picks ?? [];
-  const filtered = routes.filter((v) => passesModePicks(v, picks));
-  const places = listedDepartures(filtered, back, listing);
+  const shown = routeListShown(routes, hotspots, back, listing, picks);
   const { way, wayTo, isSwitchable } = listWay(routes, back, listing, picks);
-  const hotspotTotal = hotspotCount(hotspots);
-  // A RouteCard each, as RouteCardStack lays them out: a place and mode, so a place that jeeps
-  // and a train both leave from counts twice.
-  const cardTotal = routeCards(filtered, back, listing).length;
-  const count =
-    cardTotal === 0 && hotspotTotal > 0
-      ? `${hotspotTotal} ${hotspotTotal === 1 ? 'Hotspot' : 'Hotspots'}`
-      : `${cardTotal} ${cardTotal === 1 ? 'Route' : 'Routes'}`;
 
   return (
     <BottomSheet
-      label={count}
+      label={shown.label}
       testId="chooser"
       onClose={onClose}
       hidden={hidden}
@@ -139,7 +128,7 @@ export function RouteCardList({
             isSwitchable={isSwitchable}
             isBack={back}
             onSwitch={onFlip}
-            modeFilter={modeFilter && { ...modeFilter, routeCount: cardTotal }}
+            modeFilter={modeFilter && { ...modeFilter, routeCount: shown.cardTotal }}
             onClose={onClose}
           />
         )
@@ -154,21 +143,17 @@ export function RouteCardList({
           hasController && 'pb-20 sheet-floating:pt-16 sheet-floating:pb-0',
         )}
       >
-        {/* The list's heading, for a screen reader to move to; nothing is drawn. */}
-        <h2 className="sr-only">Routes here</h2>
-        <RouteListHotspotRows hotspots={hotspots} onHotspot={onHotspot} />
-        {modeFilter && isNarrowed(picks) && places.length === 0 && (
-          <ModeFilterEmpty picks={picks} onShowAll={() => modeFilter.onPicks([])} />
-        )}
-        <RouteCardStack
-          routes={filtered}
+        <RouteListCards
+          shown={shown}
+          hotspots={hotspots}
           back={back}
           listing={listing}
+          modeFilter={modeFilter}
           selection={selection}
           onRoute={onRoute}
-          testId="chooser"
+          onHotspot={onHotspot}
+          end={end}
         />
-        {end}
       </div>
     </BottomSheet>
   );

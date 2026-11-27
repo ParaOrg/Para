@@ -34,13 +34,25 @@ Status: needs-info
 - **Draft notice above the tabs.** Another editor's locked draft shows the existing lock notice
   above the tabs. Code: `studio-route-line-detail.tsx`.
 - **Where Overview sits.** On the map, 16 from its top left. The "Overview ↗" pill shows while the
-  detail is open, and the ↙ drawing alone over the route list. Code: `src/app/studio/playground-trip.tsx`.
+  detail is open. Code: `src/app/studio/playground-trip.tsx`.
 - **Hover, pressed and focus states** for the tabs, Other destinations rows, Route Stops rows and
   menu items. None are drawn yet, so the browser's focus ring and the menu's hover stand in.
-- **The route list on a computer.** It still floats over the map as before. The list frame shows
-  it in the left panel, which is not built yet.
 - **Add signboard in Edit Route.** The signboard editor moved from the route line detail into Edit Route,
   beside the map, and sits under Route Information in its old look. It shows only for a direction
   that is already saved: a new one has no boards to add until its first save. Phones keep it on
   their trip card. Code: `src/features/studio/panels/save-panel.tsx` (`DraftSignboards`).
 - **A phone layout** for the detail. Desktop comes first, so phones keep today's trip card.
+
+## The studio's route list on a computer (Figma 4905:21658, built 2026-11-27)
+
+- **Loading and empty.** The frame draws a full list only. The list opens only once a tap has
+  found routes, so it never waits or opens empty. A filter that leaves nothing shows the public
+  map's "No … routes here" with Show all routes, as the phone's list does. Code:
+  `src/features/studio/panels/studio-route-list.tsx`.
+- **Closing it.** The frame has no ✕. Escape closes the list, as on the public map. Opening
+  another place or a route from the map replaces it. Phones keep their ✕ and PAPUNTA.
+- **No DonationCard.** The frame ends the list with the public map's DonationCard ("Help make
+  Para better"). The studio leaves it out: editors are not the ones asked to donate. Say if it
+  should show here too.
+- **Hover and focus** on the cards and on Vice Versa, the filter and Overview: the public map's
+  own states stand in (the browser's focus ring, the buttons' hover).
