@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1143",
+  "old_id": "70f5e9de-760f-4766-88dc-bc61418baf22",
+  "name": "Forbes Park - Pasay Rd. via Ayala Ave.",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.05504,14.54917],
+  "end": [121.03106,14.54914],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.05504,14.54917],[121.05401,14.54746],[121.052,14.54739],[121.052,14.54548],[121.04999,14.5463],[121.048,14.5469],[121.04308,14.54526],[121.04112,14.54648],[121.03999,14.54772],[121.03701,14.54734],[121.03499,14.54748],[121.03106,14.54914]]
+}

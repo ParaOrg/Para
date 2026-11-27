@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1250",
+  "old_id": "aa48fc04-08d3-4fd8-bb5b-78aace5f658a",
+  "name": "Quezon Ave./Sct. Chuatoco - Roxas Dist.",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.02599,14.63046],
+  "end": [121.01599,14.63047],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.02599,14.63046],[121.02201,14.63123],[121.02199,14.62914],[121.01899,14.63001],[121.01599,14.63047]]
+}

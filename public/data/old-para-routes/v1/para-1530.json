@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1530",
+  "old_id": "e5a50bed-c162-4fde-9ece-fbffd15d5c95",
+  "name": "Blumentritt Recto via F Huertas Oroquit",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [120.982,14.62189],
+  "end": [120.98593,14.60731],
+  "length_m": null,
+  "gaps": [],
+  "line": [[120.982,14.62189],[120.982,14.62063],[120.98496,14.6147],[120.984,14.61304],[120.98381,14.61152],[120.984,14.60919],[120.98402,14.6076],[120.98593,14.60731]]
+}

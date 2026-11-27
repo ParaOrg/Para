@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1397",
+  "old_id": "a61cbffb-792d-4954-aea5-393d6b2c3d80",
+  "name": "MARKET MARKET - GUADALUPE",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.04604,14.56331],
+  "end": [121.05594,14.54696],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.04604,14.56331],[121.04582,14.55991],[121.0471,14.55957],[121.04905,14.5613],[121.05199,14.56256],[121.05497,14.56185],[121.05515,14.55915],[121.057,14.55825],[121.058,14.55811],[121.0567,14.55534],[121.05709,14.5532],[121.05699,14.54951],[121.05594,14.54696]]
+}

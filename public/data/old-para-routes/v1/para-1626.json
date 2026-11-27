@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1626",
+  "old_id": "fd3cb13a-95a7-4fc6-a5f6-f3ff06705a65",
+  "name": "Plaza Miranda OPiers via Vitas",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [120.978,14.5843],
+  "end": [120.98402,14.5974],
+  "length_m": null,
+  "gaps": [],
+  "line": [[120.978,14.5843],[120.98,14.586],[120.98102,14.58819],[120.98078,14.59074],[120.98002,14.59211],[120.98002,14.59381],[120.98402,14.5974]]
+}

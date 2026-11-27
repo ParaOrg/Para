@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1273",
+  "old_id": "35fbd833-7e4e-40cd-9d3f-863b2e478b80",
+  "name": "Munoz - Luzon",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.05099,14.67373],
+  "end": [121.02,14.65881],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.05099,14.67373],[121.04901,14.67328],[121.04799,14.67293],[121.046,14.67249],[121.04399,14.67215],[121.03898,14.67111],[121.03709,14.67032],[121.03494,14.66905],[121.03402,14.66772],[121.0321,14.66629],[121.03101,14.66576],[121.02503,14.6644],[121.022,14.66361],[121.02001,14.66252],[121.02,14.65881]]
+}

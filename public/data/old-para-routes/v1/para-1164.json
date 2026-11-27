@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1164",
+  "old_id": "f481f1df-0cf1-44b5-9ec2-4bf5e19a4e23",
+  "name": "Kayamanan C - PRC via P. Tamo",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.01602,14.57199],
+  "end": [121.01692,14.54436],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.01602,14.57199],[121.01492,14.56935],[121.013,14.56761],[121.01286,14.56575],[121.011,14.56257],[121.01298,14.55841],[121.014,14.5551],[121.014,14.55152],[121.01302,14.54937],[121.01692,14.54436]]
+}

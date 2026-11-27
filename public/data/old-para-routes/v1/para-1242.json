@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1242",
+  "old_id": "ad73a4c7-8842-48c8-9836-93276cdfdf55",
+  "name": "Pier South - Sta. Ana via Padre Faura",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [120.97005,14.59025],
+  "end": [120.99301,14.57821],
+  "length_m": null,
+  "gaps": [],
+  "line": [[120.97005,14.59025],[120.97109,14.58999],[120.97291,14.58795],[120.975,14.5832],[120.978,14.5843],[120.98101,14.582],[120.98217,14.57948],[120.98197,14.57775],[120.98498,14.57465],[120.98812,14.57586],[120.98905,14.57653],[120.99301,14.57821]]
+}

@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1089",
+  "old_id": "603cd682-b923-46b9-adb5-68df0a2be191",
+  "name": "Cubao - Proj. 4 via P. Tuazon",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.06401,14.62159],
+  "end": [121.07005,14.62742],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.06401,14.62159],[121.06312,14.62085],[121.06397,14.61868],[121.06597,14.61768],[121.06604,14.61552],[121.06801,14.61495],[121.06986,14.61647],[121.07172,14.62053],[121.07197,14.62228],[121.071,14.62419],[121.07098,14.62566],[121.07005,14.62742]]
+}

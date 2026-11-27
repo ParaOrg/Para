@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-0013",
+  "old_id": "495f0b12-869b-4744-a684-1292de51c770",
+  "name": "Sangandaan-Divisoria Papunta",
+  "mode": "jeepney",
+  "verified": true,
+  "loop": false,
+  "oneway": false,
+  "start": [120.97064,14.61782],
+  "end": [120.969,14.60958],
+  "length_m": 1081,
+  "gaps": [],
+  "line": [[120.97064,14.61782],[120.97042,14.61747],[120.9699,14.61611],[120.96775,14.6098],[120.969,14.60958]]
+}

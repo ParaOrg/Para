@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1733",
+  "old_id": "1cf59323-6271-4f0d-a5f1-1f1c9e202e78",
+  "name": "Fort West",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.02796,14.54926],
+  "end": [121.02796,14.54926],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.02796,14.54926],[121.04686,14.54545],[121.04778,14.5488],[121.04589,14.55031],[121.04653,14.5534],[121.04549,14.55426],[121.04596,14.54768],[121.02796,14.54926]]
+}

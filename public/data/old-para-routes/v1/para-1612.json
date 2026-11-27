@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1612",
+  "old_id": "5c737a45-2b3c-4a88-8121-ec33c047e89a",
+  "name": "Novaliches BF Homes",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.02181,14.73536],
+  "end": [121.03799,14.72397],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.02181,14.73536],[121.02303,14.73738],[121.02489,14.73897],[121.02604,14.74029],[121.028,14.7393],[121.03001,14.73903],[121.03181,14.73857],[121.03408,14.73404],[121.03515,14.73268],[121.03597,14.73135],[121.03703,14.72932],[121.03801,14.72777],[121.039,14.72667],[121.039,14.72531],[121.03799,14.72397]]
+}

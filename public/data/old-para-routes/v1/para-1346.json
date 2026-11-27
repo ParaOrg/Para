@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1346",
+  "old_id": "e1e019a2-bc13-4789-80be-c3fd905b200d",
+  "name": "SHAW BLVD - ORTIGAS",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.05298,14.57748],
+  "end": [121.06008,14.58943],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.05298,14.57748],[121.05328,14.57449],[121.0549,14.57264],[121.05808,14.57426],[121.05983,14.57609],[121.06313,14.57702],[121.064,14.57936],[121.06381,14.58151],[121.064,14.5844],[121.06408,14.5871],[121.06399,14.58909],[121.06008,14.58943]]
+}

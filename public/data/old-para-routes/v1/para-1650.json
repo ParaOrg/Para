@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1650",
+  "old_id": "9943797b-2ff4-4e08-bdab-0d6794e1f54f",
+  "name": "Alabang-Bbayan via Bicutan",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.06002,14.47637],
+  "end": [121.049,14.41909],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.06002,14.47637],[121.05896,14.473],[121.0579,14.4703],[121.05692,14.46833],[121.05585,14.46555],[121.05328,14.45762],[121.05209,14.45308],[121.05103,14.4504],[121.05087,14.44702],[121.05094,14.44353],[121.05025,14.43727],[121.05017,14.4351],[121.05003,14.4308],[121.05,14.42604],[121.05006,14.422],[121.049,14.41909]]
+}

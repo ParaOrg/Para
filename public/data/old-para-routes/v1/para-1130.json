@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1130",
+  "old_id": "6cc6e87e-39ea-4c28-b10b-85b92644643f",
+  "name": "EDSA - Shaw - Ortigas Complex",
+  "mode": "bus",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.05804,14.57803],
+  "end": [121.07298,14.58964],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.05804,14.57803],[121.05899,14.58009],[121.05996,14.58172],[121.06008,14.58943],[121.06199,14.59039],[121.06501,14.59126],[121.06802,14.59193],[121.07,14.59306],[121.071,14.59299],[121.07129,14.59142],[121.07298,14.58964]]
+}

@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1223",
+  "old_id": "f39333b3-a359-410c-a1c1-1160dc7f3b6f",
+  "name": "Paco - Pier South",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [120.97005,14.59025],
+  "end": [120.99301,14.57821],
+  "length_m": null,
+  "gaps": [],
+  "line": [[120.97005,14.59025],[120.96909,14.5886],[120.97103,14.58602],[120.97308,14.58398],[120.975,14.5832],[120.978,14.5843],[120.98101,14.582],[120.98217,14.57948],[120.98197,14.57775],[120.98498,14.57465],[120.98812,14.57586],[120.98905,14.57653],[120.99301,14.57821]]
+}

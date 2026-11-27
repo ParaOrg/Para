@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-0883",
+  "old_id": "fa98b362-d182-49a4-a751-999cae182e5a",
+  "name": "Alabang Lawton via Sucat",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.04301,14.56591],
+  "end": [121.01206,14.57515],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.04301,14.56591],[121.041,14.5675],[121.03797,14.56708],[121.03501,14.56685],[121.02998,14.56795],[121.02101,14.57073],[121.01799,14.57136],[121.01602,14.57199],[121.01395,14.57314],[121.01206,14.57515]]
+}

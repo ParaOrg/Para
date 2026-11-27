@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1430",
+  "old_id": "940ed7ac-719e-4d21-9020-17fa566b0c7e",
+  "name": "DIVISORIA - KALAW via JONES BR",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [120.979,14.58533],
+  "end": [120.97087,14.60473],
+  "length_m": null,
+  "gaps": [],
+  "line": [[120.979,14.58533],[120.98,14.586],[120.98098,14.58721],[120.981,14.59038],[120.97901,14.5938],[120.97603,14.59844],[120.97287,14.60073],[120.97198,14.60233],[120.97194,14.60367],[120.97087,14.60473]]
+}

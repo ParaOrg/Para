@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1068",
+  "old_id": "08c1c4f9-9ccb-4a8e-a7b5-8ae31e38efad",
+  "name": "Blumentritt - Retiro",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [120.983,14.62262],
+  "end": [121.00195,14.63281],
+  "length_m": null,
+  "gaps": [],
+  "line": [[120.983,14.62262],[120.98497,14.62377],[120.98697,14.6242],[120.98899,14.62387],[120.99098,14.62576],[120.99311,14.62721],[120.99404,14.62871],[120.998,14.63101],[121.00195,14.63281]]
+}

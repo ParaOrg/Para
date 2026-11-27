@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1384",
+  "old_id": "6ed9a7ba-b464-4ef6-9388-0acf8013daba",
+  "name": "PATEROS - MARKET MARKET",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.06701,14.545],
+  "end": [121.05699,14.54951],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.06701,14.545],[121.06697,14.54601],[121.06496,14.54614],[121.06408,14.54772],[121.06397,14.5495],[121.06298,14.55116],[121.06305,14.55269],[121.06402,14.55401],[121.06496,14.5551],[121.06401,14.55789],[121.06304,14.55598],[121.06097,14.55333],[121.05901,14.55129],[121.05699,14.54951]]
+}

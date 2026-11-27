@@ -1,56 +1,12 @@
 import { useId } from 'react';
-import type { ReactNode } from 'react';
 
 import { IconButton } from '@/design-system/primitives/icon-button';
-import { HintuanIcon, TerminalIcon } from '@/shared/ui/route-icons';
 import { cn } from '@/shared/utils/cn';
 
-import { AddIcon, RouteLetterIcon } from './new-menu-icons';
+import { CHOICES, type NewChoice } from './new-menu-choices';
+import { AddIcon } from './new-menu-icons';
 import { useNewMenu } from './use-new-menu';
 import type { HotspotKind } from '../drawing/drawing-types';
-
-type NewChoice = 'route' | 'osm' | HotspotKind;
-
-interface Choice {
-  choice: NewChoice;
-  title: string;
-  description: string;
-  icon: ReactNode;
-  /** Figma's letter colours: blue-700 for routes; a terminal's and a hintuan's own colours. */
-  iconClassName: string;
-}
-
-const CHOICES: Choice[] = [
-  {
-    choice: 'route',
-    title: 'Routes',
-    description: 'Lines you can ride by jeep, e-jeep, UV Express or bus.',
-    icon: <RouteLetterIcon />,
-    // No token holds the route letter's blue yet.
-    iconClassName: 'text-blue-700',
-  },
-  {
-    choice: 'osm',
-    title: 'Route from OSM',
-    description: 'Start a route from an OpenStreetMap route’s line. A placeholder look.',
-    icon: <RouteLetterIcon />,
-    iconClassName: 'text-blue-700',
-  },
-  {
-    choice: 'terminal',
-    title: 'Terminal',
-    description: 'Where rides start, wait and fill up with passengers.',
-    icon: <TerminalIcon />,
-    iconClassName: 'text-map-hotspots-card-terminal-surface',
-  },
-  {
-    choice: 'hintuan',
-    title: 'Hintuan',
-    description: 'Places along the way where you can wait and get on.',
-    icon: <HintuanIcon />,
-    iconClassName: 'text-map-hotspots-card-hintuan-surface',
-  },
-];
 
 /**
  * What the + takes from the map's corner, for the locator's controls to
@@ -68,6 +24,8 @@ interface NewMenuProps {
   onNewRoute: () => void;
   /** Start from an OSM route (.scratch/osm-route-start); without it, the choice is not offered. */
   onNewFromOsm?: () => void;
+  /** Start from an old Para route (.scratch/old-para-routes); without it, not offered. */
+  onNewFromOldPara?: () => void;
   onNewHotspot: (kind: HotspotKind) => void;
 }
 
@@ -82,15 +40,22 @@ export function NewMenu({
   onOpenChange,
   onNewRoute,
   onNewFromOsm,
+  onNewFromOldPara,
   onNewHotspot,
 }: NewMenuProps) {
   const menuId = useId();
   const { rootRef, triggerRef, menuRef, handleMenuKeyDown } = useNewMenu(isOpen, onOpenChange);
+  // The "start from" choices, each offered only when its handler is given.
+  const startFrom: Partial<Record<NewChoice, () => void>> = {
+    osm: onNewFromOsm,
+    'old-para': onNewFromOldPara,
+  };
+  const isOffered = (choice: NewChoice) => !(choice in startFrom) || !!startFrom[choice];
 
   const handleChoose = (choice: NewChoice) => {
     onOpenChange(false);
     if (choice === 'route') onNewRoute();
-    else if (choice === 'osm') onNewFromOsm?.();
+    else if (choice === 'osm' || choice === 'old-para') startFrom[choice]?.();
     else onNewHotspot(choice);
   };
 
@@ -109,7 +74,7 @@ export function NewMenu({
           onKeyDown={handleMenuKeyDown}
           className="flex w-80 max-w-[calc(100cqw-5.25rem)] flex-col gap-1 rounded-2xl bg-surface p-1.5 shadow-sm"
         >
-          {CHOICES.filter(({ choice }) => choice !== 'osm' || onNewFromOsm).map(
+          {CHOICES.filter(({ choice }) => isOffered(choice)).map(
             ({ choice, title, description, icon, iconClassName }) => (
               <button
                 key={choice}

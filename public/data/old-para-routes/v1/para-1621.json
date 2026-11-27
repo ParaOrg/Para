@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1621",
+  "old_id": "b56a9c6a-a31f-413b-a5c1-7b99e2efc1ee",
+  "name": "Pasay RTDA QI via L Guinto",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [120.98923,14.57433],
+  "end": [121.0003,14.53966],
+  "length_m": null,
+  "gaps": [],
+  "line": [[120.98923,14.57433],[120.99192,14.57038],[120.99219,14.56842],[120.994,14.56511],[120.99697,14.55509],[120.99199,14.55293],[120.99599,14.55365],[120.99902,14.5462],[120.99996,14.54284],[121.0003,14.53966]]
+}

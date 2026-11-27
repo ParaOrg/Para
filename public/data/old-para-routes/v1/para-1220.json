@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1220",
+  "old_id": "a2ce39f9-c4c7-4863-99b6-0bbd3d4491a8",
+  "name": "Novaliches - Urduja",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.03509,14.7434],
+  "end": [121.04,14.72194],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.03509,14.7434],[121.03398,14.7437],[121.034,14.74226],[121.03273,14.74061],[121.0324,14.73908],[121.03291,14.73747],[121.03299,14.73614],[121.03408,14.73404],[121.03515,14.73268],[121.03597,14.73135],[121.03703,14.72932],[121.03801,14.72777],[121.039,14.72667],[121.039,14.72531],[121.03799,14.72397],[121.03875,14.72223],[121.04,14.72194]]
+}

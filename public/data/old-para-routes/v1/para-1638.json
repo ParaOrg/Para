@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1638",
+  "old_id": "6319b4ff-80cc-4998-902b-a29d394fb617",
+  "name": "SM MOA NAIA",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.006,14.50722],
+  "end": [120.99999,14.52744],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.006,14.50722],[121.004,14.5085],[121.00314,14.51115],[121.003,14.51313],[121.00399,14.51537],[121.00301,14.51602],[121.00104,14.5188],[121.00097,14.5208],[121.00111,14.5244],[121.00004,14.52631],[120.99999,14.52744]]
+}

@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1541",
+  "old_id": "be1bcfd2-03bd-4d0c-8e29-ab4c2c82be23",
+  "name": "EDSA Shaw E Rodriguez Ortigas Ave",
+  "mode": "bus",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.05298,14.57748],
+  "end": [121.073,14.578],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.05298,14.57748],[121.05328,14.57449],[121.0559,14.57658],[121.05996,14.58172],[121.06381,14.58151],[121.073,14.578]]
+}

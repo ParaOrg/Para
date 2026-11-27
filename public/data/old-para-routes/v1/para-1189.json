@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1189",
+  "old_id": "fb181411-2f40-492e-acbb-b035d38d734f",
+  "name": "Malinta Exit - McArthur Highway via T. Santiago",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [120.96599,14.69282],
+  "end": [120.99398,14.70939],
+  "length_m": null,
+  "gaps": [],
+  "line": [[120.96599,14.69282],[120.96809,14.69399],[120.97001,14.6947],[120.97206,14.69602],[120.97404,14.69682],[120.9748,14.69748],[120.977,14.69831],[120.97808,14.69906],[120.98006,14.69976],[120.981,14.7008],[120.98297,14.70105],[120.98412,14.70187],[120.98488,14.70324],[120.98712,14.7045],[120.99001,14.7055],[120.99102,14.70711],[120.99302,14.70848],[120.99398,14.70939]]
+}

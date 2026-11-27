@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1314",
+  "old_id": "f8b279fb-42bd-42fa-a8a1-155fbde3a277",
+  "name": "MUNOZ-PROJ8",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.02694,14.67881],
+  "end": [121.02,14.6576],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.02694,14.67881],[121.02575,14.67754],[121.02601,14.67613],[121.02604,14.67449],[121.02508,14.67321],[121.02317,14.67201],[121.02099,14.67266],[121.01808,14.67194],[121.02,14.66943],[121.02198,14.66598],[121.022,14.66361],[121.02001,14.66252],[121.02,14.65881],[121.014,14.65753],[121.01799,14.6575],[121.02,14.6576]]
+}

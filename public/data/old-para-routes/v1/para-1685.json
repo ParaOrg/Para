@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1685",
+  "old_id": "b360a31d-2659-442c-a8dd-59f56173d07f",
+  "name": "Lagro-SM Fairview",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.06709,14.7215],
+  "end": [121.059,14.73529],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.06709,14.7215],[121.0671,14.72466],[121.06699,14.72607],[121.06703,14.72678],[121.06811,14.72853],[121.06706,14.72963],[121.06699,14.7314],[121.06718,14.73346],[121.066,14.73542],[121.059,14.73529]]
+}

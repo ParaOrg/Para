@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1557",
+  "old_id": "9373eed9-9409-4db0-a4e3-2e8f4d7d24c8",
+  "name": "Libertad Pinagbarilan via EDSA",
+  "mode": "bus",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [120.99505,14.53927],
+  "end": [121.017,14.5405],
+  "length_m": null,
+  "gaps": [],
+  "line": [[120.99505,14.53927],[120.996,14.53788],[121,14.53762],[121.00302,14.53649],[121.00401,14.53349],[121.017,14.5405]]
+}

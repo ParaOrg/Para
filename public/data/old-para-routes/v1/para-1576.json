@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1576",
+  "old_id": "5800516d-4a68-4dd5-b034-30f978eb4fb7",
+  "name": "Baclaran Nichols",
+  "mode": "bus",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.01101,14.52457],
+  "end": [120.99299,14.532],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.01101,14.52457],[121.01098,14.52609],[121.00998,14.52711],[121.002,14.52827],[120.99999,14.52744],[120.994,14.52917],[120.99299,14.532]]
+}

@@ -71,16 +71,29 @@ export function metresToLine(point: LngLat, line: readonly LngLat[]): number {
   return nearest;
 }
 
-/** The routes whose line passes within `radiusM` of a tap, nearest first, at most MAX_OSM_ROUTES. */
+/**
+ * The routes whose coarse line passes within `radiusM` of a tap, nearest first (`compare` breaks
+ * a tie), at most MAX_OSM_ROUTES. The OSM and old Para pickers share it.
+ */
+export function routesNear<T extends { coarse: readonly LngLat[] }>(
+  tap: LngLat,
+  routes: readonly T[],
+  radiusM: number,
+  compare: (a: T, b: T) => number,
+): T[] {
+  return routes
+    .map((route) => ({ route, metres: metresToLine(tap, route.coarse) }))
+    .filter(({ metres }) => metres <= radiusM)
+    .sort((a, b) => a.metres - b.metres || compare(a.route, b.route))
+    .slice(0, MAX_OSM_ROUTES)
+    .map(({ route }) => route);
+}
+
+/** The OSM routes whose line passes within `radiusM` of a tap, nearest first, at most MAX_OSM_ROUTES. */
 export function osmRoutesNear(
   tap: LngLat,
   routes: readonly OsmRouteSummary[],
   radiusM: number = NEAR_TAP_M,
 ): OsmRouteSummary[] {
-  return routes
-    .map((route) => ({ route, metres: metresToLine(tap, route.coarse) }))
-    .filter(({ metres }) => metres <= radiusM)
-    .sort((a, b) => a.metres - b.metres || a.route.id - b.route.id)
-    .slice(0, MAX_OSM_ROUTES)
-    .map(({ route }) => route);
+  return routesNear(tap, routes, radiusM, (a, b) => a.id - b.id);
 }

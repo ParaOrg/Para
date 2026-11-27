@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1347",
+  "old_id": "4e0ebdc7-0d2c-4035-ab08-54d668f90235",
+  "name": "SHAW BLVD - GUADALUPE",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.04597,14.55854],
+  "end": [121.054,14.5811],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.04597,14.55854],[121.04582,14.55991],[121.04582,14.56178],[121.046,14.56259],[121.04489,14.56414],[121.046,14.56526],[121.04605,14.567],[121.046,14.5689],[121.04702,14.57159],[121.04699,14.57248],[121.04798,14.57331],[121.05001,14.57619],[121.05198,14.57932],[121.054,14.5811]]
+}

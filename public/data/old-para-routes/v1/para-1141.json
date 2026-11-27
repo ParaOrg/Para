@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1141",
+  "old_id": "26dae28c-b0e9-4e11-bca2-fd160a870ce5",
+  "name": "Evangelista - Libertad",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.01202,14.54119],
+  "end": [120.99401,14.54617],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.01202,14.54119],[121.012,14.54287],[121.011,14.54482],[121.01099,14.54898],[121.00809,14.55033],[121.00414,14.5489],[121.001,14.54805],[121.00022,14.55046],[120.99889,14.55377],[120.99999,14.55493],[120.99599,14.55365],[120.99199,14.55293],[120.99,14.55231],[120.99298,14.55049],[120.99289,14.54819],[120.99401,14.54617]]
+}

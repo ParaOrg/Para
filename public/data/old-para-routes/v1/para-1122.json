@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1122",
+  "old_id": "e988bf39-06c4-40a9-b965-3be2da609340",
+  "name": "Dominga - Libertad",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [120.99401,14.54617],
+  "end": [120.996,14.563],
+  "length_m": null,
+  "gaps": [],
+  "line": [[120.99401,14.54617],[120.99416,14.54414],[120.99491,14.54178],[120.99505,14.53927],[120.99804,14.54174],[120.99996,14.54284],[120.99902,14.5462],[121.001,14.54805],[121.00022,14.55046],[120.99889,14.55377],[120.99794,14.55718],[120.996,14.563]]
+}

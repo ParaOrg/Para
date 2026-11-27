@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1616",
+  "old_id": "fafef91e-e7d1-40bf-b092-5d8dcbeb24cd",
+  "name": "Old Pque Bldg San Antonio Valley",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.042,14.4548],
+  "end": [121.01499,14.46698],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.042,14.4548],[121.03997,14.45539],[121.03702,14.45609],[121.03399,14.45738],[121.03201,14.45862],[121.02994,14.45979],[121.02799,14.46079],[121.02211,14.46349],[121.01998,14.46477],[121.01499,14.46698]]
+}

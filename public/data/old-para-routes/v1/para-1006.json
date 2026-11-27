@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1006",
+  "old_id": "b67e8a44-069f-4f91-bfbf-5e62337f75bf",
+  "name": "Arroceros - Roxas Dist. Via Espana",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.00093,14.61698],
+  "end": [120.98179,14.59327],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.00093,14.61698],[120.99899,14.61501],[120.99701,14.61359],[120.99602,14.61232],[120.99397,14.61083],[120.99299,14.60971],[120.98895,14.60666],[120.98797,14.60557],[120.98507,14.60479],[120.98499,14.6031],[120.98504,14.60151],[120.98411,14.59938],[120.98402,14.5974],[120.98103,14.59516],[120.98002,14.59381],[120.98002,14.59211],[120.98187,14.59149],[120.98179,14.59327]]
+}

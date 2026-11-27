@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1659",
+  "old_id": "e6d60640-c6a8-4cc2-803e-c86f87bf134c",
+  "name": "Anonas via vluna",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.04703,14.63783],
+  "end": [121.06303,14.62862],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.04703,14.63783],[121.05295,14.63661],[121.055,14.63609],[121.057,14.63523],[121.05899,14.63455],[121.05912,14.63316],[121.06093,14.63218],[121.0611,14.63096],[121.06201,14.62969],[121.06303,14.62862]]
+}

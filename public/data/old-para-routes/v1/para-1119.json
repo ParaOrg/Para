@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1119",
+  "old_id": "cd2038ac-9fc8-40f3-b972-f54127af4d0a",
+  "name": "Divisoria T.M. Kalaw via Jones Br.",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [120.97087,14.60473],
+  "end": [120.98101,14.582],
+  "length_m": null,
+  "gaps": [],
+  "line": [[120.97087,14.60473],[120.97294,14.60524],[120.97405,14.60483],[120.97399,14.60275],[120.97287,14.60073],[120.97502,14.59706],[120.97793,14.59543],[120.97805,14.59376],[120.98002,14.59211],[120.98078,14.59074],[120.98102,14.58819],[120.98,14.586],[120.98101,14.582]]
+}

@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1679",
+  "old_id": "9b66208f-3c06-4aaa-9d55-aea36ec0eeec",
+  "name": "Gate5-Unimart",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.04999,14.60039],
+  "end": [121.05401,14.60489],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.04999,14.60039],[121.05223,14.60331],[121.05401,14.60489]]
+}

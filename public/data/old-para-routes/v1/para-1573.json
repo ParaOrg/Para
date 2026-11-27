@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1573",
+  "old_id": "406fcf92-1aa5-45f0-a1cc-9163424cf3a0",
+  "name": "Angono NCC Market via Felix Ave",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.126,14.5831],
+  "end": [121.13502,14.58017],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.126,14.5831],[121.12709,14.58257],[121.12899,14.58207],[121.13201,14.58113],[121.134,14.58061],[121.13502,14.58017]]
+}

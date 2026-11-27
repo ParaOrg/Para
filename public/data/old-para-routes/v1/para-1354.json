@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1354",
+  "old_id": "8e8cc628-caa3-47d5-9cc4-d0371a7632cd",
+  "name": "LIBERTAD - WASHINGTON",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.001,14.54805],
+  "end": [121.01305,14.5519],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.001,14.54805],[121.00414,14.5489],[121.00809,14.55033],[121.00993,14.55108],[121.00998,14.55246],[121.00901,14.55481],[121.01098,14.55669],[121.013,14.55347],[121.01305,14.5519]]
+}

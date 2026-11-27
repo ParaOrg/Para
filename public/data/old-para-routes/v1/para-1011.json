@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1011",
+  "old_id": "f72d23fc-9cf4-477b-803c-2f283dcce33b",
+  "name": "Baclaran - MIA/Baltao",
+  "mode": "bus",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [120.99999,14.52744],
+  "end": [121.01189,14.50919],
+  "length_m": null,
+  "gaps": [],
+  "line": [[120.99999,14.52744],[120.997,14.52754],[120.997,14.52212],[120.99718,14.52047],[120.99642,14.51855],[120.996,14.51723],[120.999,14.5169],[121.00099,14.5168],[121.00301,14.51602],[121.00604,14.51415],[121.00789,14.51242],[121.00894,14.51066],[121.01189,14.50919]]
+}

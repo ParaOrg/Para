@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1224",
+  "old_id": "77490a24-0e87-45c0-bba2-b141f11d5840",
+  "name": "Paco - Sta. Mesa Rotonda via Nagtahan",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [120.99999,14.5998],
+  "end": [120.99498,14.5814],
+  "length_m": null,
+  "gaps": [],
+  "line": [[120.99999,14.5998],[121.00097,14.59723],[121.00181,14.59444],[120.99986,14.59238],[120.99704,14.58975],[120.99502,14.58718],[120.99498,14.5814]]
+}

@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1101",
+  "old_id": "c2343916-a188-43e6-9ccb-1eecc39434e1",
+  "name": "Dian - Libertad",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.00006,14.56499],
+  "end": [121.00414,14.5489],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.00006,14.56499],[121.00298,14.56162],[121.004,14.558],[121.00401,14.55537],[121.00497,14.55229],[121.00809,14.55033],[121.009,14.54751],[121.006,14.54705],[121.00401,14.54703],[121.00101,14.54651],[121.001,14.54805],[121.00414,14.5489]]
+}

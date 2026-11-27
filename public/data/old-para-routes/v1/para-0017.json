@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-0017",
+  "old_id": "80f77853-b040-4a7d-ac89-68142e15124c",
+  "name": "A. Bonifacio - A. Mabini via 10th Avenue",
+  "mode": "jeepney",
+  "verified": true,
+  "loop": false,
+  "oneway": false,
+  "start": [120.97252,14.65084],
+  "end": [120.99492,14.65125],
+  "length_m": 2430,
+  "gaps": [],
+  "line": [[120.97252,14.65084],[120.97379,14.65103],[120.97556,14.6515],[120.97634,14.65184],[120.98298,14.65158],[120.99492,14.65125]]
+}

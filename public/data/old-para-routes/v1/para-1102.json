@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1102",
+  "old_id": "c8b59541-74e6-422b-8033-b1cbc83ceab5",
+  "name": "Divisoria - Don Bosco via Moriones, Dagupan, Juan Luna",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [120.96,14.61771],
+  "end": [120.97204,14.60699],
+  "length_m": null,
+  "gaps": [],
+  "line": [[120.96,14.61771],[120.96006,14.61551],[120.96,14.61274],[120.961,14.60957],[120.96699,14.61003],[120.969,14.60962],[120.97101,14.60943],[120.97183,14.60835],[120.97204,14.60699]]
+}

@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1167",
+  "old_id": "8343bbe3-f359-4540-a751-06fb25114678",
+  "name": "L. Guinto - Zobel Roxas via Paco",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [120.996,14.563],
+  "end": [121.00595,14.56905],
+  "length_m": null,
+  "gaps": [],
+  "line": [[120.996,14.563],[120.999,14.562],[121.004,14.567],[121.00595,14.56905]]
+}

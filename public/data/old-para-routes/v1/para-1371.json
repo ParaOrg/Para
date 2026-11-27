@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1371",
+  "old_id": "4a5945bd-ac4f-43ce-a881-bde6f5bc5ff4",
+  "name": "TANDANG SORA PALENGKE  - NIA_NPC",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.04368,14.67533],
+  "end": [121.04911,14.69148],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.04368,14.67533],[121.04498,14.67575],[121.04587,14.6764],[121.046,14.67724],[121.04601,14.6789],[121.04701,14.6806],[121.04612,14.68282],[121.04691,14.68397],[121.048,14.691],[121.04911,14.69148]]
+}

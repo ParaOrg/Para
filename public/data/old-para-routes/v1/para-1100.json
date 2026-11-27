@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1100",
+  "old_id": "9d5c791d-5ca6-426b-a3a7-a6254701e420",
+  "name": "Del Pan Guadalupe (Ibabaw)",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.01206,14.57515],
+  "end": [121.04605,14.567],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.01206,14.57515],[121.01395,14.57314],[121.01395,14.57113],[121.01594,14.56941],[121.02201,14.56723],[121.02397,14.56663],[121.02398,14.56824],[121.02615,14.57087],[121.02719,14.57124],[121.03102,14.56902],[121.03501,14.56685],[121.03797,14.56708],[121.041,14.5675],[121.04397,14.56809],[121.04605,14.567]]
+}

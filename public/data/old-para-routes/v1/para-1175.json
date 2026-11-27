@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1175",
+  "old_id": "8af07d52-759d-48dc-a912-fbe068f09f6d",
+  "name": "Lardizabal - Rizal Ave. via M. dela Fuente",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [120.984,14.6181],
+  "end": [121.00106,14.60302],
+  "length_m": null,
+  "gaps": [],
+  "line": [[120.984,14.6181],[120.98503,14.61746],[120.98688,14.61599],[120.98896,14.61625],[120.99002,14.61718],[120.99099,14.616],[120.993,14.6139],[120.994,14.61291],[120.99702,14.61022],[120.99892,14.60772],[121.00097,14.60565],[121.00106,14.60302]]
+}

@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-0980",
+  "old_id": "f57079a6-e6f6-4f8a-84f0-7495fe133620",
+  "name": "A. Bonifacio - E. Rodriguez via D. Tuazon",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [120.99528,14.64234],
+  "end": [121.005,14.61806],
+  "length_m": null,
+  "gaps": [],
+  "line": [[120.99528,14.64234],[120.994,14.64381],[120.99512,14.64352],[120.99533,14.64194],[120.99622,14.63993],[120.99601,14.63772],[120.99693,14.63625],[120.99771,14.63386],[120.99919,14.63206],[120.99911,14.63005],[121.00038,14.62829],[121.00108,14.62602],[121.00286,14.62356],[121.00405,14.62164],[121.004,14.62021],[121.00297,14.61905],[121.005,14.61806]]
+}
