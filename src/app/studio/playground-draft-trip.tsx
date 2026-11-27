@@ -8,12 +8,15 @@ import type { useSavedRoutes } from '@/features/routes/map/use-saved-routes';
 import type { HotspotRow } from '@/features/routes/model/hotspots';
 import type { DirectionRow } from '@/features/routes/model/routes';
 import {
+  DRAFT_LINES_HIT,
   StudioRouteLineDetail,
   type useDrawing,
   type useFollow,
   type useOpenDraft,
 } from '@/features/studio';
 import { useEscape } from '@/shared/hooks/use-escape';
+
+const DRAFT_TAP_LAYERS = [DRAFT_LINES_HIT];
 
 interface PlaygroundDraftTripProps {
   map: MapLibreMap | null;
@@ -49,7 +52,8 @@ export function PlaygroundDraftTrip({
   const leave = () => {
     if (getComputedStyle(leftPanel).display !== 'none') close();
   };
-  useEmptyMapTap(map, leave);
+  // A draft's dashed line is DraftLines' to open: a tap on it is not an empty one.
+  useEmptyMapTap(map, leave, DRAFT_TAP_LAYERS);
   useEscape(leave, true);
   if (!timeline) return null;
   return createPortal(

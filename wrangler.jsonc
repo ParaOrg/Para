@@ -55,8 +55,8 @@
   ],
   "workers_dev": true,
   "preview_urls": true,
-  // Read only by `wrangler preview`, which refuses to run without it; the
-  // previews deploy.yml uploads (`wrangler versions upload`) ignore it and
-  // always use the production settings above. Empty either way.
+  // Branch Previews (`wrangler preview` in .github/workflows/deploy.yml)
+  // refuse to run without this block. Empty: a Preview uses the same
+  // settings as production.
   "previews": {},
 }

@@ -41,7 +41,7 @@ interface StudioRouteLineDetailProps {
   canEdit: boolean;
   /**
    * A route that is a draft only, opened from the editor's draft: its Status reads Draft, and it
-   * has no Delete or way to add, which work on approved rows.
+   * has no Extend, Delete or way to add, which work on approved rows.
    */
   isDraftOnly?: boolean;
   opening: ReturnType<typeof useFollow>['opening'];
@@ -120,8 +120,9 @@ export function StudioRouteLineDetail({
           exporter={exporter}
           onEdit={isEditable ? () => startFromSelected(draw.load) : undefined}
           onExtend={
-            // An ikot has no end to go on from (use-follow.ts says so when one is picked).
-            isEditable && isDrawn(direction) && !isLoop(direction)
+            // An ikot has no end to go on from (use-follow.ts says so when one is picked); a draft
+            // only has no approved line to go on from, and Edit Route extends its drawing.
+            isEditable && !isDraftOnly && isDrawn(direction) && !isLoop(direction)
               ? () => startFromSelected(draw.startExtend)
               : undefined
           }
