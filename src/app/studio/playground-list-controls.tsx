@@ -33,7 +33,7 @@ export function PlaygroundListControls({
 }: PlaygroundListControlsProps) {
   const way = listWay(list.candidates, list.back, list.listing, list.modePicks);
   return (
-    <div data-testid="map-controls" className="absolute top-4 left-4 z-10 flex items-start gap-3">
+    <div data-testid="list-controls" className="absolute top-4 left-4 z-10 flex items-start gap-3">
       <div className="flex flex-col items-start gap-3">
         {way.way !== null && (
           <ViceVersaButton

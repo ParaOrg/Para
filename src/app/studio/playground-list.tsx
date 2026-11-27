@@ -45,7 +45,9 @@ export function PlaygroundList({
   if (!choosing) return null;
 
   const key = choice.map((c) => c.id).join();
-  const isHidden = !!saved.selected;
+  // Behind a trip picked from it, and behind a place's card a trip opened over (tripBehind), as
+  // the public map keeps it: one card answers Escape at a time.
+  const isHidden = !!saved.selected || cards.tripBehind;
   const modeFilter = { picks: saved.modePicks, onPicks: filterList };
   const selection = {
     selected: saved.highlight?.where === 'list' ? saved.highlight.card : null,
@@ -88,7 +90,7 @@ export function PlaygroundList({
         createPortal(
           <StudioRouteList
             key={key}
-            hidden={isHidden}
+            isHidden={isHidden}
             routes={saved.candidates}
             hotspots={hotspots.candidates}
             back={saved.back}

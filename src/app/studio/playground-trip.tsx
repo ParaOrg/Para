@@ -11,6 +11,7 @@ import type { useSavedRoutes } from '@/features/routes/map/use-saved-routes';
 import type { HotspotRow } from '@/features/routes/model/hotspots';
 import type { DirectionRow } from '@/features/routes/model/routes';
 import {
+  isPanelReachable,
   StudioRouteLineDetail,
   StudioTripCard,
   type useDeleteActions,
@@ -70,10 +71,10 @@ export function PlaygroundTrip({
   // Back to the list or the place's card the trip was opened from; opened on its own, closed.
   const isFromCard = cards.choosing || !!hotspots.selected;
   const back = hush((isFromCard ? backFromTrip : null) ?? closeAll);
-  // On the studio's other maps the host is hidden and the detail waits: their Escape and taps
-  // are theirs, as a sheet left open under an inert page leaves them (BottomSheet).
+  // On the studio's other maps the host is hidden and the detail waits, and under the credits or
+  // an account dialog it is out of reach: their Escape and taps are theirs (isPanelReachable).
   const leave = () => {
-    if (leftPanel && getComputedStyle(leftPanel).display !== 'none') back();
+    if (isPanelReachable(leftPanel)) back();
   };
   useEmptyMapTap(map, isDetail ? leave : null);
   useEscape(leave, isDetail);
