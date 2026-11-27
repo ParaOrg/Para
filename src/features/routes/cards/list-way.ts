@@ -34,8 +34,8 @@ export function listedRouteCount(
 }
 
 /**
- * The way round of the routes a list shows, the filter applied, as RouteCardList lists them: the
- * studio's Controller and the public map's Vice Versa read the same.
+ * The way round of the routes a list shows, the filter applied, as RouteCardList lists them, for
+ * Vice Versa on the map (MapSheetControls).
  */
 export function listWay(
   routes: readonly Direction[],

@@ -104,6 +104,7 @@ flowchart TD
   app_studio --> features_routes_map
   app_studio --> features_routes_model
   app_studio --> features_studio
+  app_studio --> shared_config
   app_studio --> shared_hooks
   app_studio --> shared_lib
   app_studio --> shared_types
@@ -385,7 +386,7 @@ flowchart TD
 | --- | --- |
 | `app/contribute` | `design-system/foundation`, `features/contribute`, `features/locator`, `shared/lib`, `shared/ui`, `styles` |
 | `app/public-map` | `design-system/primitives`, `features/locator`, `features/published-map`, `features/routes/cards`, `features/routes/map`, `features/routes/model`, `features/routes/published`, `features/routes/search`, `shared/config`, `shared/hooks`, `shared/lib`, `shared/ui`, `shared/utils`, `styles` |
-| `app/studio` | `design-system/primitives`, `features/locator`, `features/routes/cards`, `features/routes/map`, `features/routes/model`, `features/studio`, `shared/hooks`, `shared/lib`, `shared/types`, `shared/ui`, `shared/utils`, `styles` |
+| `app/studio` | `design-system/primitives`, `features/locator`, `features/routes/cards`, `features/routes/map`, `features/routes/model`, `features/studio`, `shared/config`, `shared/hooks`, `shared/lib`, `shared/types`, `shared/ui`, `shared/utils`, `styles` |
 | `design-system/foundation` | — |
 | `design-system/primitives` | — |
 | `features/contribute` | `features/contribute/account`, `features/contribute/api`, `features/contribute/common`, `features/contribute/consent`, `features/contribute/history`, `features/contribute/map`, `features/contribute/motion`, `features/contribute/native`, `features/contribute/native-bridge`, `features/contribute/navigation`, `features/contribute/notices`, `features/contribute/recorder`, `features/contribute/screens`, `features/contribute/stop-notes`, `features/contribute/storage`, `features/contribute/toolbar`, `features/contribute/tutorial`, `features/contribute/uploads`, `features/routes/map`, `shared/hooks`, `shared/ui`, `shared/utils` |
@@ -452,7 +453,7 @@ A feature's `index.ts` is the only door into it for code outside the feature. Wh
 
 ### `features/studio`
 
-`AuthDialogs`, `NotEditor`, `SignIn`, `skipSignInForTests`, `useAuthFlow`, `usePasswordRecovery`, `StudioSessionProvider`, `useEditorSession`, `loadHotspotsFromSupabase`, `lineOf`, `listDirections`, `getSupabase`, `setSupabase`, `supabaseConfig`, `supabaseConfigError`, `DrawToolbar`, `STUDIO_BASEMAPS`, `STUDIO_BASEMAP_THUMBNAILS`, `useDrawing`, `useFollow`, `useLoopClosing`, `DRAFT_LINES_HIT`, `FootbridgesSwitch`, `MapPlaceholder`, `MapSwitch`, `StudioDrafts`, `StudioSearch`, `useStudioMap`, `useWheelNavigation`, `AccountPill`, `NEW_MENU_DOCK_FOOT`, `NewMenu`, `SaveToasts`, `StudioHotspotCard`, `StudioSaveSheets`, `StudioRouteLineDetail`, `isPanelReachable`, `StudioTripCard`, `useDeleteActions`, `useDraftOnly`, `useOpenDraft`, `useSaveFlow`, `useSaveTarget`, `useIsWideScreen`, `useStudioTrip`, `StudioPublicView`, `StudioContributors`, `ContributionHint`, `useContributionStart`, `ContributionStart`, `CONTRIBUTIONS`, `OsmRouteStartTools`, `useOsmRouteStart`, `OldParaRouteStartTools`, `useOldParaRouteStart`
+`AuthDialogs`, `NotEditor`, `SignIn`, `skipSignInForTests`, `useAuthFlow`, `usePasswordRecovery`, `StudioSessionProvider`, `useEditorSession`, `loadHotspotsFromSupabase`, `lineOf`, `listDirections`, `getSupabase`, `setSupabase`, `supabaseConfig`, `supabaseConfigError`, `DrawToolbar`, `STUDIO_BASEMAPS`, `STUDIO_BASEMAP_THUMBNAILS`, `useDrawing`, `useFollow`, `useLoopClosing`, `DRAFT_LINES_HIT`, `FootbridgesSwitch`, `MapPlaceholder`, `MapSwitch`, `StudioDrafts`, `StudioSearch`, `useStudioMap`, `useWheelNavigation`, `AccountPill`, `NEW_MENU_DOCK_FOOT`, `NewMenu`, `SaveToasts`, `StudioHotspotCard`, `StudioSaveSheets`, `StudioRouteLineDetail`, `isPanelReachable`, `StudioTripCard`, `useDeleteActions`, `useDraftOnly`, `useOpenDraft`, `useDraftTrip`, `DraftTrip`, `useSaveFlow`, `useSaveTarget`, `useIsWideScreen`, `StudioPublicView`, `StudioContributors`, `ContributionHint`, `useContributionStart`, `ContributionStart`, `CONTRIBUTIONS`, `OsmRouteStartTools`, `useOsmRouteStart`, `OldParaRouteStartTools`, `useOldParaRouteStart`
 
 ## Entry points
 

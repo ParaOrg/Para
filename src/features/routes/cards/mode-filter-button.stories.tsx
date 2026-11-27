@@ -12,7 +12,7 @@ interface KeepingProps {
   /** The picks it starts on. */
   picks: ModePicks;
   onPicks: (picks: ModePicks) => void;
-  /** Which funnel and size: the map's Large (28) or the Controller's Base with the 28 drawing. */
+  /** Which funnel: the 28 drawing, or the map's. */
   isLarge: boolean;
   /** The IconButton's size. */
   size?: 'base' | 'large';
@@ -99,9 +99,6 @@ export const NoneFiltered: Story = {
 export const LargeFiltered: Story = {
   args: { picks: ['jeep', 'uv'], size: 'large', isLarge: true },
 };
-
-/** The studio's Controller's funnel: the same button, its 28 drawing. */
-export const OnTheController: Story = { args: { isLarge: true } };
 
 /** On a phone's map, 393 wide, at the bottom left over the sheet, as the public map stands them. */
 export const OnPhone: Story = {

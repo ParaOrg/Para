@@ -8,6 +8,7 @@ import type { RouteCardsState } from './use-route-cards';
 import type { useSavedHotspots } from './use-saved-hotspots';
 import type { useSavedRoutes } from './use-saved-routes';
 import { RouteCardList } from '../cards/route-card-list';
+import type { PickedPlace } from '../cards/route-card-stack';
 import type { Hotspot } from '../model/hotspots';
 import { placeKey } from '../model/places';
 import type { Direction } from '../model/routes';
@@ -50,7 +51,7 @@ export function RouteCardLayer<V extends Direction, S extends Hotspot>({
   besideControls,
   underCards,
 }: RouteCardLayerProps<V, S>) {
-  const { cards, camera, listUp, floats } = routeCards;
+  const { cards, camera, listUp, floats, options } = routeCards;
   const trip = openTripOf(saved, routeCards);
   const place = openPlaceOf(saved, hotspots, routeCards);
 
@@ -64,6 +65,10 @@ export function RouteCardLayer<V extends Direction, S extends Hotspot>({
         onFlip={camera.flipList}
         onSnap={cards.height.onSnap}
         onFilter={camera.filterList}
+        place={{
+          isBesideCredits: options.isBesideCredits,
+          isAtTopLeft: options.isTripBeside && !!saved.selected,
+        }}
       />
       {besideControls}
       <RideMarks map={map} saved={saved} hotspots={hotspots} routeCards={routeCards} />
@@ -84,8 +89,8 @@ export function RouteCardLayer<V extends Direction, S extends Hotspot>({
           hotspots={hotspots.candidates}
           back={saved.back}
           listing={saved.listing}
-          onFlip={camera.flipList}
           modeFilter={{ picks: saved.modePicks, onPicks: camera.filterList }}
+          selection={options.isCardSelectable ? listSelection(saved) : undefined}
           onRoute={camera.openTrip}
           onHotspot={(s) => cards.openHotspot(s.id)}
           onClose={cards.closeAll}
@@ -94,4 +99,12 @@ export function RouteCardLayer<V extends Direction, S extends Hotspot>({
       )}
     </>
   );
+}
+
+/** The list's Selected card, where a tap off its rows selects one (isCardSelectable). */
+function listSelection<V extends Direction>(saved: ReturnType<typeof useSavedRoutes<V>>) {
+  return {
+    selected: saved.highlight?.where === 'list' ? saved.highlight.card : null,
+    onSelect: (p: PickedPlace | null) => saved.highlightCard(p && { where: 'list', ...p }),
+  };
 }

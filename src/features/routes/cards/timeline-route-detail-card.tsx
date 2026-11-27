@@ -2,18 +2,15 @@ import type { ReactNode, Ref } from 'react';
 
 import { BottomSheet, type SheetHeight } from '@/shared/ui/bottom-sheet';
 
-import { RouteListController } from './route-list-controller';
 import { ROUTE_SHEET_SHAPE } from './route-sheet-shape';
 import { TripDetail, type TripDetailProps } from './trip-detail';
 import { TripEndsCard } from './trip-ends-card';
 import { TripMoreRoutes, type OtherRoute } from './trip-more-routes';
 
 type Props = TripDetailProps & {
-  onSwitch: () => void; // ⇅ on the ends card, and PAPUNTA: the same route the other way, unless not `switchable`.
+  onSwitch: () => void; // ⇅ on the ends card: the same route the other way, unless not `switchable`.
   switchable: boolean;
-  back: boolean; // The way back, for the suites (PAPUNTA's `data-back`).
-  /** PAPUNTA's word (wayWord), the way showing, and where its tap leads (switchWord), which it says after its name. Null on a loop. */
-  way: string | null;
+  /** Where ⇅ leads (switchWord), which it says after its name. Null on a loop. */
   wayTo: string | null;
   /** The route's via, under End's place (TripEndsCard); absent with none. */
   via?: string;
@@ -21,15 +18,8 @@ type Props = TripDetailProps & {
   label?: string;
   /** A loop's name, for its ends card (TripEndsCard); absent on any other trip. */
   loopName?: string;
-  /** The Controller's ‹: back to what the trip was picked from — the list, a hotspot's card — or to its route with those sharing an end; null when there is none, and ✕ stands there. */
-  onBackToList?: (() => void) | null;
-  /** The Controller's ✕, and Escape and a pull down from Low, as for any sheet. */
+  /** Escape and a pull down from Low, as for any sheet. It has no ✕ (Figma 4831:51289): the map tapped takes it away. */
   onClose: () => void;
-  /**
-   * Whether the Controller bar stands on the sheet: the studio's. The public map has none (Figma
-   * 4831:51289): the ends card's ⇅ turns the trip, and the map tapped takes it away.
-   */
-  hasController?: boolean;
   /** The dock the card sits in, for the map to glide clear of it. */
   dockRef?: Ref<HTMLDivElement>;
   /** Its height, shared with the list or card it was opened from (BottomSheet). */
@@ -43,22 +33,17 @@ type Props = TripDetailProps & {
 };
 
 /**
- * One direction as a trip (RouteDetail, 4796:30411) on its sheet, the studio's with the Controller
- * bar: its ends (TripEndsCard), "View N more destinations" under them (TripMoreRoutes) when other
+ * One direction as a trip (RouteDetail, 4796:30411) on its sheet: its ends (TripEndsCard), "View N more destinations" under them (TripMoreRoutes) when other
  * routes leave from where it starts, then its body (TripDetail): what it rides, its tiles, its stops.
  */
 export function TimelineRouteDetailCard({
   onSwitch,
   switchable,
-  back,
-  way,
   wayTo,
   via,
   label,
   loopName,
-  onBackToList = null,
   onClose,
-  hasController = false,
   dockRef,
   height,
   otherRoutes = [],
@@ -66,7 +51,7 @@ export function TimelineRouteDetailCard({
   children,
   ...detail
 }: Props) {
-  const { livery, routeOrigin, routeDirection } = detail;
+  const { routeOrigin, routeDirection } = detail;
   const name = label ?? `${routeOrigin} → ${routeDirection}`;
   return (
     <BottomSheet
@@ -81,26 +66,10 @@ export function TimelineRouteDetailCard({
       // No notch drawn, as Figma draws none (4885:42925); the handle stays for the keyboard.
       handle="hidden"
       header={null}
-      footer={
-        hasController && (
-          <RouteListController
-            owner="card"
-            way={way}
-            wayTo={wayTo}
-            isSwitchable={switchable}
-            isBack={back}
-            onSwitch={onSwitch}
-            livery={livery}
-            onBack={onBackToList}
-            onClose={onClose}
-          />
-        )
-      }
     >
       {/* The trip's name as its heading, over the cards' own, for a screen reader; nothing is drawn. */}
       <h2 className="sr-only">{name}</h2>
       <TripMoreRoutes
-        isUnderBar={hasController}
         ends={
           <TripEndsCard
             routeOrigin={routeOrigin}

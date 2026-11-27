@@ -1,7 +1,6 @@
 import { hotspotRing, type HotspotRow } from '@/features/routes/model/hotspots';
 import type { DirectionDrawing, DirectionRow } from '@/features/routes/model/routes';
 
-import { useDraftTrip } from './use-draft-trip';
 import { useIsWideScreen } from './use-is-wide-screen';
 import { isAnothersDraft } from '../data/draft-lock';
 import type { DraftRow } from '../data/review-schema';
@@ -28,7 +27,7 @@ interface UseOpenDraftOptions {
   draftHotspots: readonly HotspotRow[];
   /** The signed-in editor, whose own drafts open in the route line detail or their card. */
   userId: string | null;
-  draw: Pick<Drawing, 'load' | 'loadArea' | 'drawing'>;
+  draw: Pick<Drawing, 'load' | 'loadArea'>;
   /** Opens a direction's drawing to edit: the editor's own draft of it when there is one (useFollow). */
   opening: (
     v: DirectionRow,
@@ -39,11 +38,13 @@ interface UseOpenDraftOptions {
    * Opens a direction's card or detail, where another editor's draft says who is changing it;
    * closes them for a route that is a draft only, whose detail takes their place.
    */
-  cards: { open: boolean; openTrip: (v: { id: string }) => void; closeAll: () => void };
+  cards: { openTrip: (v: { id: string }) => void; closeAll: () => void };
   /** Opens a hotspot's card, which opens its sidebar beside the map on a computer. */
   openPlace: (hotspotId: string) => void;
   /** Says what went wrong opening it. */
   setNotice: (text: string) => void;
+  /** Which draft-only route's detail is open (useDraftTrip): the page reads it before the cards. */
+  draftTrip: { open: (directionId: string | null) => void };
 }
 
 /**
@@ -51,7 +52,7 @@ interface UseOpenDraftOptions {
  * route on the map opens the route's card (its route line detail on a computer), which says when
  * another editor is changing it; a way of it only the draft draws opens Edit Route on the
  * editor's own draft. A route that is a draft only opens on a computer in the route line
- * detail from its draft (`trip`); a phone has no card for it and opens Edit Route on it. A tapped
+ * detail from its draft (useDraftTrip's `trip`); a phone has no card for it and opens Edit Route on it. A tapped
  * line opens its own direction; a marker, which names none, the route's first drawn one. A hotspot
  * on the map opens its card; one that is a draft only, on a computer, the map's DraftPlaceCard
  * (`{ place }`), whose Edit asks again with `isToEdit` for its outline; on a phone, its outline.
@@ -68,15 +69,10 @@ export function useOpenDraft({
   cards,
   openPlace,
   setNotice,
+  draftTrip,
 }: UseOpenDraftOptions) {
   const fetchToEdit = useFetchHotspotToEdit();
   const isWideScreen = useIsWideScreen();
-  const draftTrip = useDraftTrip({
-    draftDirections,
-    isCardOpen: cards.open,
-    isDrawing: draw.drawing,
-    isWideScreen,
-  });
   const isAnothers = (draft: DraftRow) => userId !== null && isAnothersDraft(draft, userId);
 
   // A draft whose payload cannot be read says so.
@@ -141,5 +137,5 @@ export function useOpenDraft({
     return 'opened';
   };
 
-  return { open, trip: draftTrip.trip };
+  return open;
 }
