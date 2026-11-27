@@ -343,11 +343,32 @@ check(
   '  the drawing kept on the device is gone',
   (await page.evaluate(() => localStorage.getItem('para.draft.v1'))) === null,
 );
-// ---- 2a. A route that is a draft only opens in its sidebar from a tap on its dashed line
+// ---- 2a. A route that is a draft only opens in the route line detail from a tap on its dashed
+// line, to read first; Edit Route opens it into its sidebar.
 await openCard(OUT[1]);
+const draftDetail = page.getByTestId('route-line-detail');
+await draftDetail.waitFor({ timeout: 10000 });
+check(
+  "a tap on a new route's draft opens its route line detail, marked Draft, not editing",
+  (await draftDetail.getByText('Draft', { exact: true }).isVisible()) &&
+    (await pointsShown()) === 0 &&
+    (await page.getByTestId('sidebar').count()) === 0 &&
+    (await page.locator('dialog[open]').count()) === 0,
+  `${await pointsShown()} points`,
+);
+check(
+  '  with Edit Route, and no Delete or "+ Add route", which need approved rows',
+  (await draftDetail.getByRole('button', { name: 'Edit route' }).isVisible()) &&
+    (await draftDetail.getByRole('button', { name: 'More' }).count()) === 0 &&
+    (await draftDetail.getByRole('button', { name: '+ Add route' }).count()) === 0,
+);
+await page.keyboard.press('Escape');
+check('  Escape closes it', (await draftDetail.count()) === 0);
+await openCard(OUT[1]);
+await draftDetail.getByRole('button', { name: 'Edit route' }).click();
 await waitFor(async () => (await pointsShown()) > 0);
 check(
-  "a tap on a new route's draft opens it into its sidebar, with no review sheet",
+  '  its Edit Route opens it into its sidebar, with no review sheet',
   (await pointsShown()) === OUT.length && (await page.locator('dialog[open]').count()) === 0,
   `${await pointsShown()} points`,
 );
@@ -511,11 +532,18 @@ check(
 // Saving builds on the draft, so opening the approved line would save it over the first edit.
 // No reload between the two: the studio's cache of the draft must not seed the second edit.
 await openCard(OUT[1]);
-// The draft's line is drawn over the approved one: a tap on it opens the editor's own draft
-// straight into Edit route on the way tapped, with no review sheet.
+// The draft's line is drawn over the approved one: a tap on it opens the route line detail to
+// read first, and its Edit Route the editor's own draft on the way tapped, with no review sheet.
+await page.getByTestId('route-line-detail').waitFor({ timeout: 10000 });
+check(
+  "a tap on the editor's own draft opens the route line detail, not editing",
+  (await pointsShown()) === 0 && (await page.getByTestId('sidebar').count()) === 0,
+  `${await pointsShown()} points`,
+);
+await page.getByTestId('route-line-detail').getByRole('button', { name: 'Edit route' }).click();
 await waitFor(async () => (await pointsShown()) > 0);
 check(
-  "a tap on the editor's own draft opens it into editing, with no review sheet",
+  "  its Edit Route opens the editor's own draft into editing, with no review sheet",
   (await pointsShown()) > 0 && (await page.locator('dialog[open]').count()) === 0,
   `${await pointsShown()} points`,
 );
@@ -601,7 +629,7 @@ check(
 // a change saved on top of the draft would otherwise drop the board the draft added.
 await load();
 await openCard(OUT[1]);
-// A tap on the editor's own draft opens it into editing, Add signboard with it.
+// The drawing kept on the device opens again into editing, Add signboard with it.
 await waitFor(async () => (await pointsShown()) > 0);
 await waitFor(async () => (await items().count()) === 1);
 check(
@@ -622,13 +650,11 @@ check(
   said(w),
 );
 check('  and leaves the file in the bucket: the approved map may still list it', bucket.has(board));
-// Out of Edit Route and the page read again; a tap on the editor's own draft opens it, and Exit
-// from there leaves the route's detail open.
+// Out of Edit Route and the page read again; a tap on the editor's own draft opens the route's
+// detail.
 await page.getByRole('button', { name: 'Exit', exact: true }).click();
 await load();
 await openCard(OUT[1]);
-await waitFor(async () => (await pointsShown()) > 0);
-await page.getByRole('button', { name: 'Exit', exact: true }).click();
 await page.getByTestId('route-line-detail').waitFor({ timeout: 10000 });
 
 // ---- 4a. Delete while the editor already has a draft of the route: it joins the draft

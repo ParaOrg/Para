@@ -4,6 +4,7 @@ import { expect, fn, userEvent, within } from 'storybook/test';
 import type { Direction } from '@/features/routes/model/routes';
 
 import type { DirectionTab } from './direction-tabs';
+import { DraftBadge } from './draft-badge';
 import { DraftLockNotice } from './draft-lock-notice';
 import { RouteLineActions } from './route-line-actions';
 import { RouteLineDetail } from './route-line-detail';
@@ -171,6 +172,25 @@ export const ReadOnly: Story = {
     await expect(canvas.getByText('Not drawn yet')).toBeVisible();
     await expect(canvas.queryByRole('button', { name: /Edit Route|Extend|More/ })).toBeNull();
     await expect(canvas.getByRole('button', { name: 'Export' })).toBeVisible();
+  },
+};
+
+/**
+ * A route that is a draft only, opened from the editor's draft: Draft above the tabs, Edit Route
+ * and Extend, and no ⋮ Delete or "+ Add route", which work on approved rows.
+ */
+export const DraftOnly: Story = {
+  args: {
+    tabs: BACK_NOT_DRAWN,
+    onAddRoute: undefined,
+    notice: <DraftBadge />,
+    actions: <RouteLineActions exporter={exporter} onEdit={fn()} onExtend={fn()} />,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByText('Draft', { exact: true })).toBeVisible();
+    await expect(canvas.getByRole('button', { name: 'Edit Route' })).toBeVisible();
+    await expect(canvas.queryByRole('button', { name: /More|\+ Add route/ })).toBeNull();
   },
 };
 

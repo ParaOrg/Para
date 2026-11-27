@@ -13,9 +13,11 @@ import {
   type useDeleteActions,
   type useDrawing,
   type useFollow,
+  type useOpenDraft,
   type useStudioTrip,
 } from '@/features/studio';
 
+import { PlaygroundDraftTrip } from './playground-draft-trip';
 import { PlaygroundMarks } from './playground-marks';
 import { PlaygroundTrip } from './playground-trip';
 
@@ -32,6 +34,8 @@ interface PlaygroundCardsProps {
   isWideScreen: boolean;
   /** The left panel area's host for the route line detail (PlaygroundTrip). */
   leftPanel: HTMLElement | null;
+  /** A route that is a draft only, open from its draft (useOpenDraft). */
+  draftTrip: ReturnType<typeof useOpenDraft>['trip'];
   opening: ReturnType<typeof useFollow>['opening'];
   deletes: ReturnType<typeof useDeleteActions>;
   hush: ReturnType<typeof useGazeHush>['hush'];
@@ -52,6 +56,7 @@ export function PlaygroundCards({
   canEdit,
   isWideScreen,
   leftPanel,
+  draftTrip,
   opening,
   deletes,
   hush,
@@ -93,6 +98,19 @@ export function PlaygroundCards({
         hush={hush}
         onDrawReturnTrip={onDrawReturnTrip}
       />
+      {draftTrip && isWideScreen && leftPanel && !draw.drawing && (
+        <PlaygroundDraftTrip
+          map={map}
+          trip={draftTrip}
+          saved={saved}
+          hotspots={hotspots}
+          draw={draw}
+          canEdit={canEdit}
+          leftPanel={leftPanel}
+          opening={opening}
+          deletes={deletes}
+        />
+      )}
 
       {/*
         A hotspot's card, its routes as RouteCards; it stays behind the trip
