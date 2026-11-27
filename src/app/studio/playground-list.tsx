@@ -1,5 +1,4 @@
 import type { MapLibreMap } from 'maplibre-gl';
-import { createPortal } from 'react-dom';
 
 import { RouteCardList } from '@/features/routes/cards/route-card-list';
 import type { PickedPlace } from '@/features/routes/cards/route-card-stack';
@@ -9,7 +8,6 @@ import type { useSavedHotspots } from '@/features/routes/map/use-saved-hotspots'
 import type { useSavedRoutes } from '@/features/routes/map/use-saved-routes';
 import type { HotspotRow } from '@/features/routes/model/hotspots';
 import type { DirectionRow } from '@/features/routes/model/routes';
-import { StudioRouteList } from '@/features/studio';
 
 import { PlaygroundListControls } from './playground-list-controls';
 
@@ -19,17 +17,16 @@ interface PlaygroundListProps {
   hotspots: ReturnType<typeof useSavedHotspots<HotspotRow>>;
   cards: ReturnType<typeof useCardStack<DirectionRow, HotspotRow>>;
   camera: ReturnType<typeof useCardCamera<DirectionRow, HotspotRow>>;
-  /** A computer's screen: the list fills the left panel, its controls on the map. */
+  /** A computer's screen: the list docks on the map's left, its controls on the map beside it. */
   isWideScreen: boolean;
-  /** The left panel area's host, hidden on the studio's other maps. */
-  leftPanel: HTMLElement | null;
 }
 
 /**
  * Several saved things under one click: the public map's list, kept hidden behind the trip picked
- * from it. It lists only what is drawn, the owner's way. On a computer it fills the left panel
- * (StudioRouteList) and Vice Versa, the filter and the Overview stand on the map beside it; on a
- * phone it is the sheet with its Controller: ✕, PAPUNTA and the filter.
+ * from it. It lists only what is drawn, the owner's way. On a computer it docks on the map's left
+ * as the public map's does, ending at its last card with the map below it, and Vice Versa, the
+ * filter and the Overview stand on the map beside it (Figma 4905:21658); on a phone it is the
+ * sheet with its Controller: ✕, PAPUNTA and the filter.
  */
 export function PlaygroundList({
   map,
@@ -38,7 +35,6 @@ export function PlaygroundList({
   cards,
   camera,
   isWideScreen,
-  leftPanel,
 }: PlaygroundListProps) {
   const { choice, choosing, closeAll, height } = cards;
   const { flipList, filterList, openTrip } = camera;
@@ -55,10 +51,21 @@ export function PlaygroundList({
   };
   const handleHotspot = (s: HotspotRow) => cards.openHotspot(s.id);
 
-  if (!isWideScreen) {
-    return (
+  // On a computer the list docks on the map's left, as the public map's does, its controls on the
+  // map beside it instead of the phone's Controller.
+  return (
+    <>
+      {isWideScreen && !isHidden && (
+        <PlaygroundListControls
+          map={map}
+          list={saved}
+          overview={camera.overviewButton}
+          onFlip={flipList}
+          onFilter={filterList}
+        />
+      )}
       <RouteCardList
-        hasController
+        hasController={!isWideScreen}
         key={key}
         hidden={isHidden}
         height={height}
@@ -73,36 +80,6 @@ export function PlaygroundList({
         onHotspot={handleHotspot}
         onClose={closeAll}
       />
-    );
-  }
-  return (
-    <>
-      {!isHidden && (
-        <PlaygroundListControls
-          map={map}
-          list={saved}
-          overview={camera.overviewButton}
-          onFlip={flipList}
-          onFilter={filterList}
-        />
-      )}
-      {leftPanel &&
-        createPortal(
-          <StudioRouteList
-            key={key}
-            isHidden={isHidden}
-            routes={saved.candidates}
-            hotspots={hotspots.candidates}
-            back={saved.back}
-            listing={saved.listing}
-            modeFilter={modeFilter}
-            selection={selection}
-            onRoute={openTrip}
-            onHotspot={handleHotspot}
-            onClose={closeAll}
-          />,
-          leftPanel,
-        )}
     </>
   );
 }

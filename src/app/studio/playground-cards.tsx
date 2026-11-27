@@ -32,7 +32,7 @@ interface PlaygroundCardsProps {
   canEdit: boolean;
   /** A computer's screen: a trip opens in the left panel. */
   isWideScreen: boolean;
-  /** The left panel area's host for the route list and the route line detail. */
+  /** The left panel area's host for the route line detail. */
   leftPanel: HTMLElement | null;
   /** A route that is a draft only, open from its draft (useOpenDraft). */
   draftTrip: ReturnType<typeof useOpenDraft>['trip'];
@@ -143,7 +143,6 @@ export function PlaygroundCards({
           cards={cards}
           camera={camera}
           isWideScreen={isWideScreen}
-          leftPanel={leftPanel}
         />
       )}
     </>
