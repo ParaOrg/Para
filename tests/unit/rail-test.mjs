@@ -144,6 +144,17 @@ test("a road route's timeline names a station by its own name, one row with a hi
   );
 });
 
+test("a station of the end's place is left out of the middle, as any box of it is", () => {
+  const atTail = [...HOTSPOTS, hintuan('lrt-tail', 0.0299, 'Tail', 'LRT-1')];
+  const along = hintuansAlong(LINE, atTail, BUS).map((a) => a.hotspot);
+  assert.ok(
+    along.some((s) => s.id === 'lrt-tail'),
+    'the bus passes it',
+  );
+  const rows = timelineFor(atTail[0], atTail[1], false, along, LINE[0]).between;
+  assert.ok(!rows.some((r) => r.label === 'Tail'));
+});
+
 test('a train still lists no road hintuan under its track, however near', () => {
   const underTrack = [HOTSPOTS[0], HOTSPOTS[1], hintuan('jeep-under', 0.015, 'Under')];
   assert.deepEqual(hintuansAlong(LINE, underTrack, LRT1), []);

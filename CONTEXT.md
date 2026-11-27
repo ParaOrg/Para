@@ -170,8 +170,7 @@ Cruz and Gil Puyat, each row read by the station's own name. A line — a
 train, the ferry, the EDSA Carousel — stops only at its own line's stations,
 never at the road hintuans under its track, along its river or its busway.
 The timeline, the links, a ride's start and end and the green stretch all
-follow it. A station has no babaan side: it is drawn over its track, not on
-the roadside. [ADR 0010](docs/adr/0010-road-routes-list-the-stations-they-pass.md)
+follow it. A station has no babaan side until the owner designs one. [ADR 0010](docs/adr/0010-road-routes-list-the-stations-they-pass.md)
 
 **Babaan side** (of a direction at a hintuan):
 The right-hand side of the road in the direction's travel, papunta and

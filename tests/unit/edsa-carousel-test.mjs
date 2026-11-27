@@ -1,7 +1,7 @@
 // The EDSA Carousel as a line (src/features/routes/model/busway.ts): its mode, 'busway', names its
 // one line, EDSA-C, so a route drawn in the studio, whose draft never writes a routeCode, stops at
-// the Carousel's stations only, and a jeep at them only where its line passes them (servedBy). Its bound is read from its stations'
-// order, north to south; the studio offers it, locks it once saved and marks a hintuan its station;
+// the Carousel's stations only, and a jeep at them only where its line passes them (servedBy).
+// Its bound is read from its stations' order, north to south; the studio offers it, locks it once saved and marks a hintuan its station;
 // and the publish keeps it out of every file until a shape is made for it.
 //
 //   node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs tests/unit/edsa-carousel-test.mjs

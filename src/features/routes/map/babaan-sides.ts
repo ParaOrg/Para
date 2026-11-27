@@ -83,8 +83,9 @@ export function useBabaanSides(
  * box it passes and cuts across (hintuansAlong, rightOfLine), its half on
  * the line's right, in the order the line reaches them. None for a train or
  * the ferry, or with nothing chosen, and none on a station's box: a road
- * route lists the stations it passes, but a station is drawn over its track,
- * not on the roadside, so it has no babaan side.
+ * route lists the stations it passes, but a station's babaan side is the
+ * owner's to design (ADR 0010), and a line through a platform box twice does
+ * not halve it.
  *
  * The cut is asked first, and only of the boxes the line's own box reaches (a
  * metre wider, as rightOfLine pads its own); where along the line, of only

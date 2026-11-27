@@ -7,8 +7,8 @@ interface CarouselStationFieldProps {
 }
 
 /**
- * Whether a hintuan is an EDSA Carousel station: the one line that stops at it is the Carousel's,
- * and a road route still does where its line passes it (servedBy). A train's or the ferry's station comes in by its import with its line fixed, so it
+ * Whether a hintuan is an EDSA Carousel station: the one line that stops at it is the
+ * Carousel's, and a road route still does where its line passes it (servedBy). A train's or the ferry's station comes in by its import with its line fixed, so it
  * shows none.
  */
 export function CarouselStationField({ line, onChange }: CarouselStationFieldProps) {
