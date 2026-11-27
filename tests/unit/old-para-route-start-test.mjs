@@ -31,7 +31,7 @@ const readJson = (name) => JSON.parse(readFileSync(new URL(name, DIR), 'utf8'));
 const routes = oldParaRouteIndexSchema.parse(readJson('index.json'));
 
 test('the committed files read through the studio’s schema', () => {
-  assert.equal(routes.length, 1737);
+  assert.equal(routes.length, 1734, 'the source’s 1,737 less the 3 hidden test rows');
   const ikot = routes[0];
   assert.equal(ikot.paraId, 'PARA-0001');
   assert.equal(ikot.name, 'UP - IKOT');
@@ -44,6 +44,14 @@ test('the committed files read through the studio’s schema', () => {
   const noLine = routes.find((route) => route.paraId === 'PARA-0049');
   assert.equal(noLine.coarse, null);
   assert.ok(noLine.start && noLine.end, 'its ends are known');
+});
+
+test('the hidden test rows never reach the studio: not listed, searched or near', () => {
+  const hidden = ['PARA-1734', 'PARA-1735', 'PARA-1736'];
+  assert.ok(routes.every((route) => !hidden.includes(route.paraId)));
+  for (const paraId of hidden) assert.deepEqual(searchOldParaRoutes(paraId, routes), []);
+  assert.deepEqual(searchOldParaRoutes('HEALTH_CHECK', routes), []);
+  assert.deepEqual(searchOldParaRoutes('health check', routes), []);
 });
 
 test('the fetchers read the files by their URLs and fail on a missing one', async () => {

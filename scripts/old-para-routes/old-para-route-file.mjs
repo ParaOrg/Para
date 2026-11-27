@@ -6,6 +6,8 @@
 // An index (index.json) with one row per route, its coarse line for "near the map's centre", and
 // one file per route with a line (para-0001.json) holding that line and the gaps in it. Only the
 // studio fetches them: the public map's offline worker keeps none.
+import { readFileSync } from 'node:fs';
+
 import { metresBetween, simplify } from '../osm-routes/osm-route-file.mjs';
 
 export const OLD_PARA_ROUTE_SCHEMA = 1;
@@ -15,6 +17,13 @@ export const OLD_PARA_ROUTE_DIR = 'public/data/old-para-routes/v1';
 export const OLD_PARA_MODES = ['jeepney', 'uv', 'bus'];
 /** The source holds this many routes; it never refreshes (the old app is retired). */
 export const ROUTE_COUNT = 1737;
+/**
+ * The Para IDs the studio's files leave out (hidden-para-ids.json says why). The PDF script reads
+ * the same file.
+ */
+export const HIDDEN_PARA_IDS = JSON.parse(
+  readFileSync(new URL('./hidden-para-ids.json', import.meta.url), 'utf8'),
+).paraIds;
 /** A route's line, simplified to this many metres: close enough to trace along. */
 export const LINE_TOLERANCE_M = 5;
 /** The index's line, for "near the map's centre" only, as the OSM index's. */
@@ -146,9 +155,11 @@ export function oldParaRouteText(route) {
 /** The file name of a route's file: PARA-0001 → para-0001.json. */
 export const routeFileName = (paraId) => `${paraId.toLowerCase()}.json`;
 
-/** Every file the build writes, name and text, the index first. */
+/** Every file the build writes, name and text, the index first; the hidden routes left out. */
 export function oldParaRouteFiles(sourceText) {
-  const routes = oldParaRoutesFrom(sourceText);
+  const routes = oldParaRoutesFrom(sourceText).filter(
+    (route) => !HIDDEN_PARA_IDS.includes(route.paraId),
+  );
   return [
     ['index.json', oldParaRouteIndexText(routes)],
     ...routes

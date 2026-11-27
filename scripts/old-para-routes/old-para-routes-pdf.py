@@ -1,8 +1,9 @@
 """Writes the list of every old Para route as a PDF, for the owner to read and mark up.
 
-Each route with its Para ID, name, mode, whether the old app verified it and whether it has a
-line, grouped by mode. Read from the source file (old-para-routes.v1.json), not the studio's
-files, so it lists what the old app held. The PDF is not committed.
+Each route with its Para ID, mode, name, whether the old app verified it and whether it has a
+line, grouped by mode, the verified first, each part in Para ID order. Read from the source file
+(old-para-routes.v1.json), less the test rows hidden-para-ids.json names, as the studio's files
+are. The PDF is not committed.
 
     python3 scripts/old-para-routes/old-para-routes-pdf.py <out.pdf>
 
@@ -20,17 +21,20 @@ from reportlab.lib.units import mm
 from reportlab.platypus import PageBreak, Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
 SOURCE = Path(__file__).with_name("old-para-routes.v1.json")
+HIDDEN = Path(__file__).with_name("hidden-para-ids.json")
 MODES = [("jeepney", "Jeepney"), ("bus", "Bus"), ("uv", "UV Express")]
 
 
 def route_rows(routes, styles):
-    """The table's rows: a header, then one route each, in Para ID order."""
+    """The table's rows: a header, then one route each, the verified first, in Para ID order."""
     cell = styles["BodyText"].clone("cell", fontSize=8, leading=10)
-    rows = [["Para ID", "Name", "Verified", "Line"]]
-    for route in sorted(routes, key=lambda r: r["paraId"]):
+    labels = dict(MODES)
+    rows = [["Para ID", "Mode", "Name", "Verified", "Line"]]
+    for route in sorted(routes, key=lambda r: (not r["isVerified"], r["paraId"])):
         rows.append(
             [
                 route["paraId"],
+                labels[route["mode"]],
                 Paragraph(route["name"].replace("&", "&amp;").replace("<", "&lt;"), cell),
                 "Verified" if route["isVerified"] else "Unverified",
                 "Has line" if route["line"] else "No line",
@@ -40,7 +44,7 @@ def route_rows(routes, styles):
 
 
 def table_of(rows):
-    table = Table(rows, colWidths=[22 * mm, 108 * mm, 22 * mm, 20 * mm], repeatRows=1)
+    table = Table(rows, colWidths=[22 * mm, 22 * mm, 88 * mm, 22 * mm, 20 * mm], repeatRows=1)
     table.setStyle(
         TableStyle(
             [
@@ -60,14 +64,19 @@ def main():
     if len(sys.argv) != 2:
         sys.exit("Usage: python3 scripts/old-para-routes/old-para-routes-pdf.py <out.pdf>")
     source = json.loads(SOURCE.read_text(encoding="utf-8"))
-    routes = source["routes"]
+    hidden = set(json.loads(HIDDEN.read_text(encoding="utf-8"))["paraIds"])
+    routes = [r for r in source["routes"] if r["paraId"] not in hidden]
+    unknown = [r for r in routes if r["mode"] not in dict(MODES)]
+    if unknown:
+        sys.exit(f"{len(unknown)} routes have a mode the list does not know: {unknown[0]['mode']}")
     styles = getSampleStyleSheet()
     with_line = sum(1 for r in routes if r["line"])
     verified = sum(1 for r in routes if r["isVerified"])
     story = [
         Paragraph("Old Para routes", styles["Title"]),
         Paragraph(
-            f"{len(routes)} routes from the old Para app's database (backup of 2026-10-30): "
+            f"{len(routes)} routes from the old Para app's database (backup of 2026-10-30, less "
+            f"{len(hidden)} test rows): "
             f"{with_line} with a line, {verified} verified. Extracted {source['extractedAt']}.",
             styles["BodyText"],
         ),
@@ -79,9 +88,6 @@ def main():
             story.append(PageBreak())
         story.append(Paragraph(f"{label} ({len(of_mode)})", styles["Heading2"]))
         story.append(table_of(route_rows(of_mode, styles)))
-    unknown = [r for r in routes if r["mode"] not in dict(MODES)]
-    if unknown:
-        sys.exit(f"{len(unknown)} routes have a mode the list does not know: {unknown[0]['mode']}")
 
     def footer(canvas, doc):
         canvas.setFont("Helvetica", 7)
