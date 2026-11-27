@@ -56,7 +56,7 @@
   ],
   "workers_dev": true,
   "preview_urls": true,
-  // Branch builds run `wrangler preview`, which refuses to run without this
-  // block. Empty: a Preview uses the same settings as production.
+  // Previews (`wrangler versions upload` in .github/workflows/deploy.yml) use
+  // this block. Empty: a Preview uses the same settings as production.
   "previews": {},
 }

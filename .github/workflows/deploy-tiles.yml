@@ -1,0 +1,84 @@
+# Puts the tiles Worker, `para-tiles` (workers/tiles/), on Cloudflare, as Workers Builds did with
+# root directory workers/tiles. Only a push that changes workers/tiles/ runs it; the tiles' data is
+# uploaded to R2 by tiles.yml, not by this.
+#
+#   A push to main that changes workers/tiles/     -> `wrangler deploy`: tiles.para-commute.org.
+#   A push to staging that changes workers/tiles/  -> a new version, not deployed, with the preview
+#                                                      alias `staging`.
+#   "Run workflow"                                 -> the same for the branch it is run on: a
+#                                                      deploy from main, a preview from any other.
+#
+# The secrets are deploy.yml's (its header has the owner's setup). Until they are set, a run says
+# so and deploys nothing. The Worker has no npm imports and no build step: wrangler bundles it.
+name: Deploy tiles
+
+on:
+  push:
+    branches: [main, staging]
+    paths:
+      - workers/tiles/**
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# A deploy that has started always finishes; a newer push waits for it.
+concurrency:
+  group: deploy-tiles-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  WRANGLER_VERSION: 4.162.0
+  WRANGLER_SEND_METRICS: 'false'
+
+jobs:
+  tiles:
+    name: The tiles Worker on Cloudflare
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: workers/tiles
+    steps:
+      - name: The Cloudflare secrets are set
+        id: secrets
+        working-directory: .
+        env:
+          HAS_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN != '' }}
+          HAS_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID != '' }}
+        run: |
+          if [ "$HAS_TOKEN" = true ] && [ "$HAS_ACCOUNT" = true ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::CLOUDFLARE_API_TOKEN or CLOUDFLARE_ACCOUNT_ID is not set for this run, so nothing is deployed (deploy.yml's header)."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          fi
+      - if: steps.secrets.outputs.ready == 'true'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - if: steps.secrets.outputs.ready == 'true'
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 22
+
+      - name: Deploy to production
+        if: steps.secrets.outputs.ready == 'true' && github.ref == 'refs/heads/main'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          npx --yes "wrangler@$WRANGLER_VERSION" deploy \
+            --tag "${GITHUB_SHA::7}" --message "main ${GITHUB_SHA::7}"
+          echo "Deployed para-tiles from main at ${GITHUB_SHA::7}: https://tiles.para-commute.org/health" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload a preview version
+        if: steps.secrets.outputs.ready == 'true' && github.ref != 'refs/heads/main'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          WRANGLER_CI_GENERATE_PREVIEW_ALIAS: 'true'
+          WORKERS_CI_BRANCH: ${{ github.ref_name }}
+        run: |
+          npx --yes "wrangler@$WRANGLER_VERSION" versions upload \
+            --tag "${GITHUB_SHA::7}" --message "preview ${GITHUB_SHA::7}"

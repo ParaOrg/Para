@@ -52,7 +52,7 @@ const checks = [
   {
     key: 'deployed-map',
     title: 'Alert: a publish did not reach the live site',
-    hint: 'The map was published to main, but the site still shows the one before. Open the Cloudflare dashboard, Workers & Pages, para, Deployments: a failed build says why, and "Retry deployment" builds it again. Commuters keep the earlier map meanwhile; nothing is lost.',
+    hint: 'The map was published to main, but the site still shows the one before. Open GitHub, Actions, Deploy, the run for that commit on main: a failed run says why, and Re-run jobs builds it again. Commuters keep the earlier map meanwhile; nothing is lost.',
     runbook: runbookLink('a-publish-didnt-deploy'),
     run: () => checkDeployedMap(fetch, github, now),
   },

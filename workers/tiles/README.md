@@ -23,17 +23,16 @@ Bucket layout (written by the monthly build, `.scratch/own-tiles/issues/02-month
 
 **Rate limit.** Not in the Worker. It is a Cloudflare rate-limiting rule on the `para-commute.org` zone (Security → WAF → Rate limiting rules), an owner step in the dashboard; `workers.dev` has none.
 
-## Deploy (the owner's steps)
+## Deploy
 
-1. Cloudflare dashboard → **Workers & Pages** → **Create** → **Import a repository** → choose **ParaOrg/Para**.
-2. Name the Worker `para-tiles`. Set the **root directory** to `workers/tiles`.
-3. Set the **deploy command** to `npx wrangler@4 deploy`. Leave the build command empty.
-4. Save and deploy. The R2 binding is already in `wrangler.jsonc`: `TILES` → the bucket `parapo-tiles`. In the Worker's **Settings → Bindings** it should show as an R2 bucket. If the bucket has another name, change `bucket_name` in `wrangler.jsonc`.
-5. Open `https://para-tiles.<account>.workers.dev/health`. It answers once the first monthly build has put `tiles/current.json` in the bucket; before that it says the tiles are unavailable (`503`).
-6. Check a tile is gzipped once, not twice. Take any tile address the file holds, for example Quiapo at zoom 14:
+1. `.github/workflows/deploy-tiles.yml` deploys the Worker from `main` whenever `workers/tiles/` changes, and uploads a preview version from `staging`; "Run workflow" on `main` deploys it by hand. It runs `npx wrangler deploy` in `workers/tiles`, with the secrets `docs/operations.md` (How the site deploys) lists.
+2. Cloudflare's own Workers Builds, which deployed it before, is switched off for `para-tiles` (Settings → Build).
+3. The R2 binding is already in `wrangler.jsonc`: `TILES` → the bucket `parapo-tiles`. In the Worker's **Settings → Bindings** it should show as an R2 bucket. If the bucket has another name, change `bucket_name` in `wrangler.jsonc`.
+4. Open `https://para-tiles.<account>.workers.dev/health`. It answers once the first monthly build has put `tiles/current.json` in the bucket; before that it says the tiles are unavailable (`503`).
+5. Check a tile is gzipped once, not twice. Take any tile address the file holds, for example Quiapo at zoom 14:
    `curl -s https://para-tiles.<account>.workers.dev/14/13698/7520.pbf | gunzip | head -c 20`
    should print readable protobuf text (layer names such as `water`), not binary that starts `1f 8b` again. The Worker marks tiles `encodeBody: 'manual'` so Cloudflare does not compress them a second time.
-7. For the tiles subdomain: the zone's **Workers Routes** → `tiles.para-commute.org/*` → `para-tiles`, plus a proxied AAAA `tiles` `100::` record (see Custom domain above). That is also what turns the edge cache on.
+6. For the tiles subdomain: the zone's **Workers Routes** → `tiles.para-commute.org/*` → `para-tiles`, plus a proxied AAAA `tiles` `100::` record (see Custom domain above). That is also what turns the edge cache on.
 
 ## Run the checks
 
