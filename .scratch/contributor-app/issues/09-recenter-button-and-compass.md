@@ -1,6 +1,6 @@
 # 09: Recenter button and compass on the contributor map
 
-Status: needs-info (owner: which build, and what was looked for)
+Status: closed (the owner, 2026-11-27: no recenter button or compass for now)
 Type: investigation
 Who: a session
 Source: the owner's phone test of the app, 2026-10-26, feedback (d)
