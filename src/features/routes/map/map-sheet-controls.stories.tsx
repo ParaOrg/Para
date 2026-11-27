@@ -1,9 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, within } from 'storybook/test';
 
-import type { Direction } from '@/features/routes/model/routes';
-
 import { MapSheetControls } from './map-sheet-controls';
+import type { Direction } from '../model/routes';
 
 /** Sample data only, shaped like the published map: a jeep's two ways, 8 km straight north. */
 function direction(key: string, name: string, reversed: boolean): Direction {
@@ -65,7 +64,7 @@ const listOf = (candidates: readonly Direction[]) => ({
  * 24. On a phone the list's filter stands over locate-me (ListFilter in Locator), not here.
  */
 const meta = {
-  title: 'App/PublicMap/MapSheetControls',
+  title: 'Features/Routes/MapSheetControls',
   component: MapSheetControls,
   args: {
     map: null,
