@@ -21,16 +21,21 @@ Status: needs-info
   and `route-stops-section.tsx`.
 - **Missing facts.** "Not priced yet" shows for a mode with no fare rule, and "Not set yet" for a
   route with no mode. A route with no via has no Via row. Code: `route-line-facts.ts`.
-- **Status on a published route.** The summary card (4915:2713) draws Status as "Draft" in
-  text/text-error. A route with no draft waiting says "Published" in Content/quaternary, the word
-  Edit Route's Status already uses. While the route's draft is still being read, or cannot be,
-  Status reads "--", as an unknown fact does in Edit Route. Code: `route-line-facts.ts`
+- **Status on a published route.** Answered (the owner, 2026-11-27): keep "Published", and keep
+  "--" while the route's draft is still being read. The summary card (4915:2713) draws "Draft" in
+  text/text-error; "Published" is in Content/quaternary. Code: `route-line-facts.ts`
   (`routeStatus`, `routeSummaryFacts`).
 - **Transport mode's words.** The frame writes "Jeep", so a road vehicle reads as a trip's
   Transport mode tile does (Jeep, E-Jeep, Bus, UV Express, Ferry, EDSA Carousel). LRT, MRT, P2P bus
   and Tricycle keep the studio's own words. Code: `route-line-facts.ts` (`modeLabel`).
-- **EAT.** The frame has an EAT row ("30mins - 1hr"). No travel time is stored or worked out yet,
-  so the row is left out until there is one to show.
+- **EAT.** Answered (the owner, 2026-11-27): later. The frame has an EAT row ("30mins - 1hr"), but
+  no travel time is stored or worked out yet, so the row stays out for now.
+- **A place that is a draft only.** A stand-in card until the owner draws one: on a computer, a
+  tap on a new terminal or hintuan's draft opens a small card over the map's foot with its name,
+  Kind and Status Draft (text/text-error). The editor's own draft has Edit terminal / Edit
+  hintuan, which opens the editor; another editor's shows the lock notice with Approve. Phones
+  open the editor, or the held draft sheet, as before. Code:
+  `src/features/studio/panels/draft-place-card.tsx`, opened from `maps/studio-drafts.tsx`.
 - **Draft notice above the tabs.** Another editor's locked draft shows the existing lock notice
   above the tabs. Code: `studio-route-line-detail.tsx`.
 - **Where Overview sits.** On the map, 16 from its top left. The "Overview ↗" pill shows while the
@@ -48,11 +53,14 @@ Status: needs-info
 - **Loading and empty.** The frame draws a full list only. The list opens only once a tap has
   found routes, so it never waits or opens empty. A filter that leaves nothing shows the public
   map's "No … routes here" with Show all routes, as the phone's list does. Code:
-  `src/features/studio/panels/studio-route-list.tsx`.
+  `src/app/studio/playground-list.tsx` (the public map's `RouteCardList`, docked).
 - **Closing it.** The frame has no ✕. Escape closes the list, as on the public map. Opening
   another place or a route from the map replaces it. Phones keep their ✕ and PAPUNTA.
 - **No DonationCard.** The frame ends the list with the public map's DonationCard ("Help make
   Para better"). The studio leaves it out: editors are not the ones asked to donate. Say if it
   should show here too.
+- **A short list.** It ends at its last card with the map below it, as the public map's does,
+  and grows to the map's height before it scrolls (the owner, 2026-11-27: "remove this white").
+  The frame draws a list taller than the screen only.
 - **Hover and focus** on the cards and on Vice Versa, the filter and Overview: the public map's
   own states stand in (the browser's focus ring, the buttons' hover).

@@ -20,9 +20,9 @@ interface PlaygroundListControlsProps {
 
 /**
  * The studio's route list's controls on the map on a computer (Figma 4905:21658), 16 from the
- * map's top and the left panel the list fills: Vice Versa over the Overview, the filter right of
- * them, as the public map floats its own. Vice Versa is not there when only loops are listed:
- * they have no way back.
+ * map's top and from the list docked on its left (384 wide): Vice Versa over the Overview, the
+ * filter right of them, as the public map floats its own (MapControlsDock). Vice Versa is not
+ * there when only loops are listed: they have no way back.
  */
 export function PlaygroundListControls({
   map,
@@ -33,7 +33,10 @@ export function PlaygroundListControls({
 }: PlaygroundListControlsProps) {
   const way = listWay(list.candidates, list.back, list.listing, list.modePicks);
   return (
-    <div data-testid="list-controls" className="absolute top-4 left-4 z-10 flex items-start gap-3">
+    <div
+      data-testid="list-controls"
+      className="absolute top-4 left-100 z-10 flex items-start gap-3"
+    >
       <div className="flex flex-col items-start gap-3">
         {way.way !== null && (
           <ViceVersaButton

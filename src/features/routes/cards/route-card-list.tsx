@@ -64,8 +64,8 @@ interface Props {
  * On a wide screen the list docks the map's whole height on the left, 384 wide, under the
  * Controller as its top bar, in Card/Jeep. The public map's list has no Controller (Figma
  * 4796:34329): Vice Versa and the sliders float on the map instead, and an empty map tapped,
- * Back or Escape closes it. The studio on a computer lists the same cards in its left panel
- * instead (StudioRouteList, 4905:21658), its controls on the map.
+ * Back or Escape closes it. The studio on a computer docks it the same way, without the
+ * Controller, its controls on the map (PlaygroundListControls, 4905:21658).
  *
  * The grouping is departures': one way round at a time, and PAPUNTA flips them all. The map lights
  * every direction listed, the way round it is showing them; a tap on a card off its rows narrows

@@ -126,10 +126,9 @@ The builder designed these for now, or left them out. Each waits for the owner's
 - the list's sheet at Low (240 px: the first card's mode and name above the Controller), which Figma does not draw;
 - a way to change the list sheet's height without a handle, for the keyboard (today a visually hidden button, shown as the usual notch while it has the keyboard's focus);
 - the trip and place cards' width beside the 368 list (they stay 384);
-- the trip card at full height beside the list's, which fills the screen (it keeps its strip of map);
 - the loading, empty, error and long-content states;
 - the studio's version (the owner is revamping it all);
-- the route detail's new frame;
+- the route detail's new frame; and the commuter's route detail on a computer, which has no frame of its own yet: today's (TimelineRouteDetail, with its fares and ride picks) stands in, docked where the list stood and ending at its content, the map below it (the owner, 2026-11-27: "remove this white");
 - the S and E icons beside station codes;
 - operator logos;
 - tricycle and P2P looks;
