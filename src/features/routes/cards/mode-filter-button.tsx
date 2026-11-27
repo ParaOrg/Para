@@ -26,8 +26,6 @@ interface ModeFilterButtonProps {
   tooltip: TooltipPosition;
   /** What the e2e suites find it by. */
   testId: string;
-  /** The IconButton's size: Large where a page draws it so. */
-  size?: 'base' | 'large';
 }
 
 /**
@@ -36,13 +34,7 @@ interface ModeFilterButtonProps {
  * as the IconButton's count (the Indicator), none under All, and its name says which ("Filter:
  * Jeepney, Bus"), so the badge is never the only sign. The menu closed, the focus comes back here.
  */
-export function ModeFilterButton({
-  modeFilter,
-  icon,
-  tooltip,
-  testId,
-  size = 'base',
-}: ModeFilterButtonProps) {
+export function ModeFilterButton({ modeFilter, icon, tooltip, testId }: ModeFilterButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const { picks, onPicks, routeCount } = modeFilter;
@@ -57,7 +49,7 @@ export function ModeFilterButton({
     <span className="relative flex">
       <IconButton
         ref={buttonRef}
-        size={size}
+        size="large"
         count={count}
         icon={icon}
         label={count > 0 ? `Filter: ${picksNamed(picks)}` : 'Filter'}

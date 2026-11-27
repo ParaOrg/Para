@@ -96,8 +96,7 @@ body,
 
 /*
  * Where a docked sheet slides to (BottomSheet). Not passed down: a drag writes it each frame, and
- * an inherited property would restyle everything the sheet holds each time. Its footer, the one
- * part that reads it, has it written on it as well.
+ * an inherited property would restyle everything the sheet holds each time.
  */
 @property --sheet-y {
   syntax: '*';

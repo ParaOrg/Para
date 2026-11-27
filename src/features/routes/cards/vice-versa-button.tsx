@@ -12,7 +12,7 @@ interface ViceVersaButtonProps {
   isSwitchable: boolean;
   /** Whether the way back is showing, for the suites (`data-back`). */
   isBack: boolean;
-  /** Every route listed turned to its other way round, as the studio's PAPUNTA turns them. */
+  /** Every route listed turned to its other way round, as the ends card's ⇅ turns one. */
   onSwitch: () => void;
   /** What the suites find it by: the map's, or the one in the bar a list at the top shows. */
   testId?: string;

@@ -309,24 +309,6 @@ export const LongHeader: Story = {
   },
 };
 
-/** A footer for the stories: a row of two buttons at the sheet's foot, the rest of it see-through. */
-const footer = (
-  <div className="flex w-full justify-between px-6 pb-8 sheet-floating:w-22 sheet-floating:flex-col sheet-floating:items-center sheet-floating:gap-2 sheet-floating:px-5 sheet-floating:pt-5">
-    <button
-      type="button"
-      className="rounded-full bg-surface-tertiary px-4 py-2 text-content-primary"
-    >
-      Close
-    </button>
-    <button
-      type="button"
-      className="rounded-full bg-surface-tertiary px-4 py-2 text-content-primary"
-    >
-      Filter
-    </button>
-  </div>
-);
-
 /** A sheet with a shape of its own (`shape`), as the route list's: Low 240, a full height that fills the screen. */
 const LIST_SHAPE = { lowPx: 240, isMaxFull: true };
 
@@ -379,100 +361,9 @@ export const HandleHidden: Story = {
   },
 };
 
-/** `footer`: drawn at the sheet's foot on the screen, the rows scrolling under it. */
-export const Footer: Story = {
-  args: { footer, header: null },
-  play: async ({ canvasElement }) => {
-    const host = canvasElement.querySelector('[data-dock-host]') ?? canvasElement;
-    const foot = within(canvasElement).getByTestId('sheet-footer');
-    await waitFor(() =>
-      expect(
-        Math.round(host.getBoundingClientRect().bottom - foot.getBoundingClientRect().bottom),
-      ).toBe(0),
-    );
-  },
-};
-
-/**
- * A footer with a button in its middle too, as a trip's Controller has (its SWITCH): what a finger
- * at the middle of a row under it would touch instead of the row.
- */
-const middledFooter = (
-  <div className="flex w-full justify-between px-6 pb-8">
-    {['Back', 'Switch', 'Filter'].map((name) => (
-      <button
-        key={name}
-        type="button"
-        className="rounded-full bg-surface-tertiary px-4 py-2 text-content-primary"
-      >
-        {name}
-      </button>
-    ))}
-  </div>
-);
-
-/**
- * The sheet's body scrolled to its end: whether a finger at the middle of its last row touches
- * that row, not the footer drawn over the body's foot.
- */
-async function lastRowClearsFooter(canvasElement: HTMLElement) {
-  const sheet = within(canvasElement).getByTestId('card');
-  await waitFor(() => expect(sheet).toHaveAttribute('data-snap', 'full'));
-  const body = [...sheet.children].find(
-    (el): el is HTMLElement =>
-      el instanceof HTMLElement && getComputedStyle(el).overflowY === 'auto',
-  );
-  if (!body) throw new Error('no scrolling body at full height');
-  // Longer than the screen, or any padding would pass.
-  await expect(body.scrollHeight).toBeGreaterThan(body.clientHeight);
-  body.scrollTop = body.scrollHeight;
-  const lastRow = within(body).getAllByRole('listitem').at(-1);
-  if (!lastRow) throw new Error('no rows in the body');
-  const foot = within(canvasElement).getByTestId('sheet-footer');
-  await waitFor(() => {
-    const r = lastRow.getBoundingClientRect();
-    const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
-    expect(hit === lastRow || lastRow.contains(hit)).toBe(true);
-    expect(Math.round(r.bottom)).toBeLessThanOrEqual(Math.round(foot.getBoundingClientRect().top));
-  });
-}
-
-/** `footer` at full height on a small phone, scrolled to the end: the last row clears the footer. */
-export const FooterLastRowClear: Story = {
-  render: (args) => <Keeping {...args} startsAt="full" />,
-  args: {
-    footer: middledFooter,
-    header: null,
-    height: { snap: 'full', onSnap: fn() },
-    children: <Rows count={30} />,
-  },
-  parameters: { phone: 'small' },
-  play: async ({ canvasElement }) => lastRowClearsFooter(canvasElement),
-};
-
-/** The same with a full height that fills the screen (`shape`), as the route list's does. */
-export const FooterLastRowClearFills: Story = {
-  render: (args) => <Keeping {...args} startsAt="full" />,
-  args: {
-    footer: middledFooter,
-    header: null,
-    shape: LIST_SHAPE,
-    height: { snap: 'full', onSnap: fn() },
-    children: <Rows count={30} />,
-  },
-  parameters: { phone: 'small' },
-  play: async ({ canvasElement }) => lastRowClearsFooter(canvasElement),
-};
-
-/** `footer` at Low: still at the screen's foot, over what Low shows. */
-export const FooterAtLow: Story = {
-  render: (args) => <Keeping {...args} startsAt="low" />,
-  args: { footer, header: null, shape: LIST_SHAPE, height: { snap: 'low', onSnap: fn() } },
-};
-
 /** The docked list under the public map's place search: from 118 down to the map's bottom. */
 export const DockUnderSearch: Story = {
-  args: { floats: 'dock', footer, header: null, handle: 'hidden', children: <Rows count={30} /> },
+  args: { floats: 'dock', header: null, handle: 'hidden', children: <Rows count={30} /> },
   parameters: { phone: false, underSearch: true },
   play: async ({ canvasElement }) => {
     const { top, bottomGap } = sheetEdges(canvasElement);
@@ -481,17 +372,14 @@ export const DockUnderSearch: Story = {
   },
 };
 
-/** `floats="dock"` on a wide screen: the map's whole height on the left, 384 wide, the footer its top bar. */
+/** `floats="dock"` on a wide screen: the map's whole height on the left, 384 wide. */
 export const Dock: Story = {
-  args: { floats: 'dock', footer, header: null, handle: 'hidden', children: <Rows count={30} /> },
+  args: { floats: 'dock', header: null, handle: 'hidden', children: <Rows count={30} /> },
   parameters: { phone: false },
   play: async ({ canvasElement }) => {
     const host = canvasElement.querySelector('[data-dock-host]') ?? canvasElement;
     const sheet = within(canvasElement).getByTestId('card').getBoundingClientRect();
-    const foot = within(canvasElement).getByTestId('sheet-footer').getBoundingClientRect();
     await expect(Math.round(sheet.width)).toBe(384);
     await expect(Math.round(sheet.height)).toBe(Math.round(host.getBoundingClientRect().height));
-    await expect(Math.round(foot.top)).toBe(Math.round(sheet.top));
-    await expect(Math.round(foot.width)).toBe(384);
   },
 };

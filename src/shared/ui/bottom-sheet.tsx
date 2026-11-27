@@ -10,7 +10,6 @@ import {
 
 import { useDialogFocus } from '@/shared/hooks/use-dialog-focus';
 import { useEscape } from '@/shared/hooks/use-escape';
-import { useHeightOf } from '@/shared/hooks/use-height-of';
 import { cn } from '@/shared/utils/cn';
 
 import { raisedHeightOf } from './raised-height';
@@ -53,7 +52,7 @@ interface Props {
    * the default), or the card the studio's hotspot card floats as, 16 in, from `@wide:` (`card`).
    * What it holds reads which with `sheet-floating:` and `sheet-low:` (global.css). `dock`: the route
    * list's and a trip's, docked on the left from `@float:`, 384 wide (Figma 4683:32635), as tall as
-   * what it holds up to the map's whole height, scrolling past that, its `footer` its top bar.
+   * what it holds up to the map's whole height, scrolling past that.
    */
   floats?: 'corner' | 'card' | 'dock';
   /**
@@ -78,7 +77,7 @@ interface Props {
   closesOnPull?: boolean;
   /**
    * Its own Low and full height, where they differ from every card's: the route list's Low shows
-   * its first card above its Controller, and its full height fills the screen (Figma 4633:25575).
+   * its first card, and its full height fills the screen (Figma 4633:25575).
    * Every other card's by default (CARD_SHAPE).
    */
   shape?: SheetShape;
@@ -88,12 +87,6 @@ interface Props {
    * shows as the notch while it has the keyboard's focus.
    */
   handle?: 'shown' | 'hidden';
-  /**
-   * At the sheet's foot on the screen at any height, a list's or a trip's Controller, the body under
-   * it (4679:23737), letting taps through but for its buttons; floating, the sheet's top bar
-   * (4683:32635). Read before the body; the sheet says it has one (`data-footer`).
-   */
-  footer?: ReactNode;
   children: ReactNode;
 }
 
@@ -161,7 +154,6 @@ export function BottomSheet({
   closesOnPull = true,
   shape = CARD_SHAPE,
   handle = 'shown',
-  footer,
   children,
 }: Props) {
   const own = useRef<HTMLDivElement>(null);
@@ -169,7 +161,6 @@ export function BottomSheet({
   const headRef = useRef<HTMLDivElement>(null);
   const bodyRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
-  const [footerRef, footerPx] = useHeightOf();
   const [ownSnap, setOwnSnap] = useState<Snap>('low');
   const setSnap = height?.onSnap ?? setOwnSnap;
   // A fitted sheet's measure: the map's height, and its handle, header and content's raised.
@@ -221,15 +212,14 @@ export function BottomSheet({
   }, !hidden);
 
   /**
-   * Where the sheet slides to, on it and its footer (--sheet-y does not pass down: map-frame.css).
+   * Where the sheet slides to (--sheet-y does not pass down: map-frame.css).
    * What sits on the map above follows (3870:5941) as `--dock-y`: on `[data-dock-host]` at rest, for
    * a follower that comes later, and on the followers alone (`[data-dock-follower]`) on a move.
    */
   function at(y: string, isMove = false) {
     const sheet = own.current;
     if (!sheet) return;
-    for (const el of [sheet, sheet.querySelector<HTMLElement>('[data-sheet-footer]')])
-      el?.style.setProperty('--sheet-y', y);
+    sheet.style.setProperty('--sheet-y', y);
     if (sheet.hidden) return;
     const host = sheet.closest<HTMLElement>('[data-dock-host]');
     if (!host) return;
@@ -302,7 +292,6 @@ export function BottomSheet({
       data-whole-at-low={isWholeAtLow || undefined}
       data-reaches-top={reachesTop || undefined}
       data-floats={floats}
-      data-footer={footer ? '' : undefined}
       data-low-px={shape.lowPx}
       data-max-full={shape.isMaxFull || undefined}
       hidden={hidden}
@@ -337,20 +326,6 @@ export function BottomSheet({
       <div ref={headRef} className="shrink-0 touch-none sheet-floating:touch-auto">
         {header}
       </div>
-      {footer && (
-        <div
-          ref={footerRef}
-          data-testid="sheet-footer"
-          data-sheet-footer
-          className={
-            'pointer-events-none absolute inset-x-0 bottom-(--sheet-y) z-10 pb-[env(safe-area-inset-bottom)] ' +
-            '[&_[popover]]:pointer-events-auto [&_button]:pointer-events-auto ' +
-            'sheet-floating:top-0 sheet-floating:bottom-auto sheet-floating:pb-0'
-          }
-        >
-          {footer}
-        </div>
-      )}
       <div
         ref={bodyRef}
         onFocus={onBodyFocus}
@@ -358,7 +333,7 @@ export function BottomSheet({
           'min-h-0 flex-1 scrollbar-none sheet-floating:touch-auto sheet-floating:overflow-y-auto [&::-webkit-scrollbar]:hidden ' +
           (snap === 'full' ? 'overflow-y-auto' : 'touch-none overflow-hidden')
         }
-        style={snap === 'full' ? fullBodyStyle(shape, footerPx) : undefined}
+        style={snap === 'full' ? fullBodyStyle(shape) : undefined}
       >
         {fits ? <div ref={contentRef}>{children}</div> : children}
       </div>
@@ -377,12 +352,12 @@ const HANDLE = {
 /**
  * The body at full height, where it scrolls. A sheet leaving a strip of map stands that gap down the
  * map, as much of it under the screen's bottom; a sheet filling the screen runs behind the status
- * bar. Padded by those, and by the footer drawn over its foot (`footerPx`), its end scrolls clear.
+ * bar. Padded by those, its end scrolls clear.
  */
-function fullBodyStyle(shape: SheetShape, footerPx: number): CSSProperties {
+function fullBodyStyle(shape: SheetShape): CSSProperties {
   return shape.isMaxFull
-    ? { paddingTop: 'var(--map-safe-top)', paddingBottom: footerPx + 'px' }
-    : { paddingBottom: 'calc(var(--map-safe-top) + ' + (MAX_STRIP_PX + footerPx) + 'px)' };
+    ? { paddingTop: 'var(--map-safe-top)' }
+    : { paddingBottom: 'calc(var(--map-safe-top) + ' + MAX_STRIP_PX + 'px)' };
 }
 
 /** The handle's spoken name: the height, and which way Enter steps it a third (stepFrom). */

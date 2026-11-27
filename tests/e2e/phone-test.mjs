@@ -679,7 +679,7 @@ const fingerOn = async (locator, isCentred = false) => {
       : 'nothing (off the screen)';
   }, at);
   if (!onTop) return { at };
-  // In view but under something drawn over the sheet's foot (the Controller): a person scrolls
+  // In view but under something drawn over the sheet's foot: a person scrolls
   // it clear, to the middle of what scrolls, and looks again.
   const isInScroller = await el.evaluate((node) => {
     for (let p = node.parentElement; p; p = p.parentElement)
@@ -2703,8 +2703,8 @@ const tripChecks = async () => {
     picked = await isPicked();
   }
 
-  // ⇅ on the ends card turns the trip round: the same route, the other way (the Controller's
-  // PAPUNTA gone, the owner, 2026-11-21).
+  // ⇅ on the ends card turns the trip round: the same route, the other way (the owner's
+  // call, 2026-11-21).
   const sw = card().locator('button[data-testid="trip-ends-switch"]');
   if ((await sw.count()) === 0 || (await sw.first().isDisabled())) {
     skip(
@@ -5381,8 +5381,7 @@ if (runsPart(1)) {
         JSON.stringify({ camBeforeOpen, camAfterOpen, overviewAtOpen }),
       );
       // A guard on the trip as it is drawn: at full height, every stop shown, so that it runs past
-      // the screen, scrolled to its end, its last row is in reach, as when a Controller stood over
-      // the sheet's foot. BottomSheet's stories (FooterLastRowClear) prove a footer's padding.
+      // the screen, scrolled to its end, its last row is in reach.
       const tripEnd = (await handleTo('full'))
         ? await endClearsFooter('[data-testid="card"]')
         : { ok: false, why: `the trip would not go to full: data-snap=${await sheetState()}` };
@@ -5600,7 +5599,7 @@ if (runsPart(2)) {
     const expanded = await moreRoutes.getAttribute('aria-expanded');
     check('  "View N more destinations" opens the list', expanded === 'true', String(expanded));
     // Scrolled to the sheet's middle, as a person brings a row up to tap it: "if needed" counts a
-    // row under the Controller, which floats over the sheet's foot, as already in view.
+    // row near the sheet's foot as already in view.
     await card()
       .locator(`[data-testid="trip-other-route"][data-direction="${to.id}"]`)
       .evaluate((row) => row.scrollIntoView({ block: 'center' }));
