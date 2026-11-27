@@ -9,6 +9,7 @@ import { createQueryClient } from '@/shared/lib/query-client';
 import { DraftPlaceCard } from './draft-place-card';
 import { StudioSessionContext } from '../auth/use-studio-session';
 import { editorKeys } from '../data/editor-keys';
+import { reviewKeys } from '../data/review-keys';
 import type { DraftRow } from '../data/review-schema';
 
 /** The editor's own draft of a new hintuan: no approved row yet. */
@@ -58,10 +59,14 @@ const SESSION: Session = {
   },
 };
 
-/** A client that already has the makers' names and keeps them: a story has no database. */
+/**
+ * A client that already has the stored draft (another editor's, which Approve reads) and the
+ * makers' names, and keeps them: a story has no database.
+ */
 function withEditor(Story: () => React.JSX.Element) {
   const client = createQueryClient();
   client.setDefaultOptions({ queries: { staleTime: Infinity, retry: false } });
+  client.setQueryData(reviewKeys.draftOf('hotspot', 'new-place'), ANOTHERS);
   client.setQueryData(editorKeys.names(), new Map([['marisol', 'Marisol']]));
   return (
     <QueryClientProvider client={client}>
