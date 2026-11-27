@@ -9,7 +9,6 @@ import type { HotspotRow } from '@/features/routes/model/hotspots';
 import type { DirectionRow } from '@/features/routes/model/routes';
 import {
   StudioRouteLineDetail,
-  type useDeleteActions,
   type useDrawing,
   type useFollow,
   type useOpenDraft,
@@ -28,7 +27,6 @@ interface PlaygroundDraftTripProps {
   /** Where the detail goes: the left panel area's host, hidden on the studio's other maps. */
   leftPanel: HTMLElement;
   opening: ReturnType<typeof useFollow>['opening'];
-  deletes: ReturnType<typeof useDeleteActions>;
 }
 
 /**
@@ -44,7 +42,6 @@ export function PlaygroundDraftTrip({
   canEdit,
   leftPanel,
   opening,
-  deletes,
 }: PlaygroundDraftTripProps) {
   const { direction, directions, show, close } = trip;
   const timeline = useTripTimeline(direction, hotspots);
@@ -67,9 +64,6 @@ export function PlaygroundDraftTrip({
       canEdit={canEdit}
       isDraftOnly
       opening={opening}
-      // A draft only offers neither Delete nor the other way (isDraftOnly): both need approved rows.
-      onDelete={deletes.onDelete}
-      onDrawOtherWay={close}
       onShow={show}
       onClose={close}
     />,

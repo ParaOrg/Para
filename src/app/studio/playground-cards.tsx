@@ -30,7 +30,7 @@ interface PlaygroundCardsProps {
   camera: ReturnType<typeof useCardCamera<DirectionRow, HotspotRow>>;
   trip: ReturnType<typeof useStudioTrip>;
   canEdit: boolean;
-  /** A computer's screen: a tapped hotspot opens in the sidebar, a trip in the left panel. */
+  /** A computer's screen: a trip opens in the left panel. */
   isWideScreen: boolean;
   /** The left panel area's host for the route line detail (PlaygroundTrip). */
   leftPanel: HTMLElement | null;
@@ -108,7 +108,6 @@ export function PlaygroundCards({
           canEdit={canEdit}
           leftPanel={leftPanel}
           opening={opening}
-          deletes={deletes}
         />
       )}
 
@@ -127,7 +126,6 @@ export function PlaygroundCards({
           draw={draw}
           height={height}
           canEdit={canEdit}
-          opensInSidebar={isWideScreen}
           clearOfOpen={clearOfOpen}
           onPickOnPlaceCard={pickOnPlaceCard}
           onOpenTrip={openTrip}

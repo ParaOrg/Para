@@ -815,25 +815,24 @@ const nameField = () => page.getByPlaceholder('SM Fairview Ilalim');
 async function editHintuan(spot, name) {
   await go(spot, 17);
   await clickAt([spot[0] + R * 0.7, spot[1] - R * 0.7], 700);
-  // On a computer the tap opens the hintuan straight into its sidebar, with no card or Edit.
+  // The tap opens the hintuan's card to read first, on a computer too; its Edit opens the sidebar.
   const sidebar = page.getByTestId('sidebar');
-  // No card between the tap and the sidebar: the old way showed it with its Edit and waited.
-  const hadCard = (await page.getByRole('button', { name: 'Edit hintuan' }).count()) > 0;
-  // The sidebar can be a moment behind the tap on a slow runner: give it that moment before the
-  // tap is read as one that raised the chooser.
-  await sidebar.waitFor({ timeout: 3000 }).catch(() => {});
+  const edit = page.getByRole('button', { name: 'Edit hintuan' });
+  await edit.waitFor({ timeout: 3000 }).catch(() => {});
   let tookRow = false;
-  if (!(await sidebar.isVisible())) {
+  if (!(await edit.isVisible())) {
     // A row of the chooser, and nothing else by that name: once the hintuan has a draft the map
-    // carries a label with it, which goes as the sidebar opens.
+    // carries a label with it.
     const row = page.getByTestId('chooser').getByRole('button', { name: /Stand-in Tail/ });
     if (await row.count()) {
       tookRow = true;
       await row.first().click();
     }
   }
+  await edit.waitFor({ timeout: 10000 });
+  openedAsCard.push(!tookRow && (await sidebar.count()) === 0);
+  await edit.click();
   await sidebar.waitFor({ timeout: 10000 });
-  openedBeside.push(!hadCard && !tookRow);
   await done();
   // The name the form opened with: the editor's own draft's, when there is one.
   shownName = await nameField().inputValue();
@@ -845,13 +844,13 @@ async function editHintuan(spot, name) {
   return writesSince(from);
 }
 let shownName = '';
-const openedBeside = [];
+const openedAsCard = [];
 const tailRevision = tables.stop.find((x) => x.id === tail?.id)?.revision;
 w = await editHintuan(P2, 'Stand-in Tail Renamed');
 const tailDraft = draftOf('hotspot', tail?.id);
 check(
-  'on a computer a tap on a saved hintuan opens it straight in the sidebar, with no card',
-  openedBeside[0] === true,
+  'on a computer a tap on a saved hintuan opens its card, not editing; Edit opens the sidebar',
+  openedAsCard[0] === true,
 );
 check(
   "editing a saved hintuan is a draft of it, built on the stop's revision",

@@ -35,16 +35,18 @@ interface StudioRouteLineDetailProps {
   /** A signed-in editor; another editor's draft of the route still leaves it read-only. */
   canEdit: boolean;
   /**
-   * A route that is a draft only, opened from the editor's draft: Draft over its tabs, and no
-   * Delete or way to add, which work on approved rows.
+   * A route that is a draft only, opened from the editor's draft: Draft over its tabs (the lock's
+   * notice while it is checked or could not be), and no Delete or way to add, which work on
+   * approved rows.
    */
   isDraftOnly?: boolean;
   opening: ReturnType<typeof useFollow>['opening'];
-  onDelete: ReturnType<typeof useDeleteActions>['onDelete'];
+  /** Absent on a draft only (isDraftOnly). */
+  onDelete?: ReturnType<typeof useDeleteActions>['onDelete'];
   /** Another direction of the route, or another route, in this one's place. */
   onShow: (direction: DirectionRow) => void;
-  /** Starts drawing the route's undrawn way (the return trip). */
-  onDrawOtherWay: () => void;
+  /** Starts drawing the route's undrawn way (the return trip); absent on a draft only. */
+  onDrawOtherWay?: () => void;
   /** Closes the detail: Edit Route and Extend start a drawing. */
   onClose: () => void;
 }
@@ -103,7 +105,7 @@ export function StudioRouteLineDetail({
   return (
     <RouteLineDetail
       label={direction.name ?? direction.route?.name ?? 'Route'}
-      notice={isDraftOnly ? <DraftBadge /> : lockNotice}
+      notice={isDraftOnly && !lock ? <DraftBadge /> : lockNotice}
       tabs={directionTabs(direction, saved.directions)}
       selectedId={direction.id}
       onSelect={show}
@@ -119,7 +121,7 @@ export function StudioRouteLineDetail({
               : undefined
           }
           onDelete={
-            isEditable && !isDraftOnly
+            isEditable && onDelete && !isDraftOnly
               ? () => {
                   if (saved.selected) void onDelete(saved.selected);
                 }
