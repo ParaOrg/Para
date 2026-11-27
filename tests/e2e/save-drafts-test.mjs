@@ -641,8 +641,18 @@ await page.getByTestId('route-line-detail').waitFor({ timeout: 10000 });
 // The signboard's draft is still the editor's, unreviewed. The confirm says it is discarded, so
 // the delete is the only change approved with it.
 const ownDraft = draftOf('route', route?.id);
-const OWN_CONFIRM = /^Delete ".+"\? Your unapproved changes to this route will be discarded\.$/;
-const stateBefore = structuredClone({ v: tables.route_variant, r: tables.route });
+const OWN_CONFIRM =
+  /^Delete ".+" — .+\? Your unapproved changes to this route will be discarded\.$/;
+// A real change waits in the own draft: a board listed, which the delete must not publish.
+const keptBoard = 'kept-board.svg';
+const ownDirection = ownDraft?.payload.directions.find((v) => v.id === outV?.id);
+if (ownDirection) ownDirection.signboards = [keptBoard];
+const stateBefore = structuredClone({
+  v: tables.route_variant,
+  r: tables.route,
+  l: tables.route_stop,
+  s: tables.stop,
+});
 confirmAnswer = false;
 confirms.length = 0;
 n = log.length;
@@ -668,7 +678,11 @@ w = writesSince(n);
 check(
   'Delete with an own draft, OK: the draft is discarded, then the direction is deleted and approved',
   rpcs(w, 'discard_draft').length === 1 &&
+    rpcs(w, 'save_draft').length === 0 &&
+    w.findIndex((x) => x.table === 'claim_draft') >
+      w.findIndex((x) => x.table === 'discard_draft') &&
     rpcs(w, 'publish_draft').length === 1 &&
+    tables.route_variant.find((v) => v.id === outV?.id)?.signboards.length === 0 &&
     !draftOf('route', route?.id) &&
     tables.route_variant.find((v) => v.id === outV?.id)?.shape === null &&
     !(await body()).includes('Added to your draft'),
@@ -677,6 +691,8 @@ check(
 // The stand-in restores the approved map so the next flows start with OUT drawn.
 tables.route_variant.splice(0, tables.route_variant.length, ...stateBefore.v);
 tables.route.splice(0, tables.route.length, ...stateBefore.r);
+tables.route_stop.splice(0, tables.route_stop.length, ...stateBefore.l);
+tables.stop.splice(0, tables.stop.length, ...stateBefore.s);
 tables.draft = tables.draft.filter((d) => d.subject_id !== route?.id);
 await load();
 
