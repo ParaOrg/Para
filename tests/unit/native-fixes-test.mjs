@@ -11,10 +11,7 @@ import {
   watchErrorOf,
   watchErrorOfRideProblem,
 } from '../../src/features/contribute/native/watch-error.ts';
-import {
-  brandOf,
-  stopsBackgroundApps,
-} from '../../src/features/contribute/native/keep-recording-makers.ts';
+import { brandOf } from '../../src/features/contribute/native/keep-recording-makers.ts';
 import { KEEP_RECORDING_STEPS } from '../../src/features/contribute/native/keep-recording-steps.ts';
 import {
   canRecordWithout,
@@ -84,10 +81,10 @@ test('Keep Para recording goes to the makers known to stop background apps, by a
     'OnePlus',
     ' iqoo ',
   ]) {
-    assert.equal(stopsBackgroundApps(maker), true, maker);
+    assert.notEqual(brandOf(maker), null, maker);
   }
   for (const maker of ['google', 'motorola', 'nokia', '']) {
-    assert.equal(stopsBackgroundApps(maker), false, maker);
+    assert.equal(brandOf(maker), null, maker);
   }
 });
 

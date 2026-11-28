@@ -1,4 +1,4 @@
-import { ringToPolygon, type Ring } from '@/features/routes/geo/ring';
+import type { Ring } from '@/features/routes/geo/ring';
 import type { LngLat } from '@/shared/utils/geo';
 
 /** How wide the box of a place made from the save panel is: a bay a few jeeps long. */
@@ -25,12 +25,4 @@ export function squareBox(centre: LngLat, sideM: number = NEW_PLACE_SIDE_M): Rin
     [lng + dLng, lat + dLat],
     [lng - dLng, lat + dLat],
   ];
-}
-
-/** The box as the polygon the database keeps: the ring, closed. */
-export function squareBoxPolygon(
-  centre: LngLat,
-  sideM?: number,
-): { type: 'Polygon'; coordinates: LngLat[][] } {
-  return ringToPolygon(squareBox(centre, sideM));
 }
