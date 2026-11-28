@@ -22,7 +22,7 @@ import {
   type Snap,
 } from './sheet-gesture';
 import { isReducedMotion, shownOnScreen } from './use-sheet-glide';
-import { useSheetPull, type SheetNow } from './use-sheet-pull';
+import { useSheetPull } from './use-sheet-pull';
 import { useSheetRelease } from './use-sheet-release';
 
 /** How far down a list scrolled `room` more can still go: what a throw up carries into. */
@@ -148,16 +148,10 @@ export function useSheetGestures({
     return next;
   };
   // Read by the listeners bound once, written as each render commits, before a finger comes.
-  const now = useRef<SheetNow & { afterTap: typeof afterTap }>({
-    snap,
-    settle,
-    throwTo,
-    heightsOf,
-    touched,
-    afterTap,
-  });
+  const live = { snap, settle, throwTo, heightsOf, touched, afterTap };
+  const now = useRef(live);
   useLayoutEffect(() => {
-    now.current = { snap, settle, throwTo, heightsOf, touched, afterTap };
+    now.current = live;
   });
 
   // When a finger or a mouse last pressed: focus that follows a press is not the keyboard's.
