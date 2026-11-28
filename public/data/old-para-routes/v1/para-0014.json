@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-0014",
+  "old_id": "099ba6f2-0f8d-48e4-a424-da4179e9de61",
+  "name": "Balintawak-Monumento",
+  "mode": "jeepney",
+  "verified": true,
+  "loop": true,
+  "oneway": true,
+  "start": [121.0024,14.66367],
+  "end": [121.00184,14.66315],
+  "length_m": 3590,
+  "gaps": [],
+  "line": [[121.0024,14.66367],[121.00156,14.66293],[121.00059,14.66242],[121.00002,14.66223],[120.99996,14.65892],[120.99956,14.65856],[120.99939,14.65774],[120.99918,14.65747],[120.99084,14.65737],[120.99053,14.65735],[120.99045,14.65716],[120.99052,14.65711],[121.00028,14.65729],[121.00037,14.66159],[121.00184,14.66315]]
+}

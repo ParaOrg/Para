@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1599",
+  "old_id": "aa78f85b-cae9-4326-b2ad-7e30b251d693",
+  "name": "Kiko Camarin SM Fairview via Maligaya Park",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.059,14.73529],
+  "end": [121.05799,14.75601],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.059,14.73529],[121.05895,14.7384],[121.05687,14.73919],[121.05604,14.74074],[121.05694,14.74245],[121.05595,14.74334],[121.05387,14.74399],[121.05416,14.7453],[121.05414,14.7478],[121.05397,14.74991],[121.054,14.7569],[121.05812,14.7571],[121.05799,14.75601]]
+}

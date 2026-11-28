@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1583",
+  "old_id": "2b24d05e-4df7-4e09-8a8d-f188773c9f7a",
+  "name": "Bangkusay Divisoria",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [120.9692,14.60812],
+  "end": [120.96597,14.6148],
+  "length_m": null,
+  "gaps": [],
+  "line": [[120.9692,14.60812],[120.96699,14.61003],[120.96698,14.61234],[120.96597,14.6148]]
+}

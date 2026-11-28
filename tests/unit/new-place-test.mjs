@@ -8,11 +8,7 @@ import { ringToPolygon } from '../../src/features/routes/geo/ring.ts';
 import { ringCentroid } from '../../src/features/routes/geo/box-centre.ts';
 import { ringCrossesItself } from '../../src/features/studio/data/hotspot-ring.ts';
 import { haversine } from '../../src/shared/utils/geo.ts';
-import {
-  NEW_PLACE_SIDE_M,
-  squareBox,
-  squareBoxPolygon,
-} from '../../src/features/studio/panels/new-place.ts';
+import { NEW_PLACE_SIDE_M, squareBox } from '../../src/features/studio/panels/new-place.ts';
 
 const TALA = [121.0432, 14.7589];
 
@@ -46,10 +42,9 @@ test('its sides run north–south and east–west, counter-clockwise from the so
 
 test('the ring crosses itself nowhere, and the polygon the database keeps is closed', () => {
   assert.equal(ringCrossesItself(squareBox(TALA)), false);
-  const [ring] = squareBoxPolygon(TALA).coordinates;
+  const [ring] = ringToPolygon(squareBox(TALA)).coordinates;
   assert.equal(ring.length, 5);
   assert.deepEqual(ring[0], ring[4]);
-  assert.deepEqual(squareBoxPolygon(TALA), ringToPolygon(squareBox(TALA)));
 });
 
 test('another size is the size asked for', () => {

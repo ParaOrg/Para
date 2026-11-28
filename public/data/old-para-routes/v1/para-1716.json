@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1716",
+  "old_id": "c90e41d5-022a-4838-8ec7-a97d69aab9d3",
+  "name": "Pasig-Ugong via Rodriguez",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.07986,14.58764],
+  "end": [121.08203,14.55848],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.07986,14.58764],[121.07892,14.58478],[121.077,14.5827],[121.07499,14.58001],[121.07392,14.57751],[121.07201,14.57208],[121.07098,14.56961],[121.072,14.56625],[121.076,14.566],[121.07598,14.5633],[121.07618,14.56226],[121.077,14.56166],[121.077,14.5608],[121.078,14.56081],[121.07997,14.56013],[121.08084,14.55916],[121.08203,14.55848]]
+}

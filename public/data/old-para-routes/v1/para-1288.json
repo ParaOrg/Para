@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1288",
+  "old_id": "ca4f0b1b-98d5-43ab-8910-cc2577be43d9",
+  "name": "Kamagong - Malugay Ave.",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.011,14.56257],
+  "end": [121.01587,14.56295],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.011,14.56257],[121.009,14.5663],[121.00699,14.5671],[121.004,14.567],[121.01286,14.56575],[121.014,14.5646],[121.01587,14.56295]]
+}

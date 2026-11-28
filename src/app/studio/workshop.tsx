@@ -3,18 +3,18 @@ import type { MapLibreMap } from 'maplibre-gl';
 import { useRef, useState } from 'react';
 
 import { useGazeHush } from '@/features/locator';
+import { isChoosing } from '@/features/routes/cards/card-stack';
 import { MapCreditsDock } from '@/features/routes/map/map-credits-dock';
 import { MapCreditsSheet } from '@/features/routes/map/map-credits-sheet';
 import { MapView } from '@/features/routes/map/map-view';
-import { useCardCamera } from '@/features/routes/map/use-card-camera';
-import { useCardStack } from '@/features/routes/map/use-card-stack';
-import { useLoopTip } from '@/features/routes/map/use-loop-tip';
 import { useMapCredits } from '@/features/routes/map/use-map-credits';
+import { useRouteCards } from '@/features/routes/map/use-route-cards';
 import { useSavedHotspots } from '@/features/routes/map/use-saved-hotspots';
 import { useSavedRoutes } from '@/features/routes/map/use-saved-routes';
 import { directionsAtHotspots } from '@/features/routes/model/directions-at';
 import {
   CONTRIBUTIONS,
+  DRAFT_LINES_HIT,
   lineOf,
   listDirections,
   loadHotspotsFromSupabase,
@@ -30,6 +30,7 @@ import {
   useFollow,
   useOpenDraft,
   useDraftOnly,
+  useDraftTrip,
   useLoopClosing,
   useSaveFlow,
   useSaveTarget,
@@ -38,8 +39,8 @@ import {
   useWheelNavigation,
   useContributionStart,
   useDeleteActions,
-  useStudioTrip,
 } from '@/features/studio';
+import { isRidePickingOn } from '@/shared/config/env';
 import { useTurn } from '@/shared/hooks/commit-turn';
 
 import { AccountDialogs } from './account-dialogs';
@@ -50,6 +51,9 @@ import { PlaygroundTools } from './playground-tools';
 import { HOTSPOT_MARKS, STUDIO_MAP_VIEW } from './studio-map-marks';
 import { StudioTopBar } from './studio-top-bar';
 import { WorkshopLocation } from './workshop-location';
+
+/** A draft's dashed line is DraftLines' to open: a tap on it is not an empty one. */
+const DRAFT_TAP_LAYERS = [DRAFT_LINES_HIT];
 
 interface WorkshopProps {
   session: Session | null;
@@ -122,40 +126,42 @@ export function Workshop({ session, recovery }: WorkshopProps) {
     chooseStudioMap('playground');
     contribution.begin(start);
   };
-  // The route list, a hotspot's card and the trip opened from either, as on
-  // the public map (useCardStack).
-  const cards = useCardStack(map, saved, hotspots);
-  // Where an open ikot's trip leaves from: the place whose card it was opened
-  // from, else its first. The studio has no commuter's position to start from.
-  const tipId = useLoopTip(saved.selected, hotspots, {
-    where: null,
-    openedFrom: hotspots.selected,
+  // Routes and hotspots that are drafts only: the sidebar opens on them as on approved ones.
+  const draftOnly = useDraftOnly({
+    isSignedIn,
+    directions: saved.directions,
+    hotspots: hotspots.hotspots,
   });
-  // The camera with the cards, as on the public map (useCardCamera), so the
-  // studio has the public map's interaction. A hintuan picked on the trip
-  // card, the camera gliding there clear of the card and a circle popping up
-  // on it, the route left whole, the card staying at its height; a trip
-  // opened on its whole route, a RouteCard picked, SWITCH and the sheet
-  // settled at another height, each framed beside the card; and the camera
-  // from before a hotspot's RouteCard was picked, back as it is let go.
-  const camera = useCardCamera(map, saved, hotspots, cards, { tipId });
-  const { root, ride } = camera;
-
-  // The pill's camera moves at this page's turn, after the cards' camera
-  // (commit-turn.ts); the dot's gaze is hushed by ‹ and ✕ (dot-gaze.ts).
-  const locatorTurn = useTurn();
+  const isWideScreen = useIsWideScreen();
+  // A route that is a draft only, open in its route line detail (useDraftTrip): read before the
+  // cards, which close it with the empty map tapped and Back, as they leave a trip.
+  const draftTrip = useDraftTrip({
+    draftDirections: draftOnly.directions,
+    isCardOpen:
+      !!saved.selected || !!hotspots.selected || isChoosing(saved.candidates, hotspots.candidates),
+    isDrawing: draw.drawing,
+    isWideScreen,
+  });
   const { hush, hushedAt } = useGazeHush();
+  // The public map's route cards (useRouteCards), out of play while a line is drawn and on the
+  // other maps. The studio has no commuter's position to start a loop's trip from.
+  const routeCards = useRouteCards(map, saved, hotspots, {
+    hush,
+    isRidePickingOn,
+    isActive: isPlayground && !draw.drawing,
+    ownCard: draftTrip.trip,
+    ownLayers: DRAFT_TAP_LAYERS,
+    hiddenDirectionId: draw.target.directionId,
+    isBesideCredits: true,
+    isTripBeside: isWideScreen,
+  });
+  const { cards, camera } = routeCards;
+  const { root } = camera;
+
+  // The pill's camera moves at this page's turn, after the cards' camera (commit-turn.ts).
+  const locatorTurn = useTurn();
   // Its 'load' in and not failed: the map-style button waits for it.
   const [isMapLoaded, setIsMapLoaded] = useState(false);
-
-  const trip = useStudioTrip({
-    map,
-    saved,
-    hotspots,
-    hiddenDirectionId: draw.target.directionId,
-    ride,
-    tipId,
-  });
 
   // Every editor edits every route and hotspot (migration 0015). There is no
   // sign-up, so a session is an editor's; the database refuses anyone else's
@@ -163,12 +169,6 @@ export function Workshop({ session, recovery }: WorkshopProps) {
   const canEdit = isSignedIn;
 
   // What the save panel saves into, and where the drawing is headed.
-  // Routes and hotspots that are drafts only: the sidebar opens on them as on approved ones.
-  const draftOnly = useDraftOnly({
-    isSignedIn,
-    directions: saved.directions,
-    hotspots: hotspots.hotspots,
-  });
   const target = useSaveTarget(
     draw,
     [...saved.directions, ...draftOnly.directions],
@@ -183,22 +183,23 @@ export function Workshop({ session, recovery }: WorkshopProps) {
     target,
     setNotice,
   });
-  // A draft tapped on the map opens into its sidebar: Edit route on the editor's own, the card on
-  // another editor's (useOpenDraft).
-  const handleOpenDraft = useOpenDraft({
-    directions: saved.directions,
+  // A draft tapped on the map opens to read first, its route line detail on a computer; editing
+  // starts from Edit Route (useOpenDraft).
+  const openDraft = useOpenDraft({
+    saved,
     draftDirections: draftOnly.directions,
     hotspots: hotspots.hotspots,
     draftHotspots: draftOnly.hotspots,
     userId: session?.user.id ?? null,
     draw,
     opening,
-    openTrip: cards.openTrip,
+    cards,
     openPlace: camera.openPlace,
     setNotice,
+    draftTrip,
   });
 
-  // A return trip starts where the other way ended, shows it faintly, and can close the loop.
+  // A return trip starts at its first tap, shows the other way faintly, and can close the loop.
   const { startReturnTrip } = useLoopClosing(
     map,
     draw,
@@ -216,7 +217,6 @@ export function Workshop({ session, recovery }: WorkshopProps) {
   // On a computer, a signed-in editor's sidebar stands beside the map the whole
   // time a route or a hotspot is drawn, and its saves are Done. Not while Extend
   // is still choosing where to leave a line: there is no line yet.
-  const isWideScreen = useIsWideScreen();
   const isBeside = isWideScreen && isPlayground && isSignedIn && draw.drawing && !draw.picking;
 
   // While a save sheet or an account dialog is open over the map, nothing
@@ -265,7 +265,7 @@ export function Workshop({ session, recovery }: WorkshopProps) {
               data-dock-host
               inert={isSheetOpen}
               className={
-                '@container relative min-h-0 min-w-0 flex-1 overflow-clip' +
+                'group/map @container relative min-h-0 min-w-0 flex-1 overflow-clip' +
                 (!draw.drawing && !cards.choosing ? ' ' + NEW_MENU_DOCK_FOOT : '')
               }
             >
@@ -280,7 +280,7 @@ export function Workshop({ session, recovery }: WorkshopProps) {
                   basemapThumbnails={STUDIO_BASEMAP_THUMBNAILS}
                   areCreditsShown={credits.isSheetMissing}
                 />
-                {/* The public map's ⓘ, in its place at the map's bottom left; MapLibre's corner credits step aside. */}
+                {/* The public map's ⓘ, at the map's bottom left; MapLibre's corner credits step aside. */}
                 {!credits.isSheetMissing && (
                   <MapCreditsDock
                     isDocked={cards.open}
@@ -293,11 +293,10 @@ export function Workshop({ session, recovery }: WorkshopProps) {
                   isMapLoaded={isMapLoaded}
                   saved={saved}
                   hotspots={hotspots}
-                  cards={cards}
-                  camera={camera}
+                  routeCards={routeCards}
+                  isPlayground={isPlayground}
                   cameraTurn={locatorTurn}
                   hushedAt={hushedAt}
-                  hasCredits={!credits.isSheetMissing}
                 />
               </div>
 
@@ -344,26 +343,23 @@ export function Workshop({ session, recovery }: WorkshopProps) {
                   draw={draw}
                   saved={saved}
                   hotspots={hotspots}
-                  cards={cards}
-                  camera={camera}
-                  trip={trip}
+                  routeCards={routeCards}
                   canEdit={canEdit}
                   isWideScreen={isWideScreen}
                   leftPanel={leftPanel}
+                  draftTrip={draftTrip.trip}
                   opening={opening}
                   deletes={deletes}
-                  hush={hush}
                   onDrawReturnTrip={startReturnTrip}
                 />
                 <PlaygroundTools
                   map={map}
-                  onOpenDraft={handleOpenDraft}
+                  onOpenDraft={openDraft}
                   session={session}
                   auth={auth}
                   draw={draw}
                   saved={saved}
                   hotspots={hotspots}
-                  routeCount={trip.routeCount}
                   saveFlow={saveFlow}
                   contribution={contribution}
                   extendEnds={extendEnds}

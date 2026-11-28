@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1377",
+  "old_id": "5aeebea9-2b4d-4bd8-ae5c-73fb6a28e116",
+  "name": "PROJECT 2 and 3 - WELCOME RTDA via E RODRIGUEZ",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.06303,14.62862],
+  "end": [121.00093,14.61698],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.06303,14.62862],[121.06201,14.62969],[121.0611,14.63096],[121.06093,14.63218],[121.05912,14.63316],[121.05899,14.63455],[121.05403,14.63321],[121.05199,14.63253],[121.034,14.62739],[121.03308,14.62547],[121.03098,14.62388],[121.02799,14.62295],[121.02502,14.6222],[121.02201,14.62108],[121.02003,14.62019],[121.01796,14.61982],[121.015,14.6188],[121.005,14.61806],[121.00297,14.61905],[121.00093,14.61698]]
+}

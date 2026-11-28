@@ -27,6 +27,11 @@ const { MAP_FILE_URL, EARLY_MAP_FILE } = mapFileConstants(
   readFileSync(new URL('./src/features/routes/published/map-file.ts', import.meta.url), 'utf8'),
 );
 
+// The route cards both maps draw (useRouteCards, RouteCardLayer, and what only they import):
+// a chunk of their own, `route-cards`, out of `shared` (see the groups below).
+const ROUTE_CARDS =
+  /[\\/]src[\\/]features[\\/]routes[\\/](map[\\/](use-route-cards|route-card-slots|use-map-floats)\.ts|map[\\/](route-card-layer|ride-marks|map-sheet-controls|map-controls-dock)\.tsx|cards[\\/](use-back-closes-cards|use-back-closes)\.ts|cards[\\/]list-top-bar\.tsx)$/;
+
 // The basemap host the offline worker caches from, read the way the app reads it
 // (shared/config/env.ts). A worker is only built by `vite build`, so its mode is
 // production; the same value reaches scripts/checks/check-build.mjs.
@@ -66,6 +71,11 @@ export default defineConfig({
     // silently land on the production Site URL instead. Fail loudly instead.
     port: 5173,
     strictPort: true,
+    // Agents build in git worktrees inside the checkout (.claude/worktrees). Watched, each of their
+    // edits and builds reloads every page this server serves, mid-suite: a browser suite then sees
+    // the page load twice (commuter-test's "fetched once" check). Only the worktrees under this
+    // checkout, by its own path: a server started inside a worktree still watches its own files.
+    watch: { ignored: [`${fileURLToPath(new URL('./.claude/worktrees', import.meta.url))}/**`] },
   },
   build: {
     // Three front doors, one build: the public map at /, the editor at /studio/
@@ -213,10 +223,19 @@ export default defineConfig({
               name: 'shared',
               minShareCount: 2,
               test: (id: string) =>
+                !ROUTE_CARDS.test(id) &&
                 !/[\\/]src[\\/]((app|features)[\\/](studio|contribute)[\\/]|shared[\\/]ui[\\/]turnstile|features[\\/]routes[\\/]published[\\/](fetch-index|fetch-line|line-file-schema|fetch-footbridges|footbridge-file-schema|fetch-terminals|terminal-file-schema)\.ts$|features[\\/]routes[\\/](search[\\/]|model[\\/](place-search|landmark-search|directions-at)\.ts$|map[\\/](look-at|footbridge-layer|terminal-points)\.ts$)|features[\\/]routes[\\/]map[\\/](map-style(-rows|-switch-row)?|location-labels-row)\.tsx$|shared[\\/]ui[\\/](toast|toast-host|toast-queue|use-toast|standing-toasts)\.tsx?$|design-system[\\/]primitives[\\/](location-icon|switch)\.tsx$|features[\\/]locator[\\/](contributor-location\.tsx|location-permission\.ts)$|shared[\\/]utils[\\/]css-duration\.ts$|shared[\\/]lib[\\/]query-client\.ts$|features[\\/]routes[\\/]map[\\/](hotspot-pin-images\.ts|(terminal|hintuan)-pin-icon\.svg\?raw)$)/.test(
                   id,
                 ),
             },
+            //  - route-cards: the route cards the public map and the studio's Playground
+            //    both draw (ROUTE_CARDS). In `shared` they would count against the public
+            //    page's opening budget for code it already carried in its own chunk, as
+            //    place search would; apart, one small chunk both pages load, held to its
+            //    own cap (scripts/checks/build/route-cards-weight.mjs). Below `shared`, so
+            //    what they import that both pages share stays there: a group takes the
+            //    modules its own import too.
+            { name: 'route-cards', test: ROUTE_CARDS, priority: 0 },
           ],
         },
       },

@@ -165,6 +165,8 @@ test('a category word, English or Tagalog, lists that category nearest the centr
   assert.deepEqual(search('botik'), ['Botika Burger'], 'short of the word: names');
 });
 
+const TIMED_RUNS = 7;
+
 test('over the real files, the read and a search stay quick', async () => {
   const realFetch = globalThis.fetch;
   const real = (name) =>
@@ -181,19 +183,21 @@ test('over the real files, the read and a search stay quick', async () => {
     // Generous for a loaded CI runner; a laptop reads in about a second.
     assert.ok(readMs < 8000, `read in ${Math.round(readMs)} ms`);
     // Every keystroke of a few searches an editor types: chains, a typo, category words. The
-    // median of three runs each, so one pause of the runner's does not fail it.
+    // median of seven timed runs each, after a warm-up run, so one pause of the runner's does not
+    // fail it while a real slowdown, which moves every run, still does.
     const near = [121.03, 14.65];
     const typed = ['jollibee', 'mercury drug', '7-eleven', 'purgold', 'botika', 'sari-sari', 'atm'];
     let slowest = { ms: 0, query: '' };
     for (const query of typed) {
       for (let end = 1; end <= query.length; end++) {
         const prefix = query.slice(0, end);
-        const runs = [0, 1, 2].map(() => {
+        searchStores(prefix, stores, near);
+        const runs = Array.from({ length: TIMED_RUNS }, () => {
           const started = performance.now();
           searchStores(prefix, stores, near);
           return performance.now() - started;
         });
-        const ms = runs.sort((a, b) => a - b)[1];
+        const ms = runs.sort((a, b) => a - b)[Math.floor(TIMED_RUNS / 2)];
         if (ms > slowest.ms) slowest = { ms, query: prefix };
       }
     }

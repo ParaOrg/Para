@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1037",
+  "old_id": "e580b6ce-cca3-4943-a48e-d139a12f5a36",
+  "name": "Balic - Balic - Bustillos via G. Tuazon",
+  "mode": "bus",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.00887,14.61193],
+  "end": [120.99298,14.60157],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.00887,14.61193],[121.00692,14.6121],[121.00503,14.61088],[121.00393,14.6086],[121.00297,14.60685],[120.99898,14.60449],[120.99685,14.60556],[120.995,14.6076],[120.99494,14.60557],[120.99696,14.60348],[120.995,14.60289],[120.99298,14.60157]]
+}

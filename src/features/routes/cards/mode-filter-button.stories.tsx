@@ -3,7 +3,6 @@ import { useState } from 'react';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
 import { FilterIcon } from '@/shared/ui/map-control-icons';
-import { FilterLargeIcon } from '@/shared/ui/route-icons';
 
 import { ModeFilterButton } from './mode-filter-button';
 import type { ModePicks } from '../model/mode-filter';
@@ -12,14 +11,10 @@ interface KeepingProps {
   /** The picks it starts on. */
   picks: ModePicks;
   onPicks: (picks: ModePicks) => void;
-  /** Which funnel and size: the map's Large (28) or the Controller's Base with the 28 drawing. */
-  isLarge: boolean;
-  /** The IconButton's size. */
-  size?: 'base' | 'large';
 }
 
 /** Keeps the picks as the apps do, so a story can be tapped through. */
-function Keeping({ picks: startsOn, onPicks, isLarge, size }: KeepingProps) {
+function Keeping({ picks: startsOn, onPicks }: KeepingProps) {
   const [picks, setPicks] = useState(startsOn);
   return (
     <ModeFilterButton
@@ -31,10 +26,9 @@ function Keeping({ picks: startsOn, onPicks, isLarge, size }: KeepingProps) {
         },
         routeCount: 12,
       }}
-      icon={isLarge ? <FilterLargeIcon /> : <FilterIcon />}
+      icon={<FilterIcon />}
       tooltip="left"
       testId="chooser-filter"
-      size={size}
     />
   );
 }
@@ -43,7 +37,7 @@ function Keeping({ picks: startsOn, onPicks, isLarge, size }: KeepingProps) {
 const meta = {
   title: 'Features/Routes/ModeFilterButton',
   component: Keeping,
-  args: { picks: [], onPicks: fn(), isLarge: false },
+  args: { picks: [], onPicks: fn() },
   decorators: [
     (Story) => (
       <div className="flex bg-bg-surface-secondary p-4">
@@ -94,14 +88,6 @@ export const NoneFiltered: Story = {
     await expect(within(canvasElement).queryByText('0')).toBeNull();
   },
 };
-
-/** Large (48) with the 28 funnel, as the Figma draws the commuter map's corner (4885:42133); the page places it. */
-export const LargeFiltered: Story = {
-  args: { picks: ['jeep', 'uv'], size: 'large', isLarge: true },
-};
-
-/** The studio's Controller's funnel: the same button, its 28 drawing. */
-export const OnTheController: Story = { args: { isLarge: true } };
 
 /** On a phone's map, 393 wide, at the bottom left over the sheet, as the public map stands them. */
 export const OnPhone: Story = {

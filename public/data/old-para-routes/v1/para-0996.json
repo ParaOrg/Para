@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-0996",
+  "old_id": "cdb6313c-84d2-4f37-9ab6-578c9bdfe66f",
+  "name": "Alabang - Sucat via Cupang (East Service Rd.)",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.04496,14.45392],
+  "end": [121.046,14.41922],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.04496,14.45392],[121.05087,14.44702],[121.05094,14.44353],[121.05025,14.43727],[121.05003,14.4308],[121.05,14.42604],[121.05006,14.422],[121.049,14.41909],[121.046,14.41922]]
+}

@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1729",
+  "old_id": "672fe141-c4d8-4692-baa8-806b8feab285",
+  "name": "Brgy Ayala Alabang Alabang Market",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.04401,14.41932],
+  "end": [121.02376,14.42685],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.04401,14.41932],[121.03935,14.42202],[121.03302,14.42398],[121.02901,14.42212],[121.02504,14.42329],[121.02382,14.42449],[121.02376,14.42685]]
+}

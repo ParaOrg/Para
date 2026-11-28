@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-0983",
+  "old_id": "dbf66a6e-2dbb-4b3a-960b-a0abe5730f18",
+  "name": "A. Rivera - Raon via Tomas Mapua",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [120.98022,14.60132],
+  "end": [120.977,14.61679],
+  "length_m": null,
+  "gaps": [],
+  "line": [[120.98022,14.60132],[120.97901,14.60442],[120.97994,14.60601],[120.97999,14.60793],[120.98099,14.60882],[120.98106,14.611],[120.97999,14.61182],[120.98,14.61327],[120.979,14.61332],[120.97697,14.61378],[120.97533,14.61457],[120.97589,14.61613],[120.977,14.61679]]
+}

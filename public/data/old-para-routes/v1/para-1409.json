@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1409",
+  "old_id": "f26730d5-9830-4a56-ae53-34cbbd830f14",
+  "name": "L GUINTO - PANDACAN",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [120.98899,14.57802],
+  "end": [121.013,14.59111],
+  "length_m": null,
+  "gaps": [],
+  "line": [[120.98899,14.57802],[120.98784,14.57871],[120.98791,14.58078],[120.98906,14.57984],[120.992,14.5809],[120.99498,14.5814],[120.9971,14.58272],[120.99899,14.58422],[121.00198,14.58623],[121.00398,14.59283],[121.00601,14.59069],[121.008,14.59108],[121.01099,14.59076],[121.013,14.59111]]
+}

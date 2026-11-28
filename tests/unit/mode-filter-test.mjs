@@ -9,8 +9,6 @@ import {
   MODES,
   MODE_FILTERS,
   MODE_FILTER_LABEL,
-  modesPicked,
-  passesModeFilter,
   passesModePicks,
   pickCount,
   picksEither,
@@ -42,7 +40,8 @@ const ROUTES = [
   direction('carousel', 'busway'),
 ];
 
-const kept = (filter) => ROUTES.filter((d) => passesModeFilter(d, filter)).map((d) => d.id);
+const keptBy = (picks) => ROUTES.filter((d) => passesModePicks(d, picks)).map((d) => d.id);
+const kept = (filter) => keptBy(picksOf(filter));
 
 test('All keeps every route', () => {
   assert.deepEqual(
@@ -78,8 +77,6 @@ test('jeep, UV Express and bus together keep those three', () => {
   assert.deepEqual(keptBy(['jeep', 'uv', 'bus']), ['jeep', 'bus', 'uv']);
 });
 
-const keptBy = (picks) => ROUTES.filter((d) => passesModePicks(d, picks)).map((d) => d.id);
-
 test('several modes picked keep the routes of any of them', () => {
   assert.deepEqual(keptBy(['jeep', 'bus']), ['jeep', 'bus']);
   assert.deepEqual(keptBy(['train', 'ferry']), ['lrt1', 'lrt2', 'mrt3', 'ferry']);
@@ -98,14 +95,9 @@ test('the count is how many modes are picked', () => {
   assert.equal(pickCount(['jeep', 'bus', 'train']), 3);
 });
 
-test('a single choice is the picks of that one mode, and passes as before', () => {
+test('a single choice is the picks of that one mode', () => {
   assert.deepEqual(picksOf('all'), []);
   assert.deepEqual(picksOf('bus'), ['bus']);
-  assert.equal(modesPicked('all'), 0);
-  assert.equal(modesPicked('ferry'), 1);
-  for (const filter of MODE_FILTERS) {
-    assert.deepEqual(kept(filter), keptBy(picksOf(filter)), filter);
-  }
 });
 
 test('a toggle picks or lets go, in the filter order; the last mode left out picked reads as All', () => {

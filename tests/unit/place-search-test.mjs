@@ -6,7 +6,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  editDistance,
   foldForSearch,
   matchQuality,
   placeVehicles,
@@ -92,6 +91,31 @@ test('typos: none under 4 letters, one up to 7, two from 8', () => {
   assert.equal(matchQuality('cuba', 'Quiapo'), null);
   assert.equal(matchQuality('qpo', 'Quiapo'), null);
 });
+
+// The reference the typo rule below is checked against: the edits (insert, delete, change, swap
+// two neighbours) between two texts, or limit + 1 once past it.
+const editDistance = (a, b, limit) => {
+  if (Math.abs(a.length - b.length) > limit) return limit + 1;
+  let before = [];
+  let previous = Array.from({ length: b.length + 1 }, (_, j) => j);
+  for (let i = 1; i <= a.length; i++) {
+    const current = [i];
+    let rowBest = i;
+    for (let j = 1; j <= b.length; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      let value = Math.min(previous[j] + 1, current[j - 1] + 1, previous[j - 1] + cost);
+      if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) {
+        value = Math.min(value, before[j - 2] + 1);
+      }
+      current.push(value);
+      rowBest = Math.min(rowBest, value);
+    }
+    if (rowBest > limit) return limit + 1;
+    before = previous;
+    previous = current;
+  }
+  return previous[b.length];
+};
 
 test('edit distance counts a swap of neighbours as one, and stops past its limit', () => {
   assert.equal(editDistance('quaipo', 'quiapo', 2), 1);

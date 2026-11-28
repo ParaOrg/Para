@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1511",
+  "old_id": "5f406258-b8fc-465a-b375-e680cc25544c",
+  "name": "MURPHY - CUBAO",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.063,14.61271],
+  "end": [121.05591,14.61803],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.063,14.61271],[121.06405,14.61378],[121.06191,14.61476],[121.06009,14.61444],[121.058,14.6192],[121.05591,14.61803]]
+}

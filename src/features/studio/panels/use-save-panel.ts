@@ -8,12 +8,12 @@ import {
   type DirectionRow,
 } from '@/features/routes/model/routes';
 
+import { returnTripNotes } from './return-trip-notes';
 import { loopSaveRefusal, saveRefusal } from './save-checks';
 import type { SaveIntent } from './save-intent';
 import { useRouteSave } from './use-route-save';
 import { useSaveEnds } from './use-save-ends';
 import { useSaveFacts } from './use-save-facts';
-import { returnTripNotices } from '../drawing/loop-closing';
 import type { Drawing } from '../drawing/use-drawing';
 
 export interface UseSavePanelOptions {
@@ -100,10 +100,8 @@ export function useSavePanel({
     isLoop,
     signboard,
   });
-  // A return trip that stops short of where the other way began or ended says so, and saves anyway.
-  const loop = existing
-    ? []
-    : returnTripNotices(directions, route?.id ?? null, hotspots, draw.line, slotReversed);
+  // A return trip that stops short of where the other way began or ended notes it, and saves anyway.
+  const loop = existing ? [] : returnTripNotes(directions, route?.id ?? null, hotspots, draw.line);
   const { busy, error, setError, save } = useRouteSave({
     facts,
     draw,

@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1562",
+  "old_id": "01557994-bf3c-4405-a510-8f7a7b5bc3aa",
+  "name": "Marcos Ave Tandang Sora Balintawak",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.02103,14.67981],
+  "end": [121.06697,14.66443],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.02103,14.67981],[121.023,14.67952],[121.02694,14.67881],[121.02909,14.67819],[121.03102,14.67754],[121.034,14.67678],[121.03701,14.67657],[121.04,14.67689],[121.04192,14.6766],[121.04498,14.67575],[121.04901,14.67328],[121.04996,14.67246],[121.05199,14.67031],[121.05598,14.66801],[121.059,14.66739],[121.06101,14.66683],[121.063,14.6659],[121.06503,14.66562],[121.06697,14.66443]]
+}

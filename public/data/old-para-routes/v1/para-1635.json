@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1635",
+  "old_id": "a41dedcc-4f52-4e24-ad73-6bd9e986a942",
+  "name": "San Andres via P Faura",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.0039,14.5741],
+  "end": [120.98899,14.57802],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.0039,14.5741],[121.00006,14.57263],[120.995,14.5745],[120.98899,14.57802]]
+}

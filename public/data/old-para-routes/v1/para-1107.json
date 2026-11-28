@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1107",
+  "old_id": "71a245f7-614c-410e-b1cf-3060f918af9a",
+  "name": "Divisoria - Magpajo via A. Mabini",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [120.97585,14.63852],
+  "end": [120.97204,14.60699],
+  "length_m": null,
+  "gaps": [],
+  "line": [[120.97585,14.63852],[120.97501,14.63659],[120.97502,14.6327],[120.974,14.63119],[120.9739,14.62882],[120.97404,14.62749],[120.97297,14.62626],[120.97305,14.62529],[120.97203,14.62216],[120.97204,14.62056],[120.97104,14.6179],[120.969,14.60962],[120.97101,14.60943],[120.97183,14.60835],[120.97204,14.60699]]
+}

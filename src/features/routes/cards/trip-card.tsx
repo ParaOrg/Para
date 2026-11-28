@@ -6,7 +6,7 @@ import { rideFactsOf } from './ride-facts-of';
 import { TimelineRouteDetailCard } from './timeline-route-detail-card';
 import { fareFor, pickedFareFor, publishedSignboard, tripFacts } from './trip-facts';
 import { useFareKind } from './use-fare-kind';
-import { otherRoutesFrom, switchWord, wayWord } from '../model/departures';
+import { otherRoutesFrom, switchWord } from '../model/departures';
 import type { Livery } from '../model/liveries';
 import { stationCode } from '../model/rail-codes';
 import { LINE_NOTES, LOOP_WORD, type Direction } from '../model/routes';
@@ -42,17 +42,15 @@ export function TripCard({
   extras,
   walk = null,
   onDrawOtherWay,
-  ...controller
+  onClose,
 }: {
   direction: Direction;
   directions: readonly Direction[];
   timeline: Timeline;
-  /** The colour it opened in, kept through PAPUNTA; its line wears it too. */
+  /** The colour it opened in, kept through SWITCH; its line wears it too. */
   livery: Livery;
   onSwitch: (sibling: Direction) => void;
-  /** The studio's Controller bar, its ‹ and its ✕, and Escape's move (TimelineRouteDetailCard's). */
-  hasController?: boolean;
-  onBackToList?: (() => void) | null;
+  /** Escape and a pull down from Low (TimelineRouteDetailCard's). */
   onClose: () => void;
   /** The hintuan picked on the timeline (useRideTo), the ride's end, and how far the ride between the picks runs, when the line reaches them. */
   picked: string | null;
@@ -84,7 +82,7 @@ export function TripCard({
   extras?: ReactNode;
   /** The walk from the ride's end to the landmark "Go here" was for (ticket 07), or null. */
   walk?: string | null;
-  /** The studio's: with the other way not drawn, PAPUNTA starts drawing it, not resting disabled. */
+  /** The studio's: with the other way not drawn, SWITCH starts drawing it, not resting disabled. */
   onDrawOtherWay?: () => void;
 }) {
   const trip = tripFacts(direction, directions, timeline);
@@ -123,14 +121,12 @@ export function TripCard({
       label={loop ? `${direction.name ?? from} (${LOOP_WORD})` : undefined}
       loopName={loop ? (direction.name ?? from) : undefined}
       switchable={trip.isSwitchable || canDrawOtherWay}
-      back={direction.reversed}
-      way={loop ? null : wayWord(direction.reversed, [direction])}
       wayTo={loop ? null : switchWord(direction.reversed, [direction])}
       onSwitch={() => {
         if (sibling && trip.isSwitchable) onSwitch(sibling);
         else if (canDrawOtherWay) onDrawOtherWay?.();
       }}
-      {...controller}
+      onClose={onClose}
       ride={ride}
       signboards={(direction.signboards ?? []).map(signboardUrl)}
       note={LINE_NOTES[direction.route?.routeCode ?? '']}

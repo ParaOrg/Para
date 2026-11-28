@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1057",
+  "old_id": "d17e9097-dce7-4417-8736-68674882941e",
+  "name": "Blumentritt - Frisco",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [120.983,14.62262],
+  "end": [121.016,14.64037],
+  "length_m": null,
+  "gaps": [],
+  "line": [[120.983,14.62262],[120.98497,14.62377],[120.98701,14.6253],[120.98899,14.62387],[120.99,14.62601],[120.98996,14.62758],[120.99103,14.62969],[120.99297,14.63399],[120.99295,14.63552],[120.99399,14.63746],[121.005,14.63889],[121.00699,14.63909],[121.00997,14.6396],[121.015,14.64019],[121.016,14.64037]]
+}

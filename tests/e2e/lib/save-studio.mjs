@@ -870,7 +870,7 @@ export async function openCard(ll) {
 export async function addReturnTrip() {
   const add = page.getByTestId('route-line-detail').getByRole('button', { name: '+ Add route' });
   if (await add.count()) await add.click();
-  else await page.getByTestId('card-switch').click();
+  else await page.getByTestId('trip-ends-switch').click();
 }
 
 /** The open trip's Delete: in the ⋮ menu on a computer's route line detail, on a phone's card. */
@@ -901,6 +901,8 @@ export async function drawTheRoute() {
   await openCard(OUT[1]);
   await addReturnTrip();
   await page.waitForTimeout(400);
+  // The return trip starts with no point: its first tap, on where papunta ended.
+  await clickAt(BACK[0], 300);
   await clickAt(BACK[1], 300);
   await clickAt(at(-0.002, -0.0015), 300);
   await closeByBadge();

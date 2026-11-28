@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1177",
+  "old_id": "fc2be14f-f89c-4d69-afbc-07f13d4a5e12",
+  "name": "Libertad - Malibay",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.017,14.5405],
+  "end": [120.98401,14.5372],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.017,14.5405],[121.01499,14.53963],[121.01199,14.53906],[121.008,14.53848],[121,14.53762],[120.996,14.53788],[120.99299,14.53733],[120.98599,14.53574],[120.98401,14.5372]]
+}

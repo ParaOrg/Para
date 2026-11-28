@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1289",
+  "old_id": "11b4d31e-3321-48f4-a48a-d43ed736e015",
+  "name": "Libertad - M. Reyes",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [120.99996,14.54284],
+  "end": [120.99996,14.54284],
+  "length_m": null,
+  "gaps": [],
+  "line": [[120.99996,14.54284],[120.99416,14.54414],[120.99401,14.54617],[120.99811,14.5474],[121.001,14.54805],[121.00414,14.5489],[121.00809,14.55033],[121.00997,14.54936],[121.00995,14.54348],[121.01096,14.541],[121.008,14.53848],[121.00301,14.53799],[121,14.53685],[121.0003,14.53966],[120.99996,14.54284]]
+}

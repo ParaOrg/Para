@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1260",
+  "old_id": "a55c6f24-65ea-404b-9849-9179fbe4ec3d",
+  "name": "Sucat Hi-way - Bagumbayan",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.04496,14.45392],
+  "end": [121.0579,14.4703],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.04496,14.45392],[121.05103,14.4504],[121.05209,14.45308],[121.05328,14.45762],[121.05585,14.46555],[121.05692,14.46833],[121.0579,14.4703]]
+}

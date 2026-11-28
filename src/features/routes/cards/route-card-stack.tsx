@@ -53,7 +53,7 @@ function endCodeOf(v: Direction): string | null {
  * the same mode too. A row opens its trip; a tap elsewhere on a card opens its first row's. With
  * `selection` (the studio's), that tap selects the card instead, one at a
  * time, and the map lights its directions alone; a row still opens its trip and picks none. The route
- * list stacks them over its Controller; the public map's HintuanCard under its place's boxes, the
+ * list stacks them; the public map's HintuanCard under its place's boxes, the
  * routes stopping at the Selected one; the studio's hotspot card under "Routes that pass through",
  * or a terminal's "Routes that stage here".
  */

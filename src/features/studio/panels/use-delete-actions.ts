@@ -18,19 +18,16 @@ interface DeleteActionsOptions {
   setNotice: (text: string | null) => void;
 }
 
-/** What a delete says when it joined a draft the editor already had of the route. */
-function addedToDraft(v: DirectionRow): string {
-  return `Added to your draft of "${v.route?.name ?? 'this route'}". Tap it on the map to approve it: the map changes once it is approved.`;
-}
-
 /**
  * Delete on a trip's card and on a hotspot's: who may, what is refused and
  * what is said. Each confirms first, then writes, closes the card and reloads;
  * a failure is a notice. A hotspot comes off the map by take-down, which Put
- * back undoes. A trip's delete is approved at once
- * when it is the route draft's only change; if the editor already had a draft
- * of the route, the delete joins it unapproved. If the approval is refused, the
- * removal draft stays stored and the notice says why.
+ * back undoes. A trip's delete is approved at once. If the editor already has
+ * a draft of the route, the confirm says its unapproved changes are discarded,
+ * and on OK the draft is discarded before the delete, so the delete is the
+ * only change approved; Cancel changes nothing. Another editor's draft refuses
+ * the delete. If the approval is refused, the removal draft stays stored and
+ * the notice says why.
  */
 export function useDeleteActions({
   signedIn,
@@ -70,24 +67,28 @@ export function useDeleteActions({
       onSignInNeeded();
       return;
     }
-    const confirmation = isLoop(v)
-      ? `Delete the ${LOOP_WORD.toLowerCase()} "${v.route?.name}"?`
-      : `Delete "${v.route?.name}" — ${v.name}?`;
-    if (!window.confirm(confirmation)) return;
+    // Once the editor's own draft is discarded, a later failure must say so: it is gone.
+    let hasDiscarded = false;
     try {
-      // Read before the delete is stored: once it is, a draft exists either way.
-      const hasDraftAlready = (await draftOf('route', v.routeId)) !== null;
+      const ownDraft = await draftOf('route', v.routeId);
+      await assertNotAnothersDraft(ownDraft);
+      const target = isLoop(v)
+        ? `the ${LOOP_WORD.toLowerCase()} "${v.route?.name}"`
+        : `"${v.route?.name}" — ${v.name}`;
+      // A draft whose maker is gone is nobody's, so it is not called "your" changes.
+      const discardNote = ownDraft
+        ? ` ${ownDraft.editor_id === null ? 'Unapproved' : 'Your unapproved'} changes to this route will be discarded.`
+        : '';
+      if (!window.confirm(`Delete ${target}?${discardNote}`)) return;
+      if (ownDraft) {
+        const discarded = await runReviewCommand({ action: 'discard', draft: ownDraft });
+        if (discarded.code !== 'discarded') throw new Error(reviewMessage(discarded));
+        hasDiscarded = true;
+      }
       const stored = await deleteDirectionDraft(v);
       const refusal = draftRefusal(stored);
       if (refusal) throw new Error(refusal);
       saved.select(null);
-      // The confirm reviewed the delete and nothing else. A draft the editor already
-      // had holds changes nobody has reviewed, and approving it would publish them with
-      // the delete, so the delete joins that draft and waits with the rest for its Approve.
-      if (hasDraftAlready) {
-        setNotice(addedToDraft(v));
-        return;
-      }
       // The delete is the draft's only change: approved in the same press, so it is gone
       // and not parked in a draft, where Discard would undo it.
       const approved =
@@ -98,7 +99,12 @@ export function useDeleteActions({
       }
       setNotice(approved ? reviewMessage(approved) : DRAFTED);
     } catch (e) {
-      setNotice(e instanceof Error ? e.message : String(e));
+      const reason = e instanceof Error ? e.message : String(e);
+      setNotice(
+        hasDiscarded
+          ? `Your draft was discarded, but the delete did not go through: ${reason}`
+          : reason,
+      );
     }
   };
 

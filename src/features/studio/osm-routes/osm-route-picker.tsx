@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react';
+import { useState } from 'react';
 
 import { Button } from '@/design-system/primitives/button';
 import { TextField } from '@/design-system/primitives/text-field';
@@ -8,6 +8,7 @@ import { OsmRouteCard } from './osm-route-card';
 import type { OsmRoute, OsmRouteSummary } from './osm-route-schema';
 import { osmRoutesNear, searchOsmRoutes } from './search-osm-routes';
 import type { RouteLine } from './seed-points';
+import { StartPickerFrame } from './start-picker-frame';
 import { useOsmRouteIndexQuery } from './use-osm-route-index-query';
 
 const KIND_LABEL = { jeepney: 'Jeepney', uv: 'UV Express', bus: 'Bus', rail: 'Rail' } as const;
@@ -32,9 +33,9 @@ export function OsmRoutePicker({ mapCentre, onStart, onClose }: OsmRoutePickerPr
 
   if (chosenId !== null)
     return (
-      <PickerFrame onClose={onClose}>
+      <StartPickerFrame title="Start from an OSM route" onClose={onClose}>
         <OsmRouteCard id={chosenId} onStart={onStart} onBack={() => setChosenId(null)} />
-      </PickerFrame>
+      </StartPickerFrame>
     );
 
   const routes = index.data?.routes ?? [];
@@ -46,7 +47,7 @@ export function OsmRoutePicker({ mapCentre, onStart, onClose }: OsmRoutePickerPr
   };
 
   return (
-    <PickerFrame onClose={onClose}>
+    <StartPickerFrame title="Start from an OSM route" onClose={onClose}>
       <TextField
         label="Ref, name or relation id"
         value={query}
@@ -74,29 +75,7 @@ export function OsmRoutePicker({ mapCentre, onStart, onClose }: OsmRoutePickerPr
           OSM data of {index.data.extractAt.slice(0, 10)}. {index.data.attribution}, ODbL.
         </p>
       )}
-    </PickerFrame>
-  );
-}
-
-interface PickerFrameProps {
-  children: ReactNode;
-  onClose: () => void;
-}
-
-/** The panel, where an upload's hint stands, marked as the placeholder it is. */
-function PickerFrame({ children, onClose }: PickerFrameProps) {
-  return (
-    <section
-      aria-label="Start from an OSM route"
-      className="absolute top-[calc(1rem+var(--map-safe-top))] left-4 z-10 flex max-h-[calc(100%-2rem)] w-80 max-w-[calc(100%-2rem)] flex-col gap-3 overflow-y-auto rounded-2xl bg-surface p-4 text-sm text-content-secondary shadow-lg ring-1 ring-content-primary/10"
-    >
-      <div className="flex items-baseline justify-between gap-2">
-        <h2 className="text-base font-bold text-content-primary">Start from an OSM route</h2>
-        <span className="text-xs text-content-tertiary">Placeholder look</span>
-      </div>
-      {children}
-      <Button variant="secondary" label="Close" onClick={onClose} />
-    </section>
+    </StartPickerFrame>
   );
 }
 

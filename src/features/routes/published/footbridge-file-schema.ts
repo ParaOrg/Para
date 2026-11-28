@@ -14,7 +14,6 @@ const accessPointSchema = z.object({
   kind: z.enum(['elevator', 'steps']),
   point: lngLatSchema,
 });
-export type FootbridgeAccess = z.infer<typeof accessPointSchema>;
 
 const footbridgeSchema = z.pipe(
   z.object({
@@ -41,4 +40,3 @@ export const footbridgeFileSchema = z.object({
   attribution: z.string(),
   footbridges: z.array(footbridgeSchema),
 });
-export type FootbridgeFile = z.infer<typeof footbridgeFileSchema>;

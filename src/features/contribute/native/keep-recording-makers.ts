@@ -30,8 +30,3 @@ export function brandOf(manufacturer: string): KeepRecordingBrand | null {
   const name = manufacturer.trim().toLowerCase().split(/\s+/)[0] ?? '';
   return Object.hasOwn(BRAND_OF_MAKER, name) ? BRAND_OF_MAKER[name] : null;
 }
-
-/** Whether the phone's maker is one that stops background apps, by any casing. */
-export function stopsBackgroundApps(manufacturer: string): boolean {
-  return brandOf(manufacturer) !== null;
-}

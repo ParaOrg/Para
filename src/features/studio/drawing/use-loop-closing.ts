@@ -12,7 +12,6 @@ import {
   loopClosingPoint,
   outboundFeatures,
   outboundFor,
-  returnTripStart,
   whyCannotCloseLoop,
 } from './loop-closing';
 import { useConnectHint } from './use-connect-hint';
@@ -20,9 +19,9 @@ import type { Drawing } from './use-drawing';
 
 /*
  * Closing a route's loop while its other way is drawn: the return trip starts
- * on the outbound line's last point, the outbound shows faintly under the
- * drawing with its two ends marked, and the toolbar can end the line on the
- * outbound's first point. The rules are loop-closing.ts's; this lays them on
+ * wherever the editor first taps, the outbound shows faintly under the drawing
+ * with its two ends marked as a guide, and a click by the outbound's first
+ * point ends the line there. The rules are loop-closing.ts's; this lays them on
  * the map and hands the studio what it needs.
  */
 
@@ -50,8 +49,8 @@ function addOutboundLayers(map: MapLibreMap): void {
     },
     under,
   );
-  // Where it began (the loop closes here): a ring. Where it ended (the return trip
-  // starts here): a dot. Shape tells them apart, not colour.
+  // Where it began (the loop closes here): a ring. Where it ended (a return trip's
+  // start is measured from here): a dot. Shape tells them apart, not colour.
   map.addLayer(
     {
       id: OUTBOUND_START,
@@ -98,7 +97,7 @@ export interface LoopPlan {
  * Lays the outbound line under a return trip being drawn, and says where the
  * loop closes. `routeId` is the route whose empty slot the drawing fills (null
  * for anything else), `slotReversed` which way that slot runs. `startReturnTrip`
- * begins that drawing with its first point already on the outbound line's last.
+ * begins that drawing with no point placed: the editor's first tap is its start.
  *
  * A new route, or a loop being edited, has no other way to join: it closes on
  * its own first point, so a line can go round and end where it began. Near
@@ -113,7 +112,7 @@ export function useLoopClosing(
   directions: readonly DirectionRow[],
   hotspots: readonly Hotspot[],
 ): { loop: LoopPlan | null; startReturnTrip: (routeId: string) => void } {
-  const { drawing, area, picking, start, addPoint, target, controlPoints, hasJoin } = draw;
+  const { drawing, area, picking, start, target, controlPoints, hasJoin } = draw;
   const outbound = useMemo(
     () =>
       drawing && !area && !picking && routeId ? outboundFor(directions, routeId, hotspots) : null,
@@ -127,14 +126,7 @@ export function useLoopClosing(
     if (isGeoJSON(source)) source.setData(outboundFeatures(outbound));
   }, [map, outbound]);
 
-  const startReturnTrip = useCallback(
-    (forRouteId: string) => {
-      start(forRouteId);
-      const first = returnTripStart(outboundFor(directions, forRouteId, hotspots) ?? []);
-      if (first) void addPoint(first);
-    },
-    [start, addPoint, directions, hotspots],
-  );
+  const startReturnTrip = useCallback((forRouteId: string) => start(forRouteId), [start]);
 
   const editedLoop = target.directionId
     ? directions.find((v) => v.id === target.directionId)

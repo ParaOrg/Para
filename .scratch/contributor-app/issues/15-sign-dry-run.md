@@ -1,6 +1,6 @@
 # 15: A dry run of the app's signing, with nothing published
 
-Status: ready-for-human (built; the owner runs it on `main` once it is there, before the app-v0.4.1 tag)
+Status: resolved (superseded: app-v0.5.0 was signed and released, so the real `sign` job has run)
 Type: task
 Who: an agent for the workflow; the owner to press the button and, if needed, change one setting
 Blocked by: nothing. Wanted before app-v0.4.1 is tagged
@@ -59,3 +59,5 @@ off by default.
   `tests/unit/app-sign-dry-run-test.mjs`. The box is "Sign a build without publishing it". A
   workflow is dispatched from the branch it is read from, so the dry run can be run only once
   this has reached `main`: after the next release merge, and before the tag.
+
+- 2026-11-28 (/tidy, the owner's word through the hub): resolved. There was no app-v0.4.1; app-v0.5.0 was signed and published on 2026-11-13.

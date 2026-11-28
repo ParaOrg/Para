@@ -26,7 +26,7 @@ import { requireSupabase } from './supabase';
  * is the whole subject, so approving it twice writes the same thing.
  */
 
-export type { DraftKind, DraftRow, DraftStatus, ReviewCode, ReviewResult } from './review-schema';
+export type { DraftKind, DraftRow, ReviewResult } from './review-schema';
 
 /** The review functions, with their arguments as the generated types have them. */
 type ReviewFunctions = Pick<

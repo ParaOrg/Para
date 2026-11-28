@@ -214,8 +214,8 @@
      deprecated Card (Depreciated)/green and red surfaces, so these name them for what they mean. */
   --trip-start: var(--color-green-700);
   --trip-end: var(--color-red-800);
-  /* Gradient/bottom-toolbar (4679:23737): the phone's Controller fades what scrolls under it
-     into neutral-300. Drawn with `bg-(image:--gradient-bottom-toolbar)`. */
+  /* Gradient/bottom-toolbar (4679:23737): transparent into neutral-300, a Figma variable no code
+     uses now. Drawn with `bg-(image:--gradient-bottom-toolbar)`. */
   --gradient-bottom-toolbar: linear-gradient(to bottom, transparent, var(--color-neutral-300));
   /* Gradient/signboard: the Signboard card's fill (4822:43834), white into neutral-150, a fill
      Figma draws with no variable. Drawn with `bg-(image:--gradient-signboard)`. */
@@ -692,6 +692,7 @@
  *   Figma                          code
  *   text/quarternnary              --text-quaternary
  *   text/on-text                   --text-on-fill
+ *   text/text-error                --text-error
  *   bg/surface/surface             --bg-surface
  *   bg/surface/surface-secondary   --bg-surface-secondary
  *   bg/fill/fill                   --bg-fill
@@ -861,6 +862,7 @@
   --text-tertiary: var(--color-neutral-9);
   --text-quaternary: var(--color-neutral-7);
   --text-on-fill: var(--color-white);
+  --text-error: var(--color-red-11);
   --bg-surface: var(--color-white);
   --bg-surface-secondary: var(--color-neutral-4);
   --bg-fill: var(--bg-surface);
@@ -896,6 +898,7 @@
   --color-text-tertiary: var(--text-tertiary);
   --color-text-quaternary: var(--text-quaternary);
   --color-text-on-fill: var(--text-on-fill);
+  --color-text-error: var(--text-error);
   --color-bg-surface: var(--bg-surface);
   --color-bg-surface-secondary: var(--bg-surface-secondary);
   --color-bg-fill: var(--bg-fill);

@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1327",
+  "old_id": "a7fa4956-df6b-4d17-a7b4-4f14e69a64e9",
+  "name": "KATIPUNAN - UP GATE",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.07409,14.6544],
+  "end": [121.07403,14.63189],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.07409,14.6544],[121.07405,14.652],[121.07415,14.6487],[121.07406,14.64627],[121.07508,14.64377],[121.07499,14.64087],[121.074,14.63859],[121.07415,14.6364],[121.07415,14.63409],[121.07403,14.63189]]
+}

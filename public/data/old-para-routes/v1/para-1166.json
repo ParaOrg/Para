@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1166",
+  "old_id": "7b498f99-6a37-4152-8456-7d2615c4c649",
+  "name": "Padre Faura - Sta Ana",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.02103,14.58743],
+  "end": [120.98188,14.57493],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.02103,14.58743],[121.01802,14.58468],[121.01305,14.58187],[121.00999,14.58083],[121.003,14.5791],[121,14.57871],[121,14.581],[120.997,14.58017],[120.997,14.57883],[120.99301,14.57821],[120.98899,14.57802],[120.98791,14.58078],[120.98602,14.57991],[120.98197,14.57775],[120.98188,14.57493]]
+}

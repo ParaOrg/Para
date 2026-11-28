@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1128",
+  "old_id": "3fa74b33-f1e6-4d15-9560-165c62734fc3",
+  "name": "EDSA/Shaw Central - Kalentong/JRC",
+  "mode": "bus",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.02797,14.59333],
+  "end": [121.054,14.5811],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.02797,14.59333],[121.03095,14.5918],[121.03403,14.59059],[121.03491,14.58956],[121.038,14.58951],[121.04199,14.5892],[121.045,14.588],[121.048,14.5858],[121.05104,14.58333],[121.054,14.5811]]
+}

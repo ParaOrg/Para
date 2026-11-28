@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1651",
+  "old_id": "a681342e-b881-4722-bd24-cc4969704f28",
+  "name": "Alabang Pasay Rtda",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121,14.53762],
+  "end": [121.046,14.41922],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121,14.53762],[121.01199,14.53906],[121.01901,14.5357],[121.02102,14.53281],[121.02399,14.52699],[121.03503,14.50711],[121.037,14.5041],[121.04493,14.48817],[121.04502,14.4833],[121.04515,14.445],[121.045,14.42636],[121.04524,14.42303],[121.046,14.41922]]
+}

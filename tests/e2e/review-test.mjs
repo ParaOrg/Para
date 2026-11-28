@@ -28,7 +28,8 @@ const errors = [];
 page.on('pageerror', (error) => errors.push(error.message));
 await bareStyle(page);
 await page.goto(`${BASE}/studio/`);
-// Every draft has a mark on the map; a tap opens it into its sidebar (useOpenDraft).
+// Every draft has a mark on the map; a tap opens it (useOpenDraft): a route's in its route line
+// detail first, a place that is a draft only in its sidebar.
 const marks = page.getByRole('button', { name: /^Draft: / });
 await marks.first().waitFor();
 const shot = (name) => page.screenshot({ path: `${out}/${name}.png` });
@@ -63,9 +64,14 @@ assert.ok(
 );
 await shot('01-playground-marks');
 
-// A new place's draft opens in its sidebar, on the draft; Approve with a field changed saves it
-// and then publishes it, at the revision just saved.
+// A new place's draft opens in its sidebar from its card, on the draft; Approve with a field
+// changed saves it and then publishes it, at the revision just saved.
 await page.getByRole('button', { name: 'Draft: Preview new place' }).dispatchEvent('click');
+// Its card first (DraftPlaceCard); its Edit opens the sidebar.
+await page
+  .getByTestId('draft-place-card')
+  .getByRole('button', { name: /^Edit / })
+  .click();
 const hotspotPanel = page.getByTestId('hotspot-panel');
 await hotspotPanel.waitFor();
 assert.equal(await page.getByPlaceholder('SM Fairview Ilalim').inputValue(), 'Preview new place');
@@ -130,6 +136,8 @@ let isConflictSeen = false;
 for (let tries = 0; tries < 3 && !isConflictSeen; tries++) {
   const routeMarks = page.getByRole('button', { name: /^Draft: (?!Browser-drawn)/ });
   await routeMarks.first().dispatchEvent('click');
+  // The route line detail first; its Edit Route opens the draft in its sidebar.
+  await page.getByTestId('route-line-detail').getByRole('button', { name: 'Edit route' }).click();
   await routePanel.waitFor();
   await routePanel.getByRole('button', { name: 'Approve', exact: true }).waitFor();
   await routePanel.getByRole('button', { name: 'Approve', exact: true }).click();
@@ -166,6 +174,11 @@ assert.equal((await api(`draft?id=eq.${stale.id}`)).length, 0, 'the kept draft i
 
 // The browser-drawn place's own draft, discarded from its sidebar.
 await page.getByRole('button', { name: 'Draft: Browser-drawn draft place' }).dispatchEvent('click');
+// Its card first (DraftPlaceCard); its Edit opens the sidebar.
+await page
+  .getByTestId('draft-place-card')
+  .getByRole('button', { name: /^Edit / })
+  .click();
 const placePanel = page.getByTestId('hotspot-panel');
 await placePanel.getByRole('button', { name: 'Discard', exact: true }).click();
 await toast('Draft discarded');

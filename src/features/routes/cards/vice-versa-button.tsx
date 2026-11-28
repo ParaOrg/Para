@@ -12,7 +12,7 @@ interface ViceVersaButtonProps {
   isSwitchable: boolean;
   /** Whether the way back is showing, for the suites (`data-back`). */
   isBack: boolean;
-  /** Every route listed turned to its other way round, as the studio's PAPUNTA turns them. */
+  /** Every route listed turned to its other way round, as the ends card's ⇅ turns one. */
   onSwitch: () => void;
   /** What the suites find it by: the map's, or the one in the bar a list at the top shows. */
   testId?: string;
@@ -22,7 +22,7 @@ interface ViceVersaButtonProps {
  * Vice Versa (4831:51276), floating on the map over the public map's route list: the Button's
  * Secondary, its words then ⇅ (switch-vertical). A tap turns every route listed the other way
  * round. Its words never change, so a screen reader hears which way is showing and where a tap
- * leads after its name. `chooser-flip` to the suites, as the studio's PAPUNTA is.
+ * leads after its name. `chooser-flip` to the suites.
  */
 export function ViceVersaButton({
   way,

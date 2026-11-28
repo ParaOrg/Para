@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1662",
+  "old_id": "7b4fb005-67bb-46da-9b07-43b08af39c7a",
+  "name": "Baliwag Bocaue",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [120.926,14.79862],
+  "end": [120.90003,14.82373],
+  "length_m": null,
+  "gaps": [],
+  "line": [[120.926,14.79862],[120.92216,14.80172],[120.91703,14.80807],[120.91402,14.81157],[120.91293,14.81304],[120.91107,14.81444],[120.91005,14.81585],[120.90599,14.81829],[120.90299,14.82099],[120.90101,14.82291],[120.90003,14.82373]]
+}

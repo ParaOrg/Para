@@ -4,7 +4,7 @@ import {
 } from '../../../src/features/routes/model/route-report-schema';
 
 /**
- * POST /api/report: a commuter's route report (ADR 0010, .scratch/route-reports/README.md).
+ * POST /api/report: a commuter's route report.
  * Checked in order, cheapest first: the method and type, the sender's rate limit, the size, the
  * shape (the schema the page uses), Turnstile, then the database's own checks and caps through
  * submit_route_report. Nothing here logs the body, the token or who sent it.

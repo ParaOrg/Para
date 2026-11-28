@@ -14,7 +14,6 @@ import {
   trailOf,
 } from '../../src/features/contribute/recorder/recording-rules.ts';
 import {
-  countdownText,
   distanceFigure,
   kilometresText,
   timeFigure,
@@ -73,13 +72,9 @@ test('the recording card says metres under a kilometre, then kilometres to one d
   assert.deepEqual(distanceFigure(4249), { value: '4.2', unit: 'km' });
 });
 
-test('the countdown says its figures the way the design reads them', () => {
+test('the card says its kilometres the way the design reads them', () => {
   assert.equal(kilometresText(4200), '4.2');
   assert.equal(kilometresText(4249), '4.2');
-  assert.equal(countdownText(102), '1:42');
-  assert.equal(countdownText(120), '2:00');
-  assert.equal(countdownText(0.2), '0:01');
-  assert.equal(countdownText(-3), '0:00');
 });
 
 test('a half tenth of a kilometre rounds up, as the ride notification rounds it', () => {

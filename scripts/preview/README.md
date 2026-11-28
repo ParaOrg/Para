@@ -39,8 +39,10 @@ adapter are separate verification targets: the adapter is not proof of SQL behav
 
 `asset-manifest.mjs` and `upload-assets.mjs` prepare Cloudflare's documented direct
 asset-upload flow. Upload uses a short-lived, asset-scoped token supplied by the
-connected Cloudflare API. The sample preview is a separate static Worker; do not
-change the existing `para` service or any staging/production environment flags.
+connected Cloudflare API. A shared sample preview is its own static Worker; do not
+change the `para` Worker, its staging Preview or production. The last one,
+`parapo-studio-review-preview` on the old account, was deleted on 2026-11-23
+(`docs/operations/retire-old-site.md`), so none is up today.
 
 ## Contributions (upload → Studio Contributors)
 

@@ -1,6 +1,6 @@
 # The contributor app's emulator jobs reach live hosts on a pull request
 
-Status: ready-for-human
+Status: resolved (closed by the owner 2026-11-28)
 Type: task
 Priority: medium
 
@@ -151,3 +151,5 @@ mtalk.google.com, play.googleapis.com, stun.l.google.com, stun1.l.google.com,
 update.googleapis.com, voilatile-pa.googleapis.com, www.google.com, www.googleapis.com,
 www.gstatic.com. The notification job: the same, plus infinitedata-pa.googleapis.com and
 youtubei.googleapis.com. No database host in either.
+
+**2026-11-28 (/tidy, the owner's word through the hub): closed.** [#1255](https://github.com/ParaOrg/Para/pull/1255) runs the emulator jobs on pushes to `staging`, not on pull requests, so a branch's unreviewed code no longer reaches the live hosts from them.

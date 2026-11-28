@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1633",
+  "old_id": "392fca64-646e-42bc-9920-e3e1793f1ed5",
+  "name": "Salcedo Amorsolo LegaspiVill Landmark",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.021,14.55151],
+  "end": [121.01595,14.55852],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.021,14.55151],[121.01906,14.5527],[121.021,14.55373],[121.02204,14.55475],[121.01595,14.55852]]
+}

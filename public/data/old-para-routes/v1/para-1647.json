@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1647",
+  "old_id": "5568939d-50bb-491b-9899-33efce6292c0",
+  "name": "Ugong Pasig via Pasig Market",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.072,14.56625],
+  "end": [121.08203,14.55848],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.072,14.56625],[121.076,14.566],[121.07598,14.5633],[121.07618,14.56226],[121.078,14.56081],[121.07997,14.56013],[121.08084,14.55916],[121.08203,14.55848]]
+}

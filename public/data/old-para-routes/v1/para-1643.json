@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1643",
+  "old_id": "b86bda9f-45b4-4b62-8b39-4ad2ba781e12",
+  "name": "Talayan Vill A Bonifacio 5th Ave",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.01394,14.62736],
+  "end": [120.984,14.64453],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.01394,14.62736],[121.012,14.6298],[121.00982,14.63197],[121.00901,14.6345],[121.00699,14.63909],[121.00601,14.6417],[121.00501,14.64464],[121.00201,14.64446],[120.998,14.64401],[120.99,14.64411],[120.987,14.6444],[120.985,14.64437],[120.984,14.64453]]
+}

@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1598",
+  "old_id": "20326363-54e5-448d-95f3-e9de4a4f8451",
+  "name": "Karuhatan Ugong",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.00202,14.68873],
+  "end": [120.97601,14.68963],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.00202,14.68873],[121,14.68792],[120.99799,14.68752],[120.9969,14.68707],[120.99503,14.68652],[120.99399,14.68575],[120.98997,14.68509],[120.98802,14.6847],[120.98602,14.68538],[120.9851,14.68654],[120.9841,14.68752],[120.98203,14.68858],[120.98,14.68914],[120.97802,14.68934],[120.97601,14.68963]]
+}

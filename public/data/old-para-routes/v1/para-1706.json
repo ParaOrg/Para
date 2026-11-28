@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1706",
+  "old_id": "97a91a82-0a87-4bd4-8ffa-f4128085a1ac",
+  "name": "Multinational Vill Gate along Imelda Ave",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.00495,14.48747],
+  "end": [120.99812,14.49878],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.00495,14.48747],[121.00201,14.48895],[121.00219,14.49075],[121.00499,14.49185],[121.012,14.49025],[121.00899,14.49239],[121.00322,14.49255],[121.00311,14.49443],[121.00107,14.49486],[120.99992,14.49661],[120.99812,14.49878]]
+}

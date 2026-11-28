@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1127",
+  "old_id": "f624a45f-40a8-421f-ae9a-1b13af98806b",
+  "name": "EDSA/Shaw - E. Rodriguez (Ugong) via J. Vargas Ave.",
+  "mode": "bus",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.077,14.5827],
+  "end": [121.05298,14.57748],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.077,14.5827],[121.07499,14.58001],[121.073,14.578],[121.06801,14.58051],[121.06381,14.58151],[121.064,14.5844],[121.05996,14.58172],[121.05899,14.58009],[121.0559,14.57658],[121.05328,14.57449],[121.05298,14.57748],[121.0559,14.57658],[121.05298,14.57748]]
+}

@@ -19,10 +19,11 @@
 // tables; the map switch — Contributors, Playground and Public, the address,
 // a half-drawn line, the camera and the basemap kept, the keys and clicks
 // dead on the other maps; a route saved with its slot (2); the return trip
-// from the card's SWITCH, closing the loop: it begins on the outbound's end,
-// the outbound shows faintly under it, a click by its start's badge ends it on the
-// outbound's start, and the save panel says how far an open loop falls short,
-// and its draft fills the slot; every request line short with 500 hintuans
+// from the card's SWITCH, closing the loop: it begins with no point placed, the
+// first tap its first point, the outbound shows faintly under it, a click by its
+// start's badge ends it on the outbound's start, and the save panel notes how far
+// each end falls short, never blocking, and its draft fills the slot; every
+// request line short with 500 hintuans
 // (4); an edit that rewrites one direction by its id (2), and the camera with
 // the cards, the public map's in the studio too (the owner, 2026-09-30); a
 // direction's signboards in its draft; the route exported both ways; a delete
@@ -524,9 +525,9 @@ await addReturnTrip();
 await page.waitForTimeout(400);
 let drawn = await drawnPoints();
 check(
-  '"+ Add route" on the detail\'s undrawn tab begins the return trip with its first point on the outbound line\'s end (<1 m)',
-  drawn.length === 1 && outLine.length > 1 && metresBetween(drawn[0], outLine.at(-1)) < 1,
-  `${drawn.length} point(s), ${drawn[0] && outLine.length ? metresBetween(drawn[0], outLine.at(-1)).toFixed(2) : '?'} m`,
+  '"+ Add route" on the detail\'s undrawn tab begins the return trip with no point placed',
+  drawn.length === 0,
+  `${drawn.length} point(s)`,
 );
 check(
   '  the outbound shows under it: its line, and a ring and a dot at its two ends',
@@ -537,6 +538,16 @@ check(
 check(
   '  the toolbar has no "Close the loop": a line closes by its first point\'s badge',
   (await closeLoop().count()) === 0,
+);
+// The first tap is the first point: here about 60 m short of where papunta ended. Two more
+// clicks leave the line well short of where papunta began.
+const FREE_START = at(0.0035, -0.0003);
+await clickAt(FREE_START, 300);
+drawn = await drawnPoints();
+check(
+  "  the editor's first tap is the return trip's first point, wherever it is",
+  drawn.length === 1 && metresBetween(drawn[0], FREE_START) < 5,
+  `${drawn.length} point(s)`,
 );
 {
   // Nearing where papunta began, the connect badge shows there: a click would close the loop.
@@ -551,18 +562,16 @@ check(
     `near ${near}`,
   );
 }
-// Two more clicks leave the line well short of where papunta began.
 await clickAt(BACK[1], 300);
 await clickAt(at(-0.002, -0.0015), 300);
 await done();
-const gapNotice = await page
-  .getByTestId('save-loop')
-  .innerText()
-  .catch(() => '');
+const gapNotices = await page.getByTestId('save-loop').allInnerTexts();
 check(
-  '  Done, with the loop open: the panel says how far the end is from where papunta began',
-  /^The return trip ends \d+ m from where papunta began\. Close the loop\?$/.test(gapNotice.trim()),
-  gapNotice,
+  "  Done, with the loop open: the panel notes how far each end is from the other way's",
+  gapNotices.length === 2 &&
+    /^This line starts \d+ m from where Eastbound ends\.$/.test(gapNotices[0].trim()) &&
+    /^This line ends \d+ m from where Eastbound starts\.$/.test(gapNotices[1].trim()),
+  gapNotices.join(' | '),
 );
 await backToMap();
 await page.waitForTimeout(300);
@@ -585,10 +594,16 @@ check(
   'the return trip opens as "Draw the return trip"',
   (await body()).includes('Draw the return trip'),
 );
-check(
-  '  and, with the loop closed, the panel has no gap to say',
-  (await page.getByTestId('save-loop').count()) === 0,
-);
+{
+  const notes = await page.getByTestId('save-loop').allInnerTexts();
+  check(
+    '  with the loop closed, only the free start is noted, and Save stays open (the save below goes)',
+    notes.length === 1 &&
+      notes[0].trim().startsWith('This line starts') &&
+      (await saveButton().isEnabled()),
+    notes.join(' | '),
+  );
+}
 n = log.length;
 await saveButton().click();
 await drafted();
@@ -612,13 +627,13 @@ check(
 );
 const backLine = backV?.shape?.coordinates ?? [];
 check(
-  '  the two lines meet at both ends: the return begins where papunta ended, and ends where it began (<1 m)',
+  '  the return begins at its first tap, and ends where papunta began (<1 m)',
   backLine.length > 1 &&
     outLine.length > 1 &&
-    metresBetween(backLine[0], outLine.at(-1)) < 1 &&
+    metresBetween(backLine[0], FREE_START) < 5 &&
     metresBetween(backLine.at(-1), outLine[0]) < 1,
   backLine.length && outLine.length
-    ? `${metresBetween(backLine[0], outLine.at(-1)).toFixed(2)} m and ${metresBetween(backLine.at(-1), outLine[0]).toFixed(2)} m`
+    ? `${metresBetween(backLine[0], FREE_START).toFixed(2)} m and ${metresBetween(backLine.at(-1), outLine[0]).toFixed(2)} m`
     : 'no lines',
 );
 
@@ -743,14 +758,12 @@ const exitEdit = async () => {
   await waitFor(async () => (await page.getByTestId('sidebar').count()) === 0);
 };
 /**
- * Out of Edit Route and back on the outbound's detail. With the editor's own draft of the route
- * (the boards'), a tap on its line opens Edit Route again; Exit from there leaves the detail open.
+ * Out of Edit Route and back on the outbound's detail: a tap on its line opens the detail, the
+ * editor's own draft of the route (the boards') included, to read before Edit Route edits it.
  */
 const backToDetail = async () => {
   await exitEdit();
   await openCard(OUT[1]);
-  await waitFor(async () => (await page.getByTestId('sidebar').count()) === 1);
-  await exitEdit();
   await page.getByTestId('route-line-detail').waitFor({ timeout: 10000 });
 };
 await openSignboards();

@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1120",
+  "old_id": "48a41140-679a-4834-a258-5875d78119ea",
+  "name": "Divisoria - Tayuman via Dagupan",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [120.97375,14.61656],
+  "end": [120.97204,14.60699],
+  "length_m": null,
+  "gaps": [],
+  "line": [[120.97375,14.61656],[120.97303,14.61462],[120.97293,14.61292],[120.97306,14.61122],[120.97199,14.60985],[120.97183,14.60835],[120.97204,14.60699]]
+}

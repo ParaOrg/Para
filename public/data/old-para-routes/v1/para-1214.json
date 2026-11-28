@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1214",
+  "old_id": "68377af6-5744-4a51-a15e-2343d768ec55",
+  "name": "Nichols - Vito Cruz via Park Ave.",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.01202,14.525],
+  "end": [120.99902,14.5462],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.01202,14.525],[121.00998,14.52711],[121.006,14.52772],[121.002,14.52827],[120.99999,14.52744],[120.997,14.52754],[120.995,14.52741],[120.994,14.52917],[120.99299,14.532],[120.99289,14.5346],[120.99401,14.53604],[120.99799,14.5371],[120.99903,14.53677],[121,14.53685],[121.0003,14.53966],[120.99996,14.54284],[120.99902,14.5462]]
+}

@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1075",
+  "old_id": "c0f363a5-3f48-4e06-a47f-c2b61781cacc",
+  "name": "Cabrera - Libertad",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.00087,14.53828],
+  "end": [121.001,14.54805],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.00087,14.53828],[121.00201,14.54106],[121.00118,14.54433],[121.001,14.54805]]
+}

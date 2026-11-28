@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1340",
+  "old_id": "0006ddd8-2d73-4a88-bdb9-3078e13c238d",
+  "name": "CUBAO-ROCES",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.05003,14.62141],
+  "end": [121.02201,14.63123],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.05003,14.62141],[121.04924,14.62301],[121.044,14.6258],[121.042,14.6265],[121.04102,14.62606],[121.04001,14.6254],[121.03899,14.62623],[121.03796,14.62793],[121.03703,14.62728],[121.03699,14.62612],[121.03498,14.62629],[121.034,14.62739],[121.03394,14.62811],[121.03,14.6295],[121.02599,14.63046],[121.02201,14.63123]]
+}

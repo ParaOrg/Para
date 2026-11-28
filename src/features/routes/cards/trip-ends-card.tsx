@@ -64,7 +64,7 @@ export function TripEndsCard({
               disabled={!isSwitchable}
               onClick={onSwitch}
             />
-            {/* PAPUNTA's hint's words: the name says where a tap leads, this that it turns there. */}
+            {/* The hint's words: the name says where a tap leads, this that it turns there. */}
             <span id={hintId} className="sr-only">
               turns to {way}
             </span>

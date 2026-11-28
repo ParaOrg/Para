@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1639",
+  "old_id": "9d4ba5ca-d2c6-422d-9b2f-6a857890c90a",
+  "name": "Soldier Hills II Talon (Las Pinas)",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [120.99496,14.41378],
+  "end": [121.00803,14.43625],
+  "length_m": null,
+  "gaps": [],
+  "line": [[120.99496,14.41378],[120.99698,14.41872],[120.99688,14.42213],[120.99906,14.42383],[121.00104,14.42481],[121.00207,14.42648],[121.00295,14.42872],[121.00414,14.43051],[121.0039,14.43205],[121.00497,14.43434],[121.00803,14.43625]]
+}

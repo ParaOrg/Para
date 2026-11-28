@@ -12,7 +12,8 @@
 // saved; a new route with its slot and its links to the two hintuans; the
 // return trip from the card's SWITCH, filling the slot; Edit route on the
 // approved revision; a signboard into the route's draft and out again;
-// Delete, approved in the same press, and refused in words when another
+// Delete, approved in the same press (discarding the editor's own draft of the route after a
+// confirm, refused on another editor's), and refused in words when another
 // editor's change makes its base stale; then Delete emptying one way while
 // the route keeps the other, then the last way, which takes the route down;
 // an ikot with no ends; a
@@ -134,13 +135,24 @@ const storage = async (r) => {
 // ------------------------------------------------------------ the browser
 const browser = await chromium.launch();
 const errors = [];
-const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
+// Still chevrons: their flow re-sets the drawing's arrows every frame, so while a drawing is open
+// map.loaded() is true only between frames, and a busy runner can miss every gap for the 30 s
+// load() waits (.scratch/ci-flakes/issues/09-save-drafts-map-wait.md). No check here reads the flow.
+const page = await browser.newPage({
+  viewport: { width: 1280, height: 800 },
+  reducedMotion: 'reduce',
+});
 page.on('pageerror', (e) => errors.push('pageerror: ' + String(e)));
 page.on('console', (msg) => {
   if (msg.type() === 'error' && /Warning|key/.test(msg.text()))
     errors.push(msg.text().slice(0, 160));
 });
-page.on('dialog', (d) => d.accept());
+let confirmAnswer = true;
+const confirms = [];
+page.on('dialog', (d) => {
+  confirms.push(d.message());
+  return confirmAnswer ? d.accept() : d.dismiss();
+});
 await bareStyle(page, '#e8e8e8');
 await signInAsEditor(page);
 const db = await fakeStudioDb(page, seed);
@@ -155,10 +167,48 @@ await page.route(/router\.project-osrm\.org|routing\.openstreetmap\.de/, (r) =>
   }),
 );
 
+/**
+ * What holds `map.loaded()` false: the style's state, the sources still loading, and how many data
+ * events the map fires in 2 s (a source updated in a loop never settles, however fast the runner).
+ */
+async function mapWaitState() {
+  return page.evaluate(async () => {
+    const map = window.__map;
+    if (!map) return 'no map on the page';
+    const events = {};
+    const count = (event) => {
+      const key = `${event.dataType}:${event.sourceId ?? ''}`;
+      events[key] = (events[key] ?? 0) + 1;
+    };
+    map.on('data', count);
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+    map.off('data', count);
+    const style = map.style;
+    const managers = style?.tileManagers ?? style?.sourceCaches ?? {};
+    const loading = Object.entries(managers)
+      .filter(([, manager]) => !manager.loaded())
+      .map(([id]) => id);
+    return JSON.stringify({
+      isStyleLoaded: map.isStyleLoaded(),
+      isMoving: map.isMoving(),
+      loading,
+      dataEventsIn2s: events,
+    });
+  });
+}
+
 /** The studio, loaded with its routes: the first time, and again after the stand-in approves. */
 async function load() {
   await page.goto(`${BASE}/studio/`, { waitUntil: 'load' });
-  await page.waitForFunction(() => window.__map && window.__map.loaded(), null, { timeout: 30000 });
+  await page
+    .waitForFunction(() => window.__map && window.__map.loaded(), null, { timeout: 30000 })
+    .catch(async (error) => {
+      // Say what the map is still waiting on, and keep the screen, before failing: a source that
+      // never settles is named (.scratch/ci-flakes/issues/09-save-drafts-map-wait.md).
+      const state = await mapWaitState().catch((stateError) => `unreadable: ${stateError}`);
+      await page.screenshot({ path: 'save-drafts-test-failure.png' }).catch(() => {});
+      throw new Error(`the map did not load in 30 s: ${state}`, { cause: error });
+    });
   if ((await waitForSource(page, 'saved-routes', 30000)).length === 0)
     throw new Error('the routes did not load in 30 s');
   await page.waitForTimeout(500);
@@ -275,16 +325,31 @@ check(
     approvedWrites(w).length === 0,
   said(w),
 );
-// ---- 1a. A hintuan that is a draft only opens in its sidebar from a tap on its mark
+// ---- 1a. A hintuan that is a draft only opens in its card from a tap on its mark, to read
+// first; its Edit hintuan opens the sidebar on the draft.
 await go(P1, 17);
 await clickAt(P1, 700);
+const placeCard = page.getByTestId('draft-place-card');
+await placeCard.waitFor({ timeout: 10000 });
+check(
+  "a tap on a new hintuan's draft opens its card, named, Status Draft, not the editor",
+  /Stand-in Head/.test(await placeCard.innerText()) &&
+    /Status\s+Draft/.test(await placeCard.innerText()) &&
+    (await page.getByTestId('hotspot-panel').count()) === 0,
+);
+await page.keyboard.press('Escape');
+await placeCard.waitFor({ state: 'detached', timeout: 5000 }).catch(() => {});
+check('  Escape closes it', (await placeCard.count()) === 0);
+await clickAt(P1, 700);
+await placeCard.getByRole('button', { name: 'Edit hintuan' }).click();
 const hotspotPanel = page.getByTestId('hotspot-panel');
 await waitFor(async () => (await hotspotPanel.count()) > 0);
 check(
-  "a tap on a new hintuan's draft opens its sidebar on the draft, with no review sheet",
+  '  its Edit hintuan opens the sidebar on the draft, with no review sheet and no card',
   (await hotspotPanel.count()) === 1 &&
     (await page.getByPlaceholder('SM Fairview Ilalim').inputValue()) === 'Stand-in Head' &&
-    (await page.locator('dialog[open]').count()) === 0,
+    (await page.locator('dialog[open]').count()) === 0 &&
+    (await placeCard.count()) === 0,
 );
 check(
   '  and offers Approve',
@@ -343,11 +408,37 @@ check(
   '  the drawing kept on the device is gone',
   (await page.evaluate(() => localStorage.getItem('para.draft.v1'))) === null,
 );
-// ---- 2a. A route that is a draft only opens in its sidebar from a tap on its dashed line
+// ---- 2a. A route that is a draft only opens in the route line detail from a tap on its dashed
+// line, to read first; Edit Route opens it into its sidebar.
 await openCard(OUT[1]);
+const draftDetail = page.getByTestId('route-line-detail');
+await draftDetail.waitFor({ timeout: 10000 });
+check(
+  "a tap on a new route's draft opens its route line detail, marked Draft, not editing",
+  (await draftDetail.getByText('Draft', { exact: true }).isVisible()) &&
+    (await pointsShown()) === 0 &&
+    (await page.getByTestId('sidebar').count()) === 0 &&
+    (await page.locator('dialog[open]').count()) === 0,
+  `${await pointsShown()} points`,
+);
+check(
+  '  with Edit Route, and no Extend, Delete or "+ Add route", which need approved rows',
+  (await draftDetail.getByRole('button', { name: 'Edit route' }).isVisible()) &&
+    (await draftDetail.getByRole('button', { name: 'Extend' }).count()) === 0 &&
+    (await draftDetail.getByRole('button', { name: 'More' }).count()) === 0 &&
+    (await draftDetail.getByRole('button', { name: '+ Add route' }).count()) === 0,
+);
+// The dashed line tapped again is DraftLines' tap, not an empty one: the detail stays.
+await clickAt(OUT[1], 700);
+check('  a second tap on its dashed line keeps it open', (await draftDetail.count()) === 1);
+await page.keyboard.press('Escape');
+await draftDetail.waitFor({ state: 'detached', timeout: 5000 }).catch(() => {});
+check('  Escape closes it', (await draftDetail.count()) === 0);
+await openCard(OUT[1]);
+await draftDetail.getByRole('button', { name: 'Edit route' }).click();
 await waitFor(async () => (await pointsShown()) > 0);
 check(
-  "a tap on a new route's draft opens it into its sidebar, with no review sheet",
+  '  its Edit Route opens it into its sidebar, with no review sheet',
   (await pointsShown()) === OUT.length && (await page.locator('dialog[open]').count()) === 0,
   `${await pointsShown()} points`,
 );
@@ -418,10 +509,11 @@ check(
 await addRoute().click();
 await page.waitForTimeout(400);
 check(
-  '"+ Add route" starts the return trip on the outbound\'s end',
-  (await pointsShown()) === 1,
+  '"+ Add route" starts the return trip with no point placed',
+  (await pointsShown()) === 0,
   `${await pointsShown()} points`,
 );
+await clickAt(P2, 300);
 await clickAt(BACK_MID, 300);
 await closeByBadge();
 await idle();
@@ -444,6 +536,17 @@ check(
   said(w),
 );
 check('  nothing written to the approved tables', approvedWrites(w).length === 0, said(w));
+// The way back is the approved route's slot, drawn by the draft alone: a tap on its dashed line
+// opens Edit Route on the draft, not "cannot be opened". A save leaves the drawing.
+await waitFor(async () => (await pointsShown()) === 0);
+await openCard(BACK_MID);
+await waitFor(async () => (await pointsShown()) > 0);
+check(
+  "  a tap on the slot's dashed line opens the draft's way back into editing",
+  (await pointsShown()) > 0 && !(await body()).includes('This draft cannot be opened'),
+  `${await pointsShown()} points`,
+);
+await page.getByRole('button', { name: 'Exit', exact: true }).click();
 await approveAll();
 check(
   '  approved, the route is drawn both ways',
@@ -511,11 +614,18 @@ check(
 // Saving builds on the draft, so opening the approved line would save it over the first edit.
 // No reload between the two: the studio's cache of the draft must not seed the second edit.
 await openCard(OUT[1]);
-// The draft's line is drawn over the approved one: a tap on it opens the editor's own draft
-// straight into Edit route on the way tapped, with no review sheet.
+// The draft's line is drawn over the approved one: a tap on it opens the route line detail to
+// read first, and its Edit Route the editor's own draft on the way tapped, with no review sheet.
+await page.getByTestId('route-line-detail').waitFor({ timeout: 10000 });
+check(
+  "a tap on the editor's own draft opens the route line detail, not editing",
+  (await pointsShown()) === 0 && (await page.getByTestId('sidebar').count()) === 0,
+  `${await pointsShown()} points`,
+);
+await page.getByTestId('route-line-detail').getByRole('button', { name: 'Edit route' }).click();
 await waitFor(async () => (await pointsShown()) > 0);
 check(
-  "a tap on the editor's own draft opens it into editing, with no review sheet",
+  "  its Edit Route opens the editor's own draft into editing, with no review sheet",
   (await pointsShown()) > 0 && (await page.locator('dialog[open]').count()) === 0,
   `${await pointsShown()} points`,
 );
@@ -601,7 +711,7 @@ check(
 // a change saved on top of the draft would otherwise drop the board the draft added.
 await load();
 await openCard(OUT[1]);
-// A tap on the editor's own draft opens it into editing, Add signboard with it.
+// The drawing kept on the device opens again into editing, Add signboard with it.
 await waitFor(async () => (await pointsShown()) > 0);
 await waitFor(async () => (await items().count()) === 1);
 check(
@@ -622,36 +732,91 @@ check(
   said(w),
 );
 check('  and leaves the file in the bucket: the approved map may still list it', bucket.has(board));
-// Out of Edit Route and the page read again; a tap on the editor's own draft opens it, and Exit
-// from there leaves the route's detail open.
+// Out of Edit Route and the page read again; a tap on the editor's own draft opens the route's
+// detail.
 await page.getByRole('button', { name: 'Exit', exact: true }).click();
 await load();
 await openCard(OUT[1]);
-await waitFor(async () => (await pointsShown()) > 0);
-await page.getByRole('button', { name: 'Exit', exact: true }).click();
 await page.getByTestId('route-line-detail').waitFor({ timeout: 10000 });
 
-// ---- 4a. Delete while the editor already has a draft of the route: it joins the draft
-// The signboard's draft is still the editor's, unreviewed. Approving the delete in the same
-// press would publish that draft with it, so the delete is stored in it and waits for its Approve.
+// ---- 4a. Delete while the editor already has a draft of the route: confirm, discard it, delete
+// The signboard's draft is still the editor's, unreviewed. The confirm says it is discarded, so
+// the delete is the only change approved with it.
+const ownDraft = draftOf('route', route?.id);
+const OWN_CONFIRM =
+  /^Delete ".+" — .+\? Your unapproved changes to this route will be discarded\.$/;
+// A real change waits in the own draft: a board listed, which the delete must not publish.
+const keptBoard = 'kept-board.svg';
+const ownDirection = ownDraft?.payload.directions.find((v) => v.id === outV?.id);
+if (ownDirection) ownDirection.signboards = [keptBoard];
+const stateBefore = structuredClone({
+  v: tables.route_variant,
+  r: tables.route,
+  l: tables.route_stop,
+  s: tables.stop,
+});
+confirmAnswer = false;
+confirms.length = 0;
 n = log.length;
 await pressDelete();
-await waitFor(async () => (await body()).includes('Added to your draft of'));
+await page.waitForTimeout(800);
 w = writesSince(n);
 check(
-  'Delete with a draft already open joins that draft, unapproved',
-  draftOf('route', route?.id)?.id === boardDraft?.id &&
-    draftOf('route', route?.id)?.payload.directions.find((v) => v.id === outV?.id)?.shape ===
-      null &&
-    rpcs(w, 'publish_draft').length === 0 &&
-    approvedWrites(w).length === 0,
+  'Delete with an own draft, Cancel: nothing changes',
+  confirms.length === 1 &&
+    OWN_CONFIRM.test(confirms[0] ?? '') &&
+    w.length === 0 &&
+    draftOf('route', route?.id)?.id === ownDraft?.id &&
+    draftOf('route', route?.id)?.revision === ownDraft?.revision &&
+    !!tables.route_variant.find((v) => v.id === outV?.id)?.shape,
+  `${confirms.join(' | ')}; ${said(w)}`,
+);
+confirmAnswer = true;
+n = log.length;
+await pressDelete();
+await waitFor(async () => (await page.getByRole('button', { name: 'Edit route' }).count()) === 0);
+await page.waitForTimeout(800);
+w = writesSince(n);
+check(
+  'Delete with an own draft, OK: the draft is discarded, then the direction is deleted and approved',
+  rpcs(w, 'discard_draft').length === 1 &&
+    rpcs(w, 'save_draft').length === 0 &&
+    w.findIndex((x) => x.table === 'claim_draft') >
+      w.findIndex((x) => x.table === 'discard_draft') &&
+    rpcs(w, 'publish_draft').length === 1 &&
+    tables.route_variant.find((v) => v.id === outV?.id)?.signboards.length === 0 &&
+    !draftOf('route', route?.id) &&
+    tables.route_variant.find((v) => v.id === outV?.id)?.shape === null &&
+    !(await body()).includes('Added to your draft'),
   said(w),
 );
+// The stand-in restores the approved map so the next flows start with OUT drawn.
+tables.route_variant.splice(0, tables.route_variant.length, ...stateBefore.v);
+tables.route.splice(0, tables.route.length, ...stateBefore.r);
+tables.route_stop.splice(0, tables.route_stop.length, ...stateBefore.l);
+tables.stop.splice(0, tables.stop.length, ...stateBefore.s);
+tables.draft = tables.draft.filter((d) => d.subject_id !== route?.id);
+await load();
+
+// ---- 4a2. Another editor's draft still refuses the delete
+await openCard(OUT[1]);
+tables.draft.push({
+  ...ownDraft,
+  id: 'other-editors-draft',
+  editor_id: '00000000-0000-4000-8000-0000000000ee',
+});
+confirms.length = 0;
+n = log.length;
+await pressDelete();
+await waitFor(async () => (await body()).includes('This is being changed by'));
+w = writesSince(n);
 check(
-  '  and the approved direction keeps its line until the draft is approved',
-  !!tables.route_variant.find((v) => v.id === outV?.id)?.shape,
+  "Delete refuses on another editor's draft: no confirm, no write",
+  confirms.length === 0 &&
+    w.length === 0 &&
+    !!tables.route_variant.find((v) => v.id === outV?.id)?.shape,
+  said(w),
 );
-// The stand-in drops the draft so the next flow starts from the approved map with OUT drawn.
 tables.draft = tables.draft.filter((d) => d.subject_id !== route?.id);
 await load();
 
@@ -789,25 +954,24 @@ const nameField = () => page.getByPlaceholder('SM Fairview Ilalim');
 async function editHintuan(spot, name) {
   await go(spot, 17);
   await clickAt([spot[0] + R * 0.7, spot[1] - R * 0.7], 700);
-  // On a computer the tap opens the hintuan straight into its sidebar, with no card or Edit.
+  // The tap opens the hintuan's card to read first, on a computer too; its Edit opens the sidebar.
   const sidebar = page.getByTestId('sidebar');
-  // No card between the tap and the sidebar: the old way showed it with its Edit and waited.
-  const hadCard = (await page.getByRole('button', { name: 'Edit hintuan' }).count()) > 0;
-  // The sidebar can be a moment behind the tap on a slow runner: give it that moment before the
-  // tap is read as one that raised the chooser.
-  await sidebar.waitFor({ timeout: 3000 }).catch(() => {});
+  const edit = page.getByRole('button', { name: 'Edit hintuan' });
+  await edit.waitFor({ timeout: 3000 }).catch(() => {});
   let tookRow = false;
-  if (!(await sidebar.isVisible())) {
+  if (!(await edit.isVisible())) {
     // A row of the chooser, and nothing else by that name: once the hintuan has a draft the map
-    // carries a label with it, which goes as the sidebar opens.
+    // carries a label with it.
     const row = page.getByTestId('chooser').getByRole('button', { name: /Stand-in Tail/ });
     if (await row.count()) {
       tookRow = true;
       await row.first().click();
     }
   }
+  await edit.waitFor({ timeout: 10000 });
+  openedAsCard.push(!tookRow && (await sidebar.count()) === 0);
+  await edit.click();
   await sidebar.waitFor({ timeout: 10000 });
-  openedBeside.push(!hadCard && !tookRow);
   await done();
   // The name the form opened with: the editor's own draft's, when there is one.
   shownName = await nameField().inputValue();
@@ -819,13 +983,13 @@ async function editHintuan(spot, name) {
   return writesSince(from);
 }
 let shownName = '';
-const openedBeside = [];
+const openedAsCard = [];
 const tailRevision = tables.stop.find((x) => x.id === tail?.id)?.revision;
 w = await editHintuan(P2, 'Stand-in Tail Renamed');
 const tailDraft = draftOf('hotspot', tail?.id);
 check(
-  'on a computer a tap on a saved hintuan opens it straight in the sidebar, with no card',
-  openedBeside[0] === true,
+  'on a computer a tap on a saved hintuan opens its card, not editing; Edit opens the sidebar',
+  openedAsCard[0] === true,
 );
 check(
   "editing a saved hintuan is a draft of it, built on the stop's revision",

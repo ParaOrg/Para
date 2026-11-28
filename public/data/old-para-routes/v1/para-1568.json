@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1568",
+  "old_id": "35bc2f9f-b114-46fb-aeab-7b52fb419bb9",
+  "name": "QUIRINO HIGHWAY STA LUCIA",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.0558,14.70595],
+  "end": [121.04,14.70868],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.0558,14.70595],[121.054,14.70819],[121.04998,14.70957],[121.05003,14.70886],[121.04998,14.70555],[121.04903,14.7043],[121.04593,14.70496],[121.045,14.70547],[121.043,14.70602],[121.0431,14.70808],[121.04195,14.7086],[121.04,14.70868]]
+}

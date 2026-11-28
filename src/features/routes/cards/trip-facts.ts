@@ -29,7 +29,7 @@ interface TripFacts {
   line: ReturnType<typeof railLineOf>;
   /** The same route the other way, if the map file has it. */
   sibling: Direction | null;
-  /** Whether that other way is drawn, so PAPUNTA can show it; a loop has no way back. */
+  /** Whether that other way is drawn, so ⇅ can turn to it; a loop has no way back. */
   isSwitchable: boolean;
   /** Whether the other way is in the map file but not drawn yet (the studio draws it). */
   isOtherWayUndrawn: boolean;

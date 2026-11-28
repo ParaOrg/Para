@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1342",
+  "old_id": "2d434763-02e2-48e4-9e70-642645d96534",
+  "name": "CUBAO-PROJ2-3",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.06093,14.63218],
+  "end": [121.05655,14.6214],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.06093,14.63218],[121.0611,14.63096],[121.06201,14.62969],[121.06303,14.62862],[121.06299,14.62773],[121.06007,14.62654],[121.06201,14.62369],[121.06201,14.62088],[121.05992,14.62024],[121.058,14.6192],[121.05655,14.6214]]
+}

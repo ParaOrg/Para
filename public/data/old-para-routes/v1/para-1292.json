@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1292",
+  "old_id": "40bcaf4b-9dec-4979-b28c-b2145faf6b3a",
+  "name": "Quiapo (Barbosa) - Santol via Sta. Mesa",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [120.98701,14.59688],
+  "end": [121.01203,14.61471],
+  "length_m": null,
+  "gaps": [],
+  "line": [[120.98701,14.59688],[120.99017,14.59762],[120.99099,14.60029],[120.99597,14.599],[120.998,14.59945],[120.99901,14.60119],[121.00194,14.60158],[121.00402,14.60167],[121.00796,14.60225],[121.01,14.60234],[121.01411,14.60395],[121.014,14.60721],[121.01301,14.61005],[121.01297,14.61269],[121.01203,14.61471]]
+}

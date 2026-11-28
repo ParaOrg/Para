@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1038",
+  "old_id": "181a8a74-8315-477b-b5cc-5abf38e0a21d",
+  "name": "Balic - Balic - Espana/M. Dela Fuente",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [120.994,14.61291],
+  "end": [121.00887,14.61193],
+  "length_m": null,
+  "gaps": [],
+  "line": [[120.994,14.61291],[120.99702,14.61022],[120.99892,14.60772],[121.00097,14.60565],[121.00297,14.60685],[121.00393,14.6086],[121.00503,14.61088],[121.00692,14.6121],[121.00887,14.61193]]
+}

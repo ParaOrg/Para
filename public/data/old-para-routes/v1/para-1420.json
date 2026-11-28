@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1420",
+  "old_id": "9be76a12-7daa-4ae1-b427-ac123f34d076",
+  "name": "EDSA NORTH AVE - PROJ 6",
+  "mode": "bus",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.03099,14.65537],
+  "end": [121.03701,14.66404],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.03099,14.65537],[121.03401,14.65486],[121.03496,14.65551],[121.03599,14.6571],[121.03599,14.6586],[121.03614,14.66059],[121.038,14.66078],[121.043,14.65971],[121.04499,14.65974],[121.04421,14.66165],[121.04299,14.66332],[121.0419,14.66436],[121.041,14.66479],[121.0399,14.66458],[121.03802,14.66441],[121.03701,14.66404]]
+}

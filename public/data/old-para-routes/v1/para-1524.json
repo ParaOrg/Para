@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1524",
+  "old_id": "fd9de8b3-4063-479b-8c13-3a3f142ba011",
+  "name": "Balintawak Monumento via Balong Bato",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [120.98601,14.6572],
+  "end": [120.998,14.65731],
+  "length_m": null,
+  "gaps": [],
+  "line": [[120.98601,14.6572],[120.988,14.65733],[120.998,14.65731]]
+}

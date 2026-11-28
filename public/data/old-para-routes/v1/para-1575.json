@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1575",
+  "old_id": "89de173d-2203-4d21-8c02-42ecfc5fb5a4",
+  "name": "Ayala Guadalupe Ibabaw via JP Rizal",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.02402,14.55483],
+  "end": [121.04397,14.56809],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.02402,14.55483],[121.021,14.5568],[121.01698,14.55967],[121.016,14.56132],[121.01587,14.56295],[121.01593,14.56436],[121.018,14.5687],[121.02201,14.56723],[121.02397,14.56663],[121.02398,14.56824],[121.02615,14.57087],[121.02719,14.57124],[121.02913,14.57015],[121.02797,14.56722],[121.03501,14.56685],[121.03797,14.56708],[121.041,14.5675],[121.04397,14.56809]]
+}

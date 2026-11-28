@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1426",
+  "old_id": "c30dee46-c38e-40c0-ab2b-ee323c4def4f",
+  "name": "DIVISORIA - STA CRUZ",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [120.96794,14.60098],
+  "end": [120.98097,14.60039],
+  "length_m": null,
+  "gaps": [],
+  "line": [[120.96794,14.60098],[120.96879,14.59934],[120.97018,14.59814],[120.97099,14.59647],[120.97204,14.59639],[120.973,14.59621],[120.97502,14.59706],[120.97797,14.59724],[120.97895,14.59806],[120.98097,14.60039]]
+}

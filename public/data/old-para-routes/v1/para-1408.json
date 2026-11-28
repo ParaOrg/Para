@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1408",
+  "old_id": "53d220c8-605a-41ae-8c13-d8f676a606f9",
+  "name": "L GUINTO - STA ANA",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [120.98905,14.57653],
+  "end": [121.02103,14.58743],
+  "length_m": null,
+  "gaps": [],
+  "line": [[120.98905,14.57653],[120.99301,14.57821],[120.997,14.57883],[121,14.57871],[121.003,14.5791],[121.00999,14.58083],[121.01305,14.58187],[121.01802,14.58468],[121.02103,14.58743]]
+}

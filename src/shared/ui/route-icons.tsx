@@ -19,11 +19,6 @@ export function ChevronLeftIcon() {
   return <RouteSpriteIcon id="chevron-left" />;
 }
 
-/** Figma's chevron-left-large: the Controller's ‹, back to what the trip was picked from. */
-export function ChevronLeftLargeIcon() {
-  return <RouteSpriteIcon id="chevron-left-large" />;
-}
-
 /** The chevron on the row that folds a trip's hintuans; turned up when they are open. */
 export function ChevronDownIcon() {
   return <RouteSpriteIcon id="chevron-down" />;
@@ -126,21 +121,6 @@ export function FerryIcon() {
 /** The UV Express van, from the vehicle sprite. */
 export function UvExpressIcon() {
   return <SpriteIcon id="uv-express" />;
-}
-
-/** Figma's closeLarge (4633:22012), 28 across: the Controller's ✕, on a list and a trip. */
-export function CloseLargeIcon() {
-  return <RouteSpriteIcon id="close-large" />;
-}
-
-/** Figma's arrow-left-right-large (4633:22014): the ⇆ before PAPUNTA's word on the Controller's wide bar. */
-export function ArrowLeftRightIcon() {
-  return <RouteSpriteIcon id="arrow-left-right-large" />;
-}
-
-/** Figma's filter at 28 (the funnel, 4885:42133): the Controller's, opening the route list's filter. */
-export function FilterLargeIcon() {
-  return <RouteSpriteIcon id="filter-large" />;
 }
 
 /** Figma's circle-arrow-right (3632:1755), drawn at 20: the destination row's arrow. */

@@ -20,29 +20,21 @@ export interface ListModeFilter extends ModeFilterControl {
 interface ModeFilterButtonProps {
   /** The filter, kept by the caller, who lights the map to match. */
   modeFilter: ListModeFilter;
-  /** The sliders' drawing: the Controller's large one, or the map's (Figma's filter). */
+  /** The sliders' drawing: the map's (Figma's filter). */
   icon: ReactNode;
   /** Where its tooltip points from, as the place it stands needs. */
   tooltip: TooltipPosition;
   /** What the e2e suites find it by. */
   testId: string;
-  /** The IconButton's size: Base on the studio's Controller, Large where a page draws it so. */
-  size?: 'base' | 'large';
 }
 
 /**
- * The funnel that opens the route list's filter (ModeFilterMenu), an IconButton: on the studio's
- * Controller bar, and floating on the public map's corner (MapControlsDock). The modes picked show
+ * The funnel that opens the route list's filter (ModeFilterMenu), an IconButton floating on the
+ * map (ListFilter, MapSheetControls). The modes picked show
  * as the IconButton's count (the Indicator), none under All, and its name says which ("Filter:
  * Jeepney, Bus"), so the badge is never the only sign. The menu closed, the focus comes back here.
  */
-export function ModeFilterButton({
-  modeFilter,
-  icon,
-  tooltip,
-  testId,
-  size = 'base',
-}: ModeFilterButtonProps) {
+export function ModeFilterButton({ modeFilter, icon, tooltip, testId }: ModeFilterButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const { picks, onPicks, routeCount } = modeFilter;
@@ -57,7 +49,7 @@ export function ModeFilterButton({
     <span className="relative flex">
       <IconButton
         ref={buttonRef}
-        size={size}
+        size="large"
         count={count}
         icon={icon}
         label={count > 0 ? `Filter: ${picksNamed(picks)}` : 'Filter'}

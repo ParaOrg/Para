@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1732",
+  "old_id": "d30cfeab-231f-41bb-bba5-19380e7efe77",
+  "name": "Fort Central",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.04778,14.5488],
+  "end": [121.04778,14.5488],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.04778,14.5488],[121.04589,14.55031],[121.04653,14.5534],[121.04549,14.55426],[121.04852,14.55345],[121.05085,14.55184],[121.05677,14.55148],[121.0553,14.54713],[121.05009,14.54971],[121.04778,14.5488]]
+}

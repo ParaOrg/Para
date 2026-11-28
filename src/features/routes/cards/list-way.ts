@@ -9,7 +9,7 @@ import {
 import { passesModePicks, type ModePicks } from '../model/mode-filter';
 import { isLoop, type Direction } from '../model/routes';
 
-/** The way round a route list shows, for the control that turns it: PAPUNTA, or Vice Versa. */
+/** The way round a route list shows, for the control that turns it: Vice Versa. */
 export interface ListWay {
   /** The way showing (wayWord), or null when only loops show: they have no way back, so no control. */
   way: string | null;
@@ -34,8 +34,8 @@ export function listedRouteCount(
 }
 
 /**
- * The way round of the routes a list shows, the filter applied, as RouteCardList lists them: the
- * studio's Controller and the public map's Vice Versa read the same.
+ * The way round of the routes a list shows, the filter applied, as RouteCardList lists them, for
+ * Vice Versa on the map (MapSheetControls).
  */
 export function listWay(
   routes: readonly Direction[],

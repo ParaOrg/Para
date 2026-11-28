@@ -41,3 +41,5 @@ Still open on 05:
 - The acceptance check "after any number of saves, the publish run by hand writes byte-identical files" and the live try with two real editors are the owner's.
 
 2026-10-26, review fixes on PR #407: the Drafts screen no longer edits another editor's draft (details form replaced by the notice; `saveDraftFacts`, `refreshDraftBase` and a hotspot take-down are guarded). Written, not applied: `supabase/migrations/20261026090000_draft_update_own.sql` narrows `draft_update` to the draft's maker (or a draft whose maker is gone), so the database says it too; the review functions are security definers and are unaffected. The owner applies it from `supabase/apply/20261026090000_draft_update_own_apply.sql`.
+
+2026-11-28, the owner (through the hub): (a) skip the live two-editor try, because the automatic `tests/e2e/studio-two-editors-test.mjs` covers it; (b) the 7-day rule: yes, another editor may discard a draft left untouched for 7 days. A separate session builds the rule and closes this ticket, so the status stays as it is.

@@ -18,7 +18,7 @@ export type OutboundLine = readonly LngLat[];
 
 const copyOf = ([lng, lat]: LngLat): LngLat => [lng, lat];
 
-/** Where a return trip begins: the outbound line's last point. */
+/** Where the outbound line ends, its dot: a return trip's start gap is measured from here. */
 export function returnTripStart(outbound: OutboundLine): LngLat | null {
   return outbound.length >= 2 ? copyOf(outbound[outbound.length - 1]) : null;
 }
@@ -74,24 +74,21 @@ export function whyCannotCloseLoop(
 }
 
 /**
- * What the save panel says when the loop is not closed: each end of the drawn
- * line farther than LOOP_GAP_M from where the other way's line joins it. It
- * says and never blocks: an editor may have a reason. `drawsPapunta` is
- * whether the line fills papunta's slot (the other way was drawn first).
+ * What the save panel notes when the loop is not closed: each end farther than LOOP_GAP_M from
+ * where the other way (`otherName`, as its tab names it) joins it. It never blocks a save.
  */
 export function loopNotices(
   outbound: OutboundLine,
   drawn: readonly LngLat[],
-  drawsPapunta = false,
+  otherName: string,
 ): string[] {
   const { startM, endM } = loopGaps(outbound, drawn);
-  const [mine, other] = drawsPapunta ? ['Papunta', 'pabalik'] : ['The return trip', 'papunta'];
   const notices: string[] = [];
   if (startM !== null && startM > LOOP_GAP_M) {
-    notices.push(`${mine} starts ${Math.round(startM)} m from where ${other} ended.`);
+    notices.push(`This line starts ${Math.round(startM)} m from where ${otherName} ends.`);
   }
   if (endM !== null && endM > LOOP_GAP_M) {
-    notices.push(`${mine} ends ${Math.round(endM)} m from where ${other} began. Close the loop?`);
+    notices.push(`This line ends ${Math.round(endM)} m from where ${otherName} starts.`);
   }
   return notices;
 }
@@ -111,16 +108,16 @@ export function outboundFor(
   return line.length >= 2 ? line : null;
 }
 
-/** The save panel's loop notices for the line being drawn into a route's slot; none without one. */
+/** The save panel's notices for a line drawn into a route's slot, `otherName` its other way's. */
 export function returnTripNotices(
   directions: readonly DirectionRow[],
   routeId: string | null,
   hotspots: readonly Hotspot[],
   drawn: readonly LngLat[],
-  slotReversed: boolean | null,
+  otherName: string,
 ): string[] {
   const outbound = routeId ? outboundFor(directions, routeId, hotspots) : null;
-  return outbound ? loopNotices(outbound, drawn, slotReversed === false) : [];
+  return outbound ? loopNotices(outbound, drawn, otherName) : [];
 }
 
 /** The outbound line faintly under the drawing, with its start (a ring) and end (a dot) marked. */

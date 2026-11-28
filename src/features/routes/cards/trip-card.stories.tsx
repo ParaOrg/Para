@@ -129,7 +129,6 @@ const meta = {
     directions: [talaToNovaliches, novalichesToTala],
     timeline: talaTimeline,
     livery: 'jeep',
-    onBackToList: fn(),
     onSwitch: fn(),
     onClose: fn(),
     picked: null,
@@ -181,26 +180,19 @@ export const NoWayBack: Story = {
   },
 };
 
-/** In the studio, the way back still a slot: its PAPUNTA is open, and a tap starts drawing it. */
+/** In the studio, the way back still a slot: ⇅ is open, and a tap starts drawing it. */
 export const DrawTheWayBack: Story = {
   args: {
-    hasController: true,
     directions: [talaToNovaliches, { ...novalichesToTala, shape: null }],
     onDrawOtherWay: fn(),
   },
   play: async ({ args, canvasElement }) => {
-    const turn = within(canvasElement).getByTestId('card-switch');
+    const turn = within(canvasElement).getByTestId('trip-ends-switch');
     await expect(turn).toBeEnabled();
     await userEvent.click(turn);
     await expect(args.onDrawOtherWay).toHaveBeenCalled();
     await expect(args.onSwitch).not.toHaveBeenCalled();
   },
-};
-
-/** The studio's, opened from a hotspot's card, not the list: no ‹ back to it on its Controller. */
-export const NoList: Story = {
-  args: { hasController: true },
-  render: (args) => <Keeping {...args} onBackToList={null} />,
 };
 
 /** A hintuan picked: its pill prices the ride from Tala to there. */
@@ -283,8 +275,8 @@ export const TrainMrt3: Story = {
 
 /**
  * A train whose end the line's table does not know: no bound, so no Direction row,
- * and PAPUNTA falls back to Pabalik and Papunta, as over a mixed list (wayWord). TODO: what
- * PAPUNTA should say for a train with no known bound is not designed yet.
+ * and the way word falls back to Pabalik and Papunta, as over a mixed list (wayWord). TODO: what
+ * it should say for a train with no known bound is not designed yet.
  */
 export const TrainNoBound: Story = {
   args: {
@@ -405,7 +397,7 @@ const ikotTimeline: Timeline = {
 
 /**
  * A loop's trip (UP – Ikot): the tip at the top and again at the bottom, the tiles the whole
- * loop's, and no PAPUNTA. Its name is the sheet's, for a screen reader.
+ * loop's, and no way to turn. Its name is the sheet's, for a screen reader.
  */
 export const Loop: Story = {
   args: { direction: ikot, directions: [ikot], timeline: ikotTimeline, livery: 'bus' },

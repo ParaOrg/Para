@@ -113,12 +113,9 @@ const meta = {
     hintuans: talaToNovaliches,
     routeDirection: 'Novaliches',
     switchable: true,
-    back: false,
-    // Papunta showing: PAPUNTA names it, and says Pabalik, the way a tap leads.
-    way: 'Papunta',
+    // Papunta showing: ⇅ says Pabalik, the way a tap leads.
     wayTo: 'Pabalik',
     onSwitch: fn(),
-    onBackToList: fn(),
     onClose: fn(),
     picked: null,
     onPick: fn(),
@@ -184,7 +181,7 @@ const pickedAsDrawn: Story['play'] = async (ctx) => {
 
 /**
  * On a phone, Figma's frame (3778:3183, Variant2): Tala → Novaliches, its Distance and Expected
- * fare, then every stop. The public map's: no Controller, no ‹ and no ✕ (4831:51289); Escape, as a
+ * fare, then every stop. No bar, no ‹ and no ✕ (4831:51289); Escape, as a
  * tap on the empty map does there, takes it away (`onClose`).
  */
 export const Default: Story = {
@@ -194,7 +191,6 @@ export const Default: Story = {
     await expect(
       canvas.getByRole('heading', { level: 2, name: 'Tala → Novaliches' }),
     ).toBeInTheDocument();
-    await expect(canvas.queryByTestId('card-controller')).toBeNull();
     await expect(canvas.queryByRole('button', { name: 'Back' })).toBeNull();
     await expect(canvas.queryByRole('button', { name: 'Close' })).toBeNull();
     // Escape does what ✕ did, once the sheet has taken the focus as it opens, its own effect
@@ -284,8 +280,6 @@ export const TheWayBack: Story = {
     routeOrigin: 'Novaliches',
     hintuans: [...talaToNovaliches].reverse(),
     routeDirection: 'Tala',
-    back: true,
-    way: 'Pabalik',
     wayTo: 'Papunta',
   },
   play: async ({ args, canvasElement }) => {
@@ -293,43 +287,6 @@ export const TheWayBack: Story = {
     await expect(turn).toHaveAccessibleName('Papunta');
     await userEvent.click(turn);
     await expect(args.onSwitch).toHaveBeenCalledTimes(1);
-  },
-};
-
-/** The studio's, turned round: its Controller's PAPUNTA reads Pabalik, and a tap leads to Papunta. */
-export const TheWayBackWithTheController: Story = {
-  args: { ...TheWayBack.args, hasController: true },
-  play: async ({ canvasElement }) => {
-    const way = within(canvasElement).getByTestId('card-switch');
-    await expect(way).toHaveAccessibleName('Pabalik');
-    await expect(way).toHaveAttribute('data-back', 'true');
-    // ⇅ on the ends card is named for where a tap leads, as PAPUNTA's hint is.
-    await expect(within(canvasElement).getByTestId('trip-ends-switch')).toHaveAccessibleName(
-      'Papunta',
-    );
-  },
-};
-
-/** The studio's, something behind it, the list it was picked from: ‹ in the bar, and no ✕. */
-export const SomethingBehind: Story = {
-  args: { hasController: true },
-  play: async ({ args, canvasElement }) => {
-    const canvas = within(canvasElement);
-    await expect(canvas.queryByRole('button', { name: 'Close' })).toBeNull();
-    await userEvent.click(canvas.getByRole('button', { name: 'Back' }));
-    await expect(args.onBackToList).toHaveBeenCalledTimes(1);
-  },
-};
-
-/** The studio's, opened with no list behind it — a tap on its line, a hotspot's card — and no other route sharing an end drawn its way round: nothing to go back to, so ✕ stands where ‹ would. */
-export const NothingToGoBackTo: Story = {
-  args: { hasController: true },
-  render: (args) => <TimelineRouteDetailCard {...args} onBackToList={null} />,
-  play: async ({ args, canvasElement }) => {
-    const canvas = within(canvasElement);
-    await expect(canvas.queryByRole('button', { name: 'Back' })).toBeNull();
-    await userEvent.click(canvas.getByRole('button', { name: 'Close' }));
-    await expect(args.onClose).toHaveBeenCalledTimes(1);
   },
 };
 
@@ -385,7 +342,7 @@ export const LongNames: Story = {
 
 /**
  * From 1024 wide, docked the map's whole height on the left where the list docks, 384 wide as the
- * list is (Figma 4796:33161 draws 393: the owner to confirm), the Controller its top bar.
+ * list is (Figma 4796:33161 draws 393: the owner to confirm).
  */
 export const Floating: Story = { parameters: { frame: 'wide' } };
 

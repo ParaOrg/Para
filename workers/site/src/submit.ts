@@ -16,7 +16,7 @@ const isAnswer = (value: unknown): value is SubmitAnswer =>
   ANSWERS.some((answer) => answer === value);
 
 /**
- * Sends one report to report.submit_route_report, connected as report_sender (ADR 0010). One
+ * Sends one report to report.submit_route_report, connected as report_sender. One
  * connection per report, closed once answered: the transaction pooler (port 6543) holds the real
  * ones, so statements are not prepared. Throws when the database does not answer or answers
  * something else, and the caller says only that it is unavailable.

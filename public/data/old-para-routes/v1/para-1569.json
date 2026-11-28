@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1569",
+  "old_id": "0d79a014-74d0-48df-b43f-baa29ec71875",
+  "name": "SM FAIRVIEW LAGRO SUBDIVISION LOOP",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.06699,14.72607],
+  "end": [121.06099,14.7347],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.06699,14.72607],[121.0671,14.72466],[121.06709,14.7215],[121.06502,14.7201],[121.063,14.72014],[121.06116,14.7207],[121.06116,14.7223],[121.061,14.72454],[121.06116,14.7265],[121.06115,14.7292],[121.063,14.7313],[121.061,14.7316],[121.06114,14.7334],[121.06099,14.7347]]
+}

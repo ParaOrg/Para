@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1606",
+  "old_id": "2c8c551c-6c2c-4cc8-a61d-fe1073722eec",
+  "name": "Montalban Wawa",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.15899,14.73446],
+  "end": [121.185,14.7303],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.15899,14.73446],[121.16106,14.73344],[121.16293,14.73281],[121.16403,14.73296],[121.16603,14.7336],[121.16896,14.73439],[121.17119,14.73564],[121.173,14.7371],[121.17325,14.73509],[121.175,14.73297],[121.17802,14.73395],[121.18099,14.73319],[121.185,14.7303]]
+}

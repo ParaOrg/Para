@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1455",
+  "old_id": "35af7900-b3be-46c4-994a-fe7b30526eeb",
+  "name": "BUENDIA KALAYAAN - F BONIFACIO",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.05199,14.56256],
+  "end": [121.01004,14.55879],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.05199,14.56256],[121.04905,14.5613],[121.04597,14.55854],[121.044,14.5576],[121.042,14.55731],[121.04,14.55734],[121.03699,14.55682],[121.03501,14.55499],[121.03296,14.55756],[121.03103,14.5597],[121.028,14.56149],[121.025,14.5622],[121.02001,14.5619],[121.016,14.56132],[121.01293,14.56045],[121.01004,14.55879]]
+}

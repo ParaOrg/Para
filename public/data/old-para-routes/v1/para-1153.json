@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1153",
+  "old_id": "dda94585-ca83-43cb-9e16-6a26cc1df208",
+  "name": "Guadalupe (ABC) - Brgy. Buting, East Rembo via Kalayaan Ave.",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.07007,14.55359],
+  "end": [121.046,14.56526],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.07007,14.55359],[121.067,14.55431],[121.06496,14.5551],[121.06198,14.55767],[121.05899,14.55929],[121.05497,14.56185],[121.05199,14.56256],[121.04905,14.5613],[121.0471,14.55957],[121.04582,14.55991],[121.046,14.56259],[121.04489,14.56414],[121.046,14.56526]]
+}

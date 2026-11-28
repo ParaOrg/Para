@@ -11,7 +11,13 @@ import { directionTabs } from './direction-tabs';
 import { LockedDraft } from './locked-draft';
 import { RouteLineActions } from './route-line-actions';
 import { RouteLineDetail } from './route-line-detail';
-import { otherDestinations, routeStops, transitLineFacts } from './route-line-facts';
+import {
+  otherDestinations,
+  routeStatus,
+  routeStops,
+  routeSummaryFacts,
+  transitLineFacts,
+} from './route-line-facts';
 import type { useDeleteActions } from './use-delete-actions';
 import { useDraftLock } from './use-draft-lock';
 import { useRouteExport } from './use-route-export';
@@ -26,19 +32,25 @@ interface StudioRouteLineDetailProps {
   map: MapLibreMap | null;
   /** The open direction: `saved.selected`, known to be there. */
   direction: DirectionRow;
-  saved: Pick<Saved, 'directions' | 'selected' | 'reload'>;
+  saved: { directions: readonly DirectionRow[] } & Pick<Saved, 'selected' | 'reload'>;
   hotspots: Pick<Hotspots, 'hotspots' | 'hotspotsAlong'>;
   draw: Pick<Drawing, 'load' | 'startExtend'>;
-  /** The open direction's stops (useStudioTrip's timeline). */
+  /** The open direction's stops (useTripTimeline's). */
   timeline: Timeline;
   /** A signed-in editor; another editor's draft of the route still leaves it read-only. */
   canEdit: boolean;
+  /**
+   * A route that is a draft only, opened from the editor's draft: its Status reads Draft, and it
+   * has no Extend, Delete or way to add, which work on approved rows.
+   */
+  isDraftOnly?: boolean;
   opening: ReturnType<typeof useFollow>['opening'];
-  onDelete: ReturnType<typeof useDeleteActions>['onDelete'];
+  /** Absent on a draft only (isDraftOnly). */
+  onDelete?: ReturnType<typeof useDeleteActions>['onDelete'];
   /** Another direction of the route, or another route, in this one's place. */
   onShow: (direction: DirectionRow) => void;
-  /** Starts drawing the route's undrawn way (the return trip). */
-  onDrawOtherWay: () => void;
+  /** Starts drawing the route's undrawn way (the return trip); absent on a draft only. */
+  onDrawOtherWay?: () => void;
   /** Closes the detail: Edit Route and Extend start a drawing. */
   onClose: () => void;
 }
@@ -56,14 +68,16 @@ export function StudioRouteLineDetail({
   draw,
   timeline,
   canEdit,
+  isDraftOnly = false,
   opening,
   onDelete,
   onShow,
   onDrawOtherWay,
   onClose,
 }: StudioRouteLineDetailProps) {
-  const { lock, retry } = useDraftLock('route', direction.routeId);
+  const { lock, hasDraft, retry } = useDraftLock('route', direction.routeId);
   const isEditable = canEdit && !lock;
+  const status = routeStatus(isDraftOnly, hasDraft);
   const routeDirections = saved.directions.filter((v) => v.routeId === direction.routeId);
   const exporter = useRouteExport({
     directions: routeDirections,
@@ -84,37 +98,36 @@ export function StudioRouteLineDetail({
     const v = saved.directions.find((d) => d.id === id);
     if (v) onShow(v);
   };
+  const lockNotice = canEdit && lock && (
+    <LockedDraft
+      kind="route"
+      subjectId={direction.routeId}
+      lock={lock}
+      onRetry={retry}
+      onApproved={() => void saved.reload()}
+    />
+  );
   return (
     <RouteLineDetail
       label={direction.name ?? direction.route?.name ?? 'Route'}
-      notice={
-        canEdit &&
-        lock && (
-          <LockedDraft
-            kind="route"
-            subjectId={direction.routeId}
-            lock={lock}
-            onRetry={retry}
-            onApproved={() => void saved.reload()}
-          />
-        )
-      }
+      notice={lockNotice}
       tabs={directionTabs(direction, saved.directions)}
       selectedId={direction.id}
       onSelect={show}
-      onAddRoute={isEditable ? onDrawOtherWay : undefined}
+      onAddRoute={isEditable && !isDraftOnly ? onDrawOtherWay : undefined}
       actions={
         <RouteLineActions
           exporter={exporter}
           onEdit={isEditable ? () => startFromSelected(draw.load) : undefined}
           onExtend={
-            // An ikot has no end to go on from (use-follow.ts says so when one is picked).
-            isEditable && isDrawn(direction) && !isLoop(direction)
+            // An ikot has no end to go on from (use-follow.ts says so when one is picked); a draft
+            // only has no approved line to go on from, and Edit Route extends its drawing.
+            isEditable && !isDraftOnly && isDrawn(direction) && !isLoop(direction)
               ? () => startFromSelected(draw.startExtend)
               : undefined
           }
           onDelete={
-            isEditable
+            isEditable && onDelete && !isDraftOnly
               ? () => {
                   if (saved.selected) void onDelete(saved.selected);
                 }
@@ -122,6 +135,7 @@ export function StudioRouteLineDetail({
           }
         />
       }
+      summary={routeSummaryFacts(direction, saved.directions, timeline, status)}
       facts={transitLineFacts(direction, saved.directions, timeline)}
       destinations={otherDestinations(direction, saved.directions)}
       onOpenDestination={show}

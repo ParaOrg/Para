@@ -7,11 +7,12 @@
 // a time, grouped by the place they leave from ("Tala", then → SM Fairview
 // and → Novaliches), with a switch to show them all the way back — his route
 // list here too since 2026-09-29 ("Studio too"): a RouteCard per place, only
-// what is drawn, and SWITCH. The list lights every direction it shows; a
-// card picked narrows the lights to exactly its directions, each with
-// flowing chevrons and a circle at either end, and where two lit lines share
-// a road their chevrons flow as one stream; a second tap, or SWITCH, lets
-// the card go (the owner's picks of 2026-09-29). Nothing fades: the other way round and every route
+// what is drawn, and SWITCH. The list lights every direction it shows, its
+// lines alone; since the studio took the public map's route cards
+// (2026-11-27, the owner: the commuter's way is the reference), a tap on a
+// card off its rows opens its first row's trip, as there, its line alone lit
+// with flowing chevrons and a circle at either end, and the empty map tapped
+// goes back to the list. Nothing fades: the other way round and every route
 // the list does not show stay drawn as they rest. A click on the light-blue
 // way back switches the list to it, and a click on a shown line where its
 // outbound runs too keeps the shown one.
@@ -23,7 +24,7 @@
 import { chromium } from 'playwright';
 import { SHARED_ROAD_TABLES } from './fixtures/shared-road-tables.mjs';
 import { fakeStudioDb } from './lib/fake-studio-db.mjs';
-import { BASE, harness, waitForSource } from './lib/harness.mjs';
+import { BASE, emptyMapPoint, harness, waitForSource } from './lib/harness.mjs';
 import { lookReaders } from './lib/looks.mjs';
 
 // A computer's route line detail picks no ride (its stops move the map), so the trip's pick skips.
@@ -125,8 +126,12 @@ for (const a of lines) {
 if (!spot) throw new Error('no two routes share a road in the made-up tables');
 // The map's own pixels start below the studio's bar: a tap is given in the map's and
 // lands in the page's.
-const canvas = await page.locator('canvas.maplibregl-canvas').boundingBox();
-const tap = (x, y) => page.mouse.click(canvas.x + x, canvas.y + y);
+// Measured at each tap: on a computer the list fills the left panel, beside the map, so the
+// canvas moves as the list opens and closes.
+const tap = async (x, y) => {
+  const canvas = await page.locator('canvas.maplibregl-canvas').boundingBox();
+  await page.mouse.click(canvas.x + x, canvas.y + y);
+};
 {
   await page.evaluate((c) => {
     window.__map.jumpTo({ center: c, zoom: 17 });
@@ -160,7 +165,7 @@ const tap = (x, y) => page.mouse.click(canvas.x + x, canvas.y + y);
   check('a tap where routes share a road opens the list', (await chooser.count()) === 1);
   /** Whether the list shows the way back (SWITCH's data-back). */
   const showsBack = async () =>
-    (await chooser
+    (await page
       .locator('[data-testid="chooser-flip"]')
       .getAttribute('data-back', { timeout: 2000 })
       .catch(() => null)) === 'true';
@@ -169,7 +174,11 @@ const tap = (x, y) => page.mouse.click(canvas.x + x, canvas.y + y);
   // they open — what is lit, and what is drawn over it.
   const read = async () => {
     const origins = [];
-    for (const o of await chooser.locator('[data-testid="chooser-origin"]').all()) {
+    // Behind a trip opened from it the list is kept, hidden: nothing of it is read.
+    const isListShown = (await chooser.count()) > 0 && (await chooser.isVisible());
+    for (const o of isListShown
+      ? await chooser.locator('[data-testid="chooser-origin"]').all()
+      : []) {
       // A RouteCard's place is its name, the button that picks the card.
       const from = (await o.locator('[data-testid="chooser-select"]').innerText()).trim();
       const rows = [];
@@ -215,9 +224,9 @@ const tap = (x, y) => page.mouse.click(canvas.x + x, canvas.y + y);
     return { origins, listed, selected, ...map };
   };
   /**
-   * Picks the card with the most ways out — lines out of one place share its
-   * road, so their chevrons meet — by a tap off its rows, and reads what it
-   * lights: its directions alone (the owner, 2026-09-29).
+   * Taps the card with the most ways out off its rows, as the public map's
+   * list answers it: its first row's trip opens (the owner, 2026-11-22). Reads
+   * what is lit then, and the trip's name.
    */
   const pick = async (r) => {
     const i = r.origins.reduce(
@@ -225,8 +234,16 @@ const tap = (x, y) => page.mouse.click(canvas.x + x, canvas.y + y);
       0,
     );
     await chooser.locator('[data-testid="chooser-select"]').nth(i).click();
-    await page.waitForTimeout(500);
-    return { card: r.origins[i], at: i, ...(await read()) };
+    await page.waitForTimeout(600);
+    const first = r.origins[i].rows[0];
+    return { card: r.origins[i], first, title: await tripTitle(), ...(await read()) };
+  };
+  /** The empty map tapped: the trip's way back, as on the public map; the list back at rest. */
+  const tapEmpty = async () => {
+    const at = await emptyMapPoint(page);
+    if (!at) throw new Error('no empty map in sight to tap');
+    await page.mouse.click(at.x, at.y);
+    await page.waitForTimeout(600);
   };
 
   // What each line under the lit ones is drawn at, as the map works it out
@@ -307,7 +324,7 @@ const tap = (x, y) => page.mouse.click(canvas.x + x, canvas.y + y);
   // outbound depends on the lines under the tap. Everything it shows is lit
   // till a card is picked; then that card's directions, with their arrows,
   // circles and names.
-  const opened = await read();
+  const opened = { ...(await read()), firstBack: await showsBack() };
   check(
     'the list lights every direction it shows, no card picked',
     opened.selected === 0 &&
@@ -315,44 +332,48 @@ const tap = (x, y) => page.mouse.click(canvas.x + x, canvas.y + y);
       same([...new Set(opened.lit)], opened.listed),
     `${new Set(opened.lit).size} lit, ${opened.listed.length} listed, ${opened.selected} Selected`,
   );
+  // Lit with no trip open: the lines alone, no chevrons and no ends, as on the public map.
+  check(
+    '  its lines alone: no chevrons and no end circles with no trip open',
+    opened.chevrons === 0 && opened.ends === 0,
+    `${opened.chevrons} chevron(s), ${opened.ends} circle(s)`,
+  );
   const out = await pick(opened);
   // The routes under the tap, and every direction of theirs drawn: all of
   // them listed, one way round or the other.
   const tapped = new Set(caught.map((id) => lines.find((l) => l.id === id)?.route));
   const drawnHere = lines.filter((l) => tapped.has(l.route)).map((l) => l.id);
-  const firstBack = await showsBack();
-  const outRows = out.origins.flatMap((o) => o.rows);
+  const firstBack = opened.firstBack;
+  const outRows = opened.origins.flatMap((o) => o.rows);
   const litOut = [...new Set(out.lit)];
-  const listedOut = out.listed;
+  const listedOut = opened.listed;
   console.log(
-    `      first (${firstBack ? 'the way back' : 'outbound'}): ${out.origins.map((o) => `${o.from} → ${o.rows.map((r) => r.to + (r.drawn ? '' : ' (not mapped)')).join(', ')}`).join(' | ')}`,
+    `      first (${firstBack ? 'the way back' : 'outbound'}): ${opened.origins.map((o) => `${o.from} → ${o.rows.map((r) => r.to + (r.drawn ? '' : ' (not mapped)')).join(', ')}`).join(' | ')}`,
   );
   check(
     'the routes are listed under the place they leave from',
-    out.origins.length >= 1 && outRows.length >= 2,
-    `${out.origins.length} place(s), ${outRows.length} row(s)`,
+    opened.origins.length >= 1 && outRows.length >= 2,
+    `${opened.origins.length} place(s), ${outRows.length} row(s)`,
   );
   check(
     '  one place per name, no place listed twice',
-    new Set(out.origins.map((o) => o.from.toLowerCase())).size === out.origins.length,
+    new Set(opened.origins.map((o) => o.from.toLowerCase())).size === opened.origins.length,
   );
   check(
-    `  picking ${out.card.from}'s card lights exactly its directions`,
-    out.selected === 1 &&
-      same(
-        litOut,
-        out.card.rows.map((r) => r.id),
-      ),
-    `${litOut.length} lit for ${out.card.rows.length} row(s)`,
+    `  a tap on ${out.card.from}'s card off its rows opens its first row's trip, its line alone lit, nothing Selected`,
+    out.title === `${out.card.from} → ${out.first.to}` &&
+      same(litOut, [out.first.id]) &&
+      (await chooser.locator('[data-state="selected"]').count()) === 0,
+    `${out.title || 'no trip'}; ${litOut.length} lit`,
   );
-  if (out.card.rows.length < opened.listed.length) {
+  if (opened.listed.length > 1) {
     check(
       '  fewer than the list lit before',
       litOut.length < new Set(opened.lit).size,
       `${litOut.length} of ${new Set(opened.lit).size}`,
     );
   } else {
-    skip('  fewer than the list lit before', 'the busiest card lists everything this way round');
+    skip('  fewer than the list lit before', 'the list lists one direction');
   }
   check(
     '  a circle at each end of each lit direction',
@@ -364,7 +385,7 @@ const tap = (x, y) => page.mouse.click(canvas.x + x, canvas.y + y);
   // in direction-arrows.ts), and each has its name further apart — as the
   // routes into SM Fairview from Tala and from Bagong Silang Phase 5 do, 649
   // m apart ("two labels are right", the owner, 2026-09-29).
-  const placesOut = new Set([out.card.from, ...out.card.rows.map((r) => r.to)]);
+  const placesOut = new Set([out.card.from, out.first.to]);
   check(
     '  each end is named, with the names the list uses, each place once where its ends meet',
     namedRight(out.endList, placesOut),
@@ -377,39 +398,37 @@ const tap = (x, y) => page.mouse.click(canvas.x + x, canvas.y + y);
     `${out.doubled} doubled pair(s)`,
   );
   const levelsOut = await levels();
-  // A second tap on the card lets it go: everything listed lit again.
-  await chooser.locator('[data-testid="chooser-select"]').nth(out.at).click();
-  await page.waitForTimeout(500);
+  // The empty map tapped leaves the trip for the list, as on the public map: everything listed lit.
+  await tapEmpty();
   const letGo = await read();
   check(
-    '  a second tap lets it go: nothing Selected, every direction listed lit again',
-    letGo.selected === 0 && same([...new Set(letGo.lit)], letGo.listed),
+    '  the empty map tapped goes back to the list: nothing Selected, every direction listed lit again',
+    !(await tripTitle()) &&
+      letGo.selected === 0 &&
+      same(letGo.listed, opened.listed) &&
+      same([...new Set(letGo.lit)], letGo.listed),
     `${new Set(letGo.lit).size} lit, ${letGo.listed.length} listed, ${letGo.selected} Selected`,
   );
 
-  const flip = chooser.locator('[data-testid="chooser-flip"]');
+  const flip = page.locator('[data-testid="chooser-flip"]');
   check('the list offers SWITCH', (await flip.count()) === 1 && (await flip.isEnabled()));
-  // Picked again, so SWITCH has a card to let go.
-  await chooser.locator('[data-testid="chooser-select"]').nth(out.at).click();
-  await page.waitForTimeout(300);
-  const repicked = (await chooser.locator('[data-state="selected"]').count()) === 1;
   await flip.click({ timeout: 3000 }).catch(() => {});
   await page.waitForTimeout(500);
   const switched = await read();
   check(
-    '  SWITCH lets a picked card go: the other way round, all of it lit, nothing Selected',
-    repicked &&
-      switched.selected === 0 &&
+    '  SWITCH: the other way round, all of it lit, nothing Selected',
+    switched.selected === 0 &&
       switched.listed.length > 0 &&
+      !same(switched.listed, opened.listed) &&
       same([...new Set(switched.lit)], switched.listed),
-    `picked ${repicked}; ${new Set(switched.lit).size} lit, ${switched.listed.length} listed, ${switched.selected} Selected`,
+    `${new Set(switched.lit).size} lit, ${switched.listed.length} listed, ${switched.selected} Selected`,
   );
   const back = await pick(switched);
-  const backRows = back.origins.flatMap((o) => o.rows);
+  const backRows = switched.origins.flatMap((o) => o.rows);
   const litBack = [...new Set(back.lit)];
-  const listedBack = back.listed;
+  const listedBack = switched.listed;
   console.log(
-    `      after SWITCH: ${back.origins.map((o) => `${o.from} → ${o.rows.map((r) => r.to + (r.drawn ? '' : ' (not mapped)')).join(', ')}`).join(' | ')}`,
+    `      after SWITCH: ${switched.origins.map((o) => `${o.from} → ${o.rows.map((r) => r.to + (r.drawn ? '' : ' (not mapped)')).join(', ')}`).join(' | ')}`,
   );
   check(
     'SWITCH lists the same routes the other way round',
@@ -423,23 +442,22 @@ const tap = (x, y) => page.mouse.click(canvas.x + x, canvas.y + y);
   } else {
     check(
       '  each leaves from where it was going',
-      out.origins.every((o) =>
+      opened.origins.every((o) =>
         o.rows.every((r) =>
-          back.origins.some((b) => b.from === r.to && b.rows.some((s) => s.to === o.from)),
+          switched.origins.some((b) => b.from === r.to && b.rows.some((s) => s.to === o.from)),
         ),
       ),
     );
   }
   check(
-    `  picking ${back.card.from}'s card then lights its directions, none of the first`,
-    same(
-      litBack,
-      back.card.rows.map((r) => r.id),
-    ) && litBack.every((id) => !litOut.includes(id)),
-    `${litBack.length} lit`,
+    `  a tap on ${back.card.from}'s card then opens its first row's trip, none of the first lit`,
+    back.title === `${back.card.from} → ${back.first.to}` &&
+      same(litBack, [back.first.id]) &&
+      litBack.every((id) => !litOut.includes(id)),
+    `${back.title || 'no trip'}; ${litBack.length} lit`,
   );
   check('  the circles follow', back.ends === 2 * litBack.length, `${back.ends} circle(s)`);
-  const placesBack = new Set([back.card.from, ...back.card.rows.map((r) => r.to)]);
+  const placesBack = new Set([back.card.from, back.first.to]);
   check(
     '  and so do the names',
     namedRight(back.endList, placesBack),
@@ -464,6 +482,7 @@ const tap = (x, y) => page.mouse.click(canvas.x + x, canvas.y + y);
   // Two looks, no fading (the owner, 2026-09-29): the other way round, and
   // whatever the list does not show, stay drawn as they rest, opaque.
   const levelsBack = await levels();
+  await tapEmpty();
   check(
     'the other way round still shows, opaque, while one way is listed',
     opaque(levelsOut, listedBack),
@@ -491,7 +510,7 @@ const tap = (x, y) => page.mouse.click(canvas.x + x, canvas.y + y);
   }
 
   // A row opens that direction's card.
-  const place = back.origins.find((o) => o.rows.some((r) => r.drawn));
+  const place = switched.origins.find((o) => o.rows.some((r) => r.drawn));
   const row = place?.rows.find((r) => r.drawn);
   if (!place || !row) {
     skip('a row opens that direction', 'nothing drawn the way back');
@@ -499,7 +518,7 @@ const tap = (x, y) => page.mouse.click(canvas.x + x, canvas.y + y);
     // Straight away, whether its card is picked or not (the owner, 2026-09-29).
     const placeCard = chooser
       .locator('[data-testid="chooser-origin"]')
-      .nth(back.origins.indexOf(place));
+      .nth(switched.origins.indexOf(place));
     await placeCard.locator('button[data-testid="chooser-item"]:enabled').first().click();
     await page.waitForTimeout(600);
     // The trip card the public map opens, the studio's too since 2026-09-30:
@@ -625,20 +644,17 @@ const tap = (x, y) => page.mouse.click(canvas.x + x, canvas.y + y);
         `${after.pins} circle(s), ${after.rest} stretch(es) at rest, ${after.stations.filter((s) => s.paled).length} dot(s) along it, ${after.lit} lit`,
       );
     }
-    // A trip a list's row opened closes in two steps: back to the list (a computer's detail by
-    // Escape, a trip card by ‹), then the list's ✕.
-    if (await page.getByTestId('route-line-detail').count()) {
-      await page.keyboard.press('Escape');
-      await page.waitForTimeout(400);
-      check(
-        '  Escape leaves the detail for the list it was opened from',
-        (await page.getByTestId('route-line-detail').count()) === 0 && (await chooser.isVisible()),
-      );
-    } else {
-      await page.locator('[data-testid="card"]').getByRole('button', { name: 'Back' }).click();
-    }
-    await chooser.getByRole('button', { name: 'Close' }).click();
+    // A trip a list's row opened closes in two Escapes, as on the public map: back to the list,
+    // then the list.
+    await page.keyboard.press('Escape');
     await page.waitForTimeout(400);
+    check(
+      '  Escape leaves the trip for the list it was opened from',
+      !(await tripTitle()) && (await chooser.isVisible()),
+    );
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(400);
+    check('  the list closes', (await chooser.count()) === 0);
     const endsNone = await page.evaluate(() => window.__ends().length);
     check('  closing it leaves no circles', endsNone === 0, `${endsNone} circle(s)`);
   }
@@ -656,10 +672,12 @@ const tap = (x, y) => page.mouse.click(canvas.x + x, canvas.y + y);
       window.__map.jumpTo({ center: c, zoom: 17 });
     }, spot);
     await page.waitForTimeout(700);
-    await tap(x, y);
+    // Projected again, as in clickAt: a card open in the left panel narrows the map.
+    const q = await page.evaluate((c) => window.__map.project(c), spot);
+    await tap(q.x, q.y);
     await page.waitForTimeout(700);
     if ((await showsBack()) !== wantBack) {
-      await chooser.locator('[data-testid="chooser-flip"]').click();
+      await page.locator('[data-testid="chooser-flip"]').click();
       await page.waitForTimeout(500);
     }
     return (await read()).listed;
@@ -707,7 +725,9 @@ const tap = (x, y) => page.mouse.click(canvas.x + x, canvas.y + y);
       window.__map.jumpTo({ center: c, zoom: 17 });
     }, p.at);
     await page.waitForTimeout(600);
-    await tap(p.x, p.y);
+    // Projected again: the map may be wider or narrower than when the spot was found.
+    const q = await page.evaluate((c) => window.__map.project(c), p.at);
+    await tap(q.x, q.y);
     await page.waitForTimeout(700);
     const now = await read();
     const shown = now.origins.length
@@ -796,36 +816,6 @@ const tap = (x, y) => page.mouse.click(canvas.x + x, canvas.y + y);
       );
     }
   }
-  // The same with another card of the list picked, lighting its own lines
-  // only: what the list shows still decides (useSavedRoutes' `shown`,
-  // 2026-09-29), not the outbound rule the unlit line would fall to.
-  {
-    const spot = await bothWaysSpot(await reopen(true));
-    const other = spot
-      ? (await read()).origins.findIndex((o) => !o.rows.some((r) => r.id === spot.litId))
-      : -1;
-    if (!spot) {
-      skip(
-        '  and so it does with another card picked',
-        'no stretch where one route alone runs both ways on one road',
-      );
-    } else if (other < 0) {
-      skip(
-        '  and so it does with another card picked',
-        "the list has no card but the shown line's",
-      );
-    } else {
-      await chooser.locator('[data-testid="chooser-select"]').nth(other).click();
-      await page.waitForTimeout(500);
-      const picked = (await read()).selected === 1;
-      const after = await clickAt(spot.alone);
-      check(
-        '  and so it does with another card picked',
-        picked && after.lit.length === 1 && after.lit[0] === spot.litId,
-        `picked ${picked}; ${after.shown}`,
-      );
-    }
-  }
   {
     const shownNow = await reopen(true);
     const near = lines
@@ -860,7 +850,7 @@ const tap = (x, y) => page.mouse.click(canvas.x + x, canvas.y + y);
   // list starts at All. Last, as a filter moves the camera.
   {
     const all = await reopen(false);
-    const filterButton = chooser.locator('[data-testid="chooser-filter"]');
+    const filterButton = page.locator('[data-testid="chooser-filter"]');
     // The menu's switches apply as they are tapped: Clear all, then the one kind on, then ✕.
     const filterTo = async (label) => {
       const menu = page.getByTestId('mode-filter');
@@ -905,6 +895,131 @@ const tap = (x, y) => page.mouse.click(canvas.x + x, canvas.y + y);
     await reopen(false);
     const label = await filterButton.getAttribute('aria-label');
     check('  a new list starts at All', label === 'Filter', String(label));
+  }
+}
+
+// ------------------------------------------- the browser's Back, as on the public map
+
+// Back takes the cards away one at a time, the trip first, then the list, the address kept; on
+// another map it is the map switch's, back to the Playground, its cards as they were left.
+{
+  const studioMap = () => new URL(page.url()).searchParams.get('map');
+  await tap(
+    ...(await page.evaluate((c) => {
+      window.__map.jumpTo({ center: c, zoom: 17 });
+      const q = window.__map.project(c);
+      return [q.x, q.y];
+    }, spot)),
+  );
+  await page.waitForTimeout(700);
+  const chooser = page.locator('[data-testid="chooser"]');
+  const address = page.url();
+  await chooser.locator('button[data-testid="chooser-item"]:enabled').first().click();
+  await page.waitForTimeout(600);
+  const tripOpen = !!(await tripTitle());
+  await page.goBack();
+  await page.waitForTimeout(600);
+  check(
+    "Back leaves a list's trip for the list, the address kept",
+    tripOpen && !(await tripTitle()) && (await chooser.isVisible()) && page.url() === address,
+    `trip ${tripOpen}; then ${(await tripTitle()) || 'no trip'}, ${page.url()}`,
+  );
+  await page.goBack();
+  await page.waitForTimeout(600);
+  check(
+    '  Back again closes the list, in the Playground still',
+    (await chooser.count()) === 0 && studioMap() === null,
+    `${await chooser.count()} list(s), map ${studioMap()}`,
+  );
+  // The list again, then the Public map: Back there is the switch's, the Playground's list kept.
+  await tap(
+    ...(await page.evaluate((c) => {
+      const q = window.__map.project(c);
+      return [q.x, q.y];
+    }, spot)),
+  );
+  await page.waitForTimeout(700);
+  const listOpen = (await chooser.count()) === 1;
+  await page.getByRole('radio', { name: 'Public' }).check({ force: true });
+  await page.waitForTimeout(600);
+  const onPublic = studioMap() === 'public';
+  await page.goBack();
+  await page.waitForTimeout(800);
+  check(
+    '  Back on another map goes back to the Playground, its list as it was left',
+    listOpen &&
+      onPublic &&
+      studioMap() === null &&
+      (await page.getByRole('radio', { name: 'Playground' }).isChecked()) &&
+      (await chooser.isVisible()),
+    `list ${listOpen}, public ${onPublic}; map ${studioMap()}, list shown ${await chooser.isVisible().catch(() => false)}`,
+  );
+  await page.goBack();
+  await page.waitForTimeout(600);
+  check(
+    '  and Back then closes the list',
+    (await chooser.count()) === 0 && studioMap() === null,
+    `${await chooser.count()} list(s), map ${studioMap()}`,
+  );
+}
+
+// A trip left open in the Playground waits through the Contributors map, which draws on the same
+// map: an empty tap there closes nothing of it.
+{
+  const contributors = page.getByRole('radio', { name: 'Contributors' });
+  if ((await contributors.count()) === 0) {
+    skip(
+      "an empty tap on the Contributors map leaves the Playground's trip open",
+      'the Contributors map is off in this build (VITE_CONTRIBUTIONS)',
+    );
+  } else {
+    await page.evaluate((c) => {
+      window.__map.jumpTo({ center: c, zoom: 17 });
+    }, spot);
+    await page.waitForTimeout(600);
+    await tap(...(await page.evaluate((c) => Object.values(window.__map.project(c)), spot)));
+    await page.waitForTimeout(700);
+    await page
+      .locator('[data-testid="chooser"] button[data-testid="chooser-item"]:enabled')
+      .first()
+      .click();
+    await page.waitForTimeout(600);
+    const opened = await tripTitle();
+    await contributors.check({ force: true });
+    await page.waitForTimeout(800);
+    // Signed out, the Contributors map stands its sign-in over the map: the map's own click is
+    // fired, at a point clear of every line and box, as a signed-in editor's tap would land.
+    const at = await page.evaluate(() => {
+      const m = window.__map;
+      const { width, height } = m.getCanvas().getBoundingClientRect();
+      const layers = ['saved-routes-hit', 'saved-stops-dot', 'saved-stops-fill'].filter((l) =>
+        m.getLayer(l),
+      );
+      for (let y = 60; y < height - 60; y += 20)
+        for (let x = 60; x < width - 60; x += 20) {
+          const box = [
+            [x - 25, y - 25],
+            [x + 25, y + 25],
+          ];
+          if (m.queryRenderedFeatures(box, { layers }).length > 0) continue;
+          const point = { x, y };
+          m.fire('click', {
+            point,
+            lngLat: m.unproject([x, y]),
+            originalEvent: new MouseEvent('click'),
+          });
+          return point;
+        }
+      return null;
+    });
+    await page.getByRole('radio', { name: 'Playground' }).check({ force: true });
+    await page.waitForTimeout(800);
+    const back = await tripTitle();
+    check(
+      "an empty tap on the Contributors map leaves the Playground's trip open, there on return",
+      !!opened && !!at && back === opened,
+      `opened ${opened || 'none'}; tapped ${at ? 'the empty map' : 'nothing'}; back to ${back || 'none'}`,
+    );
   }
 }
 

@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1478",
+  "old_id": "c0e82f5e-ee5e-4293-94c7-f65866c20928",
+  "name": "BACLARAN - HARRISON BUENDIA",
+  "mode": "bus",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [120.98796,14.56298],
+  "end": [120.99289,14.5346],
+  "length_m": null,
+  "gaps": [],
+  "line": [[120.98796,14.56298],[120.98997,14.56033],[120.99199,14.55293],[120.99298,14.55049],[120.99289,14.54819],[120.99401,14.54617],[120.99416,14.54414],[120.99491,14.54178],[120.99505,14.53927],[120.996,14.53788],[120.99299,14.53733],[120.99289,14.5346]]
+}

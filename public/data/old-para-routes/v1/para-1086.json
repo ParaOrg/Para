@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1086",
+  "old_id": "ba93e95b-9160-4202-9163-72e6d42734dd",
+  "name": "Crame - Q-Mart via P. Tuazon, E. Garcia",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.052,14.60533],
+  "end": [121.04895,14.62807],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.052,14.60533],[121.0509,14.60657],[121.05101,14.60818],[121.05196,14.61015],[121.06,14.61209],[121.063,14.61271],[121.06405,14.61378],[121.06294,14.61617],[121.06176,14.6181],[121.06201,14.62088],[121.06201,14.62369],[121.06007,14.62654],[121.05795,14.62628],[121.05711,14.62806],[121.05617,14.62858],[121.05405,14.62832],[121.05199,14.62732],[121.04895,14.62807]]
+}

@@ -13,7 +13,7 @@
 //     default, auto-trailing-slash).
 //
 // The script (workers/site/src/index.ts) runs first for /api/*, where it
-// answers a commuter's route report at /api/report (ADR 0010), and for every
+// answers a commuter's route report at /api/report, and for every
 // page address, where on the production site it answers with Coming soon in
 // the map's place (coming-soon.ts). The built folders below that hold no page
 // of the map's (the hashed bundles, the published map's data, icons, the
@@ -45,7 +45,7 @@
   },
   // Five reports a minute from one sender. The limiter is keyed by the
   // sender's address in Cloudflare's memory; the address is never stored or
-  // logged (ADR 0010).
+  // logged.
   "ratelimits": [
     {
       "name": "REPORT_LIMIT",

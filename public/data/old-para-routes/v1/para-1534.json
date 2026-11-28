@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1534",
+  "old_id": "7e0c7942-9cf1-4a8b-ac2b-a6a33987eb28",
+  "name": "CUBAO (MERCURY) ROCES SUPER PALENGKE",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.04793,14.62166],
+  "end": [121.02599,14.63046],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.04793,14.62166],[121.04291,14.62423],[121.04198,14.6246],[121.03899,14.62623],[121.03796,14.62793],[121.03703,14.62728],[121.03699,14.62612],[121.03498,14.62629],[121.034,14.62739],[121.03394,14.62811],[121.02599,14.63046]]
+}

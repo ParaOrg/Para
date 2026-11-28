@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1601",
+  "old_id": "82e497d5-05b1-4403-8051-5f206b26c04f",
+  "name": "Lealtad P Miranda",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [120.98797,14.59889],
+  "end": [121.00205,14.61339],
+  "length_m": null,
+  "gaps": [],
+  "line": [[120.98797,14.59889],[120.98794,14.59997],[120.98888,14.60316],[120.99102,14.60558],[120.99291,14.60732],[120.99406,14.60873],[120.99604,14.61074],[120.99892,14.61293],[121.0011,14.61377],[121.00205,14.61339]]
+}

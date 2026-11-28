@@ -1,6 +1,6 @@
 # 13: Nothing suggests Sakay when the contributor is plainly riding
 
-Status: ready-for-agent
+Status: needs-info (detection built in `sakay-hint.ts`; the prompt waits for the owner's design)
 Type: the detection logic is ready; the prompt's look waits for the owner's design
 Who: the owner
 Source: the 2026-11-11 review, finding UX-07; follows ticket 07's option 3
@@ -58,3 +58,5 @@ The tracks are made up along EDSA, as no recorded ride may be used:
 - a jeepney stopping for passengers: due.
 
 It is wired to nothing that draws, until the owner's frames come.
+
+- 2026-11-28, /tidy (owner-approved through the hub): status set to needs-info. The detection is built (`src/features/contribute/recorder/sakay-hint.ts`, `isSakayHintDue`); the prompt waits for the owner's design.

@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1531",
+  "old_id": "ffc88e5c-e69a-4bfe-9619-deaadbbc0750",
+  "name": "Blumentritt Vito Cruz L Guinto",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [120.98282,14.61851],
+  "end": [120.994,14.56511],
+  "length_m": null,
+  "gaps": [],
+  "line": [[120.98282,14.61851],[120.98309,14.6137],[120.98293,14.61171],[120.982,14.61002],[120.982,14.60601],[120.98213,14.60148],[120.98097,14.60039],[120.98004,14.59922],[120.98078,14.59074],[120.98506,14.58163],[120.98602,14.57991],[120.988,14.57731],[120.98923,14.57433],[120.99219,14.56842],[120.994,14.56511]]
+}

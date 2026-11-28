@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1321",
+  "old_id": "019761cf-fe80-48e5-97c7-08afcd7eee7b",
+  "name": "LIBERTAD-EVANGELISTA",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.01202,14.54119],
+  "end": [120.99811,14.5474],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.01202,14.54119],[121.012,14.54287],[121.011,14.54482],[121.01099,14.54898],[121.00809,14.55033],[121.00414,14.5489],[121.001,14.54805],[120.99811,14.5474]]
+}

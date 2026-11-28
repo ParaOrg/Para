@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1116",
+  "old_id": "aad41305-80c2-44ac-9e85-847d009c4782",
+  "name": "Divisoria - Sta. Cruz via Madrid",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [120.97907,14.59941],
+  "end": [120.96794,14.60098],
+  "length_m": null,
+  "gaps": [],
+  "line": [[120.97907,14.59941],[120.97709,14.59815],[120.97502,14.59706],[120.973,14.59621],[120.97204,14.59639],[120.97099,14.59647],[120.97018,14.59814],[120.96989,14.59955],[120.96794,14.60098]]
+}

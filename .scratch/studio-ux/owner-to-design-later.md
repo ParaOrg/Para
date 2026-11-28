@@ -21,16 +21,66 @@ Status: needs-info
   and `route-stops-section.tsx`.
 - **Missing facts.** "Not priced yet" shows for a mode with no fare rule, and "Not set yet" for a
   route with no mode. A route with no via has no Via row. Code: `route-line-facts.ts`.
+- **Status on a published route.** Answered (the owner, 2026-11-27): keep "Published", and keep
+  "--" while the route's draft is still being read. The summary card (4915:2713) draws "Draft" in
+  text/text-error; "Published" is in Content/quaternary. Code: `route-line-facts.ts`
+  (`routeStatus`, `routeSummaryFacts`).
+- **Transport mode's words.** The frame writes "Jeep", so a road vehicle reads as a trip's
+  Transport mode tile does (Jeep, E-Jeep, Bus, UV Express, Ferry, EDSA Carousel). LRT, MRT, P2P bus
+  and Tricycle keep the studio's own words. Code: `route-line-facts.ts` (`modeLabel`).
+- **EAT.** Answered (the owner, 2026-11-27): later. The frame has an EAT row ("30mins - 1hr"), but
+  no travel time is stored or worked out yet, so the row stays out for now.
+- **A place that is a draft only.** A stand-in card until the owner draws one: on a computer, a
+  tap on a new terminal or hintuan's draft opens a small card over the map's foot with its name,
+  Kind and Status Draft (text/text-error). The editor's own draft has Edit terminal / Edit
+  hintuan, which opens the editor; another editor's shows the lock notice with Approve. Phones
+  open the editor, or the held draft sheet, as before. Code:
+  `src/features/studio/panels/draft-place-card.tsx`, opened from `maps/studio-drafts.tsx`.
 - **Draft notice above the tabs.** Another editor's locked draft shows the existing lock notice
   above the tabs. Code: `studio-route-line-detail.tsx`.
 - **Where Overview sits.** On the map, 16 from its top left. The "Overview ↗" pill shows while the
-  detail is open, and the ↙ drawing alone over the route list. Code: `src/app/studio/playground-trip.tsx`.
+  detail is open. Code: `src/app/studio/playground-trip.tsx`.
 - **Hover, pressed and focus states** for the tabs, Other destinations rows, Route Stops rows and
   menu items. None are drawn yet, so the browser's focus ring and the menu's hover stand in.
-- **The route list on a computer.** It still floats over the map as before. The list frame shows
-  it in the left panel, which is not built yet.
 - **Add signboard in Edit Route.** The signboard editor moved from the route line detail into Edit Route,
   beside the map, and sits under Route Information in its old look. It shows only for a direction
   that is already saved: a new one has no boards to add until its first save. Phones keep it on
   their trip card. Code: `src/features/studio/panels/save-panel.tsx` (`DraftSignboards`).
 - **A phone layout** for the detail. Desktop comes first, so phones keep today's trip card.
+
+## The studio's route list on a computer (Figma 4905:21658, built 2026-11-27)
+
+- **Loading and empty.** The frame draws a full list only. The list opens only once a tap has
+  found routes, so it never waits or opens empty. A filter that leaves nothing shows the public
+  map's "No … routes here" with Show all routes, as the phone's list does. Code:
+  `src/app/studio/playground-list.tsx` (the public map's `RouteCardList`, docked).
+- **Closing it.** The frame has no ✕. Escape closes the list, as on the public map. Opening
+  another place or a route from the map replaces it. Phones keep their ✕ and PAPUNTA.
+- **No DonationCard.** The frame ends the list with the public map's DonationCard ("Help make
+  Para better"). The studio leaves it out: editors are not the ones asked to donate. Say if it
+  should show here too.
+- **A short list.** It ends at its last card with the map below it, as the public map's does,
+  and grows to the map's height before it scrolls (the owner, 2026-11-27: "remove this white").
+  The frame draws a list taller than the screen only.
+- **Hover and focus** on the cards and on Vice Versa, the filter and Overview: the public map's
+  own states stand in (the browser's focus ring, the buttons' hover).
+
+## "Start from an old Para route" (.scratch/old-para-routes/spec.md, built 2026-11-27)
+
+All of it borrows the "Start from an OSM route" stand-ins, marked "Placeholder look". Code:
+`src/features/studio/old-para-routes/`.
+
+- **The + menu's "Route from old Para"** choice, with the route letter's icon, under "Route from
+  OSM". Code: `src/features/studio/panels/new-menu-choices.tsx`.
+- **The picker.** The OSM picker's panel (`osm-routes/start-picker-frame.tsx`), a field for a
+  name, a place or a Para ID, "Routes near the map's centre", and the results: each a name over a
+  line of facts, "Jeepney · PARA-0018 · Unverified · No line". Code: `old-para-route-picker.tsx`,
+  `old-para-route-results.tsx`.
+- **The chosen route's card.** Its facts, its shape and length ("Loop · one way · 5.0 km"), whether
+  the old app's reviewers verified it, then Start drawing (or the way out and the way back for a
+  loop), or, with no line, words on what is placed. Code: `old-para-route-card.tsx`,
+  `old-para-route-line-start.tsx`.
+- **The hint while drawing.** The OSM hint's look: the places to check against the old line, or,
+  with no line, "draw it by hand" and "Look at its end". Code: `old-para-route-hint.tsx`.
+- **The end of a route with no line** on the map: a white dot ringed in Content/primary. Code:
+  `end-mark.tsx`.

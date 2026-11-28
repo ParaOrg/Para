@@ -1,6 +1,6 @@
 # 04: A footbridge hint on the walk (design 1)
 
-Status: folded into Go here's honest walking (`.scratch/go-here/issues/05-honest-walking.md`, the owner's Q116), where it is built
+Status: folded into Go here's honest walking (`.scratch/go-here/issues/05-honest-walking.md`, the owner's Q116), where it is to be built (not built yet)
 Type: task
 Blocked by: 01
 

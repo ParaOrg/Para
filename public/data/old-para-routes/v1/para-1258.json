@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1258",
+  "old_id": "261c172c-f909-480c-b9ce-7ce637472428",
+  "name": "Santol - Pina Ave. via Buenos Aires",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.01101,14.61386],
+  "end": [121.01,14.60234],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.01101,14.61386],[121.01297,14.61269],[121.01301,14.61005],[121.014,14.60721],[121.01411,14.60395],[121.01195,14.6032],[121.01,14.60234]]
+}

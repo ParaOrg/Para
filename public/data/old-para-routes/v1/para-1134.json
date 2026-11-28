@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1134",
+  "old_id": "aabcb87e-d662-409a-b422-43af1f817cd7",
+  "name": "EDSA/West Ave. - Panay Ave.",
+  "mode": "bus",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.02901,14.65563],
+  "end": [121.02204,14.63454],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.02901,14.65563],[121.03,14.6542],[121.02911,14.65178],[121.02895,14.64938],[121.02802,14.64798],[121.02798,14.64631],[121.02699,14.64405],[121.02701,14.64048],[121.02603,14.63931],[121.02601,14.63698],[121.02204,14.63454]]
+}

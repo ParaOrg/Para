@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "source": "The old Para app's community routes, extracted once from the owner's backup.",
+  "built_from": "scripts/old-para-routes/old-para-routes.v1.json",
+  "para_id": "PARA-1176",
+  "old_id": "e7a8ed22-2d75-4a39-b385-85aaaae3f1d6",
+  "name": "Libertad - M. dela Cruz",
+  "mode": "jeepney",
+  "verified": false,
+  "loop": false,
+  "oneway": false,
+  "start": [121.00808,14.54339],
+  "end": [121.001,14.54805],
+  "length_m": null,
+  "gaps": [],
+  "line": [[121.00808,14.54339],[121.00695,14.54515],[121.00702,14.54822],[121.00414,14.5489],[121.001,14.54805]]
+}
