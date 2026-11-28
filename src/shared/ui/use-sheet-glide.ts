@@ -50,6 +50,7 @@ export function useSheetGlide(sheet: RefObject<HTMLDivElement | null>) {
         el.style.removeProperty(name);
     }
     glided.current = [];
+    isCoast.current = false;
   };
   const clearRef = useRef(clear);
   useEffect(() => () => clearRef.current(), []);
