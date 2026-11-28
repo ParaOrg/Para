@@ -9,8 +9,8 @@ Ground-truthed jeepney routes for Metro Manila, on a map anyone can open.
 - **Staging:** https://staging-para.para-ph-info.workers.dev — the
   `staging` branch, each piece of work there as soon as its checks pass,
   before it is merged. For looking: its `/studio/` edits the same database
-  as the live one, so routes are edited on the live studio only. Every other
-  branch gets a link of its own, `https://<branch>-para.para-ph-info.workers.dev`,
+  as the live one, so routes are edited on the live studio only. Every pull
+  request from this repository (not Dependabot's) gets a link of its own, `https://<branch>-para.para-ph-info.workers.dev`,
   kept out of search engines as staging is.
 - **How it is built, and what comes next:** [PLAN.md](PLAN.md). The words the
   app, the plan and the owner use: [CONTEXT.md](CONTEXT.md). Decisions and
@@ -162,15 +162,15 @@ OFL 1.1. The map keeps "© OpenMapTiles" and "© OpenStreetMap contributors".
 | | |
 | --- | --- |
 | `src/app/` | the three front doors, wiring only: `public-map/` (the public map's entry, its shell and status bar), `studio/` (the editor's entry and shell) and `contribute/` (the contributor page's entry, its shell and its service worker) |
-| `src/features/routes/` | the core both apps draw: `model/` (routes, stops, places, timelines, rides, fares, liveries — no React, no MapLibre), `geo/` (the pass and babaan-side rules), `map/` (the map view with its basemap and layers, the route and hotspot layers and hooks, and the map side of the cards: `use-card-stack`, which card is up, and `use-card-camera`, the camera with them), `cards/` (the cards, sheets and timelines, with their stories), `published/` (the published map's reader: `fetch-index.ts` and `fetch-line.ts`, its shape in `index-schema.ts` and `line-file-schema.ts`, its names and URLs in `map-file.ts`). Imported through its concern folders; it has no `index.ts` on purpose, since Node runs the publish and the unit checks against its files |
+| `src/features/routes/` | the core both apps draw: `model/` (routes, stops, places, timelines, rides, fares, liveries — no React, no MapLibre), `geo/` (the pass and babaan-side rules), `map/` (the map view with its basemap and layers, the route and hotspot layers and hooks, and the map side of the cards: `use-card-stack`, which card is up, `use-card-camera`, the camera with them, and `use-route-cards` with `route-card-layer`, the card layer the public map and the studio share), `cards/` (the cards, sheets and timelines, with their stories), `published/` (the published map's reader: `fetch-index.ts` and `fetch-line.ts`, its shape in `index-schema.ts` and `line-file-schema.ts`, its names and URLs in `map-file.ts`). Imported through its concern folders; it has no `index.ts` on purpose, since Node runs the publish and the unit checks against its files |
 | `src/features/locator/` | "Where am I": the commuter's dot, its button and its moods |
 | `src/features/published-map/` | the published map's freshness, the installed app's updates (`pwa.ts`) and the notices |
-| `src/features/studio/` | the editor: `auth/` (sign-in, passwords, the session), `data/` (the Supabase client, reads and writes), `drawing/` (drawing, snapping, borrowing), `panels/` (save, hotspot, the card's actions). Its `index.ts`, like the locator's and the published map's, is what the shells import |
+| `src/features/studio/` | the editor: `auth/` (sign-in, passwords, the session), `data/` (the Supabase client, reads and writes), `drawing/` (drawing, snapping, borrowing), `panels/` (save, hotspot, the card's actions, the route line detail), `contributors/` (the Contributors map's list, details and actions), `maps/` (the drafts' lines and marks on the studio's maps), `public-view/` (the studio's Public map), `osm-routes/` and `old-para-routes/` (Start from an OSM route, Start from an old Para route). Its `index.ts`, like the locator's and the published map's, is what the shells import |
 | `src/features/contribute/` | the contributor page, where a contribution is recorded on the phone, saved and sent, with the consent, the recorder, the contributor's account and the uploads. Its `index.ts` is what the contributor page's shell imports, and the public page never loads it |
 | `src/shared/` | what knows no feature: `ui/` (the bottom sheet, its gesture, the icons), `hooks/` (dialog focus, escape, a child's turn), `utils/` (coordinate maths), `lib/` (the TanStack Query client), `config/` (the basemap host) and `types/` (the database types Supabase generates) |
 | `src/styles/` | `global.css`, the one stylesheet: Tailwind, then the design system's tokens and fonts |
 | `src/design-system/` | the tokens, fonts and primitives (foundation ← primitives) |
-| `public/data/` | the published map, every version kept in history: `index.v6.json` (what the app reads), a line per direction in `lines/` (with its orange stretches, worked out as it is published), and for apps not yet updated `index.v5.json` (without the EDSA Carousel), `index.v4.json` (without loops either), `index.v3.json` (without the ferry either), `index.json` and the older single file `map.json` (without any line) |
+| `public/data/` | the published map, every version kept in history: `index.v6.json` (what the app reads), a line per direction in `lines/` (with its orange stretches, worked out as it is published), and for apps not yet updated `index.v5.json` (without the EDSA Carousel), `index.v4.json` (without loops either), `index.v3.json` (without the ferry either), `index.json` and the older single file `map.json` (without any line); the studio also reads `osm-routes/` and `old-para-routes/`, the routes it can start from |
 | `supabase/migrations/` | the schema and its policies, in order |
 | `supabase/functions/` | Edge Functions, which hold the secrets a page must not: `waitlist` saves an email from `/app/` and sends its confirmation through Resend |
 | `scripts/` | tools: the build guards and the data check (`checks/`), the publish (`publish/`), Node's TypeScript hook (`node/`), the monthly map-tiles build (`tiles/`), the research screenshots and the cheap-phone timer, `phone-speed.mjs` with its parts, and the load test of the map and its tiles, `load-test.mjs`, run by hand only (`research/`), the icons' lossless PNG recompressor, `recompress-png.mjs` (`assets/`) |
@@ -208,7 +208,7 @@ you:
 The route lines follow OpenStreetMap's road network (snapped with OSRM), so
 the data is a derivative of OpenStreetMap, © OpenStreetMap contributors, also
 under the ODbL. The map tiles are built from the same data: by Para itself on
-staging (`workers/tiles`, ADR 0007), by OpenFreeMap on `main` until staging is released.
+staging and `main` (`workers/tiles`, ADR 0007).
 
 Every published version of the map is kept in this repository's history,
 so what is published stays public.
