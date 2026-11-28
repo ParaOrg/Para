@@ -19,6 +19,7 @@
 // younger than 7 days, only a line saying from when (20261128090000_discard_stale_draft); once it has
 // gone 7 days without a change, the card offers Discard…, which asks first and drops it, and a card
 // that went stale (the draft changed after it opened) is refused in words and keeps the draft.
+// B's Keep my draft on A's draft, sent straight to the database, is refused (refresh_draft_base).
 import { chromium } from 'playwright';
 
 import { BASE, bareStyle, harness, waitForSource } from './lib/harness.mjs';
@@ -531,6 +532,40 @@ check(
   db.tables.draft[0].note === null && Array.isArray(direct) && direct.length === 0,
   JSON.stringify(direct),
 );
+
+// ---- Keep my draft (refresh_draft_base) on A's draft, sent by B straight to the database: refused.
+{
+  const kept = db.tables.draft[0];
+  const before = JSON.stringify(kept);
+  // The stand-in answers as the migration's function does; the SQL itself is proven by
+  // supabase/apply/20261128120000_refresh_draft_base_maker_check.sql.
+  const keep = (revision) =>
+    b.page.evaluate(
+      async ([origin, draftId, p_revision]) => {
+        const token = JSON.parse(
+          localStorage.getItem(Object.keys(localStorage).find((k) => k.endsWith('-auth-token'))),
+        ).access_token;
+        const r = await fetch(`${origin}/rest/v1/rpc/refresh_draft_base`, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json', authorization: `Bearer ${token}` },
+          body: JSON.stringify({ p_draft: draftId, p_revision, p_base_revision: 7 }),
+        });
+        return r.json();
+      },
+      [new URL(b.page.url()).origin, kept.id, revision],
+    );
+  const answer = await keep(1);
+  // A wrong revision must not be told to B either: the maker test comes first.
+  const wrong = await keep(99);
+  check(
+    "B's Keep on A's draft sent straight to the database is refused, with no revision told, and the draft is unchanged",
+    answer.code === 'not_your_draft' &&
+      wrong.code === 'not_your_draft' &&
+      wrong.current_revision === undefined &&
+      JSON.stringify(db.tables.draft[0]) === before,
+    JSON.stringify([answer, wrong]),
+  );
+}
 
 // ---- A hotspot's draft is held the same way.
 db.tables.draft = [];

@@ -1560,6 +1560,9 @@ CREATE FUNCTION public.discard_draft(p_draft uuid, p_revision integer DEFAULT NU
     AS $$
 declare
   d public.draft;
+  last_change timestamptz;
+  -- Must match OTHER_EDITOR_DISCARD_DAYS in the studio.
+  stale_after constant interval := interval '7 days';
 begin
   perform private.require_editor();
   -- FOR UPDATE: a concurrent save must land before our revision read, or
@@ -1568,8 +1571,16 @@ begin
   if not found then
     return jsonb_build_object('code', 'no_draft');
   end if;
-  if d.editor_id is not null and d.editor_id <> (select auth.uid()) then
-    return jsonb_build_object('code', 'not_your_draft');
+  -- Another editor's draft (a maker-less one belongs to nobody): only once it
+  -- has gone the whole interval without a change.
+  last_change := greatest(least(d.updated_at, now()), least(d.created_at, now()));
+  if d.editor_id is not null
+     and d.editor_id is distinct from (select auth.uid())
+     and last_change + stale_after > now() then
+    return jsonb_build_object(
+      'code', 'draft_too_recent',
+      'discardable_from', last_change + stale_after
+    );
   end if;
   if p_revision is not null and d.revision <> p_revision then
     return jsonb_build_object('code', 'revision_mismatch', 'current_revision', d.revision);

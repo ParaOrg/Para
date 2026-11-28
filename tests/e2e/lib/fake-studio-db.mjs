@@ -461,6 +461,25 @@ export function draftWorkflow(tables, { newId, fill, now }) {
       tables.draft = tables.draft.filter((d) => d !== kept);
       return { status: 200, body: { code: 'discarded' } };
     }
+    if (name === 'refresh_draft_base') {
+      // 20261128120000_refresh_draft_base_maker: the maker's draft (or a maker-less one) only,
+      // checked before the revision so another editor is never told it.
+      const kept = tables.draft.find((d) => d.id === body.p_draft);
+      if (!kept) return { status: 200, body: { code: 'no_draft' } };
+      if (kept.editor_id != null && kept.editor_id !== caller)
+        return { status: 200, body: { code: 'not_your_draft' } };
+      if (kept.revision !== body.p_revision)
+        return {
+          status: 200,
+          body: { code: 'revision_mismatch', current_revision: kept.revision },
+        };
+      Object.assign(kept, {
+        base_revision: body.p_base_revision,
+        revision: kept.revision + 1,
+        updated_at: new Date().toISOString(),
+      });
+      return { status: 200, body: { code: 'ok', draft: kept } };
+    }
     if (name === 'submit_draft') {
       const kept = tables.draft.find((d) => d.id === body.p_draft);
       if (!kept) return { status: 200, body: { code: 'no_draft' } };
