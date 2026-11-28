@@ -892,6 +892,8 @@ prints the plan and writes nothing; add `--write` to rewrite the three files, th
 
 # Applying discard_stale_draft to the live project
 
+**Applied by the owner on 2026-11-28** (ledger `20261128150102`); its check passed. Kept for the record; do not reapply.
+
 `20261128090000_discard_stale_draft` replaces one function, `public.discard_draft` (same signature, same
 grants, still a security definer with its search path pinned). Another editor may discard a draft once it
 has gone 7 days without a change (`draft.updated_at`); a younger one answers `draft_too_recent` with the

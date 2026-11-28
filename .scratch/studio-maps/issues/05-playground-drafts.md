@@ -1,6 +1,6 @@
 # 05: The Playground saves drafts
 
-Status: resolved (merged; the owner applies the two migrations below, then approves the "being changed by" wording)
+Status: resolved (merged; the owner applies the Keep migration below, then approves the "being changed by" wording)
 Type: task
 Wave: 3
 Who: Sonnet
@@ -46,4 +46,4 @@ Still open on 05:
 
 2026-11-28, the owner (through the hub): (a) skip the live two-editor try, because the automatic `tests/e2e/studio-two-editors-test.mjs` covers it; (b) the 7-day rule: yes, another editor may discard a draft left untouched for 7 days. A separate session builds the rule and closes this ticket, so the status stays as it is.
 
-2026-11-28, resolved: the 7-day rule merged (#1304). **Awaiting the owner's apply:** `20261128090000_discard_stale_draft` (the rule in the database) and its follow-up `20261128120000_refresh_draft_base_maker`, which gives `refresh_draft_base` (Keep my draft) the maker test `save_draft` has, so another editor can neither rewrite a draft nor reset its 7 days; a refusal shows in words (`not_your_draft`). Steps: `supabase/apply/README.md`.
+2026-11-28, resolved: the 7-day rule merged (#1304). `20261128090000_discard_stale_draft` (the rule in the database) is applied (the owner, 2026-11-28, ledger `20261128150102`). **Awaiting the owner's apply:** its follow-up `20261128120000_refresh_draft_base_maker`, which gives `refresh_draft_base` (Keep my draft) the maker test `save_draft` has, so another editor can neither rewrite a draft nor reset its 7 days; a refusal shows in words (`not_your_draft`). Steps: `supabase/apply/README.md`.
