@@ -1,14 +1,16 @@
 // The cards that stand in for one another over the map, and what each does
 // to the others (src/features/routes/cards/card-stack.ts): the list asking, a trip's ‹,
-// the shared height, a trip behind a place's card, a row let go, what
+// the shared height and where a line's tap takes it, a trip behind a place's card, a row let go, what
 // the card on show frames for its Overview button, and what the browser's Back does.
 //
 //   node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs tests/unit/card-stack-test.mjs
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  TRIP_OPENS_AT,
   backMove,
   framedBy,
+  heightAfterLineTap,
   isChoosing,
   letGoHolds,
   sharedSnap,
@@ -80,6 +82,14 @@ test("with none open, the shared height rests at the first card's, where the nex
     // A card open keeps its own height, whatever the first card's.
     assert.equal(sharedSnap(0.7, true, idle), 0.7);
   }
+});
+
+test('a route line tapped takes the card it brings up to the middle, the trip or the list', () => {
+  assert.equal(TRIP_OPENS_AT, 0.45);
+  assert.equal(heightAfterLineTap(true, false), TRIP_OPENS_AT);
+  assert.equal(heightAfterLineTap(false, true), TRIP_OPENS_AT);
+  // The tap let everything go (an empty stretch of a line's box): nothing comes up, nothing moves.
+  assert.equal(heightAfterLineTap(false, false), null);
 });
 
 test("a trip behind a place's card holds only while that card is open and no trip is", () => {

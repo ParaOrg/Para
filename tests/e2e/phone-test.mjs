@@ -3464,6 +3464,29 @@ if (runsPart(1)) {
       sameCamera(camBeforeLineTap, camAfterLineTap) && isOfferedAtOpen,
       JSON.stringify({ camBeforeLineTap, camAfterLineTap, isOfferedAtOpen }),
     );
+    // A route's line tapped takes its card to the middle (TRIP_OPENS_AT, 45% of the map) from
+    // wherever the sheet stood: lowered to Low and the line tapped again, it rises there.
+    const middleOf = async () => {
+      const share = await tripMiddle();
+      return card()
+        .first()
+        .evaluate((el, at) => Math.round(el.offsetHeight * at), share);
+    };
+    const shownAtOpen = await shownOf(card());
+    const isLowered = await handleTo('low');
+    await mapTap(tx, ty);
+    await cardsSettled(page);
+    const shownAfterTap = (await card().count()) ? await shownOf(card()) : null;
+    const middle = await middleOf();
+    check(
+      '  it opens at the middle, and lowered, a tap on its line takes it back up there',
+      Math.abs(shownAtOpen - middle) <= 4 &&
+        isLowered &&
+        shownAfterTap !== null &&
+        Math.abs(shownAfterTap - middle) <= 4,
+      `opened at ${shownAtOpen} px, lowered ${isLowered}, after the tap ${shownAfterTap} px; the middle ${middle} px`,
+    );
+
     if (isOfferedAtOpen) await buttonTap(overview, async () => !(await overview.isVisible()));
     await page
       .waitForFunction(() => !window.__map.isMoving(), null, { timeout: 5000 })
@@ -6030,8 +6053,8 @@ if (runsPart(2) && isPlaceSearchShown) {
 }
 
 // ------------------------------------------ 4e. the height kept, card to card
-// The owner's rules of 2026-11-25, in px (±2): the first card open, the list a tap opens stands at
-// its height, and at Low at Low; a trip a tap opens, on a RouteCard or on a line of one route,
+// The owner's rules, in px (±2): the first card open or at Low, the list a line's tap opens
+// stands at the middle; a trip a tap opens, on a RouteCard or on a line of one route,
 // opens at the middle (TRIP_OPENS_AT); ⇅ keeps the trip's height; ‹ gives the list back at its own
 // height from before the tap; the first card comes back at Low, whole or Low as it was left (the
 // owner, 2026-11-26), drawn there from its first frame.
@@ -6106,13 +6129,19 @@ if (runsPart(3)) {
   };
   const allClosed = async () => (await chooser.count()) === 0 && (await card().count()) === 0;
 
+  /** The route list's middle, where a line's tap brings it (heightAfterLineTap). */
+  const listMiddlePx = () =>
+    chooser
+      .first()
+      .evaluate((e, share) => Math.round(share * e.offsetHeight), middle)
+      .catch(() => null);
   const openPx = await exploreShown();
   await tapAt(at.many);
   const listAtOpen = (await chooser.count()) ? await shownOf(chooser) : null;
   check(
-    '  the first card open, the list a tap opens stands at its height',
-    near(listAtOpen, openPx),
-    `first card ${openPx} px; list ${listAtOpen} px`,
+    '  the first card open, the list a line tap opens stands at the middle',
+    near(listAtOpen, await listMiddlePx()),
+    `first card ${openPx} px; list ${listAtOpen} px; the middle ${await listMiddlePx()} px`,
   );
   if ((await chooser.count()) > 0) {
     await dragTop(chooser, -150);
@@ -6252,7 +6281,7 @@ if (runsPart(3)) {
     );
   }
 
-  // At Low, the first card lets the list open at Low, and comes back at Low once it closes.
+  // At Low too, a line's tap opens the list at the middle; the first card comes back at Low.
   await explore.waitFor({ state: 'visible', timeout: 5000 }).catch(() => {});
   const ePx = await exploreShown();
   const eBox = await explore.boundingBox().catch(() => null);
@@ -6260,11 +6289,11 @@ if (runsPart(3)) {
   await cardsSettled(page).catch(() => {});
   const lowRest = await explore.getAttribute('data-rest').catch(() => null);
   await tapAt(at.many);
-  const listSnap = (await chooser.count()) ? await chooser.first().getAttribute('data-snap') : null;
+  const listFromLow = (await chooser.count()) ? await shownOf(chooser) : null;
   check(
-    '  the first card at Low, the list opens at Low',
-    lowRest === 'low' && listSnap === 'low',
-    `first card ${lowRest}; list ${listSnap}`,
+    '  the first card at Low, the list a line tap opens stands at the middle',
+    lowRest === 'low' && near(listFromLow, await listMiddlePx()),
+    `first card ${lowRest}; list ${listFromLow} px; the middle ${await listMiddlePx()} px`,
   );
   await leaveTrip(allClosed);
   await explore.waitFor({ state: 'visible', timeout: 5000 }).catch(() => {});

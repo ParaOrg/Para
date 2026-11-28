@@ -38,18 +38,29 @@ export function tripBack(
 /**
  * The height the sheets share: a pick, ‹, SWITCH and Vice Versa keep it as it was. With nothing
  * open it rests where the first card does (`idle`: the public map's explore cards, open at their
- * own height or at Low), so the card a tap opens stays at the height before it (the owner's rule,
- * 2026-11-25); where nothing stands there (the studio), at Low.
+ * own height or at Low), so a card a tap opens stays at the height before it; where nothing stands
+ * there (the studio), at Low. A route's line tapped is the exception (heightAfterLineTap).
  */
 export function sharedSnap(snap: Snap, anyOpen: boolean, idle: Snap = 'low'): Snap {
   return anyOpen ? snap : idle;
 }
 
 /**
- * Where a route's detail opens from a tap — a RouteCard in the list, or a line with one route: the
- * trip's middle, 45% of the map. It is the trip's alone: the route list's middle (its ⌄), where
- * the controls stop rising and the camera's frame stay at FRAMED_SHARE, so a trip opened stands a
- * little below the controls. ‹ gives the list back at its own height; ⇅, Vice Versa and another
+ * Where the sheet goes when a route's line on the map is tapped: whatever card the tap brings
+ * up — the route's trip, or the list where several lines meet — glides to the middle
+ * (TRIP_OPENS_AT), from wherever it stood. Only a line's tap: a RouteCard, a hintuan or a
+ * station keeps the height (sharedSnap), and ‹ back from the trip gives the list the height it
+ * had. Null: no card came up.
+ */
+export function heightAfterLineTap(isTripUp: boolean, isChoosing: boolean): Snap | null {
+  return isTripUp || isChoosing ? TRIP_OPENS_AT : null;
+}
+
+/**
+ * Where a route's detail opens from a tap — a RouteCard in the list, or a route's line, which
+ * brings the list there too (heightAfterLineTap): the middle, 45% of the map. It is not the
+ * list's ⌄, which sets the list at FRAMED_SHARE, where the controls stop rising and the camera's
+ * frame stays, so a card a tap opens stands a little below the controls. ‹ gives the list back at its own height; ⇅, Vice Versa and another
  * route keep the trip's.
  */
 export const TRIP_OPENS_AT: Snap = 0.45;

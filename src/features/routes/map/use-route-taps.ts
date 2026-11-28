@@ -1,5 +1,5 @@
 import type { MapLibreMap, MapMouseEvent } from 'maplibre-gl';
-import { useEffect, type RefObject } from 'react';
+import { useEffect, useState, type RefObject } from 'react';
 
 import { ROUTES_HIT_LAYER, bindHover, resolveTap, tapTargets } from './tap';
 import { isEmptyTapAnswered } from './use-empty-map-tap';
@@ -18,7 +18,8 @@ const HIT = ROUTES_HIT_LAYER;
  * can hover, from when one can (bindHover). The handler reads today's
  * directions, what is shown, the way round the list shows it and whether the
  * editor is drawing through `read`, and answers through the hook's setters
- * (`set`), which never change.
+ * (`set`), which never change. Returns how many times a line has been tapped,
+ * for the card it brings up to rise to the middle (heightAfterLineTap).
  */
 export function useRouteTaps<T extends Direction>(
   map: MapLibreMap | null,
@@ -45,6 +46,7 @@ export function useRouteTaps<T extends Direction>(
     back: setBack,
     listing: setListing,
   } = set;
+  const [lineTaps, setLineTaps] = useState(0);
   useEffect(() => {
     if (!map || !map.getLayer(HIT)) return;
     const canvas = map.getCanvas();
@@ -62,6 +64,9 @@ export function useRouteTaps<T extends Direction>(
       setHighlight(null);
       const out = resolveTap(tapTargets(map, e.point, e.originalEvent));
       const all = [...byId.current.values()];
+      // A line under the finger, alone or among others: hintuans stacked with no line are not one.
+      if (out.kind === 'route' || (out.kind === 'several' && out.routeKeys.length > 0))
+        setLineTaps((n) => n + 1);
       if (out.kind === 'route') {
         // The line under the finger wins: where a route's two directions run
         // on different roads, tapping the other one must open it. Where both
@@ -133,4 +138,5 @@ export function useRouteTaps<T extends Direction>(
     setBack,
     setListing,
   ]);
+  return lineTaps;
 }
