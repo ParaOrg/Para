@@ -8,7 +8,6 @@ import * as z from 'zod/mini';
  */
 
 export const TERMINAL_KINDS = ['jeepney', 'uv', 'bus', 'unknown'] as const;
-export type TerminalKind = (typeof TERMINAL_KINDS)[number];
 
 const terminalRowSchema = z.pipe(
   z.tuple([

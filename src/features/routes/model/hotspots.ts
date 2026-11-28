@@ -6,7 +6,7 @@ import { polygonToRing, type Ring } from '../geo/ring';
  * and are re-exported here, beside the rules, so the model keeps one door.
  */
 export type { Hotspot, HotspotKind, HotspotLink, HotspotRow } from './hotspot-schema';
-export type { PointGeoJSON, PolygonGeoJSON } from './geojson-schema';
+export type { PointGeoJSON } from './geojson-schema';
 
 /** The polygon corners of a saved hotspot. */
 export function hotspotRing(s: Hotspot): Ring {

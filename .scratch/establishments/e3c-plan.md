@@ -1,6 +1,6 @@
 # E3c: Overture as a layer of its own, the plan
 
-Step E3c of `.scratch/establishments`. Written 2026-11-23, before any code. Nothing is built.
+Step E3c of `.scratch/establishments`. Written 2026-11-23, before any code. Built since: #1171, #1197, #1204 and #1213.
 
 The owner's answers it rests on (README, "Answers and the build"):
 - **Overture yes**, as **its own layer**, never merged into the ODbL file, with its licence and NOTICE texts shipped;

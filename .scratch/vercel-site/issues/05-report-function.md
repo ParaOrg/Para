@@ -1,6 +1,6 @@
 # 05: /api/report as a Vercel Function
 
-Status: ready-for-agent
+Status: paused 2026-11-27 (was ready-for-agent): the owner chose GitHub Actions → Cloudflare (`../spec.md`)
 Type: task
 Who: Opus
 Blocked by: none

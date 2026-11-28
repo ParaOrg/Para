@@ -73,30 +73,6 @@ export function typosAllowed(length: number): number {
   return length < 8 ? 1 : 2;
 }
 
-/** Edits (insert, delete, change, swap two neighbours) between two texts, or limit + 1 once past it. */
-export function editDistance(a: string, b: string, limit: number): number {
-  if (Math.abs(a.length - b.length) > limit) return limit + 1;
-  let before: number[] = [];
-  let previous = Array.from({ length: b.length + 1 }, (_, j) => j);
-  for (let i = 1; i <= a.length; i++) {
-    const current = [i];
-    let rowBest = i;
-    for (let j = 1; j <= b.length; j++) {
-      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
-      let value = Math.min(previous[j] + 1, current[j - 1] + 1, previous[j - 1] + cost);
-      if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) {
-        value = Math.min(value, before[j - 2] + 1);
-      }
-      current.push(value);
-      rowBest = Math.min(rowBest, value);
-    }
-    if (rowBest > limit) return limit + 1;
-    before = previous;
-    previous = current;
-  }
-  return previous[b.length];
-}
-
 /** How well a folded query matches one name, or null when it does not. */
 export function matchQuality(foldedQuery: string, term: string): MatchQuality | null {
   return matchFolded(foldedQuery, foldForSearch(term));

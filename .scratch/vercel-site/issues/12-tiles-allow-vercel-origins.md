@@ -1,6 +1,6 @@
 # 12: The tiles Worker allows the Vercel origins
 
-Status: ready-for-agent (needs 07's team slug)
+Status: paused 2026-11-27 (was ready-for-agent (needs 07's team slug)): the owner chose GitHub Actions → Cloudflare (`../spec.md`)
 Type: task
 Who: Opus for the code; the owner deploys
 Blocked by: 07
