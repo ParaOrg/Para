@@ -66,6 +66,39 @@ export const DiscardLaterLine: Story = {
 /** The same, when the draft's stamp could not be read: no date. */
 export const DiscardLaterNoDate: Story = {
   args: { onApprove: fn(), otherDiscard: { state: 'wait', from: null } },
+  play: async ({ canvasElement }) => {
+    await expect(
+      within(canvasElement).getByText(
+        'You can discard this once it has gone 7 days without a change.',
+      ),
+    ).toBeVisible();
+  },
+};
+
+/** The line at a handset's width, where it wraps. */
+export const DiscardLaterLinePhone: Story = {
+  args: { onApprove: fn(), onDiscard: fn(), otherDiscard: { state: 'wait', from: FROM } },
+  decorators: [
+    (Story) => (
+      <div className="@container w-[390px] bg-surface-quaternary p-3">
+        <div className="rounded-xl bg-surface p-4">
+          <Story />
+        </div>
+      </div>
+    ),
+  ],
+};
+
+/** Still checking whose draft it is: no Discard yet, whatever the age. */
+export const CheckingWithDiscard: Story = {
+  args: {
+    lock: { state: 'checking' },
+    onDiscard: fn(),
+    otherDiscard: { state: 'ready' },
+  },
+  play: async ({ canvasElement }) => {
+    await expect(within(canvasElement).queryByRole('button', { name: /^Discard/ })).toBeNull();
+  },
 };
 
 /** Another editor's draft that has gone 7 days without a change: Discard…, which asks first. */
