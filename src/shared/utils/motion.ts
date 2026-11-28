@@ -19,6 +19,8 @@ export type Motion = readonly [
  */
 /** A sheet going down, with its scrim. */
 export const SINK: Motion = ['--transition-duration-gentle', '--ease-exit'];
+/** A sheet let go with no coast of its own gliding to its rest: a placement, a tap, a key. */
+export const SHEET_GLIDE: Motion = ['--transition-duration-sheet', '--ease-enter'];
 
 /** A motion's duration in milliseconds and its easing, read from the tokens as the page has them. */
 export function motionOf([duration, easing]: Motion): { duration: number; easing: string } {

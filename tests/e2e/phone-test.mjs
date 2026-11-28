@@ -4799,7 +4799,7 @@ if (runsPart(3)) {
     if (want === 'half') {
       // Low first, then a drag to 55%: no tap rests there.
       if (!(await restore('low'))) return false;
-      await dragHandle(await dragTo('low', 'half'));
+      await dragHandle((await dragTo('low', 'half')) - 24);
       return (await sheetState()) === 'free';
     }
     // The handle steps a third, up to full and down again: six taps reach either end.
@@ -4912,7 +4912,8 @@ if (runsPart(3)) {
     // reached is itself a failure: the drag after it would prove nothing.
     const readyUp = await restore('low');
     const camBeforeDrag = await camNow();
-    const up = await dragHandle(await dragTo('low', 'half'));
+    // The finger's first DRAG_PX (24 px) only takes hold: the sheet follows from there, no jump.
+    const up = await dragHandle((await dragTo('low', 'half')) - 24);
     const leftAt = await shownNow();
     const want = await halfShown();
     const upRests = readyUp && (await sheetState()) === 'free' && Math.abs(leftAt - want) <= 24;
@@ -4941,7 +4942,7 @@ if (runsPart(3)) {
     );
 
     const readyFull = await restore('half');
-    const upFull = await dragHandle(await dragTo('half', 'full'));
+    const upFull = await dragHandle((await dragTo('half', 'full')) - 24);
     check(
       'dragging it up to the top rests at full height',
       readyFull && (await sheetState()) === 'full',
@@ -4982,6 +4983,69 @@ if (runsPart(3)) {
       readyFlick && (await sheetState()) === 'low',
       `data-snap=${await sheetState()}`,
     );
+    // The coast is linear in the speed with no threshold for Low (glideTo): a moderate flick down
+    // from full, 1.3 px/ms, coasts some 325 px and rests between Low and full.
+    const readyFromFull = await restore('full');
+    await throwHandle(130, 5, 20);
+    check(
+      '  a moderate flick down from full coasts and rests between, not snapped to Low',
+      readyFromFull && (await sheetState()) === 'free',
+      `data-snap=${await sheetState()}`,
+    );
+    // A drag starts from where the finger is once it counts as a drag (DRAG_PX): the sheet does not
+    // jump to catch up with the 24 px the finger moved first.
+    const readyNoJump = await restore('low');
+    const startShown = await shownNow();
+    const hbJump = readyNoJump ? await handle().first().boundingBox() : null;
+    let jumped = null;
+    if (hbJump) {
+      const x = hbJump.x + hbJump.width / 2;
+      const y = hbJump.y + hbJump.height / 2;
+      await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x, y }] });
+      for (let i = 1; i <= 10; i++) {
+        await cdp.send('Input.dispatchTouchEvent', {
+          type: 'touchMove',
+          touchPoints: [{ x, y: y - 4 * i }],
+        });
+        await page.waitForTimeout(16);
+      }
+      jumped = (await shownNow()) - startShown;
+      // Held still before letting go: a placement, not a flick.
+      await page.waitForTimeout(250);
+      await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+      await cardsSettled(page);
+    }
+    check(
+      '  a drag follows the finger from where it took hold, with no jump at its start',
+      jumped !== null && Math.abs(jumped - (40 - 24)) <= 2,
+      `moved ${jumped} px for a finger's 40 px`,
+    );
+    // Thrown hard past full over a long trip, the list carries on with the rest of the throw.
+    const readyCarry = await restore('low');
+    const bodyOf = () =>
+      card()
+        .first()
+        .evaluate((el) => {
+          const body = el.children[2];
+          return { top: body.scrollTop, room: body.scrollHeight - body.clientHeight };
+        });
+    const roomFor = readyCarry ? (await bodyOf()).room : 0;
+    if (roomFor > 40) {
+      await throwHandle(-360, 4, 16);
+      const carried = await bodyOf();
+      check(
+        '  thrown hard past full, the sheet rests at full and the list scrolls on',
+        (await sheetState()) === 'full' && carried.top > 20,
+        `data-snap=${await sheetState()}; the list scrolled ${carried.top} of ${carried.room} px`,
+      );
+      await card()
+        .first()
+        .evaluate((el) => (el.children[2].scrollTop = 0));
+    } else
+      skip(
+        '  thrown hard past full, the sheet rests at full and the list scrolls on',
+        `this trip's list has ${roomFor} px to scroll`,
+      );
 
     const readyLow = await restore('low');
     const down2 = await dragHandle(120);

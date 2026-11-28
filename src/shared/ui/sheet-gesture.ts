@@ -55,8 +55,8 @@ export const snapName = (snap: Snap): SnapName => (typeof snap === 'number' ? 'f
 /** A flick down faster than this, in px/ms, takes the sheet to Low from anywhere (snapFor). */
 export const FLICK = 1.25;
 
-/** How far back the speed at release is read: only the finger's last moves count. */
-const RECENT_MS = 100;
+/** How far back the speed at release is read: the last moves, near a speeding flick's last speed. */
+const RECENT_MS = 50;
 
 /** Let go this close above Low, a sheet goes to Low: Low's magnet, the owner's ~80 px. */
 export const LOW_MAGNET_PX = 80;
@@ -193,10 +193,11 @@ export function slideShowing(shown: number, shape: SheetShape = CARD_SHAPE): str
 
 /**
  * A finger, or a mouse, holding a sheet `h` tall that showed `from` when it took hold at
- * `startY`: how much shows as it moves, and where it rests let go (snapFor). Its speed at release
- * is the finger's over its last RECENT_MS only, so a swipe that slowed before lifting is read as
- * slow, however fast it began; held still 80 ms before lifting, it is a placement, not a flick.
- * The touch pull at full and the pointer drag share it.
+ * `startY`: how much shows as it moves, how far past full the finger has taken it (`beyond`, the
+ * list's to scroll), and where it rests let go (snapFor). Its speed at release is the finger's over
+ * its last RECENT_MS only, so a swipe that slowed before lifting is read as slow, however fast it
+ * began; held still 80 ms before lifting, it is a placement, not a flick. The touch pull at full and
+ * the pointer drag share it.
  */
 export function follow(
   startY: number,
@@ -222,6 +223,7 @@ export function follow(
       while (moves.length > 2 && now - moves[1].t > RECENT_MS) moves.shift();
       return shown(at);
     },
+    beyond: (at = y): number => Math.max(0, from + startY - at - heights.full),
     /** Where it rests let go at `at` (the last move's, when the release has no position). */
     release: (now: number, at = y): Snap | 'close' =>
       snapFor(shown(at), speed(now), heights, h, from),

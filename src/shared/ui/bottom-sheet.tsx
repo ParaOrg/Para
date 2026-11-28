@@ -125,12 +125,14 @@ const FLOATS_AT = {
  * leaves only a strip of map (MAX_STRIP_PX), clear of a phone's notch: the
  * owner's rule. It is always the whole map tall and slides (`--sheet-y`), so
  * moving is one smooth `translate`: a drag on the handle or the header follows
- * the finger and, let go, stays where it is; only Low keeps a magnet, let go
- * near it or flicked down from anywhere (sheetGesture's snapFor). Pulled
- * below half of Low, or flicked down from it, the sheet closes. Below full
- * height the body does not scroll: a swipe on it moves the sheet, the owner's
- * pick; at full it scrolls, and a pull down from its top takes hold of the
- * sheet, as a drag does. A tap on the handle or Enter on it steps a third of the map, up from
+ * the finger and, thrown, coasts on as a list does, further the faster, and
+ * rests where it stops (sheetCoast's glideTo); only Low keeps a magnet, let go
+ * or coming to rest near it (sheetGesture's snapFor). Pulled below half of
+ * Low, or flicked down from it, the sheet closes. Below full height the body
+ * does not scroll: a swipe on it moves the sheet, the owner's pick; raised past
+ * full the list scrolls on, in the same gesture and with the throw's momentum;
+ * at full it scrolls, and a pull down from its top takes hold of the sheet, as
+ * a drag does. A tap on the handle or Enter on it steps a third of the map, up from
  * Low and down from full (stepFrom); a wheel's push steps the same, but never raises it from Low.
  *
  * Its siblings: sheet-gesture.ts decides the heights and the drags, and
@@ -255,6 +257,7 @@ export function BottomSheet({
   /** Docked, not floating: the notch is drawn only then. */
   const docked = () => handleRef.current?.offsetParent != null;
   const show = (shown: number) => at(slideShowing(shown, shape), true);
+  const rest = (to: Snap) => at(restAt(to));
   const { onPointerDown, onBodyFocus, afterTap, isStepUp } = useSheetGestures({
     sheet: own,
     handle: handleRef,
@@ -265,6 +268,7 @@ export function BottomSheet({
     onClose,
     setDragging,
     show,
+    rest,
     docked,
     fitted,
     shape,
@@ -329,9 +333,10 @@ export function BottomSheet({
       <div
         ref={bodyRef}
         onFocus={onBodyFocus}
+        // At full, no bounce at the list's ends: a pull down at its top moves the sheet instead.
         className={
           'min-h-0 flex-1 scrollbar-none sheet-floating:touch-auto sheet-floating:overflow-y-auto [&::-webkit-scrollbar]:hidden ' +
-          (snap === 'full' ? 'overflow-y-auto' : 'touch-none overflow-hidden')
+          (snap === 'full' ? 'overflow-y-auto overscroll-y-none' : 'touch-none overflow-hidden')
         }
         style={snap === 'full' ? fullBodyStyle(shape) : undefined}
       >
