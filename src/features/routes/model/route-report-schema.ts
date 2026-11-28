@@ -16,7 +16,6 @@ export const ROUTE_REPORT_KINDS = [
   'no_longer_runs',
   'other',
 ] as const;
-export type RouteReportKind = (typeof ROUTE_REPORT_KINDS)[number];
 
 /** The most a note may hold, as the database's check says. */
 export const ROUTE_REPORT_NOTE_MAX = 500;

@@ -60,4 +60,3 @@ export const landmarkFileSchema = z.pipe(
     extractAt: extract_at,
   })),
 );
-export type LandmarkFile = z.infer<typeof landmarkFileSchema>;
