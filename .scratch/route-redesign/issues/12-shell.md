@@ -1,6 +1,6 @@
 # 12: The shell: docking, wiring, e2e and stories
 
-Status: claimed
+Status: resolved ([#1104](https://github.com/ParaOrg/Para/pull/1104), merged 2026-11-20)
 Claimed by: [#1104](https://github.com/ParaOrg/Para/pull/1104)
 Type: task
 Blocked by: 04–11

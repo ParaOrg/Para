@@ -1,6 +1,6 @@
 # Flag a stop: a note on each flag
 
-Status: building. Approved by the owner on 2026-11-13. His Figma flow is section 4720:28883 (file MGPQFPjemLbzjNqAI5Ny4D), and it replaces the first stand-in look.
+Status: resolved: built in [#984](https://github.com/ParaOrg/Para/pull/984) and its follow-ups, shipped in app-v0.5.0. Approved by the owner on 2026-11-13. His Figma flow is section 4720:28883 (file MGPQFPjemLbzjNqAI5Ny4D), and it replaces the first stand-in look.
 
 ## What the contributor sees
 

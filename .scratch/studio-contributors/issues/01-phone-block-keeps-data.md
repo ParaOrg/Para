@@ -1,6 +1,6 @@
 # PhoneBlock keeps the phone it read when a read again fails
 
-Status: ready-for-agent
+Status: resolved ([#907](https://github.com/ParaOrg/Para/pull/907), with "Trying…" in [#911](https://github.com/ParaOrg/Para/pull/911))
 Type: task
 
 ## What happens

@@ -84,7 +84,7 @@ Calls the builders made where Figma draws nothing, or where a number is Para's o
 - **ExtraBold to Bold:** Livvic has no ExtraBold, so each `font-extrabold` became `font-bold`. The full list is under "No ExtraBold in Livvic". [#1099](https://github.com/ParaOrg/Para/pull/1099)
 - **The travel-time speeds:** the speed range and stop dwell per mode, under "How it's worked out". [#1103](https://github.com/ParaOrg/Para/pull/1103)
 - **The loop pill:** long loop names wrap inside the pill. [#1096](https://github.com/ParaOrg/Para/pull/1096)
-- **The shell:** the dock's width (384, where Figma draws 393) and the mobile notch, kept as the drag cue. Both are under "Not drawn in Figma; built as today's behaviour, owner to confirm". [#1104](https://github.com/ParaOrg/Para/pull/1104), still open.
+- **The shell:** the dock's width (384, where Figma draws 393) and the mobile notch, kept as the drag cue. Both are under "Not drawn in Figma; built as today's behaviour, owner to confirm". [#1104](https://github.com/ParaOrg/Para/pull/1104), merged 2026-11-20.
 
 ## Rules for every pull request here
 

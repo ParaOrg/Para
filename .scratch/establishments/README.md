@@ -1,6 +1,6 @@
 # Establishments on the map: a feasibility study
 
-Status: study done 2026-11-22; the owner answered the same day, and the build has started (Answers and the build, below).
+Status: study done 2026-11-22; the owner answered the same day, and E3a to E3c are built, with E3d in the studio (Answers and the build, below).
 
 The owner wants the map to feel richer, closer to Google Maps: ATMs, banks, shops, restaurants, pharmacies, convenience stores and the like, and search for them later. This study asks where such places could come from legally, how good they are in Metro Manila, how heavy they would be, and how Para could carry them without breaking its rules: commuters read only files Para publishes (ADR 0001), nothing leaves the phone (ADR 0004), and Para serves its own basemap (ADR 0007).
 
@@ -239,7 +239,7 @@ The build, one pull request each, into staging:
 | --- | --- | --- |
 | E1 | The basemap's own places drawn as establishments (`src/features/routes/map/establishment*.ts`), Location Labels on by default on the public map, the contributor page keeping its own choice | Merged (#1142) |
 | E2 | Landmarks and footbridges from the Geofabrik Philippines extract, covering the whole panning box | Merged (#1138; the files in #1140) |
-| E3 | E3a: the establishment files from OpenStreetMap, `public/data/establishments/v1/`, an index and a file per 0.05° cell (the hub's call: one file would be 4–5 MB). E3b: a layer for pawnshops, remittance and bayad centers, which the basemap's tiles lack. E3c: Overture as a layer of its own. E3d: search, once search is shown | E3a merged (#1143, data #1148); E3b merged (#1152). E3c: [e3c-plan.md](e3c-plan.md), the owner's picks; the build in review |
+| E3 | E3a: the establishment files from OpenStreetMap, `public/data/establishments/v1/`, an index and a file per 0.05° cell (the hub's call: one file would be 4–5 MB). E3b: a layer for pawnshops, remittance and bayad centers, which the basemap's tiles lack. E3c: Overture as a layer of its own. E3d: search, once search is shown | E3a merged (#1143, data #1148); E3b merged (#1152). E3c: [e3c-plan.md](e3c-plan.md), the owner's picks, merged (#1171, #1197, #1204, #1213). E3d: the studio's search of stores and establishments merged (#1209, #1212) |
 | E4 | Editors' corrections (hide, rename, move) in a Supabase table, applied by the nightly publish | Parked by the owner (2026-11-23), answers recorded in [e4-plan.md](e4-plan.md) |
 
 E1's markers, for the owner's Figma: eight families as tokens (`--map-establishment-<family>-surface` in `tokens.css`), glyphs from Maki 8.2.0 and Temaki 5.13.0 (both CC0, vendored with their licences in `establishment-icons/`), a legend in Storybook (Features/Routes/EstablishmentMarkers). The basemap's tiles have no class for pawnshops, remittance centres or bayad centers, so those wait for E3.
