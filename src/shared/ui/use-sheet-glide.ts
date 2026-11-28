@@ -28,14 +28,16 @@ export function shownOnScreen(sheet: HTMLElement, full: number): number {
  * button), set on each element itself so it holds from the moment the finger lifts, while the
  * page still marks the sheet held: `glide(coast)` on the coast's own curve (glideTo), so the sheet
  * leaves at the finger's speed; `glide(null)` the token's. Once it has arrived they go back to
- * their own. `clear()` takes it off at once, for a sheet caught by a finger; `isLive()` says whether
- * one is still under way. Under reduced motion
- * nothing is set: the sheet does not glide.
+ * their own. `clear()` takes it off at once, for a sheet caught by a finger; `isCoasting()` says
+ * whether a throw's coast is still under way, which a finger stops as it stops a list's fling (a
+ * tap's or a key's glide it does not). Under reduced motion nothing is set: the sheet does not
+ * glide.
  */
 export function useSheetGlide(sheet: RefObject<HTMLDivElement | null>) {
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   // What the last glide was set on: the followers outlive the sheet, so an unmount clears them too.
   const glided = useRef<HTMLElement[]>([]);
+  const isCoast = useRef(false);
   const clear = () => {
     if (timer.current) clearTimeout(timer.current);
     timer.current = null;
@@ -53,6 +55,7 @@ export function useSheetGlide(sheet: RefObject<HTMLDivElement | null>) {
   useEffect(() => () => clearRef.current(), []);
   const glide = (coast: Glide | null) => {
     clear();
+    isCoast.current = coast !== null;
     const el = sheet.current;
     if (!el || isReducedMotion()) return;
     const host = el.closest<HTMLElement>('[data-dock-host]');
@@ -67,11 +70,12 @@ export function useSheetGlide(sheet: RefObject<HTMLDivElement | null>) {
     }
     timer.current = setTimeout(clear, (coast?.ms ?? motionOf(SHEET_GLIDE).duration) + 100);
   };
-  // Set by this glide and still moving: the clean-up after it, and any other motion, are not.
-  const isLive = () =>
+  // A coast this set, still moving: the clean-up after it, a tap's glide and any other motion are not.
+  const isCoasting = () =>
+    isCoast.current &&
     glided.current.length > 0 &&
     !!sheet.current
       ?.getAnimations()
       .some((a) => a instanceof CSSTransition && a.transitionProperty === 'translate');
-  return { glide, clear, isLive };
+  return { glide, clear, isCoasting };
 }

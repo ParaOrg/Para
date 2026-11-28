@@ -180,13 +180,14 @@ export function useSheetGestures({
     // One pointer at a time, a mouse's main button only, and docked only.
     if (drag.current || e.button !== 0 || !sheet || !handle || !docked()) return;
     const target = e.target instanceof Node ? e.target : null;
-    // Caught mid-glide, it stops where it is, as a list does under a finger.
-    const isCaught = glider.isLive();
+    const raises =
+      handle.contains(target) || (at === 'low' && raisesAtLow(bodyRef.current, target));
+    // Caught mid-glide, it stops where it is, as a list does under a finger. A tap that steps it
+    // (the handle, or the body at Low) steps it on from where it is going instead.
+    const isCaught = !raises && glider.isCoasting();
     // At full height the body scrolls as a list does; the header brings the sheet down.
     const isOnList = !headRef.current?.contains(target) && !handle.contains(target);
     if (at === 'full' && isOnList && !isCaught) return;
-    const raises =
-      handle.contains(target) || (at === 'low' && raisesAtLow(bodyRef.current, target));
     const h = sheet.offsetHeight;
     const heights = heightsOf(h);
     const shown = shownOnScreen(sheet, heights.full);
