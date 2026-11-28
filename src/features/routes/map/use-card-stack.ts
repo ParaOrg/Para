@@ -22,6 +22,8 @@ interface Routes<V extends Direction> {
   /** Whether the list lists every line, or the way round alone. */
   listing: Listing;
   highlight: Highlight | null;
+  /** How many times a route's line has been tapped (useRouteTaps). */
+  lineTaps: number;
   select: (id: string | null, opts?: { keepList?: boolean }) => void;
   openList: (directions: readonly V[], way: boolean) => void;
   highlightCard: (h: Highlight | null) => void;
@@ -55,7 +57,8 @@ export function useCardStack<V extends Direction, S extends { id: string }>(
 
   // One height for the sheets that stand in for one another (useSharedHeight).
   const anyOpen = !!saved.selected || !!hotspots.selected || choosing;
-  const shared = useSharedHeight({ trip: !!saved.selected, place: !!hotspots.selected, choosing });
+  const opened = { trip: !!saved.selected, place: !!hotspots.selected, choosing };
+  const shared = useSharedHeight({ ...opened, lineTaps: saved.lineTaps });
   const { snap, height } = shared;
   /** Where a point the camera glides to should sit, clear of a card at the shared height. */
   const clearOf = (dock: RefObject<HTMLElement | null>) => (): [number, number] =>

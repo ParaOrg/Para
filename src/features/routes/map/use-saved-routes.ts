@@ -360,7 +360,7 @@ export function useSavedRoutes<T extends Direction>(
 
   // ----------------------------------------------------------------- events
 
-  useRouteTaps(
+  const lineTaps = useRouteTaps(
     map,
     { drawing: drawingRef, byId, shown: shownRef, back: backRef },
     {
@@ -391,6 +391,7 @@ export function useSavedRoutes<T extends Direction>(
     modePicks,
     filterModes,
     highlight,
+    lineTaps, // How many times a route's line has been tapped.
     highlightCard: setHighlight,
     showCard: setCardShows,
     lit,
