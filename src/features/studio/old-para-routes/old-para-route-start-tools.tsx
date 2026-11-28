@@ -28,6 +28,7 @@ export function OldParaRouteStartTools({
   if (!isDrawing && oldParaStart.isPickerOpen)
     return (
       <OldParaRoutePicker
+        key={oldParaStart.slot?.routeId ?? 'new'}
         mapCentre={() => {
           if (!map) return null;
           const { lng, lat } = map.getCenter();

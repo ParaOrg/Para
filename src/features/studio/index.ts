@@ -40,6 +40,8 @@ export { useDraftTrip, type DraftTrip } from './panels/use-draft-trip';
 export { useSaveFlow } from './panels/use-save-flow';
 export { useSaveTarget } from './panels/use-save-target';
 export { useIsWideScreen } from './panels/use-is-wide-screen';
+export type { AddWay } from './panels/add-way';
+export { useRouteStarts, type RouteStarts } from './panels/use-route-starts';
 export { StudioPublicView } from './public-view/studio-public-view';
 export { StudioContributors } from './contributors/studio-contributors';
 export { ContributionHint } from './contributors/actions/contribution-hint';

@@ -8,6 +8,7 @@ import type { HotspotRow } from '@/features/routes/model/hotspots';
 import type { DirectionRow } from '@/features/routes/model/routes';
 import {
   StudioHotspotCard,
+  type AddWay,
   type DraftTrip,
   type useDeleteActions,
   type useDrawing,
@@ -33,7 +34,7 @@ interface PlaygroundCardsProps {
   draftTrip: DraftTrip | null;
   opening: ReturnType<typeof useFollow>['opening'];
   deletes: ReturnType<typeof useDeleteActions>;
-  onDrawReturnTrip: (routeId: string) => void;
+  onAddOtherWay: (routeId: string, how: AddWay) => void;
 }
 
 /**
@@ -53,7 +54,7 @@ export function PlaygroundCards({
   draftTrip,
   opening,
   deletes,
-  onDrawReturnTrip,
+  onAddOtherWay,
 }: PlaygroundCardsProps) {
   const { cards, camera } = routeCards;
   if (draw.drawing) return null;
@@ -77,7 +78,7 @@ export function PlaygroundCards({
             opening={opening}
             deletes={deletes}
             onCloseAll={cards.closeAll}
-            onDrawReturnTrip={onDrawReturnTrip}
+            onAddOtherWay={onAddOtherWay}
           />
         )}
         // Keyed on the box, not only the place: the editor's card is for one box.

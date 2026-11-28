@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { Button } from '@/design-system/primitives/button';
 import { TextField } from '@/design-system/primitives/text-field';
@@ -37,6 +37,9 @@ export function OldParaRoutePicker({
   const [query, setQuery] = useState('');
   const [near, setNear] = useState<OldParaRouteSummary[] | null>(null);
   const [chosen, setChosen] = useState<OldParaRouteSummary | null>(null);
+  const fieldRef = useRef<HTMLInputElement>(null);
+  // Opened from a menu whose button may be gone (the detail's "+ Add route"): focus starts here.
+  useEffect(() => fieldRef.current?.focus(), []);
 
   if (chosen)
     return (
@@ -61,6 +64,7 @@ export function OldParaRoutePicker({
   return (
     <StartPickerFrame title={TITLE} onClose={onClose}>
       <TextField
+        ref={fieldRef}
         label="Name, place or Para ID"
         value={query}
         placeholder="UP - Ikot, Cubao, PARA-0123"

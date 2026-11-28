@@ -16,9 +16,8 @@ import {
   StudioDrafts,
   ContributionHint,
   OsmRouteStartTools,
-  useOsmRouteStart,
   OldParaRouteStartTools,
-  useOldParaRouteStart,
+  type RouteStarts,
   type useAuthFlow,
   type useContributionStart,
   type useDrawing,
@@ -36,6 +35,8 @@ interface PlaygroundToolsProps {
   saved: ReturnType<typeof useSavedRoutes<DirectionRow>>;
   hotspots: ReturnType<typeof useSavedHotspots<HotspotRow>>;
   saveFlow: ReturnType<typeof useSaveFlow>;
+  /** The start pickers, shared with "+ Add route" (useRouteStarts). */
+  starts: RouteStarts;
   contribution: ReturnType<typeof useContributionStart>;
   extendEnds: ReturnType<typeof useSaveTarget>['extendEnds'];
   isPlayground: boolean;
@@ -58,6 +59,7 @@ export function PlaygroundTools({
   saved,
   hotspots,
   saveFlow,
+  starts,
   contribution,
   extendEnds,
   isPlayground,
@@ -68,9 +70,8 @@ export function PlaygroundTools({
   onOpenDraft,
 }: PlaygroundToolsProps) {
   const { isSignedIn, isAccountDialogOpen, openSignIn, openPasswordChange } = auth;
-  const { isSaving, toast, setToast, setNotice } = saveFlow;
-  const osmStart = useOsmRouteStart({ map, draw, setNotice });
-  const oldParaStart = useOldParaRouteStart({ map, draw, setNotice });
+  const { isSaving, toast, setToast } = saveFlow;
+  const { osm: osmStart, oldPara: oldParaStart } = starts;
   // The pill counts routes, not directions: a route is two rows, one of them perhaps an empty
   // slot, so counting rows would read five routes as "10 routes".
   const routeCount = new Set(saved.directions.map((v) => v.routeId)).size;
