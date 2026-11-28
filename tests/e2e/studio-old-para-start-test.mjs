@@ -1,16 +1,22 @@
 // "Start from an old Para route" in the studio (.scratch/old-para-routes/spec.md), signed in,
 // against the save suites' stand-in for the database (lib/save-studio.mjs): the + menu's "Route
 // from old Para", the picker's search by Para ID and by name, a route with a line seeded as the
-// OSM start seeds one (its one gap to check), its save a draft that publishes nothing, then a
-// route with no line, its start placed and its end marked. The old Para route files are the
+// OSM start seeds one (its one gap to check), its save a draft that publishes nothing, then, once
+// approved, "+ Add route" → "Start from an old Para route" filling its empty slot, then a route
+// with no line, its start placed and its end marked. The old Para route files are the
 // suite's own: one route from Philcoa to UP - Ikot with an 82 m gap, and one with no line. The
 // router has no roads here, so the line between the seeded points is drawn straight.
 //
 //   node tests/e2e/studio-old-para-start-test.mjs     against http://localhost:5173
 import { BASE } from './lib/harness.mjs';
 import {
+  approveAll,
   check,
+  clickAt,
+  directionsOf,
   done,
+  draftOf,
+  go,
   drafted,
   finish,
   log,
@@ -149,6 +155,58 @@ check(
   writes.map((w) => `${w.method} ${w.table}`).join(', '),
 );
 
+// ---- 3b. "+ Add route" fills that route's empty slot from an old Para route: PARA-9002 has no
+// line, but runs from UP - Ikot to Philcoa, the other way round, so nothing is said of its way.
+const newRouteId = tables.draft.find((d) => d.kind === 'route' && d.is_new === true)?.subject_id;
+await approveAll();
+const newRoute = tables.route.find((r) => r.id === newRouteId);
+const slotId = directionsOf(newRoute?.id).find((v) => v.shape === null)?.id;
+await go(LINE[1], 16);
+await clickAt([(LINE[1][0] + LINE[2][0]) / 2, (LINE[1][1] + LINE[2][1]) / 2], 700);
+const detail = page.getByTestId('route-line-detail');
+await detail.waitFor();
+await detail.getByRole('button', { name: '+ Add route' }).click();
+await page.getByRole('menuitem', { name: 'Start from an old Para route' }).click();
+const forSlot = page.getByRole('region', { name: 'Start from an old Para route' });
+await forSlot.waitFor();
+check(
+  '"+ Add route" → "Start from an old Para route" opens the same picker, the detail closed',
+  !!slotId && !(await detail.isVisible()),
+);
+await forSlot.getByLabel('Name, place or Para ID').fill('PARA-9002');
+await forSlot.getByRole('list', { name: 'Old Para routes' }).getByRole('button').first().click();
+await forSlot.getByRole('button', { name: 'Start drawing' }).click();
+await hint.waitFor();
+await page.waitForTimeout(500);
+check(
+  '  its start is the one point, its end marked, the drawn way faint underneath, the panel drawing the return trip, no way said',
+  (await pointsShown()) === 1 &&
+    (await page.getByTestId('old-para-end').count()) === 1 &&
+    (await page.evaluate(() => window.__src('draw-outbound')))?.features.length === 3 &&
+    (await page.getByText('Draw the return trip').count()) > 0 &&
+    !(await page.getByTestId('toast').allInnerTexts()).join(' ').includes('same way'),
+  `${await pointsShown()} points`,
+);
+// A second point, by hand, on the way back: south of the drawn line.
+const BACK_MID = [121.058, 14.6545];
+await go(BACK_MID, 15);
+await clickAt(BACK_MID, 400);
+await done();
+const slotWrites = log.length;
+await saveButton().click();
+await drafted();
+const slotDraft = draftOf('route', newRoute?.id);
+check(
+  '  saved, it is a draft of the same route that fills the slot, both ways drawn',
+  slotDraft?.is_new === false &&
+    slotDraft.payload.directions.length === 2 &&
+    slotDraft.payload.directions.every((v) => v.shape) &&
+    slotDraft.payload.directions.some((v) => v.id === slotId && v.reversed === true),
+  writesSince(slotWrites)
+    .map((w) => `${w.method} ${w.table}`)
+    .join(', '),
+);
+
 // ---- 4. A route with no line: its start placed, its end marked
 const again = await openPicker();
 await again.getByLabel('Name, place or Para ID').fill('PARA-9002');
@@ -158,7 +216,9 @@ await hint.waitFor();
 await page.waitForTimeout(500);
 check(
   'a route with no line starts with its start as the one point, its end marked to draw to',
-  (await pointsShown()) === 1 &&
+  // From the New +, after a slot was filled: a new route, with no other way under it.
+  (await page.evaluate(() => window.__src('draw-outbound')))?.features.length === 0 &&
+    (await pointsShown()) === 1 &&
     (await page.getByTestId('old-para-end').count()) === 1 &&
     (await hint.innerText()).includes('The old app has no line for it'),
   `${await pointsShown()} points`,

@@ -7,6 +7,7 @@ import type { HotspotRow } from '@/features/routes/model/hotspots';
 import { isDrawn, isLoop, type DirectionRow } from '@/features/routes/model/routes';
 import type { Timeline } from '@/features/routes/model/timeline';
 
+import type { AddWay } from './add-way';
 import { directionTabs } from './direction-tabs';
 import { LockedDraft } from './locked-draft';
 import { RouteLineActions } from './route-line-actions';
@@ -49,8 +50,8 @@ interface StudioRouteLineDetailProps {
   onDelete?: ReturnType<typeof useDeleteActions>['onDelete'];
   /** Another direction of the route, or another route, in this one's place. */
   onShow: (direction: DirectionRow) => void;
-  /** Starts drawing the route's undrawn way (the return trip); absent on a draft only. */
-  onDrawOtherWay?: () => void;
+  /** Adds the route's undrawn way, as "+ Add route" picked; absent on a draft only. */
+  onAddOtherWay?: (how: AddWay) => void;
   /** Closes the detail: Edit Route and Extend start a drawing. */
   onClose: () => void;
 }
@@ -72,7 +73,7 @@ export function StudioRouteLineDetail({
   opening,
   onDelete,
   onShow,
-  onDrawOtherWay,
+  onAddOtherWay,
   onClose,
 }: StudioRouteLineDetailProps) {
   const { lock, hasDraft, retry } = useDraftLock('route', direction.routeId);
@@ -104,7 +105,7 @@ export function StudioRouteLineDetail({
       subjectId={direction.routeId}
       lock={lock}
       onRetry={retry}
-      onApproved={() => void saved.reload()}
+      onSettled={() => void saved.reload()}
     />
   );
   return (
@@ -114,7 +115,9 @@ export function StudioRouteLineDetail({
       tabs={directionTabs(direction, saved.directions)}
       selectedId={direction.id}
       onSelect={show}
-      onAddRoute={isEditable && !isDraftOnly ? onDrawOtherWay : undefined}
+      onAddRoute={
+        isEditable && !isDraftOnly && onAddOtherWay ? (_, how) => onAddOtherWay(how) : undefined
+      }
       actions={
         <RouteLineActions
           exporter={exporter}

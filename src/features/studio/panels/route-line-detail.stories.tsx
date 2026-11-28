@@ -154,12 +154,47 @@ export const TwoWays: Story = {
   },
 };
 
-/** The way back not drawn yet: its tab offers "+ Add route", which starts drawing it. */
+/**
+ * The way back not drawn yet: its tab offers "+ Add route", a menu of how to add it — draw it,
+ * or start from an OSM or an old Para route.
+ */
 export const ReturnNotDrawn: Story = {
   args: { tabs: BACK_NOT_DRAWN },
   play: async ({ args, canvasElement }) => {
-    await userEvent.click(within(canvasElement).getByRole('button', { name: '+ Add route' }));
-    await expect(args.onAddRoute).toHaveBeenCalledWith('d2');
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole('button', { name: '+ Add route' }));
+    const menu = canvas.getByRole('menu', { name: 'Add route' });
+    await expect(
+      within(menu)
+        .getAllByRole('menuitem')
+        .map((item) => item.textContent),
+    ).toEqual(['Draw it', 'Start from an OSM route', 'Start from an old Para route']);
+    await userEvent.click(within(menu).getByRole('menuitem', { name: 'Start from an OSM route' }));
+    await expect(args.onAddRoute).toHaveBeenCalledWith('d2', 'osm');
+    await expect(canvas.queryByRole('menu')).toBeNull();
+  },
+};
+
+/** "+ Add route"'s menu left open in its place, under the undrawn tab, over the detail's body. */
+export const AddRouteMenuOpen: Story = {
+  args: { tabs: BACK_NOT_DRAWN },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole('button', { name: '+ Add route' }));
+    await expect(canvas.getByRole('menu', { name: 'Add route' })).toBeVisible();
+  },
+};
+
+/** "+ Add route" by keyboard: Enter opens it on its first choice, Enter draws the way back. */
+export const AddRouteByKeyboard: Story = {
+  args: { tabs: BACK_NOT_DRAWN },
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement);
+    canvas.getByRole('button', { name: '+ Add route' }).focus();
+    await userEvent.keyboard('{Enter}');
+    await expect(canvas.getByRole('menuitem', { name: 'Draw it' })).toHaveFocus();
+    await userEvent.keyboard('{Enter}');
+    await expect(args.onAddRoute).toHaveBeenCalledWith('d2', 'draw');
   },
 };
 

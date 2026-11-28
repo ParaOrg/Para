@@ -14,6 +14,7 @@ const reviewCodeSchema = z.enum([
   'revision_mismatch',
   'no_draft',
   'not_your_draft',
+  'draft_too_recent',
   'not_approved',
   'not_published',
   'not_taken_down',
@@ -55,5 +56,7 @@ export const reviewResultSchema = z.object({
   draft: z.optional(draftRowSchema),
   current_revision: z.optional(z.number().check(z.int(), z.nonnegative())),
   created: z.optional(z.boolean()),
+  /** With draft_too_recent: when another editor's draft may be discarded. */
+  discardable_from: z.optional(z.string()),
 });
 export type ReviewResult = z.infer<typeof reviewResultSchema>;

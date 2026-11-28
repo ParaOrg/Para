@@ -3,6 +3,7 @@ import { useId, type ReactNode } from 'react';
 import type { OtherRoute } from '@/features/routes/cards/trip-more-routes';
 import type { TimelineRow } from '@/features/routes/model/timeline';
 
+import type { AddWay } from './add-way';
 import type { DirectionTab } from './direction-tabs';
 import { OtherDestinations } from './other-destinations';
 import { RouteLineTabs, tabIdOf } from './route-line-tabs';
@@ -22,7 +23,7 @@ interface RouteLineDetailProps {
   selectedId: string;
   onSelect: (directionId: string) => void;
   /** "+ Add route" on an undrawn direction's tab; absent where read-only. */
-  onAddRoute?: (directionId: string) => void;
+  onAddRoute?: (directionId: string, how: AddWay) => void;
   /** Edit Route, Extend, Export and ⋮ (RouteLineActions). */
   actions: ReactNode;
   /** The summary card's rows (routeSummaryFacts). */

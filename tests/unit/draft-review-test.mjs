@@ -190,3 +190,9 @@ test('query clients isolate private queues and never retry a mutation automatica
   first.clear();
   second.clear();
 });
+
+test("another editor's draft refused: the words say it is theirs and nothing changed", () => {
+  const words = reviewMessage({ code: 'not_your_draft' });
+  assert.match(words, /another editor's draft/);
+  assert.match(words, /Nothing was changed/);
+});

@@ -15,7 +15,11 @@
 // B's save stores a draft under B's id. A card opened before A's draft cannot save over it, and a
 // direct update of A's draft by B changes nothing (the stand-in applies
 // draft_update as the migration 20261026090000 writes it). A hotspot's draft is held the same way: B's
-// card for it says so and offers no Edit or Delete.
+// card for it says so and offers no Edit or Delete. B is offered no Discard on A's draft while it is
+// younger than 7 days, only a line saying from when (20261128090000_discard_stale_draft); once it has
+// gone 7 days without a change, the card offers Discard…, which asks first and drops it, and a card
+// that went stale (the draft changed after it opened) is refused in words and keeps the draft.
+// B's Keep my draft on A's draft, sent straight to the database, is refused (refresh_draft_base).
 import { chromium } from 'playwright';
 
 import { BASE, bareStyle, harness, waitForSource } from './lib/harness.mjs';
@@ -360,10 +364,19 @@ check(
 );
 check('  and B has sent no write', writesOf(db).length === writesBefore);
 check(
-  "  the card offers B Approve on A's draft, and no Discard: only its maker discards it",
+  "  the card offers B Approve on A's draft, and no Discard while it is younger than 7 days",
   (await b.page.getByRole('button', { name: 'Approve', exact: true }).count()) === 1 &&
     (await b.page.getByRole('button', { name: /^Discard/ }).count()) === 0,
 );
+{
+  const from = new Date(Date.parse(db.tables.draft[0].updated_at) + 7 * 24 * 60 * 60 * 1000);
+  const day = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short' }).format(from);
+  check(
+    '  instead one line says from when B can: "You can discard this from <day> if it isn\'t changed."',
+    (await body(b.page)).includes(`You can discard this from ${day} if it isn't changed.`),
+    day,
+  );
+}
 
 // ---- No name on file: plain words.
 db.tables.editor_name = db.tables.editor_name.filter((r) => r.user_id !== A_ID);
@@ -374,6 +387,54 @@ check(
   'with no name on file for A, B is told "another editor", and no id shows',
   !(await body(b.page)).includes(A_ID),
 );
+
+// ---- 7 days without a change: B may discard A's draft.
+const DAYS_8_AGO = () => new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString();
+const aDraft = structuredClone(db.tables.draft[0]);
+const aDraftId = aDraft.id;
+db.tables.editor_name = [{ user_id: A_ID, name: 'Marisol' }];
+db.tables.draft[0].updated_at = DAYS_8_AGO();
+await load(b.page);
+await openRouteFromPlace(b.page);
+await b.page.getByRole('button', { name: 'Discard…' }).waitFor({ timeout: 10000 });
+check(
+  "A's draft, 8 days without a change: B is offered Discard…, and the wait line is gone",
+  (await b.page.getByRole('button', { name: 'Discard…' }).count()) === 1 &&
+    !(await body(b.page)).includes('You can discard this from'),
+);
+// Stale card: the draft is changed after the card opened, so the database refuses.
+db.tables.draft[0].updated_at = new Date().toISOString();
+let question = '';
+b.page.once('dialog', (dialog) => {
+  question = dialog.message();
+  void dialog.accept();
+});
+await b.page.getByRole('button', { name: 'Discard…' }).click();
+await b.page
+  .getByText('Nothing was discarded. This draft was changed in the last 7 days.')
+  .waitFor({
+    timeout: 10000,
+  });
+check(
+  'B asked first, and a draft changed since the card opened is refused in words: it stays',
+  /Discard another editor's draft\?/.test(question) &&
+    db.tables.draft.length === 1 &&
+    db.tables.draft[0].id === aDraftId,
+  question,
+);
+// Reloaded and old again: B discards it, after confirming.
+db.tables.draft[0].updated_at = DAYS_8_AGO();
+await load(b.page);
+await openRouteFromPlace(b.page);
+b.page.once('dialog', (dialog) => void dialog.accept());
+await b.page.getByRole('button', { name: 'Discard…' }).click();
+await b.page.getByRole('button', { name: 'Edit route' }).waitFor({ timeout: 10000 });
+check(
+  "B discards A's old draft after confirming: it is gone, and the card offers Edit route",
+  db.tables.draft.length === 0,
+);
+// Put A's draft back, as it was and changed just now, for the steps that follow.
+db.tables.draft.push({ ...aDraft, updated_at: new Date().toISOString() });
 
 // ---- A discards from the sidebar; B can claim the route.
 // A tap on A's own dashed line opens the route line detail to read first; its Edit route opens
@@ -432,7 +493,7 @@ db.tables.draft.push({
   note: null,
   editor_id: A_ID,
   created_at: NOW,
-  updated_at: NOW,
+  updated_at: new Date().toISOString(),
   submitted_at: null,
 });
 const staleWrites = writesOf(db).length;
@@ -472,6 +533,40 @@ check(
   JSON.stringify(direct),
 );
 
+// ---- Keep my draft (refresh_draft_base) on A's draft, sent by B straight to the database: refused.
+{
+  const kept = db.tables.draft[0];
+  const before = JSON.stringify(kept);
+  // The stand-in answers as the migration's function does; the SQL itself is proven by
+  // supabase/apply/20261128120000_refresh_draft_base_maker_check.sql.
+  const keep = (revision) =>
+    b.page.evaluate(
+      async ([origin, draftId, p_revision]) => {
+        const token = JSON.parse(
+          localStorage.getItem(Object.keys(localStorage).find((k) => k.endsWith('-auth-token'))),
+        ).access_token;
+        const r = await fetch(`${origin}/rest/v1/rpc/refresh_draft_base`, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json', authorization: `Bearer ${token}` },
+          body: JSON.stringify({ p_draft: draftId, p_revision, p_base_revision: 7 }),
+        });
+        return r.json();
+      },
+      [new URL(b.page.url()).origin, kept.id, revision],
+    );
+  const answer = await keep(1);
+  // A wrong revision must not be told to B either: the maker test comes first.
+  const wrong = await keep(99);
+  check(
+    "B's Keep on A's draft sent straight to the database is refused, with no revision told, and the draft is unchanged",
+    answer.code === 'not_your_draft' &&
+      wrong.code === 'not_your_draft' &&
+      wrong.current_revision === undefined &&
+      JSON.stringify(db.tables.draft[0]) === before,
+    JSON.stringify([answer, wrong]),
+  );
+}
+
 // ---- A hotspot's draft is held the same way.
 db.tables.draft = [];
 db.tables.editor_name = [{ user_id: A_ID, name: 'Marisol' }];
@@ -487,7 +582,7 @@ db.tables.draft.push({
   note: null,
   editor_id: A_ID,
   created_at: NOW,
-  updated_at: NOW,
+  updated_at: new Date().toISOString(),
   submitted_at: null,
 });
 // The refused save left B's line on B's device, as any unsaved drawing is; drop it.
@@ -498,7 +593,7 @@ await b.page.getByText('Being changed by Marisol').waitFor({ timeout: 10000 });
 check(
   "B is told a hotspot is being changed by A's name, with no Edit terminal or Delete",
   (await b.page.getByRole('button', { name: /^(Edit terminal|Edit hintuan|Delete)/ }).count()) ===
-    0,
+    0 && (await b.page.getByRole('button', { name: /^Discard/ }).count()) === 0,
 );
 
 check('no page errors', errors.length === 0, errors.join(' | '));

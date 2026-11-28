@@ -1,17 +1,9 @@
 import { useId, useState, type ReactNode } from 'react';
 
 import { IconButton } from '@/design-system/primitives/icon-button';
-import { cn } from '@/shared/utils/cn';
 
+import { MenuList, type MenuChoice } from './menu-list';
 import { useNewMenu } from './use-new-menu';
-
-/** One choice in a MenuButton's menu. */
-export interface MenuChoice {
-  id: string;
-  label: string;
-  /** Destructive words, in Content/error. */
-  isDestructive?: boolean;
-}
 
 interface MenuButtonProps {
   /** What the button says to a screen reader and in its tooltip. */
@@ -30,11 +22,6 @@ const VOICE = {
   special: { variant: 'special', size: 'small' },
   plain: { variant: 'plain', size: 'small' },
 } as const;
-
-const WORDS = {
-  default: 'text-content-primary',
-  destructive: 'text-content-error',
-} satisfies Record<'default' | 'destructive', string>;
 
 /**
  * A small icon button that opens a menu under it, right-aligned: the route line detail's Export
@@ -73,30 +60,15 @@ export function MenuButton({
         onClick={() => setIsOpen((was) => !was)}
       />
       {isOpen && (
-        <div
+        <MenuList
           ref={menuRef}
           id={menuId}
-          role="menu"
-          tabIndex={-1}
-          aria-label={label}
+          label={label}
+          choices={choices}
+          align="right"
+          onChoose={handleChoose}
           onKeyDown={handleMenuKeyDown}
-          className="absolute top-full right-0 z-30 mt-1 flex w-48 flex-col gap-1 rounded-2xl bg-surface p-1.5 shadow-sm"
-        >
-          {choices.map((choice) => (
-            <button
-              key={choice.id}
-              type="button"
-              role="menuitem"
-              onClick={() => handleChoose(choice.id)}
-              className={cn(
-                'flex w-full rounded-xl p-2 text-left font-sn-pro text-sm/5 font-semibold hover:bg-surface-secondary focus-visible:bg-surface-secondary',
-                WORDS[choice.isDestructive ? 'destructive' : 'default'],
-              )}
-            >
-              {choice.label}
-            </button>
-          ))}
-        </div>
+        />
       )}
     </div>
   );

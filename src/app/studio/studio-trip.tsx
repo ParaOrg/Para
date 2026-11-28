@@ -11,6 +11,7 @@ import {
   type useDeleteActions,
   type useDrawing,
   type useFollow,
+  type AddWay,
 } from '@/features/studio';
 
 import { LeftPanelDetail } from './left-panel-detail';
@@ -30,7 +31,8 @@ interface StudioTripProps {
   deletes: ReturnType<typeof useDeleteActions>;
   /** Closes every card: Edit, Extend and drawing the other way start a drawing. */
   onCloseAll: () => void;
-  onDrawReturnTrip: (routeId: string) => void;
+  /** Adds the route's undrawn way: drawn by hand, or from a line picked ("+ Add route"). */
+  onAddOtherWay: (routeId: string, how: AddWay) => void;
 }
 
 /**
@@ -50,12 +52,12 @@ export function StudioTrip({
   opening,
   deletes,
   onCloseAll,
-  onDrawReturnTrip,
+  onAddOtherWay,
 }: StudioTripProps) {
   const { direction } = trip;
-  const handleDrawOtherWay = () => {
+  const handleAddOtherWay = (how: AddWay) => {
     onCloseAll();
-    onDrawReturnTrip(direction.routeId);
+    onAddOtherWay(direction.routeId, how);
   };
   if (!isWideScreen)
     return (
@@ -68,7 +70,7 @@ export function StudioTrip({
         canEdit={canEdit}
         opening={opening}
         onDelete={deletes.onDelete}
-        onDrawOtherWay={handleDrawOtherWay}
+        onDrawOtherWay={() => handleAddOtherWay('draw')}
         onCloseAll={onCloseAll}
       />
     );
@@ -87,7 +89,7 @@ export function StudioTrip({
         opening={opening}
         onDelete={deletes.onDelete}
         onShow={(v) => (v.routeId === direction.routeId ? trip.switchTrip(v) : trip.otherRoute(v))}
-        onDrawOtherWay={handleDrawOtherWay}
+        onAddOtherWay={handleAddOtherWay}
         onClose={onCloseAll}
       />
     </LeftPanelDetail>

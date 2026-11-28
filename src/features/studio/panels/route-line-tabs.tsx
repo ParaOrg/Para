@@ -2,7 +2,10 @@ import { useRef, type KeyboardEvent } from 'react';
 
 import { cn } from '@/shared/utils/cn';
 
+import { AddRouteMenu } from './add-route-menu';
+import type { AddWay } from './add-way';
 import type { DirectionTab } from './direction-tabs';
+import { TAB, TAB_WORDS } from './tab-look';
 
 interface RouteLineTabsProps {
   /** One per direction, the way there first (directionTabs). */
@@ -13,24 +16,20 @@ interface RouteLineTabsProps {
   panelId: string;
   /** A drawn direction's tab picked: that direction shows. */
   onSelect: (directionId: string) => void;
-  /** "+ Add route" on an undrawn direction's tab: starts drawing it. Absent: read-only. */
-  onAddRoute?: (directionId: string) => void;
+  /** A way picked from "+ Add route" on an undrawn direction's tab. Absent: read-only. */
+  onAddRoute?: (directionId: string, how: AddWay) => void;
 }
 
 /** A tab's id, from the panel's and its direction's: the panel is labelled by its selected tab. */
 export const tabIdOf = (panelId: string, directionId: string): string =>
   `${panelId}-tab-${directionId}`;
 
-const TAB = {
-  selected: 'border-b-2 border-brand-surface text-brand-surface',
-  rest: 'border-b-2 border-transparent text-text-secondary',
-} satisfies Record<'selected' | 'rest', string>;
-
 /**
  * The route line detail's tabs (4905:28977): one per direction, named by its bound, Medium 14/20,
  * the selected one in Brand/surface over a 2px line of it, the rest Text/secondary, along a
- * hairline. An undrawn direction's tab offers "+ Add route" instead, for an editor, or reads "Not
- * drawn yet". The arrow keys move between the drawn ones, as a tab list's do.
+ * hairline. An undrawn direction's tab offers "+ Add route" instead, for an editor (a menu: draw
+ * it, or start from an OSM or old Para route), or reads "Not drawn yet". The arrow keys move
+ * between the drawn ones, as a tab list's do.
  */
 export function RouteLineTabs({
   tabs,
@@ -67,10 +66,7 @@ export function RouteLineTabs({
               tabIndex={isSelected ? 0 : -1}
               onClick={() => onSelect(tab.direction.id)}
               onKeyDown={handleKeyDown}
-              className={cn(
-                'px-2 py-1.5 text-sm/5 font-medium whitespace-nowrap',
-                TAB[isSelected ? 'selected' : 'rest'],
-              )}
+              className={cn(TAB_WORDS, TAB[isSelected ? 'selected' : 'rest'])}
             >
               {tab.label}
             </button>
@@ -81,19 +77,12 @@ export function RouteLineTabs({
         .filter((tab) => !tab.isDrawn)
         .map((tab) =>
           onAddRoute ? (
-            <button
+            <AddRouteMenu
               key={tab.direction.id}
-              type="button"
-              onClick={() => onAddRoute(tab.direction.id)}
-              className={cn('px-2 py-1.5 text-sm/5 font-medium whitespace-nowrap', TAB.rest)}
-            >
-              + Add route
-            </button>
+              onChoose={(how) => onAddRoute(tab.direction.id, how)}
+            />
           ) : (
-            <span
-              key={tab.direction.id}
-              className={cn('px-2 py-1.5 text-sm/5 font-medium whitespace-nowrap', TAB.rest)}
-            >
+            <span key={tab.direction.id} className={cn(TAB_WORDS, TAB.rest)}>
               Not drawn yet
             </span>
           ),

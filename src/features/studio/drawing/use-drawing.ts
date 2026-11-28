@@ -413,13 +413,13 @@ export function useDrawing(
   );
 
   /**
-   * Begin a new direction from points that are not the editor's clicks, such
-   * as an upload's line: they become the control points, and the router is
-   * asked for every gap, the stand-ins showing meanwhile.
+   * Begin a new direction from points that are not the editor's clicks, such as an upload's
+   * line (of an existing route when routeId is given): they become the control points, and the
+   * router is asked for every gap, the stand-ins showing meanwhile.
    */
   const startWithPoints = useCallback(
-    (points: LngLat[]) => {
-      start();
+    (points: LngLat[], routeId: string | null = null) => {
+      start(routeId);
       writePoints(points);
       if (points.length > 1)
         void resolveGaps(0, new Array<SnapMode>(points.length - 1).fill('snapped'));

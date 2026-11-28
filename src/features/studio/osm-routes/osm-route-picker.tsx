@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { Button } from '@/design-system/primitives/button';
 import { TextField } from '@/design-system/primitives/text-field';
@@ -30,6 +30,9 @@ export function OsmRoutePicker({ mapCentre, onStart, onClose }: OsmRoutePickerPr
   const [query, setQuery] = useState('');
   const [near, setNear] = useState<OsmRouteSummary[] | null>(null);
   const [chosenId, setChosenId] = useState<number | null>(null);
+  const fieldRef = useRef<HTMLInputElement>(null);
+  // Opened from a menu whose button may be gone (the detail's "+ Add route"): focus starts here.
+  useEffect(() => fieldRef.current?.focus(), []);
 
   if (chosenId !== null)
     return (
@@ -49,6 +52,7 @@ export function OsmRoutePicker({ mapCentre, onStart, onClose }: OsmRoutePickerPr
   return (
     <StartPickerFrame title="Start from an OSM route" onClose={onClose}>
       <TextField
+        ref={fieldRef}
         label="Ref, name or relation id"
         value={query}
         placeholder="T436, Philcoa, r10183711"
