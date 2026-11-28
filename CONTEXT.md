@@ -239,8 +239,8 @@ editors only.
 _Avoid_: Tracking map, heatmap
 
 **Playground**:
-The studio's map where editors draw. Every route and hotspot goes Draft →
-Pending → Approved there.
+The studio's map where editors draw. Every route and hotspot is drawn there as
+a draft and published from there.
 _Avoid_: Drafts map, sandbox, staging
 
 **Draft** / **Published**:
@@ -291,8 +291,8 @@ hills) and Satellite. A commuter's pick is kept on the phone.
 
 **Basemap host**:
 The one address the map designs' styles, tiles, sprite and glyphs are read
-from (`VITE_BASEMAP_HOST`). Para's own tiles server on staging; OpenFreeMap
-wherever none is set, which is `main` until the owner releases staging. See
+from (`VITE_BASEMAP_HOST`). Para's own tiles server (`tiles.para-commute.org`)
+on staging and `main`; OpenFreeMap wherever none is set. See
 [ADR 0007](docs/adr/0007-para-serves-its-own-basemap.md).
 
 **Map Style card**:

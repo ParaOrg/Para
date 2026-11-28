@@ -105,7 +105,7 @@ repo's unit tests live in `tests/unit/` and run through `npm run test:unit`.
 
 1. Read the component's stories first — they are the contract.
 2. Read the component.
-3. Read a settled peer (`src/features/routes/cards/route-card.tsx`, `direction-timeline.tsx`)
+3. Read a settled peer (`src/features/routes/cards/route-card.tsx`, `timeline-route-detail.tsx`)
    for the house style you are comparing against.
 4. Run `npx tsc --noEmit` and `npm run lint`.
 5. Report.

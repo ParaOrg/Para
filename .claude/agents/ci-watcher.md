@@ -16,7 +16,7 @@ your report and stop.
 ## How to watch
 
 1. Find every run for the PR's head commit or the branch, of every workflow
-   (`CI`, and the contributor app's when it runs):
+   (`CI`, `Deploy`, and the contributor app's when it runs):
    `gh run list --repo ParaOrg/Para --branch <branch> --limit 10 --json databaseId,name,status,conclusion,headSha`.
    For a PR, read its head branch and SHA first:
    `gh api repos/ParaOrg/Para/pulls/<n> --jq '{branch: .head.ref, sha: .head.sha}'`.

@@ -37,8 +37,9 @@ steps 1–4).
    pooler** (port 6543). Put `report_sender.<project-ref>` in place of the user, and the password from step 1.
    For example: `postgresql://report_sender.<project-ref>:<password>@<region>.pooler.supabase.com:6543/postgres`.
 3. **Set the two secrets** on the Worker: Cloudflare → Workers & Pages → **para** → Settings → Variables and
-   Secrets → **Add**, type **Secret**, for production. Set the same pair on the staging environment if staging
-   should take reports.
+   Secrets → **Add**, type **Secret**, for production. Staging is this Worker's Preview `staging` (`wrangler preview`, `docs/operations.md`,
+   How the site deploys), not a separate environment: check in Cloudflare whether the Preview reads these
+   secrets before relying on reports from staging.
    - `REPORT_DATABASE_URL`: the string from step 2.
    - `TURNSTILE_SECRET_KEY`: the secret key of the Turnstile widget whose site key the public page uses
      (Cloudflare → Turnstile → the widget → Settings).

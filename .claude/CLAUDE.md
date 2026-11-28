@@ -65,7 +65,7 @@ src/
 │   ├── locator/                # "Where am I". index.ts is its public API.
 │   ├── published-map/          # Tracks the published map's freshness and runs the installed app's updates. index.ts.
 │   ├── studio/                 # The editor. The public page never loads it. index.ts.
-│   │   └── auth/ contributors/ data/ drawing/ maps/ panels/ public-view/
+│   │   └── auth/ contributors/ data/ drawing/ maps/ old-para-routes/ osm-routes/ panels/ public-view/
 │   ├── contribute/             # The contributor page: consent, the recorder, saving and sending. index.ts. The public page never loads it.
 │   │   └── account/ api/ app-update/ consent/ history/ map/ motion/ native/ native-bridge/ navigation/ notices/ recorder/ screens/ stop-notes/ storage/ toolbar/ tutorial/ uploads/, and common/ for what several of them share
 │   └── <small-feature>/        # components/ hooks/ api/ schemas/ types/ utils/ constants.ts index.ts
@@ -80,7 +80,7 @@ Outside `src/`, `android/` is the contributor app's native Android project (Capa
 
 Create only the folders a feature actually needs. Don't scaffold empty ones. A small feature may stay flat, with no kind folders, until about 30 files (`locator` and `published-map` are flat).
 
-A large feature groups by concern (`routes`: model, geo, map, published, cards, search; `studio`: auth, contributors, data, drawing, maps, panels, public-view; `contribute`: the folders in the tree above), because that is the layering the code has: no React in a model, MapLibre only in a map folder. The kind folders (`components`, `hooks`, `api`, `schemas`, `utils`) are the default for a small feature and appear inside a concern folder when it grows. No concern folder has been split by sub-concern yet (the largest, `routes/map`, holds about 130 files); a few hold one small helper folder (`studio/contributors/actions`, `contribute/uploads/packing`, the two `basemap-thumbnails`). Splitting one is a planned change of its own, by sub-concern, never a side effect of other work.
+A large feature groups by concern (`routes`: model, geo, map, published, cards, search; `studio`: auth, contributors, data, drawing, maps, old-para-routes, osm-routes, panels, public-view; `contribute`: the folders in the tree above), because that is the layering the code has: no React in a model, MapLibre only in a map folder. The kind folders (`components`, `hooks`, `api`, `schemas`, `utils`) are the default for a small feature and appear inside a concern folder when it grows. No concern folder has been split by sub-concern yet (the largest, `routes/map`, holds about 140 files besides its stories); a few hold one small helper folder (`studio/contributors/actions`, `contribute/uploads/packing`, the two `basemap-thumbnails`, and `routes/map/establishment-icons` with its `maki` and `temaki` sets). Splitting one is a planned change of its own, by sub-concern, never a side effect of other work.
 
 ### Import rules
 
@@ -350,7 +350,7 @@ These configs are installed and enforce everything above. Every ESLint rule is a
   - Import ordering (groups as above) and a no-default-export rule
   - `eslint-plugin-check-file` to enforce kebab-case file and folder names. It reads `.ts`, `.tsx` and `.css` files; fonts, pictures and other files are kept kebab-case by hand
   - `no-restricted-imports` to enforce the import direction and ban deep feature imports
-- **Scripts:** `npm run typecheck`, `npm run lint` and `npm run format`. `npm run check` runs them all as CI does: `format:check`, `lint`, `build` (typecheck, Vite and the build guards) and the unit checks.
+- **Scripts:** `npm run typecheck`, `npm run lint` and `npm run format`. `npm run check` runs them all as CI does: `format:check`, `lint`, `check:long-files`, `check:glossary`, `docs:architecture:check`, `build` (typecheck, Vite and the build guards) and the unit checks.
 
 Never disable a lint rule for a whole file. A single-line disable needs a comment explaining why.
 
