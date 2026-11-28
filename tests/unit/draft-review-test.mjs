@@ -168,6 +168,7 @@ test('a missing draft or conflict never claims it was published', () => {
   assert.match(reviewMessage({ code: 'no_draft' }), /no longer available/);
   assert.match(reviewMessage({ code: 'conflict' }), /changed since/);
   assert.match(reviewMessage({ code: 'revision_mismatch' }), /Someone changed/);
+  assert.match(reviewMessage({ code: 'not_your_draft' }), /another editor's draft.*only its maker/);
 });
 
 test('review labels tolerate unnamed routes and malformed payloads', () => {
