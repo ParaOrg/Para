@@ -1,6 +1,6 @@
 # Start from an old Para route
 
-Status: ready-for-agent
+Status: resolved (built in [#1289](https://github.com/ParaOrg/Para/pull/1289), [#1291](https://github.com/ParaOrg/Para/pull/1291) and [#1294](https://github.com/ParaOrg/Para/pull/1294))
 Owner's decision: 2026-11-27 ("yes!"), option C, Para IDs `PARA-0001`…
 
 ## What and why

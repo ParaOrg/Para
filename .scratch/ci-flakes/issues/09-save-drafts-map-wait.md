@@ -1,6 +1,6 @@
 # save-drafts-test: the reload into an open drawing waits on map.loaded(), which the chevrons' flow holds false
 
-Status: fixed (this PR)
+Status: resolved ([#1293](https://github.com/ParaOrg/Para/pull/1293))
 Type: task
 Priority: medium
 
