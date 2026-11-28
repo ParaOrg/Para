@@ -15,7 +15,7 @@ Some jeepney routes leave from more than one terminal yet are the same route, wi
 - **Return trip:** an attached terminal can also be where the jeepney ends on the way back. An attached start on one direction can be the attached end on the return. That attached end is drawn separately, as its own stretch on the return direction; it is not derived from the outbound attached start (the owner, 2026-11-28).
 - **Fares:** a ride from an attached terminal costs the same fare as the main line. No fare information is stored per stretch (the owner, 2026-11-28; ADR 0009's amendment of that date).
 - **Commuter map:** attached stretches are drawn fainter than the main line. Tapping a terminal on an attached stretch shows the route as e.g. "A – Z (also from A2)". When a commuter is near an attached terminal, directions suggest boarding there.
-- **Studio:** Attach is a mode on the drawing toolbar (the owner's Figma toolbar 4614:15351 shows an Attach pill after Move · Snap · Draw). It reuses Snap and Draw, and the stretch snaps onto the main line where it joins. It goes through drafts and review like everything else. Attach and Extend stay separate tools.
+- **Studio:** Attach is a mode on the drawing toolbar (the owner's Figma toolbar 4614:15351 shows an Attach pill after Move · Snap · Draw). It reuses Snap and Draw, and the stretch snaps onto the main line where it joins. It goes through drafts and Publish like everything else (review was retired on 2026-11-05). Attach and Extend stay separate tools.
 
 ## Storage (the owner's Yes, 2026-11-28)
 

@@ -8,7 +8,7 @@ Needs the owner's Figma for the Attach states (the toolbar pill is in 4614:15351
 
 ## What to build
 
-Attach as a mode on the drawing toolbar after Move · Snap · Draw. It adds no new way of drawing: the editor picks a route's direction, chooses start or end, then draws with Snap and Draw. The stretch snaps onto the main line where it joins, and the join distance is computed from the snap. The terminal is a hotspot the editor picks or draws. Saves go through drafts and review like everything else. Attach and Extend stay separate tools.
+Attach as a mode on the drawing toolbar after Move · Snap · Draw. It adds no new way of drawing: the editor picks a route's direction, chooses start or end, then draws with Snap and Draw. The stretch snaps onto the main line where it joins, and the snap gives the join point and the index of the main line's control point just before it. The terminal is a hotspot the editor picks or draws. Saves go through drafts and Publish like everything else. Attach and Extend stay separate tools.
 
 ## Files it owns
 
@@ -20,7 +20,7 @@ Attach as a mode on the drawing toolbar after Move · Snap · Draw. It adds no n
 ## Acceptance checks
 
 - `npm run check` passes, and the studio browser suite.
-- A stretch can be drawn, edited, deleted, and sent for review.
-- The join point lands on the main line and its distance is saved.
+- A stretch can be drawn, edited, deleted, and published.
+- The join point lands on the main line; the point and its control-point index are saved, never the distance.
 - Several starts and several ends on one route work, and an end can be set on the return direction.
 - Keyboard-accessible, labelled, and the Attach pill matches the Figma.

@@ -2,7 +2,7 @@ import * as z from 'zod/mini';
 
 /**
  * A commuter's report of a problem with a route, as the public map sends it to /api/report and as
- * the Worker there checks it (ADR 0010, .scratch/route-reports/README.md). One schema for both, so
+ * the Worker there checks it. One schema for both, so
  * the page and the Worker cannot disagree on what a report is. It holds nothing about the person:
  * no location, device or account. The Turnstile token proves a person sent it and is not stored.
  */

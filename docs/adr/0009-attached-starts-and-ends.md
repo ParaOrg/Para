@@ -43,3 +43,5 @@ The owner's answers to the spec's open questions 1 and 6, and a Yes to the stora
 
 - **Fares:** a ride from an attached terminal costs the same fare as the main line. This replaces "each attached stretch needs its own fare information" in the Decision above: no fare information is stored per stretch, and the ride card shows the main line's fare.
 - **Return trip:** an attached end on the return is drawn separately, as its own stretch on the return direction. It is not derived from the outbound attached start.
+- **Drafts:** where the Decision says a stretch "goes through drafts and review", read drafts and Publish: review was retired on 2026-11-05 (ADR 0003's amendment of that date).
+- The status stays proposed until the owner's Yes to start building.
