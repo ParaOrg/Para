@@ -129,7 +129,7 @@ export function StudioHotspotCard({
               setHasEditFailed(false);
               retry();
             }}
-            onApproved={() => void hotspots.reload()}
+            onSettled={() => void hotspots.reload()}
           />
         ) : (
           <CardActions

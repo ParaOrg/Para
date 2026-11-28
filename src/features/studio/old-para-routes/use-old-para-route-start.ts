@@ -7,13 +7,15 @@ import type { OldParaRoute, OldParaRouteSummary } from './old-para-route-schema'
 import { checkSpots } from '../osm-routes/check-spots';
 import { fitToLine } from '../osm-routes/fit-to-line';
 import { seedPoints, type RouteLine } from '../osm-routes/seed-points';
-import type { StartableDrawing } from '../osm-routes/use-osm-route-start';
+import type { StartableDrawing, StartSlot } from '../osm-routes/use-osm-route-start';
 
 interface UseOldParaRouteStartOptions {
   map: MapLibreMap | null;
   draw: StartableDrawing;
   /** Says something in the Playground's toast. */
   setNotice: (text: string | null) => void;
+  /** Hears a drawing begun into a slot, with the line it was seeded from. */
+  onSlotStart?: (routeId: string, line: readonly LngLat[]) => void;
 }
 
 /** The route a drawing came from: the part of its line it was seeded with, or, with no line, its end. */
@@ -31,11 +33,23 @@ export interface OldParaStart {
  * line seeds the drawing's control points from it; one without places its start, and its end is
  * marked for the editor to draw to. Held only while that drawing lasts; nothing is saved by it.
  */
-export function useOldParaRouteStart({ map, draw, setNotice }: UseOldParaRouteStartOptions) {
+export function useOldParaRouteStart({
+  map,
+  draw,
+  setNotice,
+  onSlotStart,
+}: UseOldParaRouteStartOptions) {
   const [isPickerOpen, setIsPickerOpen] = useState(false);
+  const [slot, setSlot] = useState<StartSlot | null>(null);
   const [start, setStart] = useState<OldParaStart | null>(null);
   // The drawing ended (saved, cancelled): so did where it came from.
   if (!draw.drawing && start) setStart(null);
+  // A drawing begun elsewhere while a slot's picker was open leaves that slot: the picker must not
+  // come back afterwards still filling it.
+  if (draw.drawing && !start && slot) {
+    setSlot(null);
+    setIsPickerOpen(false);
+  }
 
   const canBegin = () => {
     if (!draw.drawing) return true;
@@ -49,7 +63,8 @@ export function useOldParaRouteStart({ map, draw, setNotice }: UseOldParaRouteSt
     fitToLine(map, part.line);
     setIsPickerOpen(false);
     setStart({ paraId: route.paraId, name: route.name, part, end: null });
-    draw.startWithPoints(seedPoints(part));
+    draw.startWithPoints(seedPoints(part), slot?.routeId ?? null);
+    if (slot) onSlotStart?.(slot.routeId, part.line);
   };
 
   /** Begins the drawing of a route with no line: its start placed, where the old app knew it. */
@@ -61,12 +76,23 @@ export function useOldParaRouteStart({ map, draw, setNotice }: UseOldParaRouteSt
     );
     setIsPickerOpen(false);
     setStart({ paraId: route.paraId, name: route.name, part: null, end: route.end });
-    draw.startWithPoints(route.start ? [route.start] : []);
+    draw.startWithPoints(route.start ? [route.start] : [], slot?.routeId ?? null);
+    if (slot)
+      onSlotStart?.(
+        slot.routeId,
+        [route.start, route.end].filter((end) => end !== null),
+      );
   };
 
   return {
     isPickerOpen,
-    openPicker: () => setIsPickerOpen(true),
+    /** The slot the picker is open for; null for a new route. */
+    slot,
+    /** Opens the picker for a new route, or, given one, for a route's empty slot. */
+    openPicker: (forSlot: StartSlot | null = null) => {
+      setSlot(forSlot);
+      setIsPickerOpen(true);
+    },
     closePicker: () => setIsPickerOpen(false),
     start,
     /** The places to check in the drawing as it stands (check-spots.ts); none with no line. */

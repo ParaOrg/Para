@@ -1,3 +1,4 @@
+import { OTHER_EDITOR_DISCARD_DAYS, discardWaitMessage } from './draft-discard';
 import { discardDraft, publishDraft } from './drafts';
 import type { DraftRow, ReviewResult } from './review-schema';
 
@@ -31,7 +32,9 @@ export function reviewMessage(result: ReviewResult): string {
     case 'no_draft':
       return 'This draft is no longer available. Refresh to check its current state.';
     case 'not_your_draft':
-      return 'Only the editor who made this draft can discard it. Nothing was changed.';
+      return "This is another editor's draft, so you cannot save over it or keep it. Nothing was changed.";
+    case 'draft_too_recent':
+      return discardTooRecentMessage(result);
     case 'ends_taken':
       return 'Another approved route already uses these ends and via. Change them in the sidebar and save, or discard this draft.';
     case 'loop_taken':
@@ -68,4 +71,11 @@ export function reviewMessage(result: ReviewResult): string {
     case 'refused':
       return 'Nothing was changed. Refresh and try again.';
   }
+}
+
+/** Another editor's draft changed since the card was read: when it can be discarded, if the database says. */
+function discardTooRecentMessage(result: ReviewResult): string {
+  const from = result.discardable_from === undefined ? null : new Date(result.discardable_from);
+  const line = discardWaitMessage(from !== null && !Number.isNaN(from.getTime()) ? from : null);
+  return `Nothing was discarded. This draft was changed in the last ${OTHER_EDITOR_DISCARD_DAYS} days. ${line}`;
 }

@@ -31,6 +31,7 @@ APPLIED=(
   20261105160000_draft_published 20261105190000_lock_map_tables
   20261105200000_drop_dead_weight 20261110190000_retire_review_steps
   20261112100000_drop_inert_write_policies 20261125090000_edsa_carousel
+  20261128090000_discard_stale_draft
 )
 
 export DB=verify_schema_snapshot
