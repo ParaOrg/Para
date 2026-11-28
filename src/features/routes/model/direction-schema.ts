@@ -27,7 +27,6 @@ export const transportModeSchema = z.enum([
 export type TransportMode = z.infer<typeof transportModeSchema>;
 
 const confidenceSchema = z.enum(['drawn', 'verified']);
-export type Confidence = z.infer<typeof confidenceSchema>;
 
 /**
  * A loop has neither end and every other route has both (0021's route_loop_ends

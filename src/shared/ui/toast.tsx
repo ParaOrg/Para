@@ -23,9 +23,6 @@ interface ToastWords {
   body?: string;
 }
 
-/** The full card, or a pill that hugs an icon and a one-line title. */
-export type ToastSize = 'regular' | 'compact';
-
 /**
  * What a toast says. Only a problem, which stays until it is closed, may carry an action: a button
  * on a toast that hides itself would be gone before some people could reach it (WCAG's timing).

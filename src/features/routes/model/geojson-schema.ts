@@ -48,4 +48,3 @@ export const polygonSchema = z.object({
   type: z.literal('Polygon'),
   coordinates: z.array(lngLatsSchema),
 });
-export type PolygonGeoJSON = z.infer<typeof polygonSchema>;
