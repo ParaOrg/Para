@@ -53,6 +53,8 @@ export async function showContribution(id: string): Promise<void> {
   }
 }
 
+// TODO: switch these calls to the typed client and drop `untyped`: database.types.ts now has
+// contribution_use, block_contributor and unblock_contributor.
 const untyped = (): SupabaseClient => requireSupabase();
 
 export interface ContributionUse {
