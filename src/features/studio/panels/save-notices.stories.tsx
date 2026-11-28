@@ -156,6 +156,21 @@ export const SameEndsDrawnUnnamedDirection: Story = {
   },
 };
 
+/** A return trip that starts and ends away from the other way's ends: noted, never a refusal. */
+export const ReturnTripGap: Story = {
+  args: {
+    loop: [
+      'This line starts 300 m from where Northbound ends.',
+      'This line ends 120 m from where Northbound starts.',
+    ],
+  },
+  play: async ({ canvasElement }) => {
+    const notes = within(canvasElement).getAllByTestId('save-loop');
+    await expect(notes).toHaveLength(2);
+    await expect(notes[0]).toHaveTextContent('This line starts 300 m from where Northbound ends.');
+  },
+};
+
 /** No hotspots saved at all: a route is named after its ends, so draw those first. */
 export const NoHotspots: Story = {
   args: { hotspotsCount: 0 },
@@ -182,6 +197,7 @@ export const LongContent: Story = {
       from: 'SM City Fairview Public Transport Terminal',
     },
     borrowed: { metres: 2_480, parent },
+    loop: ['This line starts 300 m from where the way to Novaliches Bayan ends.'],
     sameEnds: {
       name: 'Novaliches Bayan – SM City Fairview Public Transport Terminal',
       drawn: true,
