@@ -195,3 +195,12 @@ test('a map not yet measured (0 tall) rests at Low', () => {
   assert.equal(stepFrom('low', true, 0, none), 'low');
   assert.equal(snapShowing(0, 0, none), 'low');
 });
+
+test('raised past full, how far the finger has gone beyond it: the list’s to scroll', () => {
+  const f = follow(400, 0, 700, H);
+  f.move(300, 16);
+  assert.equal(f.beyond(), 0);
+  f.move(200, 32);
+  assert.equal(f.beyond(), 80);
+  assert.equal(f.beyond(500), 0);
+});

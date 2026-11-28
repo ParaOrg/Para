@@ -9,19 +9,26 @@ import {
 
 import { holdShownUntilClick } from './hold-shown-handle';
 import { raisesAtLow } from './raises-at-low';
-import { glideTo } from './sheet-coast';
+import { glideTo, listCoast } from './sheet-coast';
 import {
   DRAG_PX,
   follow,
   heightsFor,
-  shownAt,
+  snapFor,
   stepFrom,
   swallowTheTapsClick,
   type SheetHeights,
   type SheetShape,
   type Snap,
 } from './sheet-gesture';
-import { isReducedMotion, shownOnScreen, useSheetGlide } from './use-sheet-glide';
+import { isReducedMotion, shownOnScreen } from './use-sheet-glide';
+import { useSheetPull, type SheetNow } from './use-sheet-pull';
+import { useSheetRelease } from './use-sheet-release';
+
+/** How far down a list scrolled `room` more can still go: what a throw up carries into. */
+function roomBelow(body: HTMLElement): number {
+  return Math.max(0, body.scrollHeight - body.clientHeight - body.scrollTop);
+}
 
 /** A sheet whose highest is its content's height (BottomSheet's `fits`), not the screen's. */
 export interface FittedSheet {
@@ -45,6 +52,8 @@ interface SheetGesturesOptions {
   setDragging: (dragging: boolean) => void;
   /** Writes --sheet-y (and --dock-y) for `shown` px on show: the component's `show`. */
   show: (shown: number) => void;
+  /** Writes them for the sheet at rest at `snap`, as its next render will: the component's `rest`. */
+  rest: (snap: Snap) => void;
   /** Docked, not floating. */
   docked: () => boolean;
   /** Set for a fitted sheet, whose full height is its content's; null for every other. */
@@ -67,9 +76,11 @@ interface SheetGestures {
 
 /**
  * How a finger or a mouse moves BottomSheet: the drag on the handle or the header, the pull down
- * from the list's top at full height, and the wheel's deliberate push. The sheet writes the DOM
- * (`show`) and keeps `dragging`; this decides where it goes (sheetGesture, sheetCoast). Called
- * after the sheet's two dock-mark layout effects.
+ * from the list's top at full height (useSheetPull), and the wheel's deliberate push. The sheet
+ * writes the DOM (`show`, `rest`) and keeps `dragging`; this decides where it goes (sheetGesture,
+ * sheetCoast). Let go, the sheet starts its glide at once and renders its new height a frame
+ * later, so the page's work for that height never holds the glide's first frames. A finger on a
+ * gliding sheet stops it where it is. Called after the sheet's two dock-mark layout effects.
  */
 export function useSheetGestures({
   sheet: own,
@@ -81,30 +92,47 @@ export function useSheetGestures({
   onClose,
   setDragging,
   show,
+  rest,
   docked,
   fitted,
   shape,
   closesOnPull,
 }: SheetGesturesOptions): SheetGestures {
-  const landing = (next: Snap | 'close'): Snap | 'close' =>
-    next === 'close' && !closesOnPull ? 'low' : next;
-  const glide = useSheetGlide(own);
-  const settle = (next: Snap | 'close', glideMs: number | null = null) => {
-    glide(glideMs);
-    setDragging(false);
-    const at = landing(next);
-    if (at === 'close') onClose();
-    else setSnap(at);
-  };
+  const { glider, hold, settle, touched } = useSheetRelease({
+    sheet: own,
+    body: bodyRef,
+    setSnap,
+    onClose,
+    setDragging,
+    rest,
+    closesOnPull,
+  });
   /** The two ends of a sheet on a map `h` tall. */
   const heightsOf = (h: number): SheetHeights =>
     fitted ? fitted.heightsFor(h) : heightsFor(h, shape);
-  /** A drag let go at `now`: where its momentum carries the sheet, and how long it glides (glideTo). */
-  const throwTo = (track: ReturnType<typeof follow>, now: number, at?: number) => {
+  /**
+   * A drag let go at `now`: where its momentum carries the sheet, and the list after (glideTo). A
+   * drag that scrolled the list past full (`isListDriven`) leaves the list to coast on alone.
+   */
+  const throwTo = (
+    track: ReturnType<typeof follow>,
+    now: number,
+    at?: number,
+    isListDriven = false,
+  ) => {
     const h = own.current?.offsetHeight ?? 0;
+    const body = bodyRef.current;
     const { shown, velocity, from } = track.lift(now, at);
-    const { to, glideMs } = glideTo(shown, velocity, heightsOf(h), h, isReducedMotion(), from);
-    settle(to, glideMs);
+    const isReduced = isReducedMotion();
+    if (isListDriven && body && body.scrollTop > 0 && track.beyond(at) > 0) {
+      const coast = isReduced ? null : listCoast(velocity, body.scrollTop, roomBelow(body));
+      settle('full', null, coast && { afterMs: 0, ...coast });
+      return;
+    }
+    // Where the browser scrolled the list itself, its own fling carries on: no coast drawn over it.
+    const room = body && isListDriven ? roomBelow(body) : 0;
+    const out = glideTo(shown, velocity, heightsOf(h), h, isReduced, from, room);
+    settle(out.to, out.glide, out.list);
   };
   // The way the handle's steps go: up from Low, down from full, and on the way they went between.
   // State, not a ref: the handle's label says which way the next step goes.
@@ -119,10 +147,17 @@ export function useSheetGestures({
     setGoingUp(next === 'full' ? false : next === 'low' ? true : up);
     return next;
   };
-  // Read by the listeners bound once below, written as each render commits, before a finger comes.
-  const now = useRef({ snap, settle, throwTo, heightsOf, afterTap });
+  // Read by the listeners bound once, written as each render commits, before a finger comes.
+  const now = useRef<SheetNow & { afterTap: typeof afterTap }>({
+    snap,
+    settle,
+    throwTo,
+    heightsOf,
+    touched,
+    afterTap,
+  });
   useLayoutEffect(() => {
-    now.current = { snap, settle, throwTo, heightsOf, afterTap };
+    now.current = { snap, settle, throwTo, heightsOf, touched, afterTap };
   });
 
   // When a finger or a mouse last pressed: focus that follows a press is not the keyboard's.
@@ -132,118 +167,68 @@ export function useSheetGestures({
   const drag = useRef<AbortController | null>(null);
   useLayoutEffect(() => () => drag.current?.abort(), []);
 
-  // At full height, the pull down from the list's top: touch events, as the browser takes a scroll
-  // and cancels the pointer, but a non-passive touchmove can still be claimed. A wheel's deliberate
-  // push steps the sheet a third, as a tap on the handle does, never raising it from Low.
-  useLayoutEffect(() => {
-    const body = bodyRef.current;
-    const sheet = own.current;
-    if (!body || !sheet) return;
-    let pull: { startY: number; t: number; track: ReturnType<typeof follow> | null } | null = null;
-
-    const start = (e: TouchEvent) => {
-      if (now.current.snap !== 'full' || !docked() || e.touches.length !== 1) return;
-      pull = { startY: e.touches[0].clientY, t: e.timeStamp, track: null };
-    };
-    const move = (e: TouchEvent) => {
-      if (!pull) return;
-      const y = e.touches[0].clientY;
-      if (!pull.track) {
-        // Only a pull down from the very top of the list; anything else scrolls.
-        if (body.scrollTop > 0 || y < pull.startY) {
-          pull = null;
-          return;
-        }
-        if (y - pull.startY <= DRAG_PX / 3) return;
-        const h = sheet.offsetHeight;
-        const heights = now.current.heightsOf(h);
-        pull.track = follow(pull.startY, pull.t, shownAt('full', h, heights), h, heights);
-        setDragging(true);
-      }
-      e.preventDefault();
-      show(pull.track.move(y, e.timeStamp));
-    };
-    const end = (e: TouchEvent) => {
-      const track = pull?.track;
-      pull = null;
-      if (track) now.current.throwTo(track, e.timeStamp);
-    };
-    // A wheel moves the sheet only on a push its deltas add up past DRAG_PX, never a scroll's tail.
-    let pushed = 0;
-    let lastWheel = 0;
-    let scrolledAt = -Infinity;
-    const wheel = (e: WheelEvent) => {
-      if (!docked()) return;
-      if (e.timeStamp - lastWheel > 200) pushed = 0;
-      lastWheel = e.timeStamp;
-      const at = now.current.snap;
-      if ((at === 'full' && body.scrollTop > 0) || e.timeStamp - scrolledAt < 300) {
-        scrolledAt = e.timeStamp;
-        pushed = 0;
-        return;
-      }
-      pushed += e.deltaY;
-      const h = sheet.offsetHeight;
-      if (at !== 'low' && pushed < -DRAG_PX) {
-        pushed = 0;
-        now.current.settle(stepFrom(at, false, h, now.current.heightsOf(h)));
-      } else if (at !== 'full' && at !== 'low' && pushed > DRAG_PX) {
-        pushed = 0;
-        now.current.settle(stepFrom(at, true, h, now.current.heightsOf(h)));
-      }
-    };
-    const bound = new AbortController();
-    const on = { signal: bound.signal };
-    body.addEventListener('touchstart', start, { ...on, passive: true });
-    body.addEventListener('touchmove', move, { ...on, passive: false });
-    body.addEventListener('touchend', end, on);
-    body.addEventListener('touchcancel', end, on);
-    body.addEventListener('wheel', wheel, { ...on, passive: true });
-    return () => bound.abort();
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- bound once; what changes is read through `now`
-  }, []);
+  useSheetPull({ sheet: own, body: bodyRef, now, docked, hold, show });
 
   // A drag and a tap are one gesture until DRAG_PX. Taps on what the sheet holds are its own; the
-  // click after a drag, or a tap on the handle, is swallowed (sheetGesture).
+  // click after a drag, a tap on the handle, or a tap that stopped a glide, is swallowed.
   const onPointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
     lastPress.current = e.timeStamp;
     holdShownUntilClick(handleRef.current);
+    const at = touched() ?? snap;
     const sheet = own.current;
     const handle = handleRef.current;
     // One pointer at a time, a mouse's main button only, and docked only.
     if (drag.current || e.button !== 0 || !sheet || !handle || !docked()) return;
     const target = e.target instanceof Node ? e.target : null;
+    // Caught mid-glide, it stops where it is, as a list does under a finger.
+    const isCaught = glider.isLive();
     // At full height the body scrolls as a list does; the header brings the sheet down.
-    if (snap === 'full' && !headRef.current?.contains(target) && !handle.contains(target)) return;
+    const isOnList = !headRef.current?.contains(target) && !handle.contains(target);
+    if (at === 'full' && isOnList && !isCaught) return;
     const raises =
-      handle.contains(target) || (snap === 'low' && raisesAtLow(bodyRef.current, target));
+      handle.contains(target) || (at === 'low' && raisesAtLow(bodyRef.current, target));
     const h = sheet.offsetHeight;
     const heights = heightsOf(h);
-    const track = follow(e.clientY, e.timeStamp, shownOnScreen(sheet), h, heights);
-    let moving = false;
+    const shown = shownOnScreen(sheet, heights.full);
+    if (isCaught) {
+      glider.clear();
+      hold();
+      show(shown);
+    }
+    const scrolledFrom = bodyRef.current?.scrollTop ?? 0;
+    let track: ReturnType<typeof follow> | null = null;
 
     // Followed on the window: a finger dragged above the sheet is over the map, out of its hearing.
     // Not captured, so a tap on what the sheet holds stays that thing's.
     const move = (ev: PointerEvent) => {
       if (ev.pointerId !== e.pointerId) return;
-      if (!moving) {
+      if (!track) {
         if (Math.abs(e.clientY - ev.clientY) <= DRAG_PX) return;
-        moving = true;
-        setDragging(true);
+        // Followed from DRAG_PX along the finger's way, so the sheet does not jump to catch up
+        // with it; the finger's own first sample, so its speed is read from where it really was.
+        const tookHold = e.clientY + Math.sign(ev.clientY - e.clientY) * DRAG_PX;
+        track = follow(ev.clientY, ev.timeStamp, shown + tookHold - ev.clientY, h, heights);
+        hold();
       }
       show(track.move(ev.clientY, ev.timeStamp));
+      // Raised past full in the same gesture, the list scrolls under the finger.
+      const body = bodyRef.current;
+      if (body && (track.beyond() > 0 || body.scrollTop !== scrolledFrom))
+        body.scrollTop = scrolledFrom + track.beyond();
     };
     const up = (ev: PointerEvent) => {
       if (ev.pointerId !== e.pointerId) return;
       hotspot();
-      if (moving || raises) swallowTheTapsClick(ev.clientX, ev.clientY);
-      if (moving) now.current.throwTo(track, ev.timeStamp, ev.clientY);
-      else if (raises) now.current.settle(now.current.afterTap(snap));
+      if (track || raises || isCaught) swallowTheTapsClick(ev.clientX, ev.clientY);
+      if (track) now.current.throwTo(track, ev.timeStamp, ev.clientY, true);
+      else if (raises) now.current.settle(now.current.afterTap(at));
+      else if (isCaught) now.current.settle(snapFor(shown, 0, heights, h));
     };
     const cancel = (ev: PointerEvent) => {
       if (ev.pointerId !== e.pointerId) return;
       hotspot();
-      setDragging(false);
+      if (track || isCaught)
+        now.current.settle(snapFor(shownOnScreen(sheet, heights.full), 0, heights, h));
     };
     const hotspot = () => {
       drag.current?.abort();
