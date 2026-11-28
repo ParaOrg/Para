@@ -20,4 +20,4 @@ Clicks in the Cloudflare dashboard (Para account). Can be done today; it changes
 
 ## Comments
 
-- 2026-11-28: Resolved, superseded by the owner's choice of 2026-11-27 (GitHub Actions → Cloudflare, `spec.md`). `deploy.yml` and `deploy-tiles.yml` build and deploy both Workers (#1272, #1273), and Workers Builds is off on both `para` and `para-tiles`, which the hub checked on 2026-11-27.
+- 2026-11-28: Resolved, superseded by the owner's choice of 2026-11-27 (GitHub Actions → Cloudflare, `spec.md`). `deploy.yml` and `deploy-tiles.yml` build and deploy both Workers (#1272, #1273), and Workers Builds' builds are off on both `para` and `para-tiles` (the owner, through the hub, 2026-11-28). The acceptance checks above were never run as written. The first one does not hold yet: the repository is still connected, so each pull request still shows a "Workers Builds: para" check, skipped and red (#1299, #1300). It goes away once the repository is disconnected in each Worker's Settings → Build.

@@ -1,6 +1,6 @@
 # 04: Coming soon as Routing Middleware
 
-Status: paused 2026-11-27 (was needs-info (the owner's yes on `@vercel/functions`)): the owner chose GitHub Actions → Cloudflare (`../spec.md`)
+Status: paused 2026-11-27 (was needs-info: the owner's yes on `@vercel/functions`): the owner chose GitHub Actions → Cloudflare (`../spec.md`)
 Type: task
 Who: Opus
 Blocked by: 02
