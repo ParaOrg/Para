@@ -1,6 +1,6 @@
 # 01: Stop Cloudflare's build minutes
 
-Status: ready-for-human
+Status: resolved (superseded: GitHub Actions deploys both Workers, #1272 and #1273; Workers Builds is off on `para` and `para-tiles`)
 Type: task
 Who: the owner
 Blocked by: none
@@ -19,3 +19,5 @@ Clicks in the Cloudflare dashboard (Para account). Can be done today; it changes
 - [ ] `https://www.para-commute.org/` still answers Coming soon; `https://tiles.para-commute.org/styles/positron` still answers JSON.
 
 ## Comments
+
+- 2026-11-28: Resolved, superseded by the owner's choice of 2026-11-27 (GitHub Actions → Cloudflare, `spec.md`). `deploy.yml` and `deploy-tiles.yml` build and deploy both Workers (#1272, #1273), and Workers Builds is off on both `para` and `para-tiles`, which the hub checked on 2026-11-27.

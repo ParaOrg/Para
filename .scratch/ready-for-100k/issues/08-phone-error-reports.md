@@ -15,3 +15,5 @@ Who: the owner decides; then Opus builds
 Either way, a report never carries the commuter's location, the route they looked at, or anything that identifies them. Only the error, the page, the browser and the app's version.
 
 ## Comments
+
+- 2026-11-28 (/tidy, the owner's word through the hub): commuters' route reports (`/api/report`, `workers/site/`) have no record on staging of their own yet, so `workers/site/` points here for now. Their ADR and `.scratch/route-reports/` wait in draft PR #909. When #909 resumes, its ADR should be renumbered 0012: ADR 0010 is now "Road routes list the stations they pass" and 0011 is the Vercel plan.

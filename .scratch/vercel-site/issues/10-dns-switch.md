@@ -1,6 +1,6 @@
 # 10: Point www at Vercel
 
-Status: ready-for-human
+Status: paused 2026-11-27 (was ready-for-human): the owner chose GitHub Actions → Cloudflare (`../spec.md`)
 Type: task
 Who: the owner; a session checks
 Blocked by: 09, and `main` deployed on Vercel

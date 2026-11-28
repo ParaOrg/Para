@@ -1,6 +1,6 @@
 # 06: Preview hostnames in the code
 
-Status: ready-for-agent
+Status: paused 2026-11-27 (was ready-for-agent): the owner chose GitHub Actions → Cloudflare (`../spec.md`)
 Type: task
 Who: Sonnet
 Blocked by: none
