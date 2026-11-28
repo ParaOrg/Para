@@ -97,7 +97,7 @@ Counted from the same Metro Manila extract the landmark file is built from (open
 | 01 | [The footbridge file](issues/01-footbridge-file.md) | built: 413 footbridges, 66 kB (17.6 kB gzipped) |
 | 02 | [Footbridges on the commuter map](issues/02-commuter-layer.md) | built |
 | 03 | [Footbridges in the studio](issues/03-studio-layer.md) | built |
-| 04 | [A footbridge hint on the walk (design 1)](issues/04-walk-hint.md) | folded into Go here's honest walking (`../go-here/issues/05-honest-walking.md`), where it is built |
+| 04 | [A footbridge hint on the walk (design 1)](issues/04-walk-hint.md) | folded into Go here's honest walking (`../go-here/issues/05-honest-walking.md`), where it is to be built (not built yet) |
 | 05 | [Walking routing in the browser (design 2): research](issues/05-walk-routing-research.md) | needs-triage: only if the owner wants turn-by-turn walking (question 5) |
 
 ## Questions for the owner (each with a recommendation)

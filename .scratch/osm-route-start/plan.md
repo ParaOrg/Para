@@ -2,7 +2,7 @@
 
 The owner's OK, 2026-11-25. An editor starts a new line from an OpenStreetMap route relation instead of clicking it out from nothing. Studio only; the public map never reads any of it.
 
-Status: built. PR 1 is [#1223](https://github.com/ParaOrg/Para/pull/1223), PR 2 is [#1225](https://github.com/ParaOrg/Para/pull/1225), and their CI and monthly refresh are [#1230](https://github.com/ParaOrg/Para/pull/1230).
+Status: built, with a placeholder look; the open questions for the owner below still stand. PR 1 is [#1223](https://github.com/ParaOrg/Para/pull/1223), PR 2 is [#1225](https://github.com/ParaOrg/Para/pull/1225), and their CI and monthly refresh are [#1230](https://github.com/ParaOrg/Para/pull/1230).
 
 Planned in two pull requests:
 

@@ -562,7 +562,7 @@ Status on 22 November:
 - **Done:**
   - 1 (`check-times/`, #1132);
   - 3 for commuter-test (#1144: `closeCard` waits on a condition; no measurable speed-up);
-  - 8 (#1146): a push went from 33 jobs in 9m41s to 29 jobs in 7m34s, and a pull request from 32 jobs to 28.
+  - 8 (#1146): a push went from 33 jobs in 9m41s to 29 jobs in 7m34s, and a pull request from 32 jobs to 28;
   - 11 (#1122): lint and format skip other sessions' worktrees, and the local checks are green on Windows;
   - 14's `.github/` part (#1115): `ci.yml` runs on `merge_group`. The rulesets are the owner's.
 - **Skipped:** 2, because phone-test is not the long pole.

@@ -58,3 +58,5 @@ The tracks are made up along EDSA, as no recorded ride may be used:
 - a jeepney stopping for passengers: due.
 
 It is wired to nothing that draws, until the owner's frames come.
+
+- 2026-11-28, /tidy (owner-approved through the hub): status set to needs-info. The detection is built (`src/features/contribute/recorder/sakay-hint.ts`, `isSakayHintDue`); the prompt waits for the owner's design.
