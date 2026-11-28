@@ -100,7 +100,7 @@ export function useSavePanel({
     isLoop,
     signboard,
   });
-  // A return trip that stops short of where the other way began or ended notes it, and saves anyway.
+  // A return trip short of where the other way began or ended notes it, and saves anyway.
   const loop = existing ? [] : returnTripNotes(directions, route?.id ?? null, hotspots, draw.line);
   const { busy, error, setError, save } = useRouteSave({
     facts,

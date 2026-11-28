@@ -507,9 +507,16 @@ check(
   await addRoute().isVisible(),
 );
 await addRoute().click();
+check(
+  '  it opens a menu: draw it, or start from an OSM or an old Para route',
+  (
+    await page.getByRole('menu', { name: 'Add route' }).getByRole('menuitem').allInnerTexts()
+  ).join() === 'Draw it,Start from an OSM route,Start from an old Para route',
+);
+await page.getByRole('menuitem', { name: 'Draw it' }).click();
 await page.waitForTimeout(400);
 check(
-  '"+ Add route" starts the return trip with no point placed',
+  '"Draw it" starts the return trip with no point placed',
   (await pointsShown()) === 0,
   `${await pointsShown()} points`,
 );

@@ -1,7 +1,9 @@
 // "Start from OSM route" in the studio (.scratch/osm-route-start/plan.md), signed in, against the
 // save suites' stand-in for the database (lib/save-studio.mjs): the + menu's "Route from OSM", the
 // picker's search, the route's card, a drawing seeded from the route's line with its one gap to
-// check, the drawing kept over a reload, and its save a draft that publishes nothing. The OSM route
+// check, the drawing kept over a reload, and its save a draft that publishes nothing; then, once
+// approved, "+ Add route" → "Start from an OSM route" filling the route's empty slot, the toast
+// saying the line runs the same way as the drawn one. The OSM route
 // files are the suite's own: one route from Philcoa to UP - Ikot, two published hotspots, with an
 // 82 m gap in it. The router has no roads here (save-studio answers every request with no route),
 // so the line between the seeded points is drawn straight; the seeding, the gap and the save do
@@ -10,8 +12,13 @@
 //   node tests/e2e/studio-osm-start-test.mjs     against http://localhost:5173
 import { BASE } from './lib/harness.mjs';
 import {
+  approveAll,
   check,
+  clickAt,
+  directionsOf,
   done,
+  draftOf,
+  go,
   drafted,
   finish,
   log,
@@ -213,5 +220,58 @@ check(
   publicAsked.join(', '),
 );
 await publicPage.close();
+
+// ---- 7. "+ Add route" fills the route's empty slot from an OSM route
+await approveAll();
+const osmRoute = tables.route.find((r) => r.id === draft?.subject_id);
+const slotId = directionsOf(osmRoute?.id).find((v) => v.shape === null)?.id;
+check(
+  'approved, the OSM route is one route and two directions, one of them an empty slot',
+  !!slotId && directionsOf(osmRoute?.id).length === 2,
+);
+await go(LINE[1], 16);
+await clickAt([(LINE[1][0] + LINE[2][0]) / 2, (LINE[1][1] + LINE[2][1]) / 2], 700);
+const detail = page.getByTestId('route-line-detail');
+await detail.waitFor();
+await detail.getByRole('button', { name: '+ Add route' }).click();
+await page.getByRole('menuitem', { name: 'Start from an OSM route' }).click();
+await picker.waitFor();
+check(
+  '"+ Add route" → "Start from an OSM route" opens the same picker, the detail closed',
+  (await picker.isVisible()) && !(await detail.isVisible()),
+);
+await picker.getByLabel('Ref, name or relation id').fill('T999');
+await result.first().click();
+await picker.getByRole('button', { name: 'Start drawing' }).click();
+await hint.waitFor();
+await page.waitForTimeout(800);
+check(
+  '  Start drawing seeds the slot from the route’s line, the other way faint underneath',
+  (await pointsShown()) === SEEDED &&
+    (await page.evaluate(() => window.__src('draw-outbound')))?.features.length === 3,
+  `${await pointsShown()} points`,
+);
+const toast = (await page.getByTestId('toast').allInnerTexts()).join(' ');
+check(
+  '  the line runs the same way as the drawn one: the toast says so, nothing reversed',
+  /This line runs the same way as (.+?), and the empty slot is for the other way\./.test(toast),
+  toast,
+);
+await done();
+const slotWrites = log.length;
+await saveButton().click();
+await drafted();
+const slotDraft = draftOf('route', osmRoute?.id);
+const slotDirections = slotDraft?.payload.directions ?? [];
+check(
+  '  saved, it is a draft of the same route that fills the slot: no new route, both ways drawn',
+  slotDraft?.is_new === false &&
+    slotDirections.length === 2 &&
+    slotDirections.every((v) => v.shape) &&
+    slotDirections.some((v) => v.id === slotId && v.reversed === true),
+  writesSince(slotWrites)
+    .map((w) => `${w.method} ${w.table}`)
+    .join(', '),
+);
 
 await finish('studio-osm-start-test.png');

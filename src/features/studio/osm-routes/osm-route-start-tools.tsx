@@ -22,6 +22,7 @@ export function OsmRouteStartTools({ map, osmStart, isDrawing }: OsmRouteStartTo
   if (!isDrawing && osmStart.isPickerOpen)
     return (
       <OsmRoutePicker
+        key={osmStart.slot?.routeId ?? 'new'}
         mapCentre={() => {
           if (!map) return null;
           const { lng, lat } = map.getCenter();

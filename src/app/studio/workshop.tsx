@@ -32,6 +32,7 @@ import {
   useDraftOnly,
   useDraftTrip,
   useLoopClosing,
+  useRouteStarts,
   useSaveFlow,
   useSaveTarget,
   useIsWideScreen,
@@ -208,6 +209,8 @@ export function Workshop({ session, recovery }: WorkshopProps) {
     saved.directions,
     hotspots.hotspots,
   );
+  // The New +'s and "+ Add route"'s pickers: from an OSM route, or an old Para route.
+  const starts = useRouteStarts({ map, draw, setNotice, saved, hotspots, startReturnTrip });
 
   const onDone = () => {
     if (!isSignedIn) openSignIn();
@@ -350,7 +353,7 @@ export function Workshop({ session, recovery }: WorkshopProps) {
                   draftTrip={draftTrip.trip}
                   opening={opening}
                   deletes={deletes}
-                  onDrawReturnTrip={startReturnTrip}
+                  onAddOtherWay={starts.addOtherWay}
                 />
                 <PlaygroundTools
                   map={map}
@@ -361,6 +364,7 @@ export function Workshop({ session, recovery }: WorkshopProps) {
                   saved={saved}
                   hotspots={hotspots}
                   saveFlow={saveFlow}
+                  starts={starts}
                   contribution={contribution}
                   extendEnds={extendEnds}
                   isPlayground={isPlayground}
