@@ -30,12 +30,6 @@ export function kilometresText(metres: number): string {
   return `${Math.floor(tenths / 10)}.${tenths % 10}`;
 }
 
-/** Seconds as a clock: `1:42`. */
-export function countdownText(seconds: number): string {
-  const whole = Math.max(0, Math.ceil(seconds));
-  return `${Math.floor(whole / 60)}:${String(whole % 60).padStart(2, '0')}`;
-}
-
 /** A moment to the second, with its year, for telling two recordings apart. */
 export const fullDateTimeText = (time: number): string =>
   new Date(time).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'medium' });
@@ -84,11 +78,3 @@ export function tripTimeText(seconds: number): string {
   const last = parts.pop();
   return parts.length === 0 ? `${last}` : `${parts.join(' ')} and ${last}`;
 }
-
-/** A time of day as the ride's flags say it: `10:42 AM`, Manila's, whatever the phone's zone. */
-export const clockText = (time: number): string =>
-  new Date(time).toLocaleTimeString('en-US', {
-    timeZone: 'Asia/Manila',
-    hour: 'numeric',
-    minute: '2-digit',
-  });

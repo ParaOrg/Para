@@ -53,9 +53,8 @@ export async function showContribution(id: string): Promise<void> {
   }
 }
 
-// TODO: type these through the generated client once database.types.ts is
-// regenerated after the contribution_use migration is applied; until then the
-// table and the two functions are not in `Database`.
+// TODO: switch these calls to the typed client and drop `untyped`: database.types.ts now has
+// contribution_use, block_contributor and unblock_contributor.
 const untyped = (): SupabaseClient => requireSupabase();
 
 export interface ContributionUse {

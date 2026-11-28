@@ -40,11 +40,6 @@ export function pickCount(picks: ModePicks): number {
   return isNarrowed(picks) ? new Set(picks).size : 0;
 }
 
-/** How many modes a filter has picked, for its button's count: one, or none under All. */
-export function modesPicked(filter: ModeFilter): number {
-  return pickCount(picksOf(filter));
-}
-
 /**
  * The picks with `mode` picked or let go, in the filter's order. Picking the last mode left out
  * reads as All: every route, nothing picked.
@@ -111,9 +106,4 @@ const KEPT = {
 /** Whether a direction stays listed under these picks: it is a ride of any mode picked. */
 export function passesModePicks(direction: Direction, picks: ModePicks): boolean {
   return !isNarrowed(picks) || picks.some((mode) => KEPT[mode](direction));
-}
-
-/** Whether a direction stays listed under a filter: a single choice's picks (picksOf). */
-export function passesModeFilter(direction: Direction, filter: ModeFilter): boolean {
-  return passesModePicks(direction, picksOf(filter));
 }

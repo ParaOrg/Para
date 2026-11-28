@@ -130,9 +130,9 @@ public final class Ride {
     }
 
     /**
-     * The time paused, as the page's card counts it (recording-figures.ts pausedSecondsOf): the
-     * closed "paused" gaps, those that overlap or touch counted once. Time lost to a cut-off
-     * ("resumed") counts as the ride's, as on the page.
+     * The time paused, as the page's card counts it: the closed "paused" gaps, those that overlap
+     * or touch counted once. Time lost to a cut-off ("resumed") counts as the ride's, as on the
+     * page.
      */
     long pausedMs() {
         List<Gap> paused = new ArrayList<>();
