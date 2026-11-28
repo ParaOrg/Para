@@ -509,10 +509,11 @@ check(
 await addRoute().click();
 await page.waitForTimeout(400);
 check(
-  '"+ Add route" starts the return trip on the outbound\'s end',
-  (await pointsShown()) === 1,
+  '"+ Add route" starts the return trip with no point placed',
+  (await pointsShown()) === 0,
   `${await pointsShown()} points`,
 );
+await clickAt(P2, 300);
 await clickAt(BACK_MID, 300);
 await closeByBadge();
 await idle();

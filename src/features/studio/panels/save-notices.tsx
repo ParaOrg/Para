@@ -61,7 +61,7 @@ export function SaveNotices({
         <p
           key={text}
           data-testid="save-loop"
-          className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800"
+          className="mt-3 rounded-lg bg-blue-50 px-3 py-2 text-xs text-blue-900"
         >
           {text}
         </p>

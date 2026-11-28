@@ -901,6 +901,8 @@ export async function drawTheRoute() {
   await openCard(OUT[1]);
   await addReturnTrip();
   await page.waitForTimeout(400);
+  // The return trip starts with no point: its first tap, on where papunta ended.
+  await clickAt(BACK[0], 300);
   await clickAt(BACK[1], 300);
   await clickAt(at(-0.002, -0.0015), 300);
   await closeByBadge();
