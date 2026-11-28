@@ -6,7 +6,6 @@ import type { Direction, RouteRow, TransportMode, UnnamedDirectionRow } from './
 import { hotspotLabel, type Hotspot } from './hotspots';
 
 export type {
-  Confidence,
   Direction,
   RouteRow,
   RouteSummary,

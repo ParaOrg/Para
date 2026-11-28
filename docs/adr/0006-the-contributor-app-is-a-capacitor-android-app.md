@@ -120,7 +120,7 @@ service with a visible "Para is recording" notification.
   and comes back if Android kills the process; only Pause, Finish or a refused permission stops it.
 - It takes the fixes from Play Services' `FusedLocationProviderClient`, one a second, writes each
   straight to `FixLog` and hands it to the page while the page is there (`RidePlugin`'s `rideFix`
-  event). The page keeps its catch-up from the log (`native-fix-catch-up.ts`, `importNativeFixes`).
+  event). The page keeps its catch-up from the log (`native/fix-catch-up.ts`; `importNativeFixes` in `native-bridge/native-fixes.ts`).
 - The notification's Pause and Finish stop the service; Resume starts it again while the page is
   alive and its watch was on, as before. A page gone no longer ends a recording ride.
 - `ParaServiceWatchers.java` and `ParaApplication`'s broadcast listener are gone with the

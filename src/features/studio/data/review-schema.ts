@@ -1,7 +1,6 @@
 import * as z from 'zod/mini';
 
 export type DraftKind = 'route' | 'hotspot';
-export type DraftStatus = 'draft' | 'pending';
 
 /** The machine codes publish_draft and friends answer with (0022, 20261105160000_draft_published). */
 const reviewCodeSchema = z.enum([
@@ -32,7 +31,6 @@ const reviewCodeSchema = z.enum([
   'busy',
   'refused',
 ]);
-export type ReviewCode = z.infer<typeof reviewCodeSchema>;
 
 export const draftRowSchema = z.object({
   id: z.string(),

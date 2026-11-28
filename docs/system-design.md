@@ -24,7 +24,7 @@ flowchart LR
   publish["Publish: nightly GitHub workflow"]
   repo[("GitHub repo, main branch")]
   osrm["OSRM router (snaps lines to roads)"]
-  tiles["Basemap host: Para tiles server (staging), OpenFreeMap (main)"]
+  tiles["Basemap host: Para tiles server"]
 
   editor --> studio
   studio -- "reads and saves" --> db
@@ -52,6 +52,7 @@ sequenceDiagram
   participant DB as Supabase
   participant P as Publish workflow
   participant G as GitHub main
+  participant A as GitHub Actions, deploy.yml
   participant CF as Cloudflare
 
   E->>S: Draw a line, name its ends, save
@@ -67,9 +68,10 @@ sequenceDiagram
     P->>P: Same bytes, no commit
   else Files changed
     P->>G: Commit public/data
-    G->>CF: Push starts a build
-    CF->>CF: npm run build ends with check-build
-    Note over CF: check-build fails the deploy if any studio code, Supabase client or database address reaches the public page
+    G->>A: Push runs Deploy
+    A->>A: npm run build ends with check-build
+    Note over A: check-build fails the deploy if any studio code, Supabase client or database address reaches the public page
+    A->>CF: wrangler deploy
     CF-->>E: New map files are live
   end
   P->>G: Open, update or close the issue "The map needs a look"
@@ -173,8 +175,8 @@ Built since the pictures above, which do not show them yet:
   way to the database; it is never public. See
   [`.scratch/contribute/`](../.scratch/contribute/spec.md).
 - **The studio's maps:** three maps behind one switch. The Contributors map shows every
-  contribution as it came, for editors only. Editors draw on the Playground (Draft, Pending,
-  Approved), and the Public map shows what commuters get. See
+  contribution as it came, for editors only. Editors draw on the Playground (Draft, then
+  Published), and the Public map shows what commuters get. See
   [`.scratch/studio-maps/`](../.scratch/studio-maps/spec.md).
 
 ## 7. Not yet built

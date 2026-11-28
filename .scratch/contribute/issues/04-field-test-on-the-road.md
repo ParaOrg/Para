@@ -1,6 +1,6 @@
 # 04: The field test, on the road
 
-Status: ready-for-human
+Status: resolved
 Type: research
 Wave: 1 and 2
 Who: the owner, and the people the owner sends the link to; a session helps read the results
@@ -32,3 +32,5 @@ None in the repo. A ride becomes test data (ticket 10) only if it is the owner's
 - `Status: resolved`.
 
 ## Comments
+
+- 2026-11-28, the owner (through the hub): "the road test is done and working." Resolved.

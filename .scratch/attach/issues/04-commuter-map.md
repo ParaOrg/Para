@@ -10,14 +10,14 @@ Needs the owner's Figma for the faint look and the card wording (open questions 
 
 - Draw attached stretches fainter than the main line, using the token the owner picks.
 - Tapping a terminal on an attached stretch shows the route as "A – Z (also from A2)" (wording per open question 2). The route name stays the main start's.
-- The ride's fare uses the stretch's own fare information.
+- The ride's fare is the main line's fare (the owner, 2026-11-28).
 - When the commuter is near an attached terminal, directions suggest boarding there.
 - Anything shown only on the map is also text for screen-reader users.
 
 ## Files it owns
 
 - `src/features/routes/map/` (the faint layer, taps)
-- `src/features/routes/cards/` (the card wording, the fare)
+- `src/features/routes/cards/` (the card wording)
 - `src/features/locator/` only if the boarding suggestion needs it, through its `index.ts`
 - Stories for the new card states
 

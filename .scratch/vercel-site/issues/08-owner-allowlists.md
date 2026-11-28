@@ -1,6 +1,6 @@
 # 08: Turnstile and Supabase allow staging
 
-Status: ready-for-human
+Status: paused 2026-11-27 (was ready-for-human): the owner chose GitHub Actions → Cloudflare (`../spec.md`)
 Type: task
 Who: the owner
 Blocked by: 07

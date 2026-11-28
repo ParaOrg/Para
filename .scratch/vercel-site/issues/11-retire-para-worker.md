@@ -1,6 +1,6 @@
 # 11: Retire the para Worker
 
-Status: needs-triage (after 10's 14 days)
+Status: paused 2026-11-27 (was needs-triage (after 10's 14 days)): the owner chose GitHub Actions → Cloudflare (`../spec.md`)
 Type: task
 Who: Opus for the code and docs; the owner deletes in Cloudflare
 Blocked by: 10
