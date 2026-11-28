@@ -32,7 +32,7 @@ export function reviewMessage(result: ReviewResult): string {
     case 'no_draft':
       return 'This draft is no longer available. Refresh to check its current state.';
     case 'not_your_draft':
-      return "This is another editor's draft, and only its maker can change it. Nothing was changed.";
+      return "This is another editor's draft, so you cannot save over it or keep it. Nothing was changed.";
     case 'draft_too_recent':
       return discardTooRecentMessage(result);
     case 'ends_taken':

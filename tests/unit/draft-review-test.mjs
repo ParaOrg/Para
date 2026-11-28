@@ -168,7 +168,6 @@ test('a missing draft or conflict never claims it was published', () => {
   assert.match(reviewMessage({ code: 'no_draft' }), /no longer available/);
   assert.match(reviewMessage({ code: 'conflict' }), /changed since/);
   assert.match(reviewMessage({ code: 'revision_mismatch' }), /Someone changed/);
-  assert.match(reviewMessage({ code: 'not_your_draft' }), /another editor's draft.*only its maker/);
 });
 
 test('review labels tolerate unnamed routes and malformed payloads', () => {
@@ -190,4 +189,10 @@ test('query clients isolate private queues and never retry a mutation automatica
   assert.equal(first.getDefaultOptions().mutations.retry, false);
   first.clear();
   second.clear();
+});
+
+test("another editor's draft refused: the words say it is theirs and nothing changed", () => {
+  const words = reviewMessage({ code: 'not_your_draft' });
+  assert.match(words, /another editor's draft/);
+  assert.match(words, /Nothing was changed/);
 });

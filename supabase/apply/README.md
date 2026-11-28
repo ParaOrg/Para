@@ -924,8 +924,9 @@ same signature, same grants, still a security definer with its search path pinne
 `not_your_draft` to an editor who is not the draft's maker, before it reads the revision or changes anything,
 the rule `save_draft` already has. A draft whose maker's account is gone can still be kept by any editor. The
 studio already refuses Keep on another editor's draft in the browser; this makes the database say it too, and
-stops another editor resetting a draft's 7 days (`20261128090000_discard_stale_draft`). No table, policy or row
-changes.
+stops another editor resetting a draft's 7 days (`20261128090000_discard_stale_draft`) through Keep. One path is left
+and is not changed here: `unpublish` rebases the unpublished subject's own in-sync draft, which counts as a change,
+so unpublishing resets that one draft's 7 days once. No table, policy or row changes.
 
 | File | What it does |
 | --- | --- |
