@@ -10,6 +10,10 @@
 --     stale revision is still refused after that (revision_mismatch);
 --   - the maker discards their own draft at any age, fresh or old;
 --   - a maker-less draft is discarded by any editor, fresh or old;
+--   - a draft made just now with an old updated_at (unpublish) is fresh, and a
+--     stamp in the future counts as now, never for more than 7 days;
+--   - a draft made just now with an old updated_at (unpublish) is fresh, and a
+--     stamp in the future counts as now, never for more than 7 days;
 --   - a save moves the 7 days: a draft old enough to discard is fresh again
 --     once its maker saves it.
 -- The second part is read-only: one row per check, every ok should be t.
@@ -34,11 +38,11 @@ insert into public.stop (id, owner_id, name, kind, point)
 select ('7e7e7e80-0000-0000-0000-0000000000a' || n)::uuid, '7e7e7e80-0000-0000-0000-0000000000e1',
        'Stale-draft check H' || n, 'hintuan',
        jsonb_build_object('type', 'Point', 'coordinates', jsonb_build_array(121.1 + n * 0.01, 14.6))
-from generate_series(1, 5) n;
+from generate_series(1, 7) n;
 
 set role authenticated;
 select set_config('request.jwt.claim.sub', '7e7e7e80-0000-0000-0000-0000000000e1', true);
--- e1 makes a draft on each of the five hotspots.
+-- e1 makes a draft on each of the seven hotspots.
 select public.claim_draft('hotspot', s.id, false, s.revision, pg_temp.payload(s.id))
   from public.stop s where s.name like 'Stale-draft check H%';
 reset role;
@@ -47,7 +51,7 @@ reset role;
 -- (rolled back with the rest) so a draft can be given an age.
 alter table public.draft disable trigger draft_revision;
 create function pg_temp.age(n int, days interval) returns void language sql as $$
-  update public.draft set updated_at = now() - days
+  update public.draft set updated_at = now() - days, created_at = now() - days
   where subject_id = ('7e7e7e80-0000-0000-0000-0000000000a' || n)::uuid;
 $$;
 -- H1: 1 day. H2: 6 days 23 h. H3: exactly 7 days. H4: 30 days. H5: 30 days, maker gone.
@@ -55,6 +59,11 @@ select pg_temp.age(1, interval '1 day'), pg_temp.age(2, interval '6 days 23 hour
        pg_temp.age(3, interval '7 days'), pg_temp.age(4, interval '30 days'),
        pg_temp.age(5, interval '30 days');
 update public.draft set editor_id = null where subject_id = '7e7e7e80-0000-0000-0000-0000000000a5';
+-- H6: updated_at 30 days old but created just now (what unpublishing leaves): fresh.
+select pg_temp.age(6, interval '30 days');
+update public.draft set created_at = now() where subject_id = '7e7e7e80-0000-0000-0000-0000000000a6';
+-- H7: both stamps in the future (a direct insert): counts as changed now, never beyond 7 days.
+select pg_temp.age(7, interval '-30 days');
 create function pg_temp.draft_of(n int) returns uuid language sql as $$
   select id from public.draft where subject_id = ('7e7e7e80-0000-0000-0000-0000000000a' || n)::uuid;
 $$;
@@ -91,6 +100,14 @@ select pg_temp.check(public.discard_draft(pg_temp.draft_of(4)) ->> 'code' = 'dis
 select pg_temp.check(public.discard_draft(pg_temp.draft_of(5)) ->> 'code' = 'discarded',
   'any editor discards an old maker-less draft');
 
+select pg_temp.check(r ->> 'code' = 'draft_too_recent'
+    and (r ->> 'discardable_from')::timestamptz > now() + interval '6 days 23 hours',
+  'a draft with an old updated_at but a new created_at (unpublish) is fresh')
+  from (select public.discard_draft(pg_temp.draft_of(6)) r) x;
+select pg_temp.check(r ->> 'code' = 'draft_too_recent'
+    and (r ->> 'discardable_from')::timestamptz <= now() + interval '7 days',
+  'a stamp in the future counts as now: refused, but never for more than 7 days')
+  from (select public.discard_draft(pg_temp.draft_of(7)) r) x;
 -- The maker discards their own fresh draft at once, and a save moves the clock.
 select set_config('request.jwt.claim.sub', '7e7e7e80-0000-0000-0000-0000000000e1', true);
 select pg_temp.check(public.discard_draft(pg_temp.draft_of(1)) ->> 'code' = 'discarded',

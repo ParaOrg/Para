@@ -445,7 +445,8 @@ export function draftWorkflow(tables, { newId, fill, now }) {
       // 20261128090000_discard_stale_draft: another editor's draft only once it has gone 7 days
       // without a change; a maker-less draft is anyone's.
       if (kept.editor_id != null && kept.editor_id !== caller) {
-        const from = new Date(kept.updated_at).getTime() + 7 * 24 * 60 * 60 * 1000;
+        const lastChange = Math.max(Date.parse(kept.updated_at), Date.parse(kept.created_at));
+        const from = lastChange + 7 * 24 * 60 * 60 * 1000;
         if (from > Date.now())
           return {
             status: 200,

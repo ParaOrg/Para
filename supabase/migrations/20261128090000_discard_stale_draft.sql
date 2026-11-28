@@ -1,23 +1,27 @@
 -- ParaPo — another editor's draft may be discarded once it has gone 7 days
 -- without a change.
 --
--- Until now only a draft's maker (or anyone, once the maker's account is gone)
--- could discard it: discard_draft answered not_your_draft to anyone else, so a
--- draft an editor walked away from blocked its route or hotspot for good. The
--- owner's decision (2026-11-28): another editor may discard it once it has
--- gone 7 days without a change. An editor's own draft is discarded at any
--- time, as before.
+-- discard_draft answered not_your_draft to anyone but a draft's maker, so a
+-- draft an editor walked away from blocked its route or hotspot for good. Now
+-- another editor may discard it once it has gone 7 days without a change. A
+-- maker-less draft stays anyone's, and a draft's own maker discards it at any
+-- time.
 --
--- A draft's last change is draft.updated_at, which the draft_revision trigger
--- sets to now() on every update (a save, a Keep, a take-down's rewrite), so
--- the 7 days count from the server's clock. A younger draft answers
--- {"code": "draft_too_recent", "discardable_from": <timestamptz>}, and nothing
--- is deleted. The check sits after the maker test and before the revision
--- test, so a caller who may not discard yet is never told the revision.
+-- A draft's last change is the later of draft.updated_at, which the
+-- draft_revision trigger sets to now() on every update (a save, a Keep), and
+-- draft.created_at: a draft made by unpublishing or taking down carries the
+-- row's old last-save time in updated_at, but it is new work. Both are
+-- clamped to now(), so a stamp set in the future by a direct insert (editors
+-- may insert their own drafts) cannot make a draft undiscardable. A younger
+-- draft answers {"code": "draft_too_recent", "discardable_from": <timestamptz>}
+-- and nothing is deleted. The check sits after the maker test and before the
+-- revision test, so a caller who may not discard yet is never told the
+-- revision.
 --
 -- The 7 days are written in two places that must match: the interval below,
 -- and OTHER_EDITOR_DISCARD_DAYS in src/features/studio/data/draft-discard.ts,
--- which decides whether the studio offers Discard at all.
+-- which decides whether the studio offers Discard at all
+-- (tests/unit/draft-discard-test.mjs compares them).
 --
 -- Same signature, so the grants stay as 0022_draft_ops set them (authenticated
 -- only, not anon or PUBLIC); the function stays a security definer with its
@@ -39,6 +43,7 @@ set search_path = ''
 as $$
 declare
   d public.draft;
+  last_change timestamptz;
   -- Must match OTHER_EDITOR_DISCARD_DAYS in the studio.
   stale_after constant interval := interval '7 days';
 begin
@@ -51,12 +56,13 @@ begin
   end if;
   -- Another editor's draft (a maker-less one belongs to nobody): only once it
   -- has gone the whole interval without a change.
+  last_change := greatest(least(d.updated_at, now()), least(d.created_at, now()));
   if d.editor_id is not null
-     and d.editor_id <> (select auth.uid())
-     and d.updated_at + stale_after > now() then
+     and d.editor_id is distinct from (select auth.uid())
+     and last_change + stale_after > now() then
     return jsonb_build_object(
       'code', 'draft_too_recent',
-      'discardable_from', d.updated_at + stale_after
+      'discardable_from', last_change + stale_after
     );
   end if;
   if p_revision is not null and d.revision <> p_revision then

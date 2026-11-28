@@ -896,10 +896,7 @@ prints the plan and writes nothing; add `--write` to rewrite the three files, th
 grants, still a security definer with its search path pinned). Another editor may discard a draft once it
 has gone 7 days without a change (`draft.updated_at`); a younger one answers `draft_too_recent` with the
 time it can be discarded from, and nothing is deleted. The maker's own draft, and a maker-less one, are
-discarded at any age, as before. No table, policy or row changes. The studio is already written for either
-state: before the apply it offers another editor's draft no Discard (the line says from when, and the
-database's older `not_your_draft` answer is shown in words if one is tried); after it, from day 7 it
-offers Discard…. The 7 days are also `OTHER_EDITOR_DISCARD_DAYS` in
+discarded at any age, as before. No table, policy or row changes. Apply it before the studio with the Discard… button is deployed: until it is, the older function still answers `not_your_draft` to another editor, and the studio says so in words. The 7 days are also `OTHER_EDITOR_DISCARD_DAYS` in
 `src/features/studio/data/draft-discard.ts`; the two numbers must match.
 
 | File | What it does |

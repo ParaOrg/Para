@@ -10,9 +10,16 @@ export const OTHER_EDITOR_DISCARD_DAYS = 7;
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-/** When another editor's draft, last changed at `updatedAt` (the server's stamp), may be discarded. */
-export function discardableFrom(updatedAt: string): Date {
-  return new Date(new Date(updatedAt).getTime() + OTHER_EDITOR_DISCARD_DAYS * DAY_MS);
+/**
+ * When another editor's draft may be discarded: 7 days after its last change, the later of the
+ * server's two stamps (a draft made by unpublishing carries the row's old updated_at, but is new).
+ */
+export function discardableFrom(stamps: Pick<DraftRow, 'updated_at' | 'created_at'>): Date {
+  const lastChange = Math.max(
+    new Date(stamps.updated_at).getTime(),
+    new Date(stamps.created_at).getTime(),
+  );
+  return new Date(lastChange + OTHER_EDITOR_DISCARD_DAYS * DAY_MS);
 }
 
 /** What the studio offers on a draft that is another editor's. */
@@ -25,7 +32,7 @@ export type OtherDiscard = { state: 'wait'; from: Date | null } | { state: 'read
  */
 export function otherDiscardOf(draft: DraftRow, userId: string, now: Date): OtherDiscard | null {
   if (!isAnothersDraft(draft, userId)) return null;
-  const from = discardableFrom(draft.updated_at);
+  const from = discardableFrom(draft);
   if (Number.isNaN(from.getTime())) return { state: 'wait', from: null };
   return now.getTime() >= from.getTime() ? { state: 'ready' } : { state: 'wait', from };
 }
