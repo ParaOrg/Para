@@ -182,9 +182,9 @@ export function useSheetGestures({
     const target = e.target instanceof Node ? e.target : null;
     const raises =
       handle.contains(target) || (at === 'low' && raisesAtLow(bodyRef.current, target));
-    // Caught mid-glide, it stops where it is, as a list does under a finger. A tap that steps it
-    // (the handle, or the body at Low) steps it on from where it is going instead.
-    const isCaught = !raises && glider.isCoasting();
+    // Caught mid-coast, it stops where it is, as a list's fling does under a finger, the handle
+    // too. A tap's or a key's glide is not caught: a tap then is the tapped thing's own.
+    const isCaught = glider.isCoasting();
     // At full height the body scrolls as a list does; the header brings the sheet down.
     const isOnList = !headRef.current?.contains(target) && !handle.contains(target);
     if (at === 'full' && isOnList && !isCaught) return;
@@ -208,7 +208,10 @@ export function useSheetGestures({
         // Followed from DRAG_PX along the finger's way, so the sheet does not jump to catch up
         // with it; the finger's own first sample, so its speed is read from where it really was.
         const tookHold = e.clientY + Math.sign(ev.clientY - e.clientY) * DRAG_PX;
-        track = follow(ev.clientY, ev.timeStamp, shown + tookHold - ev.clientY, h, heights);
+        // A glide still under way stops here, and the finger takes the sheet from where it is now.
+        const from = isCaught ? shown : shownOnScreen(sheet, heights.full);
+        glider.clear();
+        track = follow(ev.clientY, ev.timeStamp, from + tookHold - ev.clientY, h, heights);
         hold();
       }
       show(track.move(ev.clientY, ev.timeStamp));
@@ -222,8 +225,8 @@ export function useSheetGestures({
       hotspot();
       if (track || raises || isCaught) swallowTheTapsClick(ev.clientX, ev.clientY);
       if (track) now.current.throwTo(track, ev.timeStamp, ev.clientY, true);
-      else if (raises) now.current.settle(now.current.afterTap(at));
       else if (isCaught) now.current.settle(snapFor(shown, 0, heights, h));
+      else if (raises) now.current.settle(now.current.afterTap(at));
     };
     const cancel = (ev: PointerEvent) => {
       if (ev.pointerId !== e.pointerId) return;
