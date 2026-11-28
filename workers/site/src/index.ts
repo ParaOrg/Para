@@ -46,7 +46,7 @@ async function handle(request: Request, env: Env, ctx: ExecutionContext): Promis
   if (!databaseUrl || !turnstileSecret) return unavailable();
   return handleReport(request, {
     // The address is handed to Cloudflare's limiter, in memory, and nowhere else: never stored,
-    // never logged (ADR 0010, Q196).
+    // never logged (Q196).
     isAllowed: async () =>
       (await env.REPORT_LIMIT.limit({ key: request.headers.get('cf-connecting-ip') ?? 'unknown' }))
         .success,

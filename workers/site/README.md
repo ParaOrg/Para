@@ -2,7 +2,8 @@
 
 The Worker that serves the site, `para` (`wrangler.jsonc` at the repo root). Every address is served from
 `dist/` as before. Only `/api/*` runs this script (`run_worker_first`), and it answers one address:
-`/api/report`, a commuter's route report (ADR 0010, `.scratch/route-reports/README.md`).
+`/api/report`, a commuter's route report. Its record and ADR are in open draft PR #909, not yet merged;
+ADR 0010 is now another decision, so #909's ADR takes the next free number, 0012, when it resumes.
 
 ## /api/report
 
