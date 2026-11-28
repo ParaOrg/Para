@@ -67,7 +67,7 @@ export function HeldDraftSheet({ draft, places, onApproved, onClose }: HeldDraft
         subjectId={draft.subject_id}
         lock={lock ?? { state: 'checking' }}
         onRetry={retry}
-        onApproved={() => {
+        onSettled={() => {
           onApproved();
           onClose();
         }}

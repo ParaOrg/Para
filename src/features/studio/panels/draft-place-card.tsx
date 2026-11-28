@@ -90,7 +90,7 @@ export function DraftPlaceCard({
           subjectId={draft.subject_id}
           lock={lock}
           onRetry={retry}
-          onApproved={() => {
+          onSettled={() => {
             onApproved();
             onClose();
           }}

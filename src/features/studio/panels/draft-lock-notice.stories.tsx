@@ -48,3 +48,54 @@ export const CheckingWithApprove: Story = {
     await expect(within(canvasElement).queryByRole('button', { name: 'Approve' })).toBeNull();
   },
 };
+
+const FROM = new Date('2026-12-05T10:00:00Z');
+
+/** Another editor's draft younger than 7 days: no Discard, one line saying from when. */
+export const DiscardLaterLine: Story = {
+  args: { onApprove: fn(), onDiscard: fn(), otherDiscard: { state: 'wait', from: FROM } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(
+      canvas.getByText(/^You can discard this from \d+ \w+ if it isn't changed\.$/),
+    ).toBeVisible();
+    await expect(canvas.queryByRole('button', { name: /^Discard/ })).toBeNull();
+  },
+};
+
+/** The same, when the draft's stamp could not be read: no date. */
+export const DiscardLaterNoDate: Story = {
+  args: { onApprove: fn(), otherDiscard: { state: 'wait', from: null } },
+};
+
+/** Another editor's draft that has gone 7 days without a change: Discard…, which asks first. */
+export const DiscardReady: Story = {
+  args: { onApprove: fn(), onDiscard: fn(), otherDiscard: { state: 'ready' } },
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.queryByText(/You can discard this/)).toBeNull();
+    await userEvent.click(canvas.getByRole('button', { name: 'Discard…' }));
+    await expect(args.onDiscard).toHaveBeenCalled();
+  },
+};
+
+/** Discarding: the button says so, and neither it nor Approve can be pressed again. */
+export const Discarding: Story = {
+  args: { onApprove: fn(), onDiscard: fn(), otherDiscard: { state: 'ready' }, isDiscarding: true },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole('button', { name: 'Discarding…' })).toBeDisabled();
+    await expect(canvas.getByRole('button', { name: 'Approve' })).toBeDisabled();
+  },
+};
+
+/** The database refused: the draft was changed after the card opened. */
+export const DiscardRefused: Story = {
+  args: {
+    onApprove: fn(),
+    onDiscard: fn(),
+    otherDiscard: { state: 'ready' },
+    error:
+      "Nothing was discarded. This draft was changed in the last 7 days. You can discard this from 5 Dec if it isn't changed.",
+  },
+};

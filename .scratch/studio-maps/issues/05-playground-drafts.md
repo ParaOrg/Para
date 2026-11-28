@@ -1,6 +1,6 @@
 # 05: The Playground saves drafts
 
-Status: ready-for-human (owner: approve the "being changed by" wording in the PR, and decide the 7-day rule; then try two editors on the live studio)
+Status: ready-for-human (owner: apply the 7-day migration, approve the "being changed by" wording, then try two editors on the live studio)
 Type: task
 Wave: 3
 Who: Sonnet
@@ -41,3 +41,5 @@ Still open on 05:
 - The acceptance check "after any number of saves, the publish run by hand writes byte-identical files" and the live try with two real editors are the owner's.
 
 2026-10-26, review fixes on PR #407: the Drafts screen no longer edits another editor's draft (details form replaced by the notice; `saveDraftFacts`, `refreshDraftBase` and a hotspot take-down are guarded). Written, not applied: `supabase/migrations/20261026090000_draft_update_own.sql` narrows `draft_update` to the draft's maker (or a draft whose maker is gone), so the database says it too; the review functions are security definers and are unaffected. The owner applies it from `supabase/apply/20261026090000_draft_update_own_apply.sql`.
+
+2026-11-28, the 7-day rule (owner's decision: another editor may discard a draft only once it has gone 7 days without a change; an editor's own draft any time, after the confirmation). Corrects the note above: by then `discard_draft` already answered `not_your_draft` to another editor (20261105120000_review_rules) and the studio offered Discard to the maker only, so the rule loosens that. Built: the migration `supabase/migrations/20261128090000_discard_stale_draft.sql` makes `discard_draft` refuse another editor's draft younger than 7 days (`draft_too_recent`, with `discardable_from`), counted from `draft.updated_at`; same signature, grants and security settings. Studio: on another editor's draft the lock notice shows "You can discard this from 5 Dec if it isn't changed." until then, and Discard… (with its confirmation) from day 7; the database's refusal, if the card is stale, is shown in words. The 7 days are `OTHER_EDITOR_DISCARD_DAYS` (`src/features/studio/data/draft-discard.ts`) and the migration's interval, which must match. Unit checks `draft-discard-test`; `studio-two-editors-test` covers a fresh draft (no Discard, the line), an old one (Discard…, asks first), and a stale card (refused). **The migration is written, not applied: the owner applies it** (`supabase/apply/20261128090000_discard_stale_draft_*.sql`, steps in `supabase/apply/README.md`). Until then the live database still refuses another editor's discard in every case, and the studio says so in words.
