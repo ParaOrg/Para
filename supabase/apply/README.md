@@ -889,3 +889,28 @@ map-data check would warn about each one.
 To regenerate against the tables as they are now (after map edits, say):
 `node --experimental-strip-types --import ./scripts/node/ts-resolve.mjs scripts/relink/relink-stations.mjs`
 prints the plan and writes nothing; add `--write` to rewrite the three files, then commit them.
+
+# Applying discard_stale_draft to the live project
+
+`20261128090000_discard_stale_draft` replaces one function, `public.discard_draft` (same signature, same
+grants, still a security definer with its search path pinned). Another editor may discard a draft once it
+has gone 7 days without a change (`draft.updated_at`); a younger one answers `draft_too_recent` with the
+time it can be discarded from, and nothing is deleted. The maker's own draft, and a maker-less one, are
+discarded at any age, as before. No table, policy or row changes. Apply it before the studio with the Discard… button is deployed: until it is, the older function still answers `not_your_draft` to another editor, and the studio says so in words. The 7 days are also `OTHER_EDITOR_DISCARD_DAYS` in
+`src/features/studio/data/draft-discard.ts`; the two numbers must match.
+
+| File | What it does |
+| --- | --- |
+| `20261128090000_discard_stale_draft_apply.sql` | One transaction. Checks this is not in the ledger and `review_rules` is. Applies `migrations/20261128090000_discard_stale_draft.sql` (carried unchanged). Checks `discard_draft` is a definer with a pinned path, answers `draft_too_recent` before it deletes, and is granted to `authenticated` only. Writes the ledger row `discard_stale_draft`. Any failed check raises and nothing is changed. A second run stops at the first check and changes nothing. |
+| `20261128090000_discard_stale_draft_check.sql` | Part one adds two test editors and five hotspot drafts of set ages, proves the rule (1 day and 6 days 23 hours refused; exactly 7 and 30 days discarded; the maker's own and a maker-less draft at any age; a save starts the 7 days again), then rolls all of it back. Part two is read-only: 5 rows, all `ok` should be `t`. |
+| `20261128090000_discard_stale_draft_revert.sql` | One transaction: `discard_draft` as `review_rules` wrote it (only the maker, or anyone once the maker is gone), and the ledger row removed. Touches no data. Safe to run twice. |
+
+## Steps
+
+1. Run `20261128090000_discard_stale_draft_apply.sql`. It ends with `COMMIT`; an error means nothing changed.
+2. Run `20261128090000_discard_stale_draft_check.sql`: part one ends with `ROLLBACK` and no error; part two gives 5 rows,
+   all `ok = t`.
+3. Record the ledger version
+   (`select version from supabase_migrations.schema_migrations where name = 'discard_stale_draft';`) in
+   `migrations/README.md`, add `20261128090000_discard_stale_draft` to `APPLIED` in `verify/schema-snapshot.sh`
+   and rewrite the snapshot (`--write`). The signature is unchanged, so the generated types need no change.

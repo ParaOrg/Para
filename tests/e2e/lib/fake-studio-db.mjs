@@ -433,7 +433,7 @@ export function draftWorkflow(tables, { newId, fill, now }) {
         note: body.p_note ?? null,
         editor_id: caller,
         created_at: now,
-        updated_at: now,
+        updated_at: new Date().toISOString(),
         submitted_at: null,
       };
       tables.draft.push(draft);
@@ -442,6 +442,17 @@ export function draftWorkflow(tables, { newId, fill, now }) {
     if (name === 'discard_draft') {
       const kept = tables.draft.find((d) => d.id === body.p_draft);
       if (!kept) return { status: 200, body: { code: 'no_draft' } };
+      // 20261128090000_discard_stale_draft: another editor's draft only once it has gone 7 days
+      // without a change; a maker-less draft is anyone's.
+      if (kept.editor_id != null && kept.editor_id !== caller) {
+        const lastChange = Math.max(Date.parse(kept.updated_at), Date.parse(kept.created_at));
+        const from = lastChange + 7 * 24 * 60 * 60 * 1000;
+        if (from > Date.now())
+          return {
+            status: 200,
+            body: { code: 'draft_too_recent', discardable_from: new Date(from).toISOString() },
+          };
+      }
       if (body.p_revision !== null && body.p_revision !== kept.revision)
         return {
           status: 200,
@@ -479,6 +490,8 @@ export function draftWorkflow(tables, { newId, fill, now }) {
         submitted_at: null,
         last_saved_by: caller,
         revision: kept.revision + 1,
+        // The draft_revision trigger: the server's clock, on every update.
+        updated_at: new Date().toISOString(),
       });
       return { status: 200, body: { code: 'ok', created: false, draft: kept } };
     }

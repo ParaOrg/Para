@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 
 import { useStudioSession } from '../auth/use-studio-session';
-import { isAnothersDraft } from '../data/draft-lock';
+import { otherDiscardOf } from '../data/draft-discard';
 import { draftOf } from '../data/drafts';
 import { reviewMessage, type ReviewAction } from '../data/review-commands';
 import { reviewKeys } from '../data/review-keys';
@@ -23,6 +23,8 @@ interface UseStoredDraftOptions {
 }
 
 const DISCARD_QUESTION = 'Discard this draft? What is published stays as it is.';
+const DISCARD_OTHERS_QUESTION =
+  "Discard another editor's draft? It has not been changed for a while. What is published stays as it is.";
 /** The conflict, said beside Keep my draft: what happened and the two ways on. */
 export const KEEPABLE_CONFLICT =
   'Another editor published a change since this draft began. Keep your draft to approve it over theirs, or discard it.';
@@ -36,7 +38,7 @@ const KEEP_QUESTION =
  * The draft kept for the sidebar's route or hotspot, read under the key its Edit opened it by,
  * and what the footer does with it. Approve, with nothing changed on screen, publishes the draft
  * at the revision read (publish_draft's check refuses one saved since); changed, it is the form's
- * Publish, which saves first. Discard drops it, the maker's own only. `footer` is SaveFooter's.
+ * Publish, which saves first. Discard drops it: the editor's own, or another's once it has gone 7 days without a change (`otherDiscard`). `footer` is SaveFooter's.
  */
 export function useStoredDraft({
   kind,
@@ -55,11 +57,17 @@ export function useStoredDraft({
   const mutation = useReviewMutation();
   const keeping = useKeepDraftMutation();
   const draft: DraftRow | null = subjectId === null ? null : (query.data ?? null);
-  const isOwn = draft !== null && userId !== null && !isAnothersDraft(draft, userId);
+  // Read as of when the draft was: no clock in render, and the database decides anyway.
+  const otherDiscard =
+    draft !== null && userId !== null
+      ? otherDiscardOf(draft, userId, new Date(query.dataUpdatedAt))
+      : null;
+  const isOwn = draft !== null && userId !== null && otherDiscard === null;
 
   const run = (action: ReviewAction) => {
     if (!draft || mutation.isPending) return;
-    if (action === 'discard' && !window.confirm(DISCARD_QUESTION)) return;
+    const question = otherDiscard === null ? DISCARD_QUESTION : DISCARD_OTHERS_QUESTION;
+    if (action === 'discard' && !window.confirm(question)) return;
     // Awaited, not mutate's own onSuccess: approving or discarding a draft with no approved row
     // re-reads the drafts, and the sidebar showing it is replaced before a per-call onSuccess
     // would run (TanStack Query drops those once the caller unmounts).
@@ -107,6 +115,10 @@ export function useStoredDraft({
     },
     /** Approve, the stored draft as it is: what a card offers on another editor's draft. */
     approve,
+    /** Another editor's draft: Discard once the 7 days are up, or when it will be (LockedDraft). */
+    otherDiscard,
+    discard: () => run('discard'),
+    isDiscarding: mutation.isPending && mutation.variables.action === 'discard',
     isApproving: mutation.isPending && mutation.variables.action === 'publish',
     /** Why Approve or Discard did nothing, in the editor's words; null when nothing failed. */
     error: mutation.error

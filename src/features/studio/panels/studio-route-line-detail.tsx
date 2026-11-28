@@ -104,7 +104,7 @@ export function StudioRouteLineDetail({
       subjectId={direction.routeId}
       lock={lock}
       onRetry={retry}
-      onApproved={() => void saved.reload()}
+      onSettled={() => void saved.reload()}
     />
   );
   return (
