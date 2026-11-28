@@ -1,6 +1,6 @@
 # 02: vercel.json: output, routing, build
 
-Status: ready-for-agent
+Status: paused 2026-11-27 (was ready-for-agent): the owner chose GitHub Actions → Cloudflare (`../spec.md`)
 Type: task
 Who: Opus
 Blocked by: none

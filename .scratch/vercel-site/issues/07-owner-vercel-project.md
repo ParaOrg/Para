@@ -1,6 +1,6 @@
 # 07: The Vercel project
 
-Status: ready-for-human
+Status: paused 2026-11-27 (was ready-for-human): the owner chose GitHub Actions → Cloudflare (`../spec.md`)
 Type: task
 Who: the owner
 Blocked by: 02, 03, 04, 05 merged into `staging`

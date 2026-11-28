@@ -1,6 +1,6 @@
 # 03: The headers move into vercel.json
 
-Status: ready-for-agent
+Status: paused 2026-11-27 (was ready-for-agent): the owner chose GitHub Actions → Cloudflare (`../spec.md`)
 Type: task
 Who: Opus
 Blocked by: 02

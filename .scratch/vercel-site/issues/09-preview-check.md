@@ -1,6 +1,6 @@
 # 09: The preview check
 
-Status: ready-for-agent
+Status: paused 2026-11-27 (was ready-for-agent): the owner chose GitHub Actions → Cloudflare (`../spec.md`)
 Type: task
 Who: Opus, then the owner looks at the screens
 Blocked by: 06, 07, 08, 12
