@@ -24,9 +24,13 @@ const DRAFT: DraftRow = {
   note: null,
   editor_id: 'marisol',
   created_at: '2026-11-09T08:00:00Z',
-  updated_at: '2026-11-09T09:00:00Z',
+  // Changed just now, so it is younger than 7 days whenever the story runs.
+  updated_at: new Date().toISOString(),
   submitted_at: null,
 };
+
+/** The same draft, left untouched for well over 7 days. */
+const OLD_DRAFT: DraftRow = { ...DRAFT, updated_at: '2026-11-09T09:00:00Z' };
 
 /** The editor looking: signed in, not the draft's maker. */
 const SESSION: Session = {
@@ -45,10 +49,11 @@ const SESSION: Session = {
 
 /** A client that already has the draft and the maker's name, and keeps them: a story has no database. */
 const withEditor =
-  (names: ReadonlyMap<string, string> | null) => (Story: () => React.JSX.Element) => {
+  (names: ReadonlyMap<string, string> | null, draft: DraftRow = DRAFT) =>
+  (Story: () => React.JSX.Element) => {
     const client = createQueryClient();
     client.setDefaultOptions({ queries: { staleTime: Infinity, retry: false } });
-    client.setQueryData(reviewKeys.draftOf('hotspot', 'new-place'), DRAFT);
+    client.setQueryData(reviewKeys.draftOf('hotspot', 'new-place'), draft);
     if (names) client.setQueryData(editorKeys.names(), names);
     return (
       <QueryClientProvider client={client}>
@@ -72,7 +77,7 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** Its name, who is changing it and Approve; no Discard, which is the maker's alone. */
+/** Its name, who is changing it and Approve; no Discard yet, and a line says from when. */
 export const ByName: Story = {
   play: async ({ canvasElement }) => {
     const sheet = within(canvasElement);
@@ -83,6 +88,21 @@ export const ByName: Story = {
     await expect(await sheet.findByText(/Being changed by Marisol/)).toBeVisible();
     await expect(sheet.getByRole('button', { name: 'Approve' })).toBeEnabled();
     await expect(sheet.queryByRole('button', { name: /Discard/ })).toBeNull();
+    await expect(
+      sheet.getByText(/^You can discard this from .* if it isn't changed\.$/),
+    ).toBeVisible();
+  },
+};
+
+/** Left 7 days without a change: Discard…, which asks first, beside Approve. */
+export const OldDraft: Story = {
+  decorators: [withEditor(new Map([['marisol', 'Marisol']]), OLD_DRAFT)],
+  args: { draft: OLD_DRAFT },
+  play: async ({ canvasElement }) => {
+    const sheet = within(canvasElement);
+    await expect(await sheet.findByRole('button', { name: 'Discard…' })).toBeEnabled();
+    await expect(sheet.getByRole('button', { name: 'Approve' })).toBeEnabled();
+    await expect(sheet.queryByText(/You can discard this from/)).toBeNull();
   },
 };
 
