@@ -36,3 +36,10 @@ The storage idea above keeps a stretch's join point "as a distance along the mai
 - **Derived, never stored:** the distance along the main line. The publish works it out from the point on every run, so it is always measured on the line as it is that day.
 - **Checked:** the map-data check (`scripts/checks/check-map-data.mjs`) fails when a join lies farther from its main line than a set tolerance, naming the route and the stretch. A redraw that moves the road away from a join is then caught before it is published, not found by a commuter.
 - **Published:** a direction's stretches are an optional array on that direction in the published map, added to what is there today. A file without the array reads as a direction with no stretches, and an app that does not know the array leaves it unread, so phones holding older copies keep working. This narrows the open question in Consequences: the fields are optional additions, and whether the schema number also moves is still open.
+
+## Amendment, 2026-11-28: one fare, and the return is its own stretch
+
+The owner's answers to the spec's open questions 1 and 6, and a Yes to the storage idea (with the join as a point, as amended on 2026-11-11). Phase 1 still needs the owner's Yes to start building.
+
+- **Fares:** a ride from an attached terminal costs the same fare as the main line. This replaces "each attached stretch needs its own fare information" in the Decision above: no fare information is stored per stretch, and the ride card shows the main line's fare.
+- **Return trip:** an attached end on the return is drawn separately, as its own stretch on the return direction. It is not derived from the outbound attached start.

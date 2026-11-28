@@ -12,12 +12,12 @@ Some jeepney routes leave from more than one terminal yet are the same route, wi
 
 - A route can have attached starts and attached ends, several of each.
 - The route keeps its main line and its name (the main start's). An attached stretch never renames it.
-- **Return trip:** an attached terminal can also be where the jeepney ends on the way back. An attached start on one direction can be the attached end on the return.
-- **Fares:** a ride from an attached terminal does not necessarily cost the same as from the main start. Each attached stretch needs its own fare information.
+- **Return trip:** an attached terminal can also be where the jeepney ends on the way back. An attached start on one direction can be the attached end on the return. That attached end is drawn separately, as its own stretch on the return direction; it is not derived from the outbound attached start (the owner, 2026-11-28).
+- **Fares:** a ride from an attached terminal costs the same fare as the main line. No fare information is stored per stretch (the owner, 2026-11-28; ADR 0009's amendment of that date).
 - **Commuter map:** attached stretches are drawn fainter than the main line. Tapping a terminal on an attached stretch shows the route as e.g. "A – Z (also from A2)". When a commuter is near an attached terminal, directions suggest boarding there.
 - **Studio:** Attach is a mode on the drawing toolbar (the owner's Figma toolbar 4614:15351 shows an Attach pill after Move · Snap · Draw). It reuses Snap and Draw, and the stretch snaps onto the main line where it joins. It goes through drafts and review like everything else. Attach and Extend stay separate tools.
 
-## Storage idea (confirm in Phase 1)
+## Storage (the owner's Yes, 2026-11-28)
 
 Each attached stretch belongs to a direction and holds:
 
@@ -37,13 +37,13 @@ In the published map a direction's stretches are an optional array on that direc
 | 3 | Studio Attach mode | [03](issues/03-studio-attach-mode.md) | needs-info | 01 |
 | 4 | Commuter map | [04](issues/04-commuter-map.md) | needs-info | 02 |
 
-Every phase needs the owner's Yes before it starts. None is `ready-for-agent`.
+Every phase needs the owner's Yes before it starts. None is `ready-for-agent`. The owner said Yes to the storage on 2026-11-28; Phase 1 still waits for the Yes to start building.
 
 ## Open questions
 
-1. **Fares.** How are they stored and shown per attached stretch? Options: a fare table on each stretch, a difference from the main start's fare, or the existing fare rules applied to the stretch's own distance. How does a ride card show it ("₱13 from A2")?
+1. **Fares.** Answered by the owner on 2026-11-28: a ride from an attached terminal costs the same fare as the main line, so nothing is stored per stretch.
 2. **Wording.** Does "also from A2" need Filipino wording?
 3. **The faint look.** What is the exact token (colour, opacity or width) for an attached stretch? Needs the owner's Figma and a token in `design-system/foundation/tokens.css` first.
 4. **Backward compatibility.** How does the published file stay readable by phones holding old copies: optional fields with the schema number unchanged, or a new schema number with the publisher writing both for a while? (The index carries a schema number and an app reads only the shape it knows.)
 5. **Size.** The public page is at 412.3 of 413 kB. Which commuter-side code is trimmed, or does the owner raise the budget?
-6. **Return trip.** Is an attached end on the return stored as its own stretch on the return direction, or derived from the outbound attached start? Phase 1 picks one and says why.
+6. **Return trip.** Answered by the owner on 2026-11-28: an attached end on the return is drawn separately, as its own stretch on the return direction, not derived from the outbound attached start.

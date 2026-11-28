@@ -13,7 +13,7 @@ Attach as a mode on the drawing toolbar after Move · Snap · Draw. It adds no n
 ## Files it owns
 
 - `src/features/studio/drawing/` (the mode, reusing Snap and Draw)
-- `src/features/studio/panels/` (the stretch's details, its fare information once decided)
+- `src/features/studio/panels/` (the stretch's details; no fare of its own, the owner 2026-11-28)
 - `src/features/studio/data/` (only the calls Phase 1 added)
 - Stories for each Attach state
 
