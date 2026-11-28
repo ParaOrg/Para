@@ -199,7 +199,7 @@ export function Workshop({ session, recovery }: WorkshopProps) {
     draftTrip,
   });
 
-  // A return trip starts where the other way ended, shows it faintly, and can close the loop.
+  // A return trip starts at its first tap, shows the other way faintly, and can close the loop.
   const { startReturnTrip } = useLoopClosing(
     map,
     draw,

@@ -57,3 +57,15 @@ export function directionTabs(
     isDrawn: isDrawn(v),
   }));
 }
+
+/**
+ * A route's drawn way as the save panel's notes name it, while its other way is being drawn: its
+ * tab's name (a bound such as Northbound), or "the way to <destination>" where the tab reads
+ * "To <destination>".
+ */
+export function otherWayName(directions: readonly Direction[], routeId: string): string {
+  const drawn = directions.find((v) => v.routeId === routeId && isDrawn(v));
+  const label = drawn && directionTabs(drawn, directions).find((t) => t.direction === drawn)?.label;
+  if (!label) return 'the other way';
+  return label.startsWith('To ') ? `the way to ${label.slice(3)}` : label;
+}
